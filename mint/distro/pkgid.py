@@ -12,20 +12,6 @@ import cscmd
 #darby
 import flavorutil
 
-def thawPackage(pkgStr):
-    """Create a packageId out of a str created by str(pkgId).  """
-    id =  _PkgId._hashcache.get(pkgStr, None)
-    if id:
-        return id
-    else:
-        (name, value, flavor) = pkgStr.split(',', 2)
-    if flavor == '0':
-        flavor = None
-    else:
-        flavor = deps.ThawDependency(flavor)
-    version = versions.VersionFromString(value.replace('#', '/'))
-    return PkgId(name, version, flavor)
-
 def PkgId(name, version, flavor):
     """Create a handy identifier out of the fields commonly used to 
        identify a package.  The identifier is guaranteed to be 
