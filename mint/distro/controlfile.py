@@ -20,7 +20,7 @@ class ControlFile:
         self._loaders = []
         self.cfg = cfg
 
-    def loadControlFile(self):
+    def loadControlFile(self, loadRecipes=True):
         self.trove = self.repos.findTrove(self.label, self.file, None, None)[0]
         self.pkg = PkgId(self.file, self.trove.getVersion(), self.trove.getFlavor(), justName = True) 
         self.controlClass = self.loadRecipe(self.pkg)
@@ -33,10 +33,11 @@ class ControlFile:
         self.recipes = {}
         self.sources = {}
         self.usedFlags = {}
-        print "Loading Recipes..." 
         sys.stdout.flush()
-        self.getSources()
-        self.loadRecipes()
+        if loadRecipes:
+            print "Loading Recipes..." 
+            self.getSources()
+            self.loadRecipes()
 
     def getSources(self):
         notfound = {}
@@ -68,56 +69,57 @@ class ControlFile:
         self.sources = sources
 
     def loadRecipes(self):
-        recipes = {}
+        self.recipes = {}
         keys = self.sources.keys()
         keys.sort()
         count = 0
-        lcache = lookaside.RepositoryCache(self.repos)
         for source in keys:
             for p in self.sources[source]:
-                try:
-                    srcdirs = [ self.cfg.sourceSearchDir % { 'pkgname' : p.name }  ]
-                    recipeClass = self.loadRecipe(p)
-                    recipeObj = recipeClass(self.cfg, lcache, srcdirs) 
-                    recipeObj.setup()
-                    # one recipe can create several packages -- 
-                    # get a list of them here
-                    # XXX should probably also get components, 
-                    # and check components
-                    for package in recipeObj.packages:
-                        if not package in self.packages:
-                            self.packages[package] = []
-                        self.packages[package].append(p)
-                except recipe.RecipeFileError, e:
-                    raise
-                else:
-                    p.recipeClass = recipeClass
-                    l = recipes.get(recipeClass.name, [])
-                    l.append(p)
-                    recipes[recipeClass.name] = l
-                    sys.stdout.write('%d: %s\n' % (count, p))
-                    count = count + 1
-                    sys.stdout.flush()
+                self.loadRecipe(p)
+                sys.stdout.write('%d: %s\n' % (count, p))
+                count = count + 1
+                sys.stdout.flush()
         sys.stdout.write('\nDone.\n')
         sys.stdout.flush()
-        self.recipes = recipes
 
     def loadRecipe(self, pkg, label=None):
-        recipefile = pkg.name.split(':')[0]
-        # ensure name has :source tacked on end
-        name = recipefile + ':source'
-        recipefile += '.recipe'
-        use.resetUsed()
-        loader = recipe.recipeLoaderFromSourceComponent(name, recipefile, 
-                                self.cfg, self.repos, pkg.versionStr, 
-                                label=label)
-        pkg.usedFlags = use.getUsed()
-        recipeClass = loader[0].getRecipe()
-        # we need to keep the loaders around so that they do not
-        # get garbage collected -- their references are needed 
-        # later!!!
-        self._loaders.append(loader)
-        return recipeClass
+        lcache = lookaside.RepositoryCache(self.repos)
+        try:
+            srcdirs = [ self.cfg.sourceSearchDir % { 'pkgname' : pkg.name }  ]
+
+            recipefile = pkg.name.split(':')[0]
+            # ensure name has :source tacked on end
+            name = recipefile + ':source'
+            recipefile += '.recipe'
+            use.resetUsed()
+            loader = recipe.recipeLoaderFromSourceComponent(name, recipefile, 
+                                    self.cfg, self.repos, pkg.versionStr, 
+                                    label=label)
+            pkg.usedFlags = use.getUsed()
+            recipeClass = loader[0].getRecipe()
+            if not recipeClass.name.startswith('group-'):
+                recipeObj = recipeClass(self.cfg, lcache, srcdirs) 
+                recipeObj.setup()
+                # one recipe can create several packages -- 
+                # get a list of them here
+                # XXX should probably also get components, 
+                # and check components
+                for package in recipeObj.packages:
+                    if not package in self.packages:
+                        self.packages[package] = []
+                    self.packages[package].append(pkg)
+                l = self.recipes.get(recipeClass.name, [])
+                l.append(pkg)
+                self.recipes[recipeClass.name] = l
+            # we need to keep the loaders around so that they do not
+            # get garbage collected -- their references are needed 
+            # later!!!
+            pkg.recipeClass = recipeClass
+            self._loaders.append(loader)
+        except recipe.RecipeFileError, e:
+            raise
+        else:
+                    return recipeClass
 
     def getInstalledPkgs(self):
         matches = {}
@@ -153,7 +155,7 @@ class ControlFile:
                                 pass
         return (matches, unmatched)
 
-    def getMatchedChangeSets(self, changesetpath):
+    def getMatchedChangeSets(self, changesetpath, filterDict={}):
         """ Try to match the changesets in changesetpath against the 
             desired troves 
             Successful changesets must match:
@@ -169,6 +171,8 @@ class ControlFile:
         unmatched = {}
         for name,pkgs in self.packages.iteritems():
             for pkg in pkgs:
+                if filterDict and pkg.name not in filterDict:
+                    continue
                 if pkg not in unmatched:
                     unmatched[pkg] = []
                 unmatched[pkg].append(name)
@@ -182,6 +186,8 @@ class ControlFile:
             cs = changeset.ChangeSetFromFile(csfile)
             pkgs = cs.primaryTroveList
             for (name, version, flavor) in pkgs:
+                if filterDict and name not in filterDict:
+                    continue
                 cspkg = PkgId(name, version, flavor, justName=True)
                 if cspkg.name in self.packages:
                     for pkg in self.packages[cspkg.name]:
@@ -221,8 +227,6 @@ class ControlFile:
         return (matches, unmatched)
 
     def getDesiredCompiledVersion(self, pkg):
-        # XXX this is faking basically what cooking a group does.
-        # do I really not want to keep info in a group and recompile it before building?
         pv = pkg.version.copy()
         versions = self.repos.getTroveVersionList(pkg.version.branch().label(), [pkg.name])
         maxver = None
@@ -236,3 +240,19 @@ class ControlFile:
                     maxver = version
         return version
 
+    def loadPackageReqs(self, pkg):
+        self.loadControlFile(loadRecipes=False)
+        self.getSources()
+        deps = [pkg]
+        allDeps = {}
+        allDeps[pkg] = True
+        while deps:
+            dep = deps.pop()
+            for depPkg in self.sources[dep]:
+                recipeClass = self.loadRecipe(depPkg)
+                for newDep in recipeClass.buildRequires:
+                    baseDep = newDep.split(':')[0]
+                    if baseDep not in allDeps:
+                        allDeps[baseDep] = True
+                        deps.append(baseDep)
+        return allDeps
