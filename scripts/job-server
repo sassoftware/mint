@@ -15,9 +15,10 @@ import threading
 if os.environ.has_key("CONARY_PATH"):
     sys.path.insert(0, os.environ['CONARY_PATH'])
 else:
-    sys.path.insert(-1, "/data/imagetool/code/conary/")
+    sys.path.insert(-1, "/usr/share/conary/")
 sys.path.insert(-1, "../")
 
+from lib import log
 from lib import util
 sys.excepthook = util.genExcepthook()
 
@@ -49,7 +50,7 @@ class JobRunner(threading.Thread):
         project = self.client.getProject(projectId)
         
         self.client.setJobStatus(jobId, jobstatus.RUNNING)
-        print "Job %d running" % jobId
+        log.info("job %d running", jobId)
 
         try:
             try:
@@ -65,7 +66,7 @@ class JobRunner(threading.Thread):
         else:
             self.client.setJobFilenames(jobId, imageFilenames)
             self.client.setJobStatus(jobId, jobstatus.FINISHED)
-            print "Job %d finished (%s)" % (jobId, imageFilenames)
+            log.info("job %d finished: %s", jobId, str(imageFilenames))
 
 class JobDaemon:
     def __init__(self, cfgFile):
@@ -92,10 +93,10 @@ class JobDaemon:
         elif arch == "x86_64":
             pass
         else:
-            print >> sys.stderr, "Unsupported architecture:", arch
+            log.error("unsupported architecture: %s", arch)
             sys.exit(1)
 
-        print "Our architecture:", arch
+        log.info("handling jobs of architecture: %s", arch)
         
         while(True):
             joblist = list(client.iterJobs(profileId=-1, arch=arch))
@@ -108,30 +109,45 @@ class JobDaemon:
             time.sleep(5)
 
 if __name__ == "__main__":
-    cfgFile = "imagetool.conf"
     lockFile = "/var/run/imagetool-jobdaemon.pid"
     
-    if not os.access(cfgFile, os.R_OK): 
-        if len(sys.argv) != 2:
-            print >> sys.stderr, "Usage: %s [config file]" % (sys.argv[0])
-            sys.exit(1)
-        else:
+    # use sys.argv[1] as config file if provided
+    # if not, use some standard locations
+    cfgFiles = ["imagetool.conf", "../imagetool.conf", None]
+    if len(sys.argv) > 1:
+        if os.access(sys.argv[1], os.R_OK) and os.path.isfile(sys.argv[1]):
             cfgFile = sys.argv[1]
-    
+        else:
+            log.error("unable to open config file: %s", sys.argv[1])
+            sys.exit(1)
+
+    for cfgFile in cfgFiles:
+        if cfgFile:
+            if os.access(cfgFile, os.R_OK) and os.path.isfile(cfgFile):
+                break
+        else:
+            print >> sys.stderr, "Usage: %s [config file]" % (sys.argv[0])
+     
     if os.access(lockFile, os.R_OK):
         lock = open(lockFile, "r")
         pid = lock.read()
-        print >> sys.stderr, "Imagetool job daemon already running as pid %s" % (pid)
-        sys.exit(0)
+        log.error("imagetool job daemon already running as pid %s", pid)
+        sys.exit(1)
    
-   
-    print "Loading configuration file %s" % cfgFile
-    lock = open(lockFile, "w")
-    lock.write("%d" % os.getpid())
-    lock.close()
-    
+    log.info("loading configuration file: %s", cfgFile)
+
+    try:
+        lock = open(lockFile, "w")
+        lock.write("%d" % os.getpid())
+        lock.close()
+    except:
+        log.warning("unable to open lockfile: %s", lockFile)
+        
     try:
         jd = JobDaemon(cfgFile)
-    except:
-        os.unlink(lockFile)
-        raise
+    except KeyboardInterrupt:
+        log.info("exiting due to ctrl-c")
+        try:
+            os.unlink(lockFile)
+        except OSError:
+            log.warning("unable to remove lockfile: %s", lockFile)
