@@ -196,6 +196,16 @@ class _SourceId(_PkgId):
         self._usedFlags = {}
         self._troveIds = {}
 
+    def branch(self, newLabel):
+        """ Create a SourceId for this package after it has been branched
+            onto newLabel
+        """
+        branchV = self.getVersion().fork(newLabel, sameVerRel = 1)
+        branchedSourceId  = SourceId(self.getName(),
+                                     branchV,
+                                     self.getFlavor())
+        return branchedSourceId
+
     def setUsedFlags(self, usedFlags):
         """store the flags that were used when this package was loaded"""
         self._usedFlags = usedFlags
