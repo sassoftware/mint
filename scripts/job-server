@@ -31,13 +31,6 @@ scriptPath = os.path.dirname(sys.argv[0])
 if not scriptPath:
     scriptPath = '.'
 
-from installable_iso import InstallableIso
-from live_iso import LiveIso
-
-generators = { jobtypes.LIVE_ISO:        LiveIso,
-               jobtypes.INSTALLABLE_ISO: InstallableIso,
-}
-
 class Journal:
     def lchown(self, root, target, user, group):
         # get rid of the root
@@ -82,7 +75,7 @@ class JobRunner(threading.Thread):
             except OSError, err:
                 if err.errno != errno.EEXIST:
                     raise
-            generator = generators[self.job.getType()]
+            generator = jobtypes.generators[self.job.getType()]
             imageFilenames = generator(self.client, self.cfg, self.job, profileId).write()
         except:
             self.client.setJobStatus(jobId, jobstatus.ERROR)
