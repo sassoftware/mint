@@ -242,13 +242,18 @@ class ControlFile:
 
     def loadPackageReqs(self, pkg):
         self.loadControlFile(loadRecipes=False)
+        # XXX this could be so much if we only loaded
+        # the sources we actually want...
+        print "Getting sources..."
         self.getSources()
+        print "Loading needed recipes..."
         deps = [pkg]
         allDeps = {}
         allDeps[pkg] = True
         while deps:
             dep = deps.pop()
             for depPkg in self.sources[dep]:
+                print "Loading %s..." % depPkg
                 recipeClass = self.loadRecipe(depPkg)
                 for newDep in recipeClass.buildRequires:
                     baseDep = newDep.split(':')[0]

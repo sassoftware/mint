@@ -1,4 +1,5 @@
 import controlfile
+import errno
 import files
 from lib import util
 from iso import ISO, DiskFullError
@@ -71,9 +72,16 @@ class Distribution:
         if linkOk:
             os.system('cp -arl %s %s' % (self.topdir, self.nfspath))
         else:
-            os.system('cp -arf %s/* %s' % (self.topdir, self.nfspath))
-            for path in '.discinfo', 'images', 'isolinux', 'Specifix/base':
-                os.system('cp -arf %s/%s  %s/%s' % (self.isos[0].builddir, path, self.nfspath, path))
+            print "Copying over changesets to nfs dir"
+            util.execute('cp -arf %s/ %s' % (self.topdir, self.nfspath))
+            util.execute('cp -arf %s/.discinfo %s' % (self.isos[0].builddir, 
+                                                            self.nfspath))
+            print "Copying over auxiliary files to nfs dir"
+
+            for path in 'images', 'isolinux', 'Specifix/base':
+                util.mkdirChain('%s/%s' % (self.nfspath, path))
+                util.execute('cp -arf %s/%s/* %s/%s' % (self.isos[0].builddir, 
+                                        path, self.nfspath, path))
         self.writeCsList(self.nfspath, overrideDisc=1)
 
     def initializeCDs(self):
@@ -146,7 +154,7 @@ class Distribution:
                         dispName += '-smp'
                     
                 cspkg = pkg.cspkgs.keys()[0]
-                csfile = "%s-%s.ccs" % (pkg.name, cspkg.version.trailingVersion().asString())
+                csfile = "%s-%s.ccs" % (dispName, cspkg.version.trailingVersion().asString())
                 path = "%s/%s" % (csdir, csfile)
 
                 # link the first matching path, assuming they are ordered
