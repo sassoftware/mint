@@ -63,50 +63,50 @@ class ControlFile:
                                                 None, versionStr)
         assert(len(canTroves) == 1)
         canTrove = canTroves[0]
-
-        if self._updateLabel:
-            try:
-                updateTroves =  self._repos.findTrove(self._updateLabel,
-                                               name + ':source', 
-                                               None, versionStr)
-                if len(updateTroves) > 1:
-                    updateIds = [ TroveIdFromTrove(x) for x in updateTroves ] 
-                    latest = pkgid.getSortedLeavesAfterUnbranch(updateIds, 
-                                                        self._updateLabel)
-                    if len(latest) > 1:
-                        # multiple branches were returned.
-                        # if we didn't ask for a branch,
-                        # assume we don't want one
-                        newlatest = []
-                        if not versionStr or versionStr.find('@') == -1:
-                            desiredLabel = self._canonicalLabel
-                        elif versionStr.find('/') == -1:
-                            desiredLabel = versions.Label(versionStr)
-                        else:
-                            desiredLabel = versions.VersionFromString(versionStr)
-                            desiredLabel = desiredLabel.label()
-                        for leaf in latest:
-                            assert(len(leaf) == 1)
-                            leaf = leaf[0]
-                            if leaf.unbranch(self._updateLabel).getLabel() \
-                                    == desiredLabel:
-                                newlatest.append([leaf])
-                        latest = newlatest
-                    if len(latest) > 1:
-                        raise RuntimeError, (
-                "Multiple possible versions could match version String %s "
-                " for trove %s: %s" % (versionStr, name, 
-                                       [x[0].asString() for x in latest]))
-                    # could happen if there are multiple flavors...
-                    # but these are source troves!
-                    assert(len(latest[0]) == 1)
-                    updateTrove = latest[0][0]
-                else:
-                    updateTrove = updateTroves[0]
-            except repository.PackageNotFound:
-                return canTroves[0]
-            if not canTrove.getVersion().isAfter(updateTrove.getVersion()):
-                return updateTrove
+        return canTroves[0]
+        #if self._updateLabel:
+        #    try:
+        #        updateTroves =  self._repos.findTrove(self._updateLabel,
+        #                                       name + ':source', 
+        #                                       None, versionStr)
+        #        if len(updateTroves) > 1:
+        #            updateIds = [ TroveIdFromTrove(x) for x in updateTroves ] 
+        #            latest = pkgid.getSortedLeavesAfterUnbranch(updateIds, 
+        #                                                self._updateLabel)
+        #            if len(latest) > 1:
+        #                # multiple branches were returned.
+        #                # if we didn't ask for a branch,
+        #                # assume we don't want one
+        #                newlatest = []
+        #                if not versionStr or versionStr.find('@') == -1:
+        #                    desiredLabel = self._canonicalLabel
+        #                elif versionStr.find('/') == -1:
+        #                    desiredLabel = versions.Label(versionStr)
+        #                else:
+        #                    desiredLabel = versions.VersionFromString(versionStr)
+        #                    desiredLabel = desiredLabel.label()
+        #                for leaf in latest:
+        #                    assert(len(leaf) == 1)
+        #                    leaf = leaf[0]
+        #                    if leaf.unbranch(self._updateLabel).getLabel() \
+        #                            == desiredLabel:
+        #                        newlatest.append([leaf])
+        #                latest = newlatest
+        #            if len(latest) > 1:
+        #                raise RuntimeError, (
+        #        "Multiple possible versions could match version String %s "
+        #        " for trove %s: %s" % (versionStr, name, 
+        #                               [x[0].asString() for x in latest]))
+        #            # could happen if there are multiple flavors...
+        #            # but these are source troves!
+        #            assert(len(latest[0]) == 1)
+        #            updateTrove = latest[0][0]
+        #        else:
+        #            updateTrove = updateTroves[0]
+        #    except repository.PackageNotFound:
+        #        return canTroves[0]
+        #    if not canTrove.getVersion().isAfter(updateTrove.getVersion()):
+        #        return updateTrove
         return canTrove
 
 
@@ -282,13 +282,6 @@ class ControlFile:
                                          sourceId.getVersion(), 
                                          [sourceId.getName() + ':source'])
 
-        # Update the sourceIds so that when we load them
-        # we will load them from the new label
-        # XXX this may be dumb
-        for sourceId in needBranching:
-            branchV = sourceId.getVersion().fork(newLabel, sameVerRel = 1)
-            sourceId.setVersion(branchV)
-
 
     def getSources(self):
         """ 
@@ -425,9 +418,7 @@ class ControlFile:
         # by default everything is unmatched
         for name,sourceIds in self.iterPackageSources(): 
             for sourceId in sourceIds:
-                if sourceId not in unmatched:
-                    unmatched[sourceId] = []
-                unmatched[sourceId].append(name)
+                unmatched[sourceId] = True
 
         db = database.Database(self._cfg.root, self._cfg.dbPath)
         for troveName in db.iterAllTroveNames():
@@ -443,24 +434,17 @@ class ControlFile:
                         # builtFrom ensures that it is possible
                         # to get the built trove from the sourceId
                         # pkg
-                        found = False
+                        
                         if installedId.builtFrom(sourceId):
-                            found = True
-                        # if we have an updateLabel, it's possible that the 
-                        # installed version is from that label
-                        if not found and self._updateLabel:
-                            if sourceId.getLabel() == self._updateLabel:
-                                branchedId = sourceId
-                            else:
-                                branchedId = sourceId.branch(self._updateLabel)
-                            if installedId.builtFrom(branchedId):
-                                found = True
-                        if not found:
+                            matches[sourceId] = True
+                            sourceId.addTroveId(installedId)
+                        elif (self._updateLabel and installedId.builtFrom(
+                                        sourceId.branch(self._updateLabel))):
+                            sourceId.addBranchedTroveId(installedId, 
+                                                        self._updateLabel)
+                        else:
                             continue
-
-                        if sourceId not in matches:
-                            matches[sourceId] = []
-                        matches[sourceId].append((installedId, troveName))
+                        matches[sourceId] = True
                         try:
                             del unmatched[sourceId]
                         except KeyError:
@@ -492,9 +476,7 @@ class ControlFile:
             for sourceId in sourceIds:
                 if filterDict and sourceId.getName() not in filterDict:
                     continue
-                if sourceId not in unmatched:
-                    unmatched[sourceId] = []
-                unmatched[sourceId].append(name)
+                unmatched[sourceId] = True
         if not os.path.exists(changesetpath):
             return matches, unmatched
 
@@ -517,35 +499,12 @@ class ControlFile:
                     continue
                 for sourceId in self.getPackageSourceIds(csId.getName()): 
                     if self._updateLabel:
-                        if not csId.builtFrom(\
+                        if not csId.builtFrom(
                                         sourceId.branch(self._updateLabel)):
                             continue
                     elif not csId.builtFrom(sourceId):
                         continue
-                    # We do some extra work here to ensure that 
-                    # we only count one changeset with a particular
-                    # flavor as a match per sourceId.   
-                    # We keep track of matches for a package by flavor
-                    # and if two packages match, we make only include
-                    # the one with the later build count
-                    if sourceId not in matches:
-                        matches[sourceId] = []
-                    if sourceId not in flavors:
-                        flavors[sourceId] = {}
-                    if csId.getFlavor() not in flavors[sourceId]:
-                        flavors[sourceId][csId.getFlavor()] = csId
-                    else:
-                        other = flavors[sourceId][csId.getFlavor()]
-                        if other.getBuildCount() < \
-                            csId.getBuildCount():
-                            matches[sourceId].remove(other)
-                            flavors[sourceId][csId.getFlavor()] = csId
-                        else:
-                            # if there is already a changeset with
-                            # this version and flavor but a later
-                            # build count, don't count this as a match
-                            continue
-                    matches[sourceId].append(csId)
+                    matches[sourceId] = True
                     if self._updateLabel:
                         sourceId.addBranchedTroveId(csId, self._updateLabel)
                     else:
@@ -586,9 +545,7 @@ class ControlFile:
             for sourceId in sourceIds:
                 if filterDict and sourceId.getName() not in filterDict:
                     continue
-                if sourceId not in unmatched:
-                    unmatched[sourceId] = []
-                unmatched[sourceId].append(name)
+                unmatched[sourceId] = True
 
         ln = len(unmatched.keys())
         unmatchedKeys = unmatched.keys()
@@ -597,8 +554,6 @@ class ControlFile:
         for sourceId in unmatchedKeys:
             print "%d/%d: %s" % (index, ln, sourceId)
             index += 1
-            if filterDict and sourceId.getName() not in filterDict:
-                continue
             # find all latest troves in canonical and update sources
             matchingTroves = []
             # findTrove doesn't seem to reliably give us the latest
@@ -610,33 +565,28 @@ class ControlFile:
             #                 self._cfg.flavor,
             #                 sourceId.getLabel().asString(),
             #                 acrossRepositories=False, withFiles=False)
-            if sourceId.getLabel() != self._updateLabel:
-                try:
-                    vers = self._repos.getTroveVersionList(
-                                               self._canonicalLabel.getHost(),
-                                               [sourceId.getName()])
-                    flavors = self._repos.getTroveVersionFlavors(vers)
-                    flavors = flavors[sourceId.getName()]
+            try:
+                vers = self._repos.getTroveVersionList(
+                                           self._canonicalLabel.getHost(),
+                                           [sourceId.getName()])
+                flavors = self._repos.getTroveVersionFlavors(vers)
+                flavors = flavors[sourceId.getName()]
 
-                    for ver in flavors:
-                        for flavor in flavors[ver]:
-                                troveId = TroveId(sourceId.getName(), ver,
-                                                    flavor)
-                                # If the trove in the update repo was built 
-                                # from the source trove, it would have been 
-                                # after the source trove was branched
-                                if troveId.builtFrom(sourceId, 
-                                     allowVersionMismatch=allowVersionMismatch):
-                                    matchingTroves.append(troveId)
-                except repository.PackageNotFound:
-                    pass
+                for ver in flavors:
+                    for flavor in flavors[ver]:
+                            troveId = TroveId(sourceId.getName(), ver,
+                                                flavor)
+                            if troveId.builtFrom(sourceId, 
+                                 allowVersionMismatch=allowVersionMismatch):
+                                matchingTroves.append(troveId)
+                                sourceId.addTroveId(troveId, 
+                                  allowVersionMismatch=allowVersionMismatch)
+            except repository.PackageNotFound:
+                pass
             if self._updateLabel:
                 # search the update label for newer versions of this package
-                if sourceId.getLabel() == self._updateLabel:
-                    branchedSourceId = sourceId
-                else:
-                    branchedSourceId  = sourceId.branch(self._updateLabel)
-                branch = branchedSourceId.getVersion().branch().getBinaryBranch()
+                branchedSourceId  = sourceId.branch(self._updateLabel)
+                branch = branchedSourceId.getBranch().getBinaryBranch()
                 try:
                     vers = self._repos.getTroveVersionList(
                                                     self._updateLabel.getHost(),
@@ -654,6 +604,9 @@ class ControlFile:
                                 if troveId.builtFrom(branchedSourceId,
                                      allowVersionMismatch=allowVersionMismatch):
                                     matchingTroves.append(troveId)
+                                    sourceId.addBranchedTroveId(troveId,
+                                                        self._updateLabel,
+                                      allowVersionMismatch=allowVersionMismatch)
                 except repository.PackageNotFound:
                     pass
             if allowVersionMismatch:
@@ -670,32 +623,8 @@ class ControlFile:
                         break
                 matchingTroves = newMatching
             for troveId in matchingTroves:
-                # We do some extra work here to ensure that 
-                # we only count one trove with a particular
-                # flavor as a match per sourceId.   
-                # We keep track of matches for a package by flavor
-                # and if two packages match, we make only include
-                # the one with the later build count
-                if sourceId not in matches:
-                    matches[sourceId] = []
-                if sourceId not in flavors:
-                    flavors[sourceId] = {}
-                if troveId.getFlavor() not in flavors[sourceId]:
-                    flavors[sourceId][troveId.getFlavor()] = troveId
-                else:
-                    other = flavors[sourceId][troveId.getFlavor()]
-                    if other.getVersion().trailingVersion().buildCount < \
-                        troveId.getVersion().trailingVersion().buildCount:
-                        matches[sourceId].remove(other)
-                        flavors[sourceId][troveId.getFlavor()] = troveId
-                    else:
-                        # if there is already a trove with
-                        # this version and flavor but a later
-                        # build count, don't count this as a match
-                        continue
-                matches[sourceId].append(troveId)
-                if (troveId.getLabel() == self._updateLabel and 
-                            sourceId.getLabel() != self._updateLabel):
+                matches[sourceId] = True
+                if troveId.getLabel() == self._updateLabel:
                     sourceId.addBranchedTroveId(troveId, self._updateLabel,
                                     allowVersionMismatch=allowVersionMismatch)
                 else:
@@ -706,7 +635,6 @@ class ControlFile:
                 except KeyError:
                     pass
         return (matches, unmatched)
-
 
     def loadPackageReqs(self, troveName):
         """ An alternative to loadControlFile.  Load packages only for 
