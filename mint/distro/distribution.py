@@ -183,10 +183,11 @@ class Distribution:
         isodir = self.isos[0].builddir
         subdir = os.path.join(isodir, self.distro.productPath)
         map = { 'pname' : self.distro.productName,
-                'arch' : self.distro.arch, 'subdir' : subdir,
+                'ppath' : self.distro.productPath,
+                'arch' : self.distro.arch, 
                 'discno' : iso.discno, 'isodir' : isodir, 
                 'scripts': self.anacondascripts } 
-        os.system('python %(scripts)s/makestamp.py --releasestr="%(pname)s" --arch="%(arch)s" --discNum="%(discno)s" --baseDir=%(subdir)s/base --packagesDir=%(subdir)s/changesets --pixmapsDir=%(subdir)s/pixmaps --outfile=%(isodir)s/.discinfo' %  map)
+        os.system('python %(scripts)s/makestamp.py --releasestr="%(pname)s" --arch="%(arch)s" --discNum="%(discno)s" --baseDir=%(ppath)s/base --packagesDir=%(ppath)s/changesets --pixmapsDir=%(ppath)s/pixmaps --outfile=%(isodir)s/.discinfo' %  map)
 
     def makeInstRoots(self):
         os.environ['PYTHONPATH'] = '/home/dbc/spx/cvs/conary'
@@ -216,14 +217,14 @@ class Distribution:
         open(basedir + '/hdlist', 'w')
         open(basedir + '/hdlist2', 'w')
         # install anaconda into a root dir
-        self.anacondadir = tempfile.mkdtemp('', 'anaconda-')
+        self.anacondadir = tempfile.mkdtemp('', 'anaconda-', self.buildpath)
         oldroot = self.cfg.root
         self.cfg.root = self.anacondadir
         updatecmd.doUpdate(self.repos, self.cfg, ['anaconda'])
         self.cfg.root = oldroot
         self.anacondascripts = os.path.join(self.anacondadir, 'usr/lib/anaconda-runtime')
-        instroot = tempfile.mkdtemp('', 'bs-bd-instroot')
-        instrootgr = tempfile.mkdtemp('', 'bs-bd-instrootgr')
+        instroot = tempfile.mkdtemp('', 'bs-bd-instroot', self.buildpath)
+        instrootgr = tempfile.mkdtemp('', 'bs-bd-instrootgr', self.buildpath)
         map = { 'pname' : self.distro.productName,
                 'arch' : self.distro.arch, 'subdir' : subdir,
                 'ppath' : self.distro.productPath, 
@@ -231,7 +232,9 @@ class Distribution:
                 'scripts': self.anacondascripts,
                 'instroot' : instroot, 'instrootgr' : instrootgr,
                 'version' : self.distro.version } 
-        os.system('sh -x %(scripts)s/upd-instroot --debug --conary %(subdir)s/changesets %(instroot)s %(instrootgr)s' % map)
-        os.system('%(scripts)s/mk-images --debug --conary %(subdir)s/changesets %(isodir)s %(instroot)s %(instrootgr)s %(arch)s "%(pname)s" %(version)s %(ppath)s' % map)
-        util.rmtree(instroot)
-        util.rmtree(instrootgr)
+        try:
+            os.system('sh -x %(scripts)s/upd-instroot --debug --conary %(subdir)s/changesets %(instroot)s %(instrootgr)s' % map)
+            os.system('%(scripts)s/mk-images --debug --conary %(subdir)s/changesets %(isodir)s %(instroot)s %(instrootgr)s %(arch)s "%(pname)s" %(version)s %(ppath)s' % map)
+        finally:
+            util.rmtree(instroot)
+            util.rmtree(instrootgr)

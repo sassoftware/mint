@@ -13,7 +13,6 @@ import updatecmd
 
 class ISO:
     blocksize = 2048
-    #maxsize = 640 * 1024 * 1024
     maxsize = 640 * 1024 * 1024
 
     def __init__(self, builddir, path, name, discno = 0, bootable=False):

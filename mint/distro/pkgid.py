@@ -1,5 +1,5 @@
 from deps import deps
-import results
+import stats
 import versions
 
 def thawPackage(pkgStr):
@@ -46,7 +46,7 @@ class _PkgId:
         self.version = version
         self.flavor = flavor
         self.recipeClass = recipeClass
-        self.stats = results.PackageStats(self)
+        self.stats = stats.PackageStats(self)
         self.versionStr = versionStr
         self._repr = repr
         if recipeClass: 
