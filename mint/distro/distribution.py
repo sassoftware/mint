@@ -171,8 +171,9 @@ class Distribution:
             ln = len(self.isoTemplatePath)
             for (root, dirs, files) in os.walk(self.isoTemplatePath):
                 isoPath = root[ln:]
+                assert(not isoPath or isoPath[0] == '/')
                 if files:
-                    isoFileDir = os.path.join(ciso.builddir,isoPath)
+                    isoFileDir = ciso.builddir + isoPath 
                     util.mkdirChain(isoFileDir)
                 for f in files:
                     isoFilePath =  os.path.join(isoFileDir, f)
