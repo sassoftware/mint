@@ -62,7 +62,7 @@ class JobRunner(threading.Thread):
             self.client.setJobStatus(jobId, jobstatus.ERROR, str(e))
             raise
         else:
-            self.client.setJobFilename(jobId, ";".join(imageFilenames))
+            self.client.setJobFilenames(jobId, imageFilenames)
             self.client.setJobStatus(jobId, jobstatus.FINISHED)
             print "set %d finished (%s)" % (jobId, imageFilenames)
 
