@@ -91,23 +91,27 @@ class InstallableIso(ImageGenerator):
         except OSError, e:
             if e.errno != errno.EEXIST:
                 raise
-            
+             
         logfile = os.path.join(self.cfg.logPath, "instiso-%d.log" % jobId)
-        logfd = os.open(logfile, os.O_TRUNC | os.O_WRONLY | os.O_CREAT)
-        stdout = os.dup(sys.stdout.fileno())
-        stderr = os.dup(sys.stderr.fileno())
-        os.dup2(logfd, sys.stdout.fileno())
-        os.dup2(logfd, sys.stderr.fileno())
-        os.close(logfd)
-        
+        self.redirectOutput(logfile)
         try:
             dist.prep()
             filenames = dist.create()
         except:
-            os.dup2(stdout, sys.stdout.fileno())
-            os.dup2(stderr, sys.stderr.fileno())    
+            self.resetOutput()
             raise
-        os.dup2(stdout, sys.stdout.fileno())
-        os.dup2(stderr, sys.stderr.fileno())    
-           
+        self.resetOutput()
+         
         return filenames
+
+    def redirectOutput(self, logFile):
+        logfd = os.open(logFile, os.O_TRUNC | os.O_WRONLY | os.O_CREAT)
+        self.stdout = os.dup(sys.stdout.fileno())
+        self.stderr = os.dup(sys.stderr.fileno())
+        os.dup2(logfd, sys.stdout.fileno())
+        os.dup2(logfd, sys.stderr.fileno())
+        os.close(logfd)
+    
+    def resetOutput(self):
+        os.dup2(self.stdout, sys.stdout.fileno())
+        os.dup2(self.stderr, sys.stderr.fileno())
