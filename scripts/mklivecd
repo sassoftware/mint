@@ -54,7 +54,9 @@ chmod 755 $INITRDDIR/linuxrc
 e2fsimage -d $INITRDDIR -u 0 -g 0 -f $LIVECDDIR/initrd.nogz -s 4000
 gzip -9 < $LIVECDDIR/initrd.nogz > $LIVECDDIR/initrd.img
 rm $LIVECDDIR/initrd.nogz
-size=`du -s $IMAGEDIR | awk '{ print $1 }'`
+size=`du -s $IMAGEDIR | awk '{ print $1 + 20000 }'`
+#dd if=/dev/zero of=$LIVECDDIR/livecd.img bs=1k count=$size
+#mke2fs -F -i 512 $LIVECDDIR/livecd.img 
 e2fsimage -d $IMAGEDIR -u 0 -g 0 -f $LIVECDDIR/livecd.img -s $size
 # set up syslinux
 cp $IMAGEDIR/boot/vmlinuz* $LIVECDDIR/vmlinuz
