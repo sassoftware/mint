@@ -1,19 +1,23 @@
-import controlfile
 import errno
 import files
-from lib import util
-from iso import ISO, DiskFullError
 import os
 import os.path
-from pkgid import PkgId, thawPackage
-from repository import changeset
 import shutil
 import stat
 import sys
 import tempfile
 import time
-import trovelist
+
+#conary
+from lib import util
+from repository import changeset
 import updatecmd
+
+#darby
+from iso import ISO, DiskFullError
+from pkgid import PkgId, thawPackage
+import controlfile
+import trovelist
 
 class DistroInfo:
     def __init__(self, abbrevName, productPath, productName, version, phase, isoname=None, arch='i386', nightly=False):
@@ -33,10 +37,12 @@ class DistroInfo:
 
 class Distribution:
     def __init__(self, repos, cfg, distro, controlGroup, buildpath, isopath, 
-                nfspath, fromcspath, clean=False):
+                nfspath, tftpbootpath, fromcspath, logdir, clean=False):
         self.repos = repos
         self.cfg = cfg
         self.buildpath = buildpath
+        self.logdir = logdir
+        self.tftpbootpath = tftpbootpath
         if distro.nightly:
             buildpath = os.path.join(buildpath,'nightly')
             nfspath = os.path.join(nfspath,'nightly')
@@ -82,7 +88,16 @@ class Distribution:
                 util.mkdirChain('%s/%s' % (self.nfspath, path))
                 util.execute('cp -arf %s/%s/* %s/%s' % (self.isos[0].builddir, 
                                         path, self.nfspath, path))
+            for path in 'images', 'isolinux', 'Specifix/base':
+                util.mkdirChain('%s/%s' % (self.nfspath, path))
+                util.execute('cp -arf %s/%s/* %s/%s' % (self.isos[0].builddir, 
+                                        path, self.nfspath, path))
         self.writeCsList(self.nfspath, overrideDisc=1)
+        if self.tftpbootpath is not None:
+            print "Copying boot images to %s" % self.tftpbootpath
+            util.mkdirChain(self.tftpbootpath)
+            util.execute('cp -arf %s/isolinux/{initrd.img,vmlinuz} %s' % \
+                        (self.isos[0].builddir, self.tftpbootpath))
 
     def initializeCDs(self):
         isopath = os.path.join(self.isopath, self.distro.isoname)
@@ -181,11 +196,11 @@ class Distribution:
                 self.repos.createChangeSetFile(
                     [(pkg.name, (None, pkg.flavor), (version, pkg.flavor), True)], path)
             cs = changeset.ChangeSetFromFile(path)
-            pkgs = cs.primaryTroveList
-            if len(pkgs) > 1:
-                sys.stderr.write("Unable to handle changeset file %s with more "
-                                 "than one primary package\n", path)
-                sys.exit(1)
+            #pkgs = cs.primaryTroveList
+            #if len(pkgs) > 1:
+            #    sys.stderr.write("Unable to handle changeset file %s with more "
+            #                     "than one primary package\n", path)
+            #    sys.exit(1)
             #cspkg = PkgId(pkgs[0][0], pkgs[0][1], pkgs[0][2], justName=True)
             name = pkg.name
             trailing = cspkg.version.trailingVersion().asString()
