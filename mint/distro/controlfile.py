@@ -524,6 +524,35 @@ class ControlFile:
                         pass
         return (matches, unmatched)
 
+    def getRepoTrovesFromCookedGroup(self):
+        matches = {}
+        unmatched = {}
+        flavors = {}
+        repos = self._repos
+        # all packages are unmatched by default
+        #for name,sourceIds in self.iterPackageSources():
+        #    for sourceId in sourceIds:
+        #        unmatched[sourceId] = True
+        troveList = repos.findTrove(self._controlTroveLabel, 
+                                 self._controlTroveName, 
+                                    self._cfg.flavor)
+        if not troveList:
+            raise RuntimeError, "No matching groups for %s" % self.controlTroveName
+        if len(troveList) > 1:
+            raise RuntimeError, "Too many matching groups!"
+        groupTroves = troveList
+        troves = {}
+        while groupTroves:
+            groupTrove = groupTroves.pop()
+            for (name, version, flavor) in groupTrove.iterTroveList():
+                if name.startswith('group-'):
+                    trv = repos.getTrove(name, version, flavor)
+                    groupTroves.append(trv)
+                else:
+                    troves[TroveId(name, version, flavor)] = True
+        return troves
+
+
     def getMatchedRepoTroves(self, filterDict=None, allowVersionMismatch=False):
         """ Must be called after getSources.  Looks at the troves 
             on installLabelPath, and matches them against 

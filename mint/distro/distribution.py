@@ -114,8 +114,8 @@ class Distribution:
         self.nfspath  = nfspath
         self.isopath = isopath
         self.distro = distro
-        # Place to look for Changesets that have already been made
         self.controlGroup = controlGroup
+        # Place to look for Changesets that have already been made
         self.fromcspath = fromcspath
         self.clean = clean
 
@@ -194,6 +194,7 @@ class Distribution:
             simply skipped, and their changesets are not installed on the
             isos.
         """
+        getFromCookedGroup = True
         fromcspath = self.fromcspath
         self.csInfo = {}
         oldFiles = {}
@@ -201,19 +202,31 @@ class Distribution:
             oldFiles[path] = 1
 
         control = controlfile.ControlFile(group, self.repos, self.cfg, self.cfg.installLabelPath[0]) 
-        control.loadControlFile()
         print "Matching changesets..."
         if fromcspath:
+            control.loadControlFile()
             matches, unmatched = control.getMatchedChangeSets(fromcspath)
+        elif getFromCookedGroup:
+            matches = control.getRepoTrovesFromCookedGroup()
+            unmatched = []
         else:
+            control.loadControlFile()
             matches, unmatched = control.getMatchedRepoTroves(
                                                     allowVersionMismatch=True)
+
         self.csList = []
         trovesByName = {}
 
         if fromcspath:
             for troveName in control.getSourceList():
                 trovesByName[troveName] = control.getSourceIds(troveName)
+        elif getFromCookedGroup:
+            for trove in matches:
+                name = trove.getName()
+                if name not in trovesByName:
+                    trovesByName[name] = [trove]
+                else:
+                    trovesByName[name].append(trove)
         else:
             desTroves = control.getDesiredTroveList() 
             for desTrove in desTroves:
@@ -253,21 +266,27 @@ class Distribution:
                 print >> sys.stderr, "%d/%d: skipping %s" % (index, l, csfile)
                 index += 1
                 continue
-            useFlags = flavorutil.getFlavorUseFlags(flavor)
             dispName = troveName
-            for flag in useFlags['Use']:
-                if useFlags['Use'][flag]:
-                    dispName += '-%s' % flag
-                #else:
-                #    dispName += '-non%s' % flag
-            if pkg.getName() in useFlags['Flags']:
-                localFlags = useFlags['Flags'][pkg.getName()]
-                for flag in localFlags:
-                    if localFlags[flag]:
+            if getFromCookedGroup:
+                if troveName == 'kernel':
+                    if '~!kernel.smp' not in str(flavor):
+                        dispName += '-smp'
+                troveId = pkg
+            else:
+                useFlags = flavorutil.getFlavorUseFlags(flavor)
+                for flag in useFlags['Use']:
+                    if useFlags['Use'][flag]:
                         dispName += '-%s' % flag
                     #else:
                     #    dispName += '-non%s' % flag
-            troveId = pkg.getTroveId()
+                if pkg.getName() in useFlags['Flags']:
+                    localFlags = useFlags['Flags'][pkg.getName()]
+                    for flag in localFlags:
+                        if localFlags[flag]:
+                            dispName += '-%s' % flag
+                        #else:
+                        #    dispName += '-non%s' % flag
+                troveId = pkg.getTroveId()
             csfile = "%s-%s.ccs" % (dispName, 
                         troveId.getVersion().trailingVersion().asString())
             path = "%s/%s" % (csdir, csfile)
