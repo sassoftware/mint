@@ -44,7 +44,6 @@ class InstallableIso(ImageGenerator):
         releaseVer = self.client.getJobData(jobId, "releaseVer")
         releasePhase = self.client.getJobData(jobId, "releasePhase")
 
-        tmpDir = self.cfg.imagesPath + "/" + releasePhase + "/"
         distroInfo = distro.DistroInfo(self.cfg.instIsoPrefix,
                                        self.cfg.instIsoProductPath,
                                        self.cfg.instIsoProductName,
@@ -53,10 +52,17 @@ class InstallableIso(ImageGenerator):
        
         # XXX remove this and pass version as soon as darby can handle a full ver
         label = version.branch().label()
-        dist = distro.Distribution('x86', repos, ccfg,
+        
+        # XXX this may be a hack--not sure
+        arch = flavor.members[deps.deps.DEP_CLASS_IS].members.keys()[0]
+        assert(arch in ('x86', 'x86_64'))
+       
+        tmpDir = self.cfg.imagesPath + os.path.join(arch, releasePhase)
+        dist = distro.Distribution(arch, repos, ccfg,
                                    distroInfo, (trove, label, flavor),
                                    tmpDir, tmpDir+"/isos/", self.cfg.instIsoTemplatePath,
                                    None, None, None, "/data/imagetool/data/logs/", False)
+                                   
         dist.prep()
         filenames = dist.create()
         return filenames
