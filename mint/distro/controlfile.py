@@ -124,8 +124,8 @@ class ControlFile:
         """
         if flavor is not None:
             flavor = flavor.toDependency(troveName.split(':')[0])
-        if (troveName, versionStr, flavor) in self._desTroves:
-            raise RuntimeError, "Same trove listed twice in group file: (%s, %s %s)" % (troveName, versionStr, flavor)
+        #if (troveName, versionStr, flavor) in self._desTroves:
+        #    raise RuntimeError, "Same trove listed twice in group file: (%s, %s %s)" % (troveName, versionStr, flavor)
         self._desTroves[(troveName, versionStr, flavor)] = None
 
     def setDesiredTroveSource(self, troveName, versionStr, flavor, 
