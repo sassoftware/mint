@@ -110,7 +110,7 @@ class ControlFile:
         return canTrove
 
 
-    def loadControlFile(self, loadRecipes=True):
+    def loadControlFile(self, loadRecipes=True, extraTroves=[]):
         """ Loads the control file's basic information about what 
             troves should be built.  If loadRecipes=True, also
             loads the desired troves' recipes and stores their
@@ -144,6 +144,8 @@ class ControlFile:
 
         
         for (name, version, flavor) in controlObj.addTroveList:
+            self.addDesiredTrove(name, version, flavor)
+        for (name, version, flavor) in extraTroves:
             self.addDesiredTrove(name, version, flavor)
 
         sys.stdout.flush()
