@@ -18,7 +18,6 @@ from imagegen import ImageGenerator
 
 class InstallableIso(ImageGenerator):
     def write(self):
-        tmpDir = tempfile.mkdtemp("", "imagetool", self.cfg.imagesPath)
         profileId = self.job.getProfileId()
 
         name, projectId = self.client.server.getProfile(profileId)
@@ -45,6 +44,7 @@ class InstallableIso(ImageGenerator):
         releaseVer = self.client.getJobData(jobId, "releaseVer")
         releasePhase = self.client.getJobData(jobId, "releasePhase")
 
+        tmpDir = self.cfg.imagesPath + "/" + releasePhase + "/"
         distroInfo = distro.DistroInfo(self.cfg.instIsoPrefix,
                                        self.cfg.instIsoProductPath,
                                        self.cfg.instIsoProductName,
@@ -58,5 +58,5 @@ class InstallableIso(ImageGenerator):
                                    tmpDir, tmpDir+"/isos/", self.cfg.instIsoTemplatePath,
                                    None, None, None, "/data/imagetool/data/logs/", False)
         dist.prep()
-        dist.create()
-        return ['']
+        filenames = dist.create()
+        return filenames
