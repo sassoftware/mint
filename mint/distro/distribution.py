@@ -32,7 +32,7 @@ class DistroInfo:
 
 class Distribution:
     def __init__(self, repos, cfg, distro, controlGroup, buildpath, isopath, 
-                nfspath, fromcspath):
+                nfspath, fromcspath, clean=False):
         self.repos = repos
         self.cfg = cfg
         self.buildpath = buildpath
@@ -49,8 +49,8 @@ class Distribution:
 
     def create(self):
         self.topdir = '%s/%s' % (self.buildpath, self.distro.isoname)
-        #if os.path.exists(self.topdir):
-        #    util.rmtree(self.topdir)
+        if os.path.exists(self.topdir):
+            util.rmtree(self.topdir)
         util.mkdirChain(self.topdir)
         self.subdir = self.topdir + '/' + self.distro.productPath
         util.mkdirChain(os.path.join(self.subdir, 'changesets'))
@@ -59,14 +59,15 @@ class Distribution:
         self.writeCsList(self.isos[0].builddir)
         self.makeInstRoots()
         self.stampIsos()
-        #for iso in self.isos:
-        #    iso.create()
+        for iso in self.isos:
+            iso.create()
         if self.nfspath:
             self.copyToNFS()
 
     def copyToNFS(self):
         util.mkdirChain(self.nfspath)
         linkOk = (os.stat(self.topdir)[stat.ST_DEV] == os.stat(self.nfspath)[stat.ST_DEV])
+        os.system('rm -rf %s' % self.nfspath)
         if linkOk:
             os.system('cp -arl %s %s' % (self.topdir, self.nfspath))
         else:
