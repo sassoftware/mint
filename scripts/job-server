@@ -16,15 +16,15 @@ if os.environ.has_key("CONARY_PATH"):
     sys.path.insert(0, os.environ['CONARY_PATH'])
 else:
     sys.path.insert(-1, "/data/imagetool/code/conary/")
-    sys.path.insert(-1, "/data/imagetool/code/darby/client/")
+sys.path.insert(-1, "../")
 
 from lib import util
 sys.excepthook = util.genExcepthook()
 
-import imagetool
+from imagetool import imagetool
 import jobstatus
 import jobtypes
-import jobs
+from imagetool import jobs
 
 import conarycfg
 import conaryclient
