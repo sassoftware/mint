@@ -101,10 +101,10 @@ class ControlFile:
         groupName = groupName + ':source'
         leaves = self._repos.getTroveLeavesByLabel([groupName], label)
         leaves = leaves[groupName]
-        ver = leaves[-1]
+        ver = leaves.keys()[-1]
         groupTrove = self._repos.getTrove(groupName, ver, deps.DependencySet())
         groupId = SourceId(groupName, 
-                             groupTrove.getVersion(), 
+                           groupTrove.getVersion(), 
                              groupTrove.getFlavor()) 
         groupClass = self.loadRecipe(groupId)
 
@@ -286,7 +286,7 @@ class ControlFile:
             index += 1
             try: 
                 sourceTrove = self.getLatestSource(troveName, versionStr)
-            except repository.PackageNotFound:
+            except repository.TroveNotFound:
                 notfound[troveName] = True
                 continue
             sourceId = SourceId(troveName, sourceTrove.getVersion(), 
