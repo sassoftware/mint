@@ -463,6 +463,7 @@ class ControlFile:
         """
         matches = {}
         unmatched = {}
+        flavors = {}
         # all packages are unmatched by default
         for name,sourceIds in self.iterPackageSources():
             for sourceId in sourceIds:
@@ -472,7 +473,7 @@ class ControlFile:
                     unmatched[sourceId] = []
                 unmatched[sourceId].append(name)
 
-        for sourceId in unmatched:
+        for sourceId in unmatched.keys():
             if filterDict and sourceId.getName() not in filterDict:
                 continue
             # find all latest troves in canonical and update sources
@@ -480,7 +481,7 @@ class ControlFile:
                 matchingTroves = self._repos.findTrove(
                                  self._cfg.installLabelPath,
                                  sourceId.getName(), 
-                                 None,
+                                 self._cfg.flavor,
                                  sourceId.getLabel().asString(),
                                  acrossRepositories=True, withFiles=False)
             except repository.PackageNotFound:

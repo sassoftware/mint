@@ -140,7 +140,7 @@ class _PkgId:
         """
         self.troveIds[troveId] = True
 
-    def getTroveIds(self, troveId):
+    def getTroveIds(self):
         """ Return troves that could have been built with this 
             source trove
         """
