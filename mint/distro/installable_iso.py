@@ -6,6 +6,7 @@
 import sys
 import tempfile
 from deps import deps
+import repository
 
 sys.path.insert(0, "/home/tgerla/cvs/darby/client/")
 from buildsystem import distro
@@ -27,16 +28,20 @@ class InstallableIso(ImageGenerator):
                                             self.cfg.imageRepo)
 
         conaryCfg.setValue('buildFlavor', flavor.freeze())
+        repos = repository.netclient.NetworkRepositoryClient(conaryCfg.repositoryMap)
 
-        releaseVer = self.client.getProfileData(self.job.getProfileId(), "releaseVer")
-        releasePhase = self.client.getProfileDat(self.job.getProfileId(), "releasePhase")
+        jobId = self.job.getId()
+        releaseVer = self.client.getJobData(jobId, "releaseVer")
+        releasePhase = self.client.getJobData(jobId, "releasePhase")
 
         distroInfo = distro.DistroInfo(self.cfg.instIsoPrefix,
                                        self.cfg.instIsoProductPath,
                                        self.cfg.instIsoProductName,
                                        releaseVer, releasePhase)
 
-        dist = distro.Distribution(repos, cfg, distroInfo, trove, tmpDir, self.cfg.instIsoTemplate, "/", "/", "/", None, False)
+        dist = distro.Distribution(repos, conaryCfg,
+                                   distroInfo,
+                                   trove, tmpDir, self.cfg.instIsoTemplatePath, "/", "/", "/", None, False)
         dist.prep()
         dist.create()
         return ['']
