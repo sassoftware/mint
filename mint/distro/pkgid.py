@@ -118,7 +118,7 @@ class _PkgId:
     def getTuple(self):
 	return (self.__name, self.__version, self.__flavor)
 
-    def getSourceVersion(self):
+    def getSourceBranch(self):
         return self.getVersion().getSourceVersion().branch()
 
     def getBinaryVersion(self):
@@ -398,9 +398,6 @@ class _TroveId(_PkgId):
         self._trove = trove
 
 
-    def getSourceVersion(self):
-        return self.getVersion().getSourceVersion()
-        
     def builtFrom(self, sourceId, allowVersionMismatch=False):
         """ returns True if cooking sourceId could result in the
             given package -- if allowVersionMismatch, match only the 
@@ -415,8 +412,8 @@ class _TroveId(_PkgId):
             # XXX this does not work with the update repo, where all 
             # versions have stored with them the version/release of the 
             # source they were branched from
-            v = self.getSourceVersion()
-            pv = sourceId.getSourceVersion()
+            v = self.getSourceBranch()
+            pv = sourceId.getSourceBranch()
             if not v == pv:
                 return False
 
@@ -467,8 +464,8 @@ class _TroveId(_PkgId):
             sourceId with the same flags """
         if troveId.getName() != self.getName():
             return False
-        if troveId.getSourceVersion() != \
-                                        self.getSourceVersion():
+        if troveId.getSourceBranch() != \
+                                        self.getSourceBranch():
             return False
         if troveId.getVersion().trailingRevision().getVersion() != \
                             self.getVersion().trailingRevision().getVersion():
