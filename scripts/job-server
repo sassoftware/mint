@@ -66,8 +66,8 @@ class JobRunner(threading.Thread):
     def run(self):
         jobId = self.job.getId()
         profileId = self.job.getProfileId()
-        projectId, name = self.client.getProfile(profileId)
-        project = self.client.getProject(profileId)
+        name, projectId = self.client.getProfile(profileId)
+        project = self.client.getProject(projectId)
         
         self.client.setJobStatus(jobId, jobstatus.RUNNING)
         print "set %d running" % jobId
