@@ -5,6 +5,7 @@
 # 3.  Determine if a changeset file fits the desired version
 # 4.  Grab a matching version from the repository
 from build import lookaside, recipe
+from local import database 
 import os
 import os.path
 from repository import changeset, repository
@@ -43,15 +44,12 @@ class ControlFile:
         # XXX this might be faster if we tried to replicate findTrove behavior
         # e.g., if versionStrs are on the same label (90% of the time), we 
         # can just get leaves on label
-        for (troveName, versionStr) in self.troves:
+        for (troveName, versionStr, flavor) in self.troves:
             # remove potential :devel, etc, components from the components, 
             # since we want to point to the source trove
             troveName = troveName.split(':', 1)[0]
             try: 
                 sourceTroveName = troveName + ':source'
-                if troveName == 'icecream':
-                    from lib import epdb
-                    epdb.set_trace()
                 sourceTroves = self.repos.findTrove(self.label, sourceTroveName, flavor, versionStr)
             except repository.PackageNotFound:
                 notfound[troveName] = True
@@ -123,6 +121,38 @@ class ControlFile:
         self._loaders.append(loader)
         return recipeClass
 
+    def getInstalledPkgs(self):
+        matches = {}
+        unmatched = {}
+        for name,pkgs in self.packages.iteritems():
+            for pkg in pkgs:
+                if pkg not in unmatched:
+                    unmatched[pkg] = []
+                unmatched[pkg].append(name)
+
+        db = database.Database(self.cfg.root, self.cfg.dbPath)
+        for troveName in db.iterAllTroveNames():
+            if troveName not in self.packages:
+                continue
+            for version in  db.getTroveVersionList(troveName):
+                for trove in db.findTrove(troveName, version.asString()):
+
+                    dbpkg = PkgId(troveName, trove.getVersion(), trove.getFlavor(), justName=True)
+                    for pkg in self.packages[dbpkg.name]:
+                    # convert dbpkg version to source version by removing
+                    # buildCount
+                        v = dbpkg.version.copy()
+                        v.trailingVersion().buildCount = None
+                 
+                        if pkg.version == v or pkg.name == 'icecream':
+                            if pkg not in matches:
+                                matches[pkg] = []
+                            matches[pkg].append((dbpkg, troveName))
+                            try:
+                                del unmatched[pkg]
+                            except KeyError:
+                                pass
+        return (matches, unmatched)
 
     def getMatchedChangeSets(self, changesetpath):
         """ Try to match the changesets in changesetpath against the 
