@@ -100,7 +100,7 @@ class ISO:
             else:
                 raise
         self.freespace -= filesize
-        self.files[isopath] = currentpath
+        self.files[isopath] = filesize
 
     def markInstalled(self, fullpath, errorOnExisting=True):
         """ Mark a file as in the iso's dir path.  Fullpath is absolute,
@@ -126,7 +126,7 @@ class ISO:
             raise OSError, "No such file: %s" % fullpath
         filesize = self.checkInstallable(fullpath)
         self.freespace -= filesize
-        self.files[isopath] = fullpath
+        self.files[isopath] = filesize
 
     def markDirInstalled(self, isodir, errorOnExisting=True):
         """ mark all files under isodir as installed.  Isodir is 
@@ -152,6 +152,7 @@ class ISO:
         unknownfiles = self.files.copy()
         actualsize = 0
         extrafiles = []
+        wrongsize = []
         for (root, dirs, files) in os.walk(self.builddir):
             for fileName in files:
                 # can't use os.path.join bc it doesn't handle the case
@@ -163,6 +164,8 @@ class ISO:
                     del unknownfiles[isopath]
                     fullpath = root + '/' + fileName
                     actualsize += self.getFileSize(fullpath)
+                    if self.getFileSize(fullpath) != self.files[isopath]:
+                        wrongsize.append(isopath)
         sizediff = abs(actualsize - self.getSize())
 
         if unknownfiles or extrafiles or sizediff:
@@ -175,6 +178,10 @@ class ISO:
             if sizediff:
                 error.append("Size difference between calculated and "
                              " actual size: %s" % sizediff)
+            if wrongsize:
+                error.append("The following files are the wrong size: %s"
+                             % [ (x, self.files[x]) for x in wrongsize ])
+
             raise RuntimeError, '\n'.join(error)
 
 

@@ -336,6 +336,8 @@ class Distribution:
                     d = overrideDisc
                 print >> csfile, os.path.basename(info['path']), \
                         pkg.getName(), info['version'], info['release'], info['size'], d
+        csfile.flush()
+        csfile.close()
         if not overrideDisc:
             self.isos[0].markInstalled(path) 
 
