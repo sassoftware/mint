@@ -15,8 +15,8 @@ class ISO:
     maxsize = 640 * 1024 * 1024
 
     def __init__(self, builddir, path, name, discno = 0, bootable=False):
-        # builddir is the top directory which will contain the ISO dir tree and files
-        # path is where the iso image will end up
+        # builddir is the top directory which will contain the ISO dir tree 
+        # and files path is where the iso image will end up
         # name is the human-readable name of the CD
         self.reserved = 0
         self.freespace = self.maxsize - self.reserved
@@ -52,9 +52,8 @@ class ISO:
                 raise OSError, "Cannot add directories as files"
             link = True
         dirname = os.path.dirname(isopath)
-        util.mkdirChain(dirname)
         sb = os.stat(currentpath)
-            # round up to an ISO9660 block
+        # round up to an ISO9660 block
         total = sb.st_size + (self.blocksize - sb.st_size % self.blocksize)
         if self.freespace < total:
             extra = total - self.freespace
@@ -78,11 +77,12 @@ class ISO:
         self.files[isopath] = currentpath
 
     def _makeISO(self):
+        util.mkdirChain(os.path.dirname(self.isopath))
         if self.bootable:
-            os.system('cd %s; mkisofs -o %s -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -R -J -V "%s" -T .' % (self.builddir, self.isopath, self.isoname))
+            util.execute('cd %s; mkisofs -o %s -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -R -J -V "%s" -T .' % (self.builddir, self.isopath, self.isoname))
         else:
-            os.system('cd %s; mkisofs -o %s -R -J -V "%s" -T .' % (self.builddir, self.isopath, self.isoname))
-        os.system('/home/msw/implantisomd5 %s' % self.isopath)
+            util.execute('cd %s; mkisofs -o %s -R -J -V "%s" -T .' % (self.builddir, self.isopath, self.isoname))
+        util.execute('/usr/local/bin/implantisomd5 %s' % self.isopath)
         print "ISO created at %s" % self.isopath
 
     def create(self):

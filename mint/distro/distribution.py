@@ -16,6 +16,7 @@ import updatecmd
 #darby
 from iso import ISO, DiskFullError
 import controlfile
+import flavorutil
 
 class DistroInfo:
     def __init__(self, abbrevName, productPath, productName, version, phase, isoname=None, arch='i386', nightly=False):
@@ -45,24 +46,29 @@ class Distribution:
             buildpath = os.path.join(buildpath,'nightly')
             nfspath = os.path.join(nfspath,'nightly')
         self.buildpath = os.path.join(buildpath, distro.version)
-        self.nfspath = os.path.join(nfspath, distro.version)
+        if nfspath:
+            nfspath = os.path.join(nfspath, distro.version)
+        self.nfspath  = nfspath
         self.isopath = isopath
         self.distro = distro
         # Place to look for Changesets that have already been made
         self.controlGroup = controlGroup
         self.fromcspath = fromcspath
 
-    def create(self):
+    def prep(self):
         self.topdir = '%s/%s' % (self.buildpath, self.distro.isoname)
         if os.path.exists(self.topdir):
             util.rmtree(self.topdir)
         util.mkdirChain(self.topdir)
         self.subdir = self.topdir + '/' + self.distro.productPath
         util.mkdirChain(os.path.join(self.subdir, 'changesets'))
+
+    def create(self, anaconda=True):
+        self.prep()
         self.createChangeSets(self.controlGroup, os.path.join(self.subdir, 'changesets'), self.fromcspath)
         self.initializeCDs()
         self.writeCsList(self.isos[0].builddir)
-        self.makeInstRoots()
+        self.makeInstRoots(useAnaconda)
         self.stampIsos()
         for iso in self.isos:
             iso.create()
@@ -109,7 +115,7 @@ class Distribution:
         ciso = ISO(builddir % discno, isopath % discno, isoname % discno, discno, bootable=True)
         ciso.discno = discno
         # reserve 40MB on the first disc for use later
-        ciso.reserve(40) 
+        #ciso.reserve(40) 
         self.isos.append(ciso)
         ciso = self.isos[-1]
         
@@ -142,24 +148,30 @@ class Distribution:
         control.loadControlFile()
         print "Matching changesets..."
         matches, unmatched = control.getMatchedChangeSets(fromcspath)
-        desiredTroves = control.getDesiredTroveList()
         self.csList = []
+        trovesByName = {}
 
-        for id in desiredTroves:
-            trovesByName[id[0]] = (id, getDesiredTroveSources(*id))
+        sourceNames = control.getSourceList()
+        for sourceName in sourceNames:
+            trovesByName[sourceName] =  control.getSourceIds(sourceName)
         for name in [ 'setup', 'glibc' ]:
-            for pkg in trovesByName[name][1]:
-                self.csList.append((trovesByName[name][0], pkg))
-            del trovesByName[name]
+            if name in trovesByName:
+                for sourceId in trovesByName[name]:
+                    self.csList.append(((sourceId.getName(), 
+                                         sourceId.getVersion(), 
+                                         sourceId.getFlavor()), sourceId))
+                del trovesByName[name]
 
         l = len(trovesByName)
         names = trovesByName.keys()
         names.sort()
         index = 0
         for name in names:
-            for pkg in trovesByName[name][1]:
-                self.csList.append((trovesByName[name][0], pkg))
-            del troveByName[name]
+            for sourceId in trovesByName[name]:
+                self.csList.append(((sourceId.getName(), 
+                                     sourceId.getVersion(), 
+                                     sourceId.getFlavor()), sourceId))
+            del trovesByName[name]
         for (troveName, version, flavor), pkg in self.csList:
             if pkg not in matches:
                 # we just skip these packages
@@ -179,7 +191,7 @@ class Distribution:
                     dispName += '-%s' % flag
                 else:
                     dispName += '-non%s' % flag
-            cspkg = pkg.cspkgs.keys()[0]
+            cspkg = pkg.getTroveIds()[0]
             csfile = "%s-%s.ccs" % (dispName, cspkg.getVersion().trailingVersion().asString())
             path = "%s/%s" % (csdir, csfile)
 
@@ -245,7 +257,7 @@ class Distribution:
             stampFile.write(''.join(stampLines))
             stampFile.close()
 
-    def makeInstRoots(self):
+    def makeInstRoots(self, anaconda=True):
         os.environ['PYTHONPATH'] = '/home/dbc/spx/cvs/conary'
         os.environ['CONARY'] = 'conary'
         os.environ['CONARY_PATH'] = '/home/dbc/spx/cvs/conary'
@@ -273,6 +285,8 @@ class Distribution:
         # just touch these files
         open(basedir + '/hdlist', 'w')
         open(basedir + '/hdlist2', 'w')
+        if not anaconda:
+            return
         # install anaconda into a root dir
         self.anacondadir = tempfile.mkdtemp('', 'anaconda-', self.buildpath)
         oldroot = self.cfg.root
