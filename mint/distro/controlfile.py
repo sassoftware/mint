@@ -170,29 +170,31 @@ class ControlFile:
             yield pkgName, sources
 
 
-    def branchSourcePackages(sourceIds, newBranch):
+    def branchSourcePackages(self, sourceIds, newBranch):
         """ Branch the given sourceIds to the new branch, and update
             any needed pointers to the new sourceIds created """
         if not sourceIds:
             return
 
-        brancheSources = {}
+        branchSources = {}
         # make lists of sources on a particular branch.
         # this should handle branching packages that are on a different
         # branch correctly 
         for sourceId in sourceIds:
-            branch = soruceId.getVersion().branch()
-            if branch not in branches:
+            branch = sourceId.getVersion().branch().label()
+            if branch not in branchSources:
                 branchSources[branch] = []
-            brancheSources[branch].append(sourceId.getName() + ':source')
+            branchSources[branch].append(sourceId.getName() + ':source')
 
         if len(branchSources.keys()) > 1:
             from lib import epdb
             epdb.st()
 
+        from lib import epdb
+        epdb.st()
         for branch in branchSources:
-            self._repos.createBranch(branch.fork(newBranch), branch,
-                                                         branchSources[branch])
+            for source in branchSources[branch]:
+                self._repos.createBranch(newBranch, branch, [source])
 
         for sourceId in sourceIds:
             branchV = sourceId.getVersion().fork(newBranch, sameVerRel = 1)
