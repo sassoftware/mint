@@ -98,8 +98,12 @@ class ControlFile:
 
         for (name, version, flavor) in controlObj.addTroveList:
             self.addDesiredTrove(name, version, flavor)
-        for (name, version, flavor) in extraTroves:
-            self.addDesiredTrove(name, version, flavor)
+        for extraTrove in extraTroves:
+            if not isinstance(extraTrove, (list, tuple)):
+                self.addDesiredTrove(extraTrove, None, None)
+            else:
+                extraTrove = (list(extraTrove) + [None, None])[0:3]
+                self.addDesiredTrove(*extraTrove)
 
         sys.stdout.flush()
         if loadRecipes:

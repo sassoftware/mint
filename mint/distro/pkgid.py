@@ -35,24 +35,24 @@ def PkgId(name, version, flavor):
     """
 
     repr = makePkgIdRepr(name, version, flavor)
-    if repr in _PkgId._hashcache:
-        return _PkgId.hashcache[repr]
-    else:
-        return _PkgId(name, version, flavor, repr=repr)
+    #if repr in _PkgId._hashcache:
+    #    return _PkgId.hashcache[repr]
+    #else:
+    return _PkgId(name, version, flavor, repr=repr)
 
 def SourceId(name, version, flavor):
     repr = makePkgIdRepr(name, version, flavor)
-    if repr in _PkgId._hashcache:
-        return _PkgId.hashcache[repr]
-    else:
-        return _SourceId(name, version, flavor, repr=repr)
+    #if repr in _PkgId._hashcache:
+    #    return _PkgId.hashcache[repr]
+    #else:
+    return _SourceId(name, version, flavor, repr=repr)
 
 def TroveId(name, version, flavor, trove=None):
     repr = makePkgIdRepr(name, version, flavor)
-    if repr in _PkgId._hashcache:
-        return _PkgId.hashcache[repr]
-    else:
-        return _TroveId(name, version, flavor, repr=repr, trove=trove)
+    #if repr in _PkgId._hashcache:
+    #    return _PkgId.hashcache[repr]
+    #else:
+    return _TroveId(name, version, flavor, repr=repr, trove=trove)
 
 def TroveIdFromTrove(theTrove):
     return TroveId(theTrove.getName(), theTrove.getVersion(), 
@@ -453,6 +453,9 @@ class _TroveId(_PkgId):
         if troveId.getBranch().getSourceBranch() != \
                                         self.getBranch().getSourceBranch():
             return False
+        if troveId.getVersion().trailingVersion().getVersion() != \
+                            self.getVersion().trailingVersion().getVersion():
+            return False
         if troveId.getSourceCount() != self.getSourceCount():
             return False
         # build count doesn't matter
@@ -497,6 +500,7 @@ class _TroveId(_PkgId):
             return self._trove
         self._trove = troveLoc.getTrove(self.getName(), self.getVersion(), 
                                                          self.getFlavor())
+        return self._trove
 
     def createChangeSet(self, path, troveLoc):
         """ extract the trove from the repository to the given location """
