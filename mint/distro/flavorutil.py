@@ -13,15 +13,12 @@ def getFlavorUseFlags(flavor):
     for depGroup in flavor.getDepClasses().values():
         if isinstance(depGroup, deps.UseDependency):
             for dep in depGroup.getDeps():
-                for flag in dep.flags:
-                    value = True
-                    # we don't care about ~ mark,
-                    # just whether the flag should be true of false
-                    if flag[0] == '~':
-                        flag = flag[1:]
-                    if flag[0] == '!':
-                        value = False
-                        flag = flag[1:]
+                for flag, sense in dep.flags.iteritems():
+                    if sense in (deps.FLAG_SENSE_REQUIRED,
+                                 deps.FLAG_SENSE_PREFERRED):
+                         value = True
+                    else:
+                         value = False
                     parts = flag.split('.',1)
                     if len(parts) == 1:
                         useFlags['Use'][flag] = value

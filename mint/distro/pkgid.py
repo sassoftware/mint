@@ -136,7 +136,7 @@ class _PkgId:
         """ Create a SourceId or TroveId for this package after it 
             has been branched onto newLabel
         """
-        branchV = self.getVersion().fork(newLabel, sameVerRel = 1)
+        branchV = self.getVersion().createBranch(newLabel, withVerRel = 1)
         if self.getBuildCount() is None:
             class_ = SourceId
         else:
