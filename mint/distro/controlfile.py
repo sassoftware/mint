@@ -79,11 +79,13 @@ class ControlFile:
         self.loadGroup(ctroveName, ctroveLabel)
         for extraTrove in extraTroves:
             if not isinstance(extraTrove, (list, tuple)):
-                self.addDesiredTrove(extraTrove, None, None)
+                extraTrove = (extraTrove, None, None)
             else:
                 extraTrove = (list(extraTrove) + [None, None])[0:3]
+            if extraTrove[0].startswith('group-'):
+                self.loadGroup(extraTrove[0], ctroveLabel)
+            else:
                 self.addDesiredTrove(*extraTrove)
-
         sys.stdout.flush()
         if loadRecipes:
             print "Loading Recipes..." 
