@@ -170,34 +170,38 @@ class ControlFile:
             yield pkgName, sources
 
 
-    def branchSourcePackages(self, sourceIds, newBranch):
+    def branchSourcePackages(self, sourceIds, newLabel):
         """ Branch the given sourceIds to the new branch, and update
             any needed pointers to the new sourceIds created """
         if not sourceIds:
             return
 
-        branchSources = {}
+        labelSources = {}
         # make lists of sources on a particular branch.
         # this should handle branching packages that are on a different
         # branch correctly 
+        needBranching = []
         for sourceId in sourceIds:
-            branch = sourceId.getVersion().branch().label()
-            if branch not in branchSources:
-                branchSources[branch] = []
-            branchSources[branch].append(sourceId.getName() + ':source')
+            label = sourceId.getVersion().branch().label()
+            if label.getHost() == newLabel.getHost():
+                continue
+            needBranching.append(sourceId)
+            if label not in labelSources:
+                labelSources[label] = []
+            labelSources[label].append(sourceId.getName() + ':source')
 
-        if len(branchSources.keys()) > 1:
+        if len(labelSources.keys()) > 1:
             from lib import epdb
             epdb.st()
 
-        from lib import epdb
-        epdb.st()
-        for branch in branchSources:
-            for source in branchSources[branch]:
-                self._repos.createBranch(newBranch, branch, [source])
+        for label in labelSources:
+            self._repos.createBranch(newLabel, label, labelSources[label])
 
-        for sourceId in sourceIds:
-            branchV = sourceId.getVersion().fork(newBranch, sameVerRel = 1)
+        # Update the sourceIds so that when we load them
+        # we will load them from the new label
+        # XXX this may be dumb
+        for sourceId in needBranching:
+            branchV = sourceId.getVersion().fork(newLabel, sameVerRel = 1)
             sourceId.setVersion(branchV)
 
 
