@@ -3,7 +3,30 @@
 #
 # All Rights Reserved
 #
+import os
 from imagegen import ImageGenerator
+
+class Journal:
+    def lchown(self, root, target, user, group):
+        # get rid of the root
+        target = target[len(root):]
+        dirname = os.path.dirname(target)
+        filename = os.path.basename(target)
+        f = open(os.sep.join((root, dirname, '.UIDGID')), 'a')
+        # XXX e2fsimage does not handle group lookups yet
+        f.write('%s %s\n' %(filename, user))
+        f.close()
+
+    def mknod(self, root, target, devtype, major, minor, mode,
+              uid, gid):
+        # get rid of the root
+        target = target[len(root):]
+        dirname = os.path.dirname(target)
+        filename = os.path.basename(target)
+        f = open(os.sep.join((root, dirname, '.DEVICES')), 'a')
+        # XXX e2fsimage does not handle symbolic users/groups for .DEVICES
+        f.write('%s %s %d %d 0%o\n' %(filename, devtype, major, minor, mode))
+        f.close()
 
 class LiveIso(ImageGenerator):
     def write(self):
