@@ -219,7 +219,7 @@ class Distribution:
             for desTrove in desTroves:
                 desSourceId = control.getDesiredTroveSourceId(*desTrove)
                 if desSourceId is None:
-                    print "Skipping %s..." desTrove[0]
+                    print "Skipping %s..." % desTrove[0]
                     continue
                 if desTrove[0] in trovesByName:
                     trovesByName[desTrove[0]].append(desSourceId)
