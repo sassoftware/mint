@@ -7,6 +7,7 @@ import os.path
 from pkgid import PkgId, thawPackage
 from repository import changeset
 import shutil
+import stat
 import sys
 import tempfile
 import time
@@ -31,10 +32,15 @@ class DistroInfo:
 
 class Distribution:
     def __init__(self, repos, cfg, distro, controlGroup, buildpath, isopath, 
-                fromcspath):
+                nfspath, fromcspath):
         self.repos = repos
         self.cfg = cfg
         self.buildpath = buildpath
+        if distro.nightly:
+            buildpath = os.path.join(buildpath,'nightly')
+            nfspath = os.path.join(nfspath,'nightly')
+        self.buildpath = os.path.join(buildpath, distro.version)
+        self.nfspath = os.path.join(nfspath, distro.version)
         self.isopath = isopath
         self.distro = distro
         # Place to look for Changesets that have already been made
@@ -50,18 +56,33 @@ class Distribution:
         util.mkdirChain(os.path.join(self.subdir, 'changesets'))
         self.createChangeSets(self.controlGroup, os.path.join(self.subdir, 'changesets'), self.fromcspath)
         self.initializeCDs()
-        self.writeCsList()
+        self.writeCsList(self.isos[0].builddir)
         self.makeInstRoots()
         self.stampIsos()
-        for iso in self.isos:
-            iso.create()
+        #for iso in self.isos:
+        #    iso.create()
+        if self.nfspath:
+            self.copyToNFS()
+
+    def copyToNFS(self):
+        util.mkdirChain(self.nfspath)
+        linkOk = (os.stat(self.topdir)[stat.ST_DEV] == os.stat(self.nfspath)[stat.ST_DEV])
+        if linkOk:
+            os.system('cp -arl %s %s' % (self.topdir, self.nfspath))
+        else:
+            os.system('cp -arf %s/* %s' % (self.topdir, self.nfspath))
+            for path in '.discinfo', 'images', 'isolinux', 'Specifix/base':
+                os.system('cp -arf %s/%s  %s/%s' % (self.isos[0].builddir, path, self.nfspath, path))
+        self.writeCsList(self.nfspath, overrideDisc=1)
 
     def initializeCDs(self):
         isopath = os.path.join(self.isopath, self.distro.isoname)
         isopath += '-disc%d.iso'
         self.isos = []
         discno = 1
-        builddir = self.topdir + '/disc%d'
+        # don't substitute in discno so that this same string can be used
+        # later
+        builddir = '%s/%s-disc%%d' % (self.buildpath, self.distro.isoname) 
         isoname = self.distro.isoname + ' Disc %d'
         ciso = ISO(builddir % discno, isopath % discno, isoname % discno, discno, bootable=True)
         ciso.discno = discno
@@ -125,21 +146,30 @@ class Distribution:
             #        pkg = PkgId(dispNname, version, flavor, justName=True)
 
             if pkg in matches:
-                # link the first matching path, assuming they are ordered
-                # so that latest is first
                 cspkg = pkg.cspkgs.keys()[0]
                 csfile = "%s-%s.ccs" % (pkg.name, cspkg.version.trailingVersion().asString())
                 path = "%s/%s" % (csdir, csfile)
+
+                # link the first matching path, assuming they are ordered
+                # so that latest is first
                 if oldFiles.has_key(path):
                     print >> sys.stderr, "%d/%d: keeping old %s" % (index, l, csfile)
                     del oldFiles[path]
                 else:
                     print >> sys.stderr, "%d/%d: linking %s" % (index, l, csfile)
-                    os.link(cspkg.file, path)
+                    try:
+                        os.link(cspkg.file, path)
+                    except OSError, msg:
+                        if msg.errno != errno.EXDEV:
+                            raise
+                        shutil.copyfile(cspkg.file, path)
             else:
+                csfile = "%s-%s.ccs" % (pkg.name, pkg.version.trailingVersion().asString())
+                path = "%s/%s" % (csdir, csfile)
+
                 print >> sys.stderr, "%d/%d: skipping %s" % (index, l, csfile)
                 continue
-                print >> sys.stderr, "%d/%d: creating %s" % (index, l, csfile)
+                print >> sys.stderr, "%d/%d: creating %s" % (index, l, pkg)
                 version = control.getDesiredCompiledVersion(pkg)
                 self.repos.createChangeSetFile(
                     [(pkg.name, (None, pkg.flavor), (version, pkg.flavor), True)], path)
@@ -165,15 +195,20 @@ class Distribution:
                                 'release' : release}
             index += 1
 
-    def writeCsList(self):
-        path = '/'.join((self.isos[0].builddir, self.distro.productPath, 'base/cslist'))
+    def writeCsList(self, basepath, overrideDisc=None):
+        path = '/'.join((basepath, self.distro.productPath, 'base/cslist'))
         util.mkdirChain(os.path.dirname(path))
         csfile = open(path, 'w')
         for pkg in self.csList:
             if pkg in self.csInfo:
                 info = self.csInfo[pkg]
-                print >> csfile, os.path.basename(info['path']), pkg.name, info['version'], info['release'], info['size'], info['disc']
-        self.isos[0].addFile('/' + self.distro.productPath + '/base/cslist')
+                if overrideDisc is None:
+                    d = info['disc']
+                else:
+                    d = overrideDisc
+                print >> csfile, os.path.basename(info['path']), pkg.name, info['version'], info['release'], info['size'], d
+        if not overrideDisc:
+            self.isos[0].addFile('/' + self.distro.productPath + '/base/cslist')
 
     def stampIsos(self):
         iso = self.isos[0]

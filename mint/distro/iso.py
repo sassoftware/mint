@@ -40,7 +40,7 @@ class ISO:
             raise OSError, "Must give absolute paths for ISO: %s" % isopath
         isopath = os.path.normpath(isopath)
         if isopath in self.files:
-            raise OSError, "Already a file at location", isopath
+            raise OSError, ("Already a file at location", isopath)
         if not currentpath:
             # if the currentpath arg is not given, then isopath
             # should already exist, but not be in 
