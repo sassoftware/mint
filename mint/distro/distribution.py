@@ -186,8 +186,9 @@ class Distribution:
                     dispName += '-%s' % flag
                 else:
                     dispName += '-non%s' % flag
-            for flag in useFlags['Flags']:
-                if useFlags['Flags'][flag]:
+            localFlags = useFlags['Flags'][pkg.getName()]
+            for flag in localFlags:
+                if localFlags[flag]:
                     dispName += '-%s' % flag
                 else:
                     dispName += '-non%s' % flag
