@@ -11,30 +11,35 @@ import updatecmd
 
 # XXX maybe have a distro-info class passed from manager?
 class DistroInfo:
-    def __init__(self, abbrevName, productPath, productName, version, phase):
+    def __init__(self, abbrevName, productPath, productName, version, phase, isoname=None, arch='i386', nightly=False):
         self.abbrevName = abbrevName
         self.productPath = productPath
         self.productName = productName
         self.version = version
         self.phase = phase
+        self.arch = arch
+        self.nightly = nightly
+        if not isoname:
+            self.isoname = '%s-linux-%s' % (self.abbrevName, self.version)
+        else:
+            self.isoname = isoname
+        if self.nightly:
+            self.isoname += '-' + time.strftime('%Y%m%d')
 
 class ISO:
-    def __init__(self, repos, cfg, distro, buildpath, isopath, nightly=False):
+    def __init__(self, repos, cfg, distro, buildpath, isopath):
         self.repos = repos
         self.cfg = cfg
         self.buildpath = buildpath
         self.isopath = isopath
-        self.nightly = nightly
+        self.distro = distro
 
     def create(self):
-        self.isoname = '%s-linux-%s' % (self.abbrevName, self.version)
-        if self.nightly:
-            self.isoname += '-' + time.strftime('%Y%m%d')
-        self.topdir = '%s/%s' % (self.buildpath, self.isoname)
+        self.topdir = '%s/%s' % (self.buildpath, self.distro.isoname)
         #if os.path.exists(self.topdir):
         #    util.rmtree(self.topdir)
         util.mkdirChain(self.topdir)
-        self.subdir = self.topdir + '/' + self.productPath
+        self.subdir = self.topdir + '/' + self.distro.productPath
         util.mkdirChain(os.path.join(self.subdir, 'changesets'))
         util.mkdirChain(os.path.join(self.subdir, 'base'))
         self.createChangeSets(os.path.join(self.subdir, 'changesets'))
@@ -45,8 +50,8 @@ class ISO:
     def createISO(self):
         from lib import epdb
         epdb.set_trace()
-        os.system('cd %s; mkisofs -o %s/%s -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -R -J -V "%s" -T .' % (self.topdir, self.isopath, self.isoname, self.productName))
-        os.system('/home/msw/implantisomd5 %s/%s' % (self.isopath, self.isoname))
+        os.system('cd %s; mkisofs -o %s/%s -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -R -J -V "%s" -T .' % (self.topdir, self.isopath, self.distro.isoname, self.distro.productName))
+        os.system('/home/msw/implantisomd5 %s/%s' % (self.isopath, self.distro.isoname))
 
     def createChangeSets(self, csdir):
         self.csList = []
@@ -148,7 +153,7 @@ class ISO:
         instrootgr = tempfile.mkdtemp('', 'bs-bd-instrootgr')
         os.system('sh -x %s/upd-instroot --debug --conary %s/changesets %s %s' % (self.anacondascripts, self.subdir, instroot, instrootgr))
         os.system('%s/mk-images --debug --conary %s/changesets %s %s %s %s "%s" %s %s' % (self.anacondascripts, self.subdir, self.topdir, instroot, instrootgr,
-          'i386', "Specifix", self.version, self.subdir))
-        os.system('python %s/makestamp.py --releasestr="%s" --arch=i386 --discNum="1" --baseDir=%s/base --packagesDir=%s/changesets --pixmapsDir=%s/pixmaps --outfile=%s/.discinfo' % (self.anacondascripts, self.productName, self.distro.productPath, self.distro.productPath, self.distro.productPath, self.topdir))
+          self.distro.arch, self.distro.productPath, self.distro.version, self.subdir))
+        os.system('python %s/makestamp.py --releasestr="%s" --arch=%s --discNum="1" --baseDir=%s/base --packagesDir=%s/changesets --pixmapsDir=%s/pixmaps --outfile=%s/.discinfo' % (self.anacondascripts, self.distro.productName, self.distro.arch, self.distro.productPath, self.distro.productPath, self.distro.productPath, self.topdir))
         util.rmtree(instroot)
         util.rmtree(instrootgr)
