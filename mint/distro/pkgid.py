@@ -93,10 +93,18 @@ class _PkgId:
         """store the flags that were used when this package was loaded"""
         self.usedFlags = usedFlags
 
+    def getUsedFlags(self):
+        """retrieve the flags that were used when this package was loaded"""
+        return self.usedFlags
+
     # XXX move to sourceId subclass
     def setRecipeClass(self, recipeClass):
         """ store the recipeClass associated with this sourceId """
         self.recipeClass = recipeClass
+
+    def getRecipeClass(self):
+        """ retrieve the recipeClass associated with this sourceId """
+        return self.recipeClass 
 
     # XXX move to sourceId subclass
     def addChangeSet(self, csId):
@@ -191,7 +199,6 @@ class _PkgId:
         """ Pickling function.  Returns a dict containing this 
             packageId's critical information.  
         """
-        print "Getting %s's state" % self
         state = self.__dict__.copy()
         if 'recipeClass' in state:
             del state['recipeClass']

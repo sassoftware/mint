@@ -144,64 +144,61 @@ class Distribution:
         control.loadControlFile()
         print "Matching changesets..."
         matches, unmatched = control.getMatchedChangeSets(fromcspath)
-        trovesByName = control.sources.copy()
-        l = len(trovesByName)
+        desiredTroves = control.getDesiredTroveList()
         self.csList = []
+
+        for id in desiredTroves:
+            trovesByName[id[0]] = (id, getDesiredTroveSources(*id))
         for name in [ 'setup', 'glibc' ]:
-            for pkg in trovesByName[name]:
-                self.csList.append(pkg)
+            for pkg in trovesByName[name][1]:
+                self.csList.append((trovesByName[name][0], pkg))
             del trovesByName[name]
 
+        l = len(trovesByName)
         names = trovesByName.keys()
         names.sort()
         index = 0
         for name in names:
-            self.csList.extend(trovesByName[name])
-        for pkg in self.csList:
-            dispName = pkg.name
-            # XXX hack to add in flavor, since it is not 
-            # listed in group-dist
-            
-            if pkg in matches:
-                dispName = pkg.name
-                if pkg.name in ('kernel' or 'kernel-source'): 
-                    if "!kernel.smp" not in str(pkg.flavor):
-                        dispName += '-smp'
-                    
-                cspkg = pkg.cspkgs.keys()[0]
-                csfile = "%s-%s.ccs" % (dispName, cspkg.version.trailingVersion().asString())
-                path = "%s/%s" % (csdir, csfile)
-
-                # link the first matching path, assuming they are ordered
-                # so that latest is first
-                if oldFiles.has_key(path):
-                    print >> sys.stderr, "%d/%d: keeping old %s" % (index, l, csfile)
-                    del oldFiles[path]
-                else:
-                    print >> sys.stderr, "%d/%d: linking %s" % (index, l, csfile)
-                    try:
-                        os.link(cspkg.file, path)
-                    except OSError, msg:
-                        if msg.errno != errno.EXDEV:
-                            raise
-                        shutil.copyfile(cspkg.file, path)
-            else:
+            for pkg in trovesByName[name][1]:
+                self.csList.append((trovesByName[name][0], pkg))
+            del troveByName[name]
+        for (troveName, version, flavor), pkg in self.csList:
+            if pkg not in matches:
+                # we just skip these packages
                 csfile = "%s-%s.ccs" % (pkg.name, pkg.version.trailingVersion().asString())
                 path = "%s/%s" % (csdir, csfile)
-
                 print >> sys.stderr, "%d/%d: skipping %s" % (index, l, csfile)
                 continue
-                print >> sys.stderr, "%d/%d: creating %s" % (index, l, pkg)
-                version = control.getDesiredCompiledVersion(pkg)
-                self.repos.createChangeSetFile(
-                    [(pkg.name, (None, pkg.flavor), (version, pkg.flavor), True)], path)
+            useFlags = flavorutil.getFlavorUseFlags(flavor)
+            dispName = pkg.name
+            for flag in useFlags['Use']:
+                if useFlags['Use'][flag]:
+                    dispName += '-%s' % flag
+                else:
+                    dispName += '-non%s' % flag
+            for flag in useFlags['Flags']:
+                if useFlags['Flags'][flag]:
+                    dispName += '-%s' % flag
+                else:
+                    dispName += '-non%s' % flag
+            cspkg = pkg.cspkgs.keys()[0]
+            csfile = "%s-%s.ccs" % (dispName, cspkg.version.trailingVersion().asString())
+            path = "%s/%s" % (csdir, csfile)
+
+            # link the first matching path, assuming they are ordered
+            # so that latest is first
+            if oldFiles.has_key(path):
+                print >> sys.stderr, "%d/%d: keeping old %s" % (index, l, csfile)
+                del oldFiles[path]
+            else:
+                print >> sys.stderr, "%d/%d: linking %s" % (index, l, csfile)
+                try:
+                    os.link(cspkg.file, path)
+                except OSError, msg:
+                    if msg.errno != errno.EXDEV:
+                        raise
+                    shutil.copyfile(cspkg.file, path)
             cs = changeset.ChangeSetFromFile(path)
-            #pkgs = cs.primaryTroveList
-            #if len(pkgs) > 1:
-            #    sys.stderr.write("Unable to handle changeset file %s with more "
-            #                     "than one primary package\n", path)
-            #    sys.exit(1)
-            #cspkg = PkgId(pkgs[0][0], pkgs[0][1], pkgs[0][2], justName=True)
             name = pkg.name
             trailing = cspkg.version.trailingVersion().asString()
             v = trailing.split('-')
@@ -216,6 +213,8 @@ class Distribution:
             self.csInfo[pkg] = {'path': path, 'size': size, 'version' : version, 
                                 'release' : release}
             index += 1
+        # okay, now cut out unneeded desired trove info from csList
+        self.csList = [x[1] for x in self.csList ] 
 
     def writeCsList(self, basepath, overrideDisc=None):
         path = '/'.join((basepath, self.distro.productPath, 'base/cslist'))

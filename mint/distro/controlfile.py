@@ -236,6 +236,11 @@ class ControlFile:
                                              sourceId.getName())
             use.resetUsed()
 
+            # put a little assertion in here to ensure that we 
+            # actually are starting from a clean slate
+            used = use.getUsed()
+            assert ([ x for x in use.getUsedSet() ] == [])
+
             loader = recipe.recipeLoaderFromSourceComponent(name, recipefile, 
                                     self._cfg, self._repos, 
                                     sourceId.getVersionStr(), 
