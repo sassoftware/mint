@@ -264,7 +264,7 @@ class Distribution:
         self.anacondadir = tempfile.mkdtemp('', 'anaconda-', self.buildpath)
         oldroot = self.cfg.root
         self.cfg.root = self.anacondadir
-        updatecmd.doUpdate(self.repos, self.cfg, ['anaconda'], depCheck=False)
+        updatecmd.doUpdate(self.cfg, ['anaconda'], depCheck=False)
         self.cfg.root = oldroot
         self.anacondascripts = os.path.join(self.anacondadir, 'usr/lib/anaconda-runtime')
         instroot = tempfile.mkdtemp('', 'bs-bd-instroot', self.buildpath)
