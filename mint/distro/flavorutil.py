@@ -55,12 +55,10 @@ def setLocalFlags(flags):
 def resetLocalFlags():
     """ Delete all created local flags. """
     freeze = LocalFlags._frozen
-    if freeze:
-        LocalFlags._thaw()
+    # local flags should be unfrozen for the next use
+    LocalFlags._thaw()
     for flag in LocalFlags.keys():
         del LocalFlags[flag]
-    if freeze:
-        LocalFlags.freeze()
     return
 
 def setFlavor(flavor, recipeName):
