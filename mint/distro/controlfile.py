@@ -44,6 +44,7 @@ class ControlFile:
         # but all sourceIds that create a package are guaranteed to have 
         # the same name
         self._packages = {}
+        self._packageCreators = {}
         self.usedFlags = {}
 
     def getControlTroveName(self):
@@ -80,9 +81,9 @@ class ControlFile:
         self.loadGroup(ctroveName, ctroveLabel)
         for extraTrove in extraTroves:
             if not isinstance(extraTrove, (list, tuple)):
-                extraTrove = (extraTrove, None, None)
+                extraTrove = (extraTrove, None, None, None)
             else:
-                extraTrove = (list(extraTrove) + [None, None])[0:3]
+                extraTrove = (list(extraTrove) + [None, None, None])[0:4]
             if extraTrove[2] is None:
                 extraTrove = list(extraTrove)
                 extraTrove[2] = flavorutil.nullFlagSet()
@@ -123,9 +124,11 @@ class ControlFile:
                 # string
                 self.loadGroup(name, label)
             else:
-                self.addDesiredTrove(name, version, flavor)
+                if source is None:
+                    source = name.split(':')[0]
+                self.addDesiredTrove(name, version, flavor, source)
 
-    def addDesiredTrove(self, troveName, versionStr, flavor):
+    def addDesiredTrove(self, troveName, versionStr, flavor, source):
         """ Add this this trove as one that should be built.
             Takes the format used in group-recipes' addTrove commands
         """
@@ -136,6 +139,7 @@ class ControlFile:
         #if (troveName, versionStr, flavor) in self._desTroves:
         #    raise RuntimeError, "Same trove listed twice in group file: (%s, %s %s)" % (troveName, versionStr, flavor)
         self._desTroves[(troveName, versionStr, flavor)] = None
+        self._packageCreators[troveName.split(':')[0]] = source
 
     def setDesiredTroveSource(self, troveName, versionStr, flavor, 
                                                         sourceId):
@@ -161,6 +165,7 @@ class ControlFile:
             result in a package with packageName being cooked. """
         if packageName not in self._packages:
             self._packages[packageName] = []
+            self._packageCreators[packageName] = sourceId.getName()
         elif sourceId in self._packages[packageName]:
             # don't list a sourceId twice 
             return
@@ -216,7 +221,7 @@ class ControlFile:
     def getPackageSourceName(self, packageName):
         """ Return the name shared between all sourceIds that can build 
             this package """
-        return self._packages[packageName][0].getName()
+        return self._packageCreators[packageName]
 
     def iterPackageSources(self):
         """ iterate through a package name and the source troves that 
@@ -383,6 +388,7 @@ class ControlFile:
                 if packageCreator:
                     for package in recipeObj.packages:
                         self.addPackageCreator(package, sourceId)
+                    sourceId.packages = recipeObj.packages
             flavorutil.resetLocalFlags()
 
             # we need to keep the loaders around so that they do not
@@ -634,27 +640,33 @@ class ControlFile:
                     pass
         return (matches, unmatched)
 
-    def loadPackageReqs(self, troveName):
+    def loadPackageReqs(self, troveNames, extraTroves=[]):
         """ An alternative to loadControlFile.  Load packages only for 
         the prerequsites for a package.  
         """
-        self.loadControlFile(loadRecipes=False)
+        self.loadControlFile(loadRecipes=False, extraTroves=extraTroves)
         # XXX this could be so much faster if we only loaded
         # the sources we actually want...
         print "Getting sources..."
         self.getSources()
         print "Loading needed recipes..."
-        deps = [troveName]
+        origDeps = {}
+        deps = []
+        for troveName in troveNames:
+            sourceName = self.getPackageSourceName(troveName.split(':')[0])
+            origDeps[sourceName] = True
+            deps.append(sourceName)
         allDeps = {}
-        allDeps[troveName] = True
         while deps:
-            depName = deps.pop()
-            for depId in self.getSourceIds(depName):
+            sourceName = deps.pop()
+            for depId in self.getSourceIds(sourceName):
                 print "Loading %s..." % depId
                 recipeClass = self.loadRecipe(depId)
                 for newDepName in recipeClass.buildRequires:
                     baseDepName = newDepName.split(':')[0]
-                    if baseDepName not in allDeps:
-                        allDeps[baseDepName] = True
-                        deps.append(baseDepName)
+                    sourceName = self.getPackageSourceName(baseDepName)
+                    if (baseDepName not in allDeps 
+                        and baseDepName not in origDeps):
+                        allDeps[sourceName] = True
+                        deps.append(sourceName)
         return allDeps
