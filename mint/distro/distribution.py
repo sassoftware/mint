@@ -186,12 +186,13 @@ class Distribution:
                     dispName += '-%s' % flag
                 else:
                     dispName += '-non%s' % flag
-            localFlags = useFlags['Flags'][pkg.getName()]
-            for flag in localFlags:
-                if localFlags[flag]:
-                    dispName += '-%s' % flag
-                else:
-                    dispName += '-non%s' % flag
+            if pkg.getName() in useFlags['Flags']:
+                localFlags = useFlags['Flags'][pkg.getName()]
+                for flag in localFlags:
+                    if localFlags[flag]:
+                        dispName += '-%s' % flag
+                    else:
+                        dispName += '-non%s' % flag
             cspkg = pkg.getTroveIds()[0]
             csfile = "%s-%s.ccs" % (dispName, cspkg.getVersion().trailingVersion().asString())
             path = "%s/%s" % (csdir, csfile)
