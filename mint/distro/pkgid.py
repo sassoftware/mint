@@ -108,6 +108,12 @@ class _PkgId:
     def getVersion(self):
         return self.__version
 
+    def getFlavor(self):
+        return self.__flavor
+
+    def getTuple(self):
+	return (self.__name, self.__version, self.__flavor)
+
     def setVersion(self, version):
         """ Sets the version of this packageID.  
             This is not smart.  It will cause problems if 
@@ -173,9 +179,6 @@ class _PkgId:
 
     def getVersionStr(self):
         return self.__version.asString()
-
-    def getFlavor(self):
-        return self.__flavor
 
     def getStats(self):
         return self._stats

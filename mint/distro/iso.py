@@ -135,9 +135,9 @@ class ISO:
             installed.  Otherwise, simply skip files already marked as 
             installed.
         """
+        if(isodir[0] != '/'):
+            raise RuntimeError, "Must give absolute path to markDirInstalled"
         ln = len(self.builddir)
-        if isodir[-1] == '/':
-            raise OSError, "Don't add directories"
         for (root, dirs, files) in os.walk(self.builddir + isodir):        
             for fileName in files:
                 self.markInstalled(os.path.join(root, fileName), 
@@ -166,7 +166,7 @@ class ISO:
         sizediff = abs(actualsize - self.getSize())
 
         if unknownfiles or extrafiles or sizediff:
-            error = []
+            error = ['Errors on ISO %d at %s:' % (self.discno, self.builddir) ]
             if unknownfiles:
                 error.append("Files expected on ISO but"
                              " missing: %s" % unknownfiles)

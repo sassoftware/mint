@@ -23,7 +23,8 @@ import flavorutil
 # the buildsystem.  
 
 class DistroInfo:
-    def __init__(self, abbrevName, productPath, productName, version, phase, isoname=None, arch='i386', nightly=False):
+    def __init__(self, abbrevName, productPath, productName, version, 
+                 phase, isoname=None, arch='i386', nightly=False):
         """ Contains information about the names used in the distribution 
         Parameters:
             abbrevName:  the abbreviated name, used when creating file names
@@ -88,6 +89,8 @@ class Distribution:
 
                 logdir:       directory to log the output from creating 
                               the iso.
+
+                clean: remove old builddir before rebuilding
         """
         self.repos = repos
         self.cfg = cfg
@@ -107,13 +110,14 @@ class Distribution:
         # Place to look for Changesets that have already been made
         self.controlGroup = controlGroup
         self.fromcspath = fromcspath
+        self.clean = clean
 
     def prep(self):
         """ Create the necessary directories, etc, for creating a 
             distribution
         """
         self.topdir = '%s/%s' % (self.buildpath, self.distro.isoname)
-        if os.path.exists(self.topdir):
+        if self.clean and os.path.exists(self.topdir):
             util.rmtree(self.topdir)
         util.mkdirChain(self.topdir)
         self.subdir = self.topdir + '/' + self.distro.productPath
@@ -135,6 +139,9 @@ class Distribution:
         self.writeCsList(self.isos[0].builddir)
         if useAnaconda:
             self.stampIsos()
+            iso1 = self.isos[0]
+            assert(os.path.exists(iso1.builddir + '/images/diskboot.img')) 
+            assert(os.path.exists(iso1.builddir + '/isolinux/vmlinuz'))
         for iso in self.isos:
             iso.create()
         if self.nfspath:
@@ -146,11 +153,14 @@ class Distribution:
         """
         discno = len(self.isos) + 1
         isopath = os.path.join(self.isopath, self.distro.isoname)
-        isopath += '-disc%d.iso'
-        builddir = '%s/%s-disc%%d' % (self.buildpath, self.distro.isoname) 
-        isoname = self.distro.isoname + ' Disc %d'
-        ciso = ISO(builddir % discno, isopath % discno, isoname % discno, 
-                                                discno, bootable=bootable)
+        isopath += '-disc%d.iso' % discno
+        builddir = '%s/%s-disc%d' % (self.buildpath, self.distro.isoname, 
+                                                                    discno) 
+        if os.path.exists(builddir):
+            print "Removing old iso dir %s" % builddir
+            shutil.rmtree(builddir)
+        isoname = self.distro.isoname + ' Disc %d' % discno
+        ciso = ISO(builddir, isopath, isoname, discno, bootable=bootable)
         self.isos.append(ciso)
         return ciso
 
@@ -304,13 +314,13 @@ class Distribution:
                 'scripts': self.anacondascripts } 
         os.system('python %(scripts)s/makestamp.py --releasestr="%(pname)s" --arch="%(arch)s" --discNum="%(discno)s" --baseDir=%(ppath)s/base --packagesDir=%(ppath)s/changesets --pixmapsDir=%(ppath)s/pixmaps --outfile=%(isodir)s/.discinfo' %  map)
         stampLines = open('%s/.discinfo' % iso.builddir).readlines()
-        r.markInstalled('%s/.discinfo' % iso.builddir)
+        iso.markInstalled('%s/.discinfo' % iso.builddir)
         for iso in self.isos[1:]:
             stampFile = open('%s/.discinfo' % iso.builddir, 'w')
             stampLines[3] = str(iso.discno) + '\n'
             stampFile.write(''.join(stampLines))
             stampFile.close()
-            r.markInstalled('%s/.discinfo' % iso.builddir)
+            iso.markInstalled('%s/.discinfo' % iso.builddir)
 
 
     def makeInstRoots(self, useAnaconda=True):
@@ -323,7 +333,7 @@ class Distribution:
         os.environ['CONARY'] = 'conary'
         isodir = ciso.builddir
         ppath = self.distro.productPath
-        subdir = os.path.join(isodir, ppath)
+        csdir = os.path.join(self.subdir, 'changesets')
         basedir = '/'.join((isodir, ppath,'base'))
         compspath = basedir + '/comps.xml'
         util.mkdirChain(basedir)
@@ -342,16 +352,14 @@ class Distribution:
 </comps>
 ''')
         compsfile.close()
-        ciso.markInstalled(compspath)
         
         # just touch these files
         open(basedir + '/hdlist', 'w')
         open(basedir + '/hdlist2', 'w')
-        ciso.markInstalled(basedir + '/hdlist')
-        ciso.markInstalled(basedir + '/hdlist2')
         # the next part takes way to long for a test case, so 
         # if we are just testing, skip it.
         if not useAnaconda:
+            ciso.markDirInstalled('/%s/base/' % ppath)
             return
         # install anaconda into a root dir
         self.anacondadir = tempfile.mkdtemp('', 'anaconda-', self.buildpath)
@@ -363,22 +371,41 @@ class Distribution:
         instroot = tempfile.mkdtemp('', 'bs-bd-instroot', self.buildpath)
         instrootgr = tempfile.mkdtemp('', 'bs-bd-instrootgr', self.buildpath)
         map = { 'pname' : self.distro.productName,
-                'arch' : self.distro.arch, 'subdir' : subdir,
+                'arch' : self.distro.arch, 
+                'csdir' : csdir,
                 'ppath' : self.distro.productPath, 
                 'isodir' : isodir, 
                 'scripts': self.anacondascripts,
                 'instroot' : instroot, 'instrootgr' : instrootgr,
                 'version' : self.distro.version } 
+        sys.stdout.flush()
+        sys.stderr.flush()
+        logfile = self.logdir + '/upd-instroot'
+        logpath = os.path.join(self.logdir, logfile)
+        logfd = os.open(logpath, os.O_TRUNC | os.O_WRONLY | os.O_CREAT)
         try:
-            cmd = 'sh -x %(scripts)s/upd-instroot --debug --conary %(subdir)s/changesets %(instroot)s %(instrootgr)s' % map
+            stdout = os.dup(sys.stdout.fileno())
+            stderr = os.dup(sys.stderr.fileno())
+            os.dup2(logfd, sys.stdout.fileno())
+            os.dup2(logfd, sys.stderr.fileno())
+            os.close(logfd)
+            cmd = 'sh -x %(scripts)s/upd-instroot --debug --conary %(csdir)s %(instroot)s %(instrootgr)s' % map
             print "\n\n*********** RUNNING UPD-INSTROOT ***************\n\n"
             print cmd
-            sys.stdout.flush()
-            sys.stderr.flush()
             rc = os.system(cmd)
             print "<<Result code: %d>>" % rc
+            sys.stdout.flush()
+            sys.stderr.flush()
+
+            ## okay now output mk-images to another log file
+            logfile = 'mk-images'
+            logpath = os.path.join(self.logdir, logfile)
+            logfd = os.open(logpath, os.O_TRUNC | os.O_WRONLY | os.O_CREAT)
+            os.dup2(logfd, sys.stdout.fileno())
+            os.dup2(logfd, sys.stderr.fileno())
+            os.close(logfd)
             print "\n\n*********** RUNNING mk-images ***************\n\n"
-            cmd = ('%(scripts)s/mk-images --debug --conary %(subdir)s/changesets %(isodir)s %(instroot)s %(instrootgr)s %(arch)s "%(pname)s" %(version)s %(ppath)s' % map)
+            cmd = ('%(scripts)s/mk-images --debug --conary %(csdir)s %(isodir)s %(instroot)s %(instrootgr)s %(arch)s "%(pname)s" %(version)s %(ppath)s' % map)
             print cmd
             sys.stdout.flush()
             sys.stderr.flush()
@@ -386,12 +413,17 @@ class Distribution:
             print "<<Result code: %d>>" % rc
             sys.stdout.flush()
             sys.stderr.flush()
-        except Exception, msg:
-            print msg
+        except: 
+            os.dup2(stdout, sys.stdout.fileno())
+            os.dup2(stderr, sys.stderr.fileno())
+            raise
+        os.dup2(stdout, sys.stdout.fileno())
+        os.dup2(stderr, sys.stderr.fileno())
         util.rmtree(instroot)
         util.rmtree(instrootgr)
-        self.markDirInstalled('/isolinux')
-        self.markDirInstalled('/images')
+        ciso.markDirInstalled('/isolinux')
+        ciso.markDirInstalled('/images')
+        ciso.markDirInstalled('/%s/base/' % ppath)
 
     def copyToNFS(self):
         """ set up the changests and auxilliary files necessary 
