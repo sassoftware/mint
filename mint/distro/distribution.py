@@ -175,8 +175,7 @@ class Distribution:
         self.isos[0].addFile('/' + self.distro.productPath + '/base/cslist')
 
     def stampIso(self, iso):
-        isodir = self.isos[0].builddir
-        subdir = os.path.join(isodir, self.distro.productPath)
+        isodir = iso.builddir
         map = { 'pname' : self.distro.productName,
                 'ppath' : self.distro.productPath,
                 'arch' : self.distro.arch, 
@@ -205,7 +204,8 @@ class Distribution:
     <id>core</id>
     <name>Core</name>
   </group>
-</comps>''')
+</comps>
+''')
         compsfile.close()
         
         # just touch these files
