@@ -122,3 +122,6 @@ def resetFlavor(oldFlags):
                     del flagset[flag]
         if freeze:
             flagset._freeze()
+
+def nullFlagSet():
+        return use.Flag(name='__GLOBAL__').asSet()

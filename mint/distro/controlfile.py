@@ -83,7 +83,7 @@ class ControlFile:
             else:
                 extraTrove = (list(extraTrove) + [None, None])[0:3]
             if extraTrove[2] is None:
-                extraTrove[2] = deps.DependencySet()
+                extraTrove[2] = flavorutil.nullFlagSet()
             if extraTrove[0].startswith('group-'):
                 self.loadGroup(extraTrove[0], ctroveLabel)
             else:
