@@ -524,7 +524,7 @@ class Distribution:
         self.anacondadir = tempfile.mkdtemp('', 'anaconda-', self.buildpath)
         oldroot = self.cfg.root
         self.cfg.root = self.anacondadir
-        updatecmd.doUpdate(self.cfg, ['anaconda[is:%s]' % self.distro.arch], 
+        updatecmd.doUpdate(self.cfg, ['anaconda[is:%s]' % self.arch], 
                                                                 depCheck=False)
         self.cfg.root = oldroot
         self.anacondascripts = os.path.join(self.anacondadir, 'usr/lib/anaconda-runtime')
