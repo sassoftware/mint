@@ -173,6 +173,8 @@ class ControlFile:
                 if pkg not in unmatched:
                     unmatched[pkg] = []
                 unmatched[pkg].append(name)
+        if not os.path.exists(changesetpath):
+            return matches, unmatched
 
         changesetNames =  [ x for x in os.listdir(changesetpath) if x.endswith('.ccs') ]
         for changesetName in changesetNames:
