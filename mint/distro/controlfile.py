@@ -55,9 +55,9 @@ class ControlFile:
         """ Get the latest source version for a trove.  Search
             both canonical and update sources. """
 
-        # Note you can't just rely on the search path because 
-        # findTrove will return the first result, even if 
-        # later troves are available laterl
+        # Note that we can't rely on installLabelPath because 
+        # findTrove will return the result from the first label,
+        # even if more recent troves are available at other labels
         canTroves =  self._repos.findTrove(self._canonicalLabel,
                                                 name + ':source',
                                                 None, versionStr)
@@ -69,8 +69,6 @@ class ControlFile:
                 updateTroves =  self._repos.findTrove(self._updateLabel,
                                                name + ':source', 
                                                None, versionStr)
-                # we only get to this assertion if 
-                # we found at least one trove...
                 if len(updateTroves) > 1:
                     updateIds = [ TroveIdFromTrove(x) for x in updateTroves ] 
                     latest = pkgid.getSortedLeavesAfterUnbranch(updateIds, 
@@ -123,8 +121,7 @@ class ControlFile:
         ctroveName = self.getControlTroveName()
         ctroveName = ctroveName + ':source'
         ctroveLabel = self.getControlTroveLabel()
-        leaves = self._repos.getTroveLeavesByLabel([ctroveName], 
-                                                                ctroveLabel)
+        leaves = self._repos.getTroveLeavesByLabel([ctroveName], ctroveLabel)
         leaves = leaves[ctroveName]
         ver = leaves[-1]
         # should be a source trove, so, no flavor
