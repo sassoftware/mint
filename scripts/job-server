@@ -53,10 +53,10 @@ class Journal:
         f.close()
 
 class JobRunner(threading.Thread):
-    def __init__(self, cfg, itclient, job):
+    def __init__(self, cfg, client, job):
         threading.Thread.__init__(self)
         self.cfg = cfg
-        self.itclient = itclient
+        self.client = client
         self.job = job
 
     def run(self):
@@ -65,7 +65,7 @@ class JobRunner(threading.Thread):
         projectId, name = self.client.getProfile(profileId)
         project = self.client.getProject(profileId)
         
-        self.itclient.setJobStatus(jobId, jobstatus.RUNNING)
+        self.client.setJobStatus(jobId, jobstatus.RUNNING)
         print "set %d running" % jobId
 
         try:
@@ -80,22 +80,22 @@ class JobRunner(threading.Thread):
                 isoImage = fn
             elif self.job.jobType == jobtype.ANACONDA_ISO:
         except:
-            self.itclient.setJobStatus(jobId, jobstatus.ERROR)
+            self.client.setJobStatus(jobId, jobstatus.ERROR)
             raise
         else:
-            self.itclient.setJobFilename(jobId, filenames.join(";"))
-            self.itclient.setJobStatus(jobId, jobstatus.FINISHED)
+            self.client.setJobFilename(jobId, filenames.join(";"))
+            self.client.setJobStatus(jobId, jobstatus.FINISHED)
             print "set %d finished (%s)" % (jobId, tmpDir)
 
     def writeLiveIso(self):
         tmpDir = tempfile.mkdtemp("", "imagetool", self.cfg.imagesPath)
         profileId = self.job.getProfileId()
 
-        name, projectId = self.itclient.server.getProfile(profileId)
-        trove, version, frozenFlavor = self.itclient.server.getTrove(profileId)
+        name, projectId = self.client.server.getProfile(profileId)
+        trove, version, frozenFlavor = self.client.server.getTrove(profileId)
         flavor = deps.ThawDependencySet(frozenFlavor)
 
-        project = self.itclient.getProject(projectId)
+        project = self.client.getProject(projectId)
         cfg = project.getConaryConfig(self.cfg.imageLabel,
                                       self.cfg.imageRepo)
         cfg.setValue("root", tmpDir)
@@ -119,11 +119,11 @@ class JobRunner(threading.Thread):
         tmpDir = tempfile.mkdtemp("", "imagetool", self.cfg.imagesPath)
         profileId = self.job.getProfileId()
 
-        name, projectId = self.itclient.server.getProfile(profileId)
-        trove, version, frozenFlavor = self.itclient.server.getTrove(profileId)
+        name, projectId = self.client.server.getProfile(profileId)
+        trove, version, frozenFlavor = self.client.server.getTrove(profileId)
         flavor = deps.ThawDependencySet(frozenFlavor)
 
-        project = self.itclient.getProject(projectId)
+        project = self.client.getProject(projectId)
 
         conaryCfg = project.getConaryConfig(self.cfg.imageLabel,
                                             self.cfg.imageRepo)
@@ -148,13 +148,13 @@ class JobDaemon:
         cfg = imagetool.ImageToolConfig()
         cfg.read(cfgFile)
         
-        itclient = imagetool.ImageToolClient(cfg.imagetoolUrl)
+        client = imagetool.ImageToolClient(cfg.imagetoolUrl)
         
         threads = []
         
         while(True):
             try:
-                joblist = list(itclient.iterPendingJobs())
+                joblist = list(client.iterPendingJobs())
             except jobs.JobMissing:
                 joblist = []
 
@@ -162,7 +162,7 @@ class JobDaemon:
                 if len(threads) >= cfg.concurrentJobs:
                     break
 
-                th = JobRunner(cfg, itclient, job)
+                th = JobRunner(cfg, client, job)
                 threads.append(th)
                 th.start()
             time.sleep(5)
