@@ -489,14 +489,14 @@ class _TroveId(_PkgId):
         # this should cover Arch 
         if (deps.DEP_CLASS_IS in myFlavor.getDepClasses() and 
             deps.DEP_CLASS_IS in pkgFlavor.getDepClasses()):
-            from lib import epdb
-            epdb.set_trace()
-            myInsSet = deps.deps.DependencySet()
+            myInsSet = deps.DependencySet()
             pkgInsSet = deps.DependencySet()
-            myInsDep = myFlavor.members[deps.DEP_CLASS_IS]
-            pkgInsDep = pkgFlavor.members[deps.DEP_CLASS_IS]
-            myInsSet.addDep(deps.InstructionSetDependency, dep)
-            pkgInsSet.addDep(deps.InstructionSetDependency, dep)
+            myInsDep = [x for x in myFlavor.members[deps.DEP_CLASS_IS].getDeps()]
+            pkgInsDep = [ x for x in pkgFlavor.members[deps.DEP_CLASS_IS].getDeps()]
+            assert(len(myInsDep) == 1)
+            assert(len(pkgInsDep) == 1)
+            myInsSet.addDep(deps.InstructionSetDependency, myInsDep[0])
+            pkgInsSet.addDep(deps.InstructionSetDependency, pkgInsDep[0])
             if not myInsSet.satisfies(pkgInsSet):
                 return False
         builtFlags = flavorutil.getFlavorUseFlags(self.getFlavor())
