@@ -245,6 +245,7 @@ class _SourceId(_PkgId):
         self._troveId = None
         self._desVersionStr = None
 
+
     def setLocalFlags(self, localFlags):
         """store any local flags created by this package when loaded"""
         self._localFlags = localFlags
@@ -385,6 +386,7 @@ class _TroveId(_PkgId):
     def __init__(self, name, version, flavor, repr=repr, trove=None):
         _PkgId.__init__(self, name, version, flavor, repr=repr)
         self._trove = trove
+
         
     def builtFrom(self, sourceId, allowVersionMismatch=False):
         """ returns True if cooking sourceId could result in the
@@ -519,6 +521,9 @@ class _ChangeSetId(_TroveId):
     def __init__(self, name, version, flavor, path, repr=repr):
         _TroveId.__init__(self, name, version, flavor, repr=repr)
         self._path = path
+
+    def isChangeSet(self):
+        return True
 
     def getPath(self):
         return self._path
