@@ -9,7 +9,7 @@ from local import database
 from repository import changeset, repository
 
 # darby
-from pkgid import PkgId, thawPackage
+from pkgid import TroveId, SourceId, ChangeSetId
 import flavorutil
 
 class ControlFile:
@@ -54,9 +54,9 @@ class ControlFile:
         controlTrove = self._repos.findTrove(self.getControlTroveLabel(),
                                             self.getControlTroveName(), 
                                             None, None)[0]
-        controlId = PkgId(self.getControlTroveName(), 
-                           controlTrove.getVersion(), 
-                           controlTrove.getFlavor()) 
+        controlId = SourceId(self.getControlTroveName(), 
+                             controlTrove.getVersion(), 
+                             controlTrove.getFlavor()) 
         controlClass = self.loadRecipe(controlId)
 
         # instantiate the recipe and call its setup method to 
@@ -235,7 +235,8 @@ class ControlFile:
                 notfound[troveName] = True
                 continue
             for sourceTrove in sourceTroves:
-                sourceId = PkgId(troveName, sourceTrove.getVersion(), flavor) 
+                sourceId = SourceId(troveName, sourceTrove.getVersion(), 
+                                                                    flavor) 
                 self.setDesiredTroveSource(origTroveName, versionStr, flavor,
                                                                sourceId) 
                 self.addPackageCreator(troveName, sourceId)
@@ -348,7 +349,7 @@ class ControlFile:
             for version in  db.getTroveVersionList(troveName):
                 for trove in db.findTrove(troveName, version.asString()):
 
-                    installedId = PkgId(troveName, trove.getVersion(), 
+                    installedId = TroveId(troveName, trove.getVersion(), 
                                                 trove.getFlavor())
                     for sourceId in self.getPackageSourceIds(installedId.name):
                         # builtFrom ensures that it is possible
@@ -405,7 +406,7 @@ class ControlFile:
             for (name, version, flavor) in pkgs:
                 if filterDict and name not in filterDict:
                     continue
-                csId = PkgId(name, version, flavor)
+                csId = ChangeSetId(name, version, flavor, csfile)
                 if not self.isKnownPackage(csId.getName()):
                     continue
                 for sourceId in self.getPackageSourceIds(csId.name): 
@@ -435,8 +436,7 @@ class ControlFile:
                             # build count, don't count this as a match
                             continue
                     matches[sourceId].append(csId)
-                    csId.setChangeSetFile(csfile)
-                    sourceId.addChangeSet(csId)
+                    sourceId.addTroveId(csId)
                     try:
                         del unmatched[sourceId]
                     except KeyError:
@@ -488,8 +488,8 @@ class ControlFile:
                 continue
 
             for trove in matchingTroves:
-                troveId = PkgId(trove.getName(), trove.getVersion(), 
-                                trove.getFlavor())
+                troveId = TroveId(trove.getName(), trove.getVersion(), 
+                                  trove.getFlavor())
                 if not troveId.builtFrom(sourceId):
                     continue
                 # We do some extra work here to ensure that 

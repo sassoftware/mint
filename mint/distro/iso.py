@@ -3,7 +3,6 @@ import files
 from lib import util
 import time
 import os
-from pkgid import PkgId, thawPackage
 from repository import changeset
 import os.path
 import sys

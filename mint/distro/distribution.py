@@ -15,9 +15,7 @@ import updatecmd
 
 #darby
 from iso import ISO, DiskFullError
-from pkgid import PkgId, thawPackage
 import controlfile
-import trovelist
 
 class DistroInfo:
     def __init__(self, abbrevName, productPath, productName, version, phase, isoname=None, arch='i386', nightly=False):
@@ -193,11 +191,11 @@ class Distribution:
             else:
                 print >> sys.stderr, "%d/%d: linking %s" % (index, l, csfile)
                 try:
-                    os.link(cspkg.file, path)
+                    os.link(cspkg.getPath(), path)
                 except OSError, msg:
                     if msg.errno != errno.EXDEV:
                         raise
-                    shutil.copyfile(cspkg.file, path)
+                    shutil.copyfile(cspkg.getPath(), path)
             cs = changeset.ChangeSetFromFile(path)
             name = pkg.name
             trailing = cspkg.version.trailingVersion().asString()

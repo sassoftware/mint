@@ -1,3 +1,5 @@
+import os
+
 # conary
 from deps import deps
 import versions
@@ -32,13 +34,34 @@ def PkgId(name, version, flavor):
        flavor.
     """
 
-    
     repr = makePkgIdRepr(name, version, flavor)
-    # look to see if this package already exists in the cache
     if repr in _PkgId._hashcache:
         return _PkgId.hashcache[repr]
     else:
-        return _PkgId(name, version, flavor, None, repr)
+        return _PkgId(name, version, flavor, repr=repr)
+
+def SourceId(name, version, flavor):
+    repr = makePkgIdRepr(name, version, flavor)
+    if repr in _PkgId._hashcache:
+        return _PkgId.hashcache[repr]
+    else:
+        return _SourceId(name, version, flavor, repr=repr)
+
+def TroveId(name, version, flavor):
+    repr = makePkgIdRepr(name, version, flavor)
+    if repr in _PkgId._hashcache:
+        return _PkgId.hashcache[repr]
+    else:
+        return _TroveId(name, version, flavor, repr=repr)
+
+
+def ChangeSetId(name, version, flavor, file):
+    repr = makePkgIdRepr(name, version, flavor)
+    if repr in _PkgId._hashcache:
+        return _PkgId.hashcache[repr]
+    else:
+        return _ChangeSetId(name, version, flavor, file, repr=repr)
+
 
 def makePkgIdRepr(name, version, flavor):
     versionStr = version.asString()
@@ -57,19 +80,19 @@ def makePkgIdRepr(name, version, flavor):
 
 class _PkgId:
     _hashcache = {}
-    def __init__(self, name, version, flavor, recipeClass, repr):
+
+    def __init__(self, name, version, flavor, repr=None):
         self.name = name
         self.version = version
         self.flavor = flavor
-        self.recipeClass = recipeClass
+        if not repr:
+            repr = makePkgIdRepr(name, version, flavor)
+        self.repr = repr
+
         self.stats = stats.PackageStats(self)
         self._repr = repr
-        self.usedFlags = {}
-        self.csIds = {}
-        self.troveIds = {}
         if self not in self._hashcache:
             self._hashcache[self] = self
-
 
     def getName(self):
         return self.name
@@ -112,9 +135,59 @@ class _PkgId:
 
     def prettyStr(self):
         """ print a slightly more readable form of the sourceId """
-        return "%s (%s) (%s)" % (self.name, self.version.asString(), self.flavor)
+        return "%s (%s) (%s)" % (self.name, self.version.asString(), 
+                                                            self.flavor)
 
-    # XXX move to sourceId subclass
+    def __cmp__(self, other):
+        """ when sorting, sort by trove name """
+        return cmp(self.name, other.name) 
+
+    def __repr__(self):
+        return self._repr
+
+    def __str__(self):
+        return self._repr
+
+    def __eq__(self, other):
+        if isinstance(other, _PkgId):
+            return self._repr == other._repr
+        return False
+
+    def __add__(self, other):
+        """ Treat like a string for adding (useful for adding '.ccs)"""
+        return self._repr + other
+
+    def __radd__(self, other):
+        """ Treat like a string for adding (useful for adding .ccs)""" 
+        return other + self._repr
+
+    def __hash__(self):
+        """ hash Ids on their repr value, which is unique """
+        return hash(self._repr)
+
+    def __getstate__(self):
+        """ Pickling function.  Returns a dict containing this 
+            packageId's critical information.  
+        """
+        state = self.__dict__.copy()
+        state['stats'] = None
+        return state
+        
+    def __setstate__(self, state):
+        """ Pickling function.  Returns a dict containing this 
+            packageId's critical information.  
+        """
+        self.__dict__.update(state)
+
+
+class _SourceId(_PkgId):
+    def __init__(self, name, version, flavor, repr=repr):
+        _PkgId.__init__(self, name, version, flavor, repr=repr)
+        self._recipeClass = None
+        self.usedFlags = {}
+        self.csIds = {}
+        self.troveIds = {}
+
     def setUsedFlags(self, usedFlags):
         """store the flags that were used when this package was loaded"""
         self.usedFlags = usedFlags
@@ -123,7 +196,6 @@ class _PkgId:
         """retrieve the flags that were used when this package was loaded"""
         return self.usedFlags
 
-    # XXX move to sourceId subclass
     def setRecipeClass(self, recipeClass):
         """ store the recipeClass associated with this sourceId """
         self.recipeClass = recipeClass
@@ -133,7 +205,6 @@ class _PkgId:
         return self.recipeClass 
 
     
-    # XXX merge this with changeSetId?
     def addTroveId(self, troveId):
         """ note that the given trove could have been derived from 
             a source trove with this source id 
@@ -144,23 +215,24 @@ class _PkgId:
         """ Return troves that could have been built with this 
             source trove
         """
-        return self.troveIds
+        return self.troveIds.keys()
 
-    # XXX move to sourceId subclass
-    def addChangeSet(self, csId):
-        """ note that the given changeset could have been derived from 
-            a trove with this source id 
+    def __getstate__(self):
+        """ Pickling function.  Returns a dict containing this 
+            packageId's critical information.  
         """
-        self.csIds[csId] = True
+        state = _PkgId.__getstate__(self)
+        if 'recipeClass' in state:
+            del state['recipeClass']
+        if 'usedFlags' in state:
+            del state['usedFlags']
+        return state
 
-    def getChangeSetIds(self):
-        return self.csIds.keys()
 
-    # XXX move the csId subclass __init__
-    def setChangeSetFile(self, path):
-        self.file = path
-
-    # XXX move to csId subclass
+class _TroveId(_PkgId):
+    def __init__(self, name, version, flavor, repr=repr):
+        _PkgId.__init__(self, name, version, flavor, repr=repr)
+        
     def builtFrom(self, sourceId):
         """ returns True if cooking sourceId could result in the
             given package """
@@ -207,52 +279,19 @@ class _PkgId:
                 return False
         return True
 
-           
-    def __cmp__(self, other):
-        """ when sorting, sort by trove name """
-        return cmp(self.name, other.name) 
 
-    def __repr__(self):
-        return self._repr
+class _ChangeSetId(_TroveId):
+    
+    def __init__(self, name, version, flavor, path, repr=repr):
+        _TroveId.__init__(self, name, version, flavor, repr=repr)
+        self._path = path
 
-    def __str__(self):
-        return self._repr
+    def getPath(self):
+        return self._path
 
-    def __eq__(self, other):
-        if isinstance(other, _PkgId):
-            return self._repr == other._repr
-        return False
+    def rename(self, newPath):
+        os.rename(self._path, newPath)
+        self._path = newPath
 
-    def __add__(self, other):
-        """ Treat like a string for adding (useful for adding '.ccs)"""
-        return self._repr + other
 
-    def __radd__(self, other):
-        """ Treat like a string for adding (useful for adding .ccs)""" 
-        return other + self._repr
-
-    def __hash__(self):
-        """ hash Ids on their repr value, which is unique """
-        return hash(self._repr)
-
-    def __getstate__(self):
-        """ Pickling function.  Returns a dict containing this 
-            packageId's critical information.  
-        """
-        state = self.__dict__.copy()
-        if 'recipeClass' in state:
-            del state['recipeClass']
-        if 'usedFlags' in state:
-            del state['usedFlags']
-        #if self.flavor:
-        #    state['flavor'] = self.flavor.freeze()
-        state['stats'] = None
-        return state
-        
-    def __setstate__(self, state):
-        """ Pickling function.  Returns a dict containing this 
-            packageId's critical information.  
-        """
-        self.__dict__.update(state)
-        #if self.flavor is not None:
-        #    self.flavor = deps.ThawDependency(self.flavor)
+    
