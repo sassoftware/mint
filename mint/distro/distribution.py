@@ -47,8 +47,6 @@ class Distribution:
         self.subdir = self.topdir + '/' + self.distro.productPath
         util.mkdirChain(os.path.join(self.subdir, 'changesets'))
         self.createChangeSets(os.path.join(self.subdir, 'changesets'), self.fromcspath)
-        from lib import epdb
-        epdb.set_trace()
         self.initializeCDs()
         self.writeCsList()
         self.makeInstRoots()
@@ -84,7 +82,8 @@ class Distribution:
                 ciso = ISO(builddir % discno, isopath % discno, isoname % discno, discno)
                 self.isos.append(ciso)
                 ciso.addFile(isofilepath, curfilepath)
-                
+
+            
     def createChangeSets(self, csdir, fromcspath):
         self.csInfo = {}
         oldFiles = {}
@@ -133,8 +132,9 @@ class Distribution:
                 os.link(os.path.join(fromcspath, matches[pkg][0][1]), path)
             else:
                 print >> sys.stderr, "%d/%d: creating %s" % (index, l, csfile)
+                version = control.getDesiredCompiledVersion(pkg)
                 self.repos.createChangeSetFile(
-                    [(pkg.name, (None, pkg.flavor), (pkg.version, pkg.flavor), True)], path)
+                    [(pkg.name, (None, pkg.flavor), (version, pkg.flavor), True)], path)
             cs = changeset.ChangeSetFromFile(path)
             pkgs = cs.primaryTroveList
             if len(pkgs) > 1:
@@ -156,8 +156,6 @@ class Distribution:
             self.csInfo[pkg] = {'path': path, 'size': size, 'version' : version, 
                                 'release' : release}
             index += 1
-
-
 
     def writeCsList(self):
         path = '/'.join((self.isos[0].builddir, self.distro.productPath, 'base/cslist'))

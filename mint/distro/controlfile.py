@@ -156,4 +156,20 @@ class ControlFile:
                                 # comes first
 
         return matches
-                
+
+    def getDesiredCompiledVersion(self, pkg):
+        # XXX this is faking basically what cooking a group does.
+        # do I really not want to keep info in a group and recompile it before building?
+        pv = pkg.version.copy()
+        versions = self.repos.getTroveVersionList(pkg.version.branch().label(), [pkg.name])
+        maxver = None
+        maxcount = -1
+        for version in versions[pkg.name]:
+            bc = version.trailingVersion().buildCount
+            pv.trailingVersion().buildCount = bc
+            if pv == version:
+                if bc > maxcount:
+                    maxcount = bc
+                    maxver = version
+        return version
+
