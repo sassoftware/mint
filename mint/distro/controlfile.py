@@ -169,6 +169,11 @@ class ControlFile:
         for pkgName, sources in self._packages.iteritems():
             yield pkgName, sources
 
+    def iterAllSourceIds(self):
+        """ Iterate through all the known source Ids """
+        for sourceName in self.getSourceList():
+            for sourceId in self.getSourceIds(sourceName):
+                yield sourceId
 
     def branchSourcePackages(self, sourceIds, newLabel):
         """ Branch the given sourceIds to the new branch, and update

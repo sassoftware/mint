@@ -104,6 +104,12 @@ class _PkgId:
     def getStats(self):
         return self.stats
 
+    def setBuildIndex(self, index):
+        self.buildIndex = index
+
+    def getBuildIndex(self):
+        return self.buildIndex
+
     def prettyStr(self):
         """ print a slightly more readable form of the sourceId """
         return "%s (%s) (%s)" % (self.name, self.version.asString(), self.flavor)
