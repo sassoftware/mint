@@ -74,30 +74,9 @@ class ControlFile:
         # grab the package and get a copy of the class defined in 
         # the controlTrove
         ctroveName = self.getControlTroveName()
-        ctroveName = ctroveName + ':source'
         ctroveLabel = self.getControlTroveLabel()
-        leaves = self._repos.getTroveLeavesByLabel([ctroveName], ctroveLabel)
-        leaves = leaves[ctroveName]
-        ver = leaves[-1]
-        # should be a source trove, so, no flavor
-        controlTrove = self._repos.getTrove(ctroveName, ver, None)
-        controlId = SourceId(self.getControlTroveName(),  
-                             controlTrove.getVersion(), 
-                             controlTrove.getFlavor()) 
-        controlClass = self.loadRecipe(controlId)
-
-        # instantiate the recipe and call its setup method to 
-        # make its internal addTroves be called
-        branch = controlId.getVersion().branch()
-        controlObj = controlClass(self._repos, self._cfg, branch, None)
-        controlObj.setup()
-        # setup may instantiate some LocalFlags while creating 
-        # flagSets.  Delete those flags.
-        for flag in use.LocalFlags.keys():
-            del use.LocalFlags[flag]
-
-        for (name, version, flavor) in controlObj.addTroveList:
-            self.addDesiredTrove(name, version, flavor)
+                # should be a source trove, so, no flavor
+        self.loadGroup(ctroveName, ctroveLabel)
         for extraTrove in extraTroves:
             if not isinstance(extraTrove, (list, tuple)):
                 self.addDesiredTrove(extraTrove, None, None)
@@ -110,6 +89,34 @@ class ControlFile:
             print "Loading Recipes..." 
             self.getSources()
             self.loadRecipes()
+
+    def loadGroup(self, groupName, label):
+        groupName = groupName + ':source'
+        leaves = self._repos.getTroveLeavesByLabel([groupName], label)
+        leaves = leaves[groupName]
+        ver = leaves[-1]
+        groupTrove = self._repos.getTrove(groupName, ver, None)
+        groupId = SourceId(groupName, 
+                             groupTrove.getVersion(), 
+                             groupTrove.getFlavor()) 
+        groupClass = self.loadRecipe(groupId)
+
+        # instantiate the recipe and call its setup method to 
+        # make its internal addTroves be called
+        branch = groupId.getVersion().branch()
+        groupObj = groupClass(self._repos, self._cfg, branch, None)
+        groupObj.setup()
+        # setup may instantiate some LocalFlags while creating 
+        # flagSets.  Delete those flags.
+        for flag in use.LocalFlags.keys():
+            del use.LocalFlags[flag]
+
+        for (name, version, flavor) in groupObj.addTroveList:
+            if name.startswith('group-'):
+                # XXX this doesn't allow the group to specify a version
+                # string
+                self.loadGroup(name, label)
+            self.addDesiredTrove(name, version, flavor)
 
     def addDesiredTrove(self, troveName, versionStr, flavor):
         """ Add this this trove as one that should be built.
