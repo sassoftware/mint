@@ -12,8 +12,8 @@ from pkgid import PkgId, thawPackage
 import sys
 
 class ControlFile:
-    def __init__(self, repos, cfg, label):
-        self.file = 'group-dist:source'
+    def __init__(self, group, repos, cfg, label):
+        self.file = group + ':source'
         self.repos = repos
         self.label = label
         self._loaders = []

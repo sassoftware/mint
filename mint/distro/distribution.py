@@ -30,13 +30,15 @@ class DistroInfo:
             self.isoname += '-' + time.strftime('%Y%m%d')
 
 class Distribution:
-    def __init__(self, repos, cfg, distro, buildpath, isopath, fromcspath):
+    def __init__(self, repos, cfg, distro, controlGroup, buildpath, isopath, 
+                fromcspath):
         self.repos = repos
         self.cfg = cfg
         self.buildpath = buildpath
         self.isopath = isopath
         self.distro = distro
         # Place to look for Changesets that have already been made
+        self.controlGroup = controlGroup
         self.fromcspath = fromcspath
 
     def create(self):
@@ -46,7 +48,7 @@ class Distribution:
         util.mkdirChain(self.topdir)
         self.subdir = self.topdir + '/' + self.distro.productPath
         util.mkdirChain(os.path.join(self.subdir, 'changesets'))
-        self.createChangeSets(os.path.join(self.subdir, 'changesets'), self.fromcspath)
+        self.createChangeSets(self.controlGroup, os.path.join(self.subdir, 'changesets'), self.fromcspath)
         self.initializeCDs()
         self.writeCsList()
         self.makeInstRoots()
@@ -84,13 +86,13 @@ class Distribution:
                 ciso.addFile(isofilepath, curfilepath)
 
             
-    def createChangeSets(self, csdir, fromcspath):
+    def createChangeSets(self, group, csdir, fromcspath):
         self.csInfo = {}
         oldFiles = {}
         for path in [ "%s/%s" % (csdir, x) for x in os.listdir(csdir) ]:
             oldFiles[path] = 1
 
-        control = controlfile.ControlFile(self.repos, self.cfg, self.cfg.installLabelPath[0]) 
+        control = controlfile.ControlFile(group, self.repos, self.cfg, self.cfg.installLabelPath[0]) 
         control.loadControlFile()
         print "Matching changesets..."
         matches = control.getMatchedChangeSets(fromcspath)
