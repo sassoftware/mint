@@ -80,8 +80,8 @@ class JobRunner(threading.Thread):
                     raise
             generator = jobtypes.generators[self.job.getType()]
             imageFilenames = generator(self.client, self.cfg, self.job, profileId).write()
-        except:
-            self.client.setJobStatus(jobId, jobstatus.ERROR)
+        except Exception, e:
+            self.client.setJobStatus(jobId, jobstatus.ERROR, str(e))
             raise
         else:
             self.client.setJobFilename(jobId, filenames.join(";"))
