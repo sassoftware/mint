@@ -82,8 +82,8 @@ class ControlFile:
                 extraTrove = (extraTrove, None, None)
             else:
                 extraTrove = (list(extraTrove) + [None, None])[0:3]
-            if extraTrove[3] is None:
-                extraTrove[3] = deps.DependencySet()
+            if extraTrove[2] is None:
+                extraTrove[2] = deps.DependencySet()
             if extraTrove[0].startswith('group-'):
                 self.loadGroup(extraTrove[0], ctroveLabel)
             else:
