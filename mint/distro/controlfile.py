@@ -123,6 +123,8 @@ class ControlFile:
         troveName = troveName.split(':')[0]
         if troveName not in self._sourceIdsByName:
             self._sourceIdsByName[troveName] = []
+        if sourceId in self._sourceIdsByName[troveName]:
+           return 
         self._sourceIdsByName[troveName].append(sourceId)
 
     def addPackageCreator(self, packageName, sourceId):
@@ -260,8 +262,7 @@ class ControlFile:
             self.setDesiredTroveSource(origTroveName, versionStr, flavor,
                                                            sourceId) 
             self.addPackageCreator(troveName, sourceId)
-        for troveName in notfound:
-            print "Warning, could not find source trove for %s" % troveName
+        self._notFound = notfound
 
     def loadRecipes(self):
         """ Can only be called after getSources.  Actually loads the source
@@ -280,14 +281,16 @@ class ControlFile:
                 sys.stdout.flush()
         sys.stdout.write('\nDone.\n')
         sys.stdout.flush()
+        for package in self._notFound:
+            if not self.isKnownPackage(package):
+                print "Warning, could not find source trove for %s" % package
+        del self._notFound
 
     def loadRecipe(self, sourceId, label=None):
         """ Loads a recipeClass contained in a source trove identified by pkg.  
             Gathers information about the packages buildable from package
             Stores the information about the recipe's potential packages,
             as well as the class loaded from the recipe.
-            XXX need to combine getRecipeSources and getSource.
-            XXX add getRecipeClass method
         """
         lcache = lookaside.RepositoryCache(self._repos)
         try:
