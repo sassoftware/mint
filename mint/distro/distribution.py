@@ -184,7 +184,7 @@ class Distribution:
             pkgs = cs.primaryTroveList
             if len(pkgs) > 1:
                 sys.stderr.write("Unable to handle changeset file %s with more "
-                                 "than one primary package\n", fn)
+                                 "than one primary package\n", path)
                 sys.exit(1)
             #cspkg = PkgId(pkgs[0][0], pkgs[0][1], pkgs[0][2], justName=True)
             name = pkg.name
