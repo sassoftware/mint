@@ -90,7 +90,7 @@ class ControlFile:
                 extraTrove = (list(extraTrove) + [None, None, None])[0:4]
             if extraTrove[2] is None:
                 extraTrove = list(extraTrove)
-                extraTrove[2] = ''
+                extraTrove[2] = deps.DependencySet()
             if extraTrove[0].startswith('group-'):
                 self.loadGroup(extraTrove[0], ctroveLabel)
             else:
@@ -289,6 +289,9 @@ class ControlFile:
             except repository.TroveNotFound:
                 notfound[troveName] = True
                 continue
+            if isinstance(flavor, str):
+                from lib import epdb
+                epdb.set_trace()
             sourceId = SourceId(troveName, sourceTrove.getVersion(), 
                                                                flavor) 
             self.setDesiredTroveSource(origTroveName, versionStr, flavor,
