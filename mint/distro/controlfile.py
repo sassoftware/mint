@@ -395,6 +395,86 @@ class ControlFile:
                         pass
         return (matches, unmatched)
 
+    def getMatchedRepoTroves(self, filterDict={}):
+        """ Must be called after getSources.  Looks at the troves 
+            on installLabelPath, and matches them against 
+            the list of source troves that must be built.  Returns a list
+            matched, unmatched, where matched is a map from sourceId 
+            => [changesetId, ...], and unmatched is list of sourceIds.
+
+            If filterDict is supplied, excludes examining all package 
+            that are not keys in filterDict.
+
+            Successful troves must match:
+            1. Name 
+            2. Label (may be branched into the update repo)
+            3. Version (this may have been grabbed from repository
+                        if not specified in control file)
+            4. Source version
+            5. Use/Flag flavor 
+        """
+        matches = {}
+        unmatched = {}
+        # all packages are unmatched by default
+        for name,sourceIds in self.iterPackageSources():
+            for sourceId in sourceIds:
+                if filterDict and sourceId.getName() not in filterDict:
+                    continue
+                if sourceId not in unmatched:
+                    unmatched[sourceId] = []
+                unmatched[sourceId].append(name)
+
+        for sourceId in unmatched:
+            if filterDict and sourceId.getName() not in filterDict:
+                continue
+            # find all latest troves in canonical and update sources
+            try:
+                matchingTroves = self._repos.findTrove(
+                                 self._cfg.installLabelPath,
+                                 sourceId.getName(), 
+                                 None,
+                                 sourceId.getLabel().asString(),
+                                 acrossRepositories=True, withFiles=False)
+            except repository.PackageNotFound:
+                continue
+
+            for trove in matchingTroves:
+                troveId = PkgId(trove.getName(), trove.getVersion(), 
+                                trove.getFlavor())
+                if not troveId.builtFrom(sourceId):
+                    continue
+                # We do some extra work here to ensure that 
+                # we only count one trove with a particular
+                # flavor as a match per sourceId.   
+                # We keep track of matches for a package by flavor
+                # and if two packages match, we make only include
+                # the one with the later build count
+                if sourceId not in matches:
+                    matches[sourceId] = []
+                if sourceId not in flavors:
+                    flavors[sourceId] = {}
+                if troveId.getFlavor() not in flavors[sourceId]:
+                    flavors[sourceId][troveId.getFlavor()] = troveId
+                else:
+                    other = flavors[sourceId][troveId.getFlavor()]
+                    if other.version.trailingVersion().buildCount < \
+                        troveId.version.trailingVersion().buildCount:
+                        matches[sourceId].remove(other)
+                        flavors[sourceId][troveId.getFlavor()] = troveId
+                    else:
+                        # if there is already a trove with
+                        # this version and flavor but a later
+                        # build count, don't count this as a match
+                        continue
+                matches[sourceId].append(troveId)
+                sourceId.addTroveId(troveId)
+                try:
+                    del unmatched[sourceId]
+                except KeyError:
+                    pass
+        return (matches, unmatched)
+
+
     def getDesiredCompiledVersion(self, pkg):
         """ XXX is this used anywhere?  It is a dumb function """
         pv = pkg.version.copy()

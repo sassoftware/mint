@@ -63,6 +63,7 @@ class _PkgId:
         self._repr = repr
         self.usedFlags = {}
         self.csIds = {}
+        self.troveIds = {}
         # if there isn't a key for ourselves,
         # (and there shouldn't be, since we are here)
         if self not in self._hashcache:
@@ -74,6 +75,9 @@ class _PkgId:
 
     def getVersion(self):
         return self.version
+
+    def getLabel(self):
+        return self.version.branch().label()
 
     def getVersionStr(self):
         return self.versionStr
@@ -106,10 +110,24 @@ class _PkgId:
         """ retrieve the recipeClass associated with this sourceId """
         return self.recipeClass 
 
+    
+    # XXX merge this with changeSetId?
+    def addTroveId(self, troveId):
+        """ note that the given trove could have been derived from 
+            a source trove with this source id 
+        """
+        self.troveIds[troveId] = True
+
+    def getTroveIds(self, troveId):
+        """ Return troves that could have been built with this 
+            source trove
+        """
+        return self.troveIds
+
     # XXX move to sourceId subclass
     def addChangeSet(self, csId):
         """ note that the given changeset could have been derived from 
-            a trouve with this source id 
+            a trove with this source id 
         """
         self.csIds[csId] = True
 
