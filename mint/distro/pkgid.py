@@ -288,6 +288,8 @@ class _SourceId(_PkgId):
         state = _PkgId.__getstate__(self)
         if '_recipeClass' in state:
             del state['_recipeClass']
+        if '_localFlags' in state:
+            del state['_localFlags']
         if '_usedFlags' in state:
             del state['_usedFlags']
         return state
