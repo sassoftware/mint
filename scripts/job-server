@@ -75,7 +75,13 @@ class JobDaemon:
         client = imagetool.ImageToolClient(cfg.serverUrl)
        
         threads = []
-    
+
+        try:
+            os.makedirs(cfg.logPath)
+        except OSError, e:
+            if e.errno != errno.EEXIST:
+                raise
+     
         # normalize the job daemon machine's architecture
         # right now we only handle x86 and x86_64 images
         arch = os.uname()[4]
@@ -119,7 +125,8 @@ if __name__ == "__main__":
         pid = lock.read()
         print >> sys.stderr, "Imagetool job daemon already running as pid %s" % (pid)
         sys.exit(0)
-    
+   
+   
     print "Loading configuration file %s" % cfgFile
     lock = open(lockFile, "w")
     lock.write("%d" % os.getpid())

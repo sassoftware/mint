@@ -76,9 +76,6 @@ class InstallableIso(ImageGenerator):
                                        arch = arch)
         version = versions.VersionFromString(versionStr)
        
-        # XXX remove this and pass version as soon as darby can handle a full ver
-        label = version.branch().label()
-      
         tmpDir = self.cfg.imagesPath + os.path.join(arch, releasePhase)
         dist = distro.Distribution(arch, repos, ccfg,
                                    distroInfo, (trove, version.asString(), flavor),
@@ -86,12 +83,6 @@ class InstallableIso(ImageGenerator):
                                    isocfg.nfsPath, isocfg.tftpbootPath, None,
                                    None, False)
                                    
-        try:
-            os.makedirs(self.cfg.logPath)
-        except OSError, e:
-            if e.errno != errno.EEXIST:
-                raise
-             
         logfile = os.path.join(self.cfg.logPath, "instiso-%d.log" % jobId)
         self.redirectOutput(logfile)
         try:
