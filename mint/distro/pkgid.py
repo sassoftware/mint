@@ -49,6 +49,7 @@ class _PkgId:
         self.stats = stats.PackageStats(self)
         self.versionStr = versionStr
         self._repr = repr
+        self.usedFlags = {}
         if recipeClass: 
             self._hashcache[self] = self
 

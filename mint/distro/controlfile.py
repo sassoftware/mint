@@ -4,7 +4,7 @@
 #     desired version to include latest source version information 
 # 3.  Determine if a changeset file fits the desired version
 # 4.  Grab a matching version from the repository
-from build import lookaside, recipe
+from build import lookaside, recipe, use
 from local import database 
 import os
 import os.path
@@ -32,6 +32,7 @@ class ControlFile:
         self.packages = {}
         self.recipes = {}
         self.sources = {}
+        self.usedFlags = {}
         print "Loading Recipes..." 
         sys.stdout.flush()
         self.getSources()
@@ -76,11 +77,6 @@ class ControlFile:
                 try:
                     srcdirs = [ self.cfg.sourceSearchDir % { 'pkgname' : p.name }  ]
                     recipeClass = self.loadRecipe(p)
-                    # XXX Use flags can be checked during the execution
-                    # of actions, so it's no good to try to figure
-                    # out which ones this package cares about after
-                    # just calling setup
-                    #use.track(True)
                     recipeObj = recipeClass(self.cfg, lcache, srcdirs) 
                     recipeObj.setup()
                     # one recipe can create several packages -- 
@@ -111,9 +107,11 @@ class ControlFile:
         # ensure name has :source tacked on end
         name = recipefile + ':source'
         recipefile += '.recipe'
+        use.resetUsed()
         loader = recipe.recipeLoaderFromSourceComponent(name, recipefile, 
                                 self.cfg, self.repos, pkg.versionStr, 
                                 label=label)
+        pkg.usedFlags = use.getUsed()
         recipeClass = loader[0].getRecipe()
         # we need to keep the loaders around so that they do not
         # get garbage collected -- their references are needed 
