@@ -49,6 +49,9 @@ class ControlFile:
             troveName = troveName.split(':', 1)[0]
             try: 
                 sourceTroveName = troveName + ':source'
+                if troveName == 'icecream':
+                    from lib import epdb
+                    epdb.set_trace()
                 sourceTroves = self.repos.findTrove(self.label, sourceTroveName, flavor, versionStr)
             except repository.PackageNotFound:
                 notfound[troveName] = True
@@ -134,6 +137,13 @@ class ControlFile:
             5. Use/Flag flavor 5. build count
         """
         matches = {}
+        unmatched = {}
+        for name,pkgs in self.packages.iteritems():
+            for pkg in pkgs:
+                if pkg not in unmatched:
+                    unmatched[pkg] = []
+                unmatched[pkg].append(name)
+
         changesetNames =  [ x for x in os.listdir(changesetpath) if x.endswith('.ccs') ]
         for changesetName in changesetNames:
             cs = changeset.ChangeSetFromFile(os.path.join(changesetpath, changesetName))
@@ -144,18 +154,22 @@ class ControlFile:
                     for pkg in self.packages[cspkg.name]:
                     # convert cspkg version to source version by removing
                     # buildCount
+                        
                         v = cspkg.version.copy()
                         v.trailingVersion().buildCount = None
-                        if pkg.version == v:
+                        # XXXXXXXXX big hack to deal with the fact that
+                        # icecream version numbers are out of whack
+                        if pkg.version == v or pkg.name == 'icecream':
                             if pkg not in matches:
                                 matches[pkg] = []
                             matches[pkg].append((cspkg, changesetName))
+                            del unmatched[pkg]
                             if len(matches[pkg]) > 1:
                                 raise TypeError, "We don't handle multiple changesets matching a package yet"
-                                # when we do, we'll sort them so that the highest version #
-                                # comes first
+                                # when we do, we'll sort them so that the 
+                                # highest version comes first
 
-        return matches
+        return (matches, unmatched)
 
     def getDesiredCompiledVersion(self, pkg):
         # XXX this is faking basically what cooking a group does.
