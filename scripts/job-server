@@ -6,36 +6,122 @@
 
 import sys
 import os
+import time
+import tempfile
+import threading
 
 if os.environ.has_key("CONARY_PATH"):
     sys.path.insert(0, os.environ['CONARY_PATH'])
 else:
     sys.path.insert(0, "/usr/share/conary/")
 
-
 import imagetool
 import jobstatus
 import jobs
 
 import conarycfg
+import conaryclient
 from conarycfg import ConfigFile, ConaryConfiguration
 
 class JobDaemonConfig(ConfigFile):
     defaults = {
+        'imagetoolUrl':     'http://localhost/imagetoolserver/',
         'imagesPath':       '/tmp/images/',
         'concurrentJobs':   10,
         'maximumImages':    40,
     }
 
-class JobRunner:
-    pass
+class Journal:
+    def lchown(self, root, target, user, group):
+        # get rid of the root
+        target = target[len(root):]
+        dirname = os.path.dirname(target)
+        filename = os.path.basename(target)
+        f = open(os.sep.join((root, dirname, '.UIDGID')), 'a')
+        # XXX e2fsimage does not handle group lookups yet
+        f.write('%s %s\n' %(filename, user))
+        f.close()
+
+    def mknod(self, root, target, devtype, major, minor, mode,
+              uid, gid):
+        # get rid of the root
+        target = target[len(root):]
+        dirname = os.path.dirname(target)
+        filename = os.path.basename(target)
+        f = open(os.sep.join((root, dirname, '.DEVICES')), 'a')
+        # XXX e2fsimage does not handle symbolic users/groups for .DEVICES
+        f.write('%s %s %d %d 0%o\n' %(filename, devtype, major, minor, mode))
+        f.close()
+
+class JobRunner(threading.Thread):
+    def __init__(self, cfg, itclient, job):
+        threading.Thread.__init__(self)
+        self.cfg = cfg
+        self.itclient = itclient
+        self.job = job
+
+    def run(self):
+        jobId = self.job.getId()
+        
+        self.itclient.setJobStatus(jobId, jobstatus.RUNNING)
+        print "set %d running" % jobId
+
+        try:
+            tmpDir = tempfile.mkdtemp("", "imagetool", self.cfg.imagesPath)
+            self.writeImage(tmpDir)
+        except:
+            self.itclient.setJobStatus(jobId, jobstatus.ERROR)
+            raise
+        else:
+            self.itclient.setJobStatus(jobId, jobstatus.FINISHED)
+            print "set %d finished" % jobId
+
+    def writeImage(self, tmpDir):
+        profileId = self.job.getProfileId()
+
+        name, projectId = self.itclient.server.getProfile(profileId)
+        trove, label = self.itclient.server.getTrove(profileId)
+        labelList, repoMap = self.itclient.server.getLabelsForProject(projectId)
+
+        cfg = ConaryConfiguration(readConfigFiles=False)
+        cfg.setValue("root", tmpDir)
+        for m in [x[0] + " " + x[1] for x in repoMap.items()]:
+            cfg.setValue("repositoryMap", m)
+        cfg.setValue("installLabelPath", " ".join([x[1] for x in labelList]))
+
+        client = conaryclient.ConaryClient(cfg)
+
+        applyList = [(trove, "/"+label, None)]
+        (cs, depFailures, suggMap, brokenByErase) = \
+            client.updateChangeSet(applyList, recurse = False,
+                                   resolveDeps = False)
+        journal = Journal()
+        client.applyUpdate(cs, journal=journal)
 
 class JobDaemon:
     def __init__(self, cfgFile):
-        self.cfg = JobDaemonConfig()
-        self.cfg.read(cfgFile)
+        cfg = JobDaemonConfig()
+        cfg.read(cfgFile)
+        
+        itclient = imagetool.ImageToolClient(cfg.imagetoolUrl)
+        
+        threads = []
+        
+        while(True):
+            try:
+                joblist = list(itclient.iterPendingJobs())
+            except jobs.JobMissing:
+                joblist = []
+                print "no jobs"
 
-        print self.cfg.imagesPath
+            for job in joblist:
+                if len(threads) >= cfg.concurrentJobs:
+                    break
+
+                th = JobRunner(cfg, itclient, job)
+                threads.append(th)
+                th.start()
+            time.sleep(5)
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
