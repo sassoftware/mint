@@ -25,7 +25,7 @@ import controlfile
 
 class DistroInfo:
     def __init__(self, abbrevName, productPath, productName, version, 
-                 phase, isoname=None, arch='x86', nightly=False):
+                 phase, isoname=None, arch='x86', nightly=False, isoSize=640):
         """ Contains information about the names used in the distribution 
         Parameters:
             abbrevName:  the abbreviated name, used when creating file names
@@ -42,6 +42,8 @@ class DistroInfo:
 
             nightly:     whether this is a full release or should have a date
                          stamp attached to it
+
+            isoSize:     maximum size in megabytes of each ISO image created
         """
         
         assert(abbrevName and productPath and productName and version 
@@ -54,6 +56,7 @@ class DistroInfo:
         self.phase = phase
         self.arch = arch
         self.nightly = nightly
+        self.isoSize = isoSize
         if not isoname:
             self.isoname = '%s-linux-%s' % (self.abbrevName, self.version)
         else:
@@ -178,7 +181,8 @@ class Distribution:
             print "Removing old iso dir %s" % builddir
             shutil.rmtree(builddir)
         isoname = self.distro.isoname + ' Disc %d' % discno
-        ciso = ISO(builddir, isopath, isoname, discno, bootable=bootable)
+        ciso = ISO(builddir, isopath, isoname, discno,
+                   maxsize=self.distro.isoSize, bootable=bootable)
         self.isos.append(ciso)
         if self.isoTemplatePath:
             ln = len(self.isoTemplatePath)

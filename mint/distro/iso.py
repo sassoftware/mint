@@ -16,20 +16,21 @@ import updatecmd
 
 class ISO:
     blocksize = 2048
-    maxsize = 640 * 1024 * 1024
 
-    def __init__(self, builddir, imagepath, name, discno = 0, 
-                                                  bootable=False):
+    def __init__(self, builddir, imagepath, name, discno = 0,
+                       maxsize = 640, bootable=False):
         """Initialize the CD.  Parameters:
            builddir:  the directory which will contain the ISO dir tree,
                       which will eventually get put in the ISO image 
 
            imagepath: the path that the iso image stored to
                     
-           name:       the human-readable name of the CD
+           name:      the human-readable name of the CD
 
            discno:    a disc number that can be used to differentiate isos
                       in a set
+
+           maxsize:   the maximum size of each ISO image, in kilobytes
 
            bootable:  determines whether the CD should be made bootable or not
                       requires that the builddir contains the appropriate
@@ -44,7 +45,8 @@ class ISO:
         self.discno = discno
         self.dirs = {}
         self.bootable=bootable
-
+        self.maxsize = maxsize * 1024 * 1024
+        
     def reserve(self, megs):
         """ Reserve an amount of space on the disk, causing DiskFullError
             to be raised after fewer files are added """
