@@ -10,16 +10,18 @@ import tempfile
 import updatecmd
 
 # XXX maybe have a distro-info class passed from manager?
-
-class ISO:
-    def __init__(self, repos, cfg, abbrevName, productPath, productName, version, phase, buildpath, isopath, nightly=False):
-        self.repos = repos
-        self.cfg = cfg
+class DistroInfo:
+    def __init__(self, abbrevName, productPath, productName, version, phase):
         self.abbrevName = abbrevName
-        self.productName = productName
         self.productPath = productPath
+        self.productName = productName
         self.version = version
         self.phase = phase
+
+class ISO:
+    def __init__(self, repos, cfg, distro, buildpath, isopath, nightly=False):
+        self.repos = repos
+        self.cfg = cfg
         self.buildpath = buildpath
         self.isopath = isopath
         self.nightly = nightly
@@ -147,6 +149,6 @@ class ISO:
         os.system('sh -x %s/upd-instroot --debug --conary %s/changesets %s %s' % (self.anacondascripts, self.subdir, instroot, instrootgr))
         os.system('%s/mk-images --debug --conary %s/changesets %s %s %s %s "%s" %s %s' % (self.anacondascripts, self.subdir, self.topdir, instroot, instrootgr,
           'i386', "Specifix", self.version, self.subdir))
-        os.system('python %s/makestamp.py --releasestr="%s" --arch=i386 --discNum="1" --baseDir=%s/base --packagesDir=%s/changesets --pixmapsDir=%s/pixmaps --outfile=%s/.discinfo' % (self.anacondascripts, self.productName, self.subdir, self.subdir, self.subdir, self.topdir))
+        os.system('python %s/makestamp.py --releasestr="%s" --arch=i386 --discNum="1" --baseDir=%s/base --packagesDir=%s/changesets --pixmapsDir=%s/pixmaps --outfile=%s/.discinfo' % (self.anacondascripts, self.productName, self.distro.productPath, self.distro.productPath, self.distro.productPath, self.topdir))
         util.rmtree(instroot)
         util.rmtree(instrootgr)
