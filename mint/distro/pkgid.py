@@ -121,6 +121,9 @@ class _PkgId:
     def getSourceBranch(self):
         return self.getVersion().getSourceBranch().branch()
 
+    def getBinaryBranch(self):
+        return self.getVersion().getBinaryBranch().branch()
+
     def unbranch(self, label):
         """ Create a SourceId or TroveId for this package 
             after removing the last branch from the current id.
@@ -479,11 +482,23 @@ class _TroveId(_PkgId):
     def flavorsMatch(self, packageId):
         """ return True if if our flavor does not directly contradict
             the flavors listed in the other pkgId """
-        if None in (self.getFlavor(), packageId.getFlavor()):
+        myFlavor = self.getFlavor()
+        pkgFlavor = packageId.getFlavor()
+        if None in (myFlavor, pkgFlavor):
             return True
         # this should cover Arch 
-        if not self.getFlavor().satisfies(packageId.getFlavor()):
-            return False
+        if (deps.DEP_CLASS_IS in myFlavor.getDepClasses() and 
+            deps.DEP_CLASS_IS in pkgFlavor.getDepClasses()):
+            from lib import epdb
+            epdb.set_trace()
+            myInsSet = deps.deps.DependencySet()
+            pkgInsSet = deps.DependencySet()
+            myInsDep = myFlavor.members[deps.DEP_CLASS_IS]
+            pkgInsDep = pkgFlavor.members[deps.DEP_CLASS_IS]
+            myInsSet.addDep(deps.InstructionSetDependency, dep)
+            pkgInsSet.addDep(deps.InstructionSetDependency, dep)
+            if not myInsSet.satisfies(pkgInsSet):
+                return False
         builtFlags = flavorutil.getFlavorUseFlags(self.getFlavor())
         srcFlags = flavorutil.getFlavorUseFlags(packageId.getFlavor())
         builtUse = builtFlags['Use']

@@ -20,7 +20,6 @@ import updatecmd
 #darby
 from iso import ISO, DiskFullError
 import controlfile
-import flavorutil
 
 class DistroInfo:
     def __init__(self, abbrevName, productPath, productName, version, 
@@ -277,19 +276,6 @@ class Distribution:
                         dispName += '-smp'
                 troveId = pkg
             else:
-                useFlags = flavorutil.getFlavorUseFlags(flavor)
-                for flag in useFlags['Use']:
-                    if useFlags['Use'][flag]:
-                        dispName += '-%s' % flag
-                    #else:
-                    #    dispName += '-non%s' % flag
-                if pkg.getName() in useFlags['Flags']:
-                    localFlags = useFlags['Flags'][pkg.getName()]
-                    for flag in localFlags:
-                        if localFlags[flag]:
-                            dispName += '-%s' % flag
-                        #else:
-                        #    dispName += '-non%s' % flag
                 troveId = pkg.getTroveId()
             csfile = "%s-%s.ccs" % (dispName, 
                         troveId.getVersion().trailingVersion().asString())

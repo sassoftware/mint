@@ -90,7 +90,7 @@ class ControlFile:
                 extraTrove = (list(extraTrove) + [None, None, None])[0:4]
             if extraTrove[2] is None:
                 extraTrove = list(extraTrove)
-                extraTrove[2] = flavorutil.nullFlagSet()
+                extraTrove[2] = ''
             if extraTrove[0].startswith('group-'):
                 self.loadGroup(extraTrove[0], ctroveLabel)
             else:
@@ -117,10 +117,7 @@ class ControlFile:
         branch = groupId.getVersion().branch()
         groupObj = groupClass(self._repos, self._cfg, branch, None)
         groupObj.setup()
-        # setup may instantiate some LocalFlags while creating 
-        # flagSets.  Delete those flags.
-        for flag in use.LocalFlags.keys():
-            del use.LocalFlags[flag]
+        use.LocalFlags._clear()
 
         for (name, version, flavor, source) in groupObj.addTroveList:
             if name.startswith('group-'):
@@ -136,9 +133,7 @@ class ControlFile:
         """ Add this this trove as one that should be built.
             Takes the format used in group-recipes' addTrove commands
         """
-        if flavor is not None:
-            flavor = flavor.toDependency()
-        else:
+        if flavor is None:
             flavor = deps.DependencySet()
         #if (troveName, versionStr, flavor) in self._desTroves:
         #    raise RuntimeError, "Same trove listed twice in group file: (%s, %s %s)" % (troveName, versionStr, flavor)
@@ -263,7 +258,8 @@ class ControlFile:
         for label in labelSources:
             for sourceId in labelSources[label]:
                 print "Branching %s" % sourceId
-                branchV = sourceId.getVersion().fork(newLabel, sameVerRel = 1)
+                branchV = sourceId.getVersion().createBranch(newLabel, 
+                                                             withVerRel=1)
                 cc.createBranch(newLabel, sourceId.getVersion(), 
                                  [sourceId.getName() + ':source'])
 
@@ -361,15 +357,15 @@ class ControlFile:
             # calling loadRecipe, since even loading the class
             # may check some flags that may never be checked inside
             # the recipe
-            flavorutil.resetLocalFlags()
-            oldFlavor = flavorutil.setFlavor(sourceId.getFlavor(), 
-                                             sourceId.getName())
+            use.LocalFlags._clear()
+            use.setBuildFlagsFromFlavor(sourceId.getName(),
+                                        sourceId.getFlavor())
             use.resetUsed()
 
             # put a little assertion in here to ensure that we 
             # actually are starting from a clean slate
             used = use.getUsed()
-            assert ([ x for x in use.getUsedSet() ] == [])
+            assert ([ x for x in use.getUsed() ] == [])
 
             loader = recipe.recipeLoaderFromSourceComponent(name, recipefile, 
                                     self._cfg, self._repos, 
@@ -393,7 +389,7 @@ class ControlFile:
                     for package in recipeObj.packages:
                         self.addPackageCreator(package, sourceId)
                     sourceId.packages = recipeObj.packages
-            flavorutil.resetLocalFlags()
+            use.LocalFlags._clear()
 
             # we need to keep the loaders around so that they do not
             # get garbage collected -- their references are needed 
@@ -401,10 +397,8 @@ class ControlFile:
             sourceId.setRecipeClass(recipeClass)
             self._loaders.append(loader)
         except recipe.RecipeFileError, e:
-            flavorutil.resetFlavor(oldFlavor)
             raise
         else:
-            flavorutil.resetFlavor(oldFlavor)
             return recipeClass
 
     def getInstalledPkgs(self, filterDict=None):
@@ -593,6 +587,7 @@ class ControlFile:
         unmatchedKeys = unmatched.keys()
         unmatchedKeys.sort()
         index = 1
+
         for sourceId in unmatchedKeys:
             print "%d/%d: %s" % (index, ln, sourceId)
             index += 1
@@ -610,9 +605,13 @@ class ControlFile:
             try:
                 vers = self._repos.getTroveVersionList(
                                            self._canonicalLabel.getHost(),
-                                           dict.fromkeys([sourceId.getName()], None))
-                flavors = self._repos.getTroveVersionFlavors(vers)
-                flavors = flavors[sourceId.getName()]
+                                           dict.fromkeys([sourceId.getName()], 
+                                                                        None))
+                if vers:
+                    flavors = self._repos.getTroveVersionFlavors(vers)
+                    flavors = flavors[sourceId.getName()]
+                else:
+                    flavors = {}
 
                 for ver in flavors:
                     for flavor in flavors[ver]:
@@ -626,13 +625,16 @@ class ControlFile:
             if self._updateLabel:
                 # search the update label for newer versions of this package
                 branchedSourceId  = sourceId.branch(self._updateLabel)
-                branch = branchedSourceId.getBranch().getBinaryBranch()
+                branch = branchedSourceId.getBinaryBranch()
                 try:
                     vers = self._repos.getTroveVersionList(
                                                     self._updateLabel.getHost(),
-                                                    [sourceId.getName()])
-                    flavors = self._repos.getTroveVersionFlavors(vers)
-                    flavors = flavors[sourceId.getName()]
+                                                    {sourceId.getName():None})
+                    if vers:
+                        flavors = self._repos.getTroveVersionFlavors(vers)
+                        flavors = flavors[sourceId.getName()]
+                    else:
+                        flavors = {}
 
                     for ver in flavors:
                         for flavor in flavors[ver]:
