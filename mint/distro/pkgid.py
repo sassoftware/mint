@@ -490,10 +490,12 @@ class _TroveId(_PkgId):
             pkgInsSet = deps.DependencySet()
             myInsDep = [x for x in myFlavor.members[deps.DEP_CLASS_IS].getDeps()]
             pkgInsDep = [ x for x in pkgFlavor.members[deps.DEP_CLASS_IS].getDeps()]
-            assert(len(myInsDep) == 1)
-            assert(len(pkgInsDep) == 1)
-            myInsSet.addDep(deps.InstructionSetDependency, myInsDep[0])
-            pkgInsSet.addDep(deps.InstructionSetDependency, pkgInsDep[0])
+            if len(myInsDep) != len(pkgInsDep):
+                  return False
+            for insDep in myInsDep:
+                myInsSet.addDep(deps.InstructionSetDependency, insDep)
+            for insDep in pkgInsDep:
+                pkgInsSet.addDep(deps.InstructionSetDependency, insDep)
             if not myInsSet.satisfies(pkgInsSet):
                 return False
         builtFlags = flavorutil.getFlavorUseFlags(self.getFlavor())

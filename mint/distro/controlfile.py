@@ -28,11 +28,12 @@ class ControlFile:
         about the troves that will result from cooking that recipe.
     """
 
-    def __init__(self, controlTroveName, repos, cfg, canonicalLabel, 
-                                                            updateLabel=None,
-                                                    controlTroveLabel=None):
-        self._controlTroveName = controlTroveName
+    def __init__(self, arch, (name, versionStr, flavor), repos, cfg, 
+                canonicalLabel, 
+                updateLabel=None, controlTroveLabel=None):
+        self._controlTroveInfo = (name, versionStr, flavor)
         self._repos = repos
+        self._arch = arch
         self._canonicalLabel = canonicalLabel
         self._updateLabel = updateLabel
         if not controlTroveLabel:
@@ -51,14 +52,13 @@ class ControlFile:
         self._packages = {}
         self._packageCreators = {}
         self.usedFlags = {}
-         
         self._fromSourceDir = {}
-
-    def getControlTroveName(self):
-        return self._controlTroveName
 
     def getControlTroveLabel(self):
         return self._controlTroveLabel
+
+    def getControlTroveInfo(self):
+        return self._controlTroveInfo
 
     def getLatestSource(self, name, versionStr=None):
         """ Get the latest source version for a trove.  Search
@@ -82,10 +82,12 @@ class ControlFile:
         """
         # grab the package and get a copy of the class defined in 
         # the controlTrove
-        ctroveName = self.getControlTroveName()
-        ctroveLabel = self.getControlTroveLabel()
-                # should be a source trove, so, no flavor
-        self.loadGroup(ctroveName, ctroveLabel)
+        name, versionStr, flavor = self.getControlTroveInfo()
+        if not versionStr:
+            versionStr = self.getControlTroveLabel()
+            
+        # should be a source trove, so, no flavor
+        self.loadGroup(name, versionStr)
         for extraTrove in extraTroves:
             if not isinstance(extraTrove, (list, tuple)):
                 extraTrove = (extraTrove, None, None, None)
@@ -134,6 +136,23 @@ class ControlFile:
             else:
                 if source is None:
                     source = name.split(':')[0]
+                if flavor is None:
+                    flavor = deps.DependencySet()
+                if deps.DEP_CLASS_IS in flavor.getDepClasses():
+                    flavor = flavor.copy()
+                    isClasses = flavor.members[deps.DEP_CLASS_IS]
+                    if isClasses.members.keys() != [self._arch]:    
+                        if self._arch not in isClasses.members.keys():
+                            # don't even acknowledge this trove
+                            continue
+                        else:
+                            from lib import epdb
+                            epdb.set_trace()
+                            # remove mention of other secondary architectures
+                            # they are only important for cooking the final trove
+                            isClasses.members = {
+                                    self._arch: isClasses.members[self._arch] } 
+
                 self.addDesiredTrove(name, version, flavor, source)
 
     def addDesiredTrove(self, troveName, versionStr, flavor, source):
@@ -289,10 +308,12 @@ class ControlFile:
         for (origTroveName, versionStr, flavor) in self.getDesiredTroveList():
             # remove potential :devel, etc, components from the components, 
             # since we want to point to the source trove
+                                    
             troveName = origTroveName.split(':', 1)[0]
             print "%s/%s: %s, %s, %s" % (index, ln, origTroveName, versionStr, 
-                                                                    flavor)
+                                                                        flavor)
             index += 1
+
             try: 
                 (sourceName, sourceVersion, dummy) = \
                                 self.getLatestSource(troveName, versionStr)
@@ -554,9 +575,15 @@ class ControlFile:
         #for name,sourceIds in self.iterPackageSources():
         #    for sourceId in sourceIds:
         #        unmatched[sourceId] = True
+        name, versionStr, flavor = self._controlTroveInfo
+        if flavor:
+            buildFlavor = flavorutil.overrideFlavor(self._cfg.buildFlavor,
+                                                    flavor)
+        else:
+            buildFlavor = self._cfg.buildFlavor
         troveList = repos.findTrove(self._controlTroveLabel, 
-                                 self._controlTroveName, 
-                                    self._cfg.buildFlavor)
+                                    name,
+                                    buildFlavor)
         if not troveList:
             raise RuntimeError, "No matching groups for %s" % self.controlTroveName
         if len(troveList) > 1:

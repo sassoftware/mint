@@ -49,3 +49,37 @@ def setLocalFlags(flags):
 def resetLocalFlags():
     """ Delete all created local flags. """
     LocalFlags._clear()
+
+
+def overrideFlavor(oldFlavor, newFlavor):
+        flavor = oldFlavor.copy()
+        if (deps.DEP_CLASS_IS in flavor.getDepClasses()
+            and deps.DEP_CLASS_IS in newFlavor.getDepClasses()):
+            del flavor.members[deps.DEP_CLASS_IS]
+        flavor.union(newFlavor, mergeType=deps.DEP_MERGE_TYPE_OVERRIDE)
+        return flavor
+
+def parseTrove(trove):
+    trove = trove.split(',', 2)
+    if len(trove) == 1:
+        trove.extend((None, None))
+    elif len(trove) == 2:
+        trove.append(None)
+    if trove[1]:
+        version =  trove[1].strip().lower()
+        if not version or version == 'none':
+            trove[1] = None
+    else:
+        trove[1] = None
+    if trove[2]:
+        flavor = trove[2].strip()
+        if flavor:
+            parsedFlavor = deps.parseFlavor(flavor)
+            if not parsedFlavor:
+                raise RuntimeError, '%s didnt parse as a flavor' % flavor
+            trove[2] = parsedFlavor
+        else:
+            trove[2] = None
+    return trove
+
+

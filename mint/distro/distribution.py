@@ -61,9 +61,9 @@ class DistroInfo:
             self.isoname += '-' + time.strftime('%Y%m%d')
 
 class Distribution:
-    def __init__(self, repos, cfg, distro, controlGroup, buildpath, isopath, 
-                isoTemplatePath, nfspath, tftpbootpath, fromcspath, logdir, 
-                clean=False):
+    def __init__(self, arch, repos, cfg, distro, controlGroup, buildpath, 
+		isopath, isoTemplatePath, nfspath, tftpbootpath, fromcspath, 
+		logdir, clean=False):
         """ Contains the necessary information and methods for 
             creating a distribution.  
 
@@ -101,6 +101,7 @@ class Distribution:
 
                 clean: remove old builddir before rebuilding
         """
+	self.arch = arch
         self.repos = repos
         self.cfg = cfg
         self.buildpath = buildpath
@@ -146,9 +147,7 @@ class Distribution:
         self.createChangeSets(self.controlGroup, 
                 os.path.join(self.subdir, 'changesets'))
         self.addIso(bootable=useAnaconda)
-        #self.makeInstRoots(useAnaconda)
-        from lib import epdb
-        epdb.set_trace()
+        self.makeInstRoots(useAnaconda)
         self.initializeCDs()
         self.writeCsList(self.isos[0].builddir)
         if useAnaconda:
@@ -207,7 +206,7 @@ class Distribution:
         for path in [ "%s/%s" % (csdir, x) for x in os.listdir(csdir) ]:
             oldFiles[path] = 1
 
-        control = controlfile.ControlFile(group, self.repos, self.cfg, self.cfg.installLabelPath[0]) 
+        control = controlfile.ControlFile(self.arch, group, self.repos, self.cfg, self.cfg.installLabelPath[0]) 
         print "Matching changesets..."
         if fromcspath:
             control.loadControlFile()
@@ -525,7 +524,8 @@ class Distribution:
         self.anacondadir = tempfile.mkdtemp('', 'anaconda-', self.buildpath)
         oldroot = self.cfg.root
         self.cfg.root = self.anacondadir
-        updatecmd.doUpdate(self.cfg, ['anaconda'], depCheck=False)
+        updatecmd.doUpdate(self.cfg, ['anaconda[is:%s]' % self.distro.arch], 
+                                                                depCheck=False)
         self.cfg.root = oldroot
         self.anacondascripts = os.path.join(self.anacondadir, 'usr/lib/anaconda-runtime')
         instroot = tempfile.mkdtemp('', 'bs-bd-instroot', self.buildpath)
@@ -551,9 +551,10 @@ class Distribution:
                 os.dup2(logfd, sys.stdout.fileno())
                 os.dup2(logfd, sys.stderr.fileno())
                 os.close(logfd)
-            cmd = 'sh -x %(scripts)s/upd-instroot --debug --conary %(csdir)s %(instroot)s %(instrootgr)s' % map
+            cmd = 'sh -x %(scripts)s/upd-instroot --debug --conary --arch %(arch)s %(csdir)s %(instroot)s %(instrootgr)s' % map
             print "\n\n*********** RUNNING UPD-INSTROOT ***************\n\n"
             print cmd
+            sys.stdout.flush()
             rc = os.system(cmd)
             print "<<Result code: %d>>" % rc
             sys.stdout.flush()
@@ -584,8 +585,8 @@ class Distribution:
         if self.logdir:
             os.dup2(stdout, sys.stdout.fileno())
             os.dup2(stderr, sys.stderr.fileno())
-        util.rmtree(instroot)
-        util.rmtree(instrootgr)
+        #util.rmtree(instroot)
+        #util.rmtree(instrootgr)
         ciso.markDirInstalled('/isolinux')
         ciso.markDirInstalled('/images')
         ciso.markDirInstalled('/%s/base/' % ppath)
