@@ -610,7 +610,7 @@ class ControlFile:
             try:
                 vers = self._repos.getTroveVersionList(
                                            self._canonicalLabel.getHost(),
-                                           [sourceId.getName()])
+                                           dict.fromkeys([sourceId.getName()], None))
                 flavors = self._repos.getTroveVersionFlavors(vers)
                 flavors = flavors[sourceId.getName()]
 

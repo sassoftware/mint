@@ -118,6 +118,9 @@ class _PkgId:
     def getTuple(self):
 	return (self.__name, self.__version, self.__flavor)
 
+    def getSourceBranch(self):
+        return self.getVersion().getSourceBranch().branch()
+
     def unbranch(self, label):
         """ Create a SourceId or TroveId for this package 
             after removing the last branch from the current id.
@@ -391,6 +394,9 @@ class _TroveId(_PkgId):
         _PkgId.__init__(self, name, version, flavor, repr=repr)
         self._trove = trove
 
+
+    def getSourceVersion(self):
+        return self.getVersion().getSourceBranch()
         
     def builtFrom(self, sourceId, allowVersionMismatch=False):
         """ returns True if cooking sourceId could result in the
@@ -406,8 +412,8 @@ class _TroveId(_PkgId):
             # XXX this does not work with the update repo, where all 
             # versions have stored with them the version/release of the 
             # source they were branched from
-            v = self.getVersion().getSourceBranch().branch()
-            pv = sourceId.getVersion().getSourceBranch().branch()
+            v = self.getSourceBranch()
+            pv = sourceId.getSourceBranch()
             if not v == pv:
                 return False
 
@@ -458,8 +464,8 @@ class _TroveId(_PkgId):
             sourceId with the same flags """
         if troveId.getName() != self.getName():
             return False
-        if troveId.getBranch().getSourceBranch() != \
-                                        self.getBranch().getSourceBranch():
+        if troveId.getSourceBranch() != \
+                                        self.getSourceBranch():
             return False
         if troveId.getVersion().trailingVersion().getVersion() != \
                             self.getVersion().trailingVersion().getVersion():
