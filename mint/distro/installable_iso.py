@@ -27,7 +27,7 @@ class InstallableIso(ImageGenerator):
         conaryCfg = project.getConaryConfig(self.cfg.imageLabel,
                                             self.cfg.imageRepo)
 
-        conaryCfg.setValue('buildFlavor', flavor.freeze())
+        conaryCfg.setValue('flavor', flavor.freeze())
         repos = repository.netclient.NetworkRepositoryClient(conaryCfg.repositoryMap)
 
         jobId = self.job.getId()
@@ -38,10 +38,10 @@ class InstallableIso(ImageGenerator):
                                        self.cfg.instIsoProductPath,
                                        self.cfg.instIsoProductName,
                                        releaseVer, releasePhase)
-
-        dist = distro.Distribution(repos, conaryCfg,
-                                   distroInfo,
-                                   trove, tmpDir, self.cfg.instIsoTemplatePath, "/", "/", "/", None, False)
+        dist = distro.Distribution('i386', repos, conaryCfg,
+                                   distroInfo, (trove, version, flavor),
+                                   tmpDir, self.cfg.instIsoTemplatePath,
+                                   "/", "/", "/", None, False)
         dist.prep()
         dist.create()
         return ['']
