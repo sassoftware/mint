@@ -502,12 +502,14 @@ class _TroveId(_PkgId):
                                                          self.getFlavor())
         return self._trove
 
-    def createChangeSet(self, path, troveLoc):
+    def createChangeSet(self, path, troveLoc, component=None):
         """ extract the trove from the repository to the given location """
         version = self.getVersion()
         flavor = self.getFlavor()
+        if component is None: 
+            component = self.getName()
         troveLoc.createChangeSetFile(
-            [(self.getName(), (None, flavor), (version, flavor), True)], path)
+            [(component, (None, None), (version, flavor), True)], path)
         return ChangeSetId(self.getName(), version, flavor, path)
 
 class _ChangeSetId(_TroveId):

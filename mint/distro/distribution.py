@@ -211,9 +211,18 @@ class Distribution:
         self.csList = []
         trovesByName = {}
 
-        sourceNames = control.getSourceList()
-        for sourceName in sourceNames:
-            trovesByName[sourceName] =  control.getSourceIds(sourceName)
+        if fromcspath:
+            for troveName in control.getSourceList():
+                trovesByName[troveName] = control.getSourceIds(troveName)
+        else:
+            desTroves = control.getDesiredTroveList() 
+            for desTrove in desTroves:
+                desSourceId = control.getDesiredTroveSourceId(*desTrove)
+                if desTrove[0] in trovesByName:
+                    trovesByName[desTrove[0]].append(desSourceId)
+                else:
+                    trovesByName[desTrove[0]] = [desSourceId]
+
         for name in [ 'setup', 'glibc' ]:
             if name in trovesByName:
                 for sourceId in trovesByName[name]:
@@ -227,8 +236,7 @@ class Distribution:
         index = 0
         for name in names:
             for sourceId in trovesByName[name]:
-                self.csList.append(((sourceId.getName(), 
-                                     sourceId.getVersion(), 
+                self.csList.append(((name, sourceId.getVersion(), 
                                      sourceId.getFlavor()), sourceId))
             del trovesByName[name]
 
@@ -236,14 +244,14 @@ class Distribution:
         for (troveName, version, flavor), pkg in self.csList:
             if pkg not in matches:
                 # we just skip these packages
-                csfile = "%s-%s.ccs" % (pkg.getName(), 
+                csfile = "%s-%s.ccs" % (troveName, 
                                 pkg.getVersion().trailingVersion().asString())
                 path = "%s/%s" % (csdir, csfile)
                 print >> sys.stderr, "%d/%d: skipping %s" % (index, l, csfile)
                 index += 1
                 continue
             useFlags = flavorutil.getFlavorUseFlags(flavor)
-            dispName = pkg.getName()
+            dispName = troveName
             for flag in useFlags['Use']:
                 if useFlags['Use'][flag]:
                     dispName += '-%s' % flag
@@ -278,7 +286,7 @@ class Distribution:
             else:
                 # the trove is still waiting in the repo
                 print >> sys.stderr, "%d/%d: extracting %s" % (index, l, csfile)
-                troveId.createChangeSet(path, self.repos)
+                troveId.createChangeSet(path, self.repos, component=troveName)
 
             cs = changeset.ChangeSetFromFile(path)
             name = pkg.getName()
@@ -295,11 +303,11 @@ class Distribution:
                                                                         pathId)
                     if fileObj.hasContents:
                         size += fileObj.contents.size()
-            self.csInfo[pkg] = {'path': path, 'size': size, 
+            self.csInfo[troveName, pkg] = {'path': path, 'size': size, 
                                 'version' : version, 'release' : release}
             index += 1
         # okay, now cut out unneeded desired trove info from csList
-        self.csList = [x[1] for x in self.csList ] 
+        self.csList = [(x[0][0], x[1]) for x in self.csList ] 
 
     def initializeCDs(self):
         """ Install files from the main changeset directory into the various
@@ -307,11 +315,11 @@ class Distribution:
             been called.  Assigns a disc number to each changeset.  """
         ciso = self.isos[0]
         csdir = '/'.join(('',self.distro.productPath, 'changesets'))
-        for pkg in self.csList:
-            if pkg not in self.csInfo:
+        for troveName, pkg in self.csList:
+            if (troveName, pkg) not in self.csInfo:
                 print "Skipping %s in initializeCDs"  % pkg
                 continue
-            info = self.csInfo[pkg]
+            info = self.csInfo[(troveName, pkg)]
             try:
                 curfilepath = info['path']
                 isofilepath = os.path.join(csdir, 
@@ -330,15 +338,15 @@ class Distribution:
         path = '/'.join((basepath, self.distro.productPath, 'base/cslist'))
         util.mkdirChain(os.path.dirname(path))
         csfile = open(path, 'w')
-        for pkg in self.csList:
-            if pkg in self.csInfo:
-                info = self.csInfo[pkg]
+        for troveName, pkg in self.csList:
+            if (troveName, pkg) in self.csInfo:
+                info = self.csInfo[troveName, pkg]
                 if overrideDisc is None:
                     d = info['disc']
                 else:
                     d = overrideDisc
                 print >> csfile, os.path.basename(info['path']), \
-                        pkg.getName(), info['version'], info['release'], info['size'], d
+                        troveName, info['version'], info['release'], info['size'], d
         csfile.flush()
         csfile.close()
         if not overrideDisc:
