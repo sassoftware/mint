@@ -9,7 +9,6 @@ import sys
 import tempfile
 import updatecmd
 
-# XXX maybe have a distro-info class passed from manager?
 class DistroInfo:
     def __init__(self, abbrevName, productPath, productName, version, phase, isoname=None, arch='i386', nightly=False):
         self.abbrevName = abbrevName
@@ -60,6 +59,9 @@ class ISO:
         for path in [ "%s/%s" % (csdir, x) for x in os.listdir(csdir) ]:
             oldFiles[path] = 1
 
+        fromcspath = '/data/test-buildsystem/buildroot/stage2/tmp'
+        csTrvList = trovelist.ChangeSetDirTroveList(fromcspath)
+
         trvList = self.repos.findTrove(self.cfg.installLabelPath[0], "group-dist", self.cfg.flavor)
         if not trvList:
             print "no match for group-dist"
@@ -83,12 +85,15 @@ class ISO:
         for name, l in troves.items():
             for t in l:
                 list.append((name, t))
-        # XXX we want to generate these ourselves from already existing cs's (for now)
-        #
+        csVersions = csTrvList.getTroveNameVersions()
         for (name, (version, flavor)) in list:
             path = "%s/%s-%s.ccs" % (csdir, name, version.trailingVersion().asString())
+
             if oldFiles.has_key(path):
                 del oldFiles[path]
+            elif version in csVersions[name]:
+                frompath = os.path.join(fromcspath, hashrvname(name, version))
+                shutil.copy(frompath, path)
             else:
                 print >> sys.stderr, "creating", path
                 self.repos.createChangeSetFile(
