@@ -152,6 +152,8 @@ class ControlFile:
         """ Add sourceId as the source that fulfills this desired 
             trove requirement """
         if self._desTroves[(troveName, versionStr, flavor)] is not None:
+            if self._desTroves[(troveName, versionStr, flavor)] == sourceId:
+                 return
             raise RuntimeError, ("Source trove that satisfies (%s, %s, %s) was"
                                " already set to %s, cannot set to %s" 
                                % (troveName, versionStr, flavor, 
