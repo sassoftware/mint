@@ -1,0 +1,46 @@
+#
+# Copyright (c) 2004 Specifix, Inc.
+#
+# All Rights Reserved
+#
+
+import sys
+import os
+
+if os.environ.has_key("CONARY_PATH"):
+    sys.path.insert(0, os.environ['CONARY_PATH'])
+else:
+    sys.path.insert(0, "/usr/share/conary/")
+
+
+import imagetool
+import jobstatus
+import jobs
+
+import conarycfg
+from conarycfg import ConfigFile, ConaryConfiguration
+
+class JobDaemonConfig(ConfigFile):
+    defaults = {
+        'imagesPath':       '/tmp/images/',
+        'concurrentJobs':   10,
+        'maximumImages':    40,
+    }
+
+class JobRunner:
+    pass
+
+class JobDaemon:
+    def __init__(self, cfgFile):
+        self.cfg = JobDaemonConfig()
+        self.cfg.read(cfgFile)
+
+        print self.cfg.imagesPath
+
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print >> sys.stderr, "Usage: %s [config file]" % (sys.argv[0])
+        sys.exit(1)
+    else:
+        cfgFile = sys.argv[1]
+        jd = JobDaemon(cfgFile)
