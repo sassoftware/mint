@@ -280,12 +280,21 @@ class Distribution:
                 troveId = pkg
             else:
                 troveId = pkg.getTroveId()
-            csfile = "%s-%s.ccs" % (dispName, 
+            pkgarch = troveId.getFlavor().members[deps.DEP_CLASS_IS].members.keys()[0]
+            csfile = "%s-%s-%s.ccs" % (dispName, 
+                        troveId.getVersion().trailingRevision().asString(),
+                        pkgarch)
+            noarchCsFile = "%s-%s.ccs" % (dispName,
                         troveId.getVersion().trailingRevision().asString())
+
             path = "%s/%s" % (csdir, csfile)
+            noarchPath = "%s/%s" % (csdir, noarchCsFile)
 
             # link the first matching path, assuming they are ordered
             # so that latest is first
+            if oldFiles.has_key(noarchPath):
+                print >> sys.stderr, "%d/%d: renaming old %s -> %s" % (index, l, noarchCsFile, csfile)
+                shutil.move(noarchPath, path)
             if oldFiles.has_key(path):
                 print >> sys.stderr, "%d/%d: keeping old %s" % (index, l, 
                                                                    csfile)
@@ -322,8 +331,8 @@ class Distribution:
                     if fileObj.hasContents:
                         size += fileObj.contents.size()
             self.csInfo[troveName, pkg] = {'dispName' : dispName, 
-                                      'path': path, 'size': size, 
-                                      'version' : version, 'release' : release}
+                                           'path': path, 'size': size, 
+                                           'version' : version, 'release' : release}
             index += 1
         # okay, now cut out unneeded desired trove info from csList
         self.csList = [(x[0][0], x[1]) for x in self.csList ] 
