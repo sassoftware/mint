@@ -292,15 +292,15 @@ class ControlFile:
                                                                     flavor)
             index += 1
             try: 
-                sourceTrove = self.getLatestSource(troveName, versionStr)
+                (sourceName, sourceVersion, dummy) = \
+                                self.getLatestSource(troveName, versionStr)
             except repository.TroveNotFound:
                 notfound[troveName] = True
                 continue
             if isinstance(flavor, str):
                 from lib import epdb
                 epdb.set_trace()
-            sourceId = SourceId(troveName, sourceTrove.getVersion(), 
-                                                               flavor) 
+            sourceId = SourceId(troveName, sourceVersion, flavor) 
             self.setDesiredTroveSource(origTroveName, versionStr, flavor,
                                                            sourceId) 
             self.addPackageCreator(troveName, sourceId)
@@ -559,10 +559,12 @@ class ControlFile:
             raise RuntimeError, "No matching groups for %s" % self.controlTroveName
         if len(troveList) > 1:
             raise RuntimeError, "Too many matching groups!"
+        groupTroves = repos.getTroves(troveList)
         groupTroves = troveList
         troves = {}
         while groupTroves:
             groupTrove = groupTroves.pop()
+
             for (name, version, flavor) in groupTrove.iterTroveList():
                 if name.startswith('group-'):
                     trv = repos.getTrove(name, version, flavor)
