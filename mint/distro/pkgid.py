@@ -11,7 +11,6 @@ import cscmd
 
 #darby
 import flavorutil
-import stats
 
 def thawPackage(pkgStr):
     """Create a packageId out of a str created by str(pkgId).  """
@@ -103,7 +102,6 @@ class _PkgId:
             repr = makePkgIdRepr(name, version, flavor)
         self.__repr = repr
 
-        self._stats = stats.PackageStats(self)
         if self not in self._hashcache:
             self._hashcache[self] = self
 
@@ -175,12 +173,6 @@ class _PkgId:
     def getVersionStr(self):
         return self.__version.asString()
 
-    def getStats(self):
-        return self._stats
-
-    def setStats(self, stats):
-        self._stats = stats
-
     def setBuildIndex(self, index):
         self._buildIndex = index
 
@@ -238,7 +230,6 @@ class _PkgId:
         """
         state = self.__dict__.copy()
         state['_PkgId__version'] = self.getVersion().asString()
-        state['_stats'] = None
         return state
         
     def __setstate__(self, state):
