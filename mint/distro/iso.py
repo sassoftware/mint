@@ -30,7 +30,7 @@ class ISO:
            discno:    a disc number that can be used to differentiate isos
                       in a set
 
-           maxsize:   the maximum size of each ISO image, in kilobytes
+           maxsize:   the maximum size of each ISO image, in megabytes 
 
            bootable:  determines whether the CD should be made bootable or not
                       requires that the builddir contains the appropriate
