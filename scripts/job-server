@@ -82,13 +82,13 @@ class JobRunner(threading.Thread):
             raise
         else:
             self.itclient.setJobStatus(jobId, jobstatus.FINISHED)
-            print "set %d finished" % jobId
+            print "set %d finished (%s)" % (jobId, tmpDir)
 
     def writeImage(self, tmpDir):
         profileId = self.job.getProfileId()
 
         name, projectId = self.itclient.server.getProfile(profileId)
-        trove, frozenFlavor, label = self.itclient.server.getTrove(profileId)
+        trove, version, frozenFlavor = self.itclient.server.getTrove(profileId)
         flavor = deps.ThawDependencySet(frozenFlavor)
         labelList, repoMap = self.itclient.server.getLabelsForProject(projectId)
 
@@ -98,7 +98,8 @@ class JobRunner(threading.Thread):
             cfg.setValue("repositoryMap", m)
         cfg.setValue("installLabelPath", " ".join([x[1] for x in labelList]))
         client = conaryclient.ConaryClient(cfg)
-        applyList = [(trove, "/"+label, flavor)]
+        applyList = [(trove, version, flavor)]
+        print applyList
         (cs, depFailures, suggMap, brokenByErase) = \
             client.updateChangeSet(applyList, recurse = False,
                                    resolveDeps = False)
