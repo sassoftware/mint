@@ -5,6 +5,8 @@ from build import use
 from build.use import Arch, Use, LocalFlags
 
 def getFlavorUseFlags(flavor):
+    """ Convert a flavor-as-dependency set to flavor-as-use-flags.
+    """
     useFlags = {'Flags' : {}, 'Use' : {}}
     if flavor is None:
         return useFlags
@@ -13,6 +15,10 @@ def getFlavorUseFlags(flavor):
             for dep in depGroup.getDeps():
                 for flag in dep.flags:
                     value = True
+                    # we don't care about ~ mark,
+                    # just whether the flag should be true of false
+                    if flag[0] == '~':
+                        flag = flag[1:]
                     if flag[0] == '!':
                         value = False
                         flag = flag[1:]
@@ -28,6 +34,10 @@ def getFlavorUseFlags(flavor):
     return useFlags
 
 def setFlavor(flavor, recipeName):
+    """ Given a flavor-as-dependency set, set the related Use flags.
+        Returns the old flavor as Use flags for resetting the flavor
+        later.
+    """
     if flavor is None:
         return None
     oldFlags = { 'Use' : {}, 'Arch' : {}, 'Flags' : {} }
@@ -62,6 +72,9 @@ def setFlavor(flavor, recipeName):
     return oldFlags
 
 def resetFlavor(oldFlags):
+    """ Takes the value returned from setFlavor and resets the 
+        Use flags to their previous values
+    """
     # assumes that oldFlags was returned from setFlavor
     if oldFlags is None:
         return None

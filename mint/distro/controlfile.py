@@ -27,10 +27,14 @@ class ControlFile:
         self._controlLabel = label
         self._cfg = cfg
         self._loaders = []
-        self.packages = {}
-        self.recipes = {}
-        self.sources = {}
-        self.troves = {}
+        # desTroves is desiredTrove to sourceId, many to one
+        self._desTroves = {}
+        # sources is troveName to sourceIds, one to many
+        self._sourceIdsByName = {}
+        # packages is package -> sourceId, many to many,
+        # but all sourceIds that create a package are guaranteed to have 
+        # the same name
+        self._packages = {}
         self.usedFlags = {}
 
     def getControlTroveName(self):
@@ -77,63 +81,61 @@ class ControlFile:
         """
         if flavor is not None:
             flavor = flavor.toDependency(troveName)
-        self.troves[(troveName, versionStr, flavor)] = []
+        self._desTroves[(troveName, versionStr, flavor)] = None
 
-    def addDesiredTroveSource(self, troveName, versionStr, flavor, 
+    def setDesiredTroveSource(self, troveName, versionStr, flavor, 
                                                         sourceId):
-        """ Add sourceId as a source that fulfills this desired 
+        """ Add sourceId as the source that fulfills this desired 
             trove requirement """
-        self.troves[(troveName, versionStr, flavor)].append(sourceId)
+        if self._desTroves[(troveName, versionStr, flavor)] is not None:
+            raise RuntimeError, ("Source trove that satisfies (%s, %s, %s) was"
+                               " already set to %s, cannot set to %s" 
+                               % (troveName, versionStr, flavor, 
+                               troveName, versionStr, flavor, 
+                               self._desTroves[(troveName, versionStr, flavor)],
+                               sourceId))
+
+        self._desTroves[(troveName, versionStr, flavor)] = sourceId
         troveName = troveName.split(':')[0]
-        if troveName not in self.sources:
-            self.sources[troveName] = []
-        self.sources[troveName].append(sourceId)
+        if troveName not in self._sourceIdsByName:
+            self._sourceIdsByName[troveName] = []
+        self._sourceIdsByName[troveName].append(sourceId)
 
     def addPackageCreator(self, packageName, sourceId):
-        """ Add sourceId as source that can result in
-            a package with packageName being cooked. """
-        if not packageName in self.packages:
-            self.packages[packageName] = []
-            self.packages[packageName].append(sourceId)
+        """ Add sourceId as a source package that can 
+            result in a package with packageName being cooked. """
+        if packageName not in self._packages:
+            self._packages[packageName] = []
+        elif sourceId in self._packages[packageName]:
+            # don't list a sourceId twice 
+            return
+        elif self.getPackageSourceName(packageName) != sourceId.getName():
+            raise RuntimeError, ("Package %s was already set as created"
+                                 " by %s, cannot set to %s" % (packageName, 
+                                  self.getPackageSourceName(packageName),
+                                  sourceId.getName()))
+        self._packages[packageName].append(sourceId)
 
     def getDesiredTroveList(self):
         """ Return the human-readable set of troves to be built
             (as seen in the original control group
         """
-        return self.troves.keys()
+        return self._desTroves.keys()
 
-    def getDesiredTroveSources(self, troveName, versionStr, flavor):
+    def getDesiredTroveSourceId(self, troveName, versionStr, flavor):
         """ Get the source ids of packages that can create
             a desired trove
         """
-        return self.troves[(troveName, versionStr, flavor)]
+        return self._desTroves[(troveName, versionStr, flavor)]
 
     def getSourceIds(self, troveName):
         """ Return the list of source packages for a trove name """
-        return self.sources[troveName]
-
-
-    def addRecipeSource(self, recipeName, sourceId):
-        """ Add sourceId as a source that uses this recipe 
-            XXX can get get rid of self.recipes?
-        """ 
-        l = self.recipes.get(recipeName, [])
-        l.append(sourceId)
-        self.recipes[recipeName] = l
-
-    def getRecipeList(self):
-        return self.recipes.keys()
-
-    def getRecipeSources(self, recipeName):
-        """ Return the list of source packages for recipe name 
-            (how is this different from getSource?
-        """
-        return self.recipes[recipeName]
+        return self._sourceIdsByName[troveName]
 
     def getSourceList(self):
         """ Return the names of packages for which we have  
         """
-        keys = self.sources.keys()
+        keys = self._sourceIdsByName.keys()
         return keys
 
     def getPackageList(self):
@@ -141,26 +143,61 @@ class ControlFile:
             the loaded sources. 
             Valid after calls to loadRecipe/loadRecipes.
         """
-        keys = self.packages.keys()
+        keys = self._packages.keys()
         return keys
 
     def isKnownPackage(self, packageName):
         """ Return True if any loaded source specified this package
             name as a package that can result from cooking it.
         """
-        return packageName in self.packages
+        return packageName in self._packages
 
-    def getPackageSources(self, packageName):
+    def getPackageSourceIds(self, packageName):
         """ Return the source troves that state that they can build
             packageName
         """
-        return self.packages[packageName]
+        return self._packages[packageName]
+
+    def getPackageSourceName(self, packageName):
+        """ Return the name shared between all sourceIds that can build 
+            this package """
+        return self._packages[packageName][0].getName()
 
     def iterPackageSources(self):
         """ iterate through a package name and the source troves that 
             can result in a package with that name being built """
-        for pkgName, sources in self.packages.iteritems():
+        for pkgName, sources in self._packages.iteritems():
             yield pkgName, sources
+
+
+    def branchSourcePackages(sourceIds, newBranch):
+        """ Branch the given sourceIds to the new branch, and update
+            any needed pointers to the new sourceIds created """
+        if not sourceIds:
+            return
+
+        brancheSources = {}
+        # make lists of sources on a particular branch.
+        # this should handle branching packages that are on a different
+        # branch correctly 
+        for sourceId in sourceIds:
+            branch = soruceId.getVersion().branch()
+            if branch not in branches:
+                branchSources[branch] = []
+            brancheSources[branch].append(sourceId.getName() + ':source')
+
+        if len(branchSources.keys()) > 1:
+            from lib import epdb
+            epdb.st()
+
+        for branch in branchSources:
+            self._repos.createBranch(branch.fork(newBranch), branch,
+                                                         branchSources[branch])
+
+        for sourceId in sourceIds:
+            branchV = sourceId.getVersion().fork(newBranch, sameVerRel = 1)
+            sourceId.setVersion(branchV)
+
 
     def getSources(self):
         """ 
@@ -188,9 +225,11 @@ class ControlFile:
                 continue
             for sourceTrove in sourceTroves:
                 sourceId = PkgId(troveName, sourceTrove.getVersion(), flavor) 
-                self.addDesiredTroveSource(origTroveName, versionStr, flavor,
+                self.setDesiredTroveSource(origTroveName, versionStr, flavor,
                                                                sourceId) 
-        self.notfound = notfound
+                self.addPackageCreator(troveName, sourceId)
+        for troveName in notfound:
+            print "Warning, could not find source trove for %s" % troveName
 
     def loadRecipes(self):
         """ Can only be called after getSources.  Actually loads the source
@@ -257,8 +296,6 @@ class ControlFile:
                 recipeObj.setup()
                 for package in recipeObj.packages:
                     self.addPackageCreator(package, sourceId)
-                # XXX replace with 
-                self.addRecipeSource(recipeClass.name, sourceId)
 
             # we need to keep the loaders around so that they do not
             # get garbage collected -- their references are needed 
@@ -302,7 +339,7 @@ class ControlFile:
 
                     installedId = PkgId(troveName, trove.getVersion(), 
                                                 trove.getFlavor())
-                    for sourceId in self.getPackageSources(installedId.name):
+                    for sourceId in self.getPackageSourceIds(installedId.name):
                         # builtFrom ensures that it is possible
                         # to get the built trove from the sourceId
                         # pkg
@@ -353,14 +390,14 @@ class ControlFile:
         for changesetName in changesetNames:
             csfile = os.path.join(changesetpath, changesetName)
             cs = changeset.ChangeSetFromFile(csfile)
-            pkgs = cs.primaryTroveList
+            pkgs = cs.getPrimaryPackageList()
             for (name, version, flavor) in pkgs:
                 if filterDict and name not in filterDict:
                     continue
-                csId = PkgId(name, version, flavor, justName=True)
+                csId = PkgId(name, version, flavor)
                 if not self.isKnownPackage(csId.getName()):
                     continue
-                for sourceId in self.getPackageSources(csId.name): 
+                for sourceId in self.getPackageSourceIds(csId.name): 
                     if not csId.builtFrom(sourceId):
                         continue
                     # We do some extra work here to ensure that 
@@ -475,21 +512,6 @@ class ControlFile:
         return (matches, unmatched)
 
 
-    def getDesiredCompiledVersion(self, pkg):
-        """ XXX is this used anywhere?  It is a dumb function """
-        pv = pkg.version.copy()
-        versions = self._repos.getTroveVersionList(pkg.version.branch().label(), [pkg.name])
-        maxver = None
-        maxcount = -1
-        for version in versions[pkg.name]:
-            bc = version.trailingVersion().buildCount
-            pv.trailingVersion().buildCount = bc
-            if pv == version:
-                if bc > maxcount:
-                    maxcount = bc
-                    maxver = version
-        return version
-
     def loadPackageReqs(self, troveName):
         """ An alternative to loadControlFile.  Load packages only for 
         the prerequsites for a package.  
@@ -505,7 +527,7 @@ class ControlFile:
         allDeps[troveName] = True
         while deps:
             depName = deps.pop()
-            for depId in self.sources[depName]:
+            for depId in self.getSourceIds(depName):
                 print "Loading %s..." % depId
                 recipeClass = self.loadRecipe(depId)
                 for newDepName in recipeClass.buildRequires:

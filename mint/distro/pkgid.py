@@ -18,9 +18,9 @@ def thawPackage(pkgStr):
     else:
         flavor = deps.ThawDependency(flavor)
     version = versions.VersionFromString(value.replace('#', '/'))
-    return PkgId(name, version, flavor, justName = True)
+    return PkgId(name, version, flavor)
 
-def PkgId(name, version, flavor, justName=True):
+def PkgId(name, version, flavor):
     """Create a handy identifier out of the fields commonly used to 
        identify a package.  The identifier is guaranteed to be 
        unique for unique name, version, flavors, is hashable,
@@ -32,6 +32,15 @@ def PkgId(name, version, flavor, justName=True):
        flavor.
     """
 
+    
+    repr = makePkgIdRepr(name, version, flavor)
+    # look to see if this package already exists in the cache
+    if repr in _PkgId._hashcache:
+        return _PkgId.hashcache[repr]
+    else:
+        return _PkgId(name, version, flavor, None, repr)
+
+def makePkgIdRepr(name, version, flavor):
     versionStr = version.asString()
     # XXX not sure about why we have two different freezes here.
     if flavor:
@@ -43,29 +52,21 @@ def PkgId(name, version, flavor, justName=True):
         flavorStr = '0'
 
     # the package's representation should be a valid filename
-    repr = ','.join([name, versionStr.replace('/','#'), flavorStr])
+    return ','.join([name, versionStr.replace('/','#'), flavorStr])
 
-    # look to see if this package already exists in the cache
-    if repr in _PkgId._hashcache:
-        return _PkgId.hashcache[repr]
-    else:
-        return _PkgId(name, version, flavor, None, versionStr, repr)
 
 class _PkgId:
     _hashcache = {}
-    def __init__(self, name, version, flavor, recipeClass, versionStr, repr):
+    def __init__(self, name, version, flavor, recipeClass, repr):
         self.name = name
         self.version = version
         self.flavor = flavor
         self.recipeClass = recipeClass
         self.stats = stats.PackageStats(self)
-        self.versionStr = versionStr
         self._repr = repr
         self.usedFlags = {}
         self.csIds = {}
         self.troveIds = {}
-        # if there isn't a key for ourselves,
-        # (and there shouldn't be, since we are here)
         if self not in self._hashcache:
             self._hashcache[self] = self
 
@@ -76,11 +77,26 @@ class _PkgId:
     def getVersion(self):
         return self.version
 
+    def setVersion(self, version):
+        """ Sets the version of this packageID.  
+            XXX this may not be smart.  
+            Better to make a new copy with the new version,
+            but that has its own set of problems...
+        """
+        # we will no longer match this old cache position
+        del self._hashcache[self]
+        self.version = version
+        self._repr = makePkgIdRepr(self.getName(), self.getVersion(), 
+                                    self.getFlavor())
+        # now we match here
+        self._hashcache[self] = self
+
+
     def getLabel(self):
         return self.version.branch().label()
 
     def getVersionStr(self):
-        return self.versionStr
+        return self.version.asString()
 
     def getFlavor(self):
         return self.flavor
@@ -222,9 +238,8 @@ class _PkgId:
             del state['recipeClass']
         if 'usedFlags' in state:
             del state['usedFlags']
-        del state['version']
-        if self.flavor:
-            state['flavor'] = self.flavor.freeze()
+        #if self.flavor:
+        #    state['flavor'] = self.flavor.freeze()
         state['stats'] = None
         return state
         
@@ -233,6 +248,5 @@ class _PkgId:
             packageId's critical information.  
         """
         self.__dict__.update(state)
-        self.version = versions.VersionFromString(self.versionStr)
-        if self.flavor is not None:
-            self.flavor = deps.ThawDependency(self.flavor)
+        #if self.flavor is not None:
+        #    self.flavor = deps.ThawDependency(self.flavor)
