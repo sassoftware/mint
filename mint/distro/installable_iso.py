@@ -13,8 +13,7 @@ import repository
 import versions
 from build import use
 
-sys.path.insert(0, "/home/tgerla/cvs/darby/client/")
-from buildsystem import distro
+import distro
 
 import conarycfg
 from conarycfg import ConfigFile
