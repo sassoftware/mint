@@ -61,6 +61,9 @@ class JobRunner(threading.Thread):
 
     def run(self):
         jobId = self.job.getId()
+        profileId = self.job.getProfile()
+        projectId, name = self.client.getProfile(profileId)
+        project = self.client.getProject(profileId)
         
         self.itclient.setJobStatus(jobId, jobstatus.RUNNING)
         print "set %d running" % jobId
@@ -72,23 +75,20 @@ class JobRunner(threading.Thread):
                 if err.errno != errno.EEXIST:
                     raise
             
-            tmpDir = tempfile.mkdtemp("", "imagetool", self.cfg.imagesPath)
-            self.writeImage(tmpDir)
-
-            fd, fn = tempfile.mkstemp('.iso', 'livecd',self.cfg.imagesPath)
-            os.close(fd)
-            subprocess.call((os.path.join(scriptPath, 'mklivecd'), tmpDir, fn))
-            os.chmod(fn, 0644)
-            isoImage = fn
+            if self.job.jobType == jobtype.LIVE_ISO:
+                filenames = self.writeLiveImage(job)
+                isoImage = fn
+            elif self.job.jobType == jobtype.ANACONDA_ISO:
         except:
             self.itclient.setJobStatus(jobId, jobstatus.ERROR)
             raise
         else:
-            self.itclient.setJobFilename(jobId, isoImage)
+            self.itclient.setJobFilename(jobId, filenames.join(";"))
             self.itclient.setJobStatus(jobId, jobstatus.FINISHED)
             print "set %d finished (%s)" % (jobId, tmpDir)
 
-    def writeImage(self, tmpDir):
+    def writeLiveIso(self):
+        tmpDir = tempfile.mkdtemp("", "imagetool", self.cfg.imagesPath)
         profileId = self.job.getProfileId()
 
         name, projectId = self.itclient.server.getProfile(profileId)
@@ -106,6 +106,42 @@ class JobRunner(threading.Thread):
                                    resolveDeps = False)
         journal = Journal()
         client.applyUpdate(cs, journal=journal)
+
+        fd, fn = tempfile.mkstemp('.iso', 'livecd',self.cfg.imagesPath)
+        os.close(fd)
+
+        subprocess.call((os.path.join(scriptPath, 'mklivecd'), tmpDir, fn))
+        os.chmod(fn, 0644)
+
+        return [fn]
+
+    def writeInstallableIso(self):
+        tmpDir = tempfile.mkdtemp("", "imagetool", self.cfg.imagesPath)
+        profileId = self.job.getProfileId()
+
+        name, projectId = self.itclient.server.getProfile(profileId)
+        trove, version, frozenFlavor = self.itclient.server.getTrove(profileId)
+        flavor = deps.ThawDependencySet(frozenFlavor)
+
+        project = self.itclient.getProject(projectId)
+
+        conaryCfg = project.getConaryConfig(self.cfg.imageLabel,
+                                            self.cfg.imageRepo)
+        
+        conaryCfg.set('buildFlavor', flavor)
+    
+        releaseVer = self.client.getProfileData(job.getProfileId(), "releaseVer")
+        releasePhase = self.client.getProfileDat(job.getProfileId(), "releasePhase")
+        
+        distroInfo = distro.DistroInfo(self.cfg.instIsoPrefix,
+                                       self.cfg.instIsoProductPath,
+                                       self.cfg.instIsoProductName,
+                                       releaseVer, releasePhase)
+        
+        dist = distro.Distribution(repos, cfg, distroInfo, trove, tmpDir, self.cfg.instIsoTemplate, "/", "/", "/", None, False)
+        dist.prep()
+        dist.create()
+        return ['']
 
 class JobDaemon:
     def __init__(self, cfgFile):
