@@ -98,15 +98,13 @@ class JobDaemon:
         print "Our architecture:", arch
         
         while(True):
-            try:
-                joblist = list(client.iterPendingJobs(arch=arch))
-            except jobs.JobMissing:
-                joblist = []
+            joblist = list(client.iterJobs(profileId=-1, arch=arch))
 
             for job in joblist:
-                th = JobRunner(cfg, client, job)
-                threads.append(th)
-                th.start()
+                if job.getStatus() == jobstatus.WAITING:
+                    th = JobRunner(cfg, client, job)
+                    threads.append(th)
+                    th.start()
             time.sleep(5)
 
 if __name__ == "__main__":
