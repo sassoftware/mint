@@ -5,8 +5,11 @@
 #
 import sys
 import tempfile
-from deps import deps
+import deps
+import flavorcfg
 import repository
+import versions
+from build import use
 
 sys.path.insert(0, "/home/tgerla/cvs/darby/client/")
 from buildsystem import distro
@@ -19,16 +22,24 @@ class InstallableIso(ImageGenerator):
         profileId = self.job.getProfileId()
 
         name, projectId = self.client.server.getProfile(profileId)
-        trove, version, frozenFlavor = self.client.server.getTrove(profileId)
-        flavor = deps.ThawDependencySet(frozenFlavor)
+        trove, versionStr, frozenFlavor = self.client.server.getTrove(profileId)
+        flavor = deps.deps.ThawDependencySet(frozenFlavor)
 
         project = self.client.getProject(projectId)
 
-        conaryCfg = project.getConaryConfig(self.cfg.imageLabel,
-                                            self.cfg.imageRepo)
+        ccfg = project.getConaryConfig()
 
-        conaryCfg.setValue('flavor', flavor.freeze())
-        repos = repository.netclient.NetworkRepositoryClient(conaryCfg.repositoryMap)
+        flavorConfig = flavorcfg.FlavorConfig(ccfg.useDir, ccfg.archDir)
+        ccfg.flavor = flavorConfig.toDependency(override=ccfg.flavor)
+        insSet = deps.deps.DependencySet()
+        for dep in deps.arch.currentArch:
+            insSet.addDep(deps.deps.InstructionSetDependency, dep)
+        ccfg.flavor.union(insSet)
+        ccfg.buildFlavor = ccfg.flavor.copy()
+        flavorConfig.populateBuildFlags()
+        use.setBuildFlagsFromFlavor(None, ccfg.buildFlavor, error=None)
+       
+        repos = repository.netclient.NetworkRepositoryClient(ccfg.repositoryMap)
 
         jobId = self.job.getId()
         releaseVer = self.client.getJobData(jobId, "releaseVer")
@@ -38,9 +49,12 @@ class InstallableIso(ImageGenerator):
                                        self.cfg.instIsoProductPath,
                                        self.cfg.instIsoProductName,
                                        releaseVer, releasePhase)
-        dist = distro.Distribution('i386', repos, conaryCfg,
-                                   distroInfo, (trove, version, flavor),
-                                   tmpDir, self.cfg.instIsoTemplatePath,
+        version = versions.VersionFromString(versionStr)
+        print dir(version)
+        label = version.branch().label()
+        dist = distro.Distribution('x86', repos, ccfg,
+                                   distroInfo, (trove, label, flavor),
+                                   tmpDir, tmpDir+"/isos/", self.cfg.instIsoTemplatePath,
                                    "/", "/", "/", None, False)
         dist.prep()
         dist.create()
