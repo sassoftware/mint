@@ -272,9 +272,9 @@ class Distribution:
             dispName = troveName
             if getFromCookedGroup:
                 if troveName == 'kernel':
-                    if '~!kernel.smp' not in str(flavor):
+                    if '!kernel.smp' not in str(flavor):
                         dispName += '-smp'
-                troveId = pkg
+                troveId = pkg.getTroveId()
             else:
                 troveId = pkg.getTroveId()
             csfile = "%s-%s.ccs" % (dispName, 
