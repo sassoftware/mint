@@ -33,7 +33,7 @@ class InstallableIso(ImageGenerator):
         insSet = deps.deps.DependencySet()
         for dep in deps.arch.currentArch:
             insSet.addDep(deps.deps.InstructionSetDependency, dep)
-        ccfg.flavor.union(insSet+None)
+        ccfg.flavor.union(insSet)
         ccfg.buildFlavor = ccfg.flavor.copy()
         flavorConfig.populateBuildFlags()
         use.setBuildFlagsFromFlavor(None, ccfg.buildFlavor, error=None)
