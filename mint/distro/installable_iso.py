@@ -62,7 +62,7 @@ class InstallableIso(ImageGenerator):
         dist = distro.Distribution(arch, repos, ccfg,
                                    distroInfo, (trove, label, flavor),
                                    tmpDir, tmpDir+"/isos/", self.cfg.instIsoTemplatePath,
-                                   None, None, None, "/data/imagetool/data/logs/", False)
+                                   selfcfg.nfsPath, None, None, "/data/imagetool/data/logs/", False)
                                    
         dist.prep()
         filenames = dist.create()
