@@ -14,14 +14,27 @@ class ISO:
     blocksize = 2048
     maxsize = 640 * 1024 * 1024
 
-    def __init__(self, builddir, path, name, discno = 0, bootable=False):
-        # builddir is the top directory which will contain the ISO dir tree 
-        # and files path is where the iso image will end up
-        # name is the human-readable name of the CD
+    def __init__(self, builddir, imagepath, name, discno = 0, 
+                                                  bootable=False):
+        """Initialize the CD.  Parameters:
+           builddir:  the directory which will contain the ISO dir tree,
+                      which will eventually get put in the ISO image 
+
+           imagepath: the path that the iso image stored to
+                    
+           name:       the human-readable name of the CD
+
+           discno:    a disc number that can be used to differentiate isos
+                      in a set
+
+           bootable:  determines whether the CD should be made bootable or not
+                      requires that the builddir contains the appropriate
+                      isolinux dir.
+        """
         self.reserved = 0
         self.freespace = self.maxsize - self.reserved
         self.builddir = builddir
-        self.isopath = path
+        self.imagepath = imagepath
         self.isoname = name
         self.files = {}
         self.discno = discno
@@ -29,66 +42,157 @@ class ISO:
         self.bootable=bootable
 
     def reserve(self, megs):
+        """ Reserve an amount of space on the disk, causing DiskFullError
+            to be raised after fewer files are added """
         self.freespace -= megs * 1024 * 1024
         self.reserved += megs * 1024 * 1024
 
-    def addFile(self, isopath, currentpath=None):
+    def getSize(self):
+        """ Gets the used disk size in bytes """
+        return self.maxsize - self.freespace
+
+    def getFileSize(self, path):
+        """ Gets the amount of space a file will take up on the ISO.
+            Path is absolute.
+        """
+        assert(path[0] == '/')
+        sb = os.stat(path)
+        filesize = sb.st_size + (self.blocksize - sb.st_size % self.blocksize)
+        return filesize
+
+
+    def checkInstallable(self, path):
+        """ Check whether the given file will fit on the current disk.
+            Return the size of the file. Path is absolute.  """
+        # round up to an ISO9660 block
+        filesize = self.getFileSize(path)
+        if self.freespace < filesize:
+            extra = filesize - self.freespace
+            raise DiskFullError, ("Error: cannot fit %s on disk --"
+                                  " uses %d extra bytes" % (path, extra))
+        return filesize
+
+    def install(self, currentpath, isopath):
+        """ Install a file onto the iso.  The currentpath is a full path,
+            and isopath is a path relative to the root of the iso build dir 
+        """
         if isopath[-1] == '/':
             raise OSError, "Don't add directories"
         if isopath[0] != '/':
             raise OSError, "Must give absolute paths for ISO: %s" % isopath
         isopath = os.path.normpath(isopath)
         if isopath in self.files:
-            raise OSError, ("Already a file at location", isopath)
-        if not currentpath:
-            # if the currentpath arg is not given, then isopath
-            # should already exist, but not be in 
-            currentpath = self.builddir + isopath
-            if not os.path.exists(currentpath):
-                raise OSError, "No such file at %s " % currentpath
-            link = False
-        else:
-            if currentpath[-1] == '/':
-                raise OSError, "Cannot add directories as files"
-            link = True
+            raise OSError, ("Already a file at location %s" % isopath)
         dirname = os.path.dirname(isopath)
-        sb = os.stat(currentpath)
-        # round up to an ISO9660 block
-        total = sb.st_size + (self.blocksize - sb.st_size % self.blocksize)
-        if self.freespace < total:
-            extra = total - self.freespace
-            raise DiskFullError, "Error: cannot fit %s on disk -- uses %d extra bytes" % (currentpath, extra)
+        filesize = self.checkInstallable(currentpath)
         # Only add a link to the file if there is actually room for the file
-        if link:
-            targetpath = self.builddir + isopath
-            try:
-                util.mkdirChain(os.path.dirname(targetpath))
+        targetpath = self.builddir + isopath
+        try:
+            util.mkdirChain(os.path.dirname(targetpath))
+            os.link(currentpath, targetpath)
+        except OSError, err:
+            if err[0] == errno.EEXIST:
+                # XXX we can keep this link, but really, we shouldn't 
+                # run into this situation at all.  Only happens when 
+                # you are making lots of the same ISO over and over again
+                os.remove(targetpath)
                 os.link(currentpath, targetpath)
-            except OSError, err:
-                if err[0] == errno.EEXIST:
-                    # XXX we can keep this link, but really, we shouldn't 
-                    # run into this situation at all.  Only happens when 
-                    # you are making lots of the same ISO over and over again
-                    os.remove(targetpath)
-                    os.link(currentpath, targetpath)
-                else:
-                    raise
-        self.freespace -= total
+            else:
+                raise
+        self.freespace -= filesize
         self.files[isopath] = currentpath
 
+    def markInstalled(self, fullpath, errorOnExisting=True):
+        """ Mark a file as in the iso's dir path.  Fullpath is absolute,
+            and should start with the iso's builddir.  
+            markInstalled allows a file to
+            be installed by another process and then recognized as being
+            built by the iso.  That ensures that the iso's calculations about
+            how much space the iso is using is correct.
+        """
+        if not fullpath.startswith(self.builddir):
+            raise RuntimeError, "Must give absolute path to markInstalled"
+        ln = len(self.builddir)
+        isopath = fullpath[ln:]
+        if isopath[-1] == '/':
+            raise RuntimeError, "Don't add directories"
+        assert(isopath[0] == '/')
+        if isopath in self.files:
+            if errorOnExisting:
+                raise OSError, ("Already a file at location %s" % isopath)
+            else:
+                return
+        if not os.path.exists(fullpath):
+            raise OSError, "No such file: %s" % fullpath
+        filesize = self.checkInstallable(fullpath)
+        self.freespace -= filesize
+        self.files[isopath] = fullpath
+
+    def markDirInstalled(self, isodir, errorOnExisting=True):
+        """ mark all files under isodir as installed.  Isodir is 
+            relative to the base dir of the iso.  If errorOnExisting is 
+            true, then raise and error if a file is to be marked twice as
+            installed.  Otherwise, simply skip files already marked as 
+            installed.
+        """
+        ln = len(self.builddir)
+        if isodir[-1] == '/':
+            raise OSError, "Don't add directories"
+        for (root, dirs, files) in os.walk(self.builddir + isodir):        
+            for fileName in files:
+                self.markInstalled(os.path.join(root, fileName), 
+                                                errorOnExisting)
+
+    def checkForUnknownFiles(self):
+        """ Checks that every file that will make it on to this
+            iso is accounted for by the ISO.  This will ensure 
+            that the size accounting done by the iso is accurate.
+        """
+        ln = len(self.builddir)
+        unknownfiles = self.files.copy()
+        actualsize = 0
+        extrafiles = []
+        for (root, dirs, files) in os.walk(self.builddir):
+            for fileName in files:
+                # can't use os.path.join bc it doesn't handle the case
+                # where root == builddir, so that root[ln:] == ''
+                isopath = root[ln:] + '/' + fileName
+                if isopath not in unknownfiles:
+                    extrafiles.append(isopath)
+                else:
+                    del unknownfiles[isopath]
+                    fullpath = root + '/' + fileName
+                    actualsize += self.getFileSize(fullpath)
+        sizediff = abs(actualsize - self.getSize())
+
+        if unknownfiles or extrafiles or sizediff:
+            error = []
+            if unknownfiles:
+                error.append("Files expected on ISO but"
+                             " missing: %s" % unknownfiles)
+            if extrafiles:
+                error.append("Unexpected files on ISO: %s" % extrafiles)
+            if sizediff:
+                error.append("Size difference between calculated and "
+                             " actual size: %s" % sizediff)
+            raise RuntimeError, '\n'.join(error)
+
+
     def _makeISO(self):
-        util.mkdirChain(os.path.dirname(self.isopath))
+        """ Actually make the image, based on the parameters set before.
+            The builddir should have exactly the files that are meant to 
+            be on the image.  The md5 sum is implanted """
+        util.mkdirChain(os.path.dirname(self.imagepath))
         if self.bootable:
-            util.execute('cd %s; mkisofs -o %s -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -R -J -V "%s" -T .' % (self.builddir, self.isopath, self.isoname))
+            util.execute('cd %s; mkisofs -o %s -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -R -J -V "%s" -T .' % (self.builddir, self.imagepath, self.isoname))
         else:
-            util.execute('cd %s; mkisofs -o %s -R -J -V "%s" -T .' % (self.builddir, self.isopath, self.isoname))
-        util.execute('/usr/local/bin/implantisomd5 %s' % self.isopath)
-        print "ISO created at %s" % self.isopath
+            util.execute('cd %s; mkisofs -o %s -R -J -V "%s" -T .' % (self.builddir, self.imagepath, self.isoname))
+        util.execute('/usr/local/bin/implantisomd5 %s' % self.imagepath)
+        print "ISO created at %s" % self.imagepath
 
     def create(self):
-        pass
-        # Actually create
-        #self._createDirStructure()
+        """ Create the CD.  Checks the CD for sanity first """
+        self.checkForUnknownFiles()
         self._makeISO()
             
 class DiskFullError(Exception):
