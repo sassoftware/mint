@@ -244,6 +244,13 @@ class _SourceId(_PkgId):
         self._usedFlags = {}
         self._troveIds = {}
 
+    def setLocalFlags(self, localFlags):
+        """store any local flags created by this package when loaded"""
+        self._localFlags = localFlags
+
+    def getLocalFlags(self):
+        """get any local flags created by this package when loaded"""
+        return self._localFlags
     
     def setUsedFlags(self, usedFlags):
         """store the flags that were used when this package was loaded"""

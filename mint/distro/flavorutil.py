@@ -33,6 +33,36 @@ def getFlavorUseFlags(flavor):
                         useFlags['Flags'][name][flag] = value
     return useFlags
 
+def getLocalFlags():
+    """ Get the local flags that are currently set, so that the flags 
+        created can be reset. """
+    flags = {}
+    for flag in LocalFlags:
+        flags[flag] = LocalFlags[flag]
+    return flags
+
+def setLocalFlags(flags):
+    """ Make the given local flags exist.  """
+    freeze = LocalFlags._frozen
+    if freeze:
+        LocalFlags._thaw()
+    for flag in flags:
+        LocalFlags.__getattr__(flag)
+        LocalFlags[flag] = flags[flag]
+    if freeze:
+        LocalFlags._freeze()
+
+def resetLocalFlags():
+    """ Delete all created local flags. """
+    freeze = LocalFlags._frozen
+    if freeze:
+        LocalFlags._thaw()
+    for flag in LocalFlags.keys():
+        del LocalFlags[flag]
+    if freeze:
+        LocalFlags.freeze()
+    return
+
 def setFlavor(flavor, recipeName):
     """ Given a flavor-as-dependency set, set the related Use flags.
         Returns the old flavor as Use flags for resetting the flavor
@@ -55,6 +85,7 @@ def setFlavor(flavor, recipeName):
         else:
             Use._override(flag, value)
         oldFlags['Use'][flag] = oldValue
+
     if recipeName in useFlags['Flags']:
         for flag,value in useFlags['Flags'][recipeName].iteritems():
             if flag in LocalFlags:
@@ -89,6 +120,7 @@ def resetFlavor(oldFlags):
             if value:
                 flagset[flag]._set(value)
             else:
-                del flagset[flag]
+                if flag in flagset:
+                    del flagset[flag]
         if freeze:
             flagset._freeze()

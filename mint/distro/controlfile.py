@@ -101,6 +101,11 @@ class ControlFile:
         branch = controlId.getVersion().branch()
         controlObj = controlClass(self._repos, self._cfg, branch, None)
         controlObj.setup()
+        # setup may instantiate some LocalFlags while creating 
+        # flagSets.  Delete those flags.
+        for flag in use.LocalFlags.keys():
+            del use.LocalFlags[flag]
+
 
         
         for (name, version, flavor) in controlObj.addTroveList:
@@ -117,7 +122,7 @@ class ControlFile:
             Takes the format used in group-recipes' addTrove commands
         """
         if flavor is not None:
-            flavor = flavor.toDependency(troveName)
+            flavor = flavor.toDependency(troveName.split(':')[0])
         if (troveName, versionStr, flavor) in self._desTroves:
             raise RuntimeError, "Same trove listed twice in group file: (%s, %s %s)" % (troveName, versionStr, flavor)
         self._desTroves[(troveName, versionStr, flavor)] = None
@@ -316,6 +321,7 @@ class ControlFile:
             # calling loadRecipe, since even loading the class
             # may check some flags that may never be checked inside
             # the recipe
+            flavorutil.resetLocalFlags()
             oldFlavor = flavorutil.setFlavor(sourceId.getFlavor(), 
                                              sourceId.getName())
             use.resetUsed()
@@ -329,7 +335,11 @@ class ControlFile:
                                     self._cfg, self._repos, 
                                     sourceId.getVersionStr(), 
                                     label=label)
+            # gather the local flags created (they may not have been tracked)
+            sourceId.setLocalFlags(flavorutil.getLocalFlags())
+            # gather the local/use/arch flags actually tracked
             sourceId.setUsedFlags(use.getUsed())
+            # delete any created local flags
             recipeClass = loader[0].getRecipe()
 
             if not recipeClass.name.startswith('group-'):
@@ -341,6 +351,7 @@ class ControlFile:
                 recipeObj.setup()
                 for package in recipeObj.packages:
                     self.addPackageCreator(package, sourceId)
+            flavorutil.resetLocalFlags()
 
             # we need to keep the loaders around so that they do not
             # get garbage collected -- their references are needed 
