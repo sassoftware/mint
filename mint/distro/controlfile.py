@@ -640,7 +640,7 @@ class ControlFile:
             if self._updateLabel:
                 # search the update label for newer versions of this package
                 branchedSourceId  = sourceId.branch(self._updateLabel)
-                branch = branchedSourceId.getBinaryBranch()
+                branch = branchedSourceId.getBinaryVersion()
                 try:
                     vers = self._repos.getTroveVersionList(
                                                     self._updateLabel.getHost(),

@@ -118,11 +118,11 @@ class _PkgId:
     def getTuple(self):
 	return (self.__name, self.__version, self.__flavor)
 
-    def getSourceBranch(self):
-        return self.getVersion().getSourceBranch().branch()
+    def getSourceVersion(self):
+        return self.getVersion().getSourceVersion().branch()
 
-    def getBinaryBranch(self):
-        return self.getVersion().getBinaryBranch().branch()
+    def getBinaryVersion(self):
+        return self.getVersion().getBinaryVersion().branch()
 
     def unbranch(self, label):
         """ Create a SourceId or TroveId for this package 
@@ -166,10 +166,10 @@ class _PkgId:
         return self.__version.branch().label().getHost()
 
     def getSourceCount(self):
-        return self.__version.trailingVersion().getRelease()
+        return self.__version.trailingRevision().getSourceCount()
 
     def getBuildCount(self):
-        return self.__version.trailingVersion().buildCount
+        return self.__version.trailingRevision().buildCount
 
     def getVersionStr(self):
         return self.__version.asString()
@@ -399,7 +399,7 @@ class _TroveId(_PkgId):
 
 
     def getSourceVersion(self):
-        return self.getVersion().getSourceBranch()
+        return self.getVersion().getSourceVersion()
         
     def builtFrom(self, sourceId, allowVersionMismatch=False):
         """ returns True if cooking sourceId could result in the
@@ -415,8 +415,8 @@ class _TroveId(_PkgId):
             # XXX this does not work with the update repo, where all 
             # versions have stored with them the version/release of the 
             # source they were branched from
-            v = self.getSourceBranch()
-            pv = sourceId.getSourceBranch()
+            v = self.getSourceVersion()
+            pv = sourceId.getSourceVersion()
             if not v == pv:
                 return False
 
@@ -427,7 +427,7 @@ class _TroveId(_PkgId):
                 # if a version/release was used, make sure it matches
                 # the troveId's version/release
                 try:
-                    tv = versions.VersionRelease(vs)
+                    tv = versions.Revision(vs)
                 except versions.ParseError:
                     tv = None
                 if tv:
@@ -435,7 +435,7 @@ class _TroveId(_PkgId):
                         if self.getVersion().getTrailingVersion() != tv:
                             return False
                     else:
-                        stv = self.getVersion().trailingVersion().copy()
+                        stv = self.getVersion().trailingRevision().copy()
                         stv.buildCount = None
                         if stv != tv:
                             return False
@@ -446,16 +446,16 @@ class _TroveId(_PkgId):
                     except AttributeError:
                         v = None
                     if v and not isinstance(v, versions.Branch):
-                        pv = self.getVersion().getSourceBranch()
-                        pv.trailingVersion().buildCount = None
+                        pv = self.getVersion().getSourceVersion()
+                        pv.trailingRevision().buildCount = None
                         if v != pv:
                             return False
                 # all other cases should have been handled by the 
                 # earlier branch validity check.
         else:
-            v = sourceId.getVersion().getSourceBranch()
-            pv = self.getVersion().getSourceBranch()
-            pv.trailingVersion().buildCount = None
+            v = sourceId.getVersion().getSourceVersion()
+            pv = self.getVersion().getSourceVersion()
+            pv.trailingRevision().buildCount = None
             if v != pv:
                 return False
         if self.flavorsMatch(sourceId):
@@ -467,11 +467,11 @@ class _TroveId(_PkgId):
             sourceId with the same flags """
         if troveId.getName() != self.getName():
             return False
-        if troveId.getSourceBranch() != \
-                                        self.getSourceBranch():
+        if troveId.getSourceVersion() != \
+                                        self.getSourceVersion():
             return False
-        if troveId.getVersion().trailingVersion().getVersion() != \
-                            self.getVersion().trailingVersion().getVersion():
+        if troveId.getVersion().trailingRevision().getVersion() != \
+                            self.getVersion().trailingRevision().getVersion():
             return False
         if troveId.getSourceCount() != self.getSourceCount():
             return False

@@ -264,7 +264,7 @@ class Distribution:
             if pkg not in matches:
                 # we just skip these packages
                 csfile = "%s-%s.ccs" % (troveName, 
-                                pkg.getVersion().trailingVersion().asString())
+                                pkg.getVersion().trailingRevision().asString())
                 path = "%s/%s" % (csdir, csfile)
                 print >> sys.stderr, "%d/%d: skipping %s" % (index, l, csfile)
                 index += 1
@@ -278,7 +278,7 @@ class Distribution:
             else:
                 troveId = pkg.getTroveId()
             csfile = "%s-%s.ccs" % (dispName, 
-                        troveId.getVersion().trailingVersion().asString())
+                        troveId.getVersion().trailingRevision().asString())
             path = "%s/%s" % (csdir, csfile)
 
             # link the first matching path, assuming they are ordered
@@ -302,7 +302,7 @@ class Distribution:
 
             cs = changeset.ChangeSetFromFile(path)
             name = pkg.getName()
-            trailing = troveId.getVersion().trailingVersion().asString()
+            trailing = troveId.getVersion().trailingRevision().asString()
             v = trailing.split('-')
             version = '-'.join(v[:-2])
             release = '-'.join(v[-2:])
