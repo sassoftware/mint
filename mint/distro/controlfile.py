@@ -494,11 +494,9 @@ class ControlFile:
             for sourceId in sourceIds:
                 if filterDict and sourceId.getName() not in filterDict:
                     continue
-                if sourceId in self._fromSourceDir:
-                    continue
                 unmatched[sourceId] = True
         if not os.path.exists(changesetpath):
-            return matches, unmatched.update(self._fromSourceDir)
+            return matches, unmatched
 
         changesetNames =  [ x for x in os.listdir(changesetpath) if x.endswith('.ccs') ]
         flavors = {}
@@ -537,7 +535,7 @@ class ControlFile:
                         del unmatched[sourceId]
                     except KeyError:
                         pass
-        return (matches, unmatched.update(self._fromSourceDir))
+        return (matches, unmatched)
 
     def getRepoTrovesFromCookedGroup(self):
         matches = {}
