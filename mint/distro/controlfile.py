@@ -12,6 +12,7 @@ import conaryclient
 from deps import deps
 from local import database 
 from repository import changeset, repository
+import versions
 
 # darby
 from pkgid import TroveId, SourceId, ChangeSetId, TroveIdFromTrove
@@ -122,6 +123,10 @@ class ControlFile:
         use.LocalFlags._clear()
 
         for (name, version, flavor, source) in groupObj.addTroveList:
+            if version and version[0] == '/':
+                v = versions.VersionFromString(version)
+                if isinstance(v, versions.Version):
+                    version = v.getSourceVersion().asString()
             if name.startswith('group-'):
                 # XXX this doesn't allow the group to specify a version
                 # string
