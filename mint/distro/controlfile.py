@@ -9,7 +9,8 @@ from local import database
 from repository import changeset, repository
 
 # darby
-from pkgid import TroveId, SourceId, ChangeSetId
+from pkgid import TroveId, SourceId, ChangeSetId, TroveIdFromTrove
+import pkgid
 import flavorutil
 
 class ControlFile:
@@ -53,19 +54,31 @@ class ControlFile:
                                                 name + ':source',
                                                 None, versionStr)
         assert(len(canTroves) == 1)
+        canTrove = canTroves[0]
 
         if self._updateLabel:
             try:
-                updateTroves =  self._repos.findTrove(self._canonicalLabel,
+                updateTroves =  self._repos.findTrove(self._updateLabel,
                                                name + ':source', 
                                                None, versionStr)
-                assert(len(updateTroves) == 1)
+                # we only get to this assertion if 
+                # we found at least one trove...
+                if len(updateTroves) > 1:
+                    updateIds = [ TroveIdFromTrove(x) for x in updateTroves ] 
+                    latest = pkgid.getSortedLeavesAfterUnbranch(updateIds, 
+                                                        self._updateLabel)
+                    assert(len(latest) == 1)
+                    # could happen if there are multiple flavors...
+                    # but these are source troves!
+                    assert(len(latest[0]) == 1)
+                    updateTrove = latest[0][0]
+                else:
+                    updateTrove = updateTroves[0]
             except repository.PackageNotFound:
                 return canTroves[0]
-
-            if updateTroves[0].getVersion().isAfter(canTroves[0].getVersion()):
-                return updateTroves[0]
-        return canTroves[0]
+            if not canTrove.getVersion().isAfter(updateTrove.getVersion()):
+                return updateTrove
+        return canTrove
 
 
     def loadControlFile(self, loadRecipes=True):
@@ -105,6 +118,7 @@ class ControlFile:
         """
         if flavor is not None:
             flavor = flavor.toDependency(troveName)
+        assert((troveName, versionStr, flavor) not in self._desTroves)
         self._desTroves[(troveName, versionStr, flavor)] = None
 
     def setDesiredTroveSource(self, troveName, versionStr, flavor, 
@@ -118,7 +132,6 @@ class ControlFile:
                                troveName, versionStr, flavor, 
                                self._desTroves[(troveName, versionStr, flavor)],
                                sourceId))
-
         self._desTroves[(troveName, versionStr, flavor)] = sourceId
         troveName = troveName.split(':')[0]
         if troveName not in self._sourceIdsByName:
@@ -449,8 +462,8 @@ class ControlFile:
                         flavors[sourceId][csId.getFlavor()] = csId
                     else:
                         other = flavors[sourceId][csId.getFlavor()]
-                        if other.getVersion().trailingVersion().buildCount < \
-                            csId.getVersion().trailingVersion().buildCount:
+                        if other.getBuildCount() < \
+                            csId.getBuildCount():
                             matches[sourceId].remove(other)
                             flavors[sourceId][csId.getFlavor()] = csId
                         else:

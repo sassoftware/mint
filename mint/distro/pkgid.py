@@ -54,6 +54,11 @@ def TroveId(name, version, flavor):
     else:
         return _TroveId(name, version, flavor, repr=repr)
 
+def TroveIdFromTrove(theTrove):
+    return TroveId(theTrove.getName(), theTrove.getVersion(), 
+                                            theTrove.getFlavor())
+
+
 
 def ChangeSetId(name, version, flavor, file):
     repr = makePkgIdRepr(name, version, flavor)
@@ -119,6 +124,37 @@ class _PkgId:
         # now we match here
         self._hashcache[self] = self
 
+    def unbranch(self, label):
+        """ Create a SourceId or TroveId for this package 
+            after removing the last branch from the current id.
+        """
+        if self.getBuildCount() is None:
+            class_ = SourceId
+        else:
+            class_ = TroveId
+
+        v = self.getVersion()
+        assert(v.versions[-2] == label)
+        vlist = v.versions[:-3] + [ v.versions[-1] ]
+        unbranchedV = versions.Version(vlist)
+        unbranchedId  = class_(self.getName(),
+                               unbranchedV,
+                               self.getFlavor())
+        return unbranchedId
+
+    def branch(self, newLabel):
+        """ Create a SourceId or TroveId for this package after it 
+            has been branched onto newLabel
+        """
+        branchV = self.getVersion().fork(newLabel, sameVerRel = 1)
+        if self.getBuildCount() is None:
+            class_ = SourceId
+        else:
+            class_ = TroveId
+        branchedId  = class_(self.getName(),
+                              branchV,
+                              self.getFlavor())
+        return branchedId
 
     def getBranch(self):
         return self.__version.branch()
@@ -126,8 +162,14 @@ class _PkgId:
     def getLabel(self):
         return self.__version.branch().label()
 
+    def getHost(self):
+        return self.__version.branch().label().getHost()
+
     def getSourceCount(self):
         return self.__version.trailingVersion().getRelease()
+
+    def getBuildCount(self):
+        return self.__version.trailingVersion().buildCount
 
     def getVersionStr(self):
         return self.__version.asString()
@@ -202,16 +244,7 @@ class _SourceId(_PkgId):
         self._usedFlags = {}
         self._troveIds = {}
 
-    def branch(self, newLabel):
-        """ Create a SourceId for this package after it has been branched
-            onto newLabel
-        """
-        branchV = self.getVersion().fork(newLabel, sameVerRel = 1)
-        branchedSourceId  = SourceId(self.getName(),
-                                     branchV,
-                                     self.getFlavor())
-        return branchedSourceId
-
+    
     def setUsedFlags(self, usedFlags):
         """store the flags that were used when this package was loaded"""
         self._usedFlags = usedFlags
@@ -303,19 +336,7 @@ class _TroveId(_PkgId):
                 return False
         return True
 
-    def unbranch(self, label):
-        """ Create a SourceId for this package after it has been branched
-            onto newLabel
-        """
-        v = self.getVersion()
-        vlist = v.versions 
-        vlist = v.versions[:-3] + [ v.versions[-1] ]
-        unbranchedV = versions.Version(vlist)
-        unbranchedSourceId  = SourceId(self.getName(),
-                                     unbranchedV,
-                                     self.getFlavor())
-        return unbranchedSourceId
-
+    
 
 class _ChangeSetId(_TroveId):
     
@@ -331,4 +352,53 @@ class _ChangeSetId(_TroveId):
         self._path = newPath
 
 
-    
+def getSortedLeavesAfterUnbranch(pkgIds, label):
+    """ Returns a list of lists of pkgIds such that, after all
+        of the ids in pkgId are reverted from being branched on label,
+        each tuple represents the latest version on whatever branch
+        it was on after reverting. 
+        e.g. you branch /localhost@spx:linux/foo-1.0-1 => updatehost,
+        and /localhost@spx:linux/foo-1.0-2 => updatehost
+        and branch /localhost@spx:linux/foo-1.0-1/fooother/2 => updatehost,
+        you would get packages
+        /localhost@spx:linux/foo-1.0-1/updatehost/1
+        /localhost@spx:linux/foo-1.0-1/updatehost/2
+        /localhost@spx:linux/foo-1.0-1/fooother/2/updatehost/2.
+        From this function, you should expect back
+        [[/localhost@spx:linux/foo-1.0-1/updatehost/2], 
+         [/localhost@spx:linux/foo-1.0-1/fooother/2/updatehost/2]].
+        An interior list would contain more than one element if more than one
+        pkgId has exactly the same source version, but different flavors.
+
+        Note that even if you pass in troveIds, this function assumes that the
+        sources were branched.
+    """
+    branched = {}
+    troveIds = []
+    for pkgId in pkgIds:
+        unbranchedId = pkgId.unbranch(label)
+        branched[unbranchedId] = pkgId
+        troveIds.append(unbranchedId)
+
+    # figure out the max values for each branch
+    branchMaxes = {}
+    for troveId in troveIds:
+        branch = troveId.getBranch()
+        if branch not in branchMaxes:
+            branchMaxes[branch] = [ troveId ]
+            continue
+
+        # the current max for this branch
+        branchMax = branchMaxes[branch][0]
+        bsc = branchMax.getSourceCount()
+        tsc = troveId.getSourceCount()
+        if bsc < tsc:
+            branchMaxes[branch] = [ troveId ]
+        elif bsc == tsc:
+            # they are the same source version, but have different
+            # flavors
+            branchMaxes[branch].append(troveId)
+    results = []
+    for unbranchedIds in branchMaxes.values():
+        results.append([ branched[x] for x in unbranchedIds ])
+    return results
