@@ -120,7 +120,6 @@ class JobDaemon:
                 joblist = list(itclient.iterPendingJobs())
             except jobs.JobMissing:
                 joblist = []
-                print "no jobs"
 
             for job in joblist:
                 if len(threads) >= cfg.concurrentJobs:
