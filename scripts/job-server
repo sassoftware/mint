@@ -75,10 +75,11 @@ class JobDaemon:
         client = imagetool.ImageToolClient(cfg.serverUrl)
        
         threads = []
-        
-        arch = os.uname()[4]
+    
         # normalize the job daemon machine's architecture
         # right now we only handle x86 and x86_64 images
+        arch = os.uname()[4]
+        
         x86_re = re.compile('i.86')
         if x86_re.match(arch):
             arch = "x86"
@@ -97,9 +98,6 @@ class JobDaemon:
                 joblist = []
 
             for job in joblist:
-                if len(threads) >= cfg.concurrentJobs:
-                    break
-
                 th = JobRunner(cfg, client, job)
                 threads.append(th)
                 th.start()

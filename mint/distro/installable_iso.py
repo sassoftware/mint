@@ -15,10 +15,29 @@ from build import use
 sys.path.insert(0, "/home/tgerla/cvs/darby/client/")
 from buildsystem import distro
 
+import conarycfg
+from conarycfg import ConfigFile
+
 from imagegen import ImageGenerator
 
+class IsoConfig(ConfigFile):
+    defaults = {
+        'productPath':       'Specifix',
+        'productName':       'Specifix Linux',
+        'productPrefix':     'spx',
+        'templatePath':      None,
+        'nfsPath':           None,
+        'tftpbootPath':      None,
+    }
+
 class InstallableIso(ImageGenerator):
+    def getIsoConfig(self):
+        isocfg = IsoConfig()
+        isocfg.read("installable_iso.conf")
+
     def write(self):
+        isocfg = self.getIsoConfig()
+    
         profileId = self.job.getProfileId()
 
         name, projectId = self.client.server.getProfile(profileId)
@@ -48,23 +67,22 @@ class InstallableIso(ImageGenerator):
         arch = self.job.getArch()
         assert(arch in ('x86', 'x86_64'))
  
-        distroInfo = distro.DistroInfo(self.cfg.instIsoPrefix,
-                                       self.cfg.instIsoProductPath,
-                                       self.cfg.instIsoProductName,
+        distroInfo = distro.DistroInfo(isocfg.productPrefix,
+                                       isocfg.productPath,
+                                       isocfg.productName,
                                        releaseVer, releasePhase,
                                        arch = arch)
         version = versions.VersionFromString(versionStr)
        
         # XXX remove this and pass version as soon as darby can handle a full ver
         label = version.branch().label()
-        
       
-        tmpDir = self.cfg.imagesPath + os.path.join(arch, releasePhase)
+        tmpDir = self.itcfg.imagesPath + os.path.join(arch, releasePhase)
         dist = distro.Distribution(arch, repos, ccfg,
                                    distroInfo, (trove, label, flavor),
-                                   tmpDir, tmpDir+"/isos/", self.cfg.instIsoTemplatePath,
-                                   self.cfg.nfsPath, self.cfg.tftpbootPath, None,
-                                   "/data/imagetool/data/logs/", False)
+                                   tmpDir, tmpDir+"/isos/", isocfg.templatePath,
+                                   isocfg.nfsPath, isocfg.tftpbootPath, None,
+                                   self.itcfg.logPath, False)
                                    
         dist.prep()
         filenames = dist.create()
