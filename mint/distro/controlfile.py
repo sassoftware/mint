@@ -271,7 +271,8 @@ class ControlFile:
         """
         lcache = lookaside.RepositoryCache(self._repos)
         try:
-            srcdirs = [ self._cfg.sourceSearchDir % { 'pkgname' : sourceId.name }  ]
+            srcdirs = [ self._cfg.sourceSearchDir % { 'pkgname' : 
+                                                        sourceId.getName() }  ]
 
             # ensure name has :source tacked on end, and recipefile is
             # name.recipe
@@ -351,7 +352,7 @@ class ControlFile:
 
                     installedId = TroveId(troveName, trove.getVersion(), 
                                                 trove.getFlavor())
-                    for sourceId in self.getPackageSourceIds(installedId.name):
+                    for sourceId in self.getPackageSourceIds(installedId.getName()):
                         # builtFrom ensures that it is possible
                         # to get the built trove from the sourceId
                         # pkg
@@ -409,7 +410,7 @@ class ControlFile:
                 csId = ChangeSetId(name, version, flavor, csfile)
                 if not self.isKnownPackage(csId.getName()):
                     continue
-                for sourceId in self.getPackageSourceIds(csId.name): 
+                for sourceId in self.getPackageSourceIds(csId.getName()): 
                     if not csId.builtFrom(sourceId):
                         continue
                     # We do some extra work here to ensure that 
@@ -426,8 +427,8 @@ class ControlFile:
                         flavors[sourceId][csId.getFlavor()] = csId
                     else:
                         other = flavors[sourceId][csId.getFlavor()]
-                        if other.version.trailingVersion().buildCount < \
-                            csId.version.trailingVersion().buildCount:
+                        if other.getVersion().trailingVersion().buildCount < \
+                            csId.getVersion().trailingVersion().buildCount:
                             matches[sourceId].remove(other)
                             flavors[sourceId][csId.getFlavor()] = csId
                         else:
@@ -506,8 +507,8 @@ class ControlFile:
                     flavors[sourceId][troveId.getFlavor()] = troveId
                 else:
                     other = flavors[sourceId][troveId.getFlavor()]
-                    if other.version.trailingVersion().buildCount < \
-                        troveId.version.trailingVersion().buildCount:
+                    if other.getVersion().trailingVersion().buildCount < \
+                        troveId.getVersion().trailingVersion().buildCount:
                         matches[sourceId].remove(other)
                         flavors[sourceId][troveId.getFlavor()] = troveId
                     else:

@@ -81,96 +81,105 @@ def makePkgIdRepr(name, version, flavor):
 class _PkgId:
     _hashcache = {}
 
-    def __init__(self, name, version, flavor, repr=None):
-        self.name = name
-        self.version = version
-        self.flavor = flavor
+    def __init__(self, name, version, flavor, repr):
+        # XXX don't muck with these four variables!
+        # They are used to hash PkgIds, and any change to them
+        # will change the hash value of the object,
+        # causing Bad Things to happen.  So don't do it.
+        self.__name = name
+        self.__version = version
+        self.__flavor = flavor
         if not repr:
             repr = makePkgIdRepr(name, version, flavor)
-        self.repr = repr
+        self.__repr = repr
 
-        self.stats = stats.PackageStats(self)
-        self._repr = repr
+        self._stats = stats.PackageStats(self)
         if self not in self._hashcache:
             self._hashcache[self] = self
 
     def getName(self):
-        return self.name
+        return self.__name
 
     def getVersion(self):
-        return self.version
+        return self.__version
 
     def setVersion(self, version):
         """ Sets the version of this packageID.  
-            XXX this may not be smart.  
+            This is not smart.  It will cause problems if 
+            this PkgId is used as a hash key anywhere, so be sure
+            that it isn't before using this function. 
             Better to make a new copy with the new version,
-            but that has its own set of problems...
+            if feasible
         """
         # we will no longer match this old cache position
         del self._hashcache[self]
-        self.version = version
-        self._repr = makePkgIdRepr(self.getName(), self.getVersion(), 
+        self.__version = version
+        self.__repr = makePkgIdRepr(self.getName(), self.getVersion(), 
                                     self.getFlavor())
         # now we match here
         self._hashcache[self] = self
 
 
     def getLabel(self):
-        return self.version.branch().label()
+        return self.__version.branch().label()
 
     def getVersionStr(self):
-        return self.version.asString()
+        return self.__version.asString()
 
     def getFlavor(self):
-        return self.flavor
+        return self.__flavor
 
     def getStats(self):
-        return self.stats
+        return self._stats
+
+    def setStats(self, stats):
+        self._stats = stats
 
     def setBuildIndex(self, index):
-        self.buildIndex = index
+        self._buildIndex = index
 
     def getBuildIndex(self):
-        return self.buildIndex
+        return self._buildIndex
 
     def prettyStr(self):
         """ print a slightly more readable form of the sourceId """
-        return "%s (%s) (%s)" % (self.name, self.version.asString(), 
-                                                            self.flavor)
+        return "%s (%s) (%s)" % (self.getName(), self.getVersionStr(), 
+                                                            self.getFlavor())
 
     def __cmp__(self, other):
         """ when sorting, sort by trove name """
-        return cmp(self.name, other.name) 
+        return cmp(self.getName(), other.getName()) 
 
     def __repr__(self):
-        return self._repr
+        return self.__repr
 
     def __str__(self):
-        return self._repr
+        return self.__repr
 
     def __eq__(self, other):
         if isinstance(other, _PkgId):
-            return self._repr == other._repr
+            return self.__repr == other.__repr
         return False
 
     def __add__(self, other):
         """ Treat like a string for adding (useful for adding '.ccs)"""
-        return self._repr + other
+        return self.__repr + other
 
     def __radd__(self, other):
         """ Treat like a string for adding (useful for adding .ccs)""" 
-        return other + self._repr
+        return other + self.__repr
 
     def __hash__(self):
         """ hash Ids on their repr value, which is unique """
-        return hash(self._repr)
+        return hash(self.__repr)
 
     def __getstate__(self):
         """ Pickling function.  Returns a dict containing this 
             packageId's critical information.  
         """
         state = self.__dict__.copy()
-        state['stats'] = None
+        state['_version'] = self.getVersion().asString()
+        state['_stats'] = None
         return state
         
     def __setstate__(self, state):
@@ -178,54 +187,53 @@ class _PkgId:
             packageId's critical information.  
         """
         self.__dict__.update(state)
-
+        self._version = versions.VersionFromString(state['_version'])
 
 class _SourceId(_PkgId):
     def __init__(self, name, version, flavor, repr=repr):
         _PkgId.__init__(self, name, version, flavor, repr=repr)
         self._recipeClass = None
-        self.usedFlags = {}
-        self.csIds = {}
-        self.troveIds = {}
+        self._usedFlags = {}
+        self._troveIds = {}
 
     def setUsedFlags(self, usedFlags):
         """store the flags that were used when this package was loaded"""
-        self.usedFlags = usedFlags
+        self._usedFlags = usedFlags
 
     def getUsedFlags(self):
         """retrieve the flags that were used when this package was loaded"""
-        return self.usedFlags
+        return self._usedFlags
 
     def setRecipeClass(self, recipeClass):
         """ store the recipeClass associated with this sourceId """
-        self.recipeClass = recipeClass
+        self._recipeClass = recipeClass
 
     def getRecipeClass(self):
         """ retrieve the recipeClass associated with this sourceId """
-        return self.recipeClass 
+        return self._recipeClass 
 
     
     def addTroveId(self, troveId):
         """ note that the given trove could have been derived from 
             a source trove with this source id 
         """
-        self.troveIds[troveId] = True
+        self._troveIds[troveId] = True
 
     def getTroveIds(self):
         """ Return troves that could have been built with this 
             source trove
         """
-        return self.troveIds.keys()
+        return self._troveIds.keys()
 
     def __getstate__(self):
         """ Pickling function.  Returns a dict containing this 
             packageId's critical information.  
         """
         state = _PkgId.__getstate__(self)
-        if 'recipeClass' in state:
-            del state['recipeClass']
-        if 'usedFlags' in state:
-            del state['usedFlags']
+        if '_recipeClass' in state:
+            del state['_recipeClass']
+        if '_usedFlags' in state:
+            del state['_usedFlags']
         return state
 
 
@@ -236,12 +244,12 @@ class _TroveId(_PkgId):
     def builtFrom(self, sourceId):
         """ returns True if cooking sourceId could result in the
             given package """
-        v = self.version.getSourceBranch()
-        pv = sourceId.version.getSourceBranch()
+        v = self.getVersion().getSourceBranch()
+        pv = sourceId.getVersion().getSourceBranch()
         v.trailingVersion().buildCount = None
         # XXXXXXXXX big hack to deal with the fact that
         # icecream version numbers are out of whack
-        if pv == v or sourceId.name == 'icecream':
+        if pv == v or sourceId.getName() == 'icecream':
             if self.flavorIsFrom(sourceId):
                 return True
         return False
@@ -250,13 +258,13 @@ class _TroveId(_PkgId):
     def flavorIsFrom(self, sourceId):
         """ return True if if our flavor does not directly contradict
             the flavors listed in sourceId """
-        if sourceId.flavor is None:
+        if sourceId.getFlavor() is None:
             return True
         # this should cover Arch 
-        if not self.flavor.satisfies(sourceId.flavor):
+        if not self.getFlavor().satisfies(sourceId.getFlavor()):
             return False
-        builtFlags = flavorutil.getFlavorUseFlags(self.flavor)
-        srcFlags = flavorutil.getFlavorUseFlags(sourceId.flavor)
+        builtFlags = flavorutil.getFlavorUseFlags(self.getFlavor())
+        srcFlags = flavorutil.getFlavorUseFlags(sourceId.getFlavor())
         builtUse = builtFlags['Use']
         srcUse = srcFlags['Use']
         
@@ -267,8 +275,8 @@ class _TroveId(_PkgId):
             if flag in builtUse and builtUse[flag] != value:
                 return False
         try:
-            srcLocal = srcFlags['Flags'][sourceId.name]
-            builtLocal = builtFlags['Flags'][sourceId.name]
+            srcLocal = srcFlags['Flags'][sourceId.getName()]
+            builtLocal = builtFlags['Flags'][sourceId.getName()]
         except KeyError:
             # if either of these doesn't mention any local flags,
             # then it's impossible for them to have a contradiction

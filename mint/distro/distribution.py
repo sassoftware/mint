@@ -163,12 +163,12 @@ class Distribution:
         for (troveName, version, flavor), pkg in self.csList:
             if pkg not in matches:
                 # we just skip these packages
-                csfile = "%s-%s.ccs" % (pkg.name, pkg.version.trailingVersion().asString())
+                csfile = "%s-%s.ccs" % (pkg.getName(), pkg.getVersion().trailingVersion().asString())
                 path = "%s/%s" % (csdir, csfile)
                 print >> sys.stderr, "%d/%d: skipping %s" % (index, l, csfile)
                 continue
             useFlags = flavorutil.getFlavorUseFlags(flavor)
-            dispName = pkg.name
+            dispName = pkg.getName()
             for flag in useFlags['Use']:
                 if useFlags['Use'][flag]:
                     dispName += '-%s' % flag
@@ -180,7 +180,7 @@ class Distribution:
                 else:
                     dispName += '-non%s' % flag
             cspkg = pkg.cspkgs.keys()[0]
-            csfile = "%s-%s.ccs" % (dispName, cspkg.version.trailingVersion().asString())
+            csfile = "%s-%s.ccs" % (dispName, cspkg.getVersion().trailingVersion().asString())
             path = "%s/%s" % (csdir, csfile)
 
             # link the first matching path, assuming they are ordered
@@ -197,8 +197,8 @@ class Distribution:
                         raise
                     shutil.copyfile(cspkg.getPath(), path)
             cs = changeset.ChangeSetFromFile(path)
-            name = pkg.name
-            trailing = cspkg.version.trailingVersion().asString()
+            name = pkg.getName()
+            trailing = cspkg.getVersion().trailingVersion().asString()
             v = trailing.split('-')
             version = '-'.join(v[:-2])
             release = '-'.join(v[-2:])
@@ -225,7 +225,8 @@ class Distribution:
                     d = info['disc']
                 else:
                     d = overrideDisc
-                print >> csfile, os.path.basename(info['path']), pkg.name, info['version'], info['release'], info['size'], d
+                print >> csfile, os.path.basename(info['path']), \
+                        pkg.getName(), info['version'], info['release'], info['size'], d
         if not overrideDisc:
             self.isos[0].addFile('/' + self.distro.productPath + '/base/cslist')
 
