@@ -114,22 +114,6 @@ class _PkgId:
     def getTuple(self):
 	return (self.__name, self.__version, self.__flavor)
 
-    def setVersion(self, version):
-        """ Sets the version of this packageID.  
-            This is not smart.  It will cause problems if 
-            this PkgId is used as a hash key anywhere, so be sure
-            that it isn't before using this function. 
-            Better to make a new copy with the new version,
-            if feasible
-        """
-        # we will no longer match this old cache position
-        del self._hashcache[self]
-        self.__version = version
-        self.__repr = makePkgIdRepr(self.getName(), self.getVersion(), 
-                                    self.getFlavor())
-        # now we match here
-        self._hashcache[self] = self
-
     def unbranch(self, label):
         """ Create a SourceId or TroveId for this package 
             after removing the last branch from the current id.
@@ -335,74 +319,38 @@ class _SourceId(_PkgId):
             return t2
         if t2 is None:
             return t1
-        if t1.builtFrom(self):
+        if t1.getVersion() == t2.getVersion():
+            # versions match exactly, check flavors
+            if t1.getFlavor() != t2.getFlavor():
+                raise RuntimeError, ("addTrove is not specific enough -- two"
+                                     " packages, %s and %s match for sourceId"
+                                     "  %s "  % (t1, t2, self))
+            return t1
+        elif t1.builtFrom(self):
             if t2.builtFrom(self):
                 if t1.getVersion().isAfter(t2.getVersion()):
                     return t1
-                elif t2.getVersion().isAfter(t2.getVersion()):
+                elif t2.getVersion().isAfter(t1.getVersion()):
                     return t2
+                else:
+                    # should not get here -- timestamps are the same
+                    # but versions are different?
+                    assert(False)
             else:
                 return t1
         elif t2.builtFrom(self):
             return t2
         else:
-            # these packages should at least match given a mismatched
-            # version
+            # neither package is an exact match, so they should be
+            # inexact matches at least
             assert(t1.builtFrom(self, True) and t2.builtFrom(self, True))
             if t1.getVersion().isAfter(t2.getVersion()):
                 return t1
             elif t2.getVersion().isAfter(t1.getVersion()):
                 return t2
-        # versions match exactly, check flavors
-        if (self.countFlavorMatches(t1) < self.countFlavorMatches(t2)):
-            return t2
-        else:
-            return t1
-
-
-    def countFlavorMatches(self, packageId):
-        """ returns # of matches in flavor between the two  """
-        count = 1
-        if packageId.getFlavor() is None or self.getFlavor() is None:
-            return 0
-        # this should cover Arch 
-        if not self.getFlavor().satisfies(packageId.getFlavor()):
-            return 0
-        builtFlags = flavorutil.getFlavorUseFlags(packageId.getFlavor())
-        srcFlags = flavorutil.getFlavorUseFlags(self.getFlavor())
-        builtUse = builtFlags['Use']
-        srcUse = srcFlags['Use']
-        if self.getUsedFlags():
-            srcUse.update(self.getUsedFlags()['Use'])
-        
-        for flag, value in srcUse.iteritems():
-            if flag in builtUse:
-                if builtUse[flag] != value:
-                    return 0
-                else:
-                    count += 1
-        try:
-            srcLocal = srcFlags['Flags'][self.getName()]
-            if self.getUsedFlags():
-                usedFlags = self.getUsedFlags()
-                for key in usedFlags:
-                    if key in srcUse:
-                        srcUse[key].update(usedFlags[key])
-                    else:
-                        srcUse[key] = usedFlags[key]
-            builtLocal = builtFlags['Flags'][self.getName()]
-        except KeyError:
-            # if either of these doesn't mention any local flags,
-            # then it's impossible for them to have a contradiction
-            # between them
-            return True
-        for flag, value in srcLocal.iteritems():
-            if flag in builtLocal:
-                if builtLocal[flag] != value:
-                    return 0
-                count += 1
-        return count
-
+            # should not get here -- timestamps are the same
+            # but versions are different?
+            assert(False)
 
     def getTroveId(self):
         """ Return trove that was built from this source trove """
@@ -454,7 +402,7 @@ class _TroveId(_PkgId):
                 # the troveId's version/release
                 try:
                     tv = versions.VersionRelease(vs)
-                except ParseError:
+                except versions.ParseError:
                     tv = None
                 if tv:
                     if tv.buildCount:
@@ -505,7 +453,7 @@ class _TroveId(_PkgId):
     def flavorsMatch(self, packageId):
         """ return True if if our flavor does not directly contradict
             the flavors listed in the other pkgId """
-        if packageId.getFlavor() is None:
+        if None in (self.getFlavor(), packageId.getFlavor()):
             return True
         # this should cover Arch 
         if not self.getFlavor().satisfies(packageId.getFlavor()):
