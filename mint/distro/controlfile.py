@@ -88,8 +88,7 @@ class ControlFile:
                             self.packages[package] = []
                         self.packages[package].append(p)
                 except recipe.RecipeFileError, e:
-                    print str(e)
-                    sys.exit(1)
+                    raise
                 else:
                     p.recipeClass = recipeClass
                     l = recipes.get(recipeClass.name, [])
