@@ -37,6 +37,7 @@ class ISO:
                       isolinux dir.
         """
         self.reserved = 0
+        self.maxsize = int(maxsize) * 1024 * 1024
         self.freespace = self.maxsize - self.reserved
         self.builddir = builddir
         self.imagepath = imagepath
@@ -45,7 +46,6 @@ class ISO:
         self.discno = discno
         self.dirs = {}
         self.bootable=bootable
-        self.maxsize = maxsize * 1024 * 1024
         
     def reserve(self, megs):
         """ Reserve an amount of space on the disk, causing DiskFullError
