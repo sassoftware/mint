@@ -311,8 +311,17 @@ class _SourceId(_PkgId):
         if self._troveId is None or force:
             self._troveId = troveId
         else:
-            self._troveId = self.getBetterMatch(self._troveId.unbranch(branch), 
+            if self._troveId.getLabel() == branch:
+                better = self.getBetterMatch(
+                                        self._troveId.unbranch(branch), 
                                                  troveId.unbranch(branch))
+                if better != self._troveId.unbranch(branch):
+                    self._troveId = troveId
+            else:
+                better = self.getBetterMatch(self._troveId,
+                                                 troveId.unbranch(branch))
+                if better != self._troveId:
+                    self._troveId = troveId
 
     def getBetterMatch(self, t1, t2):
         if t1 is None:
