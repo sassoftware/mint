@@ -3,6 +3,13 @@
 #
 # All Rights Reserved
 #
+import sys
+import tempfile
+from deps import deps
+
+sys.path.insert(0, "/home/tgerla/cvs/darby/client/")
+from buildsystem import distro
+
 from imagegen import ImageGenerator
 
 class InstallableIso(ImageGenerator):
@@ -19,7 +26,7 @@ class InstallableIso(ImageGenerator):
         conaryCfg = project.getConaryConfig(self.cfg.imageLabel,
                                             self.cfg.imageRepo)
 
-        conaryCfg.set('buildFlavor', flavor)
+        conaryCfg.setValue('buildFlavor', flavor.freeze())
 
         releaseVer = self.client.getProfileData(self.job.getProfileId(), "releaseVer")
         releasePhase = self.client.getProfileDat(self.job.getProfileId(), "releasePhase")

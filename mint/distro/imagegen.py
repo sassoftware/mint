@@ -7,9 +7,8 @@
 class ImageGenerator:
     def __init__(self, client, cfg, job, profileId):
         self.client = client
-        self.repos = repos
         self.cfg = cfg
-        self.jobType = jobType
+        self.job = job
         self.profileId = profileId
 
     def write(self):
