@@ -29,12 +29,14 @@ class DistroInfo:
             self.isoname += '-' + time.strftime('%Y%m%d')
 
 class Distribution:
-    def __init__(self, repos, cfg, distro, buildpath, isopath):
+    def __init__(self, repos, cfg, distro, buildpath, isopath, fromcspath):
         self.repos = repos
         self.cfg = cfg
         self.buildpath = buildpath
         self.isopath = isopath
         self.distro = distro
+        # Place to look for Changesets that have already been made
+        self.fromcspath = fromcspath
 
     def create(self):
         self.topdir = '%s/%s' % (self.buildpath, self.distro.isoname)
@@ -43,7 +45,7 @@ class Distribution:
         util.mkdirChain(self.topdir)
         self.subdir = self.topdir + '/' + self.distro.productPath
         util.mkdirChain(os.path.join(self.subdir, 'changesets'))
-        self.createChangeSets(os.path.join(self.subdir, 'changesets'))
+        self.createChangeSets(os.path.join(self.subdir, 'changesets'), self.fromcspath)
         self.initializeCDs()
         self.writeCsList()
         self.makeInstRoots()
@@ -80,17 +82,18 @@ class Distribution:
                 self.isos.append(ciso)
                 ciso.addFile(isofilepath, curfilepath)
                 
-    def createChangeSets(self, csdir):
+    def createChangeSets(self, csdir, fromcspath):
         self.csInfo = {}
 
         oldFiles = {}
         for path in [ "%s/%s" % (csdir, x) for x in os.listdir(csdir) ]:
             oldFiles[path] = 1
 
-        fromcspath = '/spx/linux/0.8/spx-linux-0.8/Specifix/changesets'
         #'/data/test-buildsystem/buildroot/stage2/tmp/cs'
         #csTrvList = trovelist.ChangeSetDirTroveList(fromcspath, self.cfg.installLabelPath[0], self.repos)
         #csTrvList = trovelist.GroupTroveList('group-dist', self.cfg.installLabelPath[0], self.cfg.flavor, self.repos)
+        #controlFile = controlfile.ControlFile(repos, self.cfg)
+        #troveList = controlFile.getDesiredTroveList()
 
         trvList = self.repos.findTrove(self.cfg.installLabelPath[0], "group-dist", self.cfg.flavor)
         if not trvList:
@@ -103,6 +106,13 @@ class Distribution:
         troves = {}
         trovesByName = {}
         for (name, version, flavor) in groupTrv.iterTroveList():
+            # XXX Hack until I've got flavors / group-dist:source hooked up
+            flavor = None
+            if pkg.name == "kernel" or pkg.name == 'kernel-source':
+                if "kernel.smp" not in str(pkg.flavor):
+                    flavor = deps.DependencySet()
+                    dep = deps.Dependency('use', ['!kernel.smp'])
+                    flavor.addDep(deps.UseDependency, dep)
             pkg = PkgId(name, version, flavor, justName=True)
             troves[pkg] = True
             if name in trovesByName:
@@ -138,8 +148,35 @@ class Distribution:
                 print >> sys.stderr, "%d/%d: keeping old %s" % (index, l, csfile)
                 del oldFiles[path]
             else:
-                #frompath = os.path.join(fromcspath, pkg + '.ccs')
-                frompath = os.path.join(fromcspath, csfile)
+                # XXX problem:
+                # Filenames / pkg strings could either contain 
+                # 1) all information about the cs
+                #    In this case we need to weed out on use-time
+                #    information that doesn't affect whether the cs
+                #    matches the group-dist specification
+                #    This makes the check to see if a package has already
+                #    been built much more than simply 
+                # 2) information about the cs that matches it to a
+                #    specific group-dist.  This is easier bc we know 
+                #    that information without needing to load the cs...
+                #    otherwise we might need to cook it to a temp file and
+                #    move it based on the cs's contents.
+                #
+                # group-dist contains information about *built packages*
+                # but, what we want is information about the *desired qualities*
+                # of pkgs...we could store all the information about the cs
+                # in its filename, or we could store the desired qualities.
+                # E.g. do we store the fact that this is the third rebuild
+                # of the changeset in the name?  
+                # XXX hack until file names match build system and group-dist
+                # Might have to load group-dist:source here to figure out 
+                # what matches watch
+                from lib import epdb
+                epdb.set_trace()
+                if dispName != 'kernel-smp':
+                    sourcepkg = 
+
+                frompath = os.path.join(fromcspath, pkg + '.ccs')
                 if os.path.exists(frompath):
                     print >> sys.stderr, "%d/%d: linking %s" % (index, l, csfile)
                     os.link(frompath, path)
