@@ -95,7 +95,7 @@ class Distribution:
         control = controlfile.ControlFile(group, self.repos, self.cfg, self.cfg.installLabelPath[0]) 
         control.loadControlFile()
         print "Matching changesets..."
-        matches = control.getMatchedChangeSets(fromcspath)
+        matches, unmatched = control.getMatchedChangeSets(fromcspath)
         
         trovesByName = control.sources.copy()
         l = len(trovesByName)
