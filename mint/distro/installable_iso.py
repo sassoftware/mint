@@ -84,25 +84,13 @@ class InstallableIso(ImageGenerator):
                                    None, False)
                                    
         logfile = os.path.join(self.cfg.logPath, "instiso-%d.log" % jobId)
-        self.redirectOutput(logfile)
+        self.grabOutput(logfile)
         try:
             dist.prep()
             filenames = dist.create()
         except:
-            self.resetOutput()
+            self.releaseOutput()
             raise
-        self.resetOutput()
+        self.releaseOutput()
          
         return filenames
-
-    def redirectOutput(self, logFile):
-        logfd = os.open(logFile, os.O_TRUNC | os.O_WRONLY | os.O_CREAT)
-        self.stdout = os.dup(sys.stdout.fileno())
-        self.stderr = os.dup(sys.stderr.fileno())
-        os.dup2(logfd, sys.stdout.fileno())
-        os.dup2(logfd, sys.stderr.fileno())
-        os.close(logfd)
-    
-    def resetOutput(self):
-        os.dup2(self.stdout, sys.stdout.fileno())
-        os.dup2(self.stderr, sys.stderr.fileno())
