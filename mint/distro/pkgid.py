@@ -50,6 +50,7 @@ class _PkgId:
         self.versionStr = versionStr
         self._repr = repr
         self.usedFlags = {}
+        self.cspkgs = {}
         if recipeClass: 
             self._hashcache[self] = self
 

@@ -174,8 +174,10 @@ class ControlFile:
             return matches, unmatched
 
         changesetNames =  [ x for x in os.listdir(changesetpath) if x.endswith('.ccs') ]
+        flavors = {}
         for changesetName in changesetNames:
-            cs = changeset.ChangeSetFromFile(os.path.join(changesetpath, changesetName))
+            csfile = os.path.join(changesetpath, changesetName)
+            cs = changeset.ChangeSetFromFile(csfile)
             pkgs = cs.primaryTroveList
             for (name, version, flavor) in pkgs:
                 cspkg = PkgId(name, version, flavor, justName=True)
@@ -191,12 +193,28 @@ class ControlFile:
                         if pkg.version == v or pkg.name == 'icecream':
                             if pkg not in matches:
                                 matches[pkg] = []
-                            matches[pkg].append((cspkg, changesetName))
-                            del unmatched[pkg]
-                            if len(matches[pkg]) > 1:
-                                raise TypeError, "We don't handle multiple changesets matching a package yet"
-                                # when we do, we'll sort them so that the 
-                                # highest version comes first
+                            if pkg not in flavors:
+                                flavors[pkg] = {}
+                            if cspkg.flavor not in flavors[pkg]:
+                                flavors[pkg][cspkg.flavor] = cspkg
+                            else:
+                                other = flavors[pkg][cspkg.flavor]
+                                if other.trailingVersion().buildCount < \
+                                    self.trailingVersion().buildCount:
+                                    matches[pkg].remove(other)
+                                    flavors[pkg][cspkg.flavor] = cspkg
+                                else:
+                                    # if there is already a changeset with
+                                    # this version and flavor but a later
+                                    # build count, don't count this as a match
+                                    continue
+                            matches[pkg].append(cspkg)
+                            pkg.cspkgs[cspkg] = True
+                            cspkg.file = csfile
+                            try:
+                                del unmatched[pkg]
+                            except KeyError:
+                                pass
 
         return (matches, unmatched)
 
