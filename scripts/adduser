@@ -1,0 +1,10 @@
+#!/bin/sh
+
+if [ $# -ne 3 ]; then
+    echo "Not enough arguments: <username> <password> <imagetool db>"
+    exit
+fi
+
+pw=`echo -n AAAA$2 | md5sum | awk '{print $1}'`
+
+echo "INSERT INTO Users VALUES (NULL, '$1', 'AAAA', '$pw', '$1@specifix.com', 0, 0, 1, 1, '');" | sqlite3 $3
