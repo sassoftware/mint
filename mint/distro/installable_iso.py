@@ -3,6 +3,7 @@
 #
 # All Rights Reserved
 #
+import os
 import sys
 import tempfile
 import deps
