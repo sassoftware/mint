@@ -542,9 +542,13 @@ class _TroveId(_PkgId):
         else:
             recurse = True
 
-        print "fetching %s=%s[%s]" % (component, version.asString(), flavor.freeze())
-        cscmd.ChangeSetCommand(repos, cfg, ["%s=%s[%s]" % (component, version.asString(), deps.formatFlavor(flavor))],
-                               path, recurse = recurse)
+        cscmd.ChangeSetCommand(repos, cfg,
+           ["%s=%s[%s]" % (component,
+                           version.asString(),
+                           deps.formatFlavor(flavor))
+           ],
+           path, recurse = recurse
+        )
         return ChangeSetId(self.getName(), version, flavor, path)
 
 class _ChangeSetId(_TroveId):
