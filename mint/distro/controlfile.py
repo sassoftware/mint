@@ -556,7 +556,7 @@ class ControlFile:
                         pass
         return (matches, unmatched)
 
-    def getMatchedRepoTroves(self, filterDict=None):
+    def getMatchedRepoTroves(self, filterDict=None, allowVersionMismatch=False):
         """ Must be called after getSources.  Looks at the troves 
             on installLabelPath, and matches them against 
             the list of source troves that must be built.  Returns a list
@@ -573,6 +573,10 @@ class ControlFile:
                         if not specified in control file)
             4. Source version
             5. Use/Flag flavor 
+
+            If allowVersionMismatch is True, then it is not required 
+            that the trove found matches the latest source version of a trove.
+            Instead, the latest built version on the given branch is acceptable.
         """
         matches = {}
         unmatched = {}
@@ -621,9 +625,9 @@ class ControlFile:
                                 # If the trove in the update repo was built 
                                 # from the source trove, it would have been 
                                 # after the source trove was branched
-                                if not troveId.builtFrom(sourceId):
-                                    continue
-                                matchingTroves.append(troveId)
+                                if troveId.builtFrom(sourceId, 
+                                     allowVersionMismatch=allowVersionMismatch):
+                                    matchingTroves.append(troveId)
                 except repository.PackageNotFound:
                     pass
             if self._updateLabel:
@@ -647,11 +651,24 @@ class ControlFile:
                                 # If the trove in the update repo was built 
                                 # from the source trove, it would have been 
                                 # after the source trove was branched
-                                if not troveId.builtFrom(branchedSourceId):
-                                    continue
-                                matchingTroves.append(troveId)
+                                if troveId.builtFrom(branchedSourceId,
+                                     allowVersionMismatch=allowVersionMismatch):
+                                    matchingTroves.append(troveId)
                 except repository.PackageNotFound:
                     pass
+            if allowVersionMismatch:
+                # even though we are allowing for binaries that are not 
+                # as new as the latest :source trove, we still want only
+                # the latest binaries on this branch.
+                matchingTroves.sort()
+                matchingTroves.reverse()
+                newMatching = [ matchingTroves[0] ]
+                for troveId in matchingTroves[1:]:
+                    if troveId.getVersion() == matchingTroves[0].getVersion():
+                        newMatching.append(troveId)
+                    else:
+                        break
+                matchingTroves = newMatching
             for troveId in matchingTroves:
                 # We do some extra work here to ensure that 
                 # we only count one trove with a particular
@@ -679,9 +696,11 @@ class ControlFile:
                 matches[sourceId].append(troveId)
                 if (troveId.getLabel() == self._updateLabel and 
                             sourceId.getLabel() != self._updateLabel):
-                    sourceId.addBranchedTroveId(troveId, self._updateLabel)
+                    sourceId.addBranchedTroveId(troveId, self._updateLabel,
+                                    allowVersionMismatch=allowVersionMismatch)
                 else:
-                    sourceId.addTroveId(troveId)
+                    sourceId.addTroveId(troveId, 
+                                    allowVersionMismatch=allowVersionMismatch)
                 try:
                     del unmatched[sourceId]
                 except KeyError:

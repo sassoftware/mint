@@ -18,10 +18,6 @@ from iso import ISO, DiskFullError
 import controlfile
 import flavorutil
 
-# XXX please note that this distro code hasn't been reworked in a while,
-# and it doesn't really completely fit with the wordage used elsewhere in 
-# the buildsystem.  
-
 class DistroInfo:
     def __init__(self, abbrevName, productPath, productName, version, 
                  phase, isoname=None, arch='i386', nightly=False):
@@ -60,7 +56,8 @@ class DistroInfo:
 
 class Distribution:
     def __init__(self, repos, cfg, distro, controlGroup, buildpath, isopath, 
-                nfspath, tftpbootpath, fromcspath, logdir, clean=False):
+                isoTemplatePath, nfspath, tftpbootpath, fromcspath, logdir, 
+                clean=False):
         """ Contains the necessary information and methods for 
             creating a distribution.  
 
@@ -77,6 +74,11 @@ class Distribution:
                               in their expanded form.
 
                 isopath:      the directory where the final isos will reside
+
+                isoTemplatePath: a directory which contains files that should
+                              be copied over to all the isos, after applying
+                              a set of macros including %(fullName), 
+                              %(version)s and %(phase)s.
 
                 nfspath:      the path where the packages should be installed
                               for nfs mount installing
@@ -95,6 +97,7 @@ class Distribution:
         self.repos = repos
         self.cfg = cfg
         self.buildpath = buildpath
+        self.isoTemplatePath = isoTemplatePath
         self.logdir = logdir
         self.tftpbootpath = tftpbootpath
         self.isos = []
@@ -132,7 +135,8 @@ class Distribution:
             tested.
         """
         self.prep()
-        self.createChangeSets(self.controlGroup, os.path.join(self.subdir, 'changesets'), self.fromcspath)
+        self.createChangeSets(self.controlGroup, 
+                os.path.join(self.subdir, 'changesets'))
         self.addIso(bootable=useAnaconda)
         self.makeInstRoots(useAnaconda)
         self.initializeCDs()
@@ -162,15 +166,30 @@ class Distribution:
         isoname = self.distro.isoname + ' Disc %d' % discno
         ciso = ISO(builddir, isopath, isoname, discno, bootable=bootable)
         self.isos.append(ciso)
+        if self.isoTemplatePath:
+            ln = len(self.isoTemplatePath)
+            for (root, dirs, files) in os.walk(self.isoTemplatePath):
+                isoPath = root[ln:]
+                if files:
+                    isoFileDir = os.path.join(ciso.builddir,isoPath)
+                    util.mkdirChain(isoFileDir)
+                for f in files:
+                    isoFilePath =  os.path.join(isoFileDir, f)
+                    isoFile = open(isoFilePath, 'w')
+                    for line in open(os.path.join(root, f)):
+                        isoFile.write(line % self.distro.__dict__)
+                    isoFile.close()
+                    ciso.markInstalled(isoFilePath)
         return ciso
 
-    def createChangeSets(self, group, csdir, fromcspath):
+    def createChangeSets(self, group, csdir):
         """ Creates the main changeset dir, creating files with shorter
             file names based on their version and flavor, but not branch.
             Source troves which do not have matching changesets are 
             simply skipped, and their changesets are not installed on the
             isos.
         """
+        fromcspath = self.fromcspath
         self.csInfo = {}
         oldFiles = {}
         for path in [ "%s/%s" % (csdir, x) for x in os.listdir(csdir) ]:
@@ -179,7 +198,11 @@ class Distribution:
         control = controlfile.ControlFile(group, self.repos, self.cfg, self.cfg.installLabelPath[0]) 
         control.loadControlFile()
         print "Matching changesets..."
-        matches, unmatched = control.getMatchedChangeSets(fromcspath)
+        if fromcspath:
+            matches, unmatched = control.getMatchedChangeSets(fromcspath)
+        else:
+            matches, unmatched = control.getMatchedRepoTroves(
+                                                    allowVersionMismatch=True)
         self.csList = []
         trovesByName = {}
 
@@ -208,9 +231,11 @@ class Distribution:
         for (troveName, version, flavor), pkg in self.csList:
             if pkg not in matches:
                 # we just skip these packages
-                csfile = "%s-%s.ccs" % (pkg.getName(), pkg.getVersion().trailingVersion().asString())
+                csfile = "%s-%s.ccs" % (pkg.getName(), 
+                                pkg.getVersion().trailingVersion().asString())
                 path = "%s/%s" % (csdir, csfile)
                 print >> sys.stderr, "%d/%d: skipping %s" % (index, l, csfile)
+                index += 1
                 continue
             useFlags = flavorutil.getFlavorUseFlags(flavor)
             dispName = pkg.getName()
@@ -226,26 +251,33 @@ class Distribution:
                         dispName += '-%s' % flag
                     #else:
                     #    dispName += '-non%s' % flag
-            cspkg = pkg.getTroveIds()[0]
-            csfile = "%s-%s.ccs" % (dispName, cspkg.getVersion().trailingVersion().asString())
+            troveId = pkg.getTroveIds()[0]
+            csfile = "%s-%s.ccs" % (dispName, 
+                        troveId.getVersion().trailingVersion().asString())
             path = "%s/%s" % (csdir, csfile)
 
             # link the first matching path, assuming they are ordered
             # so that latest is first
             if oldFiles.has_key(path):
-                print >> sys.stderr, "%d/%d: keeping old %s" % (index, l, csfile)
+                print >> sys.stderr, "%d/%d: keeping old %s" % (index, l, 
+                                                                   csfile)
                 del oldFiles[path]
-            else:
+            elif fromcspath:
                 print >> sys.stderr, "%d/%d: linking %s" % (index, l, csfile)
                 try:
-                    os.link(cspkg.getPath(), path)
+                    os.link(troveId.getPath(), path)
                 except OSError, msg:
                     if msg.errno != errno.EXDEV:
                         raise
                     shutil.copyfile(cspkg.getPath(), path)
+            else:
+                # the trove is still waiting in the repo
+                print >> sys.stderr, "%d/%d: extracting %s" % (index, l, csfile)
+                troveId.createChangeSet(path, self.repos)
+
             cs = changeset.ChangeSetFromFile(path)
             name = pkg.getName()
-            trailing = cspkg.getVersion().trailingVersion().asString()
+            trailing = troveId.getVersion().trailingVersion().asString()
             v = trailing.split('-')
             version = '-'.join(v[:-2])
             release = '-'.join(v[-2:])
@@ -255,8 +287,8 @@ class Distribution:
                 fileObj = files.ThawFile(stream, fileId)
                 if fileObj.hasContents:
                     size += fileObj.contents.size()
-            self.csInfo[pkg] = {'path': path, 'size': size, 'version' : version, 
-                                'release' : release}
+            self.csInfo[pkg] = {'path': path, 'size': size, 
+                                'version' : version, 'release' : release}
             index += 1
         # okay, now cut out unneeded desired trove info from csList
         self.csList = [x[1] for x in self.csList ] 

@@ -47,16 +47,16 @@ def SourceId(name, version, flavor):
     else:
         return _SourceId(name, version, flavor, repr=repr)
 
-def TroveId(name, version, flavor):
+def TroveId(name, version, flavor, trove=None):
     repr = makePkgIdRepr(name, version, flavor)
     if repr in _PkgId._hashcache:
         return _PkgId.hashcache[repr]
     else:
-        return _TroveId(name, version, flavor, repr=repr)
+        return _TroveId(name, version, flavor, repr=repr, trove=trove)
 
 def TroveIdFromTrove(theTrove):
     return TroveId(theTrove.getName(), theTrove.getVersion(), 
-                                            theTrove.getFlavor())
+                            theTrove.getFlavor(), trove=theTrove)
 
 
 
@@ -198,8 +198,21 @@ class _PkgId:
                                                             self.getFlavor())
 
     def __cmp__(self, other):
-        """ when sorting, sort by trove name """
-        return cmp(self.getName(), other.getName()) 
+        """ when sorting, sort by trove name, then from earliest version to
+            latest, then alphabetically by flavor
+        """
+        if self == other:
+            return 0
+        val = cmp(self.getName(), other.getName())
+        if val != 0:
+            return val
+        v1 = self.getVersion()
+        v2 = other.getVersion()
+        if v2.isAfter(v1):
+            return -1
+        if v1 == v2:
+            return cmp(str(self.getFlavor()), str(other.getFlavor()))
+        return 1
 
     def __repr__(self):
         return self.__repr
@@ -272,20 +285,22 @@ class _SourceId(_PkgId):
         return self._recipeClass 
 
     
-    def addTroveId(self, troveId):
+    def addTroveId(self, troveId, allowVersionMismatch=False):
         """ note that the given trove could have been derived from 
             a source trove with this source id 
         """
-        if not troveId.builtFrom(self):
+        if not troveId.builtFrom(self, 
+                                   allowVersionMismatch=allowVersionMismatch):
             raise RuntimeError, ("Error: %s cannot be built from %s!" % 
                                                                (troveId, self))
         self._troveIds[troveId] = True
 
-    def addBranchedTroveId(self, troveId, branch):
+    def addBranchedTroveId(self, troveId, branch, allowVersionMismatch=False):
         """ note that the given trove could have been derived from 
             a source trove with this source id 
         """
-        if not troveId.unbranch(branch).builtFrom(self):
+        if not troveId.unbranch(branch).builtFrom(self, 
+                                    allowVersionMismatch=allowVersionMismatch):
             raise RuntimeError, ("Error: %s cannot be built from %s!" % 
                                                                (troveId, self))
         self._troveIds[troveId] = True
@@ -312,15 +327,21 @@ class _SourceId(_PkgId):
 
 
 class _TroveId(_PkgId):
-    def __init__(self, name, version, flavor, repr=repr):
+    def __init__(self, name, version, flavor, repr=repr, trove=None):
         _PkgId.__init__(self, name, version, flavor, repr=repr)
+        self._trove = trove
         
-    def builtFrom(self, sourceId):
+    def builtFrom(self, sourceId, allowVersionMismatch=False):
         """ returns True if cooking sourceId could result in the
-            given package """
-        v = self.getVersion().getSourceBranch()
-        pv = sourceId.getVersion().getSourceBranch()
-        v.trailingVersion().buildCount = None
+            given package -- if allowVersionMismatch -- ignore 
+            trailingVersion source numbers """
+        if allowVersionMismatch:
+            v = self.getBranch().getSourceBranch()
+            pv = sourceId.getBranch().getSourceBranch()
+        else:
+            v = self.getVersion().getSourceBranch()
+            pv = sourceId.getVersion().getSourceBranch()
+            v.trailingVersion().buildCount = None
         # XXXXXXXXX big hack to deal with the fact that
         # icecream version numbers are out of whack
         if pv == v or sourceId.getName() == 'icecream':
@@ -375,7 +396,19 @@ class _TroveId(_PkgId):
                 return False
         return True
 
-    
+    def getTrove(self, troveLoc):
+        if self._trove:
+            return self._trove
+        self._trove = troveLoc.getTrove(self.getName(), self.getVersion(), 
+                                                         self.getFlavor())
+
+    def createChangeSet(self, path, troveLoc):
+        """ extract the trove from the repository to the given location """
+        version = self.getVersion()
+        flavor = self.getFlavor()
+        troveLoc.createChangeSetFile(
+            [(self.getName(), (None, flavor), (version, flavor), True)], path)
+        return ChangeSetId(self.getName(), version, flavor, path)
 
 class _ChangeSetId(_TroveId):
     
@@ -390,6 +423,8 @@ class _ChangeSetId(_TroveId):
         os.rename(self._path, newPath)
         self._path = newPath
 
+    def createChangeSet(self, troveLoc):
+        raise NotImplementedError
 
 def getSortedLeavesAfterUnbranch(pkgIds, label):
     """ Returns a list of lists of pkgIds such that, after all
