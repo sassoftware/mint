@@ -65,6 +65,7 @@ class InstallableIso(ImageGenerator):
         jobId = self.job.getId()
         releaseVer = self.client.getJobData(jobId, "releaseVer")
         releasePhase = self.client.getJobData(jobId, "releasePhase")
+        isoSize = self.client.getJobData(jobId, "isoSize")
 
         arch = self.job.getArch()
         assert(arch in ('x86', 'x86_64'))
@@ -73,7 +74,8 @@ class InstallableIso(ImageGenerator):
                                        isocfg.productPath,
                                        isocfg.productName,
                                        releaseVer, releasePhase,
-                                       arch = arch)
+                                       arch = arch,
+                                       isoSize = isoSize)
         version = versions.VersionFromString(versionStr)
        
         tmpDir = self.cfg.imagesPath + os.path.join(arch, releasePhase)
