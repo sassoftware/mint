@@ -3,8 +3,9 @@ import os.path
 import sys
 
 # conary 
-from deps import deps
 from build import lookaside, recipe, use
+import conaryclient
+from deps import deps
 from local import database 
 from repository import changeset, repository
 
@@ -234,6 +235,7 @@ class ControlFile:
         if not sourceIds:
             return
 
+        cc = conaryclient.ConaryClient(self._cfg)
         labelSources = {}
         # make lists of sources on a particular branch.
         # this should handle branching packages that are on a different
@@ -252,9 +254,8 @@ class ControlFile:
             for sourceId in labelSources[label]:
                 print "Branching %s" % sourceId
                 branchV = sourceId.getVersion().fork(newLabel, sameVerRel = 1)
-                self._repos.createBranch(newLabel,
-                                         sourceId.getVersion(), 
-                                         [sourceId.getName() + ':source'])
+                cc.createBranch(newLabel, sourceId.getVersion(), 
+                                 [sourceId.getName() + ':source'])
 
 
     def getSources(self):
