@@ -288,10 +288,13 @@ class Distribution:
             release = '-'.join(v[-2:])
             size = 0
             # calculate size when installed 
-            for (fileId, (old, new, stream)) in cs.getFileList():
-                fileObj = files.ThawFile(stream, fileId)
-                if fileObj.hasContents:
-                    size += fileObj.contents.size()
+
+            for pkgCs in cs.iterNewPackageList():
+                for (pathId, fPath, fileId, fVer) in pkgCs.getNewFileList():
+                    fileObj = files.ThawFile(cs.getFileChange(None, fileId), 
+                                                                        pathId)
+                    if fileObj.hasContents:
+                        size += fileObj.contents.size()
             self.csInfo[pkg] = {'path': path, 'size': size, 
                                 'version' : version, 'release' : release}
             index += 1
