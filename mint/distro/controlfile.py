@@ -82,6 +82,8 @@ class ControlFile:
                 extraTrove = (extraTrove, None, None)
             else:
                 extraTrove = (list(extraTrove) + [None, None])[0:3]
+            if extraTrove[3] is None:
+                extraTrove[3] = deps.DependencySet()
             if extraTrove[0].startswith('group-'):
                 self.loadGroup(extraTrove[0], ctroveLabel)
             else:
@@ -97,7 +99,7 @@ class ControlFile:
         leaves = self._repos.getTroveLeavesByLabel([groupName], label)
         leaves = leaves[groupName]
         ver = leaves[-1]
-        groupTrove = self._repos.getTrove(groupName, ver, None)
+        groupTrove = self._repos.getTrove(groupName, ver, deps.DependencySet())
         groupId = SourceId(groupName, 
                              groupTrove.getVersion(), 
                              groupTrove.getFlavor()) 
@@ -127,6 +129,8 @@ class ControlFile:
         """
         if flavor is not None:
             flavor = flavor.toDependency(troveName.split(':')[0])
+        else:
+            flavor = deps.DependencySet()
         #if (troveName, versionStr, flavor) in self._desTroves:
         #    raise RuntimeError, "Same trove listed twice in group file: (%s, %s %s)" % (troveName, versionStr, flavor)
         self._desTroves[(troveName, versionStr, flavor)] = None
@@ -261,7 +265,6 @@ class ControlFile:
             or getSourceTrovesByName.
         """
         notfound = {}
-        flavor = None
         # XXX this might be faster if we tried to replicate findTrove behavior
         # e.g., if versionStrs are on the same label (90% of the time), we 
         # can just get leaves on label
