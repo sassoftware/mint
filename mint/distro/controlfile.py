@@ -51,7 +51,8 @@ class ControlFile:
             troveName = troveName.split(':', 1)[0]
             try: 
                 sourceTroveName = troveName + ':source'
-                sourceTroves = self.repos.findTrove(self.label, sourceTroveName, flavor, versionStr)
+                # XXX can't look at flavor yet
+                sourceTroves = self.repos.findTrove(self.label, sourceTroveName, None, versionStr)
             except repository.PackageNotFound:
                 notfound[troveName] = True
                 continue
@@ -199,8 +200,8 @@ class ControlFile:
                                 flavors[pkg][cspkg.flavor] = cspkg
                             else:
                                 other = flavors[pkg][cspkg.flavor]
-                                if other.trailingVersion().buildCount < \
-                                    self.trailingVersion().buildCount:
+                                if other.version.trailingVersion().buildCount < \
+                                    cspkg.version.trailingVersion().buildCount:
                                     matches[pkg].remove(other)
                                     flavors[pkg][cspkg.flavor] = cspkg
                                 else:

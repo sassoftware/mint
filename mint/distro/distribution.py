@@ -79,11 +79,13 @@ class Distribution:
                 curfilepath = info['path']
                 isofilepath = os.path.join(csdir, os.path.basename(info['path']))
                 ciso.addFile(isofilepath, curfilepath)
+                info['disc'] = ciso.discno
             except DiskFullError:
                 discno += 1
                 ciso = ISO(builddir % discno, isopath % discno, isoname % discno, discno)
                 self.isos.append(ciso)
                 ciso.addFile(isofilepath, curfilepath)
+                info['disc'] = ciso.discno
 
             
     def createChangeSets(self, group, csdir, fromcspath):
@@ -96,43 +98,46 @@ class Distribution:
         control.loadControlFile()
         print "Matching changesets..."
         matches, unmatched = control.getMatchedChangeSets(fromcspath)
-        
         trovesByName = control.sources.copy()
         l = len(trovesByName)
-        list = []
+        self.csList = []
         for name in [ 'setup', 'glibc' ]:
             for pkg in trovesByName[name]:
-                list.append(pkg)
+                self.csList.append(pkg)
             del trovesByName[name]
 
         names = trovesByName.keys()
         names.sort()
         index = 0
         for name in names:
-            list.extend(trovesByName[name])
-        for pkg in list:
+            self.csList.extend(trovesByName[name])
+        for pkg in self.csList:
             dispName = pkg.name
             # XXX hack to add in flavor, since it is not 
             # listed in group-dist
-            if pkg.name == "kernel" or pkg.name == 'kernel-source':
-                if "!kernel.smp" not in str(pkg.flavor):
-                    dispName += '-smp'
-                    flavor = deps.DependencySet()
-                    dep = deps.Dependency('use', ['!kernel.smp'])
-                    flavor.addDep(deps.UseDependency, dep)
-                    pkg = PkgId(dispNname, version, flavor, justName=True)
-            csfile = "%s-%s.ccs" % (pkg.name, pkg.version.trailingVersion().asString())
-            path = "%s/%s" % (csdir, csfile)
+            #if pkg.name == "kernel" or pkg.name == 'kernel-source':
+            #    if "!kernel.smp" not in str(pkg.flavor):
+            #        dispName += '-smp'
+            #        flavor = deps.DependencySet()
+            #        dep = deps.Dependency('use', ['!kernel.smp'])
+            #        flavor.addDep(deps.UseDependency, dep)
+            #        pkg = PkgId(dispNname, version, flavor, justName=True)
 
-            if oldFiles.has_key(path):
-                print >> sys.stderr, "%d/%d: keeping old %s" % (index, l, csfile)
-                del oldFiles[path]
-            elif pkg in matches:
+            if pkg in matches:
                 # link the first matching path, assuming they are ordered
                 # so that latest is first
-                print >> sys.stderr, "%d/%d: linking %s" % (index, l, csfile)
-                os.link(os.path.join(fromcspath, matches[pkg][0][1]), path)
+                cspkg = pkg.cspkgs.keys()[0]
+                csfile = "%s-%s.ccs" % (pkg.name, cspkg.version.trailingVersion().asString())
+                path = "%s/%s" % (csdir, csfile)
+                if oldFiles.has_key(path):
+                    print >> sys.stderr, "%d/%d: keeping old %s" % (index, l, csfile)
+                    del oldFiles[path]
+                else:
+                    print >> sys.stderr, "%d/%d: linking %s" % (index, l, csfile)
+                    os.link(cspkg.file, path)
             else:
+                print >> sys.stderr, "%d/%d: skipping %s" % (index, l, csfile)
+                continue
                 print >> sys.stderr, "%d/%d: creating %s" % (index, l, csfile)
                 version = control.getDesiredCompiledVersion(pkg)
                 self.repos.createChangeSetFile(
@@ -143,9 +148,9 @@ class Distribution:
                 sys.stderr.write("Unable to handle changeset file %s with more "
                                  "than one primary package\n", fn)
                 sys.exit(1)
-            pkg = PkgId(pkgs[0][0], pkgs[0][1], pkgs[0][2], justName=True)
+            #cspkg = PkgId(pkgs[0][0], pkgs[0][1], pkgs[0][2], justName=True)
             name = pkg.name
-            trailing = pkg.version.trailingVersion().asString()
+            trailing = cspkg.version.trailingVersion().asString()
             v = trailing.split('-')
             version = '-'.join(v[:-2])
             release = '-'.join(v[-2:])
@@ -163,11 +168,10 @@ class Distribution:
         path = '/'.join((self.isos[0].builddir, self.distro.productPath, 'base/cslist'))
         util.mkdirChain(os.path.dirname(path))
         csfile = open(path, 'w')
-        pkgs = self.csInfo.keys()
-        pkgs.sort()
-        for pkg in pkgs:
-            info = self.csInfo[pkg]
-            print >> csfile, os.path.basename(info['path']), pkg.name, info['version'], info['release'], info['size']
+        for pkg in self.csList:
+            if pkg in self.csInfo:
+                info = self.csInfo[pkg]
+                print >> csfile, os.path.basename(info['path']), pkg.name, info['version'], info['release'], info['size'], info['disc']
         self.isos[0].addFile('/' + self.distro.productPath + '/base/cslist')
 
     def stampIso(self, iso):
@@ -211,7 +215,7 @@ class Distribution:
         self.anacondadir = tempfile.mkdtemp('', 'anaconda-', self.buildpath)
         oldroot = self.cfg.root
         self.cfg.root = self.anacondadir
-        updatecmd.doUpdate(self.repos, self.cfg, ['anaconda'])
+        updatecmd.doUpdate(self.repos, self.cfg, ['anaconda'], depCheck=False)
         self.cfg.root = oldroot
         self.anacondascripts = os.path.join(self.anacondadir, 'usr/lib/anaconda-runtime')
         instroot = tempfile.mkdtemp('', 'bs-bd-instroot', self.buildpath)
