@@ -128,7 +128,7 @@ class ControlFile:
             Takes the format used in group-recipes' addTrove commands
         """
         if flavor is not None:
-            flavor = flavor.toDependency(troveName.split(':')[0])
+            flavor = flavor.toDependency()
         else:
             flavor = deps.DependencySet()
         #if (troveName, versionStr, flavor) in self._desTroves:
