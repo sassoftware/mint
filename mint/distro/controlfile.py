@@ -617,7 +617,7 @@ class ControlFile:
                             if troveId.builtFrom(sourceId, 
                                  allowVersionMismatch=allowVersionMismatch):
                                 matchingTroves.append(troveId)
-            except repository.PackageNotFound:
+            except repository.TroveNotFound:
                 pass
             if self._updateLabel:
                 # search the update label for newer versions of this package
@@ -640,7 +640,7 @@ class ControlFile:
                                 if troveId.builtFrom(branchedSourceId,
                                      allowVersionMismatch=allowVersionMismatch):
                                     matchingTroves.append(troveId)
-                except repository.PackageNotFound:
+                except repository.TroveNotFound:
                     pass
             if allowVersionMismatch and matchingTroves:
                 # even though we are allowing for binaries that are not 
