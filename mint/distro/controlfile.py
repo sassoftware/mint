@@ -283,8 +283,8 @@ class ControlFile:
             # remove potential :devel, etc, components from the components, 
             # since we want to point to the source trove
             troveName = origTroveName.split(':', 1)[0]
-            #print "%s/%s: %s, %s, %s" % (index, ln, origTroveName, versionStr, 
-            #                                                        flavor)
+            print "%s/%s: %s, %s, %s" % (index, ln, origTroveName, versionStr, 
+                                                                    flavor)
             index += 1
             try: 
                 sourceTrove = self.getLatestSource(troveName, versionStr)
@@ -377,6 +377,7 @@ class ControlFile:
                 recipeFile = '/'.join((self._cfg.recipedir, pkgName, 
                                                      pkgName + '.recipe'))
                 if os.path.exists(recipeFile):
+                    print "Loading %s from sources dir..." % pkgName
                     loader = recipe.RecipeLoader(recipeFile, cfg=self._cfg,
                                                              repos=self._repos)
                     loader = (loader, sourceId.getVersion())
