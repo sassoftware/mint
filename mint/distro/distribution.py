@@ -159,7 +159,8 @@ class Distribution:
             iso.create()
         if self.nfspath:
             self.copyToNFS()
-
+        return [iso.imagepath for iso in self.isos]
+        
     def addIso(self, bootable=False):
         """ Adds an ISO to the distribution, giving it the appropriate
             disc number, etc.
