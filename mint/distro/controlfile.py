@@ -4,7 +4,9 @@
 #     desired version to include latest source version information 
 # 3.  Determine if a changeset file fits the desired version
 # 4.  Grab a matching version from the repository
+from deps import deps
 from build import lookaside, recipe, use
+import flavorutil
 from local import database 
 import os
 import os.path
@@ -47,6 +49,8 @@ class ControlFile:
         # e.g., if versionStrs are on the same label (90% of the time), we 
         # can just get leaves on label
         for (troveName, versionStr, flavor) in self.troves:
+            if flavor is not None:
+                flavor = flavor.toDependency()
             # remove potential :devel, etc, components from the components, 
             # since we want to point to the source trove
             troveName = troveName.split(':', 1)[0]
@@ -58,7 +62,7 @@ class ControlFile:
                 notfound[troveName] = True
                 continue
             for sourceTrove in sourceTroves:
-                p = PkgId(troveName, sourceTrove.getVersion(), sourceTrove.getFlavor(), justName = True) 
+                p = PkgId(troveName, sourceTrove.getVersion(), flavor, justName = True) 
                 if troveName not in sources:
                     sources[troveName] = []
                 # its possible that multiple addTrove commands point to a single
@@ -91,6 +95,8 @@ class ControlFile:
             # ensure name has :source tacked on end
             name = recipefile + ':source'
             recipefile += '.recipe'
+            # setFlavors 
+            oldFlavor = flavorutil.setFlavor(pkg.flavor, pkg.name)
             use.resetUsed()
             loader = recipe.recipeLoaderFromSourceComponent(name, recipefile, 
                                     self.cfg, self.repos, pkg.versionStr, 
@@ -117,9 +123,11 @@ class ControlFile:
             pkg.recipeClass = recipeClass
             self._loaders.append(loader)
         except recipe.RecipeFileError, e:
+            flavorutil.resetFlavor(oldFlavor)
             raise
         else:
-                    return recipeClass
+            flavorutil.resetFlavor(oldFlavor)
+            return recipeClass
 
     def getInstalledPkgs(self):
         matches = {}
@@ -142,17 +150,15 @@ class ControlFile:
                     # convert dbpkg version to source version by removing
                     # buildCount
                     #
-                        v = dbpkg.version.getSourceBranch()
-                        pv = pkg.version.getSourceBranch()
-                        v.trailingVersion().buildCount = None
-                        if pv == v or pkg.name == 'icecream':
-                            if pkg not in matches:
-                                matches[pkg] = []
-                            matches[pkg].append((dbpkg, troveName))
-                            try:
-                                del unmatched[pkg]
-                            except KeyError:
-                                pass
+                        if not dbpkg.builtFrom(pkg):
+                            continue
+                        if pkg not in matches:
+                            matches[pkg] = []
+                        matches[pkg].append((dbpkg, troveName))
+                        try:
+                            del unmatched[pkg]
+                        except KeyError:
+                            pass
         return (matches, unmatched)
 
     def getMatchedChangeSets(self, changesetpath, filterDict={}):
@@ -191,38 +197,32 @@ class ControlFile:
                 cspkg = PkgId(name, version, flavor, justName=True)
                 if cspkg.name in self.packages:
                     for pkg in self.packages[cspkg.name]:
-                    # convert cspkg version to source version by removing
-                    # buildCount
-                        v = cspkg.version.getSourceBranch()
-                        pv = pkg.version.getSourceBranch()
-                        v.trailingVersion().buildCount = None
-                        # XXXXXXXXX big hack to deal with the fact that
-                        # icecream version numbers are out of whack
-                        if pv == v or pkg.name == 'icecream':
-                            if pkg not in matches:
-                                matches[pkg] = []
-                            if pkg not in flavors:
-                                flavors[pkg] = {}
-                            if cspkg.flavor not in flavors[pkg]:
+                        if not cspkg.builtFrom(pkg):
+                            continue
+                        if pkg not in matches:
+                            matches[pkg] = []
+                        if pkg not in flavors:
+                            flavors[pkg] = {}
+                        if cspkg.flavor not in flavors[pkg]:
+                            flavors[pkg][cspkg.flavor] = cspkg
+                        else:
+                            other = flavors[pkg][cspkg.flavor]
+                            if other.version.trailingVersion().buildCount < \
+                                cspkg.version.trailingVersion().buildCount:
+                                matches[pkg].remove(other)
                                 flavors[pkg][cspkg.flavor] = cspkg
                             else:
-                                other = flavors[pkg][cspkg.flavor]
-                                if other.version.trailingVersion().buildCount < \
-                                    cspkg.version.trailingVersion().buildCount:
-                                    matches[pkg].remove(other)
-                                    flavors[pkg][cspkg.flavor] = cspkg
-                                else:
-                                    # if there is already a changeset with
-                                    # this version and flavor but a later
-                                    # build count, don't count this as a match
-                                    continue
-                            matches[pkg].append(cspkg)
-                            pkg.cspkgs[cspkg] = True
-                            cspkg.file = csfile
-                            try:
-                                del unmatched[pkg]
-                            except KeyError:
-                                pass
+                                # if there is already a changeset with
+                                # this version and flavor but a later
+                                # build count, don't count this as a match
+                                continue
+                        matches[pkg].append(cspkg)
+                        pkg.cspkgs[cspkg] = True
+                        cspkg.file = csfile
+                        try:
+                            del unmatched[pkg]
+                        except KeyError:
+                            pass
 
         return (matches, unmatched)
 

@@ -138,15 +138,13 @@ class Distribution:
             dispName = pkg.name
             # XXX hack to add in flavor, since it is not 
             # listed in group-dist
-            #if pkg.name == "kernel" or pkg.name == 'kernel-source':
-            #    if "!kernel.smp" not in str(pkg.flavor):
-            #        dispName += '-smp'
-            #        flavor = deps.DependencySet()
-            #        dep = deps.Dependency('use', ['!kernel.smp'])
-            #        flavor.addDep(deps.UseDependency, dep)
-            #        pkg = PkgId(dispNname, version, flavor, justName=True)
-
+            
             if pkg in matches:
+                dispName = pkg.name
+                if pkg.name in ('kernel' or 'kernel-source'): 
+                    if "!kernel.smp" not in str(pkg.flavor):
+                        dispName += '-smp'
+                    
                 cspkg = pkg.cspkgs.keys()[0]
                 csfile = "%s-%s.ccs" % (pkg.name, cspkg.version.trailingVersion().asString())
                 path = "%s/%s" % (csdir, csfile)

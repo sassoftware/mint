@@ -1,4 +1,5 @@
 from deps import deps
+import flavorutil
 import stats
 import versions
 
@@ -57,6 +58,48 @@ class _PkgId:
     def prettyStr(self):
         return "%s (%s) (%s)" % (self.name, self.version.asString(), self.flavor)
 
+    def builtFrom(self, srcpkg):
+        v = self.version.getSourceBranch()
+        pv = srcpkg.version.getSourceBranch()
+        v.trailingVersion().buildCount = None
+        # XXXXXXXXX big hack to deal with the fact that
+        # icecream version numbers are out of whack
+        if pv == v or srcpkg.name == 'icecream':
+            if self.flavorIsFrom(srcpkg):
+                return True
+
+    def flavorIsFrom(self, srcpkg):
+        if srcpkg.flavor is None:
+            return True
+        # this should cover Arch 
+        if not self.flavor.satisfies(srcpkg.flavor):
+            return False
+        builtFlags = flavorutil.getFlavorUseFlags(self.flavor)
+        srcFlags = flavorutil.getFlavorUseFlags(srcpkg.flavor)
+        builtUse = builtFlags['Use']
+        srcUse = srcFlags['Use']
+        
+
+        # only return false if it actually negates the flag value
+        # -- its possible that although a flag is specified for the trove,
+        # the flag is never used during the building of this trove
+        for flag, value in srcUse.iteritems():
+            if flag in builtUse and builtUse[flag] != value:
+                return False
+        try:
+            srcLocal = srcFlags['Flags'][srcpkg.name]
+            builtLocal = builtFlags['Flags'][srcpkg.name]
+        except KeyError:
+            # if either of these doesn't mention any local flags,
+            # then it's impossible for them to have a contradiction
+            # between them
+            return True
+        for flag, value in srcLocal.iteritems():
+            if flag in builtLocal and builtLocal[flag] != value:
+                return False
+        return True
+
+           
     def __cmp__(self, other):
         return cmp(self.name, other.name) 
 
