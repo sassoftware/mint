@@ -54,6 +54,8 @@ class DistroInfo:
         self.productName = productName
         self.version = version
         self.phase = phase
+        if arch == 'x86':
+            arch = 'i386'
         self.arch = arch
         self.nightly = nightly
         self.isoSize = isoSize
@@ -316,7 +318,7 @@ class Distribution:
             else:
                 # the trove is still waiting in the repo
                 print >> sys.stderr, "%d/%d: extracting %s" % (index+1, l, csfile)
-                troveId.createChangeSet(path, self.repos, component=troveName)
+                troveId.createChangeSet(path, self.repos, self.cfg, component=troveName)
 
             cs = changeset.ChangeSetFromFile(path)
             trailing = troveId.getVersion().trailingRevision().asString()

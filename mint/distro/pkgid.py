@@ -7,6 +7,7 @@ import os
 # conary
 from deps import deps
 import versions
+import cscmd
 
 #darby
 import flavorutil
@@ -530,7 +531,7 @@ class _TroveId(_PkgId):
                                                          self.getFlavor())
         return self._trove
 
-    def createChangeSet(self, path, troveLoc, component=None):
+    def createChangeSet(self, path, repos, cfg, component=None):
         """ extract the trove from the repository to the given location """
         version = self.getVersion()
         flavor = self.getFlavor()
@@ -540,8 +541,10 @@ class _TroveId(_PkgId):
             recurse = False
         else:
             recurse = True
-        troveLoc.createChangeSetFile(
-            [(component, (None, None), (version, flavor), True)], path, recurse=recurse)
+
+        print "fetching %s=%s[%s]" % (component, version.asString(), flavor.freeze())
+        cscmd.ChangeSetCommand(repos, cfg, ["%s=%s[%s]" % (component, version.asString(), deps.formatFlavor(flavor))],
+                               path, recurse = recurse)
         return ChangeSetId(self.getName(), version, flavor, path)
 
 class _ChangeSetId(_TroveId):
