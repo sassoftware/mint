@@ -15,7 +15,7 @@ else:
 sys.path.insert(0, ".")
 
 import sqlite3
-import users
+from distro import users
 
 def addUser(dbPath, username, password):
     db = sqlite3.connect(dbPath, timeout = 30000)
