@@ -506,7 +506,11 @@ class ControlFile:
                 if not self.isKnownPackage(csId.getName()):
                     continue
                 for sourceId in self.getPackageSourceIds(csId.getName()): 
-                    if not csId.builtFrom(sourceId):
+                    if self._updateLabel:
+                        if not csId.builtFrom(\
+                                        sourceId.branch(self._updateLabel)):
+                            continue
+                    elif not csId.builtFrom(sourceId):
                         continue
                     # We do some extra work here to ensure that 
                     # we only count one changeset with a particular
@@ -532,7 +536,10 @@ class ControlFile:
                             # build count, don't count this as a match
                             continue
                     matches[sourceId].append(csId)
-                    sourceId.addTroveId(csId)
+                    if self._updateLabel:
+                        sourceId.addBranchedTroveId(csId, self._updateLabel)
+                    else:
+                        sourceId.addTroveId(csId)
                     try:
                         del unmatched[sourceId]
                     except KeyError:
