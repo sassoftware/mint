@@ -120,8 +120,14 @@ class _PkgId:
         self._hashcache[self] = self
 
 
+    def getBranch(self):
+        return self.__version.branch()
+
     def getLabel(self):
         return self.__version.branch().label()
+
+    def getSourceCount(self):
+        return self.__version.trailingVersion().getRelease()
 
     def getVersionStr(self):
         return self.__version.asString()
@@ -296,6 +302,19 @@ class _TroveId(_PkgId):
             if flag in builtLocal and builtLocal[flag] != value:
                 return False
         return True
+
+    def unbranch(self, label):
+        """ Create a SourceId for this package after it has been branched
+            onto newLabel
+        """
+        v = self.getVersion()
+        vlist = v.versions 
+        vlist = v.versions[:-3] + [ v.versions[-1] ]
+        unbranchedV = versions.Version(vlist)
+        unbranchedSourceId  = SourceId(self.getName(),
+                                     unbranchedV,
+                                     self.getFlavor())
+        return unbranchedSourceId
 
 
 class _ChangeSetId(_TroveId):
