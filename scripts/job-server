@@ -10,6 +10,7 @@ import os
 import time
 import tempfile
 import threading
+import subprocess
 
 if os.environ.has_key("CONARY_PATH"):
     sys.path.insert(0, os.environ['CONARY_PATH'])
@@ -24,6 +25,8 @@ import conarycfg
 import conaryclient
 from conarycfg import ConfigFile, ConaryConfiguration
 from deps import deps
+
+scriptPath = os.dirname(sys.argv[0])
 
 class JobDaemonConfig(ConfigFile):
     defaults = {
@@ -77,10 +80,17 @@ class JobRunner(threading.Thread):
             
             tmpDir = tempfile.mkdtemp("", "imagetool", self.cfg.imagesPath)
             self.writeImage(tmpDir)
+
+            fd, fn = tempfile.mkstemp('.iso', 'livecd',self.cfg.imagesPath)
+            os.close(fd)
+            subprocess.call((os.path.join((scriptPath, 'mklivecd')), tmpDir, fn))
+            os.chmod(fn, 0644)
+            isoImage = fn
         except:
             self.itclient.setJobStatus(jobId, jobstatus.ERROR)
             raise
         else:
+            self.itclient.setJobFilename(jobId, isoImage)
             self.itclient.setJobStatus(jobId, jobstatus.FINISHED)
             print "set %d finished (%s)" % (jobId, tmpDir)
 
@@ -99,7 +109,6 @@ class JobRunner(threading.Thread):
         cfg.setValue("installLabelPath", " ".join([x[1] for x in labelList]))
         client = conaryclient.ConaryClient(cfg)
         applyList = [(trove, version, flavor)]
-        print applyList
         (cs, depFailures, suggMap, brokenByErase) = \
             client.updateChangeSet(applyList, recurse = False,
                                    resolveDeps = False)
