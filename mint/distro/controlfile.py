@@ -67,7 +67,30 @@ class ControlFile:
                     updateIds = [ TroveIdFromTrove(x) for x in updateTroves ] 
                     latest = pkgid.getSortedLeavesAfterUnbranch(updateIds, 
                                                         self._updateLabel)
-                    assert(len(latest) == 1)
+                    if len(latest) > 1:
+                        # multiple branches were returned.
+                        # if we didn't ask for a branch,
+                        # assume we don't want one
+                        newlatest = []
+                        if not versionStr or versionStr.find('@') == -1:
+                            desiredLabel = self._canonicalLabel
+                        elif versionStr.find('/') == -1:
+                            desiredLabel = versions.Label(versionStr)
+                        else:
+                            desiredLabel = versions.VersionFromString(versionStr)
+                            desiredLabel = desiredLabel.label()
+                        for leaf in latest:
+                            assert(len(leaf) == 1)
+                            leaf = leaf[0]
+                            if leaf.unbranch(self._updateLabel).getLabel() \
+                                    == desiredLabel:
+                                newlatest.append([leaf])
+                        latest = newlatest
+                    if len(latest) > 1:
+                        raise RuntimeError, (
+                "Multiple possible versions could match version String %s "
+                " for trove %s: %s" % (versionStr, name, 
+                                       [x[0].asString() for x in latest]))
                     # could happen if there are multiple flavors...
                     # but these are source troves!
                     assert(len(latest[0]) == 1)
@@ -237,10 +260,14 @@ class ControlFile:
             needBranching.append(sourceId)
             if label not in labelSources:
                 labelSources[label] = []
-            labelSources[label].append(sourceId.getName() + ':source')
+            labelSources[label].append(sourceId)
 
         for label in labelSources:
-            self._repos.createBranch(newLabel, label, labelSources[label])
+            for sourceId in labelSources[label]:
+                branchV = sourceId.getVersion().fork(newLabel, sameVerRel = 1)
+                self._repos.createBranch(newLabel,
+                                         sourceId.getVersion(), 
+                                         [sourceId.getName() + ':source'])
 
         # Update the sourceIds so that when we load them
         # we will load them from the new label
@@ -334,7 +361,7 @@ class ControlFile:
             loader = recipe.recipeLoaderFromSourceComponent(name, recipefile, 
                                     self._cfg, self._repos, 
                                     sourceId.getVersionStr(), 
-                                    label=label)
+                                    label=sourceId.getLabel())
             # gather the local flags created (they may not have been tracked)
             sourceId.setLocalFlags(flavorutil.getLocalFlags())
             # gather the local/use/arch flags actually tracked
@@ -486,7 +513,7 @@ class ControlFile:
                         pass
         return (matches, unmatched)
 
-    def getMatchedRepoTroves(self, filterDict={}):
+    def getMatchedRepoTroves(self, filterDict=None):
         """ Must be called after getSources.  Looks at the troves 
             on installLabelPath, and matches them against 
             the list of source troves that must be built.  Returns a list
@@ -527,7 +554,7 @@ class ControlFile:
                                  sourceId.getName(), 
                                  self._cfg.flavor,
                                  sourceId.getLabel().asString(),
-                                 acrossRepositories=True, withFiles=False)
+                                 acrossRepositories=False, withFiles=False)
                 
             except repository.PackageNotFound:
                 troves = []
@@ -546,26 +573,24 @@ class ControlFile:
                 branchedSourceId  = sourceId.branch(self._updateLabel)
                 branch = branchedSourceId.getVersion().branch().getBinaryBranch()
                 try:
-                    troves = self._repos.findTrove(
-                                 self._updateLabel, 
-                                 sourceId.getName(), 
-                                 self._cfg.flavor,
-                                 branch.asString(),
-                                 acrossRepositories=True, withFiles=False)
+                    vers = self._repos.getTroveVersionList(
+                                                    self._updateLabel.getHost(),
+                                                    [sourceId.getName()])
+                    flavors = self._repos.getTroveVersionFlavors(vers)
+                    flavors = flavors[sourceId.getName()]
+
+                    for ver in flavors:
+                        for flavor in flavors[ver]:
+                                troveId = TroveId(sourceId.getName(), ver,
+                                                    flavor)
+                                # If the trove in the update repo was built 
+                                # from the source trove, it would have been 
+                                # after the source trove was branched
+                                if not troveId.builtFrom(branchedSourceId):
+                                    continue
+                                matchingTroves.append(troveId)
                 except repository.PackageNotFound:
-                    troves = []
-                for trove in troves:
-                    troveId = TroveId(trove.getName(), trove.getVersion(), 
-                                      trove.getFlavor())
-
-                    # If the trove in the update repo was built from 
-                    # the source trove, it would have been after the source
-                    # trove was branched
-                    if not troveId.builtFrom(branchedSourceId):
-                        continue
-                    matchingTroves.append(troveId)
-
-
+                    pass
             for trove in matchingTroves:
                 # We do some extra work here to ensure that 
                 # we only count one trove with a particular
