@@ -3,6 +3,7 @@
 #
 # All Rights Reserved
 #
+import errno
 import os
 import sys
 import tempfile
@@ -34,6 +35,7 @@ class InstallableIso(ImageGenerator):
     def getIsoConfig(self):
         isocfg = IsoConfig()
         isocfg.read("installable_iso.conf")
+        return isocfg
 
     def write(self):
         isocfg = self.getIsoConfig()
@@ -77,13 +79,35 @@ class InstallableIso(ImageGenerator):
         # XXX remove this and pass version as soon as darby can handle a full ver
         label = version.branch().label()
       
-        tmpDir = self.itcfg.imagesPath + os.path.join(arch, releasePhase)
+        tmpDir = self.cfg.imagesPath + os.path.join(arch, releasePhase)
         dist = distro.Distribution(arch, repos, ccfg,
-                                   distroInfo, (trove, label, flavor),
+                                   distroInfo, (trove, version.asString(), flavor),
                                    tmpDir, tmpDir+"/isos/", isocfg.templatePath,
                                    isocfg.nfsPath, isocfg.tftpbootPath, None,
-                                   self.itcfg.logPath, False)
+                                   None, False)
                                    
-        dist.prep()
-        filenames = dist.create()
+        try:
+            os.makedirs(self.cfg.logPath)
+        except OSError, e:
+            if e.errno != errno.EEXIST:
+                raise
+            
+        logfile = os.path.join(self.cfg.logPath, "instiso-%d.log" % jobId)
+        logfd = os.open(logfile, os.O_TRUNC | os.O_WRONLY | os.O_CREAT)
+        stdout = os.dup(sys.stdout.fileno())
+        stderr = os.dup(sys.stderr.fileno())
+        os.dup2(logfd, sys.stdout.fileno())
+        os.dup2(logfd, sys.stderr.fileno())
+        os.close(logfd)
+        
+        try:
+            dist.prep()
+            filenames = dist.create()
+        except:
+            os.dup2(stdout, sys.stdout.fileno())
+            os.dup2(stderr, sys.stderr.fileno())    
+            raise
+        os.dup2(stdout, sys.stdout.fileno())
+        os.dup2(stderr, sys.stderr.fileno())    
+           
         return filenames
