@@ -55,6 +55,9 @@ class _PkgId:
     def prettyStr(self):
         return "%s (%s) (%s)" % (self.name, self.version.asString(), self.flavor)
 
+    def __cmp__(self, other):
+        return cmp(self.name, other.name) 
+
     def __repr__(self):
         return self._repr
 
@@ -62,7 +65,9 @@ class _PkgId:
         return self._repr
 
     def __eq__(self, other):
-        return self._repr == other._repr
+        if isinstance(other, _PkgId):
+            return self._repr == other._repr
+        return False
 
     def __add__(self, other):
         """ Treat like a string for adding """
