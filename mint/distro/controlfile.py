@@ -277,7 +277,7 @@ class ControlFile:
         # XXX this might be faster if we tried to replicate findTrove behavior
         # e.g., if versionStrs are on the same label (90% of the time), we 
         # can just get leaves on label
-        ln = self.getDesiredTroveList()
+        ln = len(self.getDesiredTroveList())
         index = 1
         for (origTroveName, versionStr, flavor) in self.getDesiredTroveList():
             # remove potential :devel, etc, components from the components, 
