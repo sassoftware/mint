@@ -118,7 +118,8 @@ class ControlFile:
         """
         if flavor is not None:
             flavor = flavor.toDependency(troveName)
-        assert((troveName, versionStr, flavor) not in self._desTroves)
+        if (troveName, versionStr, flavor) in self._desTroves:
+            raise RuntimeError, "Same trove listed twice in group file: (%s, %s %s)" % (troveName, versionStr, flavor)
         self._desTroves[(troveName, versionStr, flavor)] = None
 
     def setDesiredTroveSource(self, troveName, versionStr, flavor, 
@@ -129,7 +130,6 @@ class ControlFile:
             raise RuntimeError, ("Source trove that satisfies (%s, %s, %s) was"
                                " already set to %s, cannot set to %s" 
                                % (troveName, versionStr, flavor, 
-                               troveName, versionStr, flavor, 
                                self._desTroves[(troveName, versionStr, flavor)],
                                sourceId))
         self._desTroves[(troveName, versionStr, flavor)] = sourceId
@@ -233,10 +233,6 @@ class ControlFile:
             if label not in labelSources:
                 labelSources[label] = []
             labelSources[label].append(sourceId.getName() + ':source')
-
-        if len(labelSources.keys()) > 1:
-            from lib import epdb
-            epdb.st()
 
         for label in labelSources:
             self._repos.createBranch(newLabel, label, labelSources[label])
