@@ -304,6 +304,24 @@ class ControlFile:
         for package in self._notFound:
             if not self.isKnownPackage(package):
                 print "Warning, could not find source trove for %s" % package
+            else:
+                desTroves = [ x for x in self.getDesiredTroveList() if \
+                                                x[0].split(':')[0] == package ] 
+                sourceIds = self.getPackageSourceIds(package)
+                # sort by version (latest first)
+                sourceIds.sort()
+                sourceIds.reverse()
+                for (desName, desVer, desFlavor) in desTroves:
+                    found = False
+                    for sourceId in sourceIds:
+                        if (sourceId.getFlavor() == desFlavor 
+                            and (desVer is None 
+                             or sourceId.getVersionStr().find(desVer) != -1)):
+                            found = True
+                            break
+                    if found:
+                        self.setDesiredTroveSource(desName, desVer, 
+                                                   desFlavor, sourceId)
         del self._notFound
 
     def loadRecipe(self, sourceId, label=None, packageCreator=True):
@@ -557,8 +575,6 @@ class ControlFile:
                             if troveId.builtFrom(sourceId, 
                                  allowVersionMismatch=allowVersionMismatch):
                                 matchingTroves.append(troveId)
-                                sourceId.addTroveId(troveId, 
-                                  allowVersionMismatch=allowVersionMismatch)
             except repository.PackageNotFound:
                 pass
             if self._updateLabel:
@@ -582,9 +598,6 @@ class ControlFile:
                                 if troveId.builtFrom(branchedSourceId,
                                      allowVersionMismatch=allowVersionMismatch):
                                     matchingTroves.append(troveId)
-                                    sourceId.addBranchedTroveId(troveId,
-                                                        self._updateLabel,
-                                      allowVersionMismatch=allowVersionMismatch)
                 except repository.PackageNotFound:
                     pass
             if allowVersionMismatch and matchingTroves:

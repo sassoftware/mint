@@ -261,6 +261,8 @@ class _SourceId(_PkgId):
         """set the version string requested in the addTrove command that
             resulted in this SourceId """
         if self._desVersionStr is not None:
+            if self._desVersionStr == versionStr:
+                return
             raise RuntimeError, "Cannot set desired version str twice"
         self._desVersionStr = versionStr
 
