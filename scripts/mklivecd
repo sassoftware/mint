@@ -1,0 +1,69 @@
+#!/bin/sh
+
+IMAGEDIR=$1
+LIVECDIMG=$2
+INITRDDIR=`mktemp -d /tmp/initrd.XXXXXX`
+LIVECDDIR=`mktemp -d /tmp/livecd.XXXXXX`
+
+# insure there's a place to pivotroot
+mkdir -p $IMAGEDIR/initrd
+
+# -- set up initrd --
+mkdir -p $INITRDDIR/{bin,dev,lib,proc,sys,sysroot}
+
+cp $IMAGEDIR/sbin/nash $INITRDDIR/bin
+chmod 755 $INITRDDIR/bin/nash
+cp $IMAGEDIR/sbin/insmod.static $INITRDDIR/bin/insmod
+chmod 755 $INITRDDIR/bin/insmod
+cp `find $IMAGEDIR/lib/modules -name loop.ko` $INITRDDIR/lib
+# make devices
+cat > $INITRDDIR/dev/.DEVICES <<EOF
+loop0 b 7 0 0660
+hdc b 22 0 0660
+console c 5 1 0660
+null c 1 3 0660
+systty c 4 0 0660
+tty1 c 4 1 0660
+tty2 c 4 2 0660
+tty3 c 4 3 0660
+tty4 c 4 4 0660
+EOF
+cat > $INITRDDIR/linuxrc <<EOF
+#!/bin/nash
+mount -t proc /proc /proc/
+echo Mounted /proc filesystem
+echo Mounting sysfs
+mount -t sysfs none /sys
+echo Creating block devices
+mkdevices /dev
+echo Creating root device
+umount /sys
+echo 0x0100 > /proc/sys/kernel/real-root-dev
+echo Mounting CD-ROM
+mkdir /cdrom
+mount -o defaults --ro -t iso9660 /dev/hdc /cdrom
+echo Inserting loop.ko module
+/bin/insmod /lib/loop.ko
+echo Mounting root filesystem
+losetup --ro /dev/loop0 /cdrom/livecd.img
+mount -o defaults --ro -t ext2 /dev/loop0 /sysroot
+pivot_root /sysroot /sysroot/initrd
+umount /initrd/proc
+EOF
+chmod 755 $INITRDDIR/linuxrc
+e2fsimage -d $INITRDDIR -u 0 -g 0 -f $LIVECDDIR/initrd.nogz -s 4000
+gzip -9 < $LIVECDDIR/initrd.nogz > $LIVECDDIR/initrd.img
+rm $LIVECDDIR/initrd.nogz
+size=`du -s $IMAGEDIR | awk '{ print $1 }'`
+e2fsimage -d $IMAGEDIR -u 0 -g 0 -f $LIVECDDIR/livecd.img -s $size
+# set up syslinux
+cp $IMAGEDIR/boot/vmlinuz* $LIVECDDIR/vmlinuz
+cp $IMAGEDIR/usr/lib/syslinux/isolinux.bin $LIVECDDIR
+cat > $LIVECDDIR/isolinux.cfg <<EOF
+label linux
+  kernel vmlinuz
+  append initrd=initrd.img
+EOF
+(cd $LIVECDDIR; mkisofs -o $LIVECDIMG -J -R -b isolinux.bin -c boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table .)
+#rm -rf $LIVECDDIR
+#rm -rf $INITRDDIR
