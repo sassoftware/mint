@@ -592,6 +592,7 @@ class ControlFile:
         troves = {}
         while groupTroves:
             groupTrove = groupTroves.pop()
+            troves[TroveId(groupTrove.getName(), groupTrove.getVersion(), groupTrove.getFlavor())] = True
             for (name, version, flavor) in groupTrove.iterTroveList():
                 if name.startswith('group-'):
                     trv = repos.getTrove(name, version, flavor)
