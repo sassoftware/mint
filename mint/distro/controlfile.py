@@ -116,7 +116,8 @@ class ControlFile:
                 # XXX this doesn't allow the group to specify a version
                 # string
                 self.loadGroup(name, label)
-            self.addDesiredTrove(name, version, flavor)
+            else:
+                self.addDesiredTrove(name, version, flavor)
 
     def addDesiredTrove(self, troveName, versionStr, flavor):
         """ Add this this trove as one that should be built.
