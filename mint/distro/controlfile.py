@@ -446,8 +446,21 @@ class ControlFile:
                         # builtFrom ensures that it is possible
                         # to get the built trove from the sourceId
                         # pkg
-                        if not installedId.builtFrom(sourceId):
+                        found = False
+                        if installedId.builtFrom(sourceId):
+                            found = True
+                        # if we have an updateLabel, it's possible that the 
+                        # installed version is from that label
+                        if not found and self._updateLabel:
+                            if sourceId.getLabel() == self._updateLabel:
+                                branchedId = sourceId
+                            else:
+                                branchedId = sourceId.branch(self._updateLabel)
+                            if installedId.builtFrom(branchedId):
+                                found = True
+                        if not found:
                             continue
+
                         if sourceId not in matches:
                             matches[sourceId] = []
                         matches[sourceId].append((installedId, troveName))
