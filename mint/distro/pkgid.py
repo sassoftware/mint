@@ -328,7 +328,21 @@ class _TroveId(_PkgId):
                 return True
         return False
 
-    # XXX move to changesetId subPackage
+    def sameSource(self, troveId):
+        """ returns True if the two packages could have come from the same
+            sourceId with the same flags """
+        if troveId.getName() != self.getName():
+            return False
+        if troveId.getBranch().getSourceBranch() != \
+                                        self.getBranch().getSourceBranch():
+            return False
+        if troveId.getSourceCount() != self.getSourceCount():
+            return False
+        # build count doesn't matter
+
+        return self.flavorIsFrom(troveId)
+
+    # XXX Rename == this function is more general than that!
     def flavorIsFrom(self, sourceId):
         """ return True if if our flavor does not directly contradict
             the flavors listed in sourceId """

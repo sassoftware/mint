@@ -290,10 +290,15 @@ class ControlFile:
         # XXX this might be faster if we tried to replicate findTrove behavior
         # e.g., if versionStrs are on the same label (90% of the time), we 
         # can just get leaves on label
+        ln = self.getDesiredTroveList()
+        index = 0
         for (origTroveName, versionStr, flavor) in self.getDesiredTroveList():
             # remove potential :devel, etc, components from the components, 
             # since we want to point to the source trove
             troveName = origTroveName.split(':', 1)[0]
+            #print "%s/%s: %s, %s, %s" % (index, ln, origTroveName, versionStr, 
+            #                                                        flavor)
+            index += 1
             try: 
                 sourceTrove = self.getLatestSource(troveName, versionStr)
             except repository.PackageNotFound:
@@ -470,7 +475,12 @@ class ControlFile:
 
         changesetNames =  [ x for x in os.listdir(changesetpath) if x.endswith('.ccs') ]
         flavors = {}
+        changesetNames.sort()
+        ln = len(changesetNames)
+        index = 0
         for changesetName in changesetNames:
+            print '%d/%d: %s' % (index, ln, changesetName)
+            index += 1
             csfile = os.path.join(changesetpath, changesetName)
             cs = changeset.ChangeSetFromFile(csfile)
             pkgs = cs.getPrimaryPackageList()
@@ -544,7 +554,11 @@ class ControlFile:
                     unmatched[sourceId] = []
                 unmatched[sourceId].append(name)
 
+        ln = len(unmatched.keys())
+        index = 0
         for sourceId in unmatched.keys():
+            print "%d/%d: %s" % (index, ln, sourceId)
+            index += 1
             if filterDict and sourceId.getName() not in filterDict:
                 continue
             # find all latest troves in canonical and update sources
