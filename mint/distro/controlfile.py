@@ -338,7 +338,7 @@ class ControlFile:
                 print "Warning, could not find source trove for %s" % package
         del self._notFound
 
-    def loadRecipe(self, sourceId, label=None):
+    def loadRecipe(self, sourceId, label=None, packageCreator=True):
         """ Loads a recipeClass contained in a source trove identified by pkg.  
             Gathers information about the packages buildable from package
             Stores the information about the recipe's potential packages,
@@ -387,8 +387,9 @@ class ControlFile:
                 # to add to a group
                 recipeObj = recipeClass(self._cfg, lcache, srcdirs) 
                 recipeObj.setup()
-                for package in recipeObj.packages:
-                    self.addPackageCreator(package, sourceId)
+                if packageCreator:
+                    for package in recipeObj.packages:
+                        self.addPackageCreator(package, sourceId)
             flavorutil.resetLocalFlags()
 
             # we need to keep the loaders around so that they do not
@@ -403,7 +404,7 @@ class ControlFile:
             flavorutil.resetFlavor(oldFlavor)
             return recipeClass
 
-    def getInstalledPkgs(self):
+    def getInstalledPkgs(self, filterDict=None):
         """ Must be called after getSources.  Looks at the installed 
             packages in the given root, and matches them against the 
             list of source troves that must be built.  Returns a list
@@ -417,6 +418,8 @@ class ControlFile:
 
         # by default everything is unmatched
         for name,sourceIds in self.iterPackageSources(): 
+            if filterDict and name not in filterDict:
+                continue
             for sourceId in sourceIds:
                 unmatched[sourceId] = True
 
@@ -424,6 +427,8 @@ class ControlFile:
         for troveName in db.iterAllTroveNames():
             # if we've never heard of this package, ignore it
             if not self.isKnownPackage(troveName):
+                continue
+            if filterDict and troveName not in filterDict:
                 continue
             for version in  db.getTroveVersionList(troveName):
                 for trove in db.findTrove(troveName, version.asString()):
@@ -451,7 +456,7 @@ class ControlFile:
                             pass
         return (matches, unmatched)
 
-    def getMatchedChangeSets(self, changesetpath, filterDict={}):
+    def getMatchedChangeSets(self, changesetpath, filterDict=None):
         """ Must be called after getSources.  Looks at the changesets 
             in changesetpath in the given root, and matches them against 
             the list of source troves that must be built.  Returns a list

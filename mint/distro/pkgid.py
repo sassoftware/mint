@@ -311,6 +311,12 @@ class _SourceId(_PkgId):
             source trove
         """
         return self._troveIds.keys()
+    
+    def clearTroveIds(self):
+        self._troveIds = {}
+
+    def removeTroveId(self, troveId):
+        del self._troveIds[troveId]
 
     def __getstate__(self):
         """ Pickling function.  Returns a dict containing this 
@@ -335,6 +341,8 @@ class _TroveId(_PkgId):
         """ returns True if cooking sourceId could result in the
             given package -- if allowVersionMismatch -- ignore 
             trailingVersion source numbers """
+        if sourceId.getName() != self.getName():
+            return False
         if allowVersionMismatch:
             v = self.getBranch().getSourceBranch()
             pv = sourceId.getBranch().getSourceBranch()
