@@ -115,7 +115,7 @@ class ControlFile:
         for flag in use.LocalFlags.keys():
             del use.LocalFlags[flag]
 
-        for (name, version, flavor) in groupObj.addTroveList:
+        for (name, version, flavor, source) in groupObj.addTroveList:
             if name.startswith('group-'):
                 # XXX this doesn't allow the group to specify a version
                 # string
