@@ -17,6 +17,7 @@ from lib import util
 from repository import changeset
 import updatecmd
 import versions
+from deps import deps
 
 #darby
 from iso import ISO, DiskFullError
@@ -24,7 +25,7 @@ import controlfile
 
 class DistroInfo:
     def __init__(self, abbrevName, productPath, productName, version, 
-                 phase, isoname=None, arch='i386', nightly=False):
+                 phase, isoname=None, arch='x86', nightly=False):
         """ Contains information about the names used in the distribution 
         Parameters:
             abbrevName:  the abbreviated name, used when creating file names
@@ -282,21 +283,19 @@ class Distribution:
                 troveId = pkg
             else:
                 troveId = pkg.getTroveId()
-            pkgarch = troveId.getFlavor().members[deps.DEP_CLASS_IS].members.keys()[0]
+
+            if deps.DEP_CLASS_IS in flavor.members:
+                pkgarch = flavor.members[deps.DEP_CLASS_IS].members.keys()[0]
+            else:
+                pkgarch = 'none';
             csfile = "%s-%s-%s.ccs" % (dispName, 
                         troveId.getVersion().trailingRevision().asString(),
                         pkgarch)
-            noarchCsFile = "%s-%s.ccs" % (dispName,
-                        troveId.getVersion().trailingRevision().asString())
 
             path = "%s/%s" % (csdir, csfile)
-            noarchPath = "%s/%s" % (csdir, noarchCsFile)
 
             # link the first matching path, assuming they are ordered
             # so that latest is first
-            if oldFiles.has_key(noarchPath):
-                print >> sys.stderr, "%d/%d: renaming old %s -> %s" % (index, l, noarchCsFile, csfile)
-                shutil.move(noarchPath, path)
             if oldFiles.has_key(path):
                 print >> sys.stderr, "%d/%d: keeping old %s" % (index, l, 
                                                                    csfile)
