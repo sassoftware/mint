@@ -52,8 +52,8 @@ class Distribution:
         self.initializeCDs()
         self.writeCsList()
         self.makeInstRoots()
+        self.stampIsos()
         for iso in self.isos:
-            self.stampIso(iso)
             iso.create()
 
     def initializeCDs(self):
@@ -68,12 +68,13 @@ class Distribution:
         # reserve 40MB on the first disc for use later
         ciso.reserve(40) 
         self.isos.append(ciso)
-        pkgs = self.csInfo.keys()
-        pkgs.sort()
         ciso = self.isos[-1]
         
         csdir = '/'.join(('',self.distro.productPath, 'changesets'))
-        for pkg in pkgs:
+        for pkg in self.csList:
+            if pkg not in self.csInfo:
+                print "Skipping %s in initializeCDs"  % pkg
+                continue
             info = self.csInfo[pkg]
             try:
                 curfilepath = info['path']
@@ -174,14 +175,20 @@ class Distribution:
                 print >> csfile, os.path.basename(info['path']), pkg.name, info['version'], info['release'], info['size'], info['disc']
         self.isos[0].addFile('/' + self.distro.productPath + '/base/cslist')
 
-    def stampIso(self, iso):
-        isodir = iso.builddir
+    def stampIsos(self):
+        iso = self.isos[0]
         map = { 'pname' : self.distro.productName,
                 'ppath' : self.distro.productPath,
                 'arch' : self.distro.arch, 
-                'discno' : iso.discno, 'isodir' : isodir, 
+                'discno' : iso.discno, 'isodir' : iso.builddir, 
                 'scripts': self.anacondascripts } 
         os.system('python %(scripts)s/makestamp.py --releasestr="%(pname)s" --arch="%(arch)s" --discNum="%(discno)s" --baseDir=%(ppath)s/base --packagesDir=%(ppath)s/changesets --pixmapsDir=%(ppath)s/pixmaps --outfile=%(isodir)s/.discinfo' %  map)
+        stampLines = open('%s/.discinfo' % iso.builddir).readlines()
+        for iso in self.isos[1:]:
+            stampFile = open('%s/.discinfo' % iso.builddir, 'w')
+            stampLines[3] = str(iso.discno) + '\n'
+            stampFile.write(''.join(stampLines))
+            stampFile.close()
 
     def makeInstRoots(self):
         os.environ['PYTHONPATH'] = '/home/dbc/spx/cvs/conary'

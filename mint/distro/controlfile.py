@@ -139,10 +139,11 @@ class ControlFile:
                     for pkg in self.packages[dbpkg.name]:
                     # convert dbpkg version to source version by removing
                     # buildCount
-                        v = dbpkg.version.copy()
+                    #
+                        v = dbpkg.version.getSourceBranch()
+                        pv = pkg.version.getSourceBranch()
                         v.trailingVersion().buildCount = None
-                 
-                        if pkg.version == v or pkg.name == 'icecream':
+                        if pv == v or pkg.name == 'icecream':
                             if pkg not in matches:
                                 matches[pkg] = []
                             matches[pkg].append((dbpkg, troveName))
@@ -186,12 +187,12 @@ class ControlFile:
                     for pkg in self.packages[cspkg.name]:
                     # convert cspkg version to source version by removing
                     # buildCount
-                        
-                        v = cspkg.version.copy()
+                        v = cspkg.version.getSourceBranch()
+                        pv = pkg.version.getSourceBranch()
                         v.trailingVersion().buildCount = None
                         # XXXXXXXXX big hack to deal with the fact that
                         # icecream version numbers are out of whack
-                        if pkg.version == v or pkg.name == 'icecream':
+                        if pv == v or pkg.name == 'icecream':
                             if pkg not in matches:
                                 matches[pkg] = []
                             if pkg not in flavors:
