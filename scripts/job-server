@@ -14,7 +14,7 @@ import threading
 if os.environ.has_key("CONARY_PATH"):
     sys.path.insert(0, os.environ['CONARY_PATH'])
 else:
-    sys.path.insert(0, "/usr/share/conary/")
+    sys.path.insert(-1, "/usr/share/conary/")
 
 import imagetool
 import jobstatus
@@ -23,6 +23,7 @@ import jobs
 import conarycfg
 import conaryclient
 from conarycfg import ConfigFile, ConaryConfiguration
+from deps import deps
 
 class JobDaemonConfig(ConfigFile):
     defaults = {
@@ -87,7 +88,8 @@ class JobRunner(threading.Thread):
         profileId = self.job.getProfileId()
 
         name, projectId = self.itclient.server.getProfile(profileId)
-        trove, label = self.itclient.server.getTrove(profileId)
+        trove, frozenFlavor, label = self.itclient.server.getTrove(profileId)
+        flavor = deps.ThawDependencySet(frozenFlavor)
         labelList, repoMap = self.itclient.server.getLabelsForProject(projectId)
 
         cfg = ConaryConfiguration(readConfigFiles=False)
@@ -95,10 +97,8 @@ class JobRunner(threading.Thread):
         for m in [x[0] + " " + x[1] for x in repoMap.items()]:
             cfg.setValue("repositoryMap", m)
         cfg.setValue("installLabelPath", " ".join([x[1] for x in labelList]))
-
         client = conaryclient.ConaryClient(cfg)
-
-        applyList = [(trove, "/"+label, None)]
+        applyList = [(trove, "/"+label, flavor)]
         (cs, depFailures, suggMap, brokenByErase) = \
             client.updateChangeSet(applyList, recurse = False,
                                    resolveDeps = False)
