@@ -16,6 +16,7 @@ import time
 from lib import util
 from repository import changeset
 import updatecmd
+import versions
 
 #darby
 from iso import ISO, DiskFullError
@@ -145,7 +146,9 @@ class Distribution:
         self.createChangeSets(self.controlGroup, 
                 os.path.join(self.subdir, 'changesets'))
         self.addIso(bootable=useAnaconda)
-        self.makeInstRoots(useAnaconda)
+        #self.makeInstRoots(useAnaconda)
+        from lib import epdb
+        epdb.set_trace()
         self.initializeCDs()
         self.writeCsList(self.isos[0].builddir)
         if useAnaconda:
@@ -274,7 +277,7 @@ class Distribution:
                 if troveName == 'kernel':
                     if '!kernel.smp' not in str(flavor):
                         dispName += '-smp'
-                troveId = pkg.getTroveId()
+                troveId = pkg
             else:
                 troveId = pkg.getTroveId()
             csfile = "%s-%s.ccs" % (dispName, 
@@ -301,7 +304,6 @@ class Distribution:
                 troveId.createChangeSet(path, self.repos, component=troveName)
 
             cs = changeset.ChangeSetFromFile(path)
-            name = pkg.getName()
             trailing = troveId.getVersion().trailingRevision().asString()
             v = trailing.split('-')
             version = '-'.join(v[:-2])
@@ -311,12 +313,17 @@ class Distribution:
 
             for pkgCs in cs.iterNewPackageList():
                 for (pathId, fPath, fileId, fVer) in pkgCs.getNewFileList():
+                    if (troveName.startswith('kernel')
+                        and fPath.startswith('/boot/vmlinuz-')):
+                        # set the version to be the kernel's extraversion
+                        release = fPath.split('-')[-1]
                     fileObj = files.ThawFile(cs.getFileChange(None, fileId), 
                                                                         pathId)
                     if fileObj.hasContents:
                         size += fileObj.contents.size()
-            self.csInfo[troveName, pkg] = {'path': path, 'size': size, 
-                                'version' : version, 'release' : release}
+            self.csInfo[troveName, pkg] = {'dispName' : dispName, 
+                                      'path': path, 'size': size, 
+                                      'version' : version, 'release' : release}
             index += 1
         # okay, now cut out unneeded desired trove info from csList
         self.csList = [(x[0][0], x[1]) for x in self.csList ] 
@@ -358,7 +365,7 @@ class Distribution:
                 else:
                     d = overrideDisc
                 print >> csfile, os.path.basename(info['path']), \
-                        troveName, info['version'], info['release'], info['size'], d
+                        info['dispName'], info['version'], info['release'], info['size'], d
         csfile.flush()
         csfile.close()
         if not overrideDisc:

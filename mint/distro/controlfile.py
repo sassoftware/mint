@@ -562,11 +562,9 @@ class ControlFile:
         if len(troveList) > 1:
             raise RuntimeError, "Too many matching groups!"
         groupTroves = repos.getTroves(troveList)
-        groupTroves = troveList
         troves = {}
         while groupTroves:
             groupTrove = groupTroves.pop()
-
             for (name, version, flavor) in groupTrove.iterTroveList():
                 if name.startswith('group-'):
                     trv = repos.getTrove(name, version, flavor)
