@@ -178,7 +178,7 @@ class _PkgId:
             packageId's critical information.  
         """
         state = self.__dict__.copy()
-        state['_version'] = self.getVersion().asString()
+        state['_PkgId__version'] = self.getVersion().asString()
         state['_stats'] = None
         return state
         
@@ -187,7 +187,7 @@ class _PkgId:
             packageId's critical information.  
         """
         self.__dict__.update(state)
-        self._version = versions.VersionFromString(state['_version'])
+        self.__version = versions.VersionFromString(state['_PkgId__version'])
 
 class _SourceId(_PkgId):
     def __init__(self, name, version, flavor, repr=repr):
