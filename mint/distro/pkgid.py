@@ -536,8 +536,12 @@ class _TroveId(_PkgId):
         flavor = self.getFlavor()
         if component is None: 
             component = self.getName()
+        if component.startswith('group-'):
+            recurse = False
+        else:
+            recurse = True
         troveLoc.createChangeSetFile(
-            [(component, (None, None), (version, flavor), True)], path)
+            [(component, (None, None), (version, flavor), True)], path, recurse=recurse)
         return ChangeSetId(self.getName(), version, flavor, path)
 
 class _ChangeSetId(_TroveId):
