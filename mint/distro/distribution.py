@@ -251,7 +251,7 @@ class Distribution:
                         dispName += '-%s' % flag
                     #else:
                     #    dispName += '-non%s' % flag
-            troveId = pkg.getTroveIds()[0]
+            troveId = pkg.getTroveId()
             csfile = "%s-%s.ccs" % (dispName, 
                         troveId.getVersion().trailingVersion().asString())
             path = "%s/%s" % (csdir, csfile)

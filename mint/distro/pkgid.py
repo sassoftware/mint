@@ -258,7 +258,8 @@ class _SourceId(_PkgId):
         _PkgId.__init__(self, name, version, flavor, repr=repr)
         self._recipeClass = None
         self._usedFlags = {}
-        self._troveIds = {}
+        self._troveId = None
+        self._desVersionStr = None
 
     def setLocalFlags(self, localFlags):
         """store any local flags created by this package when loaded"""
@@ -272,6 +273,19 @@ class _SourceId(_PkgId):
         """store the flags that were used when this package was loaded"""
         self._usedFlags = usedFlags
 
+    def setDesiredVersionStr(self, versionStr):
+        """set the version string requested in the addTrove command that
+            resulted in this SourceId """
+        if self._desVersionStr is not None:
+            raise RuntimeError, "Cannot set desired version str twice"
+        self._desVersionStr = versionStr
+
+    def getDesiredVersionStr(self):
+        """get the version string requested in the addTrove command that
+            resulted in this SourceId """
+        return self._desVersionStr
+
+
     def getUsedFlags(self):
         """retrieve the flags that were used when this package was loaded"""
         return self._usedFlags
@@ -284,8 +298,10 @@ class _SourceId(_PkgId):
         """ retrieve the recipeClass associated with this sourceId """
         return self._recipeClass 
 
+    def removeTroveId(self):
+        self._troveId = None
     
-    def addTroveId(self, troveId, allowVersionMismatch=False):
+    def addTroveId(self, troveId, allowVersionMismatch=False, force=False):
         """ note that the given trove could have been derived from 
             a source trove with this source id 
         """
@@ -293,9 +309,14 @@ class _SourceId(_PkgId):
                                    allowVersionMismatch=allowVersionMismatch):
             raise RuntimeError, ("Error: %s cannot be built from %s!" % 
                                                                (troveId, self))
-        self._troveIds[troveId] = True
 
-    def addBranchedTroveId(self, troveId, branch, allowVersionMismatch=False):
+        if self._troveId is None or force:
+            self._troveId = troveId
+        else:
+            self._troveId = self.getBetterMatch(self._troveId, troveId)
+
+    def addBranchedTroveId(self, troveId, branch, allowVersionMismatch=False,
+                                                  force=False):
         """ note that the given trove could have been derived from 
             a source trove with this source id 
         """
@@ -303,21 +324,90 @@ class _SourceId(_PkgId):
                                     allowVersionMismatch=allowVersionMismatch):
             raise RuntimeError, ("Error: %s cannot be built from %s!" % 
                                                                (troveId, self))
-        self._troveIds[troveId] = True
+        if self._troveId is None or force:
+            self._troveId = troveId
+        else:
+            self._troveId = self.getBetterMatch(self._troveId.unbranch(branch), 
+                                                 troveId.unbranch(branch))
+
+    def getBetterMatch(self, t1, t2):
+        if t1 is None:
+            return t2
+        if t2 is None:
+            return t1
+        if t1.builtFrom(self):
+            if t2.builtFrom(self):
+                if t1.getVersion().isAfter(t2.getVersion()):
+                    return t1
+                elif t2.getVersion().isAfter(t2.getVersion()):
+                    return t2
+            else:
+                return t1
+        elif t2.builtFrom(self):
+            return t2
+        else:
+            # these packages should at least match given a mismatched
+            # version
+            assert(t1.builtFrom(self, True) and t2.builtFrom(self, True))
+            if t1.getVersion().isAfter(t2.getVersion()):
+                return t1
+            elif t2.getVersion().isAfter(t1.getVersion()):
+                return t2
+        # versions match exactly, check flavors
+        if (self.countFlavorMatches(t1) < self.countFlavorMatches(t2)):
+            return t2
+        else:
+            return t1
 
 
-    def getTroveIds(self):
-        """ Return troves that could have been built with this 
-            source trove
-        """
-        return self._troveIds.keys()
+    def countFlavorMatches(self, packageId):
+        """ returns # of matches in flavor between the two  """
+        count = 1
+        if packageId.getFlavor() is None or self.getFlavor() is None:
+            return 0
+        # this should cover Arch 
+        if not self.getFlavor().satisfies(packageId.getFlavor()):
+            return 0
+        builtFlags = flavorutil.getFlavorUseFlags(packageId.getFlavor())
+        srcFlags = flavorutil.getFlavorUseFlags(self.getFlavor())
+        builtUse = builtFlags['Use']
+        srcUse = srcFlags['Use']
+        if self.getUsedFlags():
+            srcUse.update(self.getUsedFlags()['Use'])
+        
+        for flag, value in srcUse.iteritems():
+            if flag in builtUse:
+                if builtUse[flag] != value:
+                    return 0
+                else:
+                    count += 1
+        try:
+            srcLocal = srcFlags['Flags'][self.getName()]
+            if self.getUsedFlags():
+                usedFlags = self.getUsedFlags()
+                for key in usedFlags:
+                    if key in srcUse:
+                        srcUse[key].update(usedFlags[key])
+                    else:
+                        srcUse[key] = usedFlags[key]
+            builtLocal = builtFlags['Flags'][self.getName()]
+        except KeyError:
+            # if either of these doesn't mention any local flags,
+            # then it's impossible for them to have a contradiction
+            # between them
+            return True
+        for flag, value in srcLocal.iteritems():
+            if flag in builtLocal:
+                if builtLocal[flag] != value:
+                    return 0
+                count += 1
+        return count
+
+
+    def getTroveId(self):
+        """ Return trove that was built from this source trove """
+        return self._troveId
     
-    def clearTroveIds(self):
-        self._troveIds = {}
-
-    def removeTroveId(self, troveId):
-        del self._troveIds[troveId]
-
     def __getstate__(self):
         """ Pickling function.  Returns a dict containing this 
             packageId's critical information.  
@@ -339,20 +429,63 @@ class _TroveId(_PkgId):
         
     def builtFrom(self, sourceId, allowVersionMismatch=False):
         """ returns True if cooking sourceId could result in the
-            given package -- if allowVersionMismatch -- ignore 
-            trailingVersion source numbers """
+            given package -- if allowVersionMismatch, match only the 
+            branch, unless a specific version release was asked for
+            """
         if sourceId.getName() != self.getName():
             return False
-        if allowVersionMismatch:
+        if allowVersionMismatch:    
+            # allow the troveId to be from a different version than that
+            # of the sourceId -- within limits.
+            # make sure the branches match
+            # XXX this does not work with the update repo, where all 
+            # versions have stored with them the version/release of the 
+            # source they were branched from
             v = self.getBranch().getSourceBranch()
             pv = sourceId.getBranch().getSourceBranch()
+            if not v == pv:
+                return False
+
+            # if a specific version was requested with addTrove,
+            # use that info.
+            vs = sourceId.getDesiredVersionStr()
+            if vs: 
+                # if a version/release was used, make sure it matches
+                # the troveId's version/release
+                try:
+                    tv = versions.VersionRelease(vs)
+                except ParseError:
+                    tv = None
+                if tv:
+                    if tv.buildCount:
+                        if self.getVersion().getTrailingVersion() != tv:
+                            return False
+                    else:
+                        stv = self.getVersion().trailingVersion().copy()
+                        stv.buildCount = None
+                        if stv != tv:
+                            return False
+                else:
+                    # if a full version was used, it should match exactly
+                    try:
+                        v = versions.VersionFromString(vs)
+                    except AttributeError:
+                        v = None
+                    if v:
+                        pv = self.getVersion().getSourceBranch()
+                        pv.trailingVersion().buildCount = None
+                        if v != pv:
+                            return False
+                # all other cases should have been handled by the 
+                # earlier branch validity check.
         else:
-            v = self.getVersion().getSourceBranch()
-            pv = sourceId.getVersion().getSourceBranch()
-            v.trailingVersion().buildCount = None
-        if pv == v:
-            if self.flavorIsFrom(sourceId):
-                return True
+            v = sourceId.getVersion().getSourceBranch()
+            pv = self.getVersion().getSourceBranch()
+            pv.trailingVersion().buildCount = None
+            if v != pv:
+                return False
+        if self.flavorsMatch(sourceId):
+            return True
         return False
 
     def sameSource(self, troveId):
@@ -367,19 +500,18 @@ class _TroveId(_PkgId):
             return False
         # build count doesn't matter
 
-        return self.flavorIsFrom(troveId)
+        return self.flavorsMatch(troveId)
 
-    # XXX Rename == this function is more general than that!
-    def flavorIsFrom(self, sourceId):
+    def flavorsMatch(self, packageId):
         """ return True if if our flavor does not directly contradict
-            the flavors listed in sourceId """
-        if sourceId.getFlavor() is None:
+            the flavors listed in the other pkgId """
+        if packageId.getFlavor() is None:
             return True
         # this should cover Arch 
-        if not self.getFlavor().satisfies(sourceId.getFlavor()):
+        if not self.getFlavor().satisfies(packageId.getFlavor()):
             return False
         builtFlags = flavorutil.getFlavorUseFlags(self.getFlavor())
-        srcFlags = flavorutil.getFlavorUseFlags(sourceId.getFlavor())
+        srcFlags = flavorutil.getFlavorUseFlags(packageId.getFlavor())
         builtUse = builtFlags['Use']
         srcUse = srcFlags['Use']
         
@@ -390,8 +522,8 @@ class _TroveId(_PkgId):
             if flag in builtUse and builtUse[flag] != value:
                 return False
         try:
-            srcLocal = srcFlags['Flags'][sourceId.getName()]
-            builtLocal = builtFlags['Flags'][sourceId.getName()]
+            srcLocal = srcFlags['Flags'][packageId.getName()]
+            builtLocal = builtFlags['Flags'][packageId.getName()]
         except KeyError:
             # if either of these doesn't mention any local flags,
             # then it's impossible for them to have a contradiction
@@ -402,6 +534,7 @@ class _TroveId(_PkgId):
                 return False
         return True
 
+    
     def getTrove(self, troveLoc):
         if self._trove:
             return self._trove
