@@ -484,6 +484,7 @@ class Distribution:
       <packagereq type="mandatory">sysvinit</packagereq>
       <packagereq type="mandatory">tar</packagereq>
       <packagereq type="mandatory">termcap</packagereq>
+      <packagereq type="mandatory">tzdata</packagereq>
       <packagereq type="mandatory">util-linux</packagereq>
       <packagereq type="mandatory">vim-minimal</packagereq>
       <packagereq type="mandatory">zlib</packagereq>
