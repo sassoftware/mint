@@ -4,6 +4,7 @@
 # All Rights Reserved
 #
 
+import errno
 import sys
 import os
 import time
@@ -67,6 +68,12 @@ class JobRunner(threading.Thread):
         print "set %d running" % jobId
 
         try:
+            try:
+                os.makedirs(self.cfg.imagesPath)
+            except OSError, err:
+                if err.errno != errno.EEXIST:
+                    raise
+            
             tmpDir = tempfile.mkdtemp("", "imagetool", self.cfg.imagesPath)
             self.writeImage(tmpDir)
         except:
