@@ -412,13 +412,102 @@ class Distribution:
 <!DOCTYPE comps PUBLIC "-//Red Hat, Inc.//DTD Comps info//EN" "comps.dtd">
 <comps>
   <group>
-    <id>base</id>
-    <name>Base</name>
-  </group>
-  <group>
     <id>core</id>
     <name>Core</name>
+    <default>true</default>
+    <uservisible>false</uservisible>
+    <description>Smallest possible installation</description>
+    <packagelist>
+      <packagereq type="mandatory">acl</packagereq>
+      <packagereq type="default">ash</packagereq>
+      <packagereq type="mandatory">attr</packagereq>
+      <packagereq type="mandatory">bash</packagereq>
+      <packagereq type="mandatory">bzip2</packagereq>
+      <packagereq type="mandatory">dev</packagereq>
+      <packagereq type="mandatory">db</packagereq>
+      <packagereq type="mandatory">chkconfig</packagereq>
+      <packagereq type="mandatory">coreutils</packagereq>
+      <packagereq type="mandatory">cpio</packagereq>
+      <packagereq type="mandatory">cracklib</packagereq>
+      <packagereq type="mandatory">conary</packagereq>
+      <packagereq type="mandatory">dhclient</packagereq>
+      <packagereq type="mandatory">distro-release</packagereq>
+      <packagereq type="mandatory">e2fsprogs</packagereq>
+      <packagereq type="mandatory">ed</packagereq>
+      <packagereq type="mandatory">file</packagereq>
+      <packagereq type="mandatory">filesystem</packagereq>
+      <packagereq type="mandatory">glibc</packagereq>
+      <packagereq type="default" basearchonly="true">grub</packagereq>
+      <packagereq type="mandatory">hdparm</packagereq>
+      <packagereq type="mandatory">hotplug</packagereq>
+      <packagereq type="mandatory">hwdata</packagereq>
+      <packagereq type="mandatory">initscripts</packagereq>
+      <packagereq type="mandatory">iproute</packagereq>
+      <packagereq type="mandatory">iptables</packagereq>
+      <packagereq type="mandatory">iputils</packagereq>
+      <packagereq type="mandatory">kbd</packagereq>
+      <packagereq type="mandatory">kernel</packagereq>
+      <packagereq type="mandatory">gawk</packagereq>
+      <packagereq type="mandatory">gcc</packagereq>
+      <packagereq type="mandatory">gdbm</packagereq>
+      <packagereq type="mandatory">glib</packagereq>
+      <packagereq type="mandatory">gpm</packagereq>
+      <packagereq type="mandatory">grep</packagereq>
+      <packagereq type="mandatory">gzip</packagereq>
+      <packagereq type="mandatory">libelf</packagereq>
+      <packagereq type="mandatory">libtermcap</packagereq>
+      <packagereq type="mandatory">libuser</packagereq>
+      <packagereq type="mandatory">mdadm</packagereq>
+      <packagereq type="mandatory">mkinitrd</packagereq>
+      <packagereq type="mandatory">mktemp</packagereq>
+      <packagereq type="mandatory">mingetty</packagereq>
+      <packagereq type="mandatory">modutils</packagereq>
+      <packagereq type="mandatory">ncurses</packagereq>
+      <packagereq type="mandatory">newt</packagereq>
+      <packagereq type="mandatory">net-tools</packagereq>
+      <packagereq type="mandatory">pam</packagereq>
+      <packagereq type="mandatory">passwd</packagereq>
+      <packagereq type="mandatory">pcre</packagereq>
+      <packagereq type="mandatory">perl</packagereq>
+      <packagereq type="mandatory">popt</packagereq>
+      <packagereq type="mandatory">python</packagereq>
+      <packagereq type="mandatory">procps</packagereq>
+      <packagereq type="mandatory">readline</packagereq>
+      <packagereq type="mandatory">rhpl</packagereq>
+      <packagereq type="mandatory">rootfiles</packagereq>
+      <packagereq type="mandatory">sed</packagereq>
+      <packagereq type="mandatory">setserial</packagereq>
+      <packagereq type="mandatory">setup</packagereq>
+      <packagereq type="mandatory">slang</packagereq>
+      <packagereq type="mandatory">sqlite</packagereq>
+      <packagereq type="mandatory">sysklogd</packagereq>
+      <packagereq type="mandatory">sysvinit</packagereq>
+      <packagereq type="mandatory">tar</packagereq>
+      <packagereq type="mandatory">termcap</packagereq>
+      <packagereq type="mandatory">util-linux</packagereq>
+      <packagereq type="mandatory">vim-minimal</packagereq>
+      <packagereq type="mandatory">zlib</packagereq>
+      <packagereq type="default">authconfig</packagereq>
+      <packagereq type="default">kudzu</packagereq>
+      <packagereq type="default">system-config-mouse</packagereq>
+      <packagereq type="default">usermode</packagereq>
+      <packagereq type="default">shadow</packagereq>
+    </packagelist>
   </group>
+
+  <group>
+    <id>base</id>
+    <name>Base</name>
+    <description>This group includes a minimal set of packages.</description>
+    <uservisible>false</uservisible>
+    <default>true</default>
+    <grouplist>
+      <groupreq>core</groupreq>
+    </grouplist>
+  </group>
+
+  <grouphierarchy>
+  </grouphierarchy>
 </comps>
 ''')
         compsfile.close()
