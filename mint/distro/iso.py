@@ -51,6 +51,15 @@ class ISO:
         self.freespace -= megs * 1024 * 1024
         self.reserved += megs * 1024 * 1024
 
+    def release(self, megs):
+        """ Reserve an amount of space on the disk, causing DiskFullError
+            to be raised after fewer files are added """
+        amt = megs * 1024 * 1024
+        if self.reserved < amt:
+            raise RuntimeError, "%s megs were not reserved, cannot release" % megs
+        self.freespace += amt
+        self.reserved -= amt
+
     def getSize(self):
         """ Gets the used disk size in bytes """
         return self.maxsize - self.freespace

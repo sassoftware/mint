@@ -148,7 +148,9 @@ class Distribution:
                 os.path.join(self.subdir, 'changesets'))
         self.addIso(bootable=useAnaconda)
         self.makeInstRoots(useAnaconda)
+        self.isos[0].reserve(1)
         self.initializeCDs()
+        self.isos[0].release(1)
         self.writeCsList(self.isos[0].builddir)
         if useAnaconda:
             self.stampIsos()
