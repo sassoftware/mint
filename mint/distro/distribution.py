@@ -63,7 +63,7 @@ class Distribution:
         self.subdir = self.topdir + '/' + self.distro.productPath
         util.mkdirChain(os.path.join(self.subdir, 'changesets'))
 
-    def create(self, anaconda=True):
+    def create(self, useAnaconda=True):
         self.prep()
         self.createChangeSets(self.controlGroup, os.path.join(self.subdir, 'changesets'), self.fromcspath)
         self.initializeCDs()
@@ -184,15 +184,15 @@ class Distribution:
             for flag in useFlags['Use']:
                 if useFlags['Use'][flag]:
                     dispName += '-%s' % flag
-                else:
-                    dispName += '-non%s' % flag
+                #else:
+                #    dispName += '-non%s' % flag
             if pkg.getName() in useFlags['Flags']:
                 localFlags = useFlags['Flags'][pkg.getName()]
                 for flag in localFlags:
                     if localFlags[flag]:
                         dispName += '-%s' % flag
-                    else:
-                        dispName += '-non%s' % flag
+                    #else:
+                    #    dispName += '-non%s' % flag
             cspkg = pkg.getTroveIds()[0]
             csfile = "%s-%s.ccs" % (dispName, cspkg.getVersion().trailingVersion().asString())
             path = "%s/%s" % (csdir, csfile)
@@ -259,7 +259,7 @@ class Distribution:
             stampFile.write(''.join(stampLines))
             stampFile.close()
 
-    def makeInstRoots(self, anaconda=True):
+    def makeInstRoots(self, useAnaconda=True):
         os.environ['PYTHONPATH'] = '/home/dbc/spx/cvs/conary'
         os.environ['CONARY'] = 'conary'
         os.environ['CONARY_PATH'] = '/home/dbc/spx/cvs/conary'
@@ -287,7 +287,7 @@ class Distribution:
         # just touch these files
         open(basedir + '/hdlist', 'w')
         open(basedir + '/hdlist2', 'w')
-        if not anaconda:
+        if not useAnaconda:
             return
         # install anaconda into a root dir
         self.anacondadir = tempfile.mkdtemp('', 'anaconda-', self.buildpath)
@@ -306,8 +306,23 @@ class Distribution:
                 'instroot' : instroot, 'instrootgr' : instrootgr,
                 'version' : self.distro.version } 
         try:
-            os.system('sh -x %(scripts)s/upd-instroot --debug --conary %(subdir)s/changesets %(instroot)s %(instrootgr)s' % map)
-            os.system('%(scripts)s/mk-images --debug --conary %(subdir)s/changesets %(isodir)s %(instroot)s %(instrootgr)s %(arch)s "%(pname)s" %(version)s %(ppath)s' % map)
-        finally:
-            util.rmtree(instroot)
-            util.rmtree(instrootgr)
+            cmd = 'sh -x %(scripts)s/upd-instroot --debug --conary %(subdir)s/changesets %(instroot)s %(instrootgr)s' % map
+            print "\n\n*********** RUNNING UPD-INSTROOT ***************\n\n"
+            print cmd
+            sys.stdout.flush()
+            sys.stderr.flush()
+            rc = os.system(cmd)
+            print "<<Result code: %d>>" % rc
+            print "\n\n*********** RUNNING mk-images ***************\n\n"
+            cmd = ('%(scripts)s/mk-images --debug --conary %(subdir)s/changesets %(isodir)s %(instroot)s %(instrootgr)s %(arch)s "%(pname)s" %(version)s %(ppath)s' % map)
+            print cmd
+            sys.stdout.flush()
+            sys.stderr.flush()
+            rc = os.system(cmd)
+            print "<<Result code: %d>>" % rc
+            sys.stdout.flush()
+            sys.stderr.flush()
+        except Exception, msg:
+            print msg
+        util.rmtree(instroot)
+        util.rmtree(instrootgr)
