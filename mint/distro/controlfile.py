@@ -566,7 +566,7 @@ class ControlFile:
                                       allowVersionMismatch=allowVersionMismatch)
                 except repository.PackageNotFound:
                     pass
-            if allowVersionMismatch:
+            if allowVersionMismatch and matchingTroves:
                 # even though we are allowing for binaries that are not 
                 # as new as the latest :source trove, we still want only
                 # the latest binaries on this branch.

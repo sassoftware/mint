@@ -90,7 +90,8 @@ class Distribution:
                               necessary changesets
 
                 logdir:       directory to log the output from creating 
-                              the iso.
+                              the iso.  If none, output is printed on 
+                              stdout and stderr
 
                 clean: remove old builddir before rebuilding
         """
@@ -413,15 +414,17 @@ class Distribution:
                 'version' : self.distro.version } 
         sys.stdout.flush()
         sys.stderr.flush()
-        logfile = self.logdir + '/upd-instroot'
-        logpath = os.path.join(self.logdir, logfile)
-        logfd = os.open(logpath, os.O_TRUNC | os.O_WRONLY | os.O_CREAT)
+        if self.logdir:
+            logfile = self.logdir + '/upd-instroot'
+            logpath = os.path.join(self.logdir, logfile)
+            logfd = os.open(logpath, os.O_TRUNC | os.O_WRONLY | os.O_CREAT)
         try:
-            stdout = os.dup(sys.stdout.fileno())
-            stderr = os.dup(sys.stderr.fileno())
-            os.dup2(logfd, sys.stdout.fileno())
-            os.dup2(logfd, sys.stderr.fileno())
-            os.close(logfd)
+            if self.logdir:
+                stdout = os.dup(sys.stdout.fileno())
+                stderr = os.dup(sys.stderr.fileno())
+                os.dup2(logfd, sys.stdout.fileno())
+                os.dup2(logfd, sys.stderr.fileno())
+                os.close(logfd)
             cmd = 'sh -x %(scripts)s/upd-instroot --debug --conary %(csdir)s %(instroot)s %(instrootgr)s' % map
             print "\n\n*********** RUNNING UPD-INSTROOT ***************\n\n"
             print cmd
@@ -431,12 +434,13 @@ class Distribution:
             sys.stderr.flush()
 
             ## okay now output mk-images to another log file
-            logfile = 'mk-images'
-            logpath = os.path.join(self.logdir, logfile)
-            logfd = os.open(logpath, os.O_TRUNC | os.O_WRONLY | os.O_CREAT)
-            os.dup2(logfd, sys.stdout.fileno())
-            os.dup2(logfd, sys.stderr.fileno())
-            os.close(logfd)
+            if self.logdir:
+                logfile = 'mk-images'
+                logpath = os.path.join(self.logdir, logfile)
+                logfd = os.open(logpath, os.O_TRUNC | os.O_WRONLY | os.O_CREAT)
+                os.dup2(logfd, sys.stdout.fileno())
+                os.dup2(logfd, sys.stderr.fileno())
+                os.close(logfd)
             print "\n\n*********** RUNNING mk-images ***************\n\n"
             cmd = ('%(scripts)s/mk-images --debug --conary %(csdir)s %(isodir)s %(instroot)s %(instrootgr)s %(arch)s "%(pname)s" %(version)s %(ppath)s' % map)
             print cmd
@@ -447,11 +451,13 @@ class Distribution:
             sys.stdout.flush()
             sys.stderr.flush()
         except: 
+            if self.logdir:
+                os.dup2(stdout, sys.stdout.fileno())
+                os.dup2(stderr, sys.stderr.fileno())
+            raise
+        if self.logdir:
             os.dup2(stdout, sys.stdout.fileno())
             os.dup2(stderr, sys.stderr.fileno())
-            raise
-        os.dup2(stdout, sys.stdout.fileno())
-        os.dup2(stderr, sys.stderr.fileno())
         util.rmtree(instroot)
         util.rmtree(instrootgr)
         ciso.markDirInstalled('/isolinux')

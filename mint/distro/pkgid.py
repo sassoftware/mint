@@ -419,7 +419,7 @@ class _TroveId(_PkgId):
                         v = versions.VersionFromString(vs)
                     except AttributeError:
                         v = None
-                    if v:
+                    if v and not v.isBranch():
                         pv = self.getVersion().getSourceBranch()
                         pv.trailingVersion().buildCount = None
                         if v != pv:
