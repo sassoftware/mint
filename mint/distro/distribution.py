@@ -194,7 +194,6 @@ class Distribution:
                                          sourceId.getFlavor()), sourceId))
                 del trovesByName[name]
 
-        l = len(trovesByName)
         names = trovesByName.keys()
         names.sort()
         index = 0
@@ -204,6 +203,8 @@ class Distribution:
                                      sourceId.getVersion(), 
                                      sourceId.getFlavor()), sourceId))
             del trovesByName[name]
+
+        l = len(csList)
         for (troveName, version, flavor), pkg in self.csList:
             if pkg not in matches:
                 # we just skip these packages
