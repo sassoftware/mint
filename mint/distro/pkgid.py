@@ -276,7 +276,20 @@ class _SourceId(_PkgId):
         """ note that the given trove could have been derived from 
             a source trove with this source id 
         """
+        if not troveId.builtFrom(self):
+            raise RuntimeError, ("Error: %s cannot be built from %s!" % 
+                                                               (troveId, self))
         self._troveIds[troveId] = True
+
+    def addBranchedTroveId(self, troveId, branch):
+        """ note that the given trove could have been derived from 
+            a source trove with this source id 
+        """
+        if not troveId.unbranch(branch).builtFrom(self):
+            raise RuntimeError, ("Error: %s cannot be built from %s!" % 
+                                                               (troveId, self))
+        self._troveIds[troveId] = True
+
 
     def getTroveIds(self):
         """ Return troves that could have been built with this 
@@ -310,7 +323,7 @@ class _TroveId(_PkgId):
         v.trailingVersion().buildCount = None
         # XXXXXXXXX big hack to deal with the fact that
         # icecream version numbers are out of whack
-        if pv == v or sourceId.getName() == 'icecream':
+        if pv == v: #or sourceId.getName() == 'icecream':
             if self.flavorIsFrom(sourceId):
                 return True
         return False

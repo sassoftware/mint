@@ -592,7 +592,7 @@ class ControlFile:
                                 matchingTroves.append(troveId)
                 except repository.PackageNotFound:
                     pass
-            for trove in matchingTroves:
+            for troveId in matchingTroves:
                 # We do some extra work here to ensure that 
                 # we only count one trove with a particular
                 # flavor as a match per sourceId.   
@@ -617,7 +617,10 @@ class ControlFile:
                         # build count, don't count this as a match
                         continue
                 matches[sourceId].append(troveId)
-                sourceId.addTroveId(troveId)
+                if troveId.getLabel() == self._updateLabel:
+                    sourceId.addBranchedTroveId(troveId, self._updateLabel)
+                else:
+                    sourceId.addTroveId(troveId)
                 try:
                     del unmatched[sourceId]
                 except KeyError:
