@@ -108,7 +108,8 @@ class Distribution:
         self.buildpath = buildpath
         self.isoTemplatePath = isoTemplatePath
         self.logdir = logdir
-        self.tftpbootpath = tftpbootpath
+        if tftpbootpath:
+            self.tftpbootpath = os.path.join(tftpbootpath, distro.version)
         self.isos = []
         if distro.nightly:
             buildpath = os.path.join(buildpath,'nightly')
@@ -310,7 +311,7 @@ class Distribution:
                     shutil.copyfile(cspkg.getPath(), path)
             else:
                 # the trove is still waiting in the repo
-                print >> sys.stderr, "%d/%d: extracting %s" % (index, l, csfile)
+                print >> sys.stderr, "%d/%d: extracting %s" % (index+1, l, csfile)
                 troveId.createChangeSet(path, self.repos, component=troveName)
 
             cs = changeset.ChangeSetFromFile(path)
