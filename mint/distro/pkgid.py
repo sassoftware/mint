@@ -342,9 +342,7 @@ class _TroveId(_PkgId):
             v = self.getVersion().getSourceBranch()
             pv = sourceId.getVersion().getSourceBranch()
             v.trailingVersion().buildCount = None
-        # XXXXXXXXX big hack to deal with the fact that
-        # icecream version numbers are out of whack
-        if pv == v or sourceId.getName() == 'icecream':
+        if pv == v:
             if self.flavorIsFrom(sourceId):
                 return True
         return False
