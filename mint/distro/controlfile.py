@@ -23,11 +23,16 @@ class ControlFile:
     """
 
     def __init__(self, controlTroveName, repos, cfg, canonicalLabel, 
-                                                            updateLabel=None):
+                                                            updateLabel=None,
+                                                    controlTroveLabel=None):
         self._controlTroveName = controlTroveName
         self._repos = repos
         self._canonicalLabel = canonicalLabel
         self._updateLabel = updateLabel
+        if not controlTroveLabel:
+            controlTroveLabel = canonicalLabel
+        self._controlTroveLabel = controlTroveLabel
+
         self._cfg = cfg
         self._loaders = []
         # desTroves is desiredTrove to sourceId, many to one
@@ -42,6 +47,9 @@ class ControlFile:
 
     def getControlTroveName(self):
         return self._controlTroveName
+
+    def getControlTroveLabel(self):
+        return self._controlTroveLabel
 
     def getLatestSource(self, name, versionStr=None):
         """ Get the latest source version for a trove.  Search
@@ -112,9 +120,16 @@ class ControlFile:
         """
         # grab the package and get a copy of the class defined in 
         # the controlTrove
-
-        controlTrove = self.getLatestSource(self.getControlTroveName()) 
-        controlId = SourceId(self.getControlTroveName(), 
+        ctroveName = self.getControlTroveName()
+        ctroveName = ctroveName + ':source'
+        ctroveLabel = self.getControlTroveLabel()
+        leaves = self._repos.getTroveLeavesByLabel([ctroveName], 
+                                                                ctroveLabel)
+        leaves = leaves[ctroveName]
+        ver = leaves[-1]
+        # should be a source trove, so, no flavor
+        controlTrove = self._repos.getTrove(ctroveName, ver, None)
+        controlId = SourceId(self.getControlTroveName(),  
                              controlTrove.getVersion(), 
                              controlTrove.getFlavor()) 
         controlClass = self.loadRecipe(controlId)
@@ -254,8 +269,8 @@ class ControlFile:
         # branch correctly 
         needBranching = []
         for sourceId in sourceIds:
-            label = sourceId.getVersion().branch().label()
-            if label.getHost() == newLabel.getHost():
+            label = sourceId.getLabel()
+            if label == newLabel:
                 continue
             needBranching.append(sourceId)
             if label not in labelSources:
@@ -291,7 +306,7 @@ class ControlFile:
         # e.g., if versionStrs are on the same label (90% of the time), we 
         # can just get leaves on label
         ln = self.getDesiredTroveList()
-        index = 0
+        index = 1
         for (origTroveName, versionStr, flavor) in self.getDesiredTroveList():
             # remove potential :devel, etc, components from the components, 
             # since we want to point to the source trove
@@ -477,7 +492,7 @@ class ControlFile:
         flavors = {}
         changesetNames.sort()
         ln = len(changesetNames)
-        index = 0
+        index = 1
         for changesetName in changesetNames:
             print '%d/%d: %s' % (index, ln, changesetName)
             index += 1
@@ -555,37 +570,51 @@ class ControlFile:
                 unmatched[sourceId].append(name)
 
         ln = len(unmatched.keys())
-        index = 0
-        for sourceId in unmatched.keys():
+        unmatchedKeys = unmatched.keys()
+        unmatchedKeys.sort()
+        index = 1
+        for sourceId in unmatchedKeys:
             print "%d/%d: %s" % (index, ln, sourceId)
             index += 1
             if filterDict and sourceId.getName() not in filterDict:
                 continue
             # find all latest troves in canonical and update sources
             matchingTroves = []
-            try:
-                troves = self._repos.findTrove(
-                                 self._canonicalLabel, 
-                                 sourceId.getName(), 
-                                 self._cfg.flavor,
-                                 sourceId.getLabel().asString(),
-                                 acrossRepositories=False, withFiles=False)
-                
-            except repository.PackageNotFound:
-                troves = []
-            for trove in troves:
-                troveId = TroveId(trove.getName(), trove.getVersion(), 
-                                  trove.getFlavor())
-                # builtfrom should take care of any extra troves
-                # we found with the wrong version #s, source
-                # counts
-                if not troveId.builtFrom(sourceId):
-                    continue
-                matchingTroves.append(troveId)
+            # findTrove doesn't seem to reliably give us the latest
+            # version.  getLeavesByLabel seems to be the culprit
+            # we hack around this by getting our own version list
+            #troves = self._repos.findTrove(
+            #                 self._canonicalLabel, 
+            #                 sourceId.getName(), 
+            #                 self._cfg.flavor,
+            #                 sourceId.getLabel().asString(),
+            #                 acrossRepositories=False, withFiles=False)
+            if sourceId.getLabel() != self._updateLabel:
+                try:
+                    vers = self._repos.getTroveVersionList(
+                                               self._canonicalLabel.getHost(),
+                                               [sourceId.getName()])
+                    flavors = self._repos.getTroveVersionFlavors(vers)
+                    flavors = flavors[sourceId.getName()]
 
+                    for ver in flavors:
+                        for flavor in flavors[ver]:
+                                troveId = TroveId(sourceId.getName(), ver,
+                                                    flavor)
+                                # If the trove in the update repo was built 
+                                # from the source trove, it would have been 
+                                # after the source trove was branched
+                                if not troveId.builtFrom(sourceId):
+                                    continue
+                                matchingTroves.append(troveId)
+                except repository.PackageNotFound:
+                    pass
             if self._updateLabel:
                 # search the update label for newer versions of this package
-                branchedSourceId  = sourceId.branch(self._updateLabel)
+                if sourceId.getLabel() == self._updateLabel:
+                    branchedSourceId = sourceId
+                else:
+                    branchedSourceId  = sourceId.branch(self._updateLabel)
                 branch = branchedSourceId.getVersion().branch().getBinaryBranch()
                 try:
                     vers = self._repos.getTroveVersionList(
@@ -631,7 +660,8 @@ class ControlFile:
                         # build count, don't count this as a match
                         continue
                 matches[sourceId].append(troveId)
-                if troveId.getLabel() == self._updateLabel:
+                if (troveId.getLabel() == self._updateLabel and 
+                            sourceId.getLabel() != self._updateLabel):
                     sourceId.addBranchedTroveId(troveId, self._updateLabel)
                 else:
                     sourceId.addTroveId(troveId)
