@@ -412,7 +412,8 @@ class ControlFile:
                                 pass
         return (matches, unmatched)
 
-    def getMatchedChangeSets(self, changesetpath, filterDict=None):
+    def getMatchedChangeSets(self, changesetpath, filterDict=None,
+                                                  allowVersionMismatch=False):
         """ Must be called after getSources.  Looks at the changesets 
             in changesetpath in the given root, and matches them against 
             the list of source troves that must be built.  Returns a list
@@ -429,6 +430,10 @@ class ControlFile:
                         if not specified in control file)
             4. Source version
             5. Use/Flag flavor 
+
+            If allowVersionMismatch is True, then it is not required 
+            that the trove found matches the latest source version of a trove.
+            Instead, the latest built version on the given branch is acceptable.
         """
         matches = {}
         unmatched = {}
@@ -461,15 +466,19 @@ class ControlFile:
                 for sourceId in self.getPackageSourceIds(csId.getName()): 
                     if self._updateLabel:
                         if not csId.builtFrom(
-                                        sourceId.branch(self._updateLabel)):
+                                        sourceId.branch(self._updateLabel),
+                                    allowVersionMismatch=allowVersionMismatch):
                             continue
-                    elif not csId.builtFrom(sourceId):
+                    elif not csId.builtFrom(sourceId,
+                                allowVersionMismatch=allowVersionMismatch):
                         continue
                     matches[sourceId] = True
                     if self._updateLabel:
-                        sourceId.addBranchedTroveId(csId, self._updateLabel)
+                        sourceId.addBranchedTroveId(csId, self._updateLabel,
+                                allowVersionMismatch=allowVersionMismatch)
                     else:
-                        sourceId.addTroveId(csId)
+                        sourceId.addTroveId(csId, 
+                                    allowVersionMismatch=allowVersionMismatch)
                     try:
                         del unmatched[sourceId]
                     except KeyError:
