@@ -39,6 +39,8 @@ class DistroInfo:
                          stamp attached to it
         """
         
+        assert(abbrevName and productPath and productName and version 
+               and  phase and arch)
 
         self.abbrevName = abbrevName
         self.productPath = productPath
@@ -104,7 +106,8 @@ class Distribution:
         self.isos = []
         if distro.nightly:
             buildpath = os.path.join(buildpath,'nightly')
-            nfspath = os.path.join(nfspath,'nightly')
+            if nfspath:
+                nfspath = os.path.join(nfspath,'nightly')
         self.buildpath = os.path.join(buildpath, distro.version)
         if nfspath:
             nfspath = os.path.join(nfspath, distro.version)
