@@ -105,6 +105,8 @@ class JobDaemon:
 
 if __name__ == "__main__":
     cfgFile = "imagetool.conf"
+    lockFile = "/var/run/imagetool-jobdaemon.pid"
+    
     if not os.access(cfgFile, os.R_OK): 
         if len(sys.argv) != 2:
             print >> sys.stderr, "Usage: %s [config file]" % (sys.argv[0])
@@ -112,5 +114,19 @@ if __name__ == "__main__":
         else:
             cfgFile = sys.argv[1]
     
+    if os.access(lockFile, os.R_OK):
+        lock = open(lockFile, "r")
+        pid = lock.read()
+        print >> sys.stderr, "Imagetool job daemon already running as pid %s" % (pid)
+        sys.exit(0)
+    
     print "Loading configuration file %s" % cfgFile
-    jd = JobDaemon(cfgFile)
+    lock = open(lockFile, "w")
+    lock.write("%d" % os.getpid())
+    lock.close()
+    
+    try:
+        jd = JobDaemon(cfgFile)
+    except:
+        os.unlink(lockFile)
+        raise
