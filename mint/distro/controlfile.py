@@ -66,7 +66,7 @@ class ControlFile:
         # even if more recent troves are available at other labels
         canTroves =  self._repos.findTrove(self._canonicalLabel,
                                                 name + ':source',
-                                                None, versionStr)
+                                            self._cfg.buildFlavor, versionStr)
         assert(len(canTroves) == 1)
         return canTroves[0]
 
@@ -533,7 +533,7 @@ class ControlFile:
         #        unmatched[sourceId] = True
         troveList = repos.findTrove(self._controlTroveLabel, 
                                  self._controlTroveName, 
-                                    self._cfg.flavor)
+                                    self._cfg.buildFlavor)
         if not troveList:
             raise RuntimeError, "No matching groups for %s" % self.controlTroveName
         if len(troveList) > 1:
