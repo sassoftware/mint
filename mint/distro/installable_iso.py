@@ -45,19 +45,20 @@ class InstallableIso(ImageGenerator):
         releaseVer = self.client.getJobData(jobId, "releaseVer")
         releasePhase = self.client.getJobData(jobId, "releasePhase")
 
+        arch = self.job.getArch()
+        assert(arch in ('x86', 'x86_64'))
+ 
         distroInfo = distro.DistroInfo(self.cfg.instIsoPrefix,
                                        self.cfg.instIsoProductPath,
                                        self.cfg.instIsoProductName,
-                                       releaseVer, releasePhase)
+                                       releaseVer, releasePhase,
+                                       arch = arch)
         version = versions.VersionFromString(versionStr)
        
         # XXX remove this and pass version as soon as darby can handle a full ver
         label = version.branch().label()
         
-        # XXX this may be a hack--not sure
-        arch = flavor.members[deps.deps.DEP_CLASS_IS].members.keys()[0]
-        assert(arch in ('x86', 'x86_64'))
-       
+      
         tmpDir = self.cfg.imagesPath + os.path.join(arch, releasePhase)
         dist = distro.Distribution(arch, repos, ccfg,
                                    distroInfo, (trove, label, flavor),
