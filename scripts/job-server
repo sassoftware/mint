@@ -30,16 +30,6 @@ scriptPath = os.path.dirname(sys.argv[0])
 if not scriptPath:
     scriptPath = '.'
 
-class JobDaemonConfig(ConfigFile):
-    defaults = {
-        'imagetoolUrl':     'http://localhost/imagetoolserver/',
-        'imagesPath':       '/tmp/images/',
-        'concurrentJobs':   10,
-        'maximumImages':    40,
-        'imageLabel'        : '',
-        'imageRepo'         : '',
-    }
-
 class Journal:
     def lchown(self, root, target, user, group):
         # get rid of the root
@@ -119,7 +109,7 @@ class JobRunner(threading.Thread):
 
 class JobDaemon:
     def __init__(self, cfgFile):
-        cfg = JobDaemonConfig()
+        cfg = imagetool.ImageToolConfig()
         cfg.read(cfgFile)
         
         itclient = imagetool.ImageToolClient(cfg.imagetoolUrl)
