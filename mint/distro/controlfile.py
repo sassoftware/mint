@@ -264,6 +264,7 @@ class ControlFile:
 
         for label in labelSources:
             for sourceId in labelSources[label]:
+                print "Branching %s" % sourceId
                 branchV = sourceId.getVersion().fork(newLabel, sameVerRel = 1)
                 self._repos.createBranch(newLabel,
                                          sourceId.getVersion(), 
