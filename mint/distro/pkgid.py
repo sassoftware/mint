@@ -1,41 +1,68 @@
+from deps import deps
+import results
+import versions
 
 def thawPackage(pkgStr):
-    id =  PkgId._hashcache.get(pkgstr, None)
+    id =  _PkgId._hashcache.get(pkgStr, None)
     if id:
         return id
     else:
-        (name, value, flavor) = pkgstr.split(',', 2)
+        (name, value, flavor) = pkgStr.split(',', 2)
     if flavor == '0':
         flavor = None
-    PkgId.init(name, value, flavor, name = True)
+    else:
+        flavor = deps.ThawDependency(flavor)
+    version = versions.VersionFromString(value.replace('#', '/'))
+    return PkgId(name, version, flavor, justName = True)
+
+def PkgId(recipeClassOrStr, version, flavor, justName=False):
+    if justName:
+        name = recipeClassOrStr
+        recipeClass = None
+    else:
+        recipeClass = recipeClassOrStr
+        name = recipeClass.name
+    versionStr = version.asString()
+    if flavor:
+        if isinstance(flavor, deps.DependencySet):
+            flavorStr = flavor.freeze()
+        else:
+            flavorStr = flavor._freeze()
+    else:
+        flavorStr = '0'
+    repr = ','.join([name, versionStr.replace('/','#'), flavorStr])
+    if repr in _PkgId._hashcache:
+        return _PkgId.hashcache[repr]
+    else:
+        return _PkgId(name, version, flavor, recipeClass, versionStr, repr)
 
 
-class PkgId:
+
+
+class _PkgId:
     _hashcache = {}
-    def __init__(self, recipeClassOrStr, version, flavor, justName=False):
-        if justName:
-            self.name = recipeClassOrStr
-        else:
-            self.recipeClass = recipeClassOrStr
-            self.name = self.recipeClass.name
+    def __init__(self, name, version, flavor, recipeClass, versionStr, repr):
+        self.name = name
         self.version = version
-        self.versionStr = self.version.asString()
-        if flavor:
-            self.flavor = flavor
-            flavorStr = self.flavor._freeze()
-        else:
-            self.flavor = None
-            flavorStr = '0'
-        self._repr = ','.join([self.name, self.versionStr.replace('/','#'), flavorStr])
-        # don't hash if we weren't given the 
-        if not justName:
+        self.flavor = flavor
+        self.recipeClass = recipeClass
+        self.stats = results.PackageStats(self)
+        self.versionStr = versionStr
+        self._repr = repr
+        if recipeClass: 
             self._hashcache[self] = self
+
+    def prettyStr(self):
+        return "%s (%s) (%s)" % (self.name, self.version.asString(), self.flavor)
 
     def __repr__(self):
         return self._repr
 
     def __str__(self):
         return self._repr
+
+    def __eq__(self, other):
+        return self._repr == other._repr
 
     def __add__(self, other):
         """ Treat like a string for adding """
@@ -44,3 +71,6 @@ class PkgId:
     def __radd__(self, other):
         """ Treat like a string for adding """
         return other + self._repr
+
+    def __hash__(self):
+        return hash(self._repr)
