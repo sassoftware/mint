@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2004 Specifix, Inc.
+# Copyright (c) 2004-2005 Specifix, Inc.
 # All rights reserved.
 
 import errno

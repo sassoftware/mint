@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2004 Specifix, Inc.
+# Copyright (c) 2004-2005 Specifix, Inc.
 # All rights reserved.
 
 import os
@@ -50,6 +50,8 @@ class ControlFile:
         self._packages = {}
         self._packageCreators = {}
         self.usedFlags = {}
+         
+        self._fromSourceDir = {}
 
     def getControlTroveName(self):
         return self._controlTroveName
@@ -352,9 +354,9 @@ class ControlFile:
 
             # ensure name has :source tacked on end, and recipefile is
             # name.recipe
-            recipefile = sourceId.getName().split(':')[0]
-            name = recipefile + ':source'
-            recipefile += '.recipe'
+            pkgName = sourceId.getName().split(':')[0]
+            name = pkgName + ':source'
+            recipefile = pkgName + '.recipe'
 
             # set up necessary flavors and track used flags before
             # calling loadRecipe, since even loading the class
@@ -370,8 +372,18 @@ class ControlFile:
             used = use.getUsed()
             assert ([ x for x in use.getUsed() ] == [])
 
-            loader = recipe.recipeLoaderFromSourceComponent(name, recipefile, 
-                                    self._cfg, self._repos, 
+            loader = None
+            if hasattr(self._cfg, 'recipedir') and self._cfg.recipedir:
+                recipeFile = '/'.join((self._cfg.recipedir, pkgName, 
+                                                     pkgName + '.recipe'))
+                if os.path.exists(recipeFile):
+                    loader = recipe.RecipeLoader(recipeFile, cfg=self._cfg,
+                                                             repos=self._repos)
+                    loader = (loader, sourceId.getVersion())
+                    self._fromSourceDir[sourceId] = True
+            if loader is None:
+                loader = recipe.recipeLoaderFromSourceComponent(name, 
+                                    recipefile, self._cfg, self._repos, 
                                     sourceId.getVersionStr(), 
                                     label=sourceId.getLabel())
             # gather the local flags created (they may not have been tracked)
@@ -482,9 +494,11 @@ class ControlFile:
             for sourceId in sourceIds:
                 if filterDict and sourceId.getName() not in filterDict:
                     continue
+                if sourceId in self._fromSourceDir:
+                    continue
                 unmatched[sourceId] = True
         if not os.path.exists(changesetpath):
-            return matches, unmatched
+            return matches, unmatched.update(self._fromSourceDir)
 
         changesetNames =  [ x for x in os.listdir(changesetpath) if x.endswith('.ccs') ]
         flavors = {}
@@ -523,7 +537,7 @@ class ControlFile:
                         del unmatched[sourceId]
                     except KeyError:
                         pass
-        return (matches, unmatched)
+        return (matches, unmatched.update(self._fromSourceDir))
 
     def getRepoTrovesFromCookedGroup(self):
         matches = {}
