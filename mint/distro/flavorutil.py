@@ -1,3 +1,7 @@
+#
+# Copyright (c) 2004 Specifix, Inc.
+# All rights reserved.
+
 # flavor manipulations
 #
 from deps import deps

@@ -1,3 +1,7 @@
+#
+# Copyright (c) 2004 Specifix, Inc.
+# All rights reserved.
+
 import os
 
 # conary
@@ -402,8 +406,8 @@ class _TroveId(_PkgId):
             # XXX this does not work with the update repo, where all 
             # versions have stored with them the version/release of the 
             # source they were branched from
-            v = self.getBranch().getSourceBranch()
-            pv = sourceId.getBranch().getSourceBranch()
+            v = self.getVersion().getSourceBranch().branch()
+            pv = sourceId.getVersion().getSourceBranch().branch()
             if not v == pv:
                 return False
 
@@ -432,7 +436,7 @@ class _TroveId(_PkgId):
                         v = versions.VersionFromString(vs)
                     except AttributeError:
                         v = None
-                    if v and not v.isBranch():
+                    if v and not isinstance(v, versions.Branch):
                         pv = self.getVersion().getSourceBranch()
                         pv.trailingVersion().buildCount = None
                         if v != pv:
