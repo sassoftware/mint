@@ -88,7 +88,6 @@ class JobDaemon:
                 th = JobRunner(cfg, client, job)
                 threads.append(th)
                 th.start()
-            print "No jobs in queue, sleeping."
             time.sleep(5)
 
 if __name__ == "__main__":
