@@ -141,8 +141,6 @@ class ControlFile:
         for flag in use.LocalFlags.keys():
             del use.LocalFlags[flag]
 
-
-        
         for (name, version, flavor) in controlObj.addTroveList:
             self.addDesiredTrove(name, version, flavor)
         for (name, version, flavor) in extraTroves:
