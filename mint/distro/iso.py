@@ -1,4 +1,3 @@
-
 from repository import changeset
 import files
 from lib import util
