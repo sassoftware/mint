@@ -14,8 +14,8 @@ import threading
 if os.environ.has_key("CONARY_PATH"):
     sys.path.insert(0, os.environ['CONARY_PATH'])
 else:
-    sys.path.insert(-1, "/home/tgerla/cvs/conary/")
-    sys.path.insert(-1, "/home/tgerla/cvs/darby/client/")
+    sys.path.insert(-1, "/data/imagetool/code/conary/")
+    sys.path.insert(-1, "/data/imagetool/code/darby/client/")
 
 from lib import util
 sys.excepthook = util.genExcepthook()
@@ -71,7 +71,7 @@ class JobDaemon:
         cfg = imagetool.ImageToolConfig()
         cfg.read(cfgFile)
         
-        client = imagetool.ImageToolClient(cfg.imagetoolUrl)
+        client = imagetool.ImageToolClient(cfg.serverUrl)
        
         threads = []
         
