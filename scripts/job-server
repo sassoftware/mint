@@ -19,6 +19,7 @@ else:
 
 import imagetool
 import jobstatus
+import jobtypes
 import jobs
 
 import conarycfg
@@ -29,6 +30,13 @@ from deps import deps
 scriptPath = os.path.dirname(sys.argv[0])
 if not scriptPath:
     scriptPath = '.'
+
+from installable_iso import InstallableIso
+from live_iso import LiveIso
+
+generators = { jobtypes.LIVE_ISO:        LiveIso,
+               jobtypes.INSTALLABLE_ISO: InstallableIso,
+}
 
 class Journal:
     def lchown(self, root, target, user, group):
@@ -74,11 +82,8 @@ class JobRunner(threading.Thread):
             except OSError, err:
                 if err.errno != errno.EEXIST:
                     raise
-            
-            if self.job.jobType == jobtype.LIVE_ISO:
-                filenames = self.writeLiveImage(job)
-                isoImage = fn
-            elif self.job.jobType == jobtype.ANACONDA_ISO:
+            generator = generators[self.job.getType()]
+            imageFilenames = generator(self.client, self.cfg, self.job, profileId).write()
         except:
             self.client.setJobStatus(jobId, jobstatus.ERROR)
             raise
@@ -87,69 +92,13 @@ class JobRunner(threading.Thread):
             self.client.setJobStatus(jobId, jobstatus.FINISHED)
             print "set %d finished (%s)" % (jobId, tmpDir)
 
-    def writeLiveIso(self):
-        tmpDir = tempfile.mkdtemp("", "imagetool", self.cfg.imagesPath)
-        profileId = self.job.getProfileId()
-
-        name, projectId = self.client.server.getProfile(profileId)
-        trove, version, frozenFlavor = self.client.server.getTrove(profileId)
-        flavor = deps.ThawDependencySet(frozenFlavor)
-
-        project = self.client.getProject(projectId)
-        cfg = project.getConaryConfig(self.cfg.imageLabel,
-                                      self.cfg.imageRepo)
-        cfg.setValue("root", tmpDir)
-        client = conaryclient.ConaryClient(cfg)
-        applyList = [(trove, version, flavor)]
-        (cs, depFailures, suggMap, brokenByErase) = \
-            client.updateChangeSet(applyList, recurse = False,
-                                   resolveDeps = False)
-        journal = Journal()
-        client.applyUpdate(cs, journal=journal)
-
-        fd, fn = tempfile.mkstemp('.iso', 'livecd',self.cfg.imagesPath)
-        os.close(fd)
-
-        subprocess.call((os.path.join(scriptPath, 'mklivecd'), tmpDir, fn))
-        os.chmod(fn, 0644)
-
-        return [fn]
-
-    def writeInstallableIso(self):
-        tmpDir = tempfile.mkdtemp("", "imagetool", self.cfg.imagesPath)
-        profileId = self.job.getProfileId()
-
-        name, projectId = self.client.server.getProfile(profileId)
-        trove, version, frozenFlavor = self.client.server.getTrove(profileId)
-        flavor = deps.ThawDependencySet(frozenFlavor)
-
-        project = self.client.getProject(projectId)
-
-        conaryCfg = project.getConaryConfig(self.cfg.imageLabel,
-                                            self.cfg.imageRepo)
-        
-        conaryCfg.set('buildFlavor', flavor)
-    
-        releaseVer = self.client.getProfileData(job.getProfileId(), "releaseVer")
-        releasePhase = self.client.getProfileDat(job.getProfileId(), "releasePhase")
-        
-        distroInfo = distro.DistroInfo(self.cfg.instIsoPrefix,
-                                       self.cfg.instIsoProductPath,
-                                       self.cfg.instIsoProductName,
-                                       releaseVer, releasePhase)
-        
-        dist = distro.Distribution(repos, cfg, distroInfo, trove, tmpDir, self.cfg.instIsoTemplate, "/", "/", "/", None, False)
-        dist.prep()
-        dist.create()
-        return ['']
-
 class JobDaemon:
     def __init__(self, cfgFile):
         cfg = imagetool.ImageToolConfig()
         cfg.read(cfgFile)
         
         client = imagetool.ImageToolClient(cfg.imagetoolUrl)
-        
+       
         threads = []
         
         while(True):
