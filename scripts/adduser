@@ -1,10 +1,47 @@
-#!/bin/sh
+#!/usr/bin/python2.4
+# -*- mode: python -*-
+#
+# Copyright (c) 2004-2005 Specifix, Inc.
+#
 
-if [ $# -ne 3 ]; then
-    echo "Not enough arguments: <username> <password> <imagetool db>"
-    exit
-fi
+import sys
+import os
 
-pw=`echo -n AAAA$2 | md5sum | awk '{print $1}'`
+if os.environ.has_key("CONARY_PATH"):
+    sys.path.insert(0, os.environ['CONARY_PATH'])
+else:
+    sys.path.insert(0, "/usr/share/conary/")
 
-echo "INSERT INTO Users VALUES (NULL, '$1', 'AAAA', '$pw', '$1@specifix.com', 0, 0, 1, 1, '');" | sqlite3 $3
+sys.path.insert(0, ".")
+
+import sqlite3
+import users
+
+def addUser(dbPath, username, password):
+    db = sqlite3.connect(dbPath, timeout = 30000)
+
+    usersTable = users.UsersTable(db)
+    return usersTable.newUser(username, password, None, None, True)
+
+def usage():
+    print "usage: %s <username> <path to imagetool db>" % sys.argv[0]
+    sys.exit(1)
+
+if len(sys.argv) != 3:
+    usage()
+
+if os.isatty(0):
+    from getpass import getpass
+
+    pw1 = getpass('Password:')
+    pw2 = getpass('Reenter password:')
+
+    if pw1 != pw2:
+        print "Passwords do not match."
+        sys.exit(1)
+else:
+    # chop off the trailing newline
+    pw1 = sys.stdin.readline()[:-1]
+
+uid = addUser(sys.argv[2], sys.argv[1], pw1)
+print "User added. Id: %d" % uid

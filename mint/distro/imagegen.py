@@ -18,6 +18,7 @@ class ImageGenerator:
         raise NotImplementedError
 
     def grabOutput(self, logFile):
+        """Redirect stdout and stderr to a file"""
         logfd = os.open(logFile, os.O_TRUNC | os.O_WRONLY | os.O_CREAT)
         self.stdout = os.dup(sys.stdout.fileno())
         self.stderr = os.dup(sys.stderr.fileno())
@@ -26,5 +27,6 @@ class ImageGenerator:
         os.close(logfd)
 
     def releaseOutput(self):
+        """Restore stdout and stderr to the original state before grabOutput"""
         os.dup2(self.stdout, sys.stdout.fileno())
         os.dup2(self.stderr, sys.stderr.fileno())
