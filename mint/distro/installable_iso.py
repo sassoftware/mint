@@ -50,12 +50,13 @@ class InstallableIso(ImageGenerator):
                                        self.cfg.instIsoProductName,
                                        releaseVer, releasePhase)
         version = versions.VersionFromString(versionStr)
-        print dir(version)
+       
+        # XXX remove this and pass version as soon as darby can handle a full ver
         label = version.branch().label()
         dist = distro.Distribution('x86', repos, ccfg,
                                    distroInfo, (trove, label, flavor),
                                    tmpDir, tmpDir+"/isos/", self.cfg.instIsoTemplatePath,
-                                   "/", "/", "/", None, False)
+                                   None, None, None, "/data/imagetool/data/logs/", False)
         dist.prep()
         dist.create()
         return ['']
