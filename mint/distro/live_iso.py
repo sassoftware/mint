@@ -49,7 +49,7 @@ class LiveIso(ImageGenerator):
         journal = Journal()
         client.applyUpdate(cs, journal=journal)
 
-        fd, fn = tempfile.mkstemp('.iso', 'livecd',self.cfg.imagesPath)
+        fd, fn = tempfile.mkstemp('.iso', 'livecd', self.cfg.imagesPath)
         os.close(fd)
 
         subprocess.call((os.path.join(scriptPath, 'mklivecd'), tmpDir, fn))
