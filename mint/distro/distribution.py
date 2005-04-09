@@ -478,7 +478,7 @@ class Distribution:
       <packagereq type="mandatory">mkinitrd</packagereq>
       <packagereq type="mandatory">mktemp</packagereq>
       <packagereq type="mandatory">mingetty</packagereq>
-      <packagereq type="mandatory">modutils</packagereq>
+      <packagereq type="mandatory">module-init-tools</packagereq>
       <packagereq type="mandatory">ncurses</packagereq>
       <packagereq type="mandatory">newt</packagereq>
       <packagereq type="mandatory">net-tools</packagereq>
