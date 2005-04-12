@@ -102,7 +102,7 @@ class JobDaemon:
             joblist = list(client.iterJobs(profileId=-1, arch=arch))
 
             for job in joblist:
-                if job.getStatus() == jobstatus.WAITING:
+                if job.getStatus() == jobstatus.WAITING and len(joblist) < 5:
                     th = JobRunner(cfg, client, job)
                     threads.append(th)
                     th.start()
