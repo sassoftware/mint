@@ -1,6 +1,8 @@
 #
 # Copyright (c) 2004-2005 Specifix, Inc.
 #
+# All Rights Reserved
+#
 
 python_files = __init__.py\
                controlfile.py\
