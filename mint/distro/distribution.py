@@ -60,7 +60,7 @@ class DistroInfo:
         self.nightly = nightly
         self.isoSize = isoSize
         if not isoname:
-            self.isoname = '%s-linux-%s' % (self.abbrevName, self.version)
+            self.isoname = '%s-linux-%s-%s' % (self.abbrevName, self.version, self.arch)
         else:
             self.isoname = isoname
         if self.nightly:

@@ -65,7 +65,7 @@ class JobRunner(threading.Thread):
             raise
         else:
             self.job.setFiles(imageFilenames)
-            self.job.setStatus(jobId, jobstatus.FINISHED)
+            self.job.setStatus(jobstatus.FINISHED, "Finished")
             log.info("job %d finished: %s", jobId, str(imageFilenames))
 
 class JobDaemon:
