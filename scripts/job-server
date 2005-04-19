@@ -113,7 +113,7 @@ if __name__ == "__main__":
     
     # use sys.argv[1] as config file if provided
     # if not, use some standard locations
-    cfgFiles = ["imagetool.conf", "../imagetool.conf", None]
+    cfgFiles = ["imagetool.conf", "../../imagetool.conf", None]
     if len(sys.argv) > 1:
         if os.access(sys.argv[1], os.R_OK) and os.path.isfile(sys.argv[1]):
             cfgFile = sys.argv[1]
