@@ -68,8 +68,9 @@ class DistroInfo:
 
 class Distribution:
     def __init__(self, arch, repos, cfg, distro, controlGroup, buildpath, 
-		isopath, isoTemplatePath, nfspath, tftpbootpath, fromcspath, 
-		logdir, clean=False):
+		isopath, isoTemplatePath = None, nfspath = None,
+                tftpbootpath = None, fromcspath = None, 
+		logdir = None, statusCb = None, clean=False):
         """ Contains the necessary information and methods for 
             creating a distribution.  
 
@@ -105,6 +106,9 @@ class Distribution:
                               the iso.  If none, output is printed on 
                               stdout and stderr
 
+                statusCb:     a function to call to update the status of
+                              a distribution job.
+
                 clean: remove old builddir before rebuilding
         """
 	self.arch = arch
@@ -130,6 +134,10 @@ class Distribution:
         # Place to look for Changesets that have already been made
         self.fromcspath = fromcspath
         self.clean = clean
+
+    def status(self, msg):
+        if self.statusCb:
+            self.statusCb(msg)
 
     def prep(self):
         """ Create the necessary directories, etc, for creating a 
@@ -274,6 +282,7 @@ class Distribution:
 
         l = len(self.csList)
         for (troveName, version, flavor), pkg in self.csList:
+            self.status("Extracting changeset %d of %d" % (index, l))
             if pkg not in matches:
                 # we just skip these packages
                 csfile = "%s-%s.ccs" % (troveName, 
@@ -572,6 +581,7 @@ class Distribution:
             cmd = 'sh -x %(scripts)s/upd-instroot --debug --conary --arch %(arch)s %(csdir)s %(instroot)s %(instrootgr)s' % map
             print "\n\n*********** RUNNING UPD-INSTROOT ***************\n\n"
             print cmd
+            self.status("Creating Anaconda instroots")
             sys.stdout.flush()
             rc = os.system(cmd)
             print "<<Result code: %d>>" % rc
@@ -589,6 +599,7 @@ class Distribution:
             print "\n\n*********** RUNNING mk-images ***************\n\n"
             cmd = ('%(scripts)s/mk-images --debug --conary %(csdir)s %(isodir)s %(instroot)s %(instrootgr)s %(arch)s "%(pname)s" %(version)s %(ppath)s' % map)
             print cmd
+            self.status("Assembling ISO images")
             sys.stdout.flush()
             sys.stderr.flush()
             rc = os.system(cmd)
@@ -614,7 +625,7 @@ class Distribution:
             for doing an NFS install.  Also needs to copy
             the images over to a TFTP boot path so that a 
             matching image can be loaded with the NFS files.
-        """ 
+        """
         util.mkdirChain(self.nfspath)
         linkOk = (os.stat(self.topdir)[stat.ST_DEV] == os.stat(self.nfspath)[stat.ST_DEV])
         os.system('rm -rf %s' % self.nfspath)

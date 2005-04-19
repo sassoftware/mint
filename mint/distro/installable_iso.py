@@ -28,6 +28,7 @@ class IsoConfig(ConfigFile):
         'templatePath':      None,
         'nfsPath':           None,
         'tftpbootPath':      None,
+        'changesetCache':    None,
     }
 
 class InstallableIso(ImageGenerator):
@@ -80,9 +81,12 @@ class InstallableIso(ImageGenerator):
         tmpDir = self.cfg.imagesPath + os.path.join(arch, releasePhase)
         dist = distribution.Distribution(arch, repos, ccfg,
                                    distroInfo, (trove, version.asString(), flavor),
-                                   tmpDir, tmpDir+"/isos/", isocfg.templatePath,
-                                   isocfg.nfsPath, isocfg.tftpbootPath, None,
-                                   None, False)
+                                   buildpath = tmpDir, isopath = tmpDir+"/isos/",
+                                   isoTemplatePath = isocfg.templatePath,
+                                   nfspath = isocfg.nfsPath,
+                                   tftpbootpath = isocfg.tftpbootPath,
+                                   fromcspath = isocfg.changesetCache,
+                                   statusCb = self.status)
                                    
         logfile = os.path.join(self.cfg.logPath, "instiso-%d.log" % jobId)
         self.grabOutput(logfile)
