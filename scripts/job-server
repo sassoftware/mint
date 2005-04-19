@@ -25,7 +25,7 @@ sys.excepthook = util.genExcepthook()
 from imagetool import imagetool
 from imagetool import jobs
 import jobstatus
-import jobtypes
+import profiletypes
 
 import conarycfg
 import conaryclient
@@ -58,7 +58,7 @@ class JobRunner(threading.Thread):
             except OSError, err:
                 if err.errno != errno.EEXIST:
                     raise
-            generator = jobtypes.generators[self.job.getType()]
+            generator = profiletypes.generators[self.job.getType()]
             imageFilenames = generator(self.client, self.cfg, self.job, profileId).write()
         except Exception, e:
             self.job.setStatus(jobstatus.ERROR, str(e))

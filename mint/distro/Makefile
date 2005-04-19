@@ -13,7 +13,7 @@ python_files = __init__.py\
                iso.py\
                jobdaemon.py\
                jobstatus.py\
-               jobtypes.py\
+               profiletypes.py\
                live_cf_image.py\
                live_iso.py\
                pkgid.py
