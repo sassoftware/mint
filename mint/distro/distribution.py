@@ -69,7 +69,7 @@ class DistroInfo:
 class Distribution:
     def __init__(self, arch, repos, cfg, distro, controlGroup, buildpath, 
 		isopath, isoTemplatePath = None, nfspath = None,
-                tftpbootpath = None, fromcspath = None, 
+                tftpbootpath = None, cachepath= None, 
 		logdir = None, statusCb = None, clean=False):
         """ Contains the necessary information and methods for 
             creating a distribution.  
@@ -99,7 +99,7 @@ class Distribution:
                 tftpbootpath: directories where the images should be put
                               for tftpbooting 
 
-                fromcspath:   the directory which contains all of the 
+                cachepath:    the directory which contains all of the 
                               necessary changesets
 
                 logdir:       directory to log the output from creating 
@@ -131,8 +131,7 @@ class Distribution:
         self.isopath = isopath
         self.distro = distro
         self.controlGroup = controlGroup
-        # Place to look for Changesets that have already been made
-        self.fromcspath = fromcspath
+        self.cachePath = cachepath
         self.clean = clean
         self.statusCb = statusCb
 
@@ -219,50 +218,30 @@ class Distribution:
             simply skipped, and their changesets are not installed on the
             isos.
         """
-        getFromCookedGroup = True
-        fromcspath = self.fromcspath
+        
         self.csInfo = {}
         oldFiles = {}
+        cachedFiles = {}
         for path in [ "%s/%s" % (csdir, x) for x in os.listdir(csdir) ]:
             oldFiles[path] = 1
+        for path in [ "%s/%s" % (self.cachePath, x) for x in os.listdir(self.cachePath) ]:
+            cachedFiles[path] = 1
 
         control = controlfile.ControlFile(self.arch, group, self.repos, self.cfg, self.cfg.installLabelPath[0]) 
         print "Matching changesets..."
-        if fromcspath:
-            control.loadControlFile()
-            matches, unmatched = control.getMatchedChangeSets(fromcspath)
-        elif getFromCookedGroup:
-            matches = control.getRepoTrovesFromCookedGroup()
-            unmatched = []
-        else:
-            control.loadControlFile()
-            matches, unmatched = control.getMatchedRepoTroves(
-                                                    allowVersionMismatch=True)
+            
+        matches = control.getRepoTrovesFromCookedGroup()
+        unmatched = []
 
         self.csList = []
         trovesByName = {}
 
-        if fromcspath:
-            for troveName in control.getSourceList():
-                trovesByName[troveName] = control.getSourceIds(troveName)
-        elif getFromCookedGroup:
-            for trove in matches:
-                name = trove.getName()
-                if name not in trovesByName:
-                    trovesByName[name] = [trove]
-                else:
-                    trovesByName[name].append(trove)
-        else:
-            desTroves = control.getDesiredTroveList() 
-            for desTrove in desTroves:
-                desSourceId = control.getDesiredTroveSourceId(*desTrove)
-                if desSourceId is None:
-                    print "Skipping %s..." % desTrove[0]
-                    continue
-                if desTrove[0] in trovesByName:
-                    trovesByName[desTrove[0]].append(desSourceId)
-                else:
-                    trovesByName[desTrove[0]] = [desSourceId]
+        for trove in matches:
+            name = trove.getName()
+            if name not in trovesByName:
+                trovesByName[name] = [trove]
+            else:
+                trovesByName[name].append(trove)
 
         for name in [ 'setup', 'glibc' ]:
             if name in trovesByName:
@@ -293,13 +272,11 @@ class Distribution:
                 index += 1
                 continue
             dispName = troveName
-            if getFromCookedGroup:
-                if troveName == 'kernel':
-                    if '!kernel.smp' not in str(flavor):
-                        dispName += '-smp'
-                troveId = pkg
-            else:
-                troveId = pkg.getTroveId()
+            
+            if troveName == 'kernel':
+                if '!kernel.smp' not in str(flavor):
+                    dispName += '-smp'
+            troveId = pkg
 
             if deps.DEP_CLASS_IS in flavor.members:
                 pkgarch = flavor.members[deps.DEP_CLASS_IS].members.keys()[0]
@@ -310,6 +287,7 @@ class Distribution:
                         pkgarch)
 
             path = "%s/%s" % (csdir, csfile)
+            cachedPath = "%s/%s" % (self.cachePath, csfile)
 
             # link the first matching path, assuming they are ordered
             # so that latest is first
@@ -317,18 +295,24 @@ class Distribution:
                 print >> sys.stderr, "%d/%d: keeping old %s" % (index, l, 
                                                                    csfile)
                 del oldFiles[path]
-            elif fromcspath:
+            elif cachedFiles.has_key(cachedPath):
                 print >> sys.stderr, "%d/%d: linking %s" % (index, l, csfile)
                 try:
-                    os.link(troveId.getPath(), path)
+                    os.link(cachedPath, path)
                 except OSError, msg:
                     if msg.errno != errno.EXDEV:
                         raise
-                    shutil.copyfile(cspkg.getPath(), path)
+                    shutil.copyfile(cachedPath, path)
             else:
                 # the trove is still waiting in the repo
                 print >> sys.stderr, "%d/%d: extracting %s" % (index+1, l, csfile)
-                troveId.createChangeSet(path, self.repos, self.cfg, component=troveName)
+                troveId.createChangeSet(cachedPath, self.repos, self.cfg, component=troveName)
+                try:
+                    os.link(cachedPath, path)
+                except OSError, msg:
+                    if msg.errno != errno.EXDEV:
+                        raise
+                    shutil.copyfile(cachedPath, path)
 
             cs = changeset.ChangeSetFromFile(path)
             trailing = troveId.getVersion().trailingRevision().asString()

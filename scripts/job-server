@@ -142,12 +142,14 @@ if __name__ == "__main__":
         lock.close()
     except:
         log.warning("unable to open lockfile: %s", lockFile)
-        
+    
     try:
+        print "job daemon started (pid %d)" % os.getpid()
         jd = JobDaemon(cfgFile)
-    except KeyboardInterrupt:
-        log.info("exiting due to ctrl-c")
+    except:
+        log.info("exiting")
         try:
             os.unlink(lockFile)
         except OSError:
             log.warning("unable to remove lockfile: %s", lockFile)
+        raise

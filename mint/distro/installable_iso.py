@@ -85,17 +85,17 @@ class InstallableIso(ImageGenerator):
                                    isoTemplatePath = isocfg.templatePath,
                                    nfspath = isocfg.nfsPath,
                                    tftpbootpath = isocfg.tftpbootPath,
-                                   fromcspath = isocfg.changesetCache,
+                                   cachepath = isocfg.changesetCache,
                                    statusCb = self.status)
                                    
         logfile = os.path.join(self.cfg.logPath, "instiso-%d.log" % jobId)
-        self.grabOutput(logfile)
+#        self.grabOutput(logfile)
         try:
             dist.prep()
             filenames = dist.create()
         except:
-            self.releaseOutput()
+#            self.releaseOutput()
             raise
-        self.releaseOutput()
+#        self.releaseOutput()
          
         return filenames

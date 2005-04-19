@@ -109,7 +109,9 @@ class ControlFile:
 
     def loadGroup(self, groupName, label):
         groupName = groupName + ':source'
-        leaves = self._repos.getTroveLeavesByLabel([groupName], label)
+
+        v = versions.VersionFromString(label)
+        leaves = self._repos.getTroveLeavesByLabel({groupName: {v.branch().label(): None}})
         leaves = leaves[groupName]
         ver = leaves.keys()[-1]
         groupTrove = self._repos.getTrove(groupName, ver, deps.DependencySet())
@@ -122,6 +124,7 @@ class ControlFile:
         # make its internal addTroves be called
         branch = groupId.getVersion().branch()
         groupObj = groupClass(self._repos, self._cfg, branch, None)
+        print groupObj, dir(groupObj)
         groupObj.setup()
         use.LocalFlags._clear()
 
@@ -412,10 +415,12 @@ class ControlFile:
                     loader = (loader, sourceId.getVersion())
                     self._fromSourceDir[sourceId] = True
             if loader is None:
+                print name, recipefile
                 loader = recipe.recipeLoaderFromSourceComponent(name, 
-                                    recipefile, self._cfg, self._repos, 
+                                    self._cfg, self._repos, 
                                     sourceId.getVersionStr(), 
-                                    label=sourceId.getLabel())
+                                    labelPath=sourceId.getLabel(),
+                                    ignoreInstalled = True)
             # gather the local flags created (they may not have been tracked)
             sourceId.setLocalFlags(flavorutil.getLocalFlags())
             # gather the local/use/arch flags actually tracked
