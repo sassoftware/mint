@@ -17,6 +17,9 @@ class ImageGenerator:
     def write(self):
         raise NotImplementedError
 
+    def status(self, msg):
+        self.job.setStatus(jobstatus.RUNNING, msg)
+
     def grabOutput(self, logFile):
         """Redirect stdout and stderr to a file"""
         self.logfd = os.open(logFile, os.O_TRUNC | os.O_WRONLY | os.O_CREAT)

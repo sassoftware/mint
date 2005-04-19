@@ -134,6 +134,7 @@ class Distribution:
         # Place to look for Changesets that have already been made
         self.fromcspath = fromcspath
         self.clean = clean
+        self.statusCb = statusCb
 
     def status(self, msg):
         if self.statusCb:
