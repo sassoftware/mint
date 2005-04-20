@@ -12,25 +12,21 @@ import os
 import time
 import threading
 
-if os.environ.has_key("CONARY_PATH"):
-    sys.path.insert(0, os.environ['CONARY_PATH'])
-else:
-    sys.path.insert(-1, "/usr/share/conary/")
-sys.path.insert(-1, "/data/imagetool/code/imagetool/")
-
-from lib import log
-from lib import util
-sys.excepthook = util.genExcepthook()
-
-from imagetool import imagetool
-from imagetool import jobs
-import jobstatus
-import profiletypes
-
+import conary
 import conarycfg
 import conaryclient
 from conarycfg import ConfigFile, ConaryConfiguration
 from deps import deps
+from lib import log
+from lib import util
+sys.excepthook = util.genExcepthook()
+
+sys.path.append("..")
+
+import imagetool
+from imagetool import jobs
+import jobstatus
+import profiletypes
 
 scriptPath = os.path.dirname(sys.argv[0])
 if not scriptPath:
@@ -58,7 +54,7 @@ class JobRunner(threading.Thread):
             except OSError, err:
                 if err.errno != errno.EEXIST:
                     raise
-            generator = profiletypes.generators[self.job.getType()]
+            generator = profiletypes.generators['profiletype-' + self.job.getType()]
             imageFilenames = generator(self.client, self.cfg, self.job, profileId).write()
         except Exception, e:
             self.job.setStatus(jobstatus.ERROR, str(e))
