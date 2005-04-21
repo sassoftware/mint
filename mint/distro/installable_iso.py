@@ -13,11 +13,10 @@ import repository
 import versions
 from build import use
 
+import imagetool
 import distribution 
-
 import conarycfg
 from conarycfg import ConfigFile
-
 from imagegen import ImageGenerator
 
 class IsoConfig(ConfigFile):
@@ -70,12 +69,11 @@ class InstallableIso(ImageGenerator):
         arch = self.job.getArch()
         assert(arch in ('x86', 'x86_64'))
  
-        distroInfo = distribution.DistroInfo(isocfg.productPrefix,
-                                       isocfg.productPath,
-                                       isocfg.productName,
-                                       releaseVer, releasePhase,
-                                       arch = arch,
-                                       isoSize = isoSize)
+        safeName = imagetool.toSafeName(self.profile.getName())
+        distroInfo = distribution.DistroInfo(safeName, safeName, safeName
+                                             releaseVer, releasePhase,
+                                             arch = arch,
+                                             isoSize = isoSize)
         version = versions.VersionFromString(versionStr)
        
         tmpDir = self.cfg.imagesPath + os.path.join(arch, releasePhase)
