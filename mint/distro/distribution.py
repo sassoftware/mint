@@ -625,7 +625,7 @@ class Distribution:
             util.execute('cp -arf %s/.discinfo %s' % (self.isos[0].builddir, 
                                                             self.nfspath))
             print "Copying over auxiliary files to nfs dir"
-            for path in 'images', 'isolinux', 'Specifix/base':
+            for path in 'images', 'isolinux', '%s/base' % self.distro.productName:
                 util.mkdirChain('%s/%s' % (self.nfspath, path))
                 util.execute('cp -arf %s/%s/* %s/%s' % (self.isos[0].builddir, 
                                         path, self.nfspath, path))
