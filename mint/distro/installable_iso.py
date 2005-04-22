@@ -69,7 +69,7 @@ class InstallableIso(ImageGenerator):
         arch = self.job.getArch()
         assert(arch in ('x86', 'x86_64'))
  
-        safeName = imagetool.toSafeName(self.profile.getName())
+        safeName = imagetool.toSafeName(profile.getName())
         distroInfo = distribution.DistroInfo(safeName, safeName, safeName,
                                              releaseVer, releasePhase,
                                              arch = arch,
