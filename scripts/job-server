@@ -60,7 +60,7 @@ class JobRunner(threading.Thread):
             self.job.setStatus(jobstatus.ERROR, str(e))
             raise
         else:
-            self.job.setFiles(imageFilenames)
+            profile.setFiles(imageFilenames)
             self.job.setStatus(jobstatus.FINISHED, "Finished")
             log.info("job %d finished: %s", jobId, str(imageFilenames))
 

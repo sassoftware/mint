@@ -66,9 +66,6 @@ class DistroInfo:
         if self.nightly:
             self.isoname += '-' + time.strftime('%Y%m%d')
 
-        # keep the isoname short enough for the 32-byte ISO9660 limit
-        self.isoname = self.isoname[:24]
-
 class Distribution:
     def __init__(self, arch, repos, cfg, distro, controlGroup, buildpath, 
 		isopath, isoTemplatePath = None, nfspath = None,

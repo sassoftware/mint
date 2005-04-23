@@ -41,7 +41,7 @@ class ISO:
         self.freespace = self.maxsize - self.reserved
         self.builddir = builddir
         self.imagepath = imagepath
-        self.isoname = name
+        self.isoname = name[:32] # limit iso name for ISO9660 limitations
         self.files = {}
         self.discno = discno
         self.dirs = {}
