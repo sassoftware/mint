@@ -95,10 +95,14 @@ class JobDaemon:
         log.info("handling jobs of architecture: %s", arch)
         
         while(True):
-            joblist = list(client.iterJobs(profileId=-1, arch=arch))
+            joblist = list(client.iterJobs(profileId=-1))
 
             for job in joblist:
-                if job.getStatus() == jobstatus.WAITING and len(joblist) < 5:
+                profile = client.getProfile(job.getProfileId())
+            
+                if job.getStatus() == jobstatus.WAITING\
+                   and len(joblist) < 5\
+                   and arch == profile.getArch():
                     th = JobRunner(cfg, client, job)
                     threads.append(th)
                     th.start()
