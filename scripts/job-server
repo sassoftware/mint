@@ -54,7 +54,7 @@ class JobRunner(threading.Thread):
             except OSError, err:
                 if err.errno != errno.EEXIST:
                     raise
-            generator = profiletypes.generators['profiletype-' + profile.getImageType()]
+            generator = profiletypes.generators[profile.getImageType()]
             imageFilenames = generator(self.client, self.cfg, self.job, profileId).write()
         except Exception, e:
             self.job.setStatus(jobstatus.ERROR, str(e))
