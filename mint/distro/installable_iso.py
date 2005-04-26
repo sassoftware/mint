@@ -66,7 +66,7 @@ class InstallableIso(ImageGenerator):
         releasePhase = self.job.getData("releasePhase")
         isoSize = self.job.getData("isoSize")
 
-        arch = self.job.getArch()
+        arch = profile.getArch()
         assert(arch in ('x86', 'x86_64'))
  
         safeName = imagetool.toSafeName(profile.getName())
