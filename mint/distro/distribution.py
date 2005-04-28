@@ -262,7 +262,11 @@ class Distribution:
 
         l = len(self.csList)
         for (troveName, version, flavor), pkg in self.csList:
-            self.status("Extracting changeset %d of %d" % (index, l))
+            if l > 0:
+                percent = (index * 100) / l
+                self.status("Extracting changesets: %d%%" % percent)
+            else:
+                self.status("Extracting changesets")
             if pkg not in matches:
                 # we just skip these packages
                 csfile = "%s-%s.ccs" % (troveName, 

@@ -50,10 +50,10 @@ class InstallableIso(ImageGenerator):
         ccfg = project.getConaryConfig()
 
         flavorConfig = flavorcfg.FlavorConfig(ccfg.useDirs, ccfg.archDirs)
-        ccfg.flavor = flavorConfig.toDependency(override=ccfg.flavor)
+        ccfg.flavor = flavorConfig.toDependency(override=ccfg.flavor[0])
         insSet = deps.deps.DependencySet()
         for dep in deps.arch.currentArch:
-            insSet.addDep(deps.deps.InstructionSetDependency, dep)
+            insSet.addDep(deps.deps.InstructionSetDependency, dep[0])
         ccfg.flavor.union(insSet)
         ccfg.buildFlavor = ccfg.flavor.copy()
         flavorConfig.populateBuildFlags()
