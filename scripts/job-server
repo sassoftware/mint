@@ -24,6 +24,8 @@ sys.excepthook = util.genExcepthook()
 sys.path.append("..")
 
 import imagetool
+from imagetool.imagetool import ImageToolConfig
+from imagetool.imagetool import ImageToolClient
 from imagetool import jobs
 from imagetool.distro import jobstatus
 from imagetool.distro import profiletypes
@@ -66,10 +68,10 @@ class JobRunner(threading.Thread):
 
 class JobDaemon:
     def __init__(self, cfgFile):
-        cfg = imagetool.ImageToolConfig()
+        cfg = ImageToolConfig()
         cfg.read(cfgFile)
         
-        client = imagetool.ImageToolClient(cfg.serverUrl)
+        client = ImageToolClient(cfg.serverUrl)
        
         threads = []
 
@@ -113,7 +115,7 @@ if __name__ == "__main__":
     
     # use sys.argv[1] as config file if provided
     # if not, use some standard locations
-    cfgFiles = ["imagetool.conf", "../../imagetool.conf", None]
+    cfgFiles = ["imagetool.conf", "../imagetool.conf", None]
     if len(sys.argv) > 1:
         if os.access(sys.argv[1], os.R_OK) and os.path.isfile(sys.argv[1]):
             cfgFile = sys.argv[1]
