@@ -13,9 +13,9 @@ dist_files = $(script_dist) $(extra_dist)
 all: default-all
 
 install: default-install
-	mkdir -p $(DESTDIR)/$(datadir)s/imagetool/scripts/
+	mkdir -p $(DESTDIR)/$(datadir)/imagetool/scripts/
 	for f in $(script_dist); do \
-		install -m 755 $$f $(DESTDIR)/$(datadir)s/imagetool/scripts/$$f; \
+		install -m 755 $$f $(DESTDIR)/$(datadir)/imagetool/scripts/$$f; \
 	done;
 
 dist: default-dist
