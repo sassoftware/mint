@@ -11,14 +11,13 @@ python_files = __init__.py\
                imagegen.py\
                installable_iso.py\
                iso.py\
-               jobdaemon.py\
                jobstatus.py\
                profiletypes.py\
                live_cf_image.py\
                live_iso.py\
                pkgid.py
 
-extra_dist = Makefile installable_iso.conf mklivecd
+extra_dist = Makefile installable_iso.conf
 
 dist_files = $(python_files) $(extra_dist)
 
