@@ -7,7 +7,7 @@
 import os
 import sys
 
-import jobstatus
+from imagetool import jobstatus
 
 class ImageGenerator:
     def __init__(self, client, cfg, job, profileId):

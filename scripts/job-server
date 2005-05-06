@@ -31,8 +31,21 @@ import imagetool
 from imagetool.imagetool import ImageToolConfig
 from imagetool.imagetool import ImageToolClient
 from imagetool import jobs
-from imagetool.distro import jobstatus
-from imagetool.distro import profiletypes
+from imagetool import jobstatus
+from imagetool import profiletypes
+
+# image generators
+from imagetool.distro.installable_iso import InstallableIso
+from imagetool.distro.live_iso import LiveIso
+from imagetool.distro.live_cf_image import LiveCFImage
+from imagetool.distro.stub_image import StubImage
+
+generators = {
+    profiletypes.LIVE_ISO:           LiveIso,
+    profiletypes.INSTALLABLE_ISO:    InstallableIso,
+    profiletypes.LIVE_CF_IMAGE:      LiveCFImage,
+    profiletypes.STUB_IMAGE:         StubImage,
+}
 
 class JobRunner(threading.Thread):
     def __init__(self, cfg, client, job):
@@ -48,7 +61,7 @@ class JobRunner(threading.Thread):
         project = self.client.getProject(profile.getProjectId())
         
         self.job.setStatus(jobstatus.RUNNING, 'Running')
-        log.info("job %d running", jobId)
+        log.info("job %d started", jobId)
 
         try:
             try:
@@ -56,7 +69,7 @@ class JobRunner(threading.Thread):
             except OSError, err:
                 if err.errno != errno.EEXIST:
                     raise
-            generator = profiletypes.generators[profile.getImageType()]
+            generator = generators[profile.getImageType()]
             imageFilenames = generator(self.client, self.cfg, self.job, profileId).write()
         except Exception, e:
             self.job.setStatus(jobstatus.ERROR, str(e))
@@ -98,7 +111,6 @@ class JobDaemon:
 
             for job in joblist:
                 profile = client.getProfile(job.getProfileId())
-            
                 if job.getStatus() == jobstatus.WAITING\
                    and len(joblist) < 5\
                    and arch == profile.getArch():
@@ -192,7 +204,7 @@ if __name__ == "__main__":
         pid = os.fork()
         if pid == 0:
             logFile = os.path.join(cfg.logPath, "job-server.log")
-            logfd = os.open(logFile, os.O_TRUNC | os.O_WRONLY | os.O_CREAT)
+            logfd = os.open(logFile, os.O_APPEND | os.O_WRONLY | os.O_CREAT)
             sys.stdout.flush()
             sys.stderr.flush()
 
@@ -200,7 +212,7 @@ if __name__ == "__main__":
             stderr = os.dup(sys.stderr.fileno())
             os.dup2(logfd, sys.stdout.fileno())
             os.dup2(logfd, sys.stderr.fileno())
-        
+            
             daemon(options, cfg, lockFile)
     else:
         log.info("Imagetool job server started")

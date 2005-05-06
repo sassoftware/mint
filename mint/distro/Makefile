@@ -11,11 +11,11 @@ python_files = __init__.py\
                imagegen.py\
                installable_iso.py\
                iso.py\
-               jobstatus.py\
-               profiletypes.py\
                live_cf_image.py\
                live_iso.py\
-               pkgid.py
+               pkgid.py\
+               profiletypes.py\
+	       stub_image.py
 
 extra_dist = Makefile installable_iso.conf
 
