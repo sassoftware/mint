@@ -4,7 +4,7 @@
 # All Rights Reserved
 #
 
-script_dist = adduser jobdaemon mklivecd
+script_dist = adduser job-server mklivecd
 
 extra_dist = Makefile
 

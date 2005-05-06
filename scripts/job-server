@@ -7,10 +7,14 @@
 
 import errno
 import re
+import signal
+import socket
 import sys
 import os
 import time
 import threading
+
+from optparse import OptionParser
 
 import conary
 import conarycfg
@@ -19,9 +23,9 @@ from conarycfg import ConfigFile, ConaryConfiguration
 from deps import deps
 from lib import log
 from lib import util
-sys.excepthook = util.genExcepthook()
 
-sys.path.append("..")
+# to run from CVS
+sys.path.append('..')
 
 import imagetool
 from imagetool.imagetool import ImageToolConfig
@@ -29,10 +33,6 @@ from imagetool.imagetool import ImageToolClient
 from imagetool import jobs
 from imagetool.distro import jobstatus
 from imagetool.distro import profiletypes
-
-scriptPath = os.path.dirname(sys.argv[0])
-if not scriptPath:
-    scriptPath = '.'
 
 class JobRunner(threading.Thread):
     def __init__(self, cfg, client, job):
@@ -67,10 +67,7 @@ class JobRunner(threading.Thread):
             log.info("job %d finished: %s", jobId, str(imageFilenames))
 
 class JobDaemon:
-    def __init__(self, cfgFile):
-        cfg = ImageToolConfig()
-        cfg.read(cfgFile)
-        
+    def __init__(self, cfg):
         client = ImageToolClient(cfg.serverUrl)
        
         threads = []
@@ -110,13 +107,61 @@ class JobDaemon:
                     th.start()
             time.sleep(5)
 
+def kill(lockFile):
+    lock = open(lockFile, "r")
+    pid = int(lock.read())
+    log.info("killing job server pid %d" % pid)
+
+    os.kill(pid, signal.SIGINT)
+
+def daemon(options, cfg, lockFile):
+    try:
+        lock = open(lockFile, "w")
+        lock.write("%d" % os.getpid())
+        lock.close()
+    except:
+        log.warning("unable to open lockfile: %s", lockFile)
+    
+    try:
+       
+        jd = JobDaemon(cfg)
+    except socket.error, msg:
+        log.error("connecting to Imagetool XMLRPC server: %s", msg[1])
+    except KeyboardInterrupt:
+        log.info("interrupt caught; exiting")
+
+    try:
+        os.unlink(lockFile)
+    except OSError:
+        log.warning("unable to remove lockfile: %s", lockFile)
+
 if __name__ == "__main__":
     lockFile = "/var/run/imagetool-jobdaemon.pid"
     
+    parser = OptionParser()
+    parser.add_option("-k", "--kill", dest = "kill",
+                      action = "store_true",
+                      help = "Kill the running job daemon.")
+    parser.add_option("-c", "--config", dest = "config", default = None,
+                      help = "Location of the Imagetool configuration file.")
+    parser.add_option("-d", "--debug", dest = "debug", action = "store_true",
+                      help = "Enable the debugger on errors.")
+    (options, args) = parser.parse_args()
+
+    if options.debug:
+        sys.excepthook = util.genExcepthook()
+        log.setVerbosity(log.DEBUG)
+    else: 
+        log.setVerbosity(log.INFO)
+    
+    if options.kill:
+        kill(lockFile)
+        sys.exit(1)
+    
     # use sys.argv[1] as config file if provided
-    # if not, use some standard locations
+    # if not, try some standard locations
     cfgFiles = ["imagetool.conf", "../imagetool.conf", None]
-    if len(sys.argv) > 1:
+    if options.config:
         if os.access(sys.argv[1], os.R_OK) and os.path.isfile(sys.argv[1]):
             cfgFile = sys.argv[1]
         else:
@@ -128,30 +173,35 @@ if __name__ == "__main__":
             if os.access(cfgFile, os.R_OK) and os.path.isfile(cfgFile):
                 break
         else:
-            print >> sys.stderr, "Usage: %s [config file]" % (sys.argv[0])
-     
+            log.error("unable to open imagetool.conf configuration file. Please use --config=<path>.")
+    
     if os.access(lockFile, os.R_OK):
         lock = open(lockFile, "r")
         pid = lock.read()
-        log.error("imagetool job daemon already running as pid %s", pid)
+        log.error("Imagetool job daemon already running as pid %s", pid)
         sys.exit(1)
    
-    log.info("loading configuration file: %s", cfgFile)
+    log.debug("loading configuration file: %s", cfgFile)
+    cfg = ImageToolConfig()
+    cfg.read(cfgFile)
 
-    try:
-        lock = open(lockFile, "w")
-        lock.write("%d" % os.getpid())
-        lock.close()
-    except:
-        log.warning("unable to open lockfile: %s", lockFile)
-    
-    try:
-        print "job daemon started (pid %d)" % os.getpid()
-        jd = JobDaemon(cfgFile)
-    except:
-        log.info("exiting")
-        try:
-            os.unlink(lockFile)
-        except OSError:
-            log.warning("unable to remove lockfile: %s", lockFile)
-        raise
+    pid = os.fork()
+
+    if pid == 0:
+        os.setsid()
+        pid = os.fork()
+        if pid == 0:
+            logFile = os.path.join(cfg.logPath, "job-server.log")
+            logfd = os.open(logFile, os.O_TRUNC | os.O_WRONLY | os.O_CREAT)
+            sys.stdout.flush()
+            sys.stderr.flush()
+
+            stdout = os.dup(sys.stdout.fileno())
+            stderr = os.dup(sys.stderr.fileno())
+            os.dup2(logfd, sys.stdout.fileno())
+            os.dup2(logfd, sys.stderr.fileno())
+        
+            daemon(options, cfg, lockFile)
+    else:
+        log.info("rpath Imagetool job server started")
+        os._exit(0)
