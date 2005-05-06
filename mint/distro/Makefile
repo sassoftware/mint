@@ -14,10 +14,9 @@ python_files = __init__.py\
                live_cf_image.py\
                live_iso.py\
                pkgid.py\
-               profiletypes.py\
 	       stub_image.py
 
-extra_dist = Makefile installable_iso.conf
+extra_dist = Makefile
 
 dist_files = $(python_files) $(extra_dist)
 

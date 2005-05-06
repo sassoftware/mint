@@ -6,7 +6,7 @@
 
 script_dist = adduser job-server mklivecd
 
-extra_dist = Makefile
+extra_dist = Makefile installable_iso.conf
 
 dist_files = $(script_dist) $(extra_dist)
 
