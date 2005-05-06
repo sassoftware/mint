@@ -203,5 +203,5 @@ if __name__ == "__main__":
         
             daemon(options, cfg, lockFile)
     else:
-        log.info("rpath Imagetool job server started")
+        log.info("Imagetool job server started")
         os._exit(0)
