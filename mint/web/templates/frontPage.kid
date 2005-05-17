@@ -23,7 +23,7 @@
 
             <p>After you have registered, please <a href="login">log in</a>.</p>
 
-            ${html_footer(cfg)}
+            ${html_footer()}
         </div>
 
         </td>

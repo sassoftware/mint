@@ -7,11 +7,15 @@ import os
 import kid
 
 from mod_python import apache
-
-import conary
 from conary.web import webhandler
 
+from mint import shimclient
+
 class MintApp(webhandler.WebHandler):
+    def _checkAuth(self, authToken):
+        self.client = shimclient.ShimMintClient(self.cfg, authToken)
+        return self.client.checkAuth()
+
     def _getHandler(self, cmd, auth):
         self.req.content_type = "application/xhtml+xml"
         try:
@@ -33,6 +37,6 @@ class MintApp(webhandler.WebHandler):
         t = kid.load_template(path)
 
         content = t.serialize(encoding="utf-8", cfg = self.cfg,
-                                                isInternal = self.auth.isInternal,
+                                                auth = self.auth,
                                                 **values)
         self.req.write(content) 

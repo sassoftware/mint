@@ -5,13 +5,27 @@
 #
 import os
 import re
-import sys
 
 import conary
 from lib import util
-from server.server import ResetableNetworkRepositoryServer
+from repository.netrepos.netserver import NetworkRepositoryServer
 
 validHost = re.compile('^[a-zA-Z][a-zA-Z0-9\-]*$')
+
+# XXX sort of stolen from conary/server/server.py
+class EmptyNetworkRepositoryServer(NetworkRepositoryServer):
+    def reset(self, authToken, clientVersion):
+        import shutil
+        shutil.rmtree(self.repPath + '/contents')
+        os.mkdir(self.repPath + '/contents')
+
+        # cheap trick. sqlite3 doesn't mind zero byte files; just replace
+        # the file with a zero byte one (to change the inode) and reopen
+        open(self.repPath + '/sqldb.new', "w")
+        os.rename(self.repPath + '/sqldb.new', self.repPath + '/sqldb')
+        self.reopen()
+
+        return 0
 
 class ReposTable:
     def __init__(self, db):
@@ -26,7 +40,7 @@ class ReposTable:
                 CREATE TABLE Repos (
                     reposId         INTEGER PRIMARY KEY,
                     projectId       INT,
-                    hostname        STR
+                    hostname        STR UNIQUE
                 );""")
                 
     def createRepos(self, projectId, hostname, reposPath, username, password):
@@ -39,7 +53,7 @@ class ReposTable:
         path = os.path.join(reposPath, hostname)
         util.mkdirChain(reposPath)
 
-        repos = ResetableNetworkRepositoryServer(path, None, None, None, {})
+        repos = EmptyNetworkRepositoryServer(path, None, None, None, {})
         repos.auth.addUser(username, password)
         repos.auth.addAcl(username, None, None, True, False, True)
 

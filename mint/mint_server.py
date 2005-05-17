@@ -5,12 +5,15 @@
 #
 import conary
 import sqlite3
+import sys
 
 import projects
 import repos
 import users
 
+# exceptions
 from mint_error import MintError
+import repository.netrepos.netauth
 
 class MintServer(object):
     def callWrapper(self, methodName, authToken, args):
@@ -28,9 +31,11 @@ class MintServer(object):
             return (True, ("MethodNotSupported", methodName, ""))
         try:
             r = method(*args)
-        except MintError, error:
-            exc_name = sys.exc_info()[0].__name__
-            return (True, (exc_name, error, ""))
+        except repository.netrepos.netauth.UserAlreadyExists, e:
+            return (True, ("UserAlreadyExists", str(e)))
+#        except Exception, error:
+#            exc_name = sys.exc_info()[0].__name__
+#            return (True, (exc_name, error, ""))
         else:
             return (False, r)
 
@@ -40,6 +45,9 @@ class MintServer(object):
                                          self.authToken[0], self.authToken[1])
 
         return (projectId, reposId)
+
+    def checkAuth(self):
+        return (self.auth.passwordOK, self.auth.userId)
 
     def __init__(self, cfg):
         self.cfg = cfg

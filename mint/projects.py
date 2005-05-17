@@ -20,7 +20,7 @@ class ProjectsTable:
                 CREATE TABLE Projects (
                     projectId       INTEGER PRIMARY KEY,
                     userId          INT,
-                    name            STR,
+                    name            STR UNIQUE,
                     desc            STR,
                     timeCreated     INT,
                     timeModified    INT

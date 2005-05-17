@@ -11,13 +11,14 @@ import conary
 import conarycfg
 
 from conarycfg import ConfigFile
+from conarycfg import STRINGDICT
 
 templatePath = os.path.dirname(sys.modules['mint'].__file__)
 
 class MintConfig(ConfigFile):
     defaults = {
         'staticUrl'         : '/conary-static/',
-        'authRepo'          : '',
+        'authRepo'          : [ STRINGDICT, {} ],
         'templatePath'      : os.path.join(templatePath, 'web', 'templates'),
         'reposPath'         : '/data/mint/repos/',
         'dbPath'            : '/data/mint/data/db',

@@ -7,6 +7,12 @@ import sys
 import conary
 from repository import netclient
 
+from mint_error import MintError
+
+class PermissionDenied(MintError):
+    def __str__(self):
+        return "permission denied from XMLRPC server"
+
 class UsersTable:
     def __init__(self, db, cfg):
         self.db = db
@@ -20,7 +26,7 @@ class UsersTable:
             cu.execute("""
                 CREATE TABLE Users (
                     userId          INTEGER PRIMARY KEY,
-                    username        STR,
+                    username        STR UNIQUE,
                     fullName        STR,
                     email           STR,
                     timeCreated     INT,
@@ -39,7 +45,7 @@ class UsersTable:
         r = cu.fetchone()
 
         if r:
-            authRepo = netclient.NetworkRepositoryClient(self.cfg.authRepoMap)
+            authRepo = netclient.NetworkRepositoryClient(self.cfg.authRepo)
             
             if 'mint' in authRepo.getUserGroups():
                 return (True, r[0])

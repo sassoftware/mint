@@ -11,8 +11,10 @@
     </head>
 
     <!-- define the HTML footer -->
-    <div class="footer" py:def="html_footer(cfg)">
-        <a href="login">Log Out</a> | Copyright &#169; 2004-2005 <a href="http://www.rpath.com/">rpath, inc.</a>
+    <div class="footer" py:def="html_footer">
+        <a py:if="auth.passwordOK" href="login">Log Out (${auth.userId})</a>
+
+        <a py:if="not auth.passwordOK" href="login">Log In</a> | Copyright &#169; 2004-2005 <a href="http://www.rpath.com/">rpath, inc.</a>
     </div>
 
     <!-- define header image -->
