@@ -25,8 +25,6 @@ class MintClient(Client):
 
     def checkAuth(self):
         authTuple = self.server.checkAuth()
-        print >> sys.stderr, authTuple
-        sys.stderr.flush()
         return users.Authorization(*authTuple)
 
 class ServerProxy(xmlrpclib.ServerProxy):

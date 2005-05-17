@@ -4,6 +4,7 @@
 # All Rights Reserved
 #
 import conary
+import re
 import sqlite3
 import sys
 
@@ -14,6 +15,8 @@ import users
 # exceptions
 from mint_error import MintError
 import repository.netrepos.netauth
+
+validHost = re.compile('^[a-zA-Z][a-zA-Z0-9\-]*$')
 
 class MintServer(object):
     def callWrapper(self, methodName, authToken, args):
@@ -44,6 +47,10 @@ class MintServer(object):
             return (False, r)
 
     def newProject(self, projectName, hostname, desc):
+        if validHost.match(hostname) == None:
+            raise repos.InvalidHostname
+        hostname += "." + self.cfg.domainName
+    
         projectId = self.projects.newProject(projectName, hostname, self.auth.userId, desc)
         reposId = self.repos.createRepos(projectId, hostname, self.cfg.reposPath,
                                          self.authToken[0], self.authToken[1])

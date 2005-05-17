@@ -4,17 +4,18 @@
 # All Rights Reserved
 #
 import os
-import re
 
 import conary
 from lib import util
 from repository.netrepos.netserver import NetworkRepositoryServer
 
-validHost = re.compile('^[a-zA-Z][a-zA-Z0-9\-]*$')
-
 class DuplicateHostname(Exception):
     def __str__(self):
         return "hostname already exists"
+
+class InvalidHostname(Exception):
+    def __str__(self):
+        return "invalid hostname: must start with a letter and contain only letters, numbers, and hyphens."
 
 # XXX sort of stolen from conary/server/server.py
 class EmptyNetworkRepositoryServer(NetworkRepositoryServer):
@@ -48,7 +49,6 @@ class ReposTable:
                 );""")
                 
     def createRepos(self, projectId, hostname, reposPath, username, password):
-        assert(validHost.match(hostname) != None)
         cu = self.db.cursor()
 
         try:
@@ -66,3 +66,11 @@ class ReposTable:
 
         self.db.commit()
         return cu.lastrowid
+
+    def __getitem__(self, item):
+        cu = self.db.cursor()
+        cu.execute("SELECT reposId FROM Repos WHERE hostname=?", item)
+        try:
+            return cu.next()[0]
+        except StopIteration:
+            raise KeyError, item

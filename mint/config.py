@@ -22,4 +22,6 @@ class MintConfig(ConfigFile):
         'templatePath'      : os.path.join(templatePath, 'web', 'templates'),
         'reposPath'         : '/data/mint/repos/',
         'dbPath'            : '/data/mint/data/db',
+        'tmpPath'           : '/data/mint/tmp/',
+        'domainName'        : '',
     }
