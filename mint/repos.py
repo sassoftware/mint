@@ -12,6 +12,10 @@ from repository.netrepos.netserver import NetworkRepositoryServer
 
 validHost = re.compile('^[a-zA-Z][a-zA-Z0-9\-]*$')
 
+class DuplicateHostname(Exception):
+    def __str__(self):
+        return "hostname already exists"
+
 # XXX sort of stolen from conary/server/server.py
 class EmptyNetworkRepositoryServer(NetworkRepositoryServer):
     def reset(self, authToken, clientVersion):
@@ -47,9 +51,12 @@ class ReposTable:
         assert(validHost.match(hostname) != None)
         cu = self.db.cursor()
 
-        cu.execute("""INSERT INTO Repos VALUES (NULL, ?, ?)""",
-            projectId, hostname)
-
+        try:
+            cu.execute("""INSERT INTO Repos VALUES (NULL, ?, ?)""",
+                projectId, hostname)
+        except sqlite3.ProgrammingError: # XXX make sure this is really a 'column name is not unique'
+            raise DuplicateHostname
+            
         path = os.path.join(reposPath, hostname)
         util.mkdirChain(reposPath)
 

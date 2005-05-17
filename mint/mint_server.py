@@ -33,6 +33,10 @@ class MintServer(object):
             r = method(*args)
         except repository.netrepos.netauth.UserAlreadyExists, e:
             return (True, ("UserAlreadyExists", str(e)))
+        except projects.DuplicateProjectName, e:
+            return (True, ("DuplicateProjectName", str(e)))
+        except repos.DuplicateHostname, e:
+            return (True, ("DuplicateHostname", str(e)))
 #        except Exception, error:
 #            exc_name = sys.exc_info()[0].__name__
 #            return (True, (exc_name, error, ""))

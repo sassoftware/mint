@@ -7,6 +7,14 @@ import sys
 import time
 import conary
 
+import sqlite3
+
+from mint_error import MintError
+
+class DuplicateProjectName:
+    def __str__(self):
+        return "a project with that name already exists"
+
 class ProjectsTable:
     def __init__(self, db):
         self.db = db
@@ -29,7 +37,11 @@ class ProjectsTable:
     def newProject(self, name, hostname, userId, desc):
         cu = self.db.cursor()
 
-        cu.execute("""INSERT INTO Projects VALUES (NULL, ?, ?, ?, ?, 0)""",
-            userId, name, desc, time.time())
-        self.db.commit()
+        try:
+            cu.execute("""INSERT INTO Projects VALUES (NULL, ?, ?, ?, ?, 0)""",
+                userId, name, desc, time.time())
+        except sqlite3.ProgrammingError: # XXX make sure this error is actually duplicated column value
+            raise DuplicateProjectName
+        else:
+            self.db.commit()
         return cu.lastrowid

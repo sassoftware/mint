@@ -12,6 +12,8 @@ import conary
 from mint_error import MintError
 import users
 import config
+import projects
+import repos
 
 class Client:
     def __init__(self, server):
@@ -52,6 +54,10 @@ class _Method(xmlrpclib._Method):
         if exceptionName == "UserAlreadyExists":
             from repository.netrepos.netauth import UserAlreadyExists
             raise UserAlreadyExists
+        elif exceptionName == "DuplicateProjectName":
+            raise projects.DuplicateProjectName
+        elif exceptionName == "DuplicateHostname":
+            raise repos.DuplicateHostname
         elif exceptionName == "MethodNotSupported":
             raise MethodNotSupported
         else:
