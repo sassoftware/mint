@@ -27,6 +27,9 @@ class MintClient(Client):
         authTuple = self.server.checkAuth()
         return users.Authorization(*authTuple)
 
+    def getProjectByHostname(self, hostname):
+        return self.server.getProjectByHostname(hostname)
+
 class ServerProxy(xmlrpclib.ServerProxy):
     def __getattr__(self, name):
         return _Method(self.__request, name)
@@ -56,6 +59,8 @@ class _Method(xmlrpclib._Method):
             raise projects.DuplicateProjectName
         elif exceptionName == "DuplicateHostname":
             raise repos.DuplicateHostname
+        elif exceptionName == "ProjectNotFound":
+            raise projects.ProjectNotFound
         elif exceptionName == "MethodNotSupported":
             raise MethodNotSupported
         else:

@@ -17,6 +17,7 @@ from mint_error import MintError
 import repository.netrepos.netauth
 
 validHost = re.compile('^[a-zA-Z][a-zA-Z0-9\-]*$')
+reservedHosts = ['admin', 'mail', 'www', 'web']
 
 class MintServer(object):
     def callWrapper(self, methodName, authToken, args):
@@ -40,6 +41,8 @@ class MintServer(object):
             return (True, ("DuplicateProjectName", str(e)))
         except repos.DuplicateHostname, e:
             return (True, ("DuplicateHostname", str(e)))
+        except projects.ProjectNotFound, e:
+            return (True, ("ProjectNotFound", str(e)))
 #        except Exception, error:
 #            exc_name = sys.exc_info()[0].__name__
 #            return (True, (exc_name, error, ""))
@@ -49,6 +52,8 @@ class MintServer(object):
     def newProject(self, projectName, hostname, desc):
         if validHost.match(hostname) == None:
             raise repos.InvalidHostname
+        if hostname in reservedHosts:
+            raise repos.InvalidHostname
         hostname += "." + self.cfg.domainName
     
         projectId = self.projects.newProject(projectName, hostname, self.auth.userId, desc)
@@ -56,6 +61,9 @@ class MintServer(object):
                                          self.authToken[0], self.authToken[1])
 
         return (projectId, reposId)
+
+    def getProjectByHostname(self, hostname):
+        return self.projects.getProjectByHostname(hostname)
 
     def checkAuth(self):
         return (self.auth.passwordOK, self.auth.userId)

@@ -15,6 +15,10 @@ class DuplicateProjectName:
     def __str__(self):
         return "a project with that name already exists"
 
+class ProjectNotFound:
+    def __str__(self):
+        return "project not found"
+
 class ProjectsTable:
     def __init__(self, db):
         self.db = db
@@ -45,3 +49,14 @@ class ProjectsTable:
         else:
             self.db.commit()
         return cu.lastrowid
+
+    def getProjectByHostname(self, hostname):
+        cu = self.db.cursor()
+
+        cu.execute("SELECT projectId FROM Repos WHERE hostname=?", hostname)
+
+        try:
+            r = cu.next()
+        except StopIteration:
+            raise ProjectNotFound
+        return r[0]
