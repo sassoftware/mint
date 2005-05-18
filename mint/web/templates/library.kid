@@ -5,9 +5,9 @@
     <head py:def="html_header(cfg, title, extraScript=None, scriptArgs=None)">
         <title>${title}</title>
         <link rel="stylesheet" type="text/css" href="${cfg.staticUrl}css/common.css" />
-        <link rel="stylesheet" type="text/css" href="${cfg.staticUrl}apps/rmint/css/style.css" />
+        <link rel="stylesheet" type="text/css" href="${cfg.staticUrl}apps/mint/css/style.css" />
         <script py:if="extraScript">${extraScript(*scriptArgs)}</script>
-        <script language="javascript1.2" src="${cfg.staticUrl}apps/rmint/javascript/library.js" /> 
+        <script language="javascript1.2" src="${cfg.staticUrl}apps/mint/javascript/library.js" /> 
     </head>
 
     <!-- define the HTML footer -->
