@@ -62,6 +62,9 @@ class MintServer(object):
 
         return (projectId, reposId)
 
+    def getProject(self, id):
+        return self.projects.getProject(id)
+
     def getProjectByHostname(self, hostname):
         return self.projects.getProjectByHostname(hostname)
 

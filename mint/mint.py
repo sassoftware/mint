@@ -28,7 +28,9 @@ class MintClient(Client):
         return users.Authorization(*authTuple)
 
     def getProjectByHostname(self, hostname):
-        return self.server.getProjectByHostname(hostname)
+        projectId = self.server.getProjectByHostname(hostname)
+        
+        return projects.Project(self.server, projectId)
 
 class ServerProxy(xmlrpclib.ServerProxy):
     def __getattr__(self, name):

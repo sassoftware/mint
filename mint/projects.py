@@ -10,6 +10,7 @@ import conary
 import sqlite3
 
 from mint_error import MintError
+from database import TableObject
 
 class DuplicateProjectName:
     def __str__(self):
@@ -18,6 +19,29 @@ class DuplicateProjectName:
 class ProjectNotFound:
     def __str__(self):
         return "project not found"
+
+class Project(TableObject):
+    __slots__ = ['projectId', 'userId',
+                 'name', 'desc',
+                 'timeCreated', 'timeModified']
+
+    def getItem(self, id):
+        return self.server.getProject(id)
+
+    def getUserId(self):
+        return self.userId
+
+    def getName(self):
+        return self.name
+
+    def getDesc(self):
+        return self.desc
+
+    def getTimeCreated(self):
+        return self.timeCreated
+
+    def getTimeModified(self):
+        return self.timeModified
 
 class ProjectsTable:
     def __init__(self, db):
@@ -49,6 +73,22 @@ class ProjectsTable:
         else:
             self.db.commit()
         return cu.lastrowid
+
+    def getProject(self, id):
+        fields = ['userId', 'name', 'desc', 'timeCreated', 'timeModified']
+
+        cu = self.db.cursor()
+        stmt = "SELECT %s FROM Projects WHERE projectId=?" % ", ".join(fields)
+        cu.execute(stmt, id)
+        try:
+            r = cu.next()
+        except StopIteration:
+            raise ProjectNotFound
+        
+        data = {}
+        for i, key in enumerate(fields):
+            data[key] = r[i]
+        return data
 
     def getProjectByHostname(self, hostname):
         cu = self.db.cursor()
