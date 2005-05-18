@@ -12,6 +12,11 @@ from conary.web import webhandler
 
 from mint import shimclient
 from mint import projects
+from mint import database
+
+def log(*args):
+    print >> sys.stderr, args
+    sys.stderr.flush()
 
 class MintApp(webhandler.WebHandler):
     def _checkAuth(self, authToken):
@@ -23,15 +28,15 @@ class MintApp(webhandler.WebHandler):
 
         fullHost = self.req.hostname
         hostname = fullHost.split('.')[0]
-        try:
-            if hostname == "www":
-                self.project = None
-            else:
-                try:
-                    self.project = self.client.getProjectByHostname(fullHost)
-                except projects.ProjectNotFound:
-                    return lambda auth: apache.HTTP_NOT_FOUND
-                
+        
+        if hostname == "www":
+            self.project = None
+        else:
+            try:
+                self.project = self.client.getProjectByHostname(fullHost)
+            except database.ItemNotFound:
+                return lambda auth: apache.HTTP_NOT_FOUND
+        try:    
             method = self.__getattribute__(cmd)
         except AttributeError:
             if hostname == "www":

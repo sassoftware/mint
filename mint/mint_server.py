@@ -11,6 +11,7 @@ import sys
 import projects
 import repos
 import users
+import database
 
 # exceptions
 from mint_error import MintError
@@ -41,8 +42,8 @@ class MintServer(object):
             return (True, ("DuplicateProjectName", str(e)))
         except repos.DuplicateHostname, e:
             return (True, ("DuplicateHostname", str(e)))
-        except projects.ProjectNotFound, e:
-            return (True, ("ProjectNotFound", str(e)))
+        except database.ItemNotFound, e:
+            return (True, ("ItemNotFound", str(e)))
 #        except Exception, error:
 #            exc_name = sys.exc_info()[0].__name__
 #            return (True, (exc_name, error, ""))
@@ -63,10 +64,10 @@ class MintServer(object):
         return (projectId, reposId)
 
     def getProject(self, id):
-        return self.projects.getProject(id)
+        return self.projects.get(id)
 
-    def getProjectByHostname(self, hostname):
-        return self.projects.getProjectByHostname(hostname)
+    def getProjectIdByHostname(self, hostname):
+        return self.projects.getProjectIdByHostname(hostname)
 
     def checkAuth(self):
         return (self.auth.passwordOK, self.auth.userId)

@@ -7,7 +7,12 @@
         ${header_image(cfg)}
         ${menu([('Mint', False, True)])}
 
-        <pre>Project ID: ${project}</pre>
+        <div id="content">
+            <h2>${project.getName()}</h2>
+            <code>${project.getDesc()}</code>
+
+            ${html_footer()}
+        </div>
     </body>
 </html>
 

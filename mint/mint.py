@@ -14,6 +14,7 @@ import users
 import config
 import projects
 import repos
+import database
 
 class Client:
     def __init__(self, server):
@@ -28,8 +29,7 @@ class MintClient(Client):
         return users.Authorization(*authTuple)
 
     def getProjectByHostname(self, hostname):
-        projectId = self.server.getProjectByHostname(hostname)
-        
+        projectId = self.server.getProjectIdByHostname(hostname)
         return projects.Project(self.server, projectId)
 
 class ServerProxy(xmlrpclib.ServerProxy):
@@ -61,8 +61,8 @@ class _Method(xmlrpclib._Method):
             raise projects.DuplicateProjectName
         elif exceptionName == "DuplicateHostname":
             raise repos.DuplicateHostname
-        elif exceptionName == "ProjectNotFound":
-            raise projects.ProjectNotFound
+        elif exceptionName == "ItemNotFound":
+            raise database.ProjectNotFound
         elif exceptionName == "MethodNotSupported":
             raise MethodNotSupported
         else:
