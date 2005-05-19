@@ -3,11 +3,14 @@
 #
 # All rights reserved
 #
+import base64
 import os
 import kid
 import sys
 
 from mod_python import apache
+from mod_python import Cookie
+
 from conary.web import webhandler
 from conary.web.fields import strFields, intFields, listFields, boolFields
 
@@ -56,7 +59,6 @@ class MintApp(webhandler.WebHandler):
 
     @strFields(message = "")
     def login(self, auth, message):
-        log("foo!")
         self._write("login", message = message)
         return apache.OK
 
@@ -64,8 +66,9 @@ class MintApp(webhandler.WebHandler):
     def login2(self, auth, username, password):
         authToken = (username, password)
         client = shimclient.ShimMintClient(self.cfg, authToken)
-
-        if not client.checkAuth().passwordOK:
+        auth = client.checkAuth()
+        
+        if auth.passwordOK:
             return self._redirect("login?message=invalid")
         else:
             auth = base64.encodestring("%s:%s" % authToken).strip()

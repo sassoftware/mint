@@ -6,8 +6,10 @@
 import sys
 
 class ItemNotFound:
-    def __str__(self, table):
-        return "requested item not found in %s" % table
+    def __init__(self, table="table"):
+        self.table = table
+    def __str__(self):
+        return "requested item not found in %s" % self.table
 
 
 class TableObject:

@@ -19,6 +19,7 @@ class MintConfig(ConfigFile):
     defaults = {
         'staticUrl'         : '/conary-static/',
         'authRepo'          : [ STRINGDICT, {} ],
+        'authRepoUrl'       : '',
         'templatePath'      : os.path.join(templatePath, 'web', 'templates'),
         'reposPath'         : '/data/mint/repos/',
         'dbPath'            : '/data/mint/data/db',

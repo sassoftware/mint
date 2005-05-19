@@ -20,6 +20,18 @@ import repository.netrepos.netauth
 validHost = re.compile('^[a-zA-Z][a-zA-Z0-9\-]*$')
 reservedHosts = ['admin', 'mail', 'www', 'web']
 
+class PermissionDenied(MintError):
+    def __str__(self):
+        return "permission denied"
+
+def requiresAuth(func):
+    def wrapper(self, *args):
+        if not self.auth.passwordOK:
+            raise PermissionDenied
+        else:
+            return func(self, *args)
+    return wrapper
+
 class MintServer(object):
     def callWrapper(self, methodName, authToken, args):
         if methodName.startswith('_'):
@@ -50,6 +62,7 @@ class MintServer(object):
         else:
             return (False, r)
 
+    @requiresAuth
     def newProject(self, projectName, hostname, desc):
         if validHost.match(hostname) == None:
             raise repos.InvalidHostname
@@ -63,8 +76,12 @@ class MintServer(object):
 
         return (projectId, reposId)
 
+    @requiresAuth
     def getProject(self, id):
         return self.projects.get(id)
+
+    def registerNewUser(self, username, password, fullName, email):
+        return self.users.registerNewUser(username, password, fullName, email)
 
     def getProjectIdByHostname(self, hostname):
         return self.projects.getProjectIdByHostname(hostname)
