@@ -57,7 +57,7 @@ class MintServer(object):
             raise repos.InvalidHostname
         hostname += "." + self.cfg.domainName
     
-        projectId = self.projects.newProject(projectName, hostname, self.auth.userId, desc)
+        projectId = self.projects.new(name = projectName, userId = self.auth.userId, desc = desc)
         reposId = self.repos.createRepos(projectId, hostname, self.cfg.reposPath,
                                          self.authToken[0], self.authToken[1])
 

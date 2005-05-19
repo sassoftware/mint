@@ -1,7 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <?python
-title = "Login"
-
 messages = { '':          'If you do not have an account, please <a href="register">register</a>.',
              'confirmed': 'Your account has been confirmed. Please log in now.',
              'invalid':   'Sorry, the username or password is incorrect.' }
@@ -10,13 +8,13 @@ messages = { '':          'If you do not have an account, please <a href="regist
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'library.kid'">
-    ${html_header(cfg, title)}
+    ${html_header(cfg, "Login")}
     <body>
         ${header_image(cfg)}
-        ${menu([(title, None, True)])}
+        ${menu([("Login", None, True)])}
         
         <div id="content">
-        <p>Please log in to use the Specifix custom distribution server:</p>
+        <p>Please log in to use the the rpath Linux Mint custom distribution server:</p>
         <p py:if="message" style="font-weight: bold;" py:content="messages[message]"/>
         <form method="post" action="login2">
             <table>
@@ -32,7 +30,7 @@ messages = { '':          'If you do not have an account, please <a href="regist
 
             <p><input type="submit" value="Log In" /></p>
         </form>
-        ${html_footer(cfg)}
+        ${html_footer()}
         </div>
     </body>
 </html>

@@ -3,6 +3,7 @@
 #
 # All Rights Reserved
 #
+import sys
 
 class ItemNotFound:
     def __str__(self, table):
@@ -60,14 +61,14 @@ class DatabaseTable:
             data[key] = r[i]
         return data
 
-    def new(self, *kwargs):
+    def new(self, **kwargs):
         values = kwargs.values()
         cols = kwargs.keys()
 
         stmt = "INSERT INTO %s (%s) VALUES (%s)" %\
-            (self.name, cols, "?, " * len(values))
+            (self.name, ",".join(cols), ",".join('?' * len(values)))
         cu = self.db.cursor()
-        cu.excute(*[stmt] + values)
+        cu.execute(*[stmt] + values)
 
         self.db.commit()
         return cu.lastrowid
