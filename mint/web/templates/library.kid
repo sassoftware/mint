@@ -12,9 +12,10 @@
 
     <!-- define the HTML footer -->
     <div class="footer" py:def="html_footer">
-        <a py:if="auth.passwordOK" href="login">Log Out (${auth.userId})</a>
+        <span py:if="auth.authorized" id="login">You are logged in as ${auth.username}. <a href="login">Log Out</a></span>
+        <span py:if="not auth.authorized" id="login"><a href="login">Log In</a></span>
 
-        <a py:if="not auth.passwordOK" href="login">Log In</a> | Copyright &#169; 2004-2005 <a href="http://www.rpath.com/">rpath, inc.</a>
+        <span id="copyright">Copyright &#169; 2004-2005 <a href="http://www.rpath.com/">rpath, inc.</a></span>
     </div>
 
     <!-- define header image -->

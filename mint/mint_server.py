@@ -26,7 +26,7 @@ class PermissionDenied(MintError):
 
 def requiresAuth(func):
     def wrapper(self, *args):
-        if not self.auth.passwordOK:
+        if not self.auth.authorized:
             raise PermissionDenied
         else:
             return func(self, *args)
@@ -41,9 +41,11 @@ class MintServer(object):
             method = self.__getattribute__(methodName)
 
             # check authorization
-            authTuple = self.users.checkAuth(authToken)
+            authTuple= self.users.checkAuth(authToken)
             self.authToken = authToken
-            self.auth = users.Authorization(*authTuple)
+            self.auth = users.Authorization(authorized = authTuple[0],
+                                            userId = authTuple[1],
+                                            username = authTuple[2])
         except AttributeError:
             return (True, ("MethodNotSupported", methodName, ""))
         try:
@@ -87,7 +89,9 @@ class MintServer(object):
         return self.projects.getProjectIdByHostname(hostname)
 
     def checkAuth(self):
-        return (self.auth.passwordOK, self.auth.userId)
+        return {'authorized': self.auth.authorized,
+                'userId':     self.auth.userId,
+                'username':   self.auth.username } 
 
     def __init__(self, cfg):
         self.cfg = cfg
