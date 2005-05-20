@@ -17,8 +17,7 @@ import repository.netrepos.netauth
 from lib import sha1helper
 
 from mint_error import MintError
-from database import DatabaseTable, DuplicateItem
-
+import database
 
 class PermissionDenied(MintError):
     def __str__(self):
@@ -36,7 +35,7 @@ class UserAlreadyExists(MintError):
     def __str__(self):
         return "user already exists"
 
-class UsersTable(DatabaseTable):
+class UsersTable(database.KeyedTable):
     name = 'Users'
     key = 'userId'
     createSQL = """
@@ -121,7 +120,7 @@ on the Freenode IRC network (http://www.freenode.net/) for live help.
                               email = email,
                               active = active,
                               confirmation = confirm)
-        except DuplicateItem:
+        except database.DuplicateItem:
             raise UserAlreadyExists
 
     def confirm(self, confirm):
@@ -141,6 +140,16 @@ on the Freenode IRC network (http://www.freenode.net/) for live help.
             cu.execute("SELECT userId FROM Users WHERE confirmation=?", confirm)
             r = cu.fetchone()
             return r[0]
+
+def ProjectUsersTable(DatabaseTable):
+    name = "ProjectUsers"
+    fields = ["projectId", "userId"]
+
+    createSQL = """
+                CREATE TABLE Users (
+                    projectId   INT,
+                    userId      INT
+                );"""
 
 class Authorization:
     __slots__ = ['authorized', 'userId', 'username']

@@ -41,7 +41,6 @@ class DatabaseTable:
     name = None
     fields = []
     createSQL = None
-    key = None
 
     def __init__(self, db):
         assert(self.name and self.fields and self.createSQL)
@@ -53,6 +52,9 @@ class DatabaseTable:
         tables = [ x[0] for x in cu ]
         if self.name not in tables:
             cu.execute(self.createSQL)
+
+def KeyedTable(DatabaseTable):
+    key = None
 
     def get(self, id):
         assert(self.key)

@@ -9,7 +9,13 @@
 
         <div id="content">
             <h2>${project.getName()}</h2>
+
+            <h3>Project Details</h3>
             <code>${project.getDesc()}</code>
+            
+            <h3>Users</h3>
+
+            <h3>Images</h3>
 
             ${html_footer()}
         </div>

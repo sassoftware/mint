@@ -10,7 +10,7 @@ import conary
 import sqlite3
 
 from mint_error import MintError
-from database import TableObject, DatabaseTable, ItemNotFound
+from database import TableObject, KeyedTable, ItemNotFound
 
 class DuplicateProjectName:
     def __str__(self):
@@ -39,7 +39,7 @@ class Project(TableObject):
     def getTimeModified(self):
         return self.timeModified
 
-class ProjectsTable(DatabaseTable):
+class ProjectsTable(KeyedTable):
     name = 'Projects'
     key = 'projectId'
     createSQL = """CREATE TABLE Projects (
