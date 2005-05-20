@@ -50,11 +50,11 @@ class MintServer(object):
             return (True, ("MethodNotSupported", methodName, ""))
         try:
             r = method(*args)
-        except repository.netrepos.netauth.UserAlreadyExists, e:
+        except users.UserAlreadyExists, e:
             return (True, ("UserAlreadyExists", str(e)))
         except projects.DuplicateProjectName, e:
-            return (True, ("DuplicateProjectName", str(e)))
-        except repos.DuplicateHostname, e:
+            return (True, ("DuplicateItem", str(e)))
+        except database.DuplicateItem, e:
             return (True, ("DuplicateHostname", str(e)))
         except database.ItemNotFound, e:
             return (True, ("ItemNotFound", str(e)))

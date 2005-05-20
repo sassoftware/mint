@@ -13,9 +13,12 @@ import smtplib
 
 import conary
 from repository import netclient
+import repository.netrepos.netauth
+from lib import sha1helper
 
 from mint_error import MintError
-from database import DatabaseTable
+from database import DatabaseTable, DuplicateItem
+
 
 class PermissionDenied(MintError):
     def __str__(self):
@@ -28,6 +31,10 @@ class ConfirmError(MintError):
 class AlreadyConfirmed(MintError):
     def __str__(self):
         return "registration already confirmed"
+
+class UserAlreadyExists(MintError):
+    def __str__(self):
+        return "user already exists"
 
 class UsersTable(DatabaseTable):
     name = 'Users'
@@ -78,9 +85,13 @@ class UsersTable(DatabaseTable):
 
         authRepo = netclient.NetworkRepositoryClient(self.cfg.authRepo)
 
+        confirm = confirmString()
         repoLabel = self.cfg.authRepo.keys()[0]
-        authRepo.addUser(repoLabel, username, password)
-        authRepo.addAcl(repoLabel, username, None, None, False, False, False)
+        try: 
+            authRepo.addUser(repoLabel, username, password)
+            authRepo.addAcl(repoLabel, username, None, None, False, False, False)
+        except repository.netrepos.netauth.UserAlreadyExists:
+            raise UserAlreadyExists
 
         if not active:
             message = """Thank you for registering for the rpath Linux customized
@@ -92,7 +103,7 @@ Please follow the link below to confirm your registration:
 
 Contact custom@rpath.com for help, or join the IRC channel #conary
 on the Freenode IRC network (http://www.freenode.net/) for live help.
-""" % (self.cfg.domain, confirm)
+""" % (self.cfg.domainName, confirm)
 
             msg = MIMEText.MIMEText(message)
             msg['Subject'] = "rpath Linux Mint Registration"
@@ -104,12 +115,14 @@ on the Freenode IRC network (http://www.freenode.net/) for live help.
             s.sendmail(self.cfg.adminMail, [email], msg.as_string())
             s.close()
     
-        
-        return self.new(username = username,
-                        fullName = fullName,
-                        email = email,
-                        active = activeNow,
-                        confirmation = confirmString())
+        try:
+            userId = self.new(username = username,
+                              fullName = fullName,
+                              email = email,
+                              active = active,
+                              confirmation = confirm)
+        except DuplicateItem:
+            raise UserAlreadyExists
 
     def confirm(self, confirm):
         cu = self.db.cursor()
@@ -128,8 +141,6 @@ on the Freenode IRC network (http://www.freenode.net/) for live help.
             cu.execute("SELECT userId FROM Users WHERE confirmation=?", confirm)
             r = cu.fetchone()
             return r[0]
-
-
 
 class Authorization:
     __slots__ = ['authorized', 'userId', 'username']

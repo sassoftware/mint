@@ -58,10 +58,9 @@ class _Method(xmlrpclib._Method):
         exceptionArgs = result[1:]
 
         if exceptionName == "UserAlreadyExists":
-            from repository.netrepos.netauth import UserAlreadyExists
-            raise UserAlreadyExists
-        elif exceptionName == "DuplicateProjectName":
-            raise projects.DuplicateProjectName
+            raise users.UserAlreadyExists
+        elif exceptionName == "DuplicateItem":
+            raise database.DuplicateItem
         elif exceptionName == "DuplicateHostname":
             raise repos.DuplicateHostname
         elif exceptionName == "ItemNotFound":

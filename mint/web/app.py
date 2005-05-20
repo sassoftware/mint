@@ -32,6 +32,9 @@ class MintApp(webhandler.WebHandler):
         log('blam', auth.userId, authToken)
         return auth
 
+    def _404(self, *args, **kwargs):
+        return apache.HTTP_NOT_FOUND 
+
     def _getHandler(self, cmd, auth):
         self.req.content_type = "application/xhtml+xml"
 
@@ -40,18 +43,20 @@ class MintApp(webhandler.WebHandler):
         
         if hostname == "www":
             self.project = None
+            default = self.frontPage
         else:
             try:
                 self.project = self.client.getProjectByHostname(fullHost)
             except database.ItemNotFound:
-                return lambda auth: apache.HTTP_NOT_FOUND
-        try:    
-            method = self.__getattribute__(cmd)
-        except AttributeError:
-            if hostname == "www":
-                method = self.frontPage
+                return self._404
+            default = self.projectPage
+        try:
+            if not cmd:
+               method = default
             else:
-                method = self.projectPage
+                method = self.__getattribute__(cmd)
+        except AttributeError:
+            return self._404
         return method
 
     def _method_handler(self):
@@ -100,6 +105,24 @@ class MintApp(webhandler.WebHandler):
 
     def register(self, auth):
         self._write("register")
+        return apache.OK
+
+    @strFields(username = None, email = None, password = None, password2 = None)
+    def processRegister(self, auth, username, email, password, password2):
+        if password != password2:
+            self._write("error", shortError = "Registration Error",
+                           error = "Passwords do not match.")
+        elif len(password) < 6:
+            self._write("error", shortError = "Registration Error",
+                           error = "Password must be 6 characters or longer.")
+        else:
+            try:
+                self.client.registerNewUser(username, password, username, email)
+            except users.UserAlreadyExists:
+                self._write("error", shortError = "Registration Error",
+                               error = "An account with that username already exists.")
+            else:
+                return self._redirect("login")
         return apache.OK
 
     @strFields(message = "")

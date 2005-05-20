@@ -14,9 +14,9 @@ email = None
         
         <div id="content">
             <h2>Register</h2>
-            <p>Using an rMill account, you can create your own Linux distribution.</p> 
+            <p>Using a Mint account, you can create your own Linux distribution.</p> 
 
-            <form method="post" action="register2">
+            <form method="post" action="processRegister">
                 <table>
                     <tr><td><b>Username:</b></td><td><input type="text" size="32" name="username" /></td></tr>
                     <tr><td><b>Email address:</b></td><td><input size="32" type="text" name="email" /></td></tr>
@@ -30,7 +30,7 @@ email = None
                 <p><input type="submit" value="Register" /></p>
             </form>
 
-            ${html_footer(cfg)}
+            ${html_footer()}
         </div>
     </body>
 </html>

@@ -5,12 +5,19 @@
 #
 import sys
 
-class ItemNotFound:
-    def __init__(self, table="table"):
+from mint_error import MintError
+
+class ItemNotFound(MintError):
+    def __init__(self, table = "table"):
         self.table = table
     def __str__(self):
         return "requested item not found in %s" % self.table
 
+class DuplicateItem(MintError):
+    def __init__(self, table = "table"):
+        self.table = table
+    def __str__(self):
+        return "failed to add duplicate item to %s" % self.table
 
 class TableObject:
     __slots__ = ['server', 'id']
@@ -70,7 +77,11 @@ class DatabaseTable:
         stmt = "INSERT INTO %s (%s) VALUES (%s)" %\
             (self.name, ",".join(cols), ",".join('?' * len(values)))
         cu = self.db.cursor()
-        cu.execute(*[stmt] + values)
+
+        try:
+            cu.execute(*[stmt] + values)
+        except sqlite3.ProgrammingError:
+            raise DuplicateItem(self.name)
 
         self.db.commit()
         return cu.lastrowid
