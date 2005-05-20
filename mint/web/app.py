@@ -159,7 +159,7 @@ class MintApp(webhandler.WebHandler):
 
     @strFields(title = None, hostname = None)
     def createProject(self, auth, title, hostname):
-        projectId = client.newProject(title, hostname)
+        projectId = self.client.newProject(title, hostname)
         return self._redirect("http://%s.%s/" % (hostname, self.cfg.domainName) )
 
     def _write(self, template, **values):
