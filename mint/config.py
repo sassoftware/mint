@@ -25,4 +25,5 @@ class MintConfig(ConfigFile):
         'dbPath'            : '/data/mint/data/db',
         'tmpPath'           : '/data/mint/tmp/',
         'domainName'        : '',
+        'adminMail'         : 'mint@rpath.org',
     }

@@ -81,8 +81,8 @@ class MintServer(object):
     def getProject(self, id):
         return self.projects.get(id)
 
-    def registerNewUser(self, username, password, fullName, email):
-        return self.users.registerNewUser(username, password, fullName, email)
+    def registerNewUser(self, username, password, fullName, email, active):
+        return self.users.registerNewUser(username, password, fullName, email, active)
 
     def getProjectIdByHostname(self, hostname):
         return self.projects.getProjectIdByHostname(hostname)
