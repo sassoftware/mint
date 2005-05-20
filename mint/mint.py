@@ -21,7 +21,7 @@ class Client:
         self.server = ServerProxy(server)
 
 class MintClient(Client):
-    def newProject(self, name, hostname, desc):
+    def newProject(self, name, hostname, desc = ""):
         return self.server.newProject(name, hostname, desc)
 
     def checkAuth(self):

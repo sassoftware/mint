@@ -78,7 +78,6 @@ class MintServer(object):
 
         return (projectId, reposId)
 
-    @requiresAuth
     def getProject(self, id):
         return self.projects.get(id)
 

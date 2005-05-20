@@ -118,8 +118,8 @@ class MintApp(webhandler.WebHandler):
             return self._redirect("login?message=invalid")
         else:
             auth = base64.encodestring("%s:%s" % authToken).strip()
-            cookie = Cookie.Cookie('authToken', auth)
-            log("setting cookie", cookie)
+            cookie = Cookie.Cookie('authToken', auth, domain = self.cfg.domainName)
+            
             # we have to add the cookie headers manually, because mod_python
             # looks at err_headers_out instead of headers_out when doing a redirect.
             self.req.err_headers_out.add("Cache-Control", 'no-cache="set-cookie"')
@@ -133,6 +133,11 @@ class MintApp(webhandler.WebHandler):
     def newProject(self, auth):
         self._write("newProject")
         return apache.OK
+
+    @strFields(title = None, hostname = None)
+    def createProject(self, auth, title, hostname):
+        projectId = client.newProject(title, hostname)
+        return self._redirect("http://%s.%s/" % (hostname, self.cfg.domainName) )
 
     def _write(self, template, **values):
         path = os.path.join(self.cfg.templatePath, template + ".kid")
