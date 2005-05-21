@@ -7,6 +7,7 @@ import base64
 import os
 import kid
 import sys
+import time
 
 from mod_python import apache
 from mod_python import Cookie
@@ -74,7 +75,7 @@ class MintApp(webhandler.WebHandler):
             if not auth.authorized:
                 cookie = Cookie.Cookie('authToken', '')
                 cookie.expires = time.time() - 300
-                Cookie.add_cookie(self.req, cookie)
+                Cookie.add_cookie(self.req, cookie, domain = self.cfg.domainName)
                 return self._redirect("login")
         else:
             authToken = ('anonymous', 'anonymous')
@@ -147,10 +148,10 @@ class MintApp(webhandler.WebHandler):
             # looks at err_headers_out instead of headers_out when doing a redirect.
             self.req.err_headers_out.add("Cache-Control", 'no-cache="set-cookie"')
             self.req.err_headers_out.add("Set-Cookie", str(cookie))
-            return self._redirect("mainMenu")
+            return self._redirect("frontPage")
 
     def projectPage(self, auth):    
-        self._write("projectPage", project = self.project)
+        self._write("projectPage", project = self.project, users = self.client.getProjectUsers(self.project.getId()))
         return apache.OK
 
     def newProject(self, auth):

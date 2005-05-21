@@ -54,7 +54,7 @@ class UsersTable(database.KeyedTable):
               'active', 'confirmation']
              
     def __init__(self, db, cfg):
-        DatabaseTable.__init__(self, db)
+        database.DatabaseTable.__init__(self, db)
         self.cfg = cfg
              
     def checkAuth(self, authToken):
@@ -141,15 +141,32 @@ on the Freenode IRC network (http://www.freenode.net/) for live help.
             r = cu.fetchone()
             return r[0]
 
-def ProjectUsersTable(DatabaseTable):
+class ProjectUsersTable(database.DatabaseTable):
     name = "ProjectUsers"
     fields = ["projectId", "userId"]
 
     createSQL = """
-                CREATE TABLE Users (
+                CREATE TABLE ProjectUsers (
                     projectId   INT,
                     userId      INT
                 );"""
+
+    def getProjectUsers(self, projectId):
+        cu = self.db.cursor()
+        cu.execute("""SELECT p.userId, u.username
+                      FROM ProjectUsers p, Users u
+                      WHERE p.userId=u.userId AND p.projectId=?""",
+                   projectId)
+        data = []
+        for r in cu.fetchall():
+            data.append( [r[0], r[1]] )
+        return data
+
+    def new(self, projectId, userId):
+        cu = self.db.cursor()
+        cu.execute("INSERT INTO ProjectUsers VALUES(?, ?)", projectId, userId)
+        self.db.commit()
+        return 0
 
 class Authorization:
     __slots__ = ['authorized', 'userId', 'username']

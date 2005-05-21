@@ -9,7 +9,6 @@ import sqlite3
 import sys
 
 import projects
-import repos
 import users
 import database
 
@@ -52,10 +51,8 @@ class MintServer(object):
             r = method(*args)
         except users.UserAlreadyExists, e:
             return (True, ("UserAlreadyExists", str(e)))
-        except projects.DuplicateProjectName, e:
-            return (True, ("DuplicateItem", str(e)))
         except database.DuplicateItem, e:
-            return (True, ("DuplicateHostname", str(e)))
+            return (True, ("DuplicateItem", str(e)))
         except database.ItemNotFound, e:
             return (True, ("ItemNotFound", str(e)))
 #        except Exception, error:
@@ -67,19 +64,28 @@ class MintServer(object):
     @requiresAuth
     def newProject(self, projectName, hostname, desc):
         if validHost.match(hostname) == None:
-            raise repos.InvalidHostname
+            raise projects.InvalidHostname
         if hostname in reservedHosts:
-            raise repos.InvalidHostname
+            raise projects.InvalidHostname
         hostname += "." + self.cfg.domainName
     
-        projectId = self.projects.new(name = projectName, userId = self.auth.userId, desc = desc)
-        reposId = self.repos.createRepos(projectId, hostname, self.cfg.reposPath,
-                                         self.authToken[0], self.authToken[1])
+        projectId = self.projects.new(name = projectName, 
+                                      ownerId = self.auth.userId,
+                                      desc = desc,
+                                      hostname = hostname,
+                                      defaultBranch = "rpl:devel")
+        self.projectUsers.new(userId = self.auth.userId, projectId = projectId)
+        self.projects.createRepos(self.cfg.reposPath, hostname,
+                                  self.authToken[0], self.authToken[1])
+        
 
-        return (projectId, reposId)
+        return projectId
 
     def getProject(self, id):
         return self.projects.get(id)
+
+    def getProjectUsers(self, id):
+        return self.projectUsers.getProjectUsers(id)
 
     def registerNewUser(self, username, password, fullName, email, active):
         return self.users.registerNewUser(username, password, fullName, email, active)
@@ -97,5 +103,5 @@ class MintServer(object):
         self.db = sqlite3.connect(cfg.dbPath, timeout = 30000)
         
         self.projects = projects.ProjectsTable(self.db)
-        self.repos = repos.ReposTable(self.db)
         self.users = users.UsersTable(self.db, self.cfg)
+        self.projectUsers = users.ProjectUsersTable(self.db)

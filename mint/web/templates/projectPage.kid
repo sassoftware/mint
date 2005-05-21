@@ -14,6 +14,9 @@
             <code>${project.getDesc()}</code>
             
             <h3>Users</h3>
+            <ul>
+                <li py:for="userId, username in users">(${userId}) ${username}</li>
+            </ul>
 
             <h3>Images</h3>
 

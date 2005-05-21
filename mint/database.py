@@ -5,6 +5,9 @@
 #
 import sys
 
+import conary
+import sqlite3
+
 from mint_error import MintError
 
 class ItemNotFound(MintError):
@@ -53,7 +56,7 @@ class DatabaseTable:
         if self.name not in tables:
             cu.execute(self.createSQL)
 
-def KeyedTable(DatabaseTable):
+class KeyedTable(DatabaseTable):
     key = None
 
     def get(self, id):
