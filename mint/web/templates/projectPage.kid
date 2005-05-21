@@ -13,7 +13,7 @@
             <h3>Project Details</h3>
             <code>${project.getDesc()}</code>
             
-            <h3>Users</h3>
+            <h3>Project Members</h3>
             <ul>
                 <li py:for="userId, username in users">(${userId}) ${username}</li>
             </ul>

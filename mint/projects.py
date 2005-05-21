@@ -48,6 +48,9 @@ class Project(TableObject):
     def getTimeModified(self):
         return self.timeModified
 
+    def getMembers(self):
+        return self.server.getProjectUsers(self.id)
+
 class ProjectsTable(KeyedTable):
     name = 'Projects'
     key = 'projectId'

@@ -31,9 +31,6 @@ class MintClient(Client):
         projectId = self.server.getProjectIdByHostname(hostname)
         return projects.Project(self.server, projectId)
 
-    def getProjectUsers(self, id):
-        return self.server.getProjectUsers(id)
-
     def registerNewUser(self, username, password, fullName, email, active = False):
         return self.server.registerNewUser(username, password, fullName, email, active)
 
