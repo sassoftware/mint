@@ -3,6 +3,9 @@
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'library.kid'">
     ${html_header(cfg, "Linux Mint")}
+    <?python
+        isOwner = project.getOwnerId() == auth.userId
+    ?>
     <body>
         ${header_image(cfg)}
         ${menu([('Mint', False, True)])}
@@ -12,10 +15,12 @@
 
             <h3>Project Details</h3>
             <code>${project.getDesc()}</code>
+            <div py:if="isOwner"><a href="editProject">Edit Project Details</a></div>
             
             <h3>Project Members</h3>
             <ul>
                 <li py:for="userId, username in project.getMembers()">(${userId}) ${username}</li>
+                <li py:if="isOwner"><a href="members">Manage Project Members</a></li>
             </ul>
 
             <h3>Releases</h3>
@@ -23,16 +28,9 @@
                 <li>0.23</li>
                 <li>0.24</li>
                 <li>0.25</li>
-                <li py:if="project.getOwnerId() == auth.userId"><i>Release Management</i></li>
+                <li py:if="isOwner"><a href="images">Release Management</a></li>
             </ul>
 
-            <span py:omit="True" py:if="project.getOwnerId() == auth.userId">
-                <h3>Owner Options</h3>
-                <ul>
-                    <li>Edit Project Details</li>
-                    <li>Manage Project Members</li>
-                </ul>
-            </span>
             ${html_footer()}
         </div>
     </body>
