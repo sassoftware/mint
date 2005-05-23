@@ -596,18 +596,38 @@ class ControlFile:
         if len(troveList) > 1:
             raise RuntimeError, "Too many matching groups!"
         groupTroves = repos.getTroves(troveList)
-        troves = {}
+        
+        troves = set()
+        troveIds = {}
+        
+        
         while groupTroves:
             groupTrove = groupTroves.pop()
-            troves[TroveId(groupTrove.getName(), groupTrove.getVersion(), groupTrove.getFlavor())] = True
+
+            troveId = TroveId(groupTrove.getName(), groupTrove.getVersion(), groupTrove.getFlavor())
+            troves.add(troveId)
+            troveIds[groupTrove.getName()] = troveId
+                
             for (name, version, flavor) in groupTrove.iterTroveList():
                 if name.startswith('group-'):
                     trv = repos.getTrove(name, version, flavor)
                     groupTroves.append(trv)
                 else:
-                    troves[TroveId(name, version, flavor)] = True
-        return troves
+                    troveId = TroveId(name, version, flavor)
+                    troves.add(troveId)
+                    troveIds[name] = troveId
 
+        # if abcd:lib and abcd exists in troves,
+        # remove abcd:lib
+        for trove in troves.copy():
+            name = trove.getName()
+            if ":" in name:
+                pkgName = name.split(":")[0]
+                if pkgName in troveIds.keys():
+                    troveId = troveIds[name]
+                    troves.remove(troveId)
+                    
+        return dict.fromkeys(list(troves))
 
     def getMatchedRepoTroves(self, filterDict=None, allowVersionMismatch=False):
         """ Must be called after getSources.  Looks at the troves 
