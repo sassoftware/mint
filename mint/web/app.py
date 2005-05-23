@@ -151,7 +151,7 @@ class MintApp(webhandler.WebHandler):
             return self._redirect("frontPage")
 
     def projectPage(self, auth):    
-        self._write("projectPage", project = self.project, users = self.client.getProjectUsers(self.project.getId()))
+        self._write("projectPage", project = self.project)
         return apache.OK
 
     def newProject(self, auth):

@@ -15,13 +15,25 @@
             
             <h3>Project Members</h3>
             <ul>
-                <li py:for="userId, username in users">(${userId}) ${username}</li>
+                <li py:for="userId, username in project.getMembers()">(${userId}) ${username}</li>
             </ul>
 
-            <h3>Images</h3>
+            <h3>Releases</h3>
+            <ul>
+                <li>0.23</li>
+                <li>0.24</li>
+                <li>0.25</li>
+                <li py:if="project.getOwnerId() == auth.userId"><i>Release Management</i></li>
+            </ul>
 
+            <span py:omit="True" py:if="project.getOwnerId() == auth.userId">
+                <h3>Owner Options</h3>
+                <ul>
+                    <li>Edit Project Details</li>
+                    <li>Manage Project Members</li>
+                </ul>
+            </span>
             ${html_footer()}
         </div>
     </body>
 </html>
-

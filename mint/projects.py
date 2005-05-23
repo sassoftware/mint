@@ -20,15 +20,15 @@ class InvalidHostname(Exception):
         return "invalid hostname: must start with a letter and contain only letters, numbers, and hyphens."
 
 class Project(TableObject):
-    __slots__ = ['projectId', 'userId',
+    __slots__ = ['projectId', 'ownerId',
                  'name', 'desc', 'hostname', 'defaultBranch'
                  'timeCreated', 'timeModified']
 
     def getItem(self, id):
         return self.server.getProject(id)
 
-    def getUserId(self):
-        return self.userId
+    def getOwnerId(self):
+        return self.ownerId
 
     def getName(self):
         return self.name
