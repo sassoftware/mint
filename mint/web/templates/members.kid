@@ -16,20 +16,20 @@ from mint import userlevels
             <form method="post" action="editMembers">
                 <table>
                     <tr>
-                        <td>Project Name:</td>
-                        <td><b>${project.getName()}</b></td>
+                        <td><b>Project Name:</b></td>
+                        <td>${project.getName()}</td>
                     </tr>
                     <tr>
                         <td style="width: 25%;">
                             <b>Members:</b>
                         </td>
-                        <td style="vertical-align: middle;">
+                        <td>
                             <ul>
-                                <li py:for="userId, username in project.getMembers()">(${userId}) ${username}</li>
+                                <li py:for="userId, username in project.getMembers()">${username}</li>
                             </ul>
                         </td>
                     </tr>
-                    <tr><td>Add: <input type="text" name="username" value="" /></td></tr>
+                    <tr><td><b>Add:</b></td><td><input type="text" name="username" value="" /></td></tr>
                 </table>
 
                 <p><input type="submit" value="Submit" /></p>
