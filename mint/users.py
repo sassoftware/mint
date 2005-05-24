@@ -18,6 +18,7 @@ from lib import sha1helper
 
 from mint_error import MintError
 import database
+import userlevels
 
 class PermissionDenied(MintError):
     def __str__(self):
@@ -44,13 +45,14 @@ class UsersTable(database.KeyedTable):
                     username        STR UNIQUE,
                     fullName        STR,
                     email           STR,
+                    displayEmail    STR,
                     timeCreated     INT,
                     timeAccessed    INT,
                     active          INT,
                     confirmation    STR
                 );"""
     fields = ['userId', 'username', 'fullName', 'email',
-              'timeCreated', 'timeAccessed',
+              'displayEmail', 'timeCreated', 'timeAccessed',
               'active', 'confirmation']
              
     def __init__(self, db, cfg):
@@ -61,7 +63,7 @@ class UsersTable(database.KeyedTable):
         username, password = authToken
 
         cu = self.db.cursor()
-        cu.execute("""SELECT userId, email, fullName FROM Users 
+        cu.execute("""SELECT userId, email, displayEmail, fullName FROM Users 
                       WHERE username=? AND active=1""", username)
         r = cu.fetchone()
 
@@ -74,11 +76,12 @@ class UsersTable(database.KeyedTable):
             
             groups = repo.getUserGroups(authLabel)
             if username in groups:
-                return {'authorized': True,
-                        'userId':     r[0],
-                        'username':   username,
-                        'email':      r[1],
-                        'fullName':   r[2]}
+                return {'authorized':   True,
+                        'userId':       r[0],
+                        'username':     username,
+                        'email':        r[1],
+                        'displayEmail': r[2],
+                        'fullName':     r[3]}
         else:
             return {'authorized': False, 'userId': -1}
 
@@ -153,7 +156,8 @@ class ProjectUsersTable(database.DatabaseTable):
     createSQL = """
                 CREATE TABLE ProjectUsers (
                     projectId   INT,
-                    userId      INT
+                    userId      INT,
+                    level       INT,
                 );"""
 
     def getProjectUsers(self, projectId):
@@ -167,9 +171,10 @@ class ProjectUsersTable(database.DatabaseTable):
             data.append( [r[0], r[1]] )
         return data
 
-    def new(self, projectId, userId):
+    def new(self, projectId, userId, level):
+        assert(level in userlevels.LEVELS)
         cu = self.db.cursor()
-        cu.execute("INSERT INTO ProjectUsers VALUES(?, ?)", projectId, userId)
+        cu.execute("INSERT INTO ProjectUsers VALUES(?, ?, level)", projectId, userId, level)
         self.db.commit()
         return 0
 

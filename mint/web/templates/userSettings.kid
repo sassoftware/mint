@@ -16,9 +16,15 @@
                         <td>${auth.fullName}</td>
                     </tr>
                     <tr>
-                        <td>Email:</td>
+                        <td>Email (hidden):<p class="help">This email address is private and will never be displayed.</p></td>
                         <td><input type="text" name="email" value="${auth.email}" /></td>
                     </tr>
+                    <tr>
+                        <td>Email (displayed):<p class="help">You can specify a spam-masked and/or an alternate email address for publiv
+                                                              view here.</p></td>
+                        <td><input type="text" name="email" value="${auth.email}" /></td>
+                    </tr>
+
 
                     <tr>
                         <td style="padding-top: 25px;">

@@ -11,6 +11,7 @@ import sys
 import projects
 import users
 import database
+import userlevels
 
 # exceptions
 from mint_error import MintError
@@ -43,7 +44,7 @@ class MintServer(object):
             # check authorization
             auth = self.users.checkAuth(authToken)
             self.authToken = authToken
-            self.auth = users.Authorization(auth)
+            self.auth = users.Authorization(**auth)
         except AttributeError:
             return (True, ("MethodNotSupported", methodName, ""))
         try:
@@ -73,7 +74,9 @@ class MintServer(object):
                                       desc = desc,
                                       hostname = hostname,
                                       defaultBranch = "rpl:devel")
-        self.projectUsers.new(userId = self.auth.userId, projectId = projectId)
+        self.projectUsers.new(userId = self.auth.userId,
+                              projectId = projectId,
+                              level = levels.ADMIN)
         self.projects.createRepos(self.cfg.reposPath, hostname,
                                   self.authToken[0], self.authToken[1])
         
@@ -85,6 +88,17 @@ class MintServer(object):
 
     def getProjectUsers(self, id):
         return self.projectUsers.getProjectUsers(id)
+
+    def getUserLevel(self, userId, projectId):
+        cu = self.db.cursor()
+        cu.execute("SELECT level FROM ProjectUsers WHERE userId=? and projectId=?",
+                   userId, projectId)
+        try:
+            l = cu.next()[0]
+            assert(l in userlevels.LEVELS)
+            return l
+        except StopIteration:
+            raise database.ItemNotFound
 
     def registerNewUser(self, username, password, fullName, email, active):
         return self.users.registerNewUser(username, password, fullName, email, active)

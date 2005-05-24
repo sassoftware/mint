@@ -51,6 +51,11 @@ class Project(TableObject):
     def getMembers(self):
         return self.server.getProjectUsers(self.id)
 
+    def addMemberById(self, id, leve):
+        pass
+
+    def addMemberByName(self, name, level):
+
 class ProjectsTable(KeyedTable):
     name = 'Projects'
     key = 'projectId'
