@@ -2,12 +2,12 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'library.kid'">
-    ${html_header(cfg, "Linux Mint")}
+    ${html_header("Linux Mint")}
     <?python
         isOwner = project.getOwnerId() == auth.userId
     ?>
     <body>
-        ${header_image(cfg)}
+        ${header_image()}
         ${menu([('Mint', False, True)])}
 
         <div id="content">

@@ -157,7 +157,7 @@ class ProjectUsersTable(database.DatabaseTable):
                 CREATE TABLE ProjectUsers (
                     projectId   INT,
                     userId      INT,
-                    level       INT,
+                    level       INT
                 );"""
 
     def getProjectUsers(self, projectId):
@@ -174,7 +174,7 @@ class ProjectUsersTable(database.DatabaseTable):
     def new(self, projectId, userId, level):
         assert(level in userlevels.LEVELS)
         cu = self.db.cursor()
-        cu.execute("INSERT INTO ProjectUsers VALUES(?, ?, level)", projectId, userId, level)
+        cu.execute("INSERT INTO ProjectUsers VALUES(?, ?, ?)", projectId, userId, level)
         self.db.commit()
         return 0
 

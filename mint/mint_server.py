@@ -76,7 +76,7 @@ class MintServer(object):
                                       defaultBranch = "rpl:devel")
         self.projectUsers.new(userId = self.auth.userId,
                               projectId = projectId,
-                              level = levels.ADMIN)
+                              level = userlevels.ADMIN)
         self.projects.createRepos(self.cfg.reposPath, hostname,
                                   self.authToken[0], self.authToken[1])
         
@@ -105,6 +105,22 @@ class MintServer(object):
 
     def getProjectIdByHostname(self, hostname):
         return self.projects.getProjectIdByHostname(hostname)
+
+    def addMember(self, projectId, userId = None, username = None, level = None):
+        assert(level in userlevels.LEVELS)
+        cu = self.db.cursor()
+        
+        # XXX check for dups here
+        if username and not userId:
+            cu.execute("SELECT userId FROM Users WHERE username=?",
+                       username)
+            try:
+                userId = cu.next()[0]
+            except StopIteration:
+                raise database.ItemNotFound
+
+        cu.execute("INSERT INTO ProjectUsers VALUES (?, ?, ?)",
+                   projectId, userId, level)
 
     def checkAuth(self):
         return self.auth.__dict__

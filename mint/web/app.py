@@ -167,6 +167,10 @@ class MintApp(webhandler.WebHandler):
         projectId = self.client.newProject(title, hostname)
         return self._redirect("http://%s.%s/" % (hostname, self.cfg.domainName) )
 
+    def members(self, auth):
+        self._write("members", project = self.project)
+        return apache.OK
+
     def _write(self, template, **values):
         path = os.path.join(self.cfg.templatePath, template + ".kid")
         t = kid.load_template(path)

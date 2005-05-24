@@ -7,9 +7,9 @@ email = None
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'library.kid'">
-    ${html_header(cfg, title)}
+    ${html_header(title)}
     <body>
-        ${header_image(cfg)}
+        ${header_image()}
         ${menu([("Register", None, True)])}
         
         <div id="content">

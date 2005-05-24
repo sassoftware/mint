@@ -2,9 +2,9 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'library.kid'">
-    ${html_header(cfg, "User Settings")}
+    ${html_header("User Settings")}
     <body>
-        ${header_image(cfg)}
+        ${header_image()}
         ${menu([('User Settings', None, True)])}
         <div id="content">
             <h2>Change Password or Email:</h2>
@@ -20,7 +20,7 @@
                         <td><input type="text" name="email" value="${auth.email}" /></td>
                     </tr>
                     <tr>
-                        <td>Email (displayed):<p class="help">You can specify a spam-masked and/or an alternate email address for publiv
+                        <td>Email (displayed):<p class="help">You can specify a spam-masked and/or an alternate email address for public
                                                               view here.</p></td>
                         <td><input type="text" name="email" value="${auth.email}" /></td>
                     </tr>

@@ -5,7 +5,7 @@
 #
 
 OBSERVER, DEVELOPER, ADMIN = range(0, 3)
-TYPES = range(0, 3)
+LEVELS = range(0, 3)
 
 names = {
     OBSERVER: "Observer",

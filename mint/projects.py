@@ -51,10 +51,15 @@ class Project(TableObject):
     def getMembers(self):
         return self.server.getProjectUsers(self.id)
 
-    def addMemberById(self, id, leve):
-        pass
+    def addMemberById(self, userId, level):
+        assert(level in userlevels.LEVELS)
+        return self.server.addMember(self.id, userId=userId,
+                                     username=None, level=level)
 
-    def addMemberByName(self, name, level):
+    def addMemberByName(self, username, level):
+        assert(level in userlevels.LEVELS)
+        return self.server.addMember(self.id, userId=None,
+                                     username=username, level=level)
 
 class ProjectsTable(KeyedTable):
     name = 'Projects'

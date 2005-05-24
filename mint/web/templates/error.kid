@@ -2,9 +2,9 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'library.kid'">
-    ${html_header(cfg, shortError)}
+    ${html_header(shortError)}
     <body>
-        ${header_image(cfg)}
+        ${header_image()}
 
         <div id="content">
             <h2>${shortError}</h2>

@@ -8,9 +8,9 @@ messages = { '':          'If you do not have an account, please <a href="regist
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'library.kid'">
-    ${html_header(cfg, "Login")}
+    ${html_header("Login")}
     <body>
-        ${header_image(cfg)}
+        ${header_image()}
         ${menu([("Login", None, True)])}
         
         <div id="content">

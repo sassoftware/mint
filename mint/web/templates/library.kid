@@ -2,7 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#">
     <!-- define the HTML header -->
-    <head py:def="html_header(cfg, title, extraScript=None, scriptArgs=None)">
+    <head py:def="html_header(title, extraScript=None, scriptArgs=None)">
         <title>${title}</title>
         <link rel="stylesheet" type="text/css" href="${cfg.staticUrl}css/common.css" />
         <link rel="stylesheet" type="text/css" href="${cfg.staticUrl}apps/mint/css/style.css" />
@@ -19,7 +19,7 @@
     </div>
 
     <!-- define header image -->
-    <div py:def="header_image(cfg)" py:omit="True">
+    <div py:def="header_image()" py:omit="True">
         <h1 class="title">rPath</h1>
     </div>
 
