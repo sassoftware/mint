@@ -14,6 +14,7 @@ from repository.netrepos.netserver import NetworkRepositoryServer
 
 from mint_error import MintError
 from database import TableObject, KeyedTable, ItemNotFound
+import userlevels
 
 class InvalidHostname(Exception):
     def __str__(self):
@@ -53,13 +54,11 @@ class Project(TableObject):
 
     def addMemberById(self, userId, level):
         assert(level in userlevels.LEVELS)
-        return self.server.addMember(self.id, userId=userId,
-                                     username=None, level=level)
+        return self.server.addMember(self.id, userId, None, level)
 
     def addMemberByName(self, username, level):
         assert(level in userlevels.LEVELS)
-        return self.server.addMember(self.id, userId=None,
-                                     username=username, level=level)
+        return self.server.addMember(self.id, None, username, level)
 
 class ProjectsTable(KeyedTable):
     name = 'Projects'

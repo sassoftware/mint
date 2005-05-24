@@ -95,7 +95,6 @@ class MintServer(object):
                    userId, projectId)
         try:
             l = cu.next()[0]
-            assert(l in userlevels.LEVELS)
             return l
         except StopIteration:
             raise database.ItemNotFound
@@ -106,7 +105,7 @@ class MintServer(object):
     def getProjectIdByHostname(self, hostname):
         return self.projects.getProjectIdByHostname(hostname)
 
-    def addMember(self, projectId, userId = None, username = None, level = None):
+    def addMember(self, projectId, userId, username, level):
         assert(level in userlevels.LEVELS)
         cu = self.db.cursor()
         
@@ -121,7 +120,9 @@ class MintServer(object):
 
         cu.execute("INSERT INTO ProjectUsers VALUES (?, ?, ?)",
                    projectId, userId, level)
-
+        self.db.commit()
+        return 0
+        
     def checkAuth(self):
         return self.auth.__dict__
 

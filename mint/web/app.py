@@ -21,6 +21,7 @@ from mint import shimclient
 from mint import projects
 from mint import database
 from mint import users
+from mint import userlevels
 
 def log(*args):
     print >> sys.stderr, args
@@ -169,6 +170,11 @@ class MintApp(webhandler.WebHandler):
 
     def members(self, auth):
         self._write("members", project = self.project)
+        return apache.OK
+
+    @strFields(username = None)
+    def editMembers(self, auth, username):
+        self.project.addMemberByName(username, userlevels.DEVELOPER)
         return apache.OK
 
     def _write(self, template, **values):
