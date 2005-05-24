@@ -21,9 +21,9 @@ from imagegen import ImageGenerator
 
 class IsoConfig(ConfigFile):
     defaults = {
-        'productPath':       'Specifix',
-        'productName':       'Specifix Linux',
-        'productPrefix':     'spx',
+        'productPath':       'rpath',
+        'productName':       'rpath Linux',
+        'productPrefix':     'rpl',
         'templatePath':      None,
         'nfsPath':           None,
         'tftpbootPath':      None,

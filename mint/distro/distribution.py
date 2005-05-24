@@ -570,7 +570,7 @@ class Distribution:
             cmd = 'sh -x %(scripts)s/upd-instroot --debug --conary --arch %(arch)s %(csdir)s %(instroot)s %(instrootgr)s' % map
             print "\n\n*********** RUNNING UPD-INSTROOT ***************\n\n"
             print cmd
-            self.status("Creating Anaconda instroots")
+            self.status("Creating Anaconda installation images")
             sys.stdout.flush()
             rc = os.system(cmd)
             print "<<Result code: %d>>" % rc
@@ -626,7 +626,7 @@ class Distribution:
             util.execute('cp -arf %s/.discinfo %s' % (self.isos[0].builddir, 
                                                             self.nfspath))
             print "Copying over auxiliary files to nfs dir"
-            for path in 'images', 'isolinux', '%s/base' % self.distro.productName:
+            for path in 'images', 'isolinux', '%s/base' % self.distro.productPath:
                 util.mkdirChain('%s/%s' % (self.nfspath, path))
                 util.execute('cp -arf %s/%s/* %s/%s' % (self.isos[0].builddir, 
                                         path, self.nfspath, path))
