@@ -11,7 +11,7 @@ import conary
 import conarycfg
 
 from conarycfg import ConfigFile
-from conarycfg import STRINGDICT
+from conarycfg import STRINGDICT, BOOLEAN
 
 templatePath = os.path.dirname(sys.modules['mint'].__file__)
 
@@ -26,4 +26,5 @@ class MintConfig(ConfigFile):
         'tmpPath'           : '/data/mint/tmp/',
         'domainName'        : '',
         'adminMail'         : 'mint@rpath.org',
+        'xmlrpcEnabled'     : [ BOOLEAN, False ],
     }
