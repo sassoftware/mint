@@ -61,7 +61,7 @@ class UsersTable(database.KeyedTable):
         username, password = authToken
 
         cu = self.db.cursor()
-        cu.execute("""SELECT userId FROM Users 
+        cu.execute("""SELECT userId, email, fullName FROM Users 
                       WHERE username=? AND active=1""", username)
         r = cu.fetchone()
 
@@ -74,8 +74,13 @@ class UsersTable(database.KeyedTable):
             
             groups = repo.getUserGroups(authLabel)
             if username in groups:
-                return (True, r[0], username)
-        return (False, -1, None)
+                return {'authorized': True,
+                        'userId':     r[0],
+                        'username':   username,
+                        'email':      r[1],
+                        'fullName':   r[2]}
+        else:
+            return {'authorized': False, 'userId': -1}
 
     def registerNewUser(self, username, password, fullName, email, active):
         def confirmString():
@@ -169,10 +174,12 @@ class ProjectUsersTable(database.DatabaseTable):
         return 0
 
 class Authorization:
-    __slots__ = ['authorized', 'userId', 'username']
+    __slots__ = ['authorized', 'userId', 'username', 'email', 'fullName']
     authorized = False
     userId = -1
     username = None
+    email = None
+    fullName = None
 
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)

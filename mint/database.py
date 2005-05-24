@@ -20,7 +20,7 @@ class DuplicateItem(MintError):
     def __init__(self, table = "table"):
         self.table = table
     def __str__(self):
-        return "failed to add duplicate item to %s" % self.table
+        return "duplicate item: %s" % self.table
 
 class TableObject:
     __slots__ = ['server', 'id']

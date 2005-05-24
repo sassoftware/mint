@@ -154,6 +154,10 @@ class MintApp(webhandler.WebHandler):
         self._write("projectPage", project = self.project)
         return apache.OK
 
+    def user(self, auth):
+        self._write("user")
+        return apache.OK
+
     def newProject(self, auth):
         self._write("newProject")
         return apache.OK

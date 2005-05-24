@@ -17,7 +17,8 @@ from mint_error import MintError
 import repository.netrepos.netauth
 
 validHost = re.compile('^[a-zA-Z][a-zA-Z0-9\-]*$')
-reservedHosts = ['admin', 'mail', 'www', 'web']
+reservedHosts = ['admin', 'mail', 'www', 'web',
+                 'rpath', 'wiki', 'conary']
 
 class PermissionDenied(MintError):
     def __str__(self):
@@ -40,11 +41,9 @@ class MintServer(object):
             method = self.__getattribute__(methodName)
 
             # check authorization
-            authTuple= self.users.checkAuth(authToken)
+            auth = self.users.checkAuth(authToken)
             self.authToken = authToken
-            self.auth = users.Authorization(authorized = authTuple[0],
-                                            userId = authTuple[1],
-                                            username = authTuple[2])
+            self.auth = users.Authorization(auth)
         except AttributeError:
             return (True, ("MethodNotSupported", methodName, ""))
         try:
@@ -94,9 +93,7 @@ class MintServer(object):
         return self.projects.getProjectIdByHostname(hostname)
 
     def checkAuth(self):
-        return {'authorized': self.auth.authorized,
-                'userId':     self.auth.userId,
-                'username':   self.auth.username } 
+        return self.auth.__dict__
 
     def __init__(self, cfg):
         self.cfg = cfg

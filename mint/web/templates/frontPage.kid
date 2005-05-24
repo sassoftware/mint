@@ -16,12 +16,24 @@
                host a repository for your project and allow you to collaborate with others to create a complete
                Linux distribution almost entirely on the web.</p>
 
-            <p>To use this system, please <a href="register">register</a>.</p>
+            <div py:if="not auth.authorized" py:omit="True">
+                <p>To use this system, please <a href="register">register</a>.</p>
 
-            <p>After you register, you will be able to create customized distributions based
-            on the contents of your Conary repository.</p>
+                <p>After you register, you will be able to create customized distributions based
+                on the contents of your Conary repository.</p>
 
-            <p>After you have registered, please <a href="login">log in</a>.</p>
+                <p>After you have registered, please <a href="login">log in</a>.</p>
+            </div>
+
+            <div py:if="auth.authorized" py:omit="True">
+                <p>Thank you for logging in.</p>
+                <h3>Things To Do</h3>
+                <ul>
+                    <li><a href="newProject">Create a new distribution project</a></li>
+                    <li><a href="distros">Find an existing distribution</a></li>
+                    <li><a href="user">View your user page</a></li>
+                </ul> 
+            </div>
 
             ${html_footer()}
         </div>
