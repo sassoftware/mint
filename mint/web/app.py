@@ -74,9 +74,7 @@ class MintApp(webhandler.WebHandler):
                 auth = users.Authorization()
 
             if not auth.authorized:
-                cookie = Cookie.Cookie('authToken', '')
-                cookie.expires = time.time() - 300
-                Cookie.add_cookie(self.req, cookie, domain = self.cfg.domainName)
+                self._clearAuth()
                 return self._redirect("login")
         else:
             authToken = ('anonymous', 'anonymous')
@@ -100,6 +98,12 @@ class MintApp(webhandler.WebHandler):
         d = dict(self.fields)
         d['auth'] = self.auth
         return method(**d)
+
+    def _clearAuth(self):
+        cookie = Cookie.Cookie('authToken', '', domain = self.cfg.domainName)
+        cookie.expires = time.time() - 300
+        self.req.err_headers_out.add("Cache-Control", 'no-cache="set-cookie"')
+        self.req.err_headers_out.add("Set-Cookie", str(cookie))
 
     def frontPage(self, auth):
         self._write("frontPage")
@@ -131,6 +135,10 @@ class MintApp(webhandler.WebHandler):
     def login(self, auth, message):
         self._write("login", message = message)
         return apache.OK
+
+    def logout(self, auth):
+        self._clearAuth()
+        return self._redirect("login")
 
     @strFields(username = None, password = None)
     def login2(self, auth, username, password):
