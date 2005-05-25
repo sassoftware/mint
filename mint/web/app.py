@@ -56,7 +56,7 @@ class MintApp(webhandler.WebHandler):
             if not cmd:
                method = default
             else:
-                method = self.__getattribute__(cmd)
+               method = self.__getattribute__(cmd)
         except AttributeError:
             return self._404
         return method
@@ -64,18 +64,18 @@ class MintApp(webhandler.WebHandler):
     def _method_handler(self):
         cookies = Cookie.get_cookies(self.req, Cookie.Cookie)
 
+        self.user = None
         if 'authToken' in cookies:
             auth = base64.decodestring(cookies['authToken'].value)
             authToken = auth.split(":")
 
-            try:
-                auth = self._checkAuth(authToken)
-            except NotImplementedError:
-                auth = users.Authorization()
+            auth = self._checkAuth(authToken)
 
             if not auth.authorized:
                 self._clearAuth()
                 return self._redirect("login")
+            else:
+                self.user = self.client.getUser(auth.userId)
         else:
             authToken = ('anonymous', 'anonymous')
             self._checkAuth(authToken)
@@ -179,6 +179,11 @@ class MintApp(webhandler.WebHandler):
         self._write("user")
         return apache.OK
 
+    @strFields(email = "", password1 = "", password2 = "")
+    def editUserSettings(self, auth):
+        if not email:
+            email = auth.email
+        
     def newProject(self, auth):
         self._write("newProject")
         return apache.OK

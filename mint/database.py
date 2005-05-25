@@ -90,3 +90,15 @@ class KeyedTable(DatabaseTable):
 
         self.db.commit()
         return cu.lastrowid
+
+    def update(self, id, **kwargs):
+        values = kwargs.values()
+        cols = kwargs.keys()
+        
+        params = "=?, ".join(cols) + "=?"
+        stmt = "UPDATE %s SET %s WHERE %s=?" % (self.name, params, self.key)
+
+        cu = self.db.cursor()
+        cu.execute(*[stmt] + values)
+        self.db.commit()
+        

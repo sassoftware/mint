@@ -61,6 +61,7 @@ class MintServer(object):
         else:
             return (False, r)
 
+    # project methods
     @requiresAuth
     def newProject(self, projectName, hostname, desc):
         if validHost.match(hostname) == None:
@@ -86,24 +87,11 @@ class MintServer(object):
     def getProject(self, id):
         return self.projects.get(id)
 
-    def getProjectUsers(self, id):
-        return self.projectUsers.getProjectUsers(id)
-
-    def getUserLevel(self, userId, projectId):
-        cu = self.db.cursor()
-        cu.execute("SELECT level FROM ProjectUsers WHERE userId=? and projectId=?",
-                   userId, projectId)
-        try:
-            l = cu.next()[0]
-            return l
-        except StopIteration:
-            raise database.ItemNotFound
-
-    def registerNewUser(self, username, password, fullName, email, active):
-        return self.users.registerNewUser(username, password, fullName, email, active)
-
     def getProjectIdByHostname(self, hostname):
         return self.projects.getProjectIdByHostname(hostname)
+
+    def getProjectUsers(self, id):
+        return self.projectUsers.getProjectUsers(id)
 
     def addMember(self, projectId, userId, username, level):
         assert(level in userlevels.LEVELS)
@@ -122,7 +110,24 @@ class MintServer(object):
                    projectId, userId, level)
         self.db.commit()
         return 0
-        
+ 
+    # user methods
+    def getUser(self, id):
+        return self.users.get(id)
+
+    def getUserLevel(self, userId, projectId):
+        cu = self.db.cursor()
+        cu.execute("SELECT level FROM ProjectUsers WHERE userId=? and projectId=?",
+                   userId, projectId)
+        try:
+            l = cu.next()[0]
+            return l
+        except StopIteration:
+            raise database.ItemNotFound
+
+    def registerNewUser(self, username, password, fullName, email, active):
+        return self.users.registerNewUser(username, password, fullName, email, active)
+       
     def checkAuth(self):
         return self.auth.__dict__
 

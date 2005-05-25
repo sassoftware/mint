@@ -149,6 +149,30 @@ on the Freenode IRC network (http://www.freenode.net/) for live help.
             r = cu.fetchone()
             return r[0]
 
+class User(database.TableObject):
+    __slots__ = [UsersTable.key] + UsersTable.fields
+
+    def getItem(self, id):
+        return self.server.getUser(id)
+
+    def getUsername(self):
+        return self.username
+
+    def getFullName(self):
+        return self.fullName
+
+    def getEmail(self):
+        return self.email
+
+    def getDisplayEmail(self):
+        return self.displayEmail
+
+    def setEmail(self, newEmail):
+        return self.server.users.update(self.id, email = newEmail)
+
+    def setDisplayEmail(self, newEmail):
+        return self.server.users.update(self.id, displayEmail = newEmail)
+
 class ProjectUsersTable(database.DatabaseTable):
     name = "ProjectUsers"
     fields = ["projectId", "userId"]
