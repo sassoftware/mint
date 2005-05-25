@@ -16,7 +16,7 @@
             <h3>Project Details</h3>
             <code>${project.getDesc()}</code>
             <div py:if="isOwner"><a href="editProject">Edit Project Details</a></div>
-            
+            <div py:if="isOwner"><a href="http://${project.getHostname()}/conary/">Repository Administration</a></div>    
             <h3>Project Members</h3>
             <ul>
                 <li py:for="userId, username in project.getMembers()">(${userId}) ${username}</li>

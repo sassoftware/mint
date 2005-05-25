@@ -147,7 +147,6 @@ class MintApp(webhandler.WebHandler):
         auth = client.checkAuth()
         
         if not auth.authorized:
-            log("redirecting")
             return self._redirect("login?message=invalid")
         else:
             auth = base64.encodestring("%s:%s" % authToken).strip()
@@ -158,6 +157,19 @@ class MintApp(webhandler.WebHandler):
             self.req.err_headers_out.add("Cache-Control", 'no-cache="set-cookie"')
             self.req.err_headers_out.add("Set-Cookie", str(cookie))
             return self._redirect("frontPage")
+
+    def confirm(self, id):
+        try:
+            self.client.confirmUser(id)
+        except users.ConfirmError:
+            self._write("error", shortError = "Confirm Failed",
+                                    error = "Sorry, an error has occurred while confirming your registration.")
+        except users.AlreadyConfirmed:
+            self._write("error", shortError = "Already Confirmed",
+                                    error = "Your account has already been confirmed.")
+        else:
+            return self._redirect("login?message=confirmed")
+        return apache.OK 
 
     def projectPage(self, auth):    
         self._write("projectPage", project = self.project)
