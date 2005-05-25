@@ -19,6 +19,7 @@ import traceback
 import sqlite3
 import xmlrpclib
 import zlib
+import sys
 
 import conary
 from repository.netrepos import netserver
@@ -62,10 +63,11 @@ def post(port, isSecure, repos, cfg, req):
         else:
             protocol = "http"
 
-        if req.path_info == "conary":
+        if req.path_info.startswith("/conary"):
             wrapper = repos.callWrapper
             params = [protocol, port, method, authToken, params]
         else:
+            server = mint_server.MintServer(cfg)
             wrapper = server.callWrapper
             params = [method, authToken, params]
             
@@ -83,7 +85,7 @@ def post(port, isSecure, repos, cfg, req):
         req.write(resp)
         return apache.OK
     else:
-        if req.path_info == "conary":
+        if req.path_info.startswith("/conary"):
             webfe = HttpHandler(req, cfg, repos)
             return webfe._methodHandler()
         else:
@@ -136,7 +138,7 @@ def get(isSecure, repos, cfg, req):
                 os.unlink(path)
 
         return apache.OK
-    elif cmd == "conary":
+    elif req.path_info.startswith("/conary"):
         webfe = HttpHandler(req, cfg, repos)
         return webfe._methodHandler()
     else:
@@ -164,6 +166,7 @@ def putFile(port, isSecure, repos, req):
 
 def handler(req):
     repName = req.filename
+    
     if not repositories.has_key(repName):
         cfg = config.MintConfig()
         cfg.read(req.filename)
@@ -176,8 +179,6 @@ def handler(req):
         try:
             projectId = projectsTable.getProjectIdByHostname(req.hostname)
         except KeyError:
-            print >> sys.stderr, "HELLO WORLD"
-            sys.stderr.flush()
             return apache.HTTP_NOT_FOUND
 
         repositoryDir = os.path.join(cfg.reposPath, req.hostname)
