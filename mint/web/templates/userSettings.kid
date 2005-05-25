@@ -38,7 +38,7 @@
                     </tr>
                     <tr>
                         <td colspan="2">
-                            <p class="help">Leave the email field blank to change just the password, and vice-versa.</p>
+                            <p class="help">Leave the password fields blank to only change your email address.</p>
                         </td>
                     </tr>
                 </table>

@@ -175,8 +175,8 @@ class MintApp(webhandler.WebHandler):
         self._write("projectPage", project = self.project)
         return apache.OK
 
-    def user(self, auth):
-        self._write("user")
+    def userSettings(self, auth):
+        self._write("userSettings")
         return apache.OK
 
     @strFields(email = "", password1 = "", password2 = "")

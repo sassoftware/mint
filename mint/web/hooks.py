@@ -27,7 +27,9 @@ import conarycfg
 
 from web.webauth import getAuth
 from mint import config
-from mint import repos
+from mint import users
+from mint import projects
+import app
 
 BUFFER=1024 * 256
 
@@ -44,7 +46,7 @@ def checkAuth(req, repos):
             
     return authToken
 
-def post(port, isSecure, repos, httpHandler, req):
+def post(port, isSecure, repos, cfg, req):
     authToken = getAuth(req)
     if type(authToken) is int:
         return authToken
@@ -60,10 +62,16 @@ def post(port, isSecure, repos, httpHandler, req):
         else:
             protocol = "http"
 
+        if req.path_info == "conary":
+            wrapper = repos.callWrapper
+            params = [protocol, port, method, authToken, params]
+        else:
+            wrapper = server.callWrapper
+            params = [method, authToken, params]
+            
         try:
-            result = repos.callWrapper(protocol, port, method, authToken, 
-                                       params)
-        except netserver.InsufficientPermission:
+            result = wrapper(*params)
+        except (netserver.InsufficientPermission, users.PermissionDenied):
             return apache.HTTP_FORBIDDEN
 
         resp = xmlrpclib.dumps((result,), methodresponse=1)
@@ -75,9 +83,14 @@ def post(port, isSecure, repos, httpHandler, req):
         req.write(resp)
         return apache.OK
     else:
-        return httpHandler._methodHandler()
+        if req.path_info == "conary":
+            webfe = HttpHandler(req, cfg, repos)
+            return webfe._methodHandler()
+        else:
+            webfe = app.MintApp(req, cfg)
+            return webfe._handle()
 
-def get(isSecure, repos, httpHandler, req):
+def get(isSecure, repos, cfg, req):
     uri = req.uri
     if uri.endswith('/'):
         uri = uri[:-1]
@@ -123,8 +136,12 @@ def get(isSecure, repos, httpHandler, req):
                 os.unlink(path)
 
         return apache.OK
+    elif cmd == "conary":
+        webfe = HttpHandler(req, cfg, repos)
+        return webfe._methodHandler()
     else:
-        return httpHandler._methodHandler()
+        webfe = app.MintApp(req, cfg)
+        return webfe._handle()
 
 def putFile(port, isSecure, repos, req):
     if not isSecure and repos.forceSecure:
@@ -151,11 +168,16 @@ def handler(req):
         cfg = config.MintConfig()
         cfg.read(req.filename)
 
+        # XXX hack, combine these names
+        cfg.staticPath = cfg.staticUrl
+
         db = sqlite3.connect(cfg.dbPath, timeout = 30000)
-        reposTable = repos.ReposTable(db)
+        projectsTable = projects.ProjectsTable(db)
         try:
-            reposId = reposTable[req.hostname]
+            projectId = projectsTable.getProjectIdByHostname(req.hostname)
         except KeyError:
+            print >> sys.stderr, "HELLO WORLD"
+            sys.stderr.flush()
             return apache.HTTP_NOT_FOUND
 
         repositoryDir = os.path.join(cfg.reposPath, req.hostname)
@@ -201,9 +223,9 @@ def handler(req):
     method = req.method.upper()
 
     if method == "POST":
-	return post(port, secure, repo, httpHandler, req)
+	return post(port, secure, repo, repo.cfg, req)
     elif method == "GET":
-	return get(secure, repo, httpHandler, req)
+	return get(secure, repo, repo.cfg, req)
     elif method == "PUT":
 	return putFile(port, secure, repo, req)
     else:

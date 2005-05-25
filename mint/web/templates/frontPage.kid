@@ -31,7 +31,7 @@
                 <ul>
                     <li><a href="newProject">Create a new distribution project</a></li>
                     <li><a href="distros">Find an existing distribution</a></li>
-                    <li><a href="user">View your user page</a></li>
+                    <li><a href="userSettings">View your user page</a></li>
                 </ul> 
             </div>
 
