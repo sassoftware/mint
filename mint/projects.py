@@ -7,7 +7,6 @@ import os
 import sys
 import time
 
-import conary
 import sqlite3
 from lib import util
 from repository.netrepos.netserver import NetworkRepositoryServer

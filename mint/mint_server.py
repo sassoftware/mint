@@ -3,7 +3,6 @@
 #
 # All Rights Reserved
 #
-import conary
 import re
 import sqlite3
 import sys

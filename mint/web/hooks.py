@@ -16,7 +16,6 @@ import xmlrpclib
 import zlib
 import sys
 
-import conary
 from repository.netrepos import netserver
 import conarycfg
 
@@ -27,27 +26,6 @@ import app
 import cookie_http
 
 BUFFER=1024 * 256
-
-def getCookieAuth(req):
-    cookies = Cookie.get_cookies(req, Cookie.Cookie)
-
-    if 'authToken' not in cookies:
-        return ('anonymous', 'anonymous')
-
-    info = cookies['authToken'].value
-
-    try:
-        authString = base64.decodestring(info)
-    except:
-        raise
-        return apache.HTTP_BAD_REQUEST
-
-    if authString.count(":") != 1:
-        return apache.HTTP_BAD_REQUEST
-
-    authToken = authString.split(":")
-
-    return authToken
 
 def getHttpAuth(req):
     if not 'Authorization' in req.headers_in:

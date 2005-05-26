@@ -7,9 +7,8 @@ import os
 import sys
 
 import mint
-import conary
-import conarycfg
 
+import conarycfg
 from conarycfg import ConfigFile
 from conarycfg import STRINGDICT, BOOLEAN
 

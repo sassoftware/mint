@@ -4,8 +4,6 @@
 # All Rights Reserved
 #
 import sys
-
-import conary
 import sqlite3
 
 from mint_error import MintError

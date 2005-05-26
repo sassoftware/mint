@@ -11,7 +11,6 @@ import email
 from email import MIMEText
 import smtplib
 
-import conary
 from repository import netclient
 import repository.netrepos.netauth
 from lib import sha1helper

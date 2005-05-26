@@ -13,9 +13,9 @@ from mod_python import apache
 from mod_python import Cookie
 from mod_python.util import FieldStorage
 
-import conary
-from conary.web import webhandler
-from conary.web.fields import strFields, intFields, listFields, boolFields
+#import conary
+from web import webhandler
+from web.fields import strFields, intFields, listFields, boolFields
 
 from mint import shimclient
 from mint import projects
@@ -60,9 +60,9 @@ class MintApp(webhandler.WebHandler):
             return self._404
         return method
 
-    def _method_handler(self):
+    def _methodHandler(self):
         cookies = Cookie.get_cookies(self.req, Cookie.Cookie)
-
+        
         self.user = None
         if 'authToken' in cookies:
             auth = base64.decodestring(cookies['authToken'].value)

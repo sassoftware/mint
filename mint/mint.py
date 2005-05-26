@@ -7,8 +7,6 @@ import os
 import sys
 import xmlrpclib
 
-import conary
-
 from mint_error import MintError
 import users
 import config
