@@ -99,6 +99,6 @@ class KeyedTable(DatabaseTable):
         stmt = "UPDATE %s SET %s WHERE %s=?" % (self.name, params, self.key)
 
         cu = self.db.cursor()
-        cu.execute(*[stmt] + values)
+        cu.execute(*[stmt] + values + [id])
         self.db.commit()
         

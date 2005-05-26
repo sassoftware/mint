@@ -31,7 +31,6 @@ class MintApp(webhandler.WebHandler):
     def _checkAuth(self, authToken):
         self.client = shimclient.ShimMintClient(self.cfg, authToken)
         auth = self.client.checkAuth()
-        log('blam', auth.userId, authToken)
         return auth
 
     def _404(self, *args, **kwargs):
@@ -117,16 +116,16 @@ class MintApp(webhandler.WebHandler):
     def processRegister(self, auth, username, email, password, password2):
         if password != password2:
             self._write("error", shortError = "Registration Error",
-                           error = "Passwords do not match.")
+                        error = "Passwords do not match.")
         elif len(password) < 6:
             self._write("error", shortError = "Registration Error",
-                           error = "Password must be 6 characters or longer.")
+                        error = "Password must be 6 characters or longer.")
         else:
             try:
                 self.client.registerNewUser(username, password, username, email)
             except users.UserAlreadyExists:
                 self._write("error", shortError = "Registration Error",
-                               error = "An account with that username already exists.")
+                            error = "An account with that username already exists.")
             else:
                 return self._redirect("login")
         return apache.OK
@@ -209,4 +208,4 @@ class MintApp(webhandler.WebHandler):
         content = t.serialize(encoding="utf-8", cfg = self.cfg,
                                                 auth = self.auth,
                                                 **values)
-        self.req.write(content) 
+        self.req.write(content)

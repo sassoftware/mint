@@ -14,6 +14,9 @@
 
 from mod_python import apache
 from mod_python import util
+from mod_python import Cookie
+
+import base64
 import os
 import traceback
 import sqlite3
@@ -26,13 +29,33 @@ from repository.netrepos import netserver
 from server.http import HttpHandler
 import conarycfg
 
-from web.webauth import getAuth
 from mint import config
 from mint import users
 from mint import projects
 import app
 
 BUFFER=1024 * 256
+
+def getAuth(req):
+    cookies = Cookie.get_cookies(req, Cookie.Cookie)
+
+    if 'authToken' not in cookies:
+        return ('anonymous', 'anonymous')
+
+    info = cookies['authToken'].value
+
+    try:
+        authString = base64.decodestring(info)
+    except:
+        raise
+        return apache.HTTP_BAD_REQUEST
+
+    if authString.count(":") != 1:
+        return apache.HTTP_BAD_REQUEST
+
+    authToken = authString.split(":")
+
+    return authToken
 
 def checkAuth(req, repos):
     if not req.headers_in.has_key('Authorization'):
@@ -100,6 +123,8 @@ def get(isSecure, repos, cfg, req):
     fields = util.FieldStorage(req)
 
     authToken = getAuth(req)
+    if type(authToken) is int:
+        return authToken
     if authToken[0] != "anonymous" and not isSecure and repos.forceSecure:
         return apache.HTTP_FORBIDDEN
    
