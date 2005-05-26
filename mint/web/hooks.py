@@ -1,16 +1,8 @@
 #
-# Copyright (c) 2004-2005 Specifix, Inc.
+# Copyright (c) 2005 rpath, Inc.
 #
-# This program is distributed under the terms of the Common Public License,
-# version 1.0. A copy of this license should have been distributed with this
-# source file in a file called LICENSE. If it is not present, the license
-# is always available at http://www.opensource.org/licenses/cpl.php.
+# All Rights Reserved
 #
-# This program is distributed in the hope that it will be useful, but
-# without any waranty; without even the implied warranty of merchantability
-# or fitness for a particular purpose. See the Common Public License for
-# full details.
-# 
 
 from mod_python import apache
 from mod_python import util
@@ -26,17 +18,17 @@ import sys
 
 import conary
 from repository.netrepos import netserver
-from server.http import HttpHandler
 import conarycfg
 
 from mint import config
 from mint import users
 from mint import projects
 import app
+import cookie_http
 
 BUFFER=1024 * 256
 
-def getAuth(req):
+def getCookieAuth(req):
     cookies = Cookie.get_cookies(req, Cookie.Cookie)
 
     if 'authToken' not in cookies:
@@ -57,11 +49,31 @@ def getAuth(req):
 
     return authToken
 
+def getHttpAuth(req):
+    if not 'Authorization' in req.headers_in:
+        return ('anonymous', 'anonymous')
+
+    info = req.headers_in['Authorization'].split()
+    if len(info) != 2 or info[0] != "Basic":
+        return apache.HTTP_BAD_REQUEST
+
+    try:
+        authString = base64.decodestring(info[1])
+    except:
+        return apache.HTTP_BAD_REQUEST
+
+    if authString.count(":") != 1:
+        return apache.HTTP_BAD_REQUEST
+
+    authToken = authString.split(":")
+
+    return authToken
+
 def checkAuth(req, repos):
     if not req.headers_in.has_key('Authorization'):
         return None
     else:
-        authToken = getAuth(req)
+        authToken = getHttpAuth(req)
         if type(authToken) != tuple:
             return authToken
 
@@ -71,14 +83,14 @@ def checkAuth(req, repos):
     return authToken
 
 def post(port, isSecure, repos, cfg, req):
-    authToken = getAuth(req)
-    if type(authToken) is int:
-        return authToken
-
-    if authToken[0] != "anonymous" and not isSecure and repos.forceSecure:
-        return apache.HTTP_FORBIDDEN
-
     if req.headers_in['Content-Type'] == "text/xml":
+        authToken = getHttpAuth(req)
+        if type(authToken) is int:
+            return authToken
+
+        if authToken[0] != "anonymous" and not isSecure and repos.forceSecure:
+            return apache.HTTP_FORBIDDEN
+
         (params, method) = xmlrpclib.loads(req.read())
 
         if isSecure:
@@ -109,7 +121,7 @@ def post(port, isSecure, repos, cfg, req):
         return apache.OK
     else:
         if req.path_info.startswith("/conary"):
-            webfe = HttpHandler(req, cfg, repos)
+            webfe = cookie_http.CookieHttpHandler(req, cfg, repos)
             return webfe._methodHandler()
         else:
             webfe = app.MintApp(req, cfg)
@@ -121,14 +133,14 @@ def get(isSecure, repos, cfg, req):
         uri = uri[:-1]
     cmd = os.path.basename(uri)
     fields = util.FieldStorage(req)
-
-    authToken = getAuth(req)
-    if type(authToken) is int:
-        return authToken
-    if authToken[0] != "anonymous" and not isSecure and repos.forceSecure:
-        return apache.HTTP_FORBIDDEN
-   
+ 
     if cmd == "changeset":
+        authToken = getHttpAuth(req)
+        if type(authToken) is int:
+            return authToken
+        if authToken[0] != "anonymous" and not isSecure and repos.forceSecure:
+            return apache.HTTP_FORBIDDEN
+
         localName = repos.tmpPath + "/" + req.args + "-out"
         size = os.stat(localName).st_size
 
@@ -163,12 +175,13 @@ def get(isSecure, repos, cfg, req):
                 os.unlink(path)
 
         return apache.OK
-    elif req.path_info.startswith("/conary"):
-        webfe = HttpHandler(req, cfg, repos)
-        return webfe._methodHandler()
     else:
-        webfe = app.MintApp(req, cfg)
-        return webfe._handle()
+        if req.path_info.startswith("/conary"):
+            webfe = cookie_http.CookieHttpHandler(req, cfg, repos)
+            return webfe._methodHandler()
+        else:
+            webfe = app.MintApp(req, cfg)
+            return webfe._handle()
 
 def putFile(port, isSecure, repos, req):
     if not isSecure and repos.forceSecure:
@@ -244,8 +257,6 @@ def handler(req):
     secure = (port == 443)
     
     repo = repositories[repName]
-    httpHandler = HttpHandler(req, repo.cfg, repo)
-    
     method = req.method.upper()
 
     if method == "POST":
