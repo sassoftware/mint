@@ -23,10 +23,6 @@ from mint import database
 from mint import users
 from mint import userlevels
 
-def log(*args):
-    print >> sys.stderr, args
-    sys.stderr.flush()
-
 class MintApp(webhandler.WebHandler):
     def _checkAuth(self, authToken):
         self.client = shimclient.ShimMintClient(self.cfg, authToken)
@@ -37,8 +33,6 @@ class MintApp(webhandler.WebHandler):
         return apache.HTTP_NOT_FOUND 
 
     def _getHandler(self, cmd, auth):
-        self.req.content_type = "application/xhtml+xml"
-
         fullHost = self.req.hostname
         hostname = fullHost.split('.')[0]
         
@@ -61,11 +55,9 @@ class MintApp(webhandler.WebHandler):
         return method
 
     def _methodHandler(self):
-        cookies = Cookie.get_cookies(self.req, Cookie.Cookie)
-        
         self.user = None
-        if 'authToken' in cookies:
-            auth = base64.decodestring(cookies['authToken'].value)
+        if 'authToken' in self.cookies:
+            auth = base64.decodestring(self.cookies['authToken'].value)
             authToken = auth.split(":")
 
             auth = self._checkAuth(authToken)
@@ -83,16 +75,10 @@ class MintApp(webhandler.WebHandler):
         self.authToken = authToken
         self.auth = auth
 
-        cmd = self.req.path_info
-        if cmd.startswith("/"):
-            cmd = cmd[1:]
-
-        self.req.content_type = "text/html"
-        if cmd.startswith("_"):
+        if self.cmd.startswith("_"):
             return apache.HTTP_NOT_FOUND
 
-        method = self._getHandler(cmd, auth)
-        self.fields = FieldStorage(self.req)
+        method = self._getHandler(self.cmd, auth)
 
         d = dict(self.fields)
         d['auth'] = self.auth

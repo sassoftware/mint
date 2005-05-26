@@ -20,30 +20,19 @@ class CookieHttpHandler(http.HttpHandler):
 
     def _methodHandler(self):
         """Handle either an HTTP POST or GET command."""
-        self.writeFn = self.req.write
-        cmd = os.path.basename(self.req.path_info)
 
-        cookies = Cookie.get_cookies(self.req, Cookie.Cookie)
-
-        if 'authToken' in cookies:
-            auth = base64.decodestring(cookies['authToken'].value)
+        if 'authToken' in self.cookies:
+            auth = base64.decodestring(self.cookies['authToken'].value)
             authToken = auth.split(":")
         else:
             authToken = ('anonymous', 'anonymous')
 
         self.auth = authToken
 
-        if cmd.startswith('_'):
-            return apache.HTTP_NOT_FOUND
-
-        self.req.content_type = "application/xhtml+xml"
-
         try:
-            method = self._getHandler(cmd)
+            method = self._getHandler(self.cmd)
         except AttributeError:
             return apache.HTTP_NOT_FOUND
-
-        self.fields = FieldStorage(self.req)
 
         d = dict(self.fields)
         d['auth'] = self.auth

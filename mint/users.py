@@ -185,13 +185,13 @@ class ProjectUsersTable(database.DatabaseTable):
 
     def getProjectUsers(self, projectId):
         cu = self.db.cursor()
-        cu.execute("""SELECT p.userId, u.username
+        cu.execute("""SELECT p.userId, u.username, p.level
                       FROM ProjectUsers p, Users u
                       WHERE p.userId=u.userId AND p.projectId=?""",
                    projectId)
         data = []
         for r in cu.fetchall():
-            data.append( [r[0], r[1]] )
+            data.append( [r[0], r[1], r[2]] )
         return data
 
     def new(self, projectId, userId, level):

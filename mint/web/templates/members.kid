@@ -25,11 +25,22 @@ from mint import userlevels
                         </td>
                         <td>
                             <ul>
-                                <li py:for="userId, username in project.getMembers()">${username}</li>
+                                <li py:for="userId, username, level in sorted(project.getMembers(), key=lambda x: x[1])">
+                                    ${username} (a ${userlevels.names[level]})
+                                    [<a href="removeMember?id=${userId}">remove</a>]
+                                </li>
                             </ul>
                         </td>
                     </tr>
-                    <tr><td><b>Add:</b></td><td><input type="text" name="username" value="" /></td></tr>
+                    <tr>
+                        <td>
+                            <b>Add:</b>
+                            <p class="help"><a href="lookupUser">Look up user</a></p>
+                        </td>
+                        <td>    
+                            <input type="text" name="username" value="" />
+                        </td>
+                    </tr>
                 </table>
 
                 <p><input type="submit" value="Submit" /></p>
