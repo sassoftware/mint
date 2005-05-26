@@ -59,6 +59,9 @@ class Project(TableObject):
         assert(level in userlevels.LEVELS)
         return self.server.addMember(self.id, None, username, level)
 
+    def delMemberById(self, userId):
+        return self.server.delMember(self.id, userId)
+
 class ProjectsTable(KeyedTable):
     name = 'Projects'
     key = 'projectId'

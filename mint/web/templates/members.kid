@@ -27,7 +27,7 @@ from mint import userlevels
                             <ul>
                                 <li py:for="userId, username, level in sorted(project.getMembers(), key=lambda x: x[1])">
                                     ${username} (a ${userlevels.names[level]})
-                                    [<a href="removeMember?id=${userId}">remove</a>]
+                                    [<a py:if="userId != auth.userId" href="delMember?id=${userId}">remove</a>]
                                 </li>
                             </ul>
                         </td>

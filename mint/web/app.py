@@ -185,7 +185,12 @@ class MintApp(webhandler.WebHandler):
     @strFields(username = None)
     def editMembers(self, auth, username):
         self.project.addMemberByName(username, userlevels.DEVELOPER)
-        return apache.OK
+        return self._redirect("members")
+
+    @intFields(id = None)
+    def delMember(self, auth, id):
+        self.project.delMemberById(id)
+        return self._redirect("members")
 
     def _write(self, template, **values):
         path = os.path.join(self.cfg.templatePath, template + ".kid")

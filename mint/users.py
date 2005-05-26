@@ -201,6 +201,12 @@ class ProjectUsersTable(database.DatabaseTable):
         self.db.commit()
         return 0
 
+    def delete(self, projectId, userId):
+        cu = self.db.cursor()
+        cu.execute("DELETE FROM ProjectUsers WHERE projectId=? AND userId=?", projectId, userId)
+        self.db.commit()
+        return 0
+
 class Authorization:
     __slots__ = ['authorized', 'userId', 'username', 'email', 'fullName']
     authorized = False

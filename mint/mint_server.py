@@ -105,11 +105,11 @@ class MintServer(object):
             except StopIteration:
                 raise database.ItemNotFound
 
-        cu.execute("INSERT INTO ProjectUsers VALUES (?, ?, ?)",
-                   projectId, userId, level)
-        self.db.commit()
-        return 0
- 
+        return self.projectUsers.new(projectId, userId, level)
+
+    def delMember(self, projectId, userId):
+        return self.projectUsers.delete(projectId, userId)    
+
     # user methods
     def getUser(self, id):
         return self.users.get(id)
