@@ -9,10 +9,11 @@ import sqlite3
 from mint_error import MintError
 
 class ItemNotFound(MintError):
-    def __init__(self, table = "table"):
-        self.table = table
+    def __init__(self, item = "item"):
+        self.item = item
+
     def __str__(self):
-        return "requested item not found in %s" % self.table
+        return "requested %s not found" % self.item
 
 class DuplicateItem(MintError):
     def __init__(self, table = "table"):

@@ -53,7 +53,7 @@ class MintServer(object):
         except database.DuplicateItem, e:
             return (True, ("DuplicateItem", str(e)))
         except database.ItemNotFound, e:
-            return (True, ("ItemNotFound", str(e)))
+            return (True, ("ItemNotFound", e.item))
 #        except Exception, error:
 #            exc_name = sys.exc_info()[0].__name__
 #            return (True, (exc_name, error, ""))
@@ -103,7 +103,7 @@ class MintServer(object):
             try:
                 userId = cu.next()[0]
             except StopIteration:
-                raise database.ItemNotFound
+                raise database.ItemNotFound("user")
 
         return self.projectUsers.new(projectId, userId, level)
 
@@ -122,7 +122,7 @@ class MintServer(object):
             l = cu.next()[0]
             return l
         except StopIteration:
-            raise database.ItemNotFound
+            raise database.ItemNotFound("membership")
 
     def registerNewUser(self, username, password, fullName, email, active):
         return self.users.registerNewUser(username, password, fullName, email, active)

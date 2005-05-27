@@ -9,7 +9,7 @@
         <div id="content">
             <h2>${shortError}</h2>
 
-            <p class="error">${error}</p>
+            <p class="error">Error: ${error}</p>
             <p>
                 Please go back and try again or contact 
                 <a href="mailto:custom@specifix.com">custom@specifix.com</a> or join the IRC channel

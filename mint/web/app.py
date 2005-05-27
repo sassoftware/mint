@@ -22,6 +22,7 @@ from mint import projects
 from mint import database
 from mint import users
 from mint import userlevels
+from mint.mint_error import MintError
 
 class MintApp(webhandler.WebHandler):
     def _checkAuth(self, authToken):
@@ -82,7 +83,13 @@ class MintApp(webhandler.WebHandler):
 
         d = dict(self.fields)
         d['auth'] = self.auth
-        return method(**d)
+        try:
+            return method(**d)
+        except MintError, e:
+            err_name = sys.exc_info()[0].__name__
+            self.req.log_error("%s: %s" % (err_name, str(e)))
+            self._write("error", shortError = err_name, error = str(e))
+            return apache.OK
 
     def _clearAuth(self):
         cookie = Cookie.Cookie('authToken', '', domain = self.cfg.domainName)
