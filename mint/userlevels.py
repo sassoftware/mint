@@ -4,11 +4,10 @@
 # All Rights Reserved
 #
 
-OBSERVER, DEVELOPER, ADMIN = range(0, 3)
-LEVELS = range(0, 3)
+DEVELOPER, ADMIN = range(0, 2)
+LEVELS = range(0, 2)
 
 names = {
-    OBSERVER: "Observer",
     DEVELOPER: "Developer",
     ADMIN: "Admin"
 }
