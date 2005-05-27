@@ -19,7 +19,7 @@
             <div py:if="isOwner"><a href="http://${project.getHostname()}/conary/">Repository Administration</a></div>    
             <h3>Project Members</h3>
             <ul>
-                <li py:for="userId, username in project.getMembers()">(${userId}) ${username}</li>
+                <li py:for="userId, username, level in project.getMembers()">(${userId}) ${username}</li>
                 <li py:if="isOwner"><a href="members">Manage Project Members</a></li>
             </ul>
 

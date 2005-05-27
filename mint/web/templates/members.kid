@@ -13,7 +13,7 @@ from mint import userlevels
         <div id="content">
             <h2>Manage Project Memberships</h2>       
  
-            <form method="post" action="editMembers">
+            <form method="post" action="addMember">
                 <table>
                     <tr>
                         <td><b>Project Name:</b></td>
@@ -24,10 +24,16 @@ from mint import userlevels
                             <b>Members:</b>
                         </td>
                         <td>
-                            <ul>
+                            <ul> <!-- XXX order these users by level; admins first, to observers -->
                                 <li py:for="userId, username, level in sorted(project.getMembers(), key=lambda x: x[1])">
-                                    ${username} (a ${userlevels.names[level]})
-                                    [<a py:if="userId != auth.userId" href="delMember?id=${userId}">remove</a>]
+                                    <a py:if="userId != auth.userId"
+                                       href="memberSettings?userId=${userId};projectId=${project.getId()}">
+                                        ${username} (${userlevels.names[level]})
+                                    </a>
+                                    <span py:if="userId == auth.userId">
+                                        ${username} (you, ${userlevels.names[level]})
+                                    </span>
+
                                 </li>
                             </ul>
                         </td>
@@ -37,8 +43,13 @@ from mint import userlevels
                             <b>Add:</b>
                             <p class="help"><a href="lookupUser">Look up user</a></p>
                         </td>
-                        <td>    
+                        <td> 
                             <input type="text" name="username" value="" />
+                            <select name="level">
+                                <option py:for="level, levelName in userlevels.names.items()"
+                                        py:content="levelName"
+                                        value="${level}" />
+                            </select>
                         </td>
                     </tr>
                 </table>

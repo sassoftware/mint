@@ -32,6 +32,10 @@ class MintClient(Client):
     def getUser(self, userId):
         return users.User(self.server, userId)
 
+    def getMembership(self, userId, projectId):
+        level = self.server.getUserLevel(userId, projectId)
+        return (self.getUser(userId), level)
+
     def registerNewUser(self, username, password, fullName, email, active = False):
         return self.server.registerNewUser(username, password, fullName, email, active)
 
