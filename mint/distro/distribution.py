@@ -326,7 +326,7 @@ class Distribution:
             size = 0
             # calculate size when installed 
 
-            for pkgCs in cs.iterNewPackageList():
+            for pkgCs in cs.iterNewTroveList():
                 for (pathId, fPath, fileId, fVer) in pkgCs.getNewFileList():
                     if (troveName.startswith('kernel')
                         and fPath.startswith('/boot/vmlinuz-')):

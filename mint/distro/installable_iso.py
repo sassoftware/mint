@@ -57,7 +57,7 @@ class InstallableIso(ImageGenerator):
         ccfg.flavor.union(insSet)
         ccfg.buildFlavor = ccfg.flavor.copy()
         flavorConfig.populateBuildFlags()
-        use.setBuildFlagsFromFlavor(None, ccfg.buildFlavor, error=None)
+        # use.setBuildFlagsFromFlavor(None, ccfg.buildFlavor, error=None)
        
         repos = repository.netclient.NetworkRepositoryClient(ccfg.repositoryMap)
 

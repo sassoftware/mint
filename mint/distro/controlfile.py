@@ -543,7 +543,7 @@ class ControlFile:
             index += 1
             csfile = os.path.join(changesetpath, changesetName)
             cs = changeset.ChangeSetFromFile(csfile)
-            pkgs = cs.getPrimaryPackageList()
+            pkgs = cs.getPrimaryTroveList()
             for (name, version, flavor) in pkgs:
                 if filterDict and name not in filterDict:
                     continue
