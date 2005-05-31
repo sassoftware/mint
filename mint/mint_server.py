@@ -76,7 +76,7 @@ class MintServer(object):
                                       defaultBranch = "rpl:devel")
         self.projectUsers.new(userId = self.auth.userId,
                               projectId = projectId,
-                              level = userlevels.ADMIN)
+                              level = userlevels.OWNER)
         self.projects.createRepos(self.cfg.reposPath, hostname,
                                   self.authToken[0], self.authToken[1])
         

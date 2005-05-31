@@ -1,10 +1,13 @@
 <?xml version='1.0' encoding='UTF-8'?>
+<?python
+from mint import userlevels
+?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'library.kid'">
     ${html_header("Linux Mint")}
     <?python
-        isOwner = project.getOwnerId() == auth.userId
+        isOwner = project.getUserLevel(auth.userId) == userlevels.OWNER
     ?>
     <body>
         ${header_image()}
@@ -31,6 +34,7 @@
                 <li py:if="isOwner"><a href="images">Release Management</a></li>
             </ul>
 
+            <p py:if="isOwner">You are an owner of this project.</p>
             ${html_footer()}
         </div>
     </body>

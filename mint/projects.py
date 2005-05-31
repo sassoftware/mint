@@ -12,14 +12,14 @@ from lib import util
 from repository.netrepos.netserver import NetworkRepositoryServer
 
 from mint_error import MintError
-from database import TableObject, KeyedTable, ItemNotFound
+import database
 import userlevels
 
 class InvalidHostname(Exception):
     def __str__(self):
         return "invalid hostname: must start with a letter and contain only letters, numbers, and hyphens."
 
-class Project(TableObject):
+class Project(database.TableObject):
     __slots__ = ['projectId', 'ownerId', 'name',
                  'desc', 'hostname', 'defaultBranch'
                  'timeCreated', 'timeModified']
@@ -51,6 +51,12 @@ class Project(TableObject):
     def getMembers(self):
         return self.server.getProjectUsers(self.id)
 
+    def getUserLevel(self, userId):
+        try:
+            return self.server.getUserLevel(self.id, userId)
+        except database.ItemNotFound:
+            return -1
+
     def addMemberById(self, userId, level):
         assert(level in userlevels.LEVELS)
         return self.server.addMember(self.id, userId, None, level)
@@ -62,7 +68,7 @@ class Project(TableObject):
     def delMemberById(self, userId):
         return self.server.delMember(self.id, userId)
 
-class ProjectsTable(KeyedTable):
+class ProjectsTable(database.KeyedTable):
     name = 'Projects'
     key = 'projectId'
     createSQL = """CREATE TABLE Projects (
@@ -86,7 +92,7 @@ class ProjectsTable(KeyedTable):
         try:
             r = cu.next()
         except StopIteration:
-            raise ItemNotFound
+            raise database.ItemNotFound
         return r[0]
 
     def createRepos(self, reposPath, hostname, username, password):

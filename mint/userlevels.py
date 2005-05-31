@@ -4,10 +4,10 @@
 # All Rights Reserved
 #
 
-ADMIN, DEVELOPER = range(0, 2)
+OWNER, DEVELOPER = range(0, 2)
 LEVELS = range(0, 2)
 
 names = {
+    OWNER: "Owner",
     DEVELOPER: "Developer",
-    ADMIN: "Admin"
 }

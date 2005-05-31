@@ -26,7 +26,7 @@ from mint import userlevels
                         <td>
                             <?python
                             users = { userlevels.DEVELOPER: [],
-                                      userlevels.ADMIN: [], }
+                                      userlevels.OWNER: [], }
 
                             for userId, username, level in project.getMembers():
                                 users[level].append((userId, username,))
@@ -34,10 +34,10 @@ from mint import userlevels
                             ?>
                             <h4>Project Owners</h4>
                             <ul>
-                                <li py:for="userId, username in sorted(users[userlevels.ADMIN], key=lambda x: x[1])">
+                                <li py:for="userId, username in sorted(users[userlevels.OWNER], key=lambda x: x[1])">
                                     <a href="memberSettings?userId=${userId}">${username}</a>
                                 </li>
-                                <li py:if="not users[userlevels.ADMIN]">No owners.</li>
+                                <li py:if="not users[userlevels.OWNER]">No owners.</li>
                             </ul>
                             <h4>Developers</h4>
                             <ul>
