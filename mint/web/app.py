@@ -225,11 +225,13 @@ class MintApp(webhandler.WebHandler):
         self.project.delMemberById(id)
         return self._redirect("members")
 
-    @intFields(userId = None, projectId = None)
+    @intFields(userId = None)
     @requiresAuth
     @ownerOnly
-    def memberSettings(self, auth, userId, projectId):
-        user, level = self.client.getMembership(userId, projectId) 
+    def memberSettings(self, auth, userId):
+        assert(self.project)
+    
+        user, level = self.client.getMembership(userId, self.project.getId()) 
         self._write("memberSettings", user = user, userLevel = level)
         return apache.OK
 

@@ -15,6 +15,7 @@ messages = { '':          'If you do not have an account, please <a href="regist
         
         <div id="content">
         <p>Please log in to use the the rpath Linux Mint custom distribution server:</p>
+        <p>If you do not have an account, please <a href="register">register</a>.</p>
         <p py:if="message" style="font-weight: bold;" py:content="messages[message]"/>
         <form method="post" action="login2">
             <table>
