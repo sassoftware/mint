@@ -39,7 +39,6 @@ from mint import userlevels
                                 </li>
                                 <li py:if="not users[userlevels.ADMIN]">No owners.</li>
                             </ul>
-
                             <h4>Developers</h4>
                             <ul>
                                 <li py:for="userId, username in sorted(users[userlevels.DEVELOPER], key=lambda x: x[1])">

@@ -72,7 +72,7 @@ Alias /static/ "@MINTPATH@/web/content/"
 Alias /mint/ "@DOCROOT@/mint.conf/"
 <Location /mint/>
     AddHandler python-program .conf
-    PythonHandler mint.web.db_apachehooks
+    PythonHandler mint.web.hooks
     PythonDebug Off
     PythonPath "sys.path + ['@MINTPATH@', '@CONARYPATH@']"
 </Location>
