@@ -24,17 +24,28 @@ from mint import userlevels
                             <b>Members:</b>
                         </td>
                         <td>
-                            <ul> <!-- XXX order these users by level; admins first, to observers -->
-                                <li py:for="userId, username, level in sorted(project.getMembers(), key=lambda x: x[1])">
-                                    <a py:if="userId != auth.userId"
-                                       href="memberSettings?userId=${userId};projectId=${project.getId()}">
-                                        ${username} (${userlevels.names[level]})
-                                    </a>
-                                    <span py:if="userId == auth.userId">
-                                        ${username} (you, ${userlevels.names[level]})
-                                    </span>
+                            <?python
+                            users = { userlevels.DEVELOPER: [],
+                                      userlevels.ADMIN: [], }
 
+                            for userId, username, level in project.getMembers():
+                                users[level].append((userId, username,))
+            
+                            ?>
+                            <h4>Project Owners</h4>
+                            <ul>
+                                <li py:for="userId, username in sorted(users[userlevels.ADMIN], key=lambda x: x[1])">
+                                    <a href="memberSettings?userId=${userId}">${username}</a>
                                 </li>
+                                <li py:if="not users[userlevels.ADMIN]">No owners.</li>
+                            </ul>
+
+                            <h4>Developers</h4>
+                            <ul>
+                                <li py:for="userId, username in sorted(users[userlevels.DEVELOPER], key=lambda x: x[1])">
+                                    <a href="memberSettings?userId=${userId}">${username}</a>
+                                </li> 
+                                <li py:if="not users[userlevels.DEVELOPER]">No developers.</li>
                             </ul>
                         </td>
                     </tr>

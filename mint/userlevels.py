@@ -4,7 +4,7 @@
 # All Rights Reserved
 #
 
-DEVELOPER, ADMIN = range(0, 2)
+ADMIN, DEVELOPER = range(0, 2)
 LEVELS = range(0, 2)
 
 names = {
