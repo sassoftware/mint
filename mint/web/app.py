@@ -36,10 +36,9 @@ def requiresAuth(func):
 # also requires that a package exist
 def ownerOnly(func):
     def wrapper(self, **kwargs):
-        assert(self.project)
         if not self.project:
             raise database.ItemNotFound("project")
-        if self.project.getOwnerId() == kwargs['auth'].userId:
+        if self.userLevel == userlevels.OWNER:
             return func(self, **kwargs)
         else:
             raise users.PermissionDenied
@@ -64,6 +63,7 @@ class MintApp(webhandler.WebHandler):
         else:
             try:
                 self.project = self.client.getProjectByHostname(fullHost)
+                self.userLevel = self.project.getUserLevel(self.auth.userId)
             except database.ItemNotFound:
                 return self._404
             default = self.projectPage
@@ -185,7 +185,7 @@ class MintApp(webhandler.WebHandler):
         return apache.OK 
 
     def projectPage(self, auth):    
-        self._write("projectPage", project = self.project)
+        self._write("projectPage")
         return apache.OK
 
     @requiresAuth
@@ -210,8 +210,21 @@ class MintApp(webhandler.WebHandler):
         projectId = self.client.newProject(title, hostname)
         return self._redirect("http://%s.%s/" % (hostname, self.cfg.domainName) )
 
+    @requiresAuth
+    @ownerOnly
+    def projectDesc(self, auth):
+        self._write("projectDesc")
+        return apache.OK
+
+    @strFields(desc = None)
+    @requiresAuth
+    @ownerOnly
+    def editProjectDesc(self, auth, desc):
+        self.project.setDesc(desc)
+        return self._redirect("/")
+
     def members(self, auth):
-        self._write("members", project = self.project)
+        self._write("members")
         return apache.OK
 
     @strFields(username = None)
@@ -243,5 +256,7 @@ class MintApp(webhandler.WebHandler):
 
         content = t.serialize(encoding="utf-8", cfg = self.cfg,
                                                 auth = self.auth,
+                                                project = self.project,
+                                                userLevel = self.userLevel,
                                                 **values)
         self.req.write(content)

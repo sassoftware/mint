@@ -112,6 +112,10 @@ class MintServer(object):
     def delMember(self, projectId, userId):
         return self.projectUsers.delete(projectId, userId)    
 
+    @requiresAuth
+    def setProjectDesc(self, projectId, desc):
+        return self.projects.update(projectId, desc = desc)
+
     # user methods
     def getUser(self, id):
         return self.users.get(id)

@@ -68,6 +68,9 @@ class Project(database.TableObject):
     def delMemberById(self, userId):
         return self.server.delMember(self.id, userId)
 
+    def setDesc(self, desc):
+        return self.server.setProjectDesc(self.id, desc)
+
 class ProjectsTable(database.KeyedTable):
     name = 'Projects'
     key = 'projectId'

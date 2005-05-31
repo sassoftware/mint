@@ -7,7 +7,7 @@ from mint import userlevels
       py:extends="'library.kid'">
     ${html_header("Linux Mint")}
     <?python
-        isOwner = project.getUserLevel(auth.userId) == userlevels.OWNER
+        isOwner = userLevel == userlevels.OWNER
     ?>
     <body>
         ${header_image()}
@@ -17,8 +17,11 @@ from mint import userlevels
             <h2>${project.getName()}</h2>
 
             <h3>Project Details</h3>
-            <code>${project.getDesc()}</code>
-            <div py:if="isOwner"><a href="editProject">Edit Project Details</a></div>
+            <p style="padding: 10px; border: 1px solid black;">
+                <a class="button" style="float: right;" py:if="isOwner" href="projectDesc">Edit Description</a>
+                ${project.getDesc()}
+            </p>
+
             <div py:if="isOwner"><a href="http://${project.getHostname()}/conary/">Repository Administration</a></div>    
             <h3>Project Members</h3>
             <ul>
