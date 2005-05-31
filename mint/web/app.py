@@ -24,6 +24,23 @@ from mint import users
 from mint import userlevels
 from mint.mint_error import MintError
 
+def requiresAuth(func):
+    def wrapper(self, **kwargs):
+        if not kwargs['auth'].authorized:
+            raise users.PermissionDenied
+        else:
+            return func(self, **kwargs)
+    return wrapper
+
+def ownerOnly(func):
+    def wrapper(self, **kwargs):
+        if self.project:
+            if self.project.getOwnerId() == kwargs['auth'].userId:
+                return func(self, **kwargs)
+            else:
+                raise users.PermissionDenied
+    return wrapper
+
 class MintApp(webhandler.WebHandler):
     def _checkAuth(self, authToken):
         self.client = shimclient.ShimMintClient(self.cfg, authToken)
@@ -167,20 +184,24 @@ class MintApp(webhandler.WebHandler):
         self._write("projectPage", project = self.project)
         return apache.OK
 
+    @requiresAuth
     def userSettings(self, auth):
         self._write("userSettings")
         return apache.OK
 
     @strFields(email = "", password1 = "", password2 = "")
+    @requiresAuth
     def editUserSettings(self, auth):
         if not email:
             email = auth.email
         
+    @requiresAuth
     def newProject(self, auth):
         self._write("newProject")
         return apache.OK
 
     @strFields(title = None, hostname = None)
+    @requiresAuth
     def createProject(self, auth, title, hostname):
         projectId = self.client.newProject(title, hostname)
         return self._redirect("http://%s.%s/" % (hostname, self.cfg.domainName) )
@@ -191,16 +212,22 @@ class MintApp(webhandler.WebHandler):
 
     @strFields(username = None)
     @intFields(level = None)
+    @requiresAuth
+    @ownerOnly
     def addMember(self, auth, username, level):
         self.project.addMemberByName(username, level)
         return self._redirect("members")
 
     @intFields(id = None)
+    @requiresAuth
+    @ownerOnly
     def delMember(self, auth, id):
         self.project.delMemberById(id)
         return self._redirect("members")
 
     @intFields(userId = None, projectId = None)
+    @requiresAuth
+    @ownerOnly
     def memberSettings(self, auth, userId, projectId):
         user, level = self.client.getMembership(userId, projectId) 
         self._write("memberSettings", user = user, userLevel = level)

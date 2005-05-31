@@ -9,7 +9,6 @@ import xmlrpclib
 
 from mint_error import MintError
 import users
-import config
 import projects
 import database
 
