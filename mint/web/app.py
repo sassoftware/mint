@@ -32,13 +32,17 @@ def requiresAuth(func):
             return func(self, **kwargs)
     return wrapper
 
+# decorates a method to be callable only by the owner of the current package
+# also requires that a package exist
 def ownerOnly(func):
     def wrapper(self, **kwargs):
-        if self.project:
-            if self.project.getOwnerId() == kwargs['auth'].userId:
-                return func(self, **kwargs)
-            else:
-                raise users.PermissionDenied
+        assert(self.project)
+        if not self.project:
+            raise database.ItemNotFound("project")
+        if self.project.getOwnerId() == kwargs['auth'].userId:
+            return func(self, **kwargs)
+        else:
+            raise users.PermissionDenied
     return wrapper
 
 class MintApp(webhandler.WebHandler):
@@ -229,8 +233,6 @@ class MintApp(webhandler.WebHandler):
     @requiresAuth
     @ownerOnly
     def memberSettings(self, auth, userId):
-        assert(self.project)
-    
         user, level = self.client.getMembership(userId, self.project.getId()) 
         self._write("memberSettings", user = user, userLevel = level)
         return apache.OK
