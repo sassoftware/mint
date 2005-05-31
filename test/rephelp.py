@@ -44,6 +44,7 @@ import versions
 from mint import mint
 from mint import users
 from mint import config
+from mint import shimclient
 
 #test
 import recipes
@@ -329,7 +330,9 @@ class RepositoryHelper(testsuite.TestCase):
 
     def openMint(self, authToken=('test', 'foo')):
         self.openRepository()
-        return mint.MintClient(self.servers.getMintUrl() % authToken)
+        cfg = config.MintConfig()
+        cfg.read("%s/mint.conf" % self.servers.getServer().serverRoot)
+        return shimclient.ShimMintClient(cfg, authToken)
                     
     def addfile(self, file):
         cvc.sourceCommand(self.cfg, [ "add", file ], {} )

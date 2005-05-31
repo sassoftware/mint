@@ -101,7 +101,6 @@ def setup():
 	print "please set CONARY_PATH and MINT_PATH"
 	sys.exit(1)
     sys.path.append(os.environ['CONARY_PATH'])
-    sys.path.append(os.path.join(os.environ['CONARY_PATH'], 'server'))
 
     if isIndividual():
         serverDir = '/tmp/conary-server'

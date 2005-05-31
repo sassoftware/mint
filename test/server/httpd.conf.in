@@ -64,8 +64,8 @@ Alias /conary/ "@DOCROOT@/test.cnr/"
     AllowOverride None
 
     AddHandler python-program .cnr
-    PythonHandler apachehooks
-    PythonPath "sys.path + ['@NETRPATH@', '@CONARYPATH@']"
+    PythonHandler server.apachehooks
+    PythonPath "sys.path + ['@CONARYPATH@']"
 </Location>
 
 Alias /static/ "@MINTPATH@/web/content/"
