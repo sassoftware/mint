@@ -70,7 +70,7 @@ class MintServer(object):
         hostname += "." + self.cfg.domainName
     
         projectId = self.projects.new(name = projectName, 
-                                      ownerId = self.auth.userId,
+                                      creatorId = self.auth.userId,
                                       desc = desc,
                                       hostname = hostname,
                                       defaultBranch = "rpl:devel")

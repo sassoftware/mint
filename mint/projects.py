@@ -20,15 +20,15 @@ class InvalidHostname(Exception):
         return "invalid hostname: must start with a letter and contain only letters, numbers, and hyphens."
 
 class Project(database.TableObject):
-    __slots__ = ['projectId', 'ownerId', 'name',
+    __slots__ = ['projectId', 'creatorId', 'name',
                  'desc', 'hostname', 'defaultBranch'
                  'timeCreated', 'timeModified']
 
     def getItem(self, id):
         return self.server.getProject(id)
 
-    def getOwnerId(self):
-        return self.ownerId
+    def getCreatorId(self):
+        return self.creatorId
 
     def getName(self):
         return self.name
@@ -73,7 +73,7 @@ class ProjectsTable(database.KeyedTable):
     key = 'projectId'
     createSQL = """CREATE TABLE Projects (
                     projectId       INTEGER PRIMARY KEY,
-                    ownerId         INT,
+                    creatorId       INT,
                     name            STR UNIQUE,
                     hostname        STR UNIQUE,
                     defaultBranch   STR,
@@ -81,7 +81,7 @@ class ProjectsTable(database.KeyedTable):
                     timeCreated     INT,
                     timeModified    INT
                 );"""
-    fields = ['ownerId', 'name', 'hostname', 'defaultBranch',
+    fields = ['creatorId', 'name', 'hostname', 'defaultBranch',
               'desc', 'timeCreated', 'timeModified']
 
     def getProjectIdByHostname(self, hostname):
