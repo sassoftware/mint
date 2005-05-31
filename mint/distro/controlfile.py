@@ -600,7 +600,6 @@ class ControlFile:
         troves = set()
         troveIds = {}
         
-        
         while groupTroves:
             groupTrove = groupTroves.pop()
 
@@ -615,7 +614,7 @@ class ControlFile:
                 else:
                     troveId = TroveId(name, version, flavor)
                     troves.add(troveId)
-                    troveIds[name] = troveId
+                    troveIds[(name, version, flavor)] = troveId
 
         # if abcd:lib and abcd exists in troves,
         # remove abcd:lib
@@ -623,8 +622,8 @@ class ControlFile:
             name = trove.getName()
             if ":" in name:
                 pkgName = name.split(":")[0]
-                if pkgName in troveIds.keys():
-                    troveId = troveIds[name]
+                if (pkgName, trove.getVersion(), trove.getFlavor()) in troveIds.keys():
+                    troveId = troveIds[(name, trove.getVersion(), trove.getFlavor())]
                     troves.remove(troveId)
                     
         return dict.fromkeys(list(troves))
