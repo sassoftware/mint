@@ -16,10 +16,10 @@ class ItemNotFound(MintError):
         return "requested %s not found" % self.item
 
 class DuplicateItem(MintError):
-    def __init__(self, table = "table"):
-        self.table = table
+    def __init__(self, item = "item"):
+        self.item = item
     def __str__(self):
-        return "duplicate item: %s" % self.table
+        return "duplicate item in %s" % self.item
 
 class TableObject:
     __slots__ = ['server', 'id']

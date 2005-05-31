@@ -59,6 +59,7 @@ class MintApp(webhandler.WebHandler):
         
         if hostname == "www":
             self.project = None
+            self.userLevel = -1
             default = self.frontPage
         else:
             try:
@@ -198,7 +199,8 @@ class MintApp(webhandler.WebHandler):
     def editUserSettings(self, auth):
         if not email:
             email = auth.email
-        
+        # XXX finish this
+
     @requiresAuth
     def newProject(self, auth):
         self._write("newProject")

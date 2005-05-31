@@ -51,7 +51,7 @@ class MintServer(object):
         except users.UserAlreadyExists, e:
             return (True, ("UserAlreadyExists", str(e)))
         except database.DuplicateItem, e:
-            return (True, ("DuplicateItem", str(e)))
+            return (True, ("DuplicateItem", e.item))
         except database.ItemNotFound, e:
             return (True, ("ItemNotFound", e.item))
 #        except Exception, error:

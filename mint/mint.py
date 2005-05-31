@@ -66,7 +66,7 @@ class _Method(xmlrpclib._Method):
         if exceptionName == "UserAlreadyExists":
             raise users.UserAlreadyExists
         elif exceptionName == "DuplicateItem":
-            raise database.DuplicateItem
+            raise database.DuplicateItem(exceptionArgs[0])
         elif exceptionName == "DuplicateHostname":
             raise projects.DuplicateHostname
         elif exceptionName == "ItemNotFound":
