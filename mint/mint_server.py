@@ -92,6 +92,7 @@ class MintServer(object):
     def getProjectUsers(self, id):
         return self.projectUsers.getProjectUsers(id)
 
+    @requiresAuth
     def addMember(self, projectId, userId, username, level):
         assert(level in userlevels.LEVELS)
         cu = self.db.cursor()
@@ -107,6 +108,7 @@ class MintServer(object):
 
         return self.projectUsers.new(projectId, userId, level)
 
+    @requiresAuth
     def delMember(self, projectId, userId):
         return self.projectUsers.delete(projectId, userId)    
 

@@ -21,7 +21,7 @@ import userlevels
 
 class PermissionDenied(MintError):
     def __str__(self):
-        return "permission denied from XMLRPC server"
+        return "permission denied"
 
 class ConfirmError(MintError):
     def __str__(self):
