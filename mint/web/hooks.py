@@ -22,6 +22,7 @@ import conarycfg
 from mint import config
 from mint import users
 from mint import projects
+from mint import database
 import app
 import cookie_http
 
@@ -182,65 +183,68 @@ def putFile(port, isSecure, repos, req):
 
 def handler(req):
     repName = req.filename
-    
-    if not repositories.has_key(repName):
-        cfg = config.MintConfig()
-        cfg.read(req.filename)
+    cfg = config.MintConfig()
+    cfg.read(req.filename)
+    # XXX hack, combine these names
+    cfg.staticPath = cfg.staticUrl
 
-        # XXX hack, combine these names
-        cfg.staticPath = cfg.staticUrl
-
-        db = sqlite3.connect(cfg.dbPath, timeout = 30000)
-        projectsTable = projects.ProjectsTable(db)
-        try:
-            projectId = projectsTable.getProjectIdByHostname(req.hostname)
-        except KeyError:
-            return apache.HTTP_NOT_FOUND
-
-        repositoryDir = os.path.join(cfg.reposPath, req.hostname)
-
-	if os.path.basename(req.uri) == "changeset":
-	   rest = os.path.dirname(req.uri) + "/"
-	else:
-	   rest = req.uri
-
-	rest = req.uri
-	# pull out any queryargs
-	if '?' in rest:
-	    rest = req.uri.split("?")[0]
-
-	# and throw away any subdir portion
-	rest = req.uri[:-len(req.path_info)] + '/'
-        
-	urlBase = "%%(protocol)s://%s:%%(port)d" % \
-                        (req.server.server_hostname) + rest
-
-	repositories[repName] = netserver.NetworkRepositoryServer(
-                                repositoryDir,
-                                cfg.tmpPath,
-				urlBase, 
-                                req.hostname,
-                                {},
-				commitAction = None,
-                                cacheChangeSets = True,
-                                logFile = None)
-
-	repositories[repName].forceSecure = False
-        repositories[repName].cfg = cfg
+    method = req.method.upper()
     port = req.server.port
     if not port:
         port = req.parsed_uri[apache.URI_PORT]
         if not port:
             port = 80
     secure = (port == 443)
-    
-    repo = repositories[repName]
-    method = req.method.upper()
 
+
+    if req.path_info.startswith("/conary"):
+        if not repositories.has_key(repName):
+            db = sqlite3.connect(cfg.dbPath, timeout = 30000)
+            projectsTable = projects.ProjectsTable(db)
+            try:
+                projectId = projectsTable.getProjectIdByHostname(req.hostname)
+            except database.ItemNotFound:
+                return apache.HTTP_NOT_FOUND
+
+            repositoryDir = os.path.join(cfg.reposPath, req.hostname)
+
+            if os.path.basename(req.uri) == "changeset":
+               rest = os.path.dirname(req.uri) + "/"
+            else:
+               rest = req.uri
+
+            rest = req.uri
+            # pull out any queryargs
+            if '?' in rest:
+                rest = req.uri.split("?")[0]
+
+            # and throw away any subdir portion
+            rest = req.uri[:-len(req.path_info)] + '/'
+            
+            urlBase = "%%(protocol)s://%s:%%(port)d" % \
+                            (req.server.server_hostname) + rest
+
+            repositories[repName] = netserver.NetworkRepositoryServer(
+                                    repositoryDir,
+                                    cfg.tmpPath,
+                                    urlBase, 
+                                    req.hostname,
+                                    {},
+                                    commitAction = None,
+                                    cacheChangeSets = True,
+                                    logFile = None)
+
+            repositories[repName].forceSecure = False
+            repositories[repName].cfg = cfg
+       
+        repo = repositories[repName]
+    else:
+        repo = None
+        
     if method == "POST":
-	return post(port, secure, repo, repo.cfg, req)
+	return post(port, secure, repo, cfg, req)
     elif method == "GET":
-	return get(secure, repo, repo.cfg, req)
+	return get(secure, repo, cfg, req)
     elif method == "PUT":
 	return putFile(port, secure, repo, req)
     else:
