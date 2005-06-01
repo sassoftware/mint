@@ -40,24 +40,18 @@
 
         </td>
 
-        <td>
+        <td style="width: 15%;">
 
         <div style="background: white; padding: 12px; color: black;">
             <h3>Search</h3>
             <p>Search for a project:</p>
             <input type="text" name="search" size="10" /> <button>Submit</button>
 
-            <h3>Site News</h3>
-
-            <ul id="news">
-                <li>Browser-crashing bug fixed.</li>
-                <li>rMint launched!</li>
-            </ul>
-
             <h3>Your Projects</h3>
 
             <ol id="active">
-                <li py:for="project in sorted(projectList, key = lambda x: x.getName())">${project.getName()}</li>
+                <li py:for="project in sorted(projectList, key = lambda x: x.getName())">
+                    <a href="http://${project.getHostname()}/">${project.getName()}</a></li>
             </ol>
         </div>
 
