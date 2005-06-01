@@ -54,13 +54,10 @@
                 <li>rMint launched!</li>
             </ul>
 
-            <h3>Popular Projects</h3>
+            <h3>Your Projects</h3>
 
             <ol id="active">
-                <li>Foresight Linux</li>
-                <li>rPath Linux</li>
-                <li>Tiny Router Linux</li>
-                <li>MythTV Linux</li>
+                <li py:for="project in sorted(projectList, key = lambda x: x.getName())">${project.getName()}</li>
             </ol>
         </div>
 

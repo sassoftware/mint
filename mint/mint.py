@@ -28,6 +28,9 @@ class MintClient(Client):
         projectId = self.server.getProjectIdByHostname(hostname)
         return projects.Project(self.server, projectId)
 
+    def getProjectsByMember(self, userId):
+        return [projects.Project(self.server, x) for x in self.server.getProjectIdsByMember(userId)]
+
     def getUser(self, userId):
         return users.User(self.server, userId)
 

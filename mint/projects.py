@@ -98,6 +98,15 @@ class ProjectsTable(database.KeyedTable):
             raise database.ItemNotFound
         return r[0]
 
+    def getProjectIdsByMember(self, userId):
+        cu = self.db.cursor()
+        cu.execute("SELECT projectId FROM ProjectUsers WHERE userId=?", userId)
+       
+        ids = []
+        for r in cu.fetchall():
+            ids.append(r[0])
+        return ids
+    
     def createRepos(self, reposPath, hostname, username, password):
         path = os.path.join(reposPath, hostname)
         util.mkdirChain(reposPath)

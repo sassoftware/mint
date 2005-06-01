@@ -120,7 +120,9 @@ class MintApp(webhandler.WebHandler):
         self.req.err_headers_out.add("Set-Cookie", str(cookie))
 
     def frontPage(self, auth):
-        self._write("frontPage")
+        projectList = self.client.getProjectsByMember(auth.userId)
+        self.req.log_error(str(projectList))
+        self._write("frontPage", projectList = projectList)
         return apache.OK
 
     def register(self, auth):
