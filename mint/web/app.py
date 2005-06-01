@@ -121,7 +121,6 @@ class MintApp(webhandler.WebHandler):
 
     def frontPage(self, auth):
         projectList = self.client.getProjectsByMember(auth.userId)
-        self.req.log_error(str(projectList))
         self._write("frontPage", projectList = projectList)
         return apache.OK
 
