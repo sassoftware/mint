@@ -18,7 +18,7 @@ from conarycfg import ConfigFile
 import imagetool
 import distribution 
 import conarycfg
-from imagetool import upstream
+from imagetool.imagetool import upstream
 from imagegen import ImageGenerator
 
 class IsoConfig(ConfigFile):
