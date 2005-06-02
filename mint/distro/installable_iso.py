@@ -73,7 +73,7 @@ class InstallableIso(ImageGenerator):
                                              releaseVer, releasePhase,
                                              arch = arch,
                                              isoSize = isoSize)
-        version = versions.VersionFromString(versionStr)
+        version = versions.ThawVersion(versionStr)
        
         tmpDir = self.cfg.imagesPath + os.path.join(arch, releasePhase)
         dist = distribution.Distribution(arch, repos, ccfg,
