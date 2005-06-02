@@ -194,6 +194,7 @@ if __name__ == "__main__":
         sys.exit(1)
    
     log.debug("loading configuration file: %s", cfgFile)
+    log.info("using Conary in %s", os.path.dirname(sys.modules['conary'].__file__))
     cfg = ImageToolConfig()
     cfg.read(cfgFile)
 
