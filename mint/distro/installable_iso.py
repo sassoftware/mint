@@ -7,16 +7,18 @@ import errno
 import os
 import sys
 import tempfile
+
 import deps
 import flavorcfg
 import repository
 import versions
 from build import use
+from conarycfg import ConfigFile
 
 import imagetool
 import distribution 
 import conarycfg
-from conarycfg import ConfigFile
+from imagetool import upstream
 from imagegen import ImageGenerator
 
 class IsoConfig(ConfigFile):
@@ -42,8 +44,9 @@ class InstallableIso(ImageGenerator):
         profileId = self.job.getProfileId()
 
         profile = self.client.getProfile(profileId)
-        trove, versionStr, frozenFlavor = profile.getTrove()
-        flavor = deps.deps.ThawDependencySet(frozenFlavor)
+        troveName, versionStr, flavorStr = profile.getTrove()
+        version = versions.ThawVersion(versionStr)
+        flavor = deps.deps.ThawDependencySet(flavorStr)
 
         project = self.client.getProject(profile.getProjectId())
 
@@ -62,22 +65,21 @@ class InstallableIso(ImageGenerator):
         repos = repository.netclient.NetworkRepositoryClient(ccfg.repositoryMap)
 
         jobId = self.job.getId()
-        releaseVer = self.job.getData("releaseVer")
+        releasePhase = upstream(version)
         releasePhase = self.job.getData("releasePhase")
         isoSize = self.job.getData("isoSize")
 
         arch = profile.getArch()
         assert(arch in ('x86', 'x86_64'))
  
-        distroInfo = distribution.DistroInfo(isocfg.productPrefix, isocfg.productPath, isocfg.productName,
+        distroInfo = distribution.DistroInfo(isocfg.productPrefix, isocfg.productPath, profile.getName(),
                                              releaseVer, releasePhase,
                                              arch = arch,
                                              isoSize = isoSize)
-        version = versions.ThawVersion(versionStr)
        
         tmpDir = self.cfg.imagesPath + os.path.join(arch, releasePhase)
         dist = distribution.Distribution(arch, repos, ccfg,
-                                   distroInfo, (trove, version.asString(), flavor),
+                                   distroInfo, (troveName, version.asString(), flavor),
                                    buildpath = tmpDir, isopath = tmpDir+"/isos/",
                                    isoTemplatePath = isocfg.templatePath,
                                    nfspath = isocfg.nfsPath,
