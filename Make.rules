@@ -9,10 +9,10 @@ PYVERSION = $(shell $(PYTHON) -c 'import os, sys; print sys.version[:3]')
 PYINCLUDE = $(shell $(PYTHON) -c 'import os, sys; print os.sep.join((sys.prefix, "include", "python" + sys.version[:3]))')
 
 pyfiles-install:
-	mkdir -p $(DESTDIR)$(imagetooldir)
+	mkdir -p $(DESTDIR)$(mintdir)
 	for f in $(python_files) $(bin_files) $(extra_inst); do \
-		mkdir -p `dirname $(DESTDIR)/$(imagetooldir)/$(DIR)/$$f`; \
-		cp -a $$f $(DESTDIR)/$(imagetooldir)/$(DIR)/$$f; \
+		mkdir -p `dirname $(DESTDIR)/$(mintdir)/$(DIR)/$$f`; \
+		cp -a $$f $(DESTDIR)/$(mintdir)/$(DIR)/$$f; \
 	done
 
 default-dist: dist-subdirs

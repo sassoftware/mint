@@ -17,7 +17,7 @@ export httpddir = $(sysconfdir)/httpd/conf.d/
 
 SUBDIRS = mint test
 
-extra_files = Makefile Make.rules mint.conf apache.conf
+extra_files = Makefile Make.rules mint.conf httpd.conf
 
 dist_files = $(extra_files)
 
@@ -33,8 +33,8 @@ dist: $(dist_files)
 	rm -rf $(DISTDIR)
 
 install: all install-subdirs
-	mkdir -p $(DESTDIR)$(mintdir)
-	install -m 644 mint.conf $(DESTDIR)$(datadir)/imagetool/
+	mkdir -p $(DESTDIR)$(datadir)/mint/
+	install -m 644 mint.conf $(DESTDIR)$(datadir)/mint/
 	mkdir -p $(DESTDIR)$(httpddir)
 	install httpd.conf $(DESTDIR)$(httpddir)/mint.conf
 	sed -i "s,\%DATADIR%,$(datadir),g" $(DESTDIR)$(httpddir)/mint.conf
