@@ -6,13 +6,8 @@
 SUBDIRS = server archive
 
 python_files =  authtest.py\
-		jobtest.py\
-		profiletest.py\
-		projecttest.py\
-		recipes.py\
 		rephelp.py\
-		testsuite.py\
-		webtest.py
+		testsuite.py
 
 extra_dist = Makefile
 

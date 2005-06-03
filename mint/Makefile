@@ -1,0 +1,34 @@
+#
+# Copyright (c) 2005 rpath, Inc.
+#
+# All Rights Reserved
+#
+
+SUBDIRS = web
+
+python_files =  config.py\
+		database.py\
+		__init__.py\
+		mail.py\
+		mint_error.py\
+		mint.py\
+		mint_server.py\
+		projects.py\
+		shimclient.py\
+		test.py\
+		userlevels.py\
+		users.py
+		 
+extra_dist = Makefile
+
+dist_files = $(python_files) $(extra_dist)
+
+all: default-all default-subdirs
+
+install: install-subdirs pyfiles-install
+
+dist: default-dist
+
+clean: default-clean
+
+include ../Make.rules
