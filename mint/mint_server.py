@@ -16,6 +16,8 @@ import userlevels
 from mint_error import MintError
 import repository.netrepos.netauth
 
+from imagetool import imagetool
+
 validHost = re.compile('^[a-zA-Z][a-zA-Z0-9\-]*$')
 reservedHosts = ['admin', 'mail', 'www', 'web',
                  'rpath', 'wiki', 'conary']
@@ -68,19 +70,23 @@ class MintServer(object):
         if hostname in reservedHosts:
             raise projects.InvalidHostname
         hostname += "." + self.cfg.domainName
-    
+
+        imagetoolUrl = self.cfg.imagetoolUrl % (self.authToken[0], self.authToken[1])
+        itclient = imagetool.ImageToolClient(imagetoolUrl)
+        itProjectId = itclient.newProject(projectName)
+
         projectId = self.projects.new(name = projectName, 
                                       creatorId = self.auth.userId,
                                       desc = desc,
                                       hostname = hostname,
-                                      defaultBranch = "rpl:devel")
+                                      defaultBranch = "rpl:devel",
+                                      itProjectId = itProjectId)
         self.projectUsers.new(userId = self.auth.userId,
                               projectId = projectId,
                               level = userlevels.OWNER)
         self.projects.createRepos(self.cfg.reposPath, hostname,
                                   self.authToken[0], self.authToken[1])
-        
-
+    
         return projectId
 
     def getProject(self, id):

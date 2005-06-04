@@ -101,8 +101,9 @@ class UsersTable(database.KeyedTable):
         except repository.netrepos.netauth.UserAlreadyExists:
             raise UserAlreadyExists
 
-        itclient = imagetool.ImageToolClient(self.cfg.imagetoolUrl)
-        itclient.newUser(username)
+        imagetoolUrl = self.cfg.imagetoolUrl % (self.cfg.authUser, self.cfg.authPass)
+        itclient = imagetool.ImageToolClient(imagetoolUrl)
+        itclient.newUser(username, internalUser = False)
 
         if not active:
             message = """Thank you for registering for the rpath Linux customized

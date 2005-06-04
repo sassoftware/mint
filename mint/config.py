@@ -27,4 +27,6 @@ class MintConfig(ConfigFile):
         'adminMail'         : 'mint@rpath.org',
         'xmlrpcEnabled'     : [ BOOLEAN, False ],
         'imagetoolUrl'      : 'http://localhost/imagetool/',
+        'authUser'          : '',
+        'authPass'          : '',
     }

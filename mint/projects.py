@@ -82,10 +82,11 @@ class ProjectsTable(database.KeyedTable):
                     defaultBranch   STR,
                     desc            STR,
                     timeCreated     INT,
-                    timeModified    INT
+                    timeModified    INT,
+                    itProjectId     INT
                 );"""
     fields = ['creatorId', 'name', 'hostname', 'defaultBranch',
-              'desc', 'timeCreated', 'timeModified']
+              'desc', 'timeCreated', 'timeModified', 'itProjectId']
 
     def getProjectIdByHostname(self, hostname):
         cu = self.db.cursor()
@@ -110,7 +111,6 @@ class ProjectsTable(database.KeyedTable):
     def createRepos(self, reposPath, hostname, username, password):
         path = os.path.join(reposPath, hostname)
         util.mkdirChain(reposPath)
-
         
         repos = EmptyNetworkRepositoryServer(path, None, None, None, {})
         repos.auth.addUser(username, password)
@@ -118,7 +118,6 @@ class ProjectsTable(database.KeyedTable):
 
         repos.auth.addUser("anonymous", "anonymous")
         repos.auth.addAcl("anonymous", None, None, False, False, False)
-
 
 # XXX sort of stolen from conary/server/server.py
 class EmptyNetworkRepositoryServer(NetworkRepositoryServer):
