@@ -22,13 +22,17 @@ class InvalidHostname(Exception):
 class Project(database.TableObject):
     __slots__ = ['projectId', 'creatorId', 'name',
                  'desc', 'hostname', 'defaultBranch'
-                 'timeCreated', 'timeModified']
+                 'timeCreated', 'timeModified',
+                 'itProjectId']
 
     def getItem(self, id):
         return self.server.getProject(id)
 
     def getCreatorId(self):
         return self.creatorId
+
+    def getItProjectId(self):
+        return self.itProjectId
 
     def getName(self):
         return self.name
@@ -53,7 +57,7 @@ class Project(database.TableObject):
 
     def getUserLevel(self, userId):
         try:
-            return self.server.getUserLevel(self.id, userId)
+            return self.server.getUserLevel(userId, self.id)
         except database.ItemNotFound:
             return -1
 

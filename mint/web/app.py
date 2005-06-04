@@ -65,6 +65,7 @@ class MintApp(webhandler.WebHandler):
             try:
                 self.project = self.client.getProjectByHostname(fullHost)
                 self.userLevel = self.project.getUserLevel(self.auth.userId)
+                self.req.log_error("userlevel: %d" % self.userLevel)
             except database.ItemNotFound:
                 return self._404
             default = self.projectPage

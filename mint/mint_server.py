@@ -73,14 +73,16 @@ class MintServer(object):
 
         imagetoolUrl = self.cfg.imagetoolUrl % (self.authToken[0], self.authToken[1])
         itclient = imagetool.ImageToolClient(imagetoolUrl)
-        itProjectId = itclient.newProject(projectName)
+        itProject = itclient.newProject(projectName)
+        itProject.addLabel(hostname + "@rpl:devel",
+            "http://%s/conary/" % hostname, self.authToken[0], self.authToken[1])
 
         projectId = self.projects.new(name = projectName, 
                                       creatorId = self.auth.userId,
                                       desc = desc,
                                       hostname = hostname,
                                       defaultBranch = "rpl:devel",
-                                      itProjectId = itProjectId)
+                                      itProjectId = itProject.getId())
         self.projectUsers.new(userId = self.auth.userId,
                               projectId = projectId,
                               level = userlevels.OWNER)

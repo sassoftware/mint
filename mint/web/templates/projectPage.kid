@@ -34,7 +34,7 @@ from mint import userlevels
                 <li>0.23</li>
                 <li>0.24</li>
                 <li>0.25</li>
-                <li py:if="isOwner"><a href="images">Release Management</a></li>
+                <li py:if="isOwner"><a href="http://iso.rpath.org/images/projectDetails?projectId=${project.getItProjectId()}">Release Management</a></li>
             </ul>
 
             <p py:if="isOwner">You are an owner of this project.</p>
