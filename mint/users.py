@@ -19,6 +19,8 @@ from mint_error import MintError
 import database
 import userlevels
 
+from imagetool import imagetool
+
 class PermissionDenied(MintError):
     def __str__(self):
         return "permission denied"
@@ -98,6 +100,9 @@ class UsersTable(database.KeyedTable):
             authRepo.addAcl(repoLabel, username, None, None, False, False, False)
         except repository.netrepos.netauth.UserAlreadyExists:
             raise UserAlreadyExists
+
+        itclient = imagetool.ImageToolClient(self.cfg.imagetoolUrl)
+        itclient.newUser(username)
 
         if not active:
             message = """Thank you for registering for the rpath Linux customized

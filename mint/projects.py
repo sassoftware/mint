@@ -111,9 +111,14 @@ class ProjectsTable(database.KeyedTable):
         path = os.path.join(reposPath, hostname)
         util.mkdirChain(reposPath)
 
+        
         repos = EmptyNetworkRepositoryServer(path, None, None, None, {})
         repos.auth.addUser(username, password)
         repos.auth.addAcl(username, None, None, True, False, True)
+
+        repos.auth.addUser("anonymous", "anonymous")
+        repos.auth.addAcl("anonymous", None, None, False, False, False)
+
 
 # XXX sort of stolen from conary/server/server.py
 class EmptyNetworkRepositoryServer(NetworkRepositoryServer):
