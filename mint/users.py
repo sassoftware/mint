@@ -91,6 +91,9 @@ class UsersTable(database.KeyedTable):
             hash = sha1helper.sha1String(str(random.random()) + str(time.time()))
             return sha1helper.sha1ToString(hash)
 
+        # XXX this should be an atomic operation if possible:
+        #     it would be nice to roll back previous operations
+        #     if one in the chain fails
         authRepo = netclient.NetworkRepositoryClient(self.cfg.authRepo)
 
         confirm = confirmString()

@@ -71,6 +71,7 @@ class MintServer(object):
             raise projects.InvalidHostname
         hostname += "." + self.cfg.domainName
 
+        # XXX this set of operations should be atomic if possible
         imagetoolUrl = self.cfg.imagetoolUrl % (self.authToken[0], self.authToken[1])
         itclient = imagetool.ImageToolClient(imagetoolUrl)
         itProject = itclient.newProject(projectName)
