@@ -9,7 +9,9 @@ from mint import userlevels
     <body>
         ${header_image()}
         ${menu([("Manage Project Memberships", None, True)])}
-        
+        <?python
+            isOwner = userLevel == userlevels.OWNER
+        ?>
         <div id="content">
             <h2>Manage Project Memberships</h2>       
  
@@ -35,20 +37,22 @@ from mint import userlevels
                             <h4>Project Owners</h4>
                             <ul>
                                 <li py:for="userId, username in sorted(users[userlevels.OWNER], key=lambda x: x[1])">
-                                    <a href="memberSettings?userId=${userId}">${username}</a>
+                                    <a href="userInfo?id=${userId}">${username}</a>
+                                    <a py:if="isOwner" href="memberSettings?userId=${userId}">[edit]</a>
                                 </li>
                                 <li py:if="not users[userlevels.OWNER]">No owners.</li>
                             </ul>
                             <h4>Developers</h4>
                             <ul>
                                 <li py:for="userId, username in sorted(users[userlevels.DEVELOPER], key=lambda x: x[1])">
-                                    <a href="memberSettings?userId=${userId}">${username}</a>
+                                    <a href="userInfo?id=${userId}">${username}</a>
+                                    <a py:if="isOwner" href="memberSettings?userId=${userId}">[edit]</a>
                                 </li> 
                                 <li py:if="not users[userlevels.DEVELOPER]">No developers.</li>
                             </ul>
                         </td>
                     </tr>
-                    <tr>
+                    <tr py:if="isOwner">
                         <td>
                             <b>Add:</b>
                             <p class="help"><a href="lookupUser">Look up user</a></p>
