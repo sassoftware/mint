@@ -25,7 +25,7 @@ from mint import userlevels
                                 <option py:for="level, levelName in userlevels.names.items()"
                                         py:content="levelName"
                                         value="${level}"
-                                        py:attrs="{'selected': level == userLevel and 'selected' or None}" />
+                                        py:attrs="{'selected': level == otherUserLevel and 'selected' or None}" />
                             </select>
                         </td>
                     </tr>

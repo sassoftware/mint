@@ -65,7 +65,6 @@ class MintApp(webhandler.WebHandler):
             try:
                 self.project = self.client.getProjectByHostname(fullHost)
                 self.userLevel = self.project.getUserLevel(self.auth.userId)
-                self.req.log_error("userlevel: %d" % self.userLevel)
             except database.ItemNotFound:
                 return self._404
             default = self.projectPage
@@ -114,12 +113,18 @@ class MintApp(webhandler.WebHandler):
             self._write("error", shortError = err_name, error = str(e))
             return apache.OK
 
-    def _clearAuth(self):
-        cookie = Cookie.Cookie('authToken', '', domain = self.cfg.domainName)
-        cookie.expires = time.time() - 300
+    def _redirCookie(self, cookie):
+        # we have to add the cookie headers manually when redirecting, because 
+        # mod_python looks at err_headers_out instead of headers_out.
+
         self.req.err_headers_out.add("Cache-Control", 'no-cache="set-cookie"')
         self.req.err_headers_out.add("Set-Cookie", str(cookie))
 
+    def _clearAuth(self):
+        cookie = Cookie.Cookie('authToken', '', domain = self.cfg.domainName,
+                                                expires = time.time() - 300)
+        self._redirCookie(cookie)
+        
     def frontPage(self, auth):
         projectList = self.client.getProjectsByMember(auth.userId)
         self._write("frontPage", projectList = projectList)
@@ -167,11 +172,7 @@ class MintApp(webhandler.WebHandler):
         else:
             auth = base64.encodestring("%s:%s" % authToken).strip()
             cookie = Cookie.Cookie('authToken', auth, domain = self.cfg.domainName)
-            
-            # we have to add the cookie headers manually, because mod_python
-            # looks at err_headers_out instead of headers_out when doing a redirect.
-            self.req.err_headers_out.add("Cache-Control", 'no-cache="set-cookie"')
-            self.req.err_headers_out.add("Set-Cookie", str(cookie))
+            self._redirCookie(cookie)
             return self._redirect("frontPage")
 
     def confirm(self, id):
@@ -251,7 +252,14 @@ class MintApp(webhandler.WebHandler):
     @ownerOnly
     def memberSettings(self, auth, userId):
         user, level = self.client.getMembership(userId, self.project.getId()) 
-        self._write("memberSettings", user = user, userLevel = level)
+        self._write("memberSettings", user = user, otherUserLevel = level)
+        return apache.OK
+
+    @intFields(id = None)
+    def userInfo(self, auth, id):
+        user = self.client.getUser(id)
+        self._write("userInfo", user = user,
+            userProjects = self.client.getProjectsByUser(id))
         return apache.OK
 
     def _write(self, template, **values):

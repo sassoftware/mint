@@ -142,6 +142,18 @@ class MintServer(object):
         except StopIteration:
             raise database.ItemNotFound("membership")
 
+    def getProjectsByUser(self, userId):
+        cu = self.db.cursor()
+        cu.execute("""SELECT hostname, name, level FROM Projects, ProjectUsers
+                      WHERE Projects.projectId=ProjectUsers.projectId AND
+                            ProjectUsers.userId=?
+                      ORDER BY level, name""", userId)
+
+        rows = []
+        for r in cu.fetchall():
+            rows.append([r[0], r[1], r[2]])
+        return rows
+
     def registerNewUser(self, username, password, fullName, email, active):
         return self.users.registerNewUser(username, password, fullName, email, active)
        

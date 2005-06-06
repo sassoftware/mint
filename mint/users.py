@@ -50,11 +50,12 @@ class UsersTable(database.KeyedTable):
                     timeCreated     INT,
                     timeAccessed    INT,
                     active          INT,
+                    blurb           STR,
                     confirmation    STR
                 );"""
     fields = ['userId', 'username', 'fullName', 'email',
               'displayEmail', 'timeCreated', 'timeAccessed',
-              'active', 'confirmation']
+              'active', 'confirmation', 'blurb']
              
     def __init__(self, db, cfg):
         database.DatabaseTable.__init__(self, db)
@@ -83,6 +84,8 @@ class UsersTable(database.KeyedTable):
                         'email':        r[1],
                         'displayEmail': r[2],
                         'fullName':     r[3]}
+            else:
+                return {'authorized': False, 'userId': -1}
         else:
             return {'authorized': False, 'userId': -1}
 
@@ -114,7 +117,7 @@ distribution tool.
 
 Please follow the link below to confirm your registration:
 
-%sconfirm?id=%s
+http://%s/confirm?id=%s
 
 Contact custom@rpath.com for help, or join the IRC channel #conary
 on the Freenode IRC network (http://www.freenode.net/) for live help.
@@ -174,6 +177,9 @@ class User(database.TableObject):
 
     def getDisplayEmail(self):
         return self.displayEmail
+    
+    def getBlurb(self):
+        return self.blurb
 
     def setEmail(self, newEmail):
         return self.server.users.update(self.id, email = newEmail)

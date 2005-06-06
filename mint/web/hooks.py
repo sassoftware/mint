@@ -26,6 +26,7 @@ from mint import database
 import app
 import cookie_http
 
+profiling = False
 BUFFER=1024 * 256
 
 def getHttpAuth(req):
@@ -181,7 +182,8 @@ def putFile(port, isSecure, repos, req):
 
     return apache.OK
 
-def handler(req):
+
+def subhandler(req):
     repName = req.filename
     cfg = config.MintConfig()
     cfg.read(req.filename)
@@ -249,5 +251,15 @@ def handler(req):
 	return putFile(port, secure, repo, req)
     else:
 	return apache.HTTP_METHOD_NOT_ALLOWED
+
+def handler(req):
+    if profiling:
+        import hotshot
+        prof = hotshot.Profile("/tmp/mint.prof")
+        ret = prof.runcall(subhandler, req)
+        prof.close()
+    else:
+        ret = subhandler(req)
+    return ret
 
 repositories = {}
