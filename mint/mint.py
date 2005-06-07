@@ -12,11 +12,10 @@ import users
 import projects
 import database
 
-class Client:
+class MintClient(Client):
     def __init__(self, server):
         self.server = ServerProxy(server)
 
-class MintClient(Client):
     def newProject(self, name, hostname, desc = ""):
         return self.server.newProject(name, hostname, desc)
 
