@@ -183,10 +183,13 @@ class User(database.TableObject):
         return self.blurb
 
     def setEmail(self, newEmail):
-        return self.server.users.update(self.id, email = newEmail)
+        return self.server.setUserEmail(self.id, newEmail)
 
     def setDisplayEmail(self, newEmail):
-        return self.server.users.update(self.id, displayEmail = newEmail)
+        return self.server.setUserDisplayEmail(self.id, newEmail)
+
+    def setPassword(self, newPassword):
+        pass
 
 class ProjectUsersTable(database.DatabaseTable):
     name = "ProjectUsers"

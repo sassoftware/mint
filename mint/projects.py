@@ -75,6 +75,9 @@ class Project(database.TableObject):
     def setDesc(self, desc):
         return self.server.setProjectDesc(self.id, desc)
 
+    def updateUser(self, userId, **kwargs):
+        return self.users.update(userId, **kwargs)
+
 class ProjectsTable(database.KeyedTable):
     name = 'Projects'
     key = 'projectId'

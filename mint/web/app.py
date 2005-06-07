@@ -13,7 +13,6 @@ from mod_python import apache
 from mod_python import Cookie
 from mod_python.util import FieldStorage
 
-#import conary
 from web import webhandler
 from web.fields import strFields, intFields, listFields, boolFields
 
@@ -22,7 +21,7 @@ from mint import projects
 from mint import database
 from mint import users
 from mint import userlevels
-from mint.mint_error import MintError
+from mint import mint_error
 
 def requiresAuth(func):
     def wrapper(self, **kwargs):
@@ -107,7 +106,7 @@ class MintApp(webhandler.WebHandler):
         d['auth'] = self.auth
         try:
             return method(**d)
-        except MintError, e:
+        except mint_error.MintError, e:
             err_name = sys.exc_info()[0].__name__
             self.req.log_error("%s: %s" % (err_name, str(e)))
             self._write("error", shortError = err_name, error = str(e))
@@ -197,12 +196,26 @@ class MintApp(webhandler.WebHandler):
         self._write("userSettings")
         return apache.OK
 
-    @strFields(email = "", password1 = "", password2 = "")
+    @strFields(email = "", displayEmail = "", password1 = "", password2 = "")
     @requiresAuth
-    def editUserSettings(self, auth):
-        if not email:
-            email = auth.email
-        # XXX finish this
+    def editUserSettings(self, auth, email, displayEmail, password1, password2):
+        #if email != auth.email:
+        #    # XXX confirm valid email
+        #    self.user.setEmail(email)
+        if displayEmail != auth.displayEmail:
+            self.user.setDisplayEmail(displayEmail)
+
+        if password1 != password2:
+            self._write("error", shortError = "Registration Error",
+                        error = "Passwords do not match.")
+        elif len(password1) < 6:
+            self._write("error", shortError = "Registration Error",
+                        error = "Password must be 6 characters or longer.")
+        else:
+            self.user.setPassword(password1)
+            return self._redirect("logout")
+
+        return self._redirect("frontPage")
 
     @requiresAuth
     def newProject(self, auth):

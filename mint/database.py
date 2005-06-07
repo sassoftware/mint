@@ -18,6 +18,7 @@ class ItemNotFound(MintError):
 class DuplicateItem(MintError):
     def __init__(self, item = "item"):
         self.item = item
+
     def __str__(self):
         return "duplicate item in %s" % self.item
 
@@ -100,4 +101,4 @@ class KeyedTable(DatabaseTable):
         cu = self.db.cursor()
         cu.execute(*[stmt] + values + [id])
         self.db.commit()
-        
+        return 0 

@@ -162,6 +162,12 @@ class MintServer(object):
     def checkAuth(self):
         return self.auth.__dict__
 
+    def setUserEmail(self, userId, email):
+        return self.users.update(userId, email = email)
+
+    def setUserDisplayEmail(self, userId, displayEmail):
+        return self.users.update(userId, displayEmail = displayEmail)
+
     def __init__(self, cfg):
         self.cfg = cfg
         self.db = sqlite3.connect(cfg.dbPath, timeout = 30000)
