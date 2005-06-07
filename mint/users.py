@@ -99,9 +99,9 @@ class UsersTable(database.KeyedTable):
         #     it would be nice to roll back previous operations
         #     if one in the chain fails
         authRepo = netclient.NetworkRepositoryClient(self.cfg.authRepo)
- 
         confirm = confirmString()
         repoLabel = self.cfg.authRepo.keys()[0]
+
         try: 
             authRepo.addUser(repoLabel, username, password)
             authRepo.addAcl(repoLabel, username, None, None, False, False, False)
@@ -213,6 +213,12 @@ class ProjectUsersTable(database.DatabaseTable):
     def new(self, projectId, userId, level):
         assert(level in userlevels.LEVELS)
         cu = self.db.cursor()
+
+        cu.execute("SELECT * FROM ProjectUsers WHERE projectId=? AND userId=?",
+                   projectId, userId)
+        if cu.fetchall():
+            raise database.DuplicateItem("membership")
+        
         cu.execute("INSERT INTO ProjectUsers VALUES(?, ?, ?)", projectId, userId, level)
         self.db.commit()
         return 0
