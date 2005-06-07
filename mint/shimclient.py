@@ -11,17 +11,16 @@ class ShimMintClient(mint.MintClient):
         self.server = ShimServerProxy(cfg, authToken)
 
 class _ShimMethod(mint._Method):
-    def __init__(self, cfg, authToken, name):
-        self.__cfg = cfg
-        self.__authToken = authToken
-        self.__name = name
+    def __init__(self, server, authToken, name):
+        self._server = server
+        self._authToken = authToken
+        self._name = name
 
     def __repr__(self):
         return "<mint._ShimMethod(%r)>" % (self._ShimMethod__name)
 
     def __call__(self, *args):
-        server = MintServer(self.__cfg)
-        isException, result = server.callWrapper(self.__name, self.__authToken, args)
+        isException, result = self._server.callWrapper(self._name, self._authToken, args)
 
         if not isException:
             return result
@@ -30,8 +29,9 @@ class _ShimMethod(mint._Method):
 
 class ShimServerProxy(mint.ServerProxy):
     def __init__(self, cfg, authToken):
-        self.__cfg = cfg
-        self.__authToken = authToken
+        self._cfg = cfg
+        self._authToken = authToken
+        self._server = MintServer(self._cfg)
 
     def __getattr__(self, name):
-        return _ShimMethod(self.__cfg, self.__authToken, name)
+        return _ShimMethod(self._server, self._authToken, name)

@@ -149,7 +149,7 @@ on the Freenode IRC network (http://www.freenode.net/) for live help.
         if cu.fetchone():
             raise AlreadyConfirmed
 
-        cu.execute("SELECT userId FROM Users WHERE active=0 AND confirmation=?", confirm)
+        cu.execute("SELECT userId FROM Users WHERE confirmation=? AND active=0", confirm)
         if len(cu.fetchall()) != 1:
             raise ConfirmError
         else:
