@@ -61,23 +61,24 @@ class UsersTable(database.KeyedTable):
         database.DatabaseTable.__init__(self, db)
         self.cfg = cfg
              
-    def checkAuth(self, authToken):
+    def checkAuth(self, authToken, checkRepo = True):
         username, password = authToken
-
         cu = self.db.cursor()
         cu.execute("""SELECT userId, email, displayEmail, fullName FROM Users 
                       WHERE username=? AND active=1""", username)
         r = cu.fetchone()
 
         if r:
-            authUrl = self.cfg.authRepoUrl % (username, password)
-            authLabel = self.cfg.authRepo.keys()[0]
-            
-            authRepo = {authLabel: authUrl}
-            repo = netclient.NetworkRepositoryClient(authRepo)
-            
-            groups = repo.getUserGroups(authLabel)
-            if username in groups:
+            groups = []
+            if checkRepo:
+                authUrl = self.cfg.authRepoUrl % (username, password)
+                authLabel = self.cfg.authRepo.keys()[0]
+                
+                authRepo = {authLabel: authUrl}
+                repo = netclient.NetworkRepositoryClient(authRepo)
+                groups = repo.getUserGroups(authLabel)
+                
+            if username in groups or not checkRepo:
                 return {'authorized':   True,
                         'userId':       r[0],
                         'username':     username,
@@ -98,7 +99,7 @@ class UsersTable(database.KeyedTable):
         #     it would be nice to roll back previous operations
         #     if one in the chain fails
         authRepo = netclient.NetworkRepositoryClient(self.cfg.authRepo)
-
+ 
         confirm = confirmString()
         repoLabel = self.cfg.authRepo.keys()[0]
         try: 

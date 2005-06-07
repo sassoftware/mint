@@ -35,20 +35,22 @@ def requiresAuth(func):
     return wrapper
 
 class MintServer(object):
+    _checkRepo = True
     def callWrapper(self, methodName, authToken, args):
         if methodName.startswith('_'):
             raise AttributeError
         try:
-            # try and get the method to see if it exists
             method = self.__getattribute__(methodName)
-
-            # check authorization
-            auth = self.users.checkAuth(authToken)
-            self.authToken = authToken
-            self.auth = users.Authorization(**auth)
         except AttributeError:
             return (True, ("MethodNotSupported", methodName, ""))
         try:
+            # check authorization
+            auth = self.users.checkAuth(authToken, checkRepo = self._checkRepo)
+            self.authToken = authToken
+            self.auth = users.Authorization(**auth)
+            if self.auth.authorized:
+                self._checkRepo = False
+                
             r = method(*args)
         except users.UserAlreadyExists, e:
             return (True, ("UserAlreadyExists", str(e)))
