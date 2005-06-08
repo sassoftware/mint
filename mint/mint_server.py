@@ -178,6 +178,10 @@ class MintServer(object):
     def setUserDisplayEmail(self, userId, displayEmail):
         return self.users.update(userId, displayEmail = displayEmail)
 
+    def confirmUser(self, confirmation):
+        userId = self.users.confirm(confirmation)
+        return userId
+
     def __init__(self, cfg):
         self.cfg = cfg
         self.db = sqlite3.connect(cfg.dbPath, timeout = 30000)

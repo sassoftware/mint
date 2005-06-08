@@ -1,6 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <?python
 messages = { '':          'If you do not have an account, please <a href="register">register</a>.',
+             'confirm':   'Please wait for the confirmation message in your email.',
              'confirmed': 'Your account has been confirmed. Please log in now.',
              'invalid':   'Sorry, the username or password is incorrect.' }
 ?>

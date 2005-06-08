@@ -148,7 +148,7 @@ class MintApp(webhandler.WebHandler):
                 self._write("error", shortError = "Registration Error",
                             error = "An account with that username already exists.")
             else:
-                return self._redirect("login")
+                return self._redirect("login?message=confirm")
         return apache.OK
 
     @strFields(message = "")
@@ -174,7 +174,8 @@ class MintApp(webhandler.WebHandler):
             self._redirCookie(cookie)
             return self._redirect("frontPage")
 
-    def confirm(self, id):
+    @strFields(id = None)
+    def confirm(self, auth, id):
         try:
             self.client.confirmUser(id)
         except users.ConfirmError:
