@@ -1,7 +1,6 @@
 #!/usr/bin/python2.4
-# -*- mode: python -*-
 #
-# Copyright (c) 2004-2005 Specifix, Inc.
+# Copyright (c) 2004-2005 rpath, Inc.
 #
 import conary
 import sys
@@ -17,11 +16,11 @@ sys.path.insert(0, ".")
 import sqlite3
 from imagetool import users
 
-def addUser(dbPath, username, password):
+def addUser(dbPath, username):
     db = sqlite3.connect(dbPath, timeout = 30000)
 
-    usersTable = users.UsersTable(db)
-    return usersTable.newUser(username, password, None, None, True)
+    usersTable = users.UsersTable(db, None)
+    return usersTable.newUser(username, True)
 
 def usage():
     print "usage: %s <username> <path to imagetool db>" % sys.argv[0]
@@ -30,18 +29,5 @@ def usage():
 if len(sys.argv) != 3:
     usage()
 
-if os.isatty(0):
-    from getpass import getpass
-
-    pw1 = getpass('Password:')
-    pw2 = getpass('Reenter password:')
-
-    if pw1 != pw2:
-        print "Passwords do not match."
-        sys.exit(1)
-else:
-    # chop off the trailing newline
-    pw1 = sys.stdin.readline()[:-1]
-
-uid = addUser(sys.argv[2], sys.argv[1], pw1)
+uid = addUser(sys.argv[2], sys.argv[1])
 print "User added. Id: %d" % uid
