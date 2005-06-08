@@ -46,6 +46,8 @@ from mint import users
 from mint import config
 from mint import shimclient
 
+import imagetool
+
 #test
 import recipes
 import testsuite
@@ -123,22 +125,23 @@ class ChildRepository(RepositoryServer):
 
 class ApacheServer(ChildRepository):
     def __init__(self, name, server, serverDir, reposDir, conaryPath,
-                 mintPath, repMap, useCache = False):
+                 mintPath, itPath, repMap, useCache = False):
         ChildRepository.__init__(self, name, server, serverDir, reposDir,
                                  conaryPath)
         self.serverpid = -1
 
         self.mintPath = mintPath
+        self.itPath = itPath
         self.serverRoot = tempfile.mkdtemp()
 	os.mkdir(self.serverRoot + "/tmp")
 	os.symlink("/usr/lib/httpd/modules", self.serverRoot + "/modules")
 	testDir = os.path.realpath(os.path.dirname(
             sys.modules['rephelp'].__file__))
 	os.system("sed 's|@NETRPATH@|%s|;s|@CONARYPATH@|%s|;s|@PORT@|%s|;"
-		       "s|@DOCROOT@|%s|;s|@MINTPATH@|%s|'"
+		       "s|@DOCROOT@|%s|;s|@MINTPATH@|%s|;s|@ITPATH@|%s|'"
 		    " < %s/server/httpd.conf.in > %s/httpd.conf"
 		    % (self.serverDir, conaryPath, str(self.port),
-		       self.serverRoot, mintPath, testDir,
+		       self.serverRoot, mintPath, itPath, testDir,
                        self.serverRoot))
 	f = open("%s/test.cnr" % self.serverRoot, "w")
 	print >> f, 'repositoryDir %s' % self.reposDir
@@ -157,8 +160,17 @@ class ApacheServer(ChildRepository):
         print >> f, 'xmlrpcEnabled True'
         print >> f, 'authRepo %s http://test:foo@localhost:%d/conary/' % (self.name, self.port)
         print >> f, 'authRepoUrl http://%%s:%%s@localhost:%d/conary/' % (self.port)
+        print >> f, 'imagetoolUrl http://%%s:%%s@localhost:%d/images/' % (self.port)
+        print >> f, 'authUser test'
+        print >> f, 'authPass foo'
         f.close()
 
+        f = open("%s/imagetool.conf" % self.serverRoot, "w")
+        print >> f, 'dbPath %s' % self.reposDir + '/imagetooldb'
+        print >> f, 'authRepo %s http://test:foo@localhost:%d/conary/' % (self.name, self.port)
+        print >> f, 'authRepoUrl http://%%s:%%s@localhost:%d/conary/' % (self.port)
+        f.close()
+        
     def __del__(self):
 	self.stop()
 	shutil.rmtree(self.serverRoot)
@@ -204,7 +216,13 @@ class ApacheServer(ChildRepository):
                        fullName="Test User",
                        email="test@example.com",
                        active = True)
-        
+       
+        cfg = imagetool.imagetool.ImageToolConfig()
+        cfg.read("%s/imagetool.conf" % self.serverRoot)
+        db = sqlite3.connect(self.reposDir + "/imagetooldb", timeout = 30000)
+        usersTable = imagetool.users.UsersTable(db, cfg)
+        usersTable.newUser("test", True)
+       
     def stop(self):
         if self.serverpid != -1:
             # HACK
@@ -224,7 +242,7 @@ class ServerCache:
     def __init__(self):
         self.servers = [ None ] * 5
 
-    def startServer(self, reposDir, conaryPath, mintPath, serverIdx = 0):
+    def startServer(self, reposDir, conaryPath, mintPath, itPath, serverIdx = 0):
         if self.servers[serverIdx] is not None:
             return self.servers[serverIdx]
 
@@ -247,6 +265,7 @@ class ServerCache:
                                               reposDir,
                                               conaryPath,
                                               mintPath,
+                                              itPath,
                                               self.getMap())
         self.servers[serverIdx].start()
         return self.servers[serverIdx]
@@ -304,7 +323,7 @@ class RepositoryHelper(testsuite.TestCase):
 
     def openRepository(self, serverIdx=0):
         server = self.servers.startServer(self.reposDir, self.conaryDir,
-                                          self.mintDir, serverIdx)
+                                          self.mintDir, self.itDir, serverIdx)
         # make sure map is up to date
         self.cfg.repositoryMap.update(self.servers.getMap())
 

@@ -12,10 +12,15 @@ from mint import users
 
 class AuthTest(rephelp.RepositoryHelper):
     def testNewUser(self):
-        itclient = self.openMint(('test', 'foo'))
+        client = self.openMint(('test', 'foo'))
 
-        userId = itclient.registerNewUser("testuser", "testpass", "Test User",
-                                          "test@example.com", active=True)
-
+        userId = client.registerNewUser("testuser", "testpass", "Test User",
+                                        "test@example.com", active=True)
+        
+        client = self.openMint(("testuser", "testpass"))
+        auth = client.checkAuth()
+        assert(auth.authorized)
+        assert(auth.userId == userId)
+        
 if __name__ == "__main__":
     testsuite.main()
