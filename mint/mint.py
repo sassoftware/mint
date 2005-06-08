@@ -12,7 +12,7 @@ import users
 import projects
 import database
 
-class MintClient(Client):
+class MintClient:
     def __init__(self, server):
         self.server = ServerProxy(server)
 
