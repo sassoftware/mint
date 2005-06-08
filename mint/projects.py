@@ -95,6 +95,10 @@ class ProjectsTable(database.KeyedTable):
     fields = ['creatorId', 'name', 'hostname', 'defaultBranch',
               'desc', 'timeCreated', 'timeModified', 'itProjectId']
 
+    def __init__(self, db, cfg):
+        database.DatabaseTable.__init__(self, db)
+        self.cfg = cfg
+
     def getProjectIdByHostname(self, hostname):
         cu = self.db.cursor()
 
@@ -125,6 +129,11 @@ class ProjectsTable(database.KeyedTable):
 
         repos.auth.addUser("anonymous", "anonymous")
         repos.auth.addAcl("anonymous", None, None, False, False, False)
+
+        # add the mint auth user so we can add additional permissions
+        # to this repository
+        repos.auth.addUser(self.cfg.authUser, self.cfg.authPass)
+        repos.auth.addAcl(self.cfg.authUser, None, None, True, False, True)
 
 # XXX sort of stolen from conary/server/server.py
 class EmptyNetworkRepositoryServer(NetworkRepositoryServer):

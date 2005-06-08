@@ -109,9 +109,9 @@ class MintServer(object):
     @requiresAuth
     def addMember(self, projectId, userId, username, level):
         assert(level in userlevels.LEVELS)
+        project = projects.Project(self, self.getProject(projectId))
+
         cu = self.db.cursor()
-        
-        # XXX check for dups here
         if username and not userId:
             cu.execute("SELECT userId FROM Users WHERE username=?",
                        username)
@@ -119,8 +119,18 @@ class MintServer(object):
                 userId = cu.next()[0]
             except StopIteration:
                 raise database.ItemNotFound("user")
+        
+        self.projectUsers.new(projectId, userId, level)
+        authUrl = "http://%s:%s@%s/conary/" % (self.cfg.authUser, self.cfg.authPass,
+                                               project.getHostname())
+        authLabel = project.getLabel()
 
-        return self.projectUsers.new(projectId, userId, level)
+        authRepo = {authLabel: authUrl}
+        repo = netclient.NetworkRepositoryClient(authRepo)
+        repos.auth.addUser(username, password)
+        repos.auth.addAcl(username, None, None, True, False, level == userlevels.OWNER)
+
+        return 0
 
     @requiresAuth
     def delMember(self, projectId, userId):
@@ -172,6 +182,6 @@ class MintServer(object):
         self.cfg = cfg
         self.db = sqlite3.connect(cfg.dbPath, timeout = 30000)
         
-        self.projects = projects.ProjectsTable(self.db)
+        self.projects = projects.ProjectsTable(self.db, self.cfg)
         self.users = users.UsersTable(self.db, self.cfg)
         self.projectUsers = users.ProjectUsersTable(self.db)
