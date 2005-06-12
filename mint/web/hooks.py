@@ -224,13 +224,15 @@ def subhandler(req):
         urlBase = "%%(protocol)s://%s:%%(port)d" % \
                         (req.hostname) + rest
         
+        buildLabel = req.hostname + "@rpl:devel"
+        repMap = buildLabel + " http://" + req.hostname + "/conary/"
         repositories[repName] = netserver.NetworkRepositoryServer(
                                 repositoryDir,
                                 cfg.tmpPath,
                                 urlBase, 
                                 req.hostname,
                                 {},
-                                commitAction = None,
+                                commitAction = cfg.commitAction % {'repMap': repMap, 'buildLabel': buildLabel},
                                 cacheChangeSets = True,
                                 logFile = None)
 
