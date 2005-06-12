@@ -198,49 +198,46 @@ def subhandler(req):
             port = 80
     secure = (port == 443)
 
-    if req.path_info.startswith("/conary"):
-        if not repositories.has_key(repName):
-            db = sqlite3.connect(cfg.dbPath, timeout = 30000)
-            projectsTable = projects.ProjectsTable(db, cfg)
-            try:
-                projectId = projectsTable.getProjectIdByHostname(req.hostname)
-            except database.ItemNotFound:
-                return apache.HTTP_NOT_FOUND
+    if not repositories.has_key(repName):
+        db = sqlite3.connect(cfg.dbPath, timeout = 30000)
+        projectsTable = projects.ProjectsTable(db, cfg)
+        try:
+            projectId = projectsTable.getProjectIdByHostname(req.hostname)
+        except database.ItemNotFound:
+            return apache.HTTP_NOT_FOUND
 
-            repositoryDir = os.path.join(cfg.reposPath, req.hostname)
+        repositoryDir = os.path.join(cfg.reposPath, req.hostname)
 
-            if os.path.basename(req.uri) == "changeset":
-               rest = os.path.dirname(req.uri) + "/"
-            else:
-               rest = req.uri
+        if os.path.basename(req.uri) == "changeset":
+           rest = os.path.dirname(req.uri) + "/"
+        else:
+           rest = req.uri
 
-            rest = req.uri
-            # pull out any queryargs
-            if '?' in rest:
-                rest = req.uri.split("?")[0]
+        rest = req.uri
+        # pull out any queryargs
+        if '?' in rest:
+            rest = req.uri.split("?")[0]
 
-            # and throw away any subdir portion
-            rest = req.uri[:-len(req.path_info)] + '/'
-            
-            urlBase = "%%(protocol)s://%s:%%(port)d" % \
-                            (req.server.server_hostname) + rest
+        # and throw away any subdir portion
+        rest = req.uri[:-len(req.path_info)] + '/'
+        
+        urlBase = "%%(protocol)s://%s:%%(port)d" % \
+                        (req.hostname) + rest
+        
+        repositories[repName] = netserver.NetworkRepositoryServer(
+                                repositoryDir,
+                                cfg.tmpPath,
+                                urlBase, 
+                                req.hostname,
+                                {},
+                                commitAction = None,
+                                cacheChangeSets = True,
+                                logFile = None)
 
-            repositories[repName] = netserver.NetworkRepositoryServer(
-                                    repositoryDir,
-                                    cfg.tmpPath,
-                                    urlBase, 
-                                    req.hostname,
-                                    {},
-                                    commitAction = None,
-                                    cacheChangeSets = True,
-                                    logFile = None)
-
-            repositories[repName].forceSecure = False
-            repositories[repName].cfg = cfg
-       
-        repo = repositories[repName]
-    else:
-        repo = None
+        repositories[repName].forceSecure = False
+        repositories[repName].cfg = cfg
+   
+    repo = repositories[repName]
         
     if method == "POST":
 	return post(port, secure, repo, cfg, req)
