@@ -182,6 +182,9 @@ class MintServer(object):
         userId = self.users.confirm(confirmation)
         return userId
 
+    def getUserIdByName(self, username):
+        return self.users.getIdByColumn("username", username)
+
     def __init__(self, cfg):
         self.cfg = cfg
         self.db = sqlite3.connect(cfg.dbPath, timeout = 30000)

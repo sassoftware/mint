@@ -75,6 +75,16 @@ class KeyedTable(DatabaseTable):
             data[key] = r[i]
         return data
 
+    def getIdByColumn(self, column, value):
+        cu = self.db.cursor()
+    
+        stmt = "SELECT %s FROM %s WHERE %s = ?" % (self.key, self.name, column)
+        cu.execute(stmt, value)
+        try:
+            r = cu.next()
+        except StopIteration:
+            raise ItemNotFound(self.name)
+
     def new(self, **kwargs):
         values = kwargs.values()
         cols = kwargs.keys()

@@ -198,11 +198,10 @@ def subhandler(req):
             port = 80
     secure = (port == 443)
 
-
     if req.path_info.startswith("/conary"):
         if not repositories.has_key(repName):
             db = sqlite3.connect(cfg.dbPath, timeout = 30000)
-            projectsTable = projects.ProjectsTable(db)
+            projectsTable = projects.ProjectsTable(db, cfg)
             try:
                 projectId = projectsTable.getProjectIdByHostname(req.hostname)
             except database.ItemNotFound:
