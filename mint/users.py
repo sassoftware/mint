@@ -4,11 +4,11 @@
 # All Rights Reserved
 #
 import random
+import string
 import sys
 import time
 
 import email
-from email import MIMEText
 import smtplib
 
 from repository import netclient
@@ -113,27 +113,18 @@ class UsersTable(database.KeyedTable):
         itclient.newUser(username, internalUser = False)
 
         if not active:
-            message = """Thank you for registering for the rpath Linux customized
-distribution tool.
+            message = "\n".join("Thank you for registering for the rpath Linux customized",
+                                "distribution tool.",
+                                "",
+                                "Please follow the link below to confirm your registration:",
+                                "",
+                                "http://%s/confirm?id=%s" % (self.cfg.domainName, confirm),
+                                "",
+                                "Contact custom@rpath.com for help, or join the IRC channel #conary",
+                                "on the Freenode IRC network (http://www.freenode.net/) for live help.")
 
-Please follow the link below to confirm your registration:
-
-http://%s/confirm?id=%s
-
-Contact custom@rpath.com for help, or join the IRC channel #conary
-on the Freenode IRC network (http://www.freenode.net/) for live help.
-""" % (self.cfg.domainName, confirm)
-
-            msg = MIMEText.MIMEText(message)
-            msg['Subject'] = "rpath Linux Mint Registration"
-            msg['From'] = "\"rpath Linux\" <%s>" % self.cfg.adminMail
-            msg['To'] = email
-
-            s = smtplib.SMTP()
-            s.connect()
-            s.sendmail(self.cfg.adminMail, [email], msg.as_string())
-            s.close()
-    
+            sendMail(self.cfg.adminMail, "rpath.com", email, "rpath.com registration", message)
+            
         try:
             userId = self.new(username = username,
                               fullName = fullName,
@@ -189,6 +180,7 @@ class User(database.TableObject):
         return self.server.setUserDisplayEmail(self.id, newEmail)
 
     def setPassword(self, newPassword):
+        # XXX finish me
         pass
 
 class ProjectUsersTable(database.DatabaseTable):
@@ -242,3 +234,19 @@ class Authorization:
 
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
+
+def newPassword():
+    choices = string.letters + string.digits
+    pw = "".join([random.choice(choices) for x in range(6)])
+    return pw
+
+def sendMail(fromEmail, fromEmailName, toEmail, subject, body):
+    msg = email.MIMEText.MIMEText(body)
+    msg['Subject'] = subject
+    msg['From'] = '"%s" <%s>' % (fromEmailName, fromEmail)
+    msg['To'] = toEmail
+
+    s = smtplib.SMTP()
+    s.connect()
+    s.sendmail(fromEmail, [toEmail], msg.as_string())
+    s.close()

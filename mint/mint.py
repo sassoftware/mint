@@ -46,6 +46,9 @@ class MintClient:
     def confirmUser(self, confirmId):
         return self.server.confirmUser(confirmId)
 
+    def getUserIdByName(self, username):
+        return self.server.getUserIdByName(username)
+
 class ServerProxy(xmlrpclib.ServerProxy):
     def __getattr__(self, name):
         return _Method(self.__request, name)

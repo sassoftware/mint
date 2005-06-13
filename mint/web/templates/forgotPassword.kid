@@ -30,7 +30,8 @@ messages = { '':          'If you do not have an account, please <a href="regist
                 </tr>
             </table>
 
-            <p><input type="submit" value="Log In" /></p>
+            <p><input type="submit" name="submit" value="Log In" /> <input type="submit" name="submit" value="Forgot Password" /></p>
+            <p class="help">If you have forgotten your password, please enter only your username above, and click Forgot Password.</p>
         </form>
         ${html_footer()}
         </div>

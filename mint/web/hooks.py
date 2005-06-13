@@ -184,7 +184,7 @@ def putFile(port, isSecure, repos, req):
 
 
 def subhandler(req):
-    repName = req.filename
+    repName = req.hostname
     cfg = config.MintConfig()
     cfg.read(req.filename)
     # XXX hack, combine these names
@@ -199,13 +199,6 @@ def subhandler(req):
     secure = (port == 443)
 
     if not repositories.has_key(repName):
-        db = sqlite3.connect(cfg.dbPath, timeout = 30000)
-        projectsTable = projects.ProjectsTable(db, cfg)
-        try:
-            projectId = projectsTable.getProjectIdByHostname(req.hostname)
-        except database.ItemNotFound:
-            return apache.HTTP_NOT_FOUND
-
         repositoryDir = os.path.join(cfg.reposPath, req.hostname)
 
         if os.path.basename(req.uri) == "changeset":
@@ -224,17 +217,21 @@ def subhandler(req):
         urlBase = "%%(protocol)s://%s:%%(port)d" % \
                         (req.hostname) + rest
         
+        # set up the commitAction
         buildLabel = req.hostname + "@rpl:devel"
         repMap = buildLabel + " http://" + req.hostname + "/conary/"
+        commitAction = cfg.commitAction % {'repMap': repMap, 'buildLabel': buildLabel}
+        
         repositories[repName] = netserver.NetworkRepositoryServer(
-                                repositoryDir,
-                                cfg.tmpPath,
-                                urlBase, 
-                                req.hostname,
-                                {},
-                                commitAction = cfg.commitAction % {'repMap': repMap, 'buildLabel': buildLabel},
-                                cacheChangeSets = True,
-                                logFile = None)
+                                    repositoryDir,
+                                    cfg.tmpPath,
+                                    urlBase, 
+                                    req.hostname,
+                                    {},
+                                    commitAction = commitAction,
+                                    cacheChangeSets = True,
+                                    logFile = None
+                                )
 
         repositories[repName].forceSecure = False
         repositories[repName].cfg = cfg

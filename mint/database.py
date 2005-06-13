@@ -68,7 +68,7 @@ class KeyedTable(DatabaseTable):
         try:
             r = cu.next()
         except StopIteration:
-            raise ItemNotFound(self.name)
+            raise ItemNotFound('user')
 
         data = {}
         for i, key in enumerate(self.fields):
@@ -81,9 +81,9 @@ class KeyedTable(DatabaseTable):
         stmt = "SELECT %s FROM %s WHERE %s = ?" % (self.key, self.name, column)
         cu.execute(stmt, value)
         try:
-            r = cu.next()
+            return cu.next()[0]
         except StopIteration:
-            raise ItemNotFound(self.name)
+            raise ItemNotFound('user')
 
     def new(self, **kwargs):
         values = kwargs.values()

@@ -160,20 +160,36 @@ class MintApp(webhandler.WebHandler):
         self._clearAuth()
         return self._redirect("login")
 
-    @strFields(username = None, password = None)
-    def login2(self, auth, username, password):
-        authToken = (username, password)
-        client = shimclient.ShimMintClient(self.cfg, authToken)
-        auth = client.checkAuth()
-        
-        if not auth.authorized:
-            return self._redirect("login?message=invalid")
-        else:
-            auth = base64.encodestring("%s:%s" % authToken).strip()
-            cookie = Cookie.Cookie('authToken', auth, domain = self.cfg.domainName)
-            self._redirCookie(cookie)
-            return self._redirect("frontPage")
+    @strFields(username = None, password = '', submit = None)
+    def login2(self, auth, username, password, submit):
+        if submit == "Log In":
+            authToken = (username, password)
+            client = shimclient.ShimMintClient(self.cfg, authToken)
+            auth = client.checkAuth()
+            
+            if not auth.authorized:
+                return self._redirect("login?message=invalid")
+            else:
+                auth = base64.encodestring("%s:%s" % authToken).strip()
+                cookie = Cookie.Cookie('authToken', auth, domain = self.cfg.domainName)
+                self._redirCookie(cookie)
+                return self._redirect("frontPage")
+        elif submit == "Forgot Password":
+            newpw = users.newPassword()
+            
+            userId = self.client.getUserIdByName(username)
+            user = self.client.getUser(userId)
+            user.setPassword(newpw)
+            
+            message = "\n".join(["Your password for rpath.com has been reset to:",
+                                 "    %s" % newpw,
+                                 "",
+                                 "Please log in at http://www.rpath.com/ and change",
+                                 "this password as soon as possible."])
 
+            users.sendMail(self.cfg.adminMail, "rpath.com", user.getEmail(),
+                           "rpath.com forgotten password", message)
+        
     @strFields(id = None)
     def confirm(self, auth, id):
         try:
