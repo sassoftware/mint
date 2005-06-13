@@ -113,15 +113,15 @@ class UsersTable(database.KeyedTable):
         itclient.newUser(username, internalUser = False)
 
         if not active:
-            message = "\n".join("Thank you for registering for the rpath Linux customized",
-                                "distribution tool.",
-                                "",
-                                "Please follow the link below to confirm your registration:",
-                                "",
-                                "http://%s/confirm?id=%s" % (self.cfg.domainName, confirm),
-                                "",
-                                "Contact custom@rpath.com for help, or join the IRC channel #conary",
-                                "on the Freenode IRC network (http://www.freenode.net/) for live help.")
+            message = "\n".join(["Thank you for registering for the rpath Linux customized",
+                                 "distribution tool.",
+                                 "",
+                                 "Please follow the link below to confirm your registration:",
+                                 "",
+                                 "http://%s/confirm?id=%s" % (self.cfg.domainName, confirm),
+                                 "",
+                                 "Contact custom@rpath.com for help, or join the IRC channel #conary",
+                                 "on the Freenode IRC network (http://www.freenode.net/) for live help."])
 
             sendMail(self.cfg.adminMail, "rpath.com", email, "rpath.com registration", message)
             
