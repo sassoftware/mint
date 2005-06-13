@@ -11,10 +11,10 @@ import projects
 import users
 import database
 import userlevels
-
-# exceptions
 from mint_error import MintError
+
 import repository.netrepos.netauth
+from repository import netclient
 
 from imagetool import imagetool
 
@@ -63,6 +63,15 @@ class MintServer(object):
 #            return (True, (exc_name, error, ""))
         else:
             return (False, r)
+
+    def _getAuthRepo(self, project):
+        authUrl = "http://%s:%s@%s/conary/" % (self.cfg.authUser, self.cfg.authPass,
+                                               project.getHostname())
+        authLabel = project.getLabel()
+
+        authRepo = {authLabel: authUrl}
+        repo = netclient.NetworkRepositoryClient(authRepo)
+        return repo
 
     # project methods
     @requiresAuth
@@ -121,16 +130,11 @@ class MintServer(object):
                 raise database.ItemNotFound("user")
         
         self.projectUsers.new(projectId, userId, level)
-        authUrl = "http://%s:%s@%s/conary/" % (self.cfg.authUser, self.cfg.authPass,
-                                               project.getHostname())
-        authLabel = project.getLabel()
-
-        authRepo = {authLabel: authUrl}
-        repo = netclient.NetworkRepositoryClient(authRepo)
+        repos = self._getAuthRepo(project)
         repos.auth.addUser(username, password)
         repos.auth.addAcl(username, None, None, True, False, level == userlevels.OWNER)
 
-        return 0
+        return True
 
     @requiresAuth
     def delMember(self, projectId, userId):
@@ -172,9 +176,11 @@ class MintServer(object):
     def checkAuth(self):
         return self.auth.__dict__
 
+    @requiresAuth
     def setUserEmail(self, userId, email):
         return self.users.update(userId, email = email)
 
+    @requiresAuth
     def setUserDisplayEmail(self, userId, displayEmail):
         return self.users.update(userId, displayEmail = displayEmail)
 
@@ -184,6 +190,22 @@ class MintServer(object):
 
     def getUserIdByName(self, username):
         return self.users.getIdByColumn("username", username)
+
+    @requiresAuth
+    def setPassword(self, userId, newPassword):
+        username = self.users.get(userId)['username']
+
+        authRepo = netclient.NetworkRepositoryClient(self.cfg.authRepo)
+        authLabel = self.cfg.authRepo.keys()[0]
+        authRepo.changePassword(authLabel, username, newPassword)
+
+        for projectId in self.getProjectIdsByMember(userId):
+            project = projects.Project(self, projectId)
+            
+            authRepo = self._getAuthRepo(project)
+            authRepo.changePassword(project.getLabel(), username, newPassword)
+            
+        return True
 
     def __init__(self, cfg):
         self.cfg = cfg

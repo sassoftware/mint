@@ -180,7 +180,7 @@ class User(database.TableObject):
         return self.server.setUserDisplayEmail(self.id, newEmail)
 
     def setPassword(self, newPassword):
-        # XXX finish me
+        self.server.setPassword(self.id, newPassword)
         pass
 
 class ProjectUsersTable(database.DatabaseTable):

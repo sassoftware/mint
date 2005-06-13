@@ -182,6 +182,7 @@ class MintApp(webhandler.WebHandler):
             user.setPassword(newpw)
             
             message = "\n".join(["Your password for rpath.com has been reset to:",
+                                 "",
                                  "    %s" % newpw,
                                  "",
                                  "Please log in at http://www.rpath.com/ and change",
