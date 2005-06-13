@@ -1,0 +1,23 @@
+#!/bin/sh
+
+CVS_PATH=/home/tgerla/cvs
+
+MINT_DATA=/data/mint
+IT_DATA=/data/imagetool
+AUTH_REPO=/data/authrepo
+
+rm -rf $MINT_DATA/repos/
+rm $MINT_DATA/data/db
+rm -rf $AUTH_REPO
+rm $IT_DATA/data/db
+
+mkdir -p $MINT_DATA/repos $MINT_DATA/data/
+mkdir -p $IT_DATA/data/
+mkdir $AUTH_REPO
+
+touch $MINT_DATA/data/db
+echo mintpass | $CVS_PATH/conary/server/server.py --add-user mintauth $AUTH_REPO
+PYTHONPATH=$CVS_PATH/cvs/imagetool/ python $CVS_PATH/imagetool/scripts/adduser mintauth $IT_DATA/data/db
+
+chmod -R a+rw $IT_DATA/data/ $MINT_DATA/data/ $MINT_DATA/repos/
+chmod -R a+rw $AUTH_REPO
