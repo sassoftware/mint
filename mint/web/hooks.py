@@ -218,10 +218,13 @@ def subhandler(req):
                         (req.hostname) + rest
         
         # set up the commitAction
-        buildLabel = req.hostname + "@rpl:devel"
-        repMap = buildLabel + " http://" + req.hostname + "/conary/"
-        commitAction = cfg.commitAction % {'repMap': repMap, 'buildLabel': buildLabel}
-        
+        if cfg.commitAction:
+            buildLabel = req.hostname + "@rpl:devel"
+            repMap = buildLabel + " http://" + req.hostname + "/conary/"
+            commitAction = cfg.commitAction % {'repMap': repMap, 'buildLabel': buildLabel}
+        else:
+            commitAction = None
+
         repositories[repName] = netserver.NetworkRepositoryServer(
                                     repositoryDir,
                                     cfg.tmpPath,
