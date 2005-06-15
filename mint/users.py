@@ -228,8 +228,11 @@ class Authorization(object):
                  'displayEmail', 'fullName', 'blurb')
 
     def __init__(self, **kwargs):
-        for key, val in kwargs.items():
-            self.__setattr__(key, val)
+        for key in self.__slots__:
+            if key in kwargs:
+                self.__setattr__(key, kwargs[key])
+            else:
+                self.__setattr__(key, None)
 
     def getDict(self):
         d = {}
