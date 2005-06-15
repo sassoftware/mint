@@ -20,9 +20,8 @@ from repository.netrepos import netserver
 import conarycfg
 
 from mint import config
-from mint import users
-from mint import projects
 from mint import database
+from mint import mint_server
 import app
 import cookie_http
 
@@ -88,7 +87,7 @@ def post(port, isSecure, repos, cfg, req):
             
         try:
             result = wrapper(*params)
-        except (netserver.InsufficientPermission, users.PermissionDenied):
+        except (netserver.InsufficientPermission, mint_server.PermissionDenied):
             return apache.HTTP_FORBIDDEN
 
         resp = xmlrpclib.dumps((result,), methodresponse=1)

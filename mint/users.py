@@ -21,10 +21,6 @@ import userlevels
 
 from imagetool import imagetool
 
-class PermissionDenied(MintError):
-    def __str__(self):
-        return "permission denied"
-
 class ConfirmError(MintError):
     def __str__(self):
         return "your registration could not be confirmed"
