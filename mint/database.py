@@ -22,15 +22,13 @@ class DuplicateItem(MintError):
     def __str__(self):
         return "duplicate item in %s" % self.item
 
-class TableObject:
+class TableObject(object):
     """A simple base class defining a object-oriented interface to an SQL table.
        @cvar server: Internal L{mint.mint_server.MintServer} object to modify the object in
                       the database.
        @cvar id: The database primary key of the current object.
     """
     __slots__ = ('server', 'id')
-    server = None
-    id = None
 
     def getItem(self, id):
         """Abstract method to retrieve information about an object from the database
@@ -52,7 +50,8 @@ class TableObject:
         """Refreshes the object's internal fields of data about the item by forcing
            a call to L{getItem}."""
         data = self.getItem(self.id)
-        self.__dict__.update(data)
+        for key, val in data.items():
+            self.__setattr__(key, val)
 
     def getId(self):
         """@return: database primary key of the item represented by this object"""
