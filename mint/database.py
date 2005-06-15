@@ -23,29 +23,54 @@ class DuplicateItem(MintError):
         return "duplicate item in %s" % self.item
 
 class TableObject:
-    __slots__ = ['server', 'id']
+    """A simple base class defining a object-oriented interface to an SQL table.
+       @cvar server: Internal L{mint.mint_server.MintServer} object to modify the object in
+                      the database.
+       @cvar id: The database primary key of the current object.
+    """
+    __slots__ = ('server', 'id')
+    server = None
+    id = None
 
     def getItem(self, id):
+        """Abstract method to retrieve information about an object from the database
+           and fill the object members with that information.
+           
+           @param id: database primary key"""
         raise NotImplementedError
 
     def __init__(self, server, id):
+        """@param server: a L{mint.mint_server.MintServer} object for manipulation of the item represented by
+                         this object.
+           @param id: database primary key of the item to be represented by this object.
+        """
         self.id = id
         self.server = server
         self.refresh()
 
     def refresh(self):
+        """Refreshes the object's internal fields of data about the item by forcing
+           a call to L{getItem}."""
         data = self.getItem(self.id)
         self.__dict__.update(data)
 
     def getId(self):
+        """@return: database primary key of the item represented by this object"""
         return self.id
 
 class DatabaseTable:
-    name = None
+    """
+    @cvar name: The name of the table as created by the createSQL string.
+    @cvar fields: List of SQL fields as created by the createSQL string.
+    @cvar createSQL: SQL statement to create the table for this object.
+    """
+
+    name = "Table"
     fields = []
-    createSQL = None
+    createSQL = "CREATE TABLE Table ();"
 
     def __init__(self, db):
+        """@param db: database connection object"""
         assert(self.name and self.fields and self.createSQL)
         self.db = db
 
@@ -58,10 +83,19 @@ class DatabaseTable:
         self.db.commit()
 
 class KeyedTable(DatabaseTable):
-    key = None
+    """
+    @cvar key: field name of the database table's primary key
+    """
+    key = "itemId"
 
     def get(self, id):
-        assert(self.key)
+        """
+        Fetches a single row in the database by primary key.
+        @param id: database item primary key
+        @return: map of column names to values
+        @rtype: dict
+        @raise ItemNotFound: row with requested key does not exist in the database.
+        """
         
         cu = self.db.cursor()
         stmt = "SELECT %s FROM %s WHERE %s=?" % (", ".join(self.fields), self.name, self.key)
@@ -69,7 +103,7 @@ class KeyedTable(DatabaseTable):
         try:
             r = cu.next()
         except StopIteration:
-            raise ItemNotFound('user')
+            raise ItemNotFound
 
         data = {}
         for i, key in enumerate(self.fields):
@@ -77,6 +111,11 @@ class KeyedTable(DatabaseTable):
         return data
 
     def getIdByColumn(self, column, value):
+        """
+        Fetches the first primary key found by arbitrary column and value.
+        @param column: database column name
+        @param value: value to match primary key
+        """
         cu = self.db.cursor()
     
         stmt = "SELECT %s FROM %s WHERE %s = ?" % (self.key, self.name, column)
@@ -84,9 +123,14 @@ class KeyedTable(DatabaseTable):
         try:
             return cu.next()[0]
         except StopIteration:
-            raise ItemNotFound('user')
+            raise ItemNotFound
 
     def new(self, **kwargs):
+        """
+        Adds a row to the database.
+        @param kwargs: map of database column names to values.
+        @return: primary key id of new item.
+        """
         values = kwargs.values()
         cols = kwargs.keys()
 
@@ -103,6 +147,13 @@ class KeyedTable(DatabaseTable):
         return cu.lastrowid
 
     def update(self, id, **kwargs):
+        """
+        Updates a row in the database.
+        @param id: primary key of row to update.
+        @param kwargs: map of column names to new values.
+        @return: True on success
+        @rtype: bool
+        """
         values = kwargs.values()
         cols = kwargs.keys()
         

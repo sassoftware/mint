@@ -228,7 +228,7 @@ class ProjectUsersTable(database.DatabaseTable):
         return 0
 
 class Authorization:
-    __slots__ = ['authorized', 'userId', 'username', 'email', 'fullName', 'blurb']
+    __slots__ = ('authorized', 'userId', 'username', 'email', 'fullName', 'blurb')
     authorized = False
     userId = -1
     username = None
