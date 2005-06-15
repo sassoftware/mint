@@ -44,6 +44,40 @@ def ownerOnly(func):
     return wrapper
 
 class MintApp(webhandler.WebHandler):
+    """
+    The Mint webapp.
+    @cvar auth: a L{mint.users.Authorization} object for the user who is currently logged in.
+    @type auth: L{mint.users.Authorization}
+    @cvar cfg: the server's L{mint.config.MintConfig} object
+    @type cfg: L{mint.config.MintConfig}
+    @cvar client: a L{mint.mint.MintClient} object
+    @type client: L{mint.mint.MintClient}
+    @cvar cmd: the current web command extracted from the request path.
+    @type cmd: str
+    @cvar cookies: dictionary of cookies (should not be an object member; will go away)
+    @type cookies: mod_python.Cookie
+    @cvar req: mod_python request object (should probably not be an object member)
+    @type req: mod_python.request_rec
+    @cvar project: a L{mint.projects.Project} object for the currently selected project; None if no project is selected.
+    @type project: L{mint.projects.Project}
+    @cvar user: a L{mint.users.User} object of user who is currently logged in.
+    @type user: L{mint.users.User}
+    @cvar userLevel: one of L{mint.userlevels.LEVELS} for the project and user currently logged in.
+    @type userLevel: int
+    """ 
+    __slots__ = ('auth', 'cfg', 'client', 'cmd', 'cookies',
+                 'project', 'req', 'user', 'userLevel')
+
+    auth = None
+    cfg = None
+    client = None
+    cmd = None
+    cookies = None
+    req = None
+    project = None
+    user = None
+    userLevel = None
+
     def _checkAuth(self, authToken):
         self.client = shimclient.ShimMintClient(self.cfg, authToken)
         auth = self.client.checkAuth()
@@ -57,7 +91,6 @@ class MintApp(webhandler.WebHandler):
         hostname = fullHost.split('.')[0]
         
         if hostname == "www":
-            self.project = None
             self.userLevel = -1
             default = self.frontPage
         else:
@@ -77,7 +110,6 @@ class MintApp(webhandler.WebHandler):
         return method
 
     def _methodHandler(self):
-        self.user = None
         if 'authToken' in self.cookies:
             auth = base64.decodestring(self.cookies['authToken'].value)
             authToken = auth.split(":")
