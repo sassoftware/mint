@@ -223,17 +223,21 @@ class ProjectUsersTable(database.DatabaseTable):
         self.db.commit()
         return 0
 
-class Authorization:
-    __slots__ = ('authorized', 'userId', 'username', 'email', 'fullName', 'blurb')
-    authorized = False
-    userId = -1
-    username = None
-    email = None
-    fullName = None
+class Authorization(object):
+    __slots__ = ('authorized', 'userId', 'username', 'email',
+                 'displayEmail', 'fullName', 'blurb')
 
     def __init__(self, **kwargs):
-        self.__dict__.update(kwargs)
+        for key, val in kwargs.items():
+            self.__setattr__(key, val)
 
+    def getDict(self):
+        d = {}
+        for slot in self.__slots__:
+            d[slot] = self.__getattribute__(slot)
+        return d
+
+    
 def newPassword():
     choices = string.letters + string.digits
     pw = "".join([random.choice(choices) for x in range(6)])

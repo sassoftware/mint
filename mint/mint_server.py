@@ -175,7 +175,7 @@ class MintServer(object):
         return self.users.registerNewUser(username, password, fullName, email, active)
        
     def checkAuth(self):
-        return self.auth.__dict__
+        return self.auth.getDict()
 
     @requiresAuth
     def setUserEmail(self, userId, email):
