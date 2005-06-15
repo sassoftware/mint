@@ -55,6 +55,7 @@ class DatabaseTable:
         tables = [ x[0] for x in cu ]
         if self.name not in tables:
             cu.execute(self.createSQL)
+        self.db.commit()
 
 class KeyedTable(DatabaseTable):
     key = None
@@ -111,4 +112,4 @@ class KeyedTable(DatabaseTable):
         cu = self.db.cursor()
         cu.execute(*[stmt] + values + [id])
         self.db.commit()
-        return 0 
+        return True

@@ -64,7 +64,7 @@ class UsersTable(database.KeyedTable):
     def checkAuth(self, authToken, checkRepo = True):
         username, password = authToken
         cu = self.db.cursor()
-        cu.execute("""SELECT userId, email, displayEmail, fullName FROM Users 
+        cu.execute("""SELECT userId, email, displayEmail, fullName, blurb FROM Users 
                       WHERE username=? AND active=1""", username)
         r = cu.fetchone()
 
@@ -84,7 +84,8 @@ class UsersTable(database.KeyedTable):
                         'username':     username,
                         'email':        r[1],
                         'displayEmail': r[2],
-                        'fullName':     r[3]}
+                        'fullName':     r[3],
+                        'blurb':        r[4]}
             else:
                 return {'authorized': False, 'userId': -1}
         else:
@@ -181,7 +182,9 @@ class User(database.TableObject):
 
     def setPassword(self, newPassword):
         self.server.setPassword(self.id, newPassword)
-        pass
+    
+    def setBlurb(self, blurb):
+        self.server.setUserBlurb(self.id, blurb)
 
 class ProjectUsersTable(database.DatabaseTable):
     name = "ProjectUsers"
@@ -225,7 +228,7 @@ class ProjectUsersTable(database.DatabaseTable):
         return 0
 
 class Authorization:
-    __slots__ = ['authorized', 'userId', 'username', 'email', 'fullName']
+    __slots__ = ['authorized', 'userId', 'username', 'email', 'fullName', 'blurb']
     authorized = False
     userId = -1
     username = None

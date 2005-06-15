@@ -10,9 +10,9 @@
             <h2>Change Password or Email:</h2>
 
             <form method="post" action="editUserSettings">
-                <table>
+                <table style="width: 100%;">
                     <tr>
-                        <td>Name:</td>
+                        <td style="width: 20%;">Name:</td>
                         <td>${auth.fullName}</td>
                     </tr>
                     <tr>
@@ -22,10 +22,22 @@
                     <tr>
                         <td>Email (displayed):<p class="help">You can specify a spam-masked and/or an alternate email address for public
                                                               view here.</p></td>
-                        <td><input type="text" name="email" value="${auth.email}" /></td>
+                        <td><input type="text" name="displayEmail" value="${auth.displayEmail}" /></td>
                     </tr>
 
+                    <tr>
+                        <td>
+                            About:
+                            <p class="help">Please enter any relevant information about yourself here; a short biography, IRC nicknames,
+                                or anything else you would like to share with the rpath.com community.
+                            </p>
+                        </td>
+                        <td>
+                            <textarea style="width: 50%;" rows="12" name="blurb" py:content="auth.blurb" />
+                        </td>
+                    </tr>
 
+                    <tr><td colspan="2"><p class="help">Please leave these fields blank if you do not want to change your password:</p></td></tr>
                     <tr>
                         <td style="padding-top: 25px;">
                             Password:
@@ -35,11 +47,6 @@
                     <tr>
                         <td>Password (again):</td>
                         <td><input type="password" name="password2" value="" /></td>
-                    </tr>
-                    <tr>
-                        <td colspan="2">
-                            <p class="help">Leave the password fields blank to only change your email address.</p>
-                        </td>
                     </tr>
                 </table>
 

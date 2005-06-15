@@ -184,6 +184,10 @@ class MintServer(object):
     def setUserDisplayEmail(self, userId, displayEmail):
         return self.users.update(userId, displayEmail = displayEmail)
 
+    @requiresAuth
+    def setUserBlurb(self, userId, blurb):
+        return self.users.update(userId, blurb = blurb)
+
     def confirmUser(self, confirmation):
         userId = self.users.confirm(confirmation)
         return userId

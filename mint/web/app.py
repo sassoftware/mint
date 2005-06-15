@@ -214,24 +214,28 @@ class MintApp(webhandler.WebHandler):
         self._write("userSettings")
         return apache.OK
 
-    @strFields(email = "", displayEmail = "", password1 = "", password2 = "")
+    @strFields(email = "", displayEmail = "", password1 = "", password2 = "", blurb = "")
     @requiresAuth
-    def editUserSettings(self, auth, email, displayEmail, password1, password2):
-        #if email != auth.email:
-        #    # XXX confirm valid email
-        #    self.user.setEmail(email)
+    def editUserSettings(self, auth, email, displayEmail,
+                         password1, password2, blurb):
+        if email != auth.email:
+            # XXX confirm valid email
+            self.user.setEmail(email)
         if displayEmail != auth.displayEmail:
             self.user.setDisplayEmail(displayEmail)
+        if blurb != auth.blurb:
+            self.user.setBlurb(blurb)
 
-        if password1 != password2:
-            self._write("error", shortError = "Registration Error",
-                        error = "Passwords do not match.")
-        elif len(password1) < 6:
-            self._write("error", shortError = "Registration Error",
-                        error = "Password must be 6 characters or longer.")
-        else:
-            self.user.setPassword(password1)
-            return self._redirect("logout")
+        if password1 and password2:
+            if password1 != password2:
+                self._write("error", shortError = "Registration Error",
+                            error = "Passwords do not match.")
+            elif len(password1) < 6:
+                self._write("error", shortError = "Registration Error",
+                            error = "Password must be 6 characters or longer.")
+            else:
+                self.user.setPassword(password1)
+                return self._redirect("logout")
 
         return self._redirect("frontPage")
 
