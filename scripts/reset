@@ -19,5 +19,5 @@ touch $MINT_DATA/data/db
 echo mintpass | $CVS_PATH/conary/server/server.py --add-user mintauth $AUTH_REPO
 PYTHONPATH=$CVS_PATH/imagetool/ python $CVS_PATH/imagetool/scripts/adduser mintauth $IT_DATA/data/db
 
-chown -R $USERNAME.$IT_DATA/data/ $MINT_DATA/data/ $MINT_DATA/repos/ $AUTH_REPO
-chmod -R ug+rw        $IT_DATA/data/ $MINT_DATA/data/ $MINT_DATA/repos/ $AUTH_REPO
+chown -R $USERNAME.apache $IT_DATA/data/ $MINT_DATA/data/ $MINT_DATA/repos/ $AUTH_REPO
+chmod -R ug+rw            $IT_DATA/data/ $MINT_DATA/data/ $MINT_DATA/repos/ $AUTH_REPO
