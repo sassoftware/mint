@@ -13,8 +13,8 @@ from mint import userlevels
             isOwner = userLevel == userlevels.OWNER
         ?>
         <div id="content">
-            <h2>Manage Project Memberships</h2>       
- 
+            <h2>Manage Project Memberships</h2>
+
             <form method="post" action="addMember">
                 <table>
                     <tr>
@@ -32,13 +32,14 @@ from mint import userlevels
 
                             for userId, username, level in project.getMembers():
                                 users[level].append((userId, username,))
-            
+
                             ?>
                             <h4>Project Owners</h4>
                             <ul>
                                 <li py:for="userId, username in sorted(users[userlevels.OWNER], key=lambda x: x[1])">
                                     <a href="userInfo?id=${userId}">${username}</a>
                                     <a py:if="isOwner" href="memberSettings?userId=${userId}">[edit]</a>
+                                    <a py:if="isOwner" href="delMember?id=${userId}">[delete]</a>
                                 </li>
                                 <li py:if="not users[userlevels.OWNER]">No owners.</li>
                             </ul>
@@ -47,6 +48,7 @@ from mint import userlevels
                                 <li py:for="userId, username in sorted(users[userlevels.DEVELOPER], key=lambda x: x[1])">
                                     <a href="userInfo?id=${userId}">${username}</a>
                                     <a py:if="isOwner" href="memberSettings?userId=${userId}">[edit]</a>
+                                    <a py:if="isOwner" href="delMember?id=${userId}">[delete]</a>
                                 </li> 
                                 <li py:if="not users[userlevels.DEVELOPER]">No developers.</li>
                             </ul>

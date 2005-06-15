@@ -24,7 +24,11 @@ from mint import userlevels
 
             <div py:if="isOwner"><a href="http://${project.getHostname()}/conary/">Repository Administration</a></div>    
             <h3>Project Members</h3>
-            <p py:if="isOwner"><a href="members">Click to see project members</a></p>
+            <?python 
+              memberList = project.getMembers()
+            ?>
+            <p py:if="not memberList">This project is orphaned. <a href="adopt">Adopt this project</a></p>
+            <p py:if="memberList"><a href="members">Click to see project members</a></p>
 
             <h3>Releases</h3>
             <ul>

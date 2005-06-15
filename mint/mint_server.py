@@ -50,7 +50,7 @@ class MintServer(object):
             self.auth = users.Authorization(**auth)
             if self.auth.authorized:
                 self._checkRepo = False
-                
+
             r = method(*args)
         except users.UserAlreadyExists, e:
             return (True, ("UserAlreadyExists", str(e)))
@@ -118,7 +118,7 @@ class MintServer(object):
     @requiresAuth
     def addMember(self, projectId, userId, username, level):
         assert(level in userlevels.LEVELS)
-        project = projects.Project(self, self.getProject(projectId))
+        project = projects.Project(self, projectId)
 
         cu = self.db.cursor()
         if username and not userId:
@@ -131,14 +131,15 @@ class MintServer(object):
         
         self.projectUsers.new(projectId, userId, level)
         repos = self._getAuthRepo(project)
-        repos.auth.addUser(username, password)
-        repos.auth.addAcl(username, None, None, True, False, level == userlevels.OWNER)
+        repos.addUser(project.getLabel(), username, password)
+        repos.addAcl(project.getLabel(), username, None, None, True, False, level == userlevels.OWNER)
 
         return True
 
     @requiresAuth
     def delMember(self, projectId, userId):
         return self.projectUsers.delete(projectId, userId)    
+        # XXX Need to delete the user from the repository
 
     @requiresAuth
     def setProjectDesc(self, projectId, desc):

@@ -299,6 +299,12 @@ class MintApp(webhandler.WebHandler):
         self._write("members")
         return apache.OK
 
+    @requiresAuth
+    def adopt(self, auth):
+        self.project.addMemberByName(auth.username, userlevels.OWNER)
+        self._write("members")
+        return apache.OK
+
     @strFields(username = None)
     @intFields(level = None)
     @requiresAuth
