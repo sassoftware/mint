@@ -224,6 +224,23 @@ class ProjectUsersTable(database.DatabaseTable):
         return 0
 
 class Authorization(object):
+    """
+    Object describing a logged in user
+    @cvar authorized: True if this user is authorized with a good password, False if not.
+    @type authorized: bool
+    @cvar userId: database id of the user represented by this object
+    @type userId: int
+    @cvar username: username of the user
+    @type username: str
+    @cvar email: email address of the user
+    @type email: str
+    @cvar displayEmail: possibly obfuscated email address of the user
+    @type displayEmail: str
+    @cvar fullName: full name of the user
+    @type fullName: str
+    @cvar blurb: a short description about and written by the user
+    @type blurb: str
+    """
     __slots__ = ('authorized', 'userId', 'username', 'email',
                  'displayEmail', 'fullName', 'blurb')
 
@@ -239,11 +256,15 @@ class Authorization(object):
         for slot in self.__slots__:
             d[slot] = self.__getattribute__(slot)
         return d
-
-    
-def newPassword():
+ 
+def newPassword(length = 6):
+    """
+    @param length: length of random password generated
+    @returns: returns a character string of random letters and digits.
+    @rtype: str
+    """
     choices = string.letters + string.digits
-    pw = "".join([random.choice(choices) for x in range(6)])
+    pw = "".join([random.choice(choices) for x in range(length)])
     return pw
 
 def sendMail(fromEmail, fromEmailName, toEmail, subject, body):

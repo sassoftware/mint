@@ -54,7 +54,7 @@ class MintClient:
         """
         Return a list of Project objects of which the provided user is a member.
         @param userId: database id of the requested user
-        @rtype: list(L{mint.projects.Project})
+        @rtype: list of L{mint.projects.Project}
         """
         return [projects.Project(self.server, x) for x in self.server.getProjectIdsByMember(userId)]
 
