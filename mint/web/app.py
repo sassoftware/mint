@@ -22,11 +22,12 @@ from mint import database
 from mint import users
 from mint import userlevels
 from mint import mint_error
+from mint import mint_server
 
 def requiresAuth(func):
     def wrapper(self, **kwargs):
         if not kwargs['auth'].authorized:
-            raise users.PermissionDenied
+            raise mint_server.PermissionDenied
         else:
             return func(self, **kwargs)
     return wrapper
@@ -40,7 +41,7 @@ def ownerOnly(func):
         if self.userLevel == userlevels.OWNER:
             return func(self, **kwargs)
         else:
-            raise users.PermissionDenied
+            raise mint_server.PermissionDenied
     return wrapper
 
 class MintApp(webhandler.WebHandler):
@@ -222,7 +223,8 @@ class MintApp(webhandler.WebHandler):
 
             users.sendMail(self.cfg.adminMail, "rpath.com", user.getEmail(),
                            "rpath.com forgotten password", message)
-        
+            else:
+                return apache.HTTP_NOT_FOUND
     @strFields(id = None)
     def confirm(self, auth, id):
         try:
