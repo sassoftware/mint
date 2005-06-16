@@ -19,22 +19,17 @@ class ISO:
 
     def __init__(self, builddir, imagepath, name, discno = 0,
                        maxsize = 640, bootable=False):
-        """Initialize the CD.  Parameters:
-           builddir:  the directory which will contain the ISO dir tree,
-                      which will eventually get put in the ISO image 
-
-           imagepath: the path that the iso image stored to
-                    
-           name:      the human-readable name of the CD
-
-           discno:    a disc number that can be used to differentiate isos
-                      in a set
-
-           maxsize:   the maximum size of each ISO image, in megabytes 
-
-           bootable:  determines whether the CD should be made bootable or not
-                      requires that the builddir contains the appropriate
-                      isolinux dir.
+        """Initialize the CD.
+           @param builddir:  the directory which will contain the ISO dir tree,
+                             which will eventually get put in the ISO image 
+           @param imagepath: the path that the iso image stored to
+           @param name:      the human-readable name of the CD
+           @param discno:    a disc number that can be used to differentiate isos
+                             in a set.
+           @param maxsize:   the maximum size of each ISO image, in megabytes 
+           @param bootable:  determines whether the CD should be made bootable or not
+                             requires that the builddir contains the appropriate
+                             isolinux dir.
         """
         self.reserved = 0
         self.maxsize = int(maxsize) * 1024 * 1024

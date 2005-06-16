@@ -511,12 +511,12 @@ class ControlFile:
             that are not keys in filterDict.
 
             Successful changesets must match:
-            1. Name 
-            2. Label
-            3. Version (this may have been grabbed from repository
+             1. Name 
+             2. Label
+             3. Version (this may have been grabbed from repository
                         if not specified in control file)
-            4. Source version
-            5. Use/Flag flavor 
+             4. Source version
+             5. Use/Flag flavor 
 
             If allowVersionMismatch is True, then it is not required 
             that the trove found matches the latest source version of a trove.
@@ -639,12 +639,12 @@ class ControlFile:
             that are not keys in filterDict.
 
             Successful troves must match:
-            1. Name 
-            2. Label (may be branched into the update repo)
-            3. Version (this may have been grabbed from repository
+             1. Name 
+             2. Label (may be branched into the update repo)
+             3. Version (this may have been grabbed from repository
                         if not specified in control file)
-            4. Source version
-            5. Use/Flag flavor 
+             4. Source version
+             5. Use/Flag flavor 
 
             If allowVersionMismatch is True, then it is not required 
             that the trove found matches the latest source version of a trove.

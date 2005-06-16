@@ -26,24 +26,17 @@ import controlfile
 class DistroInfo:
     def __init__(self, abbrevName, productPath, productName, version, 
                  phase, isoname=None, arch='x86', nightly=False, isoSize=640):
-        """ Contains information about the names used in the distribution 
-        Parameters:
-            abbrevName:  the abbreviated name, used when creating file names
-
-            productPath: a directory name under which the changesets are kept
-
-            productName: the actual name of the product.  Shown in anaconda.
-
-            version:     the version of the product
-
-            isoname:     the basic isoname  (can be left none to get a default)
-
-            arch:        the architecture (used by anaconda)
-
-            nightly:     whether this is a full release or should have a date
-                         stamp attached to it
-
-            isoSize:     maximum size in megabytes of each ISO image created
+        """
+        Contains information about the names used in the distribution 
+        @param abbrevName:      the abbreviated name, used when creating file names
+        @param productPath:     a directory name under which the changesets are kept
+        @param productName:     the actual name of the product.  Shown in anaconda.
+        @param version:         the version of the product
+        @param phase:           release phase: ALPHA, BETA, RELEASE, etc.
+        @param isoname:         the basic isoname  (can be left none to get a default)
+        @param arch:            the architecture (used by anaconda)
+        @param nightly:         whether this is a full release or should have a date stamp attached to it
+        @param isoSize:         maximum size in megabytes of each ISO image created
         """
         
         assert(abbrevName and productPath and productName and version 
@@ -73,43 +66,32 @@ class Distribution:
 		logdir = None, statusCb = None, clean=False):
         """ Contains the necessary information and methods for 
             creating a distribution.  
-
-            Parameters:
-                repos: a NetworkClientRepository with the necessary repoMap
-                cfg: a conarycfg file
-                distro: a DistroInfo class.  This contains most of the 
-                        information about the type of distribution you 
-                        want to create, and its properties
-                controlGroup: the group trove that contains the list of 
-                              desired packages
-
-                buildpath:    the path under which the ISOs will be created
-                              in their expanded form.
-
-                isopath:      the directory where the final isos will reside
-
-                isoTemplatePath: a directory which contains files that should
-                              be copied over to all the isos, after applying
-                              a set of macros including %(fullName), 
-                              %(version)s and %(phase)s.
-
-                nfspath:      the path where the packages should be installed
-                              for nfs mount installing
-
-                tftpbootpath: directories where the images should be put
-                              for tftpbooting 
-
-                cachepath:    the directory which contains all of the 
-                              necessary changesets
-
-                logdir:       directory to log the output from creating 
-                              the iso.  If none, output is printed on 
-                              stdout and stderr
-
-                statusCb:     a function to call to update the status of
-                              a distribution job.
-
-                clean: remove old builddir before rebuilding
+            @param repos:           a NetworkClientRepository with the necessary repoMap
+            @param cfg:             a conarycfg file
+            @param distro:          a DistroInfo class.  This contains most of the 
+                                    information about the type of distribution you 
+                                    want to create, and its properties
+            @param controlGroup:    the group trove that contains the list of 
+                                    desired packages
+            @param buildpath:       the path under which the ISOs will be created
+                                    in their expanded form.
+            @param isopath:         the directory where the final isos will reside
+            @param isoTemplatePath: a directory which contains files that should
+                                    be copied over to all the isos, after applying
+                                    a set of macros including %(fullName), 
+                                    %(version)s and %(phase)s.
+            @param nfspath:         the path where the packages should be installed
+                                    for nfs mount installing
+            @param tftpbootpath:    directories where the images should be put
+                                    for tftpbooting 
+            @param cachepath:       the directory which contains all of the 
+                                    necessary changesets
+            @param logdir:          directory to log the output from creating 
+                                    the iso.  If none, output is printed on 
+                                    stdout and stderr
+            @param statusCb:        a function to call to update the status of
+                                    a distribution job.
+            @param clean:           remove old builddir before rebuilding
         """
 	self.arch = arch
         self.repos = repos
