@@ -146,7 +146,7 @@ class MintApp(webhandler.WebHandler):
             return apache.OK
 
     def _redirCookie(self, cookie):
-        # we have to add the cookie headers manually when redirecting, because 
+        # we have to add the cookie headers manually when redirecting, because
         # mod_python looks at err_headers_out instead of headers_out.
 
         self.req.err_headers_out.add("Cache-Control", 'no-cache="set-cookie"')
@@ -157,7 +157,7 @@ class MintApp(webhandler.WebHandler):
                                                 expires = time.time() - 300,
                                                 path = "/")
         self._redirCookie(cookie)
-        
+
     def frontPage(self, auth):
         projectList = self.client.getProjectsByMember(auth.userId)
         self._write("frontPage", projectList = projectList)
@@ -200,7 +200,7 @@ class MintApp(webhandler.WebHandler):
             authToken = (username, password)
             client = shimclient.ShimMintClient(self.cfg, authToken)
             auth = client.checkAuth()
-            
+
             if not auth.authorized:
                 return self._redirect("login?message=invalid")
             else:
@@ -339,10 +339,10 @@ class MintApp(webhandler.WebHandler):
         return apache.OK
 
     @strFields(search = None)
-    @intFields(count = 10)
+    @intFields(limit = 10)
     @intFields(offset = 0)
-    def projectSearch(self, auth, search, count, offset):
-        results = self.client.getProjectSearchResults(search, count, offset)
+    def projectSearch(self, auth, search, limit, offset):
+        results = self.client.getProjectSearchResults(search, limit, offset)
         self._write("searchResults", search = search, results = results)
         return apache.OK
 

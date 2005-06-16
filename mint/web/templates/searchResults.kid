@@ -5,11 +5,8 @@
     ${html_header("Search Results")}
     <body>
         ${header_image()}
-        <!--
-        ${menu([("Edit Project Description", None, True)])}
-        -->
         <div id="content">
-            ${searchResults( "Results for " + search, ("Project Name", "Project Description", "Last Modified"), results)}
+            ${searchResults( "Results for " + search, results)}
 
             ${html_footer()}
         </div>

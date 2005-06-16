@@ -48,15 +48,24 @@
         [('id', 'data item 1' ... 'data item n'), ]
         XXX: add next/prev/skip links
     -->
-    <div py:def="searchResults(title, columns=[], results=[])" py:omit="1">
+    <div py:def="searchResults(title, results=[])" py:omit="1">
         <h2 class="results">${title}</h2>
         <table class="results" width="100%">
             <thead class="results">
-                <td py:for="columnName in columns">${columnName}</td>
+                <tr class="results">
+                    <td py:for="columnName in ('Project Name', 'Project Description', 'Last Modified')">${columnName}</td>
+                </tr>
             </thead>
             <tr py:for="i, result in enumerate(results)" class="${i % 2 and 'even' or
 'odd'}">
-                <td class="results" py:for="column in result">${column}</td>
+                <!-- First column is a link using result[0] and result[1] -->
+                <td class="results"><a href="http://${result[0]}">${result[1]}</a></td>
+                <td class="results">${result[2]}</td>
+                <?python
+                    import time
+                    timestamp = time.ctime(result[3])
+                ?>
+                <td class="results">${timestamp}</td>
             </tr>
         </table>
     </div>

@@ -89,7 +89,7 @@ class ProjectsTable(database.KeyedTable):
                     defaultBranch   STR,
                     desc            STR,
                     timeCreated     INT,
-                    timeModified    INT,
+                    timeModified    INT DEFAULT 0,
                     itProjectId     INT
                 );"""
     fields = ['creatorId', 'name', 'hostname', 'defaultBranch',
@@ -113,16 +113,52 @@ class ProjectsTable(database.KeyedTable):
     def getProjectIdsByMember(self, userId):
         cu = self.db.cursor()
         cu.execute("SELECT projectId FROM ProjectUsers WHERE userId=?", userId)
-       
+
         ids = []
         for r in cu.fetchall():
             ids.append(r[0])
         return ids
-    
+
+    def search(self, terms, limit, offset):
+        """
+        Returns a list of projects matching L{terms} of length L{limit}
+        starting with item L{offset}.
+        @param terms: Search terms
+        @param offset: Count at which to begin listing
+        @param limit:  Number of items to return
+        @return:       a dictionary of the requested items.
+                       each entry will contain four bits of data:
+                        The hostname for use with linking,
+                        The project name,
+                        The project's description
+                        The date last modified.
+        """
+        sqlorder = "ORDER BY NAME"
+        cu = self.db.cursor()
+        query = """SELECT hostname, name, desc, timeModified FROM Projects
+            WHERE name||desc LIKE ? """ + sqlorder
+        subs = [ '%' + terms + '%' ]
+
+        if limit > 0:
+            query += " LIMIT ? "
+            subs.append(limit)
+        if offset > 0:
+            query += " OFFSET ? "
+            subs.append(offset)
+
+        #return [ [ query, 'two', 'three'], ['five', 'six', 'seven'] ]
+        cu.execute(query, *subs)
+        print >> sys.stderr, query, subs
+        sys.stderr.flush()
+        ids = []
+        for r in cu.fetchall():
+            ids.append(r)
+        return ids
+
     def createRepos(self, reposPath, hostname, username, password):
         path = os.path.join(reposPath, hostname)
         util.mkdirChain(reposPath)
-        
+
         repos = EmptyNetworkRepositoryServer(path, None, None, None, {})
         repos.auth.addUser(username, password)
         repos.auth.addAcl(username, None, None, True, False, True)

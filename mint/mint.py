@@ -110,15 +110,15 @@ class MintClient:
         """
         return self.server.getUserIdByName(username)
 
-    def getProjectSearchResults(self, search, offset, count = 10):
+    def getProjectSearchResults(self, search, limit = 10, offset = 0):
         """
         Collect the results as requested by the search terms
         @param search: Search terms
+        @param limit:  Number of items to return
         @param offset: Count at which to begin listing
-        @param count:  Number of items to return
         @return:       dictionary of Items requested
         """
-        return self.server.searchProjects(search, offset, count)
+        return self.server.searchProjects(search, limit, offset)
 
 class ServerProxy(xmlrpclib.ServerProxy):
     def __getattr__(self, name):

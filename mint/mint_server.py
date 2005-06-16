@@ -206,30 +206,29 @@ class MintServer(object):
 
         for projectId in self.getProjectIdsByMember(userId):
             project = projects.Project(self, projectId)
-            
+
             authRepo = self._getAuthRepo(project)
             authRepo.changePassword(project.getLabel(), username, newPassword)
-            
+
         return True
 
     @requiresAuth
-    def searchProjects(self, search, offset, count):
+    def searchProjects(self, terms, limit, offset):
         """
         Collect the results as requested by the search terms
-        @param search: Search terms
+        @param terms: Search terms
         @param offset: Count at which to begin listing
         @param count:  Number of items to return
         @return:       dictionary of Items requested
         """
-        #XXX replace this with real data
-        return [ [ 'one', 'two', 'three' ], ['four', 'five', 'six'] ]
+        return self.projects.search(terms, limit, offset)
 
 
 
     def __init__(self, cfg):
         self.cfg = cfg
         self.db = sqlite3.connect(cfg.dbPath, timeout = 30000)
-        
+
         self.projects = projects.ProjectsTable(self.db, self.cfg)
         self.users = users.UsersTable(self.db, self.cfg)
         self.projectUsers = users.ProjectUsersTable(self.db)
