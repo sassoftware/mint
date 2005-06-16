@@ -11,7 +11,28 @@ import rephelp
 
 class MintTest(rephelp.WebRepositoryHelper):
     def testLogin(self):
-        page = self.assertContent('/login', 'Please log in to use the the rpath Linux Mint custom distribution server:')
+        page = self.assertCode('/register', code = 200)
 
+        page.postForm(0, self.postAssertCode,
+                      {'username': 'testuser',
+                       'password': 'testpass1',
+                       'password2': 'testpass1',
+                       'email': 'test@example.com'},
+                    301)
+
+        page = self.assertCode('/login', code = 200)
+        page.postForm(0, self.postAssertCode,
+            {'username': 'testuser',
+             'password': 'testpass1',
+             'submit': 'Log In'},
+             301)
+
+        page = self.assertCode('/newProject', code = 200)
+
+        page.postForm(0, self.postAssertCode,
+            {'title': 'Test Project',
+             'hostname': 'test'}, 301)
+
+        
 if __name__ == "__main__":
     testsuite.main()
