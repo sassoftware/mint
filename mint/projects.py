@@ -148,8 +148,6 @@ class ProjectsTable(database.KeyedTable):
 
         #return [ [ query, 'two', 'three'], ['five', 'six', 'seven'] ]
         cu.execute(query, *subs)
-        print >> sys.stderr, query, subs
-        sys.stderr.flush()
         ids = []
         for r in cu.fetchall():
             ids.append(r)
