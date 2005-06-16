@@ -46,7 +46,6 @@ class MintClient:
         @rtype: L{mint.projects.Project}
         @raises mint.database.ItemNotFound: project of the requested hostname does not exist.
         """
-       
         projectId = self.server.getProjectIdByHostname(hostname)
         return projects.Project(self.server, projectId)
 

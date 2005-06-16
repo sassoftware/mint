@@ -28,13 +28,16 @@ class MintTest(rephelp.WebRepositoryHelper):
              'submit': 'Log In'},
              301)
              
-
         page = self.assertCode('/newProject', code = 200)
         
         page.postForm(0, self.postAssertCode,
             {'title': 'Test Project',
              'hostname': 'test'}, 301)
 
+        self.server = 'test.rpath.org'
+
+        page = self.assertCode('/', code = 200)
+        page = self.assertCode('/members', code = 200)
         
 if __name__ == "__main__":
     testsuite.main()

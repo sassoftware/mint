@@ -42,7 +42,7 @@ install: all install-subdirs
 	sed -i "s,\%DATADIR%,$(datadir),g" $(DESTDIR)$(httpddir)/mint.conf
 
 doc: 
-	PYTHONPATH=.:/home/tgerla/cvs/conary/:/home/tgerla/cvs/imagetool/ epydoc -o mintdoc mint
+	PYTHONPATH=.:../conary/:../imagetool/ epydoc -o mintdoc mint
 
 BASEPATH=mintdoc
 REMOTEPATH=public_html/
