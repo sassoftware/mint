@@ -16,6 +16,7 @@ import sys
 import tempfile
 import time
 import unittest
+from urlparse import urlparse
 from webunit import webunittest
 
 #conary
@@ -891,7 +892,7 @@ class RepositoryHelper(testsuite.TestCase):
         use.setBuildFlagsFromFlavor('', self.cfg.buildFlavor)
 
     def __init__(self, methodName):
-	testsuite.TestCase.__init__(self, methodName)
+        testsuite.TestCase.__init__(self, methodName)
 
         if 'CONARY_IDGEN' in os.environ:
             className = "IdGen%s" % os.environ['CONARY_IDGEN']
@@ -963,15 +964,18 @@ class RepositoryHelper(testsuite.TestCase):
                 sys.stderr.write("Note: not cleaning up %s\n" %self.tmpDir)
                 notCleanedUpWarning = False
 
+    def getWebTestUrl(self):
+        parts = urlparse(self.mintUrl)
+        return parts[1].split(":")
+
 class WebRepositoryHelper(RepositoryHelper, webunittest.WebTestCase):
     def __init__(self, methodName):
         RepositoryHelper.__init__(self, methodName)
         webunittest.WebTestCase.__init__(self, methodName)
-        
+
     def setUp(self):
         RepositoryHelper.setUp(self)
-        self.openRepository()
-        self.server = 'localhost'
-        self.port = self.servers.servers[0].port
+        webunittest.WebTestCase.setUp(self)
+        self.server, self.port = self.getWebTestUrl()
 
 notCleanedUpWarning = True
