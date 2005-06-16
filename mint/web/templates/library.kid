@@ -1,4 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
+<?python
+import time
+?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#">
     <!-- define the HTML header -->
@@ -62,7 +65,6 @@
                 <td class="results"><a href="http://${result[0]}">${result[1]}</a></td>
                 <td class="results">${result[2]}</td>
                 <?python
-                    import time
                     timestamp = time.ctime(result[3])
                 ?>
                 <td class="results">${timestamp}</td>
