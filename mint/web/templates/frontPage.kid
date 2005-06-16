@@ -7,10 +7,10 @@
         ${header_image()}
         ${menu([('Mint', False, True)])}
 
-        <table style="width: 100%;"> 
+        <table style="width: 100%;">
             <tr><td style="padding: 0px;">
 
-        <div id="content"> 
+        <div id="content">
             <h2>Linux Mint</h2>
             <p>The Linux Mint is a free service by rPath, Inc. to host Conary-managed Linux distributions. We will
                host a repository for your project and allow you to collaborate with others to create a complete
@@ -32,7 +32,7 @@
                     <li><a href="newProject">Create a new distribution project</a></li>
                     <li><a href="distros">Find an existing distribution</a></li>
                     <li><a href="userSettings">View your user page</a></li>
-                </ul> 
+                </ul>
             </div>
 
             ${html_footer()}
@@ -45,7 +45,10 @@
         <div style="background: white; padding: 12px; color: black;">
             <h3>Search</h3>
             <p>Search for a project:</p>
-            <input type="text" name="search" size="10" /> <button>Submit</button>
+            <form name="search" action="projectSearch" method="get">
+                <input type="text" name="search" size="10" />
+                <button>Submit</button>
+            </form>
 
             <h3>Your Projects</h3>
 

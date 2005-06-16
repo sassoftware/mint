@@ -335,6 +335,14 @@ class MintApp(webhandler.WebHandler):
             userProjects = self.client.getProjectsByUser(id))
         return apache.OK
 
+    @strFields(search = None)
+    @intFields(count = 10)
+    @intFields(offset = 0)
+    def projectSearch(self, auth, search, count, offset):
+        results = self.client.getProjectSearchResults(search, count, offset)
+        self._write("searchResults", search = search, results = results)
+        return apache.OK
+
     def _write(self, template, **values):
         path = os.path.join(self.cfg.templatePath, template + ".kid")
         t = kid.load_template(path)

@@ -44,4 +44,20 @@
             </li>
         </ul>
    </div>
+    <!-- results structure:
+        [('id', 'data item 1' ... 'data item n'), ]
+        XXX: add next/prev/skip links
+    -->
+    <div py:def="searchResults(title, columns=[], results=[])" py:omit="1">
+        <h2 class="results">${title}</h2>
+        <table class="results" width="100%">
+            <thead class="results">
+                <td py:for="columnName in columns">${columnName}</td>
+            </thead>
+            <tr py:for="i, result in enumerate(results)" class="${i % 2 and 'even' or
+'odd'}">
+                <td class="results" py:for="column in result">${column}</td>
+            </tr>
+        </table>
+    </div>
 </html>

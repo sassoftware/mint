@@ -212,6 +212,20 @@ class MintServer(object):
             
         return True
 
+    @requiresAuth
+    def searchProjects(self, search, offset, count):
+        """
+        Collect the results as requested by the search terms
+        @param search: Search terms
+        @param offset: Count at which to begin listing
+        @param count:  Number of items to return
+        @return:       dictionary of Items requested
+        """
+        #XXX replace this with real data
+        return [ [ 'one', 'two', 'three' ], ['four', 'five', 'six'] ]
+
+
+
     def __init__(self, cfg):
         self.cfg = cfg
         self.db = sqlite3.connect(cfg.dbPath, timeout = 30000)
