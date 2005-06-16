@@ -153,8 +153,9 @@ class MintApp(webhandler.WebHandler):
         self.req.err_headers_out.add("Set-Cookie", str(cookie))
 
     def _clearAuth(self):
-        cookie = Cookie.Cookie('authToken', '', domain = self.cfg.domainName,
-                                                expires = time.time() - 300)
+        cookie = Cookie.Cookie('authToken', '', domain = "." + self.cfg.domainName,
+                                                expires = time.time() - 300,
+                                                path = "/")
         self._redirCookie(cookie)
         
     def frontPage(self, auth):
@@ -204,7 +205,7 @@ class MintApp(webhandler.WebHandler):
                 return self._redirect("login?message=invalid")
             else:
                 auth = base64.encodestring("%s:%s" % authToken).strip()
-                cookie = Cookie.Cookie('authToken', auth, domain = self.cfg.domainName)
+                cookie = Cookie.Cookie('authToken', auth, domain = "." + self.cfg.domainName, path = "/")
                 self._redirCookie(cookie)
                 return self._redirect("frontPage")
         elif submit == "Forgot Password":
@@ -223,8 +224,8 @@ class MintApp(webhandler.WebHandler):
 
             users.sendMail(self.cfg.adminMail, "rpath.com", user.getEmail(),
                            "rpath.com forgotten password", message)
-            else:
-                return apache.HTTP_NOT_FOUND
+        else:
+            return apache.HTTP_NOT_FOUND
     @strFields(id = None)
     def confirm(self, auth, id):
         try:

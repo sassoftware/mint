@@ -20,7 +20,7 @@ class InvalidHostname(Exception):
         return "invalid hostname: must start with a letter and contain only letters, numbers, and hyphens."
 
 class Project(database.TableObject):
-    __slots__ = ('projectId', 'creatorId', 'name',
+    __slots__ = ('creatorId', 'name',
                  'desc', 'hostname', 'defaultBranch',
                  'timeCreated', 'timeModified',
                  'itProjectId')

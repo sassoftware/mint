@@ -21,14 +21,16 @@ class MintTest(rephelp.WebRepositoryHelper):
                     301)
 
         page = self.assertCode('/login', code = 200)
+        self.activateUsers()
         page.postForm(0, self.postAssertCode,
             {'username': 'testuser',
              'password': 'testpass1',
              'submit': 'Log In'},
              301)
+             
 
         page = self.assertCode('/newProject', code = 200)
-
+        
         page.postForm(0, self.postAssertCode,
             {'title': 'Test Project',
              'hostname': 'test'}, 301)

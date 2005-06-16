@@ -978,4 +978,7 @@ class WebRepositoryHelper(RepositoryHelper, webunittest.WebTestCase):
         webunittest.WebTestCase.setUp(self)
         self.server, self.port = self.getWebTestUrl()
 
+    def activateUsers(self):
+        os.system("echo 'UPDATE Users SET active=1;' | sqlite3 /data/mint/data/db")
+
 notCleanedUpWarning = True

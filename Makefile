@@ -15,6 +15,8 @@ export libdir = $(prefix)/lib
 export mintdir = $(libdir)/python$(PYVERSION)/site-packages/
 export httpddir = $(sysconfdir)/httpd/conf.d/
 
+.PHONY: doc
+
 SUBDIRS = mint test
 
 extra_files = Makefile Make.rules mint.conf httpd.conf
@@ -38,6 +40,17 @@ install: all install-subdirs
 	mkdir -p $(DESTDIR)$(httpddir)
 	install httpd.conf $(DESTDIR)$(httpddir)/mint.conf
 	sed -i "s,\%DATADIR%,$(datadir),g" $(DESTDIR)$(httpddir)/mint.conf
+
+doc: 
+	PYTHONPATH=.:/home/tgerla/cvs/conary/:/home/tgerla/cvs/imagetool/ epydoc -o mintdoc mint
+
+BASEPATH=mintdoc
+REMOTEPATH=public_html/
+REMOTEHOST=lambchop
+
+sync: doc
+	rsync  -a --rsh="ssh" $(BASEPATH) $(REMOTEHOST):$(REMOTEPATH)
+
 
 clean: clean-subdirs default-clean
 
