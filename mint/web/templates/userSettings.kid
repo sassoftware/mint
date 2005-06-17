@@ -7,13 +7,17 @@
         ${header_image()}
         ${menu([('User Settings', None, True)])}
         <div id="content">
-            <h2>Change Password or Email:</h2>
+            <h2>User Settings:</h2>
 
             <form method="post" action="editUserSettings">
                 <table style="width: 100%;">
                     <tr>
-                        <td style="width: 20%;">Name:</td>
-                        <td>${auth.fullName}</td>
+                        <td>Username:</td>
+                        <td>${auth.username}</td>
+                    </tr>
+                    <tr>
+                        <td style="width: 20%;">Full Name:</td>
+                        <td><input type="text" name="fullName" value="${auth.fullName}" /></td>
                     </tr>
                     <tr>
                         <td>Email (hidden):<p class="help">This email address is private and will never be displayed.</p></td>

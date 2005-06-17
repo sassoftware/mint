@@ -248,9 +248,11 @@ class MintApp(webhandler.WebHandler):
         self._write("userSettings")
         return apache.OK
 
-    @strFields(email = "", displayEmail = "", password1 = "", password2 = "", blurb = "")
+    @strFields(email = "", displayEmail = "",
+               password1 = "", password2 = "",
+               fullName = "", blurb = "")
     @requiresAuth
-    def editUserSettings(self, auth, email, displayEmail,
+    def editUserSettings(self, auth, email, displayEmail, fullName,
                          password1, password2, blurb):
         if email != auth.email:
             # XXX confirm valid email
@@ -259,6 +261,8 @@ class MintApp(webhandler.WebHandler):
             self.user.setDisplayEmail(displayEmail)
         if blurb != auth.blurb:
             self.user.setBlurb(blurb)
+        if fullName != auth.fullName:
+            self.user.setFullName(fullName)
 
         if password1 and password2:
             if password1 != password2:

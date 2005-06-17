@@ -224,6 +224,9 @@ class User(database.TableObject):
     def setBlurb(self, blurb):
         self.server.setUserBlurb(self.id, blurb)
 
+    def setFullName(self, fullName):
+        self.server.setUserFullName(self.id, fullName)
+
 class ProjectUsersTable(database.DatabaseTable):
     name = "ProjectUsers"
     fields = ["projectId", "userId"]
