@@ -32,7 +32,7 @@ from mint import userlevels
 
             <h3>Releases</h3>
             <ul>
-                <li>FIXME</li>
+                <li py:for="release in project.getReleases()">${release.getTroveName()}=${release.getTroveVersion().trailingRevision().asString()}</li>
             </ul>
             <p py:if="isOwner"><a href="http://iso.rpath.org/images/projectDetails?projectId=${project.getItProjectId()}">Release Management</a></p>
             

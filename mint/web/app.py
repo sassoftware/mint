@@ -134,7 +134,6 @@ class MintApp(webhandler.WebHandler):
             return apache.HTTP_NOT_FOUND
 
         method = self._getHandler(self.cmd, auth)
-
         d = dict(self.fields)
         d['auth'] = self.auth
         try:

@@ -1,4 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
+<?python
+from mint import userlevels
+?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'library.kid'">
@@ -57,8 +60,8 @@
             <h3>Your Projects</h3>
 
             <ol id="active">
-                <li py:for="project in sorted(projectList, key = lambda x: x.getName())">
-                    <a href="http://${project.getHostname()}/">${project.getName()}</a></li>
+                <li py:for="project, level in sorted(projectList, key = lambda x: x[0].getName())">
+                    <a href="http://${project.getHostname()}/">${project.getName()}</a> (${userlevels.names[level]})</li>
             </ol>
         </div>
 

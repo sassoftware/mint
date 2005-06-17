@@ -84,8 +84,7 @@ class MintServer(object):
         hostname += "." + self.cfg.domainName
 
         # XXX this set of operations should be atomic if possible
-        imagetoolUrl = self.cfg.imagetoolUrl % (self.authToken[0], self.authToken[1])
-        itclient = imagetool.ImageToolClient(imagetoolUrl)
+        itclient = self.getItClient()
         itProject = itclient.newProject(projectName)
         itProject.addLabel(hostname + "@rpl:devel",
             "http://%s/conary/" % hostname, self.authToken[0], self.authToken[1])
@@ -237,7 +236,12 @@ class MintServer(object):
         """
         return self.projects.search(terms, limit, offset)
 
-
+    def getItClient(self):
+        imagetoolUrl = self.cfg.imagetoolUrl % (self.authToken[0], self.authToken[1])
+        itclient = imagetool.ImageToolClient(imagetoolUrl)
+        print >> sys.stderr, itclient
+        sys.stderr.flush()
+        return itclient
 
     def __init__(self, cfg):
         self.cfg = cfg

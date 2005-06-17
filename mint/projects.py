@@ -55,6 +55,11 @@ class Project(database.TableObject):
     def getMembers(self):
         return self.server.getProjectUsers(self.id)
 
+    def getReleases(self):
+        itclient = self.server.getItClient()
+        project = itclient.getProject(self.itProjectId)
+        return project.getReleases()
+
     def getUserLevel(self, userId):
         try:
             return self.server.getUserLevel(userId, self.id)
