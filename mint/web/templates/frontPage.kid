@@ -45,7 +45,11 @@
         <div style="background: white; padding: 12px; color: black;">
             <h3>Search</h3>
             <p>Search for a project:</p>
-            <form name="search" action="projectSearch" method="get">
+            <form name="search" action="search" method="get">
+                <select name="type">
+                    <option selected="selected" value="Projects">Search projects</option>
+                    <option value="Users">Search users</option>
+                </select>
                 <input type="text" name="search" size="10" />
                 <button>Submit</button>
             </form>

@@ -6,7 +6,7 @@
     <body>
         ${header_image()}
         <div id="content">
-            ${searchResults( "Results for " + search, results)}
+            ${searchResults(type, "Results for " + terms, results)}
 
             ${html_footer()}
         </div>

@@ -341,9 +341,24 @@ class MintApp(webhandler.WebHandler):
     @strFields(search = None)
     @intFields(limit = 10)
     @intFields(offset = 0)
-    def projectSearch(self, auth, search, limit, offset):
-        results = self.client.getProjectSearchResults(search, limit, offset)
-        self._write("searchResults", search = search, results = results)
+    @strFields(type = None)
+    def search(self, auth, type, search, limit, offset):
+        if(type == "Projects"):
+            return self.projectSearch(search, limit, offset)
+        elif (type == "Users"):
+            return self.userSearch(search, limit, offset)
+        else:
+            # XXX Replace this with a real error code/page
+            return apache.HTTP_NOT_FOUND
+
+    def userSearch(self, terms, limit, offset):
+        results = self.client.getUserSearchResults(terms, limit, offset)
+        self._write("searchResults", type="Users", terms = terms, results = results)
+        return apache.OK
+
+    def projectSearch(self, terms, limit, offset):
+        results = self.client.getProjectSearchResults(terms, limit, offset)
+        self._write("searchResults", type="Projects", terms = terms, results = results)
         return apache.OK
 
     def _write(self, template, **values):

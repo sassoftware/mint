@@ -216,6 +216,17 @@ class MintServer(object):
         return True
 
     @requiresAuth
+    def searchUsers(self, terms, limit, offset):
+        """
+        Collect the results as requested by the search terms
+        @param terms: Search terms
+        @param offset: Count at which to begin listing
+        @param count:  Number of items to return
+        @return:       dictionary of Items requested
+        """
+        return self.users.search(terms, limit, offset)
+
+    @requiresAuth
     def searchProjects(self, terms, limit, offset):
         """
         Collect the results as requested by the search terms

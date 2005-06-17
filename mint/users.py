@@ -149,6 +149,48 @@ class UsersTable(database.KeyedTable):
             r = cu.fetchone()
             return r[0]
 
+    def search(self, terms, limit, offset):
+        """
+        Returns a list of projects matching L{terms} of length L{limit}
+        starting with item L{offset}.
+        @param terms: Search terms
+        @param offset: Count at which to begin listing
+        @param limit:  Number of items to return
+        @return:       a dictionary of the requested items.
+                       each entry will contain four bits of data:
+                        The hostname for use with linking,
+                        The project name,
+                        The project's description
+                        The date last modified.
+        """
+        # XXX: need to truncate the blurb so that it isn't huge and do so
+        # intelligently
+        sqlorder = "ORDER BY userName"
+        subs = []
+        cu = self.db.cursor()
+        query = """SELECT userId, userName, fullName, displayEmail, blurb
+            FROM Users """
+        where = "WHERE "
+        for i, column in enumerate(['userName', 'fullName', 'displayEmail', 'blurb']):
+            if i > 0:
+                where += "OR "
+            where += "%(a)s LIKE '%%%(b)s%%' " % {'a' : column, 'b' : terms}
+        query += where + sqlorder
+
+        if limit > 0:
+            query += " LIMIT ? "
+            subs.append(limit)
+        if offset > 0:
+            query += " OFFSET ? "
+            subs.append(offset)
+
+        cu.execute(query, *subs)
+        ids = []
+        for r in cu.fetchall():
+            ids.append(r)
+        return ids
+
+
 class User(database.TableObject):
     __slots__ = [UsersTable.key] + UsersTable.fields
 
@@ -222,6 +264,7 @@ class ProjectUsersTable(database.DatabaseTable):
         cu.execute("DELETE FROM ProjectUsers WHERE projectId=? AND userId=?", projectId, userId)
         self.db.commit()
         return 0
+
 
 class Authorization(object):
     """

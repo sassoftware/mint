@@ -47,28 +47,53 @@ import time
             </li>
         </ul>
    </div>
+
+    <div py:def="columnTitles(columns = [])" py:omit="1">
+            <thead class="results">
+                <tr class="results">
+                    <td py:for="columnName in columns">${columnName}</td>
+                </tr>
+            </thead>
+    </div>
+
+    <div py:def="resultRow(resultset = [])" py:omit="1">
+                    <td class="results"><a href="${resultset[0]}">${resultset[1]}</a></td>
+                    <?python
+                        resultset.pop(0)
+                        resultset.pop(0)
+                    ?>
+                    <td py:for="item in resultset" class="results">${item}</td>
+    </div>
+
     <!-- results structure:
         [('id', 'data item 1' ... 'data item n'), ]
         XXX: add next/prev/skip links
     -->
-    <div py:def="searchResults(title, results=[])" py:omit="1">
+    <div py:def="searchResults(type, title, results=[])" py:omit="1">
+        <?python
+            columns = []
+            if type == "Projects":
+                columns = ('Project Name', 'Project Description', 'Last Modified')
+            elif type == "Users":
+                columns = ('User Name', 'Full Name', 'E-mail Address', 'Other')
+        ?>
         <h2 class="results">${title}</h2>
         <table class="results" width="100%">
-            <thead class="results">
-                <tr class="results">
-                    <td py:for="columnName in ('Project Name', 'Project Description', 'Last Modified')">${columnName}</td>
+            ${columnTitles(columns)}
+            <tbody class="results">
+                <tr py:for="i, result in enumerate(results)" class="${i % 2 and 'even' or 'odd'}">
+                    <?python
+                        formattedresults = []
+                        if type == "Projects":
+                            formattedresults = [ 'http://%s' % result[0],
+                                result[1], result[2], time.ctime(result[3]) ]
+                        elif type == "Users":
+                            formattedresults = [ 'userInfo?id=%d' % result[0],
+                                result[1], result[2], result[3], result[4] ]
+                    ?>
+                    ${resultRow(formattedresults)}
                 </tr>
-            </thead>
-            <tr py:for="i, result in enumerate(results)" class="${i % 2 and 'even' or
-'odd'}">
-                <!-- First column is a link using result[0] and result[1] -->
-                <td class="results"><a href="http://${result[0]}">${result[1]}</a></td>
-                <td class="results">${result[2]}</td>
-                <?python
-                    timestamp = time.ctime(result[3])
-                ?>
-                <td class="results">${timestamp}</td>
-            </tr>
+            </tbody>
         </table>
     </div>
 </html>
