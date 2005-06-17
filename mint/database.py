@@ -38,9 +38,11 @@ class TableObject(object):
         raise NotImplementedError
 
     def __init__(self, server, id):
-        """@param server: a L{mint.mint_server.MintServer} object for manipulation of the item represented by
-                         this object.
-           @param id: database primary key of the item to be represented by this object.
+        """@param server: a L{mint.mint_server.MintServer} object
+                          for manipulation of the item
+                          represented by this object.
+           @param id: database primary key of the item
+                      to be represented by this object.
         """
         self.id = id
         self.server = server

@@ -91,7 +91,7 @@ class MintApp(webhandler.WebHandler):
         fullHost = self.req.hostname
         hostname = fullHost.split('.')[0]
 
-        if hostname == "www":
+        if hostname == "www" or self.cfg.domainName.startswith(hostname):
             self.userLevel = -1
             default = self.frontPage
         else:
