@@ -18,7 +18,6 @@ import repository.netrepos.netauth
 from repository import netclient
 
 from imagetool import imagetool
-from imagetool import shimclient
 
 validHost = re.compile('^[a-zA-Z][a-zA-Z0-9\-]*$')
 reservedHosts = ['admin', 'mail', 'www', 'web',
