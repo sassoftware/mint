@@ -6,6 +6,7 @@
 import re
 import sqlite3
 import sys
+import time
 
 import projects
 import users
@@ -89,18 +90,20 @@ class MintServer(object):
         itProject.addLabel(hostname + "@rpl:devel",
             "http://%s/conary/" % hostname, self.authToken[0], self.authToken[1])
 
-        projectId = self.projects.new(name = projectName, 
+        projectId = self.projects.new(name = projectName,
                                       creatorId = self.auth.userId,
                                       desc = desc,
                                       hostname = hostname,
                                       defaultBranch = "rpl:devel",
-                                      itProjectId = itProject.getId())
+                                      itProjectId = itProject.getId(),
+                                      timeModified = time.time(),
+                                      timeCreated = time.time())
         self.projectUsers.new(userId = self.auth.userId,
                               projectId = projectId,
                               level = userlevels.OWNER)
         self.projects.createRepos(self.cfg.reposPath, hostname,
                                   self.authToken[0], self.authToken[1])
-    
+
         return projectId
 
     def getProject(self, id):
@@ -128,7 +131,7 @@ class MintServer(object):
                 userId = cu.next()[0]
             except StopIteration:
                 raise database.ItemNotFound("user")
-        
+
         self.projectUsers.new(projectId, userId, level)
         repos = self._getAuthRepo(project)
         repos.addUser(project.getLabel(), username, password)
@@ -138,7 +141,7 @@ class MintServer(object):
 
     @requiresAuth
     def delMember(self, projectId, userId):
-        return self.projectUsers.delete(projectId, userId)    
+        return self.projectUsers.delete(projectId, userId)
         # XXX Need to delete the user from the repository
 
     @requiresAuth
@@ -173,7 +176,7 @@ class MintServer(object):
 
     def registerNewUser(self, username, password, fullName, email, active):
         return self.users.registerNewUser(username, password, fullName, email, active)
-       
+
     def checkAuth(self):
         return self.auth.getDict()
 
