@@ -53,7 +53,7 @@ class Project(database.TableObject):
         return self.timeModified
 
     def getMembers(self):
-        return self.server.getProjectUsers(self.id)
+        return self.server.getMembersByProjectId(self.id)
 
     def getReleases(self):
         itclient = self.server.getItClient()

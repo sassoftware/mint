@@ -18,6 +18,7 @@ import repository.netrepos.netauth
 from repository import netclient
 
 from imagetool import imagetool
+from imagetool import shimclient
 
 validHost = re.compile('^[a-zA-Z][a-zA-Z0-9\-]*$')
 reservedHosts = ['admin', 'mail', 'www', 'web',
@@ -114,8 +115,8 @@ class MintServer(object):
     def getProjectIdsByMember(self, userId):
         return self.projects.getProjectIdsByMember(userId)
 
-    def getProjectUsers(self, id):
-        return self.projectUsers.getProjectUsers(id)
+    def getMembersByProjectId(self, id):
+        return self.projectUsers.getMembersByProjectId(id)
 
     @requiresAuth
     def addMember(self, projectId, userId, username, level):
@@ -243,8 +244,7 @@ class MintServer(object):
     def getItClient(self):
         imagetoolUrl = self.cfg.imagetoolUrl % (self.authToken[0], self.authToken[1])
         itclient = imagetool.ImageToolClient(imagetoolUrl)
-        print >> sys.stderr, itclient
-        sys.stderr.flush()
+        
         return itclient
 
     def __init__(self, cfg):

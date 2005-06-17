@@ -238,7 +238,7 @@ class ProjectUsersTable(database.DatabaseTable):
                     level       INT
                 );"""
 
-    def getProjectUsers(self, projectId):
+    def getMembersByProjectId(self, projectId):
         cu = self.db.cursor()
         cu.execute("""SELECT p.userId, u.username, p.level
                       FROM ProjectUsers p, Users u
