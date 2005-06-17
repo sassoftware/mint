@@ -112,11 +112,11 @@ class ProjectsTable(database.KeyedTable):
 
     def getProjectIdsByMember(self, userId):
         cu = self.db.cursor()
-        cu.execute("SELECT projectId FROM ProjectUsers WHERE userId=?", userId)
+        cu.execute("SELECT projectId, level FROM ProjectUsers WHERE userId=?", userId)
 
         ids = []
         for r in cu.fetchall():
-            ids.append(r[0])
+            ids.append((r[0], r[1]))
         return ids
 
     def search(self, terms, limit, offset):

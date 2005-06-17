@@ -30,8 +30,8 @@ from mint import userlevels
                     <td>Projects:</td>
                     <td>
                         <ul py:if="userProjects">
-                            <li py:for="projectHostname, projectName, level in userProjects">
-                                <a href="http://${projectHostname}/">${projectName}</a> (${userlevels.names[level]})
+                            <li py:for="project, level in userProjects">
+                                <a href="http://${project.getHostname()}/">${project.getName()}</a> (${userlevels.names[level]})
                             </li>
                         </ul>
                         <span py:if="not userProjects">This user is not a member of any projects.</span>

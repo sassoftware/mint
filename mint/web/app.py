@@ -335,7 +335,7 @@ class MintApp(webhandler.WebHandler):
     def userInfo(self, auth, id):
         user = self.client.getUser(id)
         self._write("userInfo", user = user,
-            userProjects = self.client.getProjectsByUser(id))
+            userProjects = self.client.getProjectsByMember(id))
         return apache.OK
 
     @strFields(search = None)
