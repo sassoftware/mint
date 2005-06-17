@@ -33,7 +33,7 @@ class TableObject(object):
     def getItem(self, id):
         """Abstract method to retrieve information about an object from the database
            and fill the object members with that information.
-           
+
            @param id: database primary key"""
         raise NotImplementedError
 
@@ -116,7 +116,7 @@ class KeyedTable(DatabaseTable):
         @param value: value to match primary key
         """
         cu = self.db.cursor()
-    
+
         stmt = "SELECT %s FROM %s WHERE %s = ?" % (self.key, self.name, column)
         cu.execute(stmt, value)
         try:
@@ -155,7 +155,7 @@ class KeyedTable(DatabaseTable):
         """
         values = kwargs.values()
         cols = kwargs.keys()
-        
+
         params = "=?, ".join(cols) + "=?"
         stmt = "UPDATE %s SET %s WHERE %s=?" % (self.name, params, self.key)
 

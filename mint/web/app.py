@@ -85,12 +85,12 @@ class MintApp(webhandler.WebHandler):
         return auth
 
     def _404(self, *args, **kwargs):
-        return apache.HTTP_NOT_FOUND 
+        return apache.HTTP_NOT_FOUND
 
     def _getHandler(self, cmd, auth):
         fullHost = self.req.hostname
         hostname = fullHost.split('.')[0]
-        
+
         if hostname == "www":
             self.userLevel = -1
             default = self.frontPage
@@ -210,11 +210,11 @@ class MintApp(webhandler.WebHandler):
                 return self._redirect("frontPage")
         elif submit == "Forgot Password":
             newpw = users.newPassword()
-            
+
             userId = self.client.getUserIdByName(username)
             user = self.client.getUser(userId)
             user.setPassword(newpw)
-            
+
             message = "\n".join(["Your password for rpath.com has been reset to:",
                                  "",
                                  "    %s" % newpw,
