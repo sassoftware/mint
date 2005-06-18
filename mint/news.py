@@ -56,6 +56,10 @@ class NewsCacheTable(database.KeyedTable):
         self.ageTable = NewsCacheAgeTable(db)
 
     def refresh(self, items = 5, purge = True):
+        def toUnixTime(t):
+            return time.mktime(time.strptime(item.find("pubDate").text,
+                               "%a, %d %b %Y %H:%M:%S +0000"))
+    
         if not self.cfg.newsRssFeed:
             return False
 
@@ -75,9 +79,10 @@ class NewsCacheTable(database.KeyedTable):
             link = item.find("link").text
             title = item.find("title").text
             category = item.find("category").text
+            pubDate = toUnixTime(item.find("pubDate").text)
         
             query = "INSERT INTO NewsCache VALUES (NULL, ?, ?, ?, ?, ?)"
-            cu.execute(query, title, 0, '', link, category)
+            cu.execute(query, title, pubDate, '', link, category)
         
         self.ageTable.setAge()
         self.db.commit()
@@ -86,7 +91,7 @@ class NewsCacheTable(database.KeyedTable):
     def getNews(self):
         cu = self.db.cursor()
 
-        cu.execute("SELECT * FROM NewsCache ORDER BY pubDate")
+        cu.execute("SELECT * FROM NewsCache ORDER BY pubDate DESC")
         data = []
 
         for r in cu.fetchall():
