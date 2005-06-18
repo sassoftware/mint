@@ -117,7 +117,7 @@ class KeyedTable(DatabaseTable):
         @param column: database column name
         @param value: value to match primary key
         """
-        cu = self.getCursor()
+        cu = self.db.cursor()
 
         stmt = "SELECT %s FROM %s WHERE %s = ?" % (self.key, self.name, column)
         cu.execute(stmt, value)
