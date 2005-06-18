@@ -10,7 +10,7 @@ from elementtree import ElementTree
 
 import database
 
-REFRESH_TIME = 60 # seconds
+REFRESH_TIME = 600 # seconds
 
 class NewsCacheAgeTable(database.DatabaseTable):
     name = 'NewsCacheAge'
@@ -81,6 +81,7 @@ class NewsCacheTable(database.KeyedTable):
         
         self.ageTable.setAge()
         self.db.commit()
+        return True
 
     def getNews(self):
         cu = self.db.cursor()
