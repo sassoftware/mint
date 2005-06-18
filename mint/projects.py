@@ -138,24 +138,11 @@ class ProjectsTable(database.KeyedTable):
                         The project's description
                         The date last modified.
         """
-        sqlorder = "ORDER BY NAME"
-        cu = self.db.cursor()
-        query = """SELECT hostname, name, desc, timeModified FROM Projects
-            WHERE name||desc LIKE ? """ + sqlorder
-        subs = [ '%' + terms + '%' ]
+        columns = ['hostname', 'name', 'desc', 'timeModified']
+        searchcols = ['name', 'desc']
+        ids = database.KeyedTable.search(self, columns, 'Projects', terms,
+            searchcols, 'NAME', limit, offset)
 
-        if limit > 0:
-            query += " LIMIT ? "
-            subs.append(limit)
-        if offset > 0:
-            query += " OFFSET ? "
-            subs.append(offset)
-
-        #return [ [ query, 'two', 'three'], ['five', 'six', 'seven'] ]
-        cu.execute(query, *subs)
-        ids = []
-        for r in cu.fetchall():
-            ids.append(r)
         return ids
 
     def createRepos(self, reposPath, hostname, username, password):

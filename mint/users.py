@@ -165,31 +165,12 @@ class UsersTable(database.KeyedTable):
         """
         # XXX: need to truncate the blurb so that it isn't huge and do so
         # intelligently
-        sqlorder = "ORDER BY userName"
-        subs = []
-        cu = self.db.cursor()
-        query = """SELECT userId, userName, fullName, displayEmail, blurb
-            FROM Users """
-        where = "WHERE "
-        for i, column in enumerate(['userName', 'fullName', 'displayEmail', 'blurb']):
-            if i > 0:
-                where += "OR "
-            where += "%(a)s LIKE '%%%(b)s%%' " % {'a' : column, 'b' : terms}
-        query += where + sqlorder
+        columns = ['userId', 'userName', 'fullName', 'displayEmail', 'blurb']
+        searchcols = ['userName', 'fullName', 'displayEmail', 'blurb']
 
-        if limit > 0:
-            query += " LIMIT ? "
-            subs.append(limit)
-        if offset > 0:
-            query += " OFFSET ? "
-            subs.append(offset)
+        ids =  database.KeyedTable.search(self, columns, 'Users', terms, searchcols, "userName", limit, offset)
 
-        cu.execute(query, *subs)
-        ids = []
-        for r in cu.fetchall():
-            ids.append(r)
         return ids
-
 
 class User(database.TableObject):
     __slots__ = [UsersTable.key] + UsersTable.fields
@@ -208,7 +189,7 @@ class User(database.TableObject):
 
     def getDisplayEmail(self):
         return self.displayEmail
-    
+
     def getBlurb(self):
         return self.blurb
 
@@ -220,7 +201,7 @@ class User(database.TableObject):
 
     def setPassword(self, newPassword):
         self.server.setPassword(self.id, newPassword)
-    
+
     def setBlurb(self, blurb):
         self.server.setUserBlurb(self.id, blurb)
 

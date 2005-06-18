@@ -97,7 +97,7 @@ class KeyedTable(DatabaseTable):
         @rtype: dict
         @raise ItemNotFound: row with requested key does not exist in the database.
         """
-        
+
         cu = self.db.cursor()
         stmt = "SELECT %s FROM %s WHERE %s=?" % (", ".join(self.fields), self.name, self.key)
         cu.execute(stmt, id)
@@ -117,7 +117,7 @@ class KeyedTable(DatabaseTable):
         @param column: database column name
         @param value: value to match primary key
         """
-        cu = self.db.cursor()
+        cu = self.getCursor()
 
         stmt = "SELECT %s FROM %s WHERE %s = ?" % (self.key, self.name, column)
         cu.execute(stmt, value)
@@ -165,3 +165,50 @@ class KeyedTable(DatabaseTable):
         cu.execute(*[stmt] + values + [id])
         self.db.commit()
         return True
+
+    def search(self, columns, table, terms, searchcols, order, limit, offset):
+        """
+        Returns a list of items as requested by L{columns} matching L{terms} of length L{limit} starting with item L{offset}.
+        @param columns: list of columns to return
+        @param table: Table, join or view against which to search
+        @param terms: Search terms
+        @param searchcols: List of columns to compare with L{terms}
+        @param offset: Count at which to begin listing
+        @param limit:  Number of items to return
+        @return:       a dictionary of the requested items.
+                       each entry will contain four bits of data:
+                        The hostname for use with linking,
+                        The project name,
+                        The project's description
+                        The date last modified.
+        """
+        # XXX: build a more intelligent Where clause generator
+        subs = [ ]
+        cu = self.db.cursor()
+        query = "SELECT " + ", ".join(columns) + " FROM " + table
+        where = " WHERE "
+        for i, column in enumerate(searchcols):
+            if i > 0:
+                where += "OR "
+            where += "%(a)s LIKE '%%%(b)s%%' " % {'a' : column, 'b' : terms}
+        query += where + "ORDER BY %s" % order
+
+        if limit > 0:
+            query += " LIMIT ? "
+            subs.append(limit)
+        if offset > 0:
+            query += " OFFSET ? "
+            subs.append(offset)
+
+        try:
+            cu.execute(query, *subs)
+        except Exception, e:
+            print >> sys.stderr, str(e), query, subs
+            sys.stderr.flush()
+
+        ids = []
+        for r in cu.fetchall():
+            ids.append(r)
+        return ids
+
+

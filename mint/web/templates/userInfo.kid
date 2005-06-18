@@ -23,7 +23,11 @@ from mint import userlevels
                 </tr>
                 <tr>
                     <td>Blurb:</td>
-                    <td>${user.getBlurb()}</td>
+                    <td>
+                        <p py:for="line in user.getBlurb().split('\r\n')">
+                            ${line}
+                        </p>
+                    </td>
                 </tr>
 
                 <tr>
