@@ -131,6 +131,13 @@ class MintClient:
         """
         return self.server.searchProjects(terms, limit, offset)
 
+    def getNews(self):
+        """
+        Return a list of news items from the RSS news cache.
+        @return: list of news item dictionaries
+        """
+        return self.server.getNews()
+
 class ServerProxy(xmlrpclib.ServerProxy):
     def __getattr__(self, name):
         return _Method(self.__request, name)

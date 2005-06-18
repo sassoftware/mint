@@ -29,5 +29,6 @@ class MintConfig(ConfigFile):
         'imagetoolUrl'      : 'http://%s:%s@iso.rpath.org/images/',
         'authUser'          : '',
         'authPass'          : '',
+        'newsRssFeed'       : '',
         'commitAction'      : None,
     }

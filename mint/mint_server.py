@@ -12,6 +12,7 @@ import projects
 import users
 import database
 import userlevels
+import news
 from mint_error import MintError
 
 import repository.netrepos.netauth
@@ -36,7 +37,7 @@ def requiresAuth(func):
     return wrapper
 
 class MintServer(object):
-    _checkRepo = True
+    _checkRepo = True 
     def callWrapper(self, methodName, authToken, args):
         if methodName.startswith('_'):
             raise AttributeError
@@ -240,6 +241,9 @@ class MintServer(object):
         """
         return self.projects.search(terms, limit, offset)
 
+    def getNews(self):
+        return self.newsCache.getNews()
+
     def getItClient(self):
         imagetoolUrl = self.cfg.imagetoolUrl % (self.authToken[0], self.authToken[1])
         itclient = imagetool.ImageToolClient(imagetoolUrl)
@@ -253,3 +257,5 @@ class MintServer(object):
         self.projects = projects.ProjectsTable(self.db, self.cfg)
         self.users = users.UsersTable(self.db, self.cfg)
         self.projectUsers = users.ProjectUsersTable(self.db)
+        self.newsCache = news.NewsCacheTable(self.db, self.cfg)
+        self.newsCache.refresh()

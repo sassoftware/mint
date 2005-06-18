@@ -28,6 +28,10 @@ from mint import userlevels
                 <p>After you have registered, please <a href="login">log in</a>.</p>
             </div>
 
+            <ul>
+                <li py:for="item in news"><a href="${item['link']}">${item['title']}</a></li>
+            </ul>
+
             <div py:if="auth.authorized" py:omit="True">
                 <p>Thank you for logging in.</p>
                 <h3>Things To Do</h3>

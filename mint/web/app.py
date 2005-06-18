@@ -159,7 +159,8 @@ class MintApp(webhandler.WebHandler):
 
     def frontPage(self, auth):
         projectList = self.client.getProjectsByMember(auth.userId)
-        self._write("frontPage", projectList = projectList)
+        news = self.client.getNews()
+        self._write("frontPage", projectList = projectList, news = news)
         return apache.OK
 
     def register(self, auth):
