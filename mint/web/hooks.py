@@ -81,10 +81,12 @@ def post(port, isSecure, repos, cfg, req):
             wrapper = repos.callWrapper
             params = [protocol, port, method, authToken, params]
         else:
+            if not cfg.xmlrpcAccess:
+                return apache.HTTP_FORBIDDEN
             server = mint_server.MintServer(cfg)
             wrapper = server.callWrapper
             params = [method, authToken, params]
-            
+        
         try:
             result = wrapper(*params)
         except (netserver.InsufficientPermission, mint_server.PermissionDenied):
@@ -180,7 +182,6 @@ def putFile(port, isSecure, repos, req):
     f.close()
 
     return apache.OK
-
 
 def subhandler(req):
     repName = req.hostname
