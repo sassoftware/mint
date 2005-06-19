@@ -1,6 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <?python
 from mint import userlevels
+import time
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
@@ -28,8 +29,9 @@ from mint import userlevels
                 <p>After you have registered, please <a href="login">log in</a>.</p>
             </div>
 
+            <h3>Site News</h3>
             <ul>
-                <li py:for="item in news"><a href="${item['link']}">${item['title']}</a></li>
+                <li py:for="item in news"><a href="${item['link']}">${item['title']}</a> (${time.ctime(item['pubDate'])})</li>
             </ul>
 
             <div py:if="auth.authorized" py:omit="True">

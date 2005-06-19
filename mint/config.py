@@ -25,7 +25,7 @@ class MintConfig(ConfigFile):
         'tmpPath'           : '/data/mint/tmp/',
         'domainName'        : '',
         'adminMail'         : 'mint@rpath.org',
-        'xmlrpcEnabled'     : [ BOOLEAN, False ],
+        'xmlrpcAccess'      : [ BOOLEAN, False ],
         'imagetoolUrl'      : 'http://%s:%s@iso.rpath.org/images/',
         'authUser'          : '',
         'authPass'          : '',
