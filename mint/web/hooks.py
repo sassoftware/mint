@@ -25,7 +25,7 @@ from mint import mint_server
 import app
 import cookie_http
 
-profiling = False
+profiling = False 
 BUFFER=1024 * 256
 
 def getHttpAuth(req):
@@ -218,9 +218,9 @@ def subhandler(req):
                         (req.hostname) + rest
         
         # set up the commitAction
+        buildLabel = req.hostname + "@rpl:devel"
+        repMap = buildLabel + " http://" + req.hostname + "/conary/"
         if cfg.commitAction:
-            buildLabel = req.hostname + "@rpl:devel"
-            repMap = buildLabel + " http://" + req.hostname + "/conary/"
             commitAction = cfg.commitAction % {'repMap': repMap, 'buildLabel': buildLabel}
         else:
             commitAction = None
@@ -230,7 +230,7 @@ def subhandler(req):
                                     cfg.tmpPath,
                                     urlBase, 
                                     req.hostname,
-                                    {},
+                                    {buildLabel: repMap},
                                     commitAction = commitAction,
                                     cacheChangeSets = True,
                                     logFile = None

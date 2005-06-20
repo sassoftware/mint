@@ -6,20 +6,21 @@
 
 import time
 
-import stats
-import mint_server
+from mint import stats
+from mint import mint_server
+from mint import config
 
 import conary
 from conary import options 
+from conary import versions
 
 def usage(exitcode=1):
     sys.stderr.write("\n".join((
      "Usage: commitaction [commitaction args] ",
-     "         --module '/path/to/statsaction --config <mint config file> --user <user>'",
+     "         --module '/path/to/statsaction --mintconf <mint config file> --user <user>'",
      ""
     )))
     return exitcode
-
 
 def process(repos, cfg, commitList, srcMap, pkgMap, grpMap, argv, otherArgs):
     if not len(argv) and not len(otherArgs):
@@ -27,7 +28,7 @@ def process(repos, cfg, commitList, srcMap, pkgMap, grpMap, argv, otherArgs):
     
     argDef = {
         'user': options.ONE_PARAM,
-        'config' : option.ONE_PARAM,
+        'mintconf' : options.ONE_PARAM,
     }
 
     # create an argv[0] for processArgs to ignore
@@ -40,16 +41,17 @@ def process(repos, cfg, commitList, srcMap, pkgMap, grpMap, argv, otherArgs):
     otherArgs.extend(someArgs)
 
     cfg = config.MintConfig()
-    cfg.read(argSet['config'])
+    cfg.read(argSet['mintconf'])
     user = argSet['user']
 
     mint = mint_server.MintServer(cfg)
-
+    commitsTable = stats.CommitsTable(mint.db)
+    
     for commit in commitList:
         t, vStr, f = commit
 
         v = versions.VersionFromString(vStr)
-        hostname = v.label().getHost()
+        hostname = v.branch().label().getHost()
 
         projectId = mint.getProjectIdByHostname(hostname)
         userId = mint.getUserIdByName(user)
