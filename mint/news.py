@@ -4,7 +4,9 @@
 # All Rights Reserved
 #
 
+import calendar
 import time
+import rfc822
 import urllib2 
 from elementtree import ElementTree
 
@@ -57,8 +59,7 @@ class NewsCacheTable(database.KeyedTable):
 
     def refresh(self, items = 5, purge = True):
         def toUnixTime(t):
-            return time.mktime(time.strptime(item.find("pubDate").text,
-                               "%a, %d %b %Y %H:%M:%S +0000"))
+            return calendar.timegm(rfc822.parsedate_tz(item.find("pubDate").text))
     
         if not self.cfg.newsRssFeed:
             return False
