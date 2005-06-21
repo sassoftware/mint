@@ -14,6 +14,7 @@ from repository.netrepos.netserver import NetworkRepositoryServer
 from mint_error import MintError
 import database
 import userlevels
+import searcher
 
 class InvalidHostname(Exception):
     def __str__(self):
@@ -140,8 +141,11 @@ class ProjectsTable(database.KeyedTable):
         """
         columns = ['hostname', 'name', 'desc', 'timeModified']
         searchcols = ['name', 'desc']
-        ids = database.KeyedTable.search(self, columns, 'Projects', terms,
-            searchcols, 'NAME', limit, offset)
+        ids = database.KeyedTable.search(self, columns, 'Projects', 
+            searcher.Searcher.where(terms, searchcols), 'NAME', limit, offset)
+        for i, x in enumerate(ids[:]):
+            ids[i] = list(x)
+            ids[i][2] = searcher.Searcher.truncate(x[2], terms)
 
         return ids
 

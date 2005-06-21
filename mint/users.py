@@ -5,6 +5,7 @@
 #
 import random
 import string
+import re
 import sys
 import time
 
@@ -18,6 +19,7 @@ from lib import sha1helper
 from mint_error import MintError
 import database
 import userlevels
+import searcher
 
 from imagetool import imagetool
 
@@ -52,11 +54,11 @@ class UsersTable(database.KeyedTable):
     fields = ['userId', 'username', 'fullName', 'email',
               'displayEmail', 'timeCreated', 'timeAccessed',
               'active', 'confirmation', 'blurb']
-             
+
     def __init__(self, db, cfg):
         database.DatabaseTable.__init__(self, db)
         self.cfg = cfg
-             
+
     def checkAuth(self, authToken, checkRepo = True):
         username, password = authToken
         cu = self.db.cursor()
@@ -69,11 +71,11 @@ class UsersTable(database.KeyedTable):
             if checkRepo:
                 authUrl = self.cfg.authRepoUrl % (username, password)
                 authLabel = self.cfg.authRepo.keys()[0]
-                
+
                 authRepo = {authLabel: authUrl}
                 repo = netclient.NetworkRepositoryClient(authRepo)
                 groups = repo.getUserGroups(authLabel)
-                
+
             if username in groups or not checkRepo:
                 return {'authorized':   True,
                         'userId':       r[0],
@@ -121,7 +123,7 @@ class UsersTable(database.KeyedTable):
                                  "on the Freenode IRC network (http://www.freenode.net/) for live help."])
 
             sendMail(self.cfg.adminMail, "rpath.com", email, "rpath.com registration", message)
-            
+
         try:
             userId = self.new(username = username,
                               fullName = fullName,
@@ -163,12 +165,13 @@ class UsersTable(database.KeyedTable):
                         The project's description
                         The date last modified.
         """
-        # XXX: need to truncate the blurb so that it isn't huge and do so
-        # intelligently
         columns = ['userId', 'userName', 'fullName', 'displayEmail', 'blurb']
         searchcols = ['userName', 'fullName', 'displayEmail', 'blurb']
 
-        ids =  database.KeyedTable.search(self, columns, 'Users', terms, searchcols, "userName", limit, offset)
+        ids =  database.KeyedTable.search(self, columns, 'Users', searcher.Searcher.where(terms, searchcols), "userName", limit, offset)
+        for i, x in enumerate(ids[:]):
+            ids[i] = list(x)
+            ids[i][4] = searcher.Searcher.truncate(x[4], terms)
 
         return ids
 

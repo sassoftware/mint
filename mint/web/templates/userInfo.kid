@@ -24,7 +24,7 @@ from mint import userlevels
                 <tr>
                     <td>Blurb:</td>
                     <td>
-                        <p py:for="line in user.getBlurb().split('\r\n')">
+                        <p py:for="line in user.getBlurb().splitlines()">
                             ${line}
                         </p>
                     </td>

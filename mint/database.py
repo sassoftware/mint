@@ -166,7 +166,7 @@ class KeyedTable(DatabaseTable):
         self.db.commit()
         return True
 
-    def search(self, columns, table, terms, searchcols, order, limit, offset):
+    def search(self, columns, table, where, order, limit, offset):
         """
         Returns a list of items as requested by L{columns} matching L{terms} of length L{limit} starting with item L{offset}.
         @param columns: list of columns to return
@@ -182,15 +182,9 @@ class KeyedTable(DatabaseTable):
                         The project's description
                         The date last modified.
         """
-        # XXX: build a more intelligent Where clause generator
         subs = [ ]
         cu = self.db.cursor()
         query = "SELECT " + ", ".join(columns) + " FROM " + table
-        where = " WHERE "
-        for i, column in enumerate(searchcols):
-            if i > 0:
-                where += "OR "
-            where += "%(a)s LIKE '%%%(b)s%%' " % {'a' : column, 'b' : terms}
         query += where + "ORDER BY %s" % order
 
         if limit > 0:
