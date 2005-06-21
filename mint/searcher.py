@@ -3,7 +3,6 @@
 #
 # All Rights Reserved
 #
-import sys
 import string
 import re
 
@@ -31,13 +30,9 @@ class Searcher :
         """
         #are the search terms in the string
         returner = longstring
-        print >>sys.stderr, "Checking '%(a)s' for '%(b)s'"%{'a' : longstring, 'b' : searchterms}
-        sys.stderr.flush()
         if searchterms in longstring:
             #Split it up and shorten it
             regexp = "(\S+\s+){0,%d}" % self.WORDS_PRE + searchterms + "(\s+\S+){0,%d}" % self.WORDS_POST
-            print >>sys.stderr, "regexp is", regexp
-            sys.stderr.flush()
             expr = re.compile(regexp, re.IGNORECASE)
             match = expr.search(longstring)
             if match != None:
