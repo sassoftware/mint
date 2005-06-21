@@ -15,6 +15,7 @@ python_files =  config.py\
 		mint_server.py\
 		projects.py\
 		shimclient.py\
+		stats.py\
 		test.py\
 		userlevels.py\
 		users.py
