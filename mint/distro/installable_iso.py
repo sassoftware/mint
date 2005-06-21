@@ -65,7 +65,7 @@ class InstallableIso(ImageGenerator):
         repos = repository.netclient.NetworkRepositoryClient(ccfg.repositoryMap)
 
         jobId = self.job.getId()
-        releasePhase = upstream(version)
+        releaseVer = upstream(version)
         releasePhase = self.job.getData("releasePhase")
         isoSize = self.job.getData("isoSize")
 
