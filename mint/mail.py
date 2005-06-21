@@ -5,6 +5,7 @@
 #
 
 class MailInterface:
+    """Interface to mailman."""
     def newList(self, hostname, listName, adminEmails):
         """
         Request that a new list be created: <hostname>-<listName>

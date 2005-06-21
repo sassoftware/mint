@@ -15,7 +15,7 @@ messages = { '':          'If you do not have an account, please <a href="regist
         ${menu([("Login", None, True)])}
         
         <div id="content">
-        <p>Please log in to use the the rpath Linux Mint custom distribution server:</p>
+        <p>Please log in to use rpath.com:</p>
         <p>If you do not have an account, please <a href="register">register</a>.</p>
         <p py:if="message" style="font-weight: bold;" py:content="messages[message]"/>
         <form method="post" action="login2">

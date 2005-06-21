@@ -6,17 +6,17 @@ import time
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'library.kid'">
-    ${html_header("Linux Mint")}
+    ${html_header("rpath.com")}
     <body>
         ${header_image()}
-        ${menu([('Mint', False, True)])}
+        ${menu([('rpath.com', False, True)])}
 
         <table style="width: 100%;">
             <tr><td style="padding: 0px;">
 
         <div id="content">
-            <h2>Linux Mint</h2>
-            <p>The Linux Mint is a free service by rPath, Inc. to host Conary-managed Linux distributions. We will
+            <h2>rpath.com</h2>
+            <p>This is a free service by rPath, Inc. to host Conary-managed Linux distributions. We will
                host a repository for your project and allow you to collaborate with others to create a complete
                Linux distribution almost entirely on the web.</p>
 

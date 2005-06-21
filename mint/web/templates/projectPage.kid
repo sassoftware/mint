@@ -5,13 +5,13 @@ from mint import userlevels
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'library.kid'">
-    ${html_header("Linux Mint")}
+    ${html_header("rpath.com")}
     <?python
         isOwner = userLevel == userlevels.OWNER
     ?>
     <body>
         ${header_image()}
-        ${menu([('Mint', False, True)])}
+        ${menu([('rpath.com', False, True)])}
 
         <div id="content">
             <h2>${project.getName()}</h2>

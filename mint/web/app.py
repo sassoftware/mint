@@ -232,10 +232,10 @@ class MintApp(webhandler.WebHandler):
             self.client.confirmUser(id)
         except users.ConfirmError:
             self._write("error", shortError = "Confirm Failed",
-                                    error = "Sorry, an error has occurred while confirming your registration.")
+                error = "Sorry, an error has occurred while confirming your registration.")
         except users.AlreadyConfirmed:
             self._write("error", shortError = "Already Confirmed",
-                                    error = "Your account has already been confirmed.")
+                error = "Your account has already been confirmed.")
         else:
             return self._redirect("login?message=confirmed")
         return apache.OK 

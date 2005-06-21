@@ -14,7 +14,7 @@ email = None
         
         <div id="content">
             <h2>Register</h2>
-            <p>Using a Mint account, you can create your own Linux distribution.</p> 
+            <p>Using a rpath.com account, you can create your own Linux distribution.</p> 
 
             <form method="post" action="processRegister">
                 <table>
