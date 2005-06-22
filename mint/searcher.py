@@ -30,6 +30,8 @@ class Searcher :
         """
         #are the search terms in the string
         returner = longstring
+        if returner == None:
+            return ''
         if searchterms in longstring:
             #Split it up and shorten it
             regexp = "(\S+\s+){0,%d}" % self.WORDS_PRE + searchterms + "(\s+\S+){0,%d}" % self.WORDS_POST
