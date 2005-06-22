@@ -10,7 +10,6 @@ from mod_python import Cookie
 
 import base64
 import os
-import traceback
 import sqlite3
 import xmlrpclib
 import zlib
@@ -62,6 +61,11 @@ def checkAuth(req, repos):
     return authToken
 
 def post(port, isSecure, repos, cfg, req):
+    if isSecure:
+        protocol = "https"
+    else:
+        protocol = "http"
+
     if req.headers_in['Content-Type'] == "text/xml":
         authToken = getHttpAuth(req)
         if type(authToken) is int:
@@ -71,11 +75,6 @@ def post(port, isSecure, repos, cfg, req):
             return apache.HTTP_FORBIDDEN
 
         (params, method) = xmlrpclib.loads(req.read())
-
-        if isSecure:
-            protocol = "https"
-        else:
-            protocol = "http"
 
         if req.path_info.startswith("/conary"):
             wrapper = repos.callWrapper
@@ -102,13 +101,18 @@ def post(port, isSecure, repos, cfg, req):
         return apache.OK
     else:
         if req.path_info.startswith("/conary"):
-            webfe = cookie_http.CookieHttpHandler(req, cfg, repos)
+            webfe = cookie_http.CookieHttpHandler(req, cfg, repos, protocol, port)
             return webfe._methodHandler()
         else:
             webfe = app.MintApp(req, cfg)
             return webfe._handle()
 
-def get(isSecure, repos, cfg, req):
+def get(port, isSecure, repos, cfg, req):
+    if isSecure:
+        protocol = "https"
+    else:
+        protocol = "http"
+
     uri = req.uri
     if uri.endswith('/'):
         uri = uri[:-1]
@@ -158,7 +162,7 @@ def get(isSecure, repos, cfg, req):
         return apache.OK
     else:
         if req.path_info.startswith("/conary"):
-            webfe = cookie_http.CookieHttpHandler(req, cfg, repos)
+            webfe = cookie_http.CookieHttpHandler(req, cfg, repos, protocol, port)
             return webfe._methodHandler()
         else:
             webfe = app.MintApp(req, cfg)
@@ -219,9 +223,10 @@ def subhandler(req):
         
         # set up the commitAction
         buildLabel = req.hostname + "@rpl:devel"
-        repMap = buildLabel + " http://" + req.hostname + "/conary/"
+        repMapStr = buildLabel + " http://" + req.hostname + "/conary/"
+        repMap = {buildLabel: "http://" + req.hostname + "/conary/"}
         if cfg.commitAction:
-            commitAction = cfg.commitAction % {'repMap': repMap, 'buildLabel': buildLabel}
+            commitAction = cfg.commitAction % {'repMap': repMapStr, 'buildLabel': buildLabel}
         else:
             commitAction = None
 
@@ -230,7 +235,7 @@ def subhandler(req):
                                     cfg.tmpPath,
                                     urlBase, 
                                     req.hostname,
-                                    {buildLabel: repMap},
+                                    repMap,
                                     commitAction = commitAction,
                                     cacheChangeSets = True,
                                     logFile = None
@@ -244,7 +249,7 @@ def subhandler(req):
     if method == "POST":
 	return post(port, secure, repo, cfg, req)
     elif method == "GET":
-	return get(secure, repo, cfg, req)
+	return get(port, secure, repo, cfg, req)
     elif method == "PUT":
 	return putFile(port, secure, repo, req)
     else:
