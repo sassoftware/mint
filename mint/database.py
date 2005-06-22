@@ -184,6 +184,20 @@ class KeyedTable(DatabaseTable):
         """
         subs = [ ]
         cu = self.db.cursor()
+        count = 0
+
+        #First get the search result count
+        query = "SELECT count(%(column)s) FROM %(table)s " % {'column' : columns[0], 'table' : table} + where
+        try:
+            cu.execute(query)
+            r = cu.fetchone()
+            count = r[0]
+        except Exception, e:
+            print >> sys.stderr, str(e), query
+            sys.stderr.flush()
+
+
+        #Now the actual search results
         query = "SELECT " + ", ".join(columns) + " FROM " + table
         query += where + "ORDER BY %s" % order
 
@@ -203,6 +217,6 @@ class KeyedTable(DatabaseTable):
         ids = []
         for r in cu.fetchall():
             ids.append(r)
-        return ids
+        return ids, count
 
 

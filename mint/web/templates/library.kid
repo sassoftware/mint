@@ -69,15 +69,33 @@ import time
         [('id', 'data item 1' ... 'data item n'), ]
         XXX: add next/prev/skip links
     -->
-    <div py:def="searchResults(type, title, results=[])" py:omit="1">
+    <div py:def="searchResults(type, title, count, results=[], limit=10, offset=0)" py:omit="1">
         <?python
             columns = []
             if type == "Projects":
                 columns = ('Project Name', 'Project Description', 'Last Modified')
             elif type == "Users":
                 columns = ('User Name', 'Full Name', 'E-mail Address', 'Other')
+            plural=""
+            if count != 1:
+                plural = "es"
         ?>
-        <h2 class="results">${title}</h2>
+        <h2 class="results">> rpath > ${title}</h2>
+        <div>${type}; keywords: ${terms}; modified whenever</div>
+        <div class="results">
+            <span class="results">${count} match${plural} found;</span>
+            <span class="results">Showing ${offset + 1}-${min(offset+limit, count)}</span>
+            <span class="results">Page: ${offset/limit + 1}
+                 of ${(count+limit-1)/limit}</span>
+            <span py:if="offset == 0" class="resultsnav">Previous</span>
+            <span py:if="offset != 0" class="resultsnav">
+                <a href="search?type=${type};search=${terms};limit=${limit};offset=${max(offset-limit, 0)}">Previous</a>
+            </span>
+            <span py:if="offset+limit &gt;= count" class="resultsnav">Next</span>
+            <span py:if="offset+limit &lt; count" class="resultsnav">
+                <a href="search?type=${type};search=${terms};limit=${limit};offset=${offset+limit}">Next</a>
+            </span>
+        </div>
         <table class="results" width="100%">
             ${columnTitles(columns)}
             <tbody class="results">

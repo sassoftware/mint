@@ -356,13 +356,13 @@ class MintApp(webhandler.WebHandler):
             return apache.HTTP_NOT_FOUND
 
     def userSearch(self, terms, limit, offset):
-        results = self.client.getUserSearchResults(terms, limit, offset)
-        self._write("searchResults", type="Users", terms = terms, results = results)
+        results, count = self.client.getUserSearchResults(terms, limit, offset)
+        self._write("searchResults", type="Users", terms = terms, results = results, count = count, limit = limit, offset = offset)
         return apache.OK
 
     def projectSearch(self, terms, limit, offset):
-        results = self.client.getProjectSearchResults(terms, limit, offset)
-        self._write("searchResults", type="Projects", terms = terms, results = results)
+        results, count = self.client.getProjectSearchResults(terms, limit, offset)
+        self._write("searchResults", type="Projects", terms = terms, results = results, count = count, limit = limit, offset = offset)
         return apache.OK
 
     def _write(self, template, **values):

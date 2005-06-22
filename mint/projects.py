@@ -141,13 +141,13 @@ class ProjectsTable(database.KeyedTable):
         """
         columns = ['hostname', 'name', 'desc', 'timeModified']
         searchcols = ['name', 'desc']
-        ids = database.KeyedTable.search(self, columns, 'Projects', 
+        ids, count = database.KeyedTable.search(self, columns, 'Projects', 
             searcher.Searcher.where(terms, searchcols), 'NAME', limit, offset)
         for i, x in enumerate(ids[:]):
             ids[i] = list(x)
             ids[i][2] = searcher.Searcher.truncate(x[2], terms)
 
-        return ids
+        return ids, count
 
     def createRepos(self, reposPath, hostname, username, password):
         path = os.path.join(reposPath, hostname)

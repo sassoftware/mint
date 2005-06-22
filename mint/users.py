@@ -168,12 +168,12 @@ class UsersTable(database.KeyedTable):
         columns = ['userId', 'userName', 'fullName', 'displayEmail', 'blurb']
         searchcols = ['userName', 'fullName', 'displayEmail', 'blurb']
 
-        ids =  database.KeyedTable.search(self, columns, 'Users', searcher.Searcher.where(terms, searchcols), "userName", limit, offset)
+        ids, count =  database.KeyedTable.search(self, columns, 'Users', searcher.Searcher.where(terms, searchcols), "userName", limit, offset)
         for i, x in enumerate(ids[:]):
             ids[i] = list(x)
             ids[i][4] = searcher.Searcher.truncate(x[4], terms)
 
-        return ids
+        return ids, count
 
 class User(database.TableObject):
     __slots__ = [UsersTable.key] + UsersTable.fields
