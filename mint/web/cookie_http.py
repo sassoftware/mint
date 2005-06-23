@@ -13,7 +13,7 @@ from mod_python import Cookie
 from mod_python.util import FieldStorage
 
 from server import http
-from server import shimclient
+from repository import shimclient
 from web import webauth
 from repository.netrepos import netserver
 
