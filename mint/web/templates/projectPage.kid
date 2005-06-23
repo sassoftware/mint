@@ -22,7 +22,7 @@ from mint import userlevels
                 ${project.getDesc()}
             </p>
 
-            <div py:if="isOwner"><a href="http://${project.getHostname()}/conary/">Repository Administration</a></div>    
+            <div><a href="http://${project.getHostname()}/conary/browse">Browse Repository</a></div> 
             <h3>Project Members</h3>
             <?python 
               memberList = project.getMembers()
