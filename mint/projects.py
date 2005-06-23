@@ -125,11 +125,12 @@ class ProjectsTable(database.KeyedTable):
             ids.append((r[0], r[1]))
         return ids
 
-    def search(self, terms, limit, offset):
+    def search(self, terms, modified, limit, offset):
         """
         Returns a list of projects matching L{terms} of length L{limit}
         starting with item L{offset}.
         @param terms: Search terms
+        @param modified: Code for the period within which the project must have been modified to include in the search results.
         @param offset: Count at which to begin listing
         @param limit:  Number of items to return
         @return:       a dictionary of the requested items.
@@ -142,7 +143,7 @@ class ProjectsTable(database.KeyedTable):
         columns = ['hostname', 'name', 'desc', 'timeModified']
         searchcols = ['name', 'desc']
         ids, count = database.KeyedTable.search(self, columns, 'Projects', 
-            searcher.Searcher.where(terms, searchcols), 'NAME', limit, offset)
+            searcher.Searcher.where(terms, searchcols), 'NAME', searcher.Searcher.lastModified('timeModified', modified), limit, offset)
         for i, x in enumerate(ids[:]):
             ids[i] = list(x)
             ids[i][2] = searcher.Searcher.truncate(x[2], terms)

@@ -5,11 +5,40 @@
 #
 import string
 import re
+import time
+
+NEVER, DAY, THREEDAYS, WEEK, TWOWEEKS, FOURWEEKS = range(0, 6)
+
+datehtml = [
+    "Any Time",
+    "24 Hours",
+    "3 Days",
+    "7 Days",
+    "2 Weeks",
+    "4 Weeks",
+]
+
+datesql = {
+    NEVER: "0",
+    DAY: "(EPOCH - 86400)",
+    THREEDAYS: "(EPOCH - 259200)",
+    WEEK: "(EPOCH - 604800)",
+    TWOWEEKS: "(EPOCH - 1209600)",
+    FOURWEEKS: "(EPOCH - 2419200)",
+}
 
 class Searcher :
     WORDS_PRE = 30
     WORDS_POST = 30
     WORDS_TOTAL = 60
+
+    @classmethod
+    def lastModified(self, column, modcode):
+        if modcode == NEVER:
+            return ''
+        else:
+            comparator = datesql[modcode].replace('EPOCH', str(time.time()))
+            return "%s > %s" % (column, comparator)
 
     @classmethod
     def truncate(self, longstring, searchterms):

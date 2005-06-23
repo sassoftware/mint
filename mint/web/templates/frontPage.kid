@@ -2,6 +2,7 @@
 <?python
 from mint import userlevels
 import time
+from mint import searcher
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
@@ -55,11 +56,19 @@ import time
             <h3>Search</h3>
             <p>Search for a project:</p>
             <form name="search" action="search" method="get">
+                <span>Search Type:</span>
                 <select name="type">
                     <option selected="selected" value="Projects">Search projects</option>
                     <option value="Users">Search users</option>
                 </select>
+                <br/>
+                <span>Keyword(s):</span>
                 <input type="text" name="search" size="10" />
+                <br/>
+                <span>Last modified:</span>
+                <select name="modified">
+                    <option py:for="i, option in enumerate(searcher.datehtml)" value="${i}">${option}</option>
+                </select>
                 <button>Submit</button>
             </form>
 

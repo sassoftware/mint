@@ -166,13 +166,14 @@ class KeyedTable(DatabaseTable):
         self.db.commit()
         return True
 
-    def search(self, columns, table, where, order, limit, offset):
+    def search(self, columns, table, where, order, modified, limit, offset):
         """
         Returns a list of items as requested by L{columns} matching L{terms} of length L{limit} starting with item L{offset}.
         @param columns: list of columns to return
         @param table: Table, join or view against which to search
         @param terms: Search terms
         @param searchcols: List of columns to compare with L{terms}
+        @param modified: Last modification time.  Empty string to skip this check.
         @param offset: Count at which to begin listing
         @param limit:  Number of items to return
         @return:       a dictionary of the requested items.
@@ -185,6 +186,9 @@ class KeyedTable(DatabaseTable):
         subs = [ ]
         cu = self.db.cursor()
         count = 0
+
+        if modified:
+            where += " AND " + modified
 
         #First get the search result count
         query = "SELECT count(%(column)s) FROM %(table)s " % {'column' : columns[0], 'table' : table} + where
@@ -199,7 +203,7 @@ class KeyedTable(DatabaseTable):
 
         #Now the actual search results
         query = "SELECT " + ", ".join(columns) + " FROM " + table
-        query += where + "ORDER BY %s" % order
+        query += where + " ORDER BY %s" % order
 
         if limit > 0:
             query += " LIMIT ? "

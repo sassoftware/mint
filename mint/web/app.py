@@ -345,10 +345,11 @@ class MintApp(webhandler.WebHandler):
     @strFields(search = None)
     @intFields(limit = 10)
     @intFields(offset = 0)
+    @intFields(modified = 0)
     @strFields(type = None)
-    def search(self, auth, type, search, limit, offset):
+    def search(self, auth, type, search, modified, limit, offset):
         if(type == "Projects"):
-            return self.projectSearch(search, limit, offset)
+            return self.projectSearch(search, modified, limit, offset)
         elif (type == "Users"):
             return self.userSearch(search, limit, offset)
         else:
@@ -357,12 +358,12 @@ class MintApp(webhandler.WebHandler):
 
     def userSearch(self, terms, limit, offset):
         results, count = self.client.getUserSearchResults(terms, limit, offset)
-        self._write("searchResults", type="Users", terms = terms, results = results, count = count, limit = limit, offset = offset)
+        self._write("searchResults", type="Users", terms = terms, results = results, count = count, limit = limit, offset = offset, modified = 0)
         return apache.OK
 
-    def projectSearch(self, terms, limit, offset):
-        results, count = self.client.getProjectSearchResults(terms, limit, offset)
-        self._write("searchResults", type="Projects", terms = terms, results = results, count = count, limit = limit, offset = offset)
+    def projectSearch(self, terms, modified, limit, offset):
+        results, count = self.client.getProjectSearchResults(terms, modified, limit, offset)
+        self._write("searchResults", type="Projects", terms = terms, results = results, count = count, limit = limit, offset = offset, modified = modified)
         return apache.OK
 
     def _write(self, template, **values):

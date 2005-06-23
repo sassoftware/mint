@@ -1,6 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <?python
 import time
+from mint import searcher
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#">
@@ -69,7 +70,7 @@ import time
         [('id', 'data item 1' ... 'data item n'), ]
         XXX: add next/prev/skip links
     -->
-    <div py:def="searchResults(type, title, count, results=[], limit=10, offset=0)" py:omit="1">
+    <div py:def="searchResults(type, title, count, results=[], modified=0, limit=10, offset=0)" py:omit="1">
         <?python
             columns = []
             if type == "Projects":
@@ -81,19 +82,22 @@ import time
                 plural = "es"
         ?>
         <h2 class="results">> rpath > ${title}</h2>
-        <div>${type}; keywords: ${terms}; modified whenever</div>
+        <div>${type}; keywords: ${terms}; modified within ${searcher.datehtml[modified]}</div>
         <div class="results">
             <span class="results">${count} match${plural} found;</span>
-            <span class="results">Showing ${offset + 1}-${min(offset+limit, count)}</span>
-            <span class="results">Page: ${offset/limit + 1}
+            <span py:if="count == 0" class="results">No results shown</span>
+            <span py:if="count != 0" class="results">Showing ${offset + 1}-${min(offset+limit, count)}</span>
+            <span py:if="count != 0" class="results">Page: ${offset/limit + 1}
                  of ${(count+limit-1)/limit}</span>
+            <span py:if="count == 0" class="results">Page: 1 of 1</span>
+            <!-- Navigation stuff -->
             <span py:if="offset == 0" class="resultsnav">Previous</span>
             <span py:if="offset != 0" class="resultsnav">
-                <a href="search?type=${type};search=${terms};limit=${limit};offset=${max(offset-limit, 0)}">Previous</a>
+                <a href="search?type=${type};search=${terms};modified=${modified};limit=${limit};offset=${max(offset-limit, 0)}">Previous</a>
             </span>
             <span py:if="offset+limit &gt;= count" class="resultsnav">Next</span>
             <span py:if="offset+limit &lt; count" class="resultsnav">
-                <a href="search?type=${type};search=${terms};limit=${limit};offset=${offset+limit}">Next</a>
+                <a href="search?type=${type};search=${terms};modified=${modified};limit=${limit};offset=${offset+limit}">Next</a>
             </span>
         </div>
         <table class="results" width="100%">

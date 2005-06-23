@@ -6,7 +6,7 @@
     <body>
         ${header_image()}
         <div id="content">
-            ${searchResults(type, "Results for " + terms, count, results, limit, offset)}
+            ${searchResults(type, "Results for " + terms, count, results, modified, limit, offset)}
 
             ${html_footer()}
         </div>

@@ -219,27 +219,26 @@ class MintServer(object):
 
         return True
 
-    @requiresAuth
     def searchUsers(self, terms, limit, offset):
         """
         Collect the results as requested by the search terms
         @param terms: Search terms
+        @param limit:  Number of items to return
         @param offset: Count at which to begin listing
-        @param count:  Number of items to return
         @return:       dictionary of Items requested
         """
         return self.users.search(terms, limit, offset)
 
-    @requiresAuth
-    def searchProjects(self, terms, limit, offset):
+    def searchProjects(self, terms, modified, limit, offset):
         """
         Collect the results as requested by the search terms
         @param terms: Search terms
+        @param modified: Code for the lastModified filter
+        @param limit:  Number of items to return
         @param offset: Count at which to begin listing
-        @param count:  Number of items to return
         @return:       dictionary of Items requested
         """
-        return self.projects.search(terms, limit, offset)
+        return self.projects.search(terms, modified, limit, offset)
 
     def getNews(self):
         return self.newsCache.getNews()
