@@ -122,9 +122,16 @@ class JobDaemon:
 def kill(lockFile):
     lock = open(lockFile, "r")
     pid = int(lock.read())
+    lock.close()
     log.info("killing job server pid %d" % pid)
-
-    os.kill(pid, signal.SIGINT)
+    try:
+        os.kill(pid, signal.SIGINT)
+    except OSError, e:
+        log.info("process not found; removing lock file")
+        if e.errno != errno.ESRCH:
+            os.unlink(lockFile)
+        else:
+            raise
 
 def daemon(options, cfg, lockFile):
     try:
