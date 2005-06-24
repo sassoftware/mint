@@ -171,7 +171,7 @@ class KeyedTable(DatabaseTable):
         Returns a list of items as requested by L{columns} matching L{terms} of length L{limit} starting with item L{offset}.
         @param columns: list of columns to return
         @param table: Table, join or view against which to search
-        @param terms: Search terms
+        @param where: Where clause returned by Searcher.where()
         @param searchcols: List of columns to compare with L{terms}
         @param modified: Last modification time.  Empty string to skip this check.
         @param offset: Count at which to begin listing
@@ -191,9 +191,9 @@ class KeyedTable(DatabaseTable):
             where += " AND " + modified
 
         #First get the search result count
-        query = "SELECT count(%(column)s) FROM %(table)s " % {'column' : columns[0], 'table' : table} + where
+        query = "SELECT count(%(column)s) FROM %(table)s " % {'column' : columns[0], 'table' : table} + where[0]
         try:
-            cu.execute(query)
+            cu.execute(query, where[1])
             r = cu.fetchone()
             count = r[0]
         except Exception, e:
@@ -202,8 +202,9 @@ class KeyedTable(DatabaseTable):
 
 
         #Now the actual search results
-        query = "SELECT " + ", ".join(columns) + " FROM " + table
-        query += where + " ORDER BY %s" % order
+        query = "SELECT " + ", ".join(columns) + " FROM %s " % table
+        query += where[0] + " ORDER BY %s" % order
+        subs.extend(where[1])
 
         if limit > 0:
             query += " LIMIT ? "

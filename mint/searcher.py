@@ -6,6 +6,7 @@
 import string
 import re
 import time
+from mint_error import MintError
 
 NEVER, DAY, THREEDAYS, WEEK, TWOWEEKS, FOURWEEKS = range(0, 6)
 
@@ -27,10 +28,20 @@ datesql = {
     FOURWEEKS: "(EPOCH - 2419200)",
 }
 
+class SearchError(MintError):
+    def __str__(self):
+        return "An error has occurred during your search: "
+
+class SearchTermsError(SearchError):
+    def __str__(self):
+        return SearchError.__str__(self) + "Invalid search terms"
+    
+
 class Searcher :
     WORDS_PRE = 30
     WORDS_POST = 30
     WORDS_TOTAL = 60
+    MINLENGTH = 4
 
     @classmethod
     def lastModified(self, column, modcode):
@@ -57,10 +68,10 @@ class Searcher :
                         The date last modified.
 
         """
-        #are the search terms in the string
         returner = longstring
         if returner == None:
             return ''
+        #are the search terms in the string
         if searchterms in longstring:
             #Split it up and shorten it
             regexp = "(\S+\s+){0,%d}" % self.WORDS_PRE + searchterms + "(\s+\S+){0,%d}" % self.WORDS_POST
@@ -91,10 +102,67 @@ class Searcher :
         @param searchcols:  the columns to search for searchterms
         @return:        A string containing the where clause for the given L{searchterms}
         """
-        where = " WHERE "
+        # find all AND keywords and remove them.  They are redundant
+        terms = re.sub('^AND\s+|\s+AND\s+|\s+AND$', ' ', searchterms).strip()
+
+        where = ""
+        ortoks = []
+        substitutions = []
+        # Now split the string on all the OR keywords
+        # This method will behave unexpectedly if you have OR within a set i
+        # of double quotes.  Caveat searcher.
+        orsplit = re.compile('^OR\s+|\s+OR\s+|\s+OR$')
+        for orchunk in orsplit.split(terms):
+            orchunk = orchunk.strip()
+            if orchunk:
+                andtoks = []
+                andsubs = []
+                # Split on double quotes.  Odd numbered splits get columnified
+                # so long as they meet length requirements
+                # Even numbered splits get further treatment
+                for j, quotechunk in enumerate(orchunk.split('"')):
+                    if j%2:
+                        if len(quotechunk) >= self.MINLENGTH:
+                            toks, subs = self.columnify(quotechunk, searchcols)
+                            andtoks.append(toks)
+                            andsubs.extend(subs)
+                    else:
+                        toks, subs = self.tokenize(quotechunk, searchcols)
+                        andtoks.extend(toks)
+                        andsubs.extend(subs)
+                # now paste the items between the ORs together
+                ortoks.append( ' AND '.join(andtoks) )
+                substitutions.extend(andsubs)
+
+        # Finally paste the OR blocks together
+        where += ' OR '.join(ortoks)
+
+        # If nothing results, raise SearchTermsError
+        if not where.strip():
+            raise SearchTermsError
+
+        return "WHERE " + where, substitutions
+
+    @classmethod
+    def tokenize(self, searchterms, searchcols):
+        tokens = []
+        substitutions = []
+        for term in searchterms.split():
+            if len(term) >= self.MINLENGTH:
+                toks, subs = self.columnify(term, searchcols)
+                tokens.append(toks)
+                substitutions.extend(subs)
+        return tokens, substitutions
+
+    @classmethod
+    def columnify(self, term, searchcols):
+        where = '('
+        subs = []
         for i, column in enumerate(searchcols):
             if i > 0:
                 where += "OR "
-            where += "%(a)s LIKE '%%%(b)s%%' " % {'a' : column, 'b' : searchterms}
+            where += "%s LIKE ? " % column
+            subs.append ( '%' + term + '%' )
+        where += ') '
+        return where, subs
 
-        return where
