@@ -24,6 +24,13 @@ from mint import userlevels
 from mint import mint_error
 from mint import mint_server
 
+class Redirect(Exception):
+    def __init__(self, location):
+        self.location = location
+
+    def __str__(self):
+        return "Location: %s" % self.location
+
 def requiresAuth(func):
     def wrapper(self, **kwargs):
         if not kwargs['auth'].authorized:
@@ -32,9 +39,37 @@ def requiresAuth(func):
             return func(self, **kwargs)
     return wrapper
 
-# decorates a method to be callable only by the owner of the current package
-# also requires that a package exist
+def siteOnly(func):
+    """
+    Decorator to ensure that a webapp method accessed using a 
+    <project>.rpath.org url is redirected to the site url; eg:
+    www.rpath.org.
+    """
+    def wrapper(self, **kwargs):
+        if self.project:
+            newLoc = ("http://%s.%s" % (self.cfg.siteHostname, self.cfg.domainName)) + self.req.unparsed_uri
+            return self._redirect(newLoc)
+        else:
+            return func(self, **kwargs)
+    return wrapper
+
+def projectOnly(func):
+    """
+    Decorator to return a 404 Not Found error if a webapp method
+    that requires a project is accessed at the site url.
+    """
+    def wrapper(self, **kwargs):
+        if not self.project:
+            return self._404(self, **kwargs)
+        else:
+            return func(self, **kwargs)
+    return wrapper
+
 def ownerOnly(func):
+    """
+    Decorate a method to be callable only by the owner of the
+    current package also requires that a package exist.
+    """
     def wrapper(self, **kwargs):
         if not self.project:
             raise database.ItemNotFound("project")
@@ -46,7 +81,7 @@ def ownerOnly(func):
 
 class MintApp(webhandler.WebHandler):
     """
-    The Mint webapp.
+    The Mint web application handler.
     @cvar auth: a L{mint.users.Authorization} object for the user who is currently logged in.
     @type auth: L{mint.users.Authorization}
     @cvar cfg: the server's L{mint.config.MintConfig} object
@@ -138,6 +173,8 @@ class MintApp(webhandler.WebHandler):
         d['auth'] = self.auth
         try:
             return method(**d)
+        except Redirect, e:
+            return self._redirect(e.location)
         except mint_error.MintError, e:
             err_name = sys.exc_info()[0].__name__
             self.req.log_error("%s: %s" % (err_name, str(e)))
@@ -157,16 +194,19 @@ class MintApp(webhandler.WebHandler):
                                                 path = "/")
         self._redirCookie(cookie)
 
+    @siteOnly
     def frontPage(self, auth):
         projectList = self.client.getProjectsByMember(auth.userId)
         news = self.client.getNews()
         self._write("frontPage", projectList = projectList, news = news)
         return apache.OK
 
+    @siteOnly
     def register(self, auth):
         self._write("register")
         return apache.OK
 
+    @siteOnly
     @strFields(username = None, email = None, password = None, password2 = None)
     def processRegister(self, auth, username, email, password, password2):
         if password != password2:
@@ -185,15 +225,18 @@ class MintApp(webhandler.WebHandler):
                 return self._redirect("login?message=confirm")
         return apache.OK
 
+    @siteOnly
     @strFields(message = "")
     def login(self, auth, message):
         self._write("login", message = message)
         return apache.OK
 
+    @siteOnly
     def logout(self, auth):
         self._clearAuth()
         return self._redirect("login")
 
+    @siteOnly
     @strFields(username = None, password = '', submit = None)
     def login2(self, auth, username, password, submit):
         if submit == "Log In":
@@ -226,6 +269,8 @@ class MintApp(webhandler.WebHandler):
                            "rpath.com forgotten password", message)
         else:
             return apache.HTTP_NOT_FOUND
+
+    @siteOnly
     @strFields(id = None)
     def confirm(self, auth, id):
         try:
@@ -240,15 +285,18 @@ class MintApp(webhandler.WebHandler):
             return self._redirect("login?message=confirmed")
         return apache.OK 
 
+    @projectOnly
     def projectPage(self, auth):    
         self._write("projectPage")
         return apache.OK
 
+    @siteOnly
     @requiresAuth
     def userSettings(self, auth):
         self._write("userSettings")
         return apache.OK
 
+    @siteOnly
     @strFields(email = "", displayEmail = "",
                password1 = "", password2 = "",
                fullName = "", blurb = "")
@@ -278,23 +326,27 @@ class MintApp(webhandler.WebHandler):
 
         return self._redirect("frontPage")
 
+    @siteOnly
     @requiresAuth
     def newProject(self, auth):
         self._write("newProject")
         return apache.OK
 
+    @siteOnly
     @strFields(title = None, hostname = None)
     @requiresAuth
     def createProject(self, auth, title, hostname):
         projectId = self.client.newProject(title, hostname)
         return self._redirect("http://%s.%s/" % (hostname, self.cfg.domainName) )
 
+    @projectOnly
     @requiresAuth
     @ownerOnly
     def projectDesc(self, auth):
         self._write("projectDesc")
         return apache.OK
 
+    @projectOnly
     @strFields(desc = None)
     @requiresAuth
     @ownerOnly
@@ -302,16 +354,19 @@ class MintApp(webhandler.WebHandler):
         self.project.setDesc(desc)
         return self._redirect("/")
 
+    @projectOnly
     def members(self, auth):
         self._write("members")
         return apache.OK
 
+    @projectOnly
     @requiresAuth
     def adopt(self, auth):
         self.project.addMemberByName(auth.username, userlevels.OWNER)
         self._write("members")
         return apache.OK
 
+    @projectOnly
     @strFields(username = None)
     @intFields(level = None)
     @requiresAuth
@@ -320,6 +375,7 @@ class MintApp(webhandler.WebHandler):
         self.project.addMemberByName(username, level)
         return self._redirect("members")
 
+    @projectOnly
     @intFields(id = None)
     @requiresAuth
     @ownerOnly
@@ -327,6 +383,7 @@ class MintApp(webhandler.WebHandler):
         self.project.delMemberById(id)
         return self._redirect("members")
 
+    @projectOnly
     @intFields(userId = None)
     @requiresAuth
     @ownerOnly
@@ -335,6 +392,7 @@ class MintApp(webhandler.WebHandler):
         self._write("memberSettings", user = user, otherUserLevel = level)
         return apache.OK
 
+    @siteOnly
     @intFields(id = None)
     def userInfo(self, auth, id):
         user = self.client.getUser(id)
