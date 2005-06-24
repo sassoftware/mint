@@ -44,11 +44,11 @@ class UsersTable(database.KeyedTable):
                     username        STR UNIQUE,
                     fullName        STR,
                     email           STR,
-                    displayEmail    STR,
+                    displayEmail    STR DEFAULT "",
                     timeCreated     INT,
                     timeAccessed    INT,
                     active          INT,
-                    blurb           STR,
+                    blurb           STR DEFAULT "",
                     confirmation    STR
                 );"""
     fields = ['userId', 'username', 'fullName', 'email',
