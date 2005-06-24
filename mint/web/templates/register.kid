@@ -24,8 +24,8 @@ email = None
                     <tr><td><b>Confirm Password:</b></td><td><input type="password" name="password2" /></td></tr>
                 </table>
                 <p>
-                    You will receive a confirmation message with a link to activate your account, as
-                    well as a temporary password. Your email address will never be shared or sold.
+                    You will receive a confirmation message with a link to activate your account.
+                    Your email address will never be shared or sold.
                 </p>
                 <p><input type="submit" value="Register" /></p>
             </form>
