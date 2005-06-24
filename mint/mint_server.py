@@ -129,12 +129,29 @@ class MintServer(object):
                        username)
             try:
                 userId = cu.next()[0]
-            except StopIteration:
+            except StopIteration, e:
+                print >>sys.stderr, str(e), "SELECT userId FROM Users WHERE username=?", username
+                sys.stderr.flush()
                 raise database.ItemNotFound("user")
+
+        acu = self.authDb.cursor()
+        password = ''
+        salt = ''
+        query = "SELECT salt, password FROM Users WHERE user=?"
+        acu.execute(query, username)
+        try:
+            salt, password = acu.next()
+        except StopIteration, e:
+            print >>sys.stderr, str(e), query, username
+            sys.stderr.flush()
+            raise database.ItemNotFound("user")
+        except DatabaseError, e:
+            print >>sys.stderr, str(e), query, username
+            sys.stderr.flush()
 
         self.projectUsers.new(projectId, userId, level)
         repos = self._getAuthRepo(project)
-        repos.addUser(project.getLabel(), username, password)
+        repos.addUserByMD5(project.getLabel(), username, salt, password)
         repos.addAcl(project.getLabel(), username, None, None, True, False, level == userlevels.OWNER)
 
         return True
@@ -252,6 +269,7 @@ class MintServer(object):
     def __init__(self, cfg):
         self.cfg = cfg
         self.db = sqlite3.connect(cfg.dbPath, timeout = 30000)
+        self.authDb = sqlite3.connect(cfg.authDbPath, timeout = 30000)
 
         self.projects = projects.ProjectsTable(self.db, self.cfg)
         self.users = users.UsersTable(self.db, self.cfg)
