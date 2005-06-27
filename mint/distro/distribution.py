@@ -62,7 +62,7 @@ class DistroInfo:
 class Distribution:
     def __init__(self, arch, repos, cfg, distro, controlGroup, buildpath, 
 		isopath, isoTemplatePath = None, nfspath = None, 
-                tftpbootpath = None, cachepath = None, instCachePath = None
+                tftpbootpath = None, cachepath = None, instCachePath = None,
 		statusCb = None, clean=False):
         """ Contains the necessary information and methods for 
             creating a distribution.
@@ -148,11 +148,15 @@ class Distribution:
                     'csdir'         : csdir,
                     'ppath'         : self.distro.productPath, 
                     'isodir'        : isodir, 
-                    'scripts'       : self.anacondascripts,
-                    'instroot'      : os.path.join(self.instCachePath, self.distro.arch, 'instroot'),
-                    'instrootgr'    : os.path.join(self.instCachePath, self.distro.arch, 'instrootgr'),
+                    'scripts'       : None,
+                    'instroot'      : None,
+                    'instrootgr'    : None,
                     'version'       : self.distro.version } 
 
+        if self.instCachePath:
+            pathMap['instroot'] = os.path.join(self.instCachePath, self.distro.arch, 'instroot')
+            pathMap['instrootgr'] = os.path.join(self.instCachePath, self.distro.arch, 'instrootgr')
+                                
         if not self.instCachePath:
             self.makeInstRoots(pathMap, ciso)
         self.makeImages(pathMap, ciso)
@@ -411,7 +415,7 @@ class Distribution:
                                                   '/usr/share/conary')
         os.environ['CONARY'] = 'conary'
         ppath = self.distro.productPath
-        basedir = '/'.join((isodir, ppath,'base'))
+        basedir = '/'.join((map['isodir'], ppath, 'base'))
         compspath = basedir + '/comps.xml'
         util.mkdirChain(basedir)
         compsfile = open(compspath, 'w')
@@ -532,6 +536,7 @@ class Distribution:
                                                                 depCheck=False)
         self.cfg.root = oldroot
         self.anacondascripts = os.path.join(self.anacondadir, 'usr/lib/anaconda-runtime')
+        map['scripts'] = self.anacondascripts
         
         map['instroot'] = tempfile.mkdtemp('', 'bs-bd-instroot', self.buildpath)
         map['instrootgr'] = tempfile.mkdtemp('', 'bs-bd-instrootgr', self.buildpath)
