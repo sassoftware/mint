@@ -157,8 +157,11 @@ class MintServer(object):
 
     @requiresAuth
     def delMember(self, projectId, userId):
-        return self.projectUsers.delete(projectId, userId)
-        # XXX Need to delete the user from the repository
+        #XXX Make this atomic
+        project = projects.Project(self, projectId)
+        self.projectUsers.delete(projectId, userId)
+        repos = self._getAuthRepo(project)
+        repos.deleteUserByName(project.getLabel(), self.getUser(userId)['username'])
 
     @requiresAuth
     def setProjectDesc(self, projectId, desc):

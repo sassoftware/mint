@@ -16,7 +16,7 @@ from mint import userlevels
                 <table>
                     <tr>
                         <td>Name:</td>
-                        <td>${user.getFullName()} (${user.getUsername()})</td>
+                        <td>${user.getFullName()} <input type="text" readonly="true" value="${user.getUsername()}" name="username"/></td>
                     </tr>
                     <tr>
                         <td>Level:</td>

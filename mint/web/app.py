@@ -382,6 +382,15 @@ class MintApp(webhandler.WebHandler):
         self.project.addMemberByName(username, level)
         return self._redirect("members")
 
+    @intFields(level = None)
+    @strFields(username = None)
+    @projectOnly
+    @requiresAuth
+    @ownerOnly
+    def editMember(self, auth, username, level):
+        self.project.editMemberByName(username, level)
+        return self._redirect("members")
+
     @projectOnly
     @intFields(id = None)
     @requiresAuth
