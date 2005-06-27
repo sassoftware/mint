@@ -117,7 +117,7 @@ class UsersTable(database.KeyedTable):
                                  "",
                                  "Please follow the link below to confirm your registration:",
                                  "",
-                                 "http://www.%s/confirm?id=%s" % (self.cfg.domainName, confirm),
+                                 "http://%s/confirm?id=%s" % (self.cfg.domainName, confirm),
                                  "",
                                  "Contact custom@rpath.com for help, or join the IRC channel #conary",
                                  "on the Freenode IRC network (http://www.freenode.net/) for live help."])

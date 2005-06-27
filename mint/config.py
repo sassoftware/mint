@@ -25,7 +25,6 @@ class MintConfig(ConfigFile):
         'dbPath'            : '/data/mint/data/db',
         'tmpPath'           : '/data/mint/tmp/',
         'domainName'        : 'rpath.org',
-        'siteHostname'      : 'www',
         'adminMail'         : 'mint@rpath.org',
         'xmlrpcAccess'      : [ BOOLEAN, False ],
         'imagetoolUrl'      : 'http://%s:%s@iso.rpath.org/images/',

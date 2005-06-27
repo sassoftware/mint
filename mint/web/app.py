@@ -47,7 +47,7 @@ def siteOnly(func):
     """
     def wrapper(self, **kwargs):
         if self.project:
-            newLoc = ("http://%s.%s" % (self.cfg.siteHostname, self.cfg.domainName)) + self.req.unparsed_uri
+            newLoc = ("http://%s" % self.cfg.domainName) + self.req.unparsed_uri
             return self._redirect(newLoc)
         else:
             return func(self, **kwargs)
@@ -124,9 +124,13 @@ class MintApp(webhandler.WebHandler):
 
     def _getHandler(self, cmd, auth):
         fullHost = self.req.hostname
-        hostname = fullHost.split('.')[0]
+        dots = fullHost.split('.')
+        hostname = dots[0]
 
-        if hostname == "www" or self.cfg.domainName.startswith(hostname):
+        # if a reserved host is accessed, redirect to domain name
+        if len(dots) == 3 and hostname in mint_server.reservedHosts:
+           raise Redirect(("http://%s" % self.cfg.domainName) + self.req.unparsed_uri)
+        elif fullHost == self.cfg.domainName:
             self.userLevel = -1
             default = self.frontPage
         else:
@@ -136,6 +140,7 @@ class MintApp(webhandler.WebHandler):
             except database.ItemNotFound:
                 return self._404
             default = self.projectPage
+            
         try:
             if not cmd:
                method = default
@@ -168,13 +173,15 @@ class MintApp(webhandler.WebHandler):
         if self.cmd.startswith("_"):
             return apache.HTTP_NOT_FOUND
 
-        method = self._getHandler(self.cmd, auth)
+        try:
+            method = self._getHandler(self.cmd, auth)
+        except Redirect, e:
+            return self._redirect(e.location)
+            
         d = dict(self.fields)
         d['auth'] = self.auth
         try:
             return method(**d)
-        except Redirect, e:
-            return self._redirect(e.location)
         except mint_error.MintError, e:
             err_name = sys.exc_info()[0].__name__
             self.req.log_error("%s: %s" % (err_name, str(e)))
