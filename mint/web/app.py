@@ -407,28 +407,30 @@ class MintApp(webhandler.WebHandler):
             userProjects = self.client.getProjectsByMember(id))
         return apache.OK
 
-    @strFields(search = None)
-    @intFields(limit = 10)
-    @intFields(offset = 0)
-    @intFields(modified = 0)
-    @strFields(type = None)
+    @strFields(search = None, type = None)
+    @intFields(limit = 10, offset = 0, modified = 0)
     def search(self, auth, type, search, modified, limit, offset):
-        if(type == "Projects"):
+        if type == "Projects":
             return self.projectSearch(search, modified, limit, offset)
-        elif (type == "Users"):
+        elif type == "Users":
             return self.userSearch(search, limit, offset)
         else:
-            # XXX Replace this with a real error code/page
-            return apache.HTTP_NOT_FOUND
+            self._write("error", shortError = "Invalid Search Type",
+                error = "Invalid search type specified.")
+            return apache.OK
 
     def userSearch(self, terms, limit, offset):
         results, count = self.client.getUserSearchResults(terms, limit, offset)
-        self._write("searchResults", type="Users", terms = terms, results = results, count = count, limit = limit, offset = offset, modified = 0)
+        self._write("searchResults", type="Users", terms = terms, results = results,
+                                     count = count, limit = limit, offset = offset,
+                                     modified = 0)
         return apache.OK
 
     def projectSearch(self, terms, modified, limit, offset):
         results, count = self.client.getProjectSearchResults(terms, modified, limit, offset)
-        self._write("searchResults", type="Projects", terms = terms, results = results, count = count, limit = limit, offset = offset, modified = modified)
+        self._write("searchResults", type="Projects", terms = terms, results = results,
+                                     count = count, limit = limit, offset = offset,
+                                     modified = modified)
         return apache.OK
 
     def _write(self, template, **values):
