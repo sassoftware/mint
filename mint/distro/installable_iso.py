@@ -85,7 +85,8 @@ class InstallableIso(ImageGenerator):
                                    nfspath = isocfg.nfsPath,
                                    tftpbootpath = isocfg.tftpbootPath,
                                    cachepath = isocfg.changesetCache,
-                                   statusCb = self.status)
+                                   statusCb = self.status,
+                                   clean = True)
                                    
         dist.prep()
         filenames = dist.create()
