@@ -70,7 +70,7 @@ class UsersTable(database.KeyedTable):
             groups = []
             if checkRepo:
                 authUrl = self.cfg.authRepoUrl % (username, password)
-                authLabel = self.cfg.authRepo.keys()[0]
+                authLabel = self.cfg.authRepoMap.keys()[0]
 
                 authRepo = {authLabel: authUrl}
                 repo = netclient.NetworkRepositoryClient(authRepo)
@@ -97,9 +97,9 @@ class UsersTable(database.KeyedTable):
         # XXX this should be an atomic operation if possible:
         #     it would be nice to roll back previous operations
         #     if one in the chain fails
-        authRepo = netclient.NetworkRepositoryClient(self.cfg.authRepo)
+        authRepo = netclient.NetworkRepositoryClient(self.cfg.authRepoMap)
         confirm = confirmString()
-        repoLabel = self.cfg.authRepo.keys()[0]
+        repoLabel = self.cfg.authRepoMap.keys()[0]
 
         try: 
             authRepo.addUser(repoLabel, username, password)

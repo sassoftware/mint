@@ -223,8 +223,8 @@ class MintServer(object):
     def setPassword(self, userId, newPassword):
         username = self.users.get(userId)['username']
 
-        authRepo = netclient.NetworkRepositoryClient(self.cfg.authRepo)
-        authLabel = self.cfg.authRepo.keys()[0]
+        authRepo = netclient.NetworkRepositoryClient(self.cfg.authRepoMap)
+        authLabel = self.cfg.authRepoMap.keys()[0]
         authRepo.changePassword(authLabel, username, newPassword)
 
         for projectId in self.getProjectIdsByMember(userId):
