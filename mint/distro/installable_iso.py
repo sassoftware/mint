@@ -30,6 +30,7 @@ class IsoConfig(ConfigFile):
         'nfsPath':           None,
         'tftpbootPath':      None,
         'changesetCache':    None,
+        'instRootCache':     None,
     }
 
 class InstallableIso(ImageGenerator):
@@ -85,6 +86,7 @@ class InstallableIso(ImageGenerator):
                                    nfspath = isocfg.nfsPath,
                                    tftpbootpath = isocfg.tftpbootPath,
                                    cachepath = isocfg.changesetCache,
+                                   instCachePath = isocfg.instRootCache,
                                    statusCb = self.status,
                                    clean = True)
                                    

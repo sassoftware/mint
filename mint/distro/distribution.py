@@ -61,11 +61,11 @@ class DistroInfo:
 
 class Distribution:
     def __init__(self, arch, repos, cfg, distro, controlGroup, buildpath, 
-		isopath, isoTemplatePath = None, nfspath = None,
-                tftpbootpath = None, cachepath= None, 
-		logdir = None, statusCb = None, clean=False):
+		isopath, isoTemplatePath = None, nfspath = None, 
+                tftpbootpath = None, cachepath = None, instCachePath = None
+		statusCb = None, clean=False):
         """ Contains the necessary information and methods for 
-            creating a distribution.  
+            creating a distribution.
             @param repos:           a NetworkClientRepository with the necessary repoMap
             @param cfg:             a conarycfg file
             @param distro:          a DistroInfo class.  This contains most of the 
@@ -86,9 +86,8 @@ class Distribution:
                                     for tftpbooting 
             @param cachepath:       the directory which contains all of the 
                                     necessary changesets
-            @param logdir:          directory to log the output from creating 
-                                    the iso.  If none, output is printed on 
-                                    stdout and stderr
+            @param instCachePath:   the directory containing cached Anaconda instroot:
+                                    <arch>/inst and <arch>/instgr.
             @param statusCb:        a function to call to update the status of
                                     a distribution job.
             @param clean:           remove old builddir before rebuilding
@@ -98,7 +97,6 @@ class Distribution:
         self.cfg = cfg
         self.buildpath = buildpath
         self.isoTemplatePath = isoTemplatePath
-        self.logdir = logdir
         if tftpbootpath:
             self.tftpbootpath = os.path.join(tftpbootpath, distro.version)
         self.isos = []
@@ -114,6 +112,7 @@ class Distribution:
         self.distro = distro
         self.controlGroup = controlGroup
         self.cachePath = cachepath
+        self.instCachePath = instCachePath
         self.clean = clean
         self.statusCb = statusCb
 
@@ -132,35 +131,48 @@ class Distribution:
         self.subdir = self.topdir + '/' + self.distro.productPath
         util.mkdirChain(os.path.join(self.subdir, 'changesets'))
 
-    def create(self, useAnaconda=True):
+    def create(self):
         """ main function for actually creating the distribution. 
-            useAnaconda determines whether we should make the distro 
-            bootable and usable by anaconda.  Doing so takes a considerable
-            amount of time -- this option is useful mainly for testing 
-            purposes to ensure that at least most of this path gets
-            tested.
         """
         self.prep()
         self.createChangeSets(self.controlGroup, 
                 os.path.join(self.subdir, 'changesets'))
-        self.addIso(bootable=useAnaconda)
-        self.makeInstRoots(useAnaconda)
+        self.addIso()
+
+        ciso = self.isos[0]
+
+        csdir = os.path.join(self.subdir, 'changesets')
+        isodir = ciso.builddir
+        pathMap = { 'pname'         : self.distro.productName,
+                    'arch'          : self.distro.arch, 
+                    'csdir'         : csdir,
+                    'ppath'         : self.distro.productPath, 
+                    'isodir'        : isodir, 
+                    'scripts'       : self.anacondascripts,
+                    'instroot'      : os.path.join(self.instCachePath, self.distro.arch, 'instroot'),
+                    'instrootgr'    : os.path.join(self.instCachePath, self.distro.arch, 'instrootgr'),
+                    'version'       : self.distro.version } 
+
+        if not self.instCachePath:
+            self.makeInstRoots(pathMap, ciso)
+        self.makeImages(pathMap, ciso)
         self.isos[0].reserve(1)
         self.initializeCDs()
         self.isos[0].release(1)
         self.writeCsList(self.isos[0].builddir)
-        if useAnaconda:
-            self.stampIsos()
-            iso1 = self.isos[0]
-            assert(os.path.exists(iso1.builddir + '/images/diskboot.img')) 
-            assert(os.path.exists(iso1.builddir + '/isolinux/vmlinuz'))
+        
+        self.stampIsos()
+        iso1 = self.isos[0]
+        assert(os.path.exists(iso1.builddir + '/images/diskboot.img')) 
+        assert(os.path.exists(iso1.builddir + '/isolinux/vmlinuz'))
+
         for iso in self.isos:
             iso.create()
         if self.nfspath:
             self.copyToNFS()
         return [iso.imagepath for iso in self.isos]
         
-    def addIso(self, bootable=False):
+    def addIso(self):
         """ Adds an ISO to the distribution, giving it the appropriate
             disc number, etc.
         """
@@ -174,7 +186,7 @@ class Distribution:
             shutil.rmtree(builddir)
         isoname = self.distro.isoname + ' Disc %d' % discno
         ciso = ISO(builddir, isopath, isoname, discno,
-                   maxsize=self.distro.isoSize, bootable=bootable)
+                   maxsize=self.distro.isoSize, bootable = True)
         self.isos.append(ciso)
         if self.isoTemplatePath:
             ln = len(self.isoTemplatePath)
@@ -390,7 +402,7 @@ class Distribution:
             iso.markInstalled('%s/.discinfo' % iso.builddir)
 
 
-    def makeInstRoots(self, useAnaconda=True):
+    def makeInstRoots(self, map, ciso):
         """ Do a lot of anaconda related stuff.  I don't know what 
             most of this does, except that it is important for anaconda
         """
@@ -398,9 +410,7 @@ class Distribution:
         os.environ['PYTHONPATH'] = os.environ.get('CONARY_PATH', 
                                                   '/usr/share/conary')
         os.environ['CONARY'] = 'conary'
-        isodir = ciso.builddir
         ppath = self.distro.productPath
-        csdir = os.path.join(self.subdir, 'changesets')
         basedir = '/'.join((isodir, ppath,'base'))
         compspath = basedir + '/comps.xml'
         util.mkdirChain(basedir)
@@ -513,11 +523,7 @@ class Distribution:
         # just touch these files
         open(basedir + '/hdlist', 'w')
         open(basedir + '/hdlist2', 'w')
-        # the next part takes way to long for a test case, so 
-        # if we are just testing, skip it.
-        if not useAnaconda:
-            ciso.markDirInstalled('/%s/base/' % ppath)
-            return
+
         # install anaconda into a root dir
         self.anacondadir = tempfile.mkdtemp('', 'anaconda-', self.buildpath)
         oldroot = self.cfg.root
@@ -526,67 +532,38 @@ class Distribution:
                                                                 depCheck=False)
         self.cfg.root = oldroot
         self.anacondascripts = os.path.join(self.anacondadir, 'usr/lib/anaconda-runtime')
-        instroot = tempfile.mkdtemp('', 'bs-bd-instroot', self.buildpath)
-        instrootgr = tempfile.mkdtemp('', 'bs-bd-instrootgr', self.buildpath)
-        map = { 'pname' : self.distro.productName,
-                'arch' : self.distro.arch, 
-                'csdir' : csdir,
-                'ppath' : self.distro.productPath, 
-                'isodir' : isodir, 
-                'scripts': self.anacondascripts,
-                'instroot' : instroot, 'instrootgr' : instrootgr,
-                'version' : self.distro.version } 
+        
+        map['instroot'] = tempfile.mkdtemp('', 'bs-bd-instroot', self.buildpath)
+        map['instrootgr'] = tempfile.mkdtemp('', 'bs-bd-instrootgr', self.buildpath)
+
         sys.stdout.flush()
         sys.stderr.flush()
-        if self.logdir:
-            logfile = self.logdir + '/upd-instroot'
-            logpath = os.path.join(self.logdir, logfile)
-            logfd = os.open(logpath, os.O_TRUNC | os.O_WRONLY | os.O_CREAT)
-        try:
-            if self.logdir:
-                stdout = os.dup(sys.stdout.fileno())
-                stderr = os.dup(sys.stderr.fileno())
-                os.dup2(logfd, sys.stdout.fileno())
-                os.dup2(logfd, sys.stderr.fileno())
-                os.close(logfd)
-            cmd = 'sh -x %(scripts)s/upd-instroot --debug --conary --arch %(arch)s %(csdir)s %(instroot)s %(instrootgr)s' % map
-            print "\n\n*********** RUNNING UPD-INSTROOT ***************\n\n"
-            print cmd
-            self.status("Creating Anaconda installation images")
-            sys.stdout.flush()
-            rc = os.system(cmd)
-            print "<<Result code: %d>>" % rc
-            sys.stdout.flush()
-            sys.stderr.flush()
+        
+        cmd = 'sh -x %(scripts)s/upd-instroot --debug --conary --arch %(arch)s %(csdir)s %(instroot)s %(instrootgr)s' % map
+        print "\n\n*********** RUNNING UPD-INSTROOT ***************\n\n"
+        print cmd
+        self.status("Creating Anaconda installation images")
+        sys.stdout.flush()
+        rc = os.system(cmd)
+        print "<<Result code: %d>>" % rc
+        sys.stdout.flush()
+        sys.stderr.flush()
 
-            ## okay now output mk-images to another log file
-            if self.logdir:
-                logfile = 'mk-images'
-                logpath = os.path.join(self.logdir, logfile)
-                logfd = os.open(logpath, os.O_TRUNC | os.O_WRONLY | os.O_CREAT)
-                os.dup2(logfd, sys.stdout.fileno())
-                os.dup2(logfd, sys.stderr.fileno())
-                os.close(logfd)
-            print "\n\n*********** RUNNING mk-images ***************\n\n"
-            cmd = ('%(scripts)s/mk-images --debug --conary %(csdir)s %(isodir)s %(instroot)s %(instrootgr)s %(arch)s "%(pname)s" %(version)s %(ppath)s' % map)
-            print cmd
-            self.status("Assembling ISO images")
-            sys.stdout.flush()
-            sys.stderr.flush()
-            rc = os.system(cmd)
-            print "<<Result code: %d>>" % rc
-            sys.stdout.flush()
-            sys.stderr.flush()
-        except: 
-            if self.logdir:
-                os.dup2(stdout, sys.stdout.fileno())
-                os.dup2(stderr, sys.stderr.fileno())
-            raise
-        if self.logdir:
-            os.dup2(stdout, sys.stdout.fileno())
-            os.dup2(stderr, sys.stderr.fileno())
-        #util.rmtree(instroot)
-        #util.rmtree(instrootgr)
+    def makeImages(self, map, ciso):
+        print "\n\n*********** RUNNING mk-images ***************\n\n"
+        cmd = ('%(scripts)s/mk-images --debug --conary %(csdir)s %(isodir)s %(instroot)s %(instrootgr)s %(arch)s "%(pname)s" %(version)s %(ppath)s' % map)
+        print cmd
+        self.status("Assembling ISO images")
+        sys.stdout.flush()
+        sys.stderr.flush()
+        rc = os.system(cmd)
+        print "<<Result code: %d>>" % rc
+        sys.stdout.flush()
+        sys.stderr.flush()
+
+        if self.clean:
+            util.rmtree(instroot)
+            util.rmtree(instrootgr)
         ciso.markDirInstalled('/isolinux')
         ciso.markDirInstalled('/images')
         ciso.markDirInstalled('/%s/base/' % ppath)
