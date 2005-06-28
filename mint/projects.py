@@ -67,6 +67,9 @@ class Project(database.TableObject):
         except database.ItemNotFound:
             return -1
 
+    def updateUserLevel(self, userId, level):
+        return self.server.setUserLevel(userId, self.id, level)
+
     def addMemberById(self, userId, level):
         assert(level in userlevels.LEVELS)
         return self.server.addMember(self.id, userId, None, level)

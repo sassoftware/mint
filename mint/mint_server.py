@@ -181,6 +181,13 @@ class MintServer(object):
         except StopIteration:
             raise database.ItemNotFound("membership")
 
+    def setUserLevel(self, userId, projectId, level):
+        cu = self.db.cursor()
+        cu.execute("""UPDATE ProjectUsers SET level=? WHERE userId=? and 
+            projectId=?""", level, userId, projectId)
+
+        self.db.commit()
+
     def getProjectsByUser(self, userId):
         cu = self.db.cursor()
         cu.execute("""SELECT hostname, name, level FROM Projects, ProjectUsers

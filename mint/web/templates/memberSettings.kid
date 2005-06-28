@@ -12,11 +12,11 @@ from mint import userlevels
         <div id="content">
             <h2>Member Settings:</h2>
 
-            <form method="post" action="editMember">
+            <form method="post" action="editMember?userId=${userId}">
                 <table>
                     <tr>
                         <td>Name:</td>
-                        <td>${user.getFullName()} <input type="text" readonly="true" value="${user.getUsername()}" name="username"/></td>
+                        <td>${user.getFullName()} ${user.getUsername()}</td>
                     </tr>
                     <tr>
                         <td>Level:</td>

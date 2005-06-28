@@ -382,13 +382,12 @@ class MintApp(webhandler.WebHandler):
         self.project.addMemberByName(username, level)
         return self._redirect("members")
 
-    @intFields(level = None)
-    @strFields(username = None)
+    @intFields(userId = None, level = None)
     @projectOnly
     @requiresAuth
     @ownerOnly
-    def editMember(self, auth, username, level):
-        self.project.editMemberByName(username, level)
+    def editMember(self, auth, userId, level):
+        self.project.updateUserLevel(userId, level)
         return self._redirect("members")
 
     @projectOnly
@@ -405,7 +404,7 @@ class MintApp(webhandler.WebHandler):
     @ownerOnly
     def memberSettings(self, auth, userId):
         user, level = self.client.getMembership(userId, self.project.getId()) 
-        self._write("memberSettings", user = user, otherUserLevel = level)
+        self._write("memberSettings", user = user, otherUserLevel = level, userId = userId)
         return apache.OK
 
     @siteOnly
