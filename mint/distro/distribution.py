@@ -152,6 +152,7 @@ class Distribution:
                     'ppath'         : self.distro.productPath, 
                     'isodir'        : isodir, 
                     'anaconda'      : os.path.join(self.instCachePath, self.distro.arch, 'anaconda'),
+                    'scripts'       : os.path.join(self.instCachePath, self.distro.arch, 'anaconda', 'usr/lib/anaconda-runtime'),
                     'instroot'      : os.path.join(self.instCachePath, self.distro.arch, 'instroot'),
                     'instrootgr'    : os.path.join(self.instCachePath, self.distro.arch, 'instrootgr'),
                     'version'       : self.distro.version } 
@@ -536,12 +537,8 @@ class Distribution:
         updatecmd.doUpdate(self.cfg, ['anaconda[is:%s]' % self.arch], 
                            depCheck=False)
         self.cfg.root = oldroot
-        self.anacondascripts = os.path.join(self.anacondadir, 'usr/lib/anaconda-runtime')
-        map['scripts'] = self.anacondascripts
+        self.anacondascripts = man['scripts']
         
-#        map['instroot'] = tempfile.mkdtemp('', 'bs-bd-instroot', self.buildpath)
-#        map['instrootgr'] = tempfile.mkdtemp('', 'bs-bd-instrootgr', self.buildpath)
-
         sys.stdout.flush()
         sys.stderr.flush()
         
@@ -572,7 +569,7 @@ class Distribution:
         #    util.rmtree(pathMap['instrootgr'])
         ciso.markDirInstalled('/isolinux')
         ciso.markDirInstalled('/images')
-        ciso.markDirInstalled('/%s/base/' % map['ppath'])
+        ciso.markDirInstalled('/%s/base/' % pathMap['ppath'])
 
     def copyToNFS(self):
         """ set up the changests and auxilliary files necessary 
