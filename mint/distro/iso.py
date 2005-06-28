@@ -1,6 +1,8 @@
 #
-# Copyright (c) 2004-2005 Specifix, Inc.
+# Copyright (c) 2004-2005 rpath, Inc.
+#
 # All rights reserved.
+#
 
 import errno
 import files
@@ -195,7 +197,7 @@ class ISO:
             raise RuntimeError, '\n'.join(error)
 
 
-    def _makeISO(self):
+    def _makeISO(self, scriptsDir):
         """ Actually make the image, based on the parameters set before.
             The builddir should have exactly the files that are meant to 
             be on the image.  The md5 sum is implanted """
@@ -204,13 +206,13 @@ class ISO:
             util.execute('cd %s; mkisofs -o %s -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -R -J -V "%s" -T .' % (self.builddir, self.imagepath, self.isoname))
         else:
             util.execute('cd %s; mkisofs -o %s -R -J -V "%s" -T .' % (self.builddir, self.imagepath, self.isoname))
-        util.execute('/usr/local/bin/implantisomd5 %s' % self.imagepath)
+        util.execute('%s/implantisomd5 %s' % (scriptsDir, self.imagepath))
         print "ISO created at %s" % self.imagepath
 
-    def create(self):
+    def create(self, scriptsDir):
         """ Create the CD.  Checks the CD for sanity first """
         self.checkForUnknownFiles()
-        self._makeISO()
+        self._makeISO(scriptsDir)
             
 class DiskFullError(Exception):
     pass
