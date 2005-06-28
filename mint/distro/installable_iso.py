@@ -13,7 +13,7 @@ import flavorcfg
 import repository
 import versions
 from build import use
-from conarycfg import ConfigFile
+from conarycfg import ConfigFile, BOOLEAN
 
 import imagetool
 import distribution 
@@ -31,6 +31,7 @@ class IsoConfig(ConfigFile):
         'tftpbootPath':      None,
         'changesetCache':    None,
         'instRootCache':     None,
+        'cachedAnaconda':    [ BOOLEAN, False ],
     }
 
 class InstallableIso(ImageGenerator):
@@ -87,6 +88,7 @@ class InstallableIso(ImageGenerator):
                                    tftpbootpath = isocfg.tftpbootPath,
                                    cachepath = isocfg.changesetCache,
                                    instCachePath = isocfg.instRootCache,
+                                   cachedAnaconda = isocfg.cachedAnaconda,
                                    statusCb = self.status,
                                    clean = True)
                                    

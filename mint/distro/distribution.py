@@ -63,7 +63,7 @@ class Distribution:
     def __init__(self, arch, repos, cfg, distro, controlGroup, buildpath, 
 		isopath, isoTemplatePath = None, nfspath = None, 
                 tftpbootpath = None, cachepath = None, instCachePath = None,
-		statusCb = None, clean=False):
+                cachedAnaconda = False, statusCb = None, clean=False):
         """ Contains the necessary information and methods for 
             creating a distribution.
             @param repos:           a NetworkClientRepository with the necessary repoMap
@@ -88,6 +88,8 @@ class Distribution:
                                     necessary changesets
             @param instCachePath:   the directory containing cached Anaconda instroot:
                                     <arch>/inst and <arch>/instgr.
+            @param cachedAnaconda:  True to use the anaconda stuff in instCachePath,
+                                    False to populate it.
             @param statusCb:        a function to call to update the status of
                                     a distribution job.
             @param clean:           remove old builddir before rebuilding
@@ -113,6 +115,7 @@ class Distribution:
         self.controlGroup = controlGroup
         self.cachePath = cachepath
         self.instCachePath = instCachePath
+        self.cachedAnaconda = cachedAnaconda
         self.clean = clean
         self.statusCb = statusCb
 
@@ -148,17 +151,15 @@ class Distribution:
                     'csdir'         : csdir,
                     'ppath'         : self.distro.productPath, 
                     'isodir'        : isodir, 
-                    'scripts'       : None,
-                    'instroot'      : None,
-                    'instrootgr'    : None,
+                    'anaconda'      : os.path.join(self.instCachePath, self.distro.arch, 'anaconda'),
+                    'instroot'      : os.path.join(self.instCachePath, self.distro.arch, 'instroot'),
+                    'instrootgr'    : os.path.join(self.instCachePath, self.distro.arch, 'instrootgr'),
                     'version'       : self.distro.version } 
 
-        if self.instCachePath:
-            pathMap['instroot'] = os.path.join(self.instCachePath, self.distro.arch, 'instroot')
-            pathMap['instrootgr'] = os.path.join(self.instCachePath, self.distro.arch, 'instrootgr')
-                                
-        if not self.instCachePath:
+       
+        if not self.cachedAnaconda:
             self.makeInstRoots(pathMap, ciso)
+            
         self.makeImages(pathMap, ciso)
         self.isos[0].reserve(1)
         self.initializeCDs()
@@ -415,7 +416,7 @@ class Distribution:
                                                   '/usr/share/conary')
         os.environ['CONARY'] = 'conary'
         ppath = self.distro.productPath
-        basedir = '/'.join((map['isodir'], ppath, 'base'))
+        basedir = '/'.join((map['isodir'], map['ppath'], 'base'))
         compspath = basedir + '/comps.xml'
         util.mkdirChain(basedir)
         compsfile = open(compspath, 'w')
@@ -529,17 +530,17 @@ class Distribution:
         open(basedir + '/hdlist2', 'w')
 
         # install anaconda into a root dir
-        self.anacondadir = tempfile.mkdtemp('', 'anaconda-', self.buildpath)
+        self.anacondadir = map['anaconda']
         oldroot = self.cfg.root
         self.cfg.root = self.anacondadir
         updatecmd.doUpdate(self.cfg, ['anaconda[is:%s]' % self.arch], 
-                                                                depCheck=False)
+                           depCheck=False)
         self.cfg.root = oldroot
         self.anacondascripts = os.path.join(self.anacondadir, 'usr/lib/anaconda-runtime')
         map['scripts'] = self.anacondascripts
         
-        map['instroot'] = tempfile.mkdtemp('', 'bs-bd-instroot', self.buildpath)
-        map['instrootgr'] = tempfile.mkdtemp('', 'bs-bd-instrootgr', self.buildpath)
+#        map['instroot'] = tempfile.mkdtemp('', 'bs-bd-instroot', self.buildpath)
+#        map['instrootgr'] = tempfile.mkdtemp('', 'bs-bd-instrootgr', self.buildpath)
 
         sys.stdout.flush()
         sys.stderr.flush()
@@ -554,9 +555,9 @@ class Distribution:
         sys.stdout.flush()
         sys.stderr.flush()
 
-    def makeImages(self, map, ciso):
+    def makeImages(self, pathMap, ciso):
         print "\n\n*********** RUNNING mk-images ***************\n\n"
-        cmd = ('%(scripts)s/mk-images --debug --conary %(csdir)s %(isodir)s %(instroot)s %(instrootgr)s %(arch)s "%(pname)s" %(version)s %(ppath)s' % map)
+        cmd = ('%(scripts)s/mk-images --debug --conary %(csdir)s %(isodir)s %(instroot)s %(instrootgr)s %(arch)s "%(pname)s" %(version)s %(ppath)s' % pathMap)
         print cmd
         self.status("Assembling ISO images")
         sys.stdout.flush()
@@ -566,12 +567,12 @@ class Distribution:
         sys.stdout.flush()
         sys.stderr.flush()
 
-        if self.clean:
-            util.rmtree(instroot)
-            util.rmtree(instrootgr)
+        #if self.clean:
+        #    util.rmtree(pathMap['instroot'])
+        #    util.rmtree(pathMap['instrootgr'])
         ciso.markDirInstalled('/isolinux')
         ciso.markDirInstalled('/images')
-        ciso.markDirInstalled('/%s/base/' % ppath)
+        ciso.markDirInstalled('/%s/base/' % map['ppath'])
 
     def copyToNFS(self):
         """ set up the changests and auxilliary files necessary 
