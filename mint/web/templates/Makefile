@@ -15,6 +15,9 @@ kid_files = \
 	projectDesc.kid\
 	projectPage.kid\
 	register.kid\
+	releases.kid\
+	searchResults.kid\
+	userInfo.kid\
 	userSettings.kid
 
 extra_dist = Makefile

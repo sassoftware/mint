@@ -13,7 +13,9 @@ python_files =  config.py\
 		mint_error.py\
 		mint.py\
 		mint_server.py\
+		news.py\
 		projects.py\
+		searcher.py\
 		shimclient.py\
 		stats.py\
 		test.py\
