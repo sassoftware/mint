@@ -25,6 +25,7 @@
                     <a href="http://iso.rpath.org/images/downloadRelease?profileId=${release.getId()}">${release.getTroveName()}=${release.getTroveVersion().trailingRevision().asString()}</a>
                 </li>
             </ul>
+            <a py:if="isOwner" href="http://iso.rpath.org/images/projectDetails?projectId=${project.getItProjectId()}">Manage Releases</a>
             ${html_footer()}
         </div>
     </body>
