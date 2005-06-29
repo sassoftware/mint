@@ -60,7 +60,6 @@ from mint import userlevels
                 <tr py:if="isOwner">
                     <td>
                         <b>Add:</b>
-                        <p class="help"><a href="lookupUser">Look up user</a></p>
                     </td>
                     <td> 
                         <form method="post" action="addMember">
