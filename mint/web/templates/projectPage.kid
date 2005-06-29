@@ -36,7 +36,11 @@ from mint import userlevels
 
             <h3><a href="releases">Releases Page</a></h3>
             <ul>
-                <li py:for="release in project.getReleases()">${release.getTroveName()}=${release.getTroveVersion().trailingRevision().asString()}</li>
+                <li py:for="release in project.getReleases()">
+                    <a href="http://iso.rpath.org/images/downloadRelease?profileId=${release.getId()}">
+                        ${release.getTroveName()}=${release.getTroveVersion().trailingRevision().asString()}
+                    </a>
+                </li>
             </ul>
             
             <p py:if="isOwner">You are an owner of this project.</p>
