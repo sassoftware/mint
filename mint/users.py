@@ -10,6 +10,7 @@ import sys
 import time
 
 import email
+from email import MIMEText
 import smtplib
 
 from repository import netclient
@@ -298,7 +299,7 @@ def newPassword(length = 6):
     return pw
 
 def sendMail(fromEmail, fromEmailName, toEmail, subject, body):
-    msg = email.MIMEText.MIMEText(body)
+    msg = MIMEText.MIMEText(body)
     msg['Subject'] = subject
     msg['From'] = '"%s" <%s>' % (fromEmailName, fromEmail)
     msg['To'] = toEmail
