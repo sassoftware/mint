@@ -30,11 +30,10 @@ from mint import userlevels
             <p py:if="not memberList">This project is orphaned. <a href="adopt">Adopt this project</a></p>
             <p py:if="memberList"><a href="members">Click to see project members</a></p>
 
-            <h3>Releases</h3>
+            <h3><a href="releases">Releases Page</a></h3>
             <ul>
                 <li py:for="release in project.getReleases()">${release.getTroveName()}=${release.getTroveVersion().trailingRevision().asString()}</li>
             </ul>
-            <p py:if="isOwner"><a href="http://iso.rpath.org/images/projectDetails?projectId=${project.getItProjectId()}">Release Management</a></p>
             
             <p py:if="isOwner">You are an owner of this project.</p>
             ${html_footer()}

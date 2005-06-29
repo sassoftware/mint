@@ -297,6 +297,11 @@ class MintApp(webhandler.WebHandler):
         self._write("projectPage")
         return apache.OK
 
+    @projectOnly
+    def releases(self, auth):
+        self._write("releases")
+        return apache.OK
+
     @siteOnly
     @requiresAuth
     def userSettings(self, auth):
