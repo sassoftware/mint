@@ -191,7 +191,7 @@ class KeyedTable(DatabaseTable):
             where += " AND " + modified
 
         #First get the search result count
-        query = "SELECT count(%(column)s) FROM %(table)s " % {'column' : columns[0], 'table' : table} + where[0]
+        query = "SELECT count(%s) FROM %s " % (columns[0], table) + where[0]
         try:
             cu.execute(query, where[1])
             r = cu.fetchone()
@@ -223,5 +223,3 @@ class KeyedTable(DatabaseTable):
         for r in cu.fetchall():
             ids.append(r)
         return ids, count
-
-
