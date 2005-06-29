@@ -7,6 +7,10 @@ from mint import searcher
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'library.kid'">
+<!--
+    Copyright 2005 rpath, Inc.
+    All Rights Reserved
+-->
     ${html_header("rpath.com")}
     <body>
         ${header_image()}

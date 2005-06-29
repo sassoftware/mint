@@ -5,6 +5,10 @@ from mint import searcher
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#">
+<!--
+    Copyright 2005 rpath, Inc.
+    All Rights Reserved
+-->
     <!-- define the HTML header -->
     <head py:def="html_header(title, extraScript=None, scriptArgs=None)">
         <title>${title}</title>

@@ -5,6 +5,10 @@ from mint import userlevels
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'library.kid'">
+<!--
+    Copyright 2005 rpath, Inc.
+    All Rights Reserved
+-->
     ${html_header("Member Settings")}
     <body>
         ${header_image()}

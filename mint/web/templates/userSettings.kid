@@ -3,6 +3,10 @@
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'library.kid'">
     ${html_header("User Settings")}
+<!--
+    Copyright 2005 rpath, Inc.
+    All Rights Reserved
+-->
     <body>
         ${header_image()}
         ${menu([('User Settings', None, True)])}

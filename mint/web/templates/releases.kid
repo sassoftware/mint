@@ -2,6 +2,10 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'library.kid'">
+<!--
+    Copyright 2005 rpath, Inc.
+    All Rights Reserved
+-->
     ${html_header("Project Releases")}
     <?python # this comment has to be here if the first line is an import...weird!
         from mint import userlevels
