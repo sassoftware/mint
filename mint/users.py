@@ -51,10 +51,15 @@ class UsersTable(database.KeyedTable):
                     active          INT,
                     blurb           STR DEFAULT "",
                     confirmation    STR
-                );"""
+                )"""
+
     fields = ['userId', 'username', 'fullName', 'email',
               'displayEmail', 'timeCreated', 'timeAccessed',
               'active', 'confirmation', 'blurb']
+
+    indexes = {"UsersUserIdIdx":    """CREATE INDEX UsersUserIdIdx ON Users(userId)""",
+               "UsersUsernameIdx":  """CREATE INDEX UsersUsernameIdx ON Users(username)""",
+               "UsersActiveIdx":    """CREATE INDEX UsersActiveIdx ON Users(username, active)"""}
 
     def __init__(self, db, cfg):
         database.DatabaseTable.__init__(self, db)

@@ -69,6 +69,7 @@ class DatabaseTable:
     name = "Table"
     fields = []
     createSQL = "CREATE TABLE Table ();"
+    indexes = {} 
 
     def __init__(self, db):
         """@param db: database connection object"""
@@ -76,11 +77,21 @@ class DatabaseTable:
         self.db = db
 
         cu = self.db.cursor()
-        cu.execute("SELECT tbl_name FROM sqlite_master WHERE type='table'")
-
+        
+        # create missing tables
+        cu.execute("SELECT tbl_name FROM sqlite_master WHERE type = 'table'")
         tables = [ x[0] for x in cu ]
         if self.name not in tables:
             cu.execute(self.createSQL)
+        
+        # create missing indexes
+        cu.execute("SELECT name FROM sqlite_master WHERE type = 'index'")
+        missing = set(self.indexes.keys()) - set(x[0] for x in cu) 
+        print >> sys.stderr, "missing indexes:", missing
+        sys.stderr.flush()
+        for index in missing:
+            cu.execute(self.indexes[index])
+               
         self.db.commit()
 
 class KeyedTable(DatabaseTable):
