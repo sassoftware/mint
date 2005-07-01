@@ -80,8 +80,9 @@ class JobRunner(threading.Thread):
             log.info("job %d finished: %s", jobId, str(imageFilenames))
 
 class JobDaemon:
-    def __init__(self, cfg):
-        client = ImageToolClient(cfg.serverUrl)
+    def __init__(self, cfg, serverUrl):
+        print "connecting to", serverUrl
+        client = ImageToolClient(serverUrl)
        
         threads = []
 
@@ -127,13 +128,15 @@ def kill(lockFile):
     try:
         os.kill(pid, signal.SIGINT)
     except OSError, e:
-        log.info("process not found; removing lock file")
         if e.errno != errno.ESRCH:
-            os.unlink(lockFile)
-        else:
             raise
+        else:
+            log.info("process not found; removing lock file")
+            os.unlink(lockFile)
+    else:
+        os.unlink(lockFile)
 
-def daemon(options, cfg, lockFile):
+def daemon(options, cfg, serverUrl, lockFile):
     try:
         lock = open(lockFile, "w")
         lock.write("%d" % os.getpid())
@@ -143,7 +146,7 @@ def daemon(options, cfg, lockFile):
     
     try:
        
-        jd = JobDaemon(cfg)
+        jd = JobDaemon(cfg, serverUrl)
     except socket.error, msg:
         log.error("connecting to Imagetool XMLRPC server: %s", msg[1])
     except KeyboardInterrupt:
@@ -166,7 +169,11 @@ if __name__ == "__main__":
     parser.add_option("-d", "--debug", dest = "debug", action = "store_true",
                       help = "Enable the debugger on errors.")
     (options, args) = parser.parse_args()
-
+    
+    if not args:
+        log.error("You must specify the URL to an imagetool XMLRPC server on the command line.")
+        sys.exit(1)
+    
     if options.debug:
         sys.excepthook = util.genExcepthook()
         log.setVerbosity(log.DEBUG)
@@ -181,18 +188,14 @@ if __name__ == "__main__":
     # if not, try some standard locations
     cfgFiles = ["imagetool.conf", "../imagetool.conf", None]
     if options.config:
-        if os.access(sys.argv[1], os.R_OK) and os.path.isfile(sys.argv[1]):
-            cfgFile = sys.argv[1]
-        else:
-            log.error("unable to open config file: %s", sys.argv[1])
-            sys.exit(1)
-
-    for cfgFile in cfgFiles:
-        if cfgFile:
-            if os.access(cfgFile, os.R_OK) and os.path.isfile(cfgFile):
-                break
-        else:
-            log.error("unable to open imagetool.conf configuration file. Please use --config=<path>.")
+        cfgFile = options.config
+    else:
+        for cfgFile in cfgFiles:
+            if cfgFile:
+                if os.access(cfgFile, os.R_OK) and os.path.isfile(cfgFile):
+                    break
+            else:
+                log.error("unable to open imagetool.conf configuration file. Please use --config=<path>.")
     
     if os.access(lockFile, os.R_OK):
         lock = open(lockFile, "r")
@@ -221,7 +224,7 @@ if __name__ == "__main__":
             os.dup2(logfd, sys.stdout.fileno())
             os.dup2(logfd, sys.stderr.fileno())
             
-            daemon(options, cfg, lockFile)
+            daemon(options, cfg, args[0], lockFile)
     else:
         log.info("Imagetool job server started")
         os._exit(0)
