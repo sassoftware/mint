@@ -1,10 +1,10 @@
 #
-# Copyright (c) 2004-2005 Specifix, Inc.
+# Copyright (c) 2004-2005 rpath, Inc.
 #
 # All Rights Reserved
 #
 
-script_dist = adduser job-server mklivecd
+script_dist = job-server mklivecd mkinstroots.sh
 
 extra_dist = Makefile installable_iso.conf
 
@@ -13,9 +13,9 @@ dist_files = $(script_dist) $(extra_dist)
 all: default-all
 
 install: default-install
-	mkdir -p $(DESTDIR)/$(datadir)/imagetool/scripts/
+	mkdir -p $(DESTDIR)/$(datadir)/mint/scripts/
 	for f in $(script_dist); do \
-		install -m 755 $$f $(DESTDIR)/$(datadir)/imagetool/scripts/$$f; \
+		install -m 755 $$f $(DESTDIR)/$(datadir)/mint/scripts/$$f; \
 	done;
 
 dist: default-dist

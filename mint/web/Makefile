@@ -4,12 +4,13 @@
 # All Rights Reserved
 #
 
-SUBDIRS = templates
+SUBDIRS = templates content
 
-python_files = __init__.py\
-               app.py\
-	       cookie_handler.py\
-               hooks.py
+python_files = \
+	__init__.py		\
+        app.py			\
+	cookie_handler.py	\
+        hooks.py
 
 extra_dist = Makefile
 

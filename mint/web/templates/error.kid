@@ -16,7 +16,7 @@
             <p class="error">Error: ${error}</p>
             <p>
                 Please go back and try again or contact 
-                <a href="mailto:custom@specifix.com">custom@specifix.com</a> or join the IRC channel
+                <a href="mailto:custom@rpath.com">custom@rpath.com</a> or join the IRC channel
                 <b>#conary</b> on the <a href="http://www.freenode.net/">FreeNode</a> IRC network
                 for assistance.
             </p>

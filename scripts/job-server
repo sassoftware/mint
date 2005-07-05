@@ -27,18 +27,17 @@ from lib import util
 # to run from CVS
 sys.path.append('..')
 
-import imagetool
-from imagetool.imagetool import ImageToolConfig
-from imagetool.imagetool import ImageToolClient
-from imagetool import jobs
-from imagetool import jobstatus
-from imagetool import profiletypes
+from mint.mint import MintConfig
+from mint.mint import MintClient 
+from mint import jobs
+from mint import jobstatus
+from mint import releasetypes
 
 # image generators
-from imagetool.distro.installable_iso import InstallableIso
-from imagetool.distro.live_iso import LiveIso
-from imagetool.distro.live_cf_image import LiveCFImage
-from imagetool.distro.stub_image import StubImage
+from mint.distro.installable_iso import InstallableIso
+from mint.distro.live_iso import LiveIso
+from mint.distro.live_cf_image import LiveCFImage
+from mint.distro.stub_image import StubImage
 
 generators = {
     profiletypes.LIVE_ISO:           LiveIso,
@@ -82,7 +81,7 @@ class JobRunner(threading.Thread):
 class JobDaemon:
     def __init__(self, cfg, serverUrl):
         print "connecting to", serverUrl
-        client = ImageToolClient(serverUrl)
+        client = MintClient(serverUrl)
        
         threads = []
 
@@ -148,7 +147,7 @@ def daemon(options, cfg, serverUrl, lockFile):
        
         jd = JobDaemon(cfg, serverUrl)
     except socket.error, msg:
-        log.error("connecting to Imagetool XMLRPC server: %s", msg[1])
+        log.error("connecting to Mint XMLRPC server: %s", msg[1])
     except KeyboardInterrupt:
         log.info("interrupt caught; exiting")
 
@@ -158,20 +157,20 @@ def daemon(options, cfg, serverUrl, lockFile):
         log.warning("unable to remove lockfile: %s", lockFile)
 
 if __name__ == "__main__":
-    lockFile = "/var/run/imagetool-jobdaemon.pid"
+    lockFile = "/var/run/mint-jobdaemon.pid"
     
     parser = OptionParser()
     parser.add_option("-k", "--kill", dest = "kill",
                       action = "store_true",
                       help = "Kill the running job daemon.")
     parser.add_option("-c", "--config", dest = "config", default = None,
-                      help = "Location of the Imagetool configuration file.")
+                      help = "Location of the Mint configuration file.")
     parser.add_option("-d", "--debug", dest = "debug", action = "store_true",
                       help = "Enable the debugger on errors.")
     (options, args) = parser.parse_args()
     
     if not args:
-        log.error("You must specify the URL to an imagetool XMLRPC server on the command line.")
+        log.error("You must specify the URL to an mint XMLRPC server on the command line.")
         sys.exit(1)
     
     if options.debug:
@@ -186,7 +185,7 @@ if __name__ == "__main__":
     
     # use sys.argv[1] as config file if provided
     # if not, try some standard locations
-    cfgFiles = ["imagetool.conf", "../imagetool.conf", None]
+    cfgFiles = ["mint.conf", "../mint.conf", None]
     if options.config:
         cfgFile = options.config
     else:
@@ -195,17 +194,17 @@ if __name__ == "__main__":
                 if os.access(cfgFile, os.R_OK) and os.path.isfile(cfgFile):
                     break
             else:
-                log.error("unable to open imagetool.conf configuration file. Please use --config=<path>.")
+                log.error("unable to open mint.conf configuration file. Please use --config=<path>.")
     
     if os.access(lockFile, os.R_OK):
         lock = open(lockFile, "r")
         pid = lock.read()
-        log.error("Imagetool job daemon already running as pid %s", pid)
+        log.error("Mint job daemon already running as pid %s", pid)
         sys.exit(1)
    
     log.debug("loading configuration file: %s", cfgFile)
     log.info("using Conary in %s", os.path.dirname(sys.modules['conary'].__file__))
-    cfg = ImageToolConfig()
+    cfg = MintConfig()
     cfg.read(cfgFile)
 
     pid = os.fork()
@@ -226,5 +225,5 @@ if __name__ == "__main__":
             
             daemon(options, cfg, args[0], lockFile)
     else:
-        log.info("Imagetool job server started")
+        log.info("Mint job server started")
         os._exit(0)

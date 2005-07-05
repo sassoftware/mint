@@ -6,22 +6,28 @@
 
 SUBDIRS = web distro
 
-python_files =  config.py\
-		database.py\
-		__init__.py\
-		mail.py\
-		mint_error.py\
-		mint.py\
-		mint_server.py\
-		news.py\
-		projects.py\
-		searcher.py\
-		shimclient.py\
-		stats.py\
-		test.py\
-		userlevels.py\
-		users.py
-		 
+python_files = \
+	cache.py	\
+	config.py	\
+	database.py	\
+	__init__.py	\
+	jobs.py		\
+	jobstatus.py	\
+	mail.py		\
+	mint_error.py	\
+	mint.py		\
+	mint_server.py	\
+	news.py		\
+	projects.py	\
+	releases.py	\
+	releasetypes.py	\
+	searcher.py	\
+	shimclient.py	\
+	statsaction.py	\
+	stats.py	\
+	userlevels.py	\
+	users.py
+ 
 extra_dist = Makefile
 
 dist_files = $(python_files) $(extra_dist)

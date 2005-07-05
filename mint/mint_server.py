@@ -20,7 +20,6 @@ import userlevels
 from cache import TroveNamesCache
 from mint_error import MintError
 
-
 import repository.netrepos.netauth
 from repository import netclient
 

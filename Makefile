@@ -17,7 +17,7 @@ export httpddir = $(sysconfdir)/httpd/conf.d/
 
 .PHONY: doc
 
-SUBDIRS = mint test
+SUBDIRS = mint test scripts
 
 extra_files = Makefile Make.rules mint.conf httpd.conf
 
@@ -42,7 +42,7 @@ install: all install-subdirs
 	sed -i "s,\%DATADIR%,$(datadir),g" $(DESTDIR)$(httpddir)/mint.conf
 
 doc: 
-	PYTHONPATH=.:../conary/:../imagetool/ epydoc -o mintdoc mint
+	PYTHONPATH=.:../conary/: epydoc -o mintdoc mint
 
 BASEPATH=mintdoc
 REMOTEPATH=public_html/

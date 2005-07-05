@@ -298,6 +298,19 @@ def newPassword(length = 6):
     return pw
 
 def sendMail(fromEmail, fromEmailName, toEmail, subject, body):
+    """
+    @param fromEmail: email address for the From: header 
+    @type fromEmail: str
+    @param fromEmailName: name for the From: header
+    @type fromEmailName: str
+    @param toEmail: recipient's email address
+    @type toEmail: str
+    @param subject: Email subject
+    @type subject: str
+    @param body: Email body text
+    @type body: str
+    """
+    
     msg = MIMEText.MIMEText(body)
     msg['Subject'] = subject
     msg['From'] = '"%s" <%s>' % (fromEmailName, fromEmail)
