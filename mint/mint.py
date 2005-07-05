@@ -160,6 +160,10 @@ class MintClient:
 
     def getJob(self, jobId):
         return jobs.Job(self.server, jobId)
+        
+    def iterJobs(self, releaseId = -1):
+        for jobId in self.server.getJobIds(releaseId):
+            yield self.getJob(jobId)
 
     def getNews(self):
         """
