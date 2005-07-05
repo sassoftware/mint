@@ -9,7 +9,7 @@ SUBDIRS = templates content
 python_files = \
 	__init__.py		\
         app.py			\
-	cookie_handler.py	\
+	cookie_http.py	\
         hooks.py
 
 extra_dist = Makefile
