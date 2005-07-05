@@ -27,7 +27,7 @@ from lib import util
 # to run from CVS
 sys.path.append('..')
 
-from mint.mint import MintConfig
+from mint.config import MintConfig
 from mint.mint import MintClient 
 from mint import jobs
 from mint import jobstatus
@@ -40,10 +40,10 @@ from mint.distro.live_cf_image import LiveCFImage
 from mint.distro.stub_image import StubImage
 
 generators = {
-    profiletypes.LIVE_ISO:           LiveIso,
-    profiletypes.INSTALLABLE_ISO:    InstallableIso,
-    profiletypes.LIVE_CF_IMAGE:      LiveCFImage,
-    profiletypes.STUB_IMAGE:         StubImage,
+    releasetypes.LIVE_ISO:           LiveIso,
+    releasetypes.INSTALLABLE_ISO:    InstallableIso,
+    releasetypes.LIVE_CF_IMAGE:      LiveCFImage,
+    releasetypes.STUB_IMAGE:         StubImage,
 }
 
 class JobRunner(threading.Thread):
