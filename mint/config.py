@@ -28,7 +28,6 @@ class MintConfig(ConfigFile):
         'domainName'        : 'rpath.org',
         'adminMail'         : 'mint@rpath.org',
         'xmlrpcAccess'      : [ BOOLEAN, False ],
-        'imagetoolUrl'      : 'http://%s:%s@iso.rpath.org/images/',
         'newsRssFeed'       : '',
         'commitAction'      : None,
 

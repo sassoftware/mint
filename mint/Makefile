@@ -4,7 +4,7 @@
 # All Rights Reserved
 #
 
-SUBDIRS = web
+SUBDIRS = web distro
 
 python_files =  config.py\
 		database.py\

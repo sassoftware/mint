@@ -16,6 +16,7 @@ from mint import searcher
         <link rel="stylesheet" type="text/css" href="${cfg.staticUrl}apps/mint/css/style.css" />
         <script py:if="extraScript">${extraScript(*scriptArgs)}</script>
         <script language="javascript1.2" src="${cfg.staticUrl}apps/mint/javascript/library.js" /> 
+        <script language="javascript1.2" src="${cfg.staticUrl}apps/mint/javascript/xmlrpc.js" />
     </head>
 
     <!-- define the HTML footer -->

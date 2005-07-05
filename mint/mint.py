@@ -7,10 +7,12 @@ import os
 import sys
 import xmlrpclib
 
-from mint_error import MintError
-import users
-import projects
 import database
+import jobs
+import projects
+import releases
+import users
+from mint_error import MintError
 
 class MintClient:
     def __init__(self, server):
@@ -132,6 +134,33 @@ class MintClient:
         """
         return self.server.searchProjects(terms, modified, limit, offset)
 
+    def getRelease(self, releaseId):
+        return releases.Release(self.server, releaseId)
+
+    def newRelease(self, projectId, releaseName, published = False):
+        """
+        Create a new release.
+        @param projectId: the project to be associated with the new release.
+        @param releaseName: name of the new release
+        @returns: an object representing the new release
+        @rtype: L{mint.releases.Release}
+        """
+        releaseId = self.server.newRelease(projectId, releaseName, published) 
+        return self.getRelease(releaseId)
+
+    def startImageJob(self, releaseId):
+        """
+        Start a new image generation job.
+        @param releaseId: the release id which describes the image to be created.
+        @return: an object representing the new job
+        @rtype: L{mint.jobs.Job}
+        """
+        jobId = self.server.startImageJob(releaseId)
+        return self.getJob(jobId)
+
+    def getJob(self, jobId):
+        return jobs.Job(self.server, jobId)
+
     def getNews(self):
         """
         Return a list of news items from the RSS news cache.
@@ -170,7 +199,7 @@ class _Method(xmlrpclib._Method):
         elif exceptionName == "ItemNotFound":
             raise database.ItemNotFound(exceptionArgs[0])
         elif exceptionName == "MethodNotSupported":
-            raise MethodNotSupported
+            raise MethodNotSupported(exceptionArgs[0])
         else:
             raise UnknownException(exceptionName, exceptionArgs)
 
@@ -183,5 +212,26 @@ class UnknownException(Exception):
         self.eArgs = eArgs
 
 class MethodNotSupported(MintError):
+    def __init__(self, method):
+        self.method = method
+
     def __str__(self):
-        return "method not supported by XMLRPC server"
+        return "method not supported by XMLRPC server: %s" % self.method
+
+def extractIs(flavor):
+    """
+    Returns just the instruction set of a given flavor.
+    @param flavor: the full flavor
+    @type flavor: L{conary.deps.deps.DependencySet}
+    @rtype: str
+    """
+    return flavor.members[deps.DEP_CLASS_IS].members.keys()[0]
+
+def upstream(version):
+    """
+    Returns the upstream portion of a given version, stripping off the source and build counts.
+    @param version: the full version object
+    @type version: L{conary.versions.Version}
+    @rtype: str
+    """
+    return version.trailingRevision().asString().split('-')[0]

@@ -13,16 +13,22 @@ from mod_python import apache
 from mod_python import Cookie
 from mod_python.util import FieldStorage
 
+
+import repository
+import versions
+from deps import deps
 from web import webhandler
 from web.fields import strFields, intFields, listFields, boolFields
 
-from mint import shimclient
-from mint import projects
 from mint import database
-from mint import users
-from mint import userlevels
+from mint import jobs
 from mint import mint_error
 from mint import mint_server
+from mint import projects
+from mint import releases
+from mint import shimclient
+from mint import users
+from mint import userlevels
 
 class Redirect(Exception):
     def __init__(self, location):
@@ -201,6 +207,13 @@ class MintApp(webhandler.WebHandler):
                                                 path = "/")
         self._redirCookie(cookie)
 
+    def _conaryConfig(self, project):
+        cfg = project.getConaryConfig()
+
+        cfg.setValue("dbPath", ":memory:")
+        cfg.setValue("root", ":memory:")
+        return cfg                    
+
     @siteOnly
     def frontPage(self, auth):
         projectList = self.client.getProjectsByMember(auth.userId)
@@ -297,10 +310,141 @@ class MintApp(webhandler.WebHandler):
         self._write("projectPage")
         return apache.OK
 
+    @requiresAuth
     @projectOnly
+    @ownerOnly
     def releases(self, auth):
-        self._write("releases")
+        releases = self.project.getReleases()
+        releasesByTrove = {}
+        for release in releases:
+            l = releasesByTrove.setdefault(release.getTroveName(), [])
+            l.append(release)
+        for l in releasesByTrove.values():
+            l.sort(key = lambda x: x.getTroveVersion(), reverse = True)
+
+        self._write("releases", releasesByTrove = releasesByTrove)
         return apache.OK
+
+    @requiresAuth
+    @projectOnly
+    @ownerOnly
+    def newRelease(self, auth):
+        self._write("newRelease")
+        return apache.OK
+
+    @requiresAuth
+    @projectOnly
+    @ownerOnly
+    @intFields(releaseId = -1, imageType = -1)
+    @strFields(trove = "", releaseName = "")
+    def editRelease(self, auth, releaseId, imageType, trove, releaseName):
+        projectId = self.project.getId()
+        if releaseId == -1:
+            assert(projectId != -1)
+            release = self.client.newRelease(projectId, releaseName)
+
+#            release.setImageType(imageType)
+            trove, label = trove.split("=")
+            label = versions.Label(label)
+            version = None
+            flavor = None
+        else:
+            release = self.client.getRelease(releaseId)
+
+            trove, versionStr, flavor = release.getTrove()
+            version = versions.ThawVersion(versionStr)
+            label = version.branch().label()
+
+        cfg = self._conaryConfig(self.project)
+        netclient = repository.netclient.NetworkRepositoryClient(cfg.repositoryMap)
+        leaves = netclient.getTroveLeavesByLabel({trove: {label: None}})
+   
+        # group troves by major architecture
+        def dictByArch(leaves, troveName):
+            archMap = {}
+            for v, flavors in reversed(sorted(leaves[troveName].items())):
+                for f in flavors:
+                    arch = f.members[deps.DEP_CLASS_IS].members.keys()[0]
+
+                    l = archMap.setdefault(arch, [])
+                    l.append((v, f, ))
+            return archMap
+
+        archMap = dictByArch(leaves, trove)
+        versionFlavors = []
+        for arch, vfList in archMap.items():
+            for vf in vfList:
+                versionFlavors.append(vf)
+        versionFlavors.sort(key=lambda x: x[0], reverse=True)
+
+        self._write("editRelease", trove = trove, version = version,
+                                   flavor = deps.ThawDependencySet(flavor),
+                                   label = label.asString(), release = release,
+                                   archMap = archMap)
+        return apache.OK
+
+    @requiresAuth
+    @projectOnly
+    @intFields(releaseId = None)
+    @strFields(trove = None, version = None,
+               desc = "", mediaSize = None)
+    def editRelease2(self, auth, releaseId,
+                     trove, version,
+                     desc, mediaSize):
+        release = self.client.getRelease(releaseId)
+
+        version, flavor = version.split(" ")
+        release.setTrove(trove, version, flavor)
+        release.setDesc(desc)
+
+        flavor = deps.ThawDependencySet(flavor)
+        jobArch = flavor.members[deps.DEP_CLASS_IS].members.keys()[0]
+        assert(jobArch in ('x86', 'x86_64'))
+
+        try:
+            job = self.client.startImageJob(releaseId)
+        except jobs.DuplicateJob:
+            pass
+
+        return self._redirect("release?id=%d" % releaseId)
+
+    @requiresAuth
+    @projectOnly
+    @intFields(id = None)
+    def release(self, auth, id):
+        release = self.client.getRelease(id)
+
+        try:
+            trove, version, flavor = release.getTrove()
+        except releases.TroveNotSet:
+
+            return self._redirect("editRelease?releaseId=%d" % release.getId())
+        else:
+            refreshing = False
+            job = release.getJob()
+
+            self._write("release", release = release,
+                                          name = release.getName(),
+                                          trove = trove, version = versions.ThawVersion(version),
+                                          flavor = deps.ThawDependencySet(flavor), job = job,
+                                          releaseId = id, projectId = self.project.getId())
+        return apache.OK
+
+    @projectOnly
+    @ownerOnly
+    @intFields(releaseId = None)
+    def publish(self, auth, releaseId):
+        release = self.client.getRelease(releaseId)
+        release.setPublished(True)
+
+        return self._redirect("release?id=%d" % releaseId)
+
+    @projectOnly
+    @ownerOnly
+    @intFields(releaseId = None)
+    def restartJob(self, auth, releaseId):
+        self.client.startImageJob(releaseId)
+        return self._redirect("release?id=%d" % releaseId)
 
     @siteOnly
     @requiresAuth
@@ -381,7 +525,6 @@ class MintApp(webhandler.WebHandler):
     @projectOnly
     @strFields(username = None)
     @intFields(level = None)
-    @requiresAuth
     @ownerOnly
     def addMember(self, auth, username, level):
         self.project.addMemberByName(username, level)
@@ -389,7 +532,6 @@ class MintApp(webhandler.WebHandler):
 
     @intFields(userId = None, level = None)
     @projectOnly
-    @requiresAuth
     @ownerOnly
     def editMember(self, auth, userId, level):
         self.project.updateUserLevel(userId, level)
@@ -405,7 +547,6 @@ class MintApp(webhandler.WebHandler):
 
     @projectOnly
     @intFields(userId = None)
-    @requiresAuth
     @ownerOnly
     def memberSettings(self, auth, userId):
         user, level = self.client.getMembership(userId, self.project.getId()) 
@@ -445,6 +586,8 @@ class MintApp(webhandler.WebHandler):
                                      count = count, limit = limit, offset = offset,
                                      modified = modified)
         return apache.OK
+
+
 
     def _write(self, template, **values):
         path = os.path.join(self.cfg.templatePath, template + ".kid")

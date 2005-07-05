@@ -22,8 +22,6 @@ import database
 import userlevels
 import searcher
 
-from imagetool import imagetool
-
 class ConfirmError(MintError):
     def __str__(self):
         return "your registration could not be confirmed"
@@ -112,10 +110,6 @@ class UsersTable(database.KeyedTable):
             authRepo.addAcl(repoLabel, username, None, None, False, False, False)
         except repository.netrepos.netauth.UserAlreadyExists:
             raise UserAlreadyExists
-
-        imagetoolUrl = self.cfg.imagetoolUrl % (self.cfg.authUser, self.cfg.authPass)
-        itclient = imagetool.ImageToolClient(imagetoolUrl)
-        itclient.newUser(username, internalUser = False)
 
         if not active:
             message = "\n".join(["Thank you for registering for the rpath Linux customized",

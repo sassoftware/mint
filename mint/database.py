@@ -87,8 +87,6 @@ class DatabaseTable:
         # create missing indexes
         cu.execute("SELECT name FROM sqlite_master WHERE type = 'index'")
         missing = set(self.indexes.keys()) - set(x[0] for x in cu) 
-        print >> sys.stderr, "missing indexes:", missing
-        sys.stderr.flush()
         for index in missing:
             cu.execute(self.indexes[index])
                

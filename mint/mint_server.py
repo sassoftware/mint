@@ -8,12 +8,18 @@ import sqlite3
 import sys
 import time
 
-import projects
-import users
 import database
-import userlevels
+import jobs
+import jobstatus
 import news
+import projects
+import releases
+import versions
+import users
+import userlevels
+from cache import TroveNamesCache
 from mint_error import MintError
+
 
 import repository.netrepos.netauth
 from repository import netclient
@@ -22,6 +28,8 @@ from imagetool import imagetool
 
 validHost = re.compile('^[a-zA-Z][a-zA-Z0-9\-]*$')
 reservedHosts = ['admin', 'mail', 'www', 'web', 'rpath', 'wiki', 'conary']
+
+allTroveNames = TroveNamesCache()
 
 class PermissionDenied(MintError):
     def __str__(self):
@@ -84,22 +92,22 @@ class MintServer(object):
         hostname += "." + self.cfg.domainName
 
         # XXX this set of operations should be atomic if possible
-        itclient = self.getItClient()
-        itProject = itclient.newProject(projectName)
-        itProject.addLabel(hostname + "@rpl:devel",
-            "http://%s/conary/" % hostname, self.authToken[0], self.authToken[1])
-
         projectId = self.projects.new(name = projectName,
                                       creatorId = self.auth.userId,
                                       desc = desc,
                                       hostname = hostname,
                                       defaultBranch = "rpl:devel",
-                                      itProjectId = itProject.getId(),
                                       timeModified = time.time(),
                                       timeCreated = time.time())
         self.projectUsers.new(userId = self.auth.userId,
                               projectId = projectId,
                               level = userlevels.OWNER)
+        
+        project = projects.Project(self, projectId)
+        project.addLabel(hostname + "@rpl:devel",
+            "http://%s/conary/" % hostname,
+            self.authToken[0], self.authToken[1])
+
         self.projects.createRepos(self.cfg.reposPath, hostname,
                                   self.authToken[0], self.authToken[1])
 
@@ -269,11 +277,158 @@ class MintServer(object):
     def getNews(self):
         return self.newsCache.getNews()
 
-    def getItClient(self):
-        imagetoolUrl = self.cfg.imagetoolUrl % (self.authToken[0], self.authToken[1])
-        itclient = imagetool.ImageToolClient(imagetoolUrl)
+    #
+    # LABEL STUFF
+    #
+    @requiresAuth
+    def getLabelsForProject(self, projectId):
+        return self.labels.getLabelsForProject(projectId)
+
+    @requiresAuth
+    def addLabel(self, projectId, label, url, username, password):
+        return self.labels.addLabel(projectId, label, url, username, password)
+
+    @requiresAuth
+    def getLabel(self, labelId):
+        return self.labels.getLabel(labelId)
+
+    @requiresAuth
+    def editLabel(self, labelId, label, url, username, password):
+        return self.labels.editLabel(labelId, label, url, username, password)
+
+    @requiresAuth
+    def removeLabel(self, projectId, labelId):
+        return self.labels.removeLabel(projectId, labelId)
+
+    #
+    # RELEASE STUFF
+    #
+    def getReleasesForProject(self, projectId, showUnpublished = False):
+        return [releases.Release(self, x) for x in self.releases.iterReleasesForProject(projectId, showUnpublished)]
+
+    def getRelease(self, releaseId):
+        return self.releases.get(releaseId)
+
+    @requiresAuth
+    def newRelease(self, projectId, releaseName, published):
+        return self.releases.new(projectId = projectId,
+                                 name = releaseName,
+                                 published = published)
+
+    def getReleaseTrove(self, releaseId):
+        return self.releases.getTrove(releaseId)
+
+    @requiresAuth
+    def setReleaseTrove(self, releaseId, troveName, troveVersion, troveFlavor):
+        return self.releases.setTrove(releaseId, troveName,
+                                                 troveVersion,
+                                                 troveFlavor)
+
+    @requiresAuth
+    def setReleaseDesc(self, releaseId, desc):
+        cu = self.db.cursor()
+        cu.execute("UPDATE Releases SET desc=? WHERE releaseId=?",
+                   desc, releaseId)
+        self.db.commit()
+        return True
+
+    @requiresAuth
+    def setReleasePublished(self, releaseId, published):
+        cu = self.db.cursor()
+        cu.execute("UPDATE Releases SET published=? WHERE releaseId=?",
+            published, releaseId)
+        self.db.commit()
+        return True
+
+    @requiresAuth
+    def setImageType(self, releaseId, imageType):
+        cu = self.db.cursor()
+        cu.execute("UPDATE Releases SET imageType=? WHERE releaseId=?",
+                   imageType, releaseId)
+        self.db.commit()
+        return True
+
+    @requiresAuth
+    def startImageJob(self, releaseId):
+        cu = self.db.cursor()
+
+        cu.execute("SELECT jobId, status FROM Jobs WHERE releaseId=?",
+                   releaseId)
+        r = cu.fetchall()
+        if len(r) == 0:
+            cu.execute("INSERT INTO Jobs VALUES (NULL, ?, ?, ?, ?, ?, 0)",
+                       releaseId, self.auth.userId, jobstatus.WAITING,
+                       jobstatus.statusNames[jobstatus.WAITING],
+                       time.time())
+            retval = cu.lastrowid
+        else:
+            jobId, status = r[0]
+            if status in (jobstatus.WAITING, jobstatus.RUNNING):
+                raise jobs.DuplicateJob
+            else:
+                cu.execute("""UPDATE Jobs SET status=?, statusMessage='Waiting',
+                                              timeStarted=?, timeFinished=0
+                              WHERE jobId=?""", jobstatus.WAITING, time.time(),
+                                                jobId)
+                retval = jobId
+
+        self.db.commit()
+        return retval
+
+    @requiresAuth
+    def getJob(self, jobId):
+        cu = self.db.cursor()
+
+        cu.execute("SELECT userId, releaseId, status,"
+                   "  statusMessage, timeStarted, "
+                   "  timeFinished FROM Jobs "
+                   " WHERE jobId=?", jobId)
+
+        p = cu.fetchone()
+        if not p:
+            raise jobs.JobMissing
+
+        dataKeys = ['userId', 'releaseId', 'status',
+                    'statusMessage', 'timeStarted', 'timeFinished']
+        data = {}
+        for i, key in enumerate(dataKeys):
+            data[key] = p[i]
+        return data
+
+    @requiresAuth
+    def getJobIds(self, releaseId):
+        cu = self.db.cursor()
+
+        stmt = """SELECT jobId FROM JOBS"""
+        if releaseId != -1:
+            stmt += " WHERE releaseId=?"
+            cu.execute(stmt, releaseId)
+        else:
+            cu.execute(stmt)
+
+        p = cu.fetchall()
+        rows = []
+        for row in p:
+            rows.append(row[0])
+        return rows
+    
+    @requiresAuth
+    def getGroupTroves(self, projectId):
+        project = projects.Project(self, projectId)
+
+        labelIdMap = project.getLabelIdMap()
+        cfg = project.getConaryConfig()
+        netclient = repository.netclient.NetworkRepositoryClient(cfg.repositoryMap)
         
-        return itclient
+        troveDict = {}
+        for label in labelIdMap.keys():
+            troves = allTroveNames.getTroveNames(versions.Label(label), netclient)
+            troves = [x for x in troves if (x.startswith("group-") or\
+                                            x.startswith("fileset-")) and\
+                                            ":" not in x]
+            troveDict[label] = troves
+
+        return troveDict
 
     def __init__(self, cfg):
         self.cfg = cfg
@@ -281,7 +436,10 @@ class MintServer(object):
         self.authDb = sqlite3.connect(cfg.authDbPath, timeout = 30000)
 
         self.projects = projects.ProjectsTable(self.db, self.cfg)
+        self.labels = projects.LabelsTable(self.db)
+        self.jobs = jobs.JobsTable(self.db)
         self.users = users.UsersTable(self.db, self.cfg)
         self.projectUsers = users.ProjectUsersTable(self.db)
+        self.releases = releases.ReleasesTable(self.db)
         self.newsCache = news.NewsCacheTable(self.db, self.cfg)
         self.newsCache.refresh()

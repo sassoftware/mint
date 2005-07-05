@@ -7,7 +7,7 @@
 import os
 import sys
 
-from imagetool import jobstatus
+from mint import jobstatus
 
 class ImageGenerator:
     def __init__(self, client, cfg, job, profileId):

@@ -5,11 +5,14 @@
 #
 import os
 import sys
+import urlparse
 import time
 
 import sqlite3
+import versions
 from lib import util
 from repository.netrepos.netserver import NetworkRepositoryServer
+from conarycfg import ConaryConfiguration
 
 from mint_error import MintError
 import database
@@ -23,17 +26,13 @@ class InvalidHostname(Exception):
 class Project(database.TableObject):
     __slots__ = ('creatorId', 'name',
                  'desc', 'hostname', 'defaultBranch',
-                 'timeCreated', 'timeModified',
-                 'itProjectId')
+                 'timeCreated', 'timeModified')
 
     def getItem(self, id):
         return self.server.getProject(id)
 
     def getCreatorId(self):
         return self.creatorId
-
-    def getItProjectId(self):
-        return self.itProjectId
 
     def getName(self):
         return self.name
@@ -57,9 +56,7 @@ class Project(database.TableObject):
         return self.server.getMembersByProjectId(self.id)
 
     def getReleases(self, showUnpublished = False):
-        itclient = self.server.getItClient()
-        project = itclient.getProject(self.itProjectId)
-        return project.getReleases(showUnpublished)
+        return self.server.getReleasesForProject(self.id, showUnpublished)
 
     def getUserLevel(self, userId):
         try:
@@ -87,6 +84,55 @@ class Project(database.TableObject):
     def updateUser(self, userId, **kwargs):
         return self.users.update(userId, **kwargs)
 
+    def getRepoMap(self):
+        labelPath, repoMap = self.server.getLabelsForProject(self.id)
+        return [x[0] + " " + x[1] for x in repoMap.items()]
+
+    def getLabelIdMap(self):
+        """Returns a dictionary mapping of label names to database IDs"""
+        labelPath, repoMap = self.server.getLabelsForProject(self.id)
+        return labelPath
+
+    def getConaryConfig(self, imageLabel=None, imageRepo=None):
+        labelPath, repoMap = self.server.getLabelsForProject(self.id)
+
+        cfg = ConaryConfiguration(readConfigFiles=False)
+        cfg.initializeFlavors()
+
+        installLabelPath = " ".join(x for x in labelPath.keys())
+
+        if imageLabel:
+            installLabelPath += " " + imageLabel
+        cfg.setValue("installLabelPath", installLabelPath)
+
+        for m in [x[0] + " " + x[1] for x in repoMap.items()]:
+            cfg.setValue("repositoryMap", m)
+        if imageRepo:
+            cfg.setValue("repositoryMap", "%s %s" % (imageLabel.split('@')[0],
+                                                     imageRepo))
+        return cfg
+
+    def addLabel(self, label, url, username="", password=""):
+        return self.server.addLabel(self.id, label, url, username, password)
+
+    def getLabelIds(self):
+        labelPath, repoMap = self.server.getLabelsForProject(self.id)
+        return labelPath.values()
+
+    def getLabel(self, labelId):
+        labelPath, repoMap = self.server.getLabelsForProject(self.id)
+        # turn labelPath inside-out
+        revMap = dict(zip(labelPath.values(), labelPath.keys()))
+
+        return revMap[int(labelId)]
+
+    def editLabel(self, labelId, label, url, username, password):
+        return self.server.editLabel(labelId, label, url, username, password)
+
+    def removeLabel(self, labelId):
+        return self.server.removeLabel(self.id, labelId)
+
+
 class ProjectsTable(database.KeyedTable):
     name = 'Projects'
     key = 'projectId'
@@ -99,10 +145,9 @@ class ProjectsTable(database.KeyedTable):
                     desc            STR,
                     timeCreated     INT,
                     timeModified    INT DEFAULT 0,
-                    itProjectId     INT
                 );"""
     fields = ['creatorId', 'name', 'hostname', 'defaultBranch',
-              'desc', 'timeCreated', 'timeModified', 'itProjectId']
+              'desc', 'timeCreated', 'timeModified']
 
     def __init__(self, db, cfg):
         database.DatabaseTable.__init__(self, db)
@@ -169,6 +214,101 @@ class ProjectsTable(database.KeyedTable):
         repos.auth.addUser(self.cfg.authUser, self.cfg.authPass)
         repos.auth.addAcl(self.cfg.authUser, None, None, True, False, True)
 
+class LabelsTable(database.KeyedTable):
+    name = 'Labels'
+    key = 'labelId'
+
+    createSQL = """CREATE TABLE Labels (
+                    labelId         INTEGER PRIMARY KEY,
+                    projectId       INT,
+                    label           STR,
+                    url             STR,
+                    username        STR,
+                    password        STR
+                )"""
+
+    fields = ['labelId', 'projectId', 'label', 'url', 'username', 'password']
+
+    def getLabelsForProject(self, projectId):
+        cu = self.db.cursor()
+
+        cu.execute("""SELECT labelId, label, url, username, password
+                      FROM Labels
+                      WHERE projectId=?""", projectId)
+
+        repoMap = {}
+        labelIdMap = {}
+        for labelId, label, url, username, password in cu:
+            labelIdMap[label] = labelId
+            host = label[:label.find('@')]
+            if url:
+                if username and password:
+                    urlparts = urlparse.urlparse(url)
+                    map = "".join((urlparts[0], "://%s:%s@" % (username, password)) + urlparts[1:])
+                else:
+                    map = url
+            else:
+                map = "https://%s/conary/" % (host)
+
+            repoMap[host] = map
+
+        return labelIdMap, repoMap
+
+    def getLabel(self, labelId):
+        cu = self.db.cursor()
+        cu.execute("SELECT label, url, username, password FROM Labels WHERE labelId=?", labelId)
+
+        p = cu.fetchone()
+        if not p:
+            raise LabelMissing
+        else:
+            return p[0], p[1], p[2], p[3]
+
+    def addLabel(self, projectId, label, url=None, username=None, password=None):
+        cu = self.db.cursor()
+
+        cu.execute("""SELECT count(labelId) FROM Labels WHERE label=? and projectId=?""",
+                   label, projectId)
+        c = cu.fetchone()[0]
+        if c > 0:
+            raise DuplicateLabel
+
+        cu.execute("""INSERT INTO Labels (projectId, label, url, username, password)
+                      VALUES (?, ?, ?, ?, ?)""", projectId, label, url, username, password)
+        self.db.commit()
+        return cu.lastrowid
+
+    def editLabel(self, labelId, label, url, username=None, password=None):
+        cu = self.db.cursor()
+        cu.execute("""UPDATE Labels SET label=?, url=?, username=?, password=?
+                      WHERE labelId=?""", label, url, username, password, labelId)
+        self.db.commit()
+        return False
+
+    def removeLabel(self, projectId, labelId):
+        cu = self.db.cursor()
+
+        cu.execute("""SELECT p.troveVersion, l.label
+                      FROM Profiles p, Labels l
+                      WHERE p.projectId=?
+                        AND l.projectId=p.projectId
+                        AND l.labelId=?""",
+                   projectId, labelId)
+
+        for versionStr, label in cu:
+            if versionStr:
+                v = versions.ThawVersion(versionStr)
+                if v.branch().label().asString() == label:
+                    raise LabelInUse
+
+        cu.execute("""DELETE FROM Labels WHERE projectId=? AND labelId=?""", projectId, labelId)
+        self.db.commit()
+        return False
+
+
+ 
+
+    
 # XXX sort of stolen from conary/server/server.py
 class EmptyNetworkRepositoryServer(NetworkRepositoryServer):
     def reset(self, authToken, clientVersion):

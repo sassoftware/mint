@@ -37,7 +37,7 @@ from mint import userlevels
             <h3><a href="releases">Releases Page</a></h3>
             <ul>
                 <li py:for="release in project.getReleases()">
-                    <a href="http://iso.rpath.org/images/downloadRelease?profileId=${release.getId()}">
+                    <a href="/release?id=${release.getId()}">
                         ${release.getTroveName()}=${release.getTroveVersion().trailingRevision().asString()}
                     </a>
                 </li>

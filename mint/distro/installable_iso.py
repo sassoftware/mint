@@ -15,10 +15,9 @@ import versions
 from build import use
 from conarycfg import ConfigFile, BOOLEAN
 
-import imagetool
 import distribution 
 import conarycfg
-from imagetool.imagetool import upstream
+from mint.mint import upstream
 from imagegen import ImageGenerator
 
 class IsoConfig(ConfigFile):
@@ -68,8 +67,7 @@ class InstallableIso(ImageGenerator):
 
         jobId = self.job.getId()
         releaseVer = upstream(version)
-        releasePhase = self.job.getData("releasePhase")
-        isoSize = self.job.getData("isoSize")
+        releasePhase = "ALPHA"
 
         arch = profile.getArch()
         assert(arch in ('x86', 'x86_64'))

@@ -70,7 +70,7 @@ def post(port, isSecure, repos, cfg, req):
         authToken = getHttpAuth(req)
         if type(authToken) is int:
             return authToken
-
+        
         if authToken[0] != "anonymous" and not isSecure and repos.forceSecure:
             return apache.HTTP_FORBIDDEN
 

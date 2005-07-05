@@ -22,10 +22,10 @@
  
             <ul>
                 <li py:for="release in releases">
-                    <a href="http://iso.rpath.org/images/downloadRelease?profileId=${release.getId()}">${release.getTroveName()}=${release.getTroveVersion().trailingRevision().asString()}</a>
+                    <a href="release?id=${release.getId()}">${release.getTroveName()}=${release.getTroveVersion().trailingRevision().asString()}</a>
                 </li>
             </ul>
-            <a py:if="isOwner" href="http://iso.rpath.org/images/projectDetails?projectId=${project.getItProjectId()}">Manage Releases</a>
+            <p py:if="isOwner"><a href="newRelease">Create a new release</a></p>
             ${html_footer()}
         </div>
     </body>
