@@ -41,3 +41,7 @@ table.results tbody tr td {
     padding: 3px;
 }
 
+select#trove option.label {
+    font-weight: bold;
+    background-color: #dddddd;
+}
