@@ -25,11 +25,14 @@ class MintConfig(ConfigFile):
         'reposPath'         : '/data/mint/repos/',
         'dbPath'            : '/data/mint/data/db',
         'tmpPath'           : '/data/mint/tmp/',
+        'imagesPath'        : '/data/mint/images/',
+        'logPath'           : '/data/mint/logs/',
         'domainName'        : 'rpath.org',
         'adminMail'         : 'mint@rpath.org',
         'xmlrpcAccess'      : [ BOOLEAN, False ],
         'newsRssFeed'       : '',
         'commitAction'      : None,
+
 
         # don't set these yourself; they will be automatically generated 
         # from authRepoMap:
