@@ -55,9 +55,9 @@ class JobRunner(threading.Thread):
 
     def run(self):
         jobId = self.job.getId()
-        profileId = self.job.getProfileId()
-        profile = self.client.getProfile(profileId)
-        project = self.client.getProject(profile.getProjectId())
+        releaseId = self.job.getReleaseId()
+        release = self.client.getRelease(releaseId)
+        project = self.client.getProject(release.getProjectId())
         
         self.job.setStatus(jobstatus.RUNNING, 'Running')
         log.info("job %d started", jobId)
@@ -68,13 +68,13 @@ class JobRunner(threading.Thread):
             except OSError, err:
                 if err.errno != errno.EEXIST:
                     raise
-            generator = generators[profile.getImageType()]
-            imageFilenames = generator(self.client, self.cfg, self.job, profileId).write()
+            generator = generators[release.getImageType()]
+            imageFilenames = generator(self.client, self.cfg, self.job, releaseId).write()
         except Exception, e:
             self.job.setStatus(jobstatus.ERROR, str(e))
             raise
         else:
-            profile.setFiles(imageFilenames)
+            release.setFiles(imageFilenames)
             self.job.setStatus(jobstatus.FINISHED, "Finished")
             log.info("job %d finished: %s", jobId, str(imageFilenames))
 
@@ -107,13 +107,13 @@ class JobDaemon:
         log.info("handling jobs of architecture: %s", arch)
         
         while(True):
-            joblist = list(client.iterJobs(profileId=-1))
+            joblist = list(client.iterJobs(releaseId=-1))
 
             for job in joblist:
-                profile = client.getProfile(job.getProfileId())
+                release = client.getRelease(job.getReleaseId())
                 if job.getStatus() == jobstatus.WAITING\
                    and len(joblist) < 5\
-                   and arch == profile.getArch():
+                   and arch == release.getArch():
                     th = JobRunner(cfg, client, job)
                     threads.append(th)
                     th.start()
