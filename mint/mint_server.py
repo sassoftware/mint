@@ -189,6 +189,7 @@ class MintServer(object):
         except StopIteration:
             raise database.ItemNotFound("membership")
 
+    @requiresAuth
     def setUserLevel(self, userId, projectId, level):
         cu = self.db.cursor()
         cu.execute("""UPDATE ProjectUsers SET level=? WHERE userId=? and 
@@ -429,6 +430,17 @@ class MintServer(object):
             troveDict[label] = troves
 
         return troveDict
+
+    @requiresAuth
+    def getReleaseStatus(self, releaseId):
+        release = releases.Release(self, releaseId)
+        job = release.getJob()
+
+        if not job:
+            return {'status': -1, 'message': 'No job.'}
+        else:
+            return {'status':  job.getStatus(),
+                    'message': job.getStatusMessage()}
 
     def __init__(self, cfg):
         self.cfg = cfg
