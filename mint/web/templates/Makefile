@@ -5,19 +5,22 @@
 #
 
 kid_files = \
-	error.kid\
-	frontPage.kid\
-	library.kid\
-	login.kid\
-	memberSettings.kid\
-	members.kid\
-	newProject.kid\
-	projectDesc.kid\
-	projectPage.kid\
-	register.kid\
-	releases.kid\
-	searchResults.kid\
-	userInfo.kid\
+	editRelease.kid		\
+	error.kid		\
+	frontPage.kid		\
+	library.kid		\
+	login.kid		\
+	memberSettings.kid	\
+	members.kid		\
+	newProject.kid		\
+	newRelease.kid		\
+	projectDesc.kid		\
+	projectPage.kid		\
+	register.kid		\
+	release.kid		\
+	releases.kid		\
+	searchResults.kid	\
+	userInfo.kid		\
 	userSettings.kid
 
 extra_dist = Makefile

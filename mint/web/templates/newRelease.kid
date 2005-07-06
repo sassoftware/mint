@@ -40,16 +40,16 @@ title = "Create New Release"
                 </select>
 
                 <!-- hide this for now -->
-                <h2 py:if='0'>Profile Type</h2>
+                <h2 py:if='0'>Release Type</h2>
                 <ul py:if='0' style="list-style-type: none; padding-left: 10px;">
-                    <li py:for="releaseType, typeKey in sorted(releasetypes.ProfileTypes.items())">
+                    <li py:for="releaseType, typeKey in sorted(releasetypes.ReleaseTypes.items())">
                         <input type="radio" name="imageType" value="${releaseType}" />
                         ${releasetypes.typeNames[typeKey]}
                     </li>
                 </ul>
 
                 <p>
-                    <button id="submitButton" type="button" onclick="javascript:newProfileSubmit();">Submit</button>
+                    <button id="submitButton" type="button" onclick="javascript:newReleaseSubmit();">Submit</button>
                     <input type="hidden" value="${releasetypes.INSTALLABLE_ISO}" name="imageType" />
                     <input type="hidden" name="releaseId" value="-1" />
                 </p>
