@@ -51,6 +51,15 @@ class MintClient:
         projectId = self.server.getProjectIdByHostname(hostname)
         return projects.Project(self.server, projectId)
 
+    def getProject(self, projectId):
+        """
+        Retrieve a project by database id.
+        @param projectId: database id of the requested project.
+        @rtype: L{mint.projects.Project}
+        @raises mint.database.ItemNotFound: project does not exist
+        """
+        return projects.Project(self.server, projectId)
+
     def getProjectsByMember(self, userId):
         """
         Return a list of Project objects of which the provided user is a member.

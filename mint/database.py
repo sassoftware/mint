@@ -117,7 +117,11 @@ class KeyedTable(DatabaseTable):
 
         data = {}
         for i, key in enumerate(self.fields):
-            data[key] = r[i]
+            if r[i] != None:
+                data[key] = r[i]
+            else:
+                data[key] = ''
+            
         return data
 
     def getIdByColumn(self, column, value):

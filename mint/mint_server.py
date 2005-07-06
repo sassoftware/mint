@@ -409,7 +409,28 @@ class MintServer(object):
         for row in p:
             rows.append(row[0])
         return rows
-    
+   
+    @requiresAuth
+    def setJobStatus(self, jobId, newStatus, statusMessage):
+        cu = self.db.cursor()
+        cu.execute("UPDATE Jobs SET status=?, statusMessage=? WHERE jobId=?",
+                   newStatus, statusMessage, jobId)
+        if newStatus == jobstatus.FINISHED:
+            cu.execute("UPDATE Jobs SET timeFinished=? WHERE jobId=?",
+                       time.time(), jobId)
+        self.db.commit()
+        return True
+
+    @requiresAuth
+    def setImageFilenames(self, releaseId, filenames):
+        cu = self.db.cursor()
+        cu.execute("DELETE FROM ImageFiles WHERE releaseId=?", releaseId)
+        for idx, file in enumerate(sorted(filenames)):
+            cu.execute("INSERT INTO ImageFiles VALUES (NULL, ?, ?, ?)",
+                       releaseId, idx, file)
+        self.db.commit()
+        return True
+   
     @requiresAuth
     def getGroupTroves(self, projectId):
         project = projects.Project(self, projectId)
