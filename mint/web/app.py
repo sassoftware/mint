@@ -26,6 +26,7 @@ from mint import mint_error
 from mint import mint_server
 from mint import projects
 from mint import releases
+from mint import releasetypes
 from mint import shimclient
 from mint import users
 from mint import userlevels
