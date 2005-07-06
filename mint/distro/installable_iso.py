@@ -42,14 +42,14 @@ class InstallableIso(ImageGenerator):
     def write(self):
         isocfg = self.getIsoConfig()
     
-        profileId = self.job.getProfileId()
+        releaseId = self.job.getReleaseId()
 
-        profile = self.client.getProfile(profileId)
-        troveName, versionStr, flavorStr = profile.getTrove()
+        release = self.client.getRelease(releaseId)
+        troveName, versionStr, flavorStr = release.getTrove()
         version = versions.ThawVersion(versionStr)
         flavor = deps.deps.ThawDependencySet(flavorStr)
 
-        project = self.client.getProject(profile.getProjectId())
+        project = self.client.getProject(release.getProjectId())
 
         ccfg = project.getConaryConfig()
 
@@ -69,10 +69,10 @@ class InstallableIso(ImageGenerator):
         releaseVer = upstream(version)
         releasePhase = "ALPHA"
 
-        arch = profile.getArch()
+        arch = release.getArch()
         assert(arch in ('x86', 'x86_64'))
  
-        distroInfo = distribution.DistroInfo(isocfg.productPrefix, isocfg.productPath, profile.getName(),
+        distroInfo = distribution.DistroInfo(isocfg.productPrefix, isocfg.productPath, release.getName(),
                                              releaseVer, releasePhase,
                                              arch = arch,
                                              isoSize = isoSize)
