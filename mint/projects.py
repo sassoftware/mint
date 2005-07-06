@@ -144,8 +144,8 @@ class ProjectsTable(database.KeyedTable):
                     defaultBranch   STR,
                     desc            STR,
                     timeCreated     INT,
-                    timeModified    INT DEFAULT 0,
-                );"""
+                    timeModified    INT DEFAULT 0
+                )"""
     fields = ['creatorId', 'name', 'hostname', 'defaultBranch',
               'desc', 'timeCreated', 'timeModified']
 
