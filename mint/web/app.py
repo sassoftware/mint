@@ -335,7 +335,7 @@ class MintApp(webhandler.WebHandler):
     @requiresAuth
     @projectOnly
     @ownerOnly
-    @intFields(releaseId = -1, imageType = -1)
+    @intFields(releaseId = -1, imageType = releasetypes.INSTALLABLE_ISO)
     @strFields(trove = "", releaseName = "")
     def editRelease(self, auth, releaseId, imageType, trove, releaseName):
         projectId = self.project.getId()
@@ -343,7 +343,7 @@ class MintApp(webhandler.WebHandler):
             assert(projectId != -1)
             release = self.client.newRelease(projectId, releaseName)
 
-#            release.setImageType(imageType)
+            release.setImageType(imageType)
             trove, label = trove.split("=")
             label = versions.Label(label)
             version = None
