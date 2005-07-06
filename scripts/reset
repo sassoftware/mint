@@ -3,20 +3,20 @@
 # A simple script to reset a bunch of stuff for repository testing. 
 #
 
-CVS_PATH=/home/tgerla/cvs
+CVS_PATH=/usr/lib/python2.4/site-packages/
 
-MINT_DATA=/data/mint
-AUTH_REPO=/data/authrepo
+MINT_DATA=/srv/mint
+AUTH_REPO=/srv/authrepo
 
 rm -rf $MINT_DATA/repos/
 rm $MINT_DATA/data/db
-rm -rf $AUTH_REPO
+rm -rf $AUTH_REPO/repo/
 
 mkdir -p $MINT_DATA/repos $MINT_DATA/data/
-mkdir $AUTH_REPO
+mkdir $AUTH_REPO/repo/
 
 touch $MINT_DATA/data/db
-echo mintpass | $CVS_PATH/conary/server/server.py --add-user mintauth $AUTH_REPO
+echo mintpass | $CVS_PATH/conary/server/server.py --add-user mintauth $AUTH_REPO/repo/
 
 chown -R $USERNAME.apache $MINT_DATA/data/ $MINT_DATA/repos/ $AUTH_REPO
 chmod -R ug+rw            $MINT_DATA/data/ $MINT_DATA/repos/ $AUTH_REPO
