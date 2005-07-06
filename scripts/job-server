@@ -80,7 +80,6 @@ class JobRunner(threading.Thread):
 
 class JobDaemon:
     def __init__(self, cfg, serverUrl):
-        print "connecting to", serverUrl
         client = MintClient(serverUrl)
        
         threads = []
