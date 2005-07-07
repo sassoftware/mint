@@ -518,14 +518,14 @@ class Distribution:
 </comps>
 ''')
         compsfile.close()
-        
-    def makeInstRoots(self):
+
         # just touch these files
         basedir = '/'.join((self.pathMap['isodir'], self.pathMap['ppath'], 'base'))
 
         open(basedir + '/hdlist', 'w')
         open(basedir + '/hdlist2', 'w')
-
+        
+    def makeInstRoots(self):
         # install anaconda into a root dir
         oldroot = self.cfg.root
         self.cfg.root = self.pathMap['anaconda']
