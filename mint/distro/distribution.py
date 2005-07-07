@@ -160,7 +160,8 @@ class Distribution:
 
         if not self.cachedAnaconda:
             self.makeInstRoots()
-            
+        
+        self.makeCompsXml()
         self.makeImages()
         self.isos[0].reserve(1)
         self.initializeCDs()
@@ -405,16 +406,10 @@ class Distribution:
             stampFile.close()
             iso.markInstalled('%s/.discinfo' % iso.builddir)
 
-
-    def makeInstRoots(self):
-        """ Do a lot of anaconda related stuff.  I don't know what 
-            most of this does, except that it is important for anaconda
-        """
-        ciso = self.isos[0]
+    def makeCompsXml(self):
         os.environ['PYTHONPATH'] = os.environ.get('CONARY_PATH', 
                                                   '/usr/share/conary')
         os.environ['CONARY'] = 'conary'
-        ppath = self.distro.productPath
         basedir = '/'.join((self.pathMap['isodir'], self.pathMap['ppath'], 'base'))
         compspath = basedir + '/comps.xml'
         util.mkdirChain(basedir)
@@ -524,7 +519,10 @@ class Distribution:
 ''')
         compsfile.close()
         
+    def makeInstRoots(self):
         # just touch these files
+        basedir = '/'.join((self.pathMap['isodir'], self.pathMap['ppath'], 'base'))
+
         open(basedir + '/hdlist', 'w')
         open(basedir + '/hdlist2', 'w')
 
