@@ -140,7 +140,7 @@ class Distribution:
         self.prep()
         self.createChangeSets(self.controlGroup, 
                 os.path.join(self.subdir, 'changesets'))
-        self.addIso()
+        self.addIso(bootable = True)
 
         ciso = self.isos[0]
 
@@ -178,7 +178,7 @@ class Distribution:
             self.copyToNFS()
         return [iso.imagepath for iso in self.isos]
         
-    def addIso(self):
+    def addIso(self, bootable = False):
         """ Adds an ISO to the distribution, giving it the appropriate
             disc number, etc.
         """
@@ -191,7 +191,7 @@ class Distribution:
             shutil.rmtree(builddir)
         isoname = self.distro.isoname + ' Disc %d' % discno
         ciso = ISO(builddir, isopath, isoname, discno,
-                   maxsize=self.distro.isoSize, bootable = True)
+                   maxsize=self.distro.isoSize, bootable = bootable)
         self.isos.append(ciso)
         if self.isoTemplatePath:
             ln = len(self.isoTemplatePath)
