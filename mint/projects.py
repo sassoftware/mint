@@ -141,13 +141,14 @@ class ProjectsTable(database.KeyedTable):
                     creatorId       INT,
                     name            STR UNIQUE,
                     hostname        STR UNIQUE,
-                    defaultBranch   STR,
-                    desc            STR,
+                    defaultBranch   STR NOT NULL,
+                    desc            STR NOT NULL DEFAULT '',
                     timeCreated     INT,
                     timeModified    INT DEFAULT 0
                 )"""
     fields = ['creatorId', 'name', 'hostname', 'defaultBranch',
               'desc', 'timeCreated', 'timeModified']
+    indexes = {"ProjectsHostnameIdx": "CREATE INDEX ProjectHostnameIdx ON Projects(hostname)"} 
 
     def __init__(self, db, cfg):
         database.DatabaseTable.__init__(self, db)

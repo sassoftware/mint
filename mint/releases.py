@@ -146,6 +146,7 @@ class ReleasesTable(database.KeyedTable):
     fields = ['releaseId', 'projectId', 'name', 'desc', 'imageType',
               'troveName', 'troveVersion', 'troveFlavor',
               'troveLastChanged', 'published', 'downloads']
+    indexes = {"ReleaseProjectIdIdx": "CREATE INDEX ReleaseProjectIdIdx ON Releases(projectId)"}
 
     def iterReleasesForProject(self, projectId, showUnpublished = False):
         cu = self.db.cursor()
