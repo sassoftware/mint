@@ -305,10 +305,6 @@ class LabelsTable(database.KeyedTable):
         cu.execute("""DELETE FROM Labels WHERE projectId=? AND labelId=?""", projectId, labelId)
         self.db.commit()
         return False
-
-
- 
-
     
 # XXX sort of stolen from conary/server/server.py
 class EmptyNetworkRepositoryServer(NetworkRepositoryServer):

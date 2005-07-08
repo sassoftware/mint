@@ -14,7 +14,6 @@ import xmlrpclib
 import zlib
 import sys
 
-import conary
 import conarycfg
 import sqlite3
 from repository.netrepos import netserver

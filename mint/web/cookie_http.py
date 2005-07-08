@@ -12,7 +12,6 @@ from mod_python import apache
 from mod_python import Cookie
 from mod_python.util import FieldStorage
 
-import conary
 from server import http
 from repository import shimclient
 from web import webauth
