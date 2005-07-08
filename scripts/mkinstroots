@@ -1,6 +1,7 @@
 #!/bin/sh
-INSTROOTS_DIR=/srv/imagetool/instroots
+INSTROOTS_DIR=/srv/mint/instroots
 ARCH=x86
+ANACONDA_ARCH=i386
 LABEL=conary.rpath.com@rpl:devel
 
 instroot_dir=$INSTROOTS_DIR/$ARCH/instroot
@@ -11,7 +12,8 @@ mkdir -p $instroot_dir
 mkdir -p $instrootgr_dir
 mkdir -p $anaconda_dir
 mkdir -p $INSTROOTS_DIR/csdir/
+ln -s $INSTROOTS_DIR/$ARCH $INSTROOTS_DIR/$ANACONDA_ARCH
 
 conary update --root $anaconda_dir anaconda=$LABEL[is:$ARCH] --no-deps
 
-sh -x $anaconda_dir/usr/lib/anaconda-runtime/upd-instroot --debug --conary --arch %ARCH %INSTROOTS_DIR/csdir/ $instroot_dir $instrootgr_dir
+sh -x $anaconda_dir/usr/lib/anaconda-runtime/upd-instroot --debug --conary --arch $ANACONDA_ARCH /srv/mint/changesets/ $instroot_dir $instrootgr_dir
