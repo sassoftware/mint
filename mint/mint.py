@@ -144,6 +144,13 @@ class MintClient:
         return self.server.searchProjects(terms, modified, limit, offset)
 
     def getRelease(self, releaseId):
+        """
+        Retrieve a L{releases.Release} object by release id.
+        @param releaseId: the database id of the requested release.
+        @type releaseId: int
+        @returns: an object representing the requested release.
+        @rtype: L{release.Release}
+        """
         return releases.Release(self.server, releaseId)
 
     def newRelease(self, projectId, releaseName, published = False):
@@ -168,9 +175,23 @@ class MintClient:
         return self.getJob(jobId)
 
     def getJob(self, jobId):
+        """
+        Retrieve a L{jobs.Job} object by job id.
+        @param jobId: the database id of the requested job.
+        @type jobId: int
+        @returns: an object representing the requested job.
+        @rtype: L{jobs.Job}
+        """
         return jobs.Job(self.server, jobId)
         
     def iterJobs(self, releaseId = -1):
+        """
+        Iterates through all jobs, optionally by release id.
+        @param releaseId: Filter jobs by release id. Pass -1 to return all jobs.
+        @type releaseId: int
+        @returns: iterator jobs found
+        @rtype: iterator of L{jobs.Job}s
+        """
         for jobId in self.server.getJobIds(releaseId):
             yield self.getJob(jobId)
 
