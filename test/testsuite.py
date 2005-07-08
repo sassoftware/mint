@@ -97,9 +97,8 @@ def setup():
     global archivePath
 
     if not os.environ.has_key('CONARY_PATH') or\
-       not os.environ.has_key('MINT_PATH') or\
-       not os.environ.has_key('IMAGETOOL_PATH'):
-	print "please set CONARY_PATH, MINT_PATH, IMAGETOOL_PATH, and MINT_URL"
+       not os.environ.has_key('MINT_PATH'):
+	print "please set CONARY_PATH, MINT_PATH, and MINT_URL"
 	sys.exit(1)
     sys.path.append(os.environ['CONARY_PATH'])
 
@@ -126,12 +125,10 @@ def setup():
     archivePath = testPath + '/' + "archive"
     parent = os.path.dirname(testPath)
 
-    global conaryDir, mintDir, itDir, mintUrl
+    global conaryDir, mintDir, mintUrl
     conaryDir = os.environ['CONARY_PATH']
     mintDir = os.environ['MINT_PATH']
-    itDir = os.environ['IMAGETOOL_PATH']
     mintUrl = os.environ['MINT_URL']
-    sys.path.append(itDir)
     sys.path.append(mintDir)
     if parent not in sys.path:
 	sys.path.append(parent)
@@ -223,10 +220,9 @@ class TestCase(unittest.TestCase):
         self.owner = pwd.getpwuid(os.getuid())[0]
         self.group = grp.getgrgid(os.getgid())[0]
 
-	global conaryDir, mintDir, itDir, mintUrl
+	global conaryDir, mintDir, mintUrl
 	self.conaryDir = conaryDir
         self.mintDir = mintDir
-        self.itDir = itDir
         self.mintUrl = mintUrl
 
     def mimicRoot(self):
