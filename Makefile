@@ -9,6 +9,8 @@ export TOPDIR = $(shell pwd)
 export DISTDIR = $(TOPDIR)/mint-$(VERSION)
 export prefix = /usr
 export sysconfdir = /etc
+export servicedir= /srv
+export confdir = $(servicedir)/mint/
 export datadir = $(prefix)/share
 export contentdir = $(datadir)/conary/web-common/apps/mint/
 export libdir = $(prefix)/lib
@@ -19,7 +21,7 @@ export httpddir = $(sysconfdir)/httpd/conf.d/
 
 SUBDIRS = mint test scripts
 
-extra_files = Makefile Make.rules mint.conf httpd.conf
+extra_files = Makefile Make.rules mint.conf httpd.conf authrepo.cnr
 
 dist_files = $(extra_files)
 
@@ -36,12 +38,16 @@ dist: $(dist_files)
 
 install: all install-subdirs
 	mkdir -p $(DESTDIR)$(datadir)/mint/
-	install -m 644 mint.conf $(DESTDIR)$(datadir)/mint/
+	mkdir -p $(DESTDIR)$(confdir)
+	install -m 644 mint.conf $(DESTDIR)$(confdir)
 	mkdir -p $(DESTDIR)$(httpddir)
 	install httpd.conf $(DESTDIR)$(httpddir)/mint.conf
 	sed -i "s,\%DATADIR%,$(datadir),g" $(DESTDIR)$(httpddir)/mint.conf
 
-doc: 
+	mkdir -p $(DESTDIR)$(servicedir)/authrepo
+	install -m 644 authrepo.cnr $(DESTDIR)$(servicedir)/authrepo/
+
+doc:
 	PYTHONPATH=.:../conary/: epydoc -o mintdoc mint
 
 BASEPATH=mintdoc
