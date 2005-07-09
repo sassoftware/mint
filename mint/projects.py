@@ -148,7 +148,7 @@ class ProjectsTable(database.KeyedTable):
                 )"""
     fields = ['creatorId', 'name', 'hostname', 'defaultBranch',
               'desc', 'timeCreated', 'timeModified']
-    indexes = {"ProjectsHostnameIdx": "CREATE INDEX ProjectHostnameIdx ON Projects(hostname)"} 
+    indexes = {"ProjectsHostnameIdx": "CREATE INDEX ProjectsHostnameIdx ON Projects(hostname)"} 
 
     def __init__(self, db, cfg):
         database.DatabaseTable.__init__(self, db)

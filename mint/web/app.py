@@ -54,7 +54,11 @@ def siteOnly(func):
     """
     def wrapper(self, **kwargs):
         if self.project:
-            newLoc = ("http://%s" % self.cfg.domainName) + self.req.unparsed_uri
+            if self.cfg.hostName:
+                host = "%s.%s" % (self.cfg.hostName, self.cfg.domainName)
+            else:
+                host = self.cfg.domainName
+            newLoc = ("http://%s" % host) + self.req.unparsed_uri
             return self._redirect(newLoc)
         else:
             return func(self, **kwargs)
@@ -134,20 +138,36 @@ class MintApp(webhandler.WebHandler):
         dots = fullHost.split('.')
         hostname = dots[0]
 
-        # if a reserved host is accessed, redirect to domain name
-        if len(dots) == 3 and hostname in mint_server.reservedHosts:
-           raise Redirect(("http://%s" % self.cfg.domainName) + self.req.unparsed_uri)
+        # slightly hairy logic:
+        # if the hostname is the site hostname (eg: mint.rpath.org),
+        # great. if it's in reserved hosts, redirect to site hostname.
+        # if neither, check to see if it's a valid project. if so,
+        # show the project page. if not, redirect to site hostname.
+        if self.cfg.hostName:
+            siteHost = "%s.%s" % (self.cfg.hostName, self.cfg.domainName)
+        else:
+            siteHost = self.cfg.domainName
+        
+        if len(dots) == 3:
+            if hostname == self.cfg.hostName:
+                self.userLevel = -1
+                default = self.frontPage
+            elif hostname in mint_server.reservedHosts:
+                raise Redirect(("http://%s" % siteHost) + self.req.unparsed_uri)
+            else:
+                try:
+                    self.project = self.client.getProjectByHostname(fullHost)
+                    self.userLevel = self.project.getUserLevel(self.auth.userId)
+                except database.ItemNotFound:
+                    # XXX just for the testing period
+                    raise Redirect("http://rpath.org/")
+                    # raise Redirect(("http://%s" % siteHost) + self.req.unparsed_uri)
+                else:
+                    default = self.projectPage
         elif fullHost == self.cfg.domainName:
             self.userLevel = -1
             default = self.frontPage
-        else:
-            try:
-                self.project = self.client.getProjectByHostname(fullHost)
-                self.userLevel = self.project.getUserLevel(self.auth.userId)
-            except database.ItemNotFound:
-                return self._404
-            default = self.projectPage
-            
+           
         try:
             if not cmd:
                method = default

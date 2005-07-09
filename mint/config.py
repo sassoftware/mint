@@ -28,6 +28,7 @@ class MintConfig(ConfigFile):
         'imagesPath'        : '/srv/mint/images/',
         'logPath'           : '/srv/mint/logs/',
         'domainName'        : 'rpath.org',
+        'hostName'          : None, # optional domain name for main site
         'adminMail'         : 'mint@rpath.org',
         'xmlrpcAccess'      : [ BOOLEAN, False ],
         'newsRssFeed'       : '',
