@@ -160,13 +160,17 @@ class MintApp(webhandler.WebHandler):
                     self.userLevel = self.project.getUserLevel(self.auth.userId)
                 except database.ItemNotFound:
                     # XXX just for the testing period
-                    raise Redirect("http://rpath.org/")
+                    raise Redirect("http://rpath.com/")
                     # raise Redirect(("http://%s" % siteHost) + self.req.unparsed_uri)
                 else:
                     default = self.projectPage
         elif fullHost == self.cfg.domainName:
-            self.userLevel = -1
-            default = self.frontPage
+            # if hostName is set, require it for access:
+            if self.cfg.hostName:
+                raise Redirect("http://rpath.com/")
+            else:                    
+                self.userLevel = -1
+                default = self.frontPage
            
         try:
             if not cmd:
