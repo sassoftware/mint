@@ -4,7 +4,7 @@
 # All Rights Reserved
 #
 
-script_dist = job-server mklivecd mkinstroots
+script_dist = job-server mklivecd mkinstroots reset
 
 extra_dist = Makefile installable_iso.conf
 
