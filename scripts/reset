@@ -3,7 +3,7 @@
 # A simple script to reset a bunch of stuff for repository testing. 
 #
 
-CVS_PATH=/usr/lib/python2.4/site-packages/
+CONARY_PATH=/usr/lib/python2.4/site-packages/
 
 MINT_DATA=/srv/mint
 AUTH_REPO=/srv/authrepo
@@ -16,7 +16,7 @@ mkdir -p $MINT_DATA/repos $MINT_DATA/data/
 mkdir $AUTH_REPO/repo/
 
 touch $MINT_DATA/data/db
-echo mintpass | $CVS_PATH/conary/server/server.py --add-user mintauth $AUTH_REPO/repo/
+echo mintpass | $CONARY_PATH/conary/server/server.py --add-user mintauth $AUTH_REPO/repo/
 
 chown -R $USERNAME.apache $MINT_DATA/data/ $MINT_DATA/repos/ $AUTH_REPO
 chmod -R ug+rw            $MINT_DATA/data/ $MINT_DATA/repos/ $AUTH_REPO
