@@ -1,0 +1,5 @@
+repositoryDir /srv/authrepo/repo/
+tmpDir /srv/authrepo/tmp
+serverName authrepo.rpath.org
+cacheChangeSets false
+logFile /srv/mint/authrepo/tmp/contents-log
