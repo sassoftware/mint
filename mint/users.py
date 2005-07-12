@@ -110,13 +110,18 @@ class UsersTable(database.KeyedTable):
         except repository.netrepos.netauth.UserAlreadyExists:
             raise UserAlreadyExists
 
+        if self.cfg.hostName:
+            confirmDomain = "%s.%s" % (self.cfg.hostName, self.cfg.domainName)
+        else:
+            confirmDomain = self.cfg.domainName
+            
         if not active:
             message = "\n".join(["Thank you for registering for the rpath Linux customized",
                                  "distribution tool.",
                                  "",
                                  "Please follow the link below to confirm your registration:",
                                  "",
-                                 "http://%s/confirm?id=%s" % (self.cfg.domainName, confirm),
+                                 "http://%s/confirm?id=%s" % (confirmDomain, confirm),
                                  "",
                                  "Contact custom@rpath.com for help, or join the IRC channel #conary",
                                  "on the Freenode IRC network (http://www.freenode.net/) for live help."])
