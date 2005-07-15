@@ -6,18 +6,15 @@ messages = { '':          'If you do not have an account, please <a href="regist
              'invalid':   'Sorry, the username or password is incorrect.' }
 ?>
 
-<html xmlns="http://www.w3.org/1999/xhtml"
+<html xmlns:html="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
-      py:extends="'library.kid'">
+      py:extends="'library.kid', 'layout.kid'">
 <!--
     Copyright 2005 rpath, Inc.
     All Rights Reserved
 -->
-    ${html_header("Login")}
+    <head/>
     <body>
-        ${header_image()}
-        ${menu([("Login", None, True)])}
-        
         <div id="content">
         <p>Please log in to use rpath.com:</p>
         <p>If you do not have an account, please <a href="register">register</a>.</p>
@@ -37,7 +34,6 @@ messages = { '':          'If you do not have an account, please <a href="regist
             <p><input type="submit" name="submit" value="Log In" /> <input type="submit" name="submit" value="Forgot Password" /></p>
             <p class="help">If you have forgotten your password, please enter only your username above, and click Forgot Password.</p>
         </form>
-        ${html_footer()}
         </div>
     </body>
 </html>
