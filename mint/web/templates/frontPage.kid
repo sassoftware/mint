@@ -22,10 +22,10 @@ from mint import searcher
                             <div id="browse" class="palette">
                                 <h3>browse rpath</h3>
                                 <ul>
-                                    <li><a href="#">All Projects</a></li>
+                                    <li><a href="projects">All Projects</a></li>
                                     <li><a href="#">Most Active Projects</a></li>
                                     <li><a href="#">Most Popular Projects</a></li>
-                                    <li><a href="#">All People</a></li>
+                                    <li><a href="users">All People</a></li>
                                 </ul>
                             </div>
                             <div id="search" class="palette">

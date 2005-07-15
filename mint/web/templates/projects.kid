@@ -3,12 +3,11 @@
     import time
     from mint import projectlisting
 ?>
-<html xmlns="http://www.w3.org/1999/xhtml"
+<html xmlns:html="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
-      py:extends="'library.kid'">
-    ${html_header("Project Listing")}
+      py:extends="'library.kid', 'layout.kid'">
+    <head/>
     <body>
-        ${header_image()}
         <div py:def="formatResults(resultset = [])" py:omit="True">
             <?python
                 formattedresults = [ 'http://%s' % resultset[0],
@@ -37,7 +36,6 @@ ${navigation("projects?sortOrder=%d"%(sortOrder), count, limit, offset)}
 ${columnTitles(('Project Name', 'Project Description', 'Time Created', 'Time Last Modified', 'Number of Developers'))}
 ${searchResults(results)}
             </table>
-            ${html_footer()}
         </div>
     </body>
 </html>
