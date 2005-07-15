@@ -1,15 +1,15 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <?python
     from mint import searcher
+    import time    
 ?>
-<html xmlns="http://www.w3.org/1999/xhtml"
+<html xmlns:html="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
-      py:extends="'library.kid'">
+      py:extends="'library.kid', 'layout.kid'">
 <!--
     Copyright 2005 rpath, Inc.
     All Rights Reserved
 -->
-    ${html_header("Search Results")}
     <?python
         columns = []
         if type == "Projects":
@@ -17,8 +17,8 @@
         elif type == "Users":
             columns = ('User Name', 'Full Name', 'E-mail Address', 'Other')
     ?>
+    <head/>
     <body>
-        ${header_image()}
         <div py:def="searchSummary(type, terms, modified)" py:omit="True">
             ${type}; keywords: ${terms}; modified within ${searcher.datehtml[modified]}
         </div>
@@ -47,7 +47,6 @@ ${columnTitles(columns)}
 ${searchResults(results)}
 
             </table>
-            ${html_footer()}
         </div>
     </body>
 </html>
