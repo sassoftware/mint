@@ -74,7 +74,7 @@ class InstallableIso(ImageGenerator):
         distroInfo = distribution.DistroInfo(isocfg.productPrefix, isocfg.productPath, release.getName(),
                                              releaseVer, releasePhase,
                                              arch = arch,
-                                             isoSize = isoSize)
+                                             isoSize = 620)
        
         tmpDir = self.cfg.imagesPath + os.path.join(arch, releasePhase)
         dist = distribution.Distribution(arch, repos, ccfg,

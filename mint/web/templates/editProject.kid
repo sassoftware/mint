@@ -1,16 +1,14 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<html xmlns="http://www.w3.org/1999/xhtml"
+<html xmlns:html="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
-      py:extends="'library.kid'">
+      py:extends="'library.kid', 'layout.kid'">
 <!--
     Copyright 2005 rpath, Inc.
     All Rights Reserved
 -->
-    ${html_header("Edit Project Description")}
+    <head/>
     <body>
-        ${header_image()}
-        ${menu([("Edit Project Description", None, True)])}
-        <div id="content">
+        <td id="content">
             <h2>Edit Project Description</h2>
 
             <form method="post" action="editProjectDesc">
@@ -18,7 +16,6 @@
 
                 <p><input type="submit" value="Submit" /></p>
             </form>
-            ${html_footer()}
-        </div>
+        </td>
     </body>
 </html>

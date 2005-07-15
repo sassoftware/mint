@@ -1,19 +1,15 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<html xmlns="http://www.w3.org/1999/xhtml"
+<html xmlns:html="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
-      py:extends="'library.kid'">
+      py:extends="'library.kid', 'layout.kid'">
 <!--
     Copyright 2005 rpath, Inc.
     All Rights Reserved
 -->
-    ${html_header("New Project")}
+    <head/>
     <body>
-        ${header_image()}
-        ${menu([("New Project", None, True)])}
-        
-        <div id="content">
-            <h2>New Project</h2>       
- 
+        <td id="content">
+            <h2>New Project</h2>
             <form method="post" action="createProject">
                 <table>
                     <tr>
@@ -33,11 +29,10 @@
                             <input type="text" name="hostname" /> .rpath.org
                         </td>
                     </tr>
-                </table>
+                </table> 
 
                 <p><input type="submit" value="Create" /></p>
             </form>
-            ${html_footer()}
-        </div>
+        </td>
     </body>
 </html>

@@ -1,6 +1,6 @@
 #!/usr/bin/python2.4
 #
-# Copyright (c) 2004-2005 Specifix, Inc.
+# Copyright (c) 2004-2005 rpath, Inc.
 #
 
 import testsuite
@@ -8,19 +8,24 @@ testsuite.setup()
 
 import rephelp
 
-from mint import users
+from repository import repository 
 
 class AuthTest(rephelp.RepositoryHelper):
     def testNewUser(self):
-        client = self.openMint(('test', 'foo'))
-
-        userId = client.registerNewUser("testuser", "testpass", "Test User",
-                                        "test@example.com", active=True)
-        
-        client = self.openMint(("testuser", "testpass"))
+        client = self.getMintClient("testuser", "testpass")
         auth = client.checkAuth()
         assert(auth.authorized)
-        assert(auth.userId == userId)
-        
+
+    def testBadUser(self):
+        client = self.getMintClient("testuser", "testpass")
+
+        client = self.openMint(("testuser", "badpass"))
+        try:
+            auth = client.checkAuth()
+        except repository.OpenError:
+            pass
+        else:
+            self.fail("repository.OpenError expected")
+       
 if __name__ == "__main__":
     testsuite.main()

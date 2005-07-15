@@ -79,14 +79,6 @@ Alias /images/ "@DOCROOT@/imagetool.conf/"
     PythonPath "sys.path + ['@MINTPATH@', '@CONARYPATH@']"
 </Location>
 
-<Location /images/>
-    AddHandler python-program .conf
-    PythonHandler imagetool.web.imagetool_hooks
-    PythonDebug Off
-    PythonPath "sys.path + ['@ITPATH@', '@CONARYPATH@']"
-</Location>
-
-
 # TypesConfig describes where the mime.types file (or equivalent) is
 # to be found.
 #

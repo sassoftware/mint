@@ -121,7 +121,7 @@ class Project(database.TableObject):
         labelPath, repoMap = self.server.getLabelsForProject(self.id)
         return labelPath.values()
 
-    def getLabel(self, labelId):
+    def getLabelById(self, labelId):
         labelPath, repoMap = self.server.getLabelsForProject(self.id)
         # turn labelPath inside-out
         revMap = dict(zip(labelPath.values(), labelPath.keys()))
@@ -316,7 +316,7 @@ class LabelsTable(database.KeyedTable):
         cu = self.db.cursor()
 
         cu.execute("""SELECT p.troveVersion, l.label
-                      FROM Profiles p, Labels l
+                      FROM Releases p, Labels l
                       WHERE p.projectId=?
                         AND l.projectId=p.projectId
                         AND l.labelId=?""",

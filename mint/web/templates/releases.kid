@@ -1,12 +1,11 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<html xmlns="http://www.w3.org/1999/xhtml"
+<html xmlns:html="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
-      py:extends="'library.kid'">
+      py:extends="'library.kid', 'layout.kid'">
 <!--
     Copyright 2005 rpath, Inc.
     All Rights Reserved
 -->
-    ${html_header("Project Releases")}
     <?python # this comment has to be here if the first line is an import...weird!
         from mint import userlevels
 
@@ -14,19 +13,13 @@
         releases = project.getReleases()
     ?>
     <body>
-        ${header_image()}
-        ${menu([("Project Releases", None, True)])}
-        
-        <div id="content">
-            <h2>Project Releases</h2>       
- 
-            <ul>
-                <li py:for="release in releases">
-                    <a href="release?id=${release.getId()}">${release.getTroveName()}=${release.getTroveVersion().trailingRevision().asString()}</a>
-                </li>
-            </ul>
-            <p py:if="isOwner"><a href="newRelease">Create a new release</a></p>
-            ${html_footer()}
-        </div>
+        <h2>Project Releases</h2>       
+
+        <ul>
+            <li py:for="release in releases">
+                <a href="release?id=${release.getId()}">${release.getTroveName()}=${release.getTroveVersion().trailingRevision().asString()}</a>
+            </li>
+        </ul>
+        <p py:if="isOwner"><a href="newRelease">Create a new release</a></p>
     </body>
 </html>

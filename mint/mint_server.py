@@ -24,7 +24,7 @@ import repository.netrepos.netauth
 from repository import netclient
 
 validHost = re.compile('^[a-zA-Z][a-zA-Z0-9\-]*$')
-reservedHosts = ['admin', 'mail', 'www', 'web', 'rpath', 'wiki', 'conary']
+reservedHosts = ['admin', 'mail', 'mint', 'www', 'web', 'rpath', 'wiki', 'conary']
 
 allTroveNames = TroveNamesCache()
 
@@ -129,13 +129,18 @@ class MintServer(object):
 
         cu = self.db.cursor()
         if username and not userId:
-            cu.execute("SELECT userId FROM Users WHERE username=?",
-                       username)
+            cu.execute("SELECT userId FROM Users WHERE username=?", username)
             try:
                 userId = cu.next()[0]
             except StopIteration, e:
                 print >>sys.stderr, str(e), "SELECT userId FROM Users WHERE username=?", username
                 sys.stderr.flush()
+                raise database.ItemNotFound("user")
+        elif userId and not username:
+            cu.execute("SELECT username FROM Users WHERE userId=?", userId)
+            try:
+                username = cu.next()[0]
+            except StopIteration, e:
                 raise database.ItemNotFound("user")
 
         acu = self.authDb.cursor()
@@ -448,6 +453,16 @@ class MintServer(object):
                        releaseId, idx, file)
         self.db.commit()
         return True
+
+    def getImageFilenames(self, releaseId):
+        cu = self.db.cursor()
+        cu.execute("SELECT fileId, filename FROM ImageFiles WHERE releaseId=? ORDER BY idx", releaseId)
+
+        results = cu.fetchall()
+        if len(results) < 1:
+            return []
+        else:
+            return [(x[0], x[1]) for x in results]
    
     @requiresAuth
     def getGroupTroves(self, projectId):

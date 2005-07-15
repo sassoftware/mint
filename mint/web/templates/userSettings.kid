@@ -1,66 +1,64 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<html xmlns="http://www.w3.org/1999/xhtml"
+<html xmlns:html="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
-      py:extends="'library.kid'">
-    ${html_header("User Settings")}
+      py:extends="'library.kid', 'layout.kid'">
 <!--
     Copyright 2005 rpath, Inc.
     All Rights Reserved
 -->
-    <body>
-        ${header_image()}
-        ${menu([('User Settings', None, True)])}
-        <div id="content">
-            <h2>User Settings:</h2>
+    <div py:def="breadcrumb()" class="pad">
+        You are here:
+        <a href="#">rpath</a>
+        <a href="#">edit account information</a>
+    </div>
 
-            <form method="post" action="editUserSettings">
-                <table style="width: 100%;">
-                    <tr>
-                        <td>Username:</td>
+    <head/>
+    <body>
+        <td id="main" class="spanleft">
+            <div class="pad">
+                <h2>Edit Account Information</h2>
+                <table border="0" cellspacing="0" cellpadding="0" class="mainformhorizontal">                                                         <tr>
+                        <th>Username:</th>
                         <td>${auth.username}</td>
                     </tr>
                     <tr>
-                        <td style="width: 20%;">Full Name:</td>
+                        <th>Full Name:</th>
                         <td><input type="text" name="fullName" value="${auth.fullName}" /></td>
-                    </tr>
-                    <tr>
-                        <td>Email (hidden):<p class="help">This email address is private and will never be displayed.</p></td>
-                        <td><input type="text" name="email" value="${auth.email}" /></td>
-                    </tr>
-                    <tr>
-                        <td>Email (displayed):<p class="help">You can specify a spam-masked and/or an alternate email address for public
-                                                              view here.</p></td>
-                        <td><input type="text" name="displayEmail" value="${auth.displayEmail}" /></td>
-                    </tr>
-
-                    <tr>
+                    </tr>                                                         <tr>
+                        <th>Email Address:</th>
                         <td>
-                            About:
-                            <p class="help">Please enter any relevant information about yourself here; a short biography, IRC nicknames,
-                                or anything else you would like to share with the rpath.com community.
-                            </p>
-                        </td>
+                            <input type="text" name="email" value="${auth.email}" />
+                            <div class="help">This email address will not be displayed on the rpath website.</div>
+                        </td>                                                         </tr>
+                    <tr>                                                             <th>Contact Information:</th>
                         <td>
-                            <textarea style="width: 50%;" rows="12" name="blurb" py:content="auth.blurb" />
+                            <textarea rows="4" type="text" name="displayEmail">${auth.displayEmail}</textarea>
+                            <div class="help">Contact information provided here will be displayed on your rpath user information page.</div>
+                        </td>
+                    </tr>                                                         <tr>
+                        <th>About:</th>                                                             <td>
+                            <textarea rows="8" name="blurb">${auth.blurb}</textarea><br/>
+                            <div class="help">Please enter any relevant information about yourself here; a short biography, IRC nicknames, or anything else you would like to share with the rpath.com community.</div>
                         </td>
                     </tr>
-
-                    <tr><td colspan="2"><p class="help">Please leave these fields blank if you do not want to change your password:</p></td></tr>
-                    <tr>
-                        <td style="padding-top: 25px;">
-                            Password:
-                        </td>
-                        <td style="vertical-align: bottom;"><input type="password" name="password1" value="" /></td>
-                    </tr>
-                    <tr>
-                        <td>Password (again):</td>
-                        <td><input type="password" name="password2" value="" /></td>
+                    <tr><td colspan="2"><p><strong>Change Password</strong><br />                                                             Please leave these fields blank if you do not want to change your password:</p>
+                            </td>                                                         </tr>                                                         <tr>
+                        <th>New Password:</th>
+                        <td><input type="password" name="password1" value="" /></td>
+                    </tr>                                                         <tr>
+                        <th>Confirm Password:</th>                                                             <td><input type="password" name="password2" value="" /></td>
                     </tr>
                 </table>
 
-                <p><input type="submit" value="Submit" /></p>
-            </form>
-            ${html_footer()}
-        </div>
+                <p><button type="submit">Submit</button></p>
+            </div>
+        </td>
+        <td id="right" class="plain">
+            <div class="pad">
+                <h3>Cancel My Account</h3>
+                <p>If you wish to cancel your account, click the &quot;cancel account&quot; button below. If you cancel your account, you will be removed from any project for which you are a member or owner.</p>
+                <p><button class="warn" name="cancel" type="button">Cancel my account</button></p>
+            </div>
+        </td>
     </body>
 </html>

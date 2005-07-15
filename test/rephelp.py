@@ -132,11 +132,12 @@ class ApacheServer(ChildRepository):
         self.mintPath = mintPath
         self.serverRoot = tempfile.mkdtemp()
 	os.mkdir(self.serverRoot + "/tmp")
+        os.mkdir(self.reposDir + "/repos/")
 	os.symlink("/usr/lib/httpd/modules", self.serverRoot + "/modules")
 	testDir = os.path.realpath(os.path.dirname(
             sys.modules['rephelp'].__file__))
 	os.system("sed 's|@NETRPATH@|%s|;s|@CONARYPATH@|%s|;s|@PORT@|%s|;"
-		       "s|@DOCROOT@|%s|;s|@MINTPATH@|%s|;s|@ITPATH@|%s|'"
+		       "s|@DOCROOT@|%s|;s|@MINTPATH@|%s|'"
 		    " < %s/server/httpd.conf.in > %s/httpd.conf"
 		    % (self.serverDir, conaryPath, str(self.port),
 		       self.serverRoot, mintPath, testDir,
@@ -155,11 +156,10 @@ class ApacheServer(ChildRepository):
         # write Mint configuration
         f = open("%s/mint.conf" % self.serverRoot, "w")
         print >> f, 'dbPath %s' % self.reposDir + '/mintdb'
-        print >> f, 'xmlrpcEnabled True'
-        print >> f, 'authRepo %s http://test:foo@localhost:%d/conary/' % (self.name, self.port)
-        print >> f, 'authRepoUrl http://%%s:%%s@localhost:%d/conary/' % (self.port)
-        print >> f, 'authUser test'
-        print >> f, 'authPass foo'
+        print >> f, 'authDbPath %s' % self.reposDir + '/sqldb'
+        print >> f, 'reposPath %s' % self.reposDir + '/repos/'
+        print >> f, 'xmlrpcAccess True'
+        print >> f, 'authRepoMap %s http://test:foo@localhost:%d/conary/' % (self.name, self.port)
         f.close()
 
     def __del__(self):
@@ -193,7 +193,6 @@ class ApacheServer(ChildRepository):
 		    "-d", self.serverRoot,
 		    "-f", "httpd.conf",
 		    "-C", 'DocumentRoot "%s"' % self.serverRoot)
-
 	    os.execv(args[0], args)
         else:
             pass
@@ -333,6 +332,7 @@ class RepositoryHelper(testsuite.TestCase):
 
     def openMint(self, authToken=('test', 'foo')):
         self.openRepository()
+        #self.openRepository(serverIdx = 1)
         cfg = config.MintConfig()
         cfg.read("%s/mint.conf" % self.servers.getServer().serverRoot)
         return shimclient.ShimMintClient(cfg, authToken)
@@ -950,6 +950,13 @@ class RepositoryHelper(testsuite.TestCase):
     def getWebTestUrl(self):
         parts = urlparse(self.mintUrl)
         return parts[1].split(":")
+
+    def getMintClient(self, username, password):
+        client = self.openMint(('test', 'foo'))
+        userId = client.registerNewUser(username, password, "Test User",
+                                        "test@example.com", active=True)
+
+        return self.openMint((username, password))
 
 class WebRepositoryHelper(RepositoryHelper, webunittest.WebTestCase):
     def __init__(self, methodName):

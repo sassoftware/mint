@@ -2,21 +2,19 @@
 <?python
 from mint import userlevels
 ?>
-<html xmlns="http://www.w3.org/1999/xhtml"
+<html xmlns:html="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
-      py:extends="'library.kid'">
+      py:extends="'library.kid', 'layout.kid'">
 <!--
     Copyright 2005 rpath, Inc.
     All Rights Reserved
 -->
-    ${html_header("Manage Project Memberships")}
+    <head/>
     <body>
-        ${header_image()}
-        ${menu([("Manage Project Memberships", None, True)])}
-        <?python
-            isOwner = userLevel == userlevels.OWNER
-        ?>
-        <div id="content">
+        <td id="content">
+            <?python
+                isOwner = userLevel == userlevels.OWNER
+            ?>
             <h2>Manage Project Memberships</h2>
 
             <table>
@@ -74,8 +72,6 @@ from mint import userlevels
                     </td>
                 </tr>
             </table>
-
-            ${html_footer()}
-        </div>
+        </td>
     </body>
 </html>

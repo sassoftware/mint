@@ -1,4 +1,4 @@
-css_files = style.css
+css_files = *.css
 
 dist_files = $(css_files) Makefile
 

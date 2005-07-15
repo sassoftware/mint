@@ -80,10 +80,11 @@ class NewsCacheTable(database.KeyedTable):
             link = item.find("link").text
             title = item.find("title").text
             category = item.find("category").text
+            content = item.find("description").text
             pubDate = toUnixTime(item.find("pubDate").text)
         
             query = "INSERT INTO NewsCache VALUES (NULL, ?, ?, ?, ?, ?)"
-            cu.execute(query, title, pubDate, '', link, category)
+            cu.execute(query, title, pubDate, content, link, category)
         
         self.ageTable.setAge()
         self.db.commit()

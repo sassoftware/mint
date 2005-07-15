@@ -100,7 +100,8 @@ def setup():
        not os.environ.has_key('MINT_PATH'):
 	print "please set CONARY_PATH, MINT_PATH, and MINT_URL"
 	sys.exit(1)
-    sys.path.append(os.environ['CONARY_PATH'])
+    sys.path.insert(0, os.environ['CONARY_PATH'])
+    sys.path.insert(0, os.environ['MINT_PATH'])
 
     if isIndividual():
         serverDir = '/tmp/conary-server'
@@ -129,7 +130,6 @@ def setup():
     conaryDir = os.environ['CONARY_PATH']
     mintDir = os.environ['MINT_PATH']
     mintUrl = os.environ['MINT_URL']
-    sys.path.append(mintDir)
     if parent not in sys.path:
 	sys.path.append(parent)
 
@@ -363,6 +363,9 @@ if __name__ == '__main__':
 	for (dirpath, dirnames, filenames) in os.walk(topdir):
 	    for f in filenames:
 		if f.endswith('test.py') and not f.startswith('.'):
+                    global mintUrl
+                    if f.startswith('web') and not mintUrl:
+                        continue
 		    # turn any subdir into a dotted module string
 		    d = dirpath[len(topdir) + 1:].replace('/', '.')
 		    if d:

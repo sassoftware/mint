@@ -1,22 +1,14 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<?python
-title = "Register"
-email = None
-?>
-
-<html xmlns="http://www.w3.org/1999/xhtml"
+<html xmlns:html="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
-      py:extends="'library.kid'">
+      py:extends="'library.kid', 'layout.kid'">
 <!--
     Copyright 2005 rpath, Inc.
     All Rights Reserved
 -->
-    ${html_header(title)}
+    <head/>
     <body>
-        ${header_image()}
-        ${menu([("Register", None, True)])}
-        
-        <div id="content">
+        <td id="content">
             <h2>Register</h2>
             <p>Using a rpath.com account, you can create your own Linux distribution.</p> 
 
@@ -33,8 +25,6 @@ email = None
                 </p>
                 <p><input type="submit" value="Register" /></p>
             </form>
-
-            ${html_footer()}
-        </div>
+        </td>
     </body>
 </html>

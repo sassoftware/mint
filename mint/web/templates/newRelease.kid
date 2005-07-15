@@ -5,20 +5,13 @@ from mint import releasetypes
 title = "Create New Release"
 ?>
 
-<html xmlns="http://www.w3.org/1999/xhtml"
+<html xmlns:html="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
-      py:extends="'library.kid'">
-
-    ${html_header(title)}
+      py:extends="'library.kid', 'layout.kid'">
+    
+    <head/>
     <body onload="javascript:getTroveList(${project.getId()});">
-        ${header_image()}
-        <?python
-            m = menu([('Main Menu', 'mainmenu', False),
-                      ('Project Details', 'projectDetails?projectId=%d' % int(project.getId()), False),
-                      ('Create New Release', None, True)])
-        ?>
-        ${m}
-        <div id="content">
+        <td id="content">
             <form method="post" action="editRelease" id="mainForm">
 
                 <h2>New Distribution Release</h2>
@@ -34,12 +27,11 @@ title = "Create New Release"
                 <p>Please select the group or fileset trove that makes up your distribution:</p>
                 <p id="troveWarning" style="color: red;"> </p>
 
-                 <select name="trove" size="15"
+                <select name="trove" size="15"
                          style="width: 50%;" id="trove" >
                     <option value="" id="pleaseWait">Loading trove list, please wait</option>
                 </select>
 
-                <!-- hide this for now -->
                 <h2 py:if='0'>Release Type</h2>
                 <ul py:if='0' style="list-style-type: none; padding-left: 10px;">
                     <li py:for="releaseType, typeKey in sorted(releasetypes.ReleaseTypes.items())">
@@ -54,8 +46,6 @@ title = "Create New Release"
                     <input type="hidden" name="releaseId" value="-1" />
                 </p>
             </form>
-
-            ${html_footer()}
-        </div>
+        </td>
     </body>
 </html>

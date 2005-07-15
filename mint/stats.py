@@ -3,7 +3,6 @@
 #
 # All Rights Reserved
 #
-
 import database
 
 class CommitsTable(database.DatabaseTable):

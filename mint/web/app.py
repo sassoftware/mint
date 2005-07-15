@@ -111,6 +111,8 @@ class MintApp(webhandler.WebHandler):
     @type user: L{mint.users.User}
     @cvar userLevel: one of L{mint.userlevels.LEVELS} for the project and user currently logged in.
     @type userLevel: int
+    @cvar projectList: list of logged-in user's projects.
+    @type projectList: list of L{mint.projects.Project}
     """ 
     __slots__ = ('auth', 'cfg', 'client', 'cmd', 'cookies',
                  'project', 'req', 'user', 'userLevel')
@@ -124,6 +126,7 @@ class MintApp(webhandler.WebHandler):
     project = None
     user = None
     userLevel = None
+    projectList = None
 
     def _checkAuth(self, authToken):
         self.client = shimclient.ShimMintClient(self.cfg, authToken)
@@ -148,9 +151,9 @@ class MintApp(webhandler.WebHandler):
         else:
             siteHost = self.cfg.domainName
         
+        self.userLevel = -1
         if len(dots) == 3:
             if hostname == self.cfg.hostName:
-                self.userLevel = -1
                 default = self.frontPage
             elif hostname in mint_server.reservedHosts:
                 raise Redirect(("http://%s" % siteHost) + self.req.unparsed_uri)
@@ -193,6 +196,7 @@ class MintApp(webhandler.WebHandler):
                 return self._redirect("login")
             else:
                 self.user = self.client.getUser(auth.userId)
+                self.projectList = self.client.getProjectsByMember(auth.userId)
         else:
             authToken = ('anonymous', 'anonymous')
             self._checkAuth(authToken)
@@ -241,9 +245,8 @@ class MintApp(webhandler.WebHandler):
 
     @siteOnly
     def frontPage(self, auth):
-        projectList = self.client.getProjectsByMember(auth.userId)
         news = self.client.getNews()
-        self._write("frontPage", projectList = projectList, news = news)
+        self._write("frontPage", news = news)
         return apache.OK
 
     @siteOnly
@@ -281,7 +284,6 @@ class MintApp(webhandler.WebHandler):
         self._clearAuth()
         return self._redirect("login")
 
-    @siteOnly
     @strFields(username = None, password = '', submit = None)
     def login2(self, auth, username, password, submit):
         if submit == "Log In":
@@ -634,5 +636,6 @@ class MintApp(webhandler.WebHandler):
                                                 auth = self.auth,
                                                 project = self.project,
                                                 userLevel = self.userLevel,
+                                                projectList = self.projectList,
                                                 **values)
         self.req.write(content)

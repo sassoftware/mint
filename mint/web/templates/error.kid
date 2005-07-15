@@ -1,16 +1,14 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<html xmlns="http://www.w3.org/1999/xhtml"
+<html xmlns:html="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
-      py:extends="'library.kid'">
+      py:extends="'library.kid', 'layout.kid'">
 <!--
     Copyright 2005 rpath, Inc.
     All Rights Reserved
 -->
-    ${html_header(shortError)}
+    <head/>
     <body>
-        ${header_image()}
-
-        <div id="content">
+        <td id="content">
             <h2>${shortError}</h2>
 
             <p class="error">Error: ${error}</p>
@@ -20,8 +18,6 @@
                 <b>#conary</b> on the <a href="http://www.freenode.net/">FreeNode</a> IRC network
                 for assistance.
             </p>
-
-            ${html_footer()}
-        </div>
+        </td>
     </body>
 </html>

@@ -137,6 +137,7 @@ class UsersTable(database.KeyedTable):
                               confirmation = confirm)
         except database.DuplicateItem:
             raise UserAlreadyExists
+        return userId
 
     def confirm(self, confirm):
         cu = self.db.cursor()

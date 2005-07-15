@@ -4,99 +4,84 @@ from mint import userlevels
 import time
 from mint import searcher
 ?>
-<html xmlns="http://www.w3.org/1999/xhtml"
+<html
       xmlns:py="http://purl.org/kid/ns#"
-      py:extends="'library.kid'">
+      xmlns:html="http://www.w3.org/1999/xhtml"
+      py:extends="'library.kid', 'layout.kid'">
 <!--
     Copyright 2005 rpath, Inc.
     All Rights Reserved
 -->
-    ${html_header("rpath.com")}
+    <head/>
     <body>
-        ${header_image()}
-        ${menu([('rpath.com', False, True)])}
+        <td>
+            <table border="0" cellspacing="0" cellpadding="0" summary="layout" width="100%">
+                <tr>
+                    <td id="left" class="side">
+                        <div class="pad">
+                            <div id="browse" class="palette">
+                                <h3>browse rpath</h3>
+                                <ul>
+                                    <li><a href="#">All Projects</a></li>
+                                    <li><a href="#">Most Active Projects</a></li>
+                                    <li><a href="#">Most Popular Projects</a></li>
+                                    <li><a href="#">All People</a></li>
+                                </ul>
+                            </div>
+                            <div id="search" class="palette">
+                                <h3>search rpath</h3>
+                                <form name="search" action="search" method="get">
+                                    <p>
+                                        <label>search type:</label><br/>
+                                        <select name="type">
+                                            <option selected="selected" value="Projects">Search projects</option>
+                                            <option value="Users">Search users</option>
+                                        </select>
+                                    </p>
+                                    <p>
+                                        <label>keyword(s):</label><br/>
+                                        <input type="text" name="search" size="10" />
+                                    </p>
+                                    <p>
+                                        <label>last modified:</label>
+                                        <br/>
+                                        <select name="modified">
+                                            <option py:for="i, option in enumerate(searcher.datehtml)" value="${i}">${option}</option>
+                                        </select>
+                                    </p>
+                                    <p><button>Submit</button><br /><a href="#">advanced search</a></p>
+                                </form>
+                            </div>
+                        </div>
+                    </td>
+                    <td id="main">
+                        <div class="pad">
+                            <h3>Welcome to rpath</h3>
+                            <p>Lorem ipsum dolor sit amet, consectetaur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
+                            <p><a href="#">More about rpath</a> </p>
 
-        <table style="width: 100%;">
-            <tr><td style="padding: 0px;">
+                            <?python
+                                latestNews = news.pop()
+                            ?>
 
-        <div id="content">
-            <h2>rpath.com</h2>
-            <p>This is a free service by rPath, Inc. to host Conary-managed Linux distributions. We will
-               host a repository for your project and allow you to collaborate with others to create a complete
-               Linux distribution almost entirely on the web.</p>
+                            <h3>Latest News <span class="date">- ${time.ctime(latestNews['pubDate'])}</span></h3>
+                            <p>${latestNews['content']}</p>
+                            <p><a href="${latestNews['link']}">continued</a></p>
 
-            <div py:if="not auth.authorized" py:omit="True">
-                <p>To use this system, please <a href="register">register</a>.</p>
-
-                <p>After you register, you will be able to create customized distributions based
-                on the contents of your Conary repository.</p>
-
-                <p>After you have registered, please <a href="login">log in</a>.</p>
-            </div>
-
-            <h3>Site News</h3>
-            <ul>
-                <li py:for="item in news"><a href="${item['link']}">${item['title']}</a> (${time.ctime(item['pubDate'])})</li>
-            </ul>
-
-            <div py:if="auth.authorized" py:omit="True">
-                <p>Thank you for logging in.</p>
-                <h3>Things To Do</h3>
-                <ul>
-                    <li><a href="newProject">Create a new distribution project</a></li>
-                    <li><a href="projects">Browse existing projects</a></li>
-                    <li><a href="projects">Browse existing users</a></li>
-                    <li><a href="userSettings">View your user page</a></li>
-                </ul>
-            </div>
-            <div py:if="not auth.authorized" py:omit="True">
-                <h3>Things To Do</h3>
-                <ul>
-                    <li><a href="projects">Browse existing projects </a></li>
-                    <li><a href="projects">Browse existing users </a></li>
-                </ul>
-            </div>
-
-            ${html_footer()}
-        </div>
-
+                            <div py:omit="True" py:if="news">
+                                <h3>More News</h3>
+                                <ul>
+                                    <li py:for="item in news">
+                                        <span class="date">${time.ctime(item['pubDate'])}</span><br />
+                                        <a href="${item['link']}">${item['content']}</a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </td>
+                    ${projectsPane()}
+                </tr>
+            </table>
         </td>
-
-        <td style="width: 15%;">
-
-        <div style="background: white; padding: 12px; color: black;">
-            <h3>Search</h3>
-            <p>Search for a project:</p>
-            <form name="search" action="search" method="get">
-                <span>Search Type:</span>
-                <select name="type">
-                    <option selected="selected" value="Projects">Search projects</option>
-                    <option value="Users">Search users</option>
-                </select>
-                <br/>
-                <span>Keyword(s):</span>
-                <input type="text" name="search" size="10" />
-                <br/>
-                <span>Last modified:</span>
-                <select name="modified">
-                    <option py:for="i, option in enumerate(searcher.datehtml)" value="${i}">${option}</option>
-                </select>
-                <button>Submit</button>
-            </form>
-
-            <div style="background: white; padding: 12px; color: black;" py:if="auth.authorized" py:omit="True">
-                <h3>Your Projects</h3>
-
-                <ol id="active">
-                    <li py:for="project, level in sorted(projectList, key = lambda x: x[0].getName())">
-                        <a href="http://${project.getHostname()}/">${project.getName()}</a> (${userlevels.names[level]})</li>
-                </ol>
-            </div>
-        </div>
-
-
-        </td></tr></table>
-
     </body>
 </html>
-

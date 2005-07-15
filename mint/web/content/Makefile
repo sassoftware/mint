@@ -4,7 +4,7 @@
 # All Rights Reserved
 #
 
-SUBDIRS = css javascript
+SUBDIRS = css javascript images
 
 dist_files = Makefile
 

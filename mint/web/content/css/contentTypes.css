@@ -1,0 +1,155 @@
+/* CONTENT AREA COLUMNS */
+#main {
+	vertical-align:top; font-size:11px;
+	width:360px;
+}
+#main .pad {
+	margin:0px; padding:0px 18px 12px 6px;
+	vertical-align:top;
+}
+#main.spanleft {
+	width:552px;
+}
+#main.spanright {
+	width:528px;
+}
+#main.spanall {
+	width:720px;
+}
+#main.spanall .pad, #main.spanright .pad {
+	padding: 0px 6px 12px 6px;
+}
+#main h2, #main h3, #main h4 {
+	color:#000;
+}
+
+#left {
+	width:192px;
+	vertical-align:top;
+}
+#left .pad {
+	margin:0px; padding:0px 12px 12px 0px;
+	vertical-align:top;
+}
+
+#right {
+	width:168px;
+	vertical-align:top;
+}
+#right .pad {
+	margin:0px; padding:0px 0px 12px 12px;
+	vertical-align:top;
+}
+
+/* COLUMN STYLES */
+.plain {
+	font-size:11px;
+}
+.plain h2, .plain h3, .plain h4 {
+	color:#000;
+}
+
+.side {
+	font-size:10px;
+}
+.side a {
+	text-transform:lowercase;
+}
+
+.projects {
+	color:#666; font-size:11px;
+	background:url(../images/projects_border.gif) repeat-y;
+}
+.projects h2, .projects h3, .projects h4 {
+	color:#FF7001;
+}
+.projects ul li {
+	padding:0em 0em 0.75em 0.75em;
+}
+
+/* SIDE COLUMN CONTENT STYLES */
+.palette {
+	border-bottom:1px #ddd solid;
+	margin-bottom:12px; font-size:10px;
+}
+.palette h3 {
+	color:#fff; background-color:#3D5192;
+	border:1px #3A4D8B solid; padding:4px 11px 6px 11px;
+}
+.palette ul {
+	border:1px #dadada solid;
+	background-color:#e6e6e6; border-width:0px 1px 0px 1px;
+	padding:0px 0px 4px 0px; font-size:110%;
+}
+.palette li {
+	border-top:1px #dadada solid; background-position:0 0.85em;
+	padding:4px 0px 4px 11px; margin:0px 11px 0px 11px;
+}
+.palette ul li:first-child {
+	border:0px;
+}
+.palette form {
+	border:1px #dadada solid; border-width:0px 1px 0px 1px;
+	background-color:#e6e6e6; padding:10px 11px 6px 11px;
+}
+.palette form p {
+	padding-bottom:0.5em;
+}
+.palette input, .palette select {
+	width:150px;
+}
+#right .palette input, #right .palette select {
+	width:120px;
+}
+
+#browse li {
+	background-image:none; padding:4px 0px 4px 0px;
+}
+#releases h3 {
+	background:#999; border-color:#909090
+}
+#search h3 {
+	background:#FF930B; border-color:#F28C0A;
+}
+
+/* PLAIN COLUMN CONTENT STYLES */
+.date {
+	font-size:11px; color:#99660A; font-weight:normal;
+}
+.edit {
+	font-size:11px; font-weight:normal; padding-left:13px;
+	background:url(../images/A.gif) no-repeat left 60%;
+}
+.edit a:link, .edit a:active, .edit a:visited, .edit a:hover {
+	background-image:none;
+	padding-left:0px;
+}
+.help {
+	color:#666; font-size:10px; font-style:italic;
+}
+
+/* MAIN AREA FORM TABLE LAYOUT, HEADERS ON LEFT SIDE */
+.mainformhorizontal {
+	padding-top:8px;
+	margin-bottom:8px;
+	border:1px #ccc dotted; border-width:1px 0px 1px 0px;
+}
+.mainformhorizontal th {
+	text-align:left; vertical-align:top;
+	white-space:nowrap;
+	font-weight:normal; color:#99660A;
+	padding-right:20px; padding-bottom:8px;
+}
+.mainformhorizontal td {
+	vertical-align:top; padding-bottom:8px;
+	font-size:11px;
+}
+.mainformhorizontal input,
+.mainformhorizontal select,
+.mainformhorizontal textarea {
+	width:300px; margin-top:0px; padding-top:0px;
+	background-color:#eee;
+}
+.mainformhorizontal DIV.help {
+	position:relative; width:300px;
+}
