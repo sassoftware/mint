@@ -19,6 +19,8 @@ import database
 import userlevels
 import searcher
 
+import projectlisting
+
 class InvalidHostname(Exception):
     def __str__(self):
         return "invalid hostname: must start with a letter and contain only letters, numbers, and hyphens."
@@ -172,6 +174,30 @@ class ProjectsTable(database.KeyedTable):
         ids = []
         for r in cu.fetchall():
             ids.append((r[0], r[1]))
+        return ids
+
+    def getNumProjects(self):
+        cu = self.db.cursor()
+        cu.execute("SELECT count(name) FROM Projects")
+
+        return cu.next()[0]
+
+    def getProjects(self, sortOrder, limit, offset):
+        """ Return a list of projects with no filtering whatsoever
+        @param sortOrder: Order the projects by this criteria
+        @param limit:  Number of items to return
+        @param offset: Count at which to begin listing
+        """
+        cu = self.db.cursor()
+
+        SQL = projectlisting.sqlbase % (projectlisting.ordersql[sortOrder],
+            limit, offset)
+        cu.execute(SQL)
+
+        ids = []
+        for x in cu:
+            ids.append(list(x))
+
         return ids
 
     def search(self, terms, modified, limit, offset):

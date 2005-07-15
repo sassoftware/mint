@@ -44,8 +44,16 @@ from mint import searcher
                 <h3>Things To Do</h3>
                 <ul>
                     <li><a href="newProject">Create a new distribution project</a></li>
-                    <li><a href="distros">Find an existing distribution</a></li>
+                    <li><a href="projects">Browse existing projects</a></li>
+                    <li><a href="projects">Browse existing users</a></li>
                     <li><a href="userSettings">View your user page</a></li>
+                </ul>
+            </div>
+            <div py:if="not auth.authorized" py:omit="True">
+                <h3>Things To Do</h3>
+                <ul>
+                    <li><a href="projects">Browse existing projects </a></li>
+                    <li><a href="projects">Browse existing users </a></li>
                 </ul>
             </div>
 
@@ -76,12 +84,14 @@ from mint import searcher
                 <button>Submit</button>
             </form>
 
-            <h3>Your Projects</h3>
+            <div style="background: white; padding: 12px; color: black;" py:if="auth.authorized" py:omit="True">
+                <h3>Your Projects</h3>
 
-            <ol id="active">
-                <li py:for="project, level in sorted(projectList, key = lambda x: x[0].getName())">
-                    <a href="http://${project.getHostname()}/">${project.getName()}</a> (${userlevels.names[level]})</li>
-            </ol>
+                <ol id="active">
+                    <li py:for="project, level in sorted(projectList, key = lambda x: x[0].getName())">
+                        <a href="http://${project.getHostname()}/">${project.getName()}</a> (${userlevels.names[level]})</li>
+                </ol>
+            </div>
         </div>
 
 

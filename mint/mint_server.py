@@ -272,6 +272,24 @@ class MintServer(object):
         """
         return self.projects.search(terms, modified, limit, offset)
 
+    def getProjects(self, sortOrder, limit, offset):
+        """
+        Collect a list of projects
+        @param sortOrder: Order the projects by this criteria
+        @param limit:  Number of items to return
+        @param offset: Count at which to begin listing
+        """
+        return self.projects.getProjects(sortOrder, limit, offset), self.projects.getNumProjects()
+
+    def getUsers(self, sortOrder, limit, offset):
+        """
+        Collect a list of projects
+        @param sortOrder: Order the projects by this criteria
+        @param limit:  Number of items to return
+        @param offset: Count at which to begin listing
+        """
+        return self.users.getUsers(sortOrder, limit, offset), self.users.getNumUsers()
+
     def getNews(self):
         return self.newsCache.getNews()
 

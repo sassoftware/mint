@@ -21,6 +21,7 @@ from mint_error import MintError
 import database
 import userlevels
 import searcher
+import userlisting
 
 class ConfirmError(MintError):
     def __str__(self):
@@ -157,17 +158,18 @@ class UsersTable(database.KeyedTable):
 
     def search(self, terms, limit, offset):
         """
-        Returns a list of projects matching L{terms} of length L{limit}
+        Returns a list of users matching L{terms} of length L{limit}
         starting with item L{offset}.
         @param terms: Search terms
         @param offset: Count at which to begin listing
         @param limit:  Number of items to return
-        @return:       a dictionary of the requested items.
-                       each entry will contain four bits of data:
-                        The hostname for use with linking,
-                        The project name,
-                        The project's description
-                        The date last modified.
+        @return:       a list of the requested items.
+                       each entry will contain five bits of data:
+                        The userId for use in drilling down,
+                        The user name,
+                        The user's name
+                        the display e-mail
+                        the user's blurb
         """
         columns = ['userId', 'userName', 'fullName', 'displayEmail', 'blurb']
         searchcols = ['userName', 'fullName', 'displayEmail', 'blurb']
@@ -178,6 +180,37 @@ class UsersTable(database.KeyedTable):
             ids[i][4] = searcher.Searcher.truncate(x[4], terms)
 
         return ids, count
+
+    def getUsers(self, sortOrder, limit, offset):
+        """
+        Returns a list of users matching L{terms} of length L{limit}
+        starting with item L{offset}.
+        @param limit:  Number of items to return
+        @param offset: Count at which to begin listing
+        @return:       a list of the requested items.
+        """
+        cu = self.db.cursor()
+
+        SQL = userlisting.sqlbase % (userlisting.ordersql[sortOrder],
+            limit, offset)
+
+        cu.execute(SQL)
+
+        ids = []
+        for x in cu:
+            ids.append(list(x))
+
+        return ids
+
+    def getNumUsers(self):
+        """
+        Returns the count of Users
+        """
+        cu = self.db.cursor()
+        cu.execute( "SELECT count(userId) FROM Users" )
+
+
+        return cu.next()[0]
 
 class User(database.TableObject):
     __slots__ = [UsersTable.key] + UsersTable.fields

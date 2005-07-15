@@ -330,8 +330,20 @@ class MintApp(webhandler.WebHandler):
             return self._redirect("login?message=confirmed")
         return apache.OK 
 
+    @intFields(sortOrder = 0, limit = 10, offset = 0)
+    def projects(self, auth, sortOrder, limit, offset, submit = 0):
+        results, count = self.client.getProjects(sortOrder, limit, offset)
+        self._write("projects", sortOrder=sortOrder, limit=limit, offset=offset, results=results, count=count)
+        return apache.OK
+
+    @intFields(sortOrder = 0, limit = 10, offset = 0)
+    def users(self, auth, sortOrder, limit, offset, submit = 0):
+        results, count = self.client.getUsers(sortOrder, limit, offset)
+        self._write("users", sortOrder=sortOrder, limit=limit, offset=offset, results=results, count=count)
+        return apache.OK
+
     @projectOnly
-    def projectPage(self, auth):    
+    def projectPage(self, auth):
         self._write("projectPage")
         return apache.OK
 
