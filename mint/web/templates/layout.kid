@@ -46,7 +46,7 @@ from mint import userlevels
                     <form name="login" method="post" action="login2">
                         <table border="0" cellspacing="0" cellpadding="0" summary="layout" width="100%">
                             <tr>
-                                <td id="logo"><img src="${cfg.staticUrl}apps/mint/images/rpath.png"/></td>
+                                <td id="logo"></td>
                                 <td id="user" py:if="not auth.authorized">
                                     <div class="pad">
                                         <h4>not logged in</h4>
