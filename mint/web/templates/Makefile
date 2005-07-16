@@ -8,7 +8,7 @@ kid_files = \
 	editRelease.kid		\
 	error.kid		\
 	frontPage.kid		\
-	layout.kid		\	
+	layout.kid		\
 	library.kid		\
 	login.kid		\
 	memberSettings.kid	\
