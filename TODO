@@ -1,0 +1,3 @@
+* eliminate the Project.getLabel() and [getRepoMap, addLabel, getLabelIds,
+  getLabelById] duplication.
+  
