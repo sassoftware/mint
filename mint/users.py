@@ -35,6 +35,10 @@ class UserAlreadyExists(MintError):
     def __str__(self):
         return "user already exists"
 
+class GroupAlreadyExists(MintError):
+    def __str__(self):
+        return "group already exists"
+
 class UsersTable(database.KeyedTable):
     name = 'Users'
     key = 'userId'
@@ -110,6 +114,8 @@ class UsersTable(database.KeyedTable):
             authRepo.addAcl(repoLabel, username, None, None, False, False, False)
         except repository.netrepos.netauth.UserAlreadyExists:
             raise UserAlreadyExists
+        except repository.netrepos.netauth.GroupAlreadyExists:
+            raise GroupAlreadyExists
 
         if self.cfg.hostName:
             confirmDomain = "%s.%s" % (self.cfg.hostName, self.cfg.domainName)
