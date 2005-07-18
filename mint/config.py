@@ -10,7 +10,7 @@ import mint
 
 import conarycfg
 from conarycfg import ConfigFile
-from conarycfg import STRINGDICT, BOOLEAN
+from conarycfg import STRINGDICT, STRINGLIST, BOOLEAN
 
 from urlparse import urlsplit
 
@@ -28,6 +28,7 @@ class MintConfig(ConfigFile):
         'imagesPath'        : '/srv/mint/images/',
         'logPath'           : '/srv/mint/logs/',
         'domainName'        : 'rpath.org',
+        'cookieDomain'      : [ STRINGLIST, ['rpath.org'] ],
         'hostName'          : None, # optional domain name for main site
         'adminMail'         : 'mint@rpath.org',
         'xmlrpcAccess'      : [ BOOLEAN, False ],

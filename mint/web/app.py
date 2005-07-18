@@ -155,7 +155,8 @@ class MintApp(webhandler.WebHandler):
         if len(dots) == 3:
             if hostname == self.cfg.hostName:
                 default = self.frontPage
-            elif hostname in mint_server.reservedHosts:
+            elif hostname in mint_server.reservedHosts and\
+                ".".join(dots[1:]) == self.cfg.domainName:
                 raise Redirect(("http://%s" % siteHost) + self.req.unparsed_uri)
             else:
                 try:
@@ -231,10 +232,11 @@ class MintApp(webhandler.WebHandler):
         self.req.err_headers_out.add("Set-Cookie", str(cookie))
 
     def _clearAuth(self):
-        cookie = Cookie.Cookie('authToken', '', domain = "." + self.cfg.domainName,
-                                                expires = time.time() - 300,
-                                                path = "/")
-        self._redirCookie(cookie)
+        for domain in self.cfg.cookieDomain:
+            cookie = Cookie.Cookie('authToken', '', domain = "." + domain,
+                                                    expires = time.time() - 300,
+                                                    path = "/")
+            self._redirCookie(cookie)
 
     def _conaryConfig(self, project):
         cfg = project.getConaryConfig()
@@ -295,8 +297,9 @@ class MintApp(webhandler.WebHandler):
                 return self._redirect("login?message=invalid")
             else:
                 auth = base64.encodestring("%s:%s" % authToken).strip()
-                cookie = Cookie.Cookie('authToken', auth, domain = "." + self.cfg.domainName, path = "/")
-                self._redirCookie(cookie)
+                for domain in self.cfg.cookieDomain:
+                    cookie = Cookie.Cookie('authToken', auth, domain = "." + domain, path = "/")
+                    self._redirCookie(cookie)
                 return self._redirect("frontPage")
         elif submit == "Forgot Password":
             newpw = users.newPassword()
