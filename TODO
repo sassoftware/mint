@@ -1,3 +1,15 @@
 * eliminate the Project.getLabel() and [getRepoMap, addLabel, getLabelIds,
   getLabelById] duplication.
-  
+* a separate database table for namespaces
+* refactor mint -> imagetool-backend, imagetool (product frontend), mint (public frontend)
+* test suite improvements
+    * be able to test membership levels (trouble is accessing new project's repository by hostname
+      which doesn't really exist)
+    * check coverage
+    * test image creation
+* improve job-server
+    * more robust (handle server restarts, etc0
+    * place cached changesets into a separate directory
+      per repo...maybe key on something else like a sha1 of full version, name, and flavor?
+      does darby do this anywhere?
+
