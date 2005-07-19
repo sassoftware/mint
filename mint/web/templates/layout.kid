@@ -24,6 +24,11 @@ from mint import userlevels
                         ${userlevels.names[level]}
                 </li>
             </ul>
+            <ul py:if="auth.authorized">
+                <li>
+                    <a href="newProject">Create a new project</a>
+                </li>
+            </ul>
         </div>
     </td>
 
