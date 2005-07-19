@@ -41,7 +41,7 @@ class Searcher :
     WORDS_PRE = 30
     WORDS_POST = 30
     WORDS_TOTAL = 60
-    MINLENGTH = 4
+    MINLENGTH = 3
 
     @classmethod
     def lastModified(self, column, modcode):
