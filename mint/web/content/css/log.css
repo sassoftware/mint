@@ -1,12 +1,6 @@
 /* LOGIN AND LOGOUT BUTTON AREA */
-#log {
-	background:#fff; color:#ddd;
-	line-height:100%; width:180px;
-	background:#fff url(../images/login_border.gif) no-repeat bottom left;
-}
 #log .pad {
 	margin:0px; padding:8px 12px 8px 12px;
-	vertical-align:middle;
 }
 #log a {
 	text-transform:lowercase;

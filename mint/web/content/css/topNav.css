@@ -1,11 +1,6 @@
 /* TOP MENU AREA */
-#topnav {
-	width:564px; background:#fff; color:#ddd;
-}
 #topnav .pad {
 	margin:0px; padding:8px 12px 8px 12px;
-	vertical-align:middle;
-	line-height:100%;
 }
 #topnav a {
 	background:none; padding-right:0px;

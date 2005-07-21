@@ -46,12 +46,12 @@ from mint import userlevels
     <body xmlns="http://www.w3.org/1999/xhtml"
           py:match="item.tag == 'body'">
         <div id="top" align="center">
-            <div class="shadow">
-                <div class="surface" align="left">
+            <div class="shadowLeft"><div class="shadowRight">
+                <div class="surfaceLeft" align="left"><div class="surfaceRight">
                     <form name="login" method="post" action="login2">
-                        <table border="0" cellspacing="0" cellpadding="0" summary="layout" width="100%">
+                        <table border="0" cellspacing="0" cellpadding="0" summary="layout">
                             <tr>
-                                <td id="logo"></td>
+                                <td id="logo">&#160;</td>
                                 <td id="user" py:if="not auth.authorized">
                                     <div class="pad">
                                         <h4>not logged in</h4>
@@ -77,9 +77,10 @@ from mint import userlevels
                                         <a href="#">Terms of Service</a> |
                                         <a href="#">Privacy</a> |
                                         <a href="#">Contact rpath</a>
+
                                     </div>
                                 </td>
-                                <td id="log"> 
+                                <td id="log">
                                     <div class="pad" py:if="not auth.authorized">
                                         <button type="submit" name="submit" value="Log In">Login</button> |
                                         <a href="register" class="arrows">New Account</a>
@@ -91,37 +92,31 @@ from mint import userlevels
                             </tr>
                         </table>
                     </form>
-                </div>
-            </div>
+                </div></div>
+            </div></div>
         </div>
         <div id="middle" align="center">
             <div id="crumb">
-                ${breadcrumb()}
+                <div class="pad">
+                    ${breadcrumb()}
+                </div>
             </div>
         </div>
         <div id="bottom" align="center">
-            <div class="shadow">
-                <div class="surface" align="left">
+            <div class="shadowLeft"><div class="shadowRight">
+                <div class="surfaceLeft" align="left"><div class="surfaceRight">
                     <table border="0" cellspacing="0" cellpadding="0" summary="layout" width="100%">
                         <tr>
-                            <td id="content">
-                                <div class="pad">
-                                    <table border="0" cellspacing="0" cellpadding="0" summary="layout" width="100%">
-                                        <tr>
-                                            <td py:replace="item[:]" />
-                                        </tr>
-                                    </table>
-                                </div>
-                            </td>
+                            <td id="main" class="spanleft" py:replace="item[:]" />
                         </tr>
                     </table>
-                </div>
-            </div>
+                </div></div>
+            </div></div>
         </div>
         <div id="foot" align="center">
             <div id="copy">
                 <div class="pad">
-                    Copyright &#169; 2005 rpath.
+                    &#169; Copyright 2005 rpath.
                 </div>
             </div>
         </div>

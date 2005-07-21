@@ -1,8 +1,4 @@
 /* LOGIN AREA AND USER INFO BLOCK */
-#user {
-	width:180px; font-size:10px;
-	background:url(../images/user_border.gif) no-repeat;
-}
 #user .pad {
 	vertical-align:middle; padding:12px;
 }
@@ -14,7 +10,7 @@
 	padding:0px 0px 6px 0px;
 }
 #user input {
-	width:90px;
+	width:50%;
 }
 #user label {
 	font-weight:normal;
