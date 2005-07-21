@@ -9,69 +9,82 @@ from mint import userlevels
     Copyright 2005 rpath, Inc.
     All Rights Reserved
 -->
+
+    <?python
+        isOwner = userLevel == userlevels.OWNER
+        memberList = project.getMembers()
+    ?>
+
     <head/>
     <body>
-        <td id="content">
-            <?python
-                isOwner = userLevel == userlevels.OWNER
-            ?>
-            <h2>Manage Project Memberships</h2>
+        <td id="left" class="side">
+            <div class="pad">
+                <div id="browse" class="palette">
+                    <h3>Project Resources</h3>
+                    <ul>
+                        <li><a href="releases">Releases</a></li>
 
-            <table>
-                <tr>
-                    <td><b>Project Name:</b></td>
-                    <td>${project.getName()}</td>
-                </tr>
-                <tr>
-                    <td style="width: 25%;">
-                        <b>Members:</b>
-                    </td>
-                    <td>
-                        <?python
-                        users = { userlevels.DEVELOPER: [],
-                                  userlevels.OWNER: [], }
+                        <li><a href="http://${project.getHostname()}/conary/browse">Repository</a></li>
+                        <li><a href="members"><strong>Project Members</strong></a></li>
+                        <li><a href="#">Mailing Lists</a></li>
+                        <li><a href="#">Bug Tracking</a></li>
+                    </ul>
+                </div>
+                <div class="palette" py:if="isOwner">
 
-                        for userId, username, level in project.getMembers():
-                            users[level].append((userId, username,))
-
-                        ?>
-                        <h4>Project Owners</h4>
-                        <ul>
-                            <li py:for="userId, username in sorted(users[userlevels.OWNER], key=lambda x: x[1])">
-                                <a href="userInfo?id=${userId}">${username}</a>
-                                <a py:if="isOwner" href="memberSettings?userId=${userId}">[edit]</a>
-                                <a py:if="isOwner" href="delMember?id=${userId}">[delete]</a>
-                            </li>
-                            <li py:if="not users[userlevels.OWNER]">No owners.</li>
-                        </ul>
-                        <h4>Developers</h4>
-                        <ul>
-                            <li py:for="userId, username in sorted(users[userlevels.DEVELOPER], key=lambda x: x[1])">
-                                <a href="userInfo?id=${userId}">${username}</a>
-                                <a py:if="isOwner" href="memberSettings?userId=${userId}">[edit]</a>
-                                <a py:if="isOwner" href="delMember?id=${userId}">[delete]</a>
-                            </li> 
-                            <li py:if="not users[userlevels.DEVELOPER]">No developers.</li>
-                        </ul>
-                    </td>
-                </tr>
-                <tr py:if="isOwner">
-                    <td>
-                        <b>Add:</b>
-                    </td>
-                    <td> 
-                        <form method="post" action="addMember">
+                    <h3>Add New Member</h3>
+                    <form method="post" action="addMember">
+                        <p>
+                            <label>Username:</label><br/>
                             <input type="text" name="username" value="" />
+                        </p>
+                        <p>
+                            <label>Membership Type:</label><br/>
+
                             <select name="level">
                                 <option py:for="level, levelName in userlevels.names.items()"
                                         py:content="levelName"
                                         value="${level}" />
                             </select>
-                            <input type="submit" value="Submit" />
-                        </form>
-                    </td>
-                </tr>
-            </table>
+                        </p>
+                        <p><button type="submit">Submit</button></p>
+                    </form>
+                </div>
+            </div>
+
         </td>
+        <td id="main">
+            <div class="pad">
+                <h2>${project.getName()}<br />Memberships</h2>
+                <?python
+                users = { userlevels.DEVELOPER: [],
+                          userlevels.OWNER: [], }
+
+                for userId, username, level in project.getMembers():
+                    users[level].append((userId, username,))
+
+                ?>
+                <h3>Project Owners</h3>
+                <table border="0" cellspacing="0" cellpadding="0" class="memberstable">
+
+                    <tr py:for="userId, username in sorted(users[userlevels.OWNER], key=lambda x: x[1])">
+                        <th><a href="userInfo?id=${userId}">${username}</a></th>
+                        <td py:if="isOwner"><a href="memberSettings?userId=${userId}" class="option" id="{userId}Edit">Edit</a></td>
+                        <td py:if="isOwner"><a href="delMember?id=${userId}" class="option">Delete</a></td>
+                    </tr>
+                </table>
+                <h3>Developers</h3>
+
+                <table border="0" cellspacing="0" cellpadding="0" class="memberstable">
+                    <tr py:for="userId, username in sorted(users[userlevels.DEVELOPER], key=lambda x: x[1])">
+                        <th><a href="userInfo?id=${userId}">${username}</a></th>
+                        <td py:if="isOwner"><a href="memberSettings?userId=${userId}" class="option" id="{userId}Edit">Edit</a></td>
+                        <td py:if="isOwner"><a href="delMember?id=${userId}" class="option">Delete</a></td>
+                    </tr>
+                </table>
+
+            </div>
+        </td>
+        ${projectsPane()}        
     </body>
 </html>
