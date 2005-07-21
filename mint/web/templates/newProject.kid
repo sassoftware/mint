@@ -8,31 +8,43 @@
 -->
     <head/>
     <body>
-        <td id="content">
-            <h2>New Project</h2>
-            <form method="post" action="createProject">
-                <table>
-                    <tr>
-                        <td><b>Project Title:</b></td>
-                        <td><input type="text" name="title" /></td>
-                    </tr>
-                    <tr>
-                        <td style="width: 25%;">
-                            <b>Repository Hostname:</b>
-                            <p class="help">
-                                Please choose a hostname for your repository.
-                                It must start with a letter and contain only
-                                letters, numbers, and hyphens.
-                            </p>
-                        </td>
-                        <td style="vertical-align: middle;">
-                            <input type="text" name="hostname" /> .rpath.org
-                        </td>
-                    </tr>
-                </table> 
+        <td id="main" class="spanleft" >
+            <div class="pad">
+                <h2>Create an Project</h2>
+                <p>Fields labeled with a <em class="required">red arrow</em> are required.</p>
+                <form method="post" action="createProject">
 
-                <p><input type="submit" value="Create" /></p>
-            </form>
+                    <table border="0" cellspacing="0" cellpadding="0" class="mainformhorizontal">
+                        <tr>
+                            <th><em class="required">Project Title:</em></th>
+                            <td>
+                                <input type="text" name="title" />
+                                <p class="help">please limit to 16 characters</p>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <th><em class="required">Repository Hostname:</em></th>
+                            <td>
+                                <input type="text" name="hostname" /> .rpath.org
+                                <p class="help">Please choose a hostname for your repository. It must start with a letter and contain only letters, numbers, and hyphens.</p>
+                            </td>
+                        </tr>
+                        <tr>
+
+                            <th>Project Description:</th>
+                            <td>
+                                <textarea rows="6" name="blurb"></textarea>
+                            </td>
+                        </tr>
+                    </table>
+                    <p><button type="submit">Create</button></p>
+                </form>
+            </div>
+        </td>
+        <td id="right" class="plain">
+            <div class="pad">
+            </div>
         </td>
     </body>
 </html>

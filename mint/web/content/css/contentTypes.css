@@ -5,8 +5,11 @@
 .plain h2, .plain h3, .plain h4 {
 	color:#000;
 }
-.plain button, #main button {
+.plain button {
 	font-size:0.9091em;
+}
+.plain .palette button {
+	font-size:1em;
 }
 
 .side {
@@ -36,8 +39,8 @@
 	font-size:0.9091em;
 }
 .palette h3 {
-	color:#fff; background-color:#3D5192;
-	border:1px #3A4D8B solid; padding:4px 11px 6px 11px;
+	color:#fff; background-color:#999;
+	border:1px #909090 solid; padding:4px 11px 6px 11px;
 }
 .palette ul {
 	border:1px #dadada solid;
@@ -65,8 +68,8 @@
 #browse li {
 	background-image:none; padding:4px 0px 4px 0px;
 }
-#releases h3 {
-	background:#999; border-color:#909090
+#browse h3 {
+	background:#3D5192; border-color:#3A4D8B;
 }
 #search h3 {
 	background:#FF930B; border-color:#F28C0A;
@@ -90,11 +93,11 @@
 
 /* MAIN AREA FORM TABLE LAYOUT, HEADERS ON LEFT SIDE */
 .mainformhorizontal {
-	padding-top:8px; margin-bottom:8px;
+	padding:11px; margin-bottom:8px; border:1px #e6e6e6 solid;
 }
 .mainformhorizontal th {
-	font-weight:normal; color:#99660A;
-	padding-right:20px; padding-bottom:8px;
+	font-weight:normal; color:#666;
+	padding-right:12px; padding-bottom:8px;
 }
 .mainformhorizontal td {
 	vertical-align:top; padding-bottom:8px;
@@ -105,11 +108,20 @@
 	width:70%; margin-top:0px; padding-top:0px;
 	background-color:#eee;
 }
-.mainformhorizontal DIV.help {
+.mainformhorizontal div.help,
+.mainformhorizontal p.help {
 	position:relative; width:70%;
 }
+.required {
+	padding-left:0.7em; color:#c00; font-style:italic;
+	background:url(../images/required.gif) no-repeat 0.2em 0.45em;
+}
+TH .required {
+	padding-left:0.5em; color:#c00; font-style:italic;
+	background:url(../images/required.gif) no-repeat 0em 0.45em;
+}
 
-/* SEARCH RESULTS TABLE ALYOUT */
+/* SEARCH RESULTS TABLE LAYOUT */
 .results {
 	padding:0px 0px 4px 0px; margin:8px 0px 8px 0px;
 	border-bottom:1px #ccc solid; border-top:1px #ccc solid;
@@ -123,10 +135,35 @@
 	vertical-align:top; padding:6px 12px 6px 0px;
 	border-top:1px #e6e6e6 solid;
 }
-STRONG.keyword {
+strong.keyword {
 	color:#FF7C04;
 }
 
 .pager td {
 	vertical-align:middle;
+}
+
+/* RELEASES LIST TABLE, MEMBERS LIST TABLE */
+table.releasestable,
+table.memberstable {
+	padding:0px; margin:0px; margin-bottom:8px; width:auto;
+}
+.releasestable th,
+.memberstable th {
+	font-weight:normal; color:#333; white-space:normal;
+	padding:0em 0em 0.5em 0.5em; margin:0em;
+	background:url(../images/LI.gif) 0em 0.45em no-repeat;
+}
+.releasestable td,
+.memberstable td {
+	padding:0em 0em 0.5em 0.5em; margin:0em;
+}
+a.option {
+	border:1px #ccc solid; background-image:none;
+	display:block; padding:0.2em 0.4em; margin:0px;
+	font-size:0.9091em; text-transform:uppercase; font-weight:bold;
+}
+a.option:hover {
+	background-color:#ccc; background-image:none;
+	text-decoration:none;
 }
