@@ -11,16 +11,66 @@
         from mint import userlevels
 
         isOwner = userLevel == userlevels.OWNER
-        releases = project.getReleases()
     ?>
-    <body>
-        <h2>Project Releases</h2>       
 
-        <ul>
-            <li py:for="release in releases">
-                <a href="release?id=${release.getId()}">${release.getTroveName()}=${release.getTroveVersion().trailingRevision().asString()}</a>
-            </li>
-        </ul>
-        <p py:if="isOwner"><a href="newRelease">Create a new release</a></p>
+    <div py:def="breadcrumb()" class="pad">
+        You are here:
+        <a href="#">rpath</a>
+        <a href="../">${project.getName()}</a>
+        <a href="#">Releases </a>
+    </div>
+
+    <body>
+        <td id="left" class="side">
+            <div class="pad">
+                <div id="browse" class="palette">
+                    <h3>Project Resources</h3>
+                    <ul>
+                        <li><a href="releases"><strong>Releases</strong></a></li>
+                        <li><a href="http://${project.getHostname()}/conary/browse">Repository</a></li>
+                        <li><a href="members">Project Members</a></li>
+                        <li><a href="#">Mailing Lists</a></li>
+                        <li><a href="#">Bug Tracking</a></li>
+                    </ul>
+                </div>
+            </div>
+        </td>
+        <td id="main">
+            <div class="pad">
+                <h2>${project.getName()}<br />releases</h2>
+                <h3 py:if="isOwner">Published Releases</h3>
+                <table border="0" cellspacing="0" cellpadding="0" class="releasestable">
+                    <tr py:for="release in [x for x in releases if x.getPublished()]">
+
+                        <th>
+                            <a href="release?id=${release.getId()}">
+                                ${release.getTroveName()}=${release.getTroveVersion().trailingRevision().asString()}
+                            </a>
+                        </th>
+                        <td py:if="isOwner"><a href="#" id="{release.getId()}Edit" class="option">Edit</a></td>
+                        <td py:if="isOwner"><a href="#" class="option">Delete</a></td>
+                    </tr>
+                </table>
+                
+                <div py:if="isOwner">
+
+                    <h3>Unpublished Releases</h3>
+                    <table border="0" cellspacing="0" cellpadding="0" class="releasestable">
+                        <tr py:for="release in [x for x in releases if not x.getPublished()]">
+                            <th>
+                                <a href="release?id=${release.getId()}">
+                                    ${release.getTroveName()}=${release.getTroveVersion().trailingRevision().asString()}
+                                </a>
+                            </th>
+                            <td py:if="isOwner"><a href="#" id="{release.getId()}Edit" class="option">Edit</a></td>
+                            <td py:if="isOwner"><a href="#" class="option">Delete</a></td>
+                        </tr>
+
+                    </table>
+                    <p py:if="isOwner"><a href="newRelease">Create a new release</a></p>
+                </div>
+            </div>
+        </td>
+        ${projectsPane()}
     </body>
 </html>

@@ -97,9 +97,7 @@ from mint import userlevels
         </div>
         <div id="middle" align="center">
             <div id="crumb">
-                <div class="pad">
-                    ${breadcrumb()}
-                </div>
+                ${breadcrumb()}
             </div>
         </div>
         <div id="bottom" align="center">

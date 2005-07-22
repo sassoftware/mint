@@ -352,11 +352,9 @@ class MintApp(webhandler.WebHandler):
         self._write("projectPage")
         return apache.OK
 
-    @requiresAuth
     @projectOnly
-    @ownerOnly
     def releases(self, auth):
-        releases = self.project.getReleases()
+        releases = self.project.getReleases(showUnpublished = True)
         releasesByTrove = {}
         for release in releases:
             l = releasesByTrove.setdefault(release.getTroveName(), [])
@@ -364,7 +362,7 @@ class MintApp(webhandler.WebHandler):
         for l in releasesByTrove.values():
             l.sort(key = lambda x: x.getTroveVersion(), reverse = True)
 
-        self._write("releases", releasesByTrove = releasesByTrove)
+        self._write("releases", releasesByTrove = releasesByTrove, releases = releases)
         return apache.OK
 
     @requiresAuth
