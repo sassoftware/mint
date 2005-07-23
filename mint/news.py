@@ -72,8 +72,11 @@ class NewsCacheTable(database.KeyedTable):
         if purge:
             cu.execute("DELETE FROM NewsCache")
 
-        url = urllib2.urlopen(self.cfg.newsRssFeed)
-        data = url.read()
+        try:
+            url = urllib2.urlopen(self.cfg.newsRssFeed)
+            data = url.read()
+        except urllib2.URLError:
+            return False
 
         tree = ElementTree.XML(data)
         for item in tree.findall("channel/item")[:items]:

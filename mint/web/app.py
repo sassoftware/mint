@@ -8,11 +8,11 @@ import os
 import kid
 import sys
 import time
+from urllib import unquote
 
 from mod_python import apache
 from mod_python import Cookie
 from mod_python.util import FieldStorage
-
 
 import repository
 import versions
@@ -138,6 +138,7 @@ class MintApp(webhandler.WebHandler):
 
     def _getHandler(self, cmd, auth):
         fullHost = self.req.hostname
+        self.toUrl = ("http://%s" % fullHost) + self.req.unparsed_uri
         dots = fullHost.split('.')
         hostname = dots[0]
 
@@ -150,6 +151,7 @@ class MintApp(webhandler.WebHandler):
             siteHost = "%s.%s" % (self.cfg.hostName, self.cfg.domainName)
         else:
             siteHost = self.cfg.domainName
+        self.siteHost = siteHost
         
         self.userLevel = -1
         if len(dots) == 3:
@@ -282,12 +284,13 @@ class MintApp(webhandler.WebHandler):
         return apache.OK
 
     @siteOnly
-    def logout(self, auth):
+    @strFields(to = None)
+    def logout(self, auth, to):
         self._clearAuth()
-        return self._redirect("login")
+        return self._redirect(unquote(to))
 
-    @strFields(username = None, password = '', submit = None)
-    def login2(self, auth, username, password, submit):
+    @strFields(username = None, password = '', submit = None, to = 'frontPage')
+    def processLogin(self, auth, username, password, submit, to):
         if submit == "Log In":
             authToken = (username, password)
             client = shimclient.ShimMintClient(self.cfg, authToken)
@@ -300,7 +303,7 @@ class MintApp(webhandler.WebHandler):
                 for domain in self.cfg.cookieDomain:
                     cookie = Cookie.Cookie('authToken', auth, domain = "." + domain, path = "/")
                     self._redirCookie(cookie)
-                return self._redirect("frontPage")
+                return self._redirect(unquote(to))
         elif submit == "Forgot Password":
             newpw = users.newPassword()
 
@@ -355,14 +358,15 @@ class MintApp(webhandler.WebHandler):
     @projectOnly
     def releases(self, auth):
         releases = self.project.getReleases(showUnpublished = True)
-        releasesByTrove = {}
-        for release in releases:
-            l = releasesByTrove.setdefault(release.getTroveName(), [])
-            l.append(release)
-        for l in releasesByTrove.values():
-            l.sort(key = lambda x: x.getTroveVersion(), reverse = True)
+        
+        #releasesByTrove = {}
+        #for release in releases:
+        #    l = releasesByTrove.setdefault(release.getTroveName(), [])
+        #    l.append(release)
+        #for l in releasesByTrove.values():
+        #    l.sort(key = lambda x: x.getTroveVersion(), reverse = True)
 
-        self._write("releases", releasesByTrove = releasesByTrove, releases = releases)
+        self._write("releases", releases = releases)
         return apache.OK
 
     @requiresAuth
@@ -638,5 +642,6 @@ class MintApp(webhandler.WebHandler):
                                                 project = self.project,
                                                 userLevel = self.userLevel,
                                                 projectList = self.projectList,
+                                                toUrl = self.toUrl,
                                                 **values)
         self.req.write(content)

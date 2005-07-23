@@ -19,7 +19,7 @@ messages = { '':          'If you do not have an account, please <a href="regist
         <p>Please log in to use rpath.com:</p>
         <p>If you do not have an account, please <a href="register">register</a>.</p>
         <p py:if="message" style="font-weight: bold;" py:content="messages[message]"/>
-        <form method="post" action="login2">
+        <form method="post" action="processLogin">
             <table>
                 <tr>
                     <td><b>Username:</b></td>

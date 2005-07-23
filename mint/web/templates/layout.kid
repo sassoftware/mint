@@ -1,7 +1,9 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <?python
-from mint import userlevels
+    from mint import userlevels
+    from urllib import quote 
 ?>
+
 <html xmlns:py="http://purl.org/kid/ns#" xmlns="http://www.w3.org/1999/xhtml">
 <!--
     Copyright 2005 rpath, Inc.
@@ -32,7 +34,6 @@ from mint import userlevels
         </div>
     </td>
 
-
     <head py:match="item.tag == 'head'">
         <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
         <title>rpath.com</title>
@@ -45,10 +46,17 @@ from mint import userlevels
     </head>
     <body xmlns="http://www.w3.org/1999/xhtml"
           py:match="item.tag == 'body'">
+        <?python
+            if auth.authorized:
+                loginAction = "logout"
+            else:
+                loginAction = "processLogin"
+        ?>
         <div id="top" align="center">
             <div class="shadowLeft"><div class="shadowRight">
                 <div class="surfaceLeft" align="left"><div class="surfaceRight">
-                    <form name="login" method="post" action="login2">
+                    <form name="login" method="get" action="${loginAction}">
+                        <input type="hidden" name="to" value="${quote(toUrl)}" />
                         <table border="0" cellspacing="0" cellpadding="0" summary="layout">
                             <tr>
                                 <td id="logo">&#160;</td>
