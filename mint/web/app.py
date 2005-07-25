@@ -207,6 +207,7 @@ class MintApp(webhandler.WebHandler):
 
         self.authToken = authToken
         self.auth = auth
+        auth.setToken(authToken)
 
         if self.cmd.startswith("_"):
             return apache.HTTP_NOT_FOUND
@@ -633,8 +634,10 @@ class MintApp(webhandler.WebHandler):
 
 
 
-    def _write(self, template, **values):
-        path = os.path.join(self.cfg.templatePath, template + ".kid")
+    def _write(self, template, templatePath = None, **values):
+        if not templatePath:
+            templatePath = self.cfg.templatePath
+        path = os.path.join(templatePath, template + ".kid")
         t = kid.load_template(path)
 
         content = t.serialize(encoding="utf-8", cfg = self.cfg,

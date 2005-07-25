@@ -316,7 +316,7 @@ class Authorization(object):
     @type blurb: str
     """
     __slots__ = ('authorized', 'userId', 'username', 'email',
-                 'displayEmail', 'fullName', 'blurb')
+                 'displayEmail', 'fullName', 'blurb', 'token')
 
     def __init__(self, **kwargs):
         for key in self.__slots__:
@@ -325,12 +325,18 @@ class Authorization(object):
             else:
                 self.__setattr__(key, None)
 
+    def setToken(self, authToken):
+        self.token = authToken
+
+    def getToken(self):
+        return self.token
+
     def getDict(self):
         d = {}
         for slot in self.__slots__:
             d[slot] = self.__getattribute__(slot)
         return d
- 
+
 def newPassword(length = 6):
     """
     @param length: length of random password generated

@@ -16,11 +16,25 @@ from server import http
 from repository import shimclient
 from web import webauth
 from repository.netrepos import netserver
+from templates import repos
+import versions
+from app import MintApp
 
-class CookieHttpHandler(http.HttpHandler):
+class CookieHttpHandler(MintApp, http.HttpHandler):
+    def __init__(self, req, cfg, repServer, protocol, port):
+        http.HttpHandler.__init__(self, req, cfg, repServer, protocol, port)
 
+        if 'mint.web.templates.repos' in sys.modules:
+            self.reposTemplatePath = os.path.dirname(sys.modules['mint.web.templates.repos'].__file__) + "/repos/"
+            
     def _requestAuth(self):
-        return self._redirect("/login")
+        return self._redirect("/")
+
+    def _getHandler(self, cmd, auth):
+        self.repos = shimclient.ShimNetClient(
+            self.repServer, self._protocol, self._port, auth.getToken(), self.repServer.map)
+        self.serverName = self.repServer.name
+        return MintApp._getHandler(self, cmd, auth)
 
     def _getAuth(self):
         if 'authToken' in self.cookies:
@@ -30,6 +44,9 @@ class CookieHttpHandler(http.HttpHandler):
             authToken = ('anonymous', 'anonymous')
             
         return authToken
+
+    def _write(self, templateName, **values):
+        MintApp._write(self, templateName, templatePath = self.reposTemplatePath, **values)
 
     # XXX: I'm wondering if this is the best approach.
     # maybe it would be better to override _getHandler and
