@@ -260,8 +260,8 @@ class MintApp(webhandler.WebHandler):
         return apache.OK
 
     @siteOnly
-    @strFields(username = None, email = None, password = None, password2 = None)
-    def processRegister(self, auth, username, email, password, password2):
+    @strFields(username = None, email = None, password = None, password2 = None, fullName = '', displayEmail = '', blurb = '')
+    def processRegister(self, auth, username, fullName, email, password, password2, displayEmail, blurb):
         if password != password2:
             self._write("error", shortError = "Registration Error",
                         error = "Passwords do not match.")
@@ -534,10 +534,10 @@ class MintApp(webhandler.WebHandler):
         return apache.OK
 
     @siteOnly
-    @strFields(title = None, hostname = None)
+    @strFields(title = None, hostname = None, blurb='')
     @requiresAuth
-    def createProject(self, auth, title, hostname):
-        projectId = self.client.newProject(title, hostname)
+    def createProject(self, auth, title, hostname, blurb):
+        projectId = self.client.newProject(title, hostname, blurb)
         return self._redirect("http://%s.%s/" % (hostname, self.cfg.domainName) )
 
     @projectOnly
