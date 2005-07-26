@@ -18,9 +18,10 @@ sqlbase = """SELECT Projects.hostname, Projects.name, Projects.desc,
     Projects.timeCreated, Projects.timeModified,
     count(projectUsers.userId) as devs 
         FROM
-    Projects, projectUsers
-        WHERE
+    Projects
+        LEFT JOIN projectUsers ON
     Projects.projectId=projectUsers.projectId
+        GROUP BY Projects.projectId
         ORDER BY %s
         LIMIT %d
         OFFSET %d
