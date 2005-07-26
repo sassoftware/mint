@@ -43,6 +43,7 @@
         <link rel="stylesheet" type="text/css" href="${cfg.staticUrl}apps/mint/css/topNav.css"/>
         <link rel="stylesheet" type="text/css" href="${cfg.staticUrl}apps/mint/css/log.css"/>
         <link rel="stylesheet" type="text/css" href="${cfg.staticUrl}apps/mint/css/contentTypes.css"/>
+        <script language="javascript1.2" src="${cfg.staticPath}/apps/mint/javascript/library.js"/>
     </head>
     <body xmlns="http://www.w3.org/1999/xhtml"
           py:match="item.tag == 'body'">

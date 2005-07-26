@@ -9,15 +9,7 @@ import string
 <!--
  Copyright (c) 2005 rpath, Inc.
 
- This program is distributed under the terms of the Common Public License,
- version 1.0. A copy of this license should have been distributed with this
- source file in a file called LICENSE. If it is not present, the license
- is always available at http://www.opensource.org/licenses/cpl.php.
-
- This program is distributed in the hope that it will be useful, but
- without any waranty; without even the implied warranty of merchantability
- or fitness for a particular purpose. See the Common Public License for
- full details.
+ All Rights Reserved
 -->
     <head/>
     <body>
@@ -84,10 +76,22 @@ import string
                         <th colspan="3">Trove Name</th>
                     </tr>
 
-                    <tr py:for="package in packages">
-                        <td>${package}</td>
-                        <td><a href="troveInfo?t=${package}" class="option">info</a></td>
-                        <td><a href="#" class="option">files</a></td>
+                    <tr py:for="i, package in enumerate(packages)">
+                        <td>
+                            <a href="troveInfo?t=${package}">${package}</a>
+                            <a py:if="package in components" class="trove"
+                               href="javascript:toggle_display('components__${i}');">[+]</a>
+                            <div py:if="package in components" id="components__${i}"
+                                 class="trovelist" style="display: none;">
+                                <ul>
+                                    <li py:for="component in components[package]">
+                                        <a href="troveInfo?t=${package}:${component}">
+                                            ${component}
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </td>
                     </tr>
                 </table>
                 

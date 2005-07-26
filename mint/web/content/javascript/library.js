@@ -20,6 +20,15 @@ function add(targetId, sourceId) {
     }
 }
 
+function toggle_display(tid) {
+    if(document.getElementById(tid).style.display == "none") {
+        document.getElementById(tid).style.display = "";
+    }
+    else {
+        document.getElementById(tid).style.display = "none";
+    }
+}
+
 function remove(targetId, sourceId) {
     target = document.getElementById(targetId);
     source = document.getElementById(sourceId);
