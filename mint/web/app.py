@@ -270,7 +270,8 @@ class MintApp(webhandler.WebHandler):
                         error = "Password must be 6 characters or longer.")
         else:
             try:
-                self.client.registerNewUser(username, password, username, email)
+                self.client.registerNewUser(username, password, fullName, email,
+                            displayEmail, blurb)
             except users.UserAlreadyExists:
                 self._write("error", shortError = "Registration Error",
                             error = "An account with that username already exists.")

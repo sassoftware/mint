@@ -97,7 +97,7 @@ class UsersTable(database.KeyedTable):
         else:
             return {'authorized': False, 'userId': -1}
 
-    def registerNewUser(self, username, password, fullName, email, active):
+    def registerNewUser(self, username, password, fullName, email, displayEmail, blurb, active):
         def confirmString():
             hash = sha1helper.sha1String(str(random.random()) + str(time.time()))
             return sha1helper.sha1ToString(hash)
@@ -139,6 +139,8 @@ class UsersTable(database.KeyedTable):
             userId = self.new(username = username,
                               fullName = fullName,
                               email = email,
+                              displayEmail = displayEmail,
+                              blurb = blurb,
                               active = active,
                               confirmation = confirm)
         except database.DuplicateItem:

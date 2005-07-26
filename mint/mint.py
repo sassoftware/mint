@@ -86,7 +86,8 @@ class MintClient:
         level = self.server.getUserLevel(userId, projectId)
         return (self.getUser(userId), level)
 
-    def registerNewUser(self, username, password, fullName, email, active = False):
+    def registerNewUser(self, username, password, fullName, email, displayEmail,
+                blurb, active = False):
         """
         Request access for a new user.
         @param username: requested username
@@ -97,6 +98,10 @@ class MintClient:
         @type fullName: str
         @param email: email address of the new user
         @type email: str
+        @param displayEmail: spam-safe e-mail address
+        @type displayEmail: str
+        @param blurb: User bio/info/description
+        @type blurb: str
         @param active: True to activate user immediately,
                        False to send a confirmation request
                        to email and require confirmation
@@ -104,7 +109,7 @@ class MintClient:
         @type active: bool
         @returns: database id of new user
         """
-        return self.server.registerNewUser(username, password, fullName, email, active)
+        return self.server.registerNewUser(username, password, fullName, email, displayEmail, blurb, active)
 
     def confirmUser(self, confirmId):
         """

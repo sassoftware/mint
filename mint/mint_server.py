@@ -211,8 +211,8 @@ class MintServer(object):
             rows.append([r[0], r[1], r[2]])
         return rows
 
-    def registerNewUser(self, username, password, fullName, email, active):
-        return self.users.registerNewUser(username, password, fullName, email, active)
+    def registerNewUser(self, username, password, fullName, email, displayEmail, blurb, active):
+        return self.users.registerNewUser(username, password, fullName, email, displayEmail, blurb, active)
 
     def checkAuth(self):
         return self.auth.getDict()
