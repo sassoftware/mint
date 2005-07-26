@@ -156,7 +156,7 @@ class MintApp(webhandler.WebHandler):
         self.userLevel = -1
         if len(dots) == 3:
             if hostname == self.cfg.hostName:
-                default = self.frontPage
+                default = self._frontPage
             elif hostname in mint_server.reservedHosts and\
                 ".".join(dots[1:]) == self.cfg.domainName:
                 raise Redirect(("http://%s" % siteHost) + self.req.unparsed_uri)
@@ -176,7 +176,7 @@ class MintApp(webhandler.WebHandler):
                 raise Redirect("http://rpath.com/")
             else:                    
                 self.userLevel = -1
-                default = self.frontPage
+                default = self._frontPage
            
         try:
             if not cmd:
@@ -249,7 +249,7 @@ class MintApp(webhandler.WebHandler):
         return cfg                    
 
     @siteOnly
-    def frontPage(self, auth):
+    def _frontPage(self, auth):
         news = self.client.getNews()
         self._write("frontPage", news = news)
         return apache.OK
@@ -291,7 +291,7 @@ class MintApp(webhandler.WebHandler):
         self._clearAuth()
         return self._redirect(unquote(to))
 
-    @strFields(username = None, password = '', submit = None, to = 'frontPage')
+    @strFields(username = None, password = '', submit = None, to = '/')
     def processLogin(self, auth, username, password, submit, to):
         if submit == "Log In":
             authToken = (username, password)
@@ -526,7 +526,7 @@ class MintApp(webhandler.WebHandler):
                 self.user.setPassword(password1)
                 return self._redirect("logout")
 
-        return self._redirect("frontPage")
+        return self._redirect("/")
 
     @siteOnly
     @requiresAuth
@@ -641,11 +641,13 @@ class MintApp(webhandler.WebHandler):
         path = os.path.join(templatePath, template + ".kid")
         t = kid.load_template(path)
 
-        content = t.serialize(encoding="utf-8", cfg = self.cfg,
-                                                auth = self.auth,
-                                                project = self.project,
-                                                userLevel = self.userLevel,
-                                                projectList = self.projectList,
-                                                toUrl = self.toUrl,
-                                                **values)
+        content = t.serialize(encoding = "utf-8", 
+                              output = "xhtml-strict",
+                              cfg = self.cfg,
+                              auth = self.auth,
+                              project = self.project,
+                              userLevel = self.userLevel,
+                              projectList = self.projectList,
+                              toUrl = self.toUrl,
+                              **values)
         self.req.write(content)
