@@ -4,7 +4,7 @@ from mint import userlevels
 ?>
 <html xmlns:html="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
-      py:extends="'library.kid', 'layout.kid'">
+      py:extends="'library.kid', 'layout.kid', 'project.kid'">
 <!--
     Copyright 2005 rpath, Inc.
     All Rights Reserved 
@@ -27,15 +27,7 @@ from mint import userlevels
                 <tr>
                     <td id="left" class="side">
                         <div class="pad">
-                            <div id="browse" class="palette">
-                                <h3>Project resources </h3>
-                                <ul>
-                                    <li><a href="releases">Releases</a></li>
-                                    <li><a href="http://${project.getHostname()}/conary/browse">Repository</a></li>                                                            <li py:if="memberList"><a href="members">Project Members</a></li>
-                                    <li><a href="#">Mailing Lists</a></li>
-                                    <li><a href="#">Bug Tracking</a></li>
-                                </ul> 
-                            </div>
+                            ${projectResourcesMenu()}
                             <div class="palette" id="releases">
                                 <h3>Recent Releases</h3>
                                 <ul>
