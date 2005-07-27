@@ -19,7 +19,7 @@ th {
 	white-space:nowrap;
 }
 h1, h2, h3, h4, h5, h6 {
-	margin:0px; padding:0.5em 0em 0.75em 0em;
+	margin:0px; padding:0.5em 0em 0.5em 0em;
 	text-transform:lowercase;
 }
 h2 {
@@ -32,7 +32,7 @@ h3 {
 }
 h4 {
 	font-size:110%;
-	font-weight:normal; padding-top:1em;
+	font-weight:normal;
 }
 p {
 	margin:0px; padding:0em 0em 1em 0em;
@@ -43,7 +43,7 @@ ul {
 }
 ul li {
 	padding:0em 0em 0.5em 0.75em;
-	background:url(../images/LI.gif) 0em 0.5em no-repeat;
+	background:url(../images/LI.gif) 0em 0.45em no-repeat;
 }
 a:link, a:visited, a:hover, a:active {
 	color:#3D5192; padding-right:11px; text-decoration:none;
