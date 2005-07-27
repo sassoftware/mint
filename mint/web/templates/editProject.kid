@@ -16,7 +16,7 @@
 
     <head/>
     <body>
-        <td id="main">
+        <td id="main" class="spanleft">
             <div class="pad">
                 <h2>Edit Project Description</h2>
 
