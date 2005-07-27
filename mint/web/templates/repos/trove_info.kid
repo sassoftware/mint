@@ -11,9 +11,9 @@ import time
 
  All Rights Reserved
 -->
-    <table py:def="sourceTroveInfo(trove)" class="vheader">
-        <tr class="even"><td>Trove name:</td><td>${trove.getName()}</td></tr>
-        <tr class="odd"><td>Change log:</td>
+    <table py:def="sourceTroveInfo(trove)" class="troveinfo">
+        <tr><th>Trove name:</th><td>${trove.getName()}</td></tr>
+        <tr><th>Change log:</th>
             <td>
                 <?python
                     cl = trove.getChangeLog()
@@ -25,25 +25,25 @@ import time
         </tr>
     </table>
 
-    <table py:def="binaryTroveInfo(trove)" class="vheader">
+    <table py:def="binaryTroveInfo(trove)" class="troveinfo">
         <?python
-        sourceVersion = trove.getVersion().getSourceVersion().freeze()
-        sourceLink = "troveInfo?t=%s;v=%s" % (quote(trove.getSourceName()), quote(sourceVersion))
+            sourceVersion = trove.getVersion().getSourceVersion().freeze()
+            sourceLink = "troveInfo?t=%s;v=%s" % (quote(trove.getSourceName()), quote(sourceVersion))
         ?>
-        <tr class="even"><td>Trove name:</td><td>${trove.getName()}</td></tr>
-        <tr class="odd"><td>Version:</td><td>${trove.getVersion().asString()}</td></tr>
-        <tr class="even"><td>Flavor:</td><td>${trove.getFlavor()}</td></tr>
-        <tr class="odd"><td>Built from trove:</td><td><a href="${sourceLink}">${trove.getSourceName()}</a></td></tr>
-        <tr class="even"><td>Build time:</td><td>${time.ctime(trove.getBuildTime())} using Conary ${trove.getConaryVersion()}</td></tr>
-        <tr class="odd"><td>Provides:</td>
-            <td class="top">
+        <tr><th>Trove name:</th><td>${trove.getName()}</td></tr>
+        <tr><th>Version:</th><td>${trove.getVersion().asString()}</td></tr>
+        <tr><th>Flavor:</th><td>${trove.getFlavor()}</td></tr>
+        <tr><th>Built from trove:</th><td><a href="${sourceLink}">${trove.getSourceName()}</a></td></tr>
+        <tr><th>Build time:</th><td>${time.ctime(trove.getBuildTime())} using Conary ${trove.getConaryVersion()}</td></tr>
+        <tr><th>Provides:</th>
+            <td>
                 <div py:for="dep in str(trove.provides.deps).split('\n')">${dep}</div>
                 <div py:if="not trove.provides.deps">
                     Trove satisfies no dependencies.
                 </div>
             </td>
         </tr>
-        <tr class="even"><td>Requires:</td>
+        <tr><th>Requires:</th>
             <td>
                 <div py:for="dep in str(trove.requires.deps).split('\n')">${dep}</div>
                 <div py:if="not trove.requires.deps">
@@ -55,42 +55,28 @@ import time
 
     <head/>
     <body>
-        <div id="inner">
-            <h3>Trove Information:</h3>
-
-            <table py:if="metadata">
-                <tr class="even"><td>Summary:</td><td>${metadata.getShortDesc()}</td></tr>
-                <tr class="odd"><td>Description:</td><td>${metadata.getLongDesc()}</td></tr>
-                <tr class="even">
-                    <td>Categories:</td>
-                    <td><div py:for="category in metadata.getCategories()" py:content="category"/></td>
-                </tr>
-                 <tr class="odd">
-                    <td>Licenses:</td>
-                    <td><div py:for="lic in metadata.getLicenses()" py:content="lic"/></td>
-                </tr>
-                <tr class="even">
-                    <td>Urls:</td>
-                    <td><div py:for="url in metadata.getUrls()"><a href="${url}">${url}</a></div></td>
-                </tr>
-            </table>
-
-            <hr />
-
-            <div py:omit="True" py:if="troves[0].getName().endswith(':source')">
-                ${sourceTroveInfo(troves[0])}
-                <p><a href="files?t=${troveName};v=${quote(troves[0].getVersion().freeze())};f=${quote(troves[0].getFlavor().freeze())}">Show Files</a></p>
+        <td id="left" class="side">
+            <div class="pad">
+                ${projectResourcesMenu()}
             </div>
-            <div py:omit="True" py:if="not trove.getName().endswith(':source')"
-                 py:for="trove in troves">
-                ${binaryTroveInfo(trove)}
-                <p><a href="files?t=${troveName};v=${quote(trove.getVersion().freeze())};f=${quote(trove.getFlavor().freeze())}">Show Files</a></p>
-            </div>
-    
+        </td>
+        <td id="main">
+            <div class="pad">
+                <h2>${project.getName()}<br />repository browser<br />trove information for ${troveName}</h2>
 
-            <div py:omit="True" py:if="len(versionList) > 1">
+                <div py:omit="True" py:if="troves[0].getName().endswith(':source')">
+                    ${sourceTroveInfo(troves[0])}
+                    <p><a href="files?t=${troveName};v=${quote(troves[0].getVersion().freeze())};f=${quote(troves[0].getFlavor().freeze())}">Show Files</a></p>
+                </div>
+                <div py:omit="True" py:if="not trove.getName().endswith(':source')"
+                     py:for="trove in troves">
+                    ${binaryTroveInfo(trove)}
+                    <p><a href="files?t=${troveName};v=${quote(trove.getVersion().freeze())};f=${quote(trove.getFlavor().freeze())}">Show Files</a></p>
+                </div>
+
                 <h3>All Versions:</h3>
-                <ul>
+
+                <ul class="troveallversions">
                     <li py:for="ver in versionList">
                         <a href="troveInfo?t=${quote(troveName)};v=${quote(ver.freeze())}"
                            py:if="ver != reqVer">${ver.asString()}</a>
@@ -98,6 +84,7 @@ import time
                     </li>
                 </ul>
             </div>
-        </div>
+        </td>
+        ${projectsPane()}
     </body>
 </html>
