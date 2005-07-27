@@ -1,16 +1,24 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <?python
+# Copyright (c) 2005 rpath, Inc.
+#
+# All Rights Reserved
+
 from urllib import quote
 import time
 ?>
 <html xmlns:html="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'../layout.kid'">
-<!--
- Copyright (c) 2005 rpath, Inc.
 
- All Rights Reserved
--->
+    <div py:def="breadcrumb" class="pad">
+        You are here:
+        <a href="#">rpath</a>
+        <a href="/">${project.getName()}</a>
+        <a href="/conary/browse">Repository Browser</a>
+        <a href="#">${troveName}</a>
+    </div>
+
     <table py:def="sourceTroveInfo(trove)" class="troveinfo">
         <tr><th>Trove name:</th><td>${trove.getName()}</td></tr>
         <tr><th>Change log:</th>

@@ -2,15 +2,21 @@
 <html xmlns:html="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'../layout.kid', '../project.kid'">
-<?python # foo
-title="Browse Repository"
+<?python
+# Copyright (c) 2005 rpath, Inc.
+#
+# All Rights Reserved
+
 import string
 ?>
-<!--
- Copyright (c) 2005 rpath, Inc.
 
- All Rights Reserved
--->
+    <div py:def="breadcrumb" class="pad">
+        You are here:
+        <a href="#">rpath</a>
+        <a href="/">${project.getName()}</a>
+        <a href="#">Repository Browser</a>
+    </div>
+
     <head/>
     <body>
         <td id="left" class="side">
