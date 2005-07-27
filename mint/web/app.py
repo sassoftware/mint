@@ -565,6 +565,11 @@ class MintApp(webhandler.WebHandler):
         return apache.OK
 
     @projectOnly
+    def memberSettings(self, auth):
+        self._write("memberSettings")
+        return apache.OK
+
+    @projectOnly
     @requiresAuth
     def adopt(self, auth):
         self.project.addMemberByName(auth.username, userlevels.OWNER)
@@ -642,15 +647,13 @@ class MintApp(webhandler.WebHandler):
         if not templatePath:
             templatePath = self.cfg.templatePath
         path = os.path.join(templatePath, template + ".kid")
-        t = kid.load_template(path)
-
-        content = t.serialize(encoding = "utf-8", 
-                              output = "xhtml-strict",
-                              cfg = self.cfg,
+        template = kid.load_template(path)
+        t = template.Template(cfg = self.cfg,
                               auth = self.auth,
                               project = self.project,
                               userLevel = self.userLevel,
                               projectList = self.projectList,
+                              req = self.req,
                               toUrl = self.toUrl,
                               **values)
-        self.req.write(content)
+        t.write(self.req, encoding = "utf-8", output = "xhtml-strict")
