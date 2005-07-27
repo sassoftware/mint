@@ -6,16 +6,27 @@
     Copyright 2005 rpath, Inc.
     All Rights Reserved
 -->
+    <div py:def="breadcrumb" class="pad">
+        You are here:
+        <a href="#">rpath</a>
+        <a href="/">${project.getName()}</a>
+        <a href="#">Edit Description</a>
+    </div>
+
+
     <head/>
     <body>
-        <td id="content">
-            <h2>Edit Project Description</h2>
+        <td id="main">
+            <div class="pad">
+                <h2>Edit Project Description</h2>
 
-            <form method="post" action="editProjectDesc">
-                <textarea name="desc" cols="70" rows="12">${project.getDesc()}</textarea>
+                <form method="post" action="editProjectDesc">
+                    <textarea name="desc" cols="70" rows="12">${project.getDesc()}</textarea>
 
-                <p><input type="submit" value="Submit" /></p>
-            </form>
+                    <p><button type="submit">Submit</button></p>
+                </form>
+            </div>
         </td>
+        ${projectsPane()}
     </body>
 </html>
