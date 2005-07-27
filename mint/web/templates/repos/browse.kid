@@ -70,7 +70,7 @@ import string
                         <td>
                             <a href="troveInfo?t=${package}">${package}</a>
                             <a py:if="package in components" class="trove"
-                               href="javascript:toggle_display('components__${i}');">[+]</a>
+                               href="javascript:toggle_display('components__${i}');"><img border="0" src="${cfg.staticPath}/apps/mint/images/plus.gif"/></a>
                             <div py:if="package in components" id="components__${i}"
                                  class="trovelist" style="display: none;">
                                 <ul>

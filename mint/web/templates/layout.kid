@@ -4,7 +4,9 @@
     from urllib import quote 
 ?>
 
-<html xmlns:py="http://purl.org/kid/ns#" xmlns="http://www.w3.org/1999/xhtml">
+<html xmlns:py="http://purl.org/kid/ns#"
+      xmlns="http://www.w3.org/1999/xhtml"
+      py:extends="'project.kid'">
 <!--
     Copyright 2005 rpath, Inc.
     All Rights Reserved
@@ -13,37 +15,16 @@
         You are here: <a href="#">rpath</a>
     </div>
 
-    <td py:def="projectsPane()" id="right" class="projects">
-        <div class="pad">
-            <h3>My Projects</h3>
-            <p py:if="not auth.authorized">
-                You must be logged in for your projects to be displayed.
-            </p>
-            <ul py:if="auth.authorized">
-                <li py:for="project, level in sorted(projectList, key = lambda x: x[0].getName())">
-                    <a href="http://${project.getHostname()}/">
-                        ${project.getName()}</a><br/>
-                        ${userlevels.names[level]}
-                </li>
-            </ul>
-            <ul py:if="auth.authorized">
-                <li>
-                    <a href="newProject">Create a new project</a>
-                </li>
-            </ul>
-        </div>
-    </td>
-
-    <head py:match="item.tag == 'head'">
-        <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+    <head py:match="item.tag == 'head'" xmlns="http://www.w3.org/1999/xhtml">
         <title>rpath.com</title>
+        <script type="text/javascript" src="${cfg.staticPath}/apps/mint/javascript/generic.js"/>
+        <script type="text/javascript" src="${cfg.staticPath}/apps/mint/javascript/library.js"/>
         <link rel="stylesheet" type="text/css" href="${cfg.staticUrl}apps/mint/css/basic.css"/>
         <link rel="stylesheet" type="text/css" href="${cfg.staticUrl}apps/mint/css/structure.css"/>
         <link rel="stylesheet" type="text/css" href="${cfg.staticUrl}apps/mint/css/user.css"/>
         <link rel="stylesheet" type="text/css" href="${cfg.staticUrl}apps/mint/css/topNav.css"/>
         <link rel="stylesheet" type="text/css" href="${cfg.staticUrl}apps/mint/css/log.css"/>
         <link rel="stylesheet" type="text/css" href="${cfg.staticUrl}apps/mint/css/contentTypes.css"/>
-        <script language="javascript1.2" src="${cfg.staticPath}/apps/mint/javascript/library.js"/>
     </head>
     <body xmlns="http://www.w3.org/1999/xhtml"
           py:match="item.tag == 'body'">
@@ -123,7 +104,7 @@
         <div id="foot" align="center">
             <div id="copy">
                 <div class="pad">
-                    &#169; Copyright 2005 rpath.
+                    &#169; Copyright 2005 rpath, Inc.
                 </div>
             </div>
         </div>

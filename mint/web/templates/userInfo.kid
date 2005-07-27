@@ -26,13 +26,17 @@
                 <p py:for="line in user.getBlurb().splitlines()">
                     ${line}
                 </p>
+                <p py:if="not user.getBlurb()">User has not entered any information.</p>
             </div>
         </td>
         <td id="right" class="plain">
             <div class="pad">
                 <h3>this user's projects:</h3>
                 <ul py:if="userProjects">
-                    <li py:for="project, level in userProjects"><a href="http://${project.getHostname()}/">${project.getName()}</a> (${userlevels. names[level]})</li>
+                    <li py:for="project, level in userProjects">
+                        <a href="http://${project.getHostname()}/">${project.getName()}</a>
+                        (${userlevels. names[level]})
+                    </li>
                 </ul>
                 <p py:if="not userProjects">This user is not a member of any projects.</p>
                 <div class="palette">

@@ -49,7 +49,7 @@
                     <table border="0" cellspacing="0" cellpadding="0" class="releasestable">
                         <tr py:for="release in [x for x in releases if not x.getPublished()]">
                             <th>
-                                <a href="release?id=${release.getId()}">
+                                <a id="release" href="release?id=${release.getId()}">
                                     ${release.getTroveName()}=${release.getTroveVersion().trailingRevision().asString()}
                                 </a>
                             </th>
