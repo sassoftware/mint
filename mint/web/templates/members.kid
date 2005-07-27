@@ -59,7 +59,12 @@ from mint import userlevels
 
                     <tr py:for="userId, username in sorted(users[userlevels.OWNER], key=lambda x: x[1])">
                         <th><a href="userInfo?id=${userId}">${username}</a></th>
-                        <td py:if="isOwner"><a href="memberSettings?userId=${userId}" class="option" id="{userId}Edit">Edit</a></td>
+                        <td py:if="isOwner">
+                            <a onclick="javascript:show_popup('Edit${userId}','memberEditBox');"
+                               href="memberSettings?userId=${userId}"
+                               class="option" style="position:relative;"
+                               id="Edit${userId}" target="memberEditBox">Edit</a>
+                        </td>
                         <td py:if="isOwner"><a href="delMember?id=${userId}" class="option">Delete</a></td>
                     </tr>
                 </table>
@@ -68,11 +73,18 @@ from mint import userlevels
                 <table border="0" cellspacing="0" cellpadding="0" class="memberstable">
                     <tr py:for="userId, username in sorted(users[userlevels.DEVELOPER], key=lambda x: x[1])">
                         <th><a href="userInfo?id=${userId}">${username}</a></th>
-                        <td py:if="isOwner"><a href="memberSettings?userId=${userId}" class="option" id="{userId}Edit">Edit</a></td>
+                        <td py:if="isOwner">
+                            <a onclick="javascript:show_popup('Edit${userId}','memberEditBox');"
+                               href="memberSettings?userId=${userId}"
+                               class="option" style="position:relative;"
+                               id="Edit${userId}" target="memberEditBox">Edit</a>
+                        </td>
                         <td py:if="isOwner"><a href="delMember?id=${userId}" class="option">Delete</a></td>
                     </tr>
                 </table>
-
+                <iframe src="memberSettings" frameborder="0" marginheight="0" marginwidth="0"
+                        scrolling="no" id="memberEditBox" name="memberEditBox" 
+                        style="width:268px; position:absolute; z-index:115; visibility:hidden; overflow:hidden;"/>
             </div>
         </td>
         ${projectsPane()}        
