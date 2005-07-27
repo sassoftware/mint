@@ -82,7 +82,7 @@ from mint import userlevels
                         <td py:if="isOwner"><a href="delMember?id=${userId}" class="option">Delete</a></td>
                     </tr>
                 </table>
-                <iframe src="memberSettings" frameborder="0" marginheight="0" marginwidth="0"
+                <iframe src="about:blank" frameborder="0" marginheight="0" marginwidth="0"
                         scrolling="no" id="memberEditBox" name="memberEditBox" 
                         style="width:268px; position:absolute; z-index:115; visibility:hidden; overflow:hidden;"/>
             </div>
