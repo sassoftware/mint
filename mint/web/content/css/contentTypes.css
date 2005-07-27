@@ -162,6 +162,9 @@ strong.keyword {
 	font-weight:normal;
 	line-height: 180%;
 }
+.troveallversions li {
+        background: none;
+}
 .filelist {
 	position:relative;
 	overflow:auto;
