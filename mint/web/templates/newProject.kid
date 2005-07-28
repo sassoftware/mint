@@ -16,20 +16,21 @@
 
                     <table border="0" cellspacing="0" cellpadding="0" class="mainformhorizontal">
                         <tr>
-                            <th><em class="required">Project Title:</em></th>
+                            <th><em class="required">Project Name:</em></th>
                             <td>
-                                <input type="text" name="title" />
-                                <p class="help">please limit to 16 characters</p>
+                                <input type="text" name="hostname" /> .rpath.org
+                                <p class="help">Please choose a name for your project. This will be used as the hostname for your project site and repository (http://myproj.rpath.org/) and the prefix for all of the project mailing lists. It must start with a letter and contain only letters, numbers, and hyphens, and be less than or equal to 16 characters long.</p>
                             </td>
                         </tr>
 
                         <tr>
-                            <th><em class="required">Repository Hostname:</em></th>
+                            <th><em class="required">Project Title:</em></th>
                             <td>
-                                <input type="text" name="hostname" /> .rpath.org
-                                <p class="help">Please choose a hostname for your repository. It must start with a letter and contain only letters, numbers, and hyphens.</p>
+                                <input type="text" name="title" />
+                                <p class="help">The title is a longer, more descriptive name for your project. Eg., <strong>My Custom Linux</strong></p>
                             </td>
                         </tr>
+
                         <tr>
 
                             <th>Project Description:</th>
