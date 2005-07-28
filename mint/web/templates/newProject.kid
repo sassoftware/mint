@@ -19,7 +19,7 @@
                             <th><em class="required">Project Name:</em></th>
                             <td>
                                 <input type="text" name="hostname" /> .rpath.org
-                                <p class="help">Please choose a name for your project. This will be used as the hostname for your project site and repository (http://myproj.rpath.org/) and the prefix for all of the project mailing lists. It must start with a letter and contain only letters, numbers, and hyphens, and be less than or equal to 16 characters long.</p>
+                                <p class="help">Please choose a name for your project. This will be used as the hostname for your project site and repository (http://myproj.rpath.org/) and the prefix for all of the project mailing lists. It must start with a letter and contain only letters and numbers, and be less than or equal to 16 characters long.</p>
                             </td>
                         </tr>
 
