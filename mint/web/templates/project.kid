@@ -10,13 +10,13 @@
         ?>
         <h3>Project Resources</h3>
         <ul>
-            <li><a href="/"><strong py:omit="req.uri != '/'">Project Home</strong></a></li>
-            <li><a href="/releases"><strong py:omit="lastchunk not in ('release', 'releases')">Releases</strong></a></li>
+            <li><a href="/"><strong py:strip="req.uri != '/'">Project Home</strong></a></li>
+            <li><a href="/releases"><strong py:strip="lastchunk not in ('release', 'releases')">Releases</strong></a></li>
 
-            <li><a href="/conary/browse"><strong py:omit="req.uri != '/conary/browse'">Repository</strong></a></li>
-            <li><a href="/members"><strong py:omit="lastchunk != 'members'">Project Members</strong></a></li>
-            <li><a href="/mailingLists"><strong py:omit="lastchunk != 'mailingLists'">Mailing Lists</strong></a></li>
-            <li><a href="#"><strong py:omit="lastchunk != 'bugs'">Bug Tracking</strong></a></li>
+            <li><a href="/conary/browse"><strong py:strip="req.uri != '/conary/browse'">Repository</strong></a></li>
+            <li><a href="/members"><strong py:strip="lastchunk != 'members'">Project Members</strong></a></li>
+            <li><a href="/mailingLists"><strong py:strip="lastchunk != 'mailingLists'">Mailing Lists</strong></a></li>
+            <li><a href="#"><strong py:strip="lastchunk != 'bugs'">Bug Tracking</strong></a></li>
         </ul>
     </div>
 

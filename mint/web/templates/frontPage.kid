@@ -60,7 +60,7 @@ from mint import searcher
                             <p>Lorem ipsum dolor sit amet, consectetaur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
                             <p><a href="#">More about rpath</a> </p>
 
-                            <div py:omit="True" py:if="news">
+                            <div py:strip="True" py:if="news">
                                 <?python
                                     latestNews = news.pop()
                                 ?>
@@ -69,7 +69,7 @@ from mint import searcher
                                 <p>${latestNews['content']}</p>
                                 <p><a href="${latestNews['link']}">continued</a></p>
 
-                                <div py:omit="True" py:if="news">
+                                <div py:strip="True" py:if="news">
                                     <h3>More News</h3>
                                     <ul>
                                         <li py:for="item in news">

@@ -12,7 +12,7 @@
 -->
     <head/>
     <body>
-        <div py:def="formatResults(resultset = [])" py:omit="True">
+        <div py:def="formatResults(resultset = [])" py:strip="True">
             <?python
                 formattedresults = [ 'http://%s' % resultset[0],
                     resultset[1], resultset[2],
@@ -22,7 +22,7 @@
             ${resultRow(formattedresults)}
         </div>
 
-        <div py:def="sortOrderForm(sortOrder = 0)" py:omit="True">
+        <div py:def="sortOrderForm(sortOrder = 0)" py:strip="True">
             <form method="get" action="users">
                 <select name="sortOrder">
                     <option py:for="key, value in userlisting.orderhtml.items()"

@@ -19,11 +19,11 @@
     ?>
     <head/>
     <body>
-        <div py:def="searchSummary(type, terms, modified)" py:omit="True">
+        <div py:def="searchSummary(type, terms, modified)" py:strip="True">
             ${type}; keywords: ${terms}; modified within ${searcher.datehtml[modified]}
         </div>
 
-        <div py:def="formatResults(resultset = [])" py:omit="True">
+        <div py:def="formatResults(resultset = [])" py:strip="True">
             <?python
                 formattedresults = []
                 if type == "Projects":

@@ -9,13 +9,13 @@ from mint import searcher
     Copyright 2005 rpath, Inc.
     All Rights Reserved
 -->
-    <thead class="results" py:def="columnTitles(columns = [])" py:omit="False">
+    <thead class="results" py:def="columnTitles(columns = [])" py:strip="False">
         <tr class="results">
             <td py:for="columnName in columns">${columnName}</td>
         </tr>
     </thead>
 
-    <div py:def="resultRow(resultset = [])" py:omit="True">
+    <div py:def="resultRow(resultset = [])" py:strip="True">
         <td class="results"><a href="${resultset[0]}">${resultset[1]}</a></td>
         <?python
             resultset.pop(0)
@@ -24,7 +24,7 @@ from mint import searcher
         <td py:for="item in resultset" class="results">${item}</td>
     </div>
 
-    <div py:def="navigation(urlbase, count, limit, offset)" py:omit="False" class="results">
+    <div py:def="navigation(urlbase, count, limit, offset)" py:strip="False" class="results">
         <?python
             plural=""
             if count != 1:
@@ -48,7 +48,7 @@ from mint import searcher
     </div>
 
 
-    <div py:def="formatResults(resultset = [])" py:omit="True">
+    <div py:def="formatResults(resultset = [])" py:strip="True">
         <?python
             ##This function must be implemented in any derived class
             raise NotImplementedError
@@ -59,7 +59,7 @@ from mint import searcher
     <!-- results structure:
         [('id', 'data item 1' ... 'data item n'), ]
     -->
-    <tbody py:def="searchResults(results=[])" py:omit="False">
+    <tbody py:def="searchResults(results=[])" py:strip="False">
         <tr py:for="i, resultset in enumerate(results)" class="${i % 2 and 'even' or 'odd'}">
             ${formatResults(resultset)}
         </tr>

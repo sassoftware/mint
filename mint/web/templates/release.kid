@@ -37,7 +37,7 @@ from mint import userlevels
                     </li>
                 </ul>
 
-                <div py:omit="True" py:if="isOwner">
+                <div py:strip="True" py:if="isOwner">
                     <p py:if="not preventEdit"><a href="editRelease?releaseId=${release.getId()}">Edit Release</a></p>
                     <p py:if="preventEdit" class="help">Release cannot be modified while it is being generated.</p>
                     
