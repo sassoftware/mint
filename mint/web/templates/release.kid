@@ -1,71 +1,60 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <?python
+#
+# Copyright (C) 2005 rpath, Inc.
+# All Rights Reserved
+#
 from mint import jobstatus
-import time
-import textwrap
-import os.path
-from deps import deps
-title = "Release Details"
-
+from mint import userlevels
 ?>
 
-<html xmlns="http://www.w3.org/1999/xhtml"
+<html xmlns:html="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
-      py:extends="'library.kid'">
-
-    ${html_header(title)}
-    <body onload='setTimeout("getReleaseStatus(${release.getId()})", 1000);'>
-        ${header_image()}
+      py:extends="'library.kid', 'layout.kid'">
+    <head/>
+    <body onload="setTimeout('getReleaseStatus(${release.getId()})', 1000);">
         <?python
-            m = menu([('All Releases', 'releases',  False),
-                      ('Release Details', None, True)])
-
             preventEdit = job and job.getStatus() in (jobstatus.WAITING, jobstatus.RUNNING)
+            files = release.getFiles()
+            published = release.getPublished()
+            isOwner = userLevel == userlevels.OWNER
         ?>
-        ${m}
-        <div id="content">
-            <h2>Release: ${name}</h2>
+        
+        <td id="left" class="side">
+            <div class="pad">
+                ${projectResourcesMenu()}
+            </div>
+        </td>
+        <td id="main">
+            <div class="pad">
+                <h2>${project.getName()}<br/>Release: ${name}</h2>
 
-            <table class="bordered">
-                <thead><tr>
-                    <td colspan="2" style="font-weight: bold; font-size: 105%;">
-                        <span style="float: left;">Trove: ${trove}=${version.asString()} (architecture: ${release.getArch()})</span>
+                <p>${trove}=${version.asString()} (architecture: ${release.getArch()})</p>
 
-                        <a py:if="not preventEdit" class="button" style="float: right;" href="editRelease?releaseId=${release.getId()}">Edit Release</a>
-                        <span py:if="preventEdit" class="help" style="float: right">Release cannot be modified while it is being generated.</span>
-                    </td>
-                </tr></thead>
-            </table>
+                <ul py:if="files">
+                    <li py:for="i, file in enumerate(files)">
+                        <a href="downloadImage?fileId=${file[0]}">Disc ${i+1}</a>
+                    </li>
+                </ul>
 
+                <div py:omit="True" py:if="isOwner">
+                    <p py:if="not preventEdit"><a href="editRelease?releaseId=${release.getId()}">Edit Release</a></p>
+                    <p py:if="preventEdit" class="help">Release cannot be modified while it is being generated.</p>
+                    
+                    <h3>Description</h3>
+                    <p>${release.getDesc() or "Release has no description."}</p>
+                    
+                    <h3>Image Generation Status:</h3>
 
-            <table class="bordered">
-                <thead><tr>
-                    <td><span style="float: left;">Description:</span></td>
-                </tr></thead>
-                <tr><td>${release.getDesc()}</td></tr>
-            </table>
-
-            <table class="bordered">
-                <tr>
-                    <td class="tableheader" style="width: 15%;">Image Status:</td>
-                    <td>
-                        <span id="jobStatus" style="float: left;">Retrieving job status...</span>
-                        <a style="float: right;" class="button"
-                           href="restartJob?releaseId=${release.getId()}">Re-generate</a>
-
-                        <a style="float: right; visibility: hidden;" class="button" id="downloads"
-                           href="downloadImage?releaseId=${release.getId()}">
-                            Download Images
-                        </a>
-                    </td>
-                </tr>
-            </table>
-            <p>
-                <a class="button" py:if="not release.getPublished()" href="publish?releaseId=${release.getId()}">Publish Image</a>
-                <div py:if="release.getPublished()">Image Published</div>
-            </p>
-
-            ${html_footer()}
-        </div>
+                    <p id="jobStatus">Retrieving job status...</p>
+                    <p>
+                        <a href="restartJob?releaseId=${release.getId()}">Re-generate</a>
+                        <a class="button" py:if="not release.getPublished()" href="publish?releaseId=${release.getId()}">Publish Image</a>
+                    </p>
+                    <p py:if="release.getPublished()">Image Published</p>
+                </div>
+            </div>
+        </td>
+        ${projectsPane()}
     </body>
 </html>

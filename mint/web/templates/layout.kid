@@ -1,16 +1,17 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <?python
-    from mint import userlevels
-    from urllib import quote 
+#
+# Copyright 2005 rpath, Inc.
+# All Rights Reserved
+#
+from mint import userlevels
+from urllib import quote
+onload = "javascript:;" 
 ?>
 
 <html xmlns:py="http://purl.org/kid/ns#"
       xmlns="http://www.w3.org/1999/xhtml"
       py:extends="'project.kid'">
-<!--
-    Copyright 2005 rpath, Inc.
-    All Rights Reserved
--->
     <div py:def="breadcrumb()" class="pad">
         You are here: <a href="#">rpath</a>
     </div>
@@ -19,6 +20,7 @@
         <title>rpath.com</title>
         <script type="text/javascript" src="${cfg.staticPath}/apps/mint/javascript/generic.js"/>
         <script type="text/javascript" src="${cfg.staticPath}/apps/mint/javascript/library.js"/>
+        <script type="text/javascript" src="${cfg.staticPath}/apps/mint/javascript/xmlrpc.js"/>
         <link rel="stylesheet" type="text/css" href="${cfg.staticUrl}apps/mint/css/basic.css"/>
         <link rel="stylesheet" type="text/css" href="${cfg.staticUrl}apps/mint/css/structure.css"/>
         <link rel="stylesheet" type="text/css" href="${cfg.staticUrl}apps/mint/css/user.css"/>
@@ -27,7 +29,8 @@
         <link rel="stylesheet" type="text/css" href="${cfg.staticUrl}apps/mint/css/contentTypes.css"/>
     </head>
     <body xmlns="http://www.w3.org/1999/xhtml"
-          py:match="item.tag == 'body'">
+          py:match="item.tag == 'body'"
+          py:attrs="item.attrib"> 
         <?python
             if auth.authorized:
                 loginAction = "logout"

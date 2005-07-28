@@ -11,7 +11,7 @@
         <h3>Project Resources</h3>
         <ul>
             <li><a href="/"><strong py:omit="req.uri != '/'">Project Home</strong></a></li>
-            <li><a href="/releases"><strong py:omit="lastchunk != 'releases'">Releases</strong></a></li>
+            <li><a href="/releases"><strong py:omit="lastchunk not in ('release', 'releases')">Releases</strong></a></li>
 
             <li><a href="/conary/browse"><strong py:omit="req.uri != '/conary/browse'">Repository</strong></a></li>
             <li><a href="/members"><strong py:omit="lastchunk != 'members'">Project Members</strong></a></li>
@@ -35,7 +35,7 @@
             </ul>
             <ul py:if="auth.authorized">
                 <li>
-                    <a href="newProject">Create a new project</a>
+                    <a href="newProject"><strong>Create a new project</strong></a>
                 </li>
             </ul>
         </div>
