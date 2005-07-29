@@ -538,7 +538,7 @@ class MintApp(webhandler.WebHandler):
         return apache.OK
 
     @siteOnly
-    @strFields(title = None, hostname = None, blurb='')
+    @strFields(title = None, hostname = None, blurb = '')
     @requiresAuth
     def createProject(self, auth, title, hostname, blurb):
         projectId = self.client.newProject(title, hostname, blurb)

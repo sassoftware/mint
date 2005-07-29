@@ -172,7 +172,7 @@ class MintClient:
         @param releaseId: the database id of the requested release.
         @type releaseId: int
         @returns: an object representing the requested release.
-        @rtype: L{release.Release}
+        @rtype: L{releases.Release}
         """
         return releases.Release(self.server, releaseId)
 

@@ -14,10 +14,12 @@ from email import MIMEText
 import smtplib
 
 from repository import netclient
+from repository.repository import OpenError
 import repository.netrepos.netauth
 from lib import sha1helper
 
 from mint_error import MintError
+from mint_server import PermissionDenied
 import database
 import userlevels
 import searcher
@@ -73,7 +75,8 @@ class UsersTable(database.KeyedTable):
         cu.execute("""SELECT userId, email, displayEmail, fullName, blurb FROM Users 
                       WHERE username=? AND active=1""", username)
         r = cu.fetchone()
-
+   
+        noAuth = {'authorized': False, 'userId': -1}
         if r:
             groups = []
             if checkRepo:
@@ -82,10 +85,13 @@ class UsersTable(database.KeyedTable):
 
                 authRepo = {authLabel: authUrl}
                 repo = netclient.NetworkRepositoryClient(authRepo)
-                groups = repo.getUserGroups(authLabel)
+                try:
+                    groups = repo.getUserGroups(authLabel)
+                except OpenError:
+                    auth = noAuth
 
             if username in groups or not checkRepo:
-                return {'authorized':   True,
+                auth = {'authorized':   True,
                         'userId':       r[0],
                         'username':     username,
                         'email':        r[1],
@@ -93,9 +99,10 @@ class UsersTable(database.KeyedTable):
                         'fullName':     r[3],
                         'blurb':        r[4]}
             else:
-                return {'authorized': False, 'userId': -1}
+                auth = noAuth
         else:
-            return {'authorized': False, 'userId': -1}
+            auth = noAuth
+        return auth
 
     def registerNewUser(self, username, password, fullName, email, displayEmail, blurb, active):
         def confirmString():
