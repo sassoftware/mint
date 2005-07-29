@@ -1,4 +1,4 @@
-javascript_files = library.js xmlrpc.js
+javascript_files = *.js
 
 dist_files = $(javascript_files) Makefile
 

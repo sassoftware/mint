@@ -1,6 +1,6 @@
-image_files = *.gif *.jpg
+image_files = *.gif *.jpg 
 
-dist_files = Makefile
+dist_files = Makefile $(image_files)
 
 all:
 

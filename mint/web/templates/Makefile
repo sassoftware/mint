@@ -4,6 +4,8 @@
 # All Rights Reserved
 #
 
+SUBDIRS = repos
+
 kid_files = \
 	editRelease.kid		\
 	error.kid		\
@@ -24,13 +26,17 @@ kid_files = \
 	userInfo.kid		\
 	userSettings.kid
 
+python_files = __init__.py
+
 extra_dist = Makefile
 
-dist_files = $(extra_dist) $(kid_files)
+dist_files = $(extra_dist) $(kid_files) $(python_files)
 
-all: default-all
+all: default-all all-subdirs
 
-install: kidfiles-install
+install: kidfiles-install install-subdirs pyfiles-install
+
+subdirs: default-subdirs
 
 kidfiles-install:
 	kidc --strip-dest-dir $$(pwd) $$(pwd)
@@ -39,7 +45,7 @@ kidfiles-install:
                 cp -a $$f $(DESTDIR)$(mintdir)$(DIR)/$$f; \
         done
 
-dist: default-dist
+dist: default-dist 
 
 clean: default-clean
 
