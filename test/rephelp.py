@@ -954,7 +954,7 @@ class RepositoryHelper(testsuite.TestCase):
     def getMintClient(self, username, password):
         client = self.openMint(('test', 'foo'))
         userId = client.registerNewUser(username, password, "Test User",
-                                        "test@example.com", active=True)
+                "test@example.com", "test at example.com", "", active=True)
 
         return self.openMint((username, password))
 

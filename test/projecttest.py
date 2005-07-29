@@ -30,7 +30,7 @@ class ProjectTest(rephelp.RepositoryHelper):
         
         client = self.openMint(("test", "foo"))
         otherUserId = client.registerNewUser("member", "memberpass", "Test Member",
-                                            "test@example.com", active=True)
+                        "test@example.com", "test at example.com", "", active=True)
  
         client = self.getMintClient("testuser", "testpass")
                                                        
