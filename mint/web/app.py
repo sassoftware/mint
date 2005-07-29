@@ -289,10 +289,9 @@ class MintApp(webhandler.WebHandler):
         return apache.OK
 
     @siteOnly
-    @strFields(to = None)
-    def logout(self, auth, to):
+    def logout(self, auth):
         self._clearAuth()
-        return self._redirect(unquote(to))
+        return self._redirect("/")
 
     @strFields(username = None, password = '', submit = None, to = '/')
     def processLogin(self, auth, username, password, submit, to):
