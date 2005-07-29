@@ -13,7 +13,7 @@ onload = "javascript:;"
       xmlns="http://www.w3.org/1999/xhtml"
       py:extends="'project.kid'">
     <div py:def="breadcrumb()" class="pad">
-        You are here: <a href="#">rpath</a>
+        You are here: <a href="/">rpath</a>
     </div>
 
     <head py:match="item.tag == 'head'" xmlns="http://www.w3.org/1999/xhtml">

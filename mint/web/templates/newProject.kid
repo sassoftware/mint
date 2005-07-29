@@ -6,11 +6,16 @@
     Copyright 2005 rpath, Inc.
     All Rights Reserved
 -->
+    <div py:def="breadcrumb()" class="pad">
+        You are here: <a href="/">rpath</a>
+        <a href="#">Create a Project</a>
+    </div>
+
     <head/>
     <body>
         <td id="main" class="spanleft" >
             <div class="pad">
-                <h2>Create an Project</h2>
+                <h2>Create a Project</h2>
                 <p>Fields labeled with a <em class="required">red arrow</em> are required.</p>
                 <form method="post" action="createProject">
 

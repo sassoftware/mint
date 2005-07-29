@@ -9,7 +9,7 @@
 -->
     <div py:def="breadcrumb()" class="pad">
         You are here:
-        <a href="#">rpath</a>
+        <a href="/">rpath</a>
         <a href="#">${user.getFullName()}</a>
     </div>
 
