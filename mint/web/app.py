@@ -285,6 +285,7 @@ class MintApp(webhandler.WebHandler):
     @siteOnly
     @strFields(message = "")
     def login(self, auth, message):
+        self.toUrl = "/"
         self._write("login", message = message)
         return apache.OK
 
@@ -373,14 +374,12 @@ class MintApp(webhandler.WebHandler):
         self._write("releases", releases = releases)
         return apache.OK
 
-    @requiresAuth
     @projectOnly
     @ownerOnly
     def newRelease(self, auth):
         self._write("newRelease")
         return apache.OK
 
-    @requiresAuth
     @projectOnly
     @ownerOnly
     @intFields(releaseId = -1, imageType = releasetypes.INSTALLABLE_ISO)
@@ -552,7 +551,6 @@ class MintApp(webhandler.WebHandler):
 
     @projectOnly
     @strFields(desc = None)
-    @requiresAuth
     @ownerOnly
     def editProjectDesc(self, auth, desc):
         self.project.setDesc(desc)
@@ -592,7 +590,6 @@ class MintApp(webhandler.WebHandler):
 
     @projectOnly
     @intFields(id = None)
-    @requiresAuth
     @ownerOnly
     def delMember(self, auth, id):
         self.project.delMemberById(id)
