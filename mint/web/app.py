@@ -512,7 +512,9 @@ class MintApp(webhandler.WebHandler):
     @projectOnly
     @mailList
     def mailingLists(self, auth, mlists):
-        lists = mlists.list_lists(self.project.getName())
+        hostname = self.project.getHostname()
+        hostname = hostname[0:hostname.find('.')]
+        lists = mlists.list_lists(hostname)
         self._write("mailingLists", lists=lists, mailhost=self.cfg.MailListBaseURL)
         return apache.OK
 
@@ -528,7 +530,9 @@ class MintApp(webhandler.WebHandler):
                 if member[2] == userlevels.OWNER:
                     owner = self.client.getUser(member[0])
                     owners.append(owner.getEmail())
-            if not mlists.add_list(self.cfg.MailListPass, self.project.getName()+'-'+listname, listpw, description, owners):
+            hostname = self.project.getHostname()
+            hostname = hostname[0:hostname.find('.')]
+            if not mlists.add_list(self.cfg.MailListPass, hostname+'-'+listname, listpw, description, owners):
                 raise mailinglists.MailingListException("Mailing list not created")
             return self._redirect("mailingLists")
         else:
@@ -539,7 +543,10 @@ class MintApp(webhandler.WebHandler):
     @strFields(list=None)
     @mailList
     def deleteList(self, auth, mlists, list):
-        if list.lower().startswith(self.project.getName().lower() + "-"):
+        hostname = self.project.getHostname()
+        hostname = hostname[0:hostname.find('.')]
+        pcre = re.compile('^%s$|^%s-'%(hostname, hostname), re.I)
+        if pcre.search(list):
             if not mlists.delete_list(self.cfg.MailListPass, list, True):
                 raise mailinglists.MailingListException("Mailing list not deleted")
         else:
@@ -601,12 +608,13 @@ class MintApp(webhandler.WebHandler):
         lists = mailinglists.GetLists(projectName, optlists)
         lists.update(mailinglists.GetLists(projectName, mailinglists.defaultlists))
         success = True
+        error = False
         for name, values in lists.items():
             print >>sys.stderr, self.cfg.MailListPass, name, values['description'], auth.email, values['moderate']
             sys.stderr.flush()
             success = mlists.add_list(self.cfg.MailListPass, name, '', values['description'], auth.email, True, values['moderate'])
-            if not success: break
-        return success
+            if not success: error = False
+        return not error
 
     @siteOnly
     @strFields(title = None, hostname = None, blurb = '')
@@ -614,7 +622,7 @@ class MintApp(webhandler.WebHandler):
     @requiresAuth
     def createProject(self, auth, title, hostname, blurb, optlists):
         projectId = self.client.newProject(title, hostname, blurb)
-        if not self._createProjectLists(auth=auth, projectName=title, optlists=optlists):
+        if not self._createProjectLists(auth=auth, projectName=hostname, optlists=optlists):
             return apache.OK
         return self._redirect("http://%s.%s/" % (hostname, self.cfg.domainName) )
 

@@ -68,6 +68,9 @@ class MailingListClient:
         class listobj: pass
         pcre = "^%s$|^%s-" % (projectName, projectName)
         lists = self._servercall(self.server.list_lists(pcre))
+        import sys
+        print >>sys.stderr, pcre, lists
+        sys.stderr.flush()
         returner = []
         for listname in lists:
             list = listobj()
