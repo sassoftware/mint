@@ -34,6 +34,8 @@ class MintConfig(ConfigFile):
         'xmlrpcAccess'      : [ BOOLEAN, False ],
         'newsRssFeed'       : '',
         'commitAction'      : None,
+        'MailListBaseURL'   : 'http://lists.rpath.org/mailman/',
+        'MailListPass'      : 'adminpass',
 
 
         # don't set these yourself; they will be automatically generated 
@@ -58,3 +60,6 @@ class MintConfig(ConfigFile):
         repoUrl += "".join(urlparts[2:])
         
         self.setValue('authRepoUrl', repoUrl)
+        #Make sure MailListBaseURL has a slash on the end of it
+        if self.MailListBaseURL[-1:] != '/':
+            self.MailListBaseURL += '/'

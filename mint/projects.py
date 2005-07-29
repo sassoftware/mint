@@ -13,6 +13,7 @@ import versions
 from lib import util
 from repository.netrepos.netserver import NetworkRepositoryServer
 from conarycfg import ConaryConfiguration
+import mailinglists
 
 from mint_error import MintError
 import database
@@ -133,6 +134,17 @@ class Project(database.TableObject):
 
     def removeLabel(self, labelId):
         return self.server.removeLabel(self.id, labelId)
+
+    def orphan(self, mlbaseurl, mlpasswd):
+        #Take care of mailing lists
+        mlists = mailinglists.MailingListClient(mlbaseurl + 'xmlrpc/')
+        return mlists.orphan_lists(mlpasswd, self.getName())
+
+    def adopt(self, auth, mlbaseurl, mlpasswd):
+        self.addMemberByName(auth.username, userlevels.OWNER)
+        # Take care of mailing lists
+        mlists = mailinglists.MailingListClient(mlbaseurl + 'xmlrpc/')
+        mlists.adopt_lists(auth, mlpasswd, self.getName())
 
 
 class ProjectsTable(database.KeyedTable):

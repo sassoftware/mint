@@ -30,6 +30,7 @@ from mint import releasetypes
 from mint import shimclient
 from mint import users
 from mint import userlevels
+from mint import mailinglists
 
 class Redirect(Exception):
     def __init__(self, location):
@@ -88,6 +89,21 @@ def ownerOnly(func):
             return func(self, **kwargs)
         else:
             raise mint_server.PermissionDenied
+    return wrapper
+
+def mailList(func):
+    """
+    Decorate a method so that it is passed a MailingListClient object
+    properly formatted and ready to use inside an error handler.
+    """
+    def wrapper(self, **kwargs):
+        mlists = mailinglists.MailingListClient(self.cfg.MailListBaseURL + 'xmlrpc')
+        try:
+            return func(self, mlists=mlists, **kwargs)
+        except mailinglists.MailingListException, e:
+            self._write("error", shortError = "Mailing List Error",
+                    error = "An error occured while talking to the mailing list server: %s" % str(e))
+            return apache.OK
     return wrapper
 
 class MintApp(webhandler.WebHandler):
@@ -493,6 +509,51 @@ class MintApp(webhandler.WebHandler):
         self.client.startImageJob(releaseId)
         return self._redirect("release?id=%d" % releaseId)
 
+    @projectOnly
+    @mailList
+    def mailingLists(self, auth, mlists):
+        lists = mlists.list_lists(self.project.getName())
+        self._write("mailingLists", lists=lists, mailhost=self.cfg.MailListBaseURL)
+        return apache.OK
+
+    @projectOnly
+    @ownerOnly
+    @strFields(listname=None, description='', listpw='', listpw2='')
+    @mailList
+    def createList(self, auth, mlists, listname, description, listpw, listpw2):
+        if listpw == listpw2:
+            members = self.project.getMembers()
+            owners = []
+            for member in members:
+                if member[2] == userlevels.OWNER:
+                    owner = self.client.getUser(member[0])
+                    owners.append(owner.getEmail())
+            if not mlists.add_list(self.cfg.MailListPass, self.project.getName()+'-'+listname, listpw, description, owners):
+                raise mailinglists.MailingListException("Mailing list not created")
+            return self._redirect("mailingLists")
+        else:
+            raise mailinglists.MailingListException("Passwords do not match")
+
+    @projectOnly
+    @ownerOnly
+    @strFields(list=None)
+    @mailList
+    def deleteList(self, auth, mlists, list):
+        if list.lower().startswith(self.project.getName().lower() + "-"):
+            if not mlists.delete_list(self.cfg.MailListPass, list, True):
+                raise mailinglists.MailingListException("Mailing list not deleted")
+        else:
+            raise mailinglists.MailingListException("You cannot delete this list")
+        return self._redirect("mailingLists") 
+
+    @requiresAuth
+    @projectOnly
+    @strFields(list=None)
+    @mailList
+    def subscribe(self, auth, mlists, list):
+        mlists.server.subscribe(list, self.cfg.MailListPass, [auth.email], False, True)
+        return self._redirect("mailingLists")
+        
     @siteOnly
     @requiresAuth
     def userSettings(self, auth):
@@ -535,11 +596,26 @@ class MintApp(webhandler.WebHandler):
         self._write("newProject")
         return apache.OK
 
+    @mailList
+    def _createProjectLists(self, mlists, auth, projectName, optlists = []):
+        lists = mailinglists.GetLists(projectName, optlists)
+        lists.update(mailinglists.GetLists(projectName, mailinglists.defaultlists))
+        success = True
+        for name, values in lists.items():
+            print >>sys.stderr, self.cfg.MailListPass, name, values['description'], auth.email, values['moderate']
+            sys.stderr.flush()
+            success = mlists.add_list(self.cfg.MailListPass, name, '', values['description'], auth.email, True, values['moderate'])
+            if not success: break
+        return success
+
     @siteOnly
     @strFields(title = None, hostname = None, blurb = '')
+    @listFields(int, optlists = [])
     @requiresAuth
-    def createProject(self, auth, title, hostname, blurb):
+    def createProject(self, auth, title, hostname, blurb, optlists):
         projectId = self.client.newProject(title, hostname, blurb)
+        if not self._createProjectLists(auth=auth, projectName=title, optlists=optlists):
+            return apache.OK
         return self._redirect("http://%s.%s/" % (hostname, self.cfg.domainName) )
 
     @projectOnly
@@ -569,7 +645,7 @@ class MintApp(webhandler.WebHandler):
     @projectOnly
     @requiresAuth
     def adopt(self, auth):
-        self.project.addMemberByName(auth.username, userlevels.OWNER)
+        self.project.adopt(auth, self.cfg.MailListBaseURL, self.cfg.MailListPass)
         self._write("members")
         return apache.OK
 
@@ -593,6 +669,8 @@ class MintApp(webhandler.WebHandler):
     @ownerOnly
     def delMember(self, auth, id):
         self.project.delMemberById(id)
+        if self.project.getMembers() == []:
+            self.project.orphan(self.cfg.MailListBaseURL, self.cfg.MailListPass)
         return self._redirect("members")
 
     @projectOnly
