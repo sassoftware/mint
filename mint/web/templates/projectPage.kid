@@ -44,7 +44,7 @@ from mint import userlevels
                         <div class="pad">
                             <h2>${project.getName()}</h2>
                             <p py:if="isOwner"><em>You are an owner of this project.</em></p>
-                            <p py:if="not memberList">This project is orphaned. <a href="adopt">Adopt this project</a>.</p>
+                            <p py:if="not memberList">This project is orphaned. <a py:if="auth.authorized" href="adopt">Adopt this project</a><span py:strip="True" py:if="not auth.authorized">Log in to adopt this project</span>.</p>
                             <h3>
                                 Description &#160;<span class="edit" py:if="isOwner">
                                 <a href="projectDesc">Edit Description</a></span>
