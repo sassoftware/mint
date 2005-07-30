@@ -136,10 +136,15 @@ DEFAULT_PRIVATE_ROSTER = 2
 # 1 - confirmation required for subscribes
 DEFAULT_SUBSCRIBE_POLICY = 1
 
+# Defaults for content filtering on mailing lists.  DEFAULT_FILTER_CONTENT is
+# a flag which if set to true, turns on content filtering.
+DEFAULT_FILTER_CONTENT = Yes
+
 # DEFAULT_PASS_MIME_TYPES is a list of MIME types to be passed through.
 # Format is the same as DEFAULT_FILTER_MIME_TYPES
 DEFAULT_PASS_MIME_TYPES = ['multipart/mixed',
                            'multipart/alternative',
+                           'multipart/signed',
                            'text/plain',
                            'text/xml',
                            'text/html',
@@ -151,6 +156,8 @@ DEFAULT_PASS_MIME_TYPES = ['multipart/mixed',
                            'text/x-python',
                            'text/x-patch',
                            'text/vcard',
+                           'message/rfc822',
+                           'application/pgp-signature',
                            'application/pdf',
                            'application/rtf',
                            'application/x-gzip',
