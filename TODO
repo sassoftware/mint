@@ -16,8 +16,7 @@
 * Fixes
     * Rework the account creation login confirmation page
     * rework the account activated login confirmation page
-    * Fix traceback when logging in with the wrong password
-    * Project member page no longer has mechanisms for adding users.
+    * [DONE] Fix traceback when logging in with the wrong password
 * Missing templates
     * Search Projects
     * Search Users
