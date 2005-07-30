@@ -55,7 +55,7 @@
         </td>
         <td id="right" class="plain">
             <div class="pad">
-                <h3>Cancel My Account</h3>
+                <h3>Close My Account</h3>
                 <p>If you wish to cancel your account, click the &quot;cancel account&quot; button below. If you cancel your account, you will be removed from any project for which you are a member or owner.</p>
                 <p><button class="warn" name="cancel" type="button">Cancel my account</button></p>
             </div>
