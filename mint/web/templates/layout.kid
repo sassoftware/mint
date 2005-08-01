@@ -107,7 +107,7 @@ onload = "javascript:;"
         <div id="foot" align="center">
             <div id="copy">
                 <div class="pad">
-                    &#169; Copyright 2005 rpath, Inc.
+                    Copyright &#169; 2005 rpath, Inc.
                 </div>
             </div>
         </div>
