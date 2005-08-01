@@ -57,7 +57,8 @@ from mint import searcher
                     <td id="main">
                         <div class="pad">
                             <h3>Welcome to rpath</h3>
-                            <p>Lorem ipsum dolor sit amet, consectetaur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.</p>
+                            <p>ED FIXME: A short paragraph describing the rpath.com service.</p>
+                            <p>ED FIXME: A short paragraph mentioning rpath's products.</p>
                             <p><a href="#">More about rpath</a> </p>
 
                             <div py:strip="True" py:if="news">
