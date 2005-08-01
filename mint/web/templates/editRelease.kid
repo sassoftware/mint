@@ -16,11 +16,13 @@ def generateJs(archMap):
         js += ");\n";
     return js
 ?>
-<html xmlns="http://www.w3.org/1999/xhtml"
+<html xmlns:html="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
-      py:extends="'library.kid'">
+      py:extends="'library.kid', 'layout.kid'">
 
-    <script py:def="pickFlavor(archMap)" py:strip='1'>
+    <head/>
+    <body onload="javascript:pickArch(); pickVersion();">
+    <script>
         ${generateJs(archMap)}
     <![CDATA[
         function pickArch()
@@ -48,12 +50,8 @@ def generateJs(archMap):
     ]]>
     </script>
 
-    ${html_header(title, extraScript=pickFlavor, scriptArgs=[archMap])}
-    <body onload="javascript:pickArch(); pickVersion();">
-        ${header_image()}
-
-        ${menu([(title, None, True)])}
-        <div id="content">
+        <td id="main">
+        <div class="pad">
             <h2>Release</h2>
             <form method="post" action="editRelease2">
                 <table style="padding: 12px;">
@@ -113,7 +111,7 @@ def generateJs(archMap):
                     <p>FIXME: Remove an unwanted release of your distribution: <input type="submit" value="Delete Release" /></p>
                 </form>
             </div>
-            ${html_footer()}
         </div>
+        </td>
     </body>
 </html>

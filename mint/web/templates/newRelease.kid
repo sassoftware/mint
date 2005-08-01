@@ -40,7 +40,7 @@ title = "Create New Release"
                         </tr>
                     </table>
                     <p>
-                        <button id="submitButton" type="button" onclick="javascript:newProfileSubmit();">Submit</button>
+                        <button id="submitButton" type="button" onclick="javascript:newReleaseSubmit();">Submit</button>
                         <input type="hidden" value="${releasetypes.INSTALLABLE_ISO}" name="imageType" />
                         <input type="hidden" name="releaseId" value="-1" />
                     </p>
