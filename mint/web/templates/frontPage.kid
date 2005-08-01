@@ -49,7 +49,7 @@ from mint import searcher
                                             <option py:for="i, option in enumerate(searcher.datehtml)" value="${i}">${option}</option>
                                         </select>
                                     </p>
-                                    <p><button>Submit</button><br /><a href="#">advanced search</a></p>
+                                    <p><button>Submit</button><br /><a py:if="0" href="#">advanced search</a></p>
                                 </form>
                             </div>
                         </div>

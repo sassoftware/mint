@@ -50,14 +50,14 @@ def generateJs(archMap):
     ]]>
     </script>
 
-        <td id="main">
+        <td id="main" class="spanall">
         <div class="pad">
             <h2>Release</h2>
             <form method="post" action="editRelease2">
                 <table style="padding: 12px;">
-                    <tr><td style="font-weight: bold;">Trove:</td><td>${trove}=${label}</td></tr>
+                    <tr><td>Trove:</td><td>${trove}=${label}</td></tr>
                     <tr>
-                        <td style="font-weight: bold;">Architecture:</td>
+                        <td>Architecture:</td>
                         <td><select onchange="javascript:pickArch();" id="arch">
                                 <option py:for="arch in sorted(archMap.keys())"
                                         py:attrs="{'selected': (flavor and arch == extractIs(flavor)) and 'selected' or None}">
@@ -67,7 +67,7 @@ def generateJs(archMap):
                         </td>
                     </tr>
                     <tr>
-                        <td style="font-weight: bold; width: 20%;">Version:</td>
+                        <td style="width: 20%;">Version:</td>
                         <td><select onchange="javascript:pickVersion();"
                                     name="version" id="versions"></select>
                         </td>
@@ -75,28 +75,18 @@ def generateJs(archMap):
                 </table>
 
                 <h2>Description</h2>
-                <p style="font-weight: bold;">Please provide a brief description of your distribution:</p>
+                <p>Please provide a brief description of your distribution:</p>
                 <textarea style="width: 50%; margin-left: 10px;" rows="6" name="desc">${release.getDesc()}</textarea>
                 
                 <h2>Settings</h2>
                 <table cellpadding="6">
                     <tr>
-                        <td style="font-weight: bold;">Distribution Name:</td>
+                        <td>Distribution Name:</td>
                         <td>${release.getName()}</td>
                     </tr>
                     <tr>
-                        <td style="font-weight: bold;">Release:</td>
+                        <td>Release:</td>
                         <td><span id="release">None</span></td>
-                    </tr>
-                    <tr>
-                        <td style="font-weight: bold;">Media Size:</td>
-                        <td>
-                            <select name="mediaSize">
-                                <option value="640">650M CD</option>
-                                <option value="690">700M CD</option>
-                                <option value="4800">4.7G DVD</option>
-                            </select>
-                        </td>
                     </tr>
                 </table>
 
@@ -105,7 +95,7 @@ def generateJs(archMap):
                 <input type="hidden" name="trove" value="${trove}"/>
             </form>
 
-            <div style="text-align: right;">
+            <div py:if="0" style="text-align: right;">
                 <form method="post" action="deleteRelease">
                     <input type="hidden" name="releaseId" value="${release.getId()}"/>
                     <p>FIXME: Remove an unwanted release of your distribution: <input type="submit" value="Delete Release" /></p>
