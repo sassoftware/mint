@@ -19,9 +19,9 @@
     ?>
     <head/>
     <body>
-        <div py:def="searchSummary(type, terms, modified)" py:strip="True">
+        <p py:def="searchSummary(type, terms, modified)">
             ${type}; keywords: ${terms}; modified within ${searcher.datehtml[modified]}
-        </div>
+        </p>
 
         <div py:def="formatResults(resultset = [])" py:strip="True">
             <?python
@@ -38,15 +38,16 @@
             ${resultRow(formattedresults)}
         </div>
 
-        <div id="content">
-            <h2 class="results">> rpath > ${type} Search Results</h2>
-${searchSummary(type, terms, modified)}
-${navigation("search?type=%s;search=%s;modified=%d"%(type, terms, modified), count, limit, offset)}
-            <table class="results" border="2">
-${columnTitles(columns)}
-${searchResults(results)}
-
-            </table>
-        </div>
+        <td id="main" class="spanall">
+            <div class="pad">
+                <h2>search results</h2>
+                ${searchSummary(type, terms, modified)}
+                ${navigation("search?type=%s;search=%s;modified=%d"%(type, terms, modified), count, limit, offset)}
+                <table cellspacing="0" cellpadding="0" class="results">
+                    ${columnTitles(columns)}
+                    ${searchResults(results)}
+                </table>
+            </div>
+        </td>
     </body>
 </html>
