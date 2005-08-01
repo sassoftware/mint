@@ -49,7 +49,7 @@ from mint import userlevels
                     <p id="jobStatus">Retrieving job status...</p>
                     <p>
                         <a href="restartJob?releaseId=${release.getId()}">Re-generate</a>
-                        <a class="button" py:if="not release.getPublished()" href="publish?releaseId=${release.getId()}">Publish Image</a>
+                        <a class="button" py:if="not release.getPublished() and files" href="publish?releaseId=${release.getId()}">Publish Image</a>
                     </p>
                     <p py:if="release.getPublished()">Image Published</p>
                 </div>
