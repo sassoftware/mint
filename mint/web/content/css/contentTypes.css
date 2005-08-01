@@ -93,7 +93,7 @@
 
 /* MAIN AREA FORM TABLE LAYOUT, HEADERS ON LEFT SIDE */
 .mainformhorizontal {
-	padding:11px; margin-bottom:8px; border:1px #e6e6e6 solid;
+	padding:11px; margin-bottom:8px; border:1px #ccc solid;
 }
 .mainformhorizontal th {
 	font-weight:normal; color:#666;
@@ -142,6 +142,14 @@ strong.keyword {
 .pager td {
 	vertical-align:middle;
 }
+.pager a {
+	background-image:none;
+	padding-right:0px;
+}
+.pager button {
+	background-image:none;
+	padding-left:0px;
+}
 
 /* REPOSITORY BROWSER */
 .troveinfo {
@@ -163,7 +171,7 @@ strong.keyword {
 	line-height: 180%;
 }
 .troveallversions li {
-        background: none;
+	background: none;
 }
 .filelist {
 	position:relative;
