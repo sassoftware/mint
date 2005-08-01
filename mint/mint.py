@@ -14,6 +14,8 @@ import releases
 import users
 from mint_error import MintError
 
+from deps import deps
+
 class MintClient:
     def __init__(self, server):
         """
@@ -217,6 +219,9 @@ class MintClient:
         """
         for jobId in self.server.getJobIds(releaseId):
             yield self.getJob(jobId)
+
+    def getFilename(self, fileId):
+        return self.server.getFilename(fileId)
 
     def getNews(self):
         """

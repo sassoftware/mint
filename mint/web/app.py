@@ -6,6 +6,7 @@
 import base64
 import os
 import kid
+import stat
 import sys
 import time
 from urllib import unquote
@@ -18,6 +19,7 @@ import repository
 import versions
 from deps import deps
 from web import webhandler
+from web import fields
 from web.fields import strFields, intFields, listFields, boolFields
 
 from mint import database
@@ -244,6 +246,9 @@ class MintApp(webhandler.WebHandler):
             err_name = sys.exc_info()[0].__name__
             self.req.log_error("%s: %s" % (err_name, str(e)))
             self._write("error", shortError = err_name, error = str(e))
+            return apache.OK
+        except fields.MissingParameterError, e:
+            self._write("error", shortError = "Missing Parameter", error = str(e))
             return apache.OK
 
     def _redirCookie(self, cookie):
@@ -723,7 +728,22 @@ class MintApp(webhandler.WebHandler):
                                      modified = modified)
         return apache.OK
 
+    @intFields(fileId = None)
+    def downloadImage(self, auth, fileId):
+        filename = self.client.getFilename(fileId)
 
+        try:
+            size = os.stat(filename)[stat.ST_SIZE]
+
+            self.req.content_type = "application/octet-stream"
+            self.req.headers_out["Content-Disposition"] = "attachment; filename=%s;" %\
+                os.path.basename(filename)
+            self.req.headers_out["Content-Length"] = str(size)
+            self.req.sendfile(filename)
+        except OSError, e:
+            self._write("error", shortError = "File error",
+                           error = "An error has occurred opening the image file: %s" % e)
+        return apache.OK
 
     def _write(self, template, templatePath = None, **values):
         if not templatePath:

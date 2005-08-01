@@ -464,6 +464,16 @@ class MintServer(object):
         else:
             return [(x[0], x[1]) for x in results]
    
+    def getFilename(self, fileId):
+        cu = self.db.cursor()
+        cu.execute("SELECT filename FROM ImageFiles WHERE fileId=?", fileId)
+
+        results = cu.fetchone()
+        if results:
+            return results[0]
+        else:
+            raise jobs.FileMissing
+
     @requiresAuth
     def getGroupTroves(self, projectId):
         project = projects.Project(self, projectId)

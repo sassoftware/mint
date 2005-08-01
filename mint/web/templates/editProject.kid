@@ -23,7 +23,7 @@
                 <form method="post" action="editProjectDesc">
                     <textarea name="desc" cols="70" rows="12">${project.getDesc()}</textarea>
 
-                    <p><button type="submit">Submit</button></p>
+                    <p style="margin-top: 1em;"><button type="submit">Submit</button></p>
                 </form>
             </div>
         </td>
