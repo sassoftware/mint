@@ -34,7 +34,7 @@
                 <h2>Browse Projects</h2>
                 ${sortOrderForm(sortOrder)}
                 ${navigation("projects?sortOrder=%d"%(sortOrder), count, limit, offset)}
-                <table class="results">
+                <table cellpadding="0" cellspacing="0" class="results">
                     ${columnTitles(('Project Name', 'Project Description', 'Time Created', 'Time Last Modified', 'Number of Developers'))}
                     ${searchResults(results)}
                 </table>

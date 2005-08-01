@@ -37,7 +37,7 @@
             <div class="pad">
                 <h2>Browse Users</h2>
                 ${navigation("projects?sortOrder=%d"%(sortOrder), count, limit, offset)}
-                <table class="results">
+                <table cellpadding="0" cellspacing="0" class="results">
                     ${columnTitles(('User Name', 'Name', 'Time Created', 'Time Last Accessed', 'About'))}
                     ${searchResults(results)}
                 </table>
