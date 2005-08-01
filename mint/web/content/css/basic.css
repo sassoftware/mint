@@ -74,6 +74,7 @@ input, textarea {
 	font-family:Verdana,Arial,Helvetica,sans-serif;
 	border-width:1px;
 	margin:2px 0px 0px 0px;
+        background-color: #eceff9;
 }
 label {
 	font-size:100%;
