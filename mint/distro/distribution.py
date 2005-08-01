@@ -221,11 +221,8 @@ class Distribution:
         
         self.csInfo = {}
         oldFiles = {}
-        cachedFiles = {}
         for path in [ "%s/%s" % (csdir, x) for x in os.listdir(csdir) ]:
             oldFiles[path] = 1
-        for path in [ "%s/%s" % (self.cachePath, x) for x in os.listdir(self.cachePath) ]:
-            cachedFiles[path] = 1
 
         control = controlfile.ControlFile(self.arch, group, self.repos, self.cfg, self.cfg.installLabelPath[0]) 
         print "Matching changesets..."
@@ -290,8 +287,9 @@ class Distribution:
                         troveId.getVersion().trailingRevision().asString(),
                         pkgarch)
 
-            path = "%s/%s" % (csdir, csfile)
-            cachedPath = "%s/%s" % (self.cachePath, csfile)
+            branchDir = troveId.getVersion().branch().asString().replace("/", "_")
+            path = os.path.join(csdir, csfile)
+            cachedPath = os.path.join(self.cachePath, branchDir, csfile)
 
             # link the first matching path, assuming they are ordered
             # so that latest is first
@@ -299,7 +297,7 @@ class Distribution:
                 print >> sys.stderr, "%d/%d: keeping old %s" % (index, l, 
                                                                    csfile)
                 del oldFiles[path]
-            elif cachedFiles.has_key(cachedPath):
+            elif os.access(cachedPath, os.F_OK):
                 print >> sys.stderr, "%d/%d: linking %s" % (index, l, csfile)
                 try:
                     os.link(cachedPath, path)
@@ -310,6 +308,8 @@ class Distribution:
             else:
                 # the trove is still waiting in the repo
                 print >> sys.stderr, "%d/%d: extracting %s" % (index+1, l, csfile)
+                util.mkdirChain(os.path.dirname(cachedPath))
+                util.mkdirChain(os.path.dirname(path))
                 troveId.createChangeSet(cachedPath, self.repos, self.cfg, component=troveName)
                 try:
                     os.link(cachedPath, path)

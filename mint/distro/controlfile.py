@@ -124,7 +124,6 @@ class ControlFile:
         # make its internal addTroves be called
         branch = groupId.getVersion().branch()
         groupObj = groupClass(self._repos, self._cfg, branch, None)
-        print groupObj, dir(groupObj)
         groupObj.setup()
         use.LocalFlags._clear()
 
@@ -415,7 +414,6 @@ class ControlFile:
                     loader = (loader, sourceId.getVersion())
                     self._fromSourceDir[sourceId] = True
             if loader is None:
-                print name, recipefile
                 loader = recipe.recipeLoaderFromSourceComponent(name, 
                                     self._cfg, self._repos, 
                                     sourceId.getVersionStr(), 
