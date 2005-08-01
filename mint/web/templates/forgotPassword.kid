@@ -17,10 +17,13 @@ messages = { '':          'If you do not have an account, please <a href="regist
     <body>
         <td id="main" class="spanleft">
             <div class="pad">
-                <p>Please log in to use rpath.com:</p>
-                <p>If you do not have an account, please <a href="register">register</a>.</p>
+                <h2>Please log in to use rpath.com:</h2>
                 <p py:if="message" style="font-weight: bold;" py:content="messages[message]"/>
                 <form method="post" action="processLogin">
+                    <p class="help">
+                        If you have forgotten your password, please enter only
+                        your username in the field below, and click Forgot Password.
+                    </p>
                     <table>
                         <tr>
                             <td><b>Username:</b></td>
@@ -32,8 +35,10 @@ messages = { '':          'If you do not have an account, please <a href="regist
                         </tr>
                     </table>
 
-                    <p><input type="submit" name="submit" value="Log In" /> <input type="submit" name="submit" value="Forgot Password" /></p>
-                    <p class="help">If you have forgotten your password, please enter only your username above, and click Forgot Password.</p>
+                    <p>
+                        <button type="submit" name="submit" value="Log In">Log In</button>&#160;
+                        <button type="submit" name="submit" value="Forgot Password">Forgot Password</button>
+                    </p>
                 </form>
             </div>
         </td>

@@ -8,16 +8,18 @@
 -->
     <head/>
     <body>
-        <td id="content">
-            <h2>${shortError}</h2>
-
-            <p class="error">Error: ${error}</p>
-            <p>
-                Please go back and try again or contact 
-                <a href="mailto:custom@rpath.com">custom@rpath.com</a> or join the IRC channel
-                <b>#conary</b> on the <a href="http://www.freenode.net/">FreeNode</a> IRC network
-                for assistance.
-            </p>
+        <td id="main" class="spanall">
+            <div class="pad">
+                <p style="font-size: 150%; font-weight: bold;">Error:</p>
+                
+                <p style="color: red; margin-left: 1em;">${error}</p>
+                <p>
+                    Please go back and try again or contact 
+                    <a href="mailto:custom@rpath.com">custom@rpath.com</a> or join the IRC channel
+                    <b>#conary</b> on the <a href="http://www.freenode.net/">FreeNode</a> IRC network
+                    for assistance.
+                </p>
+            </div>
         </td>
     </body>
 </html>
