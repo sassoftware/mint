@@ -43,10 +43,10 @@ from mint import searcher
                          of ${(count+limit-1)/limit}</span>
                     <span py:if="count == 0">Page: 1 of 1</span>
              
-                    <a href="${baseurl};limit=${limit};offset=${max(offset-limit, 0)}" py:if="offset != 0">
+                    <a href="${urlbase};limit=${limit};offset=${max(offset-limit, 0)}" py:if="offset != 0">
                         <img src="${cfg.staticPath}/apps/mint/images/prev.gif" alt="Previous Page" width="11" height="11" border="0" />
                     </a>
-                    <a href="${baseurl};limit=${limit};offset=${offset+limit}" py:if="offset+limit &lt; count">
+                    <a href="${urlbase};limit=${limit};offset=${offset+limit}" py:if="offset+limit &lt; count">
                         <img src="${cfg.staticPath}/apps/mint/images/next.gif" alt="Next Page" width="11" height="11" border="0" />
                     </a>
                 </form>

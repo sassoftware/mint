@@ -33,12 +33,15 @@
             </form>
         </div>
 
-        <div id="content">
-${navigation("projects?sortOrder=%d"%(sortOrder), count, limit, offset)}
-            <table class="results">
-${columnTitles(('User Name', 'Name', 'Time Created', 'Time Last Accessed', 'About'))}
-${searchResults(results)}
-            </table>
-        </div>
+        <td id="main" class="spanall">
+            <div class="pad">
+                <h2>Browse Users</h2>
+                ${navigation("projects?sortOrder=%d"%(sortOrder), count, limit, offset)}
+                <table class="results">
+                    ${columnTitles(('User Name', 'Name', 'Time Created', 'Time Last Accessed', 'About'))}
+                    ${searchResults(results)}
+                </table>
+            </div>
+        </td>
     </body>
 </html>

@@ -18,7 +18,7 @@
             ${resultRow(formattedresults)}
         </div>
 
-        <div py:def="sortOrderForm(sortOrder = 0)" py:strip="True">
+        <p py:def="sortOrderForm(sortOrder = 0)">
             <form method="get" action="projects">
                 <select name="sortOrder">
                     <option py:for="key, value in projectlisting.orderhtml.items()"
@@ -27,15 +27,18 @@
                 </select>
                 <input type="submit" name="submit" value="Go" />
             </form>
-        </div>
+        </p>
 
-        <div id="content">
-${sortOrderForm(sortOrder)}
-${navigation("projects?sortOrder=%d"%(sortOrder), count, limit, offset)}
-            <table class="results">
-${columnTitles(('Project Name', 'Project Description', 'Time Created', 'Time Last Modified', 'Number of Developers'))}
-${searchResults(results)}
-            </table>
-        </div>
+        <td id="main" class="spanall">
+            <div class="pad">
+                <h2>Browse Projects</h2>
+                ${sortOrderForm(sortOrder)}
+                ${navigation("projects?sortOrder=%d"%(sortOrder), count, limit, offset)}
+                <table class="results">
+                    ${columnTitles(('Project Name', 'Project Description', 'Time Created', 'Time Last Modified', 'Number of Developers'))}
+                    ${searchResults(results)}
+                </table>
+            </div>
+        </td>
     </body>
 </html>
