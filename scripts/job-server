@@ -119,20 +119,27 @@ class JobDaemon:
             time.sleep(5)
 
 def kill(lockFile):
-    lock = open(lockFile, "r")
-    pid = int(lock.read())
-    lock.close()
-    log.info("killing job server pid %d" % pid)
     try:
-        os.kill(pid, signal.SIGINT)
-    except OSError, e:
-        if e.errno != errno.ESRCH:
-            raise
-        else:
-            log.info("process not found; removing lock file")
-            os.unlink(lockFile)
+        lock = open(lockFile, "r")
+        pid = int(lock.read())
+        lock.close()
+    except:
+        log.warning("unable to open lockfile: %s", lockFile)
     else:
-        os.unlink(lockFile)
+        log.info("killing job server pid %d" % pid)
+        try:
+            os.kill(pid, signal.SIGINT)
+        except OSError, e:
+            if e.errno != errno.ESRCH:
+                raise
+            else:
+                log.info("process not found; removing lock file")
+                os.unlink(lockFile)
+        else:
+            try:
+                os.unlink(lockFile)
+            except OSError, IOError:
+                log.warning("unable to remove lockfile")
 
 def daemon(options, cfg, serverUrl, lockFile):
     try:
@@ -152,7 +159,7 @@ def daemon(options, cfg, serverUrl, lockFile):
 
     try:
         os.unlink(lockFile)
-    except OSError:
+    except IOError, OSError:
         log.warning("unable to remove lockfile: %s", lockFile)
 
 if __name__ == "__main__":
