@@ -20,6 +20,7 @@
     <head/>
     <body>
         <p py:def="searchSummary(type, terms, modified)">
+            Results 1 - 10 of about 9,850,000 for foo
             ${type}; keywords: ${terms}; modified within ${searcher.datehtml[modified]}
         </p>
 
@@ -40,13 +41,40 @@
 
         <td id="main" class="spanall">
             <div class="pad">
-                <h2>search results</h2>
-                ${searchSummary(type, terms, modified)}
-                ${navigation("search?type=%s;search=%s;modified=%d"%(type, terms, modified), count, limit, offset)}
+                <h2>search results: ${type}</h2>
+                ${navigation("search?type=%s;search=%s;modified=%d"%(type, terms, modified), terms, count, limit, offset)}
                 <table cellspacing="0" cellpadding="0" class="results">
                     ${columnTitles(columns)}
                     ${searchResults(results)}
                 </table>
+                <h3>search again </h3>
+                <form action="search" method="get">
+                    <table cellspacing="0" cellpadding="0" class="mainformhorizontal">
+                        <tr>
+                            <th width="33%">Search Type:</th>
+                            <th width="33%">Keyword(s):</th>
+                            <th width="33%">Last Modified:</th>
+                        </tr>
+
+                        <tr>
+                            <td width="33%">
+                                <select name="type" onchange="if (this.options[this.selectedIndex].value=='Users') { document.getElementById('searchModified').disabled = true; } else { document.getElementById('searchModified').disabled = false; }">
+                                    <option selected="selected" value="Projects">Search projects</option>
+                                    <option value="Users">Search users</option>
+                                </select>
+                            </td>
+                            <td width="33%">
+                                <input type="text" name="search" size="10" />
+                            </td>
+                            <td width="33%">
+                                <select name="modified" id="searchModified">
+                                    <option py:for="i, option in enumerate(searcher.datehtml)" value="${i}">${option}</option>
+                                </select>
+                            </td>
+                        </tr>
+                    </table>
+                    <p><button>Submit</button></p>
+                </form>
             </div>
         </td>
     </body>

@@ -36,7 +36,7 @@
         <td id="main" class="spanall">
             <div class="pad">
                 <h2>Browse Users</h2>
-                ${navigation("projects?sortOrder=%d"%(sortOrder), count, limit, offset)}
+                ${navigation("projects?sortOrder=%d"%(sortOrder), "all users", count, limit, offset)}
                 <table cellpadding="0" cellspacing="0" class="results">
                     ${columnTitles(('User Name', 'Name', 'Time Created', 'Time Last Accessed', 'About'))}
                     ${searchResults(results)}

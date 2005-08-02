@@ -30,7 +30,7 @@ from mint import searcher
                             </div>
                             <div id="search" class="palette">
                                 <h3>search rpath</h3>
-                                <form name="search" action="search" method="get">
+                                <form action="search" method="get">
                                     <p>
                                         <label>search type:</label><br/>
                                         <select name="type">

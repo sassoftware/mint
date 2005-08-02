@@ -27,7 +27,7 @@ from mint import searcher
 
     <table border="0" cellspacing="0" cellpadding="0"
            summary="layout" class="pager"
-           py:def="navigation(urlbase, count, limit, offset)">
+           py:def="navigation(urlbase, terms, count, limit, offset)">
         <?python
             plural=""
             if count != 1:
@@ -36,19 +36,18 @@ from mint import searcher
         <tr>
             <td>
                 <form>
-                    ${count} match${plural} found;
-                    <span py:if="count == 0">No results shown</span>
-                    <span py:if="count != 0">Showing ${offset + 1}-${min(offset+limit, count)}</span>
-                    <span py:if="count != 0">Page: ${offset/limit + 1}
-                         of ${(count+limit-1)/limit}</span>
-                    <span py:if="count == 0">Page: 1 of 1</span>
+                    ${count} match${plural} found for <strong>${terms}</strong><span py:if="count != 0">; showing page ${offset/limit+1} of ${(count+limit-1)/limit}</span>
              
                     <a href="${urlbase};limit=${limit};offset=${max(offset-limit, 0)}" py:if="offset != 0">
                         <img src="${cfg.staticPath}/apps/mint/images/prev.gif" alt="Previous Page" width="11" height="11" border="0" />
                     </a>
+                    <img py:if="offset == 0" src="${cfg.staticPath}/apps/mint/images/prev_disabled.gif"
+                         alt="Previous Page" width="11" height="11" border="0"/>
                     <a href="${urlbase};limit=${limit};offset=${offset+limit}" py:if="offset+limit &lt; count">
                         <img src="${cfg.staticPath}/apps/mint/images/next.gif" alt="Next Page" width="11" height="11" border="0" />
                     </a>
+                    <img py:if="offset+limit &gt;= count" src="${cfg.staticPath}/apps/mint/images/next_disabled.gif"
+                        alt="Previous Page" width="11" height="11" border="0"/>
                 </form>
             </td>
         </tr>

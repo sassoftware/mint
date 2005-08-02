@@ -33,7 +33,7 @@
             <div class="pad">
                 <h2>Browse Projects</h2>
                 ${sortOrderForm(sortOrder)}
-                ${navigation("projects?sortOrder=%d"%(sortOrder), count, limit, offset)}
+                ${navigation("projects?sortOrder=%d"%(sortOrder), "all projects", count, limit, offset)}
                 <table cellpadding="0" cellspacing="0" class="results">
                     ${columnTitles(('Project Name', 'Project Description', 'Time Created', 'Time Last Modified', 'Number of Developers'))}
                     ${searchResults(results)}
