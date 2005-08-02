@@ -18,7 +18,7 @@
     <body>
         <div py:def="formatResults(resultset = [])" py:strip="True">
             <?python
-                formattedresults = [ 'http://%s' % resultset[0],
+                formattedresults = [ 'userInfo?id=%s' % resultset[0],
                     resultset[1], resultset[2],
                     time.ctime(resultset[3]), time.ctime(resultset[4]),
                     resultset[5] ]
