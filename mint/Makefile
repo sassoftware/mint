@@ -13,7 +13,7 @@ python_files =			\
 	__init__.py		\
 	jobs.py			\
 	jobstatus.py		\
-	mail.py			\
+	mailinglists.py		\
 	mint_error.py		\
 	mint.py			\
 	mint_server.py		\
