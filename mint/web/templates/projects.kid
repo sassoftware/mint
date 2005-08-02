@@ -1,11 +1,11 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <?python
-    #
-    # Copyright (C) 2005 rpath, Inc.
-    # All Rights Reserved
-    #
-    import time
-    from mint import projectlisting
+#
+# Copyright (C) 2005 rpath, Inc.
+# All Rights Reserved
+#
+import time
+from mint import projectlisting
 ?>
 <html xmlns:html="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"

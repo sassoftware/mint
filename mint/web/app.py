@@ -739,7 +739,7 @@ class MintApp(webhandler.WebHandler):
             self.req.sendfile(filename)
         except OSError, e:
             self._write("error", shortError = "File error",
-                           error = "An error has occurred opening the image file: %s" % e)
+                        error = "An error has occurred opening the image file: %s" % e)
         return apache.OK
 
     def _write(self, template, templatePath = None, **values):

@@ -17,6 +17,8 @@ import sys
 import conarycfg
 import sqlite3
 from repository.netrepos import netserver
+from repository.filecontainer import FileContainer
+from repository import changeset
 
 from mint import config
 from mint import database
@@ -113,6 +115,17 @@ def post(port, isSecure, repos, cfg, req):
             return webfe._handle()
 
 def get(port, isSecure, repos, cfg, req):
+    def _writeNestedFile(req, name, tag, size, f, sizeCb):
+        if changeset.ChangedFileTypes.refr[4:] == tag[2:]:
+            path = f.read()
+            size = os.stat(path).st_size
+            tag = tag[0:2] + changeset.ChangedFileTypes.file[4:]
+            sizeCb(size, tag)
+            req.sendfile(path)
+        else:
+            sizeCb(size, tag)
+            req.write(f.read())
+
     if isSecure:
         protocol = "https"
     else:
@@ -158,7 +171,18 @@ def get(port, isSecure, repos, cfg, req):
 
         req.content_type = "application/x-conary-change-set"
         for (path, size) in items:
-            req.sendfile(path)
+            if path.endswith('.ccs-out'):
+                cs = FileContainer(open(path))
+                cs.dump(req.write, 
+                        lambda name, tag, size, f, sizeCb: 
+                            _writeNestedFile(req, name, tag, size, f,
+                                             sizeCb))
+
+                del cs
+            else:
+                req.sendfile(path)
+
+            
 
             if path.startswith(repos.tmpPath) and \
                     not(os.path.basename(path)[0:6].startswith('cache-')):
