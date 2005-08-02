@@ -50,6 +50,15 @@ from mint import userlevels
                                 <a href="projectDesc">Edit Description</a></span>
                             </h3>
                             <p>${project.getDesc()}</p>
+                            <h3>Configuration</h3>
+
+                            <p>To add this project in your Conary configuration, add the following to your ~/.conaryrc:</p>
+                            <div style="position:relative; border:1px #ccc solid; padding:0px 8px 8px 8px;">
+                                <div style="position:relative; width:100%; height:192px; vertical-align:top;">
+                                    <pre style="position:absolute; height:inherit; width:inherit; overflow:auto;">installLabelPath ${project.getLabel()}<p py:strip="True" py:if="auth.authorized">
+repositoryMap ${project.getHostname()} http://${auth.username}:<i>password</i>@${project.getHostname()}/conary/</p></pre>
+                                </div>
+                            </div>
                         </div>
                     </td>
                     ${projectsPane()}
