@@ -13,18 +13,21 @@ kid_files = \
 	layout.kid		\
 	library.kid		\
 	login.kid		\
+	mailingLists.kid	\
 	memberSettings.kid	\
 	members.kid		\
 	newProject.kid		\
 	newRelease.kid		\
 	projectDesc.kid		\
+	project.kid		\
 	projectPage.kid		\
 	register.kid		\
 	release.kid		\
 	releases.kid		\
 	searchResults.kid	\
 	userInfo.kid		\
-	userSettings.kid
+	userSettings.kid	\
+	users.kid
 
 python_files = __init__.py
 
