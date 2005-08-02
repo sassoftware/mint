@@ -751,6 +751,7 @@ class MintApp(webhandler.WebHandler):
                               userLevel = self.userLevel,
                               projectList = self.projectList,
                               req = self.req,
+                              siteHost = self.siteHost,
                               toUrl = self.toUrl,
                               **values)
         t.write(self.req, encoding = "utf-8", output = "xhtml-strict")

@@ -44,7 +44,12 @@ onload = "javascript:;"
                         <input py:if="loginAction == 'login'" type="hidden" name="to" value="${quote(toUrl)}" />
                         <table border="0" cellspacing="0" cellpadding="0" summary="layout">
                             <tr>
-                                <td id="logo">&#160;</td>
+                                <td id="logo">
+                                    <a href="http://${siteHost}/">
+                                        <img src="${cfg.staticPath}/apps/mint/images/logo.gif" border="0"
+                                             width="216" height="72" />
+                                    </a>
+                                </td>
                                 <td id="user" py:if="not auth.authorized">
                                     <div class="pad">
                                         <h4>not logged in | <a href="login">forgot password</a></h4>
@@ -66,6 +71,7 @@ onload = "javascript:;"
                             <tr>
                                 <td id="topnav">
                                     <div class="pad">
+                                        <a href="http://${siteHost}/">Home</a> | 
                                         <a href="#">About rpath</a> |
                                         <a href="#">Terms of Service</a> |
                                         <a href="#">Privacy</a> |

@@ -23,7 +23,9 @@
 }
 td#logo {
 	width:76%; min-width:564px; height:78px;
-	background:url(../images/logo.gif) no-repeat top left;
+}
+td#logo a {
+    background: none;
 }
 td#user {
 	width:24%; min-width:180px; font-size:0.6333em;
