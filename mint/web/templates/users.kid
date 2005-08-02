@@ -10,6 +10,10 @@
     Copyright 2005 rpath, Inc.
     All Rights Reserved
 -->
+    <div py:def="breadcrumb()" py:strip="True">
+        <a href="#">browse users</a>
+    </div>
+
     <head/>
     <body>
         <div py:def="formatResults(resultset = [])" py:strip="True">

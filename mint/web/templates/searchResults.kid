@@ -17,6 +17,10 @@
         elif type == "Users":
             columns = ('User Name', 'Full Name', 'E-mail Address', 'Other')
     ?>
+    <div py:def="breadcrumb()" py:strip="True">
+        <a href="#">search results</a>
+    </div>
+
     <head/>
     <body>
         <p py:def="searchSummary(type, terms, modified)">

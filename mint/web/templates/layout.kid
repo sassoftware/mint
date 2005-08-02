@@ -11,8 +11,7 @@ onload = "javascript:;"
 
 <html xmlns:py="http://purl.org/kid/ns#"
       py:extends="'project.kid'">
-    <div py:def="breadcrumb()" class="pad">
-        You are here: <a href="/">rpath</a>
+    <div py:def="breadcrumb()" class="pad" py:strip="True">
     </div>
 
     <head py:match="item.tag == 'head'" xmlns="http://www.w3.org/1999/xhtml">
@@ -95,7 +94,10 @@ onload = "javascript:;"
         </div>
         <div id="middle" align="center">
             <div id="crumb">
-                ${breadcrumb()}
+                <div class="pad">
+                    You are here: <a href="http://${siteHost}/">rpath</a>
+                    ${breadcrumb()}
+                </div>
             </div>
         </div>
         <div id="bottom" align="center">

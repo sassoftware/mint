@@ -7,9 +7,7 @@
     Copyright 2005 rpath, Inc.
     All Rights Reserved
 -->
-    <div py:def="breadcrumb()" class="pad">
-        You are here:
-        <a href="/">rpath</a>
+    <div py:def="breadcrumb()" py:strip="True">
         <a href="#">${user.getFullName()}</a>
     </div>
 

@@ -13,9 +13,7 @@ from mint import userlevels
         memberList = project.getMembers()
     ?>
 
-    <div py:def="breadcrumb()" class="pad">
-        You are here:
-        <a href="#">rpath</a>
+    <div py:def="breadcrumb()" py:strip="True">
         <a href="#">${project.getName()}</a>
     </div>
 

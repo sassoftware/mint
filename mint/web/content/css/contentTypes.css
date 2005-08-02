@@ -64,6 +64,7 @@
 }
 .palette input, .palette select {
 	width:95%;
+        background-color: white;
 }
 
 #browse li {
