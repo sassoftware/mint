@@ -50,7 +50,7 @@
                             <th>Additional Mailing Lists:</th>
                             <td>
                                 <span py:for="listid in mailinglists.optionallists">
-                                    <input type="checkbox" name="optlists" value="${listid}"/>${mailinglists.listnames[listid]%'projectname'}
+                                    <input class="check" type="checkbox" name="optlists" value="${listid}"/>${mailinglists.listnames[listid]%'projectname'}
                                 </span>
                                 <p class="help">Two mailing lists will be created automatically, one matching your project name, and projectname-commits.  Select additional lists to create.  You may create new lists at any time from your projects administration page.
                                 </p>

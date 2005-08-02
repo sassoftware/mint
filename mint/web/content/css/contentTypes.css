@@ -108,6 +108,10 @@
 	width:70%; margin-top:0px; padding-top:0px;
 	background-color:#eee;
 }
+.mainformhorizontal input.check,
+.mainformhorizontal input.radio {
+    width:auto;
+}
 .mainformhorizontal div.help,
 .mainformhorizontal p.help {
 	position:relative; width:70%;
