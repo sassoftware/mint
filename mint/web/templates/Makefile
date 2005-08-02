@@ -20,6 +20,7 @@ kid_files = \
 	newRelease.kid		\
 	projectDesc.kid		\
 	project.kid		\
+	projects.kid		\
 	projectPage.kid		\
 	register.kid		\
 	release.kid		\
