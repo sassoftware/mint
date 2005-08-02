@@ -74,6 +74,9 @@
 #search h3 {
 	background:#FF930B; border-color:#F28C0A;
 }
+#search input {
+        background-color: white;
+}
 
 /* PLAIN COLUMN CONTENT STYLES */
 .date {
