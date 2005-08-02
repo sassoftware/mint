@@ -28,6 +28,7 @@
 }
 .projects ul li {
 	padding:0em 0em 0.75em 0.75em;
+        background-image: none;
 }
 
 /* SIDE COLUMN CONTENT STYLES */
@@ -224,4 +225,7 @@ a.option {
 a.option:hover {
 	background-color:#ccc; background-image:none;
 	text-decoration:none;
+}
+code {
+        margin-left: 1em;
 }
