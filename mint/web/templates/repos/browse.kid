@@ -46,7 +46,7 @@ import string
                 ?>
 
 
-                <table border="0" cellspacing="0" cellpadding="0" summary="layout" class="pager">
+                <table border="0" cellspacing="0" cellpadding="0" summary="layout" class="pager" py:if="0">
                     <tr>
                         <td>
                             <form>
@@ -76,7 +76,7 @@ import string
                         <td>
                             <a href="troveInfo?t=${package}">${package}</a>
                             <a py:if="package in components" class="trove"
-                               href="javascript:toggle_display('components__${i}');"><img border="0" src="${cfg.staticPath}/apps/mint/images/plus.gif"/></a>
+                               href="javascript:toggle_display('components__${i}');"><img border="0" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif"/></a>
                             <div py:if="package in components" id="components__${i}"
                                  class="trovelist" style="display: none;">
                                 <ul>
@@ -91,7 +91,7 @@ import string
                     </tr>
                 </table>
                 
-                <table border="0" cellspacing="0" cellpadding="0" summary="layout" class="pager">
+                <table border="0" cellspacing="0" cellpadding="0" summary="layout" class="pager" py:if="0">
                     <tr>
 
                         <td>
