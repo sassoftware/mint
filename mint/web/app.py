@@ -145,6 +145,8 @@ class MintApp(webhandler.WebHandler):
     user = None
     userLevel = None
     projectList = None
+    
+    content_type = "application/xhtml+xml"
 
     def _checkAuth(self, authToken):
         self.client = shimclient.ShimMintClient(self.cfg, authToken)

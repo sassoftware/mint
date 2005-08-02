@@ -27,6 +27,9 @@ td#logo {
 td#logo a {
     background: none;
 }
+td#logo img {
+    border: none;
+}
 td#user {
 	width:24%; min-width:180px; font-size:0.6333em;
 	background:url(../images/user_border.gif) no-repeat;

@@ -2,8 +2,7 @@
 <?python
 from mint import userlevels
 ?>
-<html xmlns:html="http://www.w3.org/1999/xhtml"
-      xmlns:py="http://purl.org/kid/ns#"
+<html xmlns:py="http://purl.org/kid/ns#"
       py:extends="'library.kid', 'layout.kid', 'project.kid'">
 <!--
     Copyright 2005 rpath, Inc.
@@ -53,12 +52,8 @@ from mint import userlevels
                             <h3>Configuration</h3>
 
                             <p>To add this project in your Conary configuration, add the following to your ~/.conaryrc:</p>
-                            <div style="position:relative; border:1px #ccc solid; padding:0px 8px 8px 8px;">
-                                <div style="position:relative; width:100%; height:192px; vertical-align:top;">
-                                    <pre style="position:absolute; height:inherit; width:inherit; overflow:auto;">installLabelPath ${project.getLabel()}<p py:strip="True" py:if="auth.authorized">
-repositoryMap ${project.getHostname()} http://${auth.username}:<i>password</i>@${project.getHostname()}/conary/</p></pre>
-                                </div>
-                            </div>
+                            <textarea style="width: 100%; white-space: nowrap;" readonly="readonly" rows="4">installLabelPath ${project.getLabel()}<p py:strip="True" py:if="auth.authorized">
+repositoryMap ${project.getHostname()} http://${auth.username}:<i>password</i>@${project.getHostname()}/conary/</p></textarea>
                         </div>
                     </td>
                     ${projectsPane()}

@@ -10,7 +10,6 @@ onload = "javascript:;"
 ?>
 
 <html xmlns:py="http://purl.org/kid/ns#"
-      xmlns="http://www.w3.org/1999/xhtml"
       py:extends="'project.kid'">
     <div py:def="breadcrumb()" class="pad">
         You are here: <a href="/">rpath</a>
@@ -18,6 +17,7 @@ onload = "javascript:;"
 
     <head py:match="item.tag == 'head'" xmlns="http://www.w3.org/1999/xhtml">
         <title>rpath.com</title>
+        <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=utf-8" />
         <script type="text/javascript" src="${cfg.staticPath}/apps/mint/javascript/generic.js"/>
         <script type="text/javascript" src="${cfg.staticPath}/apps/mint/javascript/library.js"/>
         <script type="text/javascript" src="${cfg.staticPath}/apps/mint/javascript/xmlrpc.js"/>
@@ -40,14 +40,13 @@ onload = "javascript:;"
         <div id="top" align="center">
             <div class="shadowLeft"><div class="shadowRight">
                 <div class="surfaceLeft" align="left"><div class="surfaceRight">
-                    <form name="login" method="get" action="${loginAction}">
+                    <form method="get" action="${loginAction}">
                         <input py:if="loginAction == 'login'" type="hidden" name="to" value="${quote(toUrl)}" />
                         <table border="0" cellspacing="0" cellpadding="0" summary="layout">
                             <tr>
                                 <td id="logo">
                                     <a href="http://${siteHost}/">
-                                        <img src="${cfg.staticPath}/apps/mint/images/logo.gif" border="0"
-                                             width="216" height="72" />
+                                        <img src="${cfg.staticPath}/apps/mint/images/logo.gif" alt="rpath logo" width="216" height="72" />
                                     </a>
                                 </td>
                                 <td id="user" py:if="not auth.authorized">
@@ -63,7 +62,7 @@ onload = "javascript:;"
                                     <div class="pad">
                                         <h3>${auth.fullName}</h3>
                                         <h4>${auth.username}</h4>
-                                        <div><a href="userSettings" class="arrows">view &amp; edit my account</a></div>
+                                        <div><a href="userSettings" class="arrows">view &#38; edit my account</a></div>
 
                                     </div>
                                 </td>
