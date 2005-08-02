@@ -476,7 +476,6 @@ class MintApp(webhandler.WebHandler):
 
         return self._redirect("release?id=%d" % releaseId)
 
-    @requiresAuth
     @projectOnly
     @intFields(id = None)
     def release(self, auth, id):
@@ -485,17 +484,13 @@ class MintApp(webhandler.WebHandler):
         try:
             trove, version, flavor = release.getTrove()
         except releases.TroveNotSet:
-
             return self._redirect("editRelease?releaseId=%d" % release.getId())
         else:
-            refreshing = False
-            job = release.getJob()
-
             self._write("release", release = release,
-                                          name = release.getName(),
-                                          trove = trove, version = versions.ThawVersion(version),
-                                          flavor = deps.ThawDependencySet(flavor), job = job,
-                                          releaseId = id, projectId = self.project.getId())
+                                   name = release.getName(),
+                                   trove = trove, version = versions.ThawVersion(version),
+                                   flavor = deps.ThawDependencySet(flavor),
+                                   releaseId = id, projectId = self.project.getId())
         return apache.OK
 
     @projectOnly
