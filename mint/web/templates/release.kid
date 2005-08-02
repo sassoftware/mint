@@ -7,17 +7,30 @@
 from mint import jobstatus
 from mint import userlevels
 ?>
-
 <html xmlns:html="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'library.kid', 'layout.kid'">
+    <?python
+    isOwner = userLevel == userlevels.OWNER
+    if isOwner:
+        onload = "setTimeout('getReleaseStatus(" + str(release.getId()) + ")', 1000);"
+    else:
+        onload = None
+
+    bodyAttrs = {'onload': onload}
+    ?>
     <head/>
-    <body onload="setTimeout('getReleaseStatus(${release.getId()})', 1000);">
+    <body py:attrs="bodyAttrs">
         <?python
+            if isOwner:
+                job = release.getJob()
+            else:
+                job = None
+
             preventEdit = job and job.getStatus() in (jobstatus.WAITING, jobstatus.RUNNING)
             files = release.getFiles()
             published = release.getPublished()
-            isOwner = userLevel == userlevels.OWNER
+
         ?>
         
         <td id="left" class="side">
