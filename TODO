@@ -35,8 +35,8 @@ USER INTERFACE
     * Search Users
     * Browse Projects
     * Browse Users
-
+* Implement "cancel account"
 
 
 * Bug tracking
-* update hooks.py to match the new apachehooks code 
+* [DONE] update hooks.py to match the new apachehooks code 
