@@ -224,11 +224,7 @@ def subhandler(req):
     cfg.staticPath = cfg.staticUrl
 
     method = req.method.upper()
-    port = req.server.port
-    if not port:
-        port = req.parsed_uri[apache.URI_PORT]
-        if not port:
-            port = 80
+    port = req.connection.local_addr[1]
     secure = (port == 443)
 
     if not repositories.has_key(repName):
