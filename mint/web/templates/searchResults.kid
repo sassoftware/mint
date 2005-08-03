@@ -15,7 +15,7 @@
         if type == "Projects":
             columns = ('Project Name', 'Project Description', 'Last Modified')
         elif type == "Users":
-            columns = ('User Name', 'Full Name', 'E-mail Address', 'Other')
+            columns = ('User Name', 'Full Name', 'Contact Info', 'Other')
     ?>
     <div py:def="breadcrumb()" py:strip="True">
         <a href="#">search results</a>
