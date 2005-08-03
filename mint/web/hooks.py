@@ -84,7 +84,7 @@ def post(port, isSecure, repos, cfg, req):
         else:
             if not cfg.xmlrpcAccess:
                 return apache.HTTP_FORBIDDEN
-            server = mint_server.MintServer(cfg)
+            server = mint_server.MintServer(cfg, allowPrivate = False)
             wrapper = server.callWrapper
             params = [method, authToken, params]
         

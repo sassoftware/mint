@@ -40,8 +40,15 @@ def requiresAuth(func):
             return func(self, *args)
     return wrapper
 
+def public(func):
+    def wrapper(self, *args):
+        func.allowed = True
+        return func(self, *args)
+    return wrapper
+
 class MintServer(object):
     _checkRepo = True 
+
     def callWrapper(self, methodName, authToken, args):
         if methodName.startswith('_'):
             raise AttributeError
@@ -57,7 +64,15 @@ class MintServer(object):
             if self.auth.authorized:
                 self._checkRepo = False
 
-            r = method(*args)
+            if 'allowed' not in method.__dict__:
+                allowed = False
+            else:
+                allowed = method.allowed
+
+            if allowed or self._allowPrivate:
+                r = method(*args)
+            else:
+                return (True, ("MethodNotSupported", methodName, ""))
         except users.UserAlreadyExists, e:
             return (True, ("UserAlreadyExists", str(e)))
         except database.DuplicateItem, e:
@@ -475,6 +490,7 @@ class MintServer(object):
             raise jobs.FileMissing
 
     @requiresAuth
+    @public
     def getGroupTroves(self, projectId):
         project = projects.Project(self, projectId)
 
@@ -493,6 +509,7 @@ class MintServer(object):
         return troveDict
 
     @requiresAuth
+    @public
     def getReleaseStatus(self, releaseId):
         release = releases.Release(self, releaseId)
         job = release.getJob()
@@ -503,8 +520,13 @@ class MintServer(object):
             return {'status':  job.getStatus(),
                     'message': job.getStatusMessage()}
 
-    def __init__(self, cfg):
+    def __init__(self, cfg, allowPrivate = False):
         self.cfg = cfg
+     
+        # all methods are private (not callable via XMLRPC)
+        # except the ones specifically decorated with @public.
+        self._allowPrivate = allowPrivate
+        
         self.db = sqlite3.connect(cfg.dbPath, timeout = 30000)
         self.authDb = sqlite3.connect(cfg.authDbPath, timeout = 30000)
 

@@ -7,6 +7,7 @@ import mint
 from mint_server import MintServer
 
 class ShimMintClient(mint.MintClient):
+    _allowPrivate = True # enable all private methods of MintClient
     def __init__(self, cfg, authToken):
         self.server = ShimServerProxy(cfg, authToken)
 
@@ -31,7 +32,7 @@ class ShimServerProxy(mint.ServerProxy):
     def __init__(self, cfg, authToken):
         self._cfg = cfg
         self._authToken = authToken
-        self._server = MintServer(self._cfg)
+        self._server = MintServer(self._cfg, allowPrivate = True)
 
     def __getattr__(self, name):
         return _ShimMethod(self._server, self._authToken, name)
