@@ -699,7 +699,7 @@ class MintApp(webhandler.WebHandler):
             userProjects = self.client.getProjectsByMember(id))
         return apache.OK
 
-    @strFields(search = None, type = None)
+    @strFields(search = "", type = None)
     @intFields(limit = 10, offset = 0, modified = 0)
     def search(self, auth, type, search, modified, limit, offset):
         if type == "Projects":
