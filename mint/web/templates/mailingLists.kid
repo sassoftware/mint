@@ -30,38 +30,45 @@
             <div class="pad">
                 <h2>${project.getName()} Mailing Lists</h2>
                 <div py:for="list in lists">
-                    <p><a href="${mailhost + 'listinfo/' + list.name}" target="_NEW" py:content="list.name"/></p>
-                    <p py:content="list.description"/>
-                    <span><a href="${mailhost + '../pipermail/' + list.name}" target="_NEW">Archives</a></span>
-                    <span py:if="auth.authorized and not isOwner"><a href="subscribe?list=${list.name}">Subscribe</a></span>
-                    <span py:if="isOwner"><a href="${mailhost + 'admin/' + list.name}" target="_NEW">Administration Page</a></span>
-                    <span py:if="isOwner"><a href="deleteList?list=${list.name}">Delete List</a></span>
+                    <h3><a href="${mailhost + 'listinfo/' + list.name}" target="_NEW">${list.name}</a></h3>
+                    <p>${list.description}</p>
+                    <div style="float:left; margin-right:5px;"><span><a href="${mailhost + '../pipermail/' + list.name}" class="option" target="_NEW">Archives</a></span></div>
+                    <div style="float:left; margin-right:5px;"><span py:if="auth.authorized and not isOwner"><a class="option" href="subscribe?list=${list.name}">Subscribe</a></span></div>
+
+                    <div style="float:left; margin-right:5px;"><span py:if="isOwner"><a href="${mailhost + 'admin/' + list.name}" class="option" target="_NEW">Admin Page</a></span></div>
+                    <div style="float:left; margin-right:5px;"><span py:if="isOwner"><a href="deleteList?list=${list.name}" class="option">Delete List</a></span></div>
+                    &#160;
+                    <br clear="all"/>
+                    &#160;
                 </div>
                 <h2 py:if="isOwner">Create a New Mailing List</h2>
+
                 <form py:if="isOwner" name="createList" action="createList" method="POST">
-                    <table border="0" cellspacing="0" cellpadding="0" class="mai
-nformhorizontal">
-                    <tr>
-                        <th><em class="required">List Name:</em></th>
-                        <td>${project.getName()}-<input name="listname" type="text" /></td>
-                    </tr>
-                    <tr>
-                        <th>List Description:</th>
-                        <td><input name="description" type="text"/></td>
-                    </tr>
-                    <tr>
-                        <th>List Password:</th>
-                        <td><input name="listpw" type="password"/>
-                            <p class="help">If you leave both password fields blank, a random password will be generated and e-mailed to all project owners.</p>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th>List Password (again):</th>
-                        <td><input name="listpw2" type="password"/></td>
-                    </tr>
-                </table>
-                <button type="submit">Create List</button>
+                    <table border="0" cellspacing="0" cellpadding="0" class="mainformhorizontal">
+                        <tr>
+                            <th><em class="required">List Name:</em></th>
+                            <td>${hostname}-<input name="listname" type="text" /></td>
+                        </tr>
+                        <tr>
+                            <th>List Description:</th>
+
+                            <td><input name="description" type="text"/></td>
+                        </tr>
+                        <tr>
+                            <th>List Password:</th>
+                            <td><input name="listpw" type="password"/>
+                                <p class="help">If you leave both password fields blank, a random password will be generated and e-mailed to all project owners.</p>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <th>List Password<br/>(again):</th>
+                            <td><input name="listpw2" type="password"/></td>
+                        </tr>
+                    </table>
+                    <p><button type="submit">Create List</button></p>
                 </form>
+
             </div>
         </td>
         ${projectsPane()}

@@ -517,7 +517,7 @@ class MintApp(webhandler.WebHandler):
         hostname = self.project.getHostname()
         hostname = hostname[0:hostname.find('.')]
         lists = mlists.list_lists(hostname)
-        self._write("mailingLists", lists=lists, mailhost=self.cfg.MailListBaseURL)
+        self._write("mailingLists", lists=lists, mailhost=self.cfg.MailListBaseURL, hostname=hostname)
         return apache.OK
 
     @projectOnly
