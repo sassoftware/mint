@@ -544,7 +544,7 @@ class MintApp(webhandler.WebHandler):
     @ownerOnly
     @strFields(list=None)
     @mailList
-    def deleteList(self, auth, mlists, list):
+    def _deleteList(self, auth, mlists, list):
         hostname = self.project.getHostname()
         hostname = hostname[0:hostname.find('.')]
         pcre = re.compile('^%s$|^%s-'%(hostname, hostname), re.I)

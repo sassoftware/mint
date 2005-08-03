@@ -36,7 +36,6 @@
                     <div style="float:left; margin-right:5px;"><span py:if="auth.authorized and not isOwner"><a class="option" href="subscribe?list=${list.name}">Subscribe</a></span></div>
 
                     <div style="float:left; margin-right:5px;"><span py:if="isOwner"><a href="${mailhost + 'admin/' + list.name}" class="option" target="_NEW">Admin Page</a></span></div>
-                    <div style="float:left; margin-right:5px;"><span py:if="isOwner"><a href="deleteList?list=${list.name}" class="option">Delete List</a></span></div>
                     &#160;
                     <br clear="all"/>
                     &#160;
