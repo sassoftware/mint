@@ -323,6 +323,7 @@ class MintApp(webhandler.WebHandler):
             authToken = (username, password)
             client = shimclient.ShimMintClient(self.cfg, authToken)
             auth = client.checkAuth()
+            client.updateAccessedTime(auth.userId)
 
             if not auth.authorized:
                 return self._redirect("login?message=invalid")

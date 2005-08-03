@@ -233,6 +233,10 @@ class MintServer(object):
         return self.auth.getDict()
 
     @requiresAuth
+    def updateAccessedTime(self, userId):
+        return self.users.update(userId, timeAccessed = time.time())
+
+    @requiresAuth
     def setUserEmail(self, userId, email):
         return self.users.update(userId, email = email)
 

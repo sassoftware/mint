@@ -147,6 +147,8 @@ class UsersTable(database.KeyedTable):
                               fullName = fullName,
                               email = email,
                               displayEmail = displayEmail,
+                              timeCreated = time.time(),
+                              timeAccessed = 0,
                               blurb = blurb,
                               active = active,
                               confirmation = confirm)

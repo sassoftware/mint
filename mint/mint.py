@@ -43,6 +43,9 @@ class MintClient:
         authTuple = self.server.checkAuth()
         return users.Authorization(**authTuple)
 
+    def updateAccessedTime(self, userId):
+        return self.server.updateAccessedTime(userId)
+
     def getProjectByHostname(self, hostname):
         """
         Retrieve a Project by hostname.
