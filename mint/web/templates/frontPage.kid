@@ -23,8 +23,8 @@ from mint import searcher
                                 <h3>browse rpath</h3>
                                 <ul>
                                     <li><a href="projects">All Projects</a></li>
-                                    <li><a href="#">Most Active Projects</a></li>
-                                    <li><a href="#">Most Popular Projects</a></li>
+                                    <li><a href="projects?sortOrder=3">Most Active Projects</a></li>
+                                    <li><a href="projects?sortOrder=7">Most Popular Projects</a></li>
                                     <li><a href="users">All People</a></li>
                                 </ul>
                             </div>
