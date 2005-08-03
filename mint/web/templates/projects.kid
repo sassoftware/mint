@@ -33,7 +33,7 @@ from mint import projectlisting
                         value="${key}" py:attrs="{'selected': (key==sortOrder) and 'selected' or None}"
                         py:content="value" />
                 </select>
-                <input type="submit" name="submit" value="Go" />
+                <button type="submit">Go</button>
             </form>
         </p>
 
