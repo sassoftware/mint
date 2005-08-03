@@ -36,6 +36,7 @@ from mint import searcher
         <tr>
             <td>
                 <form>
+                    <span style="float: right;" py:if="count != 0">Showing match${plural} ${offset + 1}-${min(offset+limit, count)}</span>
                     ${count} match${plural} found for <strong>${terms}</strong><span py:if="count != 0">; showing page ${offset/limit+1} of ${(count+limit-1)/limit}</span>
              
                     <a href="${urlbase};limit=${limit};offset=${max(offset-limit, 0)}" py:if="offset != 0">

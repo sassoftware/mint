@@ -23,11 +23,6 @@
 
     <head/>
     <body>
-        <p py:def="searchSummary(type, terms, modified)">
-            Results 1 - 10 of about 9,850,000 for foo
-            ${type}; keywords: ${terms}; modified within ${searcher.datehtml[modified]}
-        </p>
-
         <div py:def="formatResults(resultset = [])" py:strip="True">
             <?python
                 formattedresults = []
