@@ -43,11 +43,13 @@ USER INTERFACE
 * Fix 'more about rpath' link
 * Fix up news handling
 * Improve rendering of "contact information" in userInfo
-* Search issues (see Ed's email)
+* Fix description handling in search results
+* Fix description handling in browse pages
+* [POSTPONED] Highlight search results in descriptions
 * Fix all breadcrumbs
 * Agree to ToS checkbox on New Account page
 * Make a separate 'waiting for confirmation' page after registration instead of just using
   login with a message
 
-* Bug tracking
+* [POSTPONED] Bug tracking
 * [DONE] update hooks.py to match the new apachehooks code 
