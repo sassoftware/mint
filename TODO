@@ -37,7 +37,9 @@ USER INTERFACE
     * Browse Users
 * Implement "cancel account"
 * Implement a few static-text pages: about rpath, ToS, privacy, contact into, products
-* Fix 'most active' and 'most popular' project links
+* [SORT OF DONE] Fix 'most active' and 'most popular' project links
+ - We need to parse the Commits table and downloads counter and distill some real
+   statistical information to use for these links.
 * Fix 'more about rpath' link
 * Fix up news handling
 * Improve rendering of "contact information" in userInfo
