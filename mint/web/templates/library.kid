@@ -36,19 +36,22 @@ from mint import searcher
         <tr>
             <td>
                 <form>
-                    <span style="float: right;" py:if="count != 0">Showing match${plural} ${offset + 1}-${min(offset+limit, count)}</span>
-                    ${count} match${plural} found for <strong>${terms}</strong><span py:if="count != 0">; showing page ${offset/limit+1} of ${(count+limit-1)/limit}</span>
-             
-                    <a href="${urlbase};limit=${limit};offset=${max(offset-limit, 0)}" py:if="offset != 0">
-                        <img src="${cfg.staticPath}/apps/mint/images/prev.gif" alt="Previous Page" width="11" height="11" border="0" />
-                    </a>
-                    <img py:if="offset == 0" src="${cfg.staticPath}/apps/mint/images/prev_disabled.gif"
-                         alt="Previous Page" width="11" height="11" border="0"/>
-                    <a href="${urlbase};limit=${limit};offset=${offset+limit}" py:if="offset+limit &lt; count">
-                        <img src="${cfg.staticPath}/apps/mint/images/next.gif" alt="Next Page" width="11" height="11" border="0" />
-                    </a>
-                    <img py:if="offset+limit &gt;= count" src="${cfg.staticPath}/apps/mint/images/next_disabled.gif"
-                        alt="Previous Page" width="11" height="11" border="0"/>
+                    <span style="float: left;" py:if="count != 0">
+                        ${count} match${plural} found for <strong>${terms}</strong>;
+                        Showing ${offset + 1}-${min(offset+limit, count)};
+                    </span>
+                    <span style="float: right;" py:if="count != 0">
+                        Showing page ${offset/limit+1} of ${(count+limit-1)/limit}
+
+                        <a href="${urlbase};limit=${limit};offset=${max(offset-limit, 0)}" py:if="offset != 0">
+                            <img src="${cfg.staticPath}/apps/mint/images/prev.gif" alt="Previous" title="Previous Page" width="11" height="11" border="0" />
+                        </a>
+                        <img py:if="offset == 0" src="${cfg.staticPath}/apps/mint/images/prev_disabled.gif" alt="Previous" title="No previous results" width="11" height="11" border="0"/>
+                        <a href="${urlbase};limit=${limit};offset=${offset+limit}" py:if="offset+limit &lt; count">
+                            <img src="${cfg.staticPath}/apps/mint/images/next.gif" alt="Next" title="Next Page" width="11" height="11" border="0" />
+                        </a>
+                        <img py:if="offset+limit &gt;= count" src="${cfg.staticPath}/apps/mint/images/next_disabled.gif" alt="No next page" title="No subsequent results" width="11" height="11" border="0"/>
+                    </span>
                 </form>
             </td>
         </tr>
