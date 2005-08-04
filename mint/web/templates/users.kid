@@ -26,9 +26,21 @@
             ${resultRow(formattedresults)}
         </div>
 
+        <div py:def="sortOrderForm(sortOrder = 0)" py:strip="True">
+            <form method="get" action="users">
+                <select name="sortOrder">
+                    <option py:for="key, value in userlisting.orderhtml.items()"
+                        value="${key}" py:attrs="{'selected': (key==sortOrder) and 'selected' or None}"
+                        py:content="value" />
+                </select>
+                <button type="submit">Go</button>
+            </form>
+        </div>
+
         <td id="main" class="spanall">
             <div class="pad">
                 <h2>Browse Users</h2>
+                ${sortOrderForm(sortOrder)}
                 ${navigation("projects?sortOrder=%d"%(sortOrder), "all users", count, limit, offset)}
                 <table cellpadding="0" cellspacing="0" class="results">
                     ${columnTitles(('User Name', 'Name', 'Time Created', 'Time Last Accessed', 'About'))}

@@ -34,7 +34,6 @@ messages = { '':          'If you do not have an account, please <a href="regist
                             <td><input type="password" name="password" /></td>
                         </tr>
                     </table>
-
                     <p>
                         <button type="submit" name="submit" value="Log In">Log In</button>&#160;
                         <button type="submit" name="submit" value="Forgot Password">Forgot Password</button>
