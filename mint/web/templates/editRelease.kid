@@ -49,12 +49,16 @@ def generateJs(archMap):
         }
     ]]>
     </script>
-
-        <td id="main" class="spanall">
+    <td id="left" class="side">
+        <div class="pad">
+            ${projectResourcesMenu()}
+        </div>
+    </td>
+    <td id="main">
         <div class="pad">
             <h2>Release</h2>
             <form method="post" action="editRelease2">
-                <table style="padding: 12px;">
+                <table cellpadding="6">
                     <tr><td>Trove:</td><td>${trove}=${label}</td></tr>
                     <tr>
                         <td>Architecture:</td>
@@ -76,10 +80,10 @@ def generateJs(archMap):
 
                 <h2>Description</h2>
                 <p>Please provide a brief description of your distribution:</p>
-                <textarea style="width: 50%; margin-left: 10px;" rows="6" name="desc">${release.getDesc()}</textarea>
+                <textarea style="width: 80%; margin-left: 10px;" rows="6" name="desc">${release.getDesc()}</textarea>
                 
                 <h2>Settings</h2>
-                <table cellpadding="6">
+                <table cellpadding="6" style="width: 50%;">
                     <tr>
                         <td>Distribution Name:</td>
                         <td>${release.getName()}</td>
@@ -103,5 +107,6 @@ def generateJs(archMap):
             </div>
         </div>
         </td>
+        ${projectsPane()}
     </body>
 </html>

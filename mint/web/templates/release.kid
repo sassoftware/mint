@@ -32,7 +32,11 @@ from mint import userlevels
             published = release.getPublished()
 
         ?>
-        
+        <div py:def="breadcrumb()" py:strip="True">
+            <a href="/">${project.getName()}</a>
+            <a href="#">Release</a>
+        </div>
+    
         <td id="left" class="side">
             <div class="pad">
                 ${projectResourcesMenu()}
