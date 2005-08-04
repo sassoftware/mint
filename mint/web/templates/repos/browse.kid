@@ -26,14 +26,19 @@ import string
         <td id="main">
             <div class="pad">
                 <h2>${project.getName()}<br />repository browser</h2>
-               
+
                 <span py:for="l in string.uppercase">
-                    <a py:if="l != char" href="browse?char=${l}">${l}</a>
-                    <span py:if="l == char">${l}</span> | 
+                    <a py:if="l != char and totals[l]" href="browse?char=${l}">${l}</a>
+                    <span py:if="l == char or not totals[l]">${l}</span> | 
                 </span>
+                <?python
+                    total = 0
+                    for x in string.digits:
+                        total += totals[x]
+                ?>
                 <span>
-                    <a py:if="l not in string.digits" href="browse?char=0" >0-9</a>
-                    <span py:if="l in string.digits">0-9</span>
+                    <a py:if="l not in string.digits and total" href="browse?char=0" >0-9</a>
+                    <span py:if="l in string.digits or not total">0-9</span>
                 </span>
                 
                 <?python
