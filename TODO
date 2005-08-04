@@ -20,8 +20,7 @@ JOB SERVER
 * improve job-server
     * more robust (handle server restarts, etc0
     * [DONE] place cached changesets into a separate directory
-      per repo...maybe key on something else like a sha1 of full version, name, and flavor?
-      does darby do this anywhere?
+      per branch.
 * cron jobs for mail list handling
 
 USER INTERFACE
