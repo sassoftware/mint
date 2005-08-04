@@ -46,7 +46,10 @@ from mint import userlevels
                                 Description &#160;<span class="edit" py:if="isOwner">
                                 <a href="projectDesc">Edit Description</a></span>
                             </h3>
-                            <p>${project.getDesc()}</p>
+                            <p py:for="line in project.getDesc().splitlines()">
+                                ${line}
+                            </p>
+                            <p py:if="not project.getDesc()">The project owner hsa not entered a description</p>
                             <h3>Configuration</h3>
 
                             <p>To add this project in your Conary configuration, add the following to your ~/.conaryrc:</p>
