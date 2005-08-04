@@ -458,7 +458,7 @@ class MintApp(webhandler.WebHandler):
     @projectOnly
     @intFields(releaseId = None)
     @strFields(trove = None, version = None,
-               desc = "", mediaSize = None)
+               desc = "", mediaSize = "640")
     def editRelease2(self, auth, releaseId,
                      trove, version,
                      desc, mediaSize):
