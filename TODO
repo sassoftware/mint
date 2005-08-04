@@ -50,6 +50,11 @@ USER INTERFACE
 * Rework registration forms to work around mozilla bug #302190
 * Update html <title> on all pages
 * When the user changes their email address, it should be re-verified.
+  We should send two emails upon change: one to the old with a "cancel this change" link,
+  and one to the new with a "confirm this change" link. This will be safe even if the user
+  puts a typo into the new email address, and will also be safe if the old email address is
+  completely disabled. The only pathological case that it won't cover is if they typo *and*
+  their current email address is dead. Human intervention will be needed in that case!
 * Confirmation changes:
  - Make a separate 'waiting for confirmation' page after registration instead of just using
    login with a message. Also need a separate page to announce confirmation.
