@@ -49,7 +49,7 @@ from mint import userlevels
                             <p py:for="line in project.getDesc().splitlines()">
                                 ${line}
                             </p>
-                            <p py:if="not project.getDesc()">The project owner hsa not entered a description</p>
+                            <p py:if="not project.getDesc()">The project owner has not entered a description</p>
                             <h3>Configuration</h3>
 
                             <p>To add this project in your Conary configuration, add the following to your ~/.conaryrc:</p>
