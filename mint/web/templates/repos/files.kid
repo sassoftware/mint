@@ -1,12 +1,19 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <html xmlns:html="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
-      py:extends="'library.kid'">
+      py:extends="'../library.kid', '../layout.kid'">
 <!--
  Copyright (c) 2005 rpath, Inc.
 
  All Rights Reserved
 -->
+
+    <div py:def="breadcrumb" py:strip="True">
+        <a href="/">${project.getName()}</a>
+        <a href="/conary/browse">Repository Browser</a>
+        <a href="/conary/troveInfo?t=${troveName}">${troveName}</a>
+        <a href="#">Files</a>
+    </div>
 
     <div id="fileList" py:def="fileList(files)">
         <table style="width: 100%;">
@@ -33,10 +40,13 @@
 
     <head/>
     <body>
-        <div id="inner">
-            <h2>Files in <a href="troveInfo?t=${troveName}">${troveName}</a></h2>
+        <td id="main" class="spanall">
+            <div class="pad">
+                <h2>Files in <a href="troveInfo?t=${troveName}">${troveName}</a></h2>
 
-            ${fileList(fileIters)}
-        </div>
+                ${fileList(fileIters)}
+                <hr/>
+            </div>
+        </td>
     </body>
 </html>
