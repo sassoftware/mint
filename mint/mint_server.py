@@ -282,8 +282,6 @@ class MintServer(object):
         username = self.users.get(userId)['username']
 
         for projectId, level in self.getProjectIdsByMember(userId):
-            print >> sys.stderr, "getting projectId", projectId
-            sys.stderr.flush()
             project = projects.Project(self, projectId)
 
             authRepo = self._getAuthRepo(project)
