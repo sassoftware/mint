@@ -52,3 +52,6 @@ USER INTERFACE
 
 * [POSTPONED] Bug tracking
 * [DONE] update hooks.py to match the new apachehooks code 
+* Split public and private xmlrpc calls out into separate urls and
+  use access controls on the web server to limit access instead of
+  trying to do it inside the server class.
