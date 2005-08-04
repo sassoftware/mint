@@ -78,8 +78,8 @@ def generateJs(archMap):
                     </tr>
                 </table>
 
-                <h2>Description</h2>
-                <p>Please provide a brief description of your distribution:</p>
+                <h2>Release Notes</h2>
+                <p>Please provide notes for this release:</p>
                 <textarea style="width: 80%; margin-left: 10px;" rows="6" name="desc">${release.getDesc()}</textarea>
                 
                 <h2>Settings</h2>
