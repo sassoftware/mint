@@ -37,6 +37,12 @@ from mint import projectlisting
             </form>
         </p>
 
+        <td id="left" class="side">
+            <div class="pad">
+${browseMenu()}
+${searchMenu()}
+            </div>
+        </td>
         <td id="main" class="spanall">
             <div class="pad">
                 <h2>Browse Projects</h2>

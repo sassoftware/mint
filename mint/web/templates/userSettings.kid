@@ -12,7 +12,14 @@
 
     <head/>
     <body>
-        <td id="main" class="spanleft">
+        <td id="left" class="side">
+            <div class="pad">
+${browseMenu()}
+${searchMenu()}
+            </div>
+        </td>
+
+        <td id="main" >
             <form method="post" action="editUserSettings">
                 <div class="pad">
                     <h2>Edit Account Information</h2>

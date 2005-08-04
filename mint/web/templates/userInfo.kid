@@ -13,21 +13,30 @@
 
     <head/> 
     <body>
-        <td id="left" class="plain">
+        <td id="left" class="side">
+            <div class="pad">
+${browseMenu()}
+${searchMenu()}
+            </div>
+        </td>
+
+        <td id="main">
+          <span style="float:left;">
             <div class="pad">
                 <h3>${user.getFullName()}</h3>
                 <p>${user.getDisplayEmail()}</p>
             </div>
-        </td>
-        <td id="main">
+          </span>
+          <span syle="float:right">
             <div class="pad">
                 <p py:for="line in user.getBlurb().splitlines()">
                     ${line}
                 </p>
                 <p py:if="not user.getBlurb()">User has not entered any information.</p>
             </div>
+          </span>
         </td>
-        <td id="right" class="plain">
+        <td id="right" class="projects">
             <div class="pad">
                 <h3>this user's projects:</h3>
                 <ul py:if="userProjects">

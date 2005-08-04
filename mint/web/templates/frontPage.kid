@@ -19,39 +19,8 @@ from mint import searcher
                 <tr>
                     <td id="left" class="side">
                         <div class="pad">
-                            <div id="browse" class="palette">
-                                <h3>browse rpath</h3>
-                                <ul>
-                                    <li><a href="projects">All Projects</a></li>
-                                    <li><a href="projects?sortOrder=3">Most Active Projects</a></li>
-                                    <li><a href="projects?sortOrder=7">Most Popular Projects</a></li>
-                                    <li><a href="users">All People</a></li>
-                                </ul>
-                            </div>
-                            <div id="search" class="palette">
-                                <h3>search rpath</h3>
-                                <form action="search" method="get">
-                                    <p>
-                                        <label>search type:</label><br/>
-                                        <select name="type">
-                                            <option selected="selected" value="Projects">Search projects</option>
-                                            <option value="Users">Search users</option>
-                                        </select>
-                                    </p>
-                                    <p>
-                                        <label>keyword(s):</label><br/>
-                                        <input type="text" name="search" size="10" />
-                                    </p>
-                                    <p>
-                                        <label>last modified:</label>
-                                        <br/>
-                                        <select name="modified">
-                                            <option py:for="i, option in enumerate(searcher.datehtml)" value="${i}">${option}</option>
-                                        </select>
-                                    </p>
-                                    <p><button>Submit</button><br /><a py:if="0" href="#">advanced search</a></p>
-                                </form>
-                            </div>
+${browseMenu()}
+${searchMenu()}
                         </div>
                     </td>
                     <td id="main">

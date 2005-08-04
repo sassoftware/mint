@@ -38,6 +38,12 @@
             ${resultRow(formattedresults)}
         </div>
 
+        <td id="left" class="side">
+            <div class="pad">
+${browseMenu()}
+${searchMenu()}
+            </div>
+        </td>
         <td id="main" class="spanall">
             <div class="pad">
                 <h2>search results: ${type}</h2>

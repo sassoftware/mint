@@ -25,6 +25,12 @@
             ?>
             ${resultRow(formattedresults)}
         </div>
+        <td id="left" class="side">
+            <div class="pad">
+${browseMenu()}
+${searchMenu()}
+            </div>
+        </td>
 
         <div py:def="sortOrderForm(sortOrder = 0)" py:strip="True">
             <form method="get" action="users">
@@ -41,7 +47,7 @@
             <div class="pad">
                 <h2>Browse Users</h2>
                 ${sortOrderForm(sortOrder)}
-                ${navigation("projects?sortOrder=%d"%(sortOrder), "all users", count, limit, offset)}
+                ${navigation("users?sortOrder=%d"%(sortOrder), "all users", count, limit, offset)}
                 <table cellpadding="0" cellspacing="0" class="results">
                     ${columnTitles(('User Name', 'Name', 'Time Created', 'Time Last Accessed', 'About'))}
                     ${searchResults(results)}
