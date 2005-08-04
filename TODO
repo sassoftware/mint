@@ -42,11 +42,12 @@ USER INTERFACE
 * Fix 'more about rpath' link
 * Fix up news handling
 * [DONE] Improve rendering of "contact information" in userInfo
-* Fix description handling in search results
-* Fix description handling in browse pages
+* [DONE] Fix description handling in search results
+* [DONE] Fix description handling in browse pages
 * [POSTPONED] Highlight search results in descriptions
 * Fix all breadcrumbs
-* Agree to ToS checkbox on New Account page
+* [DONE] Agree to ToS checkbox on New Account page
+* Rework registration forms to work around mozilla bug #302190
 * Make a separate 'waiting for confirmation' page after registration instead of just using
   login with a message
 

@@ -286,8 +286,8 @@ class MintApp(webhandler.WebHandler):
         return apache.OK
 
     @siteOnly
-    @strFields(username = None, email = None, password = None, password2 = None, fullName = '', displayEmail = '', blurb = '')
-    def processRegister(self, auth, username, fullName, email, password, password2, displayEmail, blurb):
+    @strFields(username = None, email = None, password = None, password2 = None, fullName = '', displayEmail = '', blurb = '', tos=None, privacy=None)
+    def processRegister(self, auth, username, fullName, email, password, password2, displayEmail, blurb, tos, privacy):
         if password != password2:
             self._write("error", shortError = "Registration Error",
                         error = "Passwords do not match.")
