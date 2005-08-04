@@ -15,6 +15,8 @@
     ACCESSED_DES
 ) = range(0, 8)
 
+blurbindex = 5
+blurbtrunclength = 300
 sqlbase = """SELECT userid, username, fullname, timeCreated, timeAccessed,
 blurb FROM users
     ORDER BY %s

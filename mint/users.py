@@ -217,6 +217,8 @@ class UsersTable(database.KeyedTable):
         ids = []
         for x in cu:
             ids.append(list(x))
+            if len(ids[-1][userlisting.blurbindex]) > userlisting.blurbtrunclength:
+                ids[-1][userlisting.blurbindex] = ids[-1][userlisting.blurbindex][:userlisting.blurbtrunclength] + "..."
 
         return ids
 

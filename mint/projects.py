@@ -209,6 +209,8 @@ class ProjectsTable(database.KeyedTable):
         ids = []
         for x in cu:
             ids.append(list(x))
+            if len(ids[-1][projectlisting.descindex]) > projectlisting.desctrunclength:
+                ids[-1][projectlisting.descindex] = ids[-1][projectlisting.descindex][:projectlisting.desctrunclength] + "..."
 
         return ids
 

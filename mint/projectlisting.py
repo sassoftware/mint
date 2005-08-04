@@ -14,6 +14,8 @@
     NUMDEVELOPERS_ASC,
     NUMDEVELOPERS_DES ) = range(0, 8)
 
+descindex = 2
+desctrunclength = 300
 sqlbase = """SELECT Projects.hostname, Projects.name, Projects.desc, 
     Projects.timeCreated, Projects.timeModified,
     count(projectUsers.userId) as devs 
