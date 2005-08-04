@@ -48,8 +48,14 @@ USER INTERFACE
 * Fix all breadcrumbs
 * [DONE] Agree to ToS checkbox on New Account page
 * Rework registration forms to work around mozilla bug #302190
-* Make a separate 'waiting for confirmation' page after registration instead of just using
-  login with a message
+* Update html <title> on all pages
+* When the user changes their email address, it should be re-verified.
+* Confirmation changes:
+ - Make a separate 'waiting for confirmation' page after registration instead of just using
+   login with a message. Also need a separate page to announce confirmation.
+ - create a separate RegistrationChallenge table containing userId, age, and confirmation string
+   so we don't have to keep the confirm string around in the Users table after confirmation,
+   and so we can purge old unconfirmed accounts.
 
 * [POSTPONED] Bug tracking
 * [DONE] update hooks.py to match the new apachehooks code 
