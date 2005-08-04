@@ -34,6 +34,7 @@ class MintConfig(ConfigFile):
         'xmlrpcAccess'      : [ BOOLEAN, False ],
         'newsRssFeed'       : '',
         'commitAction'      : None,
+        'EnableMailLists'   : False,
         'MailListBaseURL'   : 'http://lists.rpath.org/mailman/',
         'MailListPass'      : 'adminpass',
 

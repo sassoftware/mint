@@ -515,6 +515,8 @@ class MintApp(webhandler.WebHandler):
     @projectOnly
     @mailList
     def mailingLists(self, auth, mlists):
+        if not self.cfg.EnableMailLists:
+            raise mailinglists.MailingListException("Mail Lists Disabled")
         hostname = self.project.getHostname()
         hostname = hostname[0:hostname.find('.')]
         lists = mlists.list_lists(hostname)
@@ -526,6 +528,8 @@ class MintApp(webhandler.WebHandler):
     @strFields(listname=None, description='', listpw='', listpw2='')
     @mailList
     def createList(self, auth, mlists, listname, description, listpw, listpw2):
+        if not self.cfg.EnableMailLists:
+            raise mailinglists.MailingListException("Mail Lists Disabled")
         if listpw == listpw2:
             members = self.project.getMembers()
             owners = []
@@ -561,6 +565,8 @@ class MintApp(webhandler.WebHandler):
     @strFields(list=None)
     @mailList
     def subscribe(self, auth, mlists, list):
+        if not self.cfg.EnableMailLists:
+            raise mailinglists.MailingListException("Mail Lists Disabled")
         mlists.server.subscribe(list, self.cfg.MailListPass, [auth.email], False, True)
         return self._redirect("mailingLists")
         
@@ -613,8 +619,6 @@ class MintApp(webhandler.WebHandler):
         success = True
         error = False
         for name, values in lists.items():
-            print >>sys.stderr, self.cfg.MailListPass, name, values['description'], auth.email, values['moderate']
-            sys.stderr.flush()
             success = mlists.add_list(self.cfg.MailListPass, name, '', values['description'], auth.email, True, values['moderate'])
             if not success: error = False
         return not error
@@ -625,8 +629,9 @@ class MintApp(webhandler.WebHandler):
     @requiresAuth
     def createProject(self, auth, title, hostname, blurb, optlists):
         projectId = self.client.newProject(title, hostname, blurb)
-        if not self._createProjectLists(auth=auth, projectName=hostname, optlists=optlists):
-            return apache.OK
+        if self.cfg.EnableMailLists:
+            if not self._createProjectLists(auth=auth, projectName=hostname, optlists=optlists):
+                return apache.OK
         return self._redirect("http://%s.%s/" % (hostname, self.cfg.domainName) )
 
     @projectOnly

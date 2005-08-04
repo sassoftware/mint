@@ -47,7 +47,7 @@ def DefaultLists(projectName):
 
 class MailingListException(MintError):
     def __init__(self, mesg):
-        self.mesg = msg
+        self.mesg = mesg
 
     def __str__(self):
         return self.mesg
