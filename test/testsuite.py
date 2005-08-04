@@ -1,7 +1,7 @@
 #!/usr/bin/python2.4
 # -*- mode: python -*-
 #
-# Copyright (c) 2004 Specifix, Inc.
+# Copyright (c) 2004 rpath, Inc.
 #
 
 import grp

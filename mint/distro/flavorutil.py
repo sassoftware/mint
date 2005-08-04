@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2004-2005 Specifix, Inc.
+# Copyright (c) 2004-2005 rpath, Inc.
 # All rights reserved.
 
 # flavor manipulations
