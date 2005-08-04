@@ -10,9 +10,9 @@
     <body>
         <td id="main" class="spanall">
             <div class="pad">
-                <p style="font-size: 150%; font-weight: bold;">Error:</p>
+                <p class="error">Error:</p>
                 
-                <p style="color: red; margin-left: 1em;">${error}</p>
+                <p class="errormessage">${error}</p>
                 <p>
                     Please go back and try again or contact 
                     <a href="mailto:custom@rpath.com">custom@rpath.com</a> or join the IRC channel

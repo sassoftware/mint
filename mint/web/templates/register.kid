@@ -11,6 +11,10 @@
     </div>
     <a py:def="legal(page, text)" py:strip="False" href="#" onclick="javascript:{window.open('${page}', 'rpathlegal', 'height=500,width=500,menubar=no,scrollbars,status=no,toolbar=no', true); return false;}" py:content="text"/>
 
+<?python
+    for var in ['username', 'email', 'fullName', 'displayEmail', 'blurb', 'tos', 'privacy']:
+        kwargs[var] = kwargs.get(var, '')
+?>
     <head/>
     <body>
         <td id="left" class="side">
@@ -21,6 +25,8 @@ ${searchMenu()}
         </td>
         <td id="main" >
             <div class="pad">
+                <p py:if="errors" class="error">Account Creation Error${len(errors) > 1 and 's' or ''}</p>
+                <p py:for="error in errors" class="errormessage" py:content="error"/>
                 <h2>Create an Account</h2>
                 <p>Fields labeled with a <em class="required">red arrow</em> are required.</p>
                 <form method="post" action="processRegister">
@@ -29,19 +35,19 @@ ${searchMenu()}
                         <tr>
                             <th><em class="required">Username:</em></th>
                             <td>
-                                <input type="text" name="username" />
+                                <input type="text" name="username" maxlength="16" value="${kwargs['username']}"/>
                                  <p class="help">please limit to 16 characters</p>
                             </td>
                         </tr>
 
                         <tr>
                             <th>Full Name:</th>
-                            <td><input type="text" name="fullName" value="${auth.fullName}" /></td>
+                            <td><input type="text" name="fullName" value="${kwargs['fullName']}" /></td>
                         </tr>
                         <tr>
                             <th><em class="required">Email Address:</em></th>
                             <td>
-                                <input type="text" name="email" />
+                                <input type="text" name="email" value="${kwargs['email']}"/>
 
                                 <p class="help">This email address will not be displayed on the rpath website.</p>
                             </td>
@@ -49,7 +55,7 @@ ${searchMenu()}
                         <tr>
                             <th>Contact Information:</th>
                             <td>
-                                <textarea rows="3" type="text" name="displayEmail">${auth.displayEmail}</textarea>
+                                <textarea rows="3" type="text" name="displayEmail">${kwargs['displayEmail']}</textarea>
 
                                 <p class="help">Contact information provided here will be displayed on your rpath user information page.</p>
                             </td>
@@ -57,7 +63,7 @@ ${searchMenu()}
                         <tr>
                             <th>About:</th>
                             <td>
-                                <textarea rows="6" name="blurb">${auth.blurb}</textarea><br/>
+                                <textarea rows="6" name="blurb">${kwargs['blurb']}</textarea><br/>
 
                                 <p class="help">
                                     Please enter any relevant information about yourself here;
@@ -79,10 +85,10 @@ ${searchMenu()}
                             <td><input type="password" name="password2" value="" /></td>
                         </tr>
                         <tr>
-                            <td colspan="2"><input type="checkbox" class="check" name="tos" /> <em class="required">I have read and accept the ${legal('#', 'Terms of Service')}</em></td>
+                            <td colspan="2"><input type="checkbox" class="check" name="tos" py:attrs="{'checked': kwargs['tos'] and 'checked' or None}"/> <em class="required">I have read and accept the ${legal('#', 'Terms of Service')}</em></td>
                         </tr>
                         <tr>
-                            <td colspan="2"><input type="checkbox" class="check" name="privacy" /> <em class="required">I have read and accept the ${legal('#', 'Privacy Policy')}</em></td>
+                            <td colspan="2"><input type="checkbox" class="check" name="privacy"  py:attrs="{'checked': kwargs['privacy'] and 'checked' or None}"/> <em class="required">I have read and accept the ${legal('#', 'Privacy Policy')}</em></td>
                         </tr>
                     </table>
                     <p>You will receive a confirmation message with a link to activate your account.</p>

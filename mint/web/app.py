@@ -282,27 +282,40 @@ class MintApp(webhandler.WebHandler):
 
     @siteOnly
     def register(self, auth):
-        self._write("register")
+        self._write("register", errors=[], kwargs={})
         return apache.OK
 
     @siteOnly
-    @strFields(username = None, email = None, password = None, password2 = None, fullName = '', displayEmail = '', blurb = '', tos=None, privacy=None)
+    @strFields(username = '', email = '', password = '', password2 = '', fullName = '', displayEmail = '', blurb = '', tos='', privacy='')
     def processRegister(self, auth, username, fullName, email, password, password2, displayEmail, blurb, tos, privacy):
+        errors = []
+        if not username:
+            errors.append("You must supply a username.")
+        if not email:
+            errors.append("You must supply a valid e-mail address.  This will be used to confirm your account.")
+        if not password or not password2:
+            errors.append("Password field left blank.")
         if password != password2:
-            self._write("error", shortError = "Registration Error",
-                        error = "Passwords do not match.")
-        elif len(password) < 6:
-            self._write("error", shortError = "Registration Error",
-                        error = "Password must be 6 characters or longer.")
-        else:
+            errors.append("Passwords do not match.")
+        if len(password) < 6:
+            errors.append("Password must be 6 characters or longer.")
+        if not tos:
+            errors.append("You must accept the Terms of Service to create an account")
+        if not privacy:
+            errors.append("You must accept the Privacy Policy to create an account")
+        if not errors:
             try:
                 self.client.registerNewUser(username, password, fullName, email,
                             displayEmail, blurb)
             except users.UserAlreadyExists:
-                self._write("error", shortError = "Registration Error",
-                            error = "An account with that username already exists.")
-            else:
-                return self._redirect("login?message=confirm")
+                errors.append("An account with that username already exists.")
+            except users.GroupAlreadyExists:
+                errors.append("An account with that username already exists.")
+        if not errors:
+            return self._redirect("login?message=confirm")
+        else:
+            kwargs = {'username': username, 'email': email, 'fullName': fullName, 'displayEmail': displayEmail, 'blurb': blurb, 'tos': tos, 'privacy': privacy}
+            self._write("register", errors=errors, kwargs = kwargs)
         return apache.OK
 
     @siteOnly

@@ -230,3 +230,11 @@ a.option:hover {
 code {
         margin-left: 1em;
 }
+p.error {
+        font-size: 125%;
+        font-weight: bold;
+}
+p.errormessage {
+        color: red;
+        margin-left: 1em;
+}
