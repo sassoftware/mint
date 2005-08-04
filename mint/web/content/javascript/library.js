@@ -192,19 +192,3 @@ function ticker() {
         setTimeout("ticker()", 200);
     }
 }
-
-function newReleaseSubmit() {
-    form = document.getElementById("mainForm");
-    name = document.getElementById("releaseName");
-    trove = document.getElementById("trove");
-
-    if(name.value.length == 0 || name.value == null) {
-        warning = document.getElementById("nameWarning");
-        warning.replaceChild(document.createTextNode("Please enter a release name."), warning.firstChild);
-    } else if(trove.value.length == 0 || trove.value == null) {
-        warning = document.getElementById("troveWarning");
-        warning.replaceChild(document.createTextNode("Please choose an image trove."), warning.firstChild);
-    } else {
-        form.submit();
-    }
-}
