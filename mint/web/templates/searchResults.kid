@@ -60,23 +60,6 @@ ${searchMenu()}
                             <th width="33%">Keyword(s):</th>
                             <th width="33%">Last Modified:</th>
                         </tr>
-
-                        <tr>
-                            <td width="33%">
-                                <select name="type" onchange="if (this.options[this.selectedIndex].value=='Users') { document.getElementById('searchModified').disabled = true; } else { document.getElementById('searchModified').disabled = false; }">
-                                    <option selected="selected" value="Projects">Search projects</option>
-                                    <option value="Users">Search users</option>
-                                </select>
-                            </td>
-                            <td width="33%">
-                                <input type="text" name="search" size="10" />
-                            </td>
-                            <td width="33%">
-                                <select name="modified" id="searchModified">
-                                    <option py:for="i, option in enumerate(searcher.datehtml)" value="${i}">${option}</option>
-                                </select>
-                            </td>
-                        </tr>
                     </table>
                     <p><button>Submit</button></p>
                 </form>

@@ -39,7 +39,7 @@ from mint import searcher
         <form action="search" method="get">
             <p>
                 <label>search type:</label><br/>
-                <select name="type">
+                <select name="type" onchange="if (this.options[this.selectedIndex].value=='Users') { document.getElementById('searchModified').disabled = true; } else { document.getElementById('searchModified').disabled = false; }">
                     <option selected="selected" value="Projects">Search projects</option>
                     <option value="Users">Search users</option>
                 </select>
@@ -51,7 +51,7 @@ from mint import searcher
             <p>
                 <label>last modified:</label>
                 <br/>
-                <select name="modified">
+                <select name="modified" id="searchModified">
                     <option py:for="i, option in enumerate(searcher.datehtml)" value="${i}">${option}</option>
                 </select>
             </p>
