@@ -76,6 +76,9 @@ input, textarea {
 	margin:2px 0px 0px 0px;
         background-color: #eceff9;
 }
+.disabledInput {
+    color: gray;
+}
 label {
 	font-size:100%;
 	color:#666;

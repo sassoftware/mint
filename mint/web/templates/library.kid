@@ -39,7 +39,15 @@ from mint import searcher
         <form action="search" method="get">
             <p>
                 <label>search type:</label><br/>
-                <select name="type" onchange="if (this.options[this.selectedIndex].value=='Users') { document.getElementById('searchModified').disabled = true; } else { document.getElementById('searchModified').disabled = false; }">
+                <select name="type" onchange="if (this.options[this.selectedIndex].value=='Users') {
+                                                el = document.getElementById('searchModified');
+                                                el.disabled = true;
+                                                el.className = 'disabledInput';
+                                              } else {
+                                                el = document.getElementById('searchModified');
+                                                el.disabled = false;
+                                                el.className = '';
+                                              }">
                     <option selected="selected" value="Projects">Search projects</option>
                     <option value="Users">Search users</option>
                 </select>
