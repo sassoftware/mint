@@ -42,7 +42,7 @@ USER INTERFACE
    statistical information to use for these links.
 * Fix 'more about rpath' link
 * Fix up news handling
-* Improve rendering of "contact information" in userInfo
+* [DONE] Improve rendering of "contact information" in userInfo
 * Fix description handling in search results
 * Fix description handling in browse pages
 * [POSTPONED] Highlight search results in descriptions
