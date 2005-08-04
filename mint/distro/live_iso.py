@@ -3,8 +3,48 @@
 #
 # All Rights Reserved
 #
+
+# python standard library imports
 import os
+import tempfile
+import subprocess
+
+# mint imports
 from imagegen import ImageGenerator
+
+# conary imports
+import conary
+import conaryclient
+import deps
+import flavorcfg
+import versions
+from callbacks import UpdateCallback, ChangesetCallback
+from conarycfg import ConfigFile
+from lib import log
+
+class LiveIsoConfig(ConfigFile):
+    defaults = {
+        'scriptPath':        None,
+    }
+
+class InstallCallback(UpdateCallback, ChangesetCallback):
+    def restoreFiles(self, size, totalSize):
+        if totalSize != 0:
+            self.restored += size
+            self.status('writing files (%d%% of %dK)'
+                        %((self.restored * 100) / totalSize, totalSize / 1024))
+
+    def setUpdateHunk(self, num, total):
+        self.restored = 0
+
+    def downloadingChangeSet(self, got, need):
+        if need != 0:
+            self.status('downloading from repository (%d%% of %dk)' %
+                        ((got * 100) / need, need / 1024))
+
+    def __init__(self, status):
+        self.status = status
+        self.restored = 0
 
 class Journal:
     def lchown(self, root, target, user, group):
@@ -29,30 +69,59 @@ class Journal:
         f.close()
 
 class LiveIso(ImageGenerator):
+    def getConfig(self):
+        cfg = LiveIsoConfig()
+        cfg.read("live_iso.conf")
+        return cfg
+
     def write(self):
+        imgcfg = self.getConfig()
+        if not imgcfg.scriptPath:
+            raise RuntimeError, 'scriptPath must be set in configuration file'
+
         tmpDir = tempfile.mkdtemp("", "imagetool", self.cfg.imagesPath)
-        profileId = self.job.getProfileId()
+        log.info('generating live iso with tmpdir %s', tmpDir)
+        release = self.client.getRelease(self.job.getReleaseId())
+        trove, version, flavorStr = release.getTrove()
 
-        name, projectId = self.client.server.getProfile(profileId)
-        trove, version, frozenFlavor = self.client.server.getTrove(profileId)
-        flavor = deps.ThawDependencySet(frozenFlavor)
+        project = self.client.getProject(release.getProjectId())
 
-        project = self.client.getProject(projectId)
-        cfg = project.getConaryConfig(self.cfg.imageLabel,
-                                      self.cfg.imageRepo)
-        cfg.setValue("root", tmpDir)
+        trove, versionStr, flavorStr = release.getTrove()
+        flavor = deps.deps.ThawDependencySet(flavorStr)
+        version = versions.ThawVersion(versionStr)
+
+        project = self.client.getProject(release.getProjectId())
+
+        # set up configuration
+        cfg = project.getConaryConfig()
+        # turn off threading
+        cfg.threadded = False
+        flavorConfig = flavorcfg.FlavorConfig(cfg.useDirs, cfg.archDirs)
+        cfg.flavor = flavorConfig.toDependency(override=cfg.flavor[0])
+        insSet = deps.deps.DependencySet()
+        for dep in deps.arch.currentArch:
+            insSet.addDep(deps.deps.InstructionSetDependency, dep[0])
+        cfg.flavor.union(insSet)
+        cfg.buildFlavor = cfg.flavor.copy()
+        flavorConfig.populateBuildFlags()
+        cfg.setValue('root', tmpDir)
+
         client = conaryclient.ConaryClient(cfg)
         applyList = [(trove, version, flavor)]
-        (cs, depFailures, suggMap, brokenByErase) = \
-            client.updateChangeSet(applyList, recurse = False,
-                                   resolveDeps = False)
+        self.status('installing software')
+        callback = InstallCallback(self.status)
+        (updJob, suggMap) = client.updateChangeSet(applyList, recurse = True,
+                                                   resolveDeps = False,
+                                                   callback = callback)
         journal = Journal()
-        client.applyUpdate(cs, journal=journal)
+        client.applyUpdate(updJob, journal=journal, callback = callback)
 
+        self.status('generating images')
         fd, fn = tempfile.mkstemp('.iso', 'livecd', self.cfg.imagesPath)
         os.close(fd)
 
-        subprocess.call((os.path.join(scriptPath, 'mklivecd'), tmpDir, fn))
+        subprocess.call((os.path.join(imgcfg.scriptPath, 'mklivecd'), tmpDir,
+                         fn))
         os.chmod(fn, 0644)
 
         return [fn]

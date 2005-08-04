@@ -6,7 +6,7 @@
 
 script_dist = job-server mklivecd mkinstroots reset
 
-extra_dist = Makefile installable_iso.conf
+extra_dist = Makefile installable_iso.conf live_iso.conf
 
 dist_files = $(script_dist) $(extra_dist)
 
@@ -19,6 +19,7 @@ install: default-install
 	done;
 	mkdir -p $(DESTDIR)/$(confdir)
 	install -m 644 installable_iso.conf $(DESTDIR)/$(confdir)
+	install -m 644 live_iso.conf $(DESTDIR)/$(confdir)
 
 dist: default-dist
 
