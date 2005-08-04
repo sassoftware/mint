@@ -26,7 +26,7 @@ ${searchMenu()}
                     <td id="main">
                         <div class="pad">
                             <h3>Welcome to rpath</h3>
-                            <p>Welcome to rpath.com &#8212; the site for collaborative open source development.</p>
+                            <p>Welcome to rpath.org &#8212; the site for collaborative open source development.</p>
 <p>Developers can create and host projects and operating systems here, while users can browse and download projects and operating system images for installation.</p>
                             <p><a href="#">More about rpath</a> </p>
 
