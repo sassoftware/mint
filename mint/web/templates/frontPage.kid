@@ -26,8 +26,8 @@ ${searchMenu()}
                     <td id="main">
                         <div class="pad">
                             <h3>Welcome to rpath</h3>
-                            <p>ED FIXME: A short paragraph describing the rpath.com service.</p>
-                            <p>ED FIXME: A short paragraph mentioning rpath's products.</p>
+                            <p>Welcome to rpath.com &#8212; the site for collaborative open source development.</p>
+<p>Developers can create and host projects and operating systems here, while users can browse and download projects and operating system images for installation.</p>
                             <p><a href="#">More about rpath</a> </p>
 
                             <div py:strip="True" py:if="news">
