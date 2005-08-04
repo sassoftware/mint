@@ -38,9 +38,9 @@ class SearchTermsError(SearchError):
     
 
 class Searcher :
-    WORDS_PRE = 30
-    WORDS_POST = 30
-    WORDS_TOTAL = 60
+    WORDS_PRE = 10
+    WORDS_POST = 10
+    WORDS_TOTAL = 20
     MINLENGTH = 3
 
     @classmethod
@@ -60,21 +60,15 @@ class Searcher :
         class and change the values of L{WORDS_PRE}, L{WORDS_POST} and/or L{WORDS_TOTAL}.
         @param longstring:  The original string
         @param searchterms: Search terms to find within the string
-        @return:       a dictionary of the requested items.
-                       each entry will contain four bits of data:
-                        The hostname for use with linking,
-                        The project name,
-                        The project's description
-                        The date last modified.
-
+        @return:       the shortened string
         """
         returner = longstring
         if returner == None:
             return ''
         #are the search terms in the string
-        if searchterms in longstring:
+        if searchterms.lower() in longstring.lower():
             #Split it up and shorten it
-            regexp = "(\S+\s+){0,%d}" % self.WORDS_PRE + searchterms + "(\s+\S+){0,%d}" % self.WORDS_POST
+            regexp = "(\S+\s+){0,%d}\S*" % self.WORDS_PRE + searchterms + "\S*(\s+\S+){0,%d}" % self.WORDS_POST
             expr = re.compile(regexp, re.IGNORECASE)
             match = expr.search(longstring)
             if match != None:
@@ -86,7 +80,7 @@ class Searcher :
                     returner = '...' + returner + '...'
         else:
             #simply truncate it
-            shortened = re.match('^(\S+\s+){0,%d}' % self.WORDS_TOTAL, longstring).group().strip()
+            shortened = re.match('^(\S+\s*){0,%d}' % self.WORDS_TOTAL, longstring).group().strip()
             if longstring != shortened:
                 shortened += '...'
             returner = shortened
