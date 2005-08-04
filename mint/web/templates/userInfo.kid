@@ -24,7 +24,10 @@ ${searchMenu()}
           <span style="float:left;">
             <div class="pad">
                 <h3>${user.getFullName()}</h3>
-                <p>${user.getDisplayEmail()}</p>
+                <div py:for="line in user.getDisplayEmail().splitlines()" py:strip="True">
+                    ${line}<br/>
+                </div>
+                <div py:if="not user.getDisplayEmail()">User has not entered any contact information.</div>
             </div>
           </span>
           <span syle="float:right">
@@ -32,7 +35,7 @@ ${searchMenu()}
                 <p py:for="line in user.getBlurb().splitlines()">
                     ${line}
                 </p>
-                <p py:if="not user.getBlurb()">User has not entered any information.</p>
+                <p py:if="not user.getBlurb()">User has not entered any about text.</p>
             </div>
           </span>
         </td>
