@@ -642,7 +642,7 @@ class MintApp(webhandler.WebHandler):
         return apache.OK
 
     @projectOnly
-    @strFields(desc = None)
+    @strFields(desc = '')
     @ownerOnly
     def editProjectDesc(self, auth, desc):
         self.project.setDesc(desc)
