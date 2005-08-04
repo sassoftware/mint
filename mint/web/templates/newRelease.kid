@@ -24,7 +24,9 @@ title = "Create New Release"
                     <table cellspacing="0" cellpadding="0" border="0" class="mainformhorizontal">
                         <tr>
                             <th><em class="required">Release name:</em></th>
-                            <td><input type="text" name="releaseName" id="releaseName" value="${project.getName()}"/></td>
+                            <td>
+                                <input type="text" name="releaseName" id="releaseName" value="${project.getName()}"/>
+                            </td>
                         </tr>
                         <tr>
                             <th><em class="required">Distribution Trove:</em></th>
@@ -36,10 +38,19 @@ title = "Create New Release"
                                 </select>
                             </td>
                         </tr>
+                        <tr>
+                            <th>Release Type:</th>
+                            <td>
+                                <select name="imageType">
+                                    <option py:for="releaseType, releaseName in releasetypes.typeNames.items()"
+                                            py:content="releaseName"
+                                            py:attrs="{'value': releaseType}"/>
+                                </select>
+                            </td>
+                        </tr>
                     </table>
                     <p>
-                        <button id="submitButton" type="button" onclick="javascript:newReleaseSubmit();">Submit</button>
-                        <input type="hidden" value="${releasetypes.INSTALLABLE_ISO}" name="imageType" />
+                        <button id="submitButton" type="submit">Submit</button>
                         <input type="hidden" name="releaseId" value="-1" />
                     </p>
                 </form>
