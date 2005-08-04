@@ -40,10 +40,14 @@ def requiresAuth(func):
             return func(self, *args)
     return wrapper
 
-def public(func):
+def private(func):
+    """Mark a method as callable only if self._allowPrivate is set
+    to mask out functions not callable via XMLRPC over the web."""
     def wrapper(self, *args):
-        func.allowed = True
-        return func(self, *args)
+        if self._allowPrivate:
+            return func(self, *args)
+        else:
+            raise PermissionDenied
     return wrapper
 
 class MintServer(object):
@@ -64,15 +68,7 @@ class MintServer(object):
             if self.auth.authorized:
                 self._checkRepo = False
 
-            if 'allowed' not in method.__dict__:
-                allowed = False
-            else:
-                allowed = method.allowed
-
-            if allowed or self._allowPrivate:
-                r = method(*args)
-            else:
-                return (True, ("MethodNotSupported", methodName, ""))
+            r = method(*args)
         except users.UserAlreadyExists, e:
             return (True, ("UserAlreadyExists", str(e)))
         except database.DuplicateItem, e:
@@ -96,6 +92,7 @@ class MintServer(object):
 
     # project methods
     @requiresAuth
+    @private
     def newProject(self, projectName, hostname, desc):
         if validHost.match(hostname) == None:
             raise projects.InvalidHostname
@@ -124,20 +121,25 @@ class MintServer(object):
                                   self.authToken[0], self.authToken[1])
 
         return projectId
-
+    
+    @private
     def getProject(self, id):
         return self.projects.get(id)
 
+    @private
     def getProjectIdByHostname(self, hostname):
         return self.projects.getProjectIdByHostname(hostname)
 
+    @private
     def getProjectIdsByMember(self, userId):
         return self.projects.getProjectIdsByMember(userId)
 
+    @private
     def getMembersByProjectId(self, id):
         return self.projectUsers.getMembersByProjectId(id)
 
     @requiresAuth
+    @private
     def addMember(self, projectId, userId, username, level):
         assert(level in userlevels.LEVELS)
         project = projects.Project(self, projectId)
@@ -181,6 +183,7 @@ class MintServer(object):
         return True
 
     @requiresAuth
+    @private
     def delMember(self, projectId, userId):
         #XXX Make this atomic
         project = projects.Project(self, projectId)
@@ -189,13 +192,16 @@ class MintServer(object):
         repos.deleteUserByName(project.getLabel(), self.getUser(userId)['username'])
 
     @requiresAuth
+    @private
     def setProjectDesc(self, projectId, desc):
         return self.projects.update(projectId, desc = desc)
 
     # user methods
+    @private
     def getUser(self, id):
         return self.users.get(id)
 
+    @private
     def getUserLevel(self, userId, projectId):
         cu = self.db.cursor()
         cu.execute("SELECT level FROM ProjectUsers WHERE userId=? and projectId=?",
@@ -207,6 +213,7 @@ class MintServer(object):
             raise database.ItemNotFound("membership")
 
     @requiresAuth
+    @private
     def setUserLevel(self, userId, projectId, level):
         cu = self.db.cursor()
         cu.execute("""UPDATE ProjectUsers SET level=? WHERE userId=? and 
@@ -214,6 +221,7 @@ class MintServer(object):
 
         self.db.commit()
 
+    @private
     def getProjectsByUser(self, userId):
         cu = self.db.cursor()
         cu.execute("""SELECT hostname, name, level FROM Projects, ProjectUsers
@@ -226,40 +234,50 @@ class MintServer(object):
             rows.append([r[0], r[1], r[2]])
         return rows
 
+    @private
     def registerNewUser(self, username, password, fullName, email, displayEmail, blurb, active):
         return self.users.registerNewUser(username, password, fullName, email, displayEmail, blurb, active)
 
+    @private
     def checkAuth(self):
         return self.auth.getDict()
-
+        
     @requiresAuth
+    @private
     def updateAccessedTime(self, userId):
         return self.users.update(userId, timeAccessed = time.time())
 
     @requiresAuth
+    @private
     def setUserEmail(self, userId, email):
         return self.users.update(userId, email = email)
 
     @requiresAuth
+    @private
     def setUserDisplayEmail(self, userId, displayEmail):
         return self.users.update(userId, displayEmail = displayEmail)
 
     @requiresAuth
+    @private
     def setUserBlurb(self, userId, blurb):
         return self.users.update(userId, blurb = blurb)
 
     @requiresAuth
+    @private
     def setUserFullName(self, userId, fullName):
         return self.users.update(userId, fullName = fullName)
 
+    @private
     def confirmUser(self, confirmation):
         userId = self.users.confirm(confirmation)
         return userId
 
+    @private
     def getUserIdByName(self, username):
         return self.users.getIdByColumn("username", username)
 
     @requiresAuth
+    @private
     def setPassword(self, userId, newPassword):
         username = self.users.get(userId)['username']
 
@@ -275,6 +293,7 @@ class MintServer(object):
 
         return True
 
+    @private
     def searchUsers(self, terms, limit, offset):
         """
         Collect the results as requested by the search terms
@@ -285,6 +304,7 @@ class MintServer(object):
         """
         return self.users.search(terms, limit, offset)
 
+    @private
     def searchProjects(self, terms, modified, limit, offset):
         """
         Collect the results as requested by the search terms
@@ -296,6 +316,7 @@ class MintServer(object):
         """
         return self.projects.search(terms, modified, limit, offset)
 
+    @private
     def getProjects(self, sortOrder, limit, offset):
         """
         Collect a list of projects
@@ -305,6 +326,7 @@ class MintServer(object):
         """
         return self.projects.getProjects(sortOrder, limit, offset), self.projects.getNumProjects()
 
+    @private
     def getUsers(self, sortOrder, limit, offset):
         """
         Collect a list of projects
@@ -321,50 +343,61 @@ class MintServer(object):
     # LABEL STUFF
     #
     @requiresAuth
+    @private
     def getLabelsForProject(self, projectId):
         return self.labels.getLabelsForProject(projectId)
 
     @requiresAuth
+    @private
     def addLabel(self, projectId, label, url, username, password):
         return self.labels.addLabel(projectId, label, url, username, password)
 
     @requiresAuth
+    @private
     def getLabel(self, labelId):
         return self.labels.getLabel(labelId)
 
     @requiresAuth
+    @private
     def editLabel(self, labelId, label, url, username, password):
         return self.labels.editLabel(labelId, label, url, username, password)
 
     @requiresAuth
+    @private
     def removeLabel(self, projectId, labelId):
         return self.labels.removeLabel(projectId, labelId)
 
     #
     # RELEASE STUFF
     #
+    @private
     def getReleasesForProject(self, projectId, showUnpublished = False):
         return [releases.Release(self, x) for x in self.releases.iterReleasesForProject(projectId, showUnpublished)]
 
+    @private
     def getRelease(self, releaseId):
         return self.releases.get(releaseId)
 
     @requiresAuth
+    @private
     def newRelease(self, projectId, releaseName, published):
         return self.releases.new(projectId = projectId,
                                  name = releaseName,
                                  published = published)
 
+    @private
     def getReleaseTrove(self, releaseId):
         return self.releases.getTrove(releaseId)
 
     @requiresAuth
+    @private
     def setReleaseTrove(self, releaseId, troveName, troveVersion, troveFlavor):
         return self.releases.setTrove(releaseId, troveName,
                                                  troveVersion,
                                                  troveFlavor)
 
     @requiresAuth
+    @private
     def setReleaseDesc(self, releaseId, desc):
         cu = self.db.cursor()
         cu.execute("UPDATE Releases SET desc=? WHERE releaseId=?",
@@ -373,6 +406,7 @@ class MintServer(object):
         return True
 
     @requiresAuth
+    @private
     def setReleasePublished(self, releaseId, published):
         cu = self.db.cursor()
         cu.execute("UPDATE Releases SET published=? WHERE releaseId=?",
@@ -381,6 +415,7 @@ class MintServer(object):
         return True
 
     @requiresAuth
+    @private
     def setImageType(self, releaseId, imageType):
         cu = self.db.cursor()
         cu.execute("UPDATE Releases SET imageType=? WHERE releaseId=?",
@@ -389,6 +424,7 @@ class MintServer(object):
         return True
 
     @requiresAuth
+    @private
     def startImageJob(self, releaseId):
         cu = self.db.cursor()
 
@@ -416,6 +452,7 @@ class MintServer(object):
         return retval
 
     @requiresAuth
+    @private
     def getJob(self, jobId):
         cu = self.db.cursor()
 
@@ -436,6 +473,7 @@ class MintServer(object):
         return data
 
     @requiresAuth
+    @private
     def getJobIds(self, releaseId):
         cu = self.db.cursor()
 
@@ -453,6 +491,7 @@ class MintServer(object):
         return rows
    
     @requiresAuth
+    @private
     def setJobStatus(self, jobId, newStatus, statusMessage):
         cu = self.db.cursor()
         cu.execute("UPDATE Jobs SET status=?, statusMessage=? WHERE jobId=?",
@@ -464,6 +503,7 @@ class MintServer(object):
         return True
 
     @requiresAuth
+    @private
     def setImageFilenames(self, releaseId, filenames):
         cu = self.db.cursor()
         cu.execute("DELETE FROM ImageFiles WHERE releaseId=?", releaseId)
@@ -473,6 +513,7 @@ class MintServer(object):
         self.db.commit()
         return True
 
+    @private
     def getImageFilenames(self, releaseId):
         cu = self.db.cursor()
         cu.execute("SELECT fileId, filename FROM ImageFiles WHERE releaseId=? ORDER BY idx", releaseId)
@@ -483,6 +524,7 @@ class MintServer(object):
         else:
             return [(x[0], x[1]) for x in results]
    
+    @private
     def getFilename(self, fileId):
         cu = self.db.cursor()
         cu.execute("SELECT filename FROM ImageFiles WHERE fileId=?", fileId)
@@ -494,7 +536,6 @@ class MintServer(object):
             raise jobs.FileMissing
 
     @requiresAuth
-    @public
     def getGroupTroves(self, projectId):
         project = projects.Project(self, projectId)
 
@@ -513,8 +554,12 @@ class MintServer(object):
         return troveDict
 
     @requiresAuth
-    @public
     def getReleaseStatus(self, releaseId):
+        # enable internal methods so that public methods can make 
+        # private calls; this is safe because only one instance
+        # of MintServer is instantiated per call.
+        self._allowPrivate = True
+
         release = releases.Release(self, releaseId)
         job = release.getJob()
 
