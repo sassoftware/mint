@@ -537,6 +537,11 @@ class MintServer(object):
 
     @requiresAuth
     def getGroupTroves(self, projectId):
+        # enable internal methods so that public methods can make 
+        # private calls; this is safe because only one instance
+        # of MintServer is instantiated per call.
+        self._allowPrivate = True
+
         project = projects.Project(self, projectId)
 
         labelIdMap = project.getLabelIdMap()
@@ -555,9 +560,6 @@ class MintServer(object):
 
     @requiresAuth
     def getReleaseStatus(self, releaseId):
-        # enable internal methods so that public methods can make 
-        # private calls; this is safe because only one instance
-        # of MintServer is instantiated per call.
         self._allowPrivate = True
 
         release = releases.Release(self, releaseId)
