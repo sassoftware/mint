@@ -233,6 +233,13 @@ class MintClient:
         """
         return self.server.getNews()
 
+    def getNewsLink(self):
+        """
+        Returns the web URL of the news RSS feed.
+        @return: web URL
+        """
+        return self.server.getNewsLink()
+
 class ServerProxy(xmlrpclib.ServerProxy):
     def __getattr__(self, name):
         return _Method(self.__request, name)

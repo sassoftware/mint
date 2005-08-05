@@ -41,6 +41,8 @@ USER INTERFACE
    statistical information to use for these links.
 * Fix 'more about rpath' link
 * Fix up news handling
+ - [DONE] link to the main news page, not the individual news entry
+ - create a b2evolution style to match rpath.com
 * [DONE] Improve rendering of "contact information" in userInfo
 * [DONE] Fix description handling in search results
 * [DONE] Fix description handling in browse pages

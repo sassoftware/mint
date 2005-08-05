@@ -14,27 +14,30 @@ import database
 
 REFRESH_TIME = 600 # seconds
 
-class NewsCacheAgeTable(database.DatabaseTable):
-    name = 'NewsCacheAge'
-    fields = ['age']
+class NewsCacheInfoTable(database.DatabaseTable):
+    name = 'NewsCacheInfo'
+    fields = ['age', 'feedLink']
 
-    createSQL = "CREATE TABLE NewsCacheAge (age INT);"
+    createSQL = "CREATE TABLE NewsCacheInfo (age INT, feedLink STR);"
 
     def getAge(self):
         cu = self.db.cursor()
-        cu.execute("SELECT age FROM NewsCacheAge")
+        cu.execute("SELECT age FROM NewsCacheInfo")
         
         r = cu.fetchone()
-        if r:
-            age = r[0]
-        else:
-            age = 0
-        return age
+        return r and r[0] or 0
 
-    def setAge(self):
+    def getLink(self):
         cu = self.db.cursor()
-        cu.execute("DELETE FROM NewsCacheAge")
-        cu.execute("INSERT INTO NewsCacheAge VALUES (?)", time.time())
+        cu.execute("SELECT feedLink FROM NewsCacheInfo")
+
+        r = cu.fetchone()
+        return r and r[0] or ""
+        
+    def set(self, t, link):
+        cu = self.db.cursor()
+        cu.execute("DELETE FROM NewsCacheInfo")
+        cu.execute("INSERT INTO NewsCacheInfo VALUES (?, ?)", t, link)
         self.db.commit()
         return True
         
@@ -55,7 +58,7 @@ class NewsCacheTable(database.KeyedTable):
     def __init__(self, db, cfg):
         database.DatabaseTable.__init__(self, db)
         self.cfg = cfg
-        self.ageTable = NewsCacheAgeTable(db)
+        self.ageTable = NewsCacheInfoTable(db)
 
     def refresh(self, items = 5, purge = True):
         def toUnixTime(t):
@@ -79,6 +82,7 @@ class NewsCacheTable(database.KeyedTable):
             return False
 
         tree = ElementTree.XML(data)
+        feedLink = tree.find("channel/link").text
         for item in tree.findall("channel/item")[:items]:
             link = item.find("link").text
             title = item.find("title").text
@@ -89,7 +93,7 @@ class NewsCacheTable(database.KeyedTable):
             query = "INSERT INTO NewsCache VALUES (NULL, ?, ?, ?, ?, ?)"
             cu.execute(query, title, pubDate, content, link, category)
         
-        self.ageTable.setAge()
+        self.ageTable.set(t = time.time(), link = feedLink)
         self.db.commit()
         return True
 
@@ -105,3 +109,6 @@ class NewsCacheTable(database.KeyedTable):
                 item[key] = r[i]
             data.append(item)
         return data
+
+    def getNewsLink(self):
+        return self.ageTable.getLink()

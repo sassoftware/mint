@@ -37,7 +37,7 @@ ${searchMenu()}
 
                                 <h3>Latest News <span class="date">- ${time.ctime(latestNews['pubDate'])}</span></h3>
                                 <p>${latestNews['content']}</p>
-                                <p><a href="${latestNews['link']}">continued</a></p>
+                                <p><a href="${newsLink}">continued</a></p>
 
                                 <div py:strip="True" py:if="news">
                                     <h3>More News</h3>

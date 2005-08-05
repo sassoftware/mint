@@ -13,7 +13,6 @@ from urllib import unquote
 
 from mod_python import apache
 from mod_python import Cookie
-from mod_python.util import FieldStorage
 
 import repository
 import versions
@@ -277,7 +276,7 @@ class MintApp(webhandler.WebHandler):
     @siteOnly
     def _frontPage(self, auth):
         news = self.client.getNews()
-        self._write("frontPage", news = news)
+        self._write("frontPage", news = news, newsLink = self.client.getNewsLink())
         return apache.OK
 
     @siteOnly

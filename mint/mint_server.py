@@ -339,6 +339,9 @@ class MintServer(object):
     def getNews(self):
         return self.newsCache.getNews()
 
+    def getNewsLink(self):
+        return self.newsCache.getNewsLink()
+
     #
     # LABEL STUFF
     #
