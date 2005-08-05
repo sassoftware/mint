@@ -51,9 +51,11 @@ from mint import userlevels
                             <p py:if="not project.getDesc()">The project owner has not entered a description</p>
                             <h3>Configuration</h3>
 
-                            <p>To add this project in your Conary configuration, add the following to your ~/.conaryrc:</p>
-                            <textarea style="width: 100%; white-space: nowrap;" readonly="readonly" rows="4">installLabelPath ${project.getLabel()}<p py:strip="True" py:if="auth.authorized">
-repositoryMap ${project.getHostname()} http://${auth.username}:<i>password</i>@${project.getHostname()}/conary/</p></textarea>
+                            <p>
+                                To add this project in your Conary configuration, add <tt><strong>${project.getLabel()}</strong></tt> 
+                                to the <tt><strong>installLabelPath</strong></tt> line in your your 
+                                <tt><strong>~/.conaryrc</strong></tt> file.
+                            </p>
                         </div>
                     </td>
                     ${projectsPane()}
