@@ -92,11 +92,8 @@ class LiveIso(ImageGenerator):
 
         tmpDir = tempfile.mkdtemp("", "imagetool", self.cfg.imagesPath)
         log.info('generating live iso with tmpdir %s', tmpDir)
+
         release = self.client.getRelease(self.job.getReleaseId())
-        trove, version, flavorStr = release.getTrove()
-
-        project = self.client.getProject(release.getProjectId())
-
         trove, versionStr, flavorStr = release.getTrove()
         flavor = deps.deps.ThawDependencySet(flavorStr)
         version = versions.ThawVersion(versionStr)
@@ -107,6 +104,7 @@ class LiveIso(ImageGenerator):
         cfg = project.getConaryConfig()
         # turn off threading
         cfg.threadded = False
+        # configure flavor
         flavorConfig = flavorcfg.FlavorConfig(cfg.useDirs, cfg.archDirs)
         cfg.flavor = flavorConfig.toDependency(override=cfg.flavor[0])
         insSet = deps.deps.DependencySet()
