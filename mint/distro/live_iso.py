@@ -31,20 +31,31 @@ class InstallCallback(UpdateCallback, ChangesetCallback):
     def restoreFiles(self, size, totalSize):
         if totalSize != 0:
             self.restored += size
-            self.status('writing files (%d%% of %dK)'
+            self.update('writing files (%d%% of %dK)'
                         %((self.restored * 100) / totalSize, totalSize / 1024))
+
+    def requestingChangeSet(self):
+        self.update('requesting changeset')
 
     def setUpdateHunk(self, num, total):
         self.restored = 0
 
     def downloadingChangeSet(self, got, need):
         if need != 0:
-            self.status('downloading from repository (%d%% of %dk)' %
+            self.update('downloading from repository (%d%% of %dk)' %
                         ((got * 100) / need, need / 1024))
+
+    def update(self, msg):
+        # only push an update into the database if it differs from the
+        # current message
+        if self.msg != msg:
+            self.msg = msg
+            self.status(msg)
 
     def __init__(self, status):
         self.status = status
         self.restored = 0
+        self.msg = ''
 
 class Journal:
     def lchown(self, root, target, user, group):
