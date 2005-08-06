@@ -38,12 +38,14 @@ from mint.distro.installable_iso import InstallableIso
 from mint.distro.live_iso import LiveIso
 from mint.distro.live_cf_image import LiveCFImage
 from mint.distro.stub_image import StubImage
+from mint.distro.netboot_image import NetbootImage
 
 generators = {
     releasetypes.LIVE_ISO:           LiveIso,
     releasetypes.INSTALLABLE_ISO:    InstallableIso,
     releasetypes.LIVE_CF_IMAGE:      LiveCFImage,
     releasetypes.STUB_IMAGE:         StubImage,
+    releasetypes.NETBOOT_IMAGE:      NetbootImage,
 }
 
 class JobRunner(threading.Thread):
