@@ -80,6 +80,22 @@ class NetbootImage(ImageGenerator):
         flavorConfig.populateBuildFlags()
         cfg.setValue('root', rootDir)
 
+        # FIXME: this is a workaround until users/groups work properly
+        os.mkdir(rootDir + '/etc')
+        f = open(rootDir + '/etc/passwd', 'w')
+        f.write("""mail:x:8:12:mail:/var/spool/mail:/sbin/nologin
+apache:x:48:48:Apache:/var/www:/sbin/nologin
+""")
+        f.close()
+        f = open(rootDir + '/etc/group', 'w')
+        f.write("""tty:x:5:
+utmp:x:22:
+mail:x:12:mail
+apache:x:48:
+smmsp:x:51:
+""")
+        f.close()
+
         client = conaryclient.ConaryClient(cfg)
         applyList = [(trove, version, flavor)]
         self.status('installing software')
@@ -87,7 +103,7 @@ class NetbootImage(ImageGenerator):
         (updJob, suggMap) = client.updateChangeSet(applyList, recurse = True,
                                                    resolveDeps = False,
                                                    callback = callback)
-        client.applyUpdate(updJob, callback = callback)
+        client.applyUpdate(updJob, callback = callback, replaceFiles = True)
 
         self.status('generating images')
         imgDir = tempfile.mkdtemp('', 'netboot-', self.cfg.imagesPath)
@@ -109,5 +125,10 @@ class NetbootImage(ImageGenerator):
         self.status('cleaning up')
         util.rmtree(rootDir)
 
-        return [imgDir + '/vmlinuz', imgDir + '/initrd.img',
-                imgDir + '/rootfs.tgz' ]
+        images = [ imgDir + x for x in ('/vmlinuz', '/initrd.img',
+                                        '/rootfs.tgz') ]
+        for image in images:
+            if not os.access(image, os.R_OK):
+                raise RuntimeError, 'image creations script did not create images properly'
+
+        return images
