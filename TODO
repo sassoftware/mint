@@ -64,8 +64,16 @@ USER INTERFACE
    so we don't have to keep the confirm string around in the Users table after confirmation,
    and so we can purge old unconfirmed accounts.
 
-* [POSTPONED] Bug tracking
+
 * [DONE] update hooks.py to match the new apachehooks code 
 * Split public and private xmlrpc calls out into separate urls and
   use access controls on the web server to limit access instead of
   trying to do it inside the server class.
+
+MISSING FEATURES
+
+* [POSTPONED] Bug tracking
+* Site-wide package search (index all repositories)
+* Metadata editing for packages
+* Each project site should have a sidebar wtih recently updated packages
+  (see http://www.archlinux.org/)
