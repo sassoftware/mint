@@ -4,7 +4,7 @@
 
 all: subdirs
 
-export VERSION=0.3.2
+export VERSION=0.3.3
 export TOPDIR = $(shell pwd)
 export DISTDIR = $(TOPDIR)/mint-$(VERSION)
 export prefix = /usr

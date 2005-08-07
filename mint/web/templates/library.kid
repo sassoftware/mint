@@ -35,7 +35,7 @@ searchTypes = ['Projects', 'Users', 'Packages']
         </ul>
     </div>
 
-    <div id="search" class="palette" py:def="searchMenu(searchType)" py:strip="False">
+    <div id="search" class="palette" py:def="searchMenu(searchType='Projects')" py:strip="False">
         <h3>search rpath</h3>
         <form action="search" method="get">
             <p>

@@ -73,7 +73,7 @@ USER INTERFACE
 MISSING FEATURES
 
 * [POSTPONED] Bug tracking
-* Site-wide package search (index all repositories)
+* [DONE] Site-wide package search (index all repositories)
 * Metadata editing for packages
 * Each project site should have a sidebar wtih recently updated packages
   (see http://www.archlinux.org/)

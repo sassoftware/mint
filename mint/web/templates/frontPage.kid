@@ -19,8 +19,8 @@ from mint import searcher
                 <tr>
                     <td id="left" class="side">
                         <div class="pad">
-${browseMenu()}
-${searchMenu()}
+                            ${browseMenu()}
+                            ${searchMenu()}
                         </div>
                     </td>
                     <td id="main">
