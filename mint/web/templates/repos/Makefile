@@ -8,7 +8,6 @@ kid_files =		\
 	browse.kid	\
 	error.kid	\
 	files.kid	\
-	library.kid	\
 	notice.kid	\
 	trove_info.kid
 

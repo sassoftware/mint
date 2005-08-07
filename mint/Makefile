@@ -18,6 +18,7 @@ python_files =			\
 	mint.py			\
 	mint_server.py		\
 	news.py			\
+	pkgindex.py		\
 	projectlisting.py	\
 	projects.py		\
 	releases.py		\
