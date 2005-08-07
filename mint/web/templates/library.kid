@@ -2,6 +2,7 @@
 <?python
 import time
 from mint import searcher
+searchTypes = ['Projects', 'Users', 'Packages']
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#">
@@ -34,12 +35,12 @@ from mint import searcher
         </ul>
     </div>
 
-    <div id="search" class="palette" py:def="searchMenu()" py:strip="False">
+    <div id="search" class="palette" py:def="searchMenu(searchType)" py:strip="False">
         <h3>search rpath</h3>
         <form action="search" method="get">
             <p>
                 <label>search type:</label><br/>
-                <select name="type" onchange="if (this.options[this.selectedIndex].value=='Users') {
+                <select name="type" onchange="if (this.options[this.selectedIndex].value != 'Projects') {
                                                 el = document.getElementById('searchModified');
                                                 el.disabled = true;
                                                 el.className = 'disabledInput';
@@ -48,8 +49,9 @@ from mint import searcher
                                                 el.disabled = false;
                                                 el.className = '';
                                               }">
-                    <option selected="selected" value="Projects">Search projects</option>
-                    <option value="Users">Search users</option>
+                    <option py:for="type in searchTypes"
+                            py:attrs="{'value': type, 'selected': (searchType == type) and 'selected' or None}"
+                            py:content="type"/>
                 </select>
             </p>
             <p>

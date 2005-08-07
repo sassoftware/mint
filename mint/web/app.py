@@ -724,6 +724,8 @@ class MintApp(webhandler.WebHandler):
             return self.projectSearch(search, modified, limit, offset)
         elif type == "Users":
             return self.userSearch(search, limit, offset)
+        elif type == "Packages":
+            return self.packageSearch(search, limit, offset)
         else:
             self._write("error", shortError = "Invalid Search Type",
                 error = "Invalid search type specified.")
@@ -736,6 +738,14 @@ class MintApp(webhandler.WebHandler):
                                      modified = 0)
         return apache.OK
 
+    def packageSearch(self, terms, limit, offset):
+        results, count = self.client.getPackageSearchResults(terms, limit, offset)
+        results = [(x[0], x[1], self.client.getProject(x[2])) for x in results]
+        self._write("searchResults", type="Packages", terms = terms, results = results,
+                                     count = count, limit = limit, offset = offset,
+                                     modified = 0)
+        return apache.OK
+    
     def projectSearch(self, terms, modified, limit, offset):
         results, count = self.client.getProjectSearchResults(terms, modified, limit, offset)
         self._write("searchResults", type="Projects", terms = terms, results = results,

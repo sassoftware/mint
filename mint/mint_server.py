@@ -12,6 +12,7 @@ import database
 import jobs
 import jobstatus
 import news
+import pkgindex
 import projects
 import releases
 import versions
@@ -317,6 +318,17 @@ class MintServer(object):
         return self.projects.search(terms, modified, limit, offset)
 
     @private
+    def searchPackages(self, terms, limit, offset):
+        """
+        Collect the results as requested by the search terms
+        @param terms: Search terms
+        @param limit:  Number of items to return
+        @param offset: Count at which to begin listing
+        @return:       dictionary of Items requested
+        """
+        return self.pkgIndex.search(terms, limit, offset)
+
+    @private
     def getProjects(self, sortOrder, limit, offset):
         """
         Collect a list of projects
@@ -590,5 +602,6 @@ class MintServer(object):
         self.users = users.UsersTable(self.db, self.cfg)
         self.projectUsers = users.ProjectUsersTable(self.db)
         self.releases = releases.ReleasesTable(self.db)
+        self.pkgIndex = pkgindex.PackageIndexTable(self.db)
         self.newsCache = news.NewsCacheTable(self.db, self.cfg)
         self.newsCache.refresh()

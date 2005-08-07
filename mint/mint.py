@@ -153,6 +153,17 @@ class MintClient:
         """
         return self.server.searchProjects(terms, modified, limit, offset)
 
+    def getPackageSearchResults(self, terms, limit = 10, offset = 0):
+        """
+        Collect the results from a package search as requested by the search
+        terms
+        @param terms: Search terms
+        @param limit:  Number of items to return
+        @param offset: Count at which to begin listing
+        @return:       dictionary of Items requested
+        """
+        return self.server.searchPackages(terms, limit, offset)
+
     def getProjects(self, sortOrder, limit, offset):
         """
         Return a list of projects unfiltered in any way

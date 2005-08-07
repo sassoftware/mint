@@ -16,6 +16,8 @@
             columns = ('Project Name', 'Project Description', 'Last Modified')
         elif type == "Users":
             columns = ('User Name', 'Full Name', 'Contact Info', 'Other')
+        elif type == "Packages":
+            columns = ('Package Name', 'Version', 'Project')
     ?>
     <div py:def="breadcrumb()" py:strip="True">
         <a href="#">search results</a>
@@ -34,14 +36,17 @@
                     formattedresults = [ 'userInfo?id=%d' % resultset[0],
                         resultset[1], resultset[2], resultset[3], 
                         resultset[4] ]
+                elif type == "Packages":
+                    formattedresults = [ 'http://%s/conary/troveInfo?t=%s' % (resultset[2].getHostname(), resultset[0]),
+                        resultset[0], resultset[1], resultset[2].getName() ]
             ?>
             ${resultRow(formattedresults)}
         </div>
 
         <td id="left" class="side">
             <div class="pad">
-${browseMenu()}
-${searchMenu()}
+                ${browseMenu()}
+                ${searchMenu(type)}
             </div>
         </td>
         <td id="main" class="spanall">
@@ -52,17 +57,6 @@ ${searchMenu()}
                     ${columnTitles(columns)}
                     ${searchResults(results)}
                 </table>
-                <h3>search again </h3>
-                <form action="search" method="get">
-                    <table cellspacing="0" cellpadding="0" class="mainformhorizontal">
-                        <tr>
-                            <th width="33%">Search Type:</th>
-                            <th width="33%">Keyword(s):</th>
-                            <th width="33%">Last Modified:</th>
-                        </tr>
-                    </table>
-                    <p><button>Submit</button></p>
-                </form>
             </div>
         </td>
     </body>
