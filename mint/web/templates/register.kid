@@ -17,13 +17,7 @@
 ?>
     <head/>
     <body>
-        <td id="left" class="side">
-            <div class="pad">
-${browseMenu()}
-${searchMenu()}
-            </div>
-        </td>
-        <td id="main" >
+        <td id="main" class="spanleft">
             <div class="pad">
                 <p py:if="errors" class="error">Account Creation Error${len(errors) > 1 and 's' or ''}</p>
                 <p py:for="error in errors" class="errormessage" py:content="error"/>

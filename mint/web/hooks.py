@@ -3,10 +3,8 @@
 #
 # All Rights Reserved
 #
-
 from mod_python import apache
 from mod_python import util
-from mod_python import Cookie
 
 import base64
 import os
@@ -14,14 +12,11 @@ import xmlrpclib
 import zlib
 import sys
 
-import conarycfg
-import sqlite3
 from repository.netrepos import netserver
 from repository.filecontainer import FileContainer
 from repository import changeset
 
 from mint import config
-from mint import database
 from mint import mint_server
 import app
 import cookie_http
@@ -81,13 +76,14 @@ def post(port, isSecure, repos, cfg, req):
         if req.path_info.startswith("/conary"):
             wrapper = repos.callWrapper
             params = [protocol, port, method, authToken, params]
-        else:
-            if not cfg.xmlrpcAccess:
-                return apache.HTTP_FORBIDDEN
+        elif req.path_info.startswith("/xmlrpc"):
+            server = mint_server.MintServer(cfg, allowPrivate = False)
+            wrapper = server.callWrapper
+            params = [method, authToken, params]
+        elif req.path_info.startswith("/xmlrpc-private"):
             server = mint_server.MintServer(cfg, allowPrivate = True)
             wrapper = server.callWrapper
             params = [method, authToken, params]
-        
         try:
             result = wrapper(*params)
         except (netserver.InsufficientPermission, mint_server.PermissionDenied):
@@ -181,9 +177,7 @@ def get(port, isSecure, repos, cfg, req):
                 del cs
             else:
                 req.sendfile(path)
-
-            
-
+                
             if path.startswith(repos.tmpPath) and \
                     not(os.path.basename(path)[0:6].startswith('cache-')):
                 os.unlink(path)
@@ -247,6 +241,7 @@ def subhandler(req):
                         (req.hostname) + rest
         
         # set up the commitAction
+        # FIXME: don't hardcode @rpl:devel
         buildLabel = req.hostname + "@rpl:devel"
         repMapStr = buildLabel + " http://" + req.hostname + "/conary/"
         repMap = {buildLabel: "http://" + req.hostname + "/conary/"}

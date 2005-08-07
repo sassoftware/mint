@@ -6,18 +6,10 @@
 import base64
 import os
 import sys
-import traceback
-
-from mod_python import apache
-from mod_python import Cookie
-from mod_python.util import FieldStorage
 
 from server import http
 from repository import shimclient
-from web import webauth
-from repository.netrepos import netserver
 from templates import repos
-import versions
 from app import MintApp
 
 class CookieHttpHandler(MintApp, http.HttpHandler):

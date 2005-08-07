@@ -151,7 +151,7 @@ function processGetTroveList(xml) {
 }
 
 function getReleaseStatus(releaseId) {
-    var req = new XmlRpcRequest(".", "getReleaseStatus");
+    var req = new XmlRpcRequest("/xmlrpc", "getReleaseStatus");
     req.setAuth(getCookieValue("authToken"));
     req.setHandler(processGetReleaseStatus);
     req.send(releaseId);
@@ -161,7 +161,7 @@ function getReleaseStatus(releaseId) {
 }
 
 function getTroveList(projectId) {
-    var req = new XmlRpcRequest(".", "getGroupTroves");
+    var req = new XmlRpcRequest("/xmlrpc", "getGroupTroves");
     req.setAuth(getCookieValue("authToken"));
     req.setHandler(processGetTroveList);
     req.send(projectId);
