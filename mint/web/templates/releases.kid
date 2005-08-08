@@ -18,6 +18,21 @@
         <a href="#">Releases </a>
     </div>
 
+    <table border="0" cellspacing="0" cellpadding="0"
+           class="releasestable" py:def="releasesTable(releaseList, isOwner)">
+        <tr py:for="release in releaseList">
+
+            <th>
+                <a href="release?id=${release.getId()}">
+                    ${release.getTroveName()}=${release.getTroveVersion().trailingRevision().asString()}
+                </a>
+            </th>
+            <td py:if="isOwner"><a href="editRelease?releaseId=${release.getId()}"
+                                   id="{release.getId()}Edit" class="option">Edit</a>
+            </td>
+        </tr>
+    </table>
+
     <body>
         <td id="left" class="side">
             <div class="pad">
@@ -28,35 +43,12 @@
             <div class="pad">
                 <h2>${project.getName()}<br />releases</h2>
                 <h3 py:if="isOwner">Published Releases</h3>
-                <table border="0" cellspacing="0" cellpadding="0" class="releasestable">
-                    <tr py:for="release in [x for x in releases if x.getPublished()]">
+                ${releasesTable([x for x in releases if x.getPublished()], isOwner)}
 
-                        <th>
-                            <a href="release?id=${release.getId()}">
-                                ${release.getTroveName()}=${release.getTroveVersion().trailingRevision().asString()}
-                            </a>
-                        </th>
-                        <td py:if="isOwner"><a href="editRelease?releaseId=${release.getId()}"
-                                               id="{release.getId()}Edit" class="option">Edit</a>
-                        </td>
-                    </tr>
-                </table>
-                
                 <div py:if="isOwner">
 
                     <h3>Unpublished Releases</h3>
-                    <table border="0" cellspacing="0" cellpadding="0" class="releasestable">
-                        <tr py:for="release in [x for x in releases if not x.getPublished()]">
-                            <th>
-                                <a id="release" href="release?id=${release.getId()}">
-                                    ${release.getTroveName()}=${release.getTroveVersion().trailingRevision().asString()}
-                                </a>
-                            </th>
-                            <td py:if="isOwner"><a href="editRelease?releaseId=${release.getId()}"
-                                                   id="{release.getId()}Edit" class="option">Edit</a></td>
-                        </tr>
-
-                    </table>
+                    ${releasesTable([x for x in releases if not x.getPublished()], isOwner)}
                     <p py:if="isOwner"><a href="newRelease">Create a new release</a></p>
                 </div>
             </div>
