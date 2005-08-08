@@ -6,13 +6,13 @@
 
 import time
 
-from mint import stats
-from mint import mint_server
-from mint import config
+import stats
+import mint_server
+import config
 
 import conary
-from conary import options 
-from conary import versions
+import options 
+import versions
 
 def usage(exitcode=1):
     sys.stderr.write("\n".join((
