@@ -20,6 +20,7 @@ import users
 import userlevels
 from cache import TroveNamesCache
 from mint_error import MintError
+from mint_error import PermissionDenied
 
 import repository.netrepos.netauth
 from repository import netclient
@@ -28,10 +29,6 @@ validHost = re.compile('^[a-zA-Z][a-zA-Z0-9\-]*$')
 reservedHosts = ['admin', 'mail', 'mint', 'www', 'web', 'rpath', 'wiki', 'conary']
 
 allTroveNames = TroveNamesCache()
-
-class PermissionDenied(MintError):
-    def __str__(self):
-        return "permission denied"
 
 def requiresAuth(func):
     def wrapper(self, *args):

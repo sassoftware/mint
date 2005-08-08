@@ -6,3 +6,7 @@
 
 class MintError(Exception):
     pass
+
+class PermissionDenied(MintError):
+    def __str__(self):
+        return "permission denied"

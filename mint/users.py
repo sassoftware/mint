@@ -19,7 +19,7 @@ import repository.netrepos.netauth
 from lib import sha1helper
 
 from mint_error import MintError
-from mint_server import PermissionDenied
+from mint_error import PermissionDenied
 import database
 import userlevels
 import searcher

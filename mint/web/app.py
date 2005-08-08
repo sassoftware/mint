@@ -43,7 +43,7 @@ class Redirect(Exception):
 def requiresAuth(func):
     def wrapper(self, **kwargs):
         if not kwargs['auth'].authorized:
-            raise mint_server.PermissionDenied
+            raise mint_error.PermissionDenied
         else:
             return func(self, **kwargs)
     return wrapper
@@ -89,7 +89,7 @@ def ownerOnly(func):
         if self.userLevel == userlevels.OWNER:
             return func(self, **kwargs)
         else:
-            raise mint_server.PermissionDenied
+            raise mint_error.PermissionDenied
     return wrapper
 
 def mailList(func):
