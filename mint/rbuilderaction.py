@@ -11,7 +11,7 @@ import mint_server
 import config
 
 import conary
-import options 
+from lib import options
 import versions
 
 def usage(exitcode=1):
@@ -44,7 +44,7 @@ def process(repos, cfg, commitList, srcMap, pkgMap, grpMap, argv, otherArgs):
     cfg.read(argSet['mintconf'])
     user = argSet['user']
 
-    mint = mint_server.MintServer(cfg)
+    mint = mint_server.MintServer(cfg, allowPrivate = True)
     commitsTable = stats.CommitsTable(mint.db)
     
     for commit in commitList:
