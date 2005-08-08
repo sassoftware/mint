@@ -175,7 +175,7 @@ class MintClient:
 
     def getUsers(self, sortOrder, limit, offset):
         """
-        Return a list of projects unfiltered in any way
+        Return a list of users unfiltered in any way
         @param sortOrder: Order in which to sort the results
         @param limit:     Number of items to return
         @param offset:    Begin listing at this offset
