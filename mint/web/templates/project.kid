@@ -27,10 +27,14 @@
                 You must be logged in for your projects to be displayed.
             </p>
             <ul py:if="auth.authorized">
-                <li py:for="project, level in sorted(projectList, key = lambda x: x[0].getName())">
+                <li py:if="projectList" 
+                    py:for="project, level in sorted(projectList, key = lambda x: x[0].getName())">
                     <a href="http://${project.getFQDN()}/">
                         ${project.getName()}</a><br/>
                         ${userlevels.names[level]}
+                </li>
+                <li py:if="not projectList">
+                    You are not a member of any projects.
                 </li>
             </ul>
             <ul py:if="auth.authorized">
