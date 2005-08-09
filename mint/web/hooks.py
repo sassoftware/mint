@@ -76,12 +76,12 @@ def post(port, isSecure, repos, cfg, req):
         if req.path_info.startswith("/conary"):
             wrapper = repos.callWrapper
             params = [protocol, port, method, authToken, params]
-        elif req.path_info.startswith("/xmlrpc"):
-            server = mint_server.MintServer(cfg, allowPrivate = False)
-            wrapper = server.callWrapper
-            params = [method, authToken, params]
         elif req.path_info.startswith("/xmlrpc-private"):
             server = mint_server.MintServer(cfg, allowPrivate = True)
+            wrapper = server.callWrapper
+            params = [method, authToken, params]
+        elif req.path_info.startswith("/xmlrpc"):
+            server = mint_server.MintServer(cfg, allowPrivate = False)
             wrapper = server.callWrapper
             params = [method, authToken, params]
         try:
