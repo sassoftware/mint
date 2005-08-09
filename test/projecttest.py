@@ -36,7 +36,7 @@ class ProjectTest(rephelp.RepositoryHelper):
  
         client = self.getMintClient("testuser", "testpass")
                                                        
-        projectId = client.newProject("Foo", "foo")
+        projectId = client.newProject("Foo", "foo", "rpath.org")
         project = client.getProject(projectId)
 
         project.addMemberById(otherUserId, userlevels.DEVELOPER)
@@ -45,7 +45,7 @@ class ProjectTest(rephelp.RepositoryHelper):
     def testLabels(self):
         client = self.getMintClient("testuser", "testpass")
 
-        projectId = client.newProject("Foo", "foo")
+        projectId = client.newProject("Foo", "foo", "rpath.org")
         project = client.getProject(projectId)
     
         assert(project.getRepoMap() ==\

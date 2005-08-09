@@ -53,16 +53,10 @@ USER INTERFACE
 * validate email address on register new user
 * improve atomicity of user create process (email fails to send--user is created but left hanging)
 
-MISC
-
-* Split public and private xmlrpc calls out into separate urls and
-  use access controls on the web server to limit access instead of
-  trying to do it inside the server class.
-
 MISSING FEATURES
 
 * [POSTPONED] Bug tracking
 * Upgrade procedure for handling database schema changes
 * Metadata editing for packages
-* Each project site should have a sidebar wtih recently updated packages
+* Each project site should have a sidebar with recently updated packages
   (see http://www.archlinux.org/)
