@@ -41,6 +41,17 @@ class GroupAlreadyExists(MintError):
     def __str__(self):
         return "group already exists"
 
+class ConfirmationsTable(database.KeyedTable):
+    name = 'Confirmations'
+    key = 'userid'
+    createSQL = """
+                CREATE TABLE Confirmations (
+                    userId          INTEGER PRIMARY KEY,
+                    timeRequested   INT,
+                    confirmation    STR
+                )"""
+    fields = ['userId', 'timeRequested', 'confirmation']
+
 class UsersTable(database.KeyedTable):
     name = 'Users'
     key = 'userId'
@@ -54,13 +65,12 @@ class UsersTable(database.KeyedTable):
                     timeCreated     INT,
                     timeAccessed    INT,
                     active          INT,
-                    blurb           STR DEFAULT "",
-                    confirmation    STR
+                    blurb           STR DEFAULT ""
                 )"""
 
     fields = ['userId', 'username', 'fullName', 'email',
               'displayEmail', 'timeCreated', 'timeAccessed',
-              'active', 'confirmation', 'blurb']
+              'active', 'blurb']
 
     indexes = {"UsersUsernameIdx": "CREATE INDEX UsersUsernameIdx ON Users(username)",
                "UsersActiveIdx":   "CREATE INDEX UsersActiveIdx ON Users(username, active)"}
@@ -68,6 +78,7 @@ class UsersTable(database.KeyedTable):
     def __init__(self, db, cfg):
         database.DatabaseTable.__init__(self, db)
         self.cfg = cfg
+        self.confirm_table = ConfirmationsTable(db)
 
     def checkAuth(self, authToken, checkRepo = True):
         username, password = authToken
@@ -151,28 +162,34 @@ class UsersTable(database.KeyedTable):
                               timeCreated = time.time(),
                               timeAccessed = 0,
                               blurb = blurb,
-                              active = active,
-                              confirmation = confirm)
+                              active = active)
         except database.DuplicateItem:
             raise UserAlreadyExists
+        self.confirm_table.new(userId = userId,
+                               timeRequested = time.time(),
+                               confirmation = confirm)
         return userId
 
     def confirm(self, confirm):
         cu = self.db.cursor()
 
-        cu.execute("SELECT active FROM Users WHERE confirmation=? AND active=1", confirm)
-        if cu.fetchone():
+        cu.execute("SELECT userId FROM Confirmations WHERE confirmation=?", confirm)
+        if len(cu.fetchall()) != 1:
             raise AlreadyConfirmed
 
-        cu.execute("SELECT userId FROM Users WHERE confirmation=? AND active=0", confirm)
+        cu.execute("SELECT Users.userId FROM Users LEFT JOIN Confirmations ON Users.userId=Confirmations.userId WHERE confirmation=? AND active=0", confirm)
         if len(cu.fetchall()) != 1:
             raise ConfirmError
         else:
-            cu.execute("UPDATE Users SET active=1 WHERE confirmation=?", confirm)
+            cu.execute("SELECT userId FROM Confirmations WHERE confirmation=?", confirm)
+            r = cu.fetchone()
+
+            cu.execute("UPDATE Users SET active=1 WHERE userId=?", r[0])
             self.db.commit()
 
-            cu.execute("SELECT userId FROM Users WHERE confirmation=?", confirm)
-            r = cu.fetchone()
+            cu.execute("DELETE FROM Confirmations WHERE userId=?", r[0])
+            self.db.commit()
+
             return r[0]
 
     def search(self, terms, limit, offset):

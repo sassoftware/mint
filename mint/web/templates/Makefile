@@ -23,6 +23,7 @@ kid_files = \
 	projects.kid		\
 	projectPage.kid		\
 	register.kid		\
+	register_conf.kid	\
 	release.kid		\
 	releases.kid		\
 	searchResults.kid	\
