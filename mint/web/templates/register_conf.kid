@@ -13,7 +13,7 @@
             <div class="pad">
                 <h2>Thank you for registering</h2>
 		<p>An email confirming your request has been sent to <b>${email}</b>.</p>
-		<p>please follow the directions in your confirmation email to complete the registration process</p>
+		<p>please follow the directions in your confirmation email to complete the registration process.</p>
             </div>
         </td>
     </body>
