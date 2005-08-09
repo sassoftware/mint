@@ -53,8 +53,7 @@ from mint import userlevels
 
                             <p>
                                 To add this project in your Conary configuration, add <tt><strong>${project.getLabel()}</strong></tt> 
-                                to the <tt><strong>installLabelPath</strong></tt> line in your your 
-                                <tt><strong>~/.conaryrc</strong></tt> file.
+                                to the <tt><strong>installLabelPath</strong></tt> line in the <tt><strong>/etc/conaryrc</strong></tt> (or your <tt><strong>~/.conaryrc</strong></tt>) file.
                             </p>
                         </div>
                     </td>
