@@ -63,6 +63,9 @@ USER INTERFACE
  - create a separate RegistrationChallenge table containing userId, age, and confirmation string
    so we don't have to keep the confirm string around in the Users table after confirmation,
    and so we can purge old unconfirmed accounts.
+* validate email address on register new user
+* improve atomicity of user create process (email fails to send--user is created but left hanging)
+
 
 
 * [DONE] update hooks.py to match the new apachehooks code 

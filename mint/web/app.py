@@ -9,7 +9,7 @@ import kid
 import stat
 import sys
 import time
-from urllib import unquote
+from urllib import quote, unquote
 
 from mod_python import apache
 from mod_python import Cookie
@@ -311,10 +311,16 @@ class MintApp(webhandler.WebHandler):
             except users.GroupAlreadyExists:
                 errors.append("An account with that username already exists.")
         if not errors:
-            return self._redirect("login?message=confirm")
+            return self._redirect("register_conf?email=" + quote(email))
         else:
             kwargs = {'username': username, 'email': email, 'fullName': fullName, 'displayEmail': displayEmail, 'blurb': blurb, 'tos': tos, 'privacy': privacy}
             self._write("register", errors=errors, kwargs = kwargs)
+        return apache.OK
+
+    @siteOnly
+    @strFields(email = "")
+    def register_conf(self, auth, email):
+        self._write("register_conf", email=email)
         return apache.OK
 
     @siteOnly
