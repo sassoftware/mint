@@ -177,7 +177,9 @@ class UsersTable(database.KeyedTable):
         if len(cu.fetchall()) != 1:
             raise AlreadyConfirmed
 
-        cu.execute("SELECT Users.userId FROM Users LEFT JOIN Confirmations ON Users.userId=Confirmations.userId WHERE confirmation=? AND active=0", confirm)
+        cu.execute("""SELECT Users.userId FROM Users 
+            LEFT JOIN Confirmations ON Users.userId=Confirmations.userId 
+            WHERE Confirmations.confirmation=? AND active=0""", confirm)
         if len(cu.fetchall()) != 1:
             raise ConfirmError
         else:
