@@ -212,7 +212,7 @@ class KeyedTable(DatabaseTable):
         except Exception, e:
             print >> sys.stderr, str(e), query
             sys.stderr.flush()
-
+            raise
 
         #Now the actual search results
         query = "SELECT " + ", ".join(columns) + " FROM %s " % table
@@ -231,6 +231,7 @@ class KeyedTable(DatabaseTable):
         except Exception, e:
             print >> sys.stderr, str(e), query, subs
             sys.stderr.flush()
+            raise
 
         ids = []
         for r in cu.fetchall():
