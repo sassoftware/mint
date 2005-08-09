@@ -37,7 +37,7 @@ from mint import userlevels
                             <label>Membership Type:</label><br/>
 
                             <select name="level">
-                                <option py:for="level, levelName in userlevels.names.items()"
+                                <option py:for="level, levelName in sorted(userlevels.names.items(), reverse=True)"
                                         py:content="levelName"
                                         value="${level}" />
                             </select>
