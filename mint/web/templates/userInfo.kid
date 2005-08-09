@@ -44,7 +44,7 @@
                 <h3>${user.getUsername()}'s projects:</h3>
                 <ul py:if="userProjects">
                     <li py:for="project, level in userProjects">
-                        <a href="http://${project.getHostname()}/">${project.getName()}</a>
+                        <a href="http://${project.getFQDN()}/">${project.getName()}</a>
                         (${userlevels. names[level]})
                     </li>
                 </ul>
