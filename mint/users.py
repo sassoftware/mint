@@ -151,9 +151,11 @@ class UsersTable(database.KeyedTable):
                                  "",
                                  "Contact custom@rpath.com for help, or join the IRC channel #conary",
                                  "on the Freenode IRC network (http://www.freenode.net/) for live help."])
-
-            sendMail(self.cfg.adminMail, "rpath.com", email, "rpath.com registration", message)
-
+            try:
+                sendMail(self.cfg.adminMail, "rpath.com", email, "rpath.com registration", message)
+            except smtplib.SMTPRecipientsRefused:
+                authRepo.deleteUserByName(repoLabel,username)
+                raise mailError
         try:
             userId = self.new(username = username,
                               fullName = fullName,
