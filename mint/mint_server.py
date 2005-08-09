@@ -81,7 +81,7 @@ class MintServer(object):
 
     def _getAuthRepo(self, project):
         authUrl = "http://%s:%s@%s/conary/" % (self.cfg.authUser, self.cfg.authPass,
-                                               project.getHostname())
+                                               project.getFQDN())
         authLabel = project.getLabel()
 
         authRepo = {authLabel: authUrl}
@@ -91,18 +91,19 @@ class MintServer(object):
     # project methods
     @requiresAuth
     @private
-    def newProject(self, projectName, hostname, desc):
+    def newProject(self, projectName, hostname, domainname, desc):
         if validHost.match(hostname) == None:
             raise projects.InvalidHostname
         if hostname in reservedHosts:
             raise projects.InvalidHostname
-        hostname += "." + self.cfg.domainName
+        fqdn = ".".join((hostname, domainname))
 
         # XXX this set of operations should be atomic if possible
         projectId = self.projects.new(name = projectName,
                                       creatorId = self.auth.userId,
                                       desc = desc,
                                       hostname = hostname,
+                                      domainname = domainname,
                                       defaultBranch = "rpl:devel",
                                       timeModified = time.time(),
                                       timeCreated = time.time())
@@ -111,11 +112,11 @@ class MintServer(object):
                               level = userlevels.OWNER)
         
         project = projects.Project(self, projectId)
-        project.addLabel(hostname + "@rpl:devel",
-            "http://%s/conary/" % hostname,
+        project.addLabel(fqdn + "@rpl:devel",
+            "http://%s/conary/" % fqdn,
             self.authToken[0], self.authToken[1])
 
-        self.projects.createRepos(self.cfg.reposPath, hostname,
+        self.projects.createRepos(self.cfg.reposPath, hostname, domainname,
                                   self.authToken[0], self.authToken[1])
 
         return projectId
@@ -125,8 +126,8 @@ class MintServer(object):
         return self.projects.get(id)
 
     @private
-    def getProjectIdByHostname(self, hostname):
-        return self.projects.getProjectIdByHostname(hostname)
+    def getProjectIdByFQDN(self, fqdn):
+        return self.projects.getProjectIdByFQDN(fqdn)
 
     @private
     def getProjectIdsByMember(self, userId):
@@ -135,6 +136,9 @@ class MintServer(object):
     @private
     def getMembersByProjectId(self, id):
         return self.projectUsers.getMembersByProjectId(id)
+
+    def getOwnersByProjectName(self, name):
+        return self.projectUsers.getOwnersByProjectName(name)
 
     @requiresAuth
     @private
@@ -222,7 +226,8 @@ class MintServer(object):
     @private
     def getProjectsByUser(self, userId):
         cu = self.db.cursor()
-        cu.execute("""SELECT hostname, name, level FROM Projects, ProjectUsers
+        cu.execute("""SELECT hostname||'.'||domainname, name, level
+                      FROM Projects, ProjectUsers
                       WHERE Projects.projectId=ProjectUsers.projectId AND
                             ProjectUsers.userId=?
                       ORDER BY level, name""", userId)

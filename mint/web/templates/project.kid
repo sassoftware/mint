@@ -28,7 +28,7 @@
             </p>
             <ul py:if="auth.authorized">
                 <li py:for="project, level in sorted(projectList, key = lambda x: x[0].getName())">
-                    <a href="http://${project.getHostname()}/">
+                    <a href="http://${project.getFQDN()}/">
                         ${project.getName()}</a><br/>
                         ${userlevels.names[level]}
                 </li>

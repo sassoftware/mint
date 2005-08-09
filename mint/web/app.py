@@ -181,7 +181,7 @@ class MintApp(webhandler.WebHandler):
                 raise Redirect(("http://%s" % siteHost) + self.req.unparsed_uri)
             else:
                 try:
-                    self.project = self.client.getProjectByHostname(fullHost)
+                    self.project = self.client.getProjectByFQDN(fullHost)
                     self.userLevel = self.project.getUserLevel(self.auth.userId)
                 except database.ItemNotFound:
                     # XXX just for the testing period
@@ -536,7 +536,6 @@ class MintApp(webhandler.WebHandler):
         if not self.cfg.EnableMailLists:
             raise mailinglists.MailingListException("Mail Lists Disabled")
         hostname = self.project.getHostname()
-        hostname = hostname[0:hostname.find('.')]
         lists = mlists.list_lists(hostname)
         self._write("mailingLists", lists=lists, mailhost=self.cfg.MailListBaseURL, hostname=hostname)
         return apache.OK
@@ -556,7 +555,6 @@ class MintApp(webhandler.WebHandler):
                     owner = self.client.getUser(member[0])
                     owners.append(owner.getEmail())
             hostname = self.project.getHostname()
-            hostname = hostname[0:hostname.find('.')]
             if not mlists.add_list(self.cfg.MailListPass, hostname+'-'+listname, listpw, description, owners):
                 raise mailinglists.MailingListException("Mailing list not created")
             return self._redirect("mailingLists")
@@ -569,7 +567,6 @@ class MintApp(webhandler.WebHandler):
     @mailList
     def _deleteList(self, auth, mlists, list):
         hostname = self.project.getHostname()
-        hostname = hostname[0:hostname.find('.')]
         pcre = re.compile('^%s$|^%s-'%(hostname, hostname), re.I)
         if pcre.search(list):
             if not mlists.delete_list(self.cfg.MailListPass, list, True):
@@ -646,7 +643,7 @@ class MintApp(webhandler.WebHandler):
     @listFields(int, optlists = [])
     @requiresAuth
     def createProject(self, auth, title, hostname, blurb, optlists):
-        projectId = self.client.newProject(title, hostname, blurb)
+        projectId = self.client.newProject(title, hostname, self.cfg.domainName, blurb)
         if self.cfg.EnableMailLists:
             if not self._createProjectLists(auth=auth, projectName=hostname, optlists=optlists):
                 return apache.OK

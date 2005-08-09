@@ -280,6 +280,18 @@ class ProjectUsersTable(database.DatabaseTable):
                     level       INT
                 );"""
 
+    def getOwnersByProjectName(self, projectname):
+        cu = self.db.cursor()
+        cu.execute("""SELECT u.username, u.email
+                      FROM Projects pr, ProjectUsers p, Users u
+                      WHERE pr.projectId=p.projectId AND p.userId=u.userId
+                      AND pr.hostname=?
+                      AND p.level=?""", projectname, userlevels.OWNER)
+        data = []
+        for r in cu.fetchall():
+            data.append(list(r))
+        return data
+
     def getMembersByProjectId(self, projectId):
         cu = self.db.cursor()
         cu.execute("""SELECT p.userId, u.username, p.level

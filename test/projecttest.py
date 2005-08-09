@@ -12,13 +12,15 @@ from mint import userlevels
 class ProjectTest(rephelp.RepositoryHelper):
     def testBasicAttributes(self):
         client = self.getMintClient("testuser", "testpass")
-        projectId = client.newProject("Foo", "foo")
+        projectId = client.newProject("Foo", "foo", "rpath.org")
 
         project = client.getProject(projectId)
         project.setDesc("Description")
 
         project = client.getProject(projectId)
-        assert(project.getHostname() == "foo.rpath.org")
+        assert(project.getFQDN() == "foo.rpath.org")
+        assert(project.getHostname() == "foo")
+        assert(project.getDomainname() == "rpath.org")
         assert(project.getName() == "Foo")
         assert(project.getDesc() == "Description")
         assert(project.getMembers() ==\

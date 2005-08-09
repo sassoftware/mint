@@ -1,9 +1,15 @@
 #!/usr/bin/python
 
+# This script requires the pythonpath to include the mailman directory
+# Mailman is installed to /var/mailman by default
+
 import sys
-sys.path.append('/var/mailman')
+import sqlite3
+import getopt
 
 from Mailman import Utils, MailList, Errors, mm_cfg
+
+from mint import config, users
 
 class InvalidSetting(Exception):
     def __init__(self, list = "list", errors = []):
@@ -53,23 +59,36 @@ def setVals(mlist):
     mlist.Save()
     mlist.Unlock()
 
+
+def usage(code, msg=''):
+    if code:
+        out = sys.stderr
+    else:
+        out = sys.stdout
+    print >> out, """
+mmsettingspolicy.py: Set the policy for mailing lists on this machine
+"""
+    sys.exit(code)
+
 def main():
     listnames = Utils.list_names()
 
     for listname in listnames:
-        try:
-            mlist = MailList.MailList(listname, lock=0)
-        except Errors.MMListError, e:
-            print >>sys.stderr, 'No such list "%s"' % listname
-            continue
-        try:
-            checkVals(mlist)
-        except InvalidSetting, e:
-            ##Some kind of error reporting.  For now just output to stderr
-            print >>sys.stderr, str(e)
-            sys.stderr.flush()
-            #Now set the values
-            setVals(mlist)
+        #ignore "mailman" list
+        if listname != 'mailman':
+            try:
+                mlist = MailList.MailList(listname, lock=0)
+            except Errors.MMListError, e:
+                print >>sys.stderr, 'No such list "%s"' % listname
+                continue
+            try:
+                checkVals(mlist)
+            except InvalidSetting, e:
+                ##Some kind of error reporting.  For now just output to stderr
+                print >>sys.stderr, str(e)
+                sys.stderr.flush()
+                #Now set the values
+                setVals(mlist)
 
 if __name__ == '__main__':
     main()

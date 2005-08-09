@@ -28,7 +28,7 @@ class InvalidHostname(Exception):
 
 class Project(database.TableObject):
     __slots__ = ('creatorId', 'name',
-                 'desc', 'hostname', 'defaultBranch',
+                 'desc', 'hostname', 'domainname', 'defaultBranch',
                  'timeCreated', 'timeModified')
 
     def getItem(self, id):
@@ -40,11 +40,17 @@ class Project(database.TableObject):
     def getName(self):
         return self.name
 
+    def getDomainname(self):
+        return self.domainname
+
     def getHostname(self):
         return self.hostname
 
+    def getFQDN(self):
+        return '.'.join((self.hostname, self.domainname))
+
     def getLabel(self):
-        return self.hostname + "@" + self.defaultBranch
+        return self.getFQDN() + "@" + self.defaultBranch
 
     def getDesc(self):
         return self.desc
@@ -155,12 +161,13 @@ class ProjectsTable(database.KeyedTable):
                     creatorId       INT,
                     name            STR UNIQUE,
                     hostname        STR UNIQUE,
+                    domainname      STR DEFAULT '',
                     defaultBranch   STR NOT NULL,
                     desc            STR NOT NULL DEFAULT '',
                     timeCreated     INT,
                     timeModified    INT DEFAULT 0
                 )"""
-    fields = ['creatorId', 'name', 'hostname', 'defaultBranch',
+    fields = ['creatorId', 'name', 'hostname', 'domainname', 'defaultBranch',
               'desc', 'timeCreated', 'timeModified']
     indexes = {"ProjectsHostnameIdx": "CREATE INDEX ProjectsHostnameIdx ON Projects(hostname)"} 
 
@@ -168,10 +175,10 @@ class ProjectsTable(database.KeyedTable):
         database.DatabaseTable.__init__(self, db)
         self.cfg = cfg
 
-    def getProjectIdByHostname(self, hostname):
+    def getProjectIdByFQDN(self, fqdn):
         cu = self.db.cursor()
 
-        cu.execute("SELECT projectId FROM Projects WHERE hostname=?", hostname)
+        cu.execute("SELECT projectId FROM Projects WHERE hostname || '.' || domainname=?", fqdn)
 
         try:
             r = cu.next()
@@ -229,7 +236,7 @@ class ProjectsTable(database.KeyedTable):
                         The project's description
                         The date last modified.
         """
-        columns = ['hostname', 'name', 'desc', 'timeModified']
+        columns = ['hostname || \'.\' || domainname', 'name', 'desc', 'timeModified']
         searchcols = ['name', 'desc']
         ids, count = database.KeyedTable.search(self, columns, 'Projects', 
             searcher.Searcher.where(terms, searchcols), 'NAME', searcher.Searcher.lastModified('timeModified', modified), limit, offset)
@@ -239,8 +246,8 @@ class ProjectsTable(database.KeyedTable):
 
         return ids, count
 
-    def createRepos(self, reposPath, hostname, username, password):
-        path = os.path.join(reposPath, hostname)
+    def createRepos(self, reposPath, hostname, domainname, username, password):
+        path = os.path.join(reposPath, hostname, domainname)
         util.mkdirChain(reposPath)
 
         repos = EmptyNetworkRepositoryServer(path, None, None, None, {})

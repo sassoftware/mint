@@ -37,7 +37,7 @@
                         resultset[1], resultset[2], resultset[3], 
                         resultset[4] ]
                 elif type == "Packages":
-                    formattedresults = [ 'http://%s/conary/troveInfo?t=%s' % (resultset[2].getHostname(), resultset[0]),
+                    formattedresults = [ 'http://%s/conary/troveInfo?t=%s' % (resultset[2].getFQDN(), resultset[0]),
                         resultset[0], resultset[1], resultset[2].getName() ]
             ?>
             ${resultRow(formattedresults)}

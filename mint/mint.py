@@ -23,7 +23,7 @@ class MintClient:
         """
         self.server = ServerProxy(server)
 
-    def newProject(self, name, hostname, desc = ""):
+    def newProject(self, name, hostname, domainname, desc = ""):
         """
         Create a new project.
         @param name: name of new project
@@ -31,7 +31,7 @@ class MintClient:
         @param desc: description of new project
         @return: primary key of newly created project.
         """
-        return self.server.newProject(name, hostname, desc)
+        return self.server.newProject(name, hostname, domainname, desc)
 
     def checkAuth(self):
         """
@@ -46,14 +46,14 @@ class MintClient:
     def updateAccessedTime(self, userId):
         return self.server.updateAccessedTime(userId)
 
-    def getProjectByHostname(self, hostname):
+    def getProjectByFQDN(self, fqdn):
         """
-        Retrieve a Project by hostname.
-        @param hostname: hostname of the requested project
+        Retrieve a Project by its fully qualified domain name.
+        @param fqdn: Fully qualified domain name of the requested project
         @rtype: L{mint.projects.Project}
-        @raises mint.database.ItemNotFound: project of the requested hostname does not exist.
+        @raises mint.database.ItemNotFound: project of the requested fqdn does not exist.
         """
-        projectId = self.server.getProjectIdByHostname(hostname)
+        projectId = self.server.getProjectIdByFQDN(fqdn)
         return projects.Project(self.server, projectId)
 
     def getProject(self, projectId):

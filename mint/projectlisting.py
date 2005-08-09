@@ -16,7 +16,7 @@
 
 descindex = 2
 desctrunclength = 300
-sqlbase = """SELECT Projects.hostname, Projects.name, Projects.desc, 
+sqlbase = """SELECT Projects.hostname || '.' || Projects.domainname, Projects.name, Projects.desc, 
     Projects.timeCreated, Projects.timeModified,
     count(projectUsers.userId) as devs 
         FROM

@@ -53,7 +53,7 @@ def process(repos, cfg, commitList, srcMap, pkgMap, grpMap, argv, otherArgs):
         v = versions.VersionFromString(vStr)
         hostname = v.branch().label().getHost()
 
-        projectId = mint.getProjectIdByHostname(hostname)
+        projectId = mint.getProjectIdByFQDN(hostname)
         userId = mint.getUserIdByName(user)
         commitsTable.new(projectId, time.time(), t, vStr, userId)
 
