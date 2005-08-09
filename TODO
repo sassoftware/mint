@@ -79,6 +79,7 @@ MISSING FEATURES
 
 * [POSTPONED] Bug tracking
 * [DONE] Site-wide package search (index all repositories)
+* Upgrade procedure for handling database schema changes
 * Metadata editing for packages
 * Each project site should have a sidebar wtih recently updated packages
   (see http://www.archlinux.org/)
