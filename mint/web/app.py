@@ -688,6 +688,17 @@ class MintApp(webhandler.WebHandler):
         self.project.addMemberByName(username, level)
         return self._redirect("members")
 
+    @siteOnly
+    @intFields(userId = None, projectId = None, level = None)
+    def addMemberById(self, auth, userId, projectId, level):
+        project = self.client.getProject(projectId)
+   
+        if project.getUserLevel(auth.userId) != userlevels.OWNER:
+            raise mint_error.PermissionDenied
+    
+        project.addMemberById(userId, level)
+        return self._redirect("http://%s" % project.getFQDN())
+
     @intFields(userId = None, level = None)
     @projectOnly
     @ownerOnly
