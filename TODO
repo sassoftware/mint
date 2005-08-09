@@ -29,12 +29,14 @@ USER INTERFACE
     * [DONE] Rework the account creation login confirmation page
     * [DONE] rework the account activated login confirmation page
     * [DONE] Fix traceback when logging in with the wrong password
+    * Fix traceback on package search results page when clicking on package
 * [DONE] Missing templates
     * Search Projects
     * Search Users
     * Browse Projects
     * Browse Users
 * Implement "cancel account"
+* Make project name on package search results page a link to each project's page
 * Implement a few static-text pages: about rpath, ToS, privacy, contact into, products
 * [SORT OF DONE] Fix 'most active' and 'most popular' project links
  - We need to parse the Commits table and downloads counter and distill some real
