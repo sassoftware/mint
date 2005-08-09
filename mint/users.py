@@ -25,6 +25,10 @@ import userlevels
 import searcher
 import userlisting
 
+class MailError(MintError):
+    def __str__(self):
+        return "there was a problem sending email"
+
 class ConfirmError(MintError):
     def __str__(self):
         return "your registration could not be confirmed"
@@ -155,7 +159,7 @@ class UsersTable(database.KeyedTable):
                 sendMail(self.cfg.adminMail, "rpath.com", email, "rpath.com registration", message)
             except smtplib.SMTPRecipientsRefused:
                 authRepo.deleteUserByName(repoLabel,username)
-                raise mailError
+                raise MailError
         try:
             userId = self.new(username = username,
                               fullName = fullName,
