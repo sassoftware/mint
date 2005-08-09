@@ -19,22 +19,12 @@ JOB SERVER
 
 * improve job-server
     * more robust (handle server restarts, etc0
-    * [DONE] place cached changesets into a separate directory
-      per branch.
 * cron jobs for mail list handling
 
 USER INTERFACE
 
 * Fixes
-    * [DONE] Rework the account creation login confirmation page
-    * [DONE] rework the account activated login confirmation page
-    * [DONE] Fix traceback when logging in with the wrong password
     * Fix traceback on package search results page when clicking on package
-* [DONE] Missing templates
-    * Search Projects
-    * Search Users
-    * Browse Projects
-    * Browse Users
 * Implement "cancel account"
 * Make project name on package search results page a link to each project's page
 * Implement a few static-text pages: about rpath, ToS, privacy, contact into, products
@@ -43,14 +33,9 @@ USER INTERFACE
    statistical information to use for these links.
 * Fix 'more about rpath' link
 * Fix up news handling
- - [DONE] link to the main news page, not the individual news entry
  - create a b2evolution style to match rpath.com
-* [DONE] Improve rendering of "contact information" in userInfo
-* [DONE] Fix description handling in search results
-* [DONE] Fix description handling in browse pages
 * [POSTPONED] Highlight search results in descriptions
 * Fix all breadcrumbs
-* [DONE] Agree to ToS checkbox on New Account page
 * Rework registration forms to work around mozilla bug #302190
 * Update html <title> on all pages
 * When the user changes their email address, it should be re-verified.
@@ -68,9 +53,8 @@ USER INTERFACE
 * validate email address on register new user
 * improve atomicity of user create process (email fails to send--user is created but left hanging)
 
+MISC
 
-
-* [DONE] update hooks.py to match the new apachehooks code 
 * Split public and private xmlrpc calls out into separate urls and
   use access controls on the web server to limit access instead of
   trying to do it inside the server class.
@@ -78,7 +62,6 @@ USER INTERFACE
 MISSING FEATURES
 
 * [POSTPONED] Bug tracking
-* [DONE] Site-wide package search (index all repositories)
 * Upgrade procedure for handling database schema changes
 * Metadata editing for packages
 * Each project site should have a sidebar wtih recently updated packages
