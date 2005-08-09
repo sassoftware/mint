@@ -110,7 +110,11 @@ function show_obj(id,flag) {
 // POPUP SPECIFIC FUNCTIONS
 var current_popup = 0;
 
-function show_popup(lnk,id) {
+function load_popup(lnk,id) {
+	if (current_popup != 0) {
+		show_obj(current_popup,0);
+		current_popup = 0;
+	}
 	var lnk_pos = get_obj_pos(lnk);
 	var lnk_dim = get_obj_dim(lnk);
 	
@@ -118,11 +122,14 @@ function show_popup(lnk,id) {
 	new_pos_y = lnk_pos[1] + lnk_dim[1];
 	
 	set_obj_pos(id,new_pos_x,new_pos_y);
+}
+
+function show_popup(id) {
 	show_obj(id,1);
 	current_popup = id;
 }
 
-function hide_popup(id, refresh) {
+function hide_popup(id) {
 	show_obj(id,0);
 	set_obj_pos(id,0,-800);
 	current_popup = 0;

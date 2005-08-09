@@ -65,7 +65,7 @@ from mint import userlevels
                     <tr py:for="userId, username in sorted(users[userlevels.OWNER], key=lambda x: x[1])">
                         <th><a href="userInfo?id=${userId}">${username}</a></th>
                         <td py:if="isOwner">
-                            <a onclick="javascript:show_popup('Edit${userId}','memberEditBox');"
+                            <a onclick="javascript:load_popup('Edit${userId}','memberEditBox');"
                                href="memberSettings?userId=${userId}"
                                class="option" style="position:relative;"
                                id="Edit${userId}" target="memberEditBox">Edit</a>
@@ -79,7 +79,7 @@ from mint import userlevels
                     <tr py:for="userId, username in sorted(users[userlevels.DEVELOPER], key=lambda x: x[1])">
                         <th><a href="userInfo?id=${userId}">${username}</a></th>
                         <td py:if="isOwner">
-                            <a onclick="javascript:show_popup('Edit${userId}','memberEditBox');"
+                            <a onclick="javascript:load_popup('Edit${userId}','memberEditBox');"
                                href="memberSettings?userId=${userId}"
                                class="option" style="position:relative;"
                                id="Edit${userId}" target="memberEditBox">Edit</a>
@@ -89,7 +89,7 @@ from mint import userlevels
                 </table>
                 <iframe src="about:blank" frameborder="0" marginheight="0" marginwidth="0"
                         scrolling="no" id="memberEditBox" name="memberEditBox" 
-                        style="width:268px; position:absolute; z-index:115; visibility:hidden; overflow:hidden;"/>
+                        style="width:268px; height: 110px; position:absolute; z-index:115; visibility:hidden; overflow:hidden;"/>
             </div>
         </td>
         ${projectsPane()}        

@@ -13,7 +13,7 @@ from mint import userlevels
         <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/basic.css"/>
         <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/contentTypes.css"/>
     </head>
-    <body style="background-color:transparent; padding:0px;">
+    <body style="background-color:transparent; padding:0px;" onload="window.parent.show_popup('memberEditBox');">
         <div class="side">
             <div class="palette">
                 <h3>Edit Member</h3>
