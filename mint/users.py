@@ -154,7 +154,7 @@ class UsersTable(database.KeyedTable):
                                    timeRequested = time.time(),
                                    confirmation = confirm)
         except database.DuplicateItem:
-            self.confirm_table.update(confirmation = confirm)
+            self.confirm_table.update(userId, confirmation = confirm)
 
     def registerNewUser(self, username, password, fullName, email, displayEmail, blurb, active):
         def confirmString():
