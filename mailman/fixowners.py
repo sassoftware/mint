@@ -1,4 +1,4 @@
-#!python
+#!/usr/bin/python
 
 # This script requires the pythonpath to include the mailman directory
 # Mailman is installed to /var/mailman by default

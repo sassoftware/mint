@@ -1,4 +1,4 @@
-#!python
+#!/usr/bin/python
 
 from conarycfg import ConfigFile
 import urllib
