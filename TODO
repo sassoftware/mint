@@ -22,8 +22,6 @@ JOB SERVER
 
 USER INTERFACE
 
-* Fixes
-    * Fix traceback on package search results page when clicking on package
 * Implement "cancel account"
 * Implement a few static-text pages: about rpath, ToS, privacy, contact into, products
 * [SORT OF DONE] Fix 'most active' and 'most popular' project links
