@@ -116,7 +116,8 @@ class UsersTable(database.KeyedTable):
                         'email':        r[1],
                         'displayEmail': r[2],
                         'fullName':     r[3],
-                        'blurb':        r[4]}
+                        'blurb':        r[4],
+                        'stagnant':     self.isUserStagnant(r[0])}
             else:
                 auth = noAuth
         else:
@@ -216,6 +217,15 @@ class UsersTable(database.KeyedTable):
                                timeRequested = time.time(),
                                confirmation = confirm)
         return userId
+
+    def isUserStagnant(self, userId):
+        cu = seld.db.cursor()
+        cu.execute("SELECT timeRequested FROM Confirmations WHERE userId=?", userId)
+        if len(cu.fetchall()) == 1:
+            r = cu.fetchone()
+            if ( time.time() - r[0]) > 172800:
+                return True
+        return False
 
     def confirm(self, confirm):
         cu = self.db.cursor()
@@ -407,7 +417,7 @@ class Authorization(object):
     @type blurb: str
     """
     __slots__ = ('authorized', 'userId', 'username', 'email',
-                 'displayEmail', 'fullName', 'blurb', 'token')
+                 'displayEmail', 'fullName', 'blurb', 'token', 'stagnant')
 
     def __init__(self, **kwargs):
         for key in self.__slots__:
