@@ -3,7 +3,6 @@ DATABASE
 * eliminate the Project.getLabel() and [getRepoMap, addLabel, getLabelIds,
   getLabelById] duplication.
 * a separate database table for namespaces; maybe not needed; maybe we can use Labels table?
-* split project hostname into hostname and domain name
 
 * refactor mint -> imagetool-backend, imagetool (product frontend), mint (public frontend)
 
@@ -26,7 +25,6 @@ USER INTERFACE
 * Fixes
     * Fix traceback on package search results page when clicking on package
 * Implement "cancel account"
-* Make project name on package search results page a link to each project's page
 * Implement a few static-text pages: about rpath, ToS, privacy, contact into, products
 * [SORT OF DONE] Fix 'most active' and 'most popular' project links
  - We need to parse the Commits table and downloads counter and distill some real
@@ -44,14 +42,6 @@ USER INTERFACE
   puts a typo into the new email address, and will also be safe if the old email address is
   completely disabled. The only pathological case that it won't cover is if they typo *and*
   their current email address is dead. Human intervention will be needed in that case!
-* Confirmation changes:
- - [DONE] Make a separate 'waiting for confirmation' page after registration instead of just using
-   login with a message. Also need a separate page to announce confirmation.
- - [DONE] create a separate RegistrationChallenge table containing userId, age, and confirmation string
-   so we don't have to keep the confirm string around in the Users table after confirmation,
-   and so we can purge old unconfirmed accounts.
-* validate email address on register new user
-* [DONE] improve atomicity of user create process (email fails to send--user is created but left hanging)
 
 MISSING FEATURES
 
