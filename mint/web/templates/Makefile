@@ -7,6 +7,7 @@
 SUBDIRS = repos
 
 kid_files = \
+	confirm.kid		\
 	editRelease.kid		\
 	error.kid		\
 	frontPage.kid		\

@@ -786,6 +786,19 @@ class MintApp(webhandler.WebHandler):
                         error = "An error has occurred opening the image file: %s" % e)
         return apache.OK
 
+    @projectOnly
+    @requiresAuth
+    @boolFields(confirmed = False)
+    def resign(self, auth, confirmed):
+        if confirmed:
+            self.project.delMemberById(auth.userId)
+            return self._redirect("/")
+        else:
+            self._write("confirm", message = "Are you sure you want to resign from this project?",
+                yesLink = "resign?confirmed=1",
+                noLink = "/")
+        return apache.OK
+
     def _write(self, template, templatePath = None, **values):
         if not templatePath:
             templatePath = self.cfg.templatePath

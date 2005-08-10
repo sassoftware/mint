@@ -40,7 +40,7 @@ onload = "javascript:;"
         <div id="top" align="center">
             <div class="shadowLeft"><div class="shadowRight">
                 <div class="surfaceLeft" align="left"><div class="surfaceRight">
-                    <form method="get" action="${loginAction}">
+                    <form method="post" action="${loginAction}">
                         <input py:if="loginAction == 'login'" type="hidden" name="to" value="${quote(toUrl)}" />
                         <table border="0" cellspacing="0" cellpadding="0" summary="layout">
                             <tr>

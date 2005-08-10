@@ -10,6 +10,7 @@ from mint import userlevels
 -->
     <?python
         isOwner = userLevel == userlevels.OWNER
+        isDeveloper = userLevel == userlevels.DEVELOPER
         memberList = project.getMembers()
     ?>
 
@@ -41,7 +42,13 @@ from mint import userlevels
                         <div class="pad">
                             <h2>${project.getName()}</h2>
                             <p py:if="isOwner"><em>You are an owner of this project.</em></p>
-                            <p py:if="not memberList">This project is orphaned. <a py:if="auth.authorized" href="adopt">Adopt this project</a><span py:strip="True" py:if="not auth.authorized">Log in to adopt this project</span>.</p>
+                            <p py:if="isDeveloper"><em>You are a developer of this project.</em>
+                                <a href="resign">Resign</a></p>
+                            <p py:if="not memberList">
+                                This project is orphaned.
+                                <a py:if="auth.authorized" href="adopt">Adopt this project</a>
+                                <span py:strip="True" py:if="not auth.authorized">Log in to adopt this project</span>.
+                            </p>
                             <h3>
                                 Description &#160; <a py:if="isOwner" href="projectDesc">Edit</a>
                             </h3>
