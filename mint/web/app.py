@@ -310,8 +310,8 @@ class MintApp(webhandler.WebHandler):
                 errors.append("An account with that username already exists.")
             except users.GroupAlreadyExists:
                 errors.append("An account with that username already exists.")
-            except users.MailError:
-                errors.append("Email address could not be reached.");
+            except users.MailError,e:
+                errors.append(e.context);
         if not errors:
             return self._redirect("register_conf?email=" + quote(email))
         else:

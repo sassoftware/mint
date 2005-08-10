@@ -29,7 +29,9 @@ import userlisting
 
 class MailError(MintError):
     def __str__(self):
-        return "there was a problem sending email"
+        return context
+    def __init__(self,context="there was a problem sending email"):
+        self.context=context
 
 class ConfirmError(MintError):
     def __str__(self):
@@ -160,9 +162,12 @@ class UsersTable(database.KeyedTable):
             try:
                 socket.gethostbyname(email[find(email,'@')+1:])
                 sendMail(self.cfg.adminMail, "rpath.com", email, "rpath.com registration", message)
-            except (smtplib.SMTPRecipientsRefused,socket.gaierror):
+            except smtplib.SMTPRecipientsRefused:
                 authRepo.deleteUserByName(repoLabel,username)
-                raise MailError
+                raise MailError("Email could not be sent: Recipient refused by server.")
+            except socket.gaierror:
+                authRepo.deleteUserByName(repoLabel,username)
+                raise MailError("Email could not be sent: Bad domain name.")
         try:
             userId = self.new(username = username,
                               fullName = fullName,
