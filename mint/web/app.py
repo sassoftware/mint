@@ -355,12 +355,12 @@ class MintApp(webhandler.WebHandler):
                 return self._redirect(unquote(to))
         elif submit == "Forgot Password":
             newpw = users.newPassword()
-
+            
             userId = self.client.getUserIdByName(username)
             user = self.client.getUser(userId)
             user.setPassword(newpw)
 
-            message = "\n".join(["Your password for rpath.com has been reset to:",
+            message = "\n".join(["Your password for username %s at rpath.com has been reset to:" % user.getUsername(),
                                  "",
                                  "    %s" % newpw,
                                  "",
@@ -369,6 +369,8 @@ class MintApp(webhandler.WebHandler):
 
             users.sendMail(self.cfg.adminMail, "rpath.com", user.getEmail(),
                            "rpath.com forgotten password", message)
+            self._write("forgotPassword", email = user.getEmail())
+            return apache.OK
         else:
             return apache.HTTP_NOT_FOUND
 

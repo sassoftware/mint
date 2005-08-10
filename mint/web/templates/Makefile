@@ -10,6 +10,7 @@ kid_files = \
 	confirm.kid		\
 	editRelease.kid		\
 	error.kid		\
+	forgotPassword.kid	\
 	frontPage.kid		\
 	layout.kid		\
 	library.kid		\

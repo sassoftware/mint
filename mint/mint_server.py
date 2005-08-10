@@ -296,7 +296,6 @@ class MintServer(object):
     def getUserIdByName(self, username):
         return self.users.getIdByColumn("username", username)
 
-    @requiresAuth
     @private
     def setPassword(self, userId, newPassword):
         username = self.users.get(userId)['username']
