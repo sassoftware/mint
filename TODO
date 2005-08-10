@@ -47,5 +47,7 @@ MISSING FEATURES
 * [POSTPONED] Bug tracking
 * Upgrade procedure for handling database schema changes
 * Metadata editing for packages
+* Ability to easily email every the holder of every user account
+  (for things like major site changes, privacy notice updates, etc.)
 * Each project site should have a sidebar with recently updated packages
   (see http://www.archlinux.org/)
