@@ -149,6 +149,12 @@ class UsersTable(database.KeyedTable):
             raise MailError("Email could not be sent: Recipient refused by server.")
         except socket.gaierror:
             raise MailError("Email could not be sent: Bad domain name.")
+        try:
+            self.confirm_table.new(userId = userId,
+                                   timeRequested = time.time(),
+                                   confirmation = confirm)
+        except database.DuplicateItem:
+            self.confirm_table.update(confirmation = confirm)
 
     def registerNewUser(self, username, password, fullName, email, displayEmail, blurb, active):
         def confirmString():
