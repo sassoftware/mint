@@ -98,7 +98,7 @@ class MailingListClient:
         settings = {
             ### XXX Come up with orphanage settings
                 'emergency': 1,
-                'member_moderation_action': 2,
+                'member_moderation_action': 1,
                 'generic_nonmember_action': 2,
                 'member_moderation_notice': "This list has been disabled because the project to which it belongs has been orphaned.  Please visit the project's web page if you wish to adopt this project and take control of its mailing lists."
             }
@@ -115,7 +115,7 @@ class MailingListClient:
         lists = self.list_lists(projectname)
         settings = {
                 'emergency': 0,
-                'member_moderation_action': 1,
+                'member_moderation_action': 0,
                 'generic_nonmember_action': 1,
                 'member_moderation_notice': "",
                 'owner': [auth.email]

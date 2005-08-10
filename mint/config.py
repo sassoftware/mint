@@ -63,4 +63,4 @@ class MintConfig(ConfigFile):
         self.setValue('authRepoUrl', repoUrl)
         #Make sure MailListBaseURL has a slash on the end of it
         if self.MailListBaseURL[-1:] != '/':
-            self.MailListBaseURL += '/'
+            self.setValue('MailListBaseURL', self.MailListBaseURL + '/')

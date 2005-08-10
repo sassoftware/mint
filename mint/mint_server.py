@@ -30,6 +30,16 @@ reservedHosts = ['admin', 'mail', 'mint', 'www', 'web', 'rpath', 'wiki', 'conary
 
 allTroveNames = TroveNamesCache()
 
+def requiresAdmin(func):
+    def wrapper(self, *args):
+        from lib import epdb
+        epdb.st()
+        if self.authToken == [self.cfg.authUser, self.cfg.authPass]:
+            return func(self, *args)
+        else:
+            raise PermissionDenied
+    return wrapper
+
 def requiresAuth(func):
     def wrapper(self, *args):
         if not self.auth.authorized:
@@ -137,6 +147,8 @@ class MintServer(object):
     def getMembersByProjectId(self, id):
         return self.projectUsers.getMembersByProjectId(id)
 
+    @requiresAdmin
+    @private
     def getOwnersByProjectName(self, name):
         return self.projectUsers.getOwnersByProjectName(name)
 
