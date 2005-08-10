@@ -12,6 +12,8 @@ import time
 import email
 from email import MIMEText
 import smtplib
+import socket
+from string import find
 
 from repository import netclient
 from repository.repository import OpenError
@@ -156,8 +158,9 @@ class UsersTable(database.KeyedTable):
                                  "Contact custom@rpath.com for help, or join the IRC channel #conary",
                                  "on the Freenode IRC network (http://www.freenode.net/) for live help."])
             try:
+                socket.gethostbyname(email[find(email,'@')+1:])
                 sendMail(self.cfg.adminMail, "rpath.com", email, "rpath.com registration", message)
-            except smtplib.SMTPRecipientsRefused:
+            except (smtplib.SMTPRecipientsRefused,socket.gaierror):
                 authRepo.deleteUserByName(repoLabel,username)
                 raise MailError
         try:
