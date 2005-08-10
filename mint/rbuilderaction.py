@@ -6,9 +6,9 @@
 
 import time
 
-import stats
-import mint_server
-import config
+from mint import stats
+from mint import mint_server
+from mint import config
 
 import conary
 from lib import options
