@@ -49,7 +49,7 @@
                     </li>
                 </ul>
                 <p py:if="not userProjects">This user is not a member of any projects.</p>
-                <div class="palette">
+                <div class="palette" py:if="auth.authorized">
                     <h3>add ${user.getUsername()} to your project</h3>
                     <form method="post" action="addMemberById">
                         <p>
