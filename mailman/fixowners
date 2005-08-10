@@ -1,0 +1,5 @@
+PYTHONPATH=${PYTHONPATH}:/var/mailman
+LOC=/var/mailman/bin
+CONF=/var/mailman/bin/fixowners.conf
+
+${LOC}/fixowners.py -C ${CONF}
