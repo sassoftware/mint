@@ -221,7 +221,9 @@ class UsersTable(database.KeyedTable):
         columns = ['userId', 'userName', 'fullName', 'displayEmail', 'blurb']
         searchcols = ['userName', 'fullName', 'displayEmail', 'blurb']
 
-        ids, count =  database.KeyedTable.search(self, columns, 'Users', searcher.Searcher.where(terms, searchcols), "userName", None, limit, offset)
+        ids, count =  database.KeyedTable.search(self, columns, 'Users',
+                                                 searcher.Searcher.where(terms, searchcols),
+                                                 "userName", None, limit, offset)
         for i, x in enumerate(ids[:]):
             ids[i] = list(x)
             ids[i][4] = searcher.Searcher.truncate(x[4], terms)

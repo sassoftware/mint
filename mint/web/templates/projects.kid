@@ -18,10 +18,13 @@ from mint import projectlisting
     <body>
         <div py:def="formatResults(resultset = [])" py:strip="True">
             <?python
-                formattedresults = [ 'http://%s' % resultset[0],
-                    resultset[1], resultset[2],
-                    time.ctime(resultset[3]), time.ctime(resultset[4]),
-                    resultset[5] ]
+                formattedresults = [
+                    ('http://%s' % resultset[0], resultset[1]),
+                    resultset[2],
+                    time.ctime(resultset[3]),
+                    time.ctime(resultset[4]),
+                    resultset[5]
+                ]
             ?>
             ${resultRow(formattedresults)}
         </div>
@@ -39,8 +42,8 @@ from mint import projectlisting
 
         <td id="left" class="side">
             <div class="pad">
-${browseMenu()}
-${searchMenu()}
+                ${browseMenu()}
+                ${searchMenu()}
             </div>
         </td>
         <td id="main" class="spanall">

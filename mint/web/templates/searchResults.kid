@@ -12,11 +12,11 @@
 -->
     <?python
         columns = []
-        if type == "Projects":
+        if searchType == "Projects":
             columns = ('Project Name', 'Project Description', 'Last Modified')
-        elif type == "Users":
+        elif searchType == "Users":
             columns = ('User Name', 'Full Name', 'Contact Info', 'Other')
-        elif type == "Packages":
+        elif searchType == "Packages":
             columns = ('Package Name', 'Version', 'Project')
     ?>
     <div py:def="breadcrumb()" py:strip="True">
@@ -28,17 +28,25 @@
         <div py:def="formatResults(resultset = [])" py:strip="True">
             <?python
                 formattedresults = []
-                if type == "Projects":
-                    formattedresults = [ 'http://%s' % resultset[0],
-                        resultset[1], resultset[2],
-                        time.ctime(resultset[3]) ]
-                elif type == "Users":
-                    formattedresults = [ 'userInfo?id=%d' % resultset[0],
-                        resultset[1], resultset[2], resultset[3], 
-                        resultset[4] ]
-                elif type == "Packages":
-                    formattedresults = [ 'http://%s/conary/troveInfo?t=%s' % (resultset[2].getFQDN(), resultset[0]),
-                        resultset[0], resultset[1], resultset[2].getName() ]
+                if searchType == "Projects":
+                    formattedresults = [
+                        ('http://%s' % resultset[0], resultset[1]),
+                        resultset[2],
+                        time.ctime(resultset[3])
+                    ]
+                elif searchType == "Users":
+                    formattedresults = [
+                        ('userInfo?id=%d' % resultset[0], resultset[1]),
+                        resultset[2],
+                        resultset[3], 
+                        resultset[4]
+                    ]
+                elif searchType == "Packages":
+                    formattedresults = [
+                        ('http://%s/conary/troveInfo?t=%s' % (resultset[2].getFQDN(), resultset[0]), resultset[0]),
+                        resultset[1],
+                        ('http://%s/' % resultset[2].getFQDN(), resultset[2].getName())
+                    ]
             ?>
             ${resultRow(formattedresults)}
         </div>
@@ -46,13 +54,13 @@
         <td id="left" class="side">
             <div class="pad">
                 ${browseMenu()}
-                ${searchMenu(type)}
+                ${searchMenu(searchType)}
             </div>
         </td>
         <td id="main" class="spanall">
             <div class="pad">
-                <h2>search results: ${type}</h2>
-                ${navigation("search?type=%s;search=%s;modified=%d"%(type, terms, modified), terms, count, limit, offset)}
+                <h2>search results: ${searchType}</h2>
+                ${navigation("search?type=%s;search=%s;modified=%d"%(searchType, terms, modified), terms, count, limit, offset)}
                 <table cellspacing="0" cellpadding="0" class="results">
                     ${columnTitles(columns)}
                     ${searchResults(results)}

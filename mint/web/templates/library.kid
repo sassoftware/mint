@@ -17,12 +17,14 @@ searchTypes = ['Projects', 'Users', 'Packages']
     </thead>
 
     <div py:def="resultRow(resultset = [])" py:strip="True">
-        <td><a href="${resultset[0]}">${resultset[1]}</a></td>
-        <?python
-            resultset.pop(0)
-            resultset.pop(0)
-        ?>
-        <td py:for="item in resultset">${item}</td>
+        <td py:for="item in resultset">
+            <a py:if="type(item) == tuple"
+               py:content="item[1]"
+               href="${item[0]}"/>
+            <div py:if="type(item) != tuple"
+                 py:strip="True"
+                 py:content="item"/>
+        </td>
     </div>
 
     <div id="browse" class="palette" py:def="browseMenu()" py:strip="False">
@@ -35,7 +37,7 @@ searchTypes = ['Projects', 'Users', 'Packages']
         </ul>
     </div>
 
-    <div id="search" class="palette" py:def="searchMenu(searchType='Projects')" py:strip="False">
+    <div id="search" class="palette" py:def="searchMenu(selectType='Projects')" py:strip="False">
         <h3>search rpath</h3>
         <form action="search" method="get">
             <p>
@@ -49,9 +51,9 @@ searchTypes = ['Projects', 'Users', 'Packages']
                                                 el.disabled = false;
                                                 el.className = '';
                                               }">
-                    <option py:for="type in searchTypes"
-                            py:attrs="{'value': type, 'selected': (searchType == type) and 'selected' or None}"
-                            py:content="type"/>
+                    <option py:for="searchType in searchTypes"
+                            py:attrs="{'value': searchType, 'selected': (selectType == searchType) and 'selected' or None}"
+                            py:content="searchType"/>
                 </select>
             </p>
             <p>

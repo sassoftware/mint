@@ -18,17 +18,20 @@
     <body>
         <div py:def="formatResults(resultset = [])" py:strip="True">
             <?python
-                formattedresults = [ 'userInfo?id=%s' % resultset[0],
-                    resultset[1], resultset[2],
-                    time.ctime(resultset[3]), time.ctime(resultset[4]),
-                    resultset[5] ]
+                formattedresults = [
+                    ('userInfo?id=%s' % resultset[0], resultset[1]),
+                    resultset[2],
+                    time.ctime(resultset[3]),
+                    time.ctime(resultset[4]),
+                    resultset[5]
+                ]
             ?>
             ${resultRow(formattedresults)}
         </div>
         <td id="left" class="side">
             <div class="pad">
-${browseMenu()}
-${searchMenu()}
+                ${browseMenu()}
+                ${searchMenu()}
             </div>
         </td>
 

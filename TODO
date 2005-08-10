@@ -45,13 +45,13 @@ USER INTERFACE
   completely disabled. The only pathological case that it won't cover is if they typo *and*
   their current email address is dead. Human intervention will be needed in that case!
 * Confirmation changes:
- - Make a separate 'waiting for confirmation' page after registration instead of just using
+ - [DONE] Make a separate 'waiting for confirmation' page after registration instead of just using
    login with a message. Also need a separate page to announce confirmation.
- - create a separate RegistrationChallenge table containing userId, age, and confirmation string
+ - [DONE] create a separate RegistrationChallenge table containing userId, age, and confirmation string
    so we don't have to keep the confirm string around in the Users table after confirmation,
    and so we can purge old unconfirmed accounts.
 * validate email address on register new user
-* improve atomicity of user create process (email fails to send--user is created but left hanging)
+* [DONE] improve atomicity of user create process (email fails to send--user is created but left hanging)
 
 MISSING FEATURES
 

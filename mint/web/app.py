@@ -749,7 +749,7 @@ class MintApp(webhandler.WebHandler):
 
     def userSearch(self, terms, limit, offset):
         results, count = self.client.getUserSearchResults(terms, limit, offset)
-        self._write("searchResults", type="Users", terms = terms, results = results,
+        self._write("searchResults", searchType = "Users", terms = terms, results = results,
                                      count = count, limit = limit, offset = offset,
                                      modified = 0)
         return apache.OK
@@ -757,14 +757,14 @@ class MintApp(webhandler.WebHandler):
     def packageSearch(self, terms, limit, offset):
         results, count = self.client.getPackageSearchResults(terms, limit, offset)
         results = [(x[0], x[1], self.client.getProject(x[2])) for x in results]
-        self._write("searchResults", type="Packages", terms = terms, results = results,
+        self._write("searchResults", searchType = "Packages", terms = terms, results = results,
                                      count = count, limit = limit, offset = offset,
                                      modified = 0)
         return apache.OK
     
     def projectSearch(self, terms, modified, limit, offset):
         results, count = self.client.getProjectSearchResults(terms, modified, limit, offset)
-        self._write("searchResults", type="Projects", terms = terms, results = results,
+        self._write("searchResults", searchType = "Projects", terms = terms, results = results,
                                      count = count, limit = limit, offset = offset,
                                      modified = modified)
         return apache.OK
