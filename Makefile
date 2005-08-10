@@ -16,10 +16,11 @@ export contentdir = $(datadir)/conary/web-common/apps/mint/
 export libdir = $(prefix)/lib
 export mintdir = $(libdir)/python$(PYVERSION)/site-packages/
 export httpddir = $(sysconfdir)/httpd/conf.d/
+export maillistdir = /var/mailman
 
 .PHONY: doc
 
-SUBDIRS = mint test scripts
+SUBDIRS = mint test scripts mailman
 
 extra_files = Makefile Make.rules mint.conf httpd.conf authrepo.cnr
 

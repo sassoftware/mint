@@ -1,0 +1,4 @@
+PYTHONPATH=${PYTHONPATH}:/var/mailman
+LOC=/var/mailman/bin
+
+${LOC}/mmsettingspolicy.py
