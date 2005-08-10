@@ -40,6 +40,7 @@ USER INTERFACE
   puts a typo into the new email address, and will also be safe if the old email address is
   completely disabled. The only pathological case that it won't cover is if they typo *and*
   their current email address is dead. Human intervention will be needed in that case!
+* Add a "project home page" field and edit function (maybe merge into Edit Description)
 
 MISSING FEATURES
 
