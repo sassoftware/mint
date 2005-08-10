@@ -29,7 +29,7 @@ import userlisting
 
 class MailError(MintError):
     def __str__(self):
-        return context
+        return self.context
     def __init__(self, context="there was a problem sending email"):
         self.context=context
 
@@ -122,6 +122,33 @@ class UsersTable(database.KeyedTable):
         else:
             auth = noAuth
         return auth
+
+    def validateNewEmail(self, userId, email):
+        def confirmString():
+            hash = sha1helper.sha1String(str(random.random()) + str(time.time()))
+            return sha1helper.sha1ToString(hash)
+
+        confirm = confirmString()
+        if self.cfg.hostName:
+            confirmDomain = "%s.%s" % (self.cfg.hostName, self.cfg.domainName)
+        else:
+            confirmDomain = self.cfg.domainName
+        message = "\n".join(["Thank you for updating your email address with the rpath",
+                             "Linux customized distribution tool.",
+                             "",
+                             "Please follow the link below to confirm your new address",
+                             "",
+                             "http://%s/confirm?id=%s" % (confirmDomain, confirm),
+                             "",
+                             "Contact custom@rpath.com for help, or join the IRC channel #conary",
+                             "on the Freenode IRC network (http://www.freenode.net/) for live help."])
+        try:
+            socket.gethostbyname(email[find(email, '@')+1:])
+            sendMail(self.cfg.adminMail, "rpath.com", email, "rpath.com registration", message)
+        except smtplib.SMTPRecipientsRefused:
+            raise MailError("Email could not be sent: Recipient refused by server.")
+        except socket.gaierror:
+            raise MailError("Email could not be sent: Bad domain name.")
 
     def registerNewUser(self, username, password, fullName, email, displayEmail, blurb, active):
         def confirmString():
@@ -285,6 +312,9 @@ class User(database.TableObject):
 
     def setEmail(self, newEmail):
         return self.server.setUserEmail(self.id, newEmail)
+
+    def validateNewEmail(self, newEmail):
+        return self.server.validateNewEmail(self.id,newEmail)
 
     def setDisplayEmail(self, newEmail):
         return self.server.setUserDisplayEmail(self.id, newEmail)

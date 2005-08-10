@@ -601,7 +601,7 @@ class MintApp(webhandler.WebHandler):
     def editUserSettings(self, auth, email, displayEmail, fullName,
                          password1, password2, blurb):
         if email != auth.email:
-            # XXX confirm valid email
+            self.user.validateNewEmail(email)
             self.user.setEmail(email)
         if displayEmail != auth.displayEmail:
             self.user.setDisplayEmail(displayEmail)

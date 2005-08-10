@@ -27,7 +27,7 @@
                         </tr>                                                         <tr>
                             <th>Email Address:</th>
                             <td>
-                                <input type="text" name="email" value="${auth.email}" readonly="readonly"/>
+                                <input type="text" name="email" value="${auth.email}" />
                                 <div class="help">This email address will not be displayed on the rpath website.</div>
                             </td>
                         </tr>

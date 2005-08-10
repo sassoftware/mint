@@ -269,6 +269,11 @@ class MintServer(object):
 
     @requiresAuth
     @private
+    def validateNewEmail(self, userId, email):
+        return self.users.validateNewEmail(userId, email)
+
+    @requiresAuth
+    @private
     def setUserDisplayEmail(self, userId, displayEmail):
         return self.users.update(userId, displayEmail = displayEmail)
 
