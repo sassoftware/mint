@@ -190,12 +190,6 @@ class UsersTable(database.KeyedTable):
         cu.execute("SELECT userId FROM Confirmations WHERE confirmation=?", confirm)
         if len(cu.fetchall()) != 1:
             raise AlreadyConfirmed
-
-        cu.execute("""SELECT Users.userId FROM Users 
-            LEFT JOIN Confirmations ON Users.userId=Confirmations.userId 
-            WHERE Confirmations.confirmation=? AND active=0""", confirm)
-        if len(cu.fetchall()) != 1:
-            raise ConfirmError
         else:
             cu.execute("SELECT userId FROM Confirmations WHERE confirmation=?", confirm)
             r = cu.fetchone()
