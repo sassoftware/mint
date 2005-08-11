@@ -13,9 +13,7 @@
         isOwner = userLevel == userlevels.OWNER
     ?>
 
-    <div py:def="breadcrumb()" class="pad">
-        You are here:
-        <a href="#">rpath</a>
+    <div py:def="breadcrumb()" py:strip="True">
         <a href="../">${project.getName()}</a>
         <a href="#">Releases </a>
     </div>
