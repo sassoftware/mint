@@ -22,6 +22,10 @@ JOB SERVER
 
 USER INTERFACE
 
+* Implement static pages for privacy policy and terms of service (see Ed
+for privacy policy text and http://www.lipsum.com/ for our terms of service
+-- say, about 20 paragraph's worth)
+
 * Implement "cancel account"
 * New users should not be listed under "all users" until the account is confirmed. They effectively don't exist yet...
 * Implement a few static-text pages: about rpath, ToS, privacy, contact into, products
