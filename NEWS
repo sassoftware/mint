@@ -1,0 +1,10 @@
+Changes in 0.3.6:
+
+* Mailman management scripts are now included.
+* Forgotten password functionality fixes.
+* Users who change their email address are now required to validate
+  the new email before 48 hours; otherwise their account will be locked
+  out from every action except to change their email again (in case of
+  typoes)
+* A way to resign as a developer of a project has been added.
+* The 'Site News' display has been improved.

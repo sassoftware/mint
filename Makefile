@@ -4,7 +4,7 @@
 
 all: subdirs
 
-export VERSION=0.3.5
+export VERSION=0.3.6
 export TOPDIR = $(shell pwd)
 export DISTDIR = $(TOPDIR)/mint-$(VERSION)
 export prefix = /usr
@@ -24,7 +24,9 @@ SUBDIRS = mint test scripts mailman
 
 extra_files = Makefile Make.rules mint.conf httpd.conf authrepo.cnr
 
-dist_files = $(extra_files)
+doc_files = NEWS TODO
+
+dist_files = $(extra_files) $(doc_files)
 
 dist: $(dist_files)
 	rm -rf $(DISTDIR)
