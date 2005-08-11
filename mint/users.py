@@ -320,7 +320,7 @@ class UsersTable(database.KeyedTable):
         Returns the count of Users
         """
         cu = self.db.cursor()
-        cu.execute( "SELECT count(userId) FROM Users" )
+        cu.execute( "SELECT count(userId) FROM Users WHERE active=1" )
 
 
         return cu.next()[0]
