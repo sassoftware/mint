@@ -18,7 +18,7 @@ JOB SERVER
 
 * improve job-server
     * more robust (handle server restarts, etc0
-* cron jobs for mail list handling
+* [DONE needs beta testing] cron jobs for mail list handling
 
 USER INTERFACE
 
@@ -34,6 +34,7 @@ USER INTERFACE
 * [POSTPONED] Highlight search results in descriptions
 * Fix all breadcrumbs
 * Rework registration forms to work around mozilla bug #302190
+ - Create Account done.  Need work on create project
 * Update html <title> on all pages
 * When the user changes their email address, it should be re-verified.
   We should send two emails upon change: one to the old with a "cancel this change" link,
