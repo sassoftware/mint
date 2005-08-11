@@ -82,7 +82,7 @@
 
 /* PLAIN COLUMN CONTENT STYLES */
 .date {
-	font-size:0.9091em; color:#99660A; font-weight:normal;
+	font-size:0.9091em; color:#BBBBBB; font-weight:normal;
 }
 .edit {
 	font-size:0.9091em; font-weight:normal; padding-left:13px;
@@ -237,4 +237,18 @@ p.error {
 p.errormessage {
         color: red;
         margin-left: 1em;
+}
+
+div.newsItem {
+    border-bottom: 1px solid #dddddd;
+    padding-bottom: 0.5em;
+    margin-bottom: 0.5em;
+}
+
+a.newsContinued {
+    float: right;
+}
+span.newsTitle {
+    color:#99660A;
+    font-weight: normal;
 }

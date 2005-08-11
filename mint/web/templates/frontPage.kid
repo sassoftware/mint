@@ -31,22 +31,13 @@ from mint import searcher
                             <p><a href="#">More about rpath</a> </p>
 
                             <div py:strip="True" py:if="news">
-                                <?python
-                                    latestNews = news.pop()
-                                ?>
-
-                                <h3>Latest News <span class="date">- ${time.ctime(latestNews['pubDate'])}</span></h3>
-                                <p>${latestNews['content']}</p>
-                                <p><a href="${newsLink}">continued</a></p>
-
-                                <div py:strip="True" py:if="news">
-                                    <h3>More News</h3>
-                                    <ul>
-                                        <li py:for="item in news">
-                                            <span class="date">${time.ctime(item['pubDate'])}</span><br />
-                                            <a href="${item['link']}">${item['content']}</a>
-                                        </li>
-                                    </ul>
+                                <h3><a href="${newsLink}">Site News</a></h3>
+                                <div py:for="item in news" class="newsItem">
+                                    <h3>
+                                        <span class="date" style="float: right;">${time.ctime(item['pubDate'])}</span>
+                                        <span class="newsTitle">${item['title']}</span>
+                                    </h3>
+                                    <p>${item['content']} <a class="newsContinued" href="${item['link']}">read more</a></p>
                                 </div>
                             </div>
                         </div>
