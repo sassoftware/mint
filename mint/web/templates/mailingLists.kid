@@ -30,14 +30,28 @@
                 <div py:for="list in lists">
                     <h3><a href="${mailhost + 'listinfo/' + list.name}" target="_NEW">${list.name}</a></h3>
                     <p>${list.description}</p>
-                    <div style="float:left; margin-right:5px;"><span><a href="${mailhost + '../pipermail/' + list.name}" class="option" target="_NEW">Archives</a></span></div>
-                    <div style="float:left; margin-right:5px;"><span py:if="auth.authorized and not isOwner"><a class="option" href="subscribe?list=${list.name}">Subscribe</a></span></div>
+                    <div style="float:left; margin-right:5px;">
+                        <span><a href="${mailhost + '../pipermail/' + list.name}"
+                                 class="option" target="_NEW">Archives</a>
+                        </span>
+                    </div>
+                    <div style="float:left; margin-right:5px;">
+                        <span py:if="auth.authorized and not isOwner">
+                            <a class="option" href="subscribe?list=${list.name}">Subscribe</a>
+                        </span>
+                    </div>
 
-                    <div style="float:left; margin-right:5px;"><span py:if="isOwner"><a href="${mailhost + 'admin/' + list.name}" class="option" target="_NEW">Admin Page</a></span></div>
+                    <div style="float:left; margin-right:5px;">
+                        <span py:if="isOwner">
+                            <a href="${mailhost + 'admin/' + list.name}" class="option" target="_NEW">Admin Page</a>
+                        </span>
+                    </div>
                     &#160;
                     <br clear="all"/>
                     &#160;
                 </div>
+                <div py:if="not lists">This project has no lists.</div>
+                
                 <h2 py:if="isOwner">Create a New Mailing List</h2>
 
                 <form py:if="isOwner" name="createList" action="createList" method="POST">
@@ -54,7 +68,10 @@
                         <tr>
                             <th>List Password:</th>
                             <td><input name="listpw" type="password"/>
-                                <p class="help">If you leave both password fields blank, a random password will be generated and e-mailed to all project owners.</p>
+                                <p class="help">
+                                    If you leave both password fields blank, a random password
+                                    will be generated and e-mailed to all project owners.
+                                </p>
                             </td>
                         </tr>
 
