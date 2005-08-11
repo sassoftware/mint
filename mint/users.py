@@ -219,11 +219,11 @@ class UsersTable(database.KeyedTable):
         return userId
 
     def isUserStagnant(self, userId):
-        cu = seld.db.cursor()
+        cu = self.db.cursor()
         cu.execute("SELECT timeRequested FROM Confirmations WHERE userId=?", userId)
-        if len(cu.fetchall()) == 1:
-            r = cu.fetchone()
-            if ( time.time() - r[0]) > 172800:
+        results = cu.fetchall()
+        if len(results) == 1:
+            if ( time.time() - results[0][0]) > 172800:
                 return True
         return False
 
