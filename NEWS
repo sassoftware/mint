@@ -1,3 +1,7 @@
+Changes in 0.3.7:
+
+* News entries are now ordered correctly: publication date descending 
+
 Changes in 0.3.6:
 
 * Mailman management scripts are now included.
