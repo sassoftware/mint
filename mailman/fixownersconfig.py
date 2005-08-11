@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-from conarycfg import ConfigFile
+from conary.conarycfg import ConfigFile
 import urllib
 
 class FixOwnersConfig(ConfigFile):

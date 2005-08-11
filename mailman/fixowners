@@ -1,5 +1,10 @@
-PYTHONPATH=${PYTHONPATH}:/var/mailman
+if [ $PYTHONPATH ]; then
+    PYTHONPATH=$PYTHONPATH:/var/mailman
+else
+    PYTHONPATH=/var/mailman
+fi
+
 LOC=/var/mailman/bin
 CONF=/var/mailman/bin/fixowners.conf
 
-${LOC}/fixowners.py -C ${CONF}
+PYTHONPATH=$PYTHONPATH python ${LOC}/fixowners.py -C ${CONF}

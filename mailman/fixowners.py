@@ -58,8 +58,6 @@ Usage: fixowners.py -U <MintRPCInterface>
     sys.exit(code)
 
 def main():
-    from lib import epdb
-    epdb.st()
     cfg = FixOwnersConfig()
     xmlrpcurl = None
     cfgFile = None

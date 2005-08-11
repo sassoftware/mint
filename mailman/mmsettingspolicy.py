@@ -4,12 +4,9 @@
 # Mailman is installed to /var/mailman by default
 
 import sys
-import sqlite3
 import getopt
 
 from Mailman import Utils, MailList, Errors, mm_cfg
-
-from mint import config, users
 
 class InvalidSetting(Exception):
     def __init__(self, list = "list", errors = []):
