@@ -1,6 +1,8 @@
 Changes in 0.3.7:
 
 * News entries are now ordered correctly: publication date descending 
+* Cancel account works.
+* Pending users who are not confirmed yet don't show up in search/browse results.
 
 Changes in 0.3.6:
 
