@@ -811,6 +811,22 @@ class MintApp(webhandler.WebHandler):
                 noLink = "/")
         return apache.OK
 
+    @siteOnly
+    @requiresAuth
+    @boolFields(confirmed = False)
+    def cancelAccount(self, auth, confirmed):
+        if confirmed:
+            #do the actual deletion
+            self.user.cancelUserAccount()
+            self._clearAuth()
+            return self._redirect("/")
+        else:
+            self._write("confirm", message = "Are you sure you want to delete your account?",
+                yesLink = "cancelAccount?confirmed=1",
+                noLink = "/")
+        return apache.OK
+        
+
     def _write(self, template, templatePath = None, **values):
         if not templatePath:
             templatePath = self.cfg.templatePath

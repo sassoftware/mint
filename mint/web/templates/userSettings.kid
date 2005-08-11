@@ -80,7 +80,9 @@
                    If you cancel your account, you will be removed from any project for which you are
                    a member or owner.
                 </p>
-                <p><button class="warn" name="cancel" type="button">Cancel my account</button></p>
+                <p><form method="get" action="cancelAccount">
+			<button class="warn" name="cancel" type="submit">Cancel my account</button>
+		</form></p>
             </div>
         </td>
     </body>

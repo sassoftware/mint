@@ -287,6 +287,11 @@ class MintServer(object):
     def setUserFullName(self, userId, fullName):
         return self.users.update(userId, fullName = fullName)
 
+    @requiresAuth
+    @private
+    def cancelUserAccount(self,userId):
+        return self.users.cancelUserAccount(userId)
+
     @private
     def confirmUser(self, confirmation):
         userId = self.users.confirm(confirmation)
