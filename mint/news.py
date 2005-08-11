@@ -100,7 +100,7 @@ class NewsCacheTable(database.KeyedTable):
     def getNews(self):
         cu = self.db.cursor()
 
-        cu.execute("SELECT * FROM NewsCache ORDER BY pubDate")
+        cu.execute("SELECT * FROM NewsCache ORDER BY pubDate DESC")
         data = []
 
         for r in cu.fetchall():
