@@ -23,6 +23,7 @@ JOB SERVER
 USER INTERFACE
 
 * Implement "cancel account"
+* New users should not be listed under "all users" until the account is confirmed. They effectively don't exist yet...
 * Implement a few static-text pages: about rpath, ToS, privacy, contact into, products
 * [SORT OF DONE] Fix 'most active' and 'most popular' project links
  - We need to parse the Commits table and downloads counter and distill some real
