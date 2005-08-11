@@ -193,7 +193,7 @@ class MintApp(webhandler.WebHandler):
             # if hostName is set, require it for access:
             if self.cfg.hostName:
                 raise Redirect("http://rpath.com/")
-            else:                    
+            else:
                 self.userLevel = -1
                 default = self._frontPage
            
@@ -205,6 +205,8 @@ class MintApp(webhandler.WebHandler):
         except AttributeError:
             return self._404
 
+        if auth.stagnant and cmd not in ['editUserSettings','confirm','logout']:
+            return self.confirmEmail
         if not callable(method):
             method = self._404
         return method
@@ -320,6 +322,11 @@ class MintApp(webhandler.WebHandler):
         return apache.OK
 
     @siteOnly
+    def confirmEmail(self, auth, **kwargs):
+        self._write("confirmEmail", email=auth.email)
+        return apache.OK
+
+    @siteOnly
     @strFields(email = "")
     def register_conf(self, auth, email):
         self._write("register_conf", email=email)
@@ -386,7 +393,10 @@ class MintApp(webhandler.WebHandler):
             self._write("error", shortError = "Already Confirmed",
                 error = "Your account has already been confirmed.")
         else:
-            return self._redirect("login?message=confirmed")
+            if auth.authorized:
+                return self._redirect("/")
+            else:
+                return self._redirect("login?message=confirmed")
         return apache.OK 
 
     @intFields(sortOrder = 0, limit = 10, offset = 0)
