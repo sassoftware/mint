@@ -9,4 +9,8 @@ class MintError(Exception):
 
 class PermissionDenied(MintError):
     def __str__(self):
-        return "permission denied"
+        return "Permission Denied"
+
+class InvalidLogin(PermissionDenied):
+    def __str__(self):
+        return "Invalid username or password."
