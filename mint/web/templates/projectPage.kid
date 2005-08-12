@@ -41,9 +41,6 @@ from mint import userlevels
                     <td id="main">
                         <div class="pad">
                             <h2>${project.getName()}</h2>
-                            <p py:if="isOwner"><em>You are an owner of this project.</em></p>
-                            <p py:if="isDeveloper"><em>You are a developer of this project.</em>
-                                <a href="resign">Resign</a></p>
                             <p py:if="not memberList">
                                 This project is orphaned.
                                 <a py:if="auth.authorized" href="adopt">Adopt this project</a>
@@ -60,8 +57,11 @@ from mint import userlevels
 
                             <p>
                                 To add this project in your Conary configuration, add <tt><strong>${project.getLabel()}</strong></tt> 
-                                to the <tt><strong>installLabelPath</strong></tt> line in the <tt><strong>/etc/conaryrc</strong></tt> (or your <tt><strong>~/.conaryrc</strong></tt>) file.
-                            </p>
+                                to the <tt><strong>installLabelPath</strong></tt> line in the <tt><strong>/etc/conaryrc</strong></tt> (or your <tt><strong>~/.conaryrc</strong></tt>) file.</p>
+
+                            <hr/>
+                            <p py:if="isDeveloper"><em class="resign">You are a developer of this project.</em>
+                                <a href="resign">Resign</a></p>
                         </div>
                     </td>
                     ${projectsPane()}

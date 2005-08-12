@@ -120,4 +120,17 @@ searchTypes = ['Projects', 'Users', 'Packages']
             ${formatResults(resultset)}
         </tr>
     </tbody>
+
+    <div py:def="rpathProductsMenu" id="browse" class="palette">
+        <h3>rpath products</h3>
+        <ul>
+            <li><a href="/"><strong py:strip="req.uri != '/'">Project Home</strong></a></li>
+            <li><a href="/releases"><strong py:strip="lastchunk not in ('release', 'releases')">Releases</strong></a></li>
+
+            <li><a href="/conary/browse"><strong py:strip="req.uri != '/conary/browse'">Repository</strong></a></li>
+            <li><a href="/members"><strong py:strip="lastchunk != 'members'">Project Members</strong></a></li>
+            <li><a href="/mailingLists"><strong py:strip="lastchunk != 'mailingLists'">Mailing Lists</strong></a></li>
+            <li py:if="0"><a href="#"><strong py:strip="lastchunk != 'bugs'">Bug Tracking</strong></a></li>
+        </ul>
+    </div>
 </html>

@@ -7,6 +7,14 @@
     Copyright 2005 rpath, Inc.
     All Rights Reserved
 -->
+    <?python
+        ownsProjects = False
+        for project, level in projectList:
+            if level == userlevels.OWNER:
+                ownsProjects = True
+                break
+    ?>
+
     <div py:def="breadcrumb()" py:strip="True">
         <a href="#">${user.getFullName()}</a>
     </div>
@@ -49,7 +57,7 @@
                     </li>
                 </ul>
                 <p py:if="not userProjects">This user is not a member of any projects.</p>
-                <div class="palette" py:if="auth.authorized">
+                <div class="palette" py:if="ownsProjects and user.id != auth.userId">
                     <h3>add ${user.getUsername()} to your project</h3>
                     <form method="post" action="addMemberById">
                         <p>

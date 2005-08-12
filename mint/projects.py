@@ -247,7 +247,7 @@ class ProjectsTable(database.KeyedTable):
         return ids, count
 
     def createRepos(self, reposPath, hostname, domainname, username, password):
-        path = os.path.join(reposPath, hostname, domainname)
+        path = os.path.join(reposPath, hostname + "." + domainname)
         util.mkdirChain(reposPath)
 
         repos = EmptyNetworkRepositoryServer(path, None, None, None, {})
