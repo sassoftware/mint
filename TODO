@@ -53,6 +53,7 @@ for privacy policy text and http://www.lipsum.com/ for our terms of service
   or resigning.
 * Remove search and browse users.
 * Immediately block unconfirmed users and require them to confirm their email or try again.
+* RSS feeds for project releases and possibly commits
 
 MISSING FEATURES
 
