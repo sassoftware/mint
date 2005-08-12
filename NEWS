@@ -10,6 +10,9 @@ Changes in 0.3.7:
 * The privacy policy and terms of service links have been moved to the bottom of the page.
 * The "add <foo> to your project" palette has been disabled if you are not an owner
   of any projects, or if you are viewing your own user account.
+* A nicer error message is raised on an incorrect password.
+* The login page has been eliminated, replaced with a "forgot password" page and 
+  a "account confirmed" message page.
 
 Changes in 0.3.6:
 

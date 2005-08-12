@@ -220,7 +220,7 @@ class MintApp(webhandler.WebHandler):
 
             if not auth.authorized:
                 self._clearAuth()
-                return self._redirect("login")
+                return self._redirect("/")
             else:
                 self.user = self.client.getUser(auth.userId)
                 self.projectList = self.client.getProjectsByMember(auth.userId)
@@ -315,7 +315,7 @@ class MintApp(webhandler.WebHandler):
             except users.MailError,e:
                 errors.append(e.context);
         if not errors:
-            return self._redirect("register_conf?email=" + quote(email))
+            self._write("register_conf", email = email)
         else:
             kwargs = {'username': username, 'email': email, 'fullName': fullName, 'displayEmail': displayEmail, 'blurb': blurb, 'tos': tos, 'privacy': privacy}
             self._write("register", errors=errors, kwargs = kwargs)
@@ -324,12 +324,6 @@ class MintApp(webhandler.WebHandler):
     @siteOnly
     def confirmEmail(self, auth, **kwargs):
         self._write("confirmEmail", email=auth.email)
-        return apache.OK
-
-    @siteOnly
-    @strFields(email = "")
-    def register_conf(self, auth, email):
-        self._write("register_conf", email=email)
         return apache.OK
 
     @siteOnly
@@ -396,7 +390,7 @@ class MintApp(webhandler.WebHandler):
             if auth.authorized:
                 return self._redirect("/")
             else:
-                return self._redirect("login?message=confirmed")
+                self._write("register_active")
         return apache.OK 
 
     @intFields(sortOrder = 0, limit = 10, offset = 0)
