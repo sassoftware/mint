@@ -129,4 +129,10 @@ searchTypes = ['Projects', 'Users', 'Packages']
             <li>Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Cras erat. Curabitur tempus nulla sit amet justo. Morbi quis tellus sed turpis bibendum egestas. Phasellus nonummy!</li>
         </ul>
     </div>
+
+    <a py:def="legal(page, text)" py:strip="False" href="#"
+        onclick="javascript:{window.open('${page}', 'rpathlegal',
+         'height=500,width=500,menubar=no,scrollbars,status=no,toolbar=no', true); return false;}" 
+        py:content="text"/>
+
 </html>

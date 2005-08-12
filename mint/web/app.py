@@ -327,6 +327,15 @@ class MintApp(webhandler.WebHandler):
         return apache.OK
 
     @siteOnly
+    @strFields(page = None)
+    def legal(self, auth, page):
+        if page not in ["tos", "privacy"]:
+            return apache.NOT_FOUND
+            
+        self._write(page)
+        return apache.OK
+
+    @siteOnly
     @strFields(message = "")
     def login(self, auth, message):
         self.toUrl = "/"

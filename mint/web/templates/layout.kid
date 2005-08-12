@@ -17,9 +17,9 @@ onload = "javascript:;"
     <head py:match="item.tag == 'head'" xmlns="http://www.w3.org/1999/xhtml">
         <title>rpath.com</title>
         <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=utf-8" />
-        <script type="text/javascript" src="${cfg.staticPath}/apps/mint/javascript/generic.js"/>
-        <script type="text/javascript" src="${cfg.staticPath}/apps/mint/javascript/library.js"/>
-        <script type="text/javascript" src="${cfg.staticPath}/apps/mint/javascript/xmlrpc.js"/>
+        <script type="text/javascript" src="${cfg.staticUrl}/apps/mint/javascript/generic.js"/>
+        <script type="text/javascript" src="${cfg.staticUrl}/apps/mint/javascript/library.js"/>
+        <script type="text/javascript" src="${cfg.staticUrl}/apps/mint/javascript/xmlrpc.js"/>
         <link rel="stylesheet" type="text/css" href="${cfg.staticUrl}apps/mint/css/basic.css"/>
         <link rel="stylesheet" type="text/css" href="${cfg.staticUrl}apps/mint/css/structure.css"/>
         <link rel="stylesheet" type="text/css" href="${cfg.staticUrl}apps/mint/css/user.css"/>
@@ -46,7 +46,7 @@ onload = "javascript:;"
                             <tr>
                                 <td id="logo">
                                     <a href="http://${siteHost}/">
-                                        <img src="${cfg.staticPath}/apps/mint/images/logo.gif" alt="rpath logo" width="216" height="72" />
+                                        <img src="${cfg.staticUrl}/apps/mint/images/logo.gif" alt="rpath logo" width="216" height="72" />
                                     </a>
                                 </td>
                                 <td id="user" py:if="not auth.authorized">
@@ -114,7 +114,7 @@ onload = "javascript:;"
             <div id="copy">
                 <div class="pad">
                     <span id="botnav">
-                        <a href="#">Terms of Service</a> <a href="#">Privacy</a>
+                        ${legal('http://%s/legal?page=tos' % siteHost, 'Terms of Service')} ${legal('http://%s/legal?page=privacy' % siteHost, 'Privacy Policy')}
                     </span>
 
                     Copyright &#169; 2005 rpath, Inc.

@@ -9,12 +9,10 @@
     <div py:def="breadcrumb()" py:strip="True">
         <a href="#">Create an Account</a>
     </div>
-    <a py:def="legal(page, text)" py:strip="False" href="#" onclick="javascript:{window.open('${page}', 'rpathlegal', 'height=500,width=500,menubar=no,scrollbars,status=no,toolbar=no', true); return false;}" py:content="text"/>
-
-<?python
-    for var in ['username', 'email', 'fullName', 'displayEmail', 'blurb', 'tos', 'privacy']:
-        kwargs[var] = kwargs.get(var, '')
-?>
+    <?python
+        for var in ['username', 'email', 'fullName', 'displayEmail', 'blurb', 'tos', 'privacy']:
+            kwargs[var] = kwargs.get(var, '')
+    ?>
     <head/>
     <body>
         <td id="main" class="spanleft">
@@ -79,10 +77,10 @@
                             <td><input type="password" name="password2" value="" /></td>
                         </tr>
                         <tr>
-                            <td colspan="2"><input type="checkbox" class="check" name="tos" py:attrs="{'checked': kwargs['tos'] and 'checked' or None}"/> <em class="required">I have read and accept the ${legal('#', 'Terms of Service')}</em></td>
+                            <td colspan="2"><input type="checkbox" class="check" name="tos" py:attrs="{'checked': kwargs['tos'] and 'checked' or None}"/> <em class="required">I have read and accept the ${legal('http://%s/legal?page=tos' % siteHost, 'Terms of Service')}</em></td>
                         </tr>
                         <tr>
-                            <td colspan="2"><input type="checkbox" class="check" name="privacy"  py:attrs="{'checked': kwargs['privacy'] and 'checked' or None}"/> <em class="required">I have read and accept the ${legal('#', 'Privacy Policy')}</em></td>
+                            <td colspan="2"><input type="checkbox" class="check" name="privacy"  py:attrs="{'checked': kwargs['privacy'] and 'checked' or None}"/> <em class="required">I have read and accept the ${legal('http://%s/legal?page=privacy' % siteHost, 'Privacy Policy')}</em></td>
                         </tr>
                     </table>
                     <p>You will receive a confirmation message with a link to activate your account.</p>
@@ -96,12 +94,12 @@
                 <h3>About rpath accounts</h3>
                 <p>
                     Using a rpath.com account, you can create your own Linux distribution.
-                    Please read the ${legal('#', 'Terms of Service')} before you register
+                    Please read the ${legal('http://%s/legal?page=tos' % siteHost, 'Terms of Service')} before you register
                     for an account.
                 </p>
                 <p>
                     Your email address will never be shared or sold. More information
-                    can be found in our ${legal('#', 'Privacy Policy')}.
+                    can be found in our ${legal('http://%s/legal?page=privacy' % siteHost, 'Privacy Policy')}.
                 </p>
             </div>
         </td>
