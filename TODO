@@ -38,7 +38,7 @@ for privacy policy text and http://www.lipsum.com/ for our terms of service
 * [POSTPONED] Highlight search results in descriptions
 * Fix all breadcrumbs
 * Rework registration forms to work around mozilla bug #302190
- - Create Account done.  Need work on create project
+ - Create Account done.  Create Project done.  Release needs work.
 * Update html <title> on all pages
 * When the user changes their email address, it should be re-verified.
   We should send two emails upon change: one to the old with a "cancel this change" link,

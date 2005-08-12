@@ -278,7 +278,9 @@ class _Method(xmlrpclib._Method):
         elif exceptionName == "DuplicateItem":
             raise database.DuplicateItem(exceptionArgs[0])
         elif exceptionName == "DuplicateHostname":
-            raise projects.DuplicateHostname
+            raise projects.DuplicateHostname()
+        elif exceptionName == "DuplicateName":
+            raise projects.DuplicateName()
         elif exceptionName == "ItemNotFound":
             raise database.ItemNotFound(exceptionArgs[0])
         elif exceptionName == "MethodNotSupported":

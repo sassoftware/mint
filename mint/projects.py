@@ -22,9 +22,17 @@ import searcher
 
 import projectlisting
 
-class InvalidHostname(Exception):
+class InvalidHostname(MintError):
     def __str__(self):
         return "invalid hostname: must start with a letter and contain only letters, numbers, and hyphens."
+
+class DuplicateHostname(MintError):
+    def __str__(self):
+        return "A project using this hostname already exists"
+
+class DuplicateName(MintError):
+    def __str__(self):
+        return "A project using this project title already exists"
 
 class Project(database.TableObject):
     __slots__ = ('creatorId', 'name',
@@ -175,6 +183,20 @@ class ProjectsTable(database.KeyedTable):
         database.DatabaseTable.__init__(self, db)
         self.cfg = cfg
 
+    def new(self, **kwargs):
+        try:
+            id = database.KeyedTable.new(self, **kwargs)
+        except database.DuplicateItem, e:
+            cu = self.db.cursor()
+            cu.execute("SELECT projectId FROM Projects WHERE hostname=?", kwargs['hostname'])
+            results = cu.fetchall()
+            if len(results) > 0:
+                raise DuplicateHostname()
+            cu.execute("SELECT projectId FROM Projects WHERE name=?", kwargs['name'])
+            results = cu.fetchall()
+            if len(results) > 0:
+                raise DuplicateName()
+        return id
     def getProjectIdByFQDN(self, fqdn):
         cu = self.db.cursor()
 

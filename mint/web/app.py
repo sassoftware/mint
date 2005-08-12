@@ -641,7 +641,7 @@ class MintApp(webhandler.WebHandler):
     @siteOnly
     @requiresAuth
     def newProject(self, auth):
-        self._write("newProject")
+        self._write("newProject", errors=[], kwargs={})
         return apache.OK
 
     @mailList
@@ -656,15 +656,41 @@ class MintApp(webhandler.WebHandler):
         return not error
 
     @siteOnly
-    @strFields(title = None, hostname = None, blurb = '')
+    @strFields(title = '', hostname = '', blurb = '')
     @listFields(int, optlists = [])
     @requiresAuth
     def createProject(self, auth, title, hostname, blurb, optlists):
-        projectId = self.client.newProject(title, hostname, self.cfg.domainName, blurb)
-        if self.cfg.EnableMailLists:
-            if not self._createProjectLists(auth=auth, projectName=hostname, optlists=optlists):
-                return apache.OK
-        return self._redirect("http://%s.%s/" % (hostname, self.cfg.domainName) )
+        errors = []
+        if not title:
+            error.append("You must supply a project title")
+        if not hostname:
+            error.append("You must supply a project hostname")
+        if not errors:
+            try:
+                #attempt to create the project
+                projectId = self.client.newProject(title, hostname, 
+                                self.cfg.domainName, blurb)
+                #Now create the mailing lists
+                if self.cfg.EnableMailLists and not errors:
+                    if not self._createProjectLists(auth=auth, 
+                                                    projectName=hostname,
+                                                    optlists=optlists):
+                        raise mailinglists.MailingListException("Could not create the mailing lists, check the mailing list page to set up your desired lists.")
+            except mailinglists.MailingListException:
+                raise
+            except projects.DuplicateHostname, e:
+                errors.append(str(e))
+            except projects.DuplicateName, e:
+                errors.append(str(e))
+            except mint_error.MintError, e:
+                errors.append(str(e))
+        if not errors:
+            return self._redirect("http://%s.%s/" % (hostname, 
+                                                    self.cfg.domainName) )
+        else:
+            kwargs = {'title': title, 'hostname': hostname, 'blurb': blurb, 'optlists': optlists}
+            self._write("newProject", errors=errors, kwargs=kwargs)
+            return apache.OK
 
     @projectOnly
     @requiresAuth
