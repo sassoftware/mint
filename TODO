@@ -64,7 +64,8 @@ MISSING FEATURES
 * Each project site should have a sidebar with recently updated packages
   (see http://www.archlinux.org/)
 * Server -> User messaging system
- - we need an in-band way for users to ask to join a project, and for
+ - we need an in-band way for users to ask to join a project (only one time
+   to prevent DoS-style issues with hundreds of join requests), and for
    project owners to offer membership.
 * Email notifications for project ownership actions: 
  - "You have been added/removed as a developer to Foo Project."
