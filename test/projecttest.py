@@ -36,7 +36,7 @@ class ProjectTest(rephelp.RepositoryHelper):
  
         client = self.getMintClient("testuser", "testpass")
                                                        
-        projectId = client.newProject("Foo", "foo", "rpath.org")
+        projectId = client.newProject("Foo", "foo", "rpath.local")
         project = client.getProject(projectId)
 
         project.addMemberById(otherUserId, userlevels.DEVELOPER)
