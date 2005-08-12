@@ -3,6 +3,13 @@ Changes in 0.3.7:
 * News entries are now ordered correctly: publication date descending 
 * Cancel account works.
 * Pending users who are not confirmed yet don't show up in search/browse results.
+* A bug that created new project repositories in the wrong path has been fixed.
+* Moved the developer "resign" link to the bottom of the project page.
+* Users may not cancel their account if they are the sole owner of any projects.
+* An "rpath Products" palette has been added.
+* The privacy policy and terms of service links have been moved to the bottom of the page.
+* The "add <foo> to your project" palette has been disabled if you are not an owner
+  of any projects, or if you are viewing your own user account.
 
 Changes in 0.3.6:
 

@@ -72,8 +72,6 @@ onload = "javascript:;"
                                     <div class="pad">
                                         <a href="http://${siteHost}/">Home</a> | 
                                         <a href="#">About rpath</a> |
-                                        <a href="#">Terms of Service</a> |
-                                        <a href="#">Privacy</a> |
                                         <a href="#">Contact rpath</a>
 
                                     </div>
@@ -115,6 +113,10 @@ onload = "javascript:;"
         <div id="foot" align="center">
             <div id="copy">
                 <div class="pad">
+                    <span id="botnav">
+                        <a href="#">Terms of Service</a> <a href="#">Privacy</a>
+                    </span>
+
                     Copyright &#169; 2005 rpath, Inc.
                 </div>
             </div>

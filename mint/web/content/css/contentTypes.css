@@ -80,6 +80,12 @@
         background-color: white;
 }
 
+.products h3 {
+    background-color: green !important;
+    border-color: #080 !important;
+}
+
+
 /* PLAIN COLUMN CONTENT STYLES */
 .date {
 	font-size:0.9091em; color:#BBBBBB; font-weight:normal;

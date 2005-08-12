@@ -21,6 +21,7 @@ from mint import searcher
                         <div class="pad">
                             ${browseMenu()}
                             ${searchMenu()}
+                            ${rpathProductsMenu()}
                         </div>
                     </td>
                     <td id="main">
