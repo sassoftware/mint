@@ -13,12 +13,18 @@
                 <p class="error">Confirm:</p>
                 
                 <p class="errormessage">${message}</p>
-                <p style="width: 10%;">
-                    <a class="option" href="${yesLink}">Yes</a>
-                </p>
-                <p style="width: 10%;">
+		<table>
+		<tr><td>
+                <p style="width: 50%;">
                     <a class="option" href="${noLink}">No</a>
                 </p>
+		</td>
+		<td>
+                <p style="width: 50%;">
+                    <a class="option" href="${yesLink}">Yes</a>
+                </p>
+		</td><td width="50%"/></tr>
+		</table>
             </div>
         </td>
     </body>
