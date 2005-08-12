@@ -222,8 +222,6 @@ def subhandler(req):
     secure = (port == 443)
 
     if not repositories.has_key(repName):
-        print >> sys.stderr, cfg.reposPath, req.hostname
-        sys.stderr.flush()
         repositoryDir = os.path.join(cfg.reposPath, req.hostname)
 
         if os.path.basename(req.uri) == "changeset":
