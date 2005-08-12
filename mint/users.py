@@ -49,6 +49,10 @@ class GroupAlreadyExists(MintError):
     def __str__(self):
         return "group already exists"
 
+class LastOwner(MintError):
+    def __str__(self):
+        return "attempted to orphan a project with developers"
+
 class ConfirmationsTable(database.KeyedTable):
     name = 'Confirmations'
     key = 'userid'
@@ -229,13 +233,18 @@ class UsersTable(database.KeyedTable):
             raise database.ItemNotFound("UserId: %d does not exist!"% userId)
         username = r[0][0]
 
+        cu.execute("SELECT max(flagged) FROM (select A.projectId, COUNT(B.userId)*not(COUNT(C.userId)) AS flagged FROM ProjectUsers AS A LEFT JOIN ProjectUsers AS B ON A.projectId=B.projectId AND B.level=1 LEFT JOIN ProjectUsers AS C ON C.projectId=A.projectId AND C.level=0 AND C.userId<>A.userId WHERE A.userId=? GROUP BY A.projectId)", userId)
+        r=cu.fetchall()
+        if len(r):
+            raise LastOwner
+
         authRepo.deleteUserByName(repoLabel, username)
         
         cu.execute("UPDATE Projects SET creatorId=NULL WHERE creatorId=?", userId)
-        cu.execute("UPDATE Jobs SET userId=NULL WHERE userId=?",userId)
-        cu.execute("DELETE FROM ProjectUsers WHERE userId=?",userId)
-        cu.execute("DELETE FROM Confirmations WHERE userId=?",userId)
-        cu.execute("DELETE FROM Users WHERE userId=?",userId)
+        cu.execute("UPDATE Jobs SET userId=NULL WHERE userId=?", userId)
+        cu.execute("DELETE FROM ProjectUsers WHERE userId=?", userId)
+        cu.execute("DELETE FROM Confirmations WHERE userId=?", userId)
+        cu.execute("DELETE FROM Users WHERE userId=?", userId)
         self.db.commit()
 
     def isUserStagnant(self, userId):
