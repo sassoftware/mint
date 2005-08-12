@@ -63,3 +63,8 @@ MISSING FEATURES
   (for things like major site changes, privacy notice updates, etc.)
 * Each project site should have a sidebar with recently updated packages
   (see http://www.archlinux.org/)
+* Server -> User messaging system
+ - we need an in-band way for users to ask to join a project, and for
+   project owners to offer membership.
+* Email notifications for project ownership actions: 
+ - "You have been added/removed as a developer to Foo Project."
