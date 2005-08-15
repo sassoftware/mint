@@ -22,13 +22,7 @@ JOB SERVER
 
 USER INTERFACE
 
-* Implement static pages for privacy policy and terms of service (see Ed
-for privacy policy text and http://www.lipsum.com/ for our terms of service
--- say, about 20 paragraph's worth)
-
-* Implement "cancel account"
-* New users should not be listed under "all users" until the account is confirmed. They effectively don't exist yet...
-* Implement a few static-text pages: about rpath, ToS, privacy, contact into, products
+* Implement a few static-text pages: about rpath, contact into, products
 * [SORT OF DONE] Fix 'most active' and 'most popular' project links
  - We need to parse the Commits table and downloads counter and distill some real
    statistical information to use for these links.
@@ -40,19 +34,9 @@ for privacy policy text and http://www.lipsum.com/ for our terms of service
 * Rework registration forms to work around mozilla bug #302190
  - Create Account done.  Create Project done.  Release needs work.
 * Update html <title> on all pages
-* When the user changes their email address, it should be re-verified.
-  We should send two emails upon change: one to the old with a "cancel this change" link,
-  and one to the new with a "confirm this change" link. This will be safe even if the user
-  puts a typo into the new email address, and will also be safe if the old email address is
-  completely disabled. The only pathological case that it won't cover is if they typo *and*
-  their current email address is dead. Human intervention will be needed in that case!
 * Add a "project home page" field and edit function (maybe merge into Edit Description)
-* Add a check on Cancel Account and prevent the operation if the user is the sole owner of any
-  project.
 * Add a check to prevent the sole owner of a project from demoting themselves to developer
   or resigning.
-* Remove search and browse users.
-* Immediately block unconfirmed users and require them to confirm their email or try again.
 * RSS feeds for project releases and possibly commits
 
 MISSING FEATURES
