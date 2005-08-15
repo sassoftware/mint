@@ -13,7 +13,9 @@
         for var in ['username', 'email', 'fullName', 'displayEmail', 'blurb', 'tos', 'privacy']:
             kwargs[var] = kwargs.get(var, '')
     ?>
-    <head/>
+    <head>
+        <title>rpath.org: create an account</title>
+    </head>
     <body>
         <td id="main" class="spanleft">
             <div class="pad">

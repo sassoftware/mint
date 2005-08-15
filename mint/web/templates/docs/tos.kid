@@ -1,6 +1,6 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
     <body>
-        <h2>rpath terms of service</h2>
+        <h2>rpath.org: terms of service</h2>
         <p> Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Maecenas
         augue metus, aliquam sit amet, congue vitae, placerat eget,
         diam. Integer rhoncus tortor sed sem. Vestibulum vestibulum porttitor

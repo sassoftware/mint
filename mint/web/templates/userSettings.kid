@@ -10,7 +10,9 @@
         <a href="#">edit account information</a>
     </div>
 
-    <head/>
+    <head>
+        <title>rpath.org: edit account information</title>
+    </head>
     <body>
         <td id="main" class="spanleft">
             <form method="post" action="editUserSettings">

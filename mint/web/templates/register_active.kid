@@ -7,7 +7,9 @@
     Copyright 2005 rpath, Inc.
     All Rights Reserved
 -->
-    <head/>
+    <head>
+        <title>rpath.org: account confirmed</title>
+    </head>
     <body>
         <td id="main" class="spanleft">
             <div class="pad">

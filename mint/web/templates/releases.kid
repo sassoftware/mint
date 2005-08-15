@@ -6,7 +6,9 @@
     Copyright 2005 rpath, Inc.
     All Rights Reserved
 -->
-    <head/>
+    <head>
+        <title>rpath.org: project releases</title>
+    </head>
     <?python # this comment has to be here if the first line is an import...weird!
         from mint import userlevels
 

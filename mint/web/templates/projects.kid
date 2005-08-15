@@ -14,7 +14,9 @@ from mint import projectlisting
         <a href="#">browse projects</a>
     </div>
 
-    <head/>
+    <head>
+        <title>rpath.org: browse projects</title>
+    </head>
     <body>
         <div py:def="formatResults(resultset = [])" py:strip="True">
             <?python

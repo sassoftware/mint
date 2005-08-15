@@ -13,7 +13,9 @@ title = "Create New Release"
         <a href="#">create a release</a>
     </div>
 
-    <head/>
+    <head>
+        <title>rpath.org: create a release</title>
+    </head>
     <body onload="javascript:getTroveList(${project.getId()});">
         <td id="main" class="spanleft">
             <div class="pad">

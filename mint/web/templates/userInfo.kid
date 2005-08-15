@@ -19,7 +19,10 @@
         <a href="#">${user.getFullName()}</a>
     </div>
 
-    <head/> 
+    <head>
+        <title>rpath.org: user information</title>
+    </head>
+
     <body>
         <td id="left" class="side">
             <div class="pad">

@@ -12,7 +12,9 @@
     </div>
 
 
-    <head/>
+    <head>
+        <title>rpath.org: edit project description</title>
+    </head>
     <body>
         <td id="main" class="spanleft">
             <div class="pad">

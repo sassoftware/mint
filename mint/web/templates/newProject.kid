@@ -15,7 +15,9 @@
         kwargs[var] = kwargs.get(var, '')
 ?>
 
-    <head/>
+    <head>
+        <title>rpath.org: create a project</title>
+    </head>
     <body>
         <td id="main" class="spanleft" >
             <div class="pad">

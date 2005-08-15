@@ -20,7 +20,9 @@ from mint import userlevels
         <a href="#">Members</a>
     </div>
 
-    <head/>
+    <head>
+        <title>rpath.org: project member settings</title>
+    </head>
     <body>
         <td id="left" class="side">
             <div class="pad">

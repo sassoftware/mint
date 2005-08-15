@@ -23,7 +23,9 @@
         <a href="#">search results</a>
     </div>
 
-    <head/>
+    <head>
+        <title>rpath.org: search results</title>
+    </head>
     <body>
         <div py:def="formatResults(resultset = [])" py:strip="True">
             <?python

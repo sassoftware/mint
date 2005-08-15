@@ -1,6 +1,6 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
     <head>
-        <title>rpath.org privacy policy</title>
+        <title>rpath.org: privacy policy</title>
         <link rel="stylesheet" type="text/css" href="${cfg.staticUrl}apps/mint/css/basic.css"/>
     </head>
     <body id="legal">

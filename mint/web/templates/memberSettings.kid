@@ -10,6 +10,7 @@ from mint import userlevels
     All Rights Reserved
 -->
     <head>
+        <title>rpath.org: member settings</title>
         <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/basic.css"/>
         <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/contentTypes.css"/>
     </head>

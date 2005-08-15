@@ -19,7 +19,9 @@ from mint import userlevels
 
     bodyAttrs = {'onload': onload}
     ?>
-    <head/>
+    <head>
+        <title>rpath.org: project release</title>
+    </head>
     <body py:attrs="bodyAttrs">
         <?python
             if isOwner:
