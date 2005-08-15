@@ -35,8 +35,6 @@ USER INTERFACE
  - Create Account done.  Create Project done.  Release needs work.
 * Update html <title> on all pages
 * Add a "project home page" field and edit function (maybe merge into Edit Description)
-* Add a check to prevent the sole owner of a project from demoting themselves to developer
-  or resigning.
 * RSS feeds for project releases and possibly commits
 
 MISSING FEATURES
