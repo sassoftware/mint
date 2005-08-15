@@ -261,3 +261,9 @@ span.newsTitle {
 em.resign {
     color: #99660A;
 }
+
+/* rss button */
+a.rssButton {
+    background-image: none;
+    padding-right: 0px;
+}

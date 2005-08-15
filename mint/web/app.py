@@ -9,6 +9,7 @@ import kid
 import stat
 import sys
 import time
+import email.Utils
 from urllib import quote, unquote
 
 from mod_python import apache
@@ -881,6 +882,36 @@ class MintApp(webhandler.WebHandler):
                 noLink = "/")
         return apache.OK
         
+    @projectOnly
+    @strFields(feed= "releases")
+    def rss(self, auth, feed):
+        if feed == "releases":
+            title = "%s releases" % self.project.getName()
+            link = "http://%s/releases" % self.project.getFQDN()
+            desc = "Current releases from %s" % self.project.getName()
+
+            releases = self.project.getReleases()
+            items = []
+            for release in releases[:10]:
+                item = {}
+                item['title'] = "%s=%s" % (release.getTroveName(),
+                    release.getTroveVersion().trailingRevision().asString())
+                item['link'] = "http://%s/release?id=%d" % (self.project.getFQDN(),
+                    release.getId())
+                item['content'] = "A new version of %s has been released: %s version %s." % \
+                    (release.getName(), release.getTroveName(),
+                     release.getTroveVersion().trailingRevision().asString())
+                item['date_822'] = email.Utils.formatdate(release.getChangedTime())
+                item['creator'] = "http://rpath.org/"
+                items.append(item)
+        else:
+            items = []
+            title = "Invalid RSS feed style requested."
+            link = ""
+            desc = ""
+        
+        self._writeRss(items = items, title = title, link = link, desc = desc)
+        return apache.OK
 
     def _write(self, template, templatePath = None, **values):
         if not templatePath:
@@ -897,3 +928,10 @@ class MintApp(webhandler.WebHandler):
                               toUrl = self.toUrl,
                               **values)
         t.write(self.req, encoding = "utf-8", output = "xhtml-strict")
+
+    def _writeRss(self, **values):
+        path = os.path.join(self.cfg.templatePath, "rss20.kid")
+        template = kid.load_template(path)
+        t = template.Template(**values)
+        self.req.content_type = "text/xml"
+        t.write(self.req, encoding = "utf-8", output = "xml")

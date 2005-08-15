@@ -77,6 +77,9 @@ class Release(object):
     def getTroveFlavor(self):
         return deps.ThawDependencySet(self.trove[2])
 
+    def getChangedTime(self):
+        return self.troveLastChanged
+
     def setTrove(self, troveName, troveVersion, troveFlavor):
         return self.server.setReleaseTrove(self.releaseId,
             troveName, troveVersion, troveFlavor)
