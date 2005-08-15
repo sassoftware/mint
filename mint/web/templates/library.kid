@@ -2,7 +2,7 @@
 <?python
 import time
 from mint import searcher
-searchTypes = ['Projects', 'Users', 'Packages']
+searchTypes = ['Projects', 'Packages']
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#">
@@ -33,7 +33,6 @@ searchTypes = ['Projects', 'Users', 'Packages']
             <li><a href="projects">All Projects</a></li>
             <li><a href="projects?sortOrder=3">Most Active Projects</a></li>
             <li><a href="projects?sortOrder=7">Most Popular Projects</a></li>
-            <li><a href="users">All People</a></li>
         </ul>
     </div>
 

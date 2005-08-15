@@ -408,11 +408,12 @@ class MintApp(webhandler.WebHandler):
         self._write("projects", sortOrder=sortOrder, limit=limit, offset=offset, results=results, count=count)
         return apache.OK
 
-    @intFields(sortOrder = 0, limit = 10, offset = 0)
-    def users(self, auth, sortOrder, limit, offset, submit = 0):
-        results, count = self.client.getUsers(sortOrder, limit, offset)
-        self._write("users", sortOrder=sortOrder, limit=limit, offset=offset, results=results, count=count)
-        return apache.OK
+    # XXX disabled
+    # @intFields(sortOrder = 0, limit = 10, offset = 0)
+    # def users(self, auth, sortOrder, limit, offset, submit = 0):
+    #     results, count = self.client.getUsers(sortOrder, limit, offset)
+    #     self._write("users", sortOrder=sortOrder, limit=limit, offset=offset, results=results, count=count)
+    #     return apache.OK
 
     @projectOnly
     def projectPage(self, auth):
@@ -779,8 +780,9 @@ class MintApp(webhandler.WebHandler):
     def search(self, auth, type, search, modified, limit, offset):
         if type == "Projects":
             return self.projectSearch(search, modified, limit, offset)
-        elif type == "Users":
-            return self.userSearch(search, limit, offset)
+        # XXX disabled
+        # elif type == "Users":
+        #    return self.userSearch(search, limit, offset)
         elif type == "Packages":
             return self.packageSearch(search, limit, offset)
         else:
@@ -788,12 +790,13 @@ class MintApp(webhandler.WebHandler):
                 error = "Invalid search type specified.")
             return apache.OK
 
-    def userSearch(self, terms, limit, offset):
-        results, count = self.client.getUserSearchResults(terms, limit, offset)
-        self._write("searchResults", searchType = "Users", terms = terms, results = results,
-                                     count = count, limit = limit, offset = offset,
-                                     modified = 0)
-        return apache.OK
+    # XXX disabled
+    # def userSearch(self, terms, limit, offset):
+    #     results, count = self.client.getUserSearchResults(terms, limit, offset)
+    #     self._write("searchResults", searchType = "Users", terms = terms, results = results,
+    #                                  count = count, limit = limit, offset = offset,
+    #                                  modified = 0)
+    #     return apache.OK
 
     def packageSearch(self, terms, limit, offset):
         results, count = self.client.getPackageSearchResults(terms, limit, offset)
