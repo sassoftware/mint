@@ -10,7 +10,7 @@ onload = "javascript:;"
 ?>
 
 <html xmlns:py="http://purl.org/kid/ns#"
-      py:extends="'project.kid'">
+      py:extends="'project.kid', 'library.kid'">
     <div py:def="breadcrumb()" class="pad" py:strip="True">
     </div>
 
