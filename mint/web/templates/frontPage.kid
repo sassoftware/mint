@@ -12,7 +12,9 @@ from mint import searcher
     Copyright 2005 rpath, Inc.
     All Rights Reserved
 -->
-    <head/>
+    <head>
+        <title>rpath.org: front page</title>
+    </head>
     <body>
         <td>
             <table border="0" cellspacing="0" cellpadding="0" summary="layout" width="100%">

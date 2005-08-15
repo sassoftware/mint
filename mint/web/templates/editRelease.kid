@@ -20,7 +20,9 @@ def generateJs(archMap):
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'library.kid', 'layout.kid'">
 
-    <head/>
+    <head>
+        <title>rpath.org: edit release</title>
+    </head>
     <body onload="javascript:pickArch(); pickVersion();">
     <script>
         ${generateJs(archMap)}

@@ -15,7 +15,6 @@ onload = "javascript:;"
     </div>
 
     <head py:match="item.tag == 'head'" xmlns="http://www.w3.org/1999/xhtml">
-        <title>rpath.com</title>
         <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=utf-8" />
         <script type="text/javascript" src="${cfg.staticUrl}/apps/mint/javascript/generic.js"/>
         <script type="text/javascript" src="${cfg.staticUrl}/apps/mint/javascript/library.js"/>

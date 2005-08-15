@@ -18,7 +18,9 @@ from mint import userlevels
         <a href="#">${project.getName()}</a>
     </div>
 
-    <head/>
+    <head>
+        <title>rpath.org: ${project.getName()}</title>
+    </head>
     <body>
         <td id="content">
             <table border="0" cellspacing="0" cellpadding="0" summary="layout" width="100%">

@@ -6,7 +6,9 @@
     Copyright 2005 rpath, Inc.
     All Rights Reserved
 -->
-    <head/>
+    <head>
+        <title>rpath.org: email confirmation required</title>
+    </head>
     <body>
         <td id="main" class="spanall">
             <div class="pad">
