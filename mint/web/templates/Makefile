@@ -7,6 +7,7 @@
 SUBDIRS = repos
 
 kid_files = \
+	confirmEmail.kid	\
 	confirm.kid		\
 	editRelease.kid		\
 	error.kid		\
@@ -20,20 +21,23 @@ kid_files = \
 	members.kid		\
 	newProject.kid		\
 	newRelease.kid		\
+	privacy.kid		\
 	projectDesc.kid		\
 	project.kid		\
-	projects.kid		\
 	projectPage.kid		\
-	register.kid		\
+	projects.kid		\
 	register_active.kid	\
 	register_conf.kid	\
+	register.kid		\
 	release.kid		\
 	releases.kid		\
+	rss20.kid		\
 	searchResults.kid	\
+	tos.kid			\
 	userInfo.kid		\
 	userSettings.kid	\
 	users.kid
-
+ 
 python_files = __init__.py
 
 extra_dist = Makefile

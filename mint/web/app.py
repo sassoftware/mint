@@ -331,7 +331,7 @@ class MintApp(webhandler.WebHandler):
     @strFields(page = None)
     def legal(self, auth, page):
         if page not in ["tos", "privacy"]:
-            return apache.NOT_FOUND
+            return apache.HTTP_NOT_FOUND
             
         self._write(page)
         return apache.OK
