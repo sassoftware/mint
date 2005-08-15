@@ -29,8 +29,7 @@ from mint import userlevels
                             <div class="palette" id="releases">
                                 <h3>
                                     <a href="/rss" class="rssButton">
-                                        <img style="vertical-align: middle; float: right; border: none;"
-                                             src="${cfg.staticUrl}/apps/mint/images/xml.gif"/>
+                                        <img src="${cfg.staticUrl}/apps/mint/images/xml.gif"/>
                                     </a>
                                     Recent Releases
                                 </h3>

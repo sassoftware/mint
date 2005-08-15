@@ -267,3 +267,9 @@ a.rssButton {
     background-image: none;
     padding-right: 0px;
 }
+
+a.rssButton img {
+    vertical-align: middle;
+    float: right;
+    border: none;
+}
