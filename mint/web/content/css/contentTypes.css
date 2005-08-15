@@ -85,6 +85,9 @@
     border-color: #080 !important;
 }
 
+.products li {
+    color: #666;
+}
 
 /* PLAIN COLUMN CONTENT STYLES */
 .date {

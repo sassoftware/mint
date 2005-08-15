@@ -12,7 +12,7 @@ body#legal {
     margin: 0em 2em 0em 2em;
 }
 
-body#legal p, li {
+body#legal p, body#legal li {
     font-size: 80%;
     color: rgb(217, 221, 232);
     text-align: justify;
