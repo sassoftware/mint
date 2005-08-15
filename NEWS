@@ -13,6 +13,11 @@ Changes in 0.3.7:
 * A nicer error message is raised on an incorrect password.
 * The login page has been eliminated, replaced with a "forgot password" page and 
   a "account confirmed" message page.
+* Privacy Policy exists, Terms of Service exists in Latin. Translator needed.
+* RSSv2 feed of project releases exists.
+* Search and browse users has been removed from the interface (and disabled in code)
+* Some checks have been added to prevent an owner of a project from leaving the project
+  in a "headless" state with developers, but no owners.
 
 Changes in 0.3.6:
 
