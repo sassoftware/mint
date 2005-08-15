@@ -743,10 +743,25 @@ class MintApp(webhandler.WebHandler):
         project.addMemberById(userId, level)
         return self._redirect("http://%s" % project.getFQDN())
 
+    def _getUserDict(self, members):
+        users = { userlevels.DEVELOPER: [],
+                  userlevels.OWNER: [], }
+        for userId, username, level in members:
+            users[level].append((userId, username,))
+        return users
+
     @intFields(userId = None, level = None)
     @projectOnly
     @ownerOnly
     def editMember(self, auth, userId, level):
+        userDict = self._getUserDict(self.project.getMembers())
+        # if there is only one owner, and that
+        # owner is being changed to a non-owner, fail.
+        if len(userDict[userlevels.OWNER]) == 1 and \
+           userDict[userlevels.OWNER][0][0] == userId and\
+           level != userlevels.OWNER:
+            raise users.LastOwner
+ 
         self.project.updateUserLevel(userId, level)
         return self._redirect("members")
 
@@ -754,6 +769,14 @@ class MintApp(webhandler.WebHandler):
     @intFields(id = None)
     @ownerOnly
     def delMember(self, auth, id):
+        userDict = self._getUserDict(self.project.getMembers())
+        # if there are developers, only one owner, and that
+        # owner is being deleted from the project, fail.
+        if len(userDict[userlevels.DEVELOPER]) > 0 and \
+           len(userDict[userlevels.OWNER]) == 1 and \
+           userDict[userlevels.OWNER][0][0] == id:
+            raise users.LastOwner
+    
         self.project.delMemberById(id)
         if self.project.getMembers() == []:
             self.project.orphan(self.cfg.MailListBaseURL, self.cfg.MailListPass)

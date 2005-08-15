@@ -58,21 +58,31 @@ from mint import userlevels
                 for userId, username, level in project.getMembers():
                     users[level].append((userId, username,))
 
+                lastOwner = len(users[userlevels.OWNER]) == 1 and len(users[userlevels.DEVELOPER]) > 0
+
                 ?>
                 <h3>Project Owners</h3>
                 <table border="0" cellspacing="0" cellpadding="0" class="memberstable">
-
                     <tr py:for="userId, username in sorted(users[userlevels.OWNER], key=lambda x: x[1])">
                         <th><a href="userInfo?id=${userId}">${username}</a></th>
-                        <td py:if="isOwner">
+                        <td py:if="isOwner and not lastOwner and userId != auth.userId">
                             <a onclick="javascript:load_popup('Edit${userId}','memberEditBox');"
                                href="memberSettings?userId=${userId}"
                                class="option" style="position:relative;"
                                id="Edit${userId}" target="memberEditBox">Edit</a>
                         </td>
-                        <td py:if="isOwner"><a href="delMember?id=${userId}" class="option">Delete</a></td>
+                        <td py:if="isOwner and not lastOwner and userId == auth.userId"></td>
+                        <td py:if="isOwner and not lastOwner">
+                            <a href="delMember?id=${userId}" class="option">Delete</a>
+                        </td>
                     </tr>
+                    <tr><td py:if="not users[userlevels.OWNER]">No owners.</td></tr>
                 </table>
+                <p class="help" py:if="isOwner and lastOwner">
+                    You are the only owner of a project, but the project still has developers.
+                    A project cannot have developers with no owner. To remove yourself from this
+                    project, promote a developer to Owner status, or remove all developers.
+                </p>
                 <h3>Developers</h3>
 
                 <table border="0" cellspacing="0" cellpadding="0" class="memberstable">
@@ -86,6 +96,7 @@ from mint import userlevels
                         </td>
                         <td py:if="isOwner"><a href="delMember?id=${userId}" class="option">Delete</a></td>
                     </tr>
+                    <tr><td py:if="not users[userlevels.DEVELOPER]">No developers.</td></tr>
                 </table>
                 <iframe src="about:blank" frameborder="0" marginheight="0" marginwidth="0"
                         scrolling="no" id="memberEditBox" name="memberEditBox" 
