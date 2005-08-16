@@ -59,7 +59,9 @@ import time
         </tr>
     </table>
 
-    <head/>
+    <head>
+        <title>${formatTitle('Trove Information: %s'%troveName)}</title>
+    </head>
     <body>
         <td id="left" class="side">
             <div class="pad">

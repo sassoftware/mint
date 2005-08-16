@@ -15,7 +15,9 @@ import string
         <a href="#">Repository Browser</a>
     </div>
 
-    <head/>
+    <head>
+        <title>${formatTitle('Repository Browser: %s'% project.getName())}</title>
+    </head>
     <body>
         <td id="left" class="side">
             <div class="pad">

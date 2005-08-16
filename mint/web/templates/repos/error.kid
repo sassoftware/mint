@@ -7,6 +7,9 @@
 
  All Rights Reserved
 -->
+    <head>
+        <title>${formatTitle('Repository Error')}</title>
+    </head>
     <body>
         <div id="content">
             <h2>Error</h2>

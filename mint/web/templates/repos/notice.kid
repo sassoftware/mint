@@ -7,7 +7,9 @@
 
  All Rights Reserved
 -->
-    <head />
+    <head>
+        <title>${formatTitle('Repository Notice')}</title>
+    </head>
     <body>
         <div id="inner">
             <h2>Notice</h2>

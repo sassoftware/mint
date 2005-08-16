@@ -38,7 +38,9 @@
         </table>
     </div>
 
-    <head/>
+    <head>
+        <title>${formatTitle('Files: %s'% troveName)}</title>
+    </head>
     <body>
         <td id="main" class="spanall">
             <div class="pad">
