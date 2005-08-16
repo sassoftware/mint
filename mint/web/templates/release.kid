@@ -20,7 +20,7 @@ from mint import userlevels
     bodyAttrs = {'onload': onload}
     ?>
     <head>
-        <title>rpath.org: project release</title>
+        <title>${formatTitle('Project Release')}</title>
     </head>
     <body py:attrs="bodyAttrs">
         <?python

@@ -24,7 +24,7 @@
     </div>
 
     <head>
-        <title>rpath.org: search results</title>
+        <title>${formatTitle('Search Results')}</title>
     </head>
     <body>
         <div py:def="formatResults(resultset = [])" py:strip="True">

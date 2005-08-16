@@ -7,7 +7,7 @@
     All Rights Reserved
 -->
     <head>
-        <title>rpath.org: error</title>
+        <title>${formatTitle('Error')}</title>
     </head>
     <body>
         <td id="main" class="spanall">
@@ -17,8 +17,7 @@
                 <p class="errormessage">${error}</p>
                 <p>
                     Please go back and try again or contact 
-                    <a href="mailto:custom@rpath.com">custom@rpath.com</a> or join the IRC channel
-                    <b>#conary</b> on the <a href="http://www.freenode.net/">FreeNode</a> IRC network
+                    ${XML(cfg.supportContactHTML)}
                     for assistance.
                 </p>
             </div>

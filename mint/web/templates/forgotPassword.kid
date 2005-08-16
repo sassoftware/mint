@@ -6,7 +6,9 @@
     Copyright 2005 rpath, Inc.
     All Rights Reserved
 -->
-    <head/>
+    <head>
+        <title>${formatTitle('Login')}</title>
+    </head>
     <body>
         <td id="main" class="spanleft">
             <div class="pad">

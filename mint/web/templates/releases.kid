@@ -7,7 +7,7 @@
     All Rights Reserved
 -->
     <head>
-        <title>rpath.org: project releases</title>
+        <title>${formatTitle('Releases: %s' % project.getName())}</title>
     </head>
     <?python # this comment has to be here if the first line is an import...weird!
         from mint import userlevels

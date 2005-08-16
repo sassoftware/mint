@@ -21,7 +21,7 @@ from mint import userlevels
     </div>
 
     <head>
-        <title>rpath.org: project member settings</title>
+        <title>${formatTitle('Member Settings: %s'%project.getName())}</title>
     </head>
     <body>
         <td id="left" class="side">

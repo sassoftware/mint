@@ -10,6 +10,8 @@ searchTypes = ['Projects', 'Packages']
     Copyright 2005 rpath, Inc.
     All Rights Reserved
 -->
+    <div py:def="formatTitle(str)" py:strip="True" py:content="'%s - %s'%(str, cfg.productName)"/>
+
     <thead py:def="columnTitles(columns = [])" py:strip="False">
         <tr>
             <th py:for="columnName in columns">${columnName}</th>
@@ -28,7 +30,7 @@ searchTypes = ['Projects', 'Packages']
     </div>
 
     <div id="browse" class="palette" py:def="browseMenu()" py:strip="False">
-        <h3>browse rpath</h3>
+        <h3>browse ${cfg.productName}</h3>
         <ul>
             <li><a href="projects">All Projects</a></li>
             <li><a href="projects?sortOrder=3">Most Active Projects</a></li>
@@ -37,7 +39,7 @@ searchTypes = ['Projects', 'Packages']
     </div>
 
     <div id="search" class="palette" py:def="searchMenu(selectType='Projects')" py:strip="False">
-        <h3>search rpath</h3>
+        <h3>search ${cfg.productName}</h3>
         <form action="search" method="get">
             <p>
                 <label>search type:</label><br/>
@@ -120,17 +122,8 @@ searchTypes = ['Projects', 'Packages']
         </tr>
     </tbody>
 
-    <div py:def="rpathProductsMenu" id="browse" class="palette products">
-        <h3>rpath products</h3>
-        <ul>
-            <li><a href="#">Product 1</a></li>
-            <li><a href="#">Product 2</a></li>
-            <li>Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Cras erat. Curabitur tempus nulla sit amet justo. Morbi quis tellus sed turpis bibendum egestas. Phasellus nonummy!</li>
-        </ul>
-    </div>
-
     <a py:def="legal(page, text)" py:strip="False" href="#"
-        onclick="javascript:{window.open('${page}', 'rpathlegal',
+        onclick="javascript:{window.open('${page}', 'legal',
          'height=500,width=500,menubar=no,scrollbars,status=no,toolbar=no', true); return false;}" 
         py:content="text"/>
 

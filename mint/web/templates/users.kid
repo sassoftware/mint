@@ -14,7 +14,9 @@
         <a href="#">browse users</a>
     </div>
 
-    <head/>
+    <head>
+        <title>${formatTitle('Browse Users')}</title>
+    </head>
     <body>
         <div py:def="formatResults(resultset = [])" py:strip="True">
             <?python

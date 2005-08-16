@@ -7,7 +7,7 @@
     All Rights Reserved
 -->
     <head>
-        <title>rpath.org: please confirm</title>
+        <title>${formatTitle('Please Confirm Your Account')}</title>
     </head>
     <body>
         <td id="main" class="spanall">

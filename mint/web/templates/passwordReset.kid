@@ -8,7 +8,7 @@
     All Rights Reserved
 -->
     <head>
-        <title>rpath.org: forgotten password</title>
+        <title>${formatTitle('Forgotten Password')}</title>
     </head>
     <body>
         <td id="main" class="spanleft">

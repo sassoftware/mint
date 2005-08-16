@@ -13,10 +13,15 @@
 
 
     <head>
-        <title>rpath.org: edit project description</title>
+        <title>${formatTitle('Description: %s'%project.getName())}</title>
     </head>
     <body>
-        <td id="main" class="spanleft">
+        <td id="left" class="side">
+            <div class="pad">
+                ${projectResourcesMenu()}
+            </div>
+        </td>
+        <td id="main">
             <div class="pad">
                 <h2>Edit Project Description</h2>
 

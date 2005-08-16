@@ -20,7 +20,7 @@
     </div>
 
     <head>
-        <title>rpath.org: user information</title>
+        <title>${formatTitle('User Information')}</title>
     </head>
 
     <body>

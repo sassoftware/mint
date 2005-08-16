@@ -11,7 +11,7 @@
     </div>
 
     <head>
-        <title>rpath.org: edit account information</title>
+        <title>${formatTitle('Edit Account Information')}</title>
     </head>
     <body>
         <td id="main" class="spanleft">
@@ -30,7 +30,7 @@
                             <th>Email Address:</th>
                             <td>
                                 <input type="text" name="email" value="${auth.email}" />
-                                <div class="help">This email address will not be displayed on the rpath website.</div>
+                                <div class="help">This email address will not be displayed on the ${cfg.companyName} website.</div>
                             </td>
                         </tr>
                         <tr>
@@ -39,7 +39,7 @@
                                 <textarea rows="4" type="text" name="displayEmail">${auth.displayEmail}</textarea>
                                 <div class="help">
                                     Contact information provided here will be displayed
-                                    on your rpath user information page.
+                                    on your ${cfg.companyName} user information page.
                                 </div>
                             </td>
                         </tr>
@@ -50,7 +50,7 @@
                                 <div class="help">
                                     Please enter any relevant information about yourself here;
                                     a short biography, IRC nicknames, or anything else you would
-                                    like to share with the rpath.com community.
+                                    like to share with the ${cfg.productName} community.
                                 </div>
                             </td>
                         </tr>

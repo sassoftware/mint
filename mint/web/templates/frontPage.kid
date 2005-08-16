@@ -13,7 +13,7 @@ from mint import searcher
     All Rights Reserved
 -->
     <head>
-        <title>rpath.org: front page</title>
+        <title>${formatTitle('Front Page')}</title>
     </head>
     <body>
         <td>

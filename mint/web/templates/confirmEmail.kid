@@ -7,7 +7,7 @@
     All Rights Reserved
 -->
     <head>
-        <title>rpath.org: email confirmation required</title>
+        <title>${formatTitle('Email Confirmation Required')}</title>
     </head>
     <body>
         <td id="main" class="spanall">

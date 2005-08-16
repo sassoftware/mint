@@ -14,7 +14,7 @@
             kwargs[var] = kwargs.get(var, '')
     ?>
     <head>
-        <title>rpath.org: create an account</title>
+        <title>${formatTitle('Create an Account')}</title>
     </head>
     <body>
         <td id="main" class="spanleft">
@@ -43,7 +43,7 @@
                             <td>
                                 <input type="text" name="email" value="${kwargs['email']}"/>
 
-                                <p class="help">This email address will not be displayed on the rpath website.</p>
+                                <p class="help">This email address will not be displayed on the ${cfg.companyName} website.</p>
                             </td>
                         </tr>
                         <tr>
@@ -51,7 +51,7 @@
                             <td>
                                 <textarea rows="3" type="text" name="displayEmail">${kwargs['displayEmail']}</textarea>
 
-                                <p class="help">Contact information provided here will be displayed on your rpath user information page.</p>
+                                <p class="help">Contact information provided here will be displayed on your ${cfg.companyName} user information page.</p>
                             </td>
                         </tr>
                         <tr>
@@ -62,7 +62,7 @@
                                 <p class="help">
                                     Please enter any relevant information about yourself here;
                                     a short biography, IRC nicknames, or anything else you would
-                                    like to share with the rpath.com community.
+                                    like to share with the ${cfg.productName} community.
                                 </p>
                             </td>
                         </tr>
@@ -93,9 +93,9 @@
         </td>
         <td id="right" class="plain">
             <div class="pad">
-                <h3>About rpath accounts</h3>
+                <h3>About ${cfg.companyName} accounts</h3>
                 <p>
-                    Using a rpath.com account, you can create your own Linux distribution.
+                    Using a ${cfg.productName} account, you can create your own Linux distribution.
                     Please read the ${legal('http://%s/legal?page=tos' % siteHost, 'Terms of Service')} before you register
                     for an account.
                 </p>

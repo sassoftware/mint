@@ -14,7 +14,7 @@ title = "Create New Release"
     </div>
 
     <head>
-        <title>rpath.org: create a release</title>
+        <title>${formatTitle('Create a Release')}</title>
     </head>
     <body onload="javascript:getTroveList(${project.getId()});">
         <td id="main" class="spanleft">

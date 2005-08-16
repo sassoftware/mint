@@ -138,18 +138,18 @@ class UsersTable(database.KeyedTable):
             confirmDomain = "%s.%s" % (self.cfg.hostName, self.cfg.domainName)
         else:
             confirmDomain = self.cfg.domainName
-        message = "\n".join(["Thank you for updating your email address with the rpath",
-                             "Linux customized distribution tool.",
+        message = "\n".join(["Thank you for updating your email address with the ",
+                             "%s."%self.cfg.productName,
                              "",
                              "Please follow the link below to confirm your new address",
                              "",
                              "http://%s/confirm?id=%s" % (confirmDomain, confirm),
                              "",
-                             "Contact custom@rpath.com for help, or join the IRC channel #conary",
-                             "on the Freenode IRC network (http://www.freenode.net/) for live help."])
+                             "Contact %s"%self.cfg.supportContactTXT,
+                             "if you need assistence."])
         try:
             socket.gethostbyname(email[find(email, '@')+1:])
-            sendMail(self.cfg.adminMail, "rpath.com", email, "rpath.com registration", message)
+            sendMail(self.cfg.adminMail, self.cfg.productName, email, "%s registration"%self.cfg.productName, message)
         except smtplib.SMTPRecipientsRefused:
             raise MailError("Email could not be sent: Recipient refused by server.")
         except socket.gaierror:
@@ -187,19 +187,18 @@ class UsersTable(database.KeyedTable):
             confirmDomain = self.cfg.domainName
             
         if not active:
-            message = "\n".join(["Thank you for registering for the rpath Linux customized",
-                                 "distribution tool.",
+            message = "\n".join(["Thank you for registering for %s"%self.cfg.productName,
                                  "",
                                  "Please follow the link below to confirm your registration",
                                  "for username %s:" % username,
                                  "",
                                  "http://%s/confirm?id=%s" % (confirmDomain, confirm),
                                  "",
-                                 "Contact custom@rpath.com for help, or join the IRC channel #conary",
-                                 "on the Freenode IRC network (http://www.freenode.net/) for live help."])
+                                 "Contact %s"%self.cfg.supportContactTXT,
+                                 "if you need assistence."])
             try:
                 socket.gethostbyname(email[find(email, '@')+1:])
-                sendMail(self.cfg.adminMail, "rpath.com", email, "rpath.com registration", message)
+                sendMail(self.cfg.adminMail, self.cfg.productName, email, "%s registration"%self.cfg.productName, message)
             except smtplib.SMTPRecipientsRefused:
                 authRepo.deleteUserByName(repoLabel, username)
                 raise MailError("Email could not be sent: Recipient refused by server.")

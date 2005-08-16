@@ -18,6 +18,15 @@ templatePath = os.path.dirname(sys.modules['mint'].__file__)
 
 class MintConfig(ConfigFile):
     defaults = {
+        'companyName'       : 'rpath Inc.',
+        'productName'       : 'rBuilder at rpath.org',
+        'defaultRedirect'   : 'http://rpath.com',
+        'supportContactHTML': '<a href="mailto:custom@rpath.com">'
+                              'custom@rpath.com</a> or join the IRC channel '
+                              '<b>#conary</b> on the '
+                              '<a href="http://www.freenode.net/">FreeNode</a> '
+                              'IRC network',
+        'supportContactTXT' : 'custom@rpath.com, or join the IRC channel #conary on the Freenode IRC network (http://www.freenode.net/)',
         'staticUrl'         : '/conary-static/',
         'authRepoMap'       : [ STRINGDICT, {} ],
         'authDbPath'        : '/srv/authrepo/repos/sqldb',

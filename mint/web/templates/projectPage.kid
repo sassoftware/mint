@@ -19,7 +19,7 @@ from mint import userlevels
     </div>
 
     <head>
-        <title>rpath.org: ${project.getName()}</title>
+        <title>${formatTitle("Project Page: %s"%project.getName())}</title>
     </head>
     <body>
         <td id="content">

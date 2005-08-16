@@ -186,14 +186,14 @@ class MintApp(webhandler.WebHandler):
                     self.userLevel = self.project.getUserLevel(self.auth.userId)
                 except database.ItemNotFound:
                     # XXX just for the testing period
-                    raise Redirect("http://rpath.com/")
+                    raise Redirect(self.cfg.defaultRedirect)
                     # raise Redirect(("http://%s" % siteHost) + self.req.unparsed_uri)
                 else:
                     default = self.projectPage
         elif fullHost == self.cfg.domainName:
             # if hostName is set, require it for access:
             if self.cfg.hostName:
-                raise Redirect("http://rpath.com/")
+                raise Redirect(self.cfg.defaultRedirect)
             else:
                 self.userLevel = -1
                 default = self._frontPage
@@ -371,15 +371,18 @@ class MintApp(webhandler.WebHandler):
             user = self.client.getUser(userId)
             user.setPassword(newpw)
 
-            message = "\n".join(["Your password for username %s at rpath.com has been reset to:" % user.getUsername(),
+            message = "\n".join(["Your password for username %s at %s has been reset to:" % (user.getUsername(), self.cfg.productName),
                                  "",
                                  "    %s" % newpw,
                                  "",
-                                 "Please log in at http://www.rpath.com/ and change",
-                                 "this password as soon as possible."])
+                                 "Please log in at http://%s.%s/ and change" %
+                                 (self.cfg.hostname, self.cfg.domainName),
+                                 "this password as soon as possible."
+                                 ])
 
-            users.sendMail(self.cfg.adminMail, "rpath.com", user.getEmail(),
-                           "rpath.com forgotten password", message)
+            users.sendMail(self.cfg.adminMail, self.cfg.productName, 
+                       user.getEmail(),
+                       "%s forgotten password"%self.cfg.productName, message)
             self._write("forgotPassword", email = user.getEmail())
             return apache.OK
         else:
@@ -902,7 +905,7 @@ class MintApp(webhandler.WebHandler):
                     (release.getName(), release.getTroveName(),
                      release.getTroveVersion().trailingRevision().asString())
                 item['date_822'] = email.Utils.formatdate(release.getChangedTime())
-                item['creator'] = "http://rpath.org/"
+                item['creator'] = "http://%s/"%self.cfg.domainName
                 items.append(item)
         else:
             items = []
