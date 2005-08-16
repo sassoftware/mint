@@ -73,7 +73,7 @@ def post(port, isSecure, repos, cfg, req):
 
         (params, method) = xmlrpclib.loads(req.read())
 
-        if req.path_info.startswith("/conary"):
+        if req.path_info.startswith("/conary") and repos.realRepo:
             wrapper = repos.callWrapper
             params = [protocol, port, method, authToken, params]
         elif req.path_info.startswith("/xmlrpc-private"):
@@ -103,7 +103,7 @@ def post(port, isSecure, repos, cfg, req):
         req.write(resp)
         return apache.OK
     else:
-        if req.path_info.startswith("/conary"):
+        if req.path_info.startswith("/conary") and repos.realRepo:
             webfe = cookie_http.CookieHttpHandler(req, cfg, repos, protocol, port)
             return webfe._methodHandler()
         else:
@@ -133,7 +133,7 @@ def get(port, isSecure, repos, cfg, req):
     cmd = os.path.basename(uri)
     fields = util.FieldStorage(req)
  
-    if cmd == "changeset":
+    if cmd == "changeset" and repos.realRepo:
         authToken = getHttpAuth(req)
         if type(authToken) is int:
             return authToken
@@ -184,7 +184,7 @@ def get(port, isSecure, repos, cfg, req):
 
         return apache.OK
     else:
-        if req.path_info.startswith("/conary"):
+        if req.path_info.startswith("/conary") and repos.realRepo:
             webfe = cookie_http.CookieHttpHandler(req, cfg, repos, protocol, port)
             return webfe._methodHandler()
         else:
@@ -192,6 +192,8 @@ def get(port, isSecure, repos, cfg, req):
             return webfe._handle()
 
 def putFile(port, isSecure, repos, req):
+    if not repos.realRepo:
+        return apache.HTTP_NOT_FOUND
     if not isSecure and repos.forceSecure:
         return apache.HTTP_FORBIDDEN
 
@@ -250,17 +252,24 @@ def subhandler(req):
         else:
             commitAction = None
 
-        repositories[repName] = netserver.NetworkRepositoryServer(
-                                    repositoryDir,
-                                    cfg.tmpPath,
-                                    urlBase, 
-                                    req.hostname,
-                                    repMap,
-                                    commitAction = commitAction,
-                                    cacheChangeSets = True,
-                                    logFile = None
-                                )
-
+        if os.access(repositoryDir, os.F_OK):
+            repositories[repName] = netserver.NetworkRepositoryServer(
+                                        repositoryDir,
+                                        cfg.tmpPath,
+                                        urlBase, 
+                                        req.hostname,
+                                        repMap,
+                                        commitAction = commitAction,
+                                        cacheChangeSets = True,
+                                        logFile = None
+                                    )
+            repositories[repName].realRepo = True
+        else:
+            # make an object that we can assign attributes to
+            # to fake having a real NetworkRepositoryServer
+            repositories[repName] = lambda: False
+            repositories[repName].realRepo = False 
+        
         repositories[repName].forceSecure = False
         repositories[repName].cfg = cfg
    
