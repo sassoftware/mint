@@ -1,7 +1,5 @@
 DATABASE 
 
-* eliminate the Project.getLabel() and [getRepoMap, addLabel, getLabelIds,
-  getLabelById] duplication.
 * a separate database table for namespaces; maybe not needed; maybe we can use Labels table?
 
 * refactor mint -> imagetool-backend, imagetool (product frontend), mint (public frontend)
