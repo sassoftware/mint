@@ -32,20 +32,24 @@ USER INTERFACE
 * [POSTPONED] Highlight search results in descriptions
 * Fix all breadcrumbs
  - capitalization
+* Log out immediately upon email change 
 
 MISSING FEATURES
 
 * [POSTPONED] Bug tracking
 * Upgrade procedure for handling database schema changes
-* Metadata editing for packages
-* Ability to easily email every the holder of every user account
-  (for things like major site changes, privacy notice updates, etc.)
+* Metadata editing for packages (blocking on Conary metadata handling)
 * Each project site should have a sidebar with recently updated packages
   (see http://www.archlinux.org/)
+
+ADMIN INTERFACE
+
 * Server -> User messaging system
  - we need an in-band way for users to ask to join a project (only one time
    to prevent DoS-style issues with hundreds of join requests), and for
    project owners to offer membership.
+* Ability to easily email every the holder of every user account
+  (for things like major site changes, privacy notice updates, etc.)
 
 PRODUCTIZE
 
