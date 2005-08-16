@@ -59,7 +59,7 @@ onload = "javascript:;"
                                 </td>
                                 <td id="user" py:if="not auth.authorized">
                                     <div class="pad">
-                                        <h4>not logged in | <a href="login">forgot password</a></h4>
+                                        <h4>not logged in | <a href="login">Forgot Password</a></h4>
                                         <div>
                                             <input type="text" name="username" size="16"/> <label>username</label><br />
                                             <input type="password" name="password" size="16"/> <label>password</label>

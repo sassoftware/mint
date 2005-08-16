@@ -61,7 +61,7 @@ from mint import userlevels
                                 To add this project in your Conary configuration, add <tt><strong>${project.getLabel()}</strong></tt> 
                                 to the <tt><strong>installLabelPath</strong></tt> line in the <tt><strong>/etc/conaryrc</strong></tt> (or your <tt><strong>~/.conaryrc</strong></tt>) file.</p>
 
-                            <hr/>
+                            <hr py:if="isDeveloper or not memberList" />
                             <p py:if="isDeveloper">
                                 <em class="resign">You are a developer of this project.</em>
                                 <a href="resign">Resign</a>
