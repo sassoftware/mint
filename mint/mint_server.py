@@ -194,6 +194,8 @@ class MintServer(object):
         repos.addUserByMD5(project.getLabel(), username, salt, password)
         repos.addAcl(project.getLabel(), username, None, None, True, False, level == userlevels.OWNER)
 
+        self._notifyUser('Added', self.getUser(userId), projects.Project(self,projectId)) 
+
         return True
 
     @requiresAuth
@@ -203,7 +205,25 @@ class MintServer(object):
         project = projects.Project(self, projectId)
         self.projectUsers.delete(projectId, userId)
         repos = self._getAuthRepo(project)
-        repos.deleteUserByName(project.getLabel(), self.getUser(userId)['username'])
+        user = self.getUser(userId)
+        repos.deleteUserByName(project.getLabel(), user['username'])
+        self._notifyUser('Removed', user, project)
+
+    def _notifyUser(self, action, user, project, userlevel=None):
+        actionText = {'Removed': "You have been removed from the project",
+            'Added': "You have been added to the project",
+            'Changed': "Your current access level is %s" % (userlevel and userlevels.names[userlevel] or 'Unknown')
+        }
+        greeting = "%s," % user['fullName']
+        message = "An owner of %s has modified your account status: "%project.getName()
+        message += actionText[action]
+        message += '.'
+        closing = 'Please contact the project owner(s) with any questions.'
+
+        users.sendMail(self.cfg.adminMail, self.cfg.productName,
+                    user['email'],
+                    "%s user modification" % project.getName(),
+                    '\n\n'.join((greeting, message, closing)))
 
     @requiresAuth
     @private
@@ -234,6 +254,7 @@ class MintServer(object):
             projectId=?""", level, userId, projectId)
 
         self.db.commit()
+        self._notifyUser('Changed', self.getUser(userId), projects.Project(self, projectId), level)
 
     @private
     def getProjectsByUser(self, userId):
