@@ -47,7 +47,7 @@ from mint import userlevels
                     </td>
                     <td id="main">
                         <div class="pad">
-                            <h2>${project.getName()}  <a py:if="isOwner" href="projectDesc">Edit</a></h2>
+                            <h2>${project.getName()}  <a py:if="isOwner" href="editProject">Edit</a></h2>
                             <h3 py:if="project.getProjectUrl()">Project Home Page &#160;</h3>
                             <p py:if="project.getProjectUrl()"><a href="${project.getProjectUrl()}" py:content="project.getProjectUrl()" />
                             </p>

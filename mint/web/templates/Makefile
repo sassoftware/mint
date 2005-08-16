@@ -9,6 +9,7 @@ SUBDIRS = repos
 kid_files = \
 	confirmEmail.kid	\
 	confirm.kid		\
+	editProject.kid		\
 	editRelease.kid		\
 	error.kid		\
 	forgotPassword.kid	\
@@ -22,7 +23,6 @@ kid_files = \
 	newProject.kid		\
 	newRelease.kid		\
 	privacy.kid		\
-	projectDesc.kid		\
 	project.kid		\
 	projectPage.kid		\
 	projects.kid		\

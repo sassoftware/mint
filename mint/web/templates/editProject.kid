@@ -19,7 +19,7 @@
         <td id="main">
             <div class="pad">
                 <h2>Edit Project Properties</h2>
-                <form method="post" action="editProject">
+                <form method="post" action="processEditProject">
                     <table border="0" cellspacing="0" cellpadding="0" class="mainformhorizontal">
                         <tr>
                             <th>Project Home Page</th>

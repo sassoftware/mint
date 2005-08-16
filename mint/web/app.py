@@ -700,14 +700,14 @@ class MintApp(webhandler.WebHandler):
     @projectOnly
     @requiresAuth
     @ownerOnly
-    def projectDesc(self, auth):
-        self._write("projectDesc")
+    def editProject(self, auth):
+        self._write("editProject")
         return apache.OK
 
     @projectOnly
     @strFields(projecturl = '', desc = '')
     @ownerOnly
-    def editProject(self, auth, projecturl, desc):
+    def processEditProject(self, auth, projecturl, desc):
         self.project.editProject(projecturl, desc)
         return self._redirect("/")
 
@@ -888,6 +888,13 @@ class MintApp(webhandler.WebHandler):
     @projectOnly
     @strFields(feed= "releases")
     def rss(self, auth, feed):
+        def writeRss(**values):
+            path = os.path.join(self.cfg.templatePath, "rss20.kid")
+            template = kid.load_template(path)
+            t = template.Template(**values)
+            self.req.content_type = "text/xml"
+            t.write(self.req, encoding = "utf-8", output = "xml")
+            
         if feed == "releases":
             title = "%s releases" % self.project.getName()
             link = "http://%s/releases" % self.project.getFQDN()
@@ -913,7 +920,7 @@ class MintApp(webhandler.WebHandler):
             link = ""
             desc = ""
         
-        self._writeRss(items = items, title = title, link = link, desc = desc)
+        writeRss(items = items, title = title, link = link, desc = desc)
         return apache.OK
 
     def _write(self, template, templatePath = None, **values):
@@ -931,10 +938,3 @@ class MintApp(webhandler.WebHandler):
                               toUrl = self.toUrl,
                               **values)
         t.write(self.req, encoding = "utf-8", output = "xhtml-strict")
-
-    def _writeRss(self, **values):
-        path = os.path.join(self.cfg.templatePath, "rss20.kid")
-        template = kid.load_template(path)
-        t = template.Template(**values)
-        self.req.content_type = "text/xml"
-        t.write(self.req, encoding = "utf-8", output = "xml")
