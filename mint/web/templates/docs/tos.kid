@@ -1,5 +1,9 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
-    <body>
+    <head>
+        <title>Terms of Service - ${cfg.productName}</title>
+        <link rel="stylesheet" type="text/css" href="${cfg.staticUrl}apps/mint/css/basic.css"/>
+    </head>
+    <body id="legal">
         <h2>rpath.org: terms of service</h2>
         <p> Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Maecenas
         augue metus, aliquam sit amet, congue vitae, placerat eget,
