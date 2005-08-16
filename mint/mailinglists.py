@@ -68,9 +68,6 @@ class MailingListClient:
         class listobj: pass
         pcre = "^%s$|^%s-" % (projectName, projectName)
         lists = self._servercall(self.server.list_lists(pcre))
-        import sys
-        print >>sys.stderr, pcre, lists
-        sys.stderr.flush()
         returner = []
         for listname in lists:
             list = listobj()
@@ -103,9 +100,6 @@ class MailingListClient:
                 'member_moderation_notice': "This list has been disabled because the project to which it belongs has been orphaned.  Please visit the project's web page if you wish to adopt this project and take control of its mailing lists."
             }
         for list in lists:
-            import sys
-            print >>sys.stderr, list.name, password, settings
-            sys.stderr.flush()
             if not self._servercall(self.server.get_owner(list.name,password)):
                 self._servercall(self.server.set_list_settings(list.name, password, settings))
                 self.reset_list_password(list.name, password)
@@ -121,9 +115,6 @@ class MailingListClient:
                 'owner': [auth.email]
             }
         for list in lists:
-            import sys
-            print >>sys.stderr, list.name, password, settings
-            sys.stderr.flush()
             self._servercall(self.server.set_list_settings(list.name, password, settings))
             self.reset_list_password(list.name, password)
 
