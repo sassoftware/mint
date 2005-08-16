@@ -49,9 +49,6 @@ MISSING FEATURES
  - we need an in-band way for users to ask to join a project (only one time
    to prevent DoS-style issues with hundreds of join requests), and for
    project owners to offer membership.
-* Email notifications for project ownership actions: 
- - "You have been added/removed as a developer to Foo Project."
- - "Your user level has been changed on project Foo."
 
 PRODUCTIZE
 
