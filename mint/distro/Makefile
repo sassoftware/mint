@@ -13,6 +13,7 @@ python_files = __init__.py\
                iso.py\
                live_cf_image.py\
                live_iso.py\
+	       netboot_image.py\
                pkgid.py\
 	       stub_image.py
 
