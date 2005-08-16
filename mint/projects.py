@@ -36,8 +36,8 @@ class DuplicateName(MintError):
 
 class Project(database.TableObject):
     __slots__ = ('creatorId', 'name',
-                 'desc', 'hostname', 'domainname', 'defaultBranch',
-                 'timeCreated', 'timeModified')
+                 'desc', 'hostname', 'domainname', 'projecturl', 
+                 'defaultBranch', 'timeCreated', 'timeModified')
 
     def getItem(self, id):
         return self.server.getProject(id)
@@ -50,6 +50,9 @@ class Project(database.TableObject):
 
     def getDomainname(self):
         return self.domainname
+
+    def getProjectUrl(self):
+        return self.projecturl
 
     def getHostname(self):
         return self.hostname
@@ -95,8 +98,8 @@ class Project(database.TableObject):
     def delMemberById(self, userId):
         return self.server.delMember(self.id, userId)
 
-    def setDesc(self, desc):
-        return self.server.setProjectDesc(self.id, desc)
+    def editProject(self, projecturl, desc):
+        return self.server.editProject(self.id, projecturl, desc)
 
     def updateUser(self, userId, **kwargs):
         return self.users.update(userId, **kwargs)
@@ -169,14 +172,15 @@ class ProjectsTable(database.KeyedTable):
                     creatorId       INT,
                     name            STR UNIQUE,
                     hostname        STR UNIQUE,
-                    domainname      STR DEFAULT '',
+                    domainname      STR DEFAULT '%s' NOT NULL,
+                    projecturl      STR DEFAULT '' NOT NULL,
                     defaultBranch   STR NOT NULL,
                     desc            STR NOT NULL DEFAULT '',
                     timeCreated     INT,
                     timeModified    INT DEFAULT 0
                 )"""
-    fields = ['creatorId', 'name', 'hostname', 'domainname', 'defaultBranch',
-              'desc', 'timeCreated', 'timeModified']
+    fields = ['creatorId', 'name', 'hostname', 'domainname', 'projecturl', 
+              'defaultBranch', 'desc', 'timeCreated', 'timeModified']
     indexes = {"ProjectsHostnameIdx": "CREATE INDEX ProjectsHostnameIdx ON Projects(hostname)"} 
 
     def __init__(self, db, cfg):
@@ -197,6 +201,7 @@ class ProjectsTable(database.KeyedTable):
             if len(results) > 0:
                 raise DuplicateName()
         return id
+
     def getProjectIdByFQDN(self, fqdn):
         cu = self.db.cursor()
 

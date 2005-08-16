@@ -32,9 +32,6 @@ USER INTERFACE
 * [POSTPONED] Highlight search results in descriptions
 * Fix all breadcrumbs
  - capitalization
-* Rework registration forms to work around mozilla bug #302190
- - Create Account done.  Create Project done.  Release needs work.
-* Add a "project home page" field and edit function (maybe merge into Edit Description)
 
 MISSING FEATURES
 

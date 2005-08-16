@@ -11,7 +11,7 @@
     </div>
 
 <?python
-    for var in ['title', 'hostname', 'optlists', 'blurb']:
+    for var in ['title', 'hostname', 'projecturl', 'optlists', 'blurb']:
         kwargs[var] = kwargs.get(var, '')
 ?>
 
@@ -41,6 +41,14 @@
                             <td>
                                 <input type="text" name="title" value="${kwargs['title']}"/>
                                 <p class="help">The title is a longer, more descriptive name for your project. Eg., <strong>My Custom Linux</strong></p>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <th>Project Home Page</th>
+                            <td>
+                                <input type="text" name="projecturl" value="${kwargs['projecturl']}"/>
+                                <p class="help">The project home page is an externally hosted web page that will be linked on your project's main page.  This can be useful to provide documentation, forums, or other web services not provided by ${cfg.productName}.</p>
                             </td>
                         </tr>
 

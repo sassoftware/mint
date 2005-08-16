@@ -661,10 +661,10 @@ class MintApp(webhandler.WebHandler):
         return not error
 
     @siteOnly
-    @strFields(title = '', hostname = '', blurb = '')
+    @strFields(title = '', hostname = '', projecturl = '', blurb = '')
     @listFields(int, optlists = [])
     @requiresAuth
-    def createProject(self, auth, title, hostname, blurb, optlists):
+    def createProject(self, auth, title, hostname, projecturl, blurb, optlists):
         errors = []
         if not title:
             error.append("You must supply a project title")
@@ -674,7 +674,7 @@ class MintApp(webhandler.WebHandler):
             try:
                 #attempt to create the project
                 projectId = self.client.newProject(title, hostname, 
-                                self.cfg.domainName, blurb)
+                                self.cfg.domainName, projecturl, blurb)
                 #Now create the mailing lists
                 if self.cfg.EnableMailLists and not errors:
                     if not self._createProjectLists(auth=auth, 
@@ -693,7 +693,7 @@ class MintApp(webhandler.WebHandler):
             return self._redirect("http://%s.%s/" % (hostname, 
                                                     self.cfg.domainName) )
         else:
-            kwargs = {'title': title, 'hostname': hostname, 'blurb': blurb, 'optlists': optlists}
+            kwargs = {'title': title, 'hostname': hostname, 'projecturl': projecturl, 'blurb': blurb, 'optlists': optlists}
             self._write("newProject", errors=errors, kwargs=kwargs)
             return apache.OK
 
@@ -705,10 +705,10 @@ class MintApp(webhandler.WebHandler):
         return apache.OK
 
     @projectOnly
-    @strFields(desc = '')
+    @strFields(projecturl = '', desc = '')
     @ownerOnly
-    def editProjectDesc(self, auth, desc):
-        self.project.setDesc(desc)
+    def editProject(self, auth, projecturl, desc):
+        self.project.editProject(projecturl, desc)
         return self._redirect("/")
 
     @projectOnly

@@ -101,7 +101,7 @@ class MintServer(object):
     # project methods
     @requiresAuth
     @private
-    def newProject(self, projectName, hostname, domainname, desc):
+    def newProject(self, projectName, hostname, domainname, projecturl, desc):
         if validHost.match(hostname) == None:
             raise projects.InvalidHostname
         if hostname in reservedHosts:
@@ -114,7 +114,8 @@ class MintServer(object):
                                       desc = desc,
                                       hostname = hostname,
                                       domainname = domainname,
-                                      defaultBranch = "rpl:devel",
+                                      projecturl = projecturl,
+                                      defaultBranch = self.cfg.defaultBranch,
                                       timeModified = time.time(),
                                       timeCreated = time.time())
         self.projectUsers.new(userId = self.auth.userId,
@@ -227,8 +228,8 @@ class MintServer(object):
 
     @requiresAuth
     @private
-    def setProjectDesc(self, projectId, desc):
-        return self.projects.update(projectId, desc = desc)
+    def editProject(self, projectId, projecturl, desc):
+        return self.projects.update(projectId, projecturl=projecturl, desc = desc)
 
     # user methods
     @private

@@ -23,7 +23,7 @@ class MintClient:
         """
         self.server = ServerProxy(server)
 
-    def newProject(self, name, hostname, domainname, desc = ""):
+    def newProject(self, name, hostname, domainname, projecturl = "", desc = ""):
         """
         Create a new project.
         @param name: name of new project
@@ -31,7 +31,7 @@ class MintClient:
         @param desc: description of new project
         @return: primary key of newly created project.
         """
-        return self.server.newProject(name, hostname, domainname, desc)
+        return self.server.newProject(name, hostname, domainname, projecturl, desc)
 
     def checkAuth(self):
         """
