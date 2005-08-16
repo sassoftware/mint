@@ -115,7 +115,6 @@ class MintServer(object):
                                       hostname = hostname,
                                       domainname = domainname,
                                       projecturl = projecturl,
-                                      defaultBranch = self.cfg.defaultBranch,
                                       timeModified = time.time(),
                                       timeCreated = time.time())
         self.projectUsers.new(userId = self.auth.userId,
@@ -123,7 +122,7 @@ class MintServer(object):
                               level = userlevels.OWNER)
         
         project = projects.Project(self, projectId)
-        project.addLabel(fqdn + "@rpl:devel",
+        project.addLabel(fqdn + "@%s"%self.cfg.defaultBranch,
             "http://%s/conary/" % fqdn,
             self.authToken[0], self.authToken[1])
 
@@ -402,9 +401,14 @@ class MintServer(object):
     #
     # LABEL STUFF
     #
+    @private
+    def getDefaultProjectLabel(self, projectId):
+        return self.labels.getDefaultProjectLabel(projectId)
+
     @requiresAuth
     @private
     def getLabelsForProject(self, projectId):
+        """Returns a mapping of labels to labelIds and a repository map dictionary for the current user"""
         return self.labels.getLabelsForProject(projectId)
 
     @requiresAuth

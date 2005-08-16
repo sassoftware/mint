@@ -37,7 +37,7 @@ class DuplicateName(MintError):
 class Project(database.TableObject):
     __slots__ = ('creatorId', 'name',
                  'desc', 'hostname', 'domainname', 'projecturl', 
-                 'defaultBranch', 'timeCreated', 'timeModified')
+                 'timeCreated', 'timeModified')
 
     def getItem(self, id):
         return self.server.getProject(id)
@@ -61,7 +61,7 @@ class Project(database.TableObject):
         return '.'.join((self.hostname, self.domainname))
 
     def getLabel(self):
-        return self.getFQDN() + "@" + self.defaultBranch
+        return self.server.getDefaultProjectLabel(self.id)
 
     def getDesc(self):
         return self.desc
@@ -174,13 +174,12 @@ class ProjectsTable(database.KeyedTable):
                     hostname        STR UNIQUE,
                     domainname      STR DEFAULT '%s' NOT NULL,
                     projecturl      STR DEFAULT '' NOT NULL,
-                    defaultBranch   STR NOT NULL,
                     desc            STR NOT NULL DEFAULT '',
                     timeCreated     INT,
                     timeModified    INT DEFAULT 0
                 )"""
     fields = ['creatorId', 'name', 'hostname', 'domainname', 'projecturl', 
-              'defaultBranch', 'desc', 'timeCreated', 'timeModified']
+              'desc', 'timeCreated', 'timeModified']
     indexes = {"ProjectsHostnameIdx": "CREATE INDEX ProjectsHostnameIdx ON Projects(hostname)"} 
 
     def __init__(self, db, cfg):
@@ -303,6 +302,17 @@ class LabelsTable(database.KeyedTable):
                 )"""
 
     fields = ['labelId', 'projectId', 'label', 'url', 'username', 'password']
+
+    def getDefaultProjectLabel(self, projectId):
+        cu = self.db.cursor()
+
+        cu.execute ("""SELECT label 
+                      FROM Labels 
+                      WHERE projectId=?
+                      ORDER BY projectId LIMIT 1""", projectId)
+
+        label = cu.fetchone()
+        return label[0]
 
     def getLabelsForProject(self, projectId):
         cu = self.db.cursor()
