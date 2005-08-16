@@ -7,7 +7,7 @@
     All Rights Reserved
 -->
     <head>
-        <title>${formatTitle('Please Confirm Your Account')}</title>
+        <title>${formatTitle('Please Confirm')}</title>
     </head>
     <body>
         <td id="main" class="spanall">

@@ -11,7 +11,7 @@
     </div>
 
     <head>
-        <title>${formatTitle('Edit Account Information')}</title>
+        <title>${formatTitle('Edit Account Information: %s'%auth.fullName)}</title>
     </head>
     <body>
         <td id="main" class="spanleft">

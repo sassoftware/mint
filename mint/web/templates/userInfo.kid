@@ -20,7 +20,7 @@
     </div>
 
     <head>
-        <title>${formatTitle('User Information')}</title>
+        <title>${formatTitle('User Information: %s'%user.getFullName())}</title>
     </head>
 
     <body>
