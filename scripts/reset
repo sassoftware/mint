@@ -20,3 +20,10 @@ echo mintpass | $CONARY_PATH/conary/server/server.py --add-user mintauth $AUTH_R
 
 chown -R $USERNAME.apache $MINT_DATA/data/ $MINT_DATA/repos/ $MINT_DATA/tmp/ $AUTH_REPO
 chmod -R ug+rw            $MINT_DATA/data/ $MINT_DATA/repos/ $MINT_DATA/tmp/ $AUTH_REPO
+
+#mailman lists
+if [ -f /var/mailman/bin/list_lists ]; then
+    for list in `/var/mailman/bin/list_lists | grep -viE 'found|mailman' | awk '{print $1}'`; do
+        /var/mailman/bin/rmlist -a $list > /dev/null
+    done
+fi
