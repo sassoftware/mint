@@ -26,4 +26,7 @@ if [ -f /var/mailman/bin/list_lists ]; then
     for list in `/var/mailman/bin/list_lists | grep -viE 'found|mailman' | awk '{print $1}'`; do
         /var/mailman/bin/rmlist -a $list > /dev/null
     done
+    #fix the permissions on the aliases files
+    chown mailman:mailman /var/mailman/data/aliases*
+    chmod 660 /var/mailman/data/aliases*
 fi
