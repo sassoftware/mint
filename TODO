@@ -20,13 +20,13 @@ JOB SERVER
 
 USER INTERFACE
 
-* Implement a few static-text pages: about rpath, contact into, products
+* Implement a few static-text pages: about rPath, contact into, products
 * [SORT OF DONE] Fix 'most active' and 'most popular' project links
  - We need to parse the Commits table and downloads counter and distill some real
    statistical information to use for these links.
-* Fix 'more about rpath' link
+* Fix 'more about rPath' link
 * Fix up news handling
- - create a b2evolution style to match rpath.com
+ - create a b2evolution style to match rPath.com
 * [POSTPONED] Highlight search results in descriptions
 * Fix all breadcrumbs
  - capitalization

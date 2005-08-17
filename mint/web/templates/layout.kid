@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <?python
 #
-# Copyright 2005 rpath, Inc.
+# Copyright 2005 rPath, Inc.
 # All Rights Reserved
 #
 from mint import userlevels
@@ -14,8 +14,8 @@ onload = "javascript:;"
     <div py:def="breadcrumb()" class="pad" py:strip="True">
     </div>
 
-    <div py:def="rpathProductsMenu" id="browse" class="palette products">
-        <h3>rpath products</h3>
+    <div py:def="rPathProductsMenu" id="browse" class="palette products">
+        <h3>rPath products</h3>
         <ul>
             <li><a href="#">Product 1</a></li>
             <li><a href="#">Product 2</a></li>
@@ -54,7 +54,7 @@ onload = "javascript:;"
                             <tr>
                                 <td id="logo">
                                     <a href="http://${siteHost}/">
-                                        <img src="${cfg.staticUrl}/apps/mint/images/logo.gif" alt="rpath logo" width="216" height="72" />
+                                        <img src="${cfg.staticUrl}/apps/mint/images/logo.gif" alt="rPath logo" width="216" height="72" />
                                     </a>
                                 </td>
                                 <td id="user" py:if="not auth.authorized">
@@ -79,8 +79,8 @@ onload = "javascript:;"
                                 <td id="topnav">
                                     <div class="pad">
                                         <a href="http://${siteHost}/">Home</a> | 
-                                        <a href="#">About rpath</a> |
-                                        <a href="#">Contact rpath</a>
+                                        <a href="#">About rPath</a> |
+                                        <a href="#">Contact rPath</a>
 
                                     </div>
                                 </td>
@@ -125,7 +125,7 @@ onload = "javascript:;"
                         ${legal('http://%s/legal?page=tos' % siteHost, 'Terms of Service')} ${legal('http://%s/legal?page=privacy' % siteHost, 'Privacy Policy')}
                     </span>
 
-                    Copyright &#169; 2005 rpath, Inc.
+                    Copyright &#169; 2005 rPath, Inc.
                 </div>
             </div>
         </div>

@@ -81,7 +81,7 @@
         drive or in memory on your computer.</p>
 
         <p>This privacy policy applies only to The Service, and not to any
-        other services provided by rpath, Inc.  Links on this site to URLs
+        other services provided by rPath, Inc.  Links on this site to URLs
         not part of The Service are not covered by this privacy policy.</p>
 
         <p>In order to enhance security and guard the privacy of your

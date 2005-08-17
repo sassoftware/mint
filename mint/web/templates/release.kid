@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <?python
 #
-# Copyright (C) 2005 rpath, Inc.
+# Copyright (C) 2005 rPath, Inc.
 # All Rights Reserved
 #
 from mint import jobstatus

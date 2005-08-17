@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2004-2005 rpath, Inc.
+# Copyright (c) 2004-2005 rPath, Inc.
 #
 # All Rights Reserved
 #
@@ -23,7 +23,7 @@ from imagegen import ImageGenerator
 class IsoConfig(ConfigFile):
     defaults = {
         'productPath':       'rpath',
-        'productName':       'rpath Linux',
+        'productName':       'rPath Linux',
         'productPrefix':     'rpl',
         'templatePath':      None,
         'nfsPath':           None,

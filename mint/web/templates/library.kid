@@ -7,7 +7,7 @@ searchTypes = ['Projects', 'Packages']
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#">
 <!--
-    Copyright 2005 rpath, Inc.
+    Copyright 2005 rPath, Inc.
     All Rights Reserved
 -->
     <div py:def="formatTitle(str)" py:strip="True" py:content="'%s - %s'%(str, cfg.productName)"/>

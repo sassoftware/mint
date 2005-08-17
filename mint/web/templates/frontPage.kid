@@ -9,7 +9,7 @@ from mint import searcher
       xmlns:html="http://www.w3.org/1999/xhtml"
       py:extends="'library.kid', 'layout.kid', 'project.kid'">
 <!--
-    Copyright 2005 rpath, Inc.
+    Copyright 2005 rPath, Inc.
     All Rights Reserved
 -->
     <head>
@@ -23,15 +23,15 @@ from mint import searcher
                         <div class="pad">
                             ${browseMenu()}
                             ${searchMenu()}
-                            ${rpathProductsMenu()}
+                            ${rPathProductsMenu()}
                         </div>
                     </td>
                     <td id="main">
                         <div class="pad">
-                            <h3>Welcome to rpath</h3>
-                            <p>Welcome to rpath.org &#8212; the site for collaborative open source development.</p>
+                            <h3>Welcome to rPath</h3>
+                            <p>Welcome to rPath.org &#8212; the site for collaborative open source development.</p>
 <p>Developers can create and host projects and operating systems here, while users can browse and download projects and operating system images for installation.</p>
-                            <p><a href="#">More about rpath</a> </p>
+                            <p><a href="#">More about rPath</a> </p>
 
                             <div py:strip="True" py:if="news">
                                 <h3><a href="${newsLink}">Site News</a></h3>
