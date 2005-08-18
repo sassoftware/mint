@@ -245,10 +245,13 @@ def subhandler(req):
         # set up the commitAction
         # FIXME: don't hardcode @rpl:devel
         buildLabel = req.hostname + "@rpl:devel"
+        projectName = req.hostname.split(".")[0]
         repMapStr = buildLabel + " http://" + req.hostname + "/conary/"
         repMap = {buildLabel: "http://" + req.hostname + "/conary/"}
         if cfg.commitAction:
-            commitAction = cfg.commitAction % {'repMap': repMapStr, 'buildLabel': buildLabel}
+            commitAction = cfg.commitAction % {'repMap': repMapStr,
+                                               'buildLabel': buildLabel,
+                                               'projectName': projectName}
         else:
             commitAction = None
 
