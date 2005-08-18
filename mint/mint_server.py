@@ -32,8 +32,6 @@ allTroveNames = TroveNamesCache()
 
 def requiresAdmin(func):
     def wrapper(self, *args):
-        from lib import epdb
-        epdb.st()
         if self.authToken == [self.cfg.authUser, self.cfg.authPass]:
             return func(self, *args)
         else:
