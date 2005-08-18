@@ -11,7 +11,7 @@
     All Rights Reserved
 -->
     <div py:def="breadcrumb()" py:strip="True">
-        <a href="#">browse users</a>
+        <a href="#">Browse Users</a>
     </div>
 
     <head>

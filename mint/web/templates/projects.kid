@@ -11,7 +11,7 @@ from mint import projectlisting
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'library.kid', 'layout.kid'">
     <div py:def="breadcrumb()" py:strip="True">
-        <a href="#">browse projects</a>
+        <a href="#">Browse Projects</a>
     </div>
 
     <head>

@@ -7,7 +7,7 @@
     All Rights Reserved
 -->
     <div py:def="breadcrumb()" py:strip="True">
-        <a href="#">edit account information</a>
+        <a href="#">Edit Account Information</a>
     </div>
 
     <head>

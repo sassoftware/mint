@@ -20,7 +20,7 @@
             columns = ('Package Name', 'Version', 'Project')
     ?>
     <div py:def="breadcrumb()" py:strip="True">
-        <a href="#">search results</a>
+        <a href="#">Search Results</a>
     </div>
 
     <head>

@@ -10,7 +10,7 @@ title = "Create New Release"
       py:extends="'library.kid', 'layout.kid'">
     <div py:def="breadcrumb()" py:strip="True">
         <a href="http://${project.getFQDN()}/">${project.getName()}</a>
-        <a href="#">create a release</a>
+        <a href="#">Create a Release</a>
     </div>
 
     <head>
