@@ -149,8 +149,6 @@ class ControlFile:
                             # don't even acknowledge this trove
                             continue
                         else:
-                            from lib import epdb
-                            epdb.set_trace()
                             # remove mention of other secondary architectures
                             # they are only important for cooking the final trove
                             isClasses.members = {
@@ -323,9 +321,6 @@ class ControlFile:
             except repository.TroveNotFound:
                 notfound[troveName] = True
                 continue
-            if isinstance(flavor, str):
-                from lib import epdb
-                epdb.set_trace()
             sourceId = SourceId(troveName, sourceVersion, flavor) 
             self.setDesiredTroveSource(origTroveName, versionStr, flavor,
                                                            sourceId) 
