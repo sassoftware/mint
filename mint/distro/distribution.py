@@ -442,6 +442,7 @@ class Distribution:
       <packagereq type="mandatory">ed</packagereq>
       <packagereq type="mandatory">file</packagereq>
       <packagereq type="mandatory">filesystem</packagereq>
+      <packagereq type="mandatory">findutils</packagereq>
       <packagereq type="mandatory">glibc</packagereq>
       <packagereq type="default" basearchonly="true">grub</packagereq>
       <packagereq type="mandatory">hdparm</packagereq>
