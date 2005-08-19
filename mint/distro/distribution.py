@@ -436,6 +436,7 @@ class Distribution:
       <packagereq type="mandatory">cpio</packagereq>
       <packagereq type="mandatory">cracklib</packagereq>
       <packagereq type="mandatory">conary</packagereq>
+      <packagereq type="mandatory">diffutils</packagereq>
       <packagereq type="mandatory">dhclient</packagereq>
       <packagereq type="mandatory">distro-release</packagereq>
       <packagereq type="mandatory">e2fsprogs</packagereq>
