@@ -15,7 +15,7 @@ class ProjectTest(rephelp.RepositoryHelper):
         projectId = client.newProject("Foo", "foo", "rpath.org")
 
         project = client.getProject(projectId)
-        project.setDesc("Description")
+        project.editProject("http://example.com/", "Description")
 
         project = client.getProject(projectId)
         assert(project.getFQDN() == "foo.rpath.org")
@@ -23,6 +23,7 @@ class ProjectTest(rephelp.RepositoryHelper):
         assert(project.getDomainname() == "rpath.org")
         assert(project.getName() == "Foo")
         assert(project.getDesc() == "Description")
+        assert(project.getProjectUrl() == "http://example.com/")
         assert(project.getMembers() ==\
             [[2, 'testuser', userlevels.OWNER]])
     
