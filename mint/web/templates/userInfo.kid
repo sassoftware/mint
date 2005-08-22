@@ -9,10 +9,11 @@
 -->
     <?python
         ownsProjects = False
-        for project, level in projectList:
-            if level == userlevels.OWNER:
-                ownsProjects = True
-                break
+        if projectList:
+            for project, level in projectList:
+                if level == userlevels.OWNER:
+                    ownsProjects = True
+                    break
     ?>
 
     <div py:def="breadcrumb()" py:strip="True">
@@ -27,7 +28,7 @@
         <td id="left" class="side">
             <div class="pad">
                 ${browseMenu()}
-            ${searchMenu()}
+                ${searchMenu()}
             </div>
         </td>
 
