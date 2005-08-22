@@ -1,3 +1,8 @@
+Changes in 0.3.9:
+
+* Fixed a bug in userInfo template which would cause a traceback if
+  the viewing user was not a member of any projects or was not logged in.
+
 Changes in 0.3.8:
 
 * Email notifications for project membership changes.
