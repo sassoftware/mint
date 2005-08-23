@@ -59,6 +59,11 @@ class MailingListClient:
         """
         self.server = xmlrpclib.ServerProxy(server)
 
+    def list_all_lists(self):
+        lists = self._servercall(self.server.list_lists())
+        lists.remove('mailman')
+        return lists
+
     def list_lists(self, projectName):
         """
         Lists the mailing lists matching L{projectName} on the mailing list
