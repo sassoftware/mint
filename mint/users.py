@@ -138,18 +138,20 @@ class UsersTable(database.KeyedTable):
             confirmDomain = "%s.%s" % (self.cfg.hostName, self.cfg.domainName)
         else:
             confirmDomain = self.cfg.domainName
-        message = "\n".join(["Thank you for updating your email address with the ",
+        message = "\n".join(["Your account FIXME on %s must have its new email address confirmed.",
                              "%s."%self.cfg.productName,
                              "",
                              "Please follow the link below to confirm your new address",
                              "",
                              "http://%s/confirm?id=%s" % (confirmDomain, confirm),
                              "",
+                             "Note that your account cannot be used until your email address has been confirmed.",
+                             "",
                              "Contact %s"%self.cfg.supportContactTXT,
-                             "if you need assistence."])
+                             "if you need assistance."])
         try:
             socket.gethostbyname(email[find(email, '@')+1:])
-            sendMail(self.cfg.adminMail, self.cfg.productName, email, "%s registration"%self.cfg.productName, message)
+            sendMail(self.cfg.adminMail, self.cfg.productName, email, "Your %s account's email address must be confirmed"%self.cfg.productName, message)
         except smtplib.SMTPRecipientsRefused:
             raise MailError("Email could not be sent: Recipient refused by server.")
         except socket.gaierror:
@@ -195,7 +197,7 @@ class UsersTable(database.KeyedTable):
                                  "http://%s/confirm?id=%s" % (confirmDomain, confirm),
                                  "",
                                  "Contact %s"%self.cfg.supportContactTXT,
-                                 "if you need assistence."])
+                                 "if you need assistance."])
             try:
                 socket.gethostbyname(email[find(email, '@')+1:])
                 sendMail(self.cfg.adminMail, self.cfg.productName, email, "%s registration"%self.cfg.productName, message)
