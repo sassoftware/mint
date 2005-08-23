@@ -174,6 +174,7 @@ class MintApp(webhandler.WebHandler):
         self.siteHost = siteHost
         
         self.userLevel = -1
+        default = self._frontPage
         if len(dots) == 3:
             if hostname == self.cfg.hostName:
                 default = self._frontPage

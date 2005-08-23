@@ -1,4 +1,7 @@
 /* COLUMN STYLES */
+.arrows {
+        text-transform: lowercase;
+}
 .plain {
 	font-size:0.6967em;
 }
@@ -64,7 +67,7 @@
         background-color: white;
 }
 .palette a {
-    text-transform: lowercase;
+        text-transform: lowercase;
 }
 
 #browse li {
