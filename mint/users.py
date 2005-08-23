@@ -132,14 +132,15 @@ class UsersTable(database.KeyedTable):
         def confirmString():
             hash = sha1helper.sha1String(str(random.random()) + str(time.time()))
             return sha1helper.sha1ToString(hash)
+        
+        user = self.get(userId)
 
         confirm = confirmString()
         if self.cfg.hostName:
             confirmDomain = "%s.%s" % (self.cfg.hostName, self.cfg.domainName)
         else:
             confirmDomain = self.cfg.domainName
-        message = "\n".join(["Your account FIXME on %s must have its new email address confirmed.",
-                             "%s."%self.cfg.productName,
+        message = "\n".join(["Your account %s on %s must have its new email address confirmed." % (user['username'], self.cfg.productName),
                              "",
                              "Please follow the link below to confirm your new address",
                              "",
@@ -151,7 +152,8 @@ class UsersTable(database.KeyedTable):
                              "if you need assistance."])
         try:
             socket.gethostbyname(email[find(email, '@')+1:])
-            sendMail(self.cfg.adminMail, self.cfg.productName, email, "Your %s account's email address must be confirmed"%self.cfg.productName, message)
+            sendMail(self.cfg.adminMail, self.cfg.productName, email,
+                "Your %s account's email address must be confirmed" % self.cfg.productName, message)
         except smtplib.SMTPRecipientsRefused:
             raise MailError("Email could not be sent: Recipient refused by server.")
         except socket.gaierror:
@@ -200,7 +202,8 @@ class UsersTable(database.KeyedTable):
                                  "if you need assistance."])
             try:
                 socket.gethostbyname(email[find(email, '@')+1:])
-                sendMail(self.cfg.adminMail, self.cfg.productName, email, "%s registration"%self.cfg.productName, message)
+                sendMail(self.cfg.adminMail, self.cfg.productName, email,
+                    "%s registration" % self.cfg.productName, message)
             except smtplib.SMTPRecipientsRefused:
                 authRepo.deleteUserByName(repoLabel, username)
                 raise MailError("Email could not be sent: Recipient refused by server.")
@@ -234,8 +237,18 @@ class UsersTable(database.KeyedTable):
             raise database.ItemNotFound("UserId: %d does not exist!"% userId)
         username = r[0][0]
 
-        cu.execute("SELECT max(flagged) FROM (select A.projectId, COUNT(B.userId)*not(COUNT(C.userId)) AS flagged FROM ProjectUsers AS A LEFT JOIN ProjectUsers AS B ON A.projectId=B.projectId AND B.level=1 LEFT JOIN ProjectUsers AS C ON C.projectId=A.projectId AND C.level=0 AND C.userId<>A.userId WHERE A.userId=? GROUP BY A.projectId)", userId)
-        r=cu.fetchall()
+        # Find all projects of which userId is an owner, has no other owners, and/or
+        # has developers.
+        cu.execute("""SELECT MAX(flagged)
+                        FROM (SELECT A.projectId,
+                              COUNT(B.userId)*not(COUNT(C.userId)) AS flagged 
+                                FROM ProjectUsers AS A 
+                                    LEFT JOIN ProjectUsers AS B ON A.projectId=B.projectId AND B.level=1 
+                                    LEFT JOIN ProjectUsers AS C ON C.projectId=A.projectId AND 
+                                                                   C.level = 0 AND 
+                                                                   C.userId < >A.userId 
+                                        WHERE A.userId=? GROUP BY A.projectId)""", userId)
+        r = cu.fetchall()
         if len(r):
             raise LastOwner
 
@@ -253,8 +266,7 @@ class UsersTable(database.KeyedTable):
         cu.execute("SELECT timeRequested FROM Confirmations WHERE userId=?", userId)
         results = cu.fetchall()
         if len(results) == 1:
-            if ( time.time() - results[0][0]) > 172800:
-                return True
+            return True
         return False
 
     def confirm(self, confirm):
