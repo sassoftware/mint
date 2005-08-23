@@ -242,7 +242,7 @@ class MintApp(webhandler.WebHandler):
             method = self._getHandler(self.cmd, auth)
         except Redirect, e:
             return self._redirect(e.location)
-            
+           
         d = dict(self.fields)
         d['auth'] = self.auth
         try:
@@ -264,6 +264,8 @@ class MintApp(webhandler.WebHandler):
         self.req.err_headers_out.add("Set-Cookie", str(cookie))
 
     def _clearAuth(self):
+        self.auth = users.Authorization()
+        self.authToken = ('anonymous', 'anonymous')
         for domain in self.cfg.cookieDomain:
             cookie = Cookie.Cookie('authToken', '', domain = "." + domain,
                                                     expires = time.time() - 300,
@@ -624,6 +626,10 @@ class MintApp(webhandler.WebHandler):
         if email != auth.email:
             self.user.validateNewEmail(email)
             self.user.setEmail(email)
+            self._clearAuth()
+            self._write("register_reconf", email = email)
+            return apache.OK
+
         if displayEmail != auth.displayEmail:
             self.user.setDisplayEmail(displayEmail)
         if blurb != auth.blurb:
@@ -643,7 +649,7 @@ class MintApp(webhandler.WebHandler):
                 return self._redirect("logout")
 
         return self._redirect("/")
-
+        
     @siteOnly
     @requiresAuth
     def newProject(self, auth):

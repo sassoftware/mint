@@ -28,6 +28,7 @@ kid_files = \
 	projects.kid		\
 	register_active.kid	\
 	register_conf.kid	\
+	register_reconf.kid	\
 	register.kid		\
 	release.kid		\
 	releases.kid		\
