@@ -291,8 +291,14 @@ class MintApp(webhandler.WebHandler):
         return apache.OK
 
     @siteOnly
-    @strFields(username = '', email = '', password = '', password2 = '', fullName = '', displayEmail = '', blurb = '', tos='', privacy='')
-    def processRegister(self, auth, username, fullName, email, password, password2, displayEmail, blurb, tos, privacy):
+    @strFields(username = '', email = '',
+               password = '', password2 = '',
+               fullName = '', displayEmail = '',
+               blurb = '', tos='', privacy='')
+    def processRegister(self, auth, username, 
+                        fullName, email, password,
+                        password2, displayEmail,
+                        blurb, tos, privacy):
         errors = []
         if not username:
             errors.append("You must supply a username.")
@@ -321,7 +327,13 @@ class MintApp(webhandler.WebHandler):
         if not errors:
             self._write("register_conf", email = email)
         else:
-            kwargs = {'username': username, 'email': email, 'fullName': fullName, 'displayEmail': displayEmail, 'blurb': blurb, 'tos': tos, 'privacy': privacy}
+            kwargs = {'username': username,
+                      'email': email,
+                      'fullName': fullName,
+                      'displayEmail': displayEmail,
+                      'blurb': blurb,
+                      'tos': tos,
+                      'privacy': privacy}
             self._write("register", errors=errors, kwargs = kwargs)
         return apache.OK
 
