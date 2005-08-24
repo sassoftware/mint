@@ -191,7 +191,7 @@ class UsersTable(database.KeyedTable):
             confirmDomain = self.cfg.domainName
             
         if not active:
-            message = "\n".join(["Thank you for registering for %s"%self.cfg.productName,
+            message = "\n".join(["Thank you for your interest in %s"%self.cfg.productName,
                                  "",
                                  "Please follow the link below to confirm your registration",
                                  "for username %s:" % username,
@@ -203,7 +203,7 @@ class UsersTable(database.KeyedTable):
             try:
                 socket.gethostbyname(email[find(email, '@')+1:])
                 sendMail(self.cfg.adminMail, self.cfg.productName, email,
-                    "%s registration" % self.cfg.productName, message)
+                    "Your new %s account must be confirmed" % self.cfg.productName, message)
             except smtplib.SMTPRecipientsRefused:
                 authRepo.deleteUserByName(repoLabel, username)
                 raise MailError("Email could not be sent: Recipient refused by server.")
