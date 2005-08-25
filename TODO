@@ -1,7 +1,6 @@
 DATABASE 
 
 * a separate database table for namespaces; maybe not needed; maybe we can use Labels table?
-
 * refactor mint -> imagetool-backend, imagetool (product frontend), mint (public frontend)
 
 TEST SUITE
@@ -15,7 +14,7 @@ TEST SUITE
 JOB SERVER
 
 * improve job-server
-    * more robust (handle server restarts, etc0
+    * more robust (handle server restarts, etc)
 * [DONE needs beta testing] cron jobs for mail list handling
 
 USER INTERFACE
