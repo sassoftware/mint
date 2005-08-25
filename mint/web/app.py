@@ -845,26 +845,26 @@ class MintApp(webhandler.WebHandler):
     @intFields(limit = 10, offset = 0, modified = 0)
     def search(self, auth, type, search, modified, limit, offset):
         if type == "Projects":
-            return self.projectSearch(search, modified, limit, offset)
+            return self._projectSearch(search, modified, limit, offset)
         # XXX disabled
-        # elif type == "Users":
-        #    return self.userSearch(search, limit, offset)
+        elif type == "Users" and auth.admin:
+            return self._userSearch(auth, search, limit, offset)
         elif type == "Packages":
-            return self.packageSearch(search, limit, offset)
+            return self._packageSearch(search, limit, offset)
         else:
             self._write("error", shortError = "Invalid Search Type",
                 error = "Invalid search type specified.")
             return apache.OK
 
     # XXX disabled
-    # def userSearch(self, terms, limit, offset):
-    #     results, count = self.client.getUserSearchResults(terms, limit, offset)
-    #     self._write("searchResults", searchType = "Users", terms = terms, results = results,
-    #                                  count = count, limit = limit, offset = offset,
-    #                                  modified = 0)
-    #     return apache.OK
+    def _userSearch(self, auth, terms, limit, offset):
+        results, count = self.client.getUserSearchResults(terms, limit, offset)
+        self._write("searchResults", searchType = "Users", terms = terms, results = results,
+                                     count = count, limit = limit, offset = offset,
+                                     modified = 0)
+        return apache.OK
 
-    def packageSearch(self, terms, limit, offset):
+    def _packageSearch(self, terms, limit, offset):
         results, count = self.client.getPackageSearchResults(terms, limit, offset)
         results = [(x[0], x[1], self.client.getProject(x[2])) for x in results]
         self._write("searchResults", searchType = "Packages", terms = terms, results = results,
@@ -872,7 +872,7 @@ class MintApp(webhandler.WebHandler):
                                      modified = 0)
         return apache.OK
     
-    def projectSearch(self, terms, modified, limit, offset):
+    def _projectSearch(self, terms, modified, limit, offset):
         results, count = self.client.getProjectSearchResults(terms, modified, limit, offset)
         self._write("searchResults", searchType = "Projects", terms = terms, results = results,
                                      count = count, limit = limit, offset = offset,
