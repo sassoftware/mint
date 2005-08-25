@@ -15,7 +15,6 @@ JOB SERVER
 
 * improve job-server
     * more robust (handle server restarts, etc)
-* [DONE needs beta testing] cron jobs for mail list handling
 
 USER INTERFACE
 
@@ -23,7 +22,6 @@ USER INTERFACE
  - We need to parse the Commits table and downloads counter and distill some real
    statistical information to use for these links.
 * Fix up news handling
- - create a b2evolution style to match rPath.com
 
 MISSING FEATURES
 
