@@ -80,7 +80,7 @@ from mint import userlevels
                     </tr>
                     <tr><td py:if="not users[userlevels.OWNER]">No owners.</td></tr>
                 </table>
-                <p class="help" py:if="isOwner and lastOwner">
+                <p class="help" py:if="isOwner and lastOwner and not auth.admin">
                     You are the only owner of a project, but the project still has developers.
                     A project cannot have developers with no owner. To remove yourself from this
                     project, promote a developer to Owner status, or remove all developers.
