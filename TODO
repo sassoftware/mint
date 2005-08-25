@@ -19,21 +19,15 @@ JOB SERVER
 
 USER INTERFACE
 
-* Implement a few static-text pages: about rPath, contact into, products
 * [SORT OF DONE] Fix 'most active' and 'most popular' project links
  - We need to parse the Commits table and downloads counter and distill some real
    statistical information to use for these links.
-* Fix 'more about rPath' link
 * Fix up news handling
  - create a b2evolution style to match rPath.com
-* [POSTPONED] Highlight search results in descriptions
-* Fix all breadcrumbs
-* Log out immediately upon email change 
 
 MISSING FEATURES
 
 * [POSTPONED] Bug tracking
-* Upgrade procedure for handling database schema changes
 * Metadata editing for packages (blocking on Conary metadata handling)
 * Each project site should have a sidebar with recently updated packages
   (see http://www.archlinux.org/)
@@ -44,11 +38,4 @@ ADMIN INTERFACE
  - we need an in-band way for users to ask to join a project (only one time
    to prevent DoS-style issues with hundreds of join requests), and for
    project owners to offer membership.
-* Ability to easily email every the holder of every user account
-  (for things like major site changes, privacy notice updates, etc.)
 
-PRODUCTIZE
-
-* create a default layout.kid and frontPage.kid
-* new make-dist type target
-* play with overlaid/merged-with-darby styles
