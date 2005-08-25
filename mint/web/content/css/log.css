@@ -2,3 +2,6 @@
 #log .pad {
 	margin:0px; padding:8px 12px 8px 12px;
 }
+#log a {
+	text-transform:lowercase;
+}

@@ -34,6 +34,7 @@ onload = "javascript:;"
         <link rel="stylesheet" type="text/css" href="${cfg.staticUrl}apps/mint/css/topNav.css"/>
         <link rel="stylesheet" type="text/css" href="${cfg.staticUrl}apps/mint/css/log.css"/>
         <link rel="stylesheet" type="text/css" href="${cfg.staticUrl}apps/mint/css/contentTypes.css"/>
+        <link rel="stylesheet" type="text/css" href="${cfg.staticUrl}apps/mint/css/mint.css"/>
         <div py:replace="item[:]"/>
     </head>
     <body xmlns="http://www.w3.org/1999/xhtml"
@@ -53,9 +54,6 @@ onload = "javascript:;"
                         <table border="0" cellspacing="0" cellpadding="0" summary="layout">
                             <tr>
                                 <td id="logo">
-                                    <a href="http://${siteHost}/">
-                                        <img src="${cfg.staticUrl}/apps/mint/images/logo.gif" alt="rPath logo" width="216" height="72" />
-                                    </a>
                                 </td>
                                 <td id="user" py:if="not auth.authorized">
                                     <div class="pad">

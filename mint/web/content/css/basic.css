@@ -4,37 +4,11 @@ html {
 }
 body {
 	background-color:#6D7CAD; color:#333;
-	margin:0px; padding:1.1em 0em 1.1em 0em;
+	margin:0px; padding:12px;
 	font-family:Verdana,Arial,Helvetica,sans-serif;
 }
-
-body#legal {
-    margin: 0em 2em 0em 2em;
-}
-
-body#legal p, body#legal li {
-    font-size: 80%;
-    color: rgb(217, 221, 232);
-    text-align: justify;
-}
-
-body#legal li {
-    list-style-type: circle;
-    margin-left: 2em;
-}
-
-body#legal a {
-    color: white;
-    background-image: none;
-    padding-right: 0px;
-}
-
-body#legal h2 {
-    color: white;
-}
-
 table {
-	font-size:100%;
+	font-size:105%;
 	width:100%;
 }
 td, th {
@@ -46,6 +20,7 @@ th {
 }
 h1, h2, h3, h4, h5, h6 {
 	margin:0px; padding:0.5em 0em 0.5em 0em;
+	text-transform:lowercase;
 }
 h2 {
 	font-size:120%;
@@ -59,22 +34,65 @@ h4 {
 	font-size:110%;
 	font-weight:normal;
 }
+h5 {
+	font-size:110%;
+	font-weight:normal;
+	margin:0px; padding:0.5em 0em 0em 0em;
+}
 p {
 	margin:0px; padding:0em 0em 1em 0em;
 }
+pre {
+	font-size:110%;
+	padding:0; margin:0;
+}
 ul {
-	margin:0px; padding:0em 0em 0.5em 0em;
+	margin:0px; padding:0em 0em 0em 0em;
 	list-style-type:none;
 }
 ul li {
 	padding:0em 0em 0.5em 0.75em;
 	background:url(../images/LI.gif) 0em 0.45em no-repeat;
 }
+ul.plain {
+	margin:0em 0em 0em -0.7em; padding:0em 0em 0em 0em;
+	line-height:120%;
+	list-style-type:none;
+	font-size:100%;
+	font-weight:normal;
+}
+ul.plain li {
+	background:none;
+}
+ul.sublist {
+	margin:0px; padding:0.4em 0em 0em 0em;
+	list-style-type:none;
+}
+ul.sublist li {
+	padding:0em 0em 0.5em 0.75em;
+	background:url(../images/LI.gif) 0em 0.45em no-repeat;
+}
+table.nopad {
+	margin:0em 0em -0.3em 0em; padding:0em 0em 0em 0em;
+}
 a:link, a:visited, a:hover, a:active {
 	color:#3D5192; padding-right:11px; text-decoration:none;
 	background:url(../images/A.gif) no-repeat right 60%;
 }
+a.noarrow:link, a.noarrow:visited, a.noarrow:hover, a.noarrow:active {
+	color:#3D5192; text-decoration:none; background:none; padding-right:0px;
+}
+a.backarrow:link, a.backarrow:visited, a.backarrow:hover, a.backarrow:active {
+	color:#3D5192; padding-left:11px; text-decoration:none;
+	background:url(../images/B.gif) no-repeat left 60%;
+}
 a:hover {
+	text-decoration:underline;
+}
+a.noarrow:hover {
+	text-decoration:underline;
+}
+a.backarrow:hover {
 	text-decoration:underline;
 }
 form {
@@ -94,15 +112,21 @@ button.warn {
 	background:transparent url(../images/BUTTON_warn.gif) no-repeat left 50%;
 	color:#770000;
 }
+button.disabled {
+	background:transparent url(../images/BUTTON_disabled.gif) no-repeat left 50%;
+	color:#999;
+}
+form {
+	margin:0px; padding:0px;
+}
 input, textarea {
 	font-size:100%; color:#333;
 	font-family:Verdana,Arial,Helvetica,sans-serif;
 	border-width:1px;
 	margin:2px 0px 0px 0px;
-        background-color: #eceff9;
 }
-.disabledInput {
-    color: gray;
+.inputwide {
+	width:70%;
 }
 label {
 	font-size:100%;

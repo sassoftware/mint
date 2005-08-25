@@ -6,13 +6,3 @@
 	background:none; padding-right:0px;
 	text-transform:lowercase;
 }
-
-#botnav {
-    float: right;
-}
-
-#botnav a {
-    color: #d9dde8;
-    margin-right: 12px;
-    text-transform: lowercase;
-}

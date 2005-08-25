@@ -1,7 +1,4 @@
 /* COLUMN STYLES */
-.arrows {
-        text-transform: lowercase;
-}
 .plain {
 	font-size:0.6967em;
 }
@@ -18,6 +15,9 @@
 .side {
 	font-size:0.6333em;
 }
+.side a {
+	text-transform:lowercase;
+}
 
 .projects {
 	color:#666; font-size:0.6967em;
@@ -28,7 +28,6 @@
 }
 .projects ul li {
 	padding:0em 0em 0.75em 0.75em;
-        background-image: none;
 }
 
 /* SIDE COLUMN CONTENT STYLES */
@@ -64,10 +63,6 @@
 }
 .palette input, .palette select {
 	width:95%;
-        background-color: white;
-}
-.palette a {
-        text-transform: lowercase;
 }
 
 #browse li {
@@ -79,22 +74,10 @@
 #search h3 {
 	background:#FF930B; border-color:#F28C0A;
 }
-#search input {
-        background-color: white;
-}
-
-.products h3 {
-    background-color: green !important;
-    border-color: #080 !important;
-}
-
-.products li {
-    color: #666;
-}
 
 /* PLAIN COLUMN CONTENT STYLES */
 .date {
-	font-size:0.9091em; color:#BBBBBB; font-weight:normal;
+	font-size:0.9091em; color:#99660A; font-weight:normal;
 }
 .edit {
 	font-size:0.9091em; font-weight:normal; padding-left:13px;
@@ -105,7 +88,7 @@
 	padding-left:0px;
 }
 .help {
-	color:#666; font-size:0.9091em; font-style:italic;
+	color:#666; font-size:100%; font-style:italic;
 }
 
 /* MAIN AREA FORM TABLE LAYOUT, HEADERS ON LEFT SIDE */
@@ -120,14 +103,18 @@
 	vertical-align:top; padding-bottom:8px;
 }
 .mainformhorizontal input,
-.mainformhorizontal select,
 .mainformhorizontal textarea {
 	width:70%; margin-top:0px; padding-top:0px;
 	background-color:#eee;
 }
 .mainformhorizontal input.check,
+.mainformhorizontal select,
+.mainformhorizontal input.notwide,
 .mainformhorizontal input.radio {
-    width:auto;
+	width:auto;
+}
+.mainformhorizontal select.wide {
+	width:70%;
 }
 .mainformhorizontal div.help,
 .mainformhorizontal p.help {
@@ -135,6 +122,10 @@
 }
 .required {
 	padding-left:0.7em; color:#c00; font-style:italic;
+	background:url(../images/required.gif) no-repeat 0.2em 0.45em;
+}
+.requiredselect {
+	padding-left:0.9em;
 	background:url(../images/required.gif) no-repeat 0.2em 0.45em;
 }
 th .required {
@@ -189,10 +180,7 @@ strong.keyword {
 }
 .troveallversions {
 	font-weight:normal;
-	line-height: 180%;
-}
-.troveallversions li {
-	background: none;
+	line-height:180%;
 }
 .filelist {
 	position:relative;
@@ -239,43 +227,57 @@ a.option:hover {
 	background-color:#ccc; background-image:none;
 	text-decoration:none;
 }
-code {
-        margin-left: 1em;
+
+/* DARBY DIFF LOGS TABLE */
+
+.diffs td {
+	padding:4px;
+	border-bottom:1px #e6e6e6 solid;
 }
-p.error {
-        font-size: 125%;
-        font-weight: bold;
+.diffs tr {
+	vertical-align:top;
 }
-p.errormessage {
-        color: red;
-        margin-left: 1em;
+td.diffNavClass {
+	white-space:nowrap;
+}
+.diffUnchangedLineNum {
+	background-color:#E6E6E6;
+}
+.diffUnchangedContent {
+	background:#EEEEEE;
+}
+.diffOldLineNum {
+	background-color:#ffc;
+	color:#c00;
+}
+.diffNewLineNum {
+	background-color:#efe;
+	color:#090; 
+}
+.diffOldEditedContent {
+	background-color:#ffc;
+}
+.diffNewEditedContent {
+	background-color:#efe;
+}
+.diffOldContents {
+	color:#c00;
+}
+.diffNewContents {
+	color:#090;
+}
+.diffOldChgContents {
+	color:#c00;
+}
+.diffNewChgContents {
+	color:#090;
 }
 
-div.newsItem {
-    border-bottom: 1px solid #dddddd;
-    padding-bottom: 0.5em;
-    margin-bottom: 0.5em;
-}
+/* DARBY HELP */
 
-a.newsContinued {
-    float: right;
-}
-span.newsTitle {
-    color:#99660A;
-    font-weight: normal;
-}
-em.resign {
-    color: #99660A;
-}
-
-/* rss button */
-a.rssButton {
-    background-image: none;
-    padding-right: 0px;
-}
-
-a.rssButton img {
-    vertical-align: middle;
-    float: right;
-    border: none;
+a.helpbutton {
+	background:none; 
+	position:relative; 
+	bottom:-1px;
+	padding:3px 15px 4px 3px;
 }
