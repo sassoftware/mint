@@ -391,7 +391,7 @@ class MintApp(webhandler.WebHandler):
                                  "    %s" % newpw,
                                  "",
                                  "Please log in at http://%s.%s/ and change" %
-                                 (self.cfg.hostname, self.cfg.domainName),
+                                 (self.cfg.hostName, self.cfg.domainName),
                                  "this password as soon as possible."
                                  ])
 
