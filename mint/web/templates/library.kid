@@ -34,12 +34,15 @@ from mint import searcher
             <li><a href="projects">All Projects</a></li>
             <li><a href="projects?sortOrder=3">Most Active Projects</a></li>
             <li><a href="projects?sortOrder=7">Most Popular Projects</a></li>
+            <li py:if="auth.admin"><a href="users">All Users</a></li>
         </ul>
     </div>
 
     <div id="search" class="palette" py:def="searchMenu(selectType='Projects')" py:strip="False">
         <?python
 searchTypes = ['Projects', 'Packages']
+if auth.admin:
+    searchTypes.append('Users')
         ?>
         <h3>search ${cfg.productName}</h3>
         <form action="search" method="get">

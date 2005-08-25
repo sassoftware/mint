@@ -121,7 +121,12 @@ class UsersTable(database.KeyedTable):
                         'displayEmail': r[2],
                         'fullName':     r[3],
                         'blurb':        r[4],
-                        'stagnant':     self.isUserStagnant(r[0])}
+                        'stagnant':     self.isUserStagnant(r[0]),
+                        'groups':       groups}
+                if 'MintAdmin' in groups:
+                    auth['admin'] = True
+                else:
+                    auth['admin'] = False
             else:
                 auth = noAuth
         else:
@@ -460,9 +465,12 @@ class Authorization(object):
     @type fullName: str
     @cvar blurb: a short description about and written by the user
     @type blurb: str
+    @cvar groups: a list dictionaries containing the groups to which the user belongs
+    @type groups: list
     """
     __slots__ = ('authorized', 'userId', 'username', 'email',
-                 'displayEmail', 'fullName', 'blurb', 'token', 'stagnant')
+                 'displayEmail', 'fullName', 'blurb', 'token', 'stagnant',
+                 'groups', 'admin')
 
     def __init__(self, **kwargs):
         for key in self.__slots__:

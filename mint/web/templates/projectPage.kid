@@ -9,7 +9,7 @@ from mint import userlevels
     All Rights Reserved 
 -->
     <?python
-        isOwner = userLevel == userlevels.OWNER
+        isOwner = (userLevel == userlevels.OWNER or auth.admin)
         isDeveloper = userLevel == userlevels.DEVELOPER
         memberList = project.getMembers()
     ?>

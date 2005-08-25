@@ -12,7 +12,7 @@
     <?python # this comment has to be here if the first line is an import...weird!
         from mint import userlevels
 
-        isOwner = userLevel == userlevels.OWNER
+        isOwner = userLevel == userlevels.OWNER or auth.admin
     ?>
 
     <div py:def="breadcrumb()" py:strip="True">

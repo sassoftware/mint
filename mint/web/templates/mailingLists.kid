@@ -6,14 +6,14 @@
     Copyright 2005 rPath, Inc.
     All Rights Reserved
 -->
+<?python #dummy
+    from mint import userlevels
+
+    isOwner = userLevel == userlevels.OWNER or auth.admin
+?>
     <head>
         <title>${formatTitle('Mailing Lists: %s'%project.getName())}</title>
     </head>
-    <?python # this comment has to be here if the first line is an import...weird!
-        from mint import userlevels
-
-        isOwner = userLevel == userlevels.OWNER
-    ?>
 
     <div py:def="breadcrumb()" py:strip="True">
         <a href="../">${project.getName()}</a>
@@ -46,6 +46,12 @@
                     <div style="float:left; margin-right:5px;">
                         <span py:if="isOwner">
                             <a href="${mailhost + 'admin/' + list.name}" class="option" target="_NEW">Admin Page</a>
+                        </span>
+                    </div>
+
+                    <div style="float:left; margin-right:5px;">
+                        <span py:if="auth.admin">
+                            <a href="deleteList?list=${list.name}" class="option">Delete List</a>
                         </span>
                     </div>
                     &#160;

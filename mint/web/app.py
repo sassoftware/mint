@@ -10,6 +10,7 @@ import stat
 import sys
 import time
 import email.Utils
+import re
 from urllib import quote, unquote
 
 from mod_python import apache
@@ -40,6 +41,14 @@ class Redirect(Exception):
 
     def __str__(self):
         return "Location: %s" % self.location
+
+def requiresAdmin(func):
+    def wrapper(self, *args, **kwargs):
+        if not kwargs['auth'].admin:
+            raise mint_error.PermissionDenied
+        else:
+            return func(self, *args, **kwargs)
+    return wrapper
 
 def requiresAuth(func):
     def wrapper(self, **kwargs):
@@ -87,7 +96,7 @@ def ownerOnly(func):
     def wrapper(self, **kwargs):
         if not self.project:
             raise database.ItemNotFound("project")
-        if self.userLevel == userlevels.OWNER:
+        if self.userLevel == userlevels.OWNER or self.auth.admin:
             return func(self, **kwargs)
         else:
             raise mint_error.PermissionDenied
@@ -283,6 +292,15 @@ class MintApp(webhandler.WebHandler):
     def _frontPage(self, auth):
         news = self.client.getNews()
         self._write("frontPage", news = news, newsLink = self.client.getNewsLink())
+        return apache.OK
+
+    @requiresAdmin
+    def administer(self, *args, **kwargs):
+        operation = kwargs.get('operation', '')
+        if not operation:
+            self._write('admin/administer')
+            return apache.OK
+        self._write('admin/%s' % operation)
         return apache.OK
 
     @siteOnly
@@ -602,11 +620,13 @@ class MintApp(webhandler.WebHandler):
     @ownerOnly
     @strFields(list=None)
     @mailList
-    def _deleteList(self, auth, mlists, list):
+    def deleteList(self, auth, mlists, list):
         hostname = self.project.getHostname()
         pcre = re.compile('^%s$|^%s-'%(hostname, hostname), re.I)
         if pcre.search(list):
-            if not mlists.delete_list(self.cfg.MailListPass, list, True):
+            #Do not delete mailing list archives by default.  This means that
+            #archives must be deleted manually if necessary.
+            if not mlists.delete_list(self.cfg.MailListPass, list, False):
                 raise mailinglists.MailingListException("Mailing list not deleted")
         else:
             raise mailinglists.MailingListException("You cannot delete this list")

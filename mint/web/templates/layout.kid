@@ -70,7 +70,8 @@ onload = "javascript:;"
                                     <div class="pad">
                                         <h3>${auth.fullName}</h3>
                                         <h4>${auth.username}</h4>
-                                        <div><a href="userSettings" class="arrows">view &#38; edit my account</a></div>
+                                        <div><a href="userSettings" class="arrows">view &#38; Edit My Account</a></div>
+                                        <div py:if='auth.admin'><a href="administer" class="arrows">Administer</a></div>
 
                                     </div>
                                 </td>

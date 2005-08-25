@@ -11,7 +11,7 @@ from mint import userlevels
 -->
 
     <?python
-        isOwner = userLevel == userlevels.OWNER
+        isOwner = userLevel == userlevels.OWNER or auth.admin
         memberList = project.getMembers()
     ?>
 
