@@ -1,7 +1,11 @@
-Changes in 0.3.10:
+Changes in 0.4.0:
 
 * Fixed some email reverification logic problems. 
 * Fixed "forgotten password" functionality.
+* Initial administration support has been added. Users are administrators
+  if they are a member of the MintAdmin group on the authrepo.
+* The stylesheets have been updated in preparation for a switch to generic
+  rPath product stylesheets.
 
 Changes in 0.3.9:
 
