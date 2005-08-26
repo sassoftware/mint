@@ -371,6 +371,13 @@ class MintServer(object):
         return self.pkgIndex.search(terms, limit, offset)
 
     @private
+    def getProjectsList(self):
+        """
+        Collect a list of all projects suitable for creating a select box
+        """
+        return self.projects.getProjectsList()
+
+    @private
     def getProjects(self, sortOrder, limit, offset):
         """
         Collect a list of projects

@@ -23,12 +23,20 @@
         </td>
         <td id="main" class="spanall">
             <div class="pad">
-              The list of project operations
-              <ul>
-                <li>Delete Project</li>
-                <li>Change Membership</li>
-                <li>Edit Properties</li>
-              </ul>
+              <form action="administer" method="post">
+                <h2>Select a project below to modify</h2>
+                <p>
+                  <select name="projectId">
+                    <option py:for="project in projects" value="${project[0]}" py:content="project[1]"/>
+                  </select>
+                </p>
+                <p>
+                  <button name="operation" value="project_delete">Delete Project</button>
+                  <button name="operation" value="project_change_members">Change Members</button>
+                  <button name="operation" value="project_maillists">Manage Mailing Lists</button>
+                  <button name="operation" value="project_edit">Edit</button>
+                </p>
+              </form>
             </div>
         </td>
     </body>

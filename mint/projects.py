@@ -201,6 +201,19 @@ class ProjectsTable(database.KeyedTable):
                 raise DuplicateName()
         return id
 
+    def getProjectsList(self):
+        cu = self.db.cursor()
+
+        sql = """
+            SELECT projectId, hostname || ' - ' || name
+            FROM Projects
+            ORDER BY hostname
+        """
+        cu.execute(sql)
+
+        results = cu.fetchall()
+        return results
+
     def getProjectIdByFQDN(self, fqdn):
         cu = self.db.cursor()
 

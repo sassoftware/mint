@@ -294,14 +294,48 @@ class MintApp(webhandler.WebHandler):
         self._write("frontPage", news = news, newsLink = self.client.getNewsLink())
         return apache.OK
 
+    # Admin Interface
+    def _admin_user(self, *args, **kwargs):
+        self._write('admin/user')
+        return apache.OK
+
+    def _admin_project(self, *args, **kwargs):
+        #Get a list of all the projects in a format suitable for producing
+        #a dropdown or multi-select list.
+        projects = self.client.getProjectsList()
+        print >>sys.stderr, projects
+        sys.stderr.flush()
+
+        self._write('admin/project', projects = projects)
+        return apache.OK
+
+    def _admin_project_delete(self, *args, **kwargs):
+        # XXX Go through with it
+        return self._admin_project(*args, **kwargs)
+
+    def _admin_project_jump(self, page, **kwargs):
+        fqdn = self.client.getProject(kwargs['projectId']).getFQDN()
+        return self._redirect('http://%s/%s' % (fqdn, page))
+
+    def _admin_project_maillists(self, *args, **kwargs):
+        return self._admin_project_jump('mailingLists', **kwargs)
+
+    def _admin_project_edit(self, *args, **kwargs):
+        return self._admin_project_jump('editProject', **kwargs)
+
+    def _admin_project_change_members(self, *args, **kwargs):
+        return self._admin_project_jump('members', **kwargs)
+
     @requiresAdmin
     def administer(self, *args, **kwargs):
         operation = kwargs.get('operation', '')
         if not operation:
             self._write('admin/administer')
             return apache.OK
-        self._write('admin/%s' % operation)
-        return apache.OK
+        #if operation in ['user', 'project', 'project_delete', 'project_edit']:
+        return self.__getattribute__('_admin_%s'%operation)(*args, **kwargs)
+        #else:
+            #return self._404(*args, **kwargs)
 
     @siteOnly
     def register(self, auth):

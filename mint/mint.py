@@ -164,6 +164,12 @@ class MintClient:
         """
         return self.server.searchPackages(terms, limit, offset)
 
+    def getProjectsList(self):
+        """
+        Return a list of all registered Projects ordered by their hostname/shortname.
+        """
+        return self.server.getProjectsList()
+
     def getProjects(self, sortOrder, limit, offset):
         """
         Return a list of projects unfiltered in any way
