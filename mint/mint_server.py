@@ -212,7 +212,7 @@ class MintServer(object):
             'Added': "You have been added to the project",
             'Changed': "Your current access level is %s" % (userlevel and userlevels.names[userlevel] or 'Unknown')
         }
-        greeting = "%s," % user['fullName']
+        greeting = "%s," % (user['fullName'] and user['fullName'] or user['username'])
         message = "An owner of %s has modified your account status: "%project.getName()
         message += actionText[action]
         message += '.'
