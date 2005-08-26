@@ -154,8 +154,11 @@ class KeyedTable(DatabaseTable):
 
         try:
             cu.execute(*[stmt] + values)
-        except sqlite3.ProgrammingError:
-            raise DuplicateItem(self.name)
+        except sqlite3.ProgrammingError, e:
+            if e.args[0].startswith("column") and e.args[0].endswith("is not unique"):
+                raise DuplicateItem(self.name)
+            else:
+                raise
 
         self.db.commit()
         return cu.lastrowid
