@@ -24,6 +24,7 @@ python_files =			\
 	releases.py		\
 	releasetypes.py		\
 	searcher.py		\
+	session.py		\
 	shimclient.py		\
 	statsaction.py		\
 	stats.py		\

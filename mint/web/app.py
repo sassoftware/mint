@@ -23,6 +23,7 @@ from web import webhandler
 from web import fields
 from web.fields import strFields, intFields, listFields, boolFields
 
+from mint.session import SqlSession
 from mint import database
 from mint import jobs
 from mint import mint_error
@@ -197,7 +198,6 @@ class MintApp(webhandler.WebHandler):
                 except database.ItemNotFound:
                     # XXX just for the testing period
                     raise Redirect(self.cfg.defaultRedirect)
-                    # raise Redirect(("http://%s" % siteHost) + self.req.unparsed_uri)
                 else:
                     default = self.projectPage
         elif fullHost == self.cfg.domainName:
