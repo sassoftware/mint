@@ -17,7 +17,12 @@ title = "Create New Release"
         <title>${formatTitle('Create a Release')}</title>
     </head>
     <body onload="javascript:getTroveList(${project.getId()});">
-        <td id="main" class="spanleft">
+        <td id="left" class="side">
+            <div class="pad">
+                ${projectResourcesMenu()}
+            </div>
+        </td>
+        <td id="main">
             <div class="pad">
                 <h2>New Distribution Release</h2>
                 <p>Fields labeled with a <em class="required">red arrow</em> are required.</p>
@@ -58,8 +63,6 @@ title = "Create New Release"
                 </form>
             </div>
         </td>
-        <td id="right" class="plain">
-            <div class="pad" />
-        </td>
+        ${projectsPane()}
     </body>
 </html>
