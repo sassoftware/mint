@@ -122,7 +122,7 @@ class MintServer(object):
         project = projects.Project(self, projectId)
         project.addLabel(fqdn + "@%s"%self.cfg.defaultBranch,
             "http://%s/conary/" % fqdn,
-            self.authToken[0], self.authToken[1])
+            self.cfg.authUser, self.cfg.authPass)
 
         self.projects.createRepos(self.cfg.reposPath, hostname, domainname,
                                   self.authToken[0], self.authToken[1])
