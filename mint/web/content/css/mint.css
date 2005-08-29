@@ -148,3 +148,6 @@ code {
     border: none;
 }
 
+table.mainformhorizontal select {
+    width: 80%;
+}
