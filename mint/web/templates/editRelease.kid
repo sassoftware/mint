@@ -21,7 +21,7 @@ def generateJs(archMap):
       py:extends="'library.kid', 'layout.kid'">
 
     <head>
-        <title>${formatTitle('Edit Release')</title>
+        <title>${formatTitle('Edit Release')}</title>
     </head>
     <body onload="javascript:pickArch(); pickVersion();">
     <script>
