@@ -58,6 +58,7 @@ def private(func):
 
 class MintServer(object):
     _checkRepo = True 
+    _cachedGroups = []
 
     def callWrapper(self, methodName, authToken, args):
         if methodName.startswith('_'):
@@ -68,9 +69,11 @@ class MintServer(object):
             return (True, ("MethodNotSupported", methodName, ""))
         try:
             # check authorization
-            auth = self.users.checkAuth(authToken, checkRepo = self._checkRepo)
+            auth = self.users.checkAuth(authToken, checkRepo = self._checkRepo, cachedGroups = self._cachedGroups)
             self.authToken = authToken
             self.auth = users.Authorization(**auth)
+            self._cachedGroups = self.auth.groups
+            
             if self.auth.authorized:
                 self._checkRepo = False
 

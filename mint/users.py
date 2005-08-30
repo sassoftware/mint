@@ -92,7 +92,7 @@ class UsersTable(database.KeyedTable):
         self.cfg = cfg
         self.confirm_table = ConfirmationsTable(db)
 
-    def checkAuth(self, authToken, checkRepo = True):
+    def checkAuth(self, authToken, checkRepo = True, cachedGroups = []):
         username, password = authToken
         cu = self.db.cursor()
         cu.execute("""SELECT userId, email, displayEmail, fullName, blurb FROM Users 
@@ -101,7 +101,7 @@ class UsersTable(database.KeyedTable):
    
         noAuth = {'authorized': False, 'userId': -1}
         if r:
-            groups = []
+            groups = cachedGroups
             if checkRepo:
                 authUrl = self.cfg.authRepoUrl % (username, password)
                 authLabel = self.cfg.authRepoMap.keys()[0]
