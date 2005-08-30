@@ -8,7 +8,7 @@
 -->
     <div py:def="breadcrumb()" py:strip="True">
         ${adminbreadcrumb()}
-        <a href="#">User Administration</a>
+        <a href="administer?operation=user">User Administration</a>
     </div>
 
     <head>
@@ -23,6 +23,19 @@
         </td>
         <td id="main" class="spanall">
             <div class="pad">
+              <p py:if="kwargs.get('extraMsg', None)" class="message" py:content="kwargs['extraMsg']"/>
+              <form action="administer" method="post">
+                <h2>Select a user below to modify</h2>
+                <p>
+                  <select name="userId">
+                    <option py:for="user in userlist" value="${user[0]}" py:content="user[1]"/>
+                  </select>
+                </p>
+                <p>
+                  <button name="operation" value="user_reset_password">Reset Password</button>
+                  <button name="operation" value="user_cancel">Cancel User Account</button>
+                </p>
+              </form>
               The list of user operations
               <ul>
                 <li>Delete User</li>

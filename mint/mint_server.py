@@ -32,7 +32,9 @@ allTroveNames = TroveNamesCache()
 
 def requiresAdmin(func):
     def wrapper(self, *args):
-        if self.authToken == [self.cfg.authUser, self.cfg.authPass]:
+        print >>sys.stderr, self.authToken, self.auth.groups, self.auth.admin
+        sys.stderr.flush()
+        if self.authToken == [self.cfg.authUser, self.cfg.authPass] or self.auth.admin:
             return func(self, *args)
         else:
             raise PermissionDenied
@@ -165,15 +167,9 @@ class MintServer(object):
             try:
                 userId = cu.next()[0]
             except StopIteration, e:
-                print >>sys.stderr, str(e), "SELECT userId FROM Users WHERE username=?", username
-                sys.stderr.flush()
                 raise database.ItemNotFound("user")
         elif userId and not username:
-            cu.execute("SELECT username FROM Users WHERE userId=?", userId)
-            try:
-                username = cu.next()[0]
-            except StopIteration, e:
-                raise database.ItemNotFound("user")
+            username = self.users.getUsername(userId)
 
         acu = self.authDb.cursor()
         password = ''
@@ -183,12 +179,9 @@ class MintServer(object):
         try:
             salt, password = acu.next()
         except StopIteration, e:
-            print >>sys.stderr, str(e), query, username
-            sys.stderr.flush()
             raise database.ItemNotFound("user")
         except DatabaseError, e:
-            print >>sys.stderr, str(e), query, username
-            sys.stderr.flush()
+            raise
 
         self.projectUsers.new(projectId, userId, level)
         repos = self._getAuthRepo(project)
@@ -311,8 +304,13 @@ class MintServer(object):
 
     @requiresAuth
     @private
-    def cancelUserAccount(self,userId):
+    def cancelUserAccount(self, userId):
         return self.users.cancelUserAccount(userId)
+
+    @requiresAdmin
+    @private
+    def removeUserAccount(self, userId):
+        return self.users.removeUserAccount(userId)
 
     @private
     def confirmUser(self, confirmation):
@@ -339,6 +337,7 @@ class MintServer(object):
 
         return True
 
+    @requiresAdmin
     @private
     def searchUsers(self, terms, limit, offset):
         """
@@ -390,6 +389,12 @@ class MintServer(object):
         """
         return self.projects.getProjects(sortOrder, limit, offset), self.projects.getNumProjects()
 
+    @requiresAdmin
+    @private
+    def getUsersList(self):
+        return self.users.getUsersList()
+
+    @requiresAdmin
     @private
     def getUsers(self, sortOrder, limit, offset):
         """

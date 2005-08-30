@@ -123,6 +123,13 @@ class MintClient:
         """
         return self.server.confirmUser(confirmId)
 
+    def removeUserAccount(self, userId):
+        """
+        Remove a user account without prejudigous.
+        @param userId: User account id
+        """
+        return self.server.removeUserAccount(userId)
+
     def getUserIdByName(self, username):
         """
         Fetch user id by username
@@ -130,6 +137,12 @@ class MintClient:
         @return: database id of requested user
         """
         return self.server.getUserIdByName(username)
+
+    def getUsersList(self):
+        """
+        Fetch users and IDs
+        """
+        return self.server.getUsersList()
 
     def getUserSearchResults(self, terms, limit = 10, offset = 0):
         """

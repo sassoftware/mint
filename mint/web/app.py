@@ -296,15 +296,26 @@ class MintApp(webhandler.WebHandler):
 
     # Admin Interface
     def _admin_user(self, *args, **kwargs):
-        self._write('admin/user')
+        #get a list of all users in a format suitable for producing a
+        #dropdown or multi-select list
+        userlist = self.client.getUsersList()
+        self._write('admin/user', userlist=userlist, kwargs = kwargs)
         return apache.OK
+
+    def _admin_user_cancel(self, *args, **kwargs):
+        self.client.removeUserAccount(kwargs['userId'])
+        kwargs['extraMsg'] = "User account deleted"
+        return self._admin_user(*args, **kwargs)
+
+    def _admin_user_reset_password(self, *args, **kwargs):
+        self._resetPasswordById(kwargs['userId'])
+        kwargs['extraMsg'] = "User password reset"
+        return self._admin_user(*args, **kwargs)
 
     def _admin_project(self, *args, **kwargs):
         #Get a list of all the projects in a format suitable for producing
         #a dropdown or multi-select list.
         projects = self.client.getProjectsList()
-        print >>sys.stderr, projects
-        sys.stderr.flush()
 
         self._write('admin/project', projects = projects)
         return apache.OK
@@ -415,6 +426,31 @@ class MintApp(webhandler.WebHandler):
         self._clearAuth()
         return self._redirect("/")
 
+    def _resetPassword(self, username):
+        userId = self.client.getUserIdByName(username)
+        self._resetPasswordById(userId)
+        self._write("forgotPassword", email = user.getEmail())
+        return apache.OK
+
+    def _resetPasswordById(self, userId):
+        newpw = users.newPassword()
+        user = self.client.getUser(userId)
+        user.setPassword(newpw)
+
+        message = "\n".join(["Your password for username %s at %s has been reset to:" % (user.getUsername(), self.cfg.productName),
+                             "",
+                             "    %s" % newpw,
+                             "",
+                             "Please log in at http://%s.%s/ and change" %
+                             (self.cfg.hostName, self.cfg.domainName),
+                             "this password as soon as possible."
+                             ])
+
+        users.sendMail(self.cfg.adminMail, self.cfg.productName, 
+                   user.getEmail(),
+                   "%s forgotten password"%self.cfg.productName, message)
+
+
     @strFields(username = None, password = '', submit = None, to = '/')
     def processLogin(self, auth, username, password, submit, to):
         if submit == "Log In":
@@ -432,26 +468,7 @@ class MintApp(webhandler.WebHandler):
                     self._redirCookie(cookie)
                 return self._redirect(unquote(to))
         elif submit == "Forgot Password":
-            newpw = users.newPassword()
-            
-            userId = self.client.getUserIdByName(username)
-            user = self.client.getUser(userId)
-            user.setPassword(newpw)
-
-            message = "\n".join(["Your password for username %s at %s has been reset to:" % (user.getUsername(), self.cfg.productName),
-                                 "",
-                                 "    %s" % newpw,
-                                 "",
-                                 "Please log in at http://%s.%s/ and change" %
-                                 (self.cfg.hostName, self.cfg.domainName),
-                                 "this password as soon as possible."
-                                 ])
-
-            users.sendMail(self.cfg.adminMail, self.cfg.productName, 
-                       user.getEmail(),
-                       "%s forgotten password"%self.cfg.productName, message)
-            self._write("forgotPassword", email = user.getEmail())
-            return apache.OK
+            return self._resetPassword(username)
         else:
             return apache.HTTP_NOT_FOUND
 
@@ -479,12 +496,12 @@ class MintApp(webhandler.WebHandler):
         self._write("projects", sortOrder=sortOrder, limit=limit, offset=offset, results=results, count=count)
         return apache.OK
 
-    # XXX disabled
-    # @intFields(sortOrder = 0, limit = 10, offset = 0)
-    # def users(self, auth, sortOrder, limit, offset, submit = 0):
-    #     results, count = self.client.getUsers(sortOrder, limit, offset)
-    #     self._write("users", sortOrder=sortOrder, limit=limit, offset=offset, results=results, count=count)
-    #     return apache.OK
+    @requiresAdmin
+    @intFields(sortOrder = 0, limit = 10, offset = 0)
+    def users(self, auth, sortOrder, limit, offset, submit = 0):
+        results, count = self.client.getUsers(sortOrder, limit, offset)
+        self._write("users", sortOrder=sortOrder, limit=limit, offset=offset, results=results, count=count)
+        return apache.OK
 
     @projectOnly
     def projectPage(self, auth):
@@ -880,7 +897,6 @@ class MintApp(webhandler.WebHandler):
     def search(self, auth, type, search, modified, limit, offset):
         if type == "Projects":
             return self._projectSearch(search, modified, limit, offset)
-        # XXX disabled
         elif type == "Users" and auth.admin:
             return self._userSearch(auth, search, limit, offset)
         elif type == "Packages":
@@ -890,7 +906,6 @@ class MintApp(webhandler.WebHandler):
                 error = "Invalid search type specified.")
             return apache.OK
 
-    # XXX disabled
     def _userSearch(self, auth, terms, limit, offset):
         results, count = self.client.getUserSearchResults(terms, limit, offset)
         self._write("searchResults", searchType = "Users", terms = terms, results = results,

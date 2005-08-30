@@ -83,6 +83,11 @@ p.errormessage {
         margin-left: 1em;
 }
 
+p.message {
+        color: blue;
+        margin-left: 1em;
+}
+
 div.newsItem {
     border-bottom: 1px solid #dddddd;
     padding-bottom: 0.5em;

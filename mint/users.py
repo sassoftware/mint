@@ -232,38 +232,45 @@ class UsersTable(database.KeyedTable):
         return userId
 
     def cancelUserAccount(self,userId):
-        authRepo = netclient.NetworkRepositoryClient(self.cfg.authRepoMap)
-        repoLabel = self.cfg.authRepoMap.keys()[0]
-
+        """ Checks to see if the the user to be deleted is leaving in a lurch developers of projects that would be left ownerless.  Then deletes the user.
+        """
         cu = self.db.cursor()
-        cu.execute("SELECT username FROM Users WHERE userId=?", userId)
-        r = cu.fetchall()
-        if not len(r):
-            raise database.ItemNotFound("UserId: %d does not exist!"% userId)
-        username = r[0][0]
+        username = self.getUsername(userId)
 
         # Find all projects of which userId is an owner, has no other owners, and/or
         # has developers.
         cu.execute("""SELECT MAX(flagged)
                         FROM (SELECT A.projectId,
-                              COUNT(B.userId)*not(COUNT(C.userId)) AS flagged 
-                                FROM ProjectUsers AS A 
-                                    LEFT JOIN ProjectUsers AS B ON A.projectId=B.projectId AND B.level=1 
-                                    LEFT JOIN ProjectUsers AS C ON C.projectId=A.projectId AND 
-                                                                   C.level = 0 AND 
-                                                                   C.userId < >A.userId 
-                                        WHERE A.userId=? GROUP BY A.projectId)""", userId)
+                               COUNT(B.userId)*not(COUNT(C.userId)) AS flagged
+                                 FROM ProjectUsers AS A
+                                   LEFT JOIN ProjectUsers AS B ON A.projectId=B.projectId AND B.level=1
+                                   LEFT JOIN ProjectUsers AS C ON C.projectId=A.projectId AND
+                                                                  C.level = 0 AND
+                                                                  C.userId <>A.userId
+                                       WHERE A.userId=? GROUP BY A.projectId)
+""", userId)
+
         r = cu.fetchall()
         if len(r):
             raise LastOwner
 
+        return self.removeUserAccount(userId)
+
+    def removeUserAccount(self, userId):
+        repoLabel = self.cfg.authRepoMap.keys()[0]
+        username = self.getUsername(userId)
+        cu = self.db.cursor()
+        authRepo = netclient.NetworkRepositoryClient(self.cfg.authRepoMap)
+
         authRepo.deleteUserByName(repoLabel, username)
-        
+
         cu.execute("UPDATE Projects SET creatorId=NULL WHERE creatorId=?", userId)
         cu.execute("UPDATE Jobs SET userId=NULL WHERE userId=?", userId)
         cu.execute("DELETE FROM ProjectUsers WHERE userId=?", userId)
         cu.execute("DELETE FROM Confirmations WHERE userId=?", userId)
         cu.execute("DELETE FROM Users WHERE userId=?", userId)
+
+        #TODO, iterate through all project databases and remove the user.
         self.db.commit()
 
     def isUserStagnant(self, userId):
@@ -319,6 +326,22 @@ class UsersTable(database.KeyedTable):
 
         return ids, count
 
+    def getUsersList(self):
+        """
+        Returns a list of all users suitable for framing in a listbox or
+        multi-select box.
+        """
+        cu = self.db.cursor()
+
+        SQL = """SELECT userId, username || ' - ' || fullName
+                FROM users
+                ORDER BY username"""
+
+        cu.execute(SQL)
+
+        results = cu.fetchall()
+        return results
+
     def getUsers(self, sortOrder, limit, offset):
         """
         Returns a list of users matching L{terms} of length L{limit}
@@ -349,8 +372,18 @@ class UsersTable(database.KeyedTable):
         cu = self.db.cursor()
         cu.execute( "SELECT count(userId) FROM Users WHERE active=1" )
 
-
         return cu.next()[0]
+
+
+    def getUsername(self, userId):
+        cu = self.db.cursor()
+        cu.execute ( "SELECT username FROM Users WHERE userId = ?", userId)
+        try:
+            username = cu.next()[0]
+        except StopIteration, e:
+            raise database.ItemNotFound("UserId: %d does not exist!"% userId)
+        return username
+
 
 class User(database.TableObject):
     __slots__ = [UsersTable.key] + UsersTable.fields
