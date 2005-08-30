@@ -194,14 +194,15 @@ class MintServer(object):
 
     @requiresAuth
     @private
-    def delMember(self, projectId, userId):
+    def delMember(self, projectId, userId, notify=True):
         #XXX Make this atomic
         project = projects.Project(self, projectId)
         self.projectUsers.delete(projectId, userId)
         repos = self._getAuthRepo(project)
         user = self.getUser(userId)
         repos.deleteUserByName(project.getLabel(), user['username'])
-        self._notifyUser('Removed', user, project)
+        if notify:
+            self._notifyUser('Removed', user, project)
 
     def _notifyUser(self, action, user, project, userlevel=None):
         actionText = {'Removed': "You have been removed from the project",
@@ -305,12 +306,55 @@ class MintServer(object):
     @requiresAuth
     @private
     def cancelUserAccount(self, userId):
-        return self.users.cancelUserAccount(userId)
+        """ Checks to see if the the user to be deleted is leaving in a lurch developers of projects that would be left ownerless.  Then deletes the user.
+        """
+        cu = self.db.cursor()
+        username = self.getUsername(userId)
+
+        # Find all projects of which userId is an owner, has no other owners, and/or
+        # has developers.
+        cu.execute("""SELECT MAX(flagged)
+                        FROM (SELECT A.projectId,
+                               COUNT(B.userId)*not(COUNT(C.userId)) AS flagged
+                                 FROM ProjectUsers AS A
+                                   LEFT JOIN ProjectUsers AS B ON A.projectId=B.projectId AND B.level=1
+                                   LEFT JOIN ProjectUsers AS C ON C.projectId=A.projectId AND
+                                                                  C.level = 0 AND
+                                                                  C.userId <>A.userId
+                                       WHERE A.userId=? GROUP BY A.projectId)
+                   """, userId)
+
+        r = cu.fetchall()
+        if len(r):
+            raise LastOwner
+
+        return self.removeUserAccount(userId)
 
     @requiresAdmin
     @private
     def removeUserAccount(self, userId):
-        return self.users.removeUserAccount(userId)
+        """Removes the user account from the authrepo and mint databases.
+        Also removes the user from each project listed in projects.
+        """
+        repoLabel = self.cfg.authRepoMap.keys()[0]
+        username = self.users.getUsername(userId)
+        cu = self.db.cursor()
+        authRepo = netclient.NetworkRepositoryClient(self.cfg.authRepoMap)
+
+        #Handle projects
+        projectlist = self.getProjectIdsByMember(userId)
+        for (projectId, level) in projectlist:
+            self.delMember(projectId, userId, False)
+
+        authRepo.deleteUserByName(repoLabel, username)
+
+        cu.execute("UPDATE Projects SET creatorId=NULL WHERE creatorId=?", userId)
+        cu.execute("UPDATE Jobs SET userId=NULL WHERE userId=?", userId)
+        cu.execute("DELETE FROM ProjectUsers WHERE userId=?", userId)
+        cu.execute("DELETE FROM Confirmations WHERE userId=?", userId)
+        cu.execute("DELETE FROM Users WHERE userId=?", userId)
+
+        self.db.commit()
 
     @private
     def confirmUser(self, confirmation):

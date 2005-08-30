@@ -231,48 +231,6 @@ class UsersTable(database.KeyedTable):
                                confirmation = confirm)
         return userId
 
-    def cancelUserAccount(self,userId):
-        """ Checks to see if the the user to be deleted is leaving in a lurch developers of projects that would be left ownerless.  Then deletes the user.
-        """
-        cu = self.db.cursor()
-        username = self.getUsername(userId)
-
-        # Find all projects of which userId is an owner, has no other owners, and/or
-        # has developers.
-        cu.execute("""SELECT MAX(flagged)
-                        FROM (SELECT A.projectId,
-                               COUNT(B.userId)*not(COUNT(C.userId)) AS flagged
-                                 FROM ProjectUsers AS A
-                                   LEFT JOIN ProjectUsers AS B ON A.projectId=B.projectId AND B.level=1
-                                   LEFT JOIN ProjectUsers AS C ON C.projectId=A.projectId AND
-                                                                  C.level = 0 AND
-                                                                  C.userId <>A.userId
-                                       WHERE A.userId=? GROUP BY A.projectId)
-""", userId)
-
-        r = cu.fetchall()
-        if len(r):
-            raise LastOwner
-
-        return self.removeUserAccount(userId)
-
-    def removeUserAccount(self, userId):
-        repoLabel = self.cfg.authRepoMap.keys()[0]
-        username = self.getUsername(userId)
-        cu = self.db.cursor()
-        authRepo = netclient.NetworkRepositoryClient(self.cfg.authRepoMap)
-
-        authRepo.deleteUserByName(repoLabel, username)
-
-        cu.execute("UPDATE Projects SET creatorId=NULL WHERE creatorId=?", userId)
-        cu.execute("UPDATE Jobs SET userId=NULL WHERE userId=?", userId)
-        cu.execute("DELETE FROM ProjectUsers WHERE userId=?", userId)
-        cu.execute("DELETE FROM Confirmations WHERE userId=?", userId)
-        cu.execute("DELETE FROM Users WHERE userId=?", userId)
-
-        #TODO, iterate through all project databases and remove the user.
-        self.db.commit()
-
     def isUserStagnant(self, userId):
         cu = self.db.cursor()
         cu.execute("SELECT timeRequested FROM Confirmations WHERE userId=?", userId)
