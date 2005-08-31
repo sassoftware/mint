@@ -74,3 +74,6 @@ class MintConfig(ConfigFile):
         #Make sure MailListBaseURL has a slash on the end of it
         if self.MailListBaseURL[-1:] != '/':
             self.setValue('MailListBaseURL', self.MailListBaseURL + '/')
+
+        # XXX we need to unify these two names: 
+        self.staticPath = self.staticUrl

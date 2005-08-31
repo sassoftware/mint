@@ -10,8 +10,10 @@ import base64
 import os
 import xmlrpclib
 import zlib
+import re
 import sys
 
+from lib import epdb
 from repository.netrepos import netserver
 from repository.filecontainer import FileContainer
 from repository import changeset
@@ -73,20 +75,12 @@ def post(port, isSecure, repos, cfg, req):
 
         (params, method) = xmlrpclib.loads(req.read())
 
-        if req.path_info.startswith("/conary") and repos.realRepo:
-            wrapper = repos.callWrapper
-            params = [protocol, port, method, authToken, params]
-        elif req.path_info.startswith("/xmlrpc-private"):
-            server = mint_server.MintServer(cfg, allowPrivate = True)
-            wrapper = server.callWrapper
-            params = [method, authToken, params]
-        elif req.path_info.startswith("/xmlrpc"):
-            server = mint_server.MintServer(cfg, allowPrivate = False)
-            wrapper = server.callWrapper
-            params = [method, authToken, params]
+        wrapper = repos.callWrapper
+        params = [protocol, port, method, authToken, params]
         try:
             result = wrapper(*params)
-        except (netserver.InsufficientPermission, mint_server.PermissionDenied):
+        except (netserver.InsufficientPermission):
+            sys.stderr.flush()
             return apache.HTTP_FORBIDDEN
 
         resp = xmlrpclib.dumps((result,), methodresponse=1)
@@ -103,12 +97,8 @@ def post(port, isSecure, repos, cfg, req):
         req.write(resp)
         return apache.OK
     else:
-        if req.path_info.startswith("/conary") and repos.realRepo:
-            webfe = cookie_http.CookieHttpHandler(req, cfg, repos, protocol, port)
-            return webfe._methodHandler()
-        else:
-            webfe = app.MintApp(req, cfg)
-            return webfe._handle()
+        webfe = cookie_http.CookieHttpHandler(req, cfg, repos, protocol, port)
+        return webfe._methodHandler()
 
 def get(port, isSecure, repos, cfg, req):
     def _writeNestedFile(req, name, tag, size, f, sizeCb):
@@ -133,7 +123,7 @@ def get(port, isSecure, repos, cfg, req):
     cmd = os.path.basename(uri)
     fields = util.FieldStorage(req)
  
-    if cmd == "changeset" and repos.realRepo:
+    if cmd == "changeset":
         authToken = getHttpAuth(req)
         if type(authToken) is int:
             return authToken
@@ -184,16 +174,10 @@ def get(port, isSecure, repos, cfg, req):
 
         return apache.OK
     else:
-        if req.path_info.startswith("/conary") and repos.realRepo:
-            webfe = cookie_http.CookieHttpHandler(req, cfg, repos, protocol, port)
-            return webfe._methodHandler()
-        else:
-            webfe = app.MintApp(req, cfg)
-            return webfe._handle()
+        webfe = cookie_http.CookieHttpHandler(req, cfg, repos, protocol, port)
+        return webfe._methodHandler()
 
 def putFile(port, isSecure, repos, req):
-    if not repos.realRepo:
-        return apache.HTTP_NOT_FOUND
     if not isSecure and repos.forceSecure:
         return apache.HTTP_FORBIDDEN
 
@@ -212,12 +196,8 @@ def putFile(port, isSecure, repos, req):
 
     return apache.OK
 
-def subhandler(req):
+def conaryHandler(req, cfg):
     repName = req.hostname
-    cfg = config.MintConfig()
-    cfg.read(req.filename)
-    # XXX hack, combine these names
-    cfg.staticPath = cfg.staticUrl
 
     method = req.method.upper()
     port = req.connection.local_addr[1]
@@ -266,13 +246,7 @@ def subhandler(req):
                                         cacheChangeSets = True,
                                         logFile = None
                                     )
-            repositories[repName].realRepo = True
-        else:
-            # make an object that we can assign attributes to
-            # to fake having a real NetworkRepositoryServer
-            repositories[repName] = lambda: False
-            repositories[repName].realRepo = False 
-        
+       
         repositories[repName].forceSecure = False
         repositories[repName].cfg = cfg
    
@@ -287,14 +261,68 @@ def subhandler(req):
     else:
 	return apache.HTTP_METHOD_NOT_ALLOWED
 
+def xmlrpcHandler(req, cfg):
+    if req.method.upper() != "POST":
+        return apache.HTTP_METHOD_NOT_ALLOWED
+    if req.headers_in['Content-Type'] != "text/xml":
+        return apache.HTTP_NOT_FOUND
+
+    authToken = getHttpAuth(req)
+    if type(authToken) is int:
+        return authToken
+        
+    (params, method) = xmlrpclib.loads(req.read())
+    params = [method, authToken, params]
+    
+    if req.uri.startswith("/xmlrpc-private"):
+        server = mint_server.MintServer(cfg, allowPrivate = True)
+    elif req.uri.startswith("/xmlrpc"):
+        server = mint_server.MintServer(cfg, allowPrivate = False)
+    try:
+        result = server.callWrapper(*params)
+    except (netserver.InsufficientPermission, mint_server.PermissionDenied):
+        return apache.HTTP_FORBIDDEN
+
+    resp = xmlrpclib.dumps((result,), methodresponse=1)
+    req.content_type = "text/xml"
+    encoding = req.headers_in.get('Accept-encoding', '')
+    if len(resp) > 200 and 'deflate' in encoding:
+        req.headers_out['Content-encoding'] = 'deflate'
+        resp = zlib.compress(resp, 5)
+    req.write(resp)
+    return apache.OK
+
+def mintHandler(req, cfg):
+    webfe = app.MintApp(req, cfg)
+    return webfe._handle()
+
+Dispatchers = (
+    (r'^/conary/',           conaryHandler),
+    (r'^/changeset',         conaryHandler),
+    (r'^/xmlrpc/',           xmlrpcHandler),
+    (r'^/xmlrpc-private/',   xmlrpcHandler),
+    (r'^/',                  mintHandler),
+)
+
 def handler(req):
-    if profiling:
-        import hotshot
-        prof = hotshot.Profile("/tmp/mint.prof")
-        ret = prof.runcall(subhandler, req)
-        prof.close()
-    else:
-        ret = subhandler(req)
-    return ret
+    pathInfo = req.uri
+    
+    if pathInfo == "":
+        pathInfo = "/"
+    elif pathInfo[-1] != "/":
+        pathInfo += "/"
+
+    cfg = config.MintConfig()
+    cfg.read(req.filename)
+
+    # special case for silly PUT urls that don't use /conary/
+    if req.method.upper() == "PUT":
+        return conaryHandler(req, cfg)
+
+    for match, urlHandler in Dispatchers:
+        if re.match(match, pathInfo):
+            return urlHandler(req, cfg)
+
+
 
 repositories = {}
