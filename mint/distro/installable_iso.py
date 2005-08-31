@@ -54,6 +54,7 @@ class InstallableIso(ImageGenerator):
         csdir = os.path.join(topdir, subdir, 'changesets')
 
         util.mkdirChain(csdir)
+        self.status("Extracting changesets")
         existingChangesets = {}
         for path in [ "%s/%s" % (csdir, x) for x in os.listdir(csdir) ]:
             existingChangesets[path] = 1
@@ -101,6 +102,7 @@ class InstallableIso(ImageGenerator):
         }
         util.mkdirChain(infoMap['isodir'])
 
+        self.status("Building Anaconda installation")
         cmd = "%(scriptsdir)s/buildinstall --topdir %(topdir)s "\
               "--subdir %(subdir)s --name \"%(name)s\" --version %(version)s "\
               "--arch %(arch)s" % infoMap
@@ -117,7 +119,7 @@ class InstallableIso(ImageGenerator):
         isoList = []
         isoname = "%(safeName)s-%(version)s-%%(disc)s.iso" % infoMap
         discdir = os.path.normpath(topdir + "/../")
-        print >> sys.stderr, discdir, os.listdir(discdir)
+        self.status("Building ISOs")
         for d in os.listdir(discdir):
             if not d.startswith('disc'):
                 continue
@@ -144,5 +146,9 @@ class InstallableIso(ImageGenerator):
                 sys.stderr.flush()
                 os.system(cmd)
             isoList.append(infoMap['iso'])
-            
-        return [os.path.join(infoMap['isodir'], iso) for iso in isoList]
+        
+        isoList = [os.path.join(infoMap['isodir'], iso) for iso in isoList]
+        for iso in isoList:
+            if not os.access(iso, os.R_OK):
+                raise RuntimeException, "ISO generation failed"
+        return isoList
