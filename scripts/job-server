@@ -109,11 +109,10 @@ class JobDaemon:
         
         while(True):
             joblist = list(client.iterJobs(releaseId=-1))
-
+            
             for job in joblist:
                 release = client.getRelease(job.getReleaseId())
                 if job.getStatus() == jobstatus.WAITING\
-                   and len(joblist) < 5\
                    and arch == release.getArch():
                     th = JobRunner(cfg, client, job)
                     threads.append(th)
