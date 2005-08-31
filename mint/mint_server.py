@@ -309,7 +309,7 @@ class MintServer(object):
         """ Checks to see if the the user to be deleted is leaving in a lurch developers of projects that would be left ownerless.  Then deletes the user.
         """
         cu = self.db.cursor()
-        username = self.getUsername(userId)
+        username = self.users.getUsername(userId)
 
         # Find all projects of which userId is an owner, has no other owners, and/or
         # has developers.
@@ -320,22 +320,28 @@ class MintServer(object):
                                    LEFT JOIN ProjectUsers AS B ON A.projectId=B.projectId AND B.level=1
                                    LEFT JOIN ProjectUsers AS C ON C.projectId=A.projectId AND
                                                                   C.level = 0 AND
-                                                                  C.userId <>A.userId
+                                                                  C.userId <> A.userId AND
+                                                                  A.level = 0
                                        WHERE A.userId=? GROUP BY A.projectId)
                    """, userId)
 
-        r = cu.fetchall()
-        if len(r):
-            raise LastOwner
+        try:
+            r = cu.next()
+            if r[0]:
+                raise users.LastOwner
+        except database.StopIteration:
+            pass
 
         return self.removeUserAccount(userId)
 
-    @requiresAdmin
+    @requiresAuth
     @private
     def removeUserAccount(self, userId):
         """Removes the user account from the authrepo and mint databases.
         Also removes the user from each project listed in projects.
         """
+        if not self.auth.admin and userId != self.auth.userId:
+            raise PermissionDenied
         repoLabel = self.cfg.authRepoMap.keys()[0]
         username = self.users.getUsername(userId)
         cu = self.db.cursor()
