@@ -317,11 +317,21 @@ class MintApp(webhandler.WebHandler):
         #a dropdown or multi-select list.
         projects = self.client.getProjectsList()
 
-        self._write('admin/project', projects = projects)
+        self._write('admin/project', projects = projects, kwargs = kwargs)
         return apache.OK
 
     def _admin_project_delete(self, *args, **kwargs):
         # XXX Go through with it
+        return self._admin_project(*args, **kwargs)
+
+    def _admin_project_disable(self, *args, **kwargs):
+        self.client.disableProject(kwargs['projectId'])
+        kwargs['extraMsg'] = "Project disabled"
+        return self._admin_project(*args, **kwargs)
+
+    def _admin_project_enable(self, *args, **kwargs):
+        self.client.enableProject(kwargs['projectId'])
+        kwargs['extraMsg'] = "Project enabled"
         return self._admin_project(*args, **kwargs)
 
     def _admin_project_jump(self, page, **kwargs):

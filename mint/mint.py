@@ -201,6 +201,21 @@ class MintClient:
         """
         return self.server.getUsers(sortOrder, limit, offset)
 
+    def disableProject(self, projectId):
+        """
+        Mark a project as disabled so that it doesn't show up in any listing, 
+        and is not accessible via any other access method.
+        """
+        return self.server.disableProject(projectId)
+
+    def enableProject(self, projectId):
+        """
+        Mark a project previously disabled as enabled so that it shows up in
+        browse and search listings, and becomes accessible through all other
+        access methods.
+        """
+        return self.server.enableProject(projectId)
+
     def getRelease(self, releaseId):
         """
         Retrieve a L{releases.Release} object by release id.

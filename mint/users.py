@@ -402,7 +402,7 @@ class ProjectUsersTable(database.DatabaseTable):
                       FROM Projects pr, ProjectUsers p, Users u
                       WHERE pr.projectId=p.projectId AND p.userId=u.userId
                       AND pr.hostname=?
-                      AND p.level=?""", projectname, userlevels.OWNER)
+                      AND p.level=? AND pr.disabled=0""", projectname, userlevels.OWNER)
         data = []
         for r in cu.fetchall():
             data.append(list(r))

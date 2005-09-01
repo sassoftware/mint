@@ -8,7 +8,7 @@
 -->
     <div py:def="breadcrumb()" py:strip="True">
         ${adminbreadcrumb()}
-        <a href="#">Project Administration</a>
+        <a href="administer?operation=project">Project Administration</a>
     </div>
 
     <head>
@@ -23,15 +23,17 @@
         </td>
         <td id="main" class="spanall">
             <div class="pad">
+              <p py:if="kwargs.get('extraMsg', None)" class="message" py:content="kwargs['extraMsg']"/>
               <form action="administer" method="post">
                 <h2>Select a project below to modify</h2>
                 <p>
                   <select name="projectId">
-                    <option py:for="project in projects" value="${project[0]}" py:content="project[1]"/>
+                    <option py:for="project in projects" value="${project[0]}" py:attrs="{'class': project[1] and 'disabledOption' or 'enabled'}" py:content="project[2]"/>
                   </select>
                 </p>
                 <p>
-                  <button name="operation" value="project_delete">Delete Project</button>
+                  <button name="operation" value="project_disable">Disable Project</button>
+                  <button name="operation" value="project_enable">Enable Project</button>
                   <button name="operation" value="project_change_members">Change Members</button>
                   <button name="operation" value="project_maillists">Manage Mailing Lists</button>
                   <button name="operation" value="project_edit">Edit</button>

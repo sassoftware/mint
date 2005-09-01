@@ -32,8 +32,6 @@ allTroveNames = TroveNamesCache()
 
 def requiresAdmin(func):
     def wrapper(self, *args):
-        print >>sys.stderr, self.authToken, self.auth.groups, self.auth.admin
-        sys.stderr.flush()
         if self.authToken == [self.cfg.authUser, self.cfg.authPass] or self.auth.admin:
             return func(self, *args)
         else:
@@ -225,6 +223,16 @@ class MintServer(object):
     def editProject(self, projectId, projecturl, desc):
         return self.projects.update(projectId, projecturl=projecturl, desc = desc)
 
+    @requiresAdmin
+    @private
+    def disableProject(self, projectId):
+        return self.projects.disable(projectId, self.cfg.reposPath)
+
+    @requiresAdmin
+    @private
+    def enableProject(self, projectId):
+        return self.projects.enable(projectId, self.cfg.reposPath)
+
     # user methods
     @private
     def getUser(self, id):
@@ -257,7 +265,7 @@ class MintServer(object):
         cu.execute("""SELECT hostname||'.'||domainname, name, level
                       FROM Projects, ProjectUsers
                       WHERE Projects.projectId=ProjectUsers.projectId AND
-                            ProjectUsers.userId=?
+                            ProjectUsers.userId=? and Projects.disabled=0
                       ORDER BY level, name""", userId)
 
         rows = []

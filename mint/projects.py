@@ -175,12 +175,15 @@ class ProjectsTable(database.KeyedTable):
                     domainname      STR DEFAULT '%s' NOT NULL,
                     projecturl      STR DEFAULT '' NOT NULL,
                     desc            STR NOT NULL DEFAULT '',
+                    disabled        INT DEFAULT 0,
                     timeCreated     INT,
                     timeModified    INT DEFAULT 0
                 )"""
     fields = ['creatorId', 'name', 'hostname', 'domainname', 'projecturl', 
               'desc', 'timeCreated', 'timeModified']
-    indexes = {"ProjectsHostnameIdx": "CREATE INDEX ProjectsHostnameIdx ON Projects(hostname)"} 
+    indexes = { "ProjectsHostnameIdx": "CREATE INDEX ProjectsHostnameIdx ON Projects(hostname)",
+                "ProjectsDisabledIdx": "CREATE INDEX ProjectsDisabledIdx ON Projects(disabled)"
+              }
 
     def __init__(self, db, cfg):
         database.DatabaseTable.__init__(self, db)
@@ -205,7 +208,7 @@ class ProjectsTable(database.KeyedTable):
         cu = self.db.cursor()
 
         sql = """
-            SELECT projectId, hostname || ' - ' || name
+            SELECT projectId, disabled, hostname || ' - ' || name 
             FROM Projects
             ORDER BY hostname
         """
@@ -217,7 +220,7 @@ class ProjectsTable(database.KeyedTable):
     def getProjectIdByFQDN(self, fqdn):
         cu = self.db.cursor()
 
-        cu.execute("SELECT projectId FROM Projects WHERE hostname || '.' || domainname=?", fqdn)
+        cu.execute("SELECT projectId FROM Projects WHERE hostname || '.' || domainname=? AND disabled=0", fqdn)
 
         try:
             r = cu.next()
@@ -236,7 +239,7 @@ class ProjectsTable(database.KeyedTable):
 
     def getNumProjects(self):
         cu = self.db.cursor()
-        cu.execute("SELECT count(name) FROM Projects")
+        cu.execute("SELECT count(name) FROM Projects WHERE disabled=0")
 
         return cu.next()[0]
 
@@ -278,7 +281,7 @@ class ProjectsTable(database.KeyedTable):
         columns = ['hostname || \'.\' || domainname', 'name', 'desc', 'timeModified']
         searchcols = ['name', 'desc']
         ids, count = database.KeyedTable.search(self, columns, 'Projects', 
-            searcher.Searcher.where(terms, searchcols), 'NAME', searcher.Searcher.lastModified('timeModified', modified), limit, offset)
+            searcher.Searcher.where(terms, searchcols, 'AND disabled=0'), 'NAME', searcher.Searcher.lastModified('timeModified', modified), limit, offset)
         for i, x in enumerate(ids[:]):
             ids[i] = list(x)
             ids[i][2] = searcher.Searcher.truncate(x[2], terms)
@@ -300,6 +303,28 @@ class ProjectsTable(database.KeyedTable):
         # to this repository
         repos.auth.addUser(self.cfg.authUser, self.cfg.authPass)
         repos.auth.addAcl(self.cfg.authUser, None, None, True, False, True)
+
+    def disable(self, projectId, reposPath):
+        cu = self.db.cursor()
+
+        # now move the repository out of the way
+        project = self.get(projectId)
+        path = os.path.join(reposPath, project['hostname'] + '.' + project['domainname'])
+        os.rename(path, path+'.disabled')
+
+        cu.execute("UPDATE Projects SET disabled=1, timeModified=? WHERE projectId=?", time.time(), projectId)
+        self.db.commit()
+
+    def enable(self, projectId, reposPath):
+        cu = self.db.cursor()
+
+        # now move the repository back
+        project = self.get(projectId)
+        path = os.path.join(reposPath, project['hostname'] + '.' + project['domainname'])
+        os.rename(path+'.disabled', path)
+
+        cu.execute("UPDATE Projects SET disabled=0, timeModified=? WHERE projectId=?", time.time(), projectId)
+        self.db.commit()
 
 class LabelsTable(database.KeyedTable):
     name = 'Labels'

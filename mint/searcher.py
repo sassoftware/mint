@@ -88,7 +88,7 @@ class Searcher :
 
 
     @classmethod
-    def where(self, searchterms, searchcols):
+    def where(self, searchterms, searchcols, extras=''):
         """
         Creates a WHERE clause based on L{searchterms}.
         XXX: Need to add sophistication
@@ -135,7 +135,7 @@ class Searcher :
         if not where.strip():
             raise SearchTermsError
 
-        return "WHERE " + where, substitutions
+        return "WHERE " + where + " " + extras, substitutions
 
     @classmethod
     def tokenize(self, searchterms, searchcols):

@@ -62,6 +62,11 @@ body#legal h2 {
     color: gray;
 }
 
+.disabledOption {
+    color: gray;
+    text-decoration: line-through;
+}
+
 /* rss button */
 a.rssButton {
     background-image: none;
