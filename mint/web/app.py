@@ -925,8 +925,20 @@ class MintApp(webhandler.WebHandler):
 
     def _packageSearch(self, terms, limit, offset):
         results, count = self.client.getPackageSearchResults(terms, limit, offset)
-        results = [(x[0], x[1], self.client.getProject(x[2])) for x in results]
-        self._write("searchResults", searchType = "Packages", terms = terms, results = results,
+        
+        searchResults = []
+        for x in results:
+            if x[2]: # if we have a project id, fine. if not, use the version to extract hostname of repo
+                p = self.client.getProject(x[2])
+                name = p.getName()
+                host = p.getFQDN()
+            else:
+                version = versions.VersionFromString(x[1])
+                name = version.branch().label().getHost()
+                host = name
+            searchResults.append( (x[0], x[1], host, name) )
+        
+        self._write("searchResults", searchType = "Packages", terms = terms, results = searchResults,
                                      count = count, limit = limit, offset = offset,
                                      modified = 0)
         return apache.OK

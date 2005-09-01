@@ -45,9 +45,9 @@
                     ]
                 elif searchType == "Packages":
                     formattedresults = [
-                        ('http://%s/conary/troveInfo?t=%s' % (resultset[2].getFQDN(), resultset[0]), resultset[0]),
+                        ('http://%s/conary/troveInfo?t=%s' % (resultset[2], resultset[0]), resultset[0]),
                         resultset[1],
-                        ('http://%s/' % resultset[2].getFQDN(), resultset[2].getName())
+                        ('http://%s/' % resultset[2], resultset[3])
                     ]
             ?>
             ${resultRow(formattedresults)}
