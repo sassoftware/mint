@@ -321,7 +321,7 @@ class MintApp(webhandler.WebHandler):
         return apache.OK
 
     def _admin_project_delete(self, *args, **kwargs):
-        # XXX Go through with it
+        # XXX Go through with it.  This functionality may be added in some later release
         return self._admin_project(*args, **kwargs)
 
     def _admin_project_disable(self, *args, **kwargs):
@@ -347,12 +347,37 @@ class MintApp(webhandler.WebHandler):
     def _admin_project_change_members(self, *args, **kwargs):
         return self._admin_project_jump('members', **kwargs)
 
+    def _admin_notify(self, *args, **kwargs):
+        self._write('admin/notify', kwargs=kwargs)
+        return apache.OK
+
+    def _admin_notify_send(self, *args, **kwargs):
+        #send the message
+        kwargs['errors'] = []
+        if not kwargs.get('subject', None):
+            kwargs['errors'].append('You must supply a subject')
+        if not kwargs.get('body', None):
+            kwargs['errors'].append('You must supply a message body')
+        if not kwargs['errors']:
+            try:
+                returner = self.client.notifyUsers(kwargs['subject'], kwargs['body'])
+                kwargs['extraMsg'] = 'Message sent successfully'
+            except Exception, e:
+                kwargs['errors'].append('An unknown error occurred: %s' % str(e))
+                return self._admin_notify(*args, **kwargs)
+        else:
+            return self._admin_notify(*args, **kwargs)
+        return self._administer(*args, **kwargs)
+
+    def _administer(self, *args, **kwargs):
+        self._write('admin/administer', kwargs=kwargs)
+        return apache.OK
+
     @requiresAdmin
     def administer(self, *args, **kwargs):
         operation = kwargs.get('operation', '')
         if not operation:
-            self._write('admin/administer')
-            return apache.OK
+            return self._administer(*args, **kwargs)
         #if operation in ['user', 'project', 'project_delete', 'project_edit']:
         return self.__getattribute__('_admin_%s'%operation)(*args, **kwargs)
         #else:

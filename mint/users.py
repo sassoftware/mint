@@ -134,10 +134,6 @@ class UsersTable(database.KeyedTable):
         return auth
 
     def validateNewEmail(self, userId, email):
-        def confirmString():
-            hash = sha1helper.sha1String(str(random.random()) + str(time.time()))
-            return sha1helper.sha1ToString(hash)
-        
         user = self.get(userId)
 
         confirm = confirmString()
@@ -155,14 +151,13 @@ class UsersTable(database.KeyedTable):
                              "",
                              "Contact %s"%self.cfg.supportContactTXT,
                              "if you need assistance."])
-        try:
-            socket.gethostbyname(email[find(email, '@')+1:])
-            sendMail(self.cfg.adminMail, self.cfg.productName, email,
+        sendMailWithChecks(self.cfg.adminMail, self.cfg.productName, email,
                 "Your %s account's email address must be confirmed" % self.cfg.productName, message)
-        except smtplib.SMTPRecipientsRefused:
-            raise MailError("Email could not be sent: Recipient refused by server.")
-        except socket.gaierror:
-            raise MailError("Email could not be sent: Bad domain name.")
+        self.invalidateUser(userId, confirm)
+
+    def invalidateUser(self, userId, confirm = None):
+        if not confirm:
+            confirm = confirmString()
         try:
             self.confirm_table.new(userId = userId,
                                    timeRequested = time.time(),
@@ -171,10 +166,6 @@ class UsersTable(database.KeyedTable):
             self.confirm_table.update(userId, confirmation = confirm)
 
     def registerNewUser(self, username, password, fullName, email, displayEmail, blurb, active):
-        def confirmString():
-            hash = sha1helper.sha1String(str(random.random()) + str(time.time()))
-            return sha1helper.sha1ToString(hash)
-
         # XXX this should be an atomic operation if possible:
         #     it would be nice to roll back previous operations
         #     if one in the chain fails
@@ -205,16 +196,8 @@ class UsersTable(database.KeyedTable):
                                  "",
                                  "Contact %s"%self.cfg.supportContactTXT,
                                  "if you need assistance."])
-            try:
-                socket.gethostbyname(email[find(email, '@')+1:])
-                sendMail(self.cfg.adminMail, self.cfg.productName, email,
+            sendMailWithChecks(self.cfg.adminMail, self.cfg.productName, email,
                     "Your new %s account must be confirmed" % self.cfg.productName, message)
-            except smtplib.SMTPRecipientsRefused:
-                authRepo.deleteUserByName(repoLabel, username)
-                raise MailError("Email could not be sent: Recipient refused by server.")
-            except socket.gaierror:
-                authRepo.deleteUserByName(repoLabel, username)
-                raise MailError("Email could not be sent: Bad domain name.")
         try:
             userId = self.new(username = username,
                               fullName = fullName,
@@ -294,6 +277,18 @@ class UsersTable(database.KeyedTable):
         SQL = """SELECT userId, username || ' - ' || fullName
                 FROM users
                 ORDER BY username"""
+
+        cu.execute(SQL)
+
+        results = cu.fetchall()
+        return results
+
+    def getUsersWithEmail(self):
+        """
+        Returns a list of all users suitable for sending e-mail
+        """
+        cu = self.db.cursor()
+        SQL = """SELECT userId, fullName, email FROM users"""
 
         cu.execute(SQL)
 
@@ -482,6 +477,13 @@ class Authorization(object):
             d[slot] = self.__getattribute__(slot)
         return d
 
+def confirmString():
+    """
+    Generate a confirmation string
+    """
+    hash = sha1helper.sha1String(str(random.random()) + str(time.time()))
+    return sha1helper.sha1ToString(hash)
+        
 def newPassword(length = 6):
     """
     @param length: length of random password generated
@@ -491,6 +493,16 @@ def newPassword(length = 6):
     choices = string.letters + string.digits
     pw = "".join([random.choice(choices) for x in range(length)])
     return pw
+
+def sendMailWithChecks(fromEmail, fromEmailName, toEmail, subject, body):
+    email = smtplib.quoteaddr(toEmail)
+    try:
+        socket.gethostbyname(email[email.find('@')+1:email.rfind('>')])
+        sendMail(fromEmail, fromEmailName, toEmail, subject, body)
+    except smtplib.SMTPRecipientsRefused:
+        raise MailError("Email could not be sent: Recipient refused by server.")
+    except socket.gaierror:
+        raise MailError("Email could not be sent: Bad domain name.")
 
 def sendMail(fromEmail, fromEmailName, toEmail, subject, body):
     """

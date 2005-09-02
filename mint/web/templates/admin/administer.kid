@@ -27,10 +27,12 @@
 
         <td id="main" class="spanall">
             <div class="pad">
-              A list of operations goes here.
+              <p py:if="kwargs.get('extraMsg', None) and not kwargs.get('errors',None)" class="message" py:content="kwargs['extraMsg']"/>
+              <h2>Available operations</h2>
               <ul>
                 <li><a href="administer?operation=user">User Operations</a></li>
                 <li><a href="administer?operation=project">Project Operations</a></li>
+                <li><a href="administer?operation=notify">Notify All Users</a></li>
               </ul>
             </div>
         </td>

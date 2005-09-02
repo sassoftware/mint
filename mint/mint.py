@@ -285,6 +285,14 @@ class MintClient:
         """
         return self.server.getNewsLink()
 
+    def notifyUsers(self, subject, body):
+        """
+        Send a message with the subject and body specified to all registered
+        members using their confirmed e-mail address.
+        """
+        print >>sys.stderr, "calling server"
+        return self.server.notifyUsers(subject, body)
+
 class ServerProxy(xmlrpclib.ServerProxy):
     def __getattr__(self, name):
         return _Method(self.__request, name)

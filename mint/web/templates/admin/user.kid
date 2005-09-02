@@ -36,12 +36,6 @@
                   <button name="operation" value="user_cancel">Cancel User Account</button>
                 </p>
               </form>
-              The list of user operations
-              <ul>
-                <li>Delete User</li>
-                <li>Change Password</li>
-                <li>Change Email Address</li>
-              </ul>
             </div>
         </td>
     </body>

@@ -218,6 +218,26 @@ class MintServer(object):
                     "%s user modification" % project.getName(),
                     '\n\n'.join((greeting, message, closing)))
 
+    @requiresAdmin
+    @private
+    def notifyUsers(self, subject, body):
+        """
+        Send an e-mail message to all registered members.
+        XXX Should we store these notifications somehow?
+        """
+        #First get a list of the users
+        userlist = self.users.getUsersWithEmail()
+        for user in userlist:
+            #Figure out the user's full name and e-mail address
+            email = "%s<%s>" % (user[1], user[2])
+            # XXX Do we want to do some substitution in the subject/body?
+            try:
+                users.sendMailWithChecks(self.cfg.adminMail, self.cfg.productName,
+                        email, subject, body)
+            except users.MailError, e:
+                # Invalidate the user, so he/she must change his/her address at the next login
+                self.users.invalidateUser(user[0])
+
     @requiresAuth
     @private
     def editProject(self, projectId, projecturl, desc):
