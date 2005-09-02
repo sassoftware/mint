@@ -29,11 +29,12 @@ MISSING FEATURES
 * Metadata editing for packages (blocking on Conary metadata handling)
 * Each project site should have a sidebar with recently updated packages
   (see http://www.archlinux.org/)
-
-ADMIN INTERFACE
-
 * Server -> User messaging system
  - we need an in-band way for users to ask to join a project (only one time
    to prevent DoS-style issues with hundreds of join requests), and for
    project owners to offer membership.
 
+ADMIN INTERFACE
+* Method for deleting a project completely
+* Mailing list handling for disabled projects.
+* Method for going in and changing user settings
