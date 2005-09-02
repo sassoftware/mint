@@ -8,7 +8,7 @@
     All Rights Reserved
 -->
     <head>
-        <title>${formatTitle('Thank You for Registering')}</title>
+        <title>${formatTitle('Confirmation Required')}</title>
     </head>
     <body>
         <td id="main" class="spanleft">
