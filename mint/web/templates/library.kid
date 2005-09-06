@@ -40,8 +40,9 @@ from mint import searcher
 
     <div id="search" class="palette" py:def="searchMenu(selectType='Projects')" py:strip="False">
         <?python
-searchTypes = ['Projects', 'Packages']
+searchTypes = ['Packages']
 if auth.admin:
+    searchTypes.insert(0, 'Projects')
     searchTypes.append('Users')
         ?>
         <h3>search ${cfg.productName}</h3>
