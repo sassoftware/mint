@@ -57,7 +57,7 @@ onload = "javascript:;"
                                 </td>
                                 <td id="user" py:if="not auth.authorized">
                                     <div class="pad">
-                                        <h4>not logged in | <a href="login">Forgot Password</a></h4>
+                                        <h4>not logged in | <a href="http://$siteHost/login">Forgot Password</a></h4>
                                         <div>
                                             <input type="text" name="username" size="16"/> <label>username</label><br />
                                             <input type="password" name="password" size="16"/> <label>password</label>
@@ -68,7 +68,7 @@ onload = "javascript:;"
                                     <div class="pad">
                                         <h3>${auth.fullName}</h3>
                                         <h4>${auth.username}</h4>
-                                        <div><a href="userSettings" class="arrows">view &#38; Edit My Account</a></div>
+                                        <div><a href="http://$siteHost/userSettings" class="arrows">view &#38; Edit My Account</a></div>
                                         <div py:if='auth.admin'><a href="http://$siteHost/administer" class="arrows">Administer</a></div>
 
                                     </div>
