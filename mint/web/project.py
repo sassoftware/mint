@@ -3,7 +3,7 @@
 #
 # All rights reserved
 #
-
+import email
 import kid
 import os
 import sys
@@ -326,7 +326,8 @@ class ProjectHandler(WebHandler):
 
         if feed == "releases":
             title = "%s releases" % self.project.getName()
-            link = "http://%s/releases" % self.project.getFQDN()
+            link = "http://%s/project/%s/releases" % \
+                (self.siteHost, self.project.getHostname())
             desc = "Current releases from %s" % self.project.getName()
 
             releases = self.project.getReleases()
@@ -335,13 +336,13 @@ class ProjectHandler(WebHandler):
                 item = {}
                 item['title'] = "%s=%s" % (release.getTroveName(),
                     release.getTroveVersion().trailingRevision().asString())
-                item['link'] = "http://%s/release?id=%d" % (self.project.getFQDN(),
-                    release.getId())
+                item['link'] = "http://%s/project/%s/release?id=%d" % \
+                    (self.siteHost, self.project.getHostname(), release.getId())
                 item['content'] = "A new version of %s has been released: %s version %s." % \
                     (release.getName(), release.getTroveName(),
                      release.getTroveVersion().trailingRevision().asString())
                 item['date_822'] = email.Utils.formatdate(release.getChangedTime())
-                item['creator'] = "http://%s/"%self.cfg.domainName
+                item['creator'] = "http://%s/" % self.cfg.domainName
                 items.append(item)
         else:
             items = []

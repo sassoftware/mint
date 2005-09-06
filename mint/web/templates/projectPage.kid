@@ -37,7 +37,7 @@ from mint import userlevels
                                 </h3>
                                 <ul>
                                     <li class="$basePath/release" py:for="release in project.getReleases()">
-                                        <a href="/release?id=${release.getId()}">
+                                        <a href="$basePath/release?id=${release.getId()}">
                                             ${release.getTroveName()} = ${release.getTroveVersion().trailingRevision().asString()}
                                         </a>
                                     </li>
