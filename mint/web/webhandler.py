@@ -54,6 +54,25 @@ class WebHandler(object):
                                                     path = "/")
             self._redirCookie(cookie)
 
+    def _resetPasswordById(self, userId):
+        newpw = users.newPassword()
+        user = self.client.getUser(userId)
+        user.setPassword(newpw)
+
+        message = "\n".join(["Your password for username %s at %s has been reset to:" % (user.getUsername(), self.cfg.productName),
+                             "",
+                             "    %s" % newpw,
+                             "",
+                             "Please log in at http://%s.%s/ and change" %
+                             (self.cfg.hostName, self.cfg.domainName),
+                             "this password as soon as possible."
+                             ])
+
+        users.sendMail(self.cfg.adminMail, self.cfg.productName,
+                   user.getEmail(),
+                   "%s forgotten password"%self.cfg.productName, message)
+
+
 def normPath(path):
     """Normalize a web path by prepending a / if missing, and appending
     a / if missing."""

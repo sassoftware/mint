@@ -40,6 +40,7 @@ class MintApp(WebHandler):
     project = None
     projectList = []
     userLevel = -1
+    user = None
 
     def __init__(self, req, cfg):
         self.req = req
@@ -162,6 +163,7 @@ class MintApp(WebHandler):
             'basePath':         self.basePath,
             'project':          None,
             'userLevel':        self.userLevel,
+            'user':             self.user,
         }
 
         # match the requested url to the right url handler

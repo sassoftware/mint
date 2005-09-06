@@ -127,28 +127,10 @@ class SiteHandler(WebHandler):
 
     def _resetPassword(self, username):
         userId = self.client.getUserIdByName(username)
+        user = self.client.getUser(userId)
         self._resetPasswordById(userId)
         self._write("forgotPassword", email = user.getEmail())
         return apache.OK
-
-    def _resetPasswordById(self, userId):
-        newpw = users.newPassword()
-        user = self.client.getUser(userId)
-        user.setPassword(newpw)
-
-        message = "\n".join(["Your password for username %s at %s has been reset to:" % (user.getUsername(), self.cfg.productName),
-                             "",
-                             "    %s" % newpw,
-                             "",
-                             "Please log in at http://%s.%s/ and change" %
-                             (self.cfg.hostName, self.cfg.domainName),
-                             "this password as soon as possible."
-                             ])
-
-        users.sendMail(self.cfg.adminMail, self.cfg.productName, 
-                   user.getEmail(),
-                   "%s forgotten password"%self.cfg.productName, message)
-
 
     @strFields(username = None, password = '', submit = None, to = '/')
     def processLogin(self, auth, username, password, submit, to):
@@ -200,7 +182,6 @@ class SiteHandler(WebHandler):
         results, count = self.client.getUsers(sortOrder, limit, offset)
         self._write("users", sortOrder=sortOrder, limit=limit, offset=offset, results=results, count=count)
         return apache.OK
-
        
     @requiresAuth
     def userSettings(self, auth):
