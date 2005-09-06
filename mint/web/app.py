@@ -146,7 +146,7 @@ class MintApp(WebHandler):
         # mapping of url regexps to handlers
         urls = (
             (r'^/project/',     self.projectHandler.handle),
-#            (r'^/admin/',       self.adminHandler.handle),
+            (r'^/administer',   self.adminHandler.handle),
             (r'^/',             self.siteHandler.handle),
         )
 
