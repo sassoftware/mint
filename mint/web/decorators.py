@@ -25,19 +25,6 @@ def requiresAuth(func):
             return func(self, **kwargs)
     return wrapper
 
-def projectOnly(func):
-    """
-    Decorator to return a 404 Not Found error if a webapp method
-    that requires a project is accessed at the site url.
-    """
-    def wrapper(self, **kwargs):
-        if not self.project:
-            return self._404(self, **kwargs)
-        else:
-            return func(self, **kwargs)
-    return wrapper
-
-
 def ownerOnly(func):
     """
     Decorate a method to be callable only by the owner of the
