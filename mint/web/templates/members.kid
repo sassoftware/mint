@@ -66,7 +66,7 @@ from mint import userlevels
                 <h3>Project Owners</h3>
                 <table border="0" cellspacing="0" cellpadding="0" class="memberstable">
                     <tr py:for="userId, username in sorted(users[userlevels.OWNER], key=lambda x: x[1])">
-                        <th><a href="userInfo?id=${userId}">${username}</a></th>
+                        <th><a href="http://${siteHost}/userInfo?id=${userId}">${username}</a></th>
                         <td py:if="isOwner and not lastOwner and userId != auth.userId">
                             <a onclick="javascript:load_popup('Edit${userId}','memberEditBox');"
                                href="memberSettings?userId=${userId}"
@@ -89,7 +89,7 @@ from mint import userlevels
 
                 <table border="0" cellspacing="0" cellpadding="0" class="memberstable">
                     <tr py:for="userId, username in sorted(users[userlevels.DEVELOPER], key=lambda x: x[1])">
-                        <th><a href="userInfo?id=${userId}">${username}</a></th>
+                        <th><a href="http://${siteHost}/userInfo?id=${userId}">${username}</a></th>
                         <td py:if="isOwner">
                             <a onclick="javascript:load_popup('Edit${userId}','memberEditBox');"
                                href="memberSettings?userId=${userId}"

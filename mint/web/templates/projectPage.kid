@@ -30,13 +30,13 @@ from mint import userlevels
                             ${projectResourcesMenu()}
                             <div class="palette" id="releases">
                                 <h3>
-                                    <a href="/rss" class="rssButton">
-                                        <img src="${cfg.staticUrl}/apps/mint/images/xml.gif"/>
+                                    <a href="$basePath/rss" class="rssButton">
+                                        <img src="${cfg.staticPath}/apps/mint/images/xml.gif"/>
                                     </a>
                                     Recent Releases
                                 </h3>
                                 <ul>
-                                    <li class="release" py:for="release in project.getReleases()">
+                                    <li class="$basePath/release" py:for="release in project.getReleases()">
                                         <a href="/release?id=${release.getId()}">
                                             ${release.getTroveName()} = ${release.getTroveVersion().trailingRevision().asString()}
                                         </a>
@@ -47,7 +47,7 @@ from mint import userlevels
                     </td>
                     <td id="main">
                         <div class="pad">
-                            <h2>${project.getName()}  <a py:if="isOwner" href="editProject">Edit</a></h2>
+                            <h2>${project.getName()}  <a py:if="isOwner" href="$basePath/editProject">Edit</a></h2>
                             <h3 py:if="project.getProjectUrl()">Project Home Page &#160;</h3>
                             <p py:if="project.getProjectUrl()"><a href="${project.getProjectUrl()}" py:content="project.getProjectUrl()" />
                             </p>
@@ -71,7 +71,7 @@ from mint import userlevels
                             </p>
                             <p py:if="not memberList">
                                 <em class="resign">This project is orphaned.</em>
-                                <a py:if="auth.authorized" href="adopt">Adopt this project</a>
+                                <a py:if="auth.authorized" href="$basePath/adopt">Adopt this project</a>
                                 <span py:strip="True" py:if="not auth.authorized">Log in to adopt this project.</span>
                             </p>
                         </div>

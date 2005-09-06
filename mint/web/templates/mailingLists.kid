@@ -16,7 +16,7 @@
     </head>
 
     <div py:def="breadcrumb()" py:strip="True">
-        <a href="../">${project.getName()}</a>
+        <a href="$basePath">${project.getName()}</a>
         <a href="#">Releases </a>
     </div>
 
@@ -51,7 +51,7 @@
 
                     <div style="float:left; margin-right:5px;">
                         <span py:if="auth.admin">
-                            <a href="deleteList?list=${list.name}" class="option">Delete List</a>
+                            <a href="$basePath/deleteList?list=${list.name}" class="option">Delete List</a>
                         </span>
                     </div>
                     &#160;
@@ -62,7 +62,7 @@
                 
                 <h2 py:if="isOwner">Create a New Mailing List</h2>
 
-                <form py:if="isOwner" name="createList" action="createList" method="POST">
+                <form py:if="isOwner" name="createList" action="$basePath/createList" method="POST">
                     <table border="0" cellspacing="0" cellpadding="0" class="mainformhorizontal">
                         <tr>
                             <th><em class="required">List Name:</em></th>

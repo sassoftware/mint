@@ -28,7 +28,7 @@ class MintConfig(ConfigFile):
                               '<a href="http://www.freenode.net/">FreeNode</a> '
                               'IRC network',
         'supportContactTXT' : 'custom@rpath.com, or join the IRC channel #conary on the Freenode IRC network (http://www.freenode.net/)',
-        'staticUrl'         : '/conary-static/',
+        'staticPath'        : '/conary-static/',
         'authRepoMap'       : [ STRINGDICT, {} ],
         'authDbPath'        : '/srv/authrepo/repos/sqldb',
         'templatePath'      : os.path.join(templatePath, 'web', 'templates'),
@@ -47,7 +47,7 @@ class MintConfig(ConfigFile):
         'EnableMailLists'   : False,
         'MailListBaseURL'   : 'http://lists.rpath.org/mailman/',
         'MailListPass'      : 'adminpass',
-
+        'basePath'          : '/',
 
         # don't set these yourself; they will be automatically generated 
         # from authRepoMap:
@@ -74,6 +74,3 @@ class MintConfig(ConfigFile):
         #Make sure MailListBaseURL has a slash on the end of it
         if self.MailListBaseURL[-1:] != '/':
             self.setValue('MailListBaseURL', self.MailListBaseURL + '/')
-
-        # XXX we need to unify these two names: 
-        self.staticPath = self.staticUrl

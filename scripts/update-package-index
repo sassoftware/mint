@@ -15,13 +15,14 @@ db = sqlite3.connect(dbPath, timeout = 30000)
 pkgIdx = pkgindex.PackageIndexTable(db)
 
 cu = db.cursor()
-cu.execute("SELECT projectId, hostname FROM Projects")
+cu.execute("SELECT projectId, hostname || '.' || domainname FROM Projects")
 
-repMap = {}
-projectIds = {}
+repMap = {'conary.rpath.com': 'http://conary.rpath.com/conary/',
+          'contrib.rpath.com': 'http://contrib.rpath.com/conary/'}
+projectIds = {'conary.rpath.com': 0, 'contrib.rpath.com': 0}
 for r in cu.fetchall():
     projectIds[r[1]] = r[0]
-    repMap[r[1]] = "http://%s/conary/" % r[1]
+    repMap[r[1]] = "http://%s/conary/" % (r[1])
 
 
 repos = netclient.NetworkRepositoryClient(repMap)

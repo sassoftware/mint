@@ -35,7 +35,7 @@ from mint import userlevels
 
         ?>
         <div py:def="breadcrumb()" py:strip="True">
-            <a href="/">${project.getName()}</a>
+            <a href="$basePath">${project.getName()}</a>
             <a href="#">Release</a>
         </div>
     
@@ -52,12 +52,12 @@ from mint import userlevels
 
                 <ul py:if="files">
                     <li py:for="i, file in enumerate(files)">
-                        <a href="downloadImage?fileId=${file[0]}">Disc ${i+1}</a>
+                        <a href="$basePath/downloadImage?fileId=${file[0]}">Disc ${i+1}</a>
                     </li>
                 </ul>
 
                 <div py:strip="True" py:if="isOwner">
-                    <p py:if="not preventEdit"><a href="editRelease?releaseId=${release.getId()}">Edit Release</a></p>
+                    <p py:if="not preventEdit"><a href="$basePath/editRelease?releaseId=${release.getId()}">Edit Release</a></p>
                     <p py:if="preventEdit" class="help">Release cannot be modified while it is being generated.</p>
                     
                     <h3>Description</h3>
@@ -67,7 +67,7 @@ from mint import userlevels
 
                     <p id="jobStatus">Retrieving job status...</p>
                     <p>
-                        <a href="restartJob?releaseId=${release.getId()}">Re-generate</a>
+                        <a href="$basePath/restartJob?releaseId=${release.getId()}">Re-generate</a>
                         <a class="button" py:if="not release.getPublished() and files" href="publish?releaseId=${release.getId()}">Publish Image</a>
                     </p>
                     <p py:if="release.getPublished()">Image Published</p>

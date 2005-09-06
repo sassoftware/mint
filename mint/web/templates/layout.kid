@@ -25,16 +25,16 @@ onload = "javascript:;"
 
     <head py:match="item.tag == 'head'" xmlns="http://www.w3.org/1999/xhtml">
         <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=utf-8" />
-        <script type="text/javascript" src="${cfg.staticUrl}/apps/mint/javascript/generic.js"/>
-        <script type="text/javascript" src="${cfg.staticUrl}/apps/mint/javascript/library.js"/>
-        <script type="text/javascript" src="${cfg.staticUrl}/apps/mint/javascript/xmlrpc.js"/>
-        <link rel="stylesheet" type="text/css" href="${cfg.staticUrl}apps/mint/css/basic.css"/>
-        <link rel="stylesheet" type="text/css" href="${cfg.staticUrl}apps/mint/css/structure.css"/>
-        <link rel="stylesheet" type="text/css" href="${cfg.staticUrl}apps/mint/css/user.css"/>
-        <link rel="stylesheet" type="text/css" href="${cfg.staticUrl}apps/mint/css/topNav.css"/>
-        <link rel="stylesheet" type="text/css" href="${cfg.staticUrl}apps/mint/css/log.css"/>
-        <link rel="stylesheet" type="text/css" href="${cfg.staticUrl}apps/mint/css/contentTypes.css"/>
-        <link rel="stylesheet" type="text/css" href="${cfg.staticUrl}apps/mint/css/mint.css"/>
+        <script type="text/javascript" src="${cfg.staticPath}/apps/mint/javascript/generic.js"/>
+        <script type="text/javascript" src="${cfg.staticPath}/apps/mint/javascript/library.js"/>
+        <script type="text/javascript" src="${cfg.staticPath}/apps/mint/javascript/xmlrpc.js"/>
+        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/basic.css"/>
+        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/structure.css"/>
+        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/user.css"/>
+        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/topNav.css"/>
+        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/log.css"/>
+        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/contentTypes.css"/>
+        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/mint.css"/>
         <div py:replace="item[:]"/>
     </head>
     <body xmlns="http://www.w3.org/1999/xhtml"
@@ -69,7 +69,7 @@ onload = "javascript:;"
                                         <h3>${auth.fullName}</h3>
                                         <h4>${auth.username}</h4>
                                         <div><a href="userSettings" class="arrows">view &#38; Edit My Account</a></div>
-                                        <div py:if='auth.admin'><a href="administer" class="arrows">Administer</a></div>
+                                        <div py:if='auth.admin'><a href="http://$siteHost/administer" class="arrows">Administer</a></div>
 
                                     </div>
                                 </td>

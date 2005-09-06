@@ -20,6 +20,7 @@ from repository import changeset
 
 from mint import config
 from mint import mint_server
+from webhandler import normPath
 import app
 import cookie_http
 
@@ -196,7 +197,7 @@ def putFile(port, isSecure, repos, req):
 
     return apache.OK
 
-def conaryHandler(req, cfg):
+def conaryHandler(req, cfg, pathInfo):
     repName = req.hostname
 
     method = req.method.upper()
@@ -227,7 +228,9 @@ def conaryHandler(req, cfg):
         buildLabel = req.hostname + "@rpl:devel"
         projectName = req.hostname.split(".")[0]
         repMapStr = buildLabel + " http://" + req.hostname + "/conary/"
-        repMap = {buildLabel: "http://" + req.hostname + "/conary/"}
+        repMap = {buildLabel: "http://" + req.hostname + "/conary/",
+                  'conary.rpath.com': 'https://conary-commits.rpath.com/conary/',
+                  'contrib.rpath.com': 'https://conary-commits.rpath.com/contrib/'}
         if cfg.commitAction:
             commitAction = cfg.commitAction % {'repMap': repMapStr,
                                                'buildLabel': buildLabel,
@@ -261,7 +264,7 @@ def conaryHandler(req, cfg):
     else:
 	return apache.HTTP_METHOD_NOT_ALLOWED
 
-def xmlrpcHandler(req, cfg):
+def xmlrpcHandler(req, cfg, pathInfo):
     if req.method.upper() != "POST":
         return apache.HTTP_METHOD_NOT_ALLOWED
     if req.headers_in['Content-Type'] != "text/xml":
@@ -292,11 +295,11 @@ def xmlrpcHandler(req, cfg):
     req.write(resp)
     return apache.OK
 
-def mintHandler(req, cfg):
+def mintHandler(req, cfg, pathInfo):
     webfe = app.MintApp(req, cfg)
-    return webfe._handle()
+    return webfe._handle(pathInfo)
 
-Dispatchers = (
+urls = (
     (r'^/conary/',           conaryHandler),
     (r'^/changeset',         conaryHandler),
     (r'^/xmlrpc/',           xmlrpcHandler),
@@ -305,24 +308,25 @@ Dispatchers = (
 )
 
 def handler(req):
-    pathInfo = req.uri
-    
-    if pathInfo == "":
-        pathInfo = "/"
-    elif pathInfo[-1] != "/":
-        pathInfo += "/"
-
     cfg = config.MintConfig()
     cfg.read(req.filename)
 
+    # normalize req path and base path
+    pathInfo = normPath(req.uri)
+    basePath = normPath(cfg.basePath)
+
+    # strip off base path and normalize again
+    pathInfo = pathInfo[len(basePath):]
+    pathInfo = normPath(pathInfo)
+
     # special case for silly PUT urls that don't use /conary/
     if req.method.upper() == "PUT":
-        return conaryHandler(req, cfg)
+        return conaryHandler(req, cfg, pathInfo)
 
-    for match, urlHandler in Dispatchers:
+    for match, urlHandler in urls:
         if re.match(match, pathInfo):
-            return urlHandler(req, cfg)
-
-
+            newPath = normPath(pathInfo[len(match)-1:])
+            return urlHandler(req, cfg, newPath)
+    return apache.HTTP_NOT_FOUND
 
 repositories = {}

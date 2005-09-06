@@ -22,9 +22,9 @@ class CookieHttpHandler(MintApp, http.HttpHandler):
     def _requestAuth(self):
         return self._redirect("/")
 
-    def _getHandler(self, cmd, auth):
+    def _getHandler(self, cmd):
         self.repos = shimclient.ShimNetClient(
-            self.repServer, self._protocol, self._port, auth.getToken(), self.repServer.map)
+            self.repServer, self._protocol, self._port, self.auth.getToken(), self.repServer.map)
         self.serverName = self.repServer.name
         return MintApp._getHandler(self, cmd, auth)
 
