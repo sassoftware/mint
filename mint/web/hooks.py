@@ -206,6 +206,7 @@ def conaryHandler(req, cfg, pathInfo):
 
     if not repositories.has_key(repName):
         repositoryDir = os.path.join(cfg.reposPath, req.hostname)
+        tmpPath = os.path.join(cfg.reposPath, req.hostname, "tmp")
 
         if os.path.basename(req.uri) == "changeset":
            rest = os.path.dirname(req.uri) + "/"
@@ -241,7 +242,7 @@ def conaryHandler(req, cfg, pathInfo):
         if os.access(repositoryDir, os.F_OK):
             repositories[repName] = netserver.NetworkRepositoryServer(
                                         repositoryDir,
-                                        cfg.tmpPath,
+                                        tmpPath,
                                         urlBase, 
                                         req.hostname,
                                         repMap,
