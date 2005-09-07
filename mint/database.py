@@ -3,7 +3,7 @@
 #
 # All Rights Reserved
 #
-import sys
+import sys, time
 import sqlite3
 
 from mint_error import MintError
@@ -21,6 +21,13 @@ class DuplicateItem(MintError):
 
     def __str__(self):
         return "duplicate item in %s" % self.item
+
+class UpToDateException(MintError):
+    def __init__(self, table = "Unknown Table"):
+        self.table = table
+
+    def __str__(self):
+            return "The table '%s' is not up to date" % self.table
 
 class TableObject(object):
     """A simple base class defining a object-oriented interface to an SQL table.
@@ -64,8 +71,11 @@ class DatabaseTable:
     @cvar name: The name of the table as created by the createSQL string.
     @cvar fields: List of SQL fields as created by the createSQL string.
     @cvar createSQL: SQL statement to create the table for this object.
+    @cvar indexes: A dictionary of indeces mapped to the SQL queries to create
+    those indeces
     """
 
+    schemaVersion = 0
     name = "Table"
     fields = []
     createSQL = "CREATE TABLE Table ();"
@@ -89,8 +99,35 @@ class DatabaseTable:
         missing = set(self.indexes.keys()) - set(x[0] for x in cu) 
         for index in missing:
             cu.execute(self.indexes[index])
-               
-        self.db.commit()
+
+        #Don't commit here.  Commits must be handled up stream to enable
+        #upgrading
+        if not self.versionCheck():
+            raise UpToDateException(self.name)
+
+    def __del__(self):
+        if not self.db.closed:
+            self.db.close()
+        del self.db
+
+    def getDBVersion(self):
+        cu = self.db.cursor()
+        try:
+            cu.execute("SELECT MAX(version) FROM DatabaseVersion")
+            version = cu.next()[0]
+            if version is None:
+                raise StopIteration
+        except StopIteration:
+            cu.execute("INSERT INTO DatabaseVersion(version, timestamp) VALUES(?,?)", self.schemaVersion, time.time())
+            version = self.schemaVersion
+        return version
+
+    def versionCheck(self):
+        """
+        Override this function in table needing to be modified.  Don't
+        forget to increment the schemaVersion
+        """
+        return self.getDBVersion() == self.schemaVersion
 
 class KeyedTable(DatabaseTable):
     """

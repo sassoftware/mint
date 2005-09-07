@@ -19,6 +19,7 @@ import session
 import versions
 import users
 import userlevels
+import dbversion
 from cache import TroveNamesCache
 from mint_error import MintError
 from mint_error import PermissionDenied
@@ -750,14 +751,28 @@ class MintServer(object):
         self.db = sqlite3.connect(cfg.dbPath, timeout = 30000)
         self.authDb = sqlite3.connect(cfg.authDbPath, timeout = 30000)
 
-        self.projects = projects.ProjectsTable(self.db, self.cfg)
-        self.labels = projects.LabelsTable(self.db)
-        self.jobs = jobs.JobsTable(self.db)
-        self.users = users.UsersTable(self.db, self.cfg)
-        self.projectUsers = users.ProjectUsersTable(self.db)
-        self.releases = releases.ReleasesTable(self.db)
-        self.pkgIndex = pkgindex.PackageIndexTable(self.db)
-        self.newsCache = news.NewsCacheTable(self.db, self.cfg)
-        self.sessions = session.SessionsTable(self.db)
-        
+        #An explicit transaction.  Make sure you don't have any implicit
+        #commits until the database version has been asserted
+        self.db.cursor().execute('BEGIN')
+        try:
+            self.projects = projects.ProjectsTable(self.db, self.cfg)
+            self.labels = projects.LabelsTable(self.db)
+            self.jobs = jobs.JobsTable(self.db)
+            self.users = users.UsersTable(self.db, self.cfg)
+            self.projectUsers = users.ProjectUsersTable(self.db)
+            self.releases = releases.ReleasesTable(self.db)
+            self.pkgIndex = pkgindex.PackageIndexTable(self.db)
+            self.newsCache = news.NewsCacheTable(self.db, self.cfg)
+            self.sessions = session.SessionsTable(self.db)
+
+            #The database version object
+            self.version = dbversion.VersionTable(self.db)
+            #Now it's safe to commit
+            self.db.commit()
+
+        except:
+            #An error occurred during db creation or upgrading
+            self.db.rollback()
+            raise
+
         self.newsCache.refresh()
