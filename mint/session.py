@@ -52,7 +52,7 @@ class SessionsTable(DatabaseTable):
         self.db.commit()
 
 
-class SqlSession(BaseSession, DatabaseTable):
+class SqlSession(BaseSession):
     """An implementation of mod_python's Session support for an sqlite backend."""
     def __init__(self, req, client, sid = 0,
                  secret = None, timeout = 0, lock = 1):
