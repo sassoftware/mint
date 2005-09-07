@@ -3,4 +3,93 @@ This is a temporary file that will contain drafts of any text required for
 the public website.  Once any text has been reviewed and approved, it will
 be removed from this file and integrated into Mint proper.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Homepage
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+*Welcome to rPath*
+
+Welcome to rPath.org -- the site for collaborative open source development.
+
+On this site, developers can create and host projects and operating
+systems, while users can browse and download projects and operating system
+images for installation.
+
+Want to learn more?  Go [here] (link to help page)
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Help page
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+rPath's mission is to *** blah blah blah ***
+
+As part of that mission, we've deployed our tools and technologies on
+rPath.com, for you to use.  Of course, how you'll use rPath.com depends on
+who you are.
+
+*I'm a Developer*
+
+If coding is your thing, you can use rPath to host your open source
+development project. (Not quite ready to share your work with the world
+yet?  No problem; rPath can still help -- go [here] (link to corporate
+site) to find out how.)
+
+What's a project?  It can be anything from packaging an app so it'll be
+available to Conary-based systems, to the creation of an operating system
+environment tailored for a specific purpose.
+
+What do you get?  Here's the list:
+
+    o A Conary repository dedicated to your project
+
+    o A project-specific hostname (<project-name>.rpath.org)
+
+    o Project-specific mailing lists
+
+    o A no-frills project-specific page (http://<project-name>.rpath.org/)
+
+    o The ability to create "releases" (downloadable images in a variety of
+      formats) with a single mouse click
+
+    o A project membership framework that allows you to keep track of your
+      project's members (people able to commit changes to your project's
+      repository) and owners (can manage project membership as well as
+      having commit access)
+
+How much does it cost?  Nothing -- rPath.com's services are free for any
+open source project.
+
+Not the project creating type?  If you see an interesting project, offer
+your services to the project's owners.  If they accept, they'll make you a
+member of the project, and you'll be able to start contributing
+immediately.
+
+HOW DO I GET STARTED?  First, register for an rPath.com account.  Once
+you've gotten the confirmation email and have logged in, you can start the
+account creation process (which no more complex than filling in a few text
+fields and clicking on a "submit" button).
+
+*I'm Not a Developer*
+
+Even if you're not the type to work late into the night getting your latest
+creation to build, rPath.com still has a lot to offer.
+
+Already using a Conary-based system?  You came to the right place to look
+for software -- browse and search your way to the right package, and then
+use Conary to install it right off the project's repository.
+
+Looking for a Conary-based system?  Search and/or browse the projects on
+rPath.com, and pick the one that best meets your needs.  Download the
+release, and you're off and running.
+
+Interested in a particular project?  You can keep track of what's going on
+by subscribing to the project's mailing list(s), or just use the project's
+"recent releases" RSS feed to find out when there's a new release
+available.
+
+HOW DO I GET STARTED?  Use rPath.com's browse and search functions to learn
+more about the projects and software available -- it's that simple.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+First-login Page
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
