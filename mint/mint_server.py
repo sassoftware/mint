@@ -15,6 +15,7 @@ import news
 import pkgindex
 import projects
 import releases
+import session
 import versions
 import users
 import userlevels
@@ -726,6 +727,19 @@ class MintServer(object):
             return {'status':  job.getStatus(),
                     'message': job.getStatusMessage()}
 
+    # session management
+    def loadSession(self, sid):
+        return self.sessions.load(sid)
+
+    def saveSession(self, sid, data):
+        self.sessions.save(sid, data)
+
+    def deleteSession(self, sid):
+        self.sessions.delete(sid)
+
+    def cleanupSessions(self):
+        self.sessions.cleanup()
+    
     def __init__(self, cfg, allowPrivate = False):
         self.cfg = cfg
      
@@ -744,4 +758,6 @@ class MintServer(object):
         self.releases = releases.ReleasesTable(self.db)
         self.pkgIndex = pkgindex.PackageIndexTable(self.db)
         self.newsCache = news.NewsCacheTable(self.db, self.cfg)
+        self.sessions = session.SessionsTable(self.db)
+        
         self.newsCache.refresh()

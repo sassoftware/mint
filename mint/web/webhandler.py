@@ -38,21 +38,10 @@ class WebHandler(object):
         self.req.headers_out['Location'] = location
         return apache.HTTP_MOVED_PERMANENTLY
 
-    def _redirCookie(self, cookie):
-        # we have to add the cookie headers manually when redirecting, because
-        # mod_python looks at err_headers_out instead of headers_out.
-
-        self.req.err_headers_out.add("Cache-Control", 'no-cache="set-cookie"')
-        self.req.err_headers_out.add("Set-Cookie", str(cookie))
-
     def _clearAuth(self):
         self.auth = users.Authorization()
         self.authToken = ('anonymous', 'anonymous')
-        for domain in self.cfg.cookieDomain:
-            cookie = Cookie.Cookie('authToken', '', domain = "." + domain,
-                                                    expires = time.time() - 300,
-                                                    path = "/")
-            self._redirCookie(cookie)
+        self.session.invalidate()
 
     def _resetPasswordById(self, userId):
         newpw = users.newPassword()

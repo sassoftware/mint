@@ -38,7 +38,6 @@ class MintConfig(ConfigFile):
         'imagesPath'        : '/srv/mint/images/',
         'logPath'           : '/srv/mint/logs/',
         'domainName'        : 'rpath.org',
-        'cookieDomain'      : [ STRINGLIST, ['rpath.org'] ],
         'hostName'          : None, # optional domain name for main site
         'adminMail'         : 'mint@rpath.org',
         'xmlrpcAccess'      : [ BOOLEAN, False ],
@@ -48,6 +47,7 @@ class MintConfig(ConfigFile):
         'MailListBaseURL'   : 'http://lists.rpath.org/mailman/',
         'MailListPass'      : 'adminpass',
         'basePath'          : '/',
+        'cookieSecretKey'   : None,
 
         # don't set these yourself; they will be automatically generated 
         # from authRepoMap:

@@ -11,7 +11,6 @@ import re
 from urllib import quote, unquote
 
 from mod_python import apache
-from mod_python import Cookie
 
 import versions
 from web import fields
@@ -143,10 +142,8 @@ class SiteHandler(WebHandler):
                 raise mint_error.InvalidLogin
             else:
                 client.updateAccessedTime(auth.userId)
-                auth = base64.encodestring("%s:%s" % authToken).strip()
-                for domain in self.cfg.cookieDomain:
-                    cookie = Cookie.Cookie('authToken', auth, domain = "." + domain, path = "/")
-                    self._redirCookie(cookie)
+                self.session['authToken'] = authToken
+                self.session.save()
                 return self._redirect(unquote(to))
         elif submit == "Forgot Password":
             return self._resetPassword(username)

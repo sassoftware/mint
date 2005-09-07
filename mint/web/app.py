@@ -61,27 +61,25 @@ class MintApp(WebHandler):
         if method not in ('GET', 'POST'):
             return apache.HTTP_METHOD_NOT_ALLOWED
 
-        cookies = Cookie.get_cookies(self.req, Cookie.Cookie)
-        if 'authToken' in cookies:
-            auth = base64.decodestring(cookies['authToken'].value)
-            authToken = auth.split(":")
+        anonToken = ('anonymous', 'anonymous')
+        self.client = shimclient.ShimMintClient(self.cfg, anonToken)
 
-            auth = self._checkAuth(authToken)
-
-            if not auth.authorized:
-                self._clearAuth()
-                return self._redirect("/")
-            else:
-                self.user = self.client.getUser(auth.userId)
-                self.projectList = self.client.getProjectsByMember(auth.userId)
-        else:
-            authToken = ('anonymous', 'anonymous')
-            self._checkAuth(authToken)
-            auth = users.Authorization()
-
-        self.authToken = authToken
-        self.auth = auth
-        auth.setToken(authToken)
+        # prepare a new session
+        self.session = SqlSession(self.req, self.client, secret = self.cfg.cookieSecretKey)
+        self.session.save()
+        
+        # default to anonToken if the current session has no authToken
+        self.authToken = self.session.get('authToken', anonToken)
+        
+        # open up a new client with the retrieved authToken
+        self.client = shimclient.ShimMintClient(self.cfg, self.authToken)
+        self.auth = self.client.checkAuth()
+        
+        if self.auth.authorized:
+            self.user = self.client.getUser(self.auth.userId)
+            self.projectList = self.client.getProjectsByMember(self.auth.userId)
+        
+        self.auth.setToken(self.authToken)
 
         try:
             method = self._getHandler(pathInfo)
@@ -100,11 +98,6 @@ class MintApp(WebHandler):
         except fields.MissingParameterError, e:
             self._write("error", shortError = "Missing Parameter", error = str(e))
             return apache.OK
-
-    def _checkAuth(self, authToken):
-        self.client = shimclient.ShimMintClient(self.cfg, authToken)
-        auth = self.client.checkAuth()
-        return auth
 
     def _getHandler(self, pathInfo):
         fullHost = self.req.hostname
@@ -158,6 +151,7 @@ class MintApp(WebHandler):
             'cfg':              self.cfg,
             'projectList':      self.projectList,
             'req':              self.req,
+            'session':          self.session,
             'siteHost':         self.siteHost,
             'toUrl':            self.toUrl,
             'basePath':         self.basePath,

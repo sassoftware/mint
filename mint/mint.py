@@ -293,6 +293,20 @@ class MintClient:
         print >>sys.stderr, "calling server"
         return self.server.notifyUsers(subject, body)
 
+    # session management
+    def loadSession(self, sid):
+        return self.server.loadSession(sid)
+
+    def saveSession(self, sid, data):
+        self.server.saveSession(sid, data)
+
+    def deleteSession(self, sid):
+        self.server.deleteSession(sid)
+
+    def cleanupSessions(self):
+        self.server.cleanupSessions()
+
+
 class ServerProxy(xmlrpclib.ServerProxy):
     def __getattr__(self, name):
         return _Method(self.__request, name)
