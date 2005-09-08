@@ -36,9 +36,12 @@ class ProjectHandler(WebHandler):
         
         cmds = self.cmd.split("/")
 
+        print >> sys.stderr, cmds
+        sys.stderr.flush()
         try:
             self.project = self.client.getProjectByFQDN(cmds[0] + "." + self.cfg.domainName)
         except database.ItemNotFound:
+            print >> sys.stderr, "project not found:", cmds[0] + "." + self.cfg.domainName
             return self._404
             
         self.userLevel = self.project.getUserLevel(self.auth.userId)
@@ -47,6 +50,8 @@ class ProjectHandler(WebHandler):
         self.basePath += "/project/%s" % (cmds[0])
 
         if not cmds[1]:
+            print >> sys.stderr, "not cmds[1], returning self.projectPage"
+            sys.stderr.flush()
             return self.projectPage
         try:
             method = self.__getattribute__(cmds[1])

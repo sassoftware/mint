@@ -172,7 +172,7 @@ class ProjectsTable(database.KeyedTable):
                     creatorId       INT,
                     name            STR UNIQUE,
                     hostname        STR UNIQUE,
-                    domainname      STR DEFAULT '%s' NOT NULL,
+                    domainname      STR DEFAULT '' NOT NULL,
                     projecturl      STR DEFAULT '' NOT NULL,
                     desc            STR NOT NULL DEFAULT '',
                     disabled        INT DEFAULT 0,

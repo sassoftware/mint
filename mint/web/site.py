@@ -263,8 +263,7 @@ class SiteHandler(WebHandler):
             except mint_error.MintError, e:
                 errors.append(str(e))
         if not errors:
-            return self._redirect("http://%s.%s/" % (hostname, 
-                                                    self.cfg.domainName) )
+            return self._redirect("http://%s/project/%s/" % (self.siteHost, hostname))
         else:
             kwargs = {'title': title, 'hostname': hostname, 'projecturl': projecturl, 'blurb': blurb, 'optlists': optlists}
             self._write("newProject", errors=errors, kwargs=kwargs)
