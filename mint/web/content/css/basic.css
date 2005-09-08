@@ -19,12 +19,17 @@ th {
 	white-space:nowrap;
 }
 h1, h2, h3, h4, h5, h6 {
-	margin:0px; padding:0.5em 0em 0.5em 0em;
+	margin:0em; padding:0.5em 0em 0.5em 0em;
 }
 h2 {
-	font-size:120%;
+	font-size:135%;
 	font-weight:bold;
+        margin:0.4em 0em 0.4em 0em; padding:0.1em 0em 0.1em 0em;
 }
+h2.header {
+    border-bottom: 2px solid gray;
+}
+
 h3 {
 	font-size:110%;
 	font-weight:bold; padding-top:0.75em;

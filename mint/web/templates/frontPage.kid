@@ -28,13 +28,13 @@ from mint import searcher
                     </td>
                     <td id="main">
                         <div class="pad">
-                            <h3>Welcome to rPath</h3>
-                            <p>Welcome to rPath.org &#8212; the site for collaborative open source development.</p>
+                            <h2 class="header">Welcome to rPath</h2>
+                            <p>Welcome to rPath.org&#8212;the site for collaborative open source development.</p>
 <p>Developers can create and host projects and operating systems here, while users can browse and download projects and operating system images for installation.</p>
                             <p><a href="#">More about rPath</a> </p>
 
                             <div py:strip="True" py:if="news">
-                                <h3><a href="${newsLink}">Site News</a></h3>
+                                <h2 class="header">Site News</h2>
                                 <div py:for="item in news" class="newsItem">
                                     <h3>
                                         <span class="date" style="float: right;">${time.ctime(item['pubDate'])}</span>
@@ -42,6 +42,7 @@ from mint import searcher
                                     </h3>
                                     <p>${item['content']} <a class="newsContinued" href="${item['link']}">read more</a></p>
                                 </div>
+                                <p><a href="${newsLink}">More News</a></p>
                             </div>
                         </div>
                     </td>
