@@ -290,7 +290,6 @@ class MintClient:
         Send a message with the subject and body specified to all registered
         members using their confirmed e-mail address.
         """
-        print >>sys.stderr, "calling server"
         return self.server.notifyUsers(subject, body)
 
     # session management
