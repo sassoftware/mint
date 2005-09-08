@@ -17,7 +17,22 @@
         <title>${formatTitle('Create an Account')}</title>
     </head>
     <body>
-        <td id="main" class="spanleft">
+        <td id="left" class="plain">
+            <div class="pad">
+                <h3>About ${cfg.companyName} accounts</h3>
+                <p>
+                    Using a ${cfg.productName} account, you can create your own Linux distribution.
+                    Please read the ${legal('http://%s/legal?page=tos' % siteHost, 'Terms of Service')} before you register
+                    for an account.
+                </p>
+                <p>
+                    Your email address will never be shared or sold. More information
+                    can be found in our ${legal('http://%s/legal?page=privacy' % siteHost, 'Privacy Policy')}.
+                </p>
+            </div>
+        </td>
+
+       <td id="main" class="spanright">
             <div class="pad">
                 <p py:if="errors" class="error">Account Creation Error${len(errors) > 1 and 's' or ''}</p>
                 <p py:for="error in errors" class="errormessage" py:content="error"/>
@@ -89,20 +104,6 @@
 
                     <p><button type="submit">Register</button></p>
                 </form>
-            </div>
-        </td>
-        <td id="right" class="plain">
-            <div class="pad">
-                <h3>About ${cfg.companyName} accounts</h3>
-                <p>
-                    Using a ${cfg.productName} account, you can create your own Linux distribution.
-                    Please read the ${legal('http://%s/legal?page=tos' % siteHost, 'Terms of Service')} before you register
-                    for an account.
-                </p>
-                <p>
-                    Your email address will never be shared or sold. More information
-                    can be found in our ${legal('http://%s/legal?page=privacy' % siteHost, 'Privacy Policy')}.
-                </p>
             </div>
         </td>
     </body>

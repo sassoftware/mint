@@ -18,7 +18,7 @@ templatePath = os.path.dirname(sys.modules['mint'].__file__)
 
 class MintConfig(ConfigFile):
     defaults = {
-        'companyName'       : 'rpath Inc.',
+        'companyName'       : 'rPath Inc.',
         'productName'       : 'rBuilder at rpath.org',
         'defaultRedirect'   : 'http://rpath.com',
         'defaultBranch'     : 'rpl:devel',
