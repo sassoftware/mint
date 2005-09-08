@@ -71,7 +71,12 @@ class JobRunner(threading.Thread):
                 if err.errno != errno.EEXIST:
                     raise
             generator = generators[release.getImageType()]
+            
+            # save the current working directory in case the generator 
+            # (or scripts that change the wd)
+            cwd = os.getcwd()
             imageFilenames = generator(self.client, self.cfg, self.job, releaseId).write()
+            os.chdir(cwd)
         except Exception, e:
             self.job.setStatus(jobstatus.ERROR, str(e))
             raise
