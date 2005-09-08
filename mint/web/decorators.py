@@ -9,6 +9,8 @@ from mint import database
 from mint import mailinglists
 from mint import userlevels
 
+from mint import mint_error
+
 def requiresAdmin(func):
     def wrapper(self, *args, **kwargs):
         if not kwargs['auth'].admin:
