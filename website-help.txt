@@ -64,9 +64,19 @@ member of the project, and you'll be able to start contributing
 immediately.
 
 HOW DO I GET STARTED?  First, register for an rPath.com account.  Once
-you've gotten the confirmation email and have logged in, you can start the
-account creation process (which no more complex than filling in a few text
-fields and clicking on a "submit" button).
+you've gotten the confirmation email and have logged in, you can get
+started.
+
+If you'd like to create a new project, start the project creation process
+by clicking on the "Create a new project" link.  After that, the process is
+no more complex than filling in a few text fields and clicking on a
+"submit" button.
+
+If you're interested in joining an already-existing project, go to the
+project's homepage, click on the "project members" link, and click on one
+of the project owners to get their contact information.  When you contact
+the project owner, ask them to make you a project member, and include your
+rPath.com username (they'll need it to make you a project member).
 
 *I'm Not a Developer*
 
