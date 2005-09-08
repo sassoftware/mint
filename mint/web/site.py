@@ -238,6 +238,7 @@ class SiteHandler(WebHandler):
     @listFields(int, optlists = [])
     @requiresAuth
     def createProject(self, auth, title, hostname, projecturl, blurb, optlists):
+        hostname = hostname.lower()
         errors = []
         if not title:
             error.append("You must supply a project title")
