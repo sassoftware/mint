@@ -22,7 +22,7 @@ import gencslist
 class IsoConfig(ConfigFile):
     defaults = {
         'imagesPath':   '/srv/mint/images/',
-        'scriptsPath':  '/srv/mint/code/scripts/',
+        'scriptPath':  '/srv/mint/code/scripts/',
     }
 
 class InstallableIso(ImageGenerator):
@@ -98,7 +98,7 @@ class InstallableIso(ImageGenerator):
             "safeName":     re.sub("\W", "_", project.getName()),
             "version":      releaseVer,
             "arch":         anacondaArch,
-            "scriptsdir":   isocfg.scriptsPath,
+            "scriptsdir":   isocfg.scriptPath,
         }
         util.mkdirChain(infoMap['isodir'])
 
