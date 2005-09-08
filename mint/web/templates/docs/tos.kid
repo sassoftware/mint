@@ -2,6 +2,7 @@
     <head>
         <title>Terms of Service - ${cfg.productName}</title>
         <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/basic.css"/>
+        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/mint.css"/>
     </head>
     <body id="legal">
         <h2>rpath.org: terms of service</h2>

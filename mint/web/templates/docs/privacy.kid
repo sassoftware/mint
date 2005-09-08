@@ -2,6 +2,7 @@
     <head>
         <title>Privacy Policy - ${cfg.productName}</title>
         <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/basic.css"/>
+        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/mint.css"/>
     </head>
     <body id="legal">
         <h2>rpath.org privacy policy</h2>
