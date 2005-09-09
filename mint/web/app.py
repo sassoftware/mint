@@ -65,7 +65,9 @@ class MintApp(WebHandler):
         self.client = shimclient.ShimMintClient(self.cfg, anonToken)
 
         # prepare a new session
-        self.session = SqlSession(self.req, self.client, secret = self.cfg.cookieSecretKey)
+        self.session = SqlSession(self.req, self.client,
+            secret = self.cfg.cookieSecretKey,
+            timeout = 86400) # XXX timeout of one day; should it be configurable?
         self.session.save()
         
         # default to anonToken if the current session has no authToken
