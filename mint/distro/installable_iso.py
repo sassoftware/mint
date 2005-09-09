@@ -121,8 +121,6 @@ class InstallableIso(ImageGenerator):
         discdir = os.path.normpath(topdir + "/../")
         self.status("Building ISOs")
 
-        # save the current cwd
-        cwd = os.getcwd()
         for d in os.listdir(discdir):
             if not d.startswith('disc'):
                 continue
@@ -150,8 +148,6 @@ class InstallableIso(ImageGenerator):
                 os.system(cmd)
             isoList.append(infoMap['iso'])
         
-        # return to the old cwd
-        os.chdir(cwd)
         isoList = [os.path.join(infoMap['isodir'], iso) for iso in isoList]
         for iso in isoList:
             if not os.access(iso, os.R_OK):
