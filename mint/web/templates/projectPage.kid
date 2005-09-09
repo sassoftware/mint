@@ -36,10 +36,14 @@ from mint import userlevels
                                     Recent Releases
                                 </h3>
                                 <ul>
-                                    <li class="$basePath/release" py:for="release in project.getReleases()">
+                                    <?python releases = project.getReleases() ?>
+                                    <li class="release" py:if="releases" py:for="release in releases">
                                         <a href="$basePath/release?id=${release.getId()}">
                                             ${release.getTroveName()} = ${release.getTroveVersion().trailingRevision().asString()}
                                         </a>
+                                    </li>
+                                    <li class="release" py:if="not releases">
+                                        No Releases
                                     </li>
                                 </ul>
                             </div>
