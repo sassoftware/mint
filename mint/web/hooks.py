@@ -198,42 +198,45 @@ def putFile(port, isSecure, repos, req):
     return apache.OK
 
 def conaryHandler(req, cfg, pathInfo):
-    repName = req.hostname
+    if req.hostname == cfg.reposHost + "." + cfg.domainName:
+        repName = pathInfo.split("/")[1] + "." + cfg.domainName
+    else:
+        repName = req.hostname
 
     method = req.method.upper()
     port = req.connection.local_addr[1]
     secure = (port == 443)
 
     if not repositories.has_key(repName):
-        repositoryDir = os.path.join(cfg.reposPath, req.hostname)
-        tmpPath = os.path.join(cfg.reposPath, req.hostname, "tmp")
+        repositoryDir = os.path.join(cfg.reposPath, repName)
+        tmpPath = os.path.join(cfg.reposPath, repName, "tmp")
 
         if os.path.basename(req.uri) == "changeset":
            rest = os.path.dirname(req.uri) + "/"
         else:
-           rest = req.uri
+           rest = pathInfo
 
-        rest = req.uri
         # pull out any queryargs
         if '?' in rest:
             rest = req.uri.split("?")[0]
 
-        # and throw away any subdir portion
-        rest = req.uri[:-len(req.path_info)] + '/'
-        
         urlBase = "%%(protocol)s://%s:%%(port)d" % \
                         (req.hostname) + rest
         
         # set up the commitAction
         # FIXME: don't hardcode @rpl:devel
-        buildLabel = req.hostname + "@rpl:devel"
-        projectName = req.hostname.split(".")[0]
-        repMapStr = buildLabel + " http://" + req.hostname + "/conary/"
-        repMap = {buildLabel: "http://" + req.hostname + "/conary/",
+        buildLabel = repName + "@rpl:devel"
+        projectName = repName.split(".")[0]
+        if req.hostname == cfg.reposHost + "." + cfg.domainName:
+            repMapStr = "http://%s/%s/" % (req.hostname, projectName)
+        else:   
+            repMapStr = "http://%s/conary/" % (req.hostname)
+           
+        repMap = {buildLabel: repMapStr,
                   'conary.rpath.com': 'https://conary-commits.rpath.com/conary/',
                   'contrib.rpath.com': 'https://conary-commits.rpath.com/contrib/'}
         if cfg.commitAction:
-            commitAction = cfg.commitAction % {'repMap': repMapStr,
+            commitAction = cfg.commitAction % {'repMap': buildLabel + " " + repMapStr,
                                                'buildLabel': buildLabel,
                                                'projectName': projectName}
         else:
@@ -244,7 +247,7 @@ def conaryHandler(req, cfg, pathInfo):
                                         repositoryDir,
                                         tmpPath,
                                         urlBase, 
-                                        req.hostname,
+                                        repName,
                                         repMap,
                                         commitAction = commitAction,
                                         cacheChangeSets = True,
@@ -302,7 +305,6 @@ def mintHandler(req, cfg, pathInfo):
 
 urls = (
     (r'^/conary/',           conaryHandler),
-    (r'^/changeset',         conaryHandler),
     (r'^/xmlrpc/',           xmlrpcHandler),
     (r'^/xmlrpc-private/',   xmlrpcHandler),
     (r'^/',                  mintHandler),
@@ -320,8 +322,8 @@ def handler(req):
     pathInfo = pathInfo[len(basePath):]
     pathInfo = normPath(pathInfo)
 
-    # special case for silly PUT urls that don't use /conary/
-    if req.method.upper() == "PUT":
+    # special case for http://$reposHost.$domainName/conary/
+    if req.hostname == "%s.%s" % (cfg.reposHost, cfg.domainName):
         return conaryHandler(req, cfg, pathInfo)
 
     for match, urlHandler in urls:
