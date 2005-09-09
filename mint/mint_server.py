@@ -729,15 +729,19 @@ class MintServer(object):
                     'message': job.getStatusMessage()}
 
     # session management
+    @private
     def loadSession(self, sid):
         return self.sessions.load(sid)
 
+    @private
     def saveSession(self, sid, data):
         self.sessions.save(sid, data)
 
+    @private
     def deleteSession(self, sid):
         self.sessions.delete(sid)
 
+    @private
     def cleanupSessions(self):
         self.sessions.cleanup()
     

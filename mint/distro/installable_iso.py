@@ -95,7 +95,7 @@ class InstallableIso(ImageGenerator):
             "topdir":       topdir,
             "subdir":       subdir,
             "name":         project.getName(),
-            "safeName":     re.sub("\W", "_", project.getName()),
+            "safeName":     project.getHostname(),
             "version":      releaseVer,
             "arch":         anacondaArch,
             "scriptsdir":   isocfg.scriptPath,
@@ -155,5 +155,5 @@ class InstallableIso(ImageGenerator):
         isoList = [os.path.join(infoMap['isodir'], iso) for iso in isoList]
         for iso in isoList:
             if not os.access(iso, os.R_OK):
-                raise RuntimeException, "ISO generation failed"
+                raise RuntimeError, "ISO generation failed"
         return isoList
