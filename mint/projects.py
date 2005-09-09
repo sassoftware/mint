@@ -152,6 +152,9 @@ class Project(database.TableObject):
     def removeLabel(self, labelId):
         return self.server.removeLabel(self.id, labelId)
 
+    def addUserKey(self, username, keydata):
+        return self.server.addUserKey(self.id, username, keydata)
+
     def orphan(self, mlbaseurl, mlpasswd):
         #Take care of mailing lists
         mlists = mailinglists.MailingListClient(mlbaseurl + 'xmlrpc/')

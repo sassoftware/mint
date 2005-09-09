@@ -12,7 +12,7 @@ import jobs
 import projects
 import releases
 import users
-from mint_error import MintError
+from mint_error import MintError, UnknownException
 
 from deps import deps
 
@@ -342,14 +342,6 @@ class _Method(xmlrpclib._Method):
             raise MethodNotSupported(exceptionArgs[0])
         else:
             raise UnknownException(exceptionName, exceptionArgs)
-
-class UnknownException(Exception):
-    def __str__(self):
-        return "%s %s" % (self.eName, self.eArgs)
-
-    def __init__(self, eName, eArgs):
-        self.eName = eName
-        self.eArgs = eArgs
 
 class MethodNotSupported(MintError):
     def __init__(self, method):

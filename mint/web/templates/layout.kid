@@ -69,6 +69,7 @@ onload = "javascript:;"
                                         <h3>${auth.fullName}</h3>
                                         <h4>${auth.username}</h4>
                                         <div><a href="http://$siteHost/userSettings" class="arrows">view &#38; Edit My Account</a></div>
+                                        <div><a href="http://$siteHost/uploadKey" class="arrows">Upload a Package Signing Key</a></div>
                                         <div py:if='auth.admin'><a href="http://$siteHost/administer" class="arrows">Administer</a></div>
 
                                     </div>

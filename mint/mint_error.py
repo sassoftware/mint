@@ -14,3 +14,11 @@ class PermissionDenied(MintError):
 class InvalidLogin(PermissionDenied):
     def __str__(self):
         return "Invalid username or password."
+
+class UnknownException(Exception):
+    def __str__(self):
+        return "%s %s" % (self.eName, self.eArgs)
+
+    def __init__(self, eName, eArgs):
+        self.eName = eName
+        self.eArgs = eArgs

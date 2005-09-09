@@ -179,7 +179,7 @@ class SiteHandler(WebHandler):
         results, count = self.client.getUsers(sortOrder, limit, offset)
         self._write("users", sortOrder=sortOrder, limit=limit, offset=offset, results=results, count=count)
         return apache.OK
-       
+
     @requiresAuth
     def userSettings(self, auth):
         self._write("userSettings")
@@ -216,6 +216,30 @@ class SiteHandler(WebHandler):
                 self.user.setPassword(password1)
                 return self._redirect("logout")
 
+        return self._redirect("/")
+
+    @requiresAuth
+    @listFields(str, projects=[])
+    @strFields(keydata = '')
+    def uploadKey(self, auth, projects, keydata):
+        if self.projectList:
+            self._write("uploadKey", errors=[], kwargs={})
+        else:
+            self._write("error", shortError="Not a project member", error="You may not upload a key as you are not a member of any projects.  Create a project, or ask a project owner to add you to their project and then come back")
+        return apache.OK
+
+    @requiresAuth
+    @listFields(str, projects=None)
+    @strFields(keydata=None)
+    def processKey(self, auth, projects, keydata):
+        for project, level in self.projectList:
+            if project.getHostname() in projects:
+                try:
+                    project.addUserKey(auth.username, keydata)
+                except Exception, e:
+                    self._write("uploadKey", errors = ['Error uploading key: %s' % str(e)], 
+                            kwargs={'projects': projects, 'keydata': keydata})
+                    return apache.OK
         return self._redirect("/")
         
     @requiresAuth

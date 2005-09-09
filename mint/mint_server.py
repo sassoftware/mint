@@ -21,7 +21,7 @@ import users
 import userlevels
 import dbversion
 from cache import TroveNamesCache
-from mint_error import MintError
+from mint_error import MintError, UnknownException
 from mint_error import PermissionDenied
 
 import repository.netrepos.netauth
@@ -86,9 +86,9 @@ class MintServer(object):
             return (True, ("DuplicateItem", e.item))
         except database.ItemNotFound, e:
             return (True, ("ItemNotFound", e.item))
-#        except Exception, error:
-#            exc_name = sys.exc_info()[0].__name__
-#            return (True, (exc_name, error, ""))
+        except Exception, error:
+            exc_name = sys.exc_info()[0].__name__
+            return (True, (exc_name, error, str(error)))
         else:
             return (False, r)
 
@@ -330,6 +330,16 @@ class MintServer(object):
 
     @requiresAuth
     @private
+    def addUserKey(self, projectId, username, keydata):
+        #find the project repository
+        project = projects.Project(self, projectId)
+        repos = self._getAuthRepo(project)
+
+        #Call the repository's addKey function
+        return repos.addNewAsciiPGPKey(project.getLabel(), username, keydata)
+
+    @requiresAuth
+    @private
     def setUserFullName(self, userId, fullName):
         return self.users.update(userId, fullName = fullName)
 
@@ -378,8 +388,8 @@ class MintServer(object):
         authRepo = netclient.NetworkRepositoryClient(self.cfg.authRepoMap)
 
         #Handle projects
-        projectlist = self.getProjectIdsByMember(userId)
-        for (projectId, level) in projectlist:
+        projectList = self.getProjectIdsByMember(userId)
+        for (projectId, level) in projectList:
             self.delMember(projectId, userId, False)
 
         authRepo.deleteUserByName(repoLabel, username)
