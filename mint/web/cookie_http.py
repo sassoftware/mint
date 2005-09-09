@@ -8,25 +8,45 @@ import os
 import sys
 
 from server import http
-from repository import shimclient
+from repository import netclient 
 from templates import repos
-from app import MintApp
+from webhandler import WebHandler
 
-class CookieHttpHandler(MintApp, http.HttpHandler):
-    def __init__(self, req, cfg, repServer, protocol, port):
-        http.HttpHandler.__init__(self, req, cfg, repServer, protocol, port)
+class ConaryHandler(WebHandler, http.HttpHandler):
+    def __init__(self, req, cfg, repServer):
+        protocol = 'http'
+        port = 80
+        self.repServer = repServer
+        
+        http.HttpHandler.__init__(self, req, cfg, self.repServer, protocol, port)
 
         if 'mint.web.templates.repos' in sys.modules:
             self.reposTemplatePath = os.path.dirname(sys.modules['mint.web.templates.repos'].__file__) + "/repos/"
-            
+    
+    def handle(self, context):
+        self.__dict__.update(**context)
+
+        # set up the netclient
+        self.serverName = self.req.hostname
+        self.project = self.client.getProjectByFQDN(self.serverName)
+        projectName = self.project.getHostname()
+        self.repositoryMap = {self.serverName: 'http://%s.%s/%s/' % (self.cfg.reposHost, self.cfg.domainName, projectName)}
+        self.repos = netclient.NetworkRepositoryClient(self.repositoryMap)
+
+        return self._handle
+
+    def _handle(self, *args, **kwargs):
+        return self._methodHandler()
+   
     def _requestAuth(self):
         return self._redirect("/")
 
     def _getHandler(self, cmd):
-        self.repos = shimclient.ShimNetClient(
-            self.repServer, self._protocol, self._port, self.auth.getToken(), self.repServer.map)
-        self.serverName = self.repServer.name
-        return MintApp._getHandler(self, cmd, auth)
+        try:
+            method = self.__getattribute__(cmd)
+        except AttributeError:
+            return self._404
+        return method
 
     def _getAuth(self):
         if 'authToken' in self.cookies:
@@ -38,7 +58,7 @@ class CookieHttpHandler(MintApp, http.HttpHandler):
         return authToken
 
     def _write(self, templateName, **values):
-        MintApp._write(self, templateName, templatePath = self.reposTemplatePath, **values)
+        WebHandler._write(self, templateName, templatePath = self.reposTemplatePath, **values)
 
     # XXX: I'm wondering if this is the best approach.
     # maybe it would be better to override _getHandler and

@@ -25,6 +25,7 @@ from mint import users
 from admin import AdminHandler
 from project import ProjectHandler
 from site import SiteHandler
+from cookie_http import ConaryHandler
 
 from webhandler import WebHandler, normPath
 
@@ -42,7 +43,7 @@ class MintApp(WebHandler):
     userLevel = -1
     user = None
 
-    def __init__(self, req, cfg):
+    def __init__(self, req, cfg, repServer = None):
         self.req = req
         self.cfg = cfg
 
@@ -55,6 +56,10 @@ class MintApp(WebHandler):
         self.siteHandler = SiteHandler()
         self.projectHandler = ProjectHandler()
         self.adminHandler = AdminHandler()
+        if repServer:
+            self.conaryHandler = ConaryHandler(req, cfg, repServer)
+        else:
+            self.conaryHandler = None
 
     def _handle(self, pathInfo):
         method = self.req.method.upper()
@@ -132,8 +137,8 @@ class MintApp(WebHandler):
                 except database.ItemNotFound:
                     # XXX just for the testing period
                     raise Redirect(self.cfg.defaultRedirect)
-                else:
-                    raise Redirect("http://%s/project/%s" % (self.siteHost, project.getHostname()))
+        #        else:
+        #            raise Redirect("http://%s/project/%s" % (self.siteHost, project.getHostname()))
         elif fullHost == self.cfg.domainName:
             # if hostName is set, require it for access:
             if self.cfg.hostName:
@@ -141,9 +146,10 @@ class MintApp(WebHandler):
                 
         # mapping of url regexps to handlers
         urls = (
-            (r'^/project/',     self.projectHandler.handle),
-            (r'^/administer',   self.adminHandler.handle),
-            (r'^/',             self.siteHandler.handle),
+            (r'^/project/',     self.projectHandler),
+            (r'^/administer',   self.adminHandler),
+            (r'^/conary/',      self.conaryHandler),
+            (r'^/',             self.siteHandler),
         )
 
         # a set of information to be passed into the next handler
@@ -166,7 +172,7 @@ class MintApp(WebHandler):
         for match, urlHandler in urls:
             if re.match(match, pathInfo):
                 context['cmd'] = pathInfo[len(match)-1:]
-                return urlHandler(context)
+                return urlHandler.handle(context)
 
         # fell through, nothing matched
         return self._404

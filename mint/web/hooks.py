@@ -98,8 +98,8 @@ def post(port, isSecure, repos, cfg, req):
         req.write(resp)
         return apache.OK
     else:
-        webfe = cookie_http.CookieHttpHandler(req, cfg, repos, protocol, port)
-        return webfe._methodHandler()
+        webfe = app.MintApp(req, cfg, repServer = repos)
+        return webfe._handle(req.uri)
 
 def get(port, isSecure, repos, cfg, req):
     def _writeNestedFile(req, name, tag, size, f, sizeCb):
@@ -175,8 +175,8 @@ def get(port, isSecure, repos, cfg, req):
 
         return apache.OK
     else:
-        webfe = cookie_http.CookieHttpHandler(req, cfg, repos, protocol, port)
-        return webfe._methodHandler()
+        webfe = app.MintApp(req, cfg, repServer = repos)
+        return webfe._handle(req.uri)
 
 def putFile(port, isSecure, repos, req):
     if not isSecure and repos.forceSecure:
