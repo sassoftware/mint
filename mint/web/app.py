@@ -72,7 +72,8 @@ class MintApp(WebHandler):
         # prepare a new session
         self.session = SqlSession(self.req, self.client,
             secret = self.cfg.cookieSecretKey,
-            timeout = 86400) # XXX timeout of one day; should it be configurable?
+            timeout = 86400, # XXX timeout of one day; should it be configurable?
+            domain = self.cfg.domainName)
         self.session.save()
         
         # default to anonToken if the current session has no authToken
@@ -155,6 +156,7 @@ class MintApp(WebHandler):
         # a set of information to be passed into the next handler
         context = {
             'auth':             self.auth,
+            'authToken':        self.auth.getToken(),
             'client':           self.client,
             'cfg':              self.cfg,
             'projectList':      self.projectList,

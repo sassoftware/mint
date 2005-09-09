@@ -11,6 +11,7 @@ from server import http
 from repository import netclient 
 from templates import repos
 from webhandler import WebHandler
+from mint.session import SqlSession
 
 class ConaryHandler(WebHandler, http.HttpHandler):
     def __init__(self, req, cfg, repServer):
@@ -49,13 +50,7 @@ class ConaryHandler(WebHandler, http.HttpHandler):
         return method
 
     def _getAuth(self):
-        if 'authToken' in self.cookies:
-            auth = base64.decodestring(self.cookies['authToken'].value)
-            authToken = auth.split(":")
-        else:
-            authToken = ('anonymous', 'anonymous')
-            
-        return authToken
+        return self.authToken
 
     def _write(self, templateName, **values):
         WebHandler._write(self, templateName, templatePath = self.reposTemplatePath, **values)
