@@ -26,12 +26,13 @@ As part of that mission, we've deployed our tools and technologies on
 rPath.com, for you to use.  Of course, how you'll use rPath.com depends on
 who you are.
 
-*I'm a Developer*
+*I'm a Developer* (Should this be a link to a developer help page with the
+ following content?)
 
 If coding is your thing, you can use rPath to host your open source
-development project. (Not quite ready to share your work with the world
-yet?  No problem; rPath can still help -- go [here] (link to corporate
-site) to find out how.)
+development project. (Not quite ready to share your work with the world?
+No problem; rPath can still help -- go [here] (link to corporate site) to
+find out how.)
 
 What's a project?  It can be anything from packaging an app so it'll be
 available to Conary-based systems, to the creation of an operating system
@@ -43,7 +44,12 @@ What do you get?  Here's the list:
 
     o A project-specific hostname (<project-name>.rpath.org)
 
-    o Project-specific mailing lists
+    o Project-specific mailing lists:
+
+        - <project-name>@rpath.org
+        - <project-name>-commits@rpath.org
+        - <project-name>-devel@rpath.org (if desired)
+        - <project-name>-bugs@rpath.org (if desired)
 
     o A no-frills project-specific page (http://<project-name>.rpath.org/)
 
@@ -52,8 +58,8 @@ What do you get?  Here's the list:
 
     o A project membership framework that allows you to keep track of your
       project's members (people able to commit changes to your project's
-      repository) and owners (can manage project membership as well as
-      having commit access)
+      repository) and owners (people that can manage project membership as
+      well as having commit access)
 
 How much does it cost?  Nothing -- rPath.com's services are free for any
 open source project.
@@ -69,8 +75,8 @@ started.
 
 If you'd like to create a new project, start the project creation process
 by clicking on the "Create a new project" link.  After that, the process is
-no more complex than filling in a few text fields and clicking on a
-"submit" button.
+no more complex than filling in a few text fields reviewing our terms of
+service and privacy policy, and clicking on a "submit" button.
 
 If you're interested in joining an already-existing project, go to the
 project's homepage, click on the "project members" link, and click on one
@@ -78,7 +84,8 @@ of the project owners to get their contact information.  When you contact
 the project owner, ask them to make you a project member, and include your
 rPath.com username (they'll need it to make you a project member).
 
-*I'm Not a Developer*
+*But I'm Not a Developer* (Should this be a link to a non-developer help
+ page with the following content?)
 
 Even if you're not the type to work late into the night getting your latest
 creation to build, rPath.com still has a lot to offer.
