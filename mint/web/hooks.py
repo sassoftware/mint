@@ -99,7 +99,7 @@ def post(port, isSecure, repos, cfg, req):
         return apache.OK
     else:
         webfe = app.MintApp(req, cfg, repServer = repos)
-        return webfe._handle(req.uri)
+        return webfe._handle("/conary/" + req.uri)
 
 def get(port, isSecure, repos, cfg, req):
     def _writeNestedFile(req, name, tag, size, f, sizeCb):
@@ -176,7 +176,7 @@ def get(port, isSecure, repos, cfg, req):
         return apache.OK
     else:
         webfe = app.MintApp(req, cfg, repServer = repos)
-        return webfe._handle(req.uri)
+        return webfe._handle("/conary/" + req.uri)
 
 def putFile(port, isSecure, repos, req):
     if not isSecure and repos.forceSecure:

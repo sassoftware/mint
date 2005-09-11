@@ -124,27 +124,9 @@ class MintApp(WebHandler):
             siteHost = self.cfg.domainName
         self.siteHost = siteHost
         
-        if len(dots) == 3:
-            if hostname == self.cfg.hostName:
-                pass
-            elif hostname in mint_server.reservedHosts and\
-                ".".join(dots[1:]) == self.cfg.domainName:
-                raise Redirect(("http://%s" % siteHost) + self.req.unparsed_uri)
-            else:
-                # redirect to the project page if
-                # a project hostname is accessed
-                try:
-                    project = self.client.getProjectByFQDN(fullHost)
-                except database.ItemNotFound:
-                    # XXX just for the testing period
-                    raise Redirect(self.cfg.defaultRedirect)
-        #        else:
-        #            raise Redirect("http://%s/project/%s" % (self.siteHost, project.getHostname()))
-        elif fullHost == self.cfg.domainName:
-            # if hostName is set, require it for access:
-            if self.cfg.hostName:
-                raise Redirect(self.cfg.defaultRedirect)
-                
+        if self.cfg.hostName and fullHost == self.cfg.domainName:
+            raise Redirect(self.cfg.defaultRedirect)
+        
         # mapping of url regexps to handlers
         urls = (
             (r'^/project/',     self.projectHandler),
