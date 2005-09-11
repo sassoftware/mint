@@ -143,8 +143,19 @@ class SiteHandler(WebHandler):
             else:
                 client.updateAccessedTime(auth.userId)
                 self.session['authToken'] = authToken
+                
+                # mod_python's cookie classes don't handle 301 redirects because
+                # Cookie.add_cookie only adds cookie headers to req.headers_out,
+                # not req_error_headers_out, which is used for redirects,
+                # so we have to manually add the cookie to the right headers
+                # table.
+                c = self.session.make_cookie()
+                self.req.err_headers_out.add('Set-Cookie', str(c))
+                self.req.err_headers_out.add('Cache-Control', 'no-cache="set-cookie"')
+                
                 self.session.save()
                 return self._redirect(unquote(to))
+                
         elif submit == "Forgot Password":
             return self._resetPassword(username)
         else:
