@@ -16,7 +16,7 @@
 
             <li><a href="http://${siteHost}/repos/${project.getHostname()}/browse"><strong py:strip="req.uri != '/conary/browse'">Repository</strong></a></li>
             <li><a href="$projectUrl/members"><strong py:strip="lastchunk != 'members'">Project Members</strong></a></li>
-            <li><a href="http://${cfg.reposHost}.${cfg.domainName}/repos/${project.getHostname()}/pgpAdminForm"><strong py:strip="req.uri != '/conary/pgpAdminForm'">Users' Signing Keys</strong></a></li>
+            <li><a href="http://${siteHost}/repos/${project.getHostname()}/pgpAdminForm"><strong py:strip="req.uri != '/conary/pgpAdminForm'">Users' Signing Keys</strong></a></li>
             <li><a href="$projectUrl/mailingLists"><strong py:strip="lastchunk != 'mailingLists'">Mailing Lists</strong></a></li>
             <li py:if="0"><a href="#"><strong py:strip="lastchunk != 'bugs'">Bug Tracking</strong></a></li>
         </ul>
