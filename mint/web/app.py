@@ -138,7 +138,7 @@ class MintApp(WebHandler):
         urls = (
             (r'^/project/',     self.projectHandler),
             (r'^/administer',   self.adminHandler),
-            (r'^/conary/',      self.conaryHandler),
+            (r'^/repos/',      self.conaryHandler),
             (r'^/',             self.siteHandler),
         )
 

@@ -99,7 +99,7 @@ def post(port, isSecure, repos, cfg, req):
         return apache.OK
     else:
         webfe = app.MintApp(req, cfg, repServer = repos)
-        return webfe._handle("/conary/" + req.uri)
+        return webfe._handle(req.uri)
 
 def get(port, isSecure, repos, cfg, req):
     def _writeNestedFile(req, name, tag, size, f, sizeCb):
@@ -176,7 +176,7 @@ def get(port, isSecure, repos, cfg, req):
         return apache.OK
     else:
         webfe = app.MintApp(req, cfg, repServer = repos)
-        return webfe._handle("/conary/" + req.uri)
+        return webfe._handle(req.uri)
 
 def putFile(port, isSecure, repos, req):
     if not isSecure and repos.forceSecure:
@@ -198,8 +198,9 @@ def putFile(port, isSecure, repos, req):
     return apache.OK
 
 def conaryHandler(req, cfg, pathInfo):
-    if req.hostname == cfg.reposHost + "." + cfg.domainName:
-        repName = pathInfo.split("/")[1] + "." + cfg.domainName
+    paths = normPath(req.uri).split("/")
+    if paths[1] == "repos":
+        repName = paths[2] + "." + cfg.domainName
     else:
         repName = req.hostname
 
@@ -214,7 +215,7 @@ def conaryHandler(req, cfg, pathInfo):
         if os.path.basename(req.uri) == "changeset":
            rest = os.path.dirname(req.uri) + "/"
         else:
-           rest = pathInfo
+           rest = req.uri 
 
         # pull out any queryargs
         if '?' in rest:
@@ -227,8 +228,8 @@ def conaryHandler(req, cfg, pathInfo):
         # FIXME: don't hardcode @rpl:devel
         buildLabel = repName + "@rpl:devel"
         projectName = repName.split(".")[0]
-        if req.hostname == cfg.reposHost + "." + cfg.domainName:
-            repMapStr = "http://%s/%s/" % (req.hostname, projectName)
+        if paths[1] == "repos":
+            repMapStr = "http://%s/repos/%s/" % (req.hostname, projectName)
         else:   
             repMapStr = "http://%s/conary/" % (req.hostname)
            
@@ -307,8 +308,10 @@ urls = (
     (r'^/conary/',           conaryHandler),
     (r'^/xmlrpc/',           xmlrpcHandler),
     (r'^/xmlrpc-private/',   xmlrpcHandler),
+    (r'^/repos/',            conaryHandler),
     (r'^/',                  mintHandler),
 )
+
 
 def handler(req):
     cfg = config.MintConfig()
@@ -321,10 +324,6 @@ def handler(req):
     # strip off base path and normalize again
     pathInfo = pathInfo[len(basePath):]
     pathInfo = normPath(pathInfo)
-
-    # special case for http://$reposHost.$domainName/conary/
-    if req.hostname == "%s.%s" % (cfg.reposHost, cfg.domainName):
-        return conaryHandler(req, cfg, pathInfo)
 
     for match, urlHandler in urls:
         if re.match(match, pathInfo):

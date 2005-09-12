@@ -3,6 +3,7 @@
 #
 # All Rights Reserved
 #
+from mod_python import apache
 from mod_python.Session import BaseSession
 from mod_python import Cookie
 

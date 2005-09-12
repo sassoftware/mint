@@ -30,15 +30,14 @@ class ConaryHandler(WebHandler, http.HttpHandler):
         # set up the netclient
         self.serverName = self.req.hostname
 
-        # handle repos.domain.name requests
         path = self.req.path_info.split("/")
-        self.cmd = path[2]
-        if self.serverName == "%s.%s" % (self.cfg.reposHost, self.cfg.domainName):
-            self.serverName = path[1] + "." + self.cfg.domainName
+        self.cmd = path[3]
+        if path[1] == "repos":
+            self.serverName = path[2] + "." + self.cfg.domainName
         
         self.project = self.client.getProjectByFQDN(self.serverName)
         projectName = self.project.getHostname()
-        self.repositoryMap = {self.serverName: 'http://%s.%s/%s/' % (self.cfg.reposHost, self.cfg.domainName, projectName)}
+        self.repositoryMap = {self.serverName: 'http://%s/repos/%s/' % (self.siteHost, projectName)}
         self.repos = netclient.NetworkRepositoryClient(self.repositoryMap)
 
         return self._handle
