@@ -354,9 +354,9 @@ class SiteHandler(WebHandler):
                 host = p.getFQDN()
             else:
                 version = versions.VersionFromString(x[1])
-                name = version.branch().label().host()
+                name = version.branch().label().getHost()
                 host = name
-            searchResults.append( (x[0], x[1], x[2], x[3]) )
+            searchResults.append( (x[0], x[1], host, name) )
             
         self._write("searchResults", searchType = "Packages", terms = terms, results = searchResults,
                                      count = count, limit = limit, offset = offset,
