@@ -7,10 +7,11 @@
 SUBDIRS = web distro
 
 python_files =			\
+	__init__.py		\
 	cache.py		\
 	config.py		\
 	database.py		\
-	__init__.py		\
+	dbversion.py		\
 	jobs.py			\
 	jobstatus.py		\
 	mailinglists.py		\
@@ -30,7 +31,7 @@ python_files =			\
 	stats.py		\
 	userlevels.py		\
 	userlisting.py		\
-	users.py		\
+	users.py		
 
 extra_dist = Makefile
 

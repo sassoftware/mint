@@ -1,6 +1,8 @@
 Changes in 0.5.0:
 
 * Projects are now accessible under the main site: http://hostname/project/<projectname>
+* Repositories are now accessible under a specified repository hostname:
+    http://repos.mint.org/projname/
 * User login is now handled using mod_python sessions instead of a simple base64-encoded
   authentication token on the client side.
 * More features have been added to the administrative interface.

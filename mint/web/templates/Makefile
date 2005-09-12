@@ -28,17 +28,18 @@ kid_files = \
 	projects.kid		\
 	register_active.kid	\
 	register_conf.kid	\
-	register_reconf.kid	\
 	register.kid		\
+	register_reconf.kid	\
 	release.kid		\
 	releases.kid		\
 	rss20.kid		\
 	searchResults.kid	\
 	tos.kid			\
+	uploadKey.kid		\
 	userInfo.kid		\
 	userSettings.kid	\
 	users.kid
- 
+	 
 python_files = __init__.py
 
 extra_dist = Makefile

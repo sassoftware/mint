@@ -4,18 +4,15 @@
 # All Rights Reserved
 #
 
-python_files = __init__.py\
-               controlfile.py\
-               distribution.py\
-               flavorutil.py\
-               imagegen.py\
-               installable_iso.py\
-               iso.py\
-               live_cf_image.py\
-               live_iso.py\
-	       netboot_image.py\
-               pkgid.py\
-	       stub_image.py
+python_files = \
+	gencslist.py		\
+	imagegen.py		\
+	__init__.py		\
+	installable_iso.py	\
+	live_cf_image.py	\
+	live_iso.py		\
+	netboot_image.py	\
+	stub_image.py
 
 extra_dist = Makefile
 

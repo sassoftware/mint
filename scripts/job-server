@@ -223,6 +223,15 @@ if __name__ == "__main__":
 
     if pid == 0:
         os.setsid()
+
+        # will this solve my shell-exiting problems?
+        #f = file('/dev/null', 'r+')
+        #fd = f.fileno()
+        #os.dup2(fd,0)
+        #os.dup2(fd,1)
+        #os.dup2(fd,2)
+        #f.close()
+        
         pid = os.fork()
         if pid == 0:
             logFile = os.path.join(cfg.logPath, "job-server.log")

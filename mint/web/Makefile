@@ -7,10 +7,15 @@
 SUBDIRS = templates content
 
 python_files = \
-	__init__.py		\
-        app.py			\
+	__init__.py	\
+	admin.py	\
+	app.py		\
 	cookie_http.py	\
-        hooks.py
+	decorators.py	\
+	hooks.py	\
+	project.py	\
+	site.py		\
+	webhandler.py
 
 extra_dist = Makefile
 
