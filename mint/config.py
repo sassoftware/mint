@@ -41,7 +41,6 @@ class MintConfig(ConfigFile):
         'hostName'          : None, # optional domain name for main site
         'reposHost'         : 'repos',
         'adminMail'         : 'mint@rpath.org',
-        'xmlrpcAccess'      : [ BOOLEAN, False ],
         'newsRssFeed'       : '',
         'commitAction'      : None,
         'EnableMailLists'   : False,

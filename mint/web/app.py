@@ -122,6 +122,13 @@ class MintApp(WebHandler):
             siteHost = "%s.%s" % (self.cfg.hostName, self.cfg.domainName)
         else:
             siteHost = self.cfg.domainName
+        try:
+            project = self.client.getProjectByFQDN(fullHost)
+        except database.ItemNotFound:
+            pass
+        else:
+            raise Redirect("http://%s/project/%s/" % (siteHost, hostname))
+
         self.siteHost = siteHost
         
         if self.cfg.hostName and fullHost == self.cfg.domainName:
