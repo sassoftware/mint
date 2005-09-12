@@ -147,6 +147,10 @@ th .required {
 	vertical-align:top; padding:6px 12px 6px 0px;
 	border-top:1px #e6e6e6 solid;
 }
+
+.results tbody tr.key-ids{
+        font-family: "times", monospace;
+}
 strong.keyword {
 	color:#FF7C04;
 }
