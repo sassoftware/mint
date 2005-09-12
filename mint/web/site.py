@@ -351,7 +351,7 @@ class SiteHandler(WebHandler):
             if x[2]:
                 p = self.client.getProject(x[2])
                 name = p.getName()
-                host = p.getFQDN()
+                host = p.getHostname()
             else:
                 version = versions.VersionFromString(x[1])
                 name = version.branch().label().getHost()
