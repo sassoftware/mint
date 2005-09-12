@@ -295,7 +295,8 @@ class ProjectsTable(database.KeyedTable):
 
     def createRepos(self, reposPath, hostname, domainname, username, password):
         path = os.path.join(reposPath, hostname + "." + domainname)
-        util.mkdirChain(reposPath)
+        tmpPath = os.path.join(path, 'tmp')
+        util.mkdirChain(tmpPath)
 
         repos = EmptyNetworkRepositoryServer(path, None, None, None, {})
         repos.auth.addUser(username, password)
