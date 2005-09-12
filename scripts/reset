@@ -13,7 +13,7 @@ rm $MINT_DATA/data/db
 rm -rf $AUTH_REPO/repo/
 
 mkdir -p $MINT_DATA/repos $MINT_DATA/data/ $MINT_DATA/tmp/
-mkdir $AUTH_REPO/repo/
+mkdir -p $AUTH_REPO/repo/
 
 touch $MINT_DATA/data/db
 echo mintpass | $CONARY_PATH/conary/server/server.py --add-user mintauth $AUTH_REPO/repo/
