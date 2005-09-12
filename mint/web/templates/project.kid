@@ -7,15 +7,16 @@
     <div py:def="projectResourcesMenu" id="browse" class="palette">
         <?python
             lastchunk = req.uri[req.uri.rfind('/')+1:]
+            projectUrl = "http://%s/project/%s" % (siteHost, project.getHostname())
         ?>
         <h3>Project Resources</h3>
         <ul>
-            <li><a href="$basePath"><strong py:strip="req.uri != '/'">Project Home</strong></a></li>
-            <li><a href="$basePath/releases"><strong py:strip="lastchunk not in ('release', 'releases')">Releases</strong></a></li>
+            <li><a href="$projectUrl"><strong py:strip="req.uri != '/'">Project Home</strong></a></li>
+            <li><a href="$projectUrl/releases"><strong py:strip="lastchunk not in ('release', 'releases')">Releases</strong></a></li>
 
-            <li><a href="$basePath/conary/browse"><strong py:strip="req.uri != '/conary/browse'">Repository</strong></a></li>
-            <li><a href="$basePath/members"><strong py:strip="lastchunk != 'members'">Project Members</strong></a></li>
-            <li><a href="$basePath/mailingLists"><strong py:strip="lastchunk != 'mailingLists'">Mailing Lists</strong></a></li>
+            <li><a href="http://${cfg.reposHost}.${cfg.domainName}/${project.getHostname()}/browse"><strong py:strip="req.uri != '/conary/browse'">Repository</strong></a></li>
+            <li><a href="$projectUrl/members"><strong py:strip="lastchunk != 'members'">Project Members</strong></a></li>
+            <li><a href="$projectUrl/mailingLists"><strong py:strip="lastchunk != 'mailingLists'">Mailing Lists</strong></a></li>
             <li py:if="0"><a href="#"><strong py:strip="lastchunk != 'bugs'">Bug Tracking</strong></a></li>
         </ul>
     </div>
