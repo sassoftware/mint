@@ -42,6 +42,7 @@ import updatecmd
 import versions
 
 #mint
+from mint import dbversion
 from mint import mint
 from mint import users
 from mint import config
@@ -158,7 +159,6 @@ class ApacheServer(ChildRepository):
         print >> f, 'dbPath %s' % self.reposDir + '/mintdb'
         print >> f, 'authDbPath %s' % self.reposDir + '/sqldb'
         print >> f, 'reposPath %s' % self.reposDir + '/repos/'
-        print >> f, 'xmlrpcAccess True'
         print >> f, 'authRepoMap %s http://test:foo@localhost:%d/conary/' % (self.name, self.port)
         f.close()
 
@@ -201,6 +201,7 @@ class ApacheServer(ChildRepository):
         cfg = config.MintConfig()
         cfg.read("%s/mint.conf" % self.serverRoot)
         db = sqlite3.connect(self.reposDir + "/mintdb", timeout = 30000)
+        versionTable = dbversion.VersionTable(db)
         usersTable = users.UsersTable(db, cfg)
         usersTable.new(username="test",
                        fullName="Test User",

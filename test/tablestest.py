@@ -9,6 +9,7 @@ testsuite.setup()
 import rephelp
 import sqlite3
 
+from mint import dbversion
 from mint import releases
 
 class TablesTest(rephelp.RepositoryHelper):
@@ -28,6 +29,8 @@ class TablesTest(rephelp.RepositoryHelper):
         except:
             pass
         self.db = sqlite3.connect(self.reposDir + "/db")
+        self.versionTable = dbversion.VersionTable(self.db)
+        self.db.commit()
 
 if __name__ == "__main__":
     testsuite.main()

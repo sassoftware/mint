@@ -41,7 +41,6 @@ class ProjectTest(rephelp.RepositoryHelper):
         project = client.getProject(projectId)
 
         project.addMemberById(otherUserId, userlevels.DEVELOPER)
-        print project.getMembers()
                     
     def testLabels(self):
         client = self.getMintClient("testuser", "testpass")
@@ -50,7 +49,7 @@ class ProjectTest(rephelp.RepositoryHelper):
         project = client.getProject(projectId)
     
         assert(project.getRepoMap() ==\
-            ["foo.rpath.org http://testuser:testpass@foo.rpath.org/conary/"])
+            ["foo.rpath.org http://test:foo@foo.rpath.org/conary/"])
         assert(project.getLabelIdMap() ==\
             {"foo.rpath.org@rpl:devel": 1})
         
@@ -59,7 +58,7 @@ class ProjectTest(rephelp.RepositoryHelper):
         assert(project.getLabelById(newLabelId) == "bar.rpath.org@rpl:devel")
 
         assert(project.getRepoMap() ==\
-            ['foo.rpath.org http://testuser:testpass@foo.rpath.org/conary/',
+            ['foo.rpath.org http://test:foo@foo.rpath.org/conary/',
              'bar.rpath.org http://user1:pass1@bar.rpath.org/conary/'])
         assert(project.getLabelIdMap() ==\
             {'bar.rpath.org@rpl:devel': newLabelId,
