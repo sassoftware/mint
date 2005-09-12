@@ -42,7 +42,7 @@ class MintConfig(ConfigFile):
         'adminMail'         : 'mint@rpath.org',
         'newsRssFeed'       : '',
         'commitAction'      : None,
-        'EnableMailLists'   : False,
+        'EnableMailLists'   : [ BOOLEAN, False ],
         'MailListBaseURL'   : 'http://lists.rpath.org/mailman/',
         'MailListPass'      : 'adminpass',
         'basePath'          : '/',

@@ -4,11 +4,13 @@
 # All Rights Reserved
 #
 
-kid_files =		\
-	browse.kid	\
-	error.kid	\
-	files.kid	\
-	notice.kid	\
+kid_files =			\
+	browse.kid		\
+	error.kid		\
+	files.kid		\
+	notice.kid		\
+	pgp_admin.kid		\
+	pgp_submit_key.kid	\
 	trove_info.kid
 
 python_files = __init__.py
