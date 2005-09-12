@@ -15,7 +15,7 @@ import news
 import pkgindex
 import projects
 import releases
-import session
+import sessiondb
 import versions
 import users
 import userlevels
@@ -777,7 +777,7 @@ class MintServer(object):
             self.releases = releases.ReleasesTable(self.db)
             self.pkgIndex = pkgindex.PackageIndexTable(self.db)
             self.newsCache = news.NewsCacheTable(self.db, self.cfg)
-            self.sessions = session.SessionsTable(self.db)
+            self.sessions = sessiondb.SessionsTable(self.db)
 
             #The database version object
             self.version = dbversion.VersionTable(self.db)
