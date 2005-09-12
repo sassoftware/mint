@@ -27,6 +27,12 @@ from mint import userlevels
         <td id="left" class="side">
             <div class="pad">
                 ${projectResourcesMenu()}
+                <div id="PGPKeys" class="palette" py:if="isOwner">
+                    <h3>Users' PGP Keys</h3>
+                    <ul>
+                    <li><a href="http://${siteHost}/repos/${project.getHostname()}/pgpAdminForm">Manage PGP/GnuPG Signing Keys</a></li>
+                    </ul>
+                </div>
                 <div class="palette" py:if="isOwner">
 
                     <h3>Add New Member</h3>

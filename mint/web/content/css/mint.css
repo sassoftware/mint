@@ -114,14 +114,6 @@ code {
         margin-left: 1em;
 }
 
-.products h3 {     background-color: green !important;
-    border-color: #080 !important;
-}
-
-.products li {
-    color: #666;
-}
-
 .arrows {
         text-transform: lowercase;
 }
