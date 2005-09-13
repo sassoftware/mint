@@ -12,14 +12,17 @@ import xmlrpclib
 import zlib
 import re
 import sys
+import time
+import traceback
 
-from lib import epdb
+from lib import epdb, log
 from repository.netrepos import netserver
 from repository.filecontainer import FileContainer
 from repository import changeset
 
 from mint import config
 from mint import mint_server
+from mint import users
 from webhandler import normPath
 import app
 import cookie_http
@@ -312,6 +315,20 @@ urls = (
     (r'^/',                  mintHandler),
 )
 
+def logErrorAndEmail(Exception, e, bt):
+    timeStamp = time.ctime(time.time())
+    # log error
+    log.error('[%s] Unhandled exception from mint web interface: %s: %s', timeStamp, Exception.__name__, e)
+    # send email
+    fromEmail = "apache@rpath.com"
+    fromEmailName = "Apache"
+    # FIXME change to a mailing list at earliest convenience
+    toEmail = "tgerla@rpath.com"
+    subject = "Unhandled exception from mint web interface"
+    body = 'Unhandled exception from mint web interface:\n\n%s: %s\n\n' %(Exception.__name__, e)
+    body += 'Time of occurance: %s\n\n' %timeStamp
+    body += ''.join( traceback.format_tb(bt))
+    users.sendMailWithChecks(fromEmail, fromEmailName, toEmail, subject, body)
 
 def handler(req):
     cfg = config.MintConfig()
@@ -328,7 +345,16 @@ def handler(req):
     for match, urlHandler in urls:
         if re.match(match, pathInfo):
             newPath = normPath(pathInfo[len(match)-1:])
-            return urlHandler(req, cfg, newPath)
+            try:
+                return urlHandler(req, cfg, newPath)
+            except:
+                # only handle actual mint errors
+                if match !='^/':
+                    raise
+                Exception, e, bt = sys.exc_info()
+                logErrorAndEmail(Exception, e, bt)
+                return urlHandler(req, cfg, '/unknownError')
+                
     return apache.HTTP_NOT_FOUND
 
 repositories = {}

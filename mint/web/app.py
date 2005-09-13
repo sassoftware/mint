@@ -36,6 +36,16 @@ class Redirect(Exception):
     def __str__(self):
         return "Location: %s" % self.location
 
+#called from hooks.py if an exception was not caught
+class ErrorHandler(WebHandler):
+    def handle(self, context):
+        self.__dict__.update(**context)
+        return self.errorPage
+
+    def errorPage(self, *args, **kwargs):
+        self._write('error', error = ' An unknown error occured while handling your request. Site maintainers have been notified.')
+        return apache.OK
+
 class MintApp(WebHandler):
     content_type = "application/xhtml+xml"
     project = None
@@ -56,6 +66,7 @@ class MintApp(WebHandler):
         self.siteHandler = SiteHandler()
         self.projectHandler = ProjectHandler()
         self.adminHandler = AdminHandler()
+        self.errorHandler = ErrorHandler()
         if repServer:
             self.conaryHandler = ConaryHandler(req, cfg, repServer)
         else:
@@ -139,6 +150,7 @@ class MintApp(WebHandler):
             (r'^/project/',     self.projectHandler),
             (r'^/administer',   self.adminHandler),
             (r'^/repos/',      self.conaryHandler),
+            (r'^/unknownError', self.errorHandler),
             (r'^/',             self.siteHandler),
         )
 
