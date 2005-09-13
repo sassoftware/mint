@@ -786,6 +786,10 @@ class MintServer(object):
         #commits until the database version has been asserted
         self.db.cursor().execute('BEGIN')
         try:
+            #The database version object has a dummy check so that it always passes.
+            #At the end of all database object creation, fix the version
+            self.version = dbversion.VersionTable(self.db)
+
             self.projects = projects.ProjectsTable(self.db, self.cfg)
             self.labels = projects.LabelsTable(self.db)
             self.jobs = jobs.JobsTable(self.db)
@@ -796,8 +800,9 @@ class MintServer(object):
             self.newsCache = news.NewsCacheTable(self.db, self.cfg)
             self.sessions = sessiondb.SessionsTable(self.db)
 
-            #The database version object
-            self.version = dbversion.VersionTable(self.db)
+            #now fix the version
+            self.version.fixVersion()
+
             #Now it's safe to commit
             self.db.commit()
 

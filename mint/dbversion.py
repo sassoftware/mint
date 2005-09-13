@@ -18,6 +18,13 @@ class VersionTable(database.KeyedTable):
     indexes = {'DatabaseVersionIdx': 'CREATE INDEX DatabaseVersionIdx ON DatabaseVersion(version)'}
 
     def versionCheck(self):
+        """ This dummy versionCheck allows __init__ to pass so that the
+        DatabaseVersion table gets created.  Otherwise, the upgrade method
+        would never create the DatabaseVersion table.
+        """
+        return True
+
+    def fixVersion(self):
         cu = self.db.cursor()
         version = self.getDBVersion()
         if version != self.schemaVersion:
