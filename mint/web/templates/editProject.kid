@@ -16,7 +16,7 @@
         <title>${formatTitle('Project Settings: %s'%project.getName())}</title>
     </head>
     <body>
-        <td id="main">
+        <td id="main" class="spanleft">
             <div class="pad">
                 <h2>Edit Project Properties</h2>
                 <form method="post" action="$basePath/processEditProject">
