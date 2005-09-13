@@ -90,20 +90,25 @@ class DatabaseTable:
         
         # create missing tables
         cu.execute("SELECT tbl_name FROM sqlite_master WHERE type = 'table'")
-        tables = [ x[0] for x in cu ]
-        if self.name not in tables:
+        tables = [ x[0].lower() for x in cu ]
+        if self.name.lower() not in tables:
             cu.execute(self.createSQL)
         
-        # create missing indexes
-        cu.execute("SELECT name FROM sqlite_master WHERE type = 'index'")
-        missing = set(self.indexes.keys()) - set(x[0] for x in cu) 
-        for index in missing:
-            cu.execute(self.indexes[index])
-
         #Don't commit here.  Commits must be handled up stream to enable
         #upgrading
         if not self.versionCheck():
             raise UpToDateException(self.name)
+
+        # create missing indexes, but only after upgrading.  Missing indeces
+        # may be created through the regular index routines instead of being
+        # explicitly created in the upgrade code.  If indeces are created
+        # before the upgrade check is done, a column not found exception
+        # could be raised if a new index is created referencing a new column
+        # created in the upgrade procedures.
+        cu.execute("SELECT name FROM sqlite_master WHERE type = 'index'")
+        missing = set(self.indexes.keys()) - set(x[0] for x in cu) 
+        for index in missing:
+            cu.execute(self.indexes[index])
 
     def __del__(self):
         if not self.db.closed:
