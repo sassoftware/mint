@@ -28,10 +28,12 @@
                 <h2>Select a project below to modify</h2>
                 <p>
                   <select name="projectId">
-                    <option py:for="project in projects" value="${project[0]}" py:attrs="{'class': project[1] and 'disabledOption' or 'enabled'}" py:content="project[2]"/>
+                    <option py:for="project in projects" value="${project[0]}" py:attrs="{'class': project[1] and 'disabledOption' or None, 'class': project[2] and 'hiddenOption' or None}" py:content="project[3]"/>
                   </select>
                 </p>
                 <p>
+                  <button name="operation" value="project_hide">Hide Project</button>
+                  <button name="operation" value="project_unhide">Unhide Project</button>
                   <button name="operation" value="project_disable">Disable Project</button>
                   <button name="operation" value="project_enable">Enable Project</button>
                   <button name="operation" value="project_change_members">Change Members</button>

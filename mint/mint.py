@@ -201,6 +201,21 @@ class MintClient:
         """
         return self.server.getUsers(sortOrder, limit, offset)
 
+    def hideProject(self, projectId):
+        """
+        Mark a project as hidden so that it doesn't show up in any listing, 
+        and is not accessible except by developers and owners of the project
+        """
+        return self.server.hideProject(projectId)
+
+    def unhideProject(self, projectId):
+        """
+        Mark a project previously hidden as unhidden so that it shows up in
+        browse and search listings, and becomes accessible through all other
+        access methods, and not just to project developers and owners.
+        """
+        return self.server.unhideProject(projectId)
+
     def disableProject(self, projectId):
         """
         Mark a project as disabled so that it doesn't show up in any listing, 

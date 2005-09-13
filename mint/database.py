@@ -75,7 +75,7 @@ class DatabaseTable:
     those indeces
     """
 
-    schemaVersion = 0
+    schemaVersion = 1
     name = "Table"
     fields = []
     createSQL = "CREATE TABLE Table ();"
@@ -124,10 +124,19 @@ class DatabaseTable:
 
     def versionCheck(self):
         """
-        Override this function in table needing to be modified.  Don't
-        forget to increment the schemaVersion
+        Override this function in tables needing to be modified.  Don't
+        forget to increment the schemaVersion when an update happens.
         """
-        return self.getDBVersion() == self.schemaVersion
+        dbversion = self.getDBVersion()
+        if dbversion != self.schemaVersion:
+            if dbversion == 0:
+                #Do version specific updating in this section
+                #See the projects.ProjectsTable.versionCheck() for an example
+                try:
+                    pass
+                except:
+                    return False
+        return True
 
 class KeyedTable(DatabaseTable):
     """

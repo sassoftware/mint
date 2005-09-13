@@ -37,6 +37,7 @@ class DuplicateName(MintError):
 class Project(database.TableObject):
     __slots__ = ('creatorId', 'name',
                  'desc', 'hostname', 'domainname', 'projecturl', 
+                 'hidden', 'disabled',
                  'timeCreated', 'timeModified')
 
     def getItem(self, id):
@@ -179,18 +180,32 @@ class ProjectsTable(database.KeyedTable):
                     projecturl      STR DEFAULT '' NOT NULL,
                     desc            STR NOT NULL DEFAULT '',
                     disabled        INT DEFAULT 0,
+                    hidden          INT DEFAULT 0,
                     timeCreated     INT,
                     timeModified    INT DEFAULT 0
                 )"""
     fields = ['creatorId', 'name', 'hostname', 'domainname', 'projecturl', 
-              'desc', 'timeCreated', 'timeModified']
+              'desc', 'hidden', 'timeCreated', 'timeModified']
     indexes = { "ProjectsHostnameIdx": "CREATE INDEX ProjectsHostnameIdx ON Projects(hostname)",
-                "ProjectsDisabledIdx": "CREATE INDEX ProjectsDisabledIdx ON Projects(disabled)"
+                "ProjectsDisabledIdx": "CREATE INDEX ProjectsDisabledIdx ON Projects(disabled)",
+                "ProjectsHiddenIdx": "CREATE INDEX ProjectsHiddenIdx ON Projects(hidden)"
               }
 
     def __init__(self, db, cfg):
         database.DatabaseTable.__init__(self, db)
         self.cfg = cfg
+
+    def versionCheck(self):
+        dbversion = self.getDBVersion()
+        if dbversion != self.schemaVersion:
+            if dbversion == 0:
+                sql = """ALTER TABLE Projects ADD COLUMN hidden INT DEFAULT 0"""
+                cu = self.db.cursor()
+                try:
+                    cu.execute(sql)
+                except:
+                    return False
+        return True
 
     def new(self, **kwargs):
         try:
@@ -211,7 +226,7 @@ class ProjectsTable(database.KeyedTable):
         cu = self.db.cursor()
 
         sql = """
-            SELECT projectId, disabled, hostname || ' - ' || name 
+            SELECT projectId, disabled, hidden, hostname || ' - ' || name 
             FROM Projects
             ORDER BY hostname
         """
@@ -242,7 +257,7 @@ class ProjectsTable(database.KeyedTable):
 
     def getNumProjects(self):
         cu = self.db.cursor()
-        cu.execute("SELECT count(name) FROM Projects WHERE disabled=0")
+        cu.execute("SELECT count(name) FROM Projects WHERE disabled=0 AND hidden=0")
 
         return cu.next()[0]
 
@@ -284,7 +299,7 @@ class ProjectsTable(database.KeyedTable):
         columns = ['hostname || \'.\' || domainname', 'name', 'desc', 'timeModified']
         searchcols = ['name', 'desc']
         ids, count = database.KeyedTable.search(self, columns, 'Projects', 
-            searcher.Searcher.where(terms, searchcols, 'AND disabled=0'),
+            searcher.Searcher.where(terms, searchcols, 'AND disabled=0 AND hidden=0'),
             'NAME', searcher.Searcher.lastModified('timeModified', modified),
             limit, offset)
         for i, x in enumerate(ids[:]):
@@ -309,6 +324,20 @@ class ProjectsTable(database.KeyedTable):
         # to this repository
         repos.auth.addUser(self.cfg.authUser, self.cfg.authPass)
         repos.auth.addAcl(self.cfg.authUser, None, None, True, False, True)
+
+    def hide(self, projectId):
+        #TODO: Add method for removing the anonymous user
+        cu = self.db.cursor()
+
+        cu.execute("UPDATE Projects SET hidden=1, timeModified=? WHERE projectId=?", time.time(), projectId)
+        self.db.commit()
+
+    def unhide(self, projectId):
+        #TODO: Add method for adding the anonymous user
+        cu = self.db.cursor()
+
+        cu.execute("UPDATE Projects SET hidden=0, timeModified=? WHERE projectId=?", time.time(), projectId)
+        self.db.commit()
 
     def disable(self, projectId, reposPath):
         cu = self.db.cursor()

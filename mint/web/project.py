@@ -40,8 +40,12 @@ class ProjectHandler(WebHandler):
             self.project = self.client.getProjectByFQDN(cmds[0] + "." + self.cfg.domainName)
         except database.ItemNotFound:
             return self._404
-            
+
         self.userLevel = self.project.getUserLevel(self.auth.userId)
+
+        #Take care of hidden projects
+        if self.project.hidden and self.userLevel == userlevels.NONMEMBER:
+            return self._404
         
         # add the project name to the base path
         self.basePath += "/project/%s" % (cmds[0])

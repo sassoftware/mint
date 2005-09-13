@@ -11,3 +11,5 @@ names = {
     OWNER: "Owner",
     DEVELOPER: "Developer",
 }
+
+NONMEMBER=-1

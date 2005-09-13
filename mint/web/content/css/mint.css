@@ -67,6 +67,12 @@ body#legal h2 {
     text-decoration: line-through;
 }
 
+.hiddenOption {
+    color: blue;
+    background-color: teal;
+    text-decoration: line-through;
+}
+
 /* rss button */
 a.rssButton {
     background-image: none;

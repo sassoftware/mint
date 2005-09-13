@@ -46,6 +46,7 @@ class ConaryHandler(WebHandler, http.HttpHandler):
         return self._methodHandler()
    
     def _requestAuth(self):
+        #TODO: This needs to do something smarter
         return self._redirect("/")
 
     def _getHandler(self, cmd):
@@ -72,16 +73,16 @@ class ConaryHandler(WebHandler, http.HttpHandler):
     del http.HttpHandler.chooseBranch
     del http.HttpHandler.getMetadata
     del http.HttpHandler.updateMetadata
-    del http.HttpHandler.userlist
-    del http.HttpHandler.addPermForm
-    del http.HttpHandler.addPerm
-    del http.HttpHandler.addGroupForm
-    del http.HttpHandler.manageGroupForm
-    del http.HttpHandler.manageGroup
-    del http.HttpHandler.addGroup
-    del http.HttpHandler.deleteGroup
-    del http.HttpHandler.deletePerm
-    del http.HttpHandler.addUser
-    del http.HttpHandler.deleteUser
+    #del http.HttpHandler.userlist #enable until a method to hide/unhide projects is added to the admin interface
+    #del http.HttpHandler.deleteGroup
+    #del http.HttpHandler.deleteUser
+    #del http.HttpHandler.addPermForm
+    #del http.HttpHandler.addPerm
+    #del http.HttpHandler.addGroupForm
+    #del http.HttpHandler.manageGroupForm
+    #del http.HttpHandler.manageGroup
+    #del http.HttpHandler.addGroup
+    #del http.HttpHandler.deletePerm
+    #del http.HttpHandler.addUser
     del http.HttpHandler.chPassForm
     del http.HttpHandler.chPass

@@ -247,6 +247,16 @@ class MintServer(object):
 
     @requiresAdmin
     @private
+    def hideProject(self, projectId):
+        return self.projects.hide(projectId)
+
+    @requiresAdmin
+    @private
+    def unhideProject(self, projectId):
+        return self.projects.unhide(projectId)
+
+    @requiresAdmin
+    @private
     def disableProject(self, projectId):
         return self.projects.disable(projectId, self.cfg.reposPath)
 

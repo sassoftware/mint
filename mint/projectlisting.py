@@ -23,7 +23,7 @@ sqlbase = """SELECT Projects.hostname || '.' || Projects.domainname, Projects.na
     Projects
         LEFT JOIN projectUsers ON
     Projects.projectId=projectUsers.projectId
-        WHERE Projects.disabled=0
+        WHERE Projects.disabled=0 AND Projects.hidden=0
         GROUP BY Projects.projectId
         ORDER BY %s
         LIMIT %d

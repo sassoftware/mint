@@ -54,6 +54,16 @@ class AdminHandler(WebHandler):
         # XXX Go through with it.  This functionality may be added in some later release
         return self._admin_project(*args, **kwargs)
 
+    def _admin_project_hide(self, *args, **kwargs):
+        self.client.hideProject(kwargs['projectId'])
+        kwargs['extraMsg'] = "Project hidden"
+        return self._admin_project(*args, **kwargs)
+
+    def _admin_project_unhide(self, *args, **kwargs):
+        self.client.unhideProject(kwargs['projectId'])
+        kwargs['extraMsg'] = "Project unhidden"
+        return self._admin_project(*args, **kwargs)
+
     def _admin_project_disable(self, *args, **kwargs):
         self.client.disableProject(kwargs['projectId'])
         kwargs['extraMsg'] = "Project disabled"
