@@ -76,3 +76,8 @@ class MintConfig(ConfigFile):
         #Make sure MailListBaseURL has a slash on the end of it
         if self.MailListBaseURL[-1:] != '/':
             self.setValue('MailListBaseURL', self.MailListBaseURL + '/')
+
+        if self.hostName:
+            self.siteHost = self.hostName + "." + self.domainName
+        else:
+            self.siteHost = self.domainName

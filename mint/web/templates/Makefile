@@ -4,7 +4,7 @@
 # All Rights Reserved
 #
 
-SUBDIRS = repos
+SUBDIRS = repos admin
 
 kid_files = \
 	confirmEmail.kid	\

@@ -10,7 +10,7 @@ kid_files =			\
 	project.kid		\
 	user.kid
 
-python_files = __init__.py
+python_files =
 
 extra_dist = Makefile
 

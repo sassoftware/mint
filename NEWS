@@ -1,3 +1,9 @@
+Changes in 0.4.1:
+
+* Add a makefile for templates/admin
+* Add code to email tracebacks to administrator on error
+* Projects can now be hidden.
+
 Changes in 0.4.0:
 
 * Projects are now accessible under the main site: http://hostname/project/<projectname>
