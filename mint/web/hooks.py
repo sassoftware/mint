@@ -344,8 +344,8 @@ def handler(req):
             try:
                 return urlHandler(req, cfg, newPath)
             except:
-                # we only want to handle errors in production Mode
-                if cfg.debugMode:
+                # we only want to handle errors in production mode
+                if cfg.debugMode or req.bytes_sent > 0:
                     raise
                 # only handle actual mint errors
                 if match !='^/':

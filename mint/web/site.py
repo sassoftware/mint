@@ -358,8 +358,9 @@ class SiteHandler(WebHandler):
                 version = versions.VersionFromString(x[1])
                 name = version.branch().label().getHost()
                 host = name
-                reposUrl = 'http://%s/conary/browse' % host
+                reposUrl = 'http://%s/conary/' % host
                 packageUrl = reposUrl + "troveInfo?t=%s" % x[0]
+                reposUrl += 'browse'
             searchResults.append( (x[0], x[1], packageUrl, name, reposUrl) )
             
         self._write("searchResults", searchType = "Packages", terms = terms, results = searchResults,
