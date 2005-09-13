@@ -14,6 +14,7 @@ import os
 import time
 import threading
 
+from xmlrpclib import ProtocolError
 from optparse import OptionParser
 
 import conary
@@ -113,15 +114,26 @@ class JobDaemon:
         log.info("handling jobs of architecture: %s", arch)
         
         while(True):
-            joblist = list(client.iterJobs(releaseId=-1))
-            
-            for job in joblist:
-                release = client.getRelease(job.getReleaseId())
-                if job.getStatus() == jobstatus.WAITING\
-                   and arch == release.getArch():
-                    th = JobRunner(cfg, client, job)
-                    threads.append(th)
-                    th.start()
+            try:
+                joblist = list(client.iterJobs(releaseId=-1))
+                for job in joblist:
+                    release = client.getRelease(job.getReleaseId())
+                    if job.getStatus() == jobstatus.WAITING\
+                           and arch == release.getArch():
+                        th = JobRunner(cfg, client, job)
+                        threads.append(th)
+                        th.start()
+            # We can't assume the mint server will stay up forever.
+            # We'd like to ignore exceptions raised if/when the mint server
+            # dies, and just wait for it to come back up.
+            # Sometimes we get socket.error and sometimes we get
+            # a ProtocolError...
+            # it all depends on what the xmlrpc lib was trying to do when
+            # the server went byebye.
+            except ProtocolError:
+                pass
+            except socket.error:
+                pass
             time.sleep(5)
 
 def kill(lockFile):
