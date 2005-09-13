@@ -315,20 +315,16 @@ urls = (
     (r'^/',                  mintHandler),
 )
 
-def logErrorAndEmail(Exception, e, bt):
+def logErrorAndEmail(cfg, Exception, e, bt):
     timeStamp = time.ctime(time.time())
     # log error
     log.error('[%s] Unhandled exception from mint web interface: %s: %s', timeStamp, Exception.__name__, e)
     # send email
-    fromEmail = "apache@rpath.com"
-    fromEmailName = "Apache"
-    # FIXME change to a mailing list at earliest convenience
-    toEmail = "tgerla@rpath.com"
-    subject = "Unhandled exception from mint web interface"
     body = 'Unhandled exception from mint web interface:\n\n%s: %s\n\n' %(Exception.__name__, e)
     body += 'Time of occurance: %s\n\n' %timeStamp
     body += ''.join( traceback.format_tb(bt))
-    users.sendMailWithChecks(fromEmail, fromEmailName, toEmail, subject, body)
+    users.sendMailWithChecks(cfg.bugsEmailFrom, cfg.bugsEmailFromName,
+                             cfg.adminMail, cfg.bugsEmailSubject, body)
 
 def handler(req):
     cfg = config.MintConfig()
@@ -352,7 +348,7 @@ def handler(req):
                 if match !='^/':
                     raise
                 Exception, e, bt = sys.exc_info()
-                logErrorAndEmail(Exception, e, bt)
+                logErrorAndEmail(cfg, Exception, e, bt)
                 return urlHandler(req, cfg, '/unknownError')
                 
     return apache.HTTP_NOT_FOUND

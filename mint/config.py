@@ -47,6 +47,9 @@ class MintConfig(ConfigFile):
         'MailListPass'      : 'adminpass',
         'basePath'          : '/',
         'cookieSecretKey'   : None,
+        'bugsEmailFrom'     : 'apache@rpath.com',
+        'bugsEmailFromName' : 'Apache',
+        'bugsEmailSubject'  : 'Mint Unhandled Exception Report',
 
         # don't set these yourself; they will be automatically generated 
         # from authRepoMap:
