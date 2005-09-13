@@ -79,8 +79,8 @@ onload = "javascript:;"
                                 <td id="topnav">
                                     <div class="pad">
                                         <a href="http://${siteHost}/">Home</a> | 
-                                        <a href="#">About rPath</a> |
-                                        <a href="#">Contact rPath</a>
+                                        <a href="${cfg.corpSite}">About rPath</a> |
+                                        <a href="${cfg.corpSite}sales/">Contact rPath</a>
 				        <span py:if="cfg.debugMode">
                                             | <span style="color:red;">DEBUG MODE</span>
                                         </span>

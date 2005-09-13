@@ -21,6 +21,7 @@ class MintConfig(ConfigFile):
         'companyName'       : 'rPath Inc.',
         'productName'       : 'rBuilder at rpath.org',
         'defaultRedirect'   : 'http://rpath.com',
+        'corpSite'          : 'http://www.rpath.com/corp/',
         'defaultBranch'     : 'rpl:devel',
         'supportContactHTML': '<a href="mailto:custom@rpath.com">'
                               'custom@rpath.com</a> or join the IRC channel '

@@ -31,7 +31,7 @@ from mint import searcher
                             <h2 class="header">Welcome to rPath</h2>
                             <p>Welcome to rPath.org&#8212;the site for collaborative open source development.</p>
 <p>Developers can create and host projects and operating systems here, while users can browse and download projects and operating system images for installation.</p>
-                            <p><a href="#">More about rPath</a> </p>
+                            <p><a href="${cfg.corpSite}">More about rPath</a> </p>
 
                             <div py:strip="True" py:if="news">
                                 <h2 class="header">Site News</h2>
