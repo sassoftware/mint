@@ -45,9 +45,9 @@
                     ]
                 elif searchType == "Packages":
                     formattedresults = [
-                        ('/repos/%s/troveInfo?t=%s' % (resultset[2], resultset[0]), resultset[0]),
+                        (resultset[2], resultset[0]),
                         resultset[1],
-                        ('/projects/%s/' % resultset[2], resultset[3])
+                        (resultset[4], resultset[3]),
                     ]
             ?>
             ${resultRow(formattedresults)}
