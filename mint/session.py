@@ -44,5 +44,5 @@ class SqlSession(BaseSession):
     def do_delete(self):
         self._client.deleteSession(self._sid)
 
-def sql_cleanup(self, client):
+def sql_cleanup(client):
     client.cleanupSessions()
