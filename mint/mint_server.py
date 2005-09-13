@@ -21,10 +21,8 @@ import users
 import userlevels
 import dbversion
 from cache import TroveNamesCache
-from mint_error import MintError, UnknownException
 from mint_error import PermissionDenied
 
-import repository.netrepos.netauth
 from repository import netclient
 
 validHost = re.compile('^[a-zA-Z][a-zA-Z0-9\-]*$')
@@ -248,11 +246,20 @@ class MintServer(object):
     @requiresAdmin
     @private
     def hideProject(self, projectId):
+        project = projects.Project(self, projectId)
+        repos = self._getAuthRepo(project)
+        repos.deleteUserByName(project.getLabel(), 'anonymous')
+
         return self.projects.hide(projectId)
 
     @requiresAdmin
     @private
     def unhideProject(self, projectId):
+        project = projects.Project(self, projectId)
+        repos = self._getAuthRepo(project)
+        userId = repos.addUser(project.getLabel(), 'anonymous', 'anonymous')
+        repos.addAcl(project.getLabel(), 'anonymous', None, None, False, False, False)
+
         return self.projects.unhide(projectId)
 
     @requiresAdmin

@@ -326,14 +326,14 @@ class ProjectsTable(database.KeyedTable):
         repos.auth.addAcl(self.cfg.authUser, None, None, True, False, True)
 
     def hide(self, projectId):
-        #TODO: Add method for removing the anonymous user
+        # Anonymous user is added/removed in mint_server
         cu = self.db.cursor()
 
         cu.execute("UPDATE Projects SET hidden=1, timeModified=? WHERE projectId=?", time.time(), projectId)
         self.db.commit()
 
     def unhide(self, projectId):
-        #TODO: Add method for adding the anonymous user
+        # Anonymous user is added/removed in mint_server
         cu = self.db.cursor()
 
         cu.execute("UPDATE Projects SET hidden=0, timeModified=? WHERE projectId=?", time.time(), projectId)
