@@ -50,6 +50,7 @@ class MintConfig(ConfigFile):
         'bugsEmailFrom'     : 'apache@rpath.com',
         'bugsEmailFromName' : 'Apache',
         'bugsEmailSubject'  : 'Mint Unhandled Exception Report',
+        'debugMode'         : [ BOOLEAN, False ],
 
         # don't set these yourself; they will be automatically generated 
         # from authRepoMap:

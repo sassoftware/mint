@@ -81,8 +81,10 @@ onload = "javascript:;"
                                         <a href="http://${siteHost}/">Home</a> | 
                                         <a href="#">About rPath</a> |
                                         <a href="#">Contact rPath</a>
-
-                                    </div>
+				        <span py:if="cfg.debugMode">
+                                            | <span style="color:red;">DEBUG MODE</span>
+                                        </span>
+	                            </div>
                                 </td>
                                 <td id="log">
                                     <div class="pad" py:if="not auth.authorized">
