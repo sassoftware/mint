@@ -34,6 +34,7 @@ class MintConfig(ConfigFile):
         'authDbPath'        : '/srv/authrepo/repos/sqldb',
         'templatePath'      : os.path.join(templatePath, 'web', 'templates'),
         'reposPath'         : '/srv/mint/repos/',
+        'reposContentsPath' : '/srv/mint/repos/',
         'dbPath'            : '/srv/mint/data/db',
         'tmpPath'           : '/srv/mint/tmp/',
         'imagesPath'        : '/srv/mint/images/',

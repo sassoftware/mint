@@ -127,8 +127,9 @@ class MintServer(object):
             "http://%s/repos/%s/" % (self.cfg.siteHost, hostname),
             self.cfg.authUser, self.cfg.authPass)
 
-        self.projects.createRepos(self.cfg.reposPath, hostname, domainname,
-                                  self.authToken[0], self.authToken[1])
+        self.projects.createRepos(self.cfg.reposPath, self.cfg.reposContentsPath,
+                                  hostname, domainname, self.authToken[0],
+                                  self.authToken[1])
 
         return projectId
     

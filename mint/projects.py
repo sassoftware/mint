@@ -308,12 +308,13 @@ class ProjectsTable(database.KeyedTable):
 
         return ids, count
 
-    def createRepos(self, reposPath, hostname, domainname, username, password):
-        path = os.path.join(reposPath, hostname + "." + domainname)
-        tmpPath = os.path.join(path, 'tmp')
+    def createRepos(self, reposPath, contentsPath, hostname, domainname, username, password):
+        dbPath = os.path.join(reposPath, hostname + "." + domainname)
+        contentsPath = os.path.join(contentsPath, hostname + "." + domainname)
+        tmpPath = os.path.join(dbPath, 'tmp')
         util.mkdirChain(tmpPath)
 
-        repos = EmptyNetworkRepositoryServer(path, None, None, None, {})
+        repos = EmptyNetworkRepositoryServer(dbPath, contentsPath, None, None, None, {})
         repos.auth.addUser(username, password)
         repos.auth.addAcl(username, None, None, True, False, True)
 
@@ -465,6 +466,18 @@ class LabelsTable(database.KeyedTable):
     
 # XXX sort of stolen from conary/server/server.py
 class EmptyNetworkRepositoryServer(NetworkRepositoryServer):
+    def __init__(self, dbPath, contentsPath, tmpPath, basicUrl, name,
+                 repositoryMap, commitAction = None, cacheChangeSets = False,
+                 logFile = None):
+        if dbPath != contentsPath:
+            #Create the links as appropriate.  dbPath will be the ultimate path sent
+            # up to NetworkRepositoryServer.
+            contentsTarget = os.path.join(dbPath, 'contents')
+            contentsSrc = os.path.join(contentsPath, 'contents')
+            util.mkdirChain(contentsSrc)
+            os.symlink(contentsSrc, contentsTarget)
+        NetworkRepositoryServer.__init__(self, dbPath, tmpPath, basicUrl, name, repositoryMap, commitAction, cacheChangeSets, logFile)
+
     def reset(self, authToken, clientVersion):
         import shutil
         shutil.rmtree(self.repPath + '/contents')
