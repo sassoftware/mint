@@ -30,12 +30,6 @@ title = "Create New Release"
 
                     <table cellspacing="0" cellpadding="0" border="0" class="mainformhorizontal">
                         <tr>
-                            <th><em class="required">Release name:</em></th>
-                            <td>
-                                <input type="text" name="releaseName" id="releaseName" value="${project.getName()}"/>
-                            </td>
-                        </tr>
-                        <tr>
                             <th><em class="required">Distribution Trove:</em></th>
                             <td>
 
@@ -60,6 +54,7 @@ title = "Create New Release"
                     <p>
                         <button id="submitButton" type="submit">Submit</button>
                         <input py:if="True" type="hidden" name="imageType" value="${releasetypes.INSTALLABLE_ISO}" />
+                        <input type="hidden" name="releaseName" value="${project.getName()}" />
                         <input type="hidden" name="releaseId" value="-1" />
                     </p>
                 </form>
