@@ -82,7 +82,7 @@ function XmlRpcRequest(url, method)
         this.req.open("POST", this.url, true);
         this.req.setRequestHeader("Content-type", "text/xml");
         if(this.auth) {
-            this.req.setRequestHeader("Authorization", "Basic " + this.auth);
+            this.req.setRequestHeader("X-Session-Id", this.auth);
         }
         this.req.send(msg);
     }

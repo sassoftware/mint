@@ -14,6 +14,7 @@ from mint import mailinglists
 from mint import releasetypes
 from mint import userlevels
 
+from repository import netclient
 import versions
 from deps import deps
 
@@ -102,9 +103,9 @@ class ProjectHandler(WebHandler):
             version = versions.ThawVersion(versionStr)
             label = version.branch().label()
 
-        cfg = self._conaryConfig(self.project)
-        netclient = repository.netclient.NetworkRepositoryClient(cfg.repositoryMap)
-        leaves = netclient.getTroveLeavesByLabel({trove: {label: None}})
+        cfg = self.project.getConaryConfig()
+        nc = netclient.NetworkRepositoryClient(cfg.repositoryMap)
+        leaves = nc.getTroveLeavesByLabel({trove: {label: None}})
 
         # group troves by major architecture
         def dictByArch(leaves, troveName):

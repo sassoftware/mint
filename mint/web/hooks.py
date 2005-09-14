@@ -31,9 +31,14 @@ profiling = False
 BUFFER=1024 * 256
 
 def getHttpAuth(req):
+    # special header to pass a session id through
+    # instead of a real http authorization token
+    if 'X-Session-Id' in req.headers_in:
+        return req.headers_in['X-Session-Id']
+ 
     if not 'Authorization' in req.headers_in:
         return ('anonymous', 'anonymous')
-
+    
     info = req.headers_in['Authorization'].split()
     if len(info) != 2 or info[0] != "Basic":
         return apache.HTTP_BAD_REQUEST

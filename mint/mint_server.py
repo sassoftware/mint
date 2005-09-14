@@ -9,6 +9,7 @@ import sys
 import time
 
 import database
+import hmac
 import jobs
 import jobstatus
 import news
@@ -69,6 +70,22 @@ class MintServer(object):
             return (True, ("MethodNotSupported", methodName, ""))
         try:
             # check authorization
+
+            # grab authToken from a session id if passed a session id
+            # the session id from the client is a hmac-signed string
+            # containing the actual session id.
+            if type(authToken) == str:
+                sig, val = authToken[:32], authToken[32:]
+                    
+                mac = hmac.new(self.cfg.cookieSecretKey, 'pysid')
+                mac.update(val)
+                if mac.hexdigest() != sig:
+                    raise PermissionDenied
+
+                sid = val
+                d = self.sessions.load(sid)
+                authToken = d['_data']['authToken']
+            
             auth = self.users.checkAuth(authToken, checkRepo = self._checkRepo, cachedGroups = self._cachedGroups)
             self.authToken = authToken
             self.auth = users.Authorization(**auth)
