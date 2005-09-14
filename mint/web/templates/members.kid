@@ -89,7 +89,8 @@ from mint import userlevels
                 <p class="help" py:if="isOwner and lastOwner and not auth.admin">
                     Because a project cannot have developers with no owner, you cannot change your
                     ownership status at this time. To remove yourself from this project, promote
-                    a developer to Owner status, or remove all developers.
+                    a developer to Owner status, or orphan the project by removing all developers,
+                    followed by yourself.
                 </p>
                 <h3>Developers</h3>
 
