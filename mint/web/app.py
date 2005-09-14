@@ -85,7 +85,8 @@ class MintApp(WebHandler):
         self.session = SqlSession(self.req, sessionClient,
             secret = self.cfg.cookieSecretKey,
             timeout = 86400, # XXX timeout of one day; should it be configurable?
-            domain = self.cfg.domainName)
+            domain = self.cfg.domainName,
+            lock = False)
         
         # default to anonToken if the current session has no authToken
         self.authToken = self.session.get('authToken', anonToken)
