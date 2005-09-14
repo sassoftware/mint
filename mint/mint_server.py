@@ -232,7 +232,7 @@ class MintServer(object):
     def _notifyUser(self, action, user, project, userlevel=None):
         actionText = {'Removed': "has been removed from the following project:",
             'Added': "has been added to the following project:",
-            'Changed': "has had its current access level changed to %s on the following project:" % (userlevel and userlevels.names[userlevel] or 'Unknown')
+            'Changed': "has had its current access level changed to %s on the following project:" % ((userlevel >=0) and userlevels.names[userlevel] or 'Unknown')
         }
         greeting = "Hello,"
         message = "Your %s account: %s\n" % (self.cfg.productName, user['username'])
