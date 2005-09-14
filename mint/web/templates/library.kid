@@ -29,7 +29,7 @@ from mint import searcher
     </div>
 
     <div id="browse" class="palette" py:def="browseMenu()" py:strip="False">
-        <h3>browse ${cfg.productName}</h3>
+        <h3>browse projects</h3>
         <ul>
             <li><a href="projects">All Projects</a></li>
             <li><a href="projects?sortOrder=3">Most Active Projects</a></li>
@@ -45,7 +45,7 @@ if auth.admin:
     searchTypes.insert(0, 'Projects')
     searchTypes.append('Users')
         ?>
-        <h3>search ${cfg.productName}</h3>
+        <h3>search projects</h3>
         <form action="search" method="get">
             <p>
                 <label>search type:</label><br/>
