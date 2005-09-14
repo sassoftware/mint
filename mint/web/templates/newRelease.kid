@@ -45,7 +45,7 @@ title = "Create New Release"
                                 </select>
                             </td>
                         </tr>
-                        <tr>
+                        <tr py:if="False">
                             <th>Release Type:</th>
                             <td>
                                 <select name="imageType">
@@ -54,10 +54,12 @@ title = "Create New Release"
                                             py:attrs="{'value': releaseType}"/>
                                 </select>
                             </td>
+                            
                         </tr>
                     </table>
                     <p>
                         <button id="submitButton" type="submit">Submit</button>
+                        <input py:if="True" type="hidden" name="imageType" value="${releasetypes.INSTALLABLE_ISO}" />
                         <input type="hidden" name="releaseId" value="-1" />
                     </p>
                 </form>
