@@ -235,10 +235,9 @@ class MintServer(object):
             'Changed': "has had its current access level changed to %s on the following project:" % (userlevel and userlevels.names[userlevel] or 'Unknown')
         }
         greeting = "Hello,"
-        message = "Your %s account: %s" % (self.cfg.productName, user['username'])
+        message = "Your %s account: %s\n" % (self.cfg.productName, user['username'])
         message += actionText[action]
-        message += "%s" % project.getName()
-        message += '.'
+        message += "\n%s\n" % project.getName()
         closing = 'Please contact the project owner(s) with any questions.'
 
         users.sendMail(self.cfg.adminMail, self.cfg.productName,
