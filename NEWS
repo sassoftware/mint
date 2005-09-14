@@ -1,3 +1,14 @@
+Changes in 0.4.3:
+
+* Cosmetic changes.
+
+Changes in 0.4.2:
+
+* Fix urls in package search results page.
+* Add a "corpSite" configuration option to point certain links
+  at an outside site.
+* Debug mode (emailing of tracebacks) is now a configuration option.
+
 Changes in 0.4.1:
 
 * Add a makefile for templates/admin
