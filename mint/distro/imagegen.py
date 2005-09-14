@@ -9,6 +9,8 @@ import sys
 
 from mint import jobstatus
 
+from threading import currentThread
+
 class ImageGenerator:
     def __init__(self, client, cfg, job, profileId):
         self.client = client
@@ -44,3 +46,31 @@ class ImageGenerator:
         os.close(self.stderr)
 
         os.close(self.logfd)
+
+def getParentThread():
+    # parentThread is defined in the JobRunner class
+    # we use this to check if the main thread is still alive, so we
+    # can abort if it's not...
+    try:
+        r = currentThread().parentThread
+    except NameError:
+        # we'll get here if getParentThread was used outside of a
+        # JobRunner thread. oh well, we won't be able to abort cleanly.
+        r = currentThread()
+    return r
+
+def getJobId(parentThread = None):
+    if not parentThread:
+        parentThread = getParentThread
+    try:
+        job = parentThread.job
+    except NameError:
+        # we'll get here if current thread is not a JobRunner thread.
+        return None
+    return job.jobId
+
+def assertParentAlive():
+    parentThread = getParentThread()
+    if not parentThread.isAlive():
+        jobId = getJobId(parentThread)
+        raise RuntimeError("Job %d aborted." %jobId)

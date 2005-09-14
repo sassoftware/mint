@@ -16,7 +16,7 @@ from lib import util
 
 import conarycfg
 from mint.mint import upstream
-from imagegen import ImageGenerator
+from imagegen import ImageGenerator, assertParentAlive
 import gencslist
 
 class IsoConfig(ConfigFile):
@@ -70,10 +70,15 @@ class InstallableIso(ImageGenerator):
             print >> sys.stderr, "multiple matches for", groupName
             raise RuntimeException
 
+        # Abort if parent thread has died
+        assertParentAlive()
+
         groupName, groupVer, groupFlavor = trvList[0]
         cslist = gencslist.processGroup(client, cfg, csdir, groupName,
                                         groupVer, groupFlavor,
                                         oldFiles = existingChangesets)
+        # Abort if parent thread has died
+        assertParentAlive()
 
         releaseVer = upstream(version)
         releasePhase = "ALPHA"
@@ -110,12 +115,18 @@ class InstallableIso(ImageGenerator):
         sys.stderr.flush()
 
         os.system(cmd)
-        
+
+        # Abort if parent thread has died
+        assertParentAlive()
+
         cmd = "%(scriptsdir)s/splitdistro %(topdir)s" % infoMap
         print >> sys.stderr, cmd
         sys.stderr.flush()
         os.system(cmd)
-        
+
+        # Abort if parent thread has died
+        assertParentAlive()
+
         isoList = []
         isoname = "%(safeName)s-%(version)s-%%(disc)s.iso" % infoMap
         discdir = os.path.normpath(topdir + "/../")
@@ -140,12 +151,16 @@ class InstallableIso(ImageGenerator):
                 print >> sys.stderr, cmd
                 sys.stderr.flush()
                 os.system(cmd)
+                # Abort if parent thread has died
+                assertParentAlive()
             else:
                 os.chdir(os.path.join(discdir, d))
                 cmd = "mkisofs -o %(isodir)s/%(iso)s -R -J -V \"%(discname)s\" -T ." % infoMap
                 print >> sys.stderr, cmd
                 sys.stderr.flush()
                 os.system(cmd)
+                # Abort if parent thread has died
+                assertParentAlive()
             isoList.append(infoMap['iso'])
         
         isoList = [os.path.join(infoMap['isodir'], iso) for iso in isoList]

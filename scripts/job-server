@@ -55,6 +55,8 @@ class JobRunner(threading.Thread):
         self.cfg = cfg
         self.client = client
         self.job = job
+        # still in parent thread when init gets called.
+        self.parentThread = threading.currentThread()
 
     def run(self):
         jobId = self.job.getId()
