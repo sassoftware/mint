@@ -28,8 +28,8 @@ from mint import searcher
                     </td>
                     <td id="main">
                         <div class="pad">
-                            <h2 class="header">Welcome to rPath</h2>
-                            <p>Welcome to rPath.org&#8212;the site for collaborative open source development.</p>
+                            <h2 class="header">Welcome to rBuilder Online</h2>
+                            <p>Welcome to rBuilder Online&#8212;the site for collaborative open source development.</p>
 <p>Developers can create and host projects and operating systems here, while users can browse and download projects and operating system images for installation.</p>
                             <p><a href="${cfg.corpSite}">More about rPath</a> </p>
 
