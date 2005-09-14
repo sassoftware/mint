@@ -28,7 +28,7 @@ from searcher import SearchTermsError
 from repository import netclient
 
 validHost = re.compile('^[a-zA-Z][a-zA-Z0-9\-]*$')
-reservedHosts = ['admin', 'mail', 'mint', 'www', 'web', 'rpath', 'wiki', 'conary']
+reservedHosts = ['admin', 'mail', 'mint', 'www', 'web', 'rpath', 'wiki', 'conary', 'lists']
 
 allTroveNames = TroveNamesCache()
 
