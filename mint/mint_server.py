@@ -230,19 +230,20 @@ class MintServer(object):
             self._notifyUser('Removed', user, project)
 
     def _notifyUser(self, action, user, project, userlevel=None):
-        actionText = {'Removed': "You have been removed from the project",
-            'Added': "You have been added to the project",
-            'Changed': "Your current access level is %s" % (userlevel and userlevels.names[userlevel] or 'Unknown')
+        actionText = {'Removed': "has been removed from the following project:",
+            'Added': "has been added to the following project:",
+            'Changed': "has had its current access level changed to %s on the following project:" % (userlevel and userlevels.names[userlevel] or 'Unknown')
         }
-        greeting = "%s," % (user['fullName'] and user['fullName'] or user['username'])
-        message = "An owner of %s has modified your account status: "%project.getName()
+        greeting = "Hello,"
+        message = "Your %s account: %s" % (self.cfg.productName, user['username'])
         message += actionText[action]
+        message += "%s" % project.getName()
         message += '.'
         closing = 'Please contact the project owner(s) with any questions.'
 
         users.sendMail(self.cfg.adminMail, self.cfg.productName,
                     user['email'],
-                    "%s user modification" % project.getName(),
+                    "%s user account modification" % self.cfg.productName,
                     '\n\n'.join((greeting, message, closing)))
 
     @requiresAdmin
