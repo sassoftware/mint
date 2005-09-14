@@ -105,6 +105,9 @@ class MintApp(WebHandler):
             method = self._getHandler(pathInfo)
         except Redirect, e:
             return self._redirect(e.location)
+        except mint_error.PermissionDenied, e:
+            self._write("error", shortError = "Permission Denied", error = str(e))
+            return apache.OK
            
         d = dict(FieldStorage(self.req))
         d['auth'] = self.auth
