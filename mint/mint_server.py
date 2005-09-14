@@ -23,6 +23,7 @@ import userlevels
 import dbversion
 from cache import TroveNamesCache
 from mint_error import PermissionDenied
+from searcher import SearchTermsError
 
 from repository import netclient
 
@@ -101,6 +102,8 @@ class MintServer(object):
             return (True, ("DuplicateItem", e.item))
         except database.ItemNotFound, e:
             return (True, ("ItemNotFound", e.item))
+        except SearchTermsError, e:
+            return (True, ("SearchTermsError", str(e)))
         except Exception, error:
             exc_name = sys.exc_info()[0].__name__
             return (True, (exc_name, error, str(error)))

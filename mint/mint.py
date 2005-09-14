@@ -13,6 +13,7 @@ import projects
 import releases
 import users
 from mint_error import MintError, UnknownException
+from searcher import SearchTermsError
 
 from deps import deps
 
@@ -355,6 +356,8 @@ class _Method(xmlrpclib._Method):
             raise database.ItemNotFound(exceptionArgs[0])
         elif exceptionName == "MethodNotSupported":
             raise MethodNotSupported(exceptionArgs[0])
+        elif exceptionName == "SearchTermsError":
+            raise SearchTermsError(exceptionArgs[0])
         else:
             raise UnknownException(exceptionName, exceptionArgs)
 
