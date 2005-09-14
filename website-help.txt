@@ -196,11 +196,40 @@ fill out.  At a minimum you must fill in the following fields:
     o Project Title -- A longer, more descriptive name for your
       project. Eg., My Custom Linux Project Home Page
 
+Although not required, there are two other fields that you should consider filling in:
 
-Optional:
+    o Project Home Page -- Entering the full URL of a page here will cause
+      a link to the page to be displayed on the project's homepage.  This
+      is handy for projects that may have an existing page hosted elsewhere.
 
-    o Project Home Page -- 
+    o Project Description -- The text in this field is your chance to get
+      the attention of prospective users and project members.  To help you
+      get started, consider the writing a description that answers the
+      following questions when writing a project description:
 
-    o Project Description -- 
+        - What is the goal of your project?
+        - What technologies does your project use?
+        - Why should someone join your project?
+        - Why should a user download your project's software?
 
-    o Additional Mailing Lists -- projectname-devel   projectname-bugs
+Finally, there are two checkboxes related to your project's mailing lists.
+By default, your project will have the following two mailing lists:
+
+    o <project-name>@lists.rpath.org -- General project-related discussion
+
+    o <project-name>-commits@lists.rpath.org -- Messages generated when
+      updates are committed into your project's Conary repository
+
+The checkboxes allow you to add two additional mailing lists:
+
+    o <project-name>-devel@lists.rpath.org -- Developer-centric discussion
+
+    o <project-name>-bugs@lists.rpath.org -- Bug reports
+
+Once you click on the "Create", your project will be created.
+
+Now What?
+
+    Managing project membership
+        Adding new members
+        Removing existing members
