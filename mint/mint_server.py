@@ -76,14 +76,20 @@ class MintServer(object):
             # the session id from the client is a hmac-signed string
             # containing the actual session id.
             if type(authToken) == str:
-                sig, val = authToken[:32], authToken[32:]
-                    
-                mac = hmac.new(self.cfg.cookieSecretKey, 'pysid')
-                mac.update(val)
-                if mac.hexdigest() != sig:
+                if len(authToken) == 64: # signed cookie
+                    sig, val = authToken[:32], authToken[32:]
+                
+                    mac = hmac.new(self.cfg.cookieSecretKey, 'pysid')
+                    mac.update(val)
+                    if mac.hexdigest() != sig:
+                        raise PermissionDenied
+
+                    sid = val
+                elif len(authToken) == 32: # unsigned cookie
+                    sid = authToken
+                else:
                     raise PermissionDenied
 
-                sid = val
                 d = self.sessions.load(sid)
                 authToken = d['_data']['authToken']
             
