@@ -731,11 +731,11 @@ class MintServer(object):
 
         labelIdMap = project.getLabelIdMap()
         cfg = project.getConaryConfig()
-        netclient = repository.netclient.NetworkRepositoryClient(cfg.repositoryMap)
+        nc = netclient.NetworkRepositoryClient(cfg.repositoryMap)
         
         troveDict = {}
         for label in labelIdMap.keys():
-            troves = allTroveNames.getTroveNames(versions.Label(label), netclient)
+            troves = allTroveNames.getTroveNames(versions.Label(label), nc)
             troves = [x for x in troves if (x.startswith("group-") or\
                                             x.startswith("fileset-")) and\
                                             ":" not in x]
