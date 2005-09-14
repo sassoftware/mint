@@ -45,7 +45,7 @@ if auth.admin:
     searchTypes.insert(0, 'Projects')
     searchTypes.append('Users')
         ?>
-        <h3>search projects</h3>
+        <h3>search packages</h3>
         <form action="search" method="get">
             <p>
                 <label>search type:</label><br/>
