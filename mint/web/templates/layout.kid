@@ -14,7 +14,7 @@ onload = "javascript:;"
     <div py:def="breadcrumb()" class="pad" py:strip="True">
     </div>
 
-    <div py:def="rPathProductsMenu" id="products" class="palette">
+    <div py:def="rPathProductsMenu" id="products" class="palette" py:if="False">
         <h3>rPath products</h3>
         <ul>
             <li><a href="#">Product 1</a></li>
