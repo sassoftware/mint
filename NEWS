@@ -1,3 +1,7 @@
+Changes in 0.4.7:
+
+* Also output repository browser HTML as text/html.
+
 Changes in 0.4.6:
 
 * Output strict HTML using the text/html content type instead of
