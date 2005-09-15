@@ -5,7 +5,7 @@
         <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/mint.css"/>
     </head>
     <body id="legal">
-        <h2 align=center>TERMS OF SERVICE</h2>
+        <h2>TERMS OF SERVICE</h2>
 
         <p>IMPORTANT! PLEASE READ THIS AGREEMENT CAREFULLY BEFORE UPLOADING
         OR DOWNLOADING ANY MATERIAL OR USING ANY OF THE SERVICES PROVIDED
