@@ -187,17 +187,18 @@ class UsersTable(database.KeyedTable):
             confirmDomain = self.cfg.domainName
             
         if not active:
-            message = "\n".join(["Thank you for your interest in %s"%self.cfg.productName,
+            message = "\n".join(["Thank you for your interest in %s!" % self.cfg.productName,
                                  "",
-                                 "Please follow the link below to confirm your registration",
-                                 "for username %s:" % username,
+                                 "Your account (%s) has been created." % username,
+                                 "",
+                                 "However, before you can use it, you must confirm your email address using this link:",
                                  "",
                                  "http://%s/confirm?id=%s" % (confirmDomain, confirm),
                                  "",
                                  "Contact %s"%self.cfg.supportContactTXT,
                                  "if you need assistance."])
             sendMailWithChecks(self.cfg.adminMail, self.cfg.productName, email,
-                    "Your new %s account must be confirmed" % self.cfg.productName, message)
+                    "Welcome to %s!" % self.cfg.productName, message)
         try:
             userId = self.new(username = username,
                               fullName = fullName,
