@@ -137,12 +137,15 @@ class MintApp(WebHandler):
             siteHost = "%s.%s" % (self.cfg.hostName, self.cfg.domainName)
         else:
             siteHost = self.cfg.domainName
-        try:
-            project = self.client.getProjectByFQDN(fullHost)
-        except database.ItemNotFound:
-            pass
-        else:
-            raise Redirect("http://%s/project/%s/" % (siteHost, hostname))
+        if hostname not in mint_server.reservedHosts:
+            try:
+                project = self.client.getProjectByFQDN(fullHost)
+                if project.disabled:
+                    Redirect(self.cfg.defaultRedirect)
+            except:
+                raise Redirect(self.cfg.defaultRedirect)
+            else:
+                raise Redirect("http://%s/project/%s/" % (siteHost, hostname))
 
         self.siteHost = siteHost
         
