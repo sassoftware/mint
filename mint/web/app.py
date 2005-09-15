@@ -140,8 +140,6 @@ class MintApp(WebHandler):
         if hostname not in mint_server.reservedHosts:
             try:
                 project = self.client.getProjectByFQDN(fullHost)
-                if project.disabled:
-                    Redirect(self.cfg.defaultRedirect)
             except:
                 raise Redirect(self.cfg.defaultRedirect)
             else:
