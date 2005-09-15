@@ -1,7 +1,7 @@
 Changes in 0.4.5:
 
-* Fix access to repository browser by logged-in non-members of a project
-* Fix redirect of reserved hosts.
+* Fixed access to repository browser by logged-in non-members of a project
+* Fixed redirect of reserved hosts.
 
 Changes in 0.4.4:
 

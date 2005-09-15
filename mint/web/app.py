@@ -137,7 +137,7 @@ class MintApp(WebHandler):
             siteHost = "%s.%s" % (self.cfg.hostName, self.cfg.domainName)
         else:
             siteHost = self.cfg.domainName
-        if hostname not in mint_server.reservedHosts:
+        if hostname not in mint_server.reservedHosts and hostname != self.cfg.hostName:
             try:
                 project = self.client.getProjectByFQDN(fullHost)
             except:
@@ -154,7 +154,7 @@ class MintApp(WebHandler):
         urls = (
             (r'^/project/',     self.projectHandler),
             (r'^/administer',   self.adminHandler),
-            (r'^/repos/',      self.conaryHandler),
+            (r'^/repos/',       self.conaryHandler),
             (r'^/unknownError', self.errorHandler),
             (r'^/',             self.siteHandler),
         )

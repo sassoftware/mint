@@ -7,6 +7,7 @@ import base64
 import os
 import sys
 
+from mod_python import apache
 from server import http
 from repository import netclient 
 from templates import repos
@@ -46,8 +47,12 @@ class ConaryHandler(WebHandler, http.HttpHandler):
         return self._methodHandler()
    
     def _requestAuth(self):
-        #TODO: This needs to do something smarter
-        return self._redirect("/")
+        # try to fall back to anonymous and rerun the handler
+        if self.authToken != ('anonymous', 'anonymous'):
+            self.authToken = ('anonymous', 'anonymous')
+            return self._handle()
+        else:
+            return self._redirect(self.cfg.defaultRedirect)
 
     def _getHandler(self, cmd):
         try:
