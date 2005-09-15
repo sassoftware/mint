@@ -53,9 +53,7 @@
                     <li>A project-specific hostname
                     (&lt;project-name&gt;.rpath.org)</li>
 
-                    <li>Project-specific mailing lists:</li>
-
-                        <ul>
+                    <li>Project-specific mailing lists:
 
                             <li>&lt;project-name&gt;@rpath.org</li>
 
@@ -67,7 +65,7 @@
                             <li>&lt;project-name&gt;-bugs@rpath.org (if
                             desired)</li>
 
-                        </ul>
+                        </li>
 
                         <li>A no-frills project-specific page
                         (http://&lt;project-name&gt;.rpath.org/)</li>
