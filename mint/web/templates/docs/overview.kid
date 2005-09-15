@@ -56,10 +56,10 @@
 
                 <ul>
                     <li>Project owners, who create and manage the project
-                    on a day-to-day basis</ul>
+                    on a day-to-day basis</li>
 
                     <li>Project members, who join the project to support
-                    the project's development effort</ul>
+                    the project's development effort</li>
 
                     <li>A Conary repository to hold all the packaged
                     software specific to the project</li>
