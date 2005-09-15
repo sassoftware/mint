@@ -358,6 +358,8 @@ class _Method(xmlrpclib._Method):
             raise MethodNotSupported(exceptionArgs[0])
         elif exceptionName == "SearchTermsError":
             raise SearchTermsError(exceptionArgs[0])
+        elif exceptionName == "AlreadyConfirmed":
+            raise users.AlreadyConfirmed(exceptionArgs[0])
         else:
             raise UnknownException(exceptionName, exceptionArgs)
 
