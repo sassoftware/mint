@@ -29,7 +29,7 @@ class WebHandler(object):
                               toUrl = self.toUrl,
                               basePath = self.basePath,
                               **values)
-        t.write(self.req, encoding = "utf-8", output = "xhtml-strict")
+        t.write(self.req, encoding = "utf-8", output = "html-strict")
 
     def _404(self, *args, **kwargs):
         return apache.HTTP_NOT_FOUND
