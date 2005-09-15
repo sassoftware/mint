@@ -4,7 +4,7 @@
 
 all: subdirs
 
-export VERSION=0.4.3
+export VERSION=0.4.4
 export TOPDIR = $(shell pwd)
 export DISTDIR = $(TOPDIR)/mint-$(VERSION)
 export prefix = /usr
@@ -42,7 +42,7 @@ dist: $(dist_files)
 install: all install-subdirs
 	mkdir -p $(DESTDIR)$(datadir)/mint/
 	mkdir -p $(DESTDIR)$(confdir)
-	install -m 644 mint.conf $(DESTDIR)$(confdir)
+	install -m 644 mint.conf $(DESTDIR)$(confdir)/mint.conf.dist
 	mkdir -p $(DESTDIR)$(httpddir)
 	install httpd.conf $(DESTDIR)$(httpddir)/mint.conf.dist
 	sed -i "s,\%DATADIR%,$(datadir),g" $(DESTDIR)$(httpddir)/mint.conf.dist
