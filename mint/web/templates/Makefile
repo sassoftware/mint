@@ -14,6 +14,7 @@ kid_files = \
 	error.kid		\
 	forgotPassword.kid	\
 	frontPage.kid		\
+	help.kid		\
 	layout.kid		\
 	library.kid		\
 	login.kid		\

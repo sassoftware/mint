@@ -120,6 +120,10 @@ class SiteHandler(WebHandler):
         self._write("login", message = message)
         return apache.OK
 
+    def help(self, auth):
+        self._write("help")
+        return apache.OK
+
     def logout(self, auth):
         self._clearAuth()
         return self._redirect("/")

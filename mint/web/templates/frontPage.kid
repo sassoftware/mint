@@ -31,7 +31,7 @@ from mint import searcher
                             <h2 class="header">Welcome to rBuilder Online</h2>
                             <p>Welcome to rBuilder Online&#8212;the site for collaborative open source development.</p>
 <p>Developers can create and host projects and operating systems here, while users can browse and download projects and operating system images for installation.</p>
-                            <p><a href="#"><b>HELP AND TUTORIAL</b></a></p>
+                            <p><a href="/help"><b>HELP AND FEEDBACK</b></a></p>
 
                             <div py:strip="True" py:if="news">
                                 <h2 class="header">Site News</h2>
