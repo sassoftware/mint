@@ -73,7 +73,7 @@
         store using the Services.</p>
 
         <p>For more information on how rPath uses your personal
-        information, consult the privacy policy at [LINK].</p>
+        information, consult the privacy policy at: <a href="http://www.rpath.org/legal?page=privacy">http://www.rpath.org/legal?page=privacy</a></p>
 
         <p>You will receive a User ID and password (collectively, the &#8220;User
         ID&#8221;) upon completing the registration process on the Web Site.  You
@@ -211,7 +211,7 @@
         unauthorized or unlawful use of the Services by any other person
         using your UserID.</p>
 
-        <h3>11.WARRANTIES</h3>
+        <h3>11. WARRANTIES</h3>
 
         <p>THE CONTENT AND SERVICES ARE PROVIDED TO YOU ON AN "AS IS," AS
         AVAILABLE BASIS. RPATH PROVIDES THE CONTENT AND SERVICES WITHOUT
