@@ -34,7 +34,7 @@ from mint import searcher
                             <p><a href="/help"><b>HELP AND FEEDBACK</b></a></p>
 
                             <div py:strip="True" py:if="news">
-                                <h2 class="header">Site News</h2>
+                                <h2 class="header">Site Announcements</h2>
                                 <div py:for="item in news" class="newsItem">
                                     <h3>
                                         <span class="date" style="float: right;">${time.ctime(item['pubDate'])}</span>
@@ -42,7 +42,7 @@ from mint import searcher
                                     </h3>
                                     <p>${item['content']} <a class="newsContinued" href="${item['link']}">read more</a></p>
                                 </div>
-                                <p><a href="${newsLink}">More News</a></p>
+                                <p><a href="${newsLink}">More Announcements</a></p>
                             </div>
                         </div>
                     </td>
