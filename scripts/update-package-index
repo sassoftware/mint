@@ -15,7 +15,7 @@ db = sqlite3.connect(dbPath, timeout = 30000)
 pkgIdx = pkgindex.PackageIndexTable(db)
 
 cu = db.cursor()
-cu.execute("SELECT projectId, hostname || '.' || domainname FROM Projects")
+cu.execute("SELECT projectId, hostname || '.' || domainname FROM Projects WHERE hidden=0 AND disabled=0")
 
 repMap = {'conary.rpath.com': 'http://conary.rpath.com/conary/',
           'contrib.rpath.com': 'http://contrib.rpath.com/conary/'}
