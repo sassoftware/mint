@@ -313,7 +313,7 @@ class ProjectHandler(WebHandler):
     def resign(self, auth, confirmed):
         if confirmed:
             self.project.delMemberById(auth.userId)
-            return self._redirect(self.basePath)
+            return self._redirect(self.basePath + "/")
         else:
             self._write("confirm", message = "Are you sure you want to resign from this project?",
                 yesLink = "resign?confirmed=1",
