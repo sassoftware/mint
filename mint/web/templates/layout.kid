@@ -81,7 +81,7 @@ onload = "javascript:;"
                                         <a href="http://${siteHost}/">Home</a> | 
                                         <a py:if="False" href="${cfg.corpSite}">About rPath</a>
                                         <a py:if="False" href="${cfg.corpSite}sales/">Contact rPath</a>
-                                        <a href="/help"><b style="color: red;">need help/have feedback?</b></a>
+                                        <a href="/help"><b style="color: red;">need help</b></a> / <a href="help?page=feedback"><b style="color: red;">have feedback?</b></a>
 				        <span py:if="cfg.debugMode">
                                             | <span style="color:red;">DEBUG MODE</span>
                                         </span>

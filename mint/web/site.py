@@ -120,8 +120,15 @@ class SiteHandler(WebHandler):
         self._write("login", message = message)
         return apache.OK
 
-    def help(self, auth):
-        self._write("docs/help")
+    @strFields(page = "")
+    def help(self, auth, page):
+        if page:
+            try:
+                self._write("docs/" + page)
+            except IOError:
+                self._write("docs/help")
+        else:
+            self._write("docs/help")
         return apache.OK
 
     def logout(self, auth):
