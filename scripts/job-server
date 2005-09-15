@@ -106,14 +106,14 @@ class JobDaemon:
         
         x86_re = re.compile('i.86')
         if x86_re.match(arch):
-            arch = "x86"
+            archList = ["x86"]
         elif arch == "x86_64":
-            pass
+            archList = ["x86", "x86_64"]
         else:
             log.error("unsupported architecture: %s", arch)
             sys.exit(1)
 
-        log.info("handling jobs of architecture: %s", arch)
+        log.info("handling jobs of architecture: %s", archList)
         
         while(True):
             try:
@@ -121,7 +121,7 @@ class JobDaemon:
                 for job in joblist:
                     release = client.getRelease(job.getReleaseId())
                     if job.getStatus() == jobstatus.WAITING\
-                           and arch == release.getArch():
+                           and release.getArch() in archList:
                         th = JobRunner(cfg, client, job)
                         threads.append(th)
                         th.start()

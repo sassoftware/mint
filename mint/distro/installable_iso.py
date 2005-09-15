@@ -5,6 +5,7 @@
 #
 import os
 import re
+import subprocess
 import sys
 
 import conaryclient
@@ -108,21 +109,21 @@ class InstallableIso(ImageGenerator):
         util.mkdirChain(infoMap['isodir'])
 
         self.status("Building Anaconda installation")
-        cmd = "%(scriptsdir)s/buildinstall --topdir %(topdir)s "\
-              "--subdir %(subdir)s --name \"%(name)s\" --version %(version)s "\
-              "--arch %(arch)s" % infoMap
-        print >> sys.stderr, cmd      
+        cmd = [isocfg.scriptPath + '/buildinstall', '--topdir', topdir,
+               '--subdir', subdir, '--name', '\"%s\"' % project.getName(),
+               '--version', releaseVer, '--arch', anacondaArch]
+        print >> sys.stderr, " ".join(cmd)
         sys.stderr.flush()
 
-        os.system(cmd)
+        subprocess.call(['setarch', anacondaArch] + cmd)
 
         # Abort if parent thread has died
         assertParentAlive()
 
-        cmd = "%(scriptsdir)s/splitdistro %(topdir)s" % infoMap
-        print >> sys.stderr, cmd
+        cmd = [isocfg.scriptPath + "/splitdistro", topdir]
+        print >> sys.stderr, " ".join(cmd)
         sys.stderr.flush()
-        os.system(cmd)
+        subprocess.call(cmd)
 
         # Abort if parent thread has died
         assertParentAlive()
@@ -141,24 +142,25 @@ class InstallableIso(ImageGenerator):
             infoMap['iso'] =  isoname % infoMap
             if os.access(os.path.join(discdir, d, "isolinux/isolinux.bin"), os.R_OK):
                 os.chdir(os.path.join(discdir, d))
-                cmd = "mkisofs -o %(isodir)s/%(iso)s "\
-                              "-b isolinux/isolinux.bin "\
-                              "-c isolinux/boot.cat "\
-                              "-no-emul-boot "\
-                              "-boot-load-size 4 "\
-                              "-boot-info-table -R -J "\
-                              "-V \"%(discname)s\" -T ." % infoMap
+                cmd = ["mkisofs", "-o", "%(isodir)s/%(iso)s" % infoMap,
+                                  "-b", "isolinux/isolinux.bin",
+                                  "-c", "isolinux/boot.cat",
+                                  "-no-emul-boot",
+                                  "-boot-load-size", "4",
+                                  "-boot-info-table", "-R", "-J",
+                                  "-V",  "\"%(discname)s\"" % infoMap, "-T", "."]
                 print >> sys.stderr, cmd
                 sys.stderr.flush()
-                os.system(cmd)
+                subprocess.call(cmd)
                 # Abort if parent thread has died
                 assertParentAlive()
             else:
                 os.chdir(os.path.join(discdir, d))
-                cmd = "mkisofs -o %(isodir)s/%(iso)s -R -J -V \"%(discname)s\" -T ." % infoMap
+                cmd = ["mkisofs", "-o", "%(isodir)s/%(iso)s" % infoMap,
+                       "-R", "-J", "-V", "\"%(discname)s\"" % infoMap, "-T", "."]
                 print >> sys.stderr, cmd
                 sys.stderr.flush()
-                os.system(cmd)
+                subprocess.call(cmd)
                 # Abort if parent thread has died
                 assertParentAlive()
             isoList.append(infoMap['iso'])
