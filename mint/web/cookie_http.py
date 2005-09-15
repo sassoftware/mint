@@ -55,6 +55,7 @@ class ConaryHandler(WebHandler, http.HttpHandler):
             return self._redirect(self.cfg.defaultRedirect)
 
     def _getHandler(self, cmd):
+        self.repos = netclient.NetworkRepositoryClient(self.repServer.map)
         try:
             method = self.__getattribute__(cmd)
         except AttributeError:
