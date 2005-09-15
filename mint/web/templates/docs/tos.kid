@@ -9,32 +9,32 @@
 
         <p>IMPORTANT! PLEASE READ THIS AGREEMENT CAREFULLY BEFORE UPLOADING
         OR DOWNLOADING ANY MATERIAL OR USING ANY OF THE SERVICES PROVIDED
-        BY RPATH.  BY CHECKING “ACCEPT”, YOU AGREE TO BE BOUND BY THE TERMS
+        BY RPATH.  BY CHECKING &#8220;ACCEPT&#8221;, YOU AGREE TO BE BOUND BY THE TERMS
         AND CONDITIONS CONTAINED HEREIN.  IF YOU DO NOT AGREE TO BE BOUND
         BY THE TERMS AND CONDITIONS OF THIS AGREEMENT, DO NOT CHECK
-        “ACCEPT”.</p>
+        &#8220;ACCEPT&#8221;.</p>
 
-        <p>This Agreement is entered into as of the date you check “ACCEPT”
-        ("Effective Date") by and between rPath, Inc. (“rPath”) and you,
-        hereinafter referred to as “you” or “your”.</p>
+        <p>This Agreement is entered into as of the date you check &#8220;ACCEPT&#8221;
+        ("Effective Date") by and between rPath, Inc. (&#8220;rPath&#8221;) and you,
+        hereinafter referred to as &#8220;you&#8221; or &#8220;your&#8221;.</p>
 
         <h3>DEFINITIONS</h3>
 
-        <p>“Web Site” means the rpath.com and rpath.org domains.</p>
+        <p>&#8220;Web Site&#8221; means the rpath.com and rpath.org domains.</p>
 
-        <p>“Content” means all information and materials, regardless of
+        <p>&#8220;Content&#8221; means all information and materials, regardless of
         format.</p>
 
-        <p>“rPath Repository” is the software database that is hosted on
+        <p>&#8220;rPath Repository&#8221; is the software database that is hosted on
         the Web Site.</p>
 
-        <p>“rBuilder Online” means the software, owned by rPath, that
+        <p>&#8220;rBuilder Online&#8221; means the software, owned by rPath, that
         provides the primary functionality of the Web Site.</p>
 
-        <p>“Service” means the processes and functionality provided by
+        <p>&#8220;Service&#8221; means the processes and functionality provided by
         rBuilder Online, the rPath Repository and the Web Site.</p>
 
-        <h3>1.RIGHT OF USE</h3>
+        <h3>1. RIGHT OF USE</h3>
 
         <p>rPath grants to you the rights herein, provided that you accept,
         without modification, the terms and conditions set forth in this
@@ -58,7 +58,7 @@
 
         <p>You agree not to resell any of the Services.</p>
 
-        <h3>2.REGISTRATION OBLIGATIONS</h3>
+        <h3>2. REGISTRATION OBLIGATIONS</h3>
 
         <p>You must provide true, accurate, current and complete
         information in the registration process on the Web Site
@@ -75,8 +75,8 @@
         <p>For more information on how rPath uses your personal
         information, consult the privacy policy at [LINK].</p>
 
-        <p>You will receive a User ID and password (collectively, the “User
-        ID”) upon completing the registration process on the Web Site.  You
+        <p>You will receive a User ID and password (collectively, the &#8220;User
+        ID&#8221;) upon completing the registration process on the Web Site.  You
         are solely responsible for the use of your User ID, whether or not
         such use is authorized by you, and for maintaining the
         confidentiality of your User ID.  You shall immediately notify
@@ -84,7 +84,7 @@
         liable for any loss or damage arising from your failure to comply
         with this Section.</p>
 
-        <h3>3.CONTENT</h3>
+        <h3>3. CONTENT</h3>
 
         <p>Whether publicly posted or privately transmitted, all Content on
         the Web Site and all Content contained in the rPath Repository that
@@ -101,7 +101,7 @@
 
         <p>The purpose of the Services is to provide a repository of
         software and corresponding tools to facilitate the sharing and
-        development of software (the “Purpose”).  rPath will not pre-screen
+        development of software (the &#8220;Purpose&#8221;).  rPath will not pre-screen
         or review Content, but rPath reserves the right to refuse or delete
         any Content, of which it becomes aware, that it reasonably deems
         not to fulfill the Purpose.  In addition, rPath shall have the
@@ -128,7 +128,7 @@
         reliance on the accuracy, completeness, or usefulness of such
         Content.</p>
 
-        <h3>4.LICENSES AND IDEA SUBMISSIONS</h3>
+        <h3>4. LICENSES AND IDEA SUBMISSIONS</h3>
 
         <p>You agree to grant to rPath a non-exclusive, royalty-free,
         worldwide, perpetual license, with the right to sub-license,
@@ -141,7 +141,7 @@
         misappropriation of any proprietary right in your submitted
         materials or other information.</p>
 
-        <h3>5.COPYRIGHT AND TRADEMARKS</h3>
+        <h3>5. COPYRIGHT AND TRADEMARKS</h3>
 
         <p>The Contents of the Services are protected by international
         copyright and trademark laws. The owner of the copyrights and
@@ -151,7 +151,7 @@
         servicemarks of rPath.  Other product and company names mentioned
         in the Services are the trademarks of their respective owners.</p>
 
-        <h3>6.CHANGES TO THIS AGREEMENT</h3>
+        <h3>6. CHANGES TO THIS AGREEMENT</h3>
 
         <p>rPath reserves the right, at its sole discretion, to change,
         modify, add or remove portions of this Agreement periodically. Such
@@ -166,11 +166,11 @@
         third party for any such modification, suspension or discontinuance
         except as expressly provided herein.</p>
 
-        <h3>7.CONFIDENTIALITY</h3>
+        <h3>7. CONFIDENTIALITY</h3>
 
         <p>You agree to maintain the confidentiality of any information
         provided to you by rPath that is marked or otherwise identified as
-        confidential or proprietary (“rPath Proprietary Information”).
+        confidential or proprietary (&#8220;rPath Proprietary Information&#8221;).
         Nothing in this Agreement shall be construed to convey any title or
         ownership rights to the rPath Proprietary Information to you.</p>
 
@@ -178,7 +178,7 @@
         effect despite termination of this Agreement for whatever
         reason.</p>
 
-        <h3>8.NO UNLAWFUL OR PROHIBITED USE</h3>
+        <h3>8. NO UNLAWFUL OR PROHIBITED USE</h3>
 
         <p>By using the Services, you warrant to rPath that you will not
         use the Services, or any of the Content obtained from the Services,
@@ -187,7 +187,7 @@
         Agreement, your permission to use the Services automatically
         terminates.</p>
 
-        <h3>9.TERM AND TERMINATION</h3>
+        <h3>9. TERM AND TERMINATION</h3>
 
         <p>This Agreement shall continue in force perpetually unless
         terminated by rPath.  Cause for termination shall include, but not
@@ -200,7 +200,7 @@
         You shall immediately stop using the Services and shall destroy all
         copies of the rBuilder Online software possessed by you.</p>
 
-        <h3>10.INDEMNIFICATION</h3>
+        <h3>10. INDEMNIFICATION</h3>
 
         <p>You agree to defend, indemnify and hold rPath harmless against
         any losses, expenses, costs or damages; including rPath reasonable
@@ -230,7 +230,7 @@
         AS WELL AS REQUIRED AND EMERGENCY MAINTENANCE WORK MAY TEMPORARILY
         INTERRUPT SERVICES OR ACCESS TO THE WEB SITE.</p>
 
-        <h3>12.LIMITATIONS OF LIABILITY</h3>
+        <h3>12. LIMITATIONS OF LIABILITY</h3>
 
         <p>You understand that rPath cannot and does not guarantee or
         warrant that Content available via the Services will be free from
@@ -252,7 +252,7 @@
         PAID BY YOU FOR THE SPECIFIC CONTENT OR SERVICES WHICH GAVE RISE TO
         SUCH DAMAGES.</p>
 
-        <h3>13.MISCELLANEOUS</h3>
+        <h3>13. MISCELLANEOUS</h3>
 
         <p>You may not assign this Agreement or any license granted or
         created hereunder.  rPath may assign this Agreement to a successor
