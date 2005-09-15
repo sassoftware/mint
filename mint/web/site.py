@@ -111,7 +111,7 @@ class SiteHandler(WebHandler):
         if page not in ["tos", "privacy"]:
             return apache.HTTP_NOT_FOUND
             
-        self._write(page)
+        self._write("docs/" + page)
         return apache.OK
 
     @strFields(message = "")
@@ -121,7 +121,7 @@ class SiteHandler(WebHandler):
         return apache.OK
 
     def help(self, auth):
-        self._write("help")
+        self._write("docs/help")
         return apache.OK
 
     def logout(self, auth):
