@@ -23,12 +23,8 @@ class MintConfig(ConfigFile):
         'defaultRedirect'   : 'http://rpath.com',
         'corpSite'          : 'http://www.rpath.com/corp/',
         'defaultBranch'     : 'rpl:devel',
-        'supportContactHTML': '<a href="mailto:custom@rpath.com">'
-                              'custom@rpath.com</a> or join the IRC channel '
-                              '<b>#conary</b> on the '
-                              '<a href="http://www.freenode.net/">FreeNode</a> '
-                              'IRC network',
-        'supportContactTXT' : 'custom@rpath.com, or join the IRC channel #conary on the Freenode IRC network (http://www.freenode.net/)',
+        'supportContactHTML': 'Contact information in HTML.',
+        'supportContactTXT' : 'Contact information in text.',
         'staticPath'        : '/conary-static/',
         'authRepoMap'       : [ STRINGDICT, {} ],
         'authDbPath'        : '/srv/authrepo/repos/sqldb',
