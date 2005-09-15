@@ -12,7 +12,7 @@
         ?>
         <h3>Project Resources</h3>
         <ul>
-            <li><a href="$projectUrl"><strong py:strip="req.uri != '/'">Project Home</strong></a></li>
+            <li><a href="$projectUrl/"><strong py:strip="req.uri != '/'">Project Home</strong></a></li>
             <li><a href="$projectUrl/releases"><strong py:strip="lastchunk not in ('release', 'releases')">Releases</strong></a></li>
 
             <li><a href="http://${siteHost}/repos/${project.getHostname()}/browse"><strong py:strip="req.uri != '/conary/browse'">Repository</strong></a></li>
