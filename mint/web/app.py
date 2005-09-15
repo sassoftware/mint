@@ -47,7 +47,8 @@ class ErrorHandler(WebHandler):
         return apache.OK
 
 class MintApp(WebHandler):
-    content_type = "application/xhtml+xml"
+#    content_type = "application/xhtml+xml"
+    content_type = "text/html"
     project = None
     projectList = []
     userLevel = -1
