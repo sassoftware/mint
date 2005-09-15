@@ -5,191 +5,300 @@
         <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/mint.css"/>
     </head>
     <body id="legal">
-        <h2>rpath.org: terms of service</h2>
-        <p> Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Maecenas
-        augue metus, aliquam sit amet, congue vitae, placerat eget,
-        diam. Integer rhoncus tortor sed sem. Vestibulum vestibulum porttitor
-        massa. Duis quam. Integer sit amet lorem. Nunc molestie. Fusce bibendum
-        sollicitudin sem. Sed porttitor, nunc eget vestibulum imperdiet, massa
-        ante interdum elit, ut commodo tellus metus at ipsum. Sed sollicitudin
-        viverra nibh. Vestibulum ante ipsum primis in faucibus orci luctus et
-        ultrices posuere cubilia Curae; Phasellus ullamcorper. Etiam neque dolor,
-        hendrerit id, luctus et, ullamcorper varius, ligula. Quisque lacus.  </p>
+        <h2 align=center>TERMS OF SERVICE</h2>
 
-        <p> Donec fermentum. Vivamus lobortis, mauris ac porta commodo, tellus
-        augue mattis dolor, sed porta lorem enim convallis tellus. In tempor,
-        sem a blandit mattis, enim dui posuere sem, id scelerisque sapien mi
-        porta augue. Suspendisse interdum enim eu metus. Pellentesque tempus
-        neque nec orci. Etiam ut leo. Sed porta leo ut elit. Ut porta urna id
-        nulla. Aliquam non tellus a sem ornare placerat. Donec adipiscing libero
-        adipiscing felis.  </p> <p> Donec fringilla, mauris quis pellentesque
-        dignissim, sem erat commodo nibh, ac pulvinar est urna in elit. Nullam
-        mattis risus nec pede. Curabitur iaculis sapien sit amet urna. Nulla
-        eu nulla. Sed luctus neque in massa. Nulla facilisi. Suspendisse
-        pellentesque bibendum orci. Donec sit amet lectus eget arcu consectetuer
-        elementum. Integer quis urna tempus sem interdum condimentum. Fusce
-        ultricies suscipit leo. Curabitur ultricies massa. In hac habitasse
-        platea dictumst. Nullam ipsum elit, pulvinar sit amet, lobortis eu,
-        pharetra at, felis. Suspendisse fermentum lacinia dui. Aenean velit leo,
-        sodales mollis, interdum ac, sodales nec, enim.  </p> <p> Sed et erat
-        at dolor porta euismod. Quisque felis quam, porttitor quis, faucibus
-        a, volutpat a, magna. Quisque fringilla, odio sed porta scelerisque,
-        velit augue convallis orci, a fermentum odio est at erat. In tempor. In
-        sapien. Praesent hendrerit, erat porttitor lobortis gravida, turpis
-        purus consectetuer nulla, non volutpat neque lacus sed eros. Nam
-        fermentum interdum neque. Pellentesque faucibus porttitor sem. Integer
-        tincidunt. Morbi accumsan lectus quis urna. Fusce vulputate, mauris
-        et ullamcorper eleifend, mi quam tincidunt ligula, at congue sem
-        neque in pede. Aliquam accumsan massa id dui. Morbi vel dui. Nullam
-        ac ante.  </p> <p> Phasellus erat dui, hendrerit in, mattis vel,
-        congue quis, ante. Mauris venenatis congue neque. Etiam volutpat tempus
-        ligula. Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Nullam
-        a ante sed enim venenatis mattis. Donec vitae urna id sapien cursus
-        viverra. Integer non quam. Etiam rutrum ipsum nec eros. Vestibulum
-        at magna. Nunc vestibulum. Nulla in sem. Curabitur bibendum lobortis
-        mauris. Sed suscipit, nibh sed hendrerit mollis, lorem magna laoreet
-        nunc, scelerisque auctor nibh erat ac est. Class aptent taciti sociosqu
-        ad litora torquent per conubia nostra, per inceptos hymenaeos. Nullam
-        vitae massa. Proin quam nunc, elementum sit amet, aliquam posuere,
-        dictum eget, est. Cum sociis natoque penatibus et magnis dis parturient
-        montes, nascetur ridiculus mus. Cras vitae risus. Nam imperdiet
-        ante id ipsum.  </p> <p> Nulla facilisi. Maecenas commodo rutrum
-        erat. Suspendisse aliquet lobortis massa. Maecenas dui augue, euismod
-        ac, mollis sit amet, convallis eleifend, nisl. Nulla facilisi. Etiam
-        condimentum semper velit. Praesent vulputate. Sed et metus in dui porta
-        fringilla. Praesent tristique suscipit massa. Maecenas ullamcorper,
-        nunc ut dictum pharetra, massa lorem dictum augue, sollicitudin lobortis
-        libero turpis a massa. Donec interdum nulla eu lorem. Duis non magna non
-        dolor scelerisque placerat. Proin augue ante, lacinia ac, interdum sit
-        amet, semper euismod, lorem.  </p> <p> Curabitur nec odio a massa luctus
-        interdum. Aenean hendrerit elit vel purus. Donec suscipit. Integer leo
-        elit, tempus at, sodales sed, semper eget, nulla. Aliquam ante. Vivamus
-        hendrerit felis id wisi. Pellentesque habitant morbi tristique senectus et
-        netus et malesuada fames ac turpis egestas. Aliquam tincidunt neque. Sed
-        in nulla. Proin interdum. Cum sociis natoque penatibus et magnis dis
-        parturient montes, nascetur ridiculus mus. Nunc adipiscing mauris quis
-        orci. Mauris quis eros at tortor tincidunt rhoncus. Morbi ultricies,
-        nunc sit amet pharetra dignissim, pede lacus semper sem, ac pellentesque
-        libero nulla vitae elit. Fusce nibh eros, porttitor eget, blandit vel,
-        scelerisque eu, quam. Morbi sem ante, feugiat non, venenatis sit amet,
-        lobortis a, eros. Nunc eleifend. In ut mauris id magna tempus convallis.
+        <p>IMPORTANT! PLEASE READ THIS AGREEMENT CAREFULLY BEFORE UPLOADING
+        OR DOWNLOADING ANY MATERIAL OR USING ANY OF THE SERVICES PROVIDED
+        BY RPATH.  BY CHECKING “ACCEPT”, YOU AGREE TO BE BOUND BY THE TERMS
+        AND CONDITIONS CONTAINED HEREIN.  IF YOU DO NOT AGREE TO BE BOUND
+        BY THE TERMS AND CONDITIONS OF THIS AGREEMENT, DO NOT CHECK
+        “ACCEPT”.</p>
 
-        </p> <p> Maecenas erat pede, euismod quis, hendrerit quis, gravida sed,
-        est. Nam dapibus vestibulum augue. Maecenas wisi metus, aliquet a,
-        posuere id, facilisis in, ipsum. Aenean at dui. Vivamus sodales. Etiam
-        et ipsum. Fusce nec est eu tortor ornare gravida. Aliquam sed quam non
-        elit consectetuer consectetuer. Sed feugiat. Phasellus id nisl et orci
-        dictum nonummy. Vivamus nisl odio, mollis sed, sollicitudin at, cursus
-        nec, nisl. Nullam est pede, tempor aliquet, dapibus at, auctor auctor,
-        dui. Nunc cursus libero ut sapien.  </p> <p> Mauris sollicitudin risus
-        ac lectus. Maecenas interdum. Integer rhoncus orci id mi. Praesent
-        vitae felis a purus viverra tristique. Nullam nec elit eget mi ornare
-        gravida. Donec interdum orci sed nunc lobortis pretium. Vestibulum
-        fringilla mollis tellus. Duis vulputate ultricies mauris. Duis vel
-        nibh. Pellentesque eu nisl at lacus fringilla condimentum.  </p> <p>
-        Nunc tristique dolor quis lacus. Nunc molestie feugiat mi. Vestibulum
-        bibendum, metus ut mollis pharetra, elit turpis scelerisque velit,
-        at venenatis dolor pede quis velit. Proin elementum, pede id gravida
-        bibendum, orci ligula mattis felis, vel placerat tellus odio ut
-        nibh. Donec auctor, lacus ultrices consequat semper, lacus tortor
-        venenatis dolor, a pulvinar wisi odio egestas augue. Donec aliquam. Duis
-        vitae pede. Donec a ante. Sed volutpat mauris et nisl. Etiam mollis,
-        mi lobortis auctor viverra, ante justo semper mi, ac sagittis lectus
-        tellus ac lacus. Aliquam ligula sapien, placerat at, commodo sit amet,
-        rhoncus nec, orci. Suspendisse metus. Sed mi. Donec iaculis pede vitae
-        tortor. Praesent a erat. Donec vitae diam. Proin aliquam molestie urna.
-        </p> <p> Cum sociis natoque penatibus et magnis dis parturient montes,
-        nascetur ridiculus mus. Curabitur nisl felis, feugiat condimentum,
-        hendrerit sit amet, ultricies id, velit. In ullamcorper quam rhoncus
-        mauris. Maecenas tortor purus, elementum placerat, posuere ac, commodo
-        sed, massa. Duis egestas elementum neque. Sed et quam. Quisque est turpis,
-        dignissim ut, vestibulum sed, adipiscing sit amet, eros. In id nibh in
-        est luctus imperdiet. Vivamus varius. Nullam nisl neque, commodo non,
-        eleifend sit amet, aliquam eget, arcu. Nullam nunc sapien, tincidunt ac,
-        auctor at, placerat sed, sapien. Donec at lacus.  </p> <p> Morbi tempus,
-        mi non porttitor pulvinar, turpis neque laoreet turpis, non consequat
-        massa sem sed massa. Maecenas eget eros. Fusce tellus nunc, ultricies a,
-        ullamcorper sodales, sodales in, mauris. Fusce dolor purus, tincidunt
-        ornare, malesuada id, laoreet ac, metus. Vivamus interdum pede eu
-        magna. Praesent lobortis. Ut vel lorem. Aenean a lectus at leo fringilla
-        interdum. Nullam in est non dui eleifend malesuada. Vestibulum vel sapien
-        ac mi tincidunt vehicula. Nam ut erat a arcu imperdiet lobortis. Duis
-        in risus eu turpis condimentum condimentum. Sed et orci. Integer risus.
-        </p> <p>
+        <p>This Agreement is entered into as of the date you check “ACCEPT”
+        ("Effective Date") by and between rPath, Inc. (“rPath”) and you,
+        hereinafter referred to as “you” or “your”.</p>
 
-        Praesent convallis, eros sit amet suscipit dapibus, libero
-        ante pellentesque quam, quis dapibus odio ipsum a velit. Nulla
-        pretium. Curabitur turpis wisi, hendrerit vel, facilisis et, egestas
-        sit amet, felis. Aenean vitae est at magna adipiscing rutrum. Duis quis
-        wisi. In eu mauris ut felis eleifend interdum. Curabitur dolor ligula,
-        lobortis nec, ultricies non, porta vel, enim. In sed lacus at dolor
-        interdum volutpat. Etiam arcu. Sed posuere aliquet nunc. Etiam sit
-        amet neque. Phasellus sed sapien eget tellus ultricies rhoncus. Nullam
-        adipiscing. Cras nunc nunc, tempor et, accumsan id, ullamcorper nec,
-        ante. Suspendisse eget massa. Donec placerat sagittis wisi.  </p> <p>
-        Ut sed nunc eget tortor ullamcorper lobortis. Etiam non quam et risus
-        malesuada iaculis. Proin erat nulla, commodo et, iaculis ac, facilisis
-        nec, massa. Cum sociis natoque penatibus et magnis dis parturient montes,
-        nascetur ridiculus mus. Fusce adipiscing elit ac ante. Proin leo lorem,
-        pretium sit amet, sodales eu, suscipit sagittis, nisl. Lorem ipsum dolor
-        sit amet, consectetuer adipiscing elit. Vivamus in tellus. Aliquam
-        quis pede. Aenean arcu eros, scelerisque nec, congue et, iaculis ac,
-        leo. Curabitur suscipit est eu magna. Morbi urna.  </p> <p> Suspendisse
-        consectetuer. Morbi massa neque, faucibus vel, eleifend et, sagittis ut,
-        massa. Integer eu ante. Etiam at nulla. Nulla a nulla. Fusce molestie
-        rutrum orci. Cras id felis vel est viverra adipiscing. Proin congue lectus
-        eu odio. Vivamus libero orci, sodales sit amet, porta sed, viverra eget,
-        odio. Fusce rhoncus dapibus nibh. Phasellus quis tellus. Vestibulum ante
-        ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae;
-        Nunc id massa. Fusce sed dolor. Nunc ante magna, condimentum eget,
-        egestas nec, rhoncus eget, sem.  </p> <p> Phasellus vehicula mollis
-        dolor. Curabitur non metus sed leo viverra hendrerit. Fusce arcu mi,
-        pulvinar a, nonummy ut, volutpat vel, lectus. In rutrum egestas neque. Sed
-        quis nulla. Duis interdum lorem eu lectus. Vestibulum sem lorem, pulvinar
-        eget, sollicitudin et, dignissim non, sem. Mauris id enim. Donec augue
-        sapien, bibendum eget, molestie sed, congue quis, lorem. Quisque venenatis
-        magna non eros. Morbi tristique, purus id lobortis hendrerit, tellus
-        justo ullamcorper nibh, vulputate molestie sem magna ut nibh. Etiam
-        metus magna, posuere ac, congue eu, eleifend sit amet, wisi. Quisque
-        ut nulla. Integer nec magna sit amet ipsum convallis congue.  </p> <p>
-        Nullam id lorem. Ut eget sapien. Aenean eros erat, egestas sit amet,
-        feugiat at, ornare quis, neque. Proin felis metus, ullamcorper id,
-        sodales a, aliquet vel, dolor. Donec eleifend ornare felis. Integer
-        molestie varius turpis. Duis eget velit. Vestibulum ante ipsum primis in
-        faucibus orci luctus et ultrices posuere cubilia Curae; Maecenas et elit
-        eget tortor nonummy feugiat. Nunc convallis urna vitae dui.  </p> <p>
-        Aliquam vitae sapien. Sed pulvinar urna et urna egestas porttitor. Sed
-        vitae ipsum. Morbi eget est id lectus varius blandit. Praesent eget
-        nibh. Sed non tortor. Pellentesque viverra, augue et consectetuer
-        molestie, risus nisl dapibus turpis, ac mollis dui ante vel tellus. Cras
-        vel nisl nec nisl imperdiet laoreet. Aliquam erat volutpat. Quisque a
-        justo mollis nisl mattis cursus.  </p>
+        <h3>DEFINITIONS</h3>
 
-        <p> Maecenas elit wisi, scelerisque non, tincidunt non, rutrum a,
-        mauris. Mauris quis elit id magna congue pharetra. Morbi sit amet massa
-        id ligula sodales molestie. Class aptent taciti sociosqu ad litora
-        torquent per conubia nostra, per inceptos hymenaeos. Nulla lorem tortor,
-        pulvinar et, pellentesque non, vestibulum at, lacus. Cras consectetuer
-        dolor non nisl. Etiam aliquam laoreet purus. Pellentesque mattis quam
-        sodales enim. Vestibulum condimentum, sem vel lacinia faucibus, ligula
-        turpis accumsan wisi, quis sodales ligula justo eget quam. Ut justo nunc,
-        pretium a, vulputate et, venenatis a, lorem. Sed metus. Ut consectetuer,
-        elit at convallis aliquet, erat lacus suscipit turpis, non pretium
-        orci diam id augue. Vivamus turpis mi, hendrerit eget, convallis eu,
-        fringilla vel, mauris. In ipsum. Curabitur nisl est, congue eu, venenatis
-        non, facilisis sed, libero. Curabitur suscipit nisl at quam. Suspendisse
-        lorem lorem, fermentum eu, suscipit vel, gravida vitae, nibh. Duis metus
-        eros, congue quis, scelerisque et, egestas id, ante.  </p> <p> Integer
-        varius consequat lacus. In nec nisl vel mi imperdiet nonummy. Proin mi
-        ipsum, porta et, fermentum adipiscing, bibendum quis, mauris. Nullam
-        malesuada luctus elit. Ut suscipit fermentum enim. Vestibulum hendrerit
-        consectetuer diam. Maecenas congue gravida sem. Fusce blandit pharetra
-        mi. Praesent varius. Nam congue nulla et nunc. Sed blandit libero eget
-        leo. Etiam mattis pharetra risus. Ut id lorem sit amet purus imperdiet
-        ultrices. Nullam lacus. Etiam gravida. Suspendisse nulla neque, pulvinar
-        nec, suscipit et, consequat eu, tortor. Class aptent taciti sociosqu
-        ad litora torquent per conubia nostra, per inceptos hymenaeos. Vivamus
-        fermentum consectetuer enim. Curabitur iaculis tempus nibh. Ut nunc quam,
-        viverra eget, fringilla eu, blandit ut, lacus.  </p>
+        <p>“Web Site” means the rpath.com and rpath.org domains.</p>
+
+        <p>“Content” means all information and materials, regardless of
+        format.</p>
+
+        <p>“rPath Repository” is the software database that is hosted on
+        the Web Site.</p>
+
+        <p>“rBuilder Online” means the software, owned by rPath, that
+        provides the primary functionality of the Web Site.</p>
+
+        <p>“Service” means the processes and functionality provided by
+        rBuilder Online, the rPath Repository and the Web Site.</p>
+
+        <h3>1.RIGHT OF USE</h3>
+
+        <p>rPath grants to you the rights herein, provided that you accept,
+        without modification, the terms and conditions set forth in this
+        Agreement and that you are in compliance with the terms and
+        conditions of this Agreement.</p>
+
+        <p>rPath grants to you a personal, non-exclusive, world-wide and
+        non-transferable license to rBuilder Online as a tool to build
+        software using only Content from the rPath Repository.  Any use of
+        rBuilder Online with Content from any source other than the rPath
+        Repository is a material breach of this Agreement.  Portions of
+        rBuilder Online may be downloaded, stored and executed on your
+        systems.  You own the media and the hardware on which rBuilder
+        Online is stored and executed but rPath retains ownership of the
+        rBuilder Online software itself.</p>
+
+        <p>rPath also grants to you the right to use the Services to upload
+        software into the rPath Repository, to download software from the
+        rPath Repository, and to access Content on the Web Site in
+        conjunction with the Services.</p>
+
+        <p>You agree not to resell any of the Services.</p>
+
+        <h3>2.REGISTRATION OBLIGATIONS</h3>
+
+        <p>You must provide true, accurate, current and complete
+        information in the registration process on the Web Site
+        (collectively, the "Registration Information") and must maintain
+        and promptly update the Registration Information as necessary.
+        rPath reserves the right to terminate this Agreement and to
+        prohibit any and all current or future use by you of the Services,
+        if rPath has reasonable grounds to suspect that your Registration
+        Information is untrue, inaccurate, not current or incomplete.  You
+        grant to rPath the right to use your Registration Information in
+        connection with Content that you upload, post, email, transmit or
+        store using the Services.</p>
+
+        <p>For more information on how rPath uses your personal
+        information, consult the privacy policy at [LINK].</p>
+
+        <p>You will receive a User ID and password (collectively, the “User
+        ID”) upon completing the registration process on the Web Site.  You
+        are solely responsible for the use of your User ID, whether or not
+        such use is authorized by you, and for maintaining the
+        confidentiality of your User ID.  You shall immediately notify
+        rPath of any unauthorized use of your User ID.  rPath shall not be
+        liable for any loss or damage arising from your failure to comply
+        with this Section.</p>
+
+        <h3>3.CONTENT</h3>
+
+        <p>Whether publicly posted or privately transmitted, all Content on
+        the Web Site and all Content contained in the rPath Repository that
+        originated from users of the Services is the sole responsibility of
+        the person from which such Content originated. You are responsible
+        for all Content that you upload, post, email, transmit or store
+        using the Services.  You shall not upload, post, email, transmit or
+        store Content or conduct or participate in any activities using the
+        Services which, in the judgment of rPath, are likely to be
+        prohibited by law in any applicable jurisdiction, including laws
+        governing the encryption of software, the export of technology, the
+        transmission of obscenity or the permissible uses of intellectual
+        property.</p>
+
+        <p>The purpose of the Services is to provide a repository of
+        software and corresponding tools to facilitate the sharing and
+        development of software (the “Purpose”).  rPath will not pre-screen
+        or review Content, but rPath reserves the right to refuse or delete
+        any Content, of which it becomes aware, that it reasonably deems
+        not to fulfill the Purpose.  In addition, rPath shall have the
+        right, but not the obligation, in its sole discretion to refuse or
+        delete any Content that it reasonably considers to violate the
+        terms and conditions of this Agreement or be otherwise illegal.</p>
+
+        <p>rPath, in its sole and absolute discretion, may preserve Content
+        and may also disclose Content if required to do so by law or
+        judicial or governmental mandate or as reasonably determined useful
+        by rPath to protect the rights, property or personal safety of
+        rPath, users of the Services, or the public. rPath does not control
+        the Content posted via the Services and, as such, does not
+        guarantee the accuracy, integrity or quality of such Content. Under
+        no circumstances will rPath be liable in any way for any Content,
+        including, but not limited to, liability for any errors or
+        omissions in any Content or for any loss or damage of any kind
+        incurred as a result of the use of any Content posted, emailed or
+        otherwise transmitted via the Services.</p>
+
+        <p>By using the Services, you may be exposed to Content that is
+        offensive, indecent or objectionable. You must evaluate, and bear
+        all risks associated with, the use of any Content, including any
+        reliance on the accuracy, completeness, or usefulness of such
+        Content.</p>
+
+        <h3>4.LICENSES AND IDEA SUBMISSIONS</h3>
+
+        <p>You agree to grant to rPath a non-exclusive, royalty-free,
+        worldwide, perpetual license, with the right to sub-license,
+        reproduce, distribute, transmit, create derivative works of,
+        publicly display and publicly perform any materials and other
+        information you submit via the Services or transmit to rPath,
+        including, without limitation, ideas contained therein for new or
+        improved products and services.  You agree that you shall have no
+        recourse against rPath for any alleged or actual infringement or
+        misappropriation of any proprietary right in your submitted
+        materials or other information.</p>
+
+        <h3>5.COPYRIGHT AND TRADEMARKS</h3>
+
+        <p>The Contents of the Services are protected by international
+        copyright and trademark laws. The owner of the copyrights and
+        trademarks are rPath, its affiliates or other third party
+        licensors.  Publications, products, content or services referenced
+        herein or in the Services are the exclusive trademarks or
+        servicemarks of rPath.  Other product and company names mentioned
+        in the Services are the trademarks of their respective owners.</p>
+
+        <h3>6.CHANGES TO THIS AGREEMENT</h3>
+
+        <p>rPath reserves the right, at its sole discretion, to change,
+        modify, add or remove portions of this Agreement periodically. Such
+        modifications shall be effective immediately upon posting of the
+        modified Agreement to the Web Site. Your continued use of the
+        Services following the posting of changes to this Agreement will
+        mean that you accept those changes.</p>
+
+        <p>rPath reserves the right at any time and from time to time to
+        modify or discontinue, temporarily or permanently, the Services, or
+        any part thereof. rPath shall not be liable to you or any other
+        third party for any such modification, suspension or discontinuance
+        except as expressly provided herein.</p>
+
+        <h3>7.CONFIDENTIALITY</h3>
+
+        <p>You agree to maintain the confidentiality of any information
+        provided to you by rPath that is marked or otherwise identified as
+        confidential or proprietary (“rPath Proprietary Information”).
+        Nothing in this Agreement shall be construed to convey any title or
+        ownership rights to the rPath Proprietary Information to you.</p>
+
+        <p>The provisions of this section shall remain in full force and
+        effect despite termination of this Agreement for whatever
+        reason.</p>
+
+        <h3>8.NO UNLAWFUL OR PROHIBITED USE</h3>
+
+        <p>By using the Services, you warrant to rPath that you will not
+        use the Services, or any of the Content obtained from the Services,
+        for any purpose that is unlawful or prohibited by this
+        Agreement. If you violate any of the terms and conditions of this
+        Agreement, your permission to use the Services automatically
+        terminates.</p>
+
+        <h3>9.TERM AND TERMINATION</h3>
+
+        <p>This Agreement shall continue in force perpetually unless
+        terminated by rPath.  Cause for termination shall include, but not
+        be limited to, (a) breaches of any material provision of this
+        Agreement, (b) a request for termination by you, (c) discontinuance
+        or modification of the Services or any part thereof, (d) extended
+        periods of inactivity, and/or (e) automatic termination as set
+        forth herein.  Upon termination for any reason, your right to
+        access, use and/or possess the Services shall immediately cease.
+        You shall immediately stop using the Services and shall destroy all
+        copies of the rBuilder Online software possessed by you.</p>
+
+        <h3>10.INDEMNIFICATION</h3>
+
+        <p>You agree to defend, indemnify and hold rPath harmless against
+        any losses, expenses, costs or damages; including rPath reasonable
+        attorneys' fees, experts' fees and other reasonable costs of
+        litigation; arising from, incurred as a result of, or in any manner
+        related to (1) your breach of the terms of this Agreement, (2) your
+        unauthorized or unlawful use of the Services, and (3) the
+        unauthorized or unlawful use of the Services by any other person
+        using your UserID.</p>
+
+        <h3>11.WARRANTIES</h3>
+
+        <p>THE CONTENT AND SERVICES ARE PROVIDED TO YOU ON AN "AS IS," AS
+        AVAILABLE BASIS. RPATH PROVIDES THE CONTENT AND SERVICES WITHOUT
+        WARRANTY OF ANY KIND, EITHER EXPRESS OR IMPLIED, INCLUDING, BUT NOT
+        LIMITED TO, ANY IMPLIED WARRANTIES OF MERCHANTABILITY,
+        NONINFRINGEMENT, OR FITNESS FOR A PARTICULAR PURPOSE OR WARRANTIES
+        OF QUALITY OR PERFORMANCE. NO ORAL OR WRITTEN ADVICE OR INFORMATION
+        GIVEN BY RPATH, ITS EMPLOYEES, LICENSEES OR THE LIKE WILL CREATE A
+        WARRANTY OR GUARANTY; NOR MAY YOU RELY ON ANY SUCH INFORMATION OR
+        ADVICE.</p>
+
+        <p>RPATH DOES NOT GUARANTEE CONTINUOUS UNINTERRUPTED OR SECURE
+        ACCESS TO THE WEB SITE OR SERVICES. OPERATION OF THE WEB SITE OR
+        SERVICES MAY BE SUBJECT TO INTERFERENCE FROM NUMEROUS FACTORS
+        OUTSIDE OUR CONTROL. FURTHER, SCHEDULED AND PREVENTIVE MAINTENANCE
+        AS WELL AS REQUIRED AND EMERGENCY MAINTENANCE WORK MAY TEMPORARILY
+        INTERRUPT SERVICES OR ACCESS TO THE WEB SITE.</p>
+
+        <h3>12.LIMITATIONS OF LIABILITY</h3>
+
+        <p>You understand that rPath cannot and does not guarantee or
+        warrant that Content available via the Services will be free from
+        infection by viruses, worms, Trojan horses or other code that
+        manifest contaminating or destructive properties. You are
+        responsible for implementing sufficient procedures and checkpoints
+        to satisfy your particular requirements for accuracy of data input
+        and output, and for maintaining a means external to the Services
+        for the reconstruction of any lost data.</p>
+
+        <p>YOU AGREE AND ACKNOWLEDGE THAT YOUR USE OF THE CONTENT AND
+        SERVICES IS ENTIRELY AT YOUR OWN RISK. TO THE EXTENT PERMITTED BY
+        APPLICABLE LAW, IN NO EVENT WILL RPATH BE LIABLE TO YOU OR ANY
+        THIRD PARTY FOR ANY INCIDENTAL, CONSEQUENTIAL, SPECIAL OR PUNITIVE
+        DAMAGES, WHETHER IN TORT OR IN CONTRACT, INCLUDING LOST PROFITS,
+        LOST SAVINGS OR OTHER INCIDENTAL OR CONSEQUENTIAL DAMAGES, EVEN IF
+        RPATH HAS BEEN NOTIFIED OF THE POSSIBILITY OF SUCH DAMAGE.  RPATH'S
+        LIABILITY HEREUNDER SHALL NOT EXCEED, IN THE AGGREGATE, THE FEES
+        PAID BY YOU FOR THE SPECIFIC CONTENT OR SERVICES WHICH GAVE RISE TO
+        SUCH DAMAGES.</p>
+
+        <h3>13.MISCELLANEOUS</h3>
+
+        <p>You may not assign this Agreement or any license granted or
+        created hereunder.  rPath may assign this Agreement to a successor
+        as the result of an acquisition, merger or other such change of
+        control either in whole or in part of rPath's business.</p>
+
+        <p>The parties are independent contractors and nothing in this
+        Agreement shall be deemed to make either party an agent, employee,
+        partner or joint venturer of the other party.  Neither party shall
+        have the authority to bind, commit, or otherwise obligate the other
+        party in any manner whatsoever.</p>
+
+        <p>The failure of rPath to require your performance of any
+        provision hereof shall not affect the full right to require such
+        performance at any time thereafter; nor shall the waiver by rPath
+        of a breach of any provision hereof be taken or held to be a waiver
+        of the provision itself. In the event that any provision of this
+        Agreement shall be unenforceable or invalid under any applicable
+        law or be so held by applicable court decision, such
+        unenforceability or invalidity shall not render this Agreement
+        unenforceable or invalid as a whole. rPath will amend or replace
+        such provision with one that is valid and enforceable and which
+        achieves, to the extent possible, the original objectives and
+        intent of rPath as reflected in the original provision</p>
+
+        <p>Definitions set forth in any part of this Agreement shall apply
+        to all parts of this Agreement.</p>
+
+        <p>The obligations of the parties under this Agreement, which by
+        their nature would continue beyond the termination, cancellation or
+        expiration of this Agreement, shall survive termination,
+        cancellation, or expiration of this Agreement.</p>
+
+        <p>Neither party shall be considered in default in performance of
+        its obligations hereunder if performance of such obligations is
+        prevented or delayed by force majeure or any cause beyond its
+        reasonable control.</p>
+
+        <p>This Agreement constitutes the entire agreement between the
+        parties regarding the subject matter hereof and supersede all
+        proposals and prior discussions and writings between the parties
+        with respect thereto.</p>
+
+        <p>This Agreement shall be governed by and interpreted in
+        accordance with the laws of the United States and State of North
+        Carolina, excluding its choice of law rules.</p>
+
     </body>
 </html>
