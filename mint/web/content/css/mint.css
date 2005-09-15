@@ -54,7 +54,7 @@ body#legal a {
     padding-right: 0px;
 }
 
-body#legal h2 {
+body#legal h2, body#legal h3 {
     color: white;
 }
 
