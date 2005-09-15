@@ -34,7 +34,7 @@ class MintConfig(ConfigFile):
         'authDbPath'        : '/srv/authrepo/repos/sqldb',
         'templatePath'      : os.path.join(templatePath, 'web', 'templates'),
         'reposPath'         : '/srv/mint/repos/',
-        'reposContentsPath' : '/srv/mint/repos/',
+        'reposContentsPath' : None,
         'dbPath'            : '/srv/mint/data/db',
         'tmpPath'           : '/srv/mint/tmp/',
         'imagesPath'        : '/srv/mint/images/',
@@ -44,13 +44,15 @@ class MintConfig(ConfigFile):
         'adminMail'         : 'mint@rpath.org',
         'newsRssFeed'       : '',
         'commitAction'      : None,
+        'commitEmail'       : None,
+        'commitEmailName'   : 'rBuilder Commit Message',
         'EnableMailLists'   : [ BOOLEAN, False ],
         'MailListBaseURL'   : 'http://lists.rpath.org/mailman/',
         'MailListPass'      : 'adminpass',
         'basePath'          : '/',
         'cookieSecretKey'   : None,
-        'bugsEmailFrom'     : 'apache@rpath.com',
-        'bugsEmailFromName' : 'Apache',
+        'bugsEmailFrom'     : None,
+        'bugsEmailFromName' : 'rBuilder Bugs',
         'bugsEmailSubject'  : 'Mint Unhandled Exception Report',
         'debugMode'         : [ BOOLEAN, False ],
 
@@ -84,3 +86,12 @@ class MintConfig(ConfigFile):
             self.siteHost = self.hostName + "." + self.domainName
         else:
             self.siteHost = self.domainName
+
+        if not self.reposContentsPath:
+            self.reposContentsPath = self.reposPath
+
+        if not self.commitEmail:
+            self.commitEmail = "rBuilder@%s" % self.domainName
+
+        if not self.bugsEmailFrom:
+            self.commitEmail = "rBuilder@%s" % self.domainName
