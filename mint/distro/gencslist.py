@@ -11,6 +11,7 @@ import sys
 
 import conary
 from repository import changeset
+from repository import trovesource
 import files
 import conaryclient
 import conarycfg
