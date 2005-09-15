@@ -1,3 +1,9 @@
+Changes in 0.4.8:
+
+* Fixed the repository browser again for non-members by
+  switching from the broken shim client to the working netclient.
+* Fixed a few typos.
+
 Changes in 0.4.7:
 
 * Also output repository browser HTML as text/html.
