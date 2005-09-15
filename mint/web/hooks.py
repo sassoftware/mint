@@ -332,7 +332,7 @@ def logErrorAndEmail(cfg, Exception, e, bt):
     log.error('[%s] Unhandled exception from mint web interface: %s: %s', timeStamp, Exception.__name__, e)
     # send email
     body = 'Unhandled exception from mint web interface:\n\n%s: %s\n\n' %(Exception.__name__, e)
-    body += 'Time of occurance: %s\n\n' %timeStamp
+    body += 'Time of occurrence: %s\n\n' %timeStamp
     body += ''.join( traceback.format_tb(bt))
     users.sendMailWithChecks(cfg.bugsEmailFrom, cfg.bugsEmailFromName,
                              cfg.adminMail, cfg.bugsEmailSubject, body)
