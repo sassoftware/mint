@@ -13,6 +13,8 @@ from mod_python import Cookie
 from mint import users
 
 class WebHandler(object):
+    content_type='text/html'
+
     """Mixin class for various helpful web methods."""
     def _write(self, template, templatePath = None, **values):
         if not templatePath:
