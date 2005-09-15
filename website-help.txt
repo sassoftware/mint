@@ -291,3 +291,26 @@ Once you click on "Create", your project will be created.
     o Managing mailing lists
         - Adding a list
         - Other functions (regular ol' mailman interface)
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Need Help/Have Feedback page
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+rBuilder Online is a work in progress, so if you need help or have any
+feedback, we'd love to hear from you!
+
+You can reach us two ways:
+
+IRC
+
+To chat online with the rBuilder Online developers, join the IRC channel
+#conary on the Freenode IRC network (http://www.freenode.net/)
+
+(Note that, although we often work long hours, we do sleep occasionally, so
+if you don't get a response on IRC, try again later, or send us email.)
+
+EMAIL
+
+To contact the rBuilder Online developers via email, send your mail to
+<email address> and we'll get back to you as soon as we can.
+
