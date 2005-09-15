@@ -44,11 +44,11 @@ install: all install-subdirs
 	mkdir -p $(DESTDIR)$(confdir)
 	install -m 644 mint.conf $(DESTDIR)$(confdir)
 	mkdir -p $(DESTDIR)$(httpddir)
-	install httpd.conf $(DESTDIR)$(httpddir)/mint.conf.example
-	sed -i "s,\%DATADIR%,$(datadir),g" $(DESTDIR)$(httpddir)/mint.conf.example
+	install httpd.conf $(DESTDIR)$(httpddir)/mint.conf.dist
+	sed -i "s,\%DATADIR%,$(datadir),g" $(DESTDIR)$(httpddir)/mint.conf.dist
 
 	mkdir -p $(DESTDIR)$(servicedir)/authrepo
-	install -m 644 authrepo.cnr $(DESTDIR)$(servicedir)/authrepo/authrepo.cnr.example
+	install -m 644 authrepo.cnr $(DESTDIR)$(servicedir)/authrepo/authrepo.cnr.dist
 
 doc:
 	PYTHONPATH=.:../conary/: epydoc -o mintdoc mint
