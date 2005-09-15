@@ -49,7 +49,7 @@ class SiteHandler(WebHandler):
 
     def _frontPage(self, auth):
         news = self.client.getNews()
-        self._write("frontPage", news = news, newsLink = self.client.getNewsLink())
+        self._write("frontPage", news = news, newsLink = self.client.getNewsLink(), firstTime=self.session.get('firstTimer', False))
         return apache.OK
         
     def register(self, auth):
@@ -152,8 +152,13 @@ class SiteHandler(WebHandler):
             if not auth.authorized:
                 raise mint_error.InvalidLogin
             else:
+                if auth.timeAccessed > 0:
+                    firstTimer = False
+                else:
+                    firstTimer = True
                 client.updateAccessedTime(auth.userId)
                 self.session['authToken'] = authToken
+                self.session['firstTimer'] = firstTimer
                 
                 # mod_python's cookie classes don't handle 301 redirects because
                 # Cookie.add_cookie only adds cookie headers to req.headers_out,

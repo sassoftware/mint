@@ -95,7 +95,7 @@ class UsersTable(database.KeyedTable):
     def checkAuth(self, authToken, checkRepo = True, cachedGroups = []):
         username, password = authToken
         cu = self.db.cursor()
-        cu.execute("""SELECT userId, email, displayEmail, fullName, blurb FROM Users 
+        cu.execute("""SELECT userId, email, displayEmail, fullName, blurb, timeAccessed FROM Users 
                       WHERE username=? AND active=1""", username)
         r = cu.fetchone()
    
@@ -121,6 +121,7 @@ class UsersTable(database.KeyedTable):
                         'displayEmail': r[2],
                         'fullName':     r[3],
                         'blurb':        r[4],
+                        'timeAccessed': r[5],
                         'stagnant':     self.isUserStagnant(r[0]),
                         'groups':       groups}
                 if 'MintAdmin' in groups:
@@ -452,12 +453,14 @@ class Authorization(object):
     @type fullName: str
     @cvar blurb: a short description about and written by the user
     @type blurb: str
+    @cvar timeAccessed: The time that the user last logged in
+    @type timeAccessed: float
     @cvar groups: a list dictionaries containing the groups to which the user belongs
     @type groups: list
     """
     __slots__ = ('authorized', 'userId', 'username', 'email',
                  'displayEmail', 'fullName', 'blurb', 'token', 'stagnant',
-                 'groups', 'admin')
+                 'groups', 'admin', 'timeAccessed')
 
     def __init__(self, **kwargs):
         for key in self.__slots__:

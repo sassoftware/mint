@@ -29,8 +29,13 @@ from mint import searcher
                     <td id="main">
                         <div class="pad">
                             <h2 class="header">Welcome to rBuilder Online</h2>
-                            <p>Welcome to rBuilder Online&#8212;the site for collaborative open source development.</p>
-<p>Developers can create and host projects and operating systems here, while users can browse and download projects and operating system images for installation.</p>
+                            <div py:if="not firstTime">
+                              <p>Welcome to rBuilder Online&#8212;the site for collaborative open source development.</p>
+                              <p>Developers can create and host projects and operating systems here, while users can browse and download projects and operating system images for installation.</p>
+                            </div>
+                            <div py:if="firstTime">
+                              <p>First time text here</p>
+                            </div>
                             <p><a href="/help?page=overview"><b>Overview of rBuilder Online</b></a></p>
 
                             <div py:strip="True" py:if="news">
