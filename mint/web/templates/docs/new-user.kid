@@ -37,69 +37,108 @@
 
                 <h3>Your new rBuilder Online account is active!</h3>
 
-It's time to take the next step -- but what that step is depends on you:
+                <p>It's time to take the next step &#8212; but what that
+                step is depends on you:</p>
 
-    o You can join an existing project
+                <ul>
 
-    o You can create a new project
+                    <li>You can join an existing project</li>
 
-Let's go through each in more detail.
+                    <li>You can create a new project</li>
 
-Joining a Project
+                </ul>
 
-If you're interested in joining a project, you probably already have a
-project in mind (if not, browse through the available projects, and make
-your selection).  Go to the project's homepage, and click on the "project
-members" link.  Under the "project owners" heading, you'll find the
-owner(s) of the project.  Click on a name, and use their contact
-information to request membership in their project.
+                <p>Let's go through each in more detail.</p>
 
-Creating a Project
+                <h4>Joining a Project</h4>
 
-To create a project, click on the "Create a new project" link under the "My
-Projects" sidebar on the rBuilder Online homepage.  You'll be taken to a
-form to fill out.  At a minimum you must fill in the following fields:
+                <p>If you're interested in joining a project, you probably
+                already have a project in mind (if not, browse through the
+                available projects, and make your selection).  Go to the
+                project's homepage, and click on the "project members"
+                link.  Under the "project owners" heading, you'll find the
+                owner(s) of the project.  Click on a name, and use their
+                contact information to request membership in their
+                project.</p>
 
-    o Project Name -- (alphanumeric only, 16 characters maximum)
+                <h4>Creating a Project</h4>
 
-    o Project Title -- A longer, more descriptive name for your
-      project. Eg., My Custom Linux Project
+                <p>To create a project, click on the "Create a new project"
+                link under the "My Projects" sidebar on the rBuilder Online
+                homepage.  You'll be taken to a form to fill out.  At a
+                minimum you must fill in the following fields:</p>
 
-Although not required, there are two other fields that you should consider filling in:
+                <ul>
 
-    o Project Home Page -- Entering the full URL of a page here will cause
-      a link to the page to be displayed on the project's homepage.  This
-      is handy for projects that have an existing homepage hosted
-      elsewhere.
+                <li>Project Name &#8212; (alphanumeric only, 16 characters
+                maximum)</li>
 
-    o Project Description -- The text in this field is your chance to get
-      the attention of prospective users and project members.  To help you
-      get started, consider the writing a description that answers the
-      following questions when writing a project description:
+                <li>Project Title &#8212; A longer, more descriptive name for your
+                project. Eg., My Custom Linux Project</li>
 
-        - What is the goal of your project?
-        - What technologies does your project use?
-        - Why should someone join your project?
-        - Why should a user download your project's software?
+                </ul>
 
-Finally, there are two checkboxes related to your project's mailing lists.
-By default, your project will have the following two mailing lists:
+                <p>Although not required, there are two other fields that
+                you should consider filling in:</p>
 
-    o <project-name>@lists.rpath.org -- General project-related discussion
+                <ul>
 
-    o <project-name>-commits@lists.rpath.org -- Messages generated when
-      updates are committed into your project's Conary repository
+                <li>Project Home Page &#8212; Entering the full URL of a
+                page here will cause a link to the page to be displayed on
+                the project's homepage.  This is handy for projects that
+                have an existing homepage hosted elsewhere.</li>
 
-The checkboxes allow you to add two additional mailing lists:
+                <li>Project Description &#8212; The text in this field is
+                your chance to get the attention of prospective users and
+                project members.  To help you get started, consider the
+                writing a description that answers the following questions
+                when writing a project description:
 
-    o <project-name>-devel@lists.rpath.org -- Developer-centric discussion
+                    <li>What is the goal of your project?</li>
 
-    o <project-name>-bugs@lists.rpath.org -- Bug reports
+                    <li>What technologies does your project use?</li>
 
-(Once your project is created, you can add other mailing lists, if you
-like.)
+                    <li>Why should someone join your project?</li>
 
-Once you click on "Create", your project will be created.
+                    <li>Why should a user download your project's
+                    software?</li>
+
+                </li>
+
+                <ul>
+
+                <p>Finally, there are two checkboxes related to your
+                project's mailing lists.  By default, your project will
+                have the following two mailing lists:</p>
+
+                <ul>
+
+                <li><project-name>@lists.rpath.org &#8212; General
+                project-related discussion</li>
+
+                <li><project-name>-commits@lists.rpath.org &#8212; Messages
+                generated when updates are committed into your project's
+                Conary repository</li>
+
+                </ul>
+
+                <p>The checkboxes allow you to add two additional mailing
+                lists:</p>
+
+                <ul>
+
+                <li><project-name>-devel@lists.rpath.org &#8212;
+                Developer-centric discussion</li>
+
+                <li><project-name>-bugs@lists.rpath.org &#8212; Bug
+                reports</li>
+
+                </ul>
+
+                <p>(Once your project is created, you can add other mailing
+                lists, if you like.)</p>
+
+                <p>Once you click on "Create", your project will be created.</p>
 
             </div>
         </td>
