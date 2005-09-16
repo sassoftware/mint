@@ -55,26 +55,28 @@
                 <p>If you're interested in joining a project, you probably
                 already have a project in mind (if not, browse through the
                 available projects, and make your selection).  Go to the
-                project's homepage, and click on the "project members"
-                link.  Under the "project owners" heading, you'll find the
-                owner(s) of the project.  Click on a name, and use their
-                contact information to request membership in their
-                project.</p>
+                project's homepage, and click on the <tt>project
+                members</tt> link.  Under the <tt>project owners</tt>
+                heading, you'll find the owner(s) of the project.  Click on
+                a name, and use their contact information to request
+                membership in their project.</p>
 
                 <h4>Creating a Project</h4>
 
-                <p>To create a project, click on the "Create a new project"
-                link under the "My Projects" sidebar on the rBuilder Online
-                homepage.  You'll be taken to a form to fill out.  At a
-                minimum you must fill in the following fields:</p>
+                <p>To create a project, click on the <tt>Create a new
+                project</tt> link under the <tt>My Projects</tt> sidebar on
+                the rBuilder Online homepage.  You'll be taken to a form to
+                fill out.  At a minimum you must fill in the following
+                fields:</p>
 
                 <ul>
 
-                <li>Project Name &#8212; (alphanumeric only, 16 characters
-                maximum)</li>
+                <li><tt>Project Name</tt> &#8212; (alphanumeric only, 16
+                characters maximum)</li>
 
-                <li>Project Title &#8212; A longer, more descriptive name for your
-                project. Eg., My Custom Linux Project</li>
+                <li><tt>Project Title</tt> &#8212; A longer, more
+                descriptive name for your project. For example, "My Custom
+                Linux Project"</li>
 
                 </ul>
 
@@ -83,16 +85,17 @@
 
                 <ul>
 
-                <li>Project Home Page &#8212; Entering the full URL of a
-                page here will cause a link to the page to be displayed on
-                the project's homepage.  This is handy for projects that
-                have an existing homepage hosted elsewhere.</li>
+                <li><tt>Project Home Page</tt> &#8212; Entering the full
+                URL of a page here will cause a link to the page to be
+                displayed on the project's homepage.  This is handy for
+                projects that have an existing homepage hosted
+                elsewhere.</li>
 
-                <li>Project Description &#8212; The text in this field is
-                your chance to get the attention of prospective users and
-                project members.  To help you get started, consider the
-                writing a description that answers the following questions
-                when writing a project description:
+                <li><tt>Project Description</tt> &#8212; The text in this
+                field is your chance to get the attention of prospective
+                users and project members.  To help you get started,
+                consider the writing a description that answers the
+                following questions when writing a project description:
 
                     <li>What is the goal of your project?</li>
 
@@ -138,7 +141,8 @@
                 <p>(Once your project is created, you can add other mailing
                 lists, if you like.)</p>
 
-                <p>Once you click on "Create", your project will be created.</p>
+                <p>Once you click on <tt>Create</tt>, your project will be
+                created.</p>
 
             </div>
         </td>
