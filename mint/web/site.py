@@ -108,10 +108,11 @@ class SiteHandler(WebHandler):
 
     @strFields(page = None)
     def legal(self, auth, page):
-        if page not in ["tos", "privacy"]:
+        try:
+            self._write("docs/" + page)
+        except IOError:
             return apache.HTTP_NOT_FOUND
             
-        self._write("docs/" + page)
         return apache.OK
 
     @strFields(message = "")
