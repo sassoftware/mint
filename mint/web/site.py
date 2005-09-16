@@ -346,7 +346,7 @@ class SiteHandler(WebHandler):
     def userInfo(self, auth, id):
         user = self.client.getUser(id)
        
-        userProjects = [x for x in self.client.getProjectsByMember(id) if not x.hidden]
+        userProjects = [x for x in self.client.getProjectsByMember(id) if not x[0].hidden]
         self._write("userInfo", user = user,
             userProjects = userProjects)
         return apache.OK
