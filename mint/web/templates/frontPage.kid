@@ -50,11 +50,17 @@ from mint import searcher
                               <p><b>Want to learn more?  Go <a
                               href="/help?page=overview">here</a></b></p>
 
+                              <p><b>Want to get started?  Go <a
+                              href="/help?page=new-user">here</a></b></p>
+
                             </div>
                             <div py:if="firstTime">
 
                               <p>Congratulations!  Your new rBuilder Online
                               account is active!</p>
+
+                              <p><b>Want to get started?  Go <a
+                              href="/help?page=new-user">here</a></b></p>
 
                             </div>
 
