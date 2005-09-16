@@ -4,8 +4,10 @@
 #
 # All rights reserved
 #
-from mint import pkgindex
+import conary
 import sqlite3
+
+from mint import pkgindex
 from repository import netclient
 from repository import repository
 
@@ -39,7 +41,6 @@ for host in repMap.keys():
     
     for pkg in pkgs:
         latestVer = sorted(troves[pkg].keys(), reverse = True)[0]
-        print pkg, latestVer
         row = (projectIds[host], pkg, latestVer.asString())
         rows.append(row)
 
