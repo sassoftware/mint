@@ -68,7 +68,7 @@ from mint import searcher
                                         <span class="date" style="float: right;">${time.ctime(item['pubDate'])}</span>
                                         <span class="newsTitle">${item['title']}</span>
                                     </h3>
-                                    <p>${item['content']} <a class="newsContinued" href="${item['link']}">read more</a></p>
+                                    <p>${XML(item['content'])} <a class="newsContinued" href="${item['link']}">read more</a></p>
                                 </div>
                                 <p><a href="${newsLink}">More Announcements</a></p>
                             </div>

@@ -87,7 +87,7 @@ class NewsCacheTable(database.KeyedTable):
             link = item.find("link").text
             title = item.find("title").text
             category = item.find("category").text
-            content = item.find("description").text
+            content = item.find("{http://purl.org/rss/1.0/modules/content/}encoded").text
             pubDate = toUnixTime(item.find("pubDate").text)
         
             query = "INSERT INTO NewsCache VALUES (NULL, ?, ?, ?, ?, ?)"
