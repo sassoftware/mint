@@ -126,7 +126,7 @@ onload = "javascript:;"
             <div id="copy">
                 <div class="pad" style="text-align: center;">
                     <span id="botnav">
-                        ${legal('http://%s/legal?page=tos' % siteHost, 'Terms of Service')} ${legal('http://%s/legal?page=privacy' % siteHost, 'Privacy Policy')}
+                        ${legal('http://%s/legal?page=legal' % siteHost, 'Legal')}
                     </span>
 
                     <span style="float: left;">Copyright &#169; 2005 rPath, Inc. </span>
