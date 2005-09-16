@@ -3,6 +3,10 @@
 	vertical-align:top;
 }
 
+sup.tm {
+        font-size; -2;
+}
+
 /* TOP */
 #top .shadowLeft {
 	position:relative; min-width:746px; /* width:85%; */
