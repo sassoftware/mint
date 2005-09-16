@@ -1,3 +1,10 @@
+Changes in 0.5.0:
+
+* Lots of documentation added.
+* News is displayed as HTML, not plain text, mainly so links and paragraph breaks are preserved.
+* constants.py stores the current version of Mint code.
+* Hidden projects are now suppressed where necessary from userInfo page.
+
 Changes in 0.4.8:
 
 * Fixed the repository browser again for non-members by

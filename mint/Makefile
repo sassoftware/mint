@@ -10,6 +10,7 @@ python_files =			\
 	__init__.py		\
 	cache.py		\
 	config.py		\
+	constants.py		\
 	database.py		\
 	dbversion.py		\
 	jobs.py			\
@@ -32,13 +33,16 @@ python_files =			\
 	stats.py		\
 	userlevels.py		\
 	userlisting.py		\
-	users.py		
+	users.py
 
-extra_dist = Makefile
+extra_dist = Makefile constants.py.in
 
 dist_files = $(python_files) $(extra_dist)
 
-all: default-all default-subdirs
+all: default-all default-subdirs constants.py
+
+constants.py: constants.py.in Makefile
+	sed s,@version@,$(VERSION),g $< > $@
 
 install: install-subdirs pyfiles-install
 

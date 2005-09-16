@@ -5,6 +5,7 @@
 # All Rights Reserved
 #
 from mint import userlevels
+from mint import constants
 from urllib import quote
 onload = "javascript:;" 
 ?>
@@ -123,13 +124,15 @@ onload = "javascript:;"
         </div>
         <div id="foot" align="center">
             <div id="copy">
-                <div class="pad">
+                <div class="pad" style="text-align: center;">
                     <span id="botnav">
                         ${legal('http://%s/legal?page=tos' % siteHost, 'Terms of Service')} ${legal('http://%s/legal?page=privacy' % siteHost, 'Privacy Policy')}
                     </span>
 
-                    Copyright &#169; 2005 rPath, Inc.
-                </div>
+                    <span style="float: left;">Copyright &#169; 2005 rPath, Inc. </span>
+
+                    <span>version ${constants.mintVersion}</span>
+                </div> 
             </div>
         </div>
     </body>
