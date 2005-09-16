@@ -34,17 +34,22 @@ from mint import searcher
                               for collaborative open source development.
                               Using rBuilder Online's free services:</p>
 
-                              <p>[Developers] (link to developer page) can
+
+
+
+
+                              <p><a
+                              href="/help?page=dev-help">Developers</a> can
                               use rPath's technologies to easily create
                               highly-customized Linux distributions and
                               package software using the [Conary] (link to
                               wiki) system software management tool.</p>
 
-                              <p>[Users] (link to user page) can browse and
-                              download ISO images of Conary-based
-                              distributions and update their Conary-based
-                              systems using software on the Conary
-                              repositories hosted here.</p>
+                              <p><a href="/help?page=user-help">Users</a>
+                              can browse and download ISO images of
+                              Conary-based distributions and update their
+                              Conary-based systems using software on the
+                              Conary repositories hosted here.</p>
 
                               <p><b>Want to learn more?  Go <a
                               href="/help?page=overview">here</a></b></p>
