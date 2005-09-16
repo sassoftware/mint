@@ -362,6 +362,8 @@ class _Method(xmlrpclib._Method):
             raise users.AlreadyConfirmed(exceptionArgs[0])
         elif exceptionName == "GroupAlreadyExists":
             raise users.GroupAlreadyExists(exceptionArgs[0])
+        elif exceptionName == "InvalidHostname":
+            raise projects.InvalidHostname(exceptionArgs[0])
         else:
             raise UnknownException(exceptionName, exceptionArgs)
 
