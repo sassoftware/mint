@@ -31,8 +31,8 @@ sqlbase = """SELECT Projects.hostname || '.' || Projects.domainname, Projects.na
 """
 
 ordersql = {
-    PROJECTNAME_ASC: "Projects.name ASC",
-    PROJECTNAME_DES: "Projects.name DESC",
+    PROJECTNAME_ASC: "LOWER(Projects.name) ASC",
+    PROJECTNAME_DES: "LOWER(Projects.name) DESC",
     LASTMODIFIED_ASC: "Projects.timeModified ASC",
     LASTMODIFIED_DES: "Projects.timeModified DESC",
     CREATED_ASC: "Projects.timeCreated ASC",

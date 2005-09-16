@@ -24,10 +24,10 @@ blurb FROM users WHERE active=1
     OFFSET %d"""
 
 ordersql = {
-    USERNAME_ASC: "username ASC",
-    USERNAME_DES: "username DESC",
-    FULLNAME_ASC: "fullname ASC",
-    FULLNAME_DES: "fullname DESC",
+    USERNAME_ASC: "LOWER(username) ASC",
+    USERNAME_DES: "LOWER(username) DESC",
+    FULLNAME_ASC: "LOWER(fullname) ASC",
+    FULLNAME_DES: "LOWER(fullname) DESC",
     CREATED_ASC:  "timeCreated ASC",
     CREATED_DES:  "timeCreated DESC",
     ACCESSED_ASC: "timeAccessed ASC",
