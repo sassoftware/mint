@@ -40,7 +40,7 @@ from mint import searcher
                               use rPath's technologies to easily create
                               highly-customized Linux distributions and
                               package software using the <a
-                              href="http://wiki.rpath.com/">Conary</a><sup class="tm">TM</sup>
+                              href="http://wiki.conary.com/">Conary</a><sup class="tm">TM</sup>
                               system software management tool.</p>
 
                               <p><a href="/help?page=user-help">Users</a>
