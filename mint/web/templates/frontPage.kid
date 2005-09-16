@@ -30,22 +30,24 @@ from mint import searcher
                         <div class="pad">
                             <h2 class="header">Welcome to rBuilder Online</h2>
                             <div py:if="not firstTime">
-                              <p>Welcome to rBuilder Online&#8212;the site
-                              for collaborative open source development.
-                              Using rBuilder Online's free services:</p>
+                              <p>Welcome to rBuilder<sup>TM</sup>
+                              Online&#8212;the site for collaborative open
+                              source development.  Using rBuilder Online's
+                              free services:</p>
 
                               <p><a
                               href="/help?page=dev-help">Developers</a> can
                               use rPath's technologies to easily create
                               highly-customized Linux distributions and
-                              package software using the <a href="http://wiki.rpath.com/">Conary</a>
+                              package software using the <a
+                              href="http://wiki.rpath.com/">Conary</a><sup>TM</sup>
                               system software management tool.</p>
 
                               <p><a href="/help?page=user-help">Users</a>
                               can browse and download ISO images of
                               Conary-based distributions and update their
                               Conary-based systems using software on the
-                              Conary repositories hosted here.</p>
+                              repositories hosted here.</p>
 
                               <p><b>Want to learn more?  <a
                               href="/help?page=overview">Go here</a></b></p>
