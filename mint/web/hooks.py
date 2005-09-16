@@ -328,6 +328,7 @@ urls = (
 
 def logErrorAndEmail(req, cfg, Exception, e, bt):
     c = req.connection
+    req.add_common_vars()
     info_dict = {
         'local_addr'     : c.local_ip + ':' + str(c.local_addr[1]),
         'remote_addr'    : c.remote_ip + ':' + str(c.remote_addr[1]),
@@ -353,7 +354,12 @@ def logErrorAndEmail(req, cfg, Exception, e, bt):
         'allowed'        : req.allowed,
         'headers_in'     : req.headers_in,
         'headers_out'    : req.headers_out,
-        
+        'uri'            : req.uri,
+        'unparsed_uri'   : req.unparsed_uri,
+        'args'           : req.args,
+        'parsed_uri'     : req.parsed_uri,
+        'filename'       : req.filename,
+        'subprocess_env' : req.subprocess_env,
         }
     timeStamp = time.ctime(time.time())
     # log error
