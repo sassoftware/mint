@@ -126,9 +126,9 @@ class SiteHandler(WebHandler):
             try:
                 self._write("docs/" + page)
             except IOError:
-                self._write("docs/help")
+                self._write("docs/overview")
         else:
-            self._write("docs/help")
+            self._write("docs/overview")
         return apache.OK
 
     def logout(self, auth):
