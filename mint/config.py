@@ -47,8 +47,8 @@ class MintConfig(ConfigFile):
         'MailListPass'      : 'adminpass',
         'basePath'          : '/',
         'cookieSecretKey'   : None,
-        'bugsEmailFrom'     : None,
-        'bugsEmailFromName' : 'rBuilder Bugs',
+        'bugsEmail'     : None,
+        'bugsEmailName' : 'rBuilder Bugs',
         'bugsEmailSubject'  : 'Mint Unhandled Exception Report',
         'debugMode'         : [ BOOLEAN, False ],
 
@@ -89,5 +89,5 @@ class MintConfig(ConfigFile):
         if not self.commitEmail:
             self.commitEmail = "rBuilder@%s" % self.domainName
 
-        if not self.bugsEmailFrom:
-            self.commitEmail = "rBuilder@%s" % self.domainName
+        if not self.bugsEmail:
+            self.bugsEmail = "rBuilder@%s" % self.domainName

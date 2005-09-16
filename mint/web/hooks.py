@@ -341,7 +341,6 @@ def logErrorAndEmail(req, cfg, Exception, e, bt):
         'connection_id'  : c.id,
         'notes'          : c.notes,
         'the_request'    : req.the_request,
-        'assbackwards'   : req.assbackwards,
         'proxyreq'       : req.proxyreq,
         'header_only'    : req.header_only,
         'protocol'       : req.protocol,
@@ -368,7 +367,7 @@ def logErrorAndEmail(req, cfg, Exception, e, bt):
     keys.sort()
     for key in keys:
         body += '\n' + key + ': ' + str(info_dict[key])
-    users.sendMailWithChecks(cfg.bugsEmailFrom, cfg.bugsEmailFromName,
+    users.sendMailWithChecks(cfg.bugsEmail, cfg.bugsEmailName,
                              cfg.adminMail, cfg.bugsEmailSubject, body)
 
 def handler(req):
