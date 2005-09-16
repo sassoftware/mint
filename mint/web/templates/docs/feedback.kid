@@ -22,7 +22,7 @@
     </div>
 
     <head>
-        <title>${formatTitle('Feedback')}</title>
+        <title>${formatTitle('Help: Feedback')}</title>
     </head>
 
     <body>

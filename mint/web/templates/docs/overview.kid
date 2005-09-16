@@ -17,11 +17,12 @@
     ?>
 
     <div py:def="breadcrumb()" py:strip="True">
-        <a href="/help">Help and Feedback</a>
+        <a href="/help">Help</a>
+        <a href="#">Overview</a>
     </div>
 
     <head>
-        <title>Overview ${cfg.productName}</title>
+        <title>${formatTitle('Help: Overview')}</title>
     </head>
 
     <body>

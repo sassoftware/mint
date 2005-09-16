@@ -17,11 +17,12 @@
     ?>
 
     <div py:def="breadcrumb()" py:strip="True">
-        <a href="/help">Help and Feedback</a>
+        <a href="/help">Help</a>
+        <a href="#">New User</a>
     </div>
 
     <head>
-        <title>Congratulations!</title>
+        <title>${formatTitle('Help: New User Introduction')}</title>
     </head>
 
     <body>
