@@ -30,13 +30,32 @@ from mint import searcher
                         <div class="pad">
                             <h2 class="header">Welcome to rBuilder Online</h2>
                             <div py:if="not firstTime">
-                              <p>Welcome to rBuilder Online&#8212;the site for collaborative open source development.</p>
-                              <p>Developers can create and host projects and operating systems here, while users can browse and download projects and operating system images for installation.</p>
+                              <p>Welcome to rBuilder Online&#8212;the site
+                              for collaborative open source development.
+                              Using rBuilder Online's free services:</p>
+
+                              <p>[Developers] (link to developer page) can
+                              use rPath's technologies to easily create
+                              highly-customized Linux distributions and
+                              package software using the [Conary] (link to
+                              wiki) system software management tool.</p>
+
+                              <p>[Users] (link to user page) can browse and
+                              download ISO images of Conary-based
+                              distributions and update their Conary-based
+                              systems using software on the Conary
+                              repositories hosted here.</p>
+
+                              <p><b>Want to learn more?  Go <a
+                              href="/help?page=overview">here</a></b></p>
+
                             </div>
                             <div py:if="firstTime">
-                              <p>First time text here</p>
+
+                              <p>Congratulations!  Your new rBuilder Online
+                              account is active!</p>
+
                             </div>
-                            <p><a href="/help?page=overview"><b>Overview of rBuilder Online</b></a></p>
 
                             <div py:strip="True" py:if="news">
                                 <h2 class="header">Site Announcements</h2>
