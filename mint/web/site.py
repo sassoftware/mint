@@ -345,8 +345,10 @@ class SiteHandler(WebHandler):
     @intFields(id = None)
     def userInfo(self, auth, id):
         user = self.client.getUser(id)
+       
+        userProjects = [x for x in self.client.getProjectsByMember(id) if not x.hidden]
         self._write("userInfo", user = user,
-            userProjects = self.client.getProjectsByMember(id))
+            userProjects = userProjects)
         return apache.OK
 
     @strFields(search = "", type = None)
