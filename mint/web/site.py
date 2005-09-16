@@ -345,8 +345,18 @@ class SiteHandler(WebHandler):
     @intFields(id = None)
     def userInfo(self, auth, id):
         user = self.client.getUser(id)
-       
-        userProjects = [x for x in self.client.getProjectsByMember(id) if not x[0].hidden]
+        userProjects = []
+        if auth.userId == id:
+            #Show all the projects.  The user is viewing his own profile
+            userProjects = [x for x in self.client.getProjectsByMember(id)]
+        else:
+            for x in self.client.getProjectsByMember(id):
+                if x[0].hidden and (x[0].getUserLevel(auth.userId) == userlevels.NONMEMBER):
+                    if not auth.admin:
+                        #Skip this project, it's hidden and the user requesting is
+                        #not a member the project
+                        continue
+                userProjects.append(x)
         self._write("userInfo", user = user,
             userProjects = userProjects)
         return apache.OK

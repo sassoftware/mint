@@ -83,7 +83,7 @@ class Project(database.TableObject):
         try:
             return self.server.getUserLevel(userId, self.id)
         except database.ItemNotFound:
-            return -1
+            return userlevels.NONMEMBER
 
     def updateUserLevel(self, userId, level):
         return self.server.setUserLevel(userId, self.id, level)

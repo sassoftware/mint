@@ -20,7 +20,7 @@ from mint import database
 from mint import mint_error
 from mint import mint_server
 from mint import shimclient
-from mint import users
+from mint import users, userlevels
 
 from admin import AdminHandler
 from project import ProjectHandler
@@ -49,7 +49,7 @@ class ErrorHandler(WebHandler):
 class MintApp(WebHandler):
     project = None
     projectList = []
-    userLevel = -1
+    userLevel = userlevels.NONMEMBER
     user = None
 
     def __init__(self, req, cfg, repServer = None):
