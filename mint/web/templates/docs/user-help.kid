@@ -84,6 +84,8 @@
                     &#8212; can be installable or live-boot ISO images,
                     among others).</li>
 
+                </ul>
+
             </div>
         </td>
         <td id="right" class="projects">
