@@ -34,10 +34,6 @@ from mint import searcher
                               for collaborative open source development.
                               Using rBuilder Online's free services:</p>
 
-
-
-
-
                               <p><a
                               href="/help?page=dev-help">Developers</a> can
                               use rPath's technologies to easily create
