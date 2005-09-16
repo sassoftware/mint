@@ -55,7 +55,7 @@
             <div class="pad">
                 <h3>${user.getUsername()}'s projects:</h3>
                 <ul py:if="userProjects">
-                    <li py:for="project, level in userProjects">
+                    <li py:for="project, level in userProjects" py:if="not project.hidden">
                         <a href="http://${project.getFQDN()}/">${project.getName()}</a>
                         (${userlevels. names[level]})
                     </li>
