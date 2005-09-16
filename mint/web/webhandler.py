@@ -13,7 +13,10 @@ from mod_python import Cookie
 from mint import users
 
 class WebHandler(object):
+    #Default content-type to send to browser
     content_type='text/html'
+    #Default render type to send to kid
+    output = 'html-strict'
 
     """Mixin class for various helpful web methods."""
     def _write(self, template, templatePath = None, **values):
@@ -31,7 +34,7 @@ class WebHandler(object):
                               toUrl = self.toUrl,
                               basePath = self.basePath,
                               **values)
-        t.write(self.req, encoding = "utf-8", output = "html-strict")
+        t.write(self.req, encoding = "utf-8", output = self.output)
 
     def _404(self, *args, **kwargs):
         return apache.HTTP_NOT_FOUND

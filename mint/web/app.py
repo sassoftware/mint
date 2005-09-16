@@ -47,8 +47,6 @@ class ErrorHandler(WebHandler):
         return apache.OK
 
 class MintApp(WebHandler):
-#    content_type = "application/xhtml+xml"
-    content_type = "text/html"
     project = None
     projectList = []
     userLevel = -1
@@ -57,6 +55,12 @@ class MintApp(WebHandler):
     def __init__(self, req, cfg, repServer = None):
         self.req = req
         self.cfg = cfg
+
+        #If the browser can support it, give it what it wants.
+        sys.stderr.flush()
+        if 'application/xhtml+xml' in self.req.headers_in.get('Accept', ''):
+            self.content_type = 'application/xhtml+xml'
+            self.output = 'xhtml'
 
         self.req.content_type = self.content_type
         
@@ -180,6 +184,8 @@ class MintApp(WebHandler):
         # match the requested url to the right url handler
         for match, urlHandler in urls:
             if re.match(match, pathInfo):
+                urlHandler.content_type=self.content_type
+                urlHandler.output = self.output
                 context['cmd'] = pathInfo[len(match)-1:]
                 return urlHandler.handle(context)
 

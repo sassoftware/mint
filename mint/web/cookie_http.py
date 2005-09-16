@@ -20,6 +20,11 @@ class ConaryHandler(WebHandler, http.HttpHandler):
         port = 80
         self.repServer = repServer
         
+        #If the browser can support it, give it what it wants.
+        if 'application/xhtml+xml' in req.headers_in.get('Accept', ''):
+            self.content_type = 'application/xhtml+xml'
+            self.output = 'xhtml'
+
         http.HttpHandler.__init__(self, req, cfg, self.repServer, protocol, port)
 
         if 'mint.web.templates.repos' in sys.modules:
