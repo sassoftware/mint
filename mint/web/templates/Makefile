@@ -14,7 +14,6 @@ kid_files = \
 	error.kid		\
 	forgotPassword.kid	\
 	frontPage.kid		\
-	help.kid		\
 	layout.kid		\
 	library.kid		\
 	login.kid		\
@@ -23,7 +22,6 @@ kid_files = \
 	members.kid		\
 	newProject.kid		\
 	newRelease.kid		\
-	privacy.kid		\
 	project.kid		\
 	projectPage.kid		\
 	projects.kid		\
@@ -35,7 +33,6 @@ kid_files = \
 	releases.kid		\
 	rss20.kid		\
 	searchResults.kid	\
-	tos.kid			\
 	uploadKey.kid		\
 	userInfo.kid		\
 	userSettings.kid	\
