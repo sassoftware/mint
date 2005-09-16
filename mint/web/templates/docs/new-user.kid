@@ -105,7 +105,7 @@
 
                 </li>
 
-                <ul>
+                </ul>
 
                 <p>Finally, there are two checkboxes related to your
                 project's mailing lists.  By default, your project will
@@ -113,12 +113,12 @@
 
                 <ul>
 
-                <li><project-name>@lists.rpath.org &#8212; General
+                <li>&lt;project-name&gt;@lists.rpath.org &#8212; General
                 project-related discussion</li>
 
-                <li><project-name>-commits@lists.rpath.org &#8212; Messages
-                generated when updates are committed into your project's
-                Conary repository</li>
+                <li>&lt;project-name&gt;-commits@lists.rpath.org &#8212;
+                Messages generated when updates are committed into your
+                project's Conary repository</li>
 
                 </ul>
 
@@ -127,10 +127,10 @@
 
                 <ul>
 
-                <li><project-name>-devel@lists.rpath.org &#8212;
+                <li>&lt;project-name&gt;-devel@lists.rpath.org &#8212;
                 Developer-centric discussion</li>
 
-                <li><project-name>-bugs@lists.rpath.org &#8212; Bug
+                <li>&lt;project-name&gt;-bugs@lists.rpath.org &#8212; Bug
                 reports</li>
 
                 </ul>
