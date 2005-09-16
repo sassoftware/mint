@@ -30,7 +30,7 @@ from mint import searcher
                         <div class="pad">
                             <h2 class="header">Welcome to rBuilder Online</h2>
                             <div py:if="not firstTime">
-                              <p>Welcome to rBuilder<sup>TM</sup>
+                              <p>Welcome to rBuilder<sup class="tm">TM</sup>
                               Online&#8212;the site for collaborative open
                               source development.  Using rBuilder Online's
                               free services:</p>
@@ -40,7 +40,7 @@ from mint import searcher
                               use rPath's technologies to easily create
                               highly-customized Linux distributions and
                               package software using the <a
-                              href="http://wiki.rpath.com/">Conary</a><sup>TM</sup>
+                              href="http://wiki.rpath.com/">Conary</a><sup class="tm">TM</sup>
                               system software management tool.</p>
 
                               <p><a href="/help?page=user-help">Users</a>
