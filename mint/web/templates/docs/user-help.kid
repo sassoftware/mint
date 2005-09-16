@@ -81,9 +81,7 @@
                     project's mailing lists.</li>
 
                     <li>The project's release page lists all available
-                    releases (which &#8212; depending on the project
-                    &#8212; can be installable or live-boot ISO images,
-                    among others).</li>
+                    releases (which are installable ISO images).</li>
 
                 </ul>
 
