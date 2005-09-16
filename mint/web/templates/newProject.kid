@@ -62,7 +62,7 @@
                         <?python
                             from mint import mailinglists
                         ?>
-                        <tr>
+                        <tr py:if="cfg.EnableMailLists">
                             <th>Additional Mailing Lists:</th>
                             <td>
                                 <span py:for="listid in mailinglists.optionallists" style="margin-right: 1em;">
