@@ -38,8 +38,8 @@ from mint import searcher
                               href="/help?page=dev-help">Developers</a> can
                               use rPath's technologies to easily create
                               highly-customized Linux distributions and
-                              package software using the [Conary] (link to
-                              wiki) system software management tool.</p>
+                              package software using the <a href="http://wiki.rpath.com/">Conary</a>
+                              system software management tool.</p>
 
                               <p><a href="/help?page=user-help">Users</a>
                               can browse and download ISO images of
@@ -47,8 +47,8 @@ from mint import searcher
                               Conary-based systems using software on the
                               Conary repositories hosted here.</p>
 
-                              <p><b>Want to learn more?  Go <a
-                              href="/help?page=overview">here</a></b></p>
+                              <p><b>Want to learn more?  <a
+                              href="/help?page=overview">Go here</a></b></p>
 
                             </div>
                             <div py:if="firstTime">
