@@ -76,4 +76,5 @@ def normPath(path):
         path += "/"
     if path[0] != "/":
         path = "/" + path
+    path.replace('//', '/')
     return path

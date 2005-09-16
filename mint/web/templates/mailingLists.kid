@@ -38,8 +38,13 @@
                         </span>
                     </div>
                     <div style="float:left; margin-right:5px;">
-                        <span py:if="auth.authorized and not isOwner">
+                        <span py:if="auth.authorized">
                             <a class="option" href="subscribe?list=${list.name}">Subscribe</a>
+                        </span>
+                    </div>
+                    <div style="float:left; margin-right:5px;">
+                        <span py:if="not auth.authorized">
+                            <a class="option" href="${mailhost + 'listinfo/' + list.name}">Subscribe</a>
                         </span>
                     </div>
 

@@ -18,7 +18,7 @@ from repository import netclient
 import versions
 from deps import deps
 
-from webhandler import WebHandler
+from webhandler import WebHandler, normPath
 from decorators import ownerOnly, requiresAuth, requiresAdmin, mailList
 from web import fields
 from web.fields import strFields, intFields, listFields, boolFields
@@ -49,7 +49,8 @@ class ProjectHandler(WebHandler):
             return self._404
         
         # add the project name to the base path
-        self.basePath += "/project/%s" % (cmds[0])
+        self.basePath += "project/%s" % (cmds[0])
+        self.basePath = normPath(self.basePath)
 
         if not cmds[1]:
             return self.projectPage
@@ -153,7 +154,7 @@ class ProjectHandler(WebHandler):
         except jobs.DuplicateJob:
             pass
 
-        return self._redirect(self.basePath + "/release?id=%d" % releaseId)
+        return self._redirect(self.basePath + "release?id=%d" % releaseId)
 
     @intFields(id = None)
     def release(self, auth, id):
@@ -162,7 +163,7 @@ class ProjectHandler(WebHandler):
         try:
             trove, version, flavor = release.getTrove()
         except releases.TroveNotSet:
-            return self._redirect(self.basePath + "/editRelease?releaseId=%d" % release.getId())
+            return self._redirect(self.basePath + "editRelease?releaseId=%d" % release.getId())
         else:
             self._write("release", release = release,
                                    name = release.getName(),
@@ -177,13 +178,13 @@ class ProjectHandler(WebHandler):
         release = self.client.getRelease(releaseId)
         release.setPublished(True)
 
-        return self._redirect(self.basePath + "/release?id=%d" % releaseId)
+        return self._redirect(self.basePath + "release?id=%d" % releaseId)
 
     @ownerOnly
     @intFields(releaseId = None)
     def restartJob(self, auth, releaseId):
         self.client.startImageJob(releaseId)
-        return self._redirect(self.basePath + "/release?id=%d" % releaseId)
+        return self._redirect(self.basePath + "release?id=%d" % releaseId)
 
     @mailList
     def mailingLists(self, auth, mlists):
@@ -210,7 +211,7 @@ class ProjectHandler(WebHandler):
             hostname = self.project.getHostname()
             if not mlists.add_list(self.cfg.MailListPass, hostname+'-'+listname, listpw, description, owners):
                 raise mailinglists.MailingListException("Mailing list not created")
-            return self._redirect(self.basePath + "/mailingLists")
+            return self._redirect(self.basePath + "mailingLists")
         else:
             raise mailinglists.MailingListException("Passwords do not match")
 
@@ -269,7 +270,7 @@ class ProjectHandler(WebHandler):
     @ownerOnly
     def addMember(self, auth, username, level):
         self.project.addMemberByName(username, level)
-        return self._redirect(self.basePath + "/members")
+        return self._redirect(self.basePath + "members")
 
     @intFields(userId = None, level = None)
     @ownerOnly
@@ -283,7 +284,7 @@ class ProjectHandler(WebHandler):
             raise users.LastOwner
 
         self.project.updateUserLevel(userId, level)
-        return self._redirect(self.basePath + "/members")
+        return self._redirect(self.basePath + "members")
 
     @intFields(id = None)
     @ownerOnly
@@ -299,7 +300,7 @@ class ProjectHandler(WebHandler):
         self.project.delMemberById(id)
         if self.project.getMembers() == []:
             self.project.orphan(self.cfg.MailListBaseURL, self.cfg.MailListPass)
-        return self._redirect(self.basePath + "/members")
+        return self._redirect(self.basePath + "members")
 
     @intFields(userId = None)
     @ownerOnly
@@ -313,7 +314,7 @@ class ProjectHandler(WebHandler):
     def resign(self, auth, confirmed):
         if confirmed:
             self.project.delMemberById(auth.userId)
-            return self._redirect(self.basePath + "/")
+            return self._redirect(self.basePath)
         else:
             self._write("confirm", message = "Are you sure you want to resign from this project?",
                 yesLink = "resign?confirmed=1",

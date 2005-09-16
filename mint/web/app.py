@@ -57,16 +57,13 @@ class MintApp(WebHandler):
         self.cfg = cfg
 
         #If the browser can support it, give it what it wants.
-        sys.stderr.flush()
         if 'application/xhtml+xml' in self.req.headers_in.get('Accept', ''):
             self.content_type = 'application/xhtml+xml'
             self.output = 'xhtml'
 
         self.req.content_type = self.content_type
         
-        self.basePath = self.cfg.basePath
-        if self.basePath[-1] == '/':
-            self.basePath = self.basePath[:-1]
+        self.basePath = normPath(self.cfg.basePath)
 
         self.siteHandler = SiteHandler()
         self.projectHandler = ProjectHandler()
