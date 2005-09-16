@@ -326,7 +326,36 @@ urls = (
     (r'^/',                  mintHandler),
 )
 
-def logErrorAndEmail(cfg, Exception, e, bt):
+def logErrorAndEmail(req, cfg, Exception, e, bt):
+    c = req.connection
+    info_dict = {
+        'local_addr'     : c.local_ip + ':' + str(c.local_addr[1]),
+        'remote_addr'    : c.remote_ip + ':' + str(c.remote_addr[1]),
+        'remote_host'    : c.remote_host,
+        'remote_logname' : c.remote_logname,
+        'aborted'        : c.aborted,
+        'keepalive'      : c.keepalive,
+        'double_reverse' : c.double_reverse,
+        'keepalives'     : c.keepalives,
+        'local_host'     : c.local_host,
+        'connection_id'  : c.id,
+        'notes'          : c.notes,
+        'the_request'    : req.the_request,
+        'assbackwards'   : req.assbackwards,
+        'proxyreq'       : req.proxyreq,
+        'header_only'    : req.header_only,
+        'protocol'       : req.protocol,
+        'proto_num'      : req.proto_num,
+        'hostname'       : req.hostname,
+        'request_time'   : time.ctime(req.request_time),
+        'status_line'    : req.status_line,
+        'status'         : req.status,
+        'method'         : req.method,
+        'allowed'        : req.allowed,
+        'headers_in'     : req.headers_in,
+        'headers_out'    : req.headers_out,
+        
+        }
     timeStamp = time.ctime(time.time())
     # log error
     log.error('[%s] Unhandled exception from mint web interface: %s: %s', timeStamp, Exception.__name__, e)
@@ -334,6 +363,11 @@ def logErrorAndEmail(cfg, Exception, e, bt):
     body = 'Unhandled exception from mint web interface:\n\n%s: %s\n\n' %(Exception.__name__, e)
     body += 'Time of occurrence: %s\n\n' %timeStamp
     body += ''.join( traceback.format_tb(bt))
+    body += '\nConnection Information:\n'
+    keys = list(info_dict)
+    keys.sort()
+    for key in keys:
+        body += '\n' + key + ': ' + str(info_dict[key])
     users.sendMailWithChecks(cfg.bugsEmailFrom, cfg.bugsEmailFromName,
                              cfg.adminMail, cfg.bugsEmailSubject, body)
 
@@ -362,7 +396,7 @@ def handler(req):
                 if match !='^/':
                     raise
                 Exception, e, bt = sys.exc_info()
-                logErrorAndEmail(cfg, Exception, e, bt)
+                logErrorAndEmail(req, cfg, Exception, e, bt)
                 return urlHandler(req, cfg, '/unknownError')
                 
     return apache.HTTP_NOT_FOUND
