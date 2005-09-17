@@ -145,6 +145,13 @@
                 <p>Once you click on <tt>Create</tt>, your project will be
                 created.</p>
 
+                <h4>What Next?</h4>
+
+                <p>If you're interested in creating a customized
+                distribution, the tutorial on <a
+                href="http://wiki.conary.com/DerivativeDistroTutorial">this
+                page</a> is a good place to start.</p>
+
             </div>
         </td>
         <td id="right" class="projects">
