@@ -360,6 +360,7 @@ def logErrorAndEmail(req, cfg, Exception, e, bt):
         'parsed_uri'     : req.parsed_uri,
         'filename'       : req.filename,
         'subprocess_env' : req.subprocess_env,
+        'referer'        : req.headers_in.get('referer', 'N/A')
         }
     timeStamp = time.ctime(time.time())
     # log error
