@@ -11,7 +11,8 @@ kid_files =			\
         overview.kid            \
         privacy.kid             \
         tos.kid                 \
-        user-help.kid
+        user-help.kid		\
+	legal.kid
 
 python_files =
 
