@@ -146,6 +146,10 @@
                 complex than filling in a few text fields and clicking on a
                 <tt>Create</tt> button.</p>
 
+                <p>After that, creating a customized distribution can be as
+                easy as <a
+                href="http://wiki.conary.com/DerivativeDistroTutorial">this</a>!</p>
+
                 <h5>Joining an Existing Project</h5>
 
                 <p>If you're interested in joining an already-existing
