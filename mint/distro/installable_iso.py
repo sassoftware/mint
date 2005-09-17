@@ -76,9 +76,9 @@ class InstallableIso(ImageGenerator):
         assertParentAlive()
 
         groupName, groupVer, groupFlavor = trvList[0]
-        cslist = gencslist.processGroup(client, cfg, csdir, groupName,
-                                        groupVer, groupFlavor,
-                                        oldFiles = existingChangesets)
+        cslist = gencslist.extractChangesets(client, cfg, csdir, groupName,
+                                             groupVer, groupFlavor,
+                                             oldFiles = existingChangesets)
         # Abort if parent thread has died
         assertParentAlive()
 

@@ -5,22 +5,24 @@
 # All rights reserved
 #
 
+import base64
+import errno
 import os
+import shutil
 import string
 import sys
+import tempfile
 
 import conary
-from repository import changeset
-from repository import trovesource
-import files
-import conaryclient
+
+from deps import deps
+from lib import util, sha1helper
+from repository import changeset, trovesource
 import conarycfg
+import conaryclient
+import files
 import trove
 import updatecmd
-from deps import deps
-
-from lib import util
-sys.excepthook = util.genExcepthook()
 
 def usage():
     print "usage: %s group /path/to/changesets/" %sys.argv[0]
@@ -51,7 +53,7 @@ def _handleKernelPackage(cs, name, version, flavor):
         name = name + '-smp'
     return name, kernelStr
 
-def findValidTroves(cs, groupName, groupVersion, groupFlavor):
+def _findValidTroves(cs, groupName, groupVersion, groupFlavor):
     # start the set of valid troves with the group itself
     valid = set()
     valid.add((groupName, groupVersion, groupFlavor))
@@ -64,11 +66,11 @@ def findValidTroves(cs, groupName, groupVersion, groupFlavor):
             valid.add((name, version, flavor))
             if name.startswith('group-'):
                 # recurse into included groups
-                valid.update(findValidTroves(cs, name, version, flavor))
+                valid.update(_findValidTroves(cs, name, version, flavor))
 
     return valid
 
-def removeInvalid(changeSetList, valid):
+def _removeInvalidTroves(changeSetList, valid):
     finalCsList = []
     handled = set()
     for chunk in changeSetList:
@@ -93,7 +95,7 @@ def removeInvalid(changeSetList, valid):
 
     return finalCsList
 
-def makeEntry(groupCs, name, version, flavor):
+def _makeEntry(groupCs, name, version, flavor):
     # set up the base name, version, release that we'll use for anaconda
     dispName = name
     trailing = version.trailingRevision().asString()
@@ -104,7 +106,8 @@ def makeEntry(groupCs, name, version, flavor):
     # handle kernel as a special case, so that anaconda can set up grub
     # entries and so on
     if name == 'kernel':
-        dispName, kernelVer = _handleKernelPackage(groupCs, name, version, flavor)
+        dispName, kernelVer = _handleKernelPackage(groupCs, name, version,
+                                                   flavor)
         verStr, release = kernelVer.split('-')
 
     # grab the arch out of the flavor, this isn't perfect.
@@ -126,17 +129,64 @@ def makeEntry(groupCs, name, version, flavor):
 
     return csfile, entry
 
-def processGroup(client, cfg, csdir, groupName, groupVer, groupFlavor,
-                 oldFiles = None):
-    """
-    processGroup extracts changesets from a group and creates cslist
-    entries to stdout as it does so.  nested groups are handled
-    recursively, depth first.  any info-* troves included in the
-    groups are extracted last as a single changeset and the cslist
-    entry to install is is first
 
-    returns cslist
+def _getCacheFilename(name, version, flavor):
+    # hash the version and flavor to give a unique filename
+    versionFlavor = '%s %s' %(version.asString(), flavor.freeze())
+    h = sha1helper.md5ToString(sha1helper.md5String(versionFlavor))
+    return '%s-%s.ccs' %(name, h)
+
+def _linkOrCopyFile(src, dest):
+    try:
+        os.link(src, dest)
+    except OSError, msg:
+        if msg.errno != errno.EXDEV:
+            raise
+        fd, fn = tempfile.mkstemp(dir=os.path.dirname(dest))
+        destf = os.fdopen(fd, 'w')
+        srcf = open(src, 'r')
+        shutil.copyfileobj(srcf, destf)
+        destf.close()
+        srcf.close()
+        os.rename(fn, dest)
+        os.chmod(dest, 0644)
+
+def extractChangeSets(client, cfg, csdir, groupName, groupVer, groupFlavor,
+                      oldFiles = None, cacheDir = None):
     """
+    extractChangesets extracts changesets from a group and creates
+    cslist entries as it does so.
+
+    @param client: ConaryClient instance used to communicate with the
+    repository servers
+    @type client: ConaryClient instance
+    @param cfg: configuration settings to use
+    @type cfg: ConaryConfiguration instance
+    @param csdir: the final location for the changesets
+    @type csdir: str
+    @param groupName: name of group to extract changesets from
+    @type groupName: str
+    @param groupVer: version of group to extract changesets from
+    @type groupVer: Version instance
+    @param groupFlavor: flavor of group to extract changesets from
+    @type groupFlavor: DependencySet instance
+
+    @param oldFiles: a set of changeset filenames that already exist
+    in the csdir.  Any valid changeset that is included in the group
+    specified will be removed from the set.  This allows the caller
+    to clean up unused changesets.  This is an optional parameter.
+    @type oldFiles: set
+    @param cacheDir: a directory to write all changeset files.  This
+    allows the caller to maintain a global changeset cache.  Files
+    will be hardlinked between the cachedir and the csdir if possible.
+    This is an optional parameter.
+
+    @returns cslist
+    """
+    assert(os.path.isdir(csdir))
+    if cacheDir:
+        assert(os.path.isdir(cacheDir))
+
     cslist = []
 
     cl = [ (groupName, (None, None), (groupVer, groupFlavor), 0) ]
@@ -149,51 +199,81 @@ def processGroup(client, cfg, csdir, groupName, groupVer, groupFlavor,
     trvSrc = trovesource.ChangesetFilesTroveSource(client.db)
     trvSrc.addChangeSet(group, includesFileContents = False)
     failedDeps = client.db.depCheck(jobSet, trvSrc)[0]
-    
+
     rc = client.db.depCheck(jobSet, trvSrc, findOrdering=True)
     failedList, unresolveableList, changeSetList = rc
     if failedList:
         print >> sys.stderr, 'WARNING: unresolved dependencies:', failedList
 
-    # instanciate all the trove objects in the group, make a set
+    # instantiate all the trove objects in the group, make a set
     # of the changesets we should extract
-    valid = findValidTroves(group, groupName, groupVer, groupFlavor)
+    valid = _findValidTroves(group, groupName, groupVer, groupFlavor)
     # filter the change set list given by the dep solver
-    finalList = removeInvalid(changeSetList, valid)
+    finalList = _removeInvalidTroves(changeSetList, valid)
 
     # use the order to extract changesets from the repository
     for name, version, flavor in finalList:
-        csfile, entry = makeEntry(group, name, version, flavor)
+        csfile, entry = _makeEntry(group, name, version, flavor)
         path = '%s/%s' %(csdir, csfile)
 
+        copyToCache = False
         keep = False
+
+        # check to see if we already have the changeset in the changeset
+        # directory
         if oldFiles and path in oldFiles:
+            # make a note that we already have this cs
+            keep = True
+        elif cacheDir:
+            # check for the cs in the cacheDir
+            cacheName = _getCacheFilename(name, version, flavor)
+            cachedPath = os.path.join(cacheDir, cacheName)
+            if os.path.exists(cachedPath):
+                _linkOrCopyFile(cachedPath, path)
+                # make a note that we already have this cs
+                keep = True
+
+        if keep:
+            # we either pulled the changeset from the cache
+            # or we already have it in the changeset directory
             try:
                 print >> sys.stderr, 'keeping', path
-                del oldFiles[path]
+                oldFiles.remove(path)
                 keep = True
             except:
                 pass
-
-        if not keep:
+        else:
             print >> sys.stderr, "creating", path
-            csRequest = [(name, (None, flavor),
-                                (version, flavor), True)]
+            csRequest = [(name, (None, None), (version, flavor), True)]
             # if we're extracting a group, don't recurse
             recurse = not name.startswith('group-')
-            client.createChangeSetFile(path, csRequest, recurse = recurse)
+
+            # create the cs to a temp file
+            fd, fn = tempfile.mkstemp(prefix=csfile, dir=csdir)
+            os.close(fd)
+            client.createChangeSetFile(fn, csRequest, recurse = recurse)
+            # rename to final path and change permissions
+            os.rename(fn, path)
+            os.chmod(path, 0644)
+
+            # link this into the cache dir if we need to
+            if cacheDir:
+                # cachedPath is calculated above
+                _linkOrCopyFile(path, cachedPath)
 
         cslist.append(entry)
 
     return cslist
 
 if __name__ == '__main__':
+    sys.excepthook = util.genExcepthook()
+
     if len(sys.argv) != 3:
         usage()
 
     topGroup = sys.argv[1]
     csdir = sys.argv[2]
-    assert(os.path.isdir(csdir))
+    util.mkdirChain(csdir)
 
     cfg = conarycfg.ConaryConfiguration()
     cfg.dbPath = ':memory:'
@@ -201,9 +281,9 @@ if __name__ == '__main__':
     cfg.initializeFlavors()
     client = conaryclient.ConaryClient(cfg)
 
-    existingChangesets = {}
+    existingChangesets = set()
     for path in [ "%s/%s" % (csdir, x) for x in os.listdir(csdir) ]:
-        existingChangesets[path] = 1
+        existingChangesets.add(path)
 
     name, ver, flv = updatecmd.parseTroveSpec(topGroup)
     trvList = client.repos.findTrove(cfg.installLabelPath[0],\
@@ -217,13 +297,14 @@ if __name__ == '__main__':
         print >> sys.stderr, "multiple matches for", groupName
         raise RuntimeException
 
-    groupName, groupVer, groupFlavor = trvList[0]  
-    cslist = processGroup(client, cfg, csdir, groupName,
-                          groupVer, groupFlavor,
-                          oldFiles = existingChangesets)
+    groupName, groupVer, groupFlavor = trvList[0]
+    cslist = extractChangeSets(client, cfg, csdir, groupName,
+                               groupVer, groupFlavor,
+                               oldFiles = existingChangesets,
+                               cacheDir = '/tmp/cscache')
     print '\n'.join(cslist)
 
-    # delete any changesets that should not belong anymore
-    for path in existingChangesets.iterkeys():
+    # delete any changesets that should not be around anymore
+    for path in existingChangesets:
         print >> sys.stderr, 'removing unused', path
         os.unlink(path)
