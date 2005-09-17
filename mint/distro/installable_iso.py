@@ -23,7 +23,8 @@ import gencslist
 class IsoConfig(ConfigFile):
     defaults = {
         'imagesPath':   '/srv/mint/images/',
-        'scriptPath':  '/srv/mint/code/scripts/',
+        'scriptPath':   '/srv/mint/code/scripts/',
+        'cacheDir':     '/srv/mint/changesets/',
     }
 
 class InstallableIso(ImageGenerator):
@@ -78,7 +79,8 @@ class InstallableIso(ImageGenerator):
         groupName, groupVer, groupFlavor = trvList[0]
         cslist = gencslist.extractChangesets(client, cfg, csdir, groupName,
                                              groupVer, groupFlavor,
-                                             oldFiles = existingChangesets)
+                                             oldFiles = existingChangesets,
+                                             cacheDir = isocfg.cacheDir)
         # Abort if parent thread has died
         assertParentAlive()
 
@@ -139,7 +141,7 @@ class InstallableIso(ImageGenerator):
                 continue
             
             infoMap['disc'] = d
-            infoMap['discname'] = "%(name)s %(disc)s" % infoMap
+            infoMap['discname'] = ("%(name)s %(disc)s" % infoMap)[32:]
             infoMap['iso'] =  isoname % infoMap
             if os.access(os.path.join(discdir, d, "isolinux/isolinux.bin"), os.R_OK):
                 os.chdir(os.path.join(discdir, d))
