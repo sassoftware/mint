@@ -5,7 +5,6 @@
 # All rights reserved
 #
 
-import base64
 import errno
 import os
 import shutil
