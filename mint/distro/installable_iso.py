@@ -77,7 +77,7 @@ class InstallableIso(ImageGenerator):
         assertParentAlive()
 
         groupName, groupVer, groupFlavor = trvList[0]
-        cslist = gencslist.extractChangesets(client, cfg, csdir, groupName,
+        cslist = gencslist.extractChangeSets(client, cfg, csdir, groupName,
                                              groupVer, groupFlavor,
                                              oldFiles = existingChangesets,
                                              cacheDir = isocfg.cacheDir)
