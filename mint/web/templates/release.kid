@@ -57,7 +57,7 @@ from mint import userlevels
                 </ul>
 
                 <div py:strip="True" py:if="isOwner">
-                    <p py:if="not preventEdit"><a href="$basePath/editRelease?releaseId=${release.getId()}">Edit Release</a></p>
+                    <p py:if="not preventEdit"><a href="${basePath}editRelease?releaseId=${release.getId()}">Edit Release</a></p>
                     <p py:if="preventEdit" class="help">Release cannot be modified while it is being generated.</p>
                     
                     <h3>Description</h3>
@@ -67,7 +67,7 @@ from mint import userlevels
 
                     <p id="jobStatus">Retrieving job status...</p>
                     <p>
-                        <a href="$basePath/restartJob?releaseId=${release.getId()}">Re-generate</a>
+                        <a href="${basePath}restartJob?releaseId=${release.getId()}">Re-generate</a>
                         <a class="button" py:if="not release.getPublished() and files" href="publish?releaseId=${release.getId()}">Publish Image</a>
                     </p>
                     <p py:if="release.getPublished()">Image Published</p>
