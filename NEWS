@@ -7,6 +7,7 @@ Changes in 0.5.2:
   button; instead use a separate hidden value.
 * Several other error messages are properly marshalled along XMLRPC.
 * Several broken URLs were fixed.
+* Repositories now keep contents logs for ease of backup.
 
 Changes in 0.5.1:
 
