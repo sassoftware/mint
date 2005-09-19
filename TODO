@@ -14,7 +14,9 @@ TEST SUITE
 JOB SERVER
 
 * improve job-server
-    * more robust (handle server restarts, etc)
+    * [PENDING TESTING] more robust (handle server restarts, etc)
+	job-server should now handle mint server downtime
+	job-server worker threads should now safely abort if job-server quits
 
 USER INTERFACE
 

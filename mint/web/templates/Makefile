@@ -36,8 +36,10 @@ kid_files = \
 	uploadKey.kid		\
 	userInfo.kid		\
 	userSettings.kid	\
-	users.kid
-	 
+	users.kid		\
+	joinRequest.kid		\
+	viewJoinRequest.kid
+
 python_files = __init__.py
 
 extra_dist = Makefile

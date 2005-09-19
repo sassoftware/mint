@@ -92,6 +92,21 @@ class MintClient:
         level = self.server.getUserLevel(userId, projectId)
         return (self.getUser(userId), level)
 
+    def userHasRequested(self, projectId, userId):
+        return self.server.userHasRequested(projectId, userId)
+
+    def deleteJoinRequest(self, projectId, userId):
+        return self.server.deleteJoinRequest(projectId, userId)
+
+    def listJoinRequests(self, projectId):
+        return self.server.listJoinRequests(projectId)
+
+    def setJoinReqComments(self, projectId, userId, comments):
+        return self.server.setJoinReqComments(projectId, userId, comments)
+
+    def getJoinReqComments(self, projectId, userId):
+        return self.server.getJoinReqComments(projectId, userId)
+
     def registerNewUser(self, username, password, fullName, email, displayEmail,
                 blurb, active = False):
         """

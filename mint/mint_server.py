@@ -15,6 +15,7 @@ import jobstatus
 import news
 import pkgindex
 import projects
+import requests
 import releases
 import sessiondb
 import versions
@@ -176,6 +177,31 @@ class MintServer(object):
     @private
     def getMembersByProjectId(self, id):
         return self.projectUsers.getMembersByProjectId(id)
+
+    @private
+    def userHasRequested(self, projectId, userId):
+        return self.membershipRequests.userHasRequested(projectId, userId)
+
+    @private
+    @requiresAuth
+    def deleteJoinRequest(self, projectId, userId):
+        return self.membershipRequests.deleteRequest(projectId, userId)
+
+    @private
+    @requiresAuth
+    def listJoinRequests(self, projectId):
+        reqList = self.membershipRequests.listRequests(projectId)
+        return [ (x, self.users.getUsername(x)) for x in reqList]
+
+    @private
+    @requiresAuth
+    def setJoinReqComments(self, projectId, userId, comments):
+        return self.membershipRequests.setComments(projectId, userId, comments)
+
+    @private
+    @requiresAuth
+    def getJoinReqComments(self, projectId, userId):
+        return self.membershipRequests.getComments(projectId, userId)
 
     @requiresAdmin
     @private
@@ -830,6 +856,7 @@ class MintServer(object):
             self.pkgIndex = pkgindex.PackageIndexTable(self.db)
             self.newsCache = news.NewsCacheTable(self.db, self.cfg)
             self.sessions = sessiondb.SessionsTable(self.db)
+            self.membershipRequests = requests.MembershipRequestTable(self.db)
 
             #now fix the version
             self.version.fixVersion()

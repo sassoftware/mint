@@ -62,7 +62,7 @@ class ProjectHandler(WebHandler):
         return method
 
     def projectPage(self, auth):
-        self._write("projectPage")
+        self._write("projectPage", userHasReq = self.client.userHasRequested(self.project.getId(), auth.userId))
         return apache.OK
 
     def releases(self, auth):
@@ -252,7 +252,11 @@ class ProjectHandler(WebHandler):
         return self._redirect(self.basePath)
 
     def members(self, auth):
-        self._write("members")
+        if (self.userLevel == userlevels.OWNER or auth.admin):
+            reqList = self.client.listJoinRequests(self.project.getId())
+        else:
+            reqList = []
+        self._write("members", reqList = reqList)
         return apache.OK
 
     def memberSettings(self, auth):
@@ -269,8 +273,38 @@ class ProjectHandler(WebHandler):
     @intFields(level = None)
     @ownerOnly
     def addMember(self, auth, username, level):
+        self.client.deleteJoinRequest(self.project.getId(), self.client.getUserIdByName(username))
         self.project.addMemberByName(username, level)
         return self._redirect(self.basePath + "members")
+
+    @strFields(comments = '')
+    @requiresAuth
+    def processJoinRequest(self, auth, comments):
+        self.client.setJoinReqComments(self.project.getId(), auth.userId, comments)
+        return self._redirect(self.basePath)
+
+    @intFields(userId = None)
+    def viewJoinRequest(self, auth, userId):
+        user = self.client.getUser(userId)
+        self._write('viewJoinRequest', userId = userId, username = user.getUsername(), projectId = self.project.getId(), comments = self.client.getJoinReqComments(self.project.getId(), userId))
+        return apache.OK
+
+    @intFields(makeOwner = False, makeDevel = False, reject = False, userId = None)
+    def acceptJoinRequest(self, auth, userId, makeOwner, makeDevel, reject):
+        projectId = self.project.getId()
+        self.client.deleteJoinRequest(projectId, userId)
+        user = self.client.getUser(userId)
+        username = user.getUsername()
+        if (makeOwner):
+            self.project.addMemberByName(username, userlevels.OWNER)
+        elif (makeDevel):
+            self.project.addMemberByName(username, userlevels.DEVELOPER)
+        return self._redirect(self.basePath + "members")
+
+    @requiresAuth
+    def joinRequest(self, auth):
+        self._write("joinRequest", comments = self.client.getJoinReqComments(self.project.getId(), auth.userId) )
+        return apache.OK
 
     @intFields(userId = None, level = None)
     @ownerOnly

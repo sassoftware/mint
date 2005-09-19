@@ -107,6 +107,19 @@ from mint import userlevels
                     </tr>
                     <tr><td py:if="not users[userlevels.DEVELOPER]">No developers.</td></tr>
                 </table>
+		<div py:if="reqList">
+                    <h3>Requestors</h3>
+                    <table border="0" cellspacing="0" cellpadding="0" class="memberstable">
+                        <tr py:for="userId, username in reqList">
+				<th><a href="http://${siteHost}/userInfo?id=${userId}">${username}</a></th>
+                            <td>
+                                <a href="viewJoinRequest?userId=${userId}"
+                                   class="option" style="position:relative;"
+                                   id="Edit${userId}">View Request</a>	
+                            </td>
+                        </tr>
+                    </table>
+		</div>
                 <iframe src="about:blank" frameborder="0" marginheight="0" marginwidth="0"
                         scrolling="no" id="memberEditBox" name="memberEditBox" 
                         style="width:268px; height: 110px; position:absolute; z-index:115; visibility:hidden; overflow:hidden;"/>

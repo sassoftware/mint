@@ -206,7 +206,7 @@ class KeyedTable(DatabaseTable):
         try:
             cu.execute(*[stmt] + values)
         except sqlite3.ProgrammingError, e:
-            if e.args[0].startswith("column") and e.args[0].endswith("is not unique"):
+            if e.args[0].startswith("column") and e.args[0].endswith("not unique"):
                 raise DuplicateItem(self.name)
             else:
                 raise

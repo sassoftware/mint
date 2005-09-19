@@ -68,10 +68,16 @@ from mint import userlevels
                                 To add this project in your Conary configuration, add <tt><strong>${project.getLabel()}</strong></tt> 
                                 to the <tt><strong>installLabelPath</strong></tt> line in the <tt><strong>/etc/conaryrc</strong></tt> (or your <tt><strong>~/.conaryrc</strong></tt>) file.</p>
 
-                            <hr py:if="isDeveloper or not memberList" />
+                            <hr py:if="isDeveloper or not memberList or bool(auth.authorized) ^ bool(isOwner)" />
                             <p py:if="isDeveloper">
                                 <em class="resign">You are a developer of this project.</em>
                                 <a href="resign">Resign</a>
+                            </p>
+                            <p py:if="auth.authorized and not isOwner and not isDeveloper and memberList">
+                                <em py:if="not userHasReq" class="resign">You are not a member of this project.</em>
+                                <em py:if="userHasReq" class="resign">Your request to join this project is pending.</em>
+                                <a py:if="not userHasReq" href="joinRequest">Request to join</a>
+                                <a py:if="userHasReq" href="joinRequest">Modify your comments</a>
                             </p>
                             <p py:if="not memberList">
                                 <em class="resign">This project is orphaned.</em>
