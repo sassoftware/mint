@@ -219,6 +219,7 @@ def conaryHandler(req, cfg, pathInfo):
     if not repositories.has_key(repName):
         repositoryDir = os.path.join(cfg.reposPath, repName)
         tmpPath = os.path.join(cfg.reposPath, repName, "tmp")
+        logFile = os.path.join(repositoryDir, "contents.log")
 
         if os.path.basename(req.uri) == "changeset":
            rest = os.path.dirname(req.uri) + "/"
@@ -266,7 +267,7 @@ def conaryHandler(req, cfg, pathInfo):
                                         repMap,
                                         commitAction = commitAction,
                                         cacheChangeSets = True,
-                                        logFile = None
+                                        logFile = logFile
                                     )
        
         repositories[repName].forceSecure = False
