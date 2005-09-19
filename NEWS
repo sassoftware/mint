@@ -1,3 +1,13 @@
+Changes in 0.5.2:
+
+* JobsTable moved to a subclass of KeyedTable.
+* Switch to using dnspython from socket.gethostbyname
+  to make sure an email server has a valid MX record.
+* Don't depend on a browser passing in values from the submit
+  button; instead use a separate hidden value.
+* Several other error messages are properly marshalled along XMLRPC.
+* Several broken URLs were fixed.
+
 Changes in 0.5.1:
 
 * Documentation improvements
