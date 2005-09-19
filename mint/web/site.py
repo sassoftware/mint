@@ -344,6 +344,7 @@ class SiteHandler(WebHandler):
         return self._redirect("http://%s" % project.getFQDN())
 
     @intFields(id = None)
+    @requiresAuth
     def userInfo(self, auth, id):
         user = self.client.getUser(id)
         userProjects = []
