@@ -9,8 +9,8 @@ testsuite.setup()
 import rephelp
 from mint import jobstatus
 
-class ReleaseTest(rephelp.RepositoryHelper):
-    def testBasicAttributes(self):
+class JobsTest(rephelp.RepositoryHelper):
+    def testJobs(self):
         client = self.getMintClient("testuser", "testpass")
         projectId = client.newProject("Foo", "foo", "rpath.org")
 
