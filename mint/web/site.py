@@ -143,9 +143,9 @@ class SiteHandler(WebHandler):
         self._write("forgotPassword", email = user.getEmail())
         return apache.OK
 
-    @strFields(username = None, password = '', submit = None, to = '/')
-    def processLogin(self, auth, username, password, submit, to):
-        if submit == "Log In":
+    @strFields(username = None, password = '', action = 'login', to = '/')
+    def processLogin(self, auth, username, password, action, to):
+        if action == 'login':
             authToken = (username, password)
             client = shimclient.ShimMintClient(self.cfg, authToken)
             auth = client.checkAuth()
@@ -173,7 +173,7 @@ class SiteHandler(WebHandler):
                 self.session.save()
                 return self._redirect(unquote(to))
                 
-        elif submit == "Forgot Password":
+        elif action == "mail_password":
             return self._resetPassword(username)
         else:
             return apache.HTTP_NOT_FOUND

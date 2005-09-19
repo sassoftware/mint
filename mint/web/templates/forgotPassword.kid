@@ -25,7 +25,8 @@
                         </tr>
                     </table>
                     <p>
-                        <button type="submit" name="submit" value="Forgot Password">Forgot Password</button>
+                        <button type="submit" name="submit">Forgot Password</button>
+                        <input type="hidden" name="action" value="mail_password" />
                     </p>
                 </form>
             </div>
