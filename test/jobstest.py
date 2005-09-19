@@ -7,6 +7,7 @@ import testsuite
 testsuite.setup()
 
 import rephelp
+from mint import jobstatus
 
 class ReleaseTest(rephelp.RepositoryHelper):
     def testBasicAttributes(self):
@@ -18,6 +19,11 @@ class ReleaseTest(rephelp.RepositoryHelper):
         job = client.startImageJob(release.getId())
         jobs = list(client.iterJobs(releaseId = release.getId()))
         assert(jobs[0].getReleaseId() == release.getId())
+
+        job.setStatus(jobstatus.ERROR, "Error Message")
+        client.startImageJob(release.getId())
+
+        assert(job.getStatus() == jobstatus.WAITING)
 
 if __name__ == "__main__":
     testsuite.main()
