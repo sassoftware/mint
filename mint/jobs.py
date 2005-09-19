@@ -41,7 +41,7 @@ class Job(database.TableObject):
         return self.server.getJob(id)
     
     def getId(self):
-        return self.jobId
+        return self.id
 
     def getReleaseId(self):
         return self.releaseId
@@ -56,7 +56,7 @@ class Job(database.TableObject):
         return self.statusMessage
 
     def setStatus(self, status, statusMessage):
-        return self.server.setJobStatus(self.jobId, status, statusMessage)
+        return self.server.setJobStatus(self.id, status, statusMessage)
 
     def getTimeStarted(self):
         return self.timeStarted
