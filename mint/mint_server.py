@@ -820,6 +820,7 @@ class MintServer(object):
             self.projects = projects.ProjectsTable(self.db, self.cfg)
             self.labels = projects.LabelsTable(self.db)
             self.jobs = jobs.JobsTable(self.db)
+            self.images = jobs.ImageFilesTable(self.db)
             self.users = users.UsersTable(self.db, self.cfg)
             self.projectUsers = users.ProjectUsersTable(self.db)
             self.releases = releases.ReleasesTable(self.db)

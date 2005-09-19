@@ -28,7 +28,7 @@ class ProjectTest(rephelp.RepositoryHelper):
             [[2, 'testuser', userlevels.OWNER]])
     
     def testMembers(self):
-        # XXX disabled
+        ## XXX disabled
         return
         
         client = self.openMint(("test", "foo"))
@@ -37,7 +37,7 @@ class ProjectTest(rephelp.RepositoryHelper):
  
         client = self.getMintClient("testuser", "testpass")
                                                        
-        projectId = client.newProject("Foo", "foo", "rpath.local")
+        projectId = client.newProject("Foo", "foo", "rpath.org")
         project = client.getProject(projectId)
 
         project.addMemberById(otherUserId, userlevels.DEVELOPER)
@@ -49,17 +49,17 @@ class ProjectTest(rephelp.RepositoryHelper):
         project = client.getProject(projectId)
     
         assert(project.getRepoMap() ==\
-            ["foo.rpath.org http://test:foo@foo.rpath.org/conary/"])
+            ["foo.rpath.org http://test:foo@localhost/repos/foo/"])
         assert(project.getLabelIdMap() ==\
             {"foo.rpath.org@rpl:devel": 1})
         
         newLabelId = project.addLabel("bar.rpath.org@rpl:devel",
-            "http://bar.rpath.org/conary/", "user1", "pass1")
+            "http://rpath.org/repos/bar/", "user1", "pass1")
         assert(project.getLabelById(newLabelId) == "bar.rpath.org@rpl:devel")
 
         assert(project.getRepoMap() ==\
-            ['foo.rpath.org http://test:foo@foo.rpath.org/conary/',
-             'bar.rpath.org http://user1:pass1@bar.rpath.org/conary/'])
+            ['foo.rpath.org http://test:foo@localhost/repos/foo/',
+             'bar.rpath.org http://user1:pass1@rpath.org/repos/bar/'])
         assert(project.getLabelIdMap() ==\
             {'bar.rpath.org@rpl:devel': newLabelId,
              'foo.rpath.org@rpl:devel': 1})

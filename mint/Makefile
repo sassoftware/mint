@@ -41,7 +41,7 @@ dist_files = $(python_files) $(extra_dist)
 
 all: default-all default-subdirs constants.py
 
-constants.py: constants.py.in Makefile
+constants.py: constants.py.in ../Makefile
 	sed s,@version@,$(VERSION),g $< > $@
 
 install: install-subdirs pyfiles-install

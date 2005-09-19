@@ -3,7 +3,7 @@
 #
 # All rights reserved
 #
-
+import database
 from mint_error import MintError
 
 class JobMissing(MintError):
@@ -18,15 +18,10 @@ class DuplicateJob(MintError):
     def __str__(self):
         return "a conflicting job is already in progress"
 
-class JobsTable:
-    def __init__(self, db):
-        self.db = db
-
-        cu = self.db.cursor()
-        cu.execute("SELECT tbl_name FROM sqlite_master WHERE type='table'")
-        tables = [ x[0] for x in cu ]
-        if 'Jobs' not in tables:
-            cu.execute("""
+class JobsTable(database.KeyedTable):
+    name = 'Jobs'
+    key = 'jobId'
+    createSQL = """
                 CREATE TABLE Jobs (
                     jobId           INTEGER PRIMARY KEY,
                     releaseId       INT,
@@ -35,38 +30,16 @@ class JobsTable:
                     statusMessage   STR,
                     timeStarted     INT,
                     timeFinished    INT
-                )""")
-        if 'ImageFiles' not in tables:
-            cu.execute("""
-                CREATE TABLE ImageFiles (
-                    fileId      INTEGER PRIMARY KEY,
-                    releaseId   INT,
-                    idx         INT,
-                    filename    STR 
-                );""")
-        self.db.commit()
+                )"""
+    fields = ['jobId', 'releaseId', 'userId', 'status',
+              'statusMessage', 'timeStarted', 'timeFinished']
 
-class Job(object):
-    jobId = None
-    release = None
-    userId = None
-    status = None
-    statusMessage = None
-    timeStarted = None
-    timeFinished = None
-
-    _itserver = None
-
-    def __init__(self, server, jobId):
-        self.jobId = jobId
-        self._itserver = server
-        self._refresh()
-
-    def _refresh(self):
-        jobData = self._itserver.getJob(self.jobId)
-        self.__dict__.update(jobData)
-
-    # static members: no need to call _refresh
+class Job(database.TableObject):
+    __slots__ = [JobsTable.key] + JobsTable.fields
+    
+    def getItem(self, id):
+        return self.server.getJob(id)
+    
     def getId(self):
         return self.jobId
 
@@ -76,22 +49,29 @@ class Job(object):
     def getUserId(self):
         return self.userId
 
-    # non-static members
     def getStatus(self):
-        self._refresh()
         return self.status
 
     def getStatusMessage(self):
-        self._refresh()
         return self.statusMessage
 
     def setStatus(self, status, statusMessage):
-        return self._itserver.setJobStatus(self.jobId, status, statusMessage)
+        return self.server.setJobStatus(self.jobId, status, statusMessage)
 
     def getTimeStarted(self):
-        self._refresh()
         return self.timeStarted
 
     def getTimeFinished(self):
-        self._refresh()
         return self.timeFinished
+
+class ImageFilesTable(database.KeyedTable):
+    name = 'ImageFiles'
+    key = 'fileId'
+    createSQL = """
+                CREATE TABLE ImageFiles (
+                    fileId      INTEGER PRIMARY KEY,
+                    releaseId   INT,
+                    idx         INT,
+                    filename    STR
+                );"""
+    fields = ['fileId', 'releaseId', 'idx', 'filename']
