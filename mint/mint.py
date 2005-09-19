@@ -366,6 +366,8 @@ class _Method(xmlrpclib._Method):
             raise projects.InvalidHostname(exceptionArgs[0])
         elif exceptionName == "MailError":
             raise users.MailError(exceptionArgs[0])
+        elif exceptionName == "DuplicateJob":
+            raise jobs.DuplicateJob(exceptionArgs[0])
         else:
             raise UnknownException(exceptionName, exceptionArgs)
 
