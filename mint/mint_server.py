@@ -93,7 +93,9 @@ class MintServer(object):
                 d = self.sessions.load(sid)
                 authToken = d['_data']['authToken']
             
-            auth = self.users.checkAuth(authToken, checkRepo = self._checkRepo, cachedGroups = self._cachedGroups)
+            auth = self.users.checkAuth(authToken,
+                checkRepo = self._checkRepo,
+                cachedGroups = self._cachedGroups)
             self.authToken = authToken
             self.auth = users.Authorization(**auth)
             self._cachedGroups = self.auth.groups
@@ -232,7 +234,8 @@ class MintServer(object):
     def _notifyUser(self, action, user, project, userlevel=None):
         actionText = {'Removed': "has been removed from the following project:",
             'Added': "has been added to the following project:",
-            'Changed': "has had its current access level changed to %s on the following project:" % ((userlevel >=0) and userlevels.names[userlevel] or 'Unknown')
+            'Changed': "has had its current access level changed to %s on the following project:" % \
+                ((userlevel >=0) and userlevels.names[userlevel] or 'Unknown')
         }
         greeting = "Hello,"
         message = "Your %s account: %s\n" % (self.cfg.productName, user['username'])
@@ -688,7 +691,7 @@ class MintServer(object):
     def getJobIds(self, releaseId):
         cu = self.db.cursor()
 
-        stmt = """SELECT jobId FROM JOBS"""
+        stmt = """SELECT jobId FROM Jobs"""
         if releaseId != -1:
             stmt += " WHERE releaseId=?"
             cu.execute(stmt, releaseId)
