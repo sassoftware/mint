@@ -8,6 +8,7 @@ import string
 import re
 import sys
 import time
+import dns.resolver
 
 import email
 from email import MIMEText
@@ -63,6 +64,10 @@ class ConfirmationsTable(database.KeyedTable):
                     confirmation    STR
                 )"""
     fields = ['userId', 'timeRequested', 'confirmation']
+
+def digMX(hostname):
+    answers = dns.resolver.query(hostname, 'MX')
+    return answers
 
 class UsersTable(database.KeyedTable):
     name = 'Users'
@@ -501,11 +506,13 @@ def newPassword(length = 6):
 def sendMailWithChecks(fromEmail, fromEmailName, toEmail, subject, body):
     email = smtplib.quoteaddr(toEmail)
     try:
-        socket.gethostbyname(email[email.find('@')+1:email.rfind('>')])
+        if not digMX(email[email.find('@')+1:email.rfind('>')]):
+            socket.gethostbyname(email[email.find('@')+1:email.rfind('>')])
+        #If we get this far, we know we can send the mail
         sendMail(fromEmail, fromEmailName, toEmail, subject, body)
     except smtplib.SMTPRecipientsRefused:
         raise MailError("Email could not be sent: Recipient refused by server.")
-    except socket.gaierror:
+    except (socket.gaierror, dns.resolver.NXDOMAIN):
         raise MailError("Email could not be sent: Bad domain name.")
 
 def sendMail(fromEmail, fromEmailName, toEmail, subject, body):
