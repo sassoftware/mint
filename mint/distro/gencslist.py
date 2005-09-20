@@ -6,6 +6,7 @@
 #
 
 import errno
+import itertools
 import os
 import shutil
 import string
@@ -22,10 +23,6 @@ import conaryclient
 import files
 import trove
 import updatecmd
-
-def usage():
-    print "usage: %s group /path/to/changesets/" %sys.argv[0]
-    sys.exit(1)
 
 def _getTrove(cs, name, version, flavor):
     troveCs = cs.getNewTroveVersion(name, version, flavor)
@@ -135,20 +132,68 @@ def _getCacheFilename(name, version, flavor):
     h = sha1helper.md5ToString(sha1helper.md5String(versionFlavor))
     return '%s-%s.ccs' %(name, h)
 
-def _linkOrCopyFile(src, dest):
+def _validateTrove(newCs, cachedCs, name, version, flavor):
     try:
-        os.link(src, dest)
-    except OSError, msg:
-        if msg.errno != errno.EXDEV:
-            raise
-        fd, fn = tempfile.mkstemp(dir=os.path.dirname(dest))
-        destf = os.fdopen(fd, 'w')
-        srcf = open(src, 'r')
-        shutil.copyfileobj(srcf, destf)
-        destf.close()
-        srcf.close()
-        os.rename(fn, dest)
-        os.chmod(dest, 0644)
+        cachedTrove = _getTrove(cachedCs, name, version, flavor)
+    except KeyError:
+        # the cached cs doesn't know anything about the trove we
+        # want, it's definitely not the trove we're looking for.
+        # move along.
+        return False
+    newTrove = _getTrove(newCs, name, version, flavor)
+    cachedTrove.idMap.clear()
+    if cachedTrove.freeze() != newTrove.freeze():
+        return False
+    return True
+
+def _validateChangeSet(path, cs, name, version, flavor):
+    # check to make sure that a cached change set matches the version
+    # from the repository
+    cachedCs = changeset.ChangeSetFromFile(path)
+
+    # first check the top level trove
+    if not _validateTrove(cs, cachedCs, name, version, flavor):
+        return False
+
+    # then iterate over any included troves (if any)
+    topTrove = _getTrove(cs, name, version, flavor)
+    for name, version, flavor in topTrove.iterTroveList():
+        # skip not byDefault troves
+        try:
+            if not topTrove.includeTroveByDefault(name, version, flavor):
+                continue
+        except KeyError:
+            # missing byDefault infor for this trove, so it's bad
+            return False
+        if not _validateTrove(cs, cachedCs, name, version, flavor):
+            return False
+
+    return True
+
+def _linkOrCopyFile(src, dest):
+    while 1:
+        try:
+            os.link(src, dest)
+        except OSError, msg:
+            if msg.errno == errno.EEXIST:
+                # if the file already exists, unlink and try again
+                os.unlink(dest)
+                continue
+            # if we're attempting to make a cross-device link,
+            # fall back to copy.
+            if msg.errno != errno.EXDEV:
+                # otherwise re-raise the unhandled exception, something
+                # else went wrong.
+                raise
+            fd, fn = tempfile.mkstemp(dir=os.path.dirname(dest))
+            destf = os.fdopen(fd, 'w')
+            srcf = open(src, 'r')
+            shutil.copyfileobj(srcf, destf)
+            destf.close()
+            srcf.close()
+            os.rename(fn, dest)
+            os.chmod(dest, 0644)
+        break
 
 def extractChangeSets(client, cfg, csdir, groupName, groupVer, groupFlavor,
                       oldFiles = None, cacheDir = None):
@@ -214,8 +259,6 @@ def extractChangeSets(client, cfg, csdir, groupName, groupVer, groupFlavor,
     for name, version, flavor in finalList:
         csfile, entry = _makeEntry(group, name, version, flavor)
         path = '%s/%s' %(csdir, csfile)
-
-        copyToCache = False
         keep = False
 
         # check to see if we already have the changeset in the changeset
@@ -231,6 +274,12 @@ def extractChangeSets(client, cfg, csdir, groupName, groupVer, groupFlavor,
                 _linkOrCopyFile(cachedPath, path)
                 # make a note that we already have this cs
                 keep = True
+
+        # make sure that the existing changeset is not stale
+        if keep:
+            if not _validateChangeSet(path, group, name, version, flavor):
+                # the existing changeset does not check out, toss it.
+                keep = False
 
         if keep:
             # we either pulled the changeset from the cache
@@ -263,6 +312,10 @@ def extractChangeSets(client, cfg, csdir, groupName, groupVer, groupFlavor,
         cslist.append(entry)
 
     return cslist
+
+def usage():
+    print "usage: %s group /path/to/changesets/" %sys.argv[0]
+    sys.exit(1)
 
 if __name__ == '__main__':
     sys.excepthook = util.genExcepthook()
