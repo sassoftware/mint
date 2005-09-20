@@ -6,6 +6,8 @@ be removed from this file and integrated into Mint proper.
 
 ***Need a 'What Next?' section with links to the following:***
 
+Developers:
+
     o Learning more about Conary
         - Wiki site
         - Nate's tutorial
@@ -23,3 +25,20 @@ be removed from this file and integrated into Mint proper.
     o Managing mailing lists
         - Adding a list
         - Other functions (regular ol' mailman interface)
+
+    o Build system stuff
+        - Downloading Darby
+        - Installing/configuring Darby
+
+    o Creating a release
+
+Users:
+
+    o Searching
+        - For packages
+        - For projects
+
+    o Configuration
+        - Adding a repo to installLabelPath
+
+    o Download Releases
