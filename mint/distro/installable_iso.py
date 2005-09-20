@@ -178,4 +178,8 @@ class InstallableIso(ImageGenerator):
                 print >> sys.stderr, cmd
                 sys.stderr.flush()
                 subprocess.call(cmd)
+        isoList += [ (os.path.join(topdir, 'images/boot.iso'), "boot.iso"),
+                     (os.path.join(topdir, 'images/diskboot.img'), "diskboot.img"),
+                   ]
+
         return isoList
