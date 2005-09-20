@@ -20,9 +20,9 @@ class ReleaseTest(rephelp.RepositoryHelper):
             ('group-trove', '/conary.rpath.com@rpl:devel/1.0-1-1', '1#x86'))
         assert(release.getArch() == "x86")
 
-        release.setFiles(["file1", "file2"])
+        release.setFiles([("file1", "File Title 1"), ("file2", "File Title 2")])
         assert(release.getFiles() ==\
-            [(1, 'file1'), (2, 'file2')])
+            [(1, 'file1', 'File Title 1'), (2, 'file2', 'File Title 2')])
         
 
 if __name__ == "__main__":

@@ -105,7 +105,7 @@ class Release(object):
         return job
 
     def getFiles(self):
-        return [(x[0], x[1]) for x in self.server.getImageFilenames(self.releaseId)]
+        return [(x[0], x[1], x[2]) for x in self.server.getImageFilenames(self.releaseId)]
 
     def setFiles(self, filenames):
         return self.server.setImageFilenames(self.releaseId, filenames)

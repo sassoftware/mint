@@ -72,6 +72,19 @@ class ImageFilesTable(database.KeyedTable):
                     fileId      INTEGER PRIMARY KEY,
                     releaseId   INT,
                     idx         INT,
-                    filename    STR
+                    filename    STR,
+                    title       STR DEFAULT ''
                 );"""
     fields = ['fileId', 'releaseId', 'idx', 'filename']
+
+    def versionCheck(self):
+        dbversion = self.getDBVersion()
+        if dbversion != self.schemaVersion:
+            if dbversion == 1:
+                sql = """ALTER TABLE ImageFiles ADD COLUMN title STR DEFAULT ''"""
+                cu = self.db.cursor()
+                try:
+                    cu.execute(sql)
+                except:
+                    return False
+        return True

@@ -22,9 +22,10 @@ import gencslist
 
 class IsoConfig(ConfigFile):
     defaults = {
-        'imagesPath':   '/srv/mint/images/',
-        'scriptPath':   '/srv/mint/code/scripts/',
-        'cacheDir':     '/srv/mint/changesets/',
+        'imagesPath':       '/srv/mint/images/',
+        'scriptPath':       '/srv/mint/code/scripts/',
+        'cacheDir':         '/srv/mint/changesets/',
+        'implantIsoMd5':    '/usr/lib/anaconda-runtime/implantisomd5'
     }
 
 class InstallableIso(ImageGenerator):
@@ -166,10 +167,15 @@ class InstallableIso(ImageGenerator):
                 subprocess.call(cmd)
                 # Abort if parent thread has died
                 assertParentAlive()
-            isoList.append(infoMap['iso'])
+            isoList.append((infoMap['iso'], infoMap['discname'])
         
-        isoList = [os.path.join(infoMap['isodir'], iso) for iso in isoList]
-        for iso in isoList:
+        isoList = [(os.path.join(infoMap['isodir'], iso[0]), iso[1]) for iso in isoList]
+        for iso, name in isoList:
             if not os.access(iso, os.R_OK):
                 raise RuntimeError, "ISO generation failed"
+            else:
+                cmd = [isocfg.implantIsoMd5, iso]
+                print >> sys.stderr, cmd
+                sys.stderr.flush()
+                subprocess.call(cmd)
         return isoList

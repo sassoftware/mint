@@ -752,21 +752,22 @@ class MintServer(object):
         cu = self.db.cursor()
         cu.execute("DELETE FROM ImageFiles WHERE releaseId=?", releaseId)
         for idx, file in enumerate(sorted(filenames)):
-            cu.execute("INSERT INTO ImageFiles VALUES (NULL, ?, ?, ?)",
-                       releaseId, idx, file)
+            fileName, title = file
+            cu.execute("INSERT INTO ImageFiles VALUES (NULL, ?, ?, ?, ?)",
+                       releaseId, idx, fileName, title)
         self.db.commit()
         return True
 
     @private
     def getImageFilenames(self, releaseId):
         cu = self.db.cursor()
-        cu.execute("SELECT fileId, filename FROM ImageFiles WHERE releaseId=? ORDER BY idx", releaseId)
+        cu.execute("SELECT fileId, filename, title FROM ImageFiles WHERE releaseId=? ORDER BY idx", releaseId)
 
         results = cu.fetchall()
         if len(results) < 1:
             return []
         else:
-            return [(x[0], x[1]) for x in results]
+            return [(x[0], x[1], x[2]) for x in results]
    
     @private
     def getFilename(self, fileId):
