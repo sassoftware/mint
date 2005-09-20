@@ -7,7 +7,7 @@
 from mint import userlevels
 from mint import constants
 from urllib import quote
-onload = "javascript:;" 
+onload = "javascript:;"
 ?>
 
 <html xmlns:py="http://purl.org/kid/ns#"
@@ -46,11 +46,14 @@ onload = "javascript:;"
                 loginAction = "logout"
             else:
                 loginAction = "processLogin"
+            secureProtocol = 'http'
+            if cfg.SSL:
+                secureProtocol += 's'
         ?>
         <div id="top" align="center">
             <div class="shadowLeft"><div class="shadowRight">
                 <div class="surfaceLeft" align="left"><div class="surfaceRight">
-                    <form method="post" action="https://$siteHost$cfg.basePath$loginAction">
+                    <form method="post" action="${secureProtocol}://$siteHost$cfg.basePath$loginAction">
                         <input py:if="loginAction == 'login'" type="hidden" name="to" value="${quote(toUrl)}" />
                         <table border="0" cellspacing="0" cellpadding="0" summary="layout">
                             <tr>
@@ -58,7 +61,7 @@ onload = "javascript:;"
                                 </td>
                                 <td id="user" py:if="not auth.authorized">
                                     <div class="pad">
-                                        <h4>not logged in | <a href="https://${siteHost}${cfg.basePath}login">Forgot Password</a></h4>
+                                        <h4>not logged in | <a href="${secureProtocol}://${siteHost}${cfg.basePath}login">Forgot Password</a></h4>
                                         <div>
                                             <input type="text" name="username" size="16"/> <label>username</label><br />
                                             <input type="password" name="password" size="16"/> <label>password</label>
@@ -69,7 +72,7 @@ onload = "javascript:;"
                                     <div class="pad">
                                         <h3>${auth.fullName}</h3>
                                         <h4>${auth.username}</h4>
-                                        <div><a href="https://${siteHost}${cfg.basePath}userSettings" class="arrows">view &#38; Edit My Account</a></div>
+                                        <div><a href="${secureProtocol}://${siteHost}${cfg.basePath}userSettings" class="arrows">view &#38; Edit My Account</a></div>
                                         <div><a href="${cfg.basePath}uploadKey" class="arrows">Upload a Package Signing Key</a></div>
                                         <div py:if='auth.admin'><a href="${cfg.basePath}administer" class="arrows">Administer</a></div>
 

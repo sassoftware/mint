@@ -24,7 +24,7 @@ from mint import userlevels
 from mint import mailinglists
 
 from webhandler import WebHandler, normPath
-from decorators import requiresAdmin, requiresAuth, requiresHttps
+from decorators import requiresAdmin, requiresAuth, requiresHttps, redirectHttps
 from decorators import mailList
 
 class SiteHandler(WebHandler):
@@ -52,6 +52,7 @@ class SiteHandler(WebHandler):
         self._write("frontPage", news = news, newsLink = self.client.getNewsLink(), firstTime=self.session.get('firstTimer', False))
         return apache.OK
         
+    @redirectHttps
     def register(self, auth):
         self._write("register", errors=[], kwargs={})
         return apache.OK
@@ -103,6 +104,7 @@ class SiteHandler(WebHandler):
             self._write("register", errors=errors, kwargs = kwargs)
         return apache.OK
 
+    @redirectHttps
     def confirmEmail(self, auth, **kwargs):
         self._write("confirmEmail", email=auth.email)
         return apache.OK
@@ -117,6 +119,7 @@ class SiteHandler(WebHandler):
         return apache.OK
 
     @strFields(message = "")
+    @redirectHttps
     def login(self, auth, message):
         self.toUrl = "/"
         self._write("login", message = message)
@@ -211,6 +214,7 @@ class SiteHandler(WebHandler):
         return apache.OK
 
     @requiresAuth
+    @redirectHttps
     def userSettings(self, auth):
         self._write("userSettings")
         return apache.OK
@@ -218,6 +222,7 @@ class SiteHandler(WebHandler):
     @strFields(email = "", displayEmail = "",
                password1 = "", password2 = "",
                fullName = "", blurb = "")
+    @requiresHttps
     @requiresAuth
     def editUserSettings(self, auth, email, displayEmail, fullName,
                          password1, password2, blurb):

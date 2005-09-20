@@ -272,7 +272,7 @@ def conaryHandler(req, cfg, pathInfo):
         else:
             return apache.HTTP_NOT_FOUND
 
-        repositories[repName].forceSecure = False
+        repositories[repName].forceSecure = cfg.SSL
         repositories[repName].cfg = cfg
    
     repo = repositories[repName]

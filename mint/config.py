@@ -37,6 +37,7 @@ class MintConfig(ConfigFile):
         'logPath'           : '/srv/mint/logs/',
         'domainName'        : 'rpath.org',
         'hostName'          : None, # optional domain name for main site
+        'SSL'               : [ BOOLEAN, False ],
         'adminMail'         : 'mint@rpath.org',
         'newsRssFeed'       : '',
         'commitAction'      : None,
