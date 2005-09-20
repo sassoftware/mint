@@ -90,7 +90,7 @@ onload = "javascript:;"
                                 </td>
                                 <td id="log">
                                     <div class="pad" py:if="not auth.authorized">
-                                        <button type="submit" name="submit">Login</button> |
+                                        <button type="submit">Login</button> |
                                         <a href="/register" class="arrows">New Account</a>
                                     </div>
                                     <div class="pad" py:if="auth.authorized">
