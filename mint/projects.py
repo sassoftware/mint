@@ -96,6 +96,9 @@ class Project(database.TableObject):
         assert(level in userlevels.LEVELS)
         return self.server.addMember(self.id, None, username, level)
 
+    def listJoinRequests(self):
+        return self.server.listJoinRequests(self.id)
+
     def delMemberById(self, userId):
         return self.server.delMember(self.id, userId)
 

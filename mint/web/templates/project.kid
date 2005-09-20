@@ -34,6 +34,9 @@
                     <a href="${cfg.basePath}project/${project.getHostname()}/">
                         ${project.getName()}</a><br/>
                         ${userlevels.names[level]}
+                        <p py:if="not level and project.listJoinRequests()">
+                            <a href="${cfg.basePath}project/${project.getHostname()}/members"><b style="color: red;">Requests Pending</b></a>
+                        </p>
                 </li>
                 <li py:if="not projectList">
                     You are not a member of any projects.
