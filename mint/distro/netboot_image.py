@@ -125,9 +125,11 @@ smmsp:x:51:
         self.status('cleaning up')
         util.rmtree(rootDir)
 
-        images = [ imgDir + x for x in ('/vmlinuz', '/initrd.img',
-                                        '/rootfs.tgz') ]
-        for image in images:
+        images = [ (os.path.join(imgDir, x), x) for x in
+                   ('vmlinuz', 'initrd.img', 'rootfs.tgz') ]
+        log.info('images %s', images)
+        for image, descr in images:
+            log.info('check %s', image)
             if not os.access(image, os.R_OK):
                 raise RuntimeError, 'image creations script did not create images properly'
 
