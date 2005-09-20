@@ -66,6 +66,8 @@ class MintClient:
         @rtype: L{mint.projects.Project}
         @raises mint.database.ItemNotFound: project does not exist
         """
+        print >> sys.stderr, self, projectId
+        sys.stderr.flush()
         return projects.Project(self.server, projectId)
 
     def getProjectsByMember(self, userId):
@@ -345,7 +347,7 @@ class ServerProxy(xmlrpclib.ServerProxy):
 
 class _Method(xmlrpclib._Method):
     def __repr__(self):
-        return "<mint._Method(%s, %r)>" % (self._Method__send, self._Method__name)
+        return "<mint._Method(%r)>" % (self.__name)
 
     def __str__(self):
         return self.__repr__()

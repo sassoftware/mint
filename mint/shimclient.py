@@ -36,3 +36,9 @@ class ShimServerProxy(mint.ServerProxy):
 
     def __getattr__(self, name):
         return _ShimMethod(self._server, self._authToken, name)
+
+    def __repr__(self):
+        return "ShimServerProxy(%s, %s)" % (self._cfg, self._authToken)
+
+    def __str__(self):
+        return self.__repr__()
