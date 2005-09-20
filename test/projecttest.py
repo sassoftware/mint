@@ -29,7 +29,6 @@ class ProjectTest(rephelp.RepositoryHelper):
     
     def testMembers(self):
         ## XXX disabled
-        return
         
         client = self.openMint(("test", "foo"))
         otherUserId = client.registerNewUser("member", "memberpass", "Test Member",
@@ -37,7 +36,7 @@ class ProjectTest(rephelp.RepositoryHelper):
  
         client = self.getMintClient("testuser", "testpass")
                                                        
-        projectId = client.newProject("Foo", "foo", "rpath.org")
+        projectId = client.newProject("Foo", "foo", "localhost")
         project = client.getProject(projectId)
 
         project.addMemberById(otherUserId, userlevels.DEVELOPER)

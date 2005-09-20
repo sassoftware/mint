@@ -156,7 +156,7 @@ class ApacheServer(ChildRepository):
 
         # write Mint configuration
         f = open("%s/mint.conf" % self.serverRoot, "w")
-        print >> f, 'domainName localhost'
+        print >> f, 'domainName localhost:%i' %self.port
         print >> f, 'dbPath %s' % self.reposDir + '/mintdb'
         print >> f, 'authDbPath %s' % self.reposDir + '/sqldb'
         print >> f, 'reposPath %s' % self.reposDir + '/repos/'
