@@ -66,7 +66,10 @@ class ConfirmationsTable(database.KeyedTable):
     fields = ['userId', 'timeRequested', 'confirmation']
 
 def digMX(hostname):
-    answers = dns.resolver.query(hostname, 'MX')
+    try:
+        answers = dns.resolver.query(hostname, 'MX')
+    except dns.resolver.NoAnswer:
+        return None
     return answers
 
 class UsersTable(database.KeyedTable):

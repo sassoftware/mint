@@ -4,6 +4,7 @@ Changes in 0.5.3:
   the latest version from the repository before they are used for
   installable ISO images.
 * Images can now have descriptions stored with each image file.
+* mint.users.digMX() properly handles domains without MX records.
 
 Changes in 0.5.2:
 
