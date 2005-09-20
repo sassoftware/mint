@@ -52,7 +52,7 @@ from mint import userlevels
 
                 <ul py:if="files">
                     <li py:for="i, file in enumerate(files)">
-                        <a href="http://$siteHost/downloadImage?fileId=${file[0]}">${file[2]}</a>
+                        <a href="${cfg.basePath}downloadImage?fileId=${file[0]}">${file[2]}</a>
                     </li>
                 </ul>
 

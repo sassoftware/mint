@@ -27,32 +27,6 @@ from mint import userlevels
         <td id="left" class="side">
             <div class="pad">
                 ${projectResourcesMenu()}
-                <div id="PGPKeys" class="palette" py:if="isOwner">
-                    <h3>Users' OpenPGP Keys</h3>
-                    <ul>
-                    <li><a href="http://${siteHost}/repos/${project.getHostname()}/pgpAdminForm">Manage OpenPGP/GnuPG Signing Keys</a></li>
-                    </ul>
-                </div>
-                <div class="palette" py:if="isOwner">
-
-                    <h3>Add New Member</h3>
-                    <form method="post" action="addMember">
-                        <p>
-                            <label>Username:</label><br/>
-                            <input type="text" name="username" value="" />
-                        </p>
-                        <p>
-                            <label>Membership Type:</label><br/>
-
-                            <select name="level">
-                                <option py:for="level, levelName in sorted(userlevels.names.items(), reverse=True)"
-                                        py:content="levelName"
-                                        value="${level}" />
-                            </select>
-                        </p>
-                        <p><button type="submit">Submit</button></p>
-                    </form>
-                </div>
             </div>
 
         </td>

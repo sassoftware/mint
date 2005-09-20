@@ -10,6 +10,15 @@ from mint import mailinglists
 from mint import mint_error
 from mint import userlevels
 
+def requiresHttps(func):
+    def wrapper(self, *args, **kwargs):
+        if self.req.subprocess_env.get('HTTPS', 'off') != 'on':
+            raise mint_error.PermissionDenied
+        else:
+            return func(self, *args, **kwargs)
+
+    return wrapper
+
 def requiresAdmin(func):
     def wrapper(self, *args, **kwargs):
         if not kwargs['auth'].admin:

@@ -296,7 +296,7 @@ class ProjectsTable(database.KeyedTable):
                         The project's description
                         The date last modified.
         """
-        columns = ['hostname || \'.\' || domainname', 'name', 'desc', 'timeModified']
+        columns = ['hostname', 'name', 'desc', 'timeModified']
         searchcols = ['name', 'desc']
         ids, count = database.KeyedTable.search(self, columns, 'Projects', 
             searcher.Searcher.where(terms, searchcols, 'AND disabled=0 AND hidden=0'),

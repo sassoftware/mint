@@ -30,7 +30,7 @@ from mint import userlevels
                 <div id="PGPKeys" class="palette" py:if="isOwner">
                     <h3>Users' OpenPGP Keys</h3>
                     <ul>
-                    <li><a py:strip="not auth.authorized" href="http://${siteHost}/repos/${project.getHostname()}/pgpAdminForm">Manage OpenPGP/GnuPG Signing Keys</a></li>
+                    <li><a py:strip="not auth.authorized" href="${cfg.basePath}repos/${project.getHostname()}/pgpAdminForm">Manage OpenPGP/GnuPG Signing Keys</a></li>
                     </ul>
                 </div>
                 <div class="palette" py:if="isOwner">
@@ -72,7 +72,7 @@ from mint import userlevels
                 <h3>Project Owners</h3>
                 <table border="0" cellspacing="0" cellpadding="0" class="memberstable">
                     <tr py:for="userId, username in sorted(users[userlevels.OWNER], key=lambda x: x[1])">
-                        <th><a py:strip="not auth.authorized" href="http://${siteHost}/userInfo?id=${userId}">${username}</a></th>
+                        <th><a py:strip="not auth.authorized" href="${cfg.basePath}userInfo?id=${userId}">${username}</a></th>
                         <td py:if="isOwner and not lastOwner and userId != auth.userId">
                             <a onclick="javascript:load_popup('Edit${userId}','memberEditBox');"
                                href="memberSettings?userId=${userId}"
@@ -96,7 +96,7 @@ from mint import userlevels
 
                 <table border="0" cellspacing="0" cellpadding="0" class="memberstable">
                     <tr py:for="userId, username in sorted(users[userlevels.DEVELOPER], key=lambda x: x[1])">
-                        <th><a py:strip="not auth.authorized" href="http://${siteHost}/userInfo?id=${userId}">${username}</a></th>
+                        <th><a py:strip="not auth.authorized" href="${cfg.basePath}userInfo?id=${userId}">${username}</a></th>
                         <td py:if="isOwner">
                             <a onclick="javascript:load_popup('Edit${userId}','memberEditBox');"
                                href="memberSettings?userId=${userId}"
@@ -111,7 +111,7 @@ from mint import userlevels
                     <h3>Requestors</h3>
                     <table border="0" cellspacing="0" cellpadding="0" class="memberstable">
                         <tr py:for="userId, username in reqList">
-				<th><a href="http://${siteHost}/userInfo?id=${userId}">${username}</a></th>
+				<th><a href="${cfg.basePath}userInfo?id=${userId}">${username}</a></th>
                             <td>
                                 <a href="viewJoinRequest?userId=${userId}"
                                    class="option" style="position:relative;"

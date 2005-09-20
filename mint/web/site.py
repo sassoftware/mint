@@ -24,7 +24,7 @@ from mint import userlevels
 from mint import mailinglists
 
 from webhandler import WebHandler, normPath
-from decorators import requiresAdmin, requiresAuth
+from decorators import requiresAdmin, requiresAuth, requiresHttps
 from decorators import mailList
 
 class SiteHandler(WebHandler):
@@ -60,6 +60,7 @@ class SiteHandler(WebHandler):
                password = '', password2 = '',
                fullName = '', displayEmail = '',
                blurb = '', tos='', privacy='')
+    @requiresHttps
     def processRegister(self, auth, username, 
                         fullName, email, password,
                         password2, displayEmail,
@@ -143,6 +144,7 @@ class SiteHandler(WebHandler):
         self._write("forgotPassword", email = user.getEmail())
         return apache.OK
 
+    @requiresHttps
     @strFields(username = None, password = '', action = 'login', to = '/')
     def processLogin(self, auth, username, password, action, to):
         if action == 'login':
@@ -327,7 +329,7 @@ class SiteHandler(WebHandler):
             except mint_error.MintError, e:
                 errors.append(str(e))
         if not errors:
-            return self._redirect("http://%s/project/%s/" % (self.siteHost, hostname))
+            return self._redirect("%sproject/%s/" % (self.cfg.basePath, hostname))
         else:
             kwargs = {'title': title, 'hostname': hostname, 'projecturl': projecturl, 'blurb': blurb, 'optlists': optlists}
             self._write("newProject", errors=errors, kwargs=kwargs)
@@ -341,7 +343,7 @@ class SiteHandler(WebHandler):
             raise mint_error.PermissionDenied
     
         project.addMemberById(userId, level)
-        return self._redirect("http://%s" % project.getFQDN())
+        return self._redirect("%sproject/%s" % (self.cfg.basePath, project.getHostname()))
 
     @intFields(id = None)
     @requiresAuth

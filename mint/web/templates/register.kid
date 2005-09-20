@@ -22,12 +22,12 @@
                 <h3>About ${cfg.companyName} accounts</h3>
                 <p>
                     Using a ${cfg.productName} account, you can create your own Linux distribution.
-                    Please read the ${legal('http://%s/legal?page=tos' % siteHost, 'Terms of Service')} before you register
+                    Please read the ${legal('%slegal?page=tos' % cfg.basePath, 'Terms of Service')} before you register
                     for an account.
                 </p>
                 <p>
                     Your email address will never be shared or sold. More information
-                    can be found in our ${legal('http://%s/legal?page=privacy' % siteHost, 'Privacy Policy')}.
+                    can be found in our ${legal('%slegal?page=privacy' % cfg.basePath, 'Privacy Policy')}.
                 </p>
             </div>
         </td>
@@ -94,10 +94,10 @@
                             <td><input type="password" name="password2" value="" /></td>
                         </tr>
                         <tr>
-                            <td colspan="2"><input type="checkbox" class="check" name="tos" py:attrs="{'checked': kwargs['tos'] and 'checked' or None}"/> <em class="required">I have read and accept the ${legal('http://%s/legal?page=tos' % siteHost, 'Terms of Service')}</em></td>
+                            <td colspan="2"><input type="checkbox" class="check" name="tos" py:attrs="{'checked': kwargs['tos'] and 'checked' or None}"/> <em class="required">I have read and accept the ${legal('%slegal?page=tos' % cfg.basePath, 'Terms of Service')}</em></td>
                         </tr>
                         <tr>
-                            <td colspan="2"><input type="checkbox" class="check" name="privacy"  py:attrs="{'checked': kwargs['privacy'] and 'checked' or None}"/> <em class="required">I have read and accept the ${legal('http://%s/legal?page=privacy' % siteHost, 'Privacy Policy')}</em></td>
+                            <td colspan="2"><input type="checkbox" class="check" name="privacy"  py:attrs="{'checked': kwargs['privacy'] and 'checked' or None}"/> <em class="required">I have read and accept the ${legal('%slegal?page=privacy' % cfg.basePath, 'Privacy Policy')}</em></td>
                         </tr>
                     </table>
                     <p>You will receive a confirmation message with a link to activate your account.</p>

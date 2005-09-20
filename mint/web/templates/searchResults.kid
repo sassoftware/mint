@@ -32,7 +32,7 @@
                 formattedresults = []
                 if searchType == "Projects":
                     formattedresults = [
-                        ('http://%s' % resultset[0], resultset[1]),
+                        ('%sproject/%s/' % (cfg.basePath,resultset[0]), resultset[1]),
                         resultset[2],
                         time.ctime(resultset[3])
                     ]

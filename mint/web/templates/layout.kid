@@ -50,7 +50,7 @@ onload = "javascript:;"
         <div id="top" align="center">
             <div class="shadowLeft"><div class="shadowRight">
                 <div class="surfaceLeft" align="left"><div class="surfaceRight">
-                    <form method="post" action="http://$siteHost/$loginAction">
+                    <form method="post" action="https://$siteHost$cfg.basePath$loginAction">
                         <input py:if="loginAction == 'login'" type="hidden" name="to" value="${quote(toUrl)}" />
                         <table border="0" cellspacing="0" cellpadding="0" summary="layout">
                             <tr>
@@ -58,7 +58,7 @@ onload = "javascript:;"
                                 </td>
                                 <td id="user" py:if="not auth.authorized">
                                     <div class="pad">
-                                        <h4>not logged in | <a href="http://$siteHost/login">Forgot Password</a></h4>
+                                        <h4>not logged in | <a href="https://${siteHost}${cfg.basePath}login">Forgot Password</a></h4>
                                         <div>
                                             <input type="text" name="username" size="16"/> <label>username</label><br />
                                             <input type="password" name="password" size="16"/> <label>password</label>
@@ -69,9 +69,9 @@ onload = "javascript:;"
                                     <div class="pad">
                                         <h3>${auth.fullName}</h3>
                                         <h4>${auth.username}</h4>
-                                        <div><a href="http://$siteHost/userSettings" class="arrows">view &#38; Edit My Account</a></div>
-                                        <div><a href="http://$siteHost/uploadKey" class="arrows">Upload a Package Signing Key</a></div>
-                                        <div py:if='auth.admin'><a href="http://$siteHost/administer" class="arrows">Administer</a></div>
+                                        <div><a href="https://${siteHost}${cfg.basePath}userSettings" class="arrows">view &#38; Edit My Account</a></div>
+                                        <div><a href="${cfg.basePath}uploadKey" class="arrows">Upload a Package Signing Key</a></div>
+                                        <div py:if='auth.admin'><a href="${cfg.basePath}administer" class="arrows">Administer</a></div>
 
                                     </div>
                                 </td>
@@ -79,7 +79,7 @@ onload = "javascript:;"
                             <tr>
                                 <td id="topnav">
                                     <div class="pad">
-                                        <a href="http://${siteHost}/">Home</a> | 
+                                        <a href="${cfg.basePath}">Home</a> | 
                                         <a py:if="False" href="${cfg.corpSite}">About rPath</a>
                                         <a py:if="False" href="${cfg.corpSite}sales/">Contact rPath</a>
                                         <a href="/help?page=feedback"><b style="color: red;">need help/have feedback?</b></a>
@@ -106,7 +106,7 @@ onload = "javascript:;"
         <div id="middle" align="center">
             <div id="crumb">
                 <div class="pad">
-                    You are here: <a href="http://${siteHost}/">home</a>
+                    You are here: <a href="${cfg.basePath}">home</a>
                     ${breadcrumb()}
                 </div>
             </div>
@@ -126,7 +126,7 @@ onload = "javascript:;"
             <div id="copy">
                 <div class="pad" style="text-align: center;">
                     <span id="botnav">
-                        ${legal('http://%s/legal?page=legal' % siteHost, 'Legal')}
+                        ${legal('%slegal?page=legal' % cfg.basePath, 'Legal')}
                     </span>
 
                     <span style="float: left;">Copyright &#169; 2005 rPath, Inc. </span>
