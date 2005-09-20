@@ -14,7 +14,7 @@
         <td id="main" class="spanleft">
             <div class="pad">
                 <h2>Thank you for registering</h2>
-		<p>An email confirming your request has been sent to <b>${email}</b>.</p>
+		<p>An email confirming your request has been sent to the email address you provided.</p>
 		<p>Please follow the directions in your confirmation email to complete the registration process.</p>
             </div>
         </td>

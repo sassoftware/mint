@@ -42,13 +42,13 @@ onload = "javascript:;"
           py:match="item.tag == 'body'"
           py:attrs="item.attrib"> 
         <?python
+            secureProtocol = 'http'
             if auth.authorized:
                 loginAction = "logout"
             else:
                 loginAction = "processLogin"
-            secureProtocol = 'http'
-            if cfg.SSL:
-                secureProtocol += 's'
+                if cfg.SSL:
+                    secureProtocol += 's'
         ?>
         <div id="top" align="center">
             <div class="shadowLeft"><div class="shadowRight">

@@ -39,6 +39,16 @@ class WebHandler(object):
     def _404(self, *args, **kwargs):
         return apache.HTTP_NOT_FOUND
 
+    def _redirectHttp(self, location):
+        if location.startswith('http://'):
+            pass
+        elif location.startswith('https://'):
+            location = location.replace('https://', 'http://', 1)
+        else:
+            location = 'http://%s%s' % (self.req.hostname, normPath(self.cfg.basePath + location))
+        self.req.headers_out['Location'] = location
+        return apache.HTTP_MOVED_PERMANENTLY
+
     def _redirect(self, location):
         self.req.headers_out['Location'] = location
         return apache.HTTP_MOVED_PERMANENTLY
@@ -76,5 +86,5 @@ def normPath(path):
         path += "/"
     if path[0] != "/":
         path = "/" + path
-    path.replace('//', '/')
+    path = path.replace('//', '/')
     return path

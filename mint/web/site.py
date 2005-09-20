@@ -92,7 +92,7 @@ class SiteHandler(WebHandler):
             except users.MailError,e:
                 errors.append(e.context);
         if not errors:
-            self._write("register_conf", email = email)
+            return self._redirectHttp('registerComplete')
         else:
             kwargs = {'username': username,
                       'email': email,
@@ -102,6 +102,10 @@ class SiteHandler(WebHandler):
                       'tos': tos,
                       'privacy': privacy}
             self._write("register", errors=errors, kwargs = kwargs)
+        return apache.OK
+
+    def registerComplete(self, auth):
+        self._write("register_conf")
         return apache.OK
 
     @redirectHttps
@@ -138,7 +142,7 @@ class SiteHandler(WebHandler):
 
     def logout(self, auth):
         self._clearAuth()
-        return self._redirect("/")
+        return self._redirectHttp("/")
 
     def _resetPassword(self, username):
         userId = self.client.getUserIdByName(username)
@@ -176,7 +180,7 @@ class SiteHandler(WebHandler):
                 self.req.err_headers_out.add('Cache-Control', 'no-cache="set-cookie"')
                 
                 self.session.save()
-                return self._redirect(unquote(to))
+                return self._redirectHttp(unquote(to))
                 
         elif action == "mail_password":
             return self._resetPassword(username)
@@ -249,9 +253,9 @@ class SiteHandler(WebHandler):
                             error = "Password must be 6 characters or longer.")
             else:
                 self.user.setPassword(password1)
-                return self._redirect("logout")
+                return self._redirectHttp("logout")
 
-        return self._redirect("/")
+        return self._redirectHttp("/")
 
     @requiresAuth
     @listFields(str, projects=[])
