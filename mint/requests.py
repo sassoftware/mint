@@ -32,6 +32,11 @@ class MembershipRequestTable(database.DatabaseTable):
                 raise
         self.db.commit()
 
+    def userAccountCanceled(self, userId):
+        cu = self.db.cursor()
+        cu.execute("DELETE from MembershipRequests where userId=?", userId)
+        self.db.commit()
+
     def deleteRequest(self, projectId, userId):
         cu = self.db.cursor()
         cu.execute("DELETE from MembershipRequests where projectId=? and userId=?", projectId, userId)

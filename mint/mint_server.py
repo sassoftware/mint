@@ -447,6 +447,8 @@ class MintServer(object):
         except database.StopIteration:
             pass
 
+        self.membershipRequests.userAccountCanceled(userId)
+
         return self.removeUserAccount(userId)
 
     @requiresAuth
