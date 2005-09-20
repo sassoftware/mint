@@ -66,8 +66,6 @@ class MintClient:
         @rtype: L{mint.projects.Project}
         @raises mint.database.ItemNotFound: project does not exist
         """
-        print >> sys.stderr, self, projectId
-        sys.stderr.flush()
         return projects.Project(self.server, projectId)
 
     def getProjectsByMember(self, userId):
