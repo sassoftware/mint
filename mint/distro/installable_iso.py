@@ -167,9 +167,9 @@ class InstallableIso(ImageGenerator):
                 subprocess.call(cmd)
                 # Abort if parent thread has died
                 assertParentAlive()
-            isoList.append((infoMap['iso'], infoMap['discname'])
+            isoList.append((infoMap['iso'], infoMap['discname']))
         
-        isoList = [(os.path.join(infoMap['isodir'], iso[0]), iso[1]) for iso in isoList]
+        isoList = [ (os.path.join(infoMap['isodir'], iso[0]), iso[1]) for iso in isoList ]
         for iso, name in isoList:
             if not os.access(iso, os.R_OK):
                 raise RuntimeError, "ISO generation failed"
