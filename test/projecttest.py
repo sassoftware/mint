@@ -38,6 +38,21 @@ class ProjectTest(rephelp.RepositoryHelper):
         project = client.getProject(projectId)
 
         project.addMemberById(otherUserId, userlevels.DEVELOPER)
+        assert(project.getMembers() == [[3, 'testuser', userlevels.OWNER],
+                                        [otherUserId, 'member', userlevels.DEVELOPER]])
+
+        project.delMemberById(otherUserId)
+        assert(project.getMembers() == [[3, 'testuser', userlevels.OWNER]])
+
+        project.addMemberByName('member', userlevels.OWNER)
+        assert(project.getMembers() == [[3, 'testuser', userlevels.OWNER],
+                                        [otherUserId, 'member', userlevels.OWNER]])
+        
+        project.updateUserLevel(otherUserId, userlevels.DEVELOPER)
+        assert(project.getMembers() == [[3, 'testuser', userlevels.OWNER],
+                                        [otherUserId, 'member', userlevels.DEVELOPER]])
+ 
+        
 
     def testLabels(self):
         client = self.getMintClient("testuser", "testpass")
