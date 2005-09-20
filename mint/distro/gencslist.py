@@ -6,7 +6,6 @@
 #
 
 import errno
-import itertools
 import os
 import shutil
 import string
