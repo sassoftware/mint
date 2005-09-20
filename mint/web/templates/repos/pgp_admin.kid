@@ -4,7 +4,7 @@
       py:extends="'../project.kid', '../layout.kid'">
 
     <div py:def="breadcrumb" py:strip="True">
-        <a href="http://${siteHost}/project/${project.getHostname()}">${project.getName()}</a>
+        <a href="${cfg.basePath}project/${project.getHostname()}/">${project.getName()}</a>
         <a href="#">PGP Key Browser</a>
     </div>
 

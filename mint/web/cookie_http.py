@@ -43,7 +43,7 @@ class ConaryHandler(WebHandler, http.HttpHandler):
         
         self.project = self.client.getProjectByFQDN(self.serverName)
         projectName = self.project.getHostname()
-        self.repositoryMap = {self.serverName: 'http://%s/repos/%s/' % (self.siteHost, projectName)}
+        self.repositoryMap = {self.serverName: 'http://%s%srepos/%s/' % (self.siteHost, self.cfg.basePath, projectName)}
         self.repos = netclient.NetworkRepositoryClient(self.repositoryMap)
 
         return self._handle

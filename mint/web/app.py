@@ -126,7 +126,10 @@ class MintApp(WebHandler):
 
     def _getHandler(self, pathInfo):
         fullHost = self.req.hostname
-        self.toUrl = ("http://%s" % fullHost) + self.req.unparsed_uri
+        protocol='https'
+        if self.req.subprocess_env.get('HTTPS', 'off') != 'on':
+            protocol='http'
+        self.toUrl = ("%s://%s" % (protocol, fullHost)) + self.req.unparsed_uri
         dots = fullHost.split('.')
         hostname = dots[0]
 
@@ -145,7 +148,7 @@ class MintApp(WebHandler):
             except:
                 raise Redirect(self.cfg.defaultRedirect)
             else:
-                raise Redirect("http://%s/project/%s/" % (siteHost, hostname))
+                raise Redirect("%s://%s%sproject/%s/" % (protocol, siteHost, self.cfg.basePath, hostname))
 
         self.siteHost = siteHost
         

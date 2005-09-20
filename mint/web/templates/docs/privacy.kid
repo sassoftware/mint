@@ -14,9 +14,9 @@
 
         <p>The term "The Service" as used in this document means the Conary
         repository hosting service accessible via
-        <a href="http://www.rpath.org/">http://www.rpath.org/</a> and
+        <a href="${cfg.basePath}">http://${siteHost}${cfg.basePath}</a> and
         all software development projects created via
-        <a href="http://www.rpath.org/">http://www.rpath.org/</a>,
+        <a href="${cfg.basePath}">http://${siteHost}${cfg.basePath}</a>,
         hosted in the rpath.org domain.</p>
 
         <p>We will never sell, rent, or otherwise transfer your private
@@ -103,7 +103,7 @@
         <p>We may change this policy from time to time.  Any such changes
         will not make previously private personal information public,
         unless required by law.  A change to this privacy policy will
-        be posted at the following URL http://${siteHost}/legal?page=privacy,
+        be posted at the following URL <a href="${cfg.basePath}legal?page=privacy">http://${siteHost}${cfg.basePath}legal?page=privacy</a>,
         and we will send email to active users notifying them of the change
         15 days prior to change, unless otherwise required by law or regulation.</p>
 

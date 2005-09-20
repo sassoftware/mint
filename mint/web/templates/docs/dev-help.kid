@@ -69,7 +69,7 @@
                         </li>
 
                         <li>A no-frills project-specific page
-                        (http://&lt;project-name&gt;.rpath.org/)</li>
+                        (http://&lt;project-name&gt;.rpath.org/ or http://${siteHost}${cfg.basePath}project/&lt;project-name&gt;/)</li>
 
                         <li>The ability to create "releases" (downloadable
                         ISO images) with a single mouse click</li>

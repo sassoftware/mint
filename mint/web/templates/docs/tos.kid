@@ -73,7 +73,7 @@
         store using the Services.</p>
 
         <p>For more information on how rPath uses your personal
-        information, consult the privacy policy at: <a href="http://www.rpath.org/legal?page=privacy">http://www.rpath.org/legal?page=privacy</a></p>
+        information, consult the privacy policy at: <a href="${cfg.basePath}legal?page=privacy">http://${siteHost}${cfg.basePath}legal?page=privacy</a></p>
 
         <p>You will receive a User ID and password (collectively, the &#8220;User
         ID&#8221;) upon completing the registration process on the Web Site.  You

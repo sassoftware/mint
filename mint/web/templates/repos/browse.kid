@@ -11,7 +11,7 @@ import string
 ?>
 
     <div py:def="breadcrumb" py:strip="True">
-        <a href="http://${siteHost}/project/${project.getHostname()}">${project.getName()}</a>
+        <a href="${cfg.basePath}project/${project.getHostname()}/">${project.getName()}</a>
         <a href="#">Repository Browser</a>
     </div>
 
