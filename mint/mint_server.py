@@ -243,6 +243,8 @@ class MintServer(object):
 
         self._notifyUser('Added', self.getUser(userId), projects.Project(self,projectId)) 
 
+        self.membershipRequests.deleteRequest(projectId, userId)
+
         return True
 
     @requiresAuth

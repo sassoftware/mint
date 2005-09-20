@@ -273,7 +273,6 @@ class ProjectHandler(WebHandler):
     @intFields(level = None)
     @ownerOnly
     def addMember(self, auth, username, level):
-        self.client.deleteJoinRequest(self.project.getId(), self.client.getUserIdByName(username))
         self.project.addMemberByName(username, level)
         return self._redirect(self.basePath + "members")
 
