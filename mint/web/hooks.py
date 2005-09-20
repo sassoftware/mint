@@ -214,7 +214,7 @@ def conaryHandler(req, cfg, pathInfo):
 
     method = req.method.upper()
     port = req.connection.local_addr[1]
-    secure = (self.req.subprocess_env.get('HTTPS', 'off') == 'on')
+    secure = (req.subprocess_env.get('HTTPS', 'off') == 'on')
 
     if not repositories.has_key(repName):
         repositoryDir = os.path.join(cfg.reposPath, repName)
