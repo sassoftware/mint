@@ -46,7 +46,7 @@ class ProjectTest(rephelp.RepositoryHelper):
         project = client.getProject(projectId)
     
         assert(project.getRepoMap() ==\
-            ["foo.rpath.org http://test:foo@localhost/repos/foo/"])
+            ["foo.rpath.org http://test:foo@localhost:%i/repos/foo/" %self.getPort()])
         assert(project.getLabelIdMap() ==\
             {"foo.rpath.org@rpl:devel": 1})
         
@@ -55,7 +55,7 @@ class ProjectTest(rephelp.RepositoryHelper):
         assert(project.getLabelById(newLabelId) == "bar.rpath.org@rpl:devel")
 
         assert(project.getRepoMap() ==\
-            ['foo.rpath.org http://test:foo@localhost/repos/foo/',
+            ['foo.rpath.org http://test:foo@localhost:%i/repos/foo/' %self.getPort(),
              'bar.rpath.org http://user1:pass1@rpath.org/repos/bar/'])
         assert(project.getLabelIdMap() ==\
             {'bar.rpath.org@rpl:devel': newLabelId,
