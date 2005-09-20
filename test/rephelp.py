@@ -301,6 +301,9 @@ class RepositoryHelper(testsuite.TestCase):
         rmap = self.servers.getMap(user = user, password = password)
 	return netclient.NetworkRepositoryClient(rmap)
 
+    def getPort(self, serverIdx = 0):
+        return self.servers.getServer(serverIdx).port
+
     def printRepMap(self):
         rmap = self.servers.getMap()
         for name, url in rmap.items():
