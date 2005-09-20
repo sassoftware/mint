@@ -8,6 +8,7 @@ import re
 import subprocess
 import sys
 
+import callbacks
 import conaryclient
 import deps
 import versions
@@ -27,6 +28,40 @@ class IsoConfig(ConfigFile):
         'cacheDir':         '/srv/mint/changesets/',
         'implantIsoMd5':    '/usr/lib/anaconda-runtime/implantisomd5'
     }
+
+class Callback(callbacks.UpdateCallback, callbacks.ChangesetCallback):
+    def requestingChangeSet(self):
+        self._update('requesting %s from repository')
+
+    def downloadingChangeSet(self, got, need):
+        if need != 0:
+            self._update('downloading %%s from repository (%d%%%% of %dk)'
+                         %((got * 100) / need, need / 1024))
+
+    def downloadingFileContents(self, got, need):
+        if need != 0:
+            self._update('downloading files for %%s from repository '
+                         '(%d%%%% of %dk)' %((got * 100) / need, need / 1024))
+
+    def _update(self, msg):
+        # only push an update into the database if it differs from the
+        # current message
+        if self.msg != msg:
+            self.msg = msg
+            self.status(self.prefix + msg % self.changeset)
+
+    def setChangeSet(self, name):
+        self.changeset = name
+
+    def setPrefix(self, prefix):
+        self.prefix = prefix
+
+    def __init__(self, status):
+        self.status = status
+        self.restored = 0
+        self.msg = ''
+        self.changeset = ''
+        self.prefix = ''
 
 class InstallableIso(ImageGenerator):
     def getIsoConfig(self):
@@ -59,9 +94,11 @@ class InstallableIso(ImageGenerator):
 
         util.mkdirChain(csdir)
         self.status("Extracting changesets")
-        existingChangesets = {}
-        for path in [ "%s/%s" % (csdir, x) for x in os.listdir(csdir) ]:
-            existingChangesets[path] = 1
+
+        # build a set of the things we already have extracted.
+        existingChangesets = set()
+        for path in (os.path.join(csdir, x) for x in os.listdir(csdir)):
+            existingChangesets.add(path)
 
         trvList = client.repos.findTrove(cfg.installLabelPath[0],\
                                  (troveName, version.asString(), flavor),
@@ -78,10 +115,13 @@ class InstallableIso(ImageGenerator):
         assertParentAlive()
 
         groupName, groupVer, groupFlavor = trvList[0]
+
+        callback = Callback(self.status)
         cslist = gencslist.extractChangeSets(client, cfg, csdir, groupName,
                                              groupVer, groupFlavor,
                                              oldFiles = existingChangesets,
-                                             cacheDir = isocfg.cacheDir)
+                                             cacheDir = isocfg.cacheDir,
+                                             callback = callback)
         # Abort if parent thread has died
         assertParentAlive()
 
@@ -168,7 +208,7 @@ class InstallableIso(ImageGenerator):
                 # Abort if parent thread has died
                 assertParentAlive()
             isoList.append((infoMap['iso'], infoMap['discname']))
-        
+
         isoList = [ (os.path.join(infoMap['isodir'], iso[0]), iso[1]) for iso in isoList ]
         for iso, name in isoList:
             if not os.access(iso, os.R_OK):

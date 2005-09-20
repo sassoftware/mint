@@ -195,7 +195,7 @@ def _linkOrCopyFile(src, dest):
         break
 
 def extractChangeSets(client, cfg, csdir, groupName, groupVer, groupFlavor,
-                      oldFiles = None, cacheDir = None):
+                      oldFiles = None, cacheDir = None, callback = None):
     """
     extractChangesets extracts changesets from a group and creates
     cslist entries as it does so.
@@ -213,6 +213,7 @@ def extractChangeSets(client, cfg, csdir, groupName, groupVer, groupFlavor,
     @type groupVer: Version instance
     @param groupFlavor: flavor of group to extract changesets from
     @type groupFlavor: DependencySet instance
+    @param callback: Callback instance for progress.
 
     @param oldFiles: a set of changeset filenames that already exist
     in the csdir.  Any valid changeset that is included in the group
@@ -254,11 +255,16 @@ def extractChangeSets(client, cfg, csdir, groupName, groupVer, groupFlavor,
     # filter the change set list given by the dep solver
     finalList = _removeInvalidTroves(changeSetList, valid)
 
+    total = len(finalList)
     # use the order to extract changesets from the repository
-    for name, version, flavor in finalList:
+    for num, (name, version, flavor) in enumerate(finalList):
         csfile, entry = _makeEntry(group, name, version, flavor)
         path = '%s/%s' %(csdir, csfile)
         keep = False
+
+        if cacheDir:
+            cacheName = _getCacheFilename(name, version, flavor)
+            cachedPath = os.path.join(cacheDir, cacheName)
 
         # check to see if we already have the changeset in the changeset
         # directory
@@ -267,8 +273,6 @@ def extractChangeSets(client, cfg, csdir, groupName, groupVer, groupFlavor,
             keep = True
         elif cacheDir:
             # check for the cs in the cacheDir
-            cacheName = _getCacheFilename(name, version, flavor)
-            cachedPath = os.path.join(cacheDir, cacheName)
             if os.path.exists(cachedPath):
                 _linkOrCopyFile(cachedPath, path)
                 # make a note that we already have this cs
@@ -298,7 +302,11 @@ def extractChangeSets(client, cfg, csdir, groupName, groupVer, groupFlavor,
             # create the cs to a temp file
             fd, fn = tempfile.mkstemp(prefix=csfile, dir=csdir)
             os.close(fd)
-            client.createChangeSetFile(fn, csRequest, recurse = recurse)
+            if callback:
+                callback.setPrefix('changeset %d of %d: ' %(num, total))
+                callback.setChangeSet(name)
+            client.createChangeSetFile(fn, csRequest, recurse = recurse,
+                                       callback = callback)
             # rename to final path and change permissions
             os.rename(fn, path)
             os.chmod(path, 0644)

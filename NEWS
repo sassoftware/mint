@@ -5,6 +5,8 @@ Changes in 0.5.3:
   installable ISO images.
 * Images can now have descriptions stored with each image file.
 * mint.users.digMX() properly handles domains without MX records.
+* Installable ISO changeset extraction provides progress updates when
+  downloading data from the repository.
 
 Changes in 0.5.2:
 
