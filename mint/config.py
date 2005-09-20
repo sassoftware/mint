@@ -52,6 +52,7 @@ class MintConfig(ConfigFile):
         'bugsEmailName' : 'rBuilder Bugs',
         'bugsEmailSubject'  : 'Mint Unhandled Exception Report',
         'debugMode'         : [ BOOLEAN, False ],
+        'sendNotificationEmails': [ BOOLEAN, True ],
 
         # don't set these yourself; they will be automatically generated 
         # from authRepoMap:

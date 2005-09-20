@@ -160,7 +160,9 @@ class ApacheServer(ChildRepository):
         print >> f, 'dbPath %s' % self.reposDir + '/mintdb'
         print >> f, 'authDbPath %s' % self.reposDir + '/sqldb'
         print >> f, 'reposPath %s' % self.reposDir + '/repos/'
-        print >> f, 'authRepoMap %s http://test:foo@localhost:%d/conary/' % (self.name, self.port)
+        print >> f, 'authRepoMap %s http://test:foo@localhostconary:%d/conary/' % (self.name, self.port)
+        print >> f, 'debugMode False'
+        print >> f, 'sendNotificationEmails False'
         f.close()
 
     def __del__(self):
@@ -168,7 +170,7 @@ class ApacheServer(ChildRepository):
 	shutil.rmtree(self.serverRoot)
 
     def getMap(self, user = 'test', password = 'foo'):
-        return {self.name: 'http://%s:%s@localhost:%d/conary/' %
+        return {self.name: 'http://%s:%s@localhostconary:%d/conary/' %
                                         (user, password, self.port) }
 
     def reset(self):
@@ -232,7 +234,7 @@ class ServerCache:
         if self.servers[serverIdx] is not None:
             return self.servers[serverIdx]
 
-        name = 'localhost'
+        name = 'localhostconary'
         envname = 'CONARY_SERVER'
         if serverIdx > 0:
             name += str(serverIdx)
@@ -318,7 +320,7 @@ class RepositoryHelper(testsuite.TestCase):
 	count = 0
 	repos = netclient.NetworkRepositoryClient(self.cfg.repositoryMap)
 
-        name = "localhost"
+        name = "localhostconary"
         if serverIdx:
             name += "%d" % serverIdx
         label = versions.Label("%s@spx:linux" % name)
@@ -327,7 +329,7 @@ class RepositoryHelper(testsuite.TestCase):
 	    try:
                 repos.troveNames(label)
 		return repos
-	    except:
+	    except Exception, e:
 		pass
 
 	    time.sleep(0.1)

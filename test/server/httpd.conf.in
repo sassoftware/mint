@@ -43,6 +43,8 @@ MaxRequestsPerChild  0
 # Change this to Listen on specific IP addresses as shown below to 
 # prevent Apache from glomming onto all bound IP addresses (0.0.0.0)
 #
+NameVirtualHost *:@PORT@
+
 Listen 127.0.0.1:@PORT@
 
 # ServerAdmin: Your address, where problems with the server should be
@@ -59,8 +61,8 @@ LoadModule alias_module modules/mod_alias.so
 DocumentRoot "@DOCROOT@"
 
 Alias /static/ "@MINTPATH@/web/content/"
-Alias / "@DOCROOT@/mint.conf/"
 
+Alias / "@DOCROOT@/mint.conf/"
 <Location />
     AddHandler python-program .conf
     PythonHandler mint.web.hooks
@@ -68,15 +70,19 @@ Alias / "@DOCROOT@/mint.conf/"
     PythonPath "sys.path + ['@MINTPATH@', '@CONARYPATH@']"
 </Location>
 
-Alias /conary/ "@DOCROOT@/test.cnr/"
-<Location /conary/>
-    Options FollowSymLinks
-    AllowOverride None
+<VirtualHost *:@PORT@>
+    ServerName localhostconary
+    Alias /conary/ "@DOCROOT@/test.cnr/"
+    <Location /conary/>
+        Options FollowSymLinks
+        AllowOverride None
 
-    AddHandler python-program .cnr
-    PythonHandler server.apachehooks
-    PythonPath "sys.path + ['@CONARYPATH@']"
-</Location>
+        AddHandler python-program .cnr
+        PythonHandler server.apachehooks
+        PythonPath "sys.path + ['@CONARYPATH@']"
+    </Location>
+</VirtualHost>
+
 
 # TypesConfig describes where the mime.types file (or equivalent) is
 # to be found.

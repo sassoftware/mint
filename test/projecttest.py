@@ -38,7 +38,7 @@ class ProjectTest(rephelp.RepositoryHelper):
         project = client.getProject(projectId)
 
         project.addMemberById(otherUserId, userlevels.DEVELOPER)
-                    
+
     def testLabels(self):
         client = self.getMintClient("testuser", "testpass")
 

@@ -6,6 +6,7 @@
 import re
 import sqlite3
 import sys
+import os
 import time
 
 import database
@@ -27,6 +28,8 @@ from mint_error import PermissionDenied
 from searcher import SearchTermsError
 
 from repository import netclient
+from repository import shimclient
+from repository.netrepos import netserver
 
 validHost = re.compile('^[a-zA-Z][a-zA-Z0-9\-]*$')
 reservedHosts = ['admin', 'mail', 'mint', 'www', 'web', 'rpath', 'wiki', 'conary', 'lists']
@@ -119,13 +122,51 @@ class MintServer(object):
         else:
             return (False, r)
 
-    def _getAuthRepo(self, project):
+    def _getAuthRepo(self):
+        authRepoPath = os.path.dirname(self.cfg.authDbPath)
+        server = netserver.NetworkRepositoryServer(authRepoPath,
+            os.path.join(authRepoPath, "tmp"), '', self.cfg.authRepoMap.keys()[0],
+            self.cfg.authRepoMap)
+
+        repoUrl = urlparse(self.cfg.authRepoMap.values()[0])
+        # too bad urlparse doesn't split foo:bar@foo.com:80
+        if "@" in repoUrl[1]:
+            host = repoUrl[1].split("@")
+        else:
+            host = repoUrl
+        if ":" in host[0]:
+            port = host[1].split(":")
+        else:
+            port = 80
+    
+        repo = shimclient.ShimNetClient(
+            server, repoUrl[0], port,
+            (self.cfg.authUser, self.cfg.authPass),
+            self.cfg.authRepoMap)
+        return repo
+
+    def _getProjectRepo(self, project):
         authUrl = "http://%s:%s@%s/repos/%s/" % (self.cfg.authUser, self.cfg.authPass,
                                                  self.cfg.siteHost, project.getHostname())
         authLabel = project.getLabel()
-
         authRepo = {authLabel: authUrl}
-        repo = netclient.NetworkRepositoryClient(authRepo)
+
+        reposPath = os.path.join(self.cfg.reposPath, project.getFQDN())
+        tmpPath = os.path.join(reposPath, "tmp")
+        
+        # handle non-standard ports specified on cfg.domainName,
+        # most likely just used by the test suite
+        if ":" in self.cfg.domainName:
+            port = int(self.cfg.domainName.split(":")[1])
+        else:
+            port = 80
+        
+        # use a shimclient for mint-handled repositories; netclient if not
+        if project.getDomainname() == self.cfg.domainName:
+            repo = netclient.NetworkRepositoryClient(authRepo)
+        else:
+            server = netserver.NetworkRepositoryServer(reposPath, tmpPath, '', project.getFQDN(), authRepo)
+            repo = shimclient.ShimNetClient(server, "http", port, (self.cfg.authUser, self.cfg.authPass), authRepo)
         return repo
 
     # project methods
@@ -237,7 +278,7 @@ class MintServer(object):
             raise
 
         self.projectUsers.new(projectId, userId, level)
-        repos = self._getAuthRepo(project)
+        repos = self._getProjectRepo(project)
         repos.addUserByMD5(project.getLabel(), username, salt, password)
         repos.addAcl(project.getLabel(), username, None, None, True, False, level == userlevels.OWNER)
 
@@ -253,7 +294,7 @@ class MintServer(object):
         #XXX Make this atomic
         project = projects.Project(self, projectId)
         self.projectUsers.delete(projectId, userId)
-        repos = self._getAuthRepo(project)
+        repos = self._getProjectRepo(project)
         user = self.getUser(userId)
         repos.deleteUserByName(project.getLabel(), user['username'])
         if notify:
@@ -271,10 +312,11 @@ class MintServer(object):
         message += "\n%s\n" % project.getName()
         closing = 'Please contact the project owner(s) with any questions.'
 
-        users.sendMail(self.cfg.adminMail, self.cfg.productName,
-                    user['email'],
-                    "%s user account modification" % self.cfg.productName,
-                    '\n\n'.join((greeting, message, closing)))
+        if self.cfg.sendNotificationEmails:
+            users.sendMail(self.cfg.adminMail, self.cfg.productName,
+                        user['email'],
+                        "%s user account modification" % self.cfg.productName,
+                        '\n\n'.join((greeting, message, closing)))
 
     @requiresAdmin
     @private
@@ -305,7 +347,7 @@ class MintServer(object):
     @private
     def hideProject(self, projectId):
         project = projects.Project(self, projectId)
-        repos = self._getAuthRepo(project)
+        repos = self._getProjectRepo(project)
         repos.deleteUserByName(project.getLabel(), 'anonymous')
 
         return self.projects.hide(projectId)
@@ -314,7 +356,7 @@ class MintServer(object):
     @private
     def unhideProject(self, projectId):
         project = projects.Project(self, projectId)
-        repos = self._getAuthRepo(project)
+        repos = self._getProjectRepo(project)
         userId = repos.addUser(project.getLabel(), 'anonymous', 'anonymous')
         repos.addAcl(project.getLabel(), 'anonymous', None, None, False, False, False)
 
@@ -408,7 +450,7 @@ class MintServer(object):
     def addUserKey(self, projectId, username, keydata):
         #find the project repository
         project = projects.Project(self, projectId)
-        repos = self._getAuthRepo(project)
+        repos = self._getProjectRepo(project)
 
         #Call the repository's addKey function
         return repos.addNewAsciiPGPKey(project.getLabel(), username, keydata)
@@ -462,7 +504,7 @@ class MintServer(object):
         repoLabel = self.cfg.authRepoMap.keys()[0]
         username = self.users.getUsername(userId)
         cu = self.db.cursor()
-        authRepo = netclient.NetworkRepositoryClient(self.cfg.authRepoMap)
+        authRepo = self._getAuthRepo()
 
         #Handle projects
         projectList = self.getProjectIdsByMember(userId)
@@ -495,10 +537,10 @@ class MintServer(object):
         for projectId, level in self.getProjectIdsByMember(userId):
             project = projects.Project(self, projectId)
 
-            authRepo = self._getAuthRepo(project)
+            authRepo = self._getProjectRepo(project)
             authRepo.changePassword(project.getLabel(), username, newPassword)
 
-        authRepo = netclient.NetworkRepositoryClient(self.cfg.authRepoMap)
+        authRepo = self._getAuthRepo()
         authLabel = self.cfg.authRepoMap.keys()[0]
         authRepo.changePassword(authLabel, username, newPassword)
 
