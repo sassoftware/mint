@@ -1,3 +1,10 @@
+Changes in 0.5.3:
+
+* The cached or pre-existing changesets are now double checked against
+  the latest version from the repository before they are used for
+  installable ISO images.
+* Images can now have descriptions stored with each image file.
+
 Changes in 0.5.2:
 
 * JobsTable moved to a subclass of KeyedTable.
