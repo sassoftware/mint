@@ -19,6 +19,14 @@ def requiresHttps(func):
 
     return wrapper
 
+def redirectHttp(func):
+    def wrapper(self, *args, **kwargs):
+        if self.req.subprocess_env.get('HTTPS', 'off') != 'off' and self.cfg.SSL:
+            return self._redirect('http://%s%s' %(self.req.hostname, self.req.unparsed_uri))
+        else:
+            return func(self, *args, **kwargs)
+    return wrapper
+
 def redirectHttps(func):
     def wrapper(self, *args, **kwargs):
         if self.req.subprocess_env.get('HTTPS', 'off') != 'on' and self.cfg.SSL:

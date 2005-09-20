@@ -24,7 +24,7 @@ from mint import userlevels
 from mint import mailinglists
 
 from webhandler import WebHandler, normPath
-from decorators import requiresAdmin, requiresAuth, requiresHttps, redirectHttps
+from decorators import requiresAdmin, requiresAuth, requiresHttps, redirectHttps, redirectHttp
 from decorators import mailList
 
 class SiteHandler(WebHandler):
@@ -47,6 +47,7 @@ class SiteHandler(WebHandler):
             method = self._404
         return method
 
+    @redirectHttp
     def _frontPage(self, auth):
         news = self.client.getNews()
         self._write("frontPage", news = news, newsLink = self.client.getNewsLink(), firstTime=self.session.get('firstTimer', False))
@@ -129,6 +130,7 @@ class SiteHandler(WebHandler):
         self._write("login", message = message)
         return apache.OK
 
+    @redirectHttp
     @strFields(page = "")
     def help(self, auth, page):
         if page:
@@ -142,7 +144,7 @@ class SiteHandler(WebHandler):
 
     def logout(self, auth):
         self._clearAuth()
-        return self._redirectHttp("/")
+        return self._redirect("/")
 
     def _resetPassword(self, username):
         userId = self.client.getUserIdByName(username)

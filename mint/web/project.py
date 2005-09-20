@@ -19,7 +19,7 @@ import versions
 from deps import deps
 
 from webhandler import WebHandler, normPath
-from decorators import ownerOnly, requiresAuth, requiresAdmin, mailList
+from decorators import ownerOnly, requiresAuth, requiresAdmin, mailList, redirectHttp
 from web import fields
 from web.fields import strFields, intFields, listFields, boolFields
 
@@ -61,6 +61,7 @@ class ProjectHandler(WebHandler):
 
         return method
 
+    @redirectHttp
     def projectPage(self, auth):
         self._write("projectPage", userHasReq = self.client.userHasRequested(self.project.getId(), auth.userId))
         return apache.OK

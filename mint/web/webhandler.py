@@ -45,7 +45,9 @@ class WebHandler(object):
         elif location.startswith('https://'):
             location = location.replace('https://', 'http://', 1)
         else:
-            location = 'http://%s%s' % (self.req.hostname, normPath(self.cfg.basePath + location))
+            while location and location[0] == '/':
+                location = location[1:]
+            location = 'http://%s%s%s' % (self.req.hostname, self.cfg.basePath, location)
         self.req.headers_out['Location'] = location
         return apache.HTTP_MOVED_PERMANENTLY
 
