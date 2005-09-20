@@ -58,6 +58,16 @@ LoadModule alias_module modules/mod_alias.so
 
 DocumentRoot "@DOCROOT@"
 
+Alias /static/ "@MINTPATH@/web/content/"
+Alias / "@DOCROOT@/mint.conf/"
+
+<Location />
+    AddHandler python-program .conf
+    PythonHandler mint.web.hooks
+    PythonDebug Off
+    PythonPath "sys.path + ['@MINTPATH@', '@CONARYPATH@']"
+</Location>
+
 Alias /conary/ "@DOCROOT@/test.cnr/"
 <Location /conary/>
     Options FollowSymLinks
@@ -66,17 +76,6 @@ Alias /conary/ "@DOCROOT@/test.cnr/"
     AddHandler python-program .cnr
     PythonHandler server.apachehooks
     PythonPath "sys.path + ['@CONARYPATH@']"
-</Location>
-
-Alias /static/ "@MINTPATH@/web/content/"
-Alias /mint/ "@DOCROOT@/mint.conf/"
-Alias /images/ "@DOCROOT@/imagetool.conf/"
-
-<Location /mint/>
-    AddHandler python-program .conf
-    PythonHandler mint.web.hooks
-    PythonDebug Off
-    PythonPath "sys.path + ['@MINTPATH@', '@CONARYPATH@']"
 </Location>
 
 # TypesConfig describes where the mime.types file (or equivalent) is

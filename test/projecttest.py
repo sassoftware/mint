@@ -28,8 +28,6 @@ class ProjectTest(rephelp.RepositoryHelper):
             [[2, 'testuser', userlevels.OWNER]])
     
     def testMembers(self):
-        ## XXX disabled
-        
         client = self.openMint(("test", "foo"))
         otherUserId = client.registerNewUser("member", "memberpass", "Test Member",
                         "test@example.com", "test at example.com", "", active=True)
