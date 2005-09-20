@@ -4,7 +4,7 @@
 # All Rights Reserved
 #
 
-script_dist = job-server mklivecd mkinstroots reset update-package-index
+script_dist = job-server mklivecd reset update-package-index
 
 extra_dist = Makefile installable_iso.conf live_iso.conf
 
