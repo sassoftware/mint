@@ -7,6 +7,8 @@ import os
 import sys
 import xmlrpclib
 
+from repository import repository
+
 import database
 import jobs
 import projects
@@ -383,6 +385,8 @@ class _Method(xmlrpclib._Method):
             raise users.MailError(exceptionArgs[0])
         elif exceptionName == "DuplicateJob":
             raise jobs.DuplicateJob(exceptionArgs[0])
+        elif exceptionName == "OpenError":
+            raise repository.OpenError(exceptionArgs[0])
         else:
             raise UnknownException(exceptionName, exceptionArgs)
 

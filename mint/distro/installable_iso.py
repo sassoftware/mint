@@ -155,7 +155,8 @@ class InstallableIso(ImageGenerator):
         self.status("Building Anaconda installation")
         cmd = [isocfg.scriptPath + '/buildinstall', '--topdir', topdir,
                '--subdir', subdir, '--name', '%s' % project.getName(),
-               '--version', releaseVer, '--arch', anacondaArch]
+               '--version', releaseVer, '--arch', anacondaArch,
+               '--install-label', 'conary.rpath.com@rpl:devel']
         print >> sys.stderr, " ".join(cmd)
         sys.stderr.flush()
 

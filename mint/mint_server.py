@@ -120,8 +120,8 @@ class MintServer(object):
             return (False, r)
 
     def _getAuthRepo(self, project):
-        authUrl = "http://%s:%s@%s/conary/" % (self.cfg.authUser, self.cfg.authPass,
-                                               project.getFQDN())
+        authUrl = "http://%s:%s@%s/repos/%s/" % (self.cfg.authUser, self.cfg.authPass,
+                                                 self.cfg.siteHost, project.getHostname())
         authLabel = project.getLabel()
 
         authRepo = {authLabel: authUrl}
