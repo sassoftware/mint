@@ -8,6 +8,7 @@ import sqlite3
 import sys
 import os
 import time
+from urlparse import urlparse
 
 import database
 import hmac
