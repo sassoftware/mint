@@ -146,8 +146,14 @@ class MintServer(object):
         return repo
 
     def _getProjectRepo(self, project):
-        authUrl = "http://%s:%s@%s/repos/%s/" % (self.cfg.authUser, self.cfg.authPass,
-                                                 self.cfg.siteHost, project.getHostname())
+        if self.cfg.SSL:
+            protocol = "https"
+            port = 443
+        else:
+            protocol = "http"
+            port = 80
+        authUrl = "%s://%s:%s@%s/repos/%s/" % (protocol, self.cfg.authUser, self.cfg.authPass,
+                                               self.cfg.siteHost, project.getHostname())
         authLabel = project.getLabel()
         authRepo = {authLabel: authUrl}
 
@@ -158,15 +164,13 @@ class MintServer(object):
         # most likely just used by the test suite
         if ":" in self.cfg.domainName:
             port = int(self.cfg.domainName.split(":")[1])
-        else:
-            port = 80
         
         # use a shimclient for mint-handled repositories; netclient if not
         if project.getDomainname() == self.cfg.domainName:
             repo = netclient.NetworkRepositoryClient(authRepo)
         else:
             server = netserver.NetworkRepositoryServer(reposPath, tmpPath, '', project.getFQDN(), authRepo)
-            repo = shimclient.ShimNetClient(server, "http", port, (self.cfg.authUser, self.cfg.authPass), authRepo)
+            repo = shimclient.ShimNetClient(server, protocol, port, (self.cfg.authUser, self.cfg.authPass), authRepo)
         return repo
 
     # project methods
@@ -193,6 +197,8 @@ class MintServer(object):
                               level = userlevels.OWNER)
         
         project = projects.Project(self, projectId)
+        
+        
         project.addLabel(fqdn + "@%s" % self.cfg.defaultBranch,
             "http://%s%srepos/%s/" % (self.cfg.siteHost, self.cfg.basePath, hostname),
             self.cfg.authUser, self.cfg.authPass)
@@ -645,7 +651,7 @@ class MintServer(object):
     @private
     def getLabelsForProject(self, projectId):
         """Returns a mapping of labels to labelIds and a repository map dictionary for the current user"""
-        return self.labels.getLabelsForProject(projectId)
+        return self.labels.getLabelsForProject(projectId, self.cfg.SSL)
 
     @requiresAuth
     @private

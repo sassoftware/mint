@@ -391,7 +391,7 @@ class LabelsTable(database.KeyedTable):
         label = cu.fetchone()
         return label[0]
 
-    def getLabelsForProject(self, projectId):
+    def getLabelsForProject(self, projectId, useSSL = False):
         cu = self.db.cursor()
 
         cu.execute("""SELECT labelId, label, url, username, password
@@ -406,11 +406,16 @@ class LabelsTable(database.KeyedTable):
             if url:
                 if username and password:
                     urlparts = urlparse.urlparse(url)
-                    map = "".join((urlparts[0], "://%s:%s@" % (username, password)) + urlparts[1:])
+
+                    if useSSL:
+                        protocol = "https"
+                    else:
+                        protocol = "http"
+                    map = "".join((protocol, "://%s:%s@" % (username, password)) + urlparts[1:])
                 else:
                     map = url
             else:
-                map = "https://%s/conary/" % (host)
+                map = "http://%s/conary/" % (host)
 
             repoMap[host] = map
 
