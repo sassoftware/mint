@@ -259,8 +259,8 @@ class MintServer(object):
                     message += "No comments were supplied"
                 message += "\n\nTo respond to this request:\n\n"
                 message += "  o Login to %s\n" % self.getProject(projectId)['name']
-                message += "  o Click on the "Requests Pending" link under the "My Projects" sidebar\n"
-                message += "  o You can find all outstanding requests under the "Requestors" heading at the bottom of the page\n"
+                message += "  o Click on the 'Requests Pending' link under the 'My Projects' sidebar\n"
+                message += "  o You can find all outstanding requests under the 'Requestors' heading at the bottom of the page\n"
                 users.sendMailWithChecks(self.cfg.adminMail, self.cfg.productName, email, subject, message)
         return self.membershipRequests.setComments(projectId, userId, comments)
 
