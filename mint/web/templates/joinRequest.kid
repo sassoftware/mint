@@ -32,7 +32,12 @@ from mint import userlevels
                             <tr><td><h2>Request membership in ${project.getName()}</h2></td></tr>
                             <tr><td>Please edit any additional comments you wish to make</td></tr>
 			    <tr><td><textarea name="comments" rows="10" cols="40">$comments</textarea></td></tr>
-                            <tr><td><button type="submit">Submit</button></td></tr>
+                            <tr>
+                                <td>
+                                    <button name="keepReq" value="1" type="submit">Submit</button>
+                                    <button name="keepReq" value="0" type="submit">Retract Request</button>
+                                </td>
+                            </tr>
 			</table>
 			</form>
                         </div>

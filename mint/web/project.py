@@ -278,17 +278,25 @@ class ProjectHandler(WebHandler):
         return self._redirect(self.basePath + "members")
 
     @strFields(comments = '')
+    @intFields(keepReq = None)
     @requiresAuth
-    def processJoinRequest(self, auth, comments):
-        self.client.setJoinReqComments(self.project.getId(), auth.userId, comments)
+    def processJoinRequest(self, auth, comments, keepReq):
+        projectId = self.project.getId()
+        userId = auth.userId
+        if(keepReq):
+            self.client.setJoinReqComments(projectId, userId, comments)
+        else:
+            self.client.deleteJoinRequest(projectId, userId)
         return self._redirect(self.basePath)
 
+    @requiresAuth
     @intFields(userId = None)
     def viewJoinRequest(self, auth, userId):
         user = self.client.getUser(userId)
         self._write('viewJoinRequest', userId = userId, username = user.getUsername(), projectId = self.project.getId(), comments = self.client.getJoinReqComments(self.project.getId(), userId))
         return apache.OK
 
+    @requiresAuth
     @intFields(makeOwner = False, makeDevel = False, reject = False, userId = None)
     def acceptJoinRequest(self, auth, userId, makeOwner, makeDevel, reject):
         projectId = self.project.getId()
