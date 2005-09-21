@@ -208,10 +208,12 @@ def putFile(port, isSecure, repos, req):
 def conaryHandler(req, cfg, pathInfo):
     paths = normPath(req.uri).split("/")
     if paths[1] == "repos":
-        repName = paths[2] + "." + cfg.domainName
+        # test suite hook: lop off any port specified in cfg file
+        domainName = cfg.domainName.split(":")[0]
+        repName = paths[2] + "." + domainName
     else:
         repName = req.hostname
-
+                        
     method = req.method.upper()
     port = req.connection.local_addr[1]
     secure = (req.subprocess_env.get('HTTPS', 'off') == 'on')
