@@ -15,9 +15,9 @@ from mint import userlevels
     ?>
 
     <div py:def="breadcrumb()" py:strip="True">
-        <a href="/">${project.getName()}</a>
-        <a href="members">Members</a>
-	<a href="viewJoinRequest?userId=${userId}">View Join Request</a>
+        <a href="$basePath">${project.getName()}</a>
+        <a href="${basePath}members">Members</a>
+	<a href="${basePath}viewJoinRequest?userId=${userId}">View Join Request</a>
 	<a href="#">Reject</a>
     </div>
 
