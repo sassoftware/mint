@@ -282,7 +282,6 @@ class MintServer(object):
     @private
     def addMember(self, projectId, userId, username, level):
         assert(level in userlevels.LEVELS)
-        self.membershipRequests.deleteRequest(projectId, userId)
         project = projects.Project(self, projectId)
 
         cu = self.db.cursor()
@@ -295,6 +294,7 @@ class MintServer(object):
         elif userId and not username:
             username = self.users.getUsername(userId)
 
+        self.membershipRequests.deleteRequest(projectId, userId)
         acu = self.authDb.cursor()
         password = ''
         salt = ''

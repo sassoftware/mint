@@ -57,5 +57,30 @@ class JoinRequestTest(MintRepositoryHelper):
         # request should not have been added -- user is already a member
         assert(not client.userHasRequested(projectId, userId))
 
+        # exercise addMemberByName code path. same as adopting project
+        project.delMemberById(userId)
+        client.setJoinReqComments(projectId, userId, 'foo')
+        for memberId, x, y in project.getMembers():
+            project.delMemberById(memberId)
+        project.addMemberByName('member', userlevels.OWNER)
+        # request should no longer be present
+        assert(not client.userHasRequested(projectId, userId))
+        
+    def testCancelAcctEffects(self):
+        client = self.getMintClient("testuser", "testpass")
+        projectId = client.newProject("Foo", "foo", "rpath.org")
+
+        userId = client.registerNewUser("member", "memberpass", "Test Member",
+                                        "test@example.com", "test at example.com", "", active=True)
+
+        client = self.openMint(('member', 'memberpass'))
+        user = client.getUser(userId)
+        client.setJoinReqComments(projectId, userId, 'foo')
+        # cancel account and check again
+        user.cancelUserAccount()
+        # request should no longer be present
+        assert(not client.userHasRequested(projectId, userId))
+        
+
 if __name__ == "__main__":
     testsuite.main()
