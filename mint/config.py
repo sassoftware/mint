@@ -92,4 +92,4 @@ class MintConfig(ConfigFile):
             self.commitEmail = "rBuilder@%s" % self.domainName
 
         if not self.bugsEmail:
-            self.bugsEmail = "rBuilder@%s" % self.domainName
+            self.bugsEmail = "rBuilder-tracebacks@%s" % self.domainName

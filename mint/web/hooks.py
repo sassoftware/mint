@@ -378,7 +378,7 @@ def logErrorAndEmail(req, cfg, Exception, e, bt):
     for key in keys:
         body += '\n' + key + ': ' + str(info_dict[key])
     users.sendMailWithChecks(cfg.bugsEmail, cfg.bugsEmailName,
-                             cfg.adminMail, cfg.bugsEmailSubject, body)
+                             cfg.bugsEmail, cfg.bugsEmailSubject, body)
 
 def handler(req):
     cfg = config.MintConfig()
