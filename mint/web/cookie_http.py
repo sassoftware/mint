@@ -43,9 +43,19 @@ class ConaryHandler(WebHandler, http.HttpHandler):
         
         self.project = self.client.getProjectByFQDN(self.serverName)
         projectName = self.project.getHostname()
-        self.repositoryMap = {self.serverName: 'http://%s%srepos/%s/' % (self.siteHost, self.cfg.basePath, projectName)}
-        self.repos = netclient.NetworkRepositoryClient(self.repositoryMap)
 
+        if self.cfg.SSL:
+            protocol = "https"
+        else:
+            protocol = "http"
+            
+        if self.project.hidden:
+            url = "%s://%s:%s@%s%srepos/%s/" % (protocol, self.authToken[0], self.authToken[1],
+                                              self.siteHost, self.cfg.basePath, projectName)
+        else:
+            url = "%s://%s%srepos/%s/" % (protocol, self.siteHost, self.cfg.basePath, projectName)
+        self.repositoryMap = {self.serverName: url}
+        self.repos = netclient.NetworkRepositoryClient(self.repositoryMap)
         return self._handle
 
     def _handle(self, *args, **kwargs):
@@ -60,7 +70,6 @@ class ConaryHandler(WebHandler, http.HttpHandler):
             return self._redirect(self.cfg.defaultRedirect)
 
     def _getHandler(self, cmd):
-        self.repos = netclient.NetworkRepositoryClient(self.repServer.map)
         try:
             method = self.__getattribute__(cmd)
         except AttributeError:
