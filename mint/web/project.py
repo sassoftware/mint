@@ -300,13 +300,31 @@ class ProjectHandler(WebHandler):
     @intFields(makeOwner = False, makeDevel = False, reject = False, userId = None)
     def acceptJoinRequest(self, auth, userId, makeOwner, makeDevel, reject):
         projectId = self.project.getId()
-        self.client.deleteJoinRequest(projectId, userId)
+        user = self.client.getUser(userId)
+        if reject:
+            self._write('rejectJoinRequest', userId = userId, username = user.getUsername())
+            return apache.OK
         user = self.client.getUser(userId)
         username = user.getUsername()
         if (makeOwner):
             self.project.addMemberByName(username, userlevels.OWNER)
         elif (makeDevel):
             self.project.addMemberByName(username, userlevels.DEVELOPER)
+        return self._redirect(self.basePath + "members")
+
+    @requiresAuth
+    @intFields(userId = None)
+    @strFields(comments = '')
+    def processJoinRejection(self, auth, userId, comments):
+        from mint.users import sendMailWithChecks
+        if not comments:
+            comments = "No reason was supplied"
+        body = "Your application to join project: "+self.project.getName()
+        body += " has been rejected.\nOwner's comments:\n"+comments
+        subject = "Membership Rejection Notice"
+        user = self.client.getUser(userId)
+        sendMailWithChecks(self.cfg.adminMail, self.cfg.productName, user.getEmail(), subject, body)
+        self.client.deleteJoinRequest(self.project.getId(), userId)
         return self._redirect(self.basePath + "members")
 
     @requiresAuth

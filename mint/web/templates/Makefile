@@ -38,7 +38,8 @@ kid_files = \
 	userSettings.kid	\
 	users.kid		\
 	joinRequest.kid		\
-	viewJoinRequest.kid
+	viewJoinRequest.kid	\
+	rejectJoinRequest.kid
 
 python_files = __init__.py
 
