@@ -41,6 +41,7 @@ function XmlRpcRequest(url, method)
         if(req.readyState == 4) {
             if(req.status == 200) {
                 if(handler) {
+                    alert(req.responseText);
                     handler(req.responseXML);
                 }
             }

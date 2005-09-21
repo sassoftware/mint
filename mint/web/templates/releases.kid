@@ -17,7 +17,7 @@
 
     <div py:def="breadcrumb()" py:strip="True">
         <a href="$basePath">${project.getName()}</a>
-        <a href="#">Releases </a>
+        <a href="#">Releases</a>
     </div>
 
     <table border="0" cellspacing="0" cellpadding="0"

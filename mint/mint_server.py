@@ -862,7 +862,7 @@ class MintServer(object):
         
         troveDict = {}
         for label in labelIdMap.keys():
-            troves = allTroveNames.getTroveNames(versions.Label(label), nc)
+            troves = nc.getAllTroveLeaves(versions.Label(label).getHost(), {None: [None]})
             troves = [x for x in troves if (x.startswith("group-") or\
                                             x.startswith("fileset-")) and\
                                             ":" not in x]

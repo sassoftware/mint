@@ -12,8 +12,8 @@ import time
       py:extends="'../layout.kid'">
 
     <div py:def="breadcrumb" py:strip="True">
-        <a href="/">${project.getName()}</a>
-        <a href="/conary/browse">Repository Browser</a>
+        <a href="${cfg.basePath}project/${project.getHostname()}/">${project.getName()}</a>
+        <a href="${basePath}browse">Repository Browser</a>
         <a href="#">${troveName}</a>
     </div>
 

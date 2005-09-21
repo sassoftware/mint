@@ -11,7 +11,7 @@ from mod_python import apache
 from server import http
 from repository import netclient 
 from templates import repos
-from webhandler import WebHandler
+from webhandler import WebHandler, normPath
 from mint.session import SqlSession
 
 class ConaryHandler(WebHandler, http.HttpHandler):
@@ -43,6 +43,9 @@ class ConaryHandler(WebHandler, http.HttpHandler):
         
         self.project = self.client.getProjectByFQDN(self.serverName)
         projectName = self.project.getHostname()
+
+        self.basePath += "repos/%s" % self.project.getHostname()
+        self.basePath = normPath(self.basePath)
 
         if self.cfg.SSL:
             protocol = "https"

@@ -36,7 +36,8 @@ from mint import userlevels
         ?>
         <div py:def="breadcrumb()" py:strip="True">
             <a href="$basePath">${project.getName()}</a>
-            <a href="#">Release</a>
+            <a href="${basePath}releases">Releases</a>
+            <a href="#">Release: ${name}</a>
         </div>
     
         <td id="left" class="side">
