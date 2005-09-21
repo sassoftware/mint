@@ -60,15 +60,16 @@ LoadModule alias_module modules/mod_alias.so
 
 DocumentRoot "@DOCROOT@"
 
-Alias /static/ "@MINTPATH@/web/content/"
-
-Alias / "@DOCROOT@/mint.conf/"
-<Location />
-    AddHandler python-program .conf
-    PythonHandler mint.web.hooks
-    PythonDebug Off
-    PythonPath "sys.path + ['@MINTPATH@', '@CONARYPATH@']"
-</Location>
+PythonPath "['@MINTPATH@', '@CONARYPATH@'] + sys.path"
+<VirtualHost *:@PORT@>
+    ServerName localhost
+    Alias / "@DOCROOT@/mint.conf/"
+    <Location />
+        AddHandler python-program .conf
+        PythonHandler mint.web.hooks
+        PythonDebug Off
+    </Location>
+</VirtualHost>
 
 <VirtualHost *:@PORT@>
     ServerName 127.0.0.1 
@@ -79,7 +80,6 @@ Alias / "@DOCROOT@/mint.conf/"
 
         AddHandler python-program .cnr
         PythonHandler server.apachehooks
-        PythonPath "sys.path + ['@CONARYPATH@']"
     </Location>
 </VirtualHost>
 
