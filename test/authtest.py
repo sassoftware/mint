@@ -6,11 +6,11 @@
 import testsuite
 testsuite.setup()
 
-import rephelp
+from mint_rephelp import MintRepositoryHelper
 
 from mint import mint_server
 
-class AuthTest(rephelp.RepositoryHelper):
+class AuthTest(MintRepositoryHelper):
     def testNewUser(self):
         client = self.getMintClient("testuser", "testpass")
         auth = client.checkAuth()

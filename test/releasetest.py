@@ -6,9 +6,9 @@
 import testsuite
 testsuite.setup()
 
-import rephelp
+from mint_rephelp import MintRepositoryHelper
 
-class ReleaseTest(rephelp.RepositoryHelper):
+class ReleaseTest(MintRepositoryHelper):
     def testBasicAttributes(self):
         client = self.getMintClient("testuser", "testpass")
         projectId = client.newProject("Foo", "foo", "rpath.org")

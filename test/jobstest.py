@@ -6,11 +6,11 @@
 import testsuite
 testsuite.setup()
 
-import rephelp
+from mint_rephelp import MintRepositoryHelper
 from mint import jobstatus
 from mint import jobs
 
-class JobsTest(rephelp.RepositoryHelper):
+class JobsTest(MintRepositoryHelper):
     def testJobs(self):
         client = self.getMintClient("testuser", "testpass")
         projectId = client.newProject("Foo", "foo", "rpath.org")

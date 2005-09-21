@@ -24,6 +24,12 @@ class LogFilter:
         self.records = []
         self.ignorelist = []
 
+    def clear(self):
+        from lib import log
+        self.records = []
+        self.ignorelist = []
+        log.logger.removeFilter(self)
+
     def filter(self, record):
         from lib import log
         text = log.formatter.format(record)
@@ -90,18 +96,25 @@ class LogFilter:
         self.records = []
 
 conaryDir = None
-mintDir = None
 
 def setup():
     global testPath
     global archivePath
 
-    if not os.environ.has_key('CONARY_PATH') or\
-       not os.environ.has_key('MINT_PATH'):
-	print "please set CONARY_PATH, MINT_PATH, and MINT_URL"
+    if not os.environ.has_key('CONARY_PATH'):
+	print "please set CONARY_PATH"
 	sys.exit(1)
+    if not os.environ.has_key('MINT_PATH'):
+        print "please set MINT_PATH"
+        sys.exit(1)
     sys.path.insert(0, os.environ['CONARY_PATH'])
     sys.path.insert(0, os.environ['MINT_PATH'])
+    sys.path.insert(1, os.path.join(os.environ['CONARY_PATH'], 'server'))
+    if 'PYTHONPATH' in os.environ:
+        os.environ['PYTHONPATH'] = os.pathsep.join((os.environ['CONARY_PATH'],
+                                                    os.environ['PYTHONPATH']))
+    else:
+        os.environ['PYTHONPATH'] = os.environ['CONARY_PATH']
 
     if isIndividual():
         serverDir = '/tmp/conary-server'
@@ -126,12 +139,14 @@ def setup():
     archivePath = testPath + '/' + "archive"
     parent = os.path.dirname(testPath)
 
-    global conaryDir, mintDir, mintUrl
+    global conaryDir, mintDir
     conaryDir = os.environ['CONARY_PATH']
     mintDir = os.environ['MINT_PATH']
-    mintUrl = os.environ['MINT_URL']
     if parent not in sys.path:
 	sys.path.append(parent)
+
+    from lib import util
+    sys.excepthook = util.genExcepthook(False)
 
     return path
 
@@ -151,9 +166,17 @@ class Loader(unittest.TestLoader):
         return self.suiteClass(tests)
 
     def loadTestsFromName(self, name, module=None):
+        # test to make sure we can load what we're trying to load
+        # since we can generate a better error message up front.
+        if not module:
+            try:
+                __import__(name)
+            except ImportError, e:
+                print 'unable to import module %s: %s' %(name, e)
+                raise
         try:
             f = unittest.TestLoader.loadTestsFromName(self, name,
-                                                       module=module)
+                                                      module=module)
             if isinstance(f, unittest.TestSuite) and not f._tests:
                 raise RuntimeError, 'no tests in %s' %name
             return f
@@ -167,6 +190,12 @@ class Loader(unittest.TestLoader):
                                                                  module=module)
                 except AttributeError:
                     pass
+                except ImportError, e:
+                    print 'unable to import tests from %s: %s' %(newname, e)
+                    raise
+        except ImportError, e:
+            print 'unable to import tests from %s: %s' %(name, e)
+            raise
         raise AttributeError
 
 class TestCase(unittest.TestCase):
@@ -220,10 +249,9 @@ class TestCase(unittest.TestCase):
         self.owner = pwd.getpwuid(os.getuid())[0]
         self.group = grp.getgrgid(os.getgid())[0]
 
-	global conaryDir, mintDir, mintUrl
+	global conaryDir, mintDir
 	self.conaryDir = conaryDir
         self.mintDir = mintDir
-        self.mintUrl = mintUrl
 
     def mimicRoot(self):
 	self.oldgetuid = os.getuid
@@ -363,9 +391,6 @@ if __name__ == '__main__':
 	for (dirpath, dirnames, filenames) in os.walk(topdir):
 	    for f in filenames:
 		if f.endswith('test.py') and not f.startswith('.'):
-                    global mintUrl
-                    if f.startswith('web') and not mintUrl:
-                        continue
 		    # turn any subdir into a dotted module string
 		    d = dirpath[len(topdir) + 1:].replace('/', '.')
 		    if d:

@@ -3,6 +3,7 @@
 #
 
 #python
+import copy
 import errno
 import os
 import signal
@@ -25,8 +26,10 @@ import branch
 from build import cook
 from build import recipe, use
 import checkin
+import clone
 import conaryclient
 import conarycfg
+import cscmd
 import cvc
 import deps
 import files
@@ -34,6 +37,8 @@ import flavorcfg
 from lib import log
 from lib import sha1helper
 from lib import util
+from lib import openpgpkey
+from lib import openpgpfile
 from local import database
 from repository import netclient, changeset, filecontents
 import repository
@@ -41,16 +46,32 @@ import trove
 import updatecmd
 import versions
 
+#test
+import recipes
+import testsuite
+
 #mint
 from mint import dbversion
 from mint import mint
 from mint import users
 from mint import config
-from mint import shimclient
 
-#test
-import recipes
-import testsuite
+# this is an override for deps.arch.x86flags -- we never want to use
+# any system flags (normally gathered from places like /proc/cpuinfo)
+# because they could change the results from run to run
+def x86flags(archTag, *args):
+    # always pretend we're on i686 for x86 machines
+    if archTag == 'x86':
+        flags = []
+        for f in ('i486', 'i586', 'i686'):
+            flags.append((f, deps.deps.FLAG_SENSE_PREFERRED))
+        return deps.deps.Dependency(archTag, flags)
+    # otherwise, just use the archTag with no flags
+    return deps.deps.Dependency(archTag)
+# override the existing x86flags() function
+deps.arch.x86flags = x86flags
+# reinitialize deps.arch
+deps.arch.initializeArch()
 
 class IdGen0(cook._IdGen):
 
@@ -75,6 +96,7 @@ class IdGen3(IdGen0):
 class RepositoryServer:
     def __init__(self, name):
         self.name = name
+        self.needsPGPKey = True
 
     def start(self):
         raise NotImplementedError
@@ -124,25 +146,26 @@ class ChildRepository(RepositoryServer):
                   % (self.serverDir, self.reposDir))
 
 class ApacheServer(ChildRepository):
-    def __init__(self, name, server, serverDir, reposDir, conaryPath,
-                 mintPath, repMap, useCache = False):
+    def __init__(self, name, server, serverDir, reposDir, conaryPath, mintPath, repMap,
+                 useCache = False):
         ChildRepository.__init__(self, name, server, serverDir, reposDir,
                                  conaryPath)
+        self.mintPath = mintPath
         self.serverpid = -1
 
-        self.mintPath = mintPath
         self.serverRoot = tempfile.mkdtemp()
 	os.mkdir(self.serverRoot + "/tmp")
-        os.mkdir(self.reposDir + "/repos/")
-	os.symlink("/usr/lib/httpd/modules", self.serverRoot + "/modules")
+        for path in ('/usr/lib64/httpd/modules', '/usr/lib/httpd/modules'):
+            if os.path.isdir(path):
+                os.symlink(path, self.serverRoot + "/modules")
+                break
 	testDir = os.path.realpath(os.path.dirname(
             sys.modules['rephelp'].__file__))
 	os.system("sed 's|@NETRPATH@|%s|;s|@CONARYPATH@|%s|;s|@PORT@|%s|;"
 		       "s|@DOCROOT@|%s|;s|@MINTPATH@|%s|'"
 		    " < %s/server/httpd.conf.in > %s/httpd.conf"
 		    % (self.serverDir, conaryPath, str(self.port),
-		       self.serverRoot, mintPath, testDir,
-                       self.serverRoot))
+		       self.serverRoot, mintPath, testDir, self.serverRoot))
 	f = open("%s/test.cnr" % self.serverRoot, "w")
 	print >> f, 'repositoryDir %s' % self.reposDir
 	print >> f, 'tmpDir %s/tmp' % self.serverRoot
@@ -155,8 +178,10 @@ class ApacheServer(ChildRepository):
             print >> f, 'cacheChangeSets False'
 
         # write Mint configuration
+        os.mkdir(self.reposDir + "/repos/")
+        
         f = open("%s/mint.conf" % self.serverRoot, "w")
-        print >> f, 'domainName localhost:%i' %self.port
+        print >> f, 'domainName localhost:%i' % self.port
         print >> f, 'dbPath %s' % self.reposDir + '/mintdb'
         print >> f, 'authDbPath %s' % self.reposDir + '/sqldb'
         print >> f, 'reposPath %s' % self.reposDir + '/repos/'
@@ -176,6 +201,7 @@ class ApacheServer(ChildRepository):
     def reset(self):
         self.stop()
         self.start()
+        self.needsPGPKey = True
 
     def start(self):
         shutil.rmtree(self.reposDir)
@@ -210,7 +236,9 @@ class ApacheServer(ChildRepository):
                        fullName="Test User",
                        email="test@example.com",
                        active = True)
-       
+
+
+
     def stop(self):
         if self.serverpid != -1:
             # HACK
@@ -224,6 +252,119 @@ class ApacheServerWithCache(ApacheServer):
     def __init__(self, name, server, serverDir, reposDir, conaryPath, repMap):
         ApacheServer.__init__(self, name, server, serverDir, reposDir,
                               conaryPath, repMap, useCache = True)
+
+class NetworkReposServer(ChildRepository):
+    def __init__(self, name, server, serverDir, reposDir, conaryPath, repMap):
+        ChildRepository.__init__(self, name, server, serverDir, reposDir,
+                                 conaryPath)
+        self.repMap = repMap
+        self.serverpid = -1
+        if 'SERVER_FILE_PATH' in os.environ:
+            self.serverFilePath = os.environ['SERVER_FILE_PATH']
+            self.delServerPath = False
+        else:
+            self.serverFilePath =  None
+            self.delServerPath = True
+        self.serverLog = '/tmp/conary-server-%s.log' % self.name
+        try:
+            os.unlink(self.serverLog)
+        except OSError, err:
+            if err.errno == errno.ENOENT:
+                pass
+            elif err.errno == errno.EPERM:
+                try:
+                    self.serverLog = '/tmp/conary-server-%s-%s.log' \
+                                % (self.name, pwd.getpwuid(os.getuid())[0])
+                    os.unlink(self.serverLog)
+                except OSError, err:
+                    if err.errno == errno.ENOENT:
+                        pass
+        except OSError:
+            pass
+
+    def start(self):
+        if self.serverpid != -1:
+            return
+        shutil.rmtree(self.reposDir)
+        os.mkdir(self.reposDir)
+        self.createUser()
+        
+	sb = os.stat(self.server)
+	if not stat.S_ISREG(sb.st_mode) or not os.access(self.server, os.X_OK):
+	    print "bad server path: %s" % self.server
+	    sys.exit(1)
+
+        self.serverpid = os.fork()
+        if self.serverpid == 0:
+	    os.environ['CONARY_PATH'] = self.conaryPath
+            log = os.open(self.serverLog, os.O_WRONLY | os.O_CREAT | os.O_APPEND)
+            os.dup2(log, sys.stdout.fileno())
+            os.dup2(log, sys.stderr.fileno())
+            print "starting server"
+            sys.stdout.flush()
+            f = open(self.reposDir + '/serverrc', 'w')
+            print >> f, 'port %d' %self.port
+            for repname, reppath in self.repMap.iteritems():
+                print >> f, 'repositoryMap %s %s' %(repname, reppath)
+            f.close()
+
+            if self.serverFilePath is None:
+                self.serverFilePath = tempfile.mkdtemp()
+            args = (self.server, self.reposDir, 
+                    self.name, 
+                    '--config-file', self.reposDir + '/serverrc', 
+                    '--tmp-file-path', self.serverFilePath)
+	    os.execv(args[0], args)
+        else:
+            pass
+
+    def stop(self):
+        if self.serverpid != -1:
+            os.kill(self.serverpid, signal.SIGKILL)
+            os.waitpid(self.serverpid, 0)
+            self.serverpid = -1
+        if self.serverFilePath and self.delServerPath:
+            util.rmtree(self.serverFilePath)
+            self.serverFilePath = None
+
+    def getMap(self, user = 'test', password = 'foo'):
+        return {self.name: 'http://%s:%s@127.0.0.1:%d/' %
+                                        (user, password, self.port) }
+
+    def reset(self):
+	repos = netclient.NetworkRepositoryClient(self.getMap())
+        repos.c[self.name].reset()
+        self.createUser()
+        self.needsPGPKey = True
+
+    def __del__(self):
+        self.stop()
+
+
+class ExistingServer(RepositoryServer):
+    def __init__(self, name, port=8000):
+        RepositoryServer.__init__(self, name)
+	self.port = port
+        self.reposDir = None
+        #self.reset()
+        
+    def getMap(self):
+        return {self.name: 'http://test:foo@127.0.0.1:%d/' %self.port}
+
+    def reset(self):
+	repos = netclient.NetworkRepositoryClient(self.getMap())
+        repos.c[self.name].reset()
+        self.needsPGPKey = True
+
+    def start(self):
+        pass
+
+    def stop(self):
+        pass
+
+    def getMap(self, user = 'test', password = 'foo'):
+        return {self.name: 'http://%s:%s@127.0.0.1:%d/' %
+                                        (user, password, self.port) }
 
 class ServerCache:
 
@@ -271,18 +412,13 @@ class ServerCache:
             if server:
                 servers.update(server.getMap(user = user, password = password))
         return servers
-
-    def getMintUrl(self):
-        for server in self.servers:
-            return "http://%%s:%%s@localhost:%d/mint/" % server.port
-                        
     
 _servers = ServerCache()
 
 class RepositoryHelper(testsuite.TestCase):
     topDir = None
     cleanupDir = True
-    defLabel = versions.Label("localhost@spx:linux")
+    defLabel = versions.Label("127.0.0.1@rpl:linux")
 
     def setUp(self):
         # set up the flavor based on the defaults in use
@@ -291,13 +427,31 @@ class RepositoryHelper(testsuite.TestCase):
         self._origDir = os.getcwd()
         testsuite.TestCase.setUp(self)
         self.cfg.buildLabel = self.defLabel
+        self.logFilter.clear()
+
+        # set up the keyCache so that it won't prompt for passwords in
+        # any of the test suites.
+        keyCache = openpgpkey.OpenPGPKeyFileCache()
+        openpgpkey.setKeyCache(keyCache)
+
+        # pre-populate private key cache
+        keyCache.setPrivatePath(testsuite.archivePath + '/secring.gpg')
+        fingerprint = '95B457D16843B21EA3FC73BBC7C32FC1F94E405E'
+        keyCache.getPrivateKey(fingerprint, '111111')
+        keyCache.getPrivateKey('', '111111')
+
+        # pre-populate public key cache
+        keyCache.setPublicPath(testsuite.archivePath + '/pubring.gpg')
+        keyCache.getPublicKey('')
 
     def tearDown(self):
         self.resetFlavors()
         self.reset()
         os.chdir(self._origDir)
         testsuite.TestCase.tearDown(self)
-        self.cfg.excludeTroves = []
+        self.cfg.excludeTroves = conarycfg.RegularExpressionList()
+        self.cfg.pinTroves = conarycfg.RegularExpressionList()
+        self.logFilter.clear()
         
     def getRepositoryClient(self, user = 'test', password = 'foo'):
         rmap = self.servers.getMap(user = user, password = password)
@@ -323,27 +477,28 @@ class RepositoryHelper(testsuite.TestCase):
         name = "127.0.0.1"
         if serverIdx:
             name += "%d" % serverIdx
-        label = versions.Label("%s@spx:linux" % name)
-						   
-	while count < 50:
+        label = versions.Label("%s@rpl:linux" % name)
+
+        ready = False
+	while count < 500:
 	    try:
                 repos.troveNames(label)
-		return repos
-	    except Exception, e:
+                ready = True
+                break
+	    except:
 		pass
 
-	    time.sleep(0.1)
+	    time.sleep(0.01)
 	    count += 1
+        if not ready:
+            raise RuntimeError, "unable to open networked repository"
 
-	raise RuntimeError, "unable to open networked repository"
-
-    def openMint(self, authToken=('test', 'foo')):
-        self.openRepository()
-        #self.openRepository(serverIdx = 1)
-        cfg = config.MintConfig()
-        cfg.read("%s/mint.conf" % self.servers.getServer().serverRoot)
-        return shimclient.ShimMintClient(cfg, authToken)
-                    
+        if server.needsPGPKey:
+            ascKey = open(testsuite.archivePath + '/key.asc', 'r').read()
+            repos.addNewAsciiPGPKey(label, 'test', ascKey)
+            server.needsPGPKey = False
+        return repos
+   
     def addfile(self, file):
         cvc.sourceCommand(self.cfg, [ "add", file ], {} )
 
@@ -372,15 +527,20 @@ class RepositoryHelper(testsuite.TestCase):
 	if dir:
 	    dict = { "dir" : dir }
 
+        callback = checkin.CheckinCallback()
+
 	if versionStr:
 	    cvc.sourceCommand(self.cfg, [ "checkout", name +'='+ versionStr ], 
-				 dict )
+                              dict, callback=callback)
 	else:
-	    cvc.sourceCommand(self.cfg, [ "checkout", name ], dict )
+	    cvc.sourceCommand(self.cfg, [ "checkout", name ], dict,
+                              callback=callback)
 
     def commit(self):
 	self.openRepository()
-	cvc.sourceCommand(self.cfg, [ "commit" ], { 'message' : 'foo' })
+        callback = checkin.CheckinCallback()
+	cvc.sourceCommand(self.cfg, [ "commit" ], { 'message' : 'foo' },
+                          callback=callback)
 
     def diff(self, *args):
 	self.openRepository()
@@ -395,9 +555,9 @@ class RepositoryHelper(testsuite.TestCase):
         self.openRepository()
         (rc, str) = self.captureOutput(cvc.sourceCommand,
                                         self.cfg, [ "log" ] + list(args), {})
-        # 1.0-2 Test (http://buzilla.specifixinc.com/) Mon Nov 22 12:11:24 2004
+        # 1.0-2 Test (http://buzilla.rpath.com/) Mon Nov 22 12:11:24 2004
 	# -> 1.0-2 Test
-	str = re.sub(r'\(http://bugzilla.specifix.com/\) .*', '', str)
+	str = re.sub(r'\(http://bugzilla.rpath.com/\) .*', '', str)
         return str
 
     def annotate(self, *args):
@@ -417,7 +577,7 @@ class RepositoryHelper(testsuite.TestCase):
 	(rc, str) = self.captureOutput(cvc.sourceCommand,
 				       self.cfg, [ "rdiff" ] + list(args), 
                                         {})
-        str = re.sub(r'\(http://bugzilla.specifix.com/\).*', '(http://bugzilla.specifix.com/)', str, 1)
+        str = re.sub(r'\(http://bugzilla.rpath.com/\).*', '(http://bugzilla.rpath.com/)', str, 1)
 	return str
 
     def newpkg(self, name):
@@ -453,7 +613,9 @@ class RepositoryHelper(testsuite.TestCase):
 
     def update(self, *args):
 	self.openRepository()
-	cvc.sourceCommand(self.cfg, [ "update" ] + list(args), {})
+        callback = checkin.CheckinCallback()
+	cvc.sourceCommand(self.cfg, [ "update" ] + list(args), {},
+                          callback=callback)
 
     def resetFlavors(self):
         use.clearFlags()
@@ -471,7 +633,7 @@ class RepositoryHelper(testsuite.TestCase):
         server = self.servers.getServer(serverIdx)
         if server is not None:
             server.reset()
-	self.openRepository()
+            self.openRepository()
 
     def resetWork(self):
 	util.rmtree(self.workDir)
@@ -505,55 +667,165 @@ class RepositoryHelper(testsuite.TestCase):
 	if mtime:
 	    os.utime(file, (mtime, mtime))
 
-    def addQuickTestPkg(self, name, version, flavor='', label=None,
-                        fileContents=''):
-        if label is None:
-            label = self.cfg.buildLabel
+    def _cvtVersion(self, verStr):
+        if verStr[0] != '/':
+            verStr = '/%s/%s' % (self.cfg.buildLabel.asString(), verStr)
+
+        try:
+            v = versions.VersionFromString(verStr)
+            v.setTimeStamps([ time.time() for x in v.versions ])
+        except versions.ParseError:
+            v = versions.ThawVersion(verStr)
+        return v
+
+    def addQuickTestCollection(self, name, version, troveList):
+        version = self._cvtVersion(version)
+        assert(':' not in name and not name.startswith('fileset'))
+
+        flavor = deps.deps.DependencySet()
+        fullList = []
+        for info in troveList:
+            if len(info) == 4:
+                (trvName, trvVersion, trvFlavor, byDefault) = info
+            elif len(info) == 2:
+                (trvName, trvVersion) = info
+                trvFlavor = ''
+                byDefault = True
+            else:
+                (trvName, trvVersion, trvFlavor) = info
+                byDefault = True
+
+            if type(trvFlavor) == str:
+                trvFlavor = deps.deps.parseFlavor(trvFlavor)
+            trvVersion = self._cvtVersion(trvVersion)
+            flavor.union(trvFlavor, deps.deps.DEP_MERGE_TYPE_DROP_CONFLICTS)
+            fullList.append(((trvName, trvVersion, trvFlavor), byDefault))
+
+        coll = trove.Trove(name, version, flavor, None)
+        for (info, byDefault) in fullList:
+            coll.addTrove(*info, **{ 'byDefault' : byDefault })
+
+        # create an absolute changeset
+        cs = changeset.ChangeSet()
+        diff = coll.diff(None, absolute = 1)[0]
+        cs.newTrove(diff)
+
+        repos = self.openRepository()
+        repos.commitChangeSet(cs)
+        return coll
+
+    def addQuickTestComponent(self, name, version, flavor='', fileContents=None,
+                              provides=deps.deps.DependencySet(),
+                              requires=deps.deps.DependencySet(),
+                              installBucket = None,
+                              filePrimer=0):
+        troveVersion = self._cvtVersion(version)
+
+        assert(':' in name)
 
         # set up a file with some contents
         fileList = []
-        if not fileContents:
-            cont = self.workDir + '/contents'
+        if fileContents is None:
+            cont = self.workDir + '/contents%s' % filePrimer
             f = open(cont, 'w')
             f.write('hello, world!\n')
             f.close()
-            pathId = sha1helper.md5FromString('0' * 32)
+            if not filePrimer:
+                filePrimer = '0'
+            filePrimer = str(filePrimer)
+            repeats = (32 / len(filePrimer) + 1)
+            pathId = (filePrimer * repeats)[:32]
+            pathId = sha1helper.md5FromString(pathId)
             f = files.FileFromFilesystem(cont, pathId)
-            fileList.append((f, cont, pathId))
+            fileList.append((f, '/contents%s' % filePrimer, pathId, troveVersion))
         else:
             index = 0
-            for name, contents in fileContents:
-                cont = self.workDir + '/' + name
+            for fileInfo in fileContents:
+                fileName, contents = fileInfo[0:2]
+                if len(fileInfo) > 3:
+                    fileDeps = fileInfo[3]
+                else:   
+                    fileDeps = None
+
+                cont = self.workDir + '/' + fileName
+                dir = os.path.dirname(cont)
+                if not os.path.exists(dir):
+                    os.mkdir(dir)
                 f = open(cont, 'w')
                 f.write(contents)
                 f.close()
-                pathId = sha1helper.md5FromString('0' * 31 + str(index))
+                pathId = sha1helper.md5String(fileName)
                 f = files.FileFromFilesystem(cont, pathId)
+                if fileDeps is not None:
+                    f.requires.set(fileDeps)
+                if fileName.startswith('/etc'):
+                    f.flags.isConfig(True)
                 index += 1
-                fileList.append((f, name, pathId))
+
+                if len(fileInfo) > 2 and fileInfo[2] is not None:
+                    fileVersion = self._cvtVersion(fileInfo[2])
+                else:
+                    fileVersion = troveVersion
+                fileList.append((f, fileName, pathId, fileVersion))
         # create an absolute changeset
         cs = changeset.ChangeSet()
 
         # add a pkg diff
+
+        flavor = deps.deps.parseFlavor(flavor)
+        t = trove.Trove(name, troveVersion, flavor, None)
+        req = requires.copy()
+        for f, name, pathId, fileVersion in fileList:
+            t.addFile(pathId, '/' + name, fileVersion, f.fileId())
+            req.union(f.requires())
+        t.setRequires(req)
+
+        if installBucket is not None:
+            t.setInstallBucket(installBucket)
+
+        prov = provides.copy()
+        prov.union(deps.deps.ThawDependencySet('4#%s' % 
+                                t.getName().replace(':', '::')))
+        t.setProvides(prov)
+        diff = t.diff(None, absolute = 1)[0]
+        cs.newTrove(diff)
+
+        # add the file and file contents
+        for f,name, pathId, fileVersion in fileList:
+            cs.addFile(None, f.fileId(), f.freeze())
+            cs.addFileContents(pathId, changeset.ChangedFileTypes.file,
+                               filecontents.FromFilesystem(
+                                 os.path.normpath(self.workDir + '/' + name)),
+                               f.flags.isConfig())
+        repos = self.openRepository()
+        repos.commitChangeSet(cs)
+        return t
+
+    def addQuickDbTestPkg(self, db, name, version, flavor, 
+                          provides=deps.deps.DependencySet(), 
+                          requires=deps.deps.DependencySet()):
+        fileList = []
+
+        # create a file
+        cont = self.workDir + '/contents'
+        f = open(cont, 'w')
+        f.write('hello, world!\n')
+        f.close()
+        pathId = sha1helper.md5FromString('0' * 32)
+        f = files.FileFromFilesystem(cont, pathId)
+        fileList.append((f, cont, pathId))
+
         v = versions.VersionFromString(version)
         v.setTimeStamps([ time.time() for x in v.versions ])
-
         flavor = deps.deps.parseFlavor(flavor)
         t = trove.Trove(name, v, flavor, None)
         for f, name, pathId in fileList:
             t.addFile(pathId, '/' + name, v, f.fileId())
-        diff = t.diff(None, absolute = 1)[0]
-        cs.newPackage(diff)
-
-        # add the file and file contents
-        for f,name, pathId in fileList:
-            cs.addFile(None, f.fileId(), f.freeze())
-            cs.addFileContents(pathId, changeset.ChangedFileTypes.file,
-                               filecontents.FromFilesystem(
-                                            os.path.join(self.workDir, name)),
-                               f.flags.isConfig())
-        repos = self.openRepository()
-        repos.commitChangeSet(cs)
+        t.setRequires(requires)
+        t.setProvides(provides)
+	db.addTrove(t)
+        db.commit()
+        return t
 
     def addTestPkg(self, num, requires=[], fail=False, content='', 
                    flags=[], localflags=[], packageSpecs=[], subPackages=[], 
@@ -652,7 +924,7 @@ class RepositoryHelper(testsuite.TestCase):
 
     def verifyTroves(self, pkg, ideal):
 	actual = [ (x[0], x[1].asString(), x[2]) for x in pkg.iterTroveList() ]
-        if actual != ideal:
+        if sorted(actual) != sorted(ideal):
             self.fail("troves don't match expected: got %s expected %s"
                       %(actual, ideal))
 
@@ -691,7 +963,7 @@ class RepositoryHelper(testsuite.TestCase):
 	    self.fail("files missing %s" % " ".join(paths.keys()))
 
     def cookObject(self, theClass, prep=False, macros={}, sourceVersion = None,
-                   serverIdx = 0, ignoreDeps = False):
+                   serverIdx = 0, ignoreDeps = False, logBuild = False):
 	repos = self.openRepository(serverIdx)
         if sourceVersion is None:
             sourceVersion = cook.guessSourceVersion(repos, theClass.name, 
@@ -716,7 +988,8 @@ class RepositoryHelper(testsuite.TestCase):
                                         sourceVersion,
 					prep=prep, macros=macros,
                                         allowMissingSource=True,
-                                        ignoreDeps=ignoreDeps)
+                                        ignoreDeps=ignoreDeps,
+                                        logBuild=logBuild)
         finally:
             os.dup2(stdout, sys.stdout.fileno())
             os.dup2(stderr, sys.stderr.fileno())
@@ -727,10 +1000,53 @@ class RepositoryHelper(testsuite.TestCase):
     
 	return builtList
 
+    def cookPackageObject(self, theClass, prep=False, macros={}, 
+                          sourceVersion = None, serverIdx = 0, 
+                          ignoreDeps = False):
+        """ cook a package object, return the buildpackage components 
+            and package obj 
+        """
+        repos = self.openRepository(serverIdx)
+        if sourceVersion is None:
+            sourceVersion = cook.guessSourceVersion(repos, theClass.name, 
+                                                    theClass.version,
+                                                    self.cfg.buildLabel,
+                                                    searchBuiltTroves=True)
+        if not sourceVersion:
+            # just make up a sourceCount -- there's no version in 
+            # the repository to compare against
+            sourceVersion = versions.VersionFromString('/%s/%s-1' % (
+                                               self.cfg.buildLabel.asString(),
+                                               theClass.version))
+        use.resetUsed()
+        stdout = os.dup(sys.stdout.fileno())
+        stderr = os.dup(sys.stderr.fileno())
+        null = os.open('/dev/null', os.O_WRONLY)
+        os.dup2(null, sys.stdout.fileno())
+        os.dup2(null, sys.stderr.fileno())
+
+        try:
+	    res = cook._cookPackageObject(repos, self.cfg, theClass,
+                                        sourceVersion,
+					prep=prep, macros=macros,
+                                        ignoreDeps=ignoreDeps)
+        finally:
+            os.dup2(stdout, sys.stdout.fileno())
+            os.dup2(stderr, sys.stderr.fileno())
+            os.close(null)
+            os.close(stdout)
+            os.close(stderr)
+	    repos.close()
+        if not res:
+            return None
+        #return bldList, recipeObj
+        return res[0:2]
+
     def updatePkg(self, root, pkg, version = None, tagScript = None,
 		  keepExisting = False, replaceFiles = False,
                   resolve = False, depCheck = True, justDatabase = False,
-                  flavor = None, recurse = True):
+                  flavor = None, recurse = True, split=True, sync = False,
+                  info = False, fromFiles = []):
 	newcfg = self.cfg
 	newcfg.root = root
 
@@ -754,7 +1070,8 @@ class RepositoryHelper(testsuite.TestCase):
                                replaceFiles = replaceFiles,
                                depCheck = depCheck,
                                justDatabase = justDatabase,
-                               recurse = recurse)
+                               recurse = recurse, split = split, 
+                               sync = sync, info = info, fromFiles = fromFiles)
         elif type(pkg) == list:
             assert(version is None)
             assert(flavor is None)
@@ -767,46 +1084,62 @@ class RepositoryHelper(testsuite.TestCase):
                                replaceFiles = replaceFiles,
                                depCheck = depCheck,
                                justDatabase = justDatabase,
-                               recurse = recurse)
+                               recurse = recurse, split = split,
+                               sync = sync, info = info, fromFiles = fromFiles)
 	else:
-	    # pkg should be a change set
-	    if pkg.isAbsolute():
-		cl = conaryclient.ConaryClient(self.cfg)
-		cl._rootChangeSet(pkg, keepExisting = keepExisting)
-		del cl
+            assert(not info)
+            assert(not fromFiles)
+            cl = conaryclient.ConaryClient(self.cfg)
+            updJob, suggMap = cl.updateChangeSet([pkg], 
+                                keepExisting = keepExisting,
+                                recurse = recurse, split = split, sync = sync)
+            if depCheck:
+                assert(not suggMap)
+            cl.applyUpdate(updJob, replaceFiles = replaceFiles, 
+                           tagScript = tagScript, justDatabase = justDatabase)
 
-	    db = database.Database(root, self.cfg.dbPath)
-	    db.commitChangeSet(pkg, keepExisting = keepExisting,
-			       tagScript = tagScript, 
-                               replaceFiles = replaceFiles,
-                               justDatabase = justDatabase)
-	    db.close()
+    def localChangeset(self, root, pkg, fileName):
+        db = database.Database(root, self.cfg.dbPath)
+	newcfg = copy.deepcopy(self.cfg)
+	newcfg.root = root
+        db = database.Database(root, self.cfg.dbPath)
+	newcfg = copy.deepcopy(self.cfg)
+	newcfg.root = root
+
+	cscmd.LocalChangeSetCommand(db, newcfg, pkg, fileName)
+
+        db.close()
 
     def erasePkg(self, root, pkg, version = None, tagScript = None,
                  depCheck = True, justDatabase = False, flavor = None):
         db = database.Database(root, self.cfg.dbPath)
 
         if type(pkg) == list:
-            updatecmd.doErase(self.cfg, pkg, 
-                              tagScript = tagScript, depCheck = depCheck,
-                              justDatabase = justDatabase)
+            updatecmd.doUpdate(self.cfg, pkg, 
+                               tagScript = tagScript, depCheck = depCheck,
+                               justDatabase = justDatabase,
+                               updateByDefault = False)
         elif version and flavor:
-            updatecmd.doErase(self.cfg, [ "%s=%s[%s]" % (pkg, version, 
+            updatecmd.doUpdate(self.cfg, [ "%s=%s[%s]" % (pkg, version, 
                                                          flavor) ], 
-                              tagScript = tagScript, depCheck = depCheck,
-                              justDatabase = justDatabase)
+                               tagScript = tagScript, depCheck = depCheck,
+                               justDatabase = justDatabase,
+                               updateByDefault = False)
         elif version:
-            updatecmd.doErase(self.cfg, [ "%s=%s" % (pkg, version) ], 
-                              tagScript = tagScript, depCheck = depCheck,
-                              justDatabase = justDatabase)
+            updatecmd.doUpdate(self.cfg, [ "%s=%s" % (pkg, version) ], 
+                               tagScript = tagScript, depCheck = depCheck,
+                               justDatabase = justDatabase,
+                               updateByDefault = False)
         elif flavor:
-            updatecmd.doErase(self.cfg, [ "%s[%s]" % (pkg, flavor) ], 
-                              tagScript = tagScript, depCheck = depCheck,
-                              justDatabase = justDatabase)
+            updatecmd.doUpdate(self.cfg, [ "%s[%s]" % (pkg, flavor) ], 
+                               tagScript = tagScript, depCheck = depCheck,
+                               justDatabase = justDatabase,
+                               updateByDefault = False)
         else:
-            updatecmd.doErase(self.cfg, [ "%s" % (pkg) ], 
-                              tagScript = tagScript, depCheck = depCheck,
-                              justDatabase = justDatabase)
+            updatecmd.doUpdate(self.cfg, [ "%s" % (pkg) ], 
+                               tagScript = tagScript, depCheck = depCheck,
+                               justDatabase = justDatabase,
+                               updateByDefault = False)
         db.close()
 
     def removeFile(self, root, path, version = None):
@@ -816,8 +1149,6 @@ class RepositoryHelper(testsuite.TestCase):
 	db.close()
 
     def build(self, str, name, dict = {}, sourceVersion = None, serverIdx = 0):
-        use.setBuildFlagsFromFlavor(name, self.cfg.buildFlavor)
-        
 	(built, d) = self.buildRecipe(str, name, dict, 
 				      sourceVersion = sourceVersion)
 	(name, version, flavor) = built[0]
@@ -828,7 +1159,11 @@ class RepositoryHelper(testsuite.TestCase):
 
     def buildRecipe(self, theClass, theName, vars = {}, prep=False, macros={},
 		    sourceVersion = None, d = {}, serverIdx = 0,
-                    logLevel = log.WARNING, ignoreDeps=False):
+                    logLevel = log.WARNING, ignoreDeps=False,
+                    logBuild=False):
+
+        use.setBuildFlagsFromFlavor(theName, self.cfg.buildFlavor)
+
 	built = []
 	recipe.setupRecipeDict(d, "test1")
 
@@ -845,9 +1180,36 @@ class RepositoryHelper(testsuite.TestCase):
 	built = self.cookObject(d[theName], prep=prep, macros=macros,
                                 sourceVersion=sourceVersion,
                                 serverIdx = serverIdx, 
-                                ignoreDeps = ignoreDeps)
+                                ignoreDeps = ignoreDeps,
+                                logBuild = logBuild)
         log.setVerbosity(level)
 	return (built, d)
+
+    def buildPackageObject(self, theClass, theName, vars = {}, prep=False, 
+                        macros={}, sourceVersion = None, d = {}, serverIdx = 0,
+                        logLevel = log.WARNING, ignoreDeps=False):
+        use.setBuildFlagsFromFlavor(theName, self.cfg.buildFlavor)
+
+	built = []
+	recipe.setupRecipeDict(d, "test1")
+
+	code = compile(theClass, theName, "exec")
+	exec code in d
+	d[theName].filename = "test"
+	
+	for name in vars.iterkeys():
+	    d[theName].__dict__[name] = vars[name]
+
+        
+        level = log.getVerbosity()
+        log.setVerbosity(logLevel)
+	built = self.cookPackageObject(d[theName], prep=prep, macros=macros,
+                                       sourceVersion=sourceVersion,
+                                       serverIdx = serverIdx, 
+                                       ignoreDeps = ignoreDeps)
+        log.setVerbosity(level)
+	return (built, d)
+
 
     def overrideBuildFlavor(self, flavorStr):
         flavor = deps.deps.parseFlavor(flavorStr)
@@ -862,6 +1224,15 @@ class RepositoryHelper(testsuite.TestCase):
                           mergeType = deps.deps.DEP_MERGE_TYPE_OVERRIDE)
         self.cfg.buildFlavor = buildFlavor
 
+    def pin(self, troveName):
+        updatecmd.changePins(self.cfg, [ troveName ], True)
+
+    def unpin(self, troveName):
+        updatecmd.changePins(self.cfg, [ troveName ], False)
+
+    def clone(self, targetLabel, troveSpec):
+        clone.CloneTrove(self.cfg, targetLabel, troveSpec)
+
     def initializeFlavor(self):
         use.clearFlags()
         for dir in reversed(sys.path):
@@ -869,20 +1240,13 @@ class RepositoryHelper(testsuite.TestCase):
 	    if os.path.isdir(thisdir):
                 archiveDir = thisdir
 		break
-        flavorConfig = flavorcfg.FlavorConfig(archiveDir + '/use', 
-                                              archiveDir + '/arch')
-        self.cfg.configLine('flavor is: x86(i686)')
-        self.cfg.flavor = flavorConfig.toDependency(override=self.cfg.flavor)
-        #insSet = deps.deps.DependencySet()
-        #for dep in deps.arch.currentArch:
-        #    insSet.addDep(deps.deps.InstructionSetDependency, dep)
-        #self.cfg.flavor.union(insSet)
-        self.cfg.buildFlavor = self.cfg.flavor[0].copy()
-        flavorConfig.populateBuildFlags()
+        self.cfg.useDirs = archiveDir + '/use'
+        self.cfg.archDirs = archiveDir + '/arch'
+        self.cfg.initializeFlavors()
         use.setBuildFlagsFromFlavor('', self.cfg.buildFlavor)
-
+        
     def __init__(self, methodName):
-        testsuite.TestCase.__init__(self, methodName)
+	testsuite.TestCase.__init__(self, methodName)
 
         if 'CONARY_IDGEN' in os.environ:
             className = "IdGen%s" % os.environ['CONARY_IDGEN']
@@ -916,7 +1280,7 @@ class RepositoryHelper(testsuite.TestCase):
 	os.mkdir(self.cacheDir)
 	self.cfg = conarycfg.ConaryConfiguration(False)
 	self.cfg.name = 'Test'
-	self.cfg.contact = 'http://bugzilla.specifix.com/'
+	self.cfg.contact = 'http://bugzilla.rpath.com/'
 	self.cfg.installLabelPath = [ self.defLabel ]
 	self.cfg.installLabel = self.defLabel
 	self.cfg.buildLabel = self.defLabel
@@ -926,6 +1290,7 @@ class RepositoryHelper(testsuite.TestCase):
 	self.cfg.debugRecipeExceptions = True
 	self.cfg.repositoryMap = {}
         self.cfg.useDir = None
+        self.cfg.quiet = True
 
         global _servers
         self.servers = _servers
@@ -953,29 +1318,5 @@ class RepositoryHelper(testsuite.TestCase):
             if notCleanedUpWarning:
                 sys.stderr.write("Note: not cleaning up %s\n" %self.tmpDir)
                 notCleanedUpWarning = False
-
-    def getWebTestUrl(self):
-        parts = urlparse(self.mintUrl)
-        return parts[1].split(":")
-
-    def getMintClient(self, username, password):
-        client = self.openMint(('test', 'foo'))
-        userId = client.registerNewUser(username, password, "Test User",
-                "test@example.com", "test at example.com", "", active=True)
-
-        return self.openMint((username, password))
-
-class WebRepositoryHelper(RepositoryHelper, webunittest.WebTestCase):
-    def __init__(self, methodName):
-        RepositoryHelper.__init__(self, methodName)
-        webunittest.WebTestCase.__init__(self, methodName)
-
-    def setUp(self):
-        RepositoryHelper.setUp(self)
-        webunittest.WebTestCase.setUp(self)
-        self.server, self.port = self.getWebTestUrl()
-
-    def activateUsers(self):
-        os.system("echo 'UPDATE Users SET active=1;' | sqlite3 /data/mint/data/db")
 
 notCleanedUpWarning = True

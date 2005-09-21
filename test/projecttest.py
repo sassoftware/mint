@@ -6,10 +6,10 @@
 import testsuite
 testsuite.setup()
 
-import rephelp
+from mint_rephelp import MintRepositoryHelper
 from mint import userlevels
 
-class ProjectTest(rephelp.RepositoryHelper):
+class ProjectTest(MintRepositoryHelper):
     def testBasicAttributes(self):
         client = self.getMintClient("testuser", "testpass")
         projectId = client.newProject("Foo", "foo", "rpath.org")

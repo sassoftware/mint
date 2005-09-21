@@ -6,10 +6,10 @@
 import testsuite
 testsuite.setup()
 
-import rephelp
+from mint_rephelp import MintRepositoryHelper
 from mint import userlevels
 
-class JoinRequestTest(rephelp.RepositoryHelper):
+class JoinRequestTest(MintRepositoryHelper):
     def testSetComments(self):
         client = self.getMintClient("testuser", "testpass")
         projectId = client.newProject("Foo", "foo", "rpath.org")
