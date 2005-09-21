@@ -244,6 +244,9 @@ class MintServer(object):
     @private
     @requiresAuth
     def setJoinReqComments(self, projectId, userId, comments):
+        # only add if user is already a member of project
+        if userId in [x[0] for x in self.getMembersByProjectId(projectId)]:
+            return
         if self.cfg.sendNotificationEmails and \
                not self.membershipRequests.userHasRequested(projectId, userId):
             projectName = self.getProject(projectId)['hostname']
@@ -279,6 +282,7 @@ class MintServer(object):
     @private
     def addMember(self, projectId, userId, username, level):
         assert(level in userlevels.LEVELS)
+        self.membershipRequests.deleteRequest(projectId, userId)
         project = projects.Project(self, projectId)
 
         cu = self.db.cursor()
@@ -309,9 +313,6 @@ class MintServer(object):
         repos.addAcl(project.getLabel(), username, None, None, True, False, level == userlevels.OWNER)
 
         self._notifyUser('Added', self.getUser(userId), projects.Project(self,projectId)) 
-
-        self.membershipRequests.deleteRequest(projectId, userId)
-
         return True
 
     @requiresAuth
