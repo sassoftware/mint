@@ -208,7 +208,9 @@ class InstallableIso(ImageGenerator):
                 subprocess.call(cmd)
                 # Abort if parent thread has died
                 assertParentAlive()
-            isoList.append((infoMap['iso'], infoMap['discname']))
+
+            discNum = infoMap['discname'].split("disc")
+            isoList.append((infoMap['iso'], "%s Disk %s" % (infoMap['name'], discNum)))
 
         isoList = [ (os.path.join(infoMap['isodir'], iso[0]), iso[1]) for iso in isoList ]
         for iso, name in isoList:
@@ -219,6 +221,8 @@ class InstallableIso(ImageGenerator):
                 print >> sys.stderr, cmd
                 sys.stderr.flush()
                 subprocess.call(cmd)
+
+        # add the netboot images
         isoList += [ (os.path.join(topdir, 'images/boot.iso'), "boot.iso"),
                      (os.path.join(topdir, 'images/diskboot.img'), "diskboot.img"),
                    ]
