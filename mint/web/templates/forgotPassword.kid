@@ -16,7 +16,7 @@
         <td id="main" class="spanleft">
             <div class="pad">
                 <h2>Lost Password:</h2>
-                <form method="post" action="processLogin">
+                <form method="post" action="resetPassword">
                     <p class="help">
                         If you have forgotten your password, please enter
                         your username in the field below, and click Forgot Password.
@@ -29,7 +29,6 @@
                     </table>
                     <p>
                         <button type="submit" name="submit">Forgot Password</button>
-                        <input type="hidden" name="action" value="mail_password" />
                     </p>
                 </form>
             </div>

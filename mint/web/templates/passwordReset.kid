@@ -7,8 +7,11 @@
     Copyright 2005 rPath, Inc.
     All Rights Reserved
 -->
+    <div py:def="breadcrumb()" py:strip="True">
+        <a href="#">Password Reset</a>
+    </div>
     <head>
-        <title>${formatTitle('Forgotten Password')}</title>
+        <title>${formatTitle('Password Reset')}</title>
     </head>
     <body>
         <td id="main" class="spanleft">

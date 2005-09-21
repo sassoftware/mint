@@ -125,9 +125,9 @@ class SiteHandler(WebHandler):
 
     @strFields(message = "")
     @redirectHttps
-    def login(self, auth, message):
+    def forgotPassword(self, auth, message):
         self.toUrl = "/"
-        self._write("login", message = message)
+        self._write("forgotPassword", message = message)
         return apache.OK
 
     @redirectHttp
@@ -146,11 +146,13 @@ class SiteHandler(WebHandler):
         self._clearAuth()
         return self._redirect("/")
 
-    def _resetPassword(self, username):
+    @requiresHttps
+    @strFields(username = None)
+    def resetPassword(self, auth, username):
         userId = self.client.getUserIdByName(username)
         user = self.client.getUser(userId)
         self._resetPasswordById(userId)
-        self._write("forgotPassword", email = user.getEmail())
+        self._write("passwordReset", email = user.getEmail())
         return apache.OK
 
     @requiresHttps
@@ -183,9 +185,6 @@ class SiteHandler(WebHandler):
                 
                 self.session.save()
                 return self._redirectHttp(unquote(to))
-                
-        elif action == "mail_password":
-            return self._resetPassword(username)
         else:
             return apache.HTTP_NOT_FOUND
 
