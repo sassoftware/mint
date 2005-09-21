@@ -6,8 +6,11 @@
     Copyright 2005 rPath, Inc.
     All Rights Reserved
 -->
+    <div py:def="breadcrumb()" py:strip="True">
+        <a href="#">Lost Password</a>
+    </div>
     <head>
-        <title>${formatTitle('Login')}</title>
+        <title>${formatTitle('Lost Password')}</title>
     </head>
     <body>
         <td id="main" class="spanleft">
