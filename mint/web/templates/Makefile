@@ -16,12 +16,12 @@ kid_files = \
 	frontPage.kid		\
 	layout.kid		\
 	library.kid		\
-	login.kid		\
 	mailingLists.kid	\
 	memberSettings.kid	\
 	members.kid		\
 	newProject.kid		\
 	newRelease.kid		\
+	passwordReset.kid	\
 	project.kid		\
 	projectPage.kid		\
 	projects.kid		\
