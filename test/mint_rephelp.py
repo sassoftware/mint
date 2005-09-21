@@ -3,8 +3,11 @@
 #
 # All Rights Reserved
 #
-
+import testsuite
 import rephelp
+
+import versions
+from lib import openpgpkey
 
 from mint import config
 from mint import shimclient
