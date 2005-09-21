@@ -71,7 +71,7 @@ Alias / "@DOCROOT@/mint.conf/"
 </Location>
 
 <VirtualHost *:@PORT@>
-    ServerName localhostconary
+    ServerName 127.0.0.1 
     Alias /conary/ "@DOCROOT@/test.cnr/"
     <Location /conary/>
         Options FollowSymLinks
