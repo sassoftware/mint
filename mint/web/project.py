@@ -22,6 +22,7 @@ from webhandler import WebHandler, normPath
 from decorators import ownerOnly, requiresAuth, requiresAdmin, mailList, redirectHttp
 from web import fields
 from web.fields import strFields, intFields, listFields, boolFields
+from mint.users import sendMailWithChecks
 
 def getUserDict(members):
     users = { userlevels.DEVELOPER: [],
@@ -316,14 +317,14 @@ class ProjectHandler(WebHandler):
     @intFields(userId = None)
     @strFields(comments = '')
     def processJoinRejection(self, auth, userId, comments):
-        from mint.users import sendMailWithChecks
-        if not comments:
-            comments = "No reason was supplied"
-        body = "Your application to join project: "+self.project.getName()
-        body += " has been rejected.\nOwner's comments:\n"+comments
-        subject = "Membership Rejection Notice"
-        user = self.client.getUser(userId)
-        sendMailWithChecks(self.cfg.adminMail, self.cfg.productName, user.getEmail(), subject, body)
+        if self.cfg.sendNotificationEmails:
+            if not comments:
+                comments = "No reason was supplied"
+            body = "Your application to join project: "+self.project.getName()
+            body += " has been rejected.\nOwner's comments:\n"+comments
+            subject = "Membership Rejection Notice"
+            user = self.client.getUser(userId)
+            sendMailWithChecks(self.cfg.adminMail, self.cfg.productName, user.getEmail(), subject, body)
         self.client.deleteJoinRequest(self.project.getId(), userId)
         return self._redirect(self.basePath + "members")
 

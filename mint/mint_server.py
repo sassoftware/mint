@@ -243,7 +243,8 @@ class MintServer(object):
     @private
     @requiresAuth
     def setJoinReqComments(self, projectId, userId, comments):
-        if not self.membershipRequests.userHasRequested(projectId, userId):
+        if self.cfg.sendNotificationEmails and \
+               not self.membershipRequests.userHasRequested(projectId, userId):
             projectName = self.getProject(projectId)['hostname']
             owners = self.projectUsers.getOwnersByProjectName(projectName)
             for name, email in owners:
@@ -256,7 +257,6 @@ class MintServer(object):
                 else:
                     message += "No comments were supplied"
                 users.sendMailWithChecks(self.cfg.adminMail, self.cfg.productName, email, subject, message)
-
         return self.membershipRequests.setComments(projectId, userId, comments)
 
     @private
