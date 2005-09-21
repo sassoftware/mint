@@ -250,13 +250,17 @@ class MintServer(object):
             owners = self.projectUsers.getOwnersByProjectName(projectName)
             for name, email in owners:
                 subject = "Project Membership Request"
-                message = "Another %s user has requested to join a project you own!\n" %self.cfg.productName
+                message = "A %s user would like to join a project you own.\n\n" %self.cfg.productName
                 message += "Project: %s\n" %self.getProject(projectId)['name']
-                message += "Username: %s\n" %self.users.getUsername(userId)
+                message += "Username: %s\n\n" %self.users.getUsername(userId)
                 if comments:
-                    message += "Comments: %s" %comments
+                    message += "Comments:\n%s" %comments
                 else:
                     message += "No comments were supplied"
+                message += "\n\nTo respond to this request:\n\n"
+                message += "  o Login to %s\n" % self.getProject(projectId)['name']
+                message += "  o Click on the "Requests Pending" link under the "My Projects" sidebar\n"
+                message += "  o You can find all outstanding requests under the "Requestors" heading at the bottom of the page\n"
                 users.sendMailWithChecks(self.cfg.adminMail, self.cfg.productName, email, subject, message)
         return self.membershipRequests.setComments(projectId, userId, comments)
 
