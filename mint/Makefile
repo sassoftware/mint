@@ -25,6 +25,7 @@ python_files =			\
 	projects.py		\
 	releases.py		\
 	releasetypes.py		\
+	requests.py		\
 	searcher.py		\
 	session.py		\
 	sessiondb.py		\
