@@ -81,7 +81,7 @@ if auth.admin:
 
     <table border="0" cellspacing="0" cellpadding="0"
            summary="layout" class="pager"
-           py:def="navigation(urlbase, terms, count, limit, offset)">
+           py:def="navigation(urlbase, terms, count, limit, offset, footer=False)">
         <?python
             plural=""
             if count != 1:
@@ -90,7 +90,7 @@ if auth.admin:
         <tr>
             <td>
                 <form>
-                    <span style="float: left;" py:if="count != 0">
+                    <span style="float: left;" py:if="count != 0 and not footer">
                         ${count} match${plural} found for <strong>${terms}</strong>;
                         Showing ${offset + 1}-${min(offset+limit, count)};
                     </span>

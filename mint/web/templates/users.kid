@@ -57,6 +57,7 @@
                     ${columnTitles(('User Name', 'Name', 'Time Created', 'Time Last Accessed', 'About'))}
                     ${searchResults(results)}
                 </table>
+                ${navigation("users?sortOrder=%d"%(sortOrder), "all users", count, limit, offset, True)}
             </div>
         </td>
     </body>

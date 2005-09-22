@@ -57,6 +57,7 @@ from mint import projectlisting
                     ${columnTitles(('Project Name', 'Project Description', 'Time Created', 'Time Last Modified', 'Number of Developers'))}
                     ${searchResults(results)}
                 </table>
+                ${navigation("projects?sortOrder=%d"%(sortOrder), "all projects", count, limit, offset, True)}
             </div>
         </td>
     </body>

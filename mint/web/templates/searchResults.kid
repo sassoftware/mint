@@ -67,6 +67,7 @@
                     ${columnTitles(columns)}
                     ${searchResults(results)}
                 </table>
+                ${navigation("search?type=%s;search=%s;modified=%d"%(searchType, terms, modified), terms, count, limit, offset, True)}
             </div>
         </td>
     </body>
