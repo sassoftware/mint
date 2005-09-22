@@ -51,9 +51,7 @@ class ProjectTest(MintRepositoryHelper):
         project.updateUserLevel(otherUserId, userlevels.DEVELOPER)
         assert(project.getMembers() == [[3, 'testuser', userlevels.OWNER],
                                         [otherUserId, 'member', userlevels.DEVELOPER]])
- 
         
-
     def testLabels(self):
         client = self.getMintClient("testuser", "testpass")
 
@@ -61,7 +59,7 @@ class ProjectTest(MintRepositoryHelper):
         project = client.getProject(projectId)
     
         assert(project.getRepoMap() ==\
-            ["foo.rpath.org http://test:foo@localhost:%i/repos/foo/" %self.getPort()])
+            ["foo.rpath.org http://mintauth:mintpass@localhost:%i/repos/foo/" %self.getPort()])
         assert(project.getLabelIdMap() ==\
             {"foo.rpath.org@rpl:devel": 1})
         
@@ -70,7 +68,7 @@ class ProjectTest(MintRepositoryHelper):
         assert(project.getLabelById(newLabelId) == "bar.rpath.org@rpl:devel")
 
         assert(project.getRepoMap() ==\
-            ['foo.rpath.org http://test:foo@localhost:%i/repos/foo/' %self.getPort(),
+            ['foo.rpath.org http://mintauth:mintpass@localhost:%i/repos/foo/' %self.getPort(),
              'bar.rpath.org http://user1:pass1@rpath.org/repos/bar/'])
         assert(project.getLabelIdMap() ==\
             {'bar.rpath.org@rpl:devel': newLabelId,

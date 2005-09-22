@@ -13,14 +13,14 @@ from mint import config
 from mint import shimclient
 
 class MintRepositoryHelper(rephelp.RepositoryHelper):
-    def openMint(self, authToken=('test', 'foo')):
+    def openMint(self, authToken=('mintauth', 'mintpass')):
         self.openRepository()
         cfg = config.MintConfig()
         cfg.read("%s/mint.conf" % self.servers.getServer().serverRoot)
         return shimclient.ShimMintClient(cfg, authToken)
 
     def getMintClient(self, username, password):
-        client = self.openMint(('test', 'foo'))
+        client = self.openMint(('mintauth', 'mintpass'))
         userId = client.registerNewUser(username, password, "Test User",
                 "test@example.com", "test at example.com", "", active=True)
 
@@ -29,7 +29,7 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
     def newProject(self, client, name = "Test Project",
                          hostname = "test",
                          domainname = "localhost",
-                         username = "testuser"):
+                         username = "mintauth"):
         # save the current openpgpkey cache
         keyCache = openpgpkey.getKeyCache()
         projectId = client.newProject(name, hostname, domainname)

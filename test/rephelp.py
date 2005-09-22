@@ -140,7 +140,7 @@ class ChildRepository(RepositoryServer):
     def createUser(self):
         # using echo to send the password isn't secure, but the password
         # is foo, so who cares?
-        os.system("cd %s; echo foo | ./server.py --add-user test %s" 
+        os.system("cd %s; echo mintpass | ./server.py --add-user mintauth %s" 
                   % (self.serverDir, self.reposDir))
         os.system("cd %s; echo anonymous | ./server.py --add-user anonymous %s" 
                   % (self.serverDir, self.reposDir))
@@ -185,7 +185,7 @@ class ApacheServer(ChildRepository):
         print >> f, 'dbPath %s' % self.reposDir + '/mintdb'
         print >> f, 'authDbPath %s' % self.reposDir + '/sqldb'
         print >> f, 'reposPath %s' % self.reposDir + '/repos/'
-        print >> f, 'authRepoMap %s http://test:foo@127.0.0.1:%d/conary/' % (self.name, self.port)
+        print >> f, 'authRepoMap %s http://mintauth:mintpass@127.0.0.1:%d/conary/' % (self.name, self.port)
         print >> f, 'debugMode False'
         print >> f, 'sendNotificationEmails False'
         f.close()
@@ -194,7 +194,7 @@ class ApacheServer(ChildRepository):
 	self.stop()
 	shutil.rmtree(self.serverRoot)
 
-    def getMap(self, user = 'test', password = 'foo'):
+    def getMap(self, user = 'mintauth', password = 'mintpass'):
         return {self.name: 'http://%s:%s@127.0.0.1:%d/conary/' %
                                         (user, password, self.port) }
 
@@ -327,7 +327,7 @@ class NetworkReposServer(ChildRepository):
             util.rmtree(self.serverFilePath)
             self.serverFilePath = None
 
-    def getMap(self, user = 'test', password = 'foo'):
+    def getMap(self, user = 'mintauth', password = 'mintpass'):
         return {self.name: 'http://%s:%s@127.0.0.1:%d/' %
                                         (user, password, self.port) }
 
@@ -349,7 +349,7 @@ class ExistingServer(RepositoryServer):
         #self.reset()
         
     def getMap(self):
-        return {self.name: 'http://test:foo@127.0.0.1:%d/' %self.port}
+        return {self.name: 'http://mintauth:mintpass@127.0.0.1:%d/' %self.port}
 
     def reset(self):
 	repos = netclient.NetworkRepositoryClient(self.getMap())
@@ -362,7 +362,7 @@ class ExistingServer(RepositoryServer):
     def stop(self):
         pass
 
-    def getMap(self, user = 'test', password = 'foo'):
+    def getMap(self, user = 'mintauth', password = 'mintpass'):
         return {self.name: 'http://%s:%s@127.0.0.1:%d/' %
                                         (user, password, self.port) }
 
@@ -406,7 +406,7 @@ class ServerCache:
     def getServer(self, serverIdx=0):
         return self.servers[serverIdx]
 
-    def getMap(self, user = 'test', password = 'foo'):
+    def getMap(self, user = 'mintauth', password = 'mintpass'):
         servers = {}
         for server in self.servers:
             if server:
@@ -453,7 +453,7 @@ class RepositoryHelper(testsuite.TestCase):
         self.cfg.pinTroves = conarycfg.RegularExpressionList()
         self.logFilter.clear()
         
-    def getRepositoryClient(self, user = 'test', password = 'foo'):
+    def getRepositoryClient(self, user = 'mintauth', password = 'mintpass'):
         rmap = self.servers.getMap(user = user, password = password)
 	return netclient.NetworkRepositoryClient(rmap)
 
@@ -495,7 +495,7 @@ class RepositoryHelper(testsuite.TestCase):
 
         if server.needsPGPKey:
             ascKey = open(testsuite.archivePath + '/key.asc', 'r').read()
-            repos.addNewAsciiPGPKey(label, 'test', ascKey)
+            repos.addNewAsciiPGPKey(label, 'mintauth', ascKey)
             server.needsPGPKey = False
         return repos
    
