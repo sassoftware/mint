@@ -29,7 +29,7 @@ from mint import searcher
     </div>
 
     <div id="browse" class="palette" py:def="browseMenu()" py:strip="False">
-        <h3>browse projects</h3>
+        <h3>Browse Projects</h3>
         <ul>
             <li><a href="projects">All Projects</a></li>
             <li><a href="projects?sortOrder=3">Most Active Projects</a></li>
@@ -40,12 +40,11 @@ from mint import searcher
 
     <div id="search" class="palette" py:def="searchMenu(selectType='Projects')" py:strip="False">
         <?python
-searchTypes = ['Packages']
+searchTypes = ['Projects', 'Packages']
 if auth.admin:
-    searchTypes.insert(0, 'Projects')
     searchTypes.append('Users')
         ?>
-        <h3>search packages</h3>
+        <h3>Search</h3>
         <form action="search" method="get">
             <p>
                 <label>search type:</label><br/>
@@ -67,14 +66,14 @@ if auth.admin:
                 <label>keyword(s):</label><br/>
                 <input type="text" name="search" size="10" />
             </p>
-            <p>
+            <p py:if="0">
                 <label>last modified:</label>
                 <br/>
                 <select name="modified" id="searchModified">
                     <option py:for="i, option in enumerate(searcher.datehtml)" value="${i}">${option}</option>
                 </select>
             </p>
-            <p><button>Submit</button><br /><a py:if="0" href="#">advanced search</a></p>
+            <p><button>Submit</button><br /><a py:if="0" href="#">Advanced Search</a></p>
         </form>
     </div>
 

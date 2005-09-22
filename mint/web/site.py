@@ -378,7 +378,7 @@ class SiteHandler(WebHandler):
     @strFields(search = "", type = None)
     @intFields(limit = 10, offset = 0, modified = 0)
     def search(self, auth, type, search, modified, limit, offset):
-        if type == "Projects" and auth.admin:
+        if type == "Projects":
             return self._projectSearch(search, modified, limit, offset)
         elif type == "Users" and auth.admin:
             return self._userSearch(auth, search, limit, offset)
