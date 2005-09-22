@@ -34,7 +34,7 @@
                     formattedresults = [
                         ('%sproject/%s/' % (cfg.basePath,resultset[0]), resultset[1]),
                         resultset[2],
-                        time.ctime(resultset[3])
+                        time.strftime("%Y-%m-%d", time.localtime(resultset[3]))
                     ]
                 elif searchType == "Users":
                     formattedresults = [
