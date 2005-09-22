@@ -26,7 +26,8 @@
         <div class="pad">
             <h3>My Projects</h3>
             <p py:if="not auth.authorized">
-                You must be logged in for your projects to be displayed.
+                <p>You must be logged in for your projects to be displayed.</p>
+                <p>To login, use the form above, or <a href="${cfg.basePath}register">create a new account</a></p>
             </p>
             <ul py:if="auth.authorized">
                 <li py:if="projectList" 
@@ -39,7 +40,8 @@
                         </p>
                 </li>
                 <li py:if="not projectList">
-                    You are not a member of any projects.
+                    <p>You are not a member of any projects.</p>
+                    <p><a href="${cfg.basePath}projects">Browse the list of projects to find one to join</a></p>
                 </li>
             </ul>
             <ul py:if="auth.authorized">
