@@ -1,6 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <?python
 from mint import userlevels
+from mint.mint import upstream, extractIs
 ?>
 <html xmlns:py="http://purl.org/kid/ns#"
       py:extends="'library.kid', 'layout.kid', 'project.kid'">
@@ -39,7 +40,7 @@ from mint import userlevels
                                     <?python releases = project.getReleases() ?>
                                     <li class="release" py:if="releases" py:for="release in releases">
                                         <a href="${basePath}release?id=${release.getId()}">
-                                            ${release.getTroveName()} = ${release.getTroveVersion().trailingRevision().asString()}
+                                            Version ${upstream(release.getTroveVersion())} for ${release.getArch()}
                                         </a>
                                     </li>
                                     <li class="release" py:if="not releases">

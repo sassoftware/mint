@@ -6,6 +6,7 @@
 #
 from mint import jobstatus
 from mint import userlevels
+from mint.mint import upstream
 ?>
 <html xmlns:html="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
@@ -49,12 +50,13 @@ from mint import userlevels
             <div class="pad">
                 <h2>${project.getName()}<br/>Release: ${name}</h2>
 
-                <p>${trove}=${version.asString()} (architecture: ${release.getArch()})</p>
+                <h3>Version ${upstream(version)} of ${trove} for ${release.getArch()}</h3>
 
-                <ul py:if="files">
+                <ul>
                     <li py:for="i, file in enumerate(files)">
-                        <a href="${cfg.basePath}downloadImage?fileId=${file[0]}">${file[2]}</a>
+                        <a href="${cfg.basePath}downloadImage?fileId=${file[0]}">Download ${file[2] and file[2] or "Disc " + str(i+1)}</a>
                     </li>
+                    <li py:if="not files">Release has no files.</li>
                 </ul>
 
                 <div py:strip="True" py:if="isOwner">
