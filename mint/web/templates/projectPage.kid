@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <?python
 from mint import userlevels
-from mint.mint import upstream, extractIs
+from mint.mint import upstream 
 ?>
 <html xmlns:py="http://purl.org/kid/ns#"
       py:extends="'library.kid', 'layout.kid', 'project.kid'">
