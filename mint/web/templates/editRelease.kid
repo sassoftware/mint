@@ -20,6 +20,12 @@ def generateJs(archMap):
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'library.kid', 'layout.kid'">
 
+    <div py:def="breadcrumb()" py:strip="True">
+        <a href="$basePath">${project.getName()}</a>
+        <a href="${basePath}releases">Releases</a>
+        <a href="#">Edit Release</a>
+    </div>
+
     <head>
         <title>${formatTitle('Edit Release')}</title>
     </head>
