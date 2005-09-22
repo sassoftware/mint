@@ -1,0 +1,124 @@
+#!/usr/bin/env python2.4
+# -*- python -*-
+#
+# Copyright (c) 2004-2005 rPath, Inc.
+# All rights reserved
+#
+
+import sys
+import os
+
+import conary
+from lib import util
+sys.excepthook = util.genExcepthook()
+
+isoblocksize = 2048
+maxisosize = 650 * 1024 * 1024
+commonfiles = ('README', 'LICENSE')
+
+def usage():
+    print 'usage: %s /path/to/distro' %sys.argv[0]
+    sys.exit(1)
+
+def join(*args):
+    return os.sep.join(args)
+
+def lndir(src, dest, excludes=None):
+    for dirpath, dirnames, filenames in os.walk(src):
+        curdir = dirpath[len(src) + 1:]
+        if curdir in excludes:
+            continue
+        for d in dirnames:
+            os.mkdir(join(dest, curdir, d))
+        for f in filenames:
+            if curdir:
+                curfile = join(curdir, f)
+            else:
+                curfile = f
+            if curfile in excludes:
+                continue
+            os.link(join(dirpath, f), join(dest, curfile))
+
+def spaceused(path):
+    if not os.path.isdir(path):
+        sb = os.stat(path)
+        return sb.st_size + (isoblocksize - sb.st_size % isoblocksize)
+    
+    total = 0
+    for dirpath, dirnames, filenames in os.walk(path):
+        for filename in filenames:
+            filepath = join(dirpath, filename)
+            sb = os.stat(filepath)
+            # round up to an ISO9660 block
+            total += sb.st_size + (isoblocksize - sb.st_size % isoblocksize)
+
+    return total
+
+def preparedir(unified, path, csdir):
+    os.mkdir(path)
+    base = path
+    for d in csdir.split(os.sep):
+        os.mkdir(join(base, d))
+        base = join(base, d)
+    for f in commonfiles:
+        src = join(unified, f)
+        if os.access(src, os.R_OK):
+            os.link(src, join(path, f))
+
+def writediscinfo(path, discnum, discinfo):
+    newinfo = discinfo[:]
+    newinfo[3] = str(discnum)
+    f = open(join(path, '.discinfo'), 'w')
+    f.write('\n'.join(newinfo))
+    f.write('\n')
+    f.close()
+
+if __name__ == '__main__':
+    if len(sys.argv) != 2:
+        usage()
+
+    if not os.path.isdir(sys.argv[1]):
+        usage()
+
+    unified = sys.argv[1]
+
+    f = open(join(unified, '.discinfo'))
+    discinfo = [ line.strip() for line in f ]
+    f.close()
+
+    cslist = join(discinfo[4], 'cslist')
+    csdir = discinfo[5]
+
+    # create disc1, it needs to contain all the disc1 files
+    current = join(os.path.dirname(unified), 'disc1')
+    print >> sys.stderr, 'creating', current
+    discnum = 1
+    os.mkdir(current)
+    lndir(unified, current, excludes=(csdir, cslist, '.discinfo'))
+    writediscinfo(current, discnum, discinfo)
+    used = spaceused(current)
+
+    # iterate through the cslist, copying all the changesets that
+    # will fit
+    f = open(join(unified, cslist))
+    outcs = open(join(current, cslist), 'w')
+    for line in f:
+        csfile = line.split()[0]
+        src = join(unified, csdir, csfile)
+        used += spaceused(src)
+        if used > maxisosize:
+            # oops, ran out of space.  set up a new disc
+            discnum += 1
+            current = join(os.path.dirname(unified), 'disc%d' %discnum)
+            print >> sys.stderr, 'creating', current
+            preparedir(unified, current, csdir)
+            writediscinfo(current, discnum, discinfo)
+            used = spaceused(current)
+        dest = join(current, csdir, csfile)
+        os.link(src, dest)
+        # cut off disc number, record the disc location
+        newline = " ".join(line.split()[:-1])
+        outcs.write("%s %d\n" %(newline, discnum))
+    outcs.close()
+        
+        

@@ -1,0 +1,67 @@
+#!/bin/sh
+#
+# Copyright (c) 2004-2005 rPath, Inc.
+# All rights reserved
+#
+# buildiso is an example script of how to go about building
+# ananaconda-based ISO set.  It does not need to be distributed with
+# mint
+#
+
+CONARY=/usr/bin/conary
+alias conary="$CONARY"
+export PYTHONPATH=$CONARY_PATH
+
+version=1nubb
+lastversion=none
+phase=ALPHA
+basedir=/data/msw/linux/$version
+topdir=$basedir/unified
+#template=/spx/spx-linux-template
+name="Pound Key"
+subdir=Digium
+arch=`uname -m | sed -e 's/i.86/i386/'`
+isopath=/data/msw/iso
+isoname="pound-key-$version-$arch-@disc@.iso"
+lastcs=/spx/linux/$lastversion/unified/$subdir/changesets
+
+
+implantmd5=~msw/implantisomd5
+mkdir -p $topdir/$subdir/{base,changesets}
+#cp -r $template/* $topdir
+
+# hard link the last release's changesets over to save time/space
+if [ -d $lastcs ]; then
+    cp -l $lastcs/*ccs $topdir/$subdir/changesets
+fi
+
+if [ -f $topdir/README ]; then
+    sed -i "s/@VERSION@/$version ($phase)/g" $topdir/README
+fi
+./gencslist group-asterisk=asterisk.rpath.org@rpl:devel $topdir/$subdir/changesets > $topdir/$subdir/base/cslist
+
+if [ ! -f $topdir/$subdir/changesets/distro-release-$version* ]; then
+    echo "no distro-release for version $version"
+    exit 1
+fi
+
+./buildinstall --topdir $topdir \
+               --subdir $subdir \
+               --name "$name" \
+               --version $version \
+               --arch $arch \
+               --scriptdir /home/msw/cvs/anaconda/scripts \
+	       --install-label "asterisk.rpath.org@rpl:devel conary.rpath.com@rpl:devel"
+rm -rf $basedir/disc*
+./splitdistro $topdir
+for dir in $basedir/disc*; do
+    disc=`basename $dir`
+    iso=`echo $isoname | sed s/@disc@/$disc/g`
+    discname="$name $disc"
+    if [ -f $dir/isolinux/isolinux.bin ]; then
+	(cd $dir; mkisofs -o $isopath/$iso -b isolinux/isolinux.bin -c isolinux/boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -R -J -V "$discname" -T .)
+    else
+	(cd $dir; mkisofs -o $isopath/$iso -R -J -V "$discname" -T .)
+    fi
+    $implantmd5 $isopath/$iso
+done

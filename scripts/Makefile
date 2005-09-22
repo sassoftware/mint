@@ -4,9 +4,9 @@
 # All Rights Reserved
 #
 
-script_dist = job-server mklivecd reset update-package-index
+script_dist = job-server mklivecd reset update-package-index buildinstall splitdistro
 
-extra_dist = Makefile installable_iso.conf live_iso.conf
+extra_dist = Makefile installable_iso.conf live_iso.conf buildiso
 
 dist_files = $(script_dist) $(extra_dist)
 

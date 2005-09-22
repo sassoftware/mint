@@ -1,0 +1,182 @@
+#!/bin/sh
+#
+# Copyright (c) 2004-2005 rPath, Inc.
+# All rights reserved
+#
+
+conary=conary
+
+scriptdir=                  # directory to run anaconda scripts from
+topdir=/mnt/foo             # top directory of the CD image
+subdir=Specifix             # directory under $topdir that contains base/
+distroname="rPath Linux"    # name of the distro
+distroversion=0.50          # version of the distro
+arch=i386                   # architecture of the distro
+
+while [ $# -ge 1 ]; do
+    case $1 in
+	--scriptdir) scriptdir="$2"; shift; shift;;
+	--topdir) topdir="$2"; shift; shift;;
+	--name) distroname="$2"; shift; shift;;
+	--version) distroversion="$2"; shift; shift;;
+	--arch) arch="$2"; shift; shift;;
+	--subdir) subdir="$2"; shift; shift;;
+	--install-label) 
+	    installlabel=$2;
+	    conaryargs="$conaryargs --install-label $2"; 
+	    shift; shift
+	    ;;
+	*) echo "unknown option $1";;
+    esac
+done
+
+# set up comps.xml and header list
+mkdir -p $topdir/$subdir/base
+cat > $topdir/$subdir/base/comps.xml <<EOF
+<?xml version="1.0"?>
+<!DOCTYPE comps PUBLIC "-//Red Hat, Inc.//DTD Comps info//EN" "comps.dtd">
+<comps>
+  <group>
+    <id>core</id>
+    <name>Core</name>
+    <default>true</default>
+    <uservisible>false</uservisible>
+    <description>Smallest possible installation</description>
+    <packagelist>
+      <packagereq type="mandatory">acl</packagereq>
+      <packagereq type="default">ash</packagereq>
+      <packagereq type="mandatory">attr</packagereq>
+      <packagereq type="mandatory">bash</packagereq>
+      <packagereq type="mandatory">bzip2</packagereq>
+      <packagereq type="mandatory">dev</packagereq>
+      <packagereq type="mandatory">db</packagereq>
+      <packagereq type="mandatory">chkconfig</packagereq>
+      <packagereq type="mandatory">coreutils</packagereq>
+      <packagereq type="mandatory">cpio</packagereq>
+      <packagereq type="mandatory">cracklib</packagereq>
+      <packagereq type="mandatory">conary</packagereq>
+      <packagereq type="mandatory">diffutils</packagereq>
+      <packagereq type="mandatory">dhclient</packagereq>
+      <packagereq type="mandatory">distro-release</packagereq>
+      <packagereq type="mandatory">e2fsprogs</packagereq>
+      <packagereq type="mandatory">ed</packagereq>
+      <packagereq type="mandatory">file</packagereq>
+      <packagereq type="mandatory">filesystem</packagereq>
+      <packagereq type="mandatory">findutils</packagereq>
+      <packagereq type="mandatory">glibc</packagereq>
+      <packagereq type="default" basearchonly="true">grub</packagereq>
+      <packagereq type="mandatory">hdparm</packagereq>
+      <packagereq type="mandatory">hotplug</packagereq>
+      <packagereq type="mandatory">hwdata</packagereq>
+      <packagereq type="mandatory">info-adm</packagereq>
+      <packagereq type="mandatory">info-bin</packagereq>
+      <packagereq type="mandatory">info-daemon</packagereq>
+      <packagereq type="mandatory">info-disk</packagereq>
+      <packagereq type="mandatory">info-floppy</packagereq>
+      <packagereq type="mandatory">info-kmem</packagereq>
+      <packagereq type="mandatory">info-lp</packagereq>
+      <packagereq type="mandatory">info-sync</packagereq>
+      <packagereq type="mandatory">info-sys</packagereq>
+      <packagereq type="mandatory">info-tty</packagereq>
+      <packagereq type="mandatory">info-users</packagereq>
+      <packagereq type="mandatory">info-uucp</packagereq>
+      <packagereq type="mandatory">info-utmp</packagereq>
+      <packagereq type="mandatory">info-vcsa</packagereq>
+      <packagereq type="mandatory">info-wheel</packagereq>
+      <packagereq type="mandatory">initscripts</packagereq>
+      <packagereq type="mandatory">iproute</packagereq>
+      <packagereq type="mandatory">iptables</packagereq>
+      <packagereq type="mandatory">iputils</packagereq>
+      <packagereq type="mandatory">kbd</packagereq>
+      <packagereq type="mandatory">kernel</packagereq>
+      <packagereq type="mandatory">gawk</packagereq>
+      <packagereq type="mandatory">gcc</packagereq>
+      <packagereq type="mandatory">gdbm</packagereq>
+      <packagereq type="mandatory">glib</packagereq>
+      <packagereq type="mandatory">gpm</packagereq>
+      <packagereq type="mandatory">grep</packagereq>
+      <packagereq type="mandatory">gzip</packagereq>
+      <packagereq type="mandatory">libelf</packagereq>
+      <packagereq type="mandatory">libtermcap</packagereq>
+      <packagereq type="mandatory">libuser</packagereq>
+      <packagereq type="mandatory">mdadm</packagereq>
+      <packagereq type="mandatory">mkinitrd</packagereq>
+      <packagereq type="mandatory">mktemp</packagereq>
+      <packagereq type="mandatory">mingetty</packagereq>
+      <packagereq type="mandatory">module-init-tools</packagereq>
+      <packagereq type="mandatory">ncurses</packagereq>
+      <packagereq type="mandatory">newt</packagereq>
+      <packagereq type="mandatory">net-tools</packagereq>
+      <packagereq type="mandatory">pam</packagereq>
+      <packagereq type="mandatory">passwd</packagereq>
+      <packagereq type="mandatory">pcre</packagereq>
+      <packagereq type="mandatory">perl</packagereq>
+      <packagereq type="mandatory">popt</packagereq>
+      <packagereq type="mandatory">python</packagereq>
+      <packagereq type="mandatory">procps</packagereq>
+      <packagereq type="mandatory">readline</packagereq>
+      <packagereq type="mandatory">rhpl</packagereq>
+      <packagereq type="mandatory">rootfiles</packagereq>
+      <packagereq type="mandatory">sed</packagereq>
+      <packagereq type="mandatory">setserial</packagereq>
+      <packagereq type="mandatory">setup</packagereq>
+      <packagereq type="mandatory">slang</packagereq>
+      <packagereq type="mandatory">sqlite</packagereq>
+      <packagereq type="mandatory">sysklogd</packagereq>
+      <packagereq type="mandatory">sysvinit</packagereq>
+      <packagereq type="mandatory">tar</packagereq>
+      <packagereq type="mandatory">termcap</packagereq>
+      <packagereq type="mandatory">tzdata</packagereq>
+      <packagereq type="mandatory">util-linux</packagereq>
+      <packagereq type="mandatory">vim-minimal</packagereq>
+      <packagereq type="mandatory">zlib</packagereq>
+      <packagereq type="mandatory">zlib</packagereq>
+      <packagereq type="mandatory">group-dist</packagereq>
+      <packagereq type="mandatory">group-os</packagereq>
+      <packagereq type="default">authconfig</packagereq>
+      <packagereq type="default">kudzu</packagereq>
+      <packagereq type="default">system-config-mouse</packagereq>
+      <packagereq type="default">usermode</packagereq>
+      <packagereq type="default">shadow</packagereq>
+    </packagelist>
+  </group>
+
+  <group>
+    <id>base</id>
+    <name>Base</name>
+    <description>This group includes a minimal set of packages.</description>
+    <uservisible>false</uservisible>
+    <default>true</default>
+    <grouplist>
+      <groupreq>core</groupreq>
+    </grouplist>
+  </group>
+
+  <grouphierarchy>
+  </grouphierarchy>
+</comps>
+EOF
+touch $topdir/$subdir/base/hdlist
+touch $topdir/$subdir/base/hdlist2
+
+# Internal variables: No need to modify these
+# temporary directory where anaconda is extracted
+if [ "x$scriptdir" == "x" ]; then
+# extract anaconda scripts
+    anacondadir=$(mktemp -d /tmp/bd-anaconda-XXXXXX)
+    $conary $conaryargs --root $anacondadir update anaconda --no-deps
+    # the location of anaconda's scripts
+    scriptdir=$anacondadir/usr/lib/anaconda-runtime
+fi
+
+# instroot staging directories
+instroot=$(mktemp -d /tmp/bd-instroot-XXXXXX)
+instrootgr=$(mktemp -d /tmp/bd-instrootgr-XXXXXX)
+
+# build the images
+$scriptdir/upd-instroot --conary --install-label "$installlabel" --arch "$arch" $topdir/$subdir/changesets $instroot $instrootgr
+$scriptdir/mk-images --conary $topdir/$subdir/changesets $topdir $instroot $instrootgr $arch "$distroname" $distroversion $subdir
+
+$scriptdir/makestamp.py --releasestr="$distroname" --arch="$arch" --discNum="1" --baseDir=$subdir/base --packagesDir=$subdir/changesets --pixmapsDir=$subdir/pixmaps --outfile=$topdir/.discinfo
+
+rm -rf $anacondadir $instroot $instrootgr
