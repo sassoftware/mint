@@ -319,11 +319,11 @@ class ProjectHandler(WebHandler):
     def processJoinRejection(self, auth, userId, comments):
         if self.cfg.sendNotificationEmails:
             subject = "Membership Rejection Notice"
-            body = "Your request to join the following project on %s:\n" % self.cfg.productName
+            body = "Your request to join the following project on %s:\n\n" % self.cfg.productName
             body += "%s\n\n" % self.project.getName()
             body += " has been rejected by the project's owner.\n\n"
             if comments:
-                body += "Owner's comments:\n%s:" % comments
+                body += "Owner's comments:\n%s" % comments
             else:
                 body += "The owner did not provide a reason for this rejection.\n"
             user = self.client.getUser(userId)
