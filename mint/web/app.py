@@ -133,18 +133,13 @@ class MintApp(WebHandler):
         dots = fullHost.split('.')
         hostname = dots[0]
 
-        # slightly hairy logic:
-        # if the hostname is the site hostname (eg: mint.rpath.org),
-        # great. if it's in reserved hosts, redirect to site hostname.
-        # if neither, check to see if it's a valid project. if so,
-        # show the project page. if not, redirect to site hostname.
         if self.cfg.hostName:
             siteHost = "%s.%s" % (self.cfg.hostName, self.cfg.domainName)
         else:
             siteHost = self.cfg.domainName
         if hostname not in mint_server.reservedHosts and hostname != self.cfg.hostName:
             try:
-                project = self.client.getProjectByFQDN(fullHost)
+                project = self.client.getProjectByHostname(hostname)
             except:
                 raise Redirect(self.cfg.defaultRedirect)
             else:

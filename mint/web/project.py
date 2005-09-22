@@ -40,7 +40,7 @@ class ProjectHandler(WebHandler):
         cmds = self.cmd.split("/")
 
         try:
-            self.project = self.client.getProjectByFQDN(cmds[0] + "." + self.cfg.domainName)
+            self.project = self.client.getProjectByHostname(cmds[0])
         except database.ItemNotFound:
             return self._404
 

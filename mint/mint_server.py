@@ -219,6 +219,10 @@ class MintServer(object):
         return self.projects.getProjectIdByFQDN(fqdn)
 
     @private
+    def getProjectIdByHostname(self, hostname):
+        return self.projects.getProjectIdByHostname(hostname)
+
+    @private
     def getProjectIdsByMember(self, userId):
         return self.projects.getProjectIdsByMember(userId)
 

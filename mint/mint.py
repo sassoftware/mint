@@ -59,6 +59,16 @@ class MintClient:
         projectId = self.server.getProjectIdByFQDN(fqdn)
         return projects.Project(self.server, projectId)
 
+    def getProjectByHostname(self, hostname):
+        """
+        Retrieve a Project by its hostname.
+        @param hostname: Hostname of the requested project
+        @rtype: L{mint.projects.Project}
+        @raises mint.database.ItemNotFound: project of the requested hostname does not exist.
+        """
+        projectId = self.server.getProjectIdByHostname(hostname)
+        return projects.Project(self.server, projectId)
+
     def getProject(self, projectId):
         """
         Retrieve a project by database id.

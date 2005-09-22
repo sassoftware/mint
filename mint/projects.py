@@ -249,6 +249,17 @@ class ProjectsTable(database.KeyedTable):
             raise database.ItemNotFound
         return r[0]
 
+    def getProjectIdByHostname(self, hostname):
+        cu = self.db.cursor()
+
+        cu.execute("SELECT projectId FROM Projects WHERE hostname=? AND disabled=0", hostname)
+
+        try:
+            r = cu.next()
+        except StopIteration:
+            raise database.ItemNotFound
+        return r[0]
+
     def getProjectIdsByMember(self, userId):
         cu = self.db.cursor()
         cu.execute("SELECT projectId, level FROM ProjectUsers WHERE userId=?", userId)
