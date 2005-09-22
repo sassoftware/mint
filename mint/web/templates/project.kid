@@ -23,25 +23,46 @@
     </div>
 
     <td py:def="projectsPane()" id="right" class="projects">
-        <div class="pad">
+        <div py:if="not auth.authorized" class="pad">
+            <h3>Start Using rBuilder Online Today</h3>
+
+            <p>If you are new to rBuilder Online, create
+            your new account by using the
+            <a href="${cfg.basePath}register"><strong>new account</strong></a>
+            link above.</p>
+
+            <p>If you already have an account, use the above form to login.</p>
+        </div>
+        <div py:if="auth.authorized and not projectList" class="pad">
+            <h3>Get Involved</h3>
+
+            <p>Now's the time to get involved with the rBuilder Online
+            community. There are two ways you can do this:</p>
+
+            <ul>
+                <p>You can create a new project.</p>
+
+                <p>You can join an existing project.</p>
+            </ul>
+
+            <p>To create a new project, click
+                <a href="${cfg.basePath}newProject"><strong>here</strong></a>.</p>
+
+            <p>To join an existing project, use the browse or search boxes
+            in the left sidebar to find a project that interests you.
+            Then, click on the project name, and click on the "Request to join"
+            link to submit your request to the project's owners.</p>
+        </div>
+        <div py:if="auth.authorized and projectList" class="pad">
             <h3>My Projects</h3>
-            <p py:if="not auth.authorized">
-                <p>You must be logged in for your projects to be displayed.</p>
-                <p>To login, use the form above, or <a href="${cfg.basePath}register">create a new account</a></p>
-            </p>
-            <ul py:if="auth.authorized">
-                <li py:if="projectList" 
-                    py:for="project, level in sorted(projectList, key = lambda x: x[0].getName())">
+            <ul>
+                <li py:for="project, level in sorted(projectList, key = lambda x: x[0].getName())">
                     <a href="${cfg.basePath}project/${project.getHostname()}/">
                         ${project.getName()}</a><br/>
                         ${userlevels.names[level]}
-                        <p py:if="not level and project.listJoinRequests()">
+                        <span py:if="not level and project.listJoinRequests()">
                             <a href="${cfg.basePath}project/${project.getHostname()}/members"><b style="color: red;">Requests Pending</b></a>
-                        </p>
-                </li>
-                <li py:if="not projectList">
-                    <p>You are not a member of any projects.</p>
-                    <p><a href="${cfg.basePath}projects">Browse the list of projects to find one to join</a></p>
+                        </span>
                 </li>
             </ul>
             <ul py:if="auth.authorized">
