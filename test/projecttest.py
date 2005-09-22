@@ -27,6 +27,16 @@ class ProjectTest(MintRepositoryHelper):
         assert(project.getMembers() ==\
             [[2, 'testuser', userlevels.OWNER]])
     
+    def testGetProjects(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        projectId = self.newProject(client, hostname = "test1")
+
+        project = client.getProjectByHostname("test1")
+        assert(projectId == project.getId())
+
+        project = client.getProjectByFQDN("test1.localhost")
+        assert(projectId == project.getId())
+   
     def testMembers(self):
         client = self.openMintClient(("test", "foo"))
         otherUserId = client.registerNewUser("member", "memberpass", "Test Member",
