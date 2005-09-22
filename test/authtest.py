@@ -25,6 +25,12 @@ class AuthTest(MintRepositoryHelper):
         auth = client.checkAuth()
         assert(not auth.authorized)
 
+        # ensure capitlization typos in username aren't allowed either
+        client = self.openMint(("testUser","testpass"))
+        auth = client.checkAuth()
+        assert(not auth.authorized)
+
+
     def testConflictingUser(self):
         client = self.getMintClient("testuser", "testpass")
         # make two accounts with a case sensitive clash.
@@ -40,7 +46,6 @@ class AuthTest(MintRepositoryHelper):
             pass
         userId = client.registerNewUser("different", "memberpass", "Test Member",
                                         "test@example.com", "test at example.com", "", active=True)
-
 
 if __name__ == "__main__":
     testsuite.main()
