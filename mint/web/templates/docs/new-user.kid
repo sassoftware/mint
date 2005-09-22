@@ -56,11 +56,12 @@
                 <p>If you're interested in joining a project, you probably
                 already have a project in mind (if not, browse through the
                 available projects, and make your selection).  Go to the
-                project's homepage, and click on the <tt>project
-                members</tt> link.  Under the <tt>project owners</tt>
-                heading, you'll find the owner(s) of the project.  Click on
-                a name, and use their contact information to request
-                membership in their project.</p>
+                project's homepage, and click on the <tt>Request to
+                join</tt> link at the bottom of the page.  Enter any
+                comments you'd like to pass on to the project's owners, and
+                click on <tt>Submit</tt>.  Your request will be forwarded
+                to the project's owners, who can then review your
+                request.</p>
 
                 <h4>Creating a Project</h4>
 
