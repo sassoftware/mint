@@ -75,18 +75,21 @@ def _removeInvalidTroves(changeSetList, valid):
             entry = (name, newVersion, newFlavor)
             if entry in handled:
                 continue
-            if entry in valid:
-                finalCsList.append(entry)
             # try to see if the package is included.  if so, go ahead
             # and add it to the finalCsList and mark it as included
             # already.  This makes the whole package get installed at
             # the first mention of a component, instead of the final
-            # mention of the package.
+            # mention of the package.  It also means that we'll make
+            # packages where possible 
             if ':' in name:
-                entry = (name.split(':')[0], entry[1], entry[2])
-                if entry in valid and not entry in handled:
-                    finalCsList.append(entry)
-                    handled.add(entry)
+                pkgEntry = (name.split(':')[0], entry[1], entry[2])
+                if pkgEntry in valid:
+                    if not pkgEntry in handled:
+                        finalCsList.append(pkgEntry)
+                        handled.add(pkgEntry)
+                    continue
+            if entry in valid:
+                finalCsList.append(entry)
 
     return finalCsList
 
@@ -153,6 +156,11 @@ def _validateChangeSet(path, cs, name, version, flavor):
     # first check the top level trove
     if not _validateTrove(cs, cachedCs, name, version, flavor):
         return False
+
+    if name.startswith('group-'):
+        # groups are extracted with recurse=False, so we are done with
+        # validataion
+        return True
 
     # then iterate over any included troves (if any)
     topTrove = _getTrove(cs, name, version, flavor)
