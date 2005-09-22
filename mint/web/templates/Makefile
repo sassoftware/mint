@@ -11,6 +11,7 @@ kid_files = \
 	confirm.kid		\
 	editProject.kid		\
 	editRelease.kid		\
+	conaryCfg.kid		\
 	error.kid		\
 	forgotPassword.kid	\
 	frontPage.kid		\

@@ -68,6 +68,10 @@ class ProjectHandler(WebHandler):
         self._write("projectPage", userHasReq = self.client.userHasRequested(self.project.getId(), auth.userId))
         return apache.OK
 
+    def conaryCfg(self, auth):
+        self._write("conaryCfg")
+        return apache.OK
+
     def releases(self, auth):
         releases = self.project.getReleases(showUnpublished = True)
 

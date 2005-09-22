@@ -27,7 +27,7 @@ import string
         </td>
         <td id="main">
             <div class="pad">
-                <h2>${project.getName()}<br />repository browser</h2>
+                <h2>${project.getName()}<br />Repository Browser</h2>
 
                 <span py:for="l in string.uppercase">
                     <a py:if="l != char and totals[l]" href="browse?char=${l}">${l}</a>

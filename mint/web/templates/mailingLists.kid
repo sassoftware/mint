@@ -29,7 +29,7 @@
         <td id="main">
             <div class="pad">
                 <p class="message" py:for='msg in messages' py:content="msg"/>
-                <h2>${project.getName()} Mailing Lists</h2>
+                <h2>${project.getName()}<br />Mailing Lists</h2>
                 <div py:for="list in lists">
                     <h3><a href="${mailhost + 'listinfo/' + list.name}" target="_NEW">${list.name}</a></h3>
                     <p>${list.description}</p>

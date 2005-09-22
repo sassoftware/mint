@@ -63,11 +63,7 @@ from mint.mint import upstream
                                 ${line}
                             </p>
                             <p py:if="not project.getDesc()">The project owner has not entered a description</p>
-                            <h3>Configuration</h3>
-
-                            <p>
-                                To add this project in your Conary configuration, add <tt><strong>${project.getLabel()}</strong></tt> 
-                                to the <tt><strong>installLabelPath</strong></tt> line in the <tt><strong>/etc/conaryrc</strong></tt> (or your <tt><strong>~/.conaryrc</strong></tt>) file.</p>
+                            <a href="${basePath}conaryCfg">Add This Project To My Conary Configuration</a>
 
                             <hr py:if="isDeveloper or not memberList or bool(auth.authorized) ^ bool(isOwner)" />
                             <p py:if="isDeveloper">
