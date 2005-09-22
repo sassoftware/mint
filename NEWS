@@ -7,6 +7,8 @@ Changes in 0.5.3:
 * mint.users.digMX() properly handles domains without MX records.
 * Installable ISO changeset extraction provides progress updates when
   downloading data from the repository.
+* In-band membership requests are now possible in the web interface.
+* SSL support for login and repository access is now possible.
 
 Changes in 0.5.2:
 
