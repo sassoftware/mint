@@ -122,12 +122,13 @@
 
                 <p>Even though it is not required, you should strongly
                 consider filling in the <tt>Contact Information</tt> field.
-                Why?  Well, if you are going to create a project and you're
-                looking for people to join, they'll be using the contents
-                of this field to contact you.  (Note that whatever you
-                enter here will be publicly accessible, so you should use
-                either a URL, or notation such as <tt>name at example dot
-                com</tt> to make life more difficult for spammers.)</p>
+                Why?  Well, if you are going to create a project, it's
+                highly likely that people will have questions about the
+                project, and they'll be using the contents of this field to
+                contact you.  (Note that whatever you enter here will be
+                publicly accessible, so you should use either a URL, or
+                notation such as <tt>name at example dot com</tt> to make
+                life more difficult for spammers.)</p>
 
                 <p>Finally, you must check the two checkboxes entitled
                 <tt>I have read and accept the Terms of Service</tt> and
@@ -153,12 +154,12 @@
                 <h5>Joining an Existing Project</h5>
 
                 <p>If you're interested in joining an already-existing
-                project, go to the project's homepage, click on the
-                <tt>project members</tt> link, and click on one of the
-                project owners to get their contact information.  When you
-                contact the project owner, ask them to make you a project
-                member, and include your rBuilder Online username (they'll
-                need it to make you a project member).</p>
+                project, go to the project's homepage.  Click on the
+                <tt>Request to join</tt> link at the bottom of
+                the page, enter any comments you'd like to make to the
+                project's owners, and click on <tt>Submit</tt>.  Your
+                request will be forwarded to the project's owners, who can
+                then review your request.</p>
             </div>
         </td>
         <td id="right" class="projects">
