@@ -6,6 +6,7 @@
 import email
 import kid
 import os
+import re
 import sys
 from mod_python import apache
 
@@ -188,14 +189,18 @@ class ProjectHandler(WebHandler):
         self.client.startImageJob(releaseId)
         return self._redirect(self.basePath + "release?id=%d" % releaseId)
 
-    @mailList
-    def mailingLists(self, auth, mlists):
+    def _mailingLists(self, auth, mlists, messages=[]):
         if not self.cfg.EnableMailLists:
             raise mailinglists.MailingListException("Mail Lists Disabled")
         hostname = self.project.getHostname()
         lists = mlists.list_lists(hostname)
-        self._write("mailingLists", lists=lists, mailhost=self.cfg.MailListBaseURL, hostname=hostname)
+        self._write("mailingLists", lists=lists, mailhost=self.cfg.MailListBaseURL, hostname=hostname, messages=messages)
         return apache.OK
+
+        
+    @mailList
+    def mailingLists(self, auth, mlists, messages=[]):
+        return self._mailingLists(auth, mlists, messages)
 
     @ownerOnly
     @strFields(listname=None, description='', listpw='', listpw2='')
@@ -213,7 +218,7 @@ class ProjectHandler(WebHandler):
             hostname = self.project.getHostname()
             if not mlists.add_list(self.cfg.MailListPass, hostname+'-'+listname, listpw, description, owners):
                 raise mailinglists.MailingListException("Mailing list not created")
-            return self._redirect(self.basePath + "mailingLists")
+            return self._mailingLists(auth, mlists, ['Mailing list "%s" created' % hostname+'-'+listname])
         else:
             raise mailinglists.MailingListException("Passwords do not match")
 
@@ -230,7 +235,7 @@ class ProjectHandler(WebHandler):
                 raise mailinglists.MailingListException("Mailing list not deleted")
         else:
             raise mailinglists.MailingListException("You cannot delete this list")
-        return self._redirect(self.basePath + "mailingLists")
+        return self._mailingLists(auth, mlists, ['Mailing list "%s" deleted' % list])
 
     @requiresAuth
     @strFields(list=None)
@@ -239,7 +244,7 @@ class ProjectHandler(WebHandler):
         if not self.cfg.EnableMailLists:
             raise mailinglists.MailingListException("Mail Lists Disabled")
         mlists.server.subscribe(list, self.cfg.MailListPass, [auth.email], False, True)
-        return self._redirect(self.basePath + "mailingLists")
+        return self._mailingLists(auth, mlists, ['You have been subscribed to %s' % list])
 
     @requiresAuth
     @ownerOnly
