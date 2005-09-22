@@ -38,7 +38,7 @@ fi
 if [ -f $topdir/README ]; then
     sed -i "s/@VERSION@/$version ($phase)/g" $topdir/README
 fi
-./gencslist.py group-asterisk=asterisk.rpath.org@rpl:devel $topdir/$subdir/changesets > $topdir/$subdir/base/cslist
+../mint/distro/gencslist.py group-asterisk-all=asterisk.rpath.org@rpl:devel $topdir/$subdir/changesets > $topdir/$subdir/base/cslist
 
 if [ ! -f $topdir/$subdir/changesets/distro-release-$version* ]; then
     echo "no distro-release for version $version"
