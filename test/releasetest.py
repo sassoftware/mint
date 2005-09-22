@@ -10,7 +10,7 @@ from mint_rephelp import MintRepositoryHelper
 
 class ReleaseTest(MintRepositoryHelper):
     def testBasicAttributes(self):
-        client = self.getMintClient("testuser", "testpass")
+        client, userId = self.quickMintUser("testuser", "testpass")
         projectId = client.newProject("Foo", "foo", "rpath.org")
 
         release = client.newRelease(projectId, "Test Release")

@@ -11,7 +11,7 @@ from mint import userlevels
 
 class ProjectTest(MintRepositoryHelper):
     def testBasicAttributes(self):
-        client = self.getMintClient("testuser", "testpass")
+        client, userId = self.quickMintUser("testuser", "testpass")
         projectId = client.newProject("Foo", "foo", "rpath.org")
 
         project = client.getProject(projectId)
@@ -28,32 +28,32 @@ class ProjectTest(MintRepositoryHelper):
             [[2, 'testuser', userlevels.OWNER]])
     
     def testMembers(self):
-        client = self.openMint(("test", "foo"))
+        client = self.openMintClient(("test", "foo"))
         otherUserId = client.registerNewUser("member", "memberpass", "Test Member",
                         "test@example.com", "test at example.com", "", active=True)
  
-        client = self.getMintClient("testuser", "testpass")
+        client, userId = self.quickMintUser("testuser", "testpass")
                                                        
         projectId = client.newProject("Foo", "foo", "localhost")
         project = client.getProject(projectId)
 
         project.addMemberById(otherUserId, userlevels.DEVELOPER)
-        assert(project.getMembers() == [[3, 'testuser', userlevels.OWNER],
+        assert(project.getMembers() == [[userId, 'testuser', userlevels.OWNER],
                                         [otherUserId, 'member', userlevels.DEVELOPER]])
 
         project.delMemberById(otherUserId)
-        assert(project.getMembers() == [[3, 'testuser', userlevels.OWNER]])
+        assert(project.getMembers() == [[userId, 'testuser', userlevels.OWNER]])
 
         project.addMemberByName('member', userlevels.OWNER)
-        assert(project.getMembers() == [[3, 'testuser', userlevels.OWNER],
+        assert(project.getMembers() == [[userId, 'testuser', userlevels.OWNER],
                                         [otherUserId, 'member', userlevels.OWNER]])
         
         project.updateUserLevel(otherUserId, userlevels.DEVELOPER)
-        assert(project.getMembers() == [[3, 'testuser', userlevels.OWNER],
+        assert(project.getMembers() == [[userId, 'testuser', userlevels.OWNER],
                                         [otherUserId, 'member', userlevels.DEVELOPER]])
         
     def testLabels(self):
-        client = self.getMintClient("testuser", "testpass")
+        client, userId = self.quickMintUser("testuser", "testpass")
 
         projectId = client.newProject("Foo", "foo", "rpath.org")
         project = client.getProject(projectId)

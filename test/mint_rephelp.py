@@ -13,23 +13,27 @@ from mint import config
 from mint import shimclient
 
 class MintRepositoryHelper(rephelp.RepositoryHelper):
-    def openMint(self, authToken=('mintauth', 'mintpass')):
+    def openMintClient(self, authToken=('mintauth', 'mintpass')):
+        """Return a mint client authenticated via authToken, defaults to 'mintauth', 'mintpass'"""
         self.openRepository()
         cfg = config.MintConfig()
         cfg.read("%s/mint.conf" % self.servers.getServer().serverRoot)
         return shimclient.ShimMintClient(cfg, authToken)
 
-    def getMintClient(self, username, password):
-        client = self.openMint(('mintauth', 'mintpass'))
+    def quickMintUser(self, username, password):
+        """Retrieves a client, creates a user as specified by username and password,
+           and returns a connection to mint as that new user, and the user ID.:"""
+        client = self.openMintClient()
         userId = client.registerNewUser(username, password, "Test User",
                 "test@example.com", "test at example.com", "", active=True)
 
-        return self.openMint((username, password))
+        return self.openMintClient((username, password)), userId
 
     def newProject(self, client, name = "Test Project",
                          hostname = "test",
                          domainname = "localhost",
                          username = "mintauth"):
+        """Create a new mint project and return that project ID."""
         # save the current openpgpkey cache
         keyCache = openpgpkey.getKeyCache()
         projectId = client.newProject(name, hostname, domainname)
@@ -47,4 +51,3 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
             "http://testuser:testpass@%s:%d/repos/%s/" % (domainname, self.getPort(), hostname)}
 
         return projectId
-

@@ -11,7 +11,7 @@ import recipes
 
 class RepositoryTest(MintRepositoryHelper):
     def testBasicRepository(self):
-        client = self.getMintClient("testuser", "testpass")
+        client, userId = self.quickMintUser("testuser", "testpass")
         projectId = self.newProject(client)
        
         self.makeSourceTrove("testcase", recipes.testRecipe1)

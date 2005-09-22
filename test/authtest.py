@@ -14,25 +14,25 @@ from mint import users
 
 class AuthTest(MintRepositoryHelper):
     def testNewUser(self):
-        client = self.getMintClient("testuser", "testpass")
+        client, userId = self.quickMintUser("testuser", "testpass")
         auth = client.checkAuth()
         assert(auth.authorized)
 
     def testBadUser(self):
-        client = self.getMintClient("testuser", "testpass")
+        client, userId = self.quickMintUser("testuser", "testpass")
 
-        client = self.openMint(("testuser", "badpass"))
+        client = self.openMintClient(("testuser", "badpass"))
         auth = client.checkAuth()
         assert(not auth.authorized)
 
-        # ensure capitlization typos in username aren't allowed either
-        client = self.openMint(("testUser","testpass"))
+        # ensure capitalization typos in username aren't allowed either
+        client = self.openMintClient(("testUser","testpass"))
         auth = client.checkAuth()
         assert(not auth.authorized)
 
 
     def testConflictingUser(self):
-        client = self.getMintClient("testuser", "testpass")
+        client = self.openMintClient()
         # make two accounts with a case sensitive clash.
         userId = client.registerNewUser("member", "memberpass", "Test Member",
                                         "test@example.com", "test at example.com", "", active=True)

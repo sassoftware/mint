@@ -11,9 +11,8 @@ from mint import userlevels
 
 class JoinRequestTest(MintRepositoryHelper):
     def testSetComments(self):
-        client = self.getMintClient("testuser", "testpass")
+        client, userId = self.quickMintUser("testuser", "testpass")
         projectId = client.newProject("Foo", "foo", "rpath.org")
-
 
         userId = client.registerNewUser("member", "memberpass", "Test Member",
                                         "test@example.com", "test at example.com", "", active=True)
@@ -35,7 +34,7 @@ class JoinRequestTest(MintRepositoryHelper):
         assert(not client.userHasRequested(projectId, userId))
 
     def testMembershipEffects(self):
-        client = self.getMintClient("testuser", "testpass")
+        client, userId = self.quickMintUser("testuser", "testpass")
         projectId = client.newProject("Foo", "foo", "rpath.org")
 
         project = client.getProject(projectId)
@@ -67,13 +66,13 @@ class JoinRequestTest(MintRepositoryHelper):
         assert(not client.userHasRequested(projectId, userId))
         
     def testCancelAcctEffects(self):
-        client = self.getMintClient("testuser", "testpass")
+        client, userId = self.quickMintUser("testuser", "testpass")
         projectId = client.newProject("Foo", "foo", "rpath.org")
 
         userId = client.registerNewUser("member", "memberpass", "Test Member",
                                         "test@example.com", "test at example.com", "", active=True)
 
-        client = self.openMint(('member', 'memberpass'))
+        client = self.openMintClient(('member', 'memberpass'))
         user = client.getUser(userId)
         client.setJoinReqComments(projectId, userId, 'foo')
         # cancel account and check again
