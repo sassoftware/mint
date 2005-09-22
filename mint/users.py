@@ -194,8 +194,8 @@ class UsersTable(database.KeyedTable):
             confirmDomain = "%s.%s" % (self.cfg.hostName, self.cfg.domainName)
         else:
             confirmDomain = self.cfg.domainName
-            
-        if not active:
+
+        if self.cfg.sendNotificationEmails:
             message = "\n".join(["Thank you for your interest in %s!" % self.cfg.productName,
                                  "",
                                  "Your account (%s) has been created." % username,
