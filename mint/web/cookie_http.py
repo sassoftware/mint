@@ -57,7 +57,7 @@ class ConaryHandler(WebHandler, http.HttpHandler):
             useSSL = self.cfg.useSSL
         cfg = self.project.getConaryConfig(newUser = self.authToken[0],
                                            newPass = self.authToken[1],
-                                           useSSL)
+                                           useSSL = useSSL)
         self.repos = netclient.NetworkRepositoryClient(cfg.repositoryMap)
 
         try:
