@@ -69,7 +69,7 @@ class MintApp(WebHandler):
         self.projectHandler = ProjectHandler()
         self.adminHandler = AdminHandler()
         self.errorHandler = ErrorHandler()
-        self.conaryHandler = ConaryHandler(req, cfg)
+        self.conaryHandler = ConaryHandler(req, cfg, repServer)
 
     def _handle(self, pathInfo):
         method = self.req.method.upper()

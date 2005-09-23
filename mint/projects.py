@@ -37,7 +37,7 @@ class DuplicateName(MintError):
 class Project(database.TableObject):
     __slots__ = ('creatorId', 'name',
                  'desc', 'hostname', 'domainname', 'projecturl', 
-                 'hidden', 'disabled',
+                 'hidden', 'external', 'disabled',
                  'timeCreated', 'timeModified')
 
     def getItem(self, id):
@@ -178,11 +178,12 @@ class ProjectsTable(database.KeyedTable):
                     desc            STR NOT NULL DEFAULT '',
                     disabled        INT DEFAULT 0,
                     hidden          INT DEFAULT 0,
+                    external        INT DEFAULT 0,
                     timeCreated     INT,
                     timeModified    INT DEFAULT 0
                 )"""
     fields = ['creatorId', 'name', 'hostname', 'domainname', 'projecturl', 
-              'desc', 'hidden', 'timeCreated', 'timeModified']
+              'desc', 'disabled', 'hidden', 'external', 'timeCreated', 'timeModified']
     indexes = { "ProjectsHostnameIdx": "CREATE INDEX ProjectsHostnameIdx ON Projects(hostname)",
                 "ProjectsDisabledIdx": "CREATE INDEX ProjectsDisabledIdx ON Projects(disabled)",
                 "ProjectsHiddenIdx": "CREATE INDEX ProjectsHiddenIdx ON Projects(hidden)"
@@ -202,6 +203,14 @@ class ProjectsTable(database.KeyedTable):
                     cu.execute(sql)
                 except:
                     return False
+            if dbversion == 2:
+                cu = self.db.cursor()
+                try:
+                    cu.execute("ALTER TABLE Projects ADD COLUMN external INT DEFAULT 0")
+                    cu.execute("UPDATE Projects SET external=0")
+                except:
+                    return False
+                    
         return True
 
     def new(self, **kwargs):

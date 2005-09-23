@@ -17,7 +17,7 @@ from webhandler import WebHandler, normPath
 from mint.session import SqlSession
 
 class ConaryHandler(WebHandler, http.HttpHandler):
-    def __init__(self, req, cfg):
+    def __init__(self, req, cfg, repServer = None):
         protocol = 'http'
         port = 80
         
@@ -26,6 +26,9 @@ class ConaryHandler(WebHandler, http.HttpHandler):
             self.content_type = 'application/xhtml+xml'
             self.output = 'xhtml'
 
+        if repServer:
+            self.repServer = repServer
+            self.troveStore = self.repServer.troveStore
         if 'mint.web.templates.repos' in sys.modules:
             self.reposTemplatePath = os.path.dirname(sys.modules['mint.web.templates.repos'].__file__) + "/repos/"
     
@@ -51,7 +54,7 @@ class ConaryHandler(WebHandler, http.HttpHandler):
     def _handle(self, *args, **kwargs):
         """Handle either an HTTP POST or GET command."""
         
-        if self.project.getDomainname() == self.cfg.domainName:
+        if self.project.external:
             useSSL = None # use the label as-is for external projects
         else:
             useSSL = self.cfg.SSL

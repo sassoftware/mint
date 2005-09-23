@@ -69,22 +69,25 @@ from mint.mint import upstream
                                     <img src="${cfg.staticPath}/apps/mint/images/xml.gif"/>
                                 </a>
                             </p>
+
+                            <div py:strip="True" py:if="not project.external">
                                 <hr py:if="isDeveloper or not memberList or bool(auth.authorized) ^ bool(isOwner)" />
-                            <p py:if="isDeveloper">
-                                <em class="resign">You are a developer of this project.</em>
-                                <a href="resign">Resign</a>
-                            </p>
-                            <p py:if="auth.authorized and not isOwner and not isDeveloper and memberList">
-                                <em py:if="not userHasReq" class="resign">You are not a member of this project.</em>
-                                <em py:if="userHasReq" class="resign">Your request to join this project is pending.</em>
-                                <a py:if="not userHasReq" href="joinRequest">Request to join</a>
-                                <a py:if="userHasReq" href="joinRequest">Modify your comments</a>
-                            </p>
-                            <p py:if="not memberList">
-                                <em class="resign">This project is orphaned.</em>
-                                <a py:if="auth.authorized" href="${basePath}adopt">Adopt this project</a>
-                                <span py:strip="True" py:if="not auth.authorized">Log in to adopt this project.</span>
-                            </p>
+                                <p py:if="isDeveloper">
+                                    <em class="resign">You are a developer of this project.</em>
+                                    <a href="resign">Resign</a>
+                                </p>
+                                <p py:if="auth.authorized and not isOwner and not isDeveloper and memberList">
+                                    <em py:if="not userHasReq" class="resign">You are not a member of this project.</em>
+                                    <em py:if="userHasReq" class="resign">Your request to join this project is pending.</em>
+                                    <a py:if="not userHasReq" href="joinRequest">Request to join</a>
+                                    <a py:if="userHasReq" href="joinRequest">Modify your comments</a>
+                                </p>
+                                <p py:if="not memberList">
+                                    <em class="resign">This project is orphaned.</em>
+                                    <a py:if="auth.authorized" href="${basePath}adopt">Adopt this project</a>
+                                    <span py:strip="True" py:if="not auth.authorized">Log in to adopt this project.</span>
+                                </p>
+                            </div>
                         </div>
                     </td>
                     ${projectsPane()}

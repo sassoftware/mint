@@ -26,6 +26,10 @@ class ProjectTest(MintRepositoryHelper):
         assert(project.getProjectUrl() == "http://example.com/")
         assert(project.getMembers() ==\
             [[2, 'testuser', userlevels.OWNER]])
+
+        assert(project.hidden == 0)
+        assert(project.external == 0)
+        assert(project.disabled == 0)
     
     def testGetProjects(self):
         client, userId = self.quickMintUser("testuser", "testpass")
