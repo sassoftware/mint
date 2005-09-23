@@ -69,10 +69,7 @@ class MintApp(WebHandler):
         self.projectHandler = ProjectHandler()
         self.adminHandler = AdminHandler()
         self.errorHandler = ErrorHandler()
-        if repServer:
-            self.conaryHandler = ConaryHandler(req, cfg, repServer)
-        else:
-            self.conaryHandler = None
+        self.conaryHandler = ConaryHandler(req, cfg)
 
     def _handle(self, pathInfo):
         method = self.req.method.upper()
@@ -110,8 +107,8 @@ class MintApp(WebHandler):
         except mint_error.PermissionDenied, e:
             self._write("error", shortError = "Permission Denied", error = str(e))
             return apache.OK
-           
-        d = dict(FieldStorage(self.req))
+        
+        d = self.fields.copy()
         d['auth'] = self.auth
         try:
             return method(**d)
@@ -146,6 +143,7 @@ class MintApp(WebHandler):
                 raise Redirect("%s://%s%sproject/%s/" % (protocol, siteHost, self.cfg.basePath, hostname))
 
         self.siteHost = siteHost
+        self.fields = dict(FieldStorage(self.req))
         
         if self.cfg.hostName and fullHost == self.cfg.domainName:
             raise Redirect(self.cfg.defaultRedirect)
@@ -165,6 +163,7 @@ class MintApp(WebHandler):
             'authToken':        self.auth.getToken(),
             'client':           self.client,
             'cfg':              self.cfg,
+            'fields':           self.fields,
             'projectList':      self.projectList,
             'req':              self.req,
             'session':          self.session,

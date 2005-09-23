@@ -6,26 +6,25 @@
 import base64
 import os
 import sys
+import traceback
 
 from mod_python import apache
 from server import http
-from repository import netclient 
+from repository import netclient, repository
+from repository.netrepos import netserver
 from templates import repos
 from webhandler import WebHandler, normPath
 from mint.session import SqlSession
 
 class ConaryHandler(WebHandler, http.HttpHandler):
-    def __init__(self, req, cfg, repServer):
+    def __init__(self, req, cfg):
         protocol = 'http'
         port = 80
-        self.repServer = repServer
         
         #If the browser can support it, give it what it wants.
         if 'application/xhtml+xml' in req.headers_in.get('Accept', ''):
             self.content_type = 'application/xhtml+xml'
             self.output = 'xhtml'
-
-        http.HttpHandler.__init__(self, req, cfg, self.repServer, protocol, port)
 
         if 'mint.web.templates.repos' in sys.modules:
             self.reposTemplatePath = os.path.dirname(sys.modules['mint.web.templates.repos'].__file__) + "/repos/"
@@ -39,31 +38,40 @@ class ConaryHandler(WebHandler, http.HttpHandler):
         path = self.req.path_info.split("/")
         self.cmd = path[3]
         if path[1] == "repos":
-            self.serverName = path[2] + "." + self.cfg.domainName
-        
-        self.project = self.client.getProjectByFQDN(self.serverName)
-        projectName = self.project.getHostname()
+            self.project = self.client.getProjectByHostname(path[2])
+            self.serverName = self.project.getLabel().split("@")[0]
+        else:
+            self.project = self.client.getProjectByFQDN(self.serverName)
 
         self.basePath += "repos/%s" % self.project.getHostname()
         self.basePath = normPath(self.basePath)
 
-        if self.cfg.SSL:
-            protocol = "https"
-        else:
-            protocol = "http"
-            
-        if self.project.hidden:
-            url = "%s://%s:%s@%s%srepos/%s/" % (protocol, self.authToken[0], self.authToken[1],
-                                              self.siteHost, self.cfg.basePath, projectName)
-        else:
-            url = "%s://%s%srepos/%s/" % (protocol, self.siteHost, self.cfg.basePath, projectName)
-        self.repositoryMap = {self.serverName: url}
-        self.repos = netclient.NetworkRepositoryClient(self.repositoryMap)
         return self._handle
 
     def _handle(self, *args, **kwargs):
-        return self._methodHandler()
-   
+        """Handle either an HTTP POST or GET command."""
+        
+        if self.project.getDomainName() == self.cfg.domainName:
+            useSSL = None # use the label as-is for external projects
+        else:
+            useSSL = self.cfg.useSSL
+        cfg = self.project.getConaryConfig(newUser = self.authToken[0],
+                                           newPass = self.authToken[1],
+                                           useSSL)
+        self.repos = netclient.NetworkRepositoryClient(cfg.repositoryMap)
+
+        try:
+            method = self.__getattribute__(self.cmd)
+        except AttributeError:
+            return apache.HTTP_NOT_FOUND
+
+        d = self.fields
+        d['auth'] = self.authToken
+        try:
+            return method(**d)
+        except repository.OpenError:
+            return self._requestAuth()
+
     def _requestAuth(self):
         # try to fall back to anonymous and rerun the handler
         if self.authToken != ('anonymous', 'anonymous'):
@@ -71,16 +79,6 @@ class ConaryHandler(WebHandler, http.HttpHandler):
             return self._handle()
         else:
             return self._redirect(self.cfg.defaultRedirect)
-
-    def _getHandler(self, cmd):
-        try:
-            method = self.__getattribute__(cmd)
-        except AttributeError:
-            return self._404
-        return method
-
-    def _getAuth(self):
-        return self.authToken
 
     def _write(self, templateName, **values):
         WebHandler._write(self, templateName, templatePath = self.reposTemplatePath, **values)

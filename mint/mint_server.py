@@ -658,11 +658,10 @@ class MintServer(object):
     def getDefaultProjectLabel(self, projectId):
         return self.labels.getDefaultProjectLabel(projectId)
 
-    @requiresAuth
     @private
-    def getLabelsForProject(self, projectId):
+    def getLabelsForProject(self, projectId, newUser, newPass, useSSL):
         """Returns a mapping of labels to labelIds and a repository map dictionary for the current user"""
-        return self.labels.getLabelsForProject(projectId, self.cfg.SSL)
+        return self.labels.getLabelsForProject(projectId, useSSL, newUser, newPass)
 
     @requiresAuth
     @private

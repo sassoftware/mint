@@ -271,12 +271,11 @@ def conaryHandler(req, cfg, pathInfo):
                                         cacheChangeSets = True,
                                         logFile = logFile
                                     )
+            repositories[repName].forceSecure = cfg.SSL
+            repositories[repName].cfg = cfg
         else:
-            return apache.HTTP_NOT_FOUND
-
-        repositories[repName].forceSecure = cfg.SSL
-        repositories[repName].cfg = cfg
-   
+            repositories[repName] = None
+    
     repo = repositories[repName]
         
     if method == "POST":
