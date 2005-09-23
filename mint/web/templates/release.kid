@@ -12,7 +12,7 @@ from mint.mint import upstream
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'library.kid', 'layout.kid'">
     <?python
-    isOwner = userLevel == userlevels.OWNER
+    isOwner = (userLevel == userlevels.OWNER or auth.admin)
     if isOwner:
         onload = "setTimeout('getReleaseStatus(" + str(release.getId()) + ")', 1000);"
     else:
