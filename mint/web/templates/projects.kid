@@ -6,6 +6,7 @@
 #
 import time
 from mint import projectlisting
+from mint.mint import timeDelta
 ?>
 <html xmlns:html="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
@@ -23,8 +24,8 @@ from mint import projectlisting
                 formattedresults = [
                     ('%sproject/%s/' % (cfg.basePath,resultset[0]), resultset[1]),
                     resultset[2],
-                    time.strftime("%Y-%m-%d", time.localtime(resultset[3])),
-                    time.strftime("%Y-%m-%d", time.localtime(resultset[4])),
+                    timeDelta(resultset[3]),
+                    timeDelta(resultset[4]),
                     resultset[5]
                 ]
             ?>

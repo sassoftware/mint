@@ -76,12 +76,11 @@ body#legal h2, body#legal h3 {
 /* rss button */
 a.rssButton {
     background-image: none;
-    padding-right: 0px;
+    padding-left: 5px;
 }
 
 a.rssButton img {
     vertical-align: middle;
-    float: right;
     border: none;
 }
 

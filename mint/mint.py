@@ -6,6 +6,7 @@
 import os
 import sys
 import xmlrpclib
+import time
 
 from repository import repository
 
@@ -424,3 +425,30 @@ def upstream(version):
     @rtype: str
     """
     return version.trailingRevision().asString().split('-')[0]
+
+def timeDelta(t):
+    curTime = time.time()
+    timeOffset = time.timezone + 3600 * (time.localtime()[-1])
+    days = int((curTime - timeOffset) / 86400) - int((t - timeOffset) / 86400)
+    if not days:
+        delta = int(curTime - t)
+        if delta < 3600:
+            if delta < 60:
+                if not delta:
+                    return "This very second"
+                r = str(delta) + " second"
+                if (delta) != 1:
+                    r +="s"
+                return r + " ago"
+            r = str(delta / 60) + " minute"
+            if (delta / 60) != 1:
+                r +="s"
+            return r + " ago"
+        else:
+            r = str(delta / 3600) + " hour"
+            if (delta / 3600) != 1:
+                r +="s"
+            return r + " ago"
+    if days == 1:
+        return 'Yesterday'
+    return time.strftime('%Y-%m-%d', time.localtime(t))

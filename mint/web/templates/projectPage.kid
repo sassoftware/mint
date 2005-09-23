@@ -31,9 +31,6 @@ from mint.mint import upstream
                             ${projectResourcesMenu()}
                             <div class="palette" id="releases">
                                 <h3>
-                                    <a href="${basePath}rss" class="rssButton">
-                                        <img src="${cfg.staticPath}/apps/mint/images/xml.gif"/>
-                                    </a>
                                     Recent Releases
                                 </h3>
                                 <ul>
@@ -63,9 +60,16 @@ from mint.mint import upstream
                                 ${line}
                             </p>
                             <p py:if="not project.getDesc()">The project owner has not entered a description</p>
-                            <a href="${basePath}conaryCfg">Add This Project To My Conary Configuration</a>
-
-                            <hr py:if="isDeveloper or not memberList or bool(auth.authorized) ^ bool(isOwner)" />
+                            <p>
+                                <a href="${basePath}conaryCfg">Add This Project To My Conary Configuration</a>
+                            </p>
+                            <p>
+                                Watch this project:
+                                <a href="${basePath}rss" class="rssButton">
+                                    <img src="${cfg.staticPath}/apps/mint/images/xml.gif"/>
+                                </a>
+                            </p>
+                                <hr py:if="isDeveloper or not memberList or bool(auth.authorized) ^ bool(isOwner)" />
                             <p py:if="isDeveloper">
                                 <em class="resign">You are a developer of this project.</em>
                                 <a href="resign">Resign</a>
