@@ -451,4 +451,4 @@ def timeDelta(t):
             return r + " ago"
     if days == 1:
         return 'Yesterday'
-    return time.strftime('%Y-%m-%d', time.localtime(t))
+    return time.strftime('%d-%b-%Y', time.localtime(t))
