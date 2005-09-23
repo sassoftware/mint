@@ -51,10 +51,10 @@ class ConaryHandler(WebHandler, http.HttpHandler):
     def _handle(self, *args, **kwargs):
         """Handle either an HTTP POST or GET command."""
         
-        if self.project.getDomainName() == self.cfg.domainName:
+        if self.project.getDomainname() == self.cfg.domainName:
             useSSL = None # use the label as-is for external projects
         else:
-            useSSL = self.cfg.useSSL
+            useSSL = self.cfg.SSL
         cfg = self.project.getConaryConfig(newUser = self.authToken[0],
                                            newPass = self.authToken[1],
                                            useSSL = useSSL)
