@@ -29,13 +29,13 @@ from mint.mint import upstream
                     <td id="left" class="side">
                         <div class="pad">
                             ${projectResourcesMenu()}
-                            <div class="palette" id="releases">
+                            <div py:if="isOwner or project.getReleases()" class="palette" id="releases">
                                 <h3>
                                     Recent Releases
                                 </h3>
                                 <ul>
                                     <?python releases = project.getReleases() ?>
-                                    <li class="release" py:if="releases" py:for="release in releases">
+                                    <li class="release" py:if="releases" py:for="release in releases[:3]">
                                         <a href="${basePath}release?id=${release.getId()}">
                                             Version ${upstream(release.getTroveVersion())} for ${release.getArch()}
                                         </a>
@@ -43,6 +43,12 @@ from mint.mint import upstream
                                     <li class="release" py:if="not releases">
                                         No Releases
                                     </li>
+                                    <div class="release" py:if="isOwner" align="right" style="padding-right:8px;">
+                                        <a href="newRelease"><strong>Create a new release...</strong></a>
+                                    </div>
+                                    <div class="release" py:if="not isOwner and len(releases) > 3" align="right" style="padding-right:8px;">
+                                        <a href="releases"><strong>More...</strong></a>
+                                    </div>
                                 </ul>
                             </div>
                         </div>
