@@ -14,4 +14,4 @@ class StubImage(ImageGenerator):
         stub = file(f, "w")
         print >> stub, "Hello World!"
 
-        return [f]
+        return [(f, "Disk 1")]
