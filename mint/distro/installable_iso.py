@@ -209,7 +209,7 @@ class InstallableIso(ImageGenerator):
                 # Abort if parent thread has died
                 assertParentAlive()
 
-            discNum = infoMap['discname'].split("disc")
+            discNum = infoMap['discname'].split("disc")[-1]
             isoList.append((infoMap['iso'], "%s Disk %s" % (infoMap['name'], discNum)))
 
         isoList = [ (os.path.join(infoMap['isodir'], iso[0]), iso[1]) for iso in isoList ]
