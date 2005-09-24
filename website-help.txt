@@ -3,6 +3,62 @@ This is a temporary file that will contain drafts of any text required for
 the public website.  Once any text has been reviewed and approved, it will
 be removed from this file and integrated into Mint proper.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Conary configuration for users (always displayed)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Current text:
+
+To add this project in your Conary configuration, add
+frobnitz.beta.rpath.com@rpl:devel to the installLabelPath line in the
+/etc/conaryrc (or your ~/.conaryrc) file.
+
+New text:
+
+You have two options available to you if you want to install software from
+this project:
+
+    o You can perform an installation by manually specifying the install
+      label
+
+    o You can configure Conary to automatically search the install label
+
+Which option should I choose?
+
+    It really depends on what your long-term expectations are with respect
+to this project.
+
+    If the project has only one package that interests you, manually
+specify the install label.  Note that this does *not* prevent Conary from
+accessing this project's repository from finding (and installing) updates
+to the software you install -- Conary takes care of that for you.
+
+    On the other hand, if the project has lots of interesting packages and
+you expect that you'll be coming back from time to time to see what
+newly-available software there is, you should configure Conary to
+automatically search this project's label.
+
+How do I do it?
+
+*Manually Specifying the Project's label*
+
+Use Conary's --install-label option to specify this project's when issuing
+a conary update command:
+
+conary update --install-label frobnitz.beta.rpath.com@rpl:devel <package>
+
+(Where <package> represents the name of the package to be installed.)
+
+*Configuring Conary to Automatically Search the Install Label*
+
+***FIXME***
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Conary configuration for developers (displayed only for project members)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Big picture stuff
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 ***Need a 'What Next?' section with links to the following:***
 
