@@ -190,6 +190,7 @@ class SiteHandler(WebHandler):
 
     @strFields(id = None)
     def confirm(self, auth, id):
+        self.toUrl = '/'
         try:
             self.client.confirmUser(id)
         except users.ConfirmError:
