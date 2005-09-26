@@ -79,6 +79,9 @@ class Project(database.TableObject):
     def getReleases(self, showUnpublished = False):
         return self.server.getReleasesForProject(self.id, showUnpublished)
 
+    def getCommits(self):
+        return self.server.getCommitsForProject(self.id)
+
     def getUserLevel(self, userId):
         try:
             return self.server.getUserLevel(userId, self.id)

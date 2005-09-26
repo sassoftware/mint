@@ -51,6 +51,19 @@ from mint.mint import upstream
                                     </div>
                                 </ul>
                             </div>
+                            <?python commits = project.getCommits() ?>
+                            <div py:if="commits" class="palette" id="commits">
+                                <h3>
+                                    Recent Commits
+                                </h3>
+                                <ul>
+                                    <li class="release" py:for="commit in commits">
+                                        <a href="${basePath}/troveInfo?t=${commit[0]}">
+                                            ${commit[0]}=${commit[1]}
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
                         </div>
                     </td>
                     <td id="main">

@@ -24,3 +24,9 @@ class CommitsTable(database.DatabaseTable):
         cu.execute("INSERT INTO Commits VALUES (?, ?, ?, ?, ?)",
             projectId, timestamp, troveName, troveVersion, userId)
         self.db.commit()
+
+    def getCommitsByProject(self, projectId, limit = 10):
+        cu = self.db.cursor()
+
+        r = cu.execute("SELECT troveName, version FROM Commits WHERE projectId = ? AND troveName like '%:source' ORDER BY timestamp DESC LIMIT ?", (projectId, limit))
+        return [(x[0], x[1].split('/')[-1]) for x in r.fetchall()]

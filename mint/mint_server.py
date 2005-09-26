@@ -24,6 +24,7 @@ import versions
 import users
 import userlevels
 import dbversion
+import stats
 from cache import TroveNamesCache
 from mint_error import PermissionDenied
 from searcher import SearchTermsError
@@ -691,6 +692,10 @@ class MintServer(object):
         return [releases.Release(self, x) for x in self.releases.iterReleasesForProject(projectId, showUnpublished)]
 
     @private
+    def getCommitsForProject(self, projectId):
+        return self.commits.getCommitsByProject(projectId)
+
+    @private
     def getRelease(self, releaseId):
         return self.releases.get(releaseId)
 
@@ -934,6 +939,7 @@ class MintServer(object):
             self.newsCache = news.NewsCacheTable(self.db, self.cfg)
             self.sessions = sessiondb.SessionsTable(self.db)
             self.membershipRequests = requests.MembershipRequestTable(self.db)
+            self.commits = stats.CommitsTable(self.db)
 
             #now fix the version
             self.version.fixVersion()
