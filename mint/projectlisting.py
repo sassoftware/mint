@@ -17,8 +17,12 @@
 descindex = 2
 desctrunclength = 300
 sqlbase = """SELECT Projects.hostname, Projects.name, Projects.desc, 
-    Projects.timeCreated, Projects.timeModified,
-    count(projectUsers.userId) as devs 
+    Projects.timeCreated,
+    IFNULL(
+        (SELECT MAX(Commits.timestamp)
+            FROM Commits WHERE Commits.projectId=Projects.projectId),
+         Projects.timeCreated) AS timeModified,
+    count(projectUsers.userId) AS devs 
         FROM
     Projects
         LEFT JOIN projectUsers ON
@@ -33,8 +37,8 @@ sqlbase = """SELECT Projects.hostname, Projects.name, Projects.desc,
 ordersql = {
     PROJECTNAME_ASC: "LOWER(Projects.name) ASC",
     PROJECTNAME_DES: "LOWER(Projects.name) DESC",
-    LASTMODIFIED_ASC: "Projects.timeModified ASC",
-    LASTMODIFIED_DES: "Projects.timeModified DESC",
+    LASTMODIFIED_ASC: "timeModified ASC",
+    LASTMODIFIED_DES: "timeModified DESC",
     CREATED_ASC: "Projects.timeCreated ASC",
     CREATED_DES: "Projects.timeCreated DESC",
     NUMDEVELOPERS_ASC: "devs ASC",
