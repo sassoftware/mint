@@ -46,6 +46,7 @@
                 <h2>${project.getName()}<br />releases</h2>
                 <h3 py:if="isOwner">Published Releases</h3>
                 ${releasesTable([x for x in releases if x.getPublished()], isOwner)}
+                <p py:if="not releases">This project has no releases.</p>
 
                 <div py:if="isOwner">
 
