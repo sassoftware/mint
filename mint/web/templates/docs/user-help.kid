@@ -35,7 +35,7 @@
 
         <td id="main">
             <div class="pad">
-                <h3>rBuilder Online for Users</h3>
+                <h2>rBuilder Online for Users</h2>
 
                 <p>Even if you're not the coding type, rBuilder Online
                 still has a lot to offer.</p>
@@ -62,7 +62,7 @@
                 href="/register">create</a> an rBuilder Online account, and
                 offer your services to the project owners.</p>
 
-                <h4>HOW DO I GET STARTED?</h4>
+                <h2>HOW DO I GET STARTED?</h2>
 
                 <p>Use rBuilder Online's browse and search functions to
                 learn more about the projects and software available.</p>
