@@ -218,7 +218,8 @@ def conaryHandler(req, cfg, pathInfo):
     port = req.connection.local_addr[1]
     secure = (req.subprocess_env.get('HTTPS', 'off') == 'on')
 
-    if not repositories.has_key(repName):
+    repHash = repName + req.hostname
+    if not repositories.has_key(repHash):
         repositoryDir = os.path.join(cfg.reposPath, repName)
         tmpPath = os.path.join(cfg.reposPath, repName, "tmp")
         logFile = os.path.join(repositoryDir, "contents.log")
@@ -261,7 +262,7 @@ def conaryHandler(req, cfg, pathInfo):
                                 
 
         if os.access(repositoryDir, os.F_OK):
-            repositories[repName] = netserver.NetworkRepositoryServer(
+            repositories[repHash] = netserver.NetworkRepositoryServer(
                                         repositoryDir,
                                         tmpPath,
                                         urlBase, 
@@ -271,12 +272,12 @@ def conaryHandler(req, cfg, pathInfo):
                                         cacheChangeSets = True,
                                         logFile = logFile
                                     )
-            repositories[repName].forceSecure = cfg.SSL
-            repositories[repName].cfg = cfg
+            repositories[repHash].forceSecure = cfg.SSL
+            repositories[repHash].cfg = cfg
         else:
-            repositories[repName] = None
+            repositories[repHash] = None
     
-    repo = repositories[repName]
+    repo = repositories[repHash]
         
     if method == "POST":
 	return post(port, secure, repo, cfg, req)
