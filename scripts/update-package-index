@@ -1,13 +1,15 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2005 rpath, Inc.
+# Copyright (c) 2005 rPath, Inc.
 #
 # All rights reserved
 #
 import conary
 import sqlite3
+import versions
 
 from mint import pkgindex
+from mint import projects
 from repository import netclient
 from repository import repository
 
@@ -15,25 +17,30 @@ dbPath = "/srv/mint/data/db"
 db = sqlite3.connect(dbPath, timeout = 30000)
 
 pkgIdx = pkgindex.PackageIndexTable(db)
+labelsTable = projects.LabelsTable(db)
 
 cu = db.cursor()
 cu.execute("SELECT projectId, hostname || '.' || domainname FROM Projects WHERE hidden=0 AND disabled=0")
 
-repMap = {'conary.rpath.com': 'http://conary.rpath.com/conary/',
-          'contrib.rpath.com': 'http://contrib.rpath.com/conary/'}
-projectIds = {'conary.rpath.com': 0, 'contrib.rpath.com': 0}
+labels = {}
+repositoryMap = {}
+projectIds = {}
 for r in cu.fetchall():
-    projectIds[r[1]] = r[0]
-    repMap[r[1]] = "http://%s/conary/" % (r[1])
+    projectId, hostname = r
 
+    l, repMap = labelsTable.getLabelsForProject(projectId)
+    repositoryMap.update(repMap)
+    labels[hostname] = versions.Label(l.keys()[0])
+    projectIds[hostname] = projectId
 
-repos = netclient.NetworkRepositoryClient(repMap)
+repos = netclient.NetworkRepositoryClient(repositoryMap)
 
 rows = []
-for host in repMap.keys():
+for host in repositoryMap.keys():
     try:
-        troves = repos.getAllTroveLeaves(host, {None: [None]})
-    except repository.OpenError:
+        troves = repos.getTroveVersionsByLabel({None: {labels[host]: None}})
+
+    except repository.OpenError, e:
         print "warning: unable to access %s" % host
         continue
         
@@ -44,6 +51,7 @@ for host in repMap.keys():
         row = (projectIds[host], pkg, latestVer.asString())
         rows.append(row)
 
+#cu = db.cursor()
 try:
     cu.execute("DELETE FROM PackageIndex")
     for row in rows:
