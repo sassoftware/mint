@@ -58,7 +58,7 @@ from mint.mint import upstream
                                 </h3>
                                 <ul>
                                     <li class="release" py:for="commit in commits">
-                                        <a href="${cfg.basePath}repos/${project.getHostname()}/${commit[0]}">
+                                        <a href="${cfg.basePath}repos/${project.getHostname()}/troveInfo?t=${commit[0]}">
                                             ${commit[0]}=${commit[1]}
                                         </a>
                                     </li>
