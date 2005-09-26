@@ -104,15 +104,13 @@ class MintApp(WebHandler):
             method = self._getHandler(pathInfo)
         except Redirect, e:
             return self._redirect(e.location)
-        except mint_error.PermissionDenied, e:
-            self._write("error", shortError = "Permission Denied", error = str(e))
-            return apache.OK
-        
+       
         d = self.fields.copy()
         d['auth'] = self.auth
         try:
             return method(**d)
         except mint_error.MintError, e:
+            self.toUrl = "/"
             err_name = sys.exc_info()[0].__name__
             self.req.log_error("%s: %s" % (err_name, str(e)))
             self._write("error", shortError = err_name, error = str(e))
@@ -120,7 +118,10 @@ class MintApp(WebHandler):
         except fields.MissingParameterError, e:
             self._write("error", shortError = "Missing Parameter", error = str(e))
             return apache.OK
-
+        except mint_error.PermissionDenied, e:
+            self._write("error", shortError = "Permission Denied", error = str(e))
+            return apache.OK
+ 
     def _getHandler(self, pathInfo):
         fullHost = self.req.hostname
         protocol='https'
