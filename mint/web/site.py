@@ -401,20 +401,11 @@ class SiteHandler(WebHandler):
 
         searchResults = []
         for x in results:
-            if x[2]:
-                p = self.client.getProject(x[2])
-                name = p.getName()
-                host = p.getHostname()
-                reposUrl = '/project/%s/' % host
-                packageUrl = '/repos/%s/troveInfo?t=%s' % (host, x[0])
-            else:
-                version = versions.VersionFromString(x[1])
-                name = version.branch().label().getHost()
-                host = name
-                reposUrl = 'http://%s/conary/' % host
-                packageUrl = reposUrl + "troveInfo?t=%s" % x[0]
-                reposUrl += 'browse'
-            searchResults.append( (x[0], x[1], packageUrl, name, reposUrl) )
+            p = self.client.getProject(x[2])
+            host = p.getHostname()
+            reposUrl = '/project/%s/' % host
+            packageUrl = '/repos/%s/troveInfo?t=%s' % (host, x[0])
+            searchResults.append( (x[0], x[1], packageUrl, p.getName(), reposUrl) )
             
         self._write("searchResults", searchType = "Packages", terms = terms, results = searchResults,
                                      count = count, limit = limit, offset = offset,

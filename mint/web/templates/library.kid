@@ -48,15 +48,7 @@ if auth.admin:
         <form action="search" method="get">
             <p>
                 <label>search type:</label><br/>
-                <select name="type" onchange="if (this.options[this.selectedIndex].value != 'Projects') {
-                                                el = document.getElementById('searchModified');
-                                                el.disabled = true;
-                                                el.className = 'disabledInput';
-                                              } else {
-                                                el = document.getElementById('searchModified');
-                                                el.disabled = false;
-                                                el.className = '';
-                                              }">
+                <select name="type">
                     <option py:for="searchType in searchTypes"
                             py:attrs="{'value': searchType, 'selected': (selectType == searchType) and 'selected' or None}"
                             py:content="searchType"/>
