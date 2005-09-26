@@ -68,26 +68,38 @@ from mint.mint import upstream
                     </td>
                     <td id="main">
                         <div class="pad">
-                            <h2>${project.getName()}  <a py:if="isOwner" href="${basePath}editProject">Edit</a></h2>
+
+
+                            <h2>${project.getName()}</h2>
                             <h3 py:if="project.getProjectUrl()">Project Home Page &#160;</h3>
                             <p py:if="project.getProjectUrl()"><a href="${project.getProjectUrl()}" py:content="project.getProjectUrl()" />
                             </p>
-                            <h3>
-                                Description &#160;
-                            </h3>
+                            <h3>Description</h3>
                             <p py:for="line in project.getDesc().splitlines()">
                                 ${line}
                             </p>
                             <p py:if="not project.getDesc()">The project owner has not entered a description</p>
-                            <p>
-                                <a href="${basePath}conaryCfg">Add This Project To My Conary Configuration</a>
-                            </p>
-                            <p>
-                                Watch this project:
-                                <a href="${basePath}rss" class="rssButton">
-                                    <img src="${cfg.staticPath}/apps/mint/images/xml.gif"/>
-                                </a>
-                            </p>
+
+                            <hr />
+                            <h4>What can I do with this project?</h4>
+                            <ul>
+                                <li>
+                                <a py:if="isOwner" href="${basePath}editProject">
+                                    edit project details
+                                </a></li>
+
+                                <li>
+                                    <a href="${basePath}rss">
+                                        subscribe to release news <img style="border: none; vertical-align: middle;" src="${cfg.staticPath}apps/mint/images/xml.gif" />
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="${basePath}conaryCfg">add to my conary setup</a>
+                                </li>
+                            </ul>
+
+
+
 
                             <div py:strip="True" py:if="not project.external">
                                 <hr py:if="isDeveloper or not memberList or bool(auth.authorized) ^ bool(isOwner)" />
