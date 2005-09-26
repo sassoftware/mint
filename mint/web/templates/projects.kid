@@ -26,7 +26,7 @@ from mint.mint import timeDelta
                     resultset[2],
                     timeDelta(resultset[3]),
                     timeDelta(resultset[4]),
-                    resultset[5]
+                    resultset[5] or '-'
                 ]
             ?>
             ${resultRow(formattedresults)}
