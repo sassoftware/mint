@@ -83,24 +83,21 @@ from mint.mint import upstream
                             <hr />
                             <h4>What can I do with this project?</h4>
                             <ul>
-                                <li>
-                                <a py:if="isOwner" href="${basePath}editProject">
-                                    edit project details
-                                </a></li>
-
+                                <li py:if="isOwner">
+                                    <a href="${basePath}editProject">edit project details</a>
+                                </li>
                                 <li>
                                     <a href="${basePath}rss">
-                                        subscribe to release news <img style="border: none; vertical-align: middle;" src="${cfg.staticPath}apps/mint/images/xml.gif" />
+                                        subscribe to release news 
+                                            <img style="border: none; vertical-align: middle;"
+                                                 src="${cfg.staticPath}apps/mint/images/xml.gif" />
                                     </a>
                                 </li>
                                 <li>
                                     <a href="${basePath}conaryCfg">add to my conary setup</a>
                                 </li>
                             </ul>
-
-
-
-
+                            
                             <div py:strip="True" py:if="not project.external">
                                 <hr py:if="isDeveloper or not memberList or bool(auth.authorized) ^ bool(isOwner)" />
                                 <p py:if="isDeveloper">
