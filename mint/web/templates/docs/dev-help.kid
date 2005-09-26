@@ -92,7 +92,7 @@
                 project, and you'll be able to start contributing
                 immediately.</p>
 
-                <h4>HOW DO I GET STARTED?</h4>
+                <h2>HOW DO I GET STARTED?</h2>
 
                 <p>First, you need to create your own rBuilder Online
                 account.</p>
@@ -104,19 +104,19 @@
 
                 <ul>
 
-                    <p><tt>Username</tt> &#8212; Limit to no more than 16
-                    characters</p>
+                    <li><tt>Username</tt> &#8212; Limit to no more than 16
+                    characters</li>
 
-                    <p><tt>Email Address</tt> &#8212; This email address is
+                    <li><tt>Email Address</tt> &#8212; This email address is
                     strictly for rPath to contact you regarding rBuilder
-                    Online</p>
+                    Online</li>
 
-                    <p><tt>New Password</tt> &#8212; The password you'll
+                    <li><tt>New Password</tt> &#8212; The password you'll
                     use to login to your account (must be at least 6
-                    characters)</p>
+                    characters)</li>
 
-                    <p><tt>Confirm Password</tt> &#8212; Confirmation of
-                    the password you entered above.</p>
+                    <li><tt>Confirm Password</tt> &#8212; Confirmation of
+                    the password you entered above.</li>
 
                 </ul>
 
@@ -139,7 +139,7 @@
                 confirmation link.  Use your browser to follow the link,
                 and you'll then be able to login.</p>
 
-                <h5>Creating a New Project</h5>
+                <h3>Creating a New Project</h3>
 
                 <p>If you'd like to create a new project, start the project
                 creation process by clicking on the <tt>Create a new
@@ -151,7 +151,7 @@
                 easy as <a
                 href="http://wiki.conary.com/DerivativeDistroTutorial">this</a>!</p>
 
-                <h5>Joining an Existing Project</h5>
+                <h3>Joining an Existing Project</h3>
 
                 <p>If you're interested in joining an already-existing
                 project, go to the project's homepage.  Click on the
