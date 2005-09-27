@@ -53,7 +53,7 @@ from mint.mint import timeDelta
                 ${sortOrderForm(sortOrder)}
                 ${navigation("projects?sortOrder=%d"%(sortOrder), "all projects", count, limit, offset)}
                 <table cellpadding="0" cellspacing="0" class="results">
-                    ${columnTitles(('Project Name', 'Project Description', 'Last Modified'))}
+                    ${columnTitles(('Project Name', 'Project Description', 'Last Commit'))}
                     ${searchResults(results)}
                 </table>
                 ${navigation("projects?sortOrder=%d"%(sortOrder), "all projects", count, limit, offset, True)}

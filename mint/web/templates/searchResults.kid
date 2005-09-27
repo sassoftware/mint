@@ -14,7 +14,7 @@
     <?python
         columns = []
         if searchType == "Projects":
-            columns = ('Project Name', 'Project Description', 'Last Modified')
+            columns = ('Project Name', 'Project Description', 'Last Commit')
         elif searchType == "Users":
             columns = ('User Name', 'Full Name', 'Contact Info', 'Other')
         elif searchType == "Packages":
