@@ -29,8 +29,8 @@ import string
             <div class="pad">
                 <h2>${project.getName()}<br />Repository Browser</h2>
 
-                <span py:for="l in string.uppercase">
-                    <span py:if="totals[l]" py:strip="True"><a href="browse?char=${l}" title="${totals[l]} trove(s)">${l}</a> |</span>
+                <span py:for="l in string.uppercase" py:strip="True">
+                    <span py:if="totals[l]"><a href="browse?char=${l}" title="${totals[l]} trove(s)">${l}</a> |</span>
                 </span>
                 <?python
                     total = 0
@@ -38,7 +38,7 @@ import string
                         total += totals[x]
                 ?>
                 <span>
-                    <a py:if="l not in string.digits and total" href="browse?char=0" >0-9</a>
+                    <a py:if="l not in string.digits and total" href="browse?char=0" title="${totals[l]} trove(s)">0-9</a>
                 </span>
                 
                 <?python
