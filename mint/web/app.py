@@ -108,7 +108,9 @@ class MintApp(WebHandler):
         d = self.fields.copy()
         d['auth'] = self.auth
         try:
-            return method(**d)
+            returncode = method(**d)
+            self.session.save()
+            return returncode
         except mint_error.MintError, e:
             self.toUrl = "/"
             err_name = sys.exc_info()[0].__name__

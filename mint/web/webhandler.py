@@ -30,6 +30,7 @@ class WebHandler(object):
                               userLevel = self.userLevel,
                               projectList = self.projectList,
                               req = self.req,
+                              session = self.session,
                               siteHost = self.siteHost,
                               toUrl = self.toUrl,
                               basePath = self.basePath,

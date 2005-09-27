@@ -183,7 +183,6 @@ class SiteHandler(WebHandler):
                 self.req.err_headers_out.add('Set-Cookie', str(c))
                 self.req.err_headers_out.add('Cache-Control', 'no-cache="set-cookie"')
                 
-                self.session.save()
                 return self._redirectHttp(unquote(to))
         else:
             return apache.HTTP_NOT_FOUND
@@ -206,15 +205,21 @@ class SiteHandler(WebHandler):
                 self._write("register_active")
         return apache.OK 
 
-    @intFields(sortOrder = 0, limit = 10, offset = 0)
+    @intFields(sortOrder = -1, limit = 10, offset = 0)
     def projects(self, auth, sortOrder, limit, offset, submit = 0):
+        if sortOrder < 0:
+            sortOrder = self.session.get('projectsSortOrder', 0)
+        self.session['projectsSortOrder'] = sortOrder
         results, count = self.client.getProjects(sortOrder, limit, offset)
         self._write("projects", sortOrder=sortOrder, limit=limit, offset=offset, results=results, count=count)
         return apache.OK
 
     @requiresAdmin
-    @intFields(sortOrder = 0, limit = 10, offset = 0)
+    @intFields(sortOrder = -1, limit = 10, offset = 0)
     def users(self, auth, sortOrder, limit, offset, submit = 0):
+        if sortOrder < 0:
+            sortOrder = self.session.get('usersSortOrder', 0)
+        self.session['usersSortOrder'] = sortOrder
         results, count = self.client.getUsers(sortOrder, limit, offset)
         self._write("users", sortOrder=sortOrder, limit=limit, offset=offset, results=results, count=count)
         return apache.OK
@@ -379,6 +384,7 @@ class SiteHandler(WebHandler):
     @strFields(search = "", type = None)
     @intFields(limit = 10, offset = 0, modified = 0)
     def search(self, auth, type, search, modified, limit, offset):
+        self.session['searchType'] = type
         if type == "Projects":
             return self._projectSearch(search, modified, limit, offset)
         elif type == "Users" and auth.admin:
@@ -386,6 +392,7 @@ class SiteHandler(WebHandler):
         elif type == "Packages":
             return self._packageSearch(search, limit, offset)
         else:
+            self.session['searchType'] = ''
             self._write("error", shortError = "Invalid Search Type",
                 error = "Invalid search type specified.")
             return apache.OK

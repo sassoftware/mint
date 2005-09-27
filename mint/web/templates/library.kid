@@ -38,8 +38,10 @@ from mint import searcher
         </ul>
     </div>
 
-    <div id="search" class="palette" py:def="searchMenu(selectType='Projects')" py:strip="False">
+    <div id="search" class="palette" py:def="searchMenu(selectType=None)" py:strip="False">
         <?python
+if not selectType:
+    selectType = session.get('searchType', 'Projects')
 searchTypes = ['Projects', 'Packages']
 if auth.admin:
     searchTypes.append('Users')
