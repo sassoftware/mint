@@ -29,6 +29,9 @@ sqlbase = """SELECT Projects.hostname, Projects.name, Projects.desc,
         OFFSET %d
 """
 
+NUM_DEVS_STRING = "(SELECT count(*) FROM ProjectUsers WHERE ProjectUsers.projectId=Projects.projectId)"
+
+# FIXME. NUMDEVELOPERS needs to go away and be replaced by a true popularity metric. Note the effect on "browse projects box"--most popular projects.
 ordersql = {
     PROJECTNAME_ASC: "LOWER(Projects.name) ASC",
     PROJECTNAME_DES: "LOWER(Projects.name) DESC",
@@ -36,8 +39,8 @@ ordersql = {
     LASTMODIFIED_DES: "timeModified DESC",
     CREATED_ASC: "Projects.timeCreated ASC",
     CREATED_DES: "Projects.timeCreated DESC",
-#    NUMDEVELOPERS_ASC: "devs ASC",
-#    NUMDEVELOPERS_DES: "devs DESC",
+    NUMDEVELOPERS_ASC: NUM_DEVS_STRING+" ASC",
+    NUMDEVELOPERS_DES: NUM_DEVS_STRING+" DESC",
 }
 
 orderhtml = {
@@ -47,6 +50,6 @@ orderhtml = {
     LASTMODIFIED_DES: "Most recently modified",
     CREATED_ASC:      "Oldest",
     CREATED_DES:      "Newest",
-#    NUMDEVELOPERS_ASC: "Fewest developers",
-#    NUMDEVELOPERS_DES: "Most developers",
+    NUMDEVELOPERS_ASC: "Fewest developers",
+    NUMDEVELOPERS_DES: "Most developers",
 }
