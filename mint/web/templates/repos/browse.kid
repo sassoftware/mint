@@ -30,7 +30,7 @@ import string
                 <h2>${project.getName()}<br />Repository Browser</h2>
 
                 <span py:for="l in string.uppercase">
-                    <span py:if="totals[l]" py:strip="True"><a href="browse?char=${l}">${l}</a> |</span>
+                    <span py:if="totals[l]" py:strip="True"><a href="browse?char=${l}" title="${totals[l]} trove(s)">${l}</a> |</span>
                 </span>
                 <?python
                     total = 0
