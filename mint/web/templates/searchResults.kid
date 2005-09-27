@@ -1,7 +1,8 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <?python
     from mint import searcher
-    import time    
+    import time
+    from mint.mint import timeDelta
 ?>
 <html xmlns:html="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
@@ -34,7 +35,7 @@
                     formattedresults = [
                         ('%sproject/%s/' % (cfg.basePath,resultset[0]), resultset[1]),
                         resultset[2],
-                        time.strftime("%Y-%m-%d", time.localtime(resultset[3]))
+                        timeDelta(resultset[3])
                     ]
                 elif searchType == "Users":
                     formattedresults = [

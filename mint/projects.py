@@ -316,7 +316,11 @@ class ProjectsTable(database.KeyedTable):
                         The project's description
                         The date last modified.
         """
-        columns = ['hostname', 'name', 'desc', 'timeModified']
+        columns = ['hostname', 'name', 'desc',
+                   """IFNULL(
+                       (SELECT MAX(Commits.timestamp) FROM Commits
+                       WHERE Commits.projectId=Projects.projectId),
+                   Projects.timeCreated) AS timeModified"""]
         searchcols = ['name', 'desc']
         ids, count = database.KeyedTable.search(self, columns, 'Projects', 
             searcher.Searcher.where(terms, searchcols, 'AND disabled=0 AND hidden=0'),
