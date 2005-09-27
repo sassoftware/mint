@@ -8,6 +8,10 @@
 # All Rights Reserved
 
 import string
+
+def pluralPackages(c):
+    return c == 1 and "package" or "packages"
+
 ?>
 
     <div py:def="breadcrumb" py:strip="True">
@@ -30,7 +34,7 @@ import string
                 <h2>${project.getName()}<br />Repository Browser</h2>
 
                 <span py:for="l in string.uppercase" py:strip="True">
-                    <span py:if="totals[l]"><a href="browse?char=${l}" title="${totals[l]} trove(s)">${l}</a> |</span>
+                    <span py:if="totals[l]"><a href="browse?char=${l}" title="${totals[l]} ${pluralPackages(totals[l])}">${l}</a> |</span>
                 </span>
                 <?python
                     total = 0
@@ -38,7 +42,7 @@ import string
                         total += totals[x]
                 ?>
                 <span>
-                    <a py:if="l not in string.digits and total" href="browse?char=0" title="${totals[l]} trove(s)">0-9</a>
+                    <a py:if="l not in string.digits and total" href="browse?char=0" title="${total} ${pluralPackages(total)}">0-9</a>
                 </span>
                 
                 <?python
@@ -48,31 +52,10 @@ import string
                         char = "'%c'" % char
                 ?>
 
-
-                <table border="0" cellspacing="0" cellpadding="0" summary="layout" class="pager" py:if="0">
-                    <tr>
-                        <td>
-                            <form>
-                                Displaying troves 
-                                <select name="resultsPager">
-                                    <option value="" selected="selected">1-6</option>
-                                </select>
-                            </form>
-                        </td>
-                        <td>
-                            <div align="right">
-
-                                <a href="#">Previous Page</a>
-                                <a href="#">Next Page</a>
-                            </div>
-                        </td>
-                    </tr>
-                </table>
-                
                 <table border="0" cellspacing="0" cellpadding="0" class="results">
                     <tr>
 
-                        <th colspan="3">Trove Name</th>
+                        <th colspan="3">Package Name</th>
                     </tr>
 
                     <tr py:for="i, package in enumerate(packages)">
@@ -89,27 +72,6 @@ import string
                                         </a>
                                     </li>
                                 </ul>
-                            </div>
-                        </td>
-                    </tr>
-                </table>
-                
-                <table border="0" cellspacing="0" cellpadding="0" summary="layout" class="pager" py:if="0">
-                    <tr>
-
-                        <td>
-                            <form>
-                            Displaying troves
-                            <select name="resultsPager">
-                                <option value="" selected="selected">1-6</option>
-                            </select>
-                            </form>
-                        </td>
-
-                        <td>
-                            <div align="right">
-                                <a href="#">Previous Page</a>
-                                <a href="#">Next Page</a>
                             </div>
                         </td>
                     </tr>
