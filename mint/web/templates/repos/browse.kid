@@ -30,8 +30,7 @@ import string
                 <h2>${project.getName()}<br />Repository Browser</h2>
 
                 <span py:for="l in string.uppercase">
-                    <a py:if="l != char and totals[l]" href="browse?char=${l}">${l}</a>
-                    <span py:if="l == char or not totals[l]">${l}</span> | 
+                    <span py:if="totals[l]" py:strip="True"><a href="browse?char=${l}">${l}</a> |</span>
                 </span>
                 <?python
                     total = 0
@@ -40,7 +39,6 @@ import string
                 ?>
                 <span>
                     <a py:if="l not in string.digits and total" href="browse?char=0" >0-9</a>
-                    <span py:if="l in string.digits or not total">0-9</span>
                 </span>
                 
                 <?python
