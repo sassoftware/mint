@@ -25,8 +25,6 @@ from mint.mint import timeDelta
                     ('%sproject/%s/' % (cfg.basePath,resultset[0]), resultset[1]),
                     resultset[2],
                     timeDelta(resultset[3]),
-                    timeDelta(resultset[4]),
-                    resultset[5] or '-'
                 ]
             ?>
             ${resultRow(formattedresults)}
@@ -55,7 +53,7 @@ from mint.mint import timeDelta
                 ${sortOrderForm(sortOrder)}
                 ${navigation("projects?sortOrder=%d"%(sortOrder), "all projects", count, limit, offset)}
                 <table cellpadding="0" cellspacing="0" class="results">
-                    ${columnTitles(('Project Name', 'Project Description', 'Time Created', 'Time Last Modified', 'Number of Developers'))}
+                    ${columnTitles(('Project Name', 'Project Description', 'Last Modified'))}
                     ${searchResults(results)}
                 </table>
                 ${navigation("projects?sortOrder=%d"%(sortOrder), "all projects", count, limit, offset, True)}

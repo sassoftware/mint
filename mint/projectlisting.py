@@ -16,17 +16,12 @@
 
 descindex = 2
 desctrunclength = 300
-sqlbase = """SELECT Projects.hostname, Projects.name, Projects.desc, 
-    Projects.timeCreated,
-    IFNULL(
-        (SELECT MAX(Commits.timestamp)
-            FROM Commits WHERE Commits.projectId=Projects.projectId),
-         Projects.timeCreated) AS timeModified,
-    count(projectUsers.userId) AS devs 
+sqlbase = """SELECT Projects.hostname, Projects.name, Projects.desc,
+    IFNULL(MAX(Commits.timestamp), Projects.timeCreated) AS timeModified
         FROM
     Projects
-        LEFT JOIN projectUsers ON
-    Projects.projectId=projectUsers.projectId
+        LEFT JOIN Commits ON
+    Projects.projectId=Commits.projectId
         WHERE Projects.disabled=0 AND Projects.hidden=0
         GROUP BY Projects.projectId
         ORDER BY %s
@@ -41,8 +36,8 @@ ordersql = {
     LASTMODIFIED_DES: "timeModified DESC",
     CREATED_ASC: "Projects.timeCreated ASC",
     CREATED_DES: "Projects.timeCreated DESC",
-    NUMDEVELOPERS_ASC: "devs ASC",
-    NUMDEVELOPERS_DES: "devs DESC",
+#    NUMDEVELOPERS_ASC: "devs ASC",
+#    NUMDEVELOPERS_DES: "devs DESC",
 }
 
 orderhtml = {
@@ -52,6 +47,6 @@ orderhtml = {
     LASTMODIFIED_DES: "Most recently modified",
     CREATED_ASC:      "Oldest",
     CREATED_DES:      "Newest",
-    NUMDEVELOPERS_ASC: "Fewest developers",
-    NUMDEVELOPERS_DES: "Most developers",
+#    NUMDEVELOPERS_ASC: "Fewest developers",
+#    NUMDEVELOPERS_DES: "Most developers",
 }
