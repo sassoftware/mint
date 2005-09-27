@@ -6,51 +6,91 @@ be removed from this file and integrated into Mint proper.
 Conary configuration for users (always displayed)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-Current text:
-
-To add this project in your Conary configuration, add
-frobnitz.beta.rpath.com@rpl:devel to the installLabelPath line in the
-/etc/conaryrc (or your ~/.conaryrc) file.
-
-New text:
-
 You have two options available to you if you want to install software from
 this project:
 
-    o You can perform an installation by manually specifying the install
-      label
+    o You can perform an installation by specifying this project's label as
+      part of the conary command
 
-    o You can configure Conary to automatically search the install label
+    o You can configure Conary to automatically search this project's label
+      so that subsequent conary commands need not explicitly specify it
 
 Which option should I choose?
 
     It really depends on what your long-term expectations are with respect
 to this project.
 
-    If the project has only one package that interests you, manually
-specify the install label.  Note that this does *not* prevent Conary from
-accessing this project's repository from finding (and installing) updates
-to the software you install -- Conary takes care of that for you.
+    If this project has only one trove that interests you, specify the
+label as part of the conary command.  Note that this does *not* prevent
+Conary from accessing this project's repository to find (and install)
+updates to the software you install -- Conary takes care of that for you.
 
-    On the other hand, if the project has lots of interesting packages and
+    On the other hand, if this project has lots of interesting troves and
 you expect that you'll be coming back from time to time to see what
 newly-available software there is, you should configure Conary to
 automatically search this project's label.
 
-How do I do it?
+*How do I do it?*
 
-*Manually Specifying the Project's label*
+*Specifying This Project's Label as Part of the Conary command*
 
-Use Conary's --install-label option to specify this project's when issuing
-a conary update command:
+    Use Conary's --install-label option to specify this project's label
+when issuing a conary update command:
 
-conary update --install-label frobnitz.beta.rpath.com@rpl:devel <package>
+conary update --install-label [this project's label] <trove>
 
-(Where <package> represents the name of the package to be installed.)
+(Where <trove> represents the name of the trove to be installed.)
 
-*Configuring Conary to Automatically Search the Install Label*
+*Configuring Conary to Automatically Search this Project's Label*
 
-***FIXME***
+    To configure Conary to automatically search this project's label you
+must use a text editor to add the label to Conary's main configuration
+file, /etc/conaryrc.
+
+    NOTE: You must be the root user (either by logging in as root, or by
+using the su command) to edit this file.
+
+    The option you must modify is installLabelPath.  This option contains
+the list of labels that Conary searches when performing the initial
+installation of a trove.  The order of labels in the list determines
+the order in which they will be searched.
+
+    You can display the current installLabelPath setting using the
+following command:
+
+conary config | grep installLabelPath
+
+If this project's label is already be included in your system's
+installLabelPath, you don't need to make any changes at all -- just install
+the desired trove using the "conary update" command shown at the end of
+this page.
+
+    However, if this project's label is not currently included in your
+system's installLabelPath, you must add it.
+
+    Using the text editor of your choice, open /etc/conaryrc, and find the
+installLabelPath line.  At this point, you must decide where in the list to
+place this project's label.
+
+    In most cases, you can just add the project's label to the end of the
+list (Note: even though it can be quite long, the installLabelPath line
+*must* remain one line):
+
+installLabelPath <label1> ... <labelN> [this project's label]
+
+    This approach would not work if one or more labels in the list had
+troves with the same names as those in the project's label.  In that case,
+this project's label should be inserted before the labels with the
+same-named troves:
+
+installLabelPath [this project's label] <label1> ... <labelN>
+
+    Once you've added the project's label, the Conary command you'll use to
+install trove's from the project's repository takes the form:
+
+conary update <trove>
+
+(Where <trove> represents the name of the trove to be installed.)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Conary configuration for developers (displayed only for project members)
