@@ -25,6 +25,7 @@ import users
 import userlevels
 import dbversion
 import stats
+import releasedata
 from cache import TroveNamesCache
 from mint_error import PermissionDenied
 from searcher import SearchTermsError
@@ -709,6 +710,19 @@ class MintServer(object):
                                  name = releaseName,
                                  published = published)
 
+    @requiresAuth
+    @private
+    def setReleaseDataValue(self, releaseId, name, value, dataType):
+        return self.releaseData.setReleaseDataValue(releaseId, name, value, dataType)
+
+    @private
+    def getReleaseDataValue(self, releaseId, name):
+        return self.releaseData.getReleaseDataValue(releaseId, name)
+
+    @private
+    def getReleaseDataDict(self, releaseId):
+        return self.releaseData.getReleaseDataDict(releaseId)
+
     @private
     def getReleaseTrove(self, releaseId):
         return self.releases.getTrove(releaseId)
@@ -943,6 +957,7 @@ class MintServer(object):
             self.sessions = sessiondb.SessionsTable(self.db)
             self.membershipRequests = requests.MembershipRequestTable(self.db)
             self.commits = stats.CommitsTable(self.db)
+            self.releaseData = releasedata.ReleaseDataTable(self.db)
 
             #now fix the version
             self.version.fixVersion()

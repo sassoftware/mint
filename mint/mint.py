@@ -281,6 +281,15 @@ class MintClient:
         releaseId = self.server.newRelease(projectId, releaseName, published) 
         return self.getRelease(releaseId)
 
+    def setReleaseDataValue(self, releaseId, name, value, dataType):
+        return self.server.setReleaseDataValue(releaseId, name, value, dataType)
+
+    def getReleaseDataValue(self, releaseId, name):
+        return self.server.getReleaseDataValue(releaseId, name)
+
+    def getReleaseDataDict(self, releaseId):
+        return self.server.getReleaseDataDict(releaseId)
+
     def startImageJob(self, releaseId):
         """
         Start a new image generation job.
