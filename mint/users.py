@@ -265,7 +265,7 @@ class UsersTable(database.KeyedTable):
                         the display e-mail
                         the user's blurb
         """
-        columns = ['userId', 'userName', 'fullName', 'displayEmail', 'blurb']
+        columns = ['userId', 'userName', 'fullName', 'displayEmail', 'blurb', 'timeAccessed']
         searchcols = ['userName', 'fullName', 'displayEmail', 'blurb']
 
         ids, count =  database.KeyedTable.search(self, columns, 'Users',
@@ -307,7 +307,7 @@ class UsersTable(database.KeyedTable):
 
     def getUsers(self, sortOrder, limit, offset):
         """
-        Returns a list of users matching L{terms} of length L{limit}
+        Returns a list of users for browsing limited by L{limit}
         starting with item L{offset}.
         @param limit:  Number of items to return
         @param offset: Count at which to begin listing

@@ -15,10 +15,10 @@
     ACCESSED_DES
 ) = range(0, 8)
 
-blurbindex = 5
+blurbindex = 4
 blurbtrunclength = 300
-sqlbase = """SELECT userid, username, fullname, timeCreated, timeAccessed,
-blurb FROM users WHERE active=1
+sqlbase = """SELECT userid, username, fullname, displayEmail, blurb, timeCreated, timeAccessed
+FROM users WHERE active=1
     ORDER BY %s
     LIMIT %d
     OFFSET %d"""

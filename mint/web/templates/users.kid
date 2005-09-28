@@ -1,7 +1,8 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <?python
-    from mint import userlisting
-    import time
+from mint import userlisting
+import time
+from mint.mint import timeDelta
 ?>
 <html xmlns:html="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
@@ -23,9 +24,10 @@
                 formattedresults = [
                     ('userInfo?id=%s' % resultset[0], resultset[1]),
                     resultset[2],
-                    time.ctime(resultset[3]),
-                    time.ctime(resultset[4]),
-                    resultset[5]
+                    resultset[3],
+                    resultset[4],
+                    timeDelta(resultset[5]),
+                    timeDelta(resultset[6]),
                 ]
             ?>
             ${resultRow(formattedresults)}
@@ -54,7 +56,7 @@
                 ${sortOrderForm(sortOrder)}
                 ${navigation("users?sortOrder=%d"%(sortOrder), "all users", count, limit, offset)}
                 <table cellpadding="0" cellspacing="0" class="results">
-                    ${columnTitles(('User Name', 'Name', 'Time Created', 'Time Last Accessed', 'About'))}
+                    ${columnTitles(('User Name', 'Full Name', 'Contact Info', 'About', 'Created', 'Last Accessed'))}
                     ${searchResults(results)}
                 </table>
                 ${navigation("users?sortOrder=%d"%(sortOrder), "all users", count, limit, offset, True)}

@@ -16,7 +16,7 @@
         if searchType == "Projects":
             columns = ('Project Name', 'Project Description', 'Last Commit')
         elif searchType == "Users":
-            columns = ('User Name', 'Full Name', 'Contact Info', 'Other')
+            columns = ('User Name', 'Full Name', 'Contact Info', 'About', 'Last Accessed')
         elif searchType == "Packages":
             columns = ('Package Name', 'Version', 'Project')
     ?>
@@ -42,7 +42,8 @@
                         ('userInfo?id=%d' % resultset[0], resultset[1]),
                         resultset[2],
                         resultset[3], 
-                        resultset[4]
+                        resultset[4],
+                        timeDelta(resultset[5])
                     ]
                 elif searchType == "Packages":
                     formattedresults = [

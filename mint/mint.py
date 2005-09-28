@@ -460,4 +460,6 @@ def timeDelta(t):
             return r + " ago"
     if days == 1:
         return 'Yesterday'
+    if days > 1 and days < 28:
+        return '%d days ago' % days
     return time.strftime('%d-%b-%Y', time.localtime(t))
