@@ -52,12 +52,12 @@ NUM_DEVS_STRING = "(SELECT count(*) FROM ProjectUsers WHERE ProjectUsers.project
 
 # FIXME. NUMDEVELOPERS needs to go away and be replaced by a true popularity metric. Note the effect on "browse projects box"--most popular projects.
 ordersql = {
-    PROJECTNAME_ASC: "LOWER(Projects.name) ASC",
-    PROJECTNAME_DES: "LOWER(Projects.name) DESC",
+    PROJECTNAME_ASC: "LOWER(name) ASC",
+    PROJECTNAME_DES: "LOWER(name) DESC",
     LASTMODIFIED_ASC: "timeModified ASC",
     LASTMODIFIED_DES: "timeModified DESC",
-    CREATED_ASC: "Projects.timeCreated ASC",
-    CREATED_DES: "Projects.timeCreated DESC",
+#    CREATED_ASC: "Projects.timeCreated ASC",
+#    CREATED_DES: "Projects.timeCreated DESC",
     NUMDEVELOPERS_ASC: NUM_DEVS_STRING+" ASC",
     NUMDEVELOPERS_DES: NUM_DEVS_STRING+" DESC",
 }
@@ -67,8 +67,8 @@ orderhtml = {
     PROJECTNAME_DES: "Project name in descending order",
     LASTMODIFIED_ASC: "Least recently modified",
     LASTMODIFIED_DES: "Most recently modified",
-    CREATED_ASC:      "Oldest",
-    CREATED_DES:      "Newest",
+#    CREATED_ASC:      "Oldest",
+#    CREATED_DES:      "Newest",
     NUMDEVELOPERS_ASC: "Fewest developers",
     NUMDEVELOPERS_DES: "Most developers",
 }
