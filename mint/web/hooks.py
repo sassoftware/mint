@@ -240,10 +240,12 @@ def conaryHandler(req, cfg, pathInfo):
         # FIXME: don't hardcode @rpl:devel
         buildLabel = repName + "@rpl:devel"
         projectName = repName.split(".")[0]
-        if paths[1] == "repos":
-            repMapStr = "http://%s/repos/%s/" % (req.hostname, projectName)
-        else:   
-            repMapStr = "http://%s/conary/" % (req.hostname)
+        if cfg.SSL:
+            protocol = "https"
+        else:
+            protocol = "http"
+
+        repMapStr = "%s://%s:%s@%s/repos/%s/" % (protocol, cfg.authUser, cfg.authPass, req.hostname, projectName)
            
         repMap = {buildLabel: repMapStr,
                   'conary.rpath.com': 'https://conary-commits.rpath.com/conary/',
