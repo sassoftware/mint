@@ -13,6 +13,8 @@ from mint.mint import upstream
         isOwner = (userLevel == userlevels.OWNER or auth.admin)
         isDeveloper = userLevel == userlevels.DEVELOPER
         memberList = project.getMembers()
+
+        releases = project.getReleases()
     ?>
 
     <div py:def="breadcrumb()" py:strip="True">
@@ -21,6 +23,9 @@ from mint.mint import upstream
 
     <head>
         <title>${formatTitle("Project Page: %s"%project.getName())}</title>
+        <link py:if="releases" rel="alternate" type="application/rss+xml"
+              title="${project.getName()} Releases" href="${basePath}rss" />
+
     </head>
     <body>
         <td id="content">
@@ -29,12 +34,11 @@ from mint.mint import upstream
                     <td id="left" class="side">
                         <div class="pad">
                             ${projectResourcesMenu()}
-                            <div py:if="isOwner or project.getReleases()" class="palette" id="releases">
+                            <div py:if="isOwner or releases" class="palette" id="releases">
                                 <h3>
                                     Recent Releases
                                 </h3>
                                 <ul>
-                                    <?python releases = project.getReleases() ?>
                                     <li class="release" py:if="releases" py:for="release in releases[:3]">
                                         <a href="${basePath}release?id=${release.getId()}">
                                             Version ${upstream(release.getTroveVersion())} for ${release.getArch()}
@@ -86,7 +90,7 @@ from mint.mint import upstream
                                 <li py:if="isOwner">
                                     <a href="${basePath}editProject">edit project details</a>
                                 </li>
-                                <li>
+                                <li py:if="releases">
                                     <a href="${basePath}rss">
                                         subscribe to release news 
                                             <img style="border: none; vertical-align: middle;"

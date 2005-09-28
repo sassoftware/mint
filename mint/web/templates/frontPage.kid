@@ -14,6 +14,8 @@ from mint import searcher
 -->
     <head>
         <title>${formatTitle('Front Page')}</title>
+        <link py:if="cfg.newsRssFeed" rel="alternate" type="application/rss+xml"
+              title="${cfg.productName} Site Announcements" href="${cfg.newsRssFeed}" />
     </head>
     <body>
         <td>
@@ -64,7 +66,13 @@ from mint import searcher
                             </div>
 
                             <div py:strip="True" py:if="news">
-                                <h2 class="header">Site Announcements</h2>
+                                <h2 class="header">
+                                    <a href="${cfg.newsRssFeed}">
+                                        <img style="border: none; vertical-align: middle; float: right;"
+                                             src="${cfg.staticPath}apps/mint/images/xml.gif" />
+                                    </a>
+                                    Site Announcements
+                                </h2>
                                 <div py:for="item in news" class="newsItem">
                                     <h3>
                                         <span class="date" style="float: right;">${time.ctime(item['pubDate'])}</span>
