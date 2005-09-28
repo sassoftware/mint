@@ -6,6 +6,7 @@ Changes in 0.5.4:
 * The popularity and activity metrics have been improved.
 * The repository browser now only shows letters for which troves
   actually exist.
+* Some bugs in the commitAction prepration have been fixed.
 
 Changes in 0.5.3:
 
