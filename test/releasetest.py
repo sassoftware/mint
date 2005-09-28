@@ -31,6 +31,9 @@ class ReleaseTest(MintRepositoryHelper):
         projectId = client.newProject("Foo", "foo", "rpath.org")
         release = client.newRelease(projectId, "Test Release")
         releaseId = release.getId()
+
+        assert(client.getReleaseDataDict(releaseId) == {})
+
         for mediaCheck in (False, True):
             client.setReleaseDataValue(releaseId, 'mediaCheck', mediaCheck, RDT_BOOL)
             assert (mediaCheck == client.getReleaseDataValue(releaseId, 'mediaCheck'))
@@ -45,6 +48,8 @@ class ReleaseTest(MintRepositoryHelper):
         assert (client.getReleaseDataDict(releaseId) ==
                 {'stringVal': 'foo', 'mediaCheck': True, 'intVal': 2})
 
+
+        assert (client.getReleaseDataValue(releaseId, 'undefiendName') == None)
 
 if __name__ == "__main__":
     testsuite.main()

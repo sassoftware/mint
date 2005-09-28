@@ -46,10 +46,7 @@ class ReleaseDataTable(database.DatabaseTable):
         r = cu.execute("SELECT value, dataType FROM ReleaseData WHERE releaseId=? AND name=?", (releaseId, name))
         res = r.fetchall()
         if len(res) != 1:
-            if len(res) == 0:
-                raise NotFoundError
-            else:
-                raise MultipleFoundError
+            return None
         value, dataType = res[0]
         if dataType == RDT_BOOL:
             value=bool(int(value))
