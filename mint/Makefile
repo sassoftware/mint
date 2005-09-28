@@ -24,6 +24,7 @@ python_files =			\
 	projectlisting.py	\
 	projects.py		\
 	releases.py		\
+	releasedata.py		\
 	releasetypes.py		\
 	requests.py		\
 	searcher.py		\
