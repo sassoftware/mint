@@ -578,7 +578,7 @@ class MintServer(object):
 
         return True
 
-    @requiresAdmin
+    @requiresAuth
     @private
     def searchUsers(self, terms, limit, offset):
         """
@@ -633,13 +633,16 @@ class MintServer(object):
     @requiresAdmin
     @private
     def getUsersList(self):
+        """
+        Collect a list of users suitable for creating a select box
+        """
         return self.users.getUsersList()
 
-    @requiresAdmin
+    @requiresAuth
     @private
     def getUsers(self, sortOrder, limit, offset):
         """
-        Collect a list of projects
+        Collect a list of users
         @param sortOrder: Order the projects by this criteria
         @param limit:  Number of items to return
         @param offset: Count at which to begin listing

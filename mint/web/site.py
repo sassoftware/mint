@@ -214,7 +214,7 @@ class SiteHandler(WebHandler):
         self._write("projects", sortOrder=sortOrder, limit=limit, offset=offset, results=results, count=count)
         return apache.OK
 
-    @requiresAdmin
+    @requiresAuth
     @intFields(sortOrder = -1, limit = 10, offset = 0)
     def users(self, auth, sortOrder, limit, offset, submit = 0):
         if sortOrder < 0:
@@ -387,7 +387,7 @@ class SiteHandler(WebHandler):
         self.session['searchType'] = type
         if type == "Projects":
             return self._projectSearch(search, modified, limit, offset)
-        elif type == "Users" and auth.admin:
+        elif type == "Users" and auth.authorized:
             return self._userSearch(auth, search, limit, offset)
         elif type == "Packages":
             return self._packageSearch(search, limit, offset)
