@@ -34,7 +34,7 @@ from mint import searcher
             <li><a href="projects">All Projects</a></li>
             <li><a href="projects?sortOrder=3">Most Active Projects</a></li>
             <li><a href="projects?sortOrder=7">Most Popular Projects</a></li>
-            <li py:if="auth.authorized"><a href="users">All Users</a></li>
+            <li py:if="auth.admin"><a href="users">All Users</a></li>
         </ul>
     </div>
 

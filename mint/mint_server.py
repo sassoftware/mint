@@ -639,12 +639,12 @@ class MintServer(object):
         """
         return self.users.getUsersList()
 
-    @requiresAuth
+    @requiresAdmin
     @private
     def getUsers(self, sortOrder, limit, offset):
         """
         Collect a list of users
-        @param sortOrder: Order the projects by this criteria
+        @param sortOrder: Order the users by this criteria
         @param limit:  Number of items to return
         @param offset: Count at which to begin listing
         """

@@ -214,7 +214,7 @@ class SiteHandler(WebHandler):
         self._write("projects", sortOrder=sortOrder, limit=limit, offset=offset, results=results, count=count)
         return apache.OK
 
-    @requiresAuth
+    @requiresAdmin
     @intFields(sortOrder = -1, limit = 10, offset = 0)
     def users(self, auth, sortOrder, limit, offset, submit = 0):
         if sortOrder < 0:
