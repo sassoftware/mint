@@ -16,20 +16,39 @@
 
 descindex = 2
 desctrunclength = 300
-sqlbase = """SELECT Projects.hostname, Projects.name, Projects.desc,
+
+# FIXME sqlbase has been badly mangled due to sqlite3 not handling "group by" and "order by" combined with joins in any semblance of a sane fashion. the code below is a workaround. original sqlbase is included in comments. note that group by and having alteration should probably be worked into original code. it's faster.
+
+#sqlbase = """SELECT Projects.hostname, Projects.name, Projects.desc,
+#    IFNULL(MAX(Commits.timestamp), Projects.timeCreated) AS timeModified
+#        FROM
+#    Projects
+#        LEFT JOIN Commits ON
+#    Projects.projectId=Commits.projectId
+#        WHERE Projects.disabled=0 AND Projects.hidden=0
+#        GROUP BY Projects.projectId
+#        ORDER BY %s
+#        LIMIT %d
+#        OFFSET %d
+#"""
+
+
+sqlbase = """ SELECT hostname, name, desc, timeModified FROM
+        (SELECT projects.projectId as projectId, Projects.hostname as hostname, Projects.name as name, Projects.desc as desc,
     IFNULL(MAX(Commits.timestamp), Projects.timeCreated) AS timeModified
         FROM
     Projects
         LEFT JOIN Commits ON
     Projects.projectId=Commits.projectId
-        WHERE Projects.disabled=0 AND Projects.hidden=0
         GROUP BY Projects.projectId
+        HAVING Projects.disabled=0 AND Projects.hidden=0)
         ORDER BY %s
         LIMIT %d
         OFFSET %d
 """
 
-NUM_DEVS_STRING = "(SELECT count(*) FROM ProjectUsers WHERE ProjectUsers.projectId=Projects.projectId)"
+# FIXME NUM_DEVS_STRING has been modified to match new sqlbase
+NUM_DEVS_STRING = "(SELECT count(*) FROM ProjectUsers WHERE ProjectUsers.projectId=projectId)"
 
 # FIXME. NUMDEVELOPERS needs to go away and be replaced by a true popularity metric. Note the effect on "browse projects box"--most popular projects.
 ordersql = {
