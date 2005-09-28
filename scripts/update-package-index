@@ -8,13 +8,18 @@ import conary
 import sqlite3
 import versions
 
+from mint import config
 from mint import pkgindex
 from mint import projects
 from repository import netclient
 from repository import repository
 
-dbPath = "/srv/mint/data/db"
-db = sqlite3.connect(dbPath, timeout = 30000)
+cfgPath = "/srv/mint/mint.conf"
+
+cfg = config.MintConfig()
+cfg.read(cfgPath)
+
+db = sqlite3.connect(cfg.dbPath, timeout = 30000)
 
 pkgIdx = pkgindex.PackageIndexTable(db)
 labelsTable = projects.LabelsTable(db)
@@ -28,7 +33,7 @@ projectIds = {}
 for r in cu.fetchall():
     projectId, hostname = r
 
-    l, repMap = labelsTable.getLabelsForProject(projectId)
+    l, repMap = labelsTable.getLabelsForProject(projectId, useSSL = cfg.SSL)
     repositoryMap.update(repMap)
     labels[hostname] = versions.Label(l.keys()[0])
     projectIds[hostname] = projectId
