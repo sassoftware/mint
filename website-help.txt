@@ -6,6 +6,8 @@ be removed from this file and integrated into Mint proper.
 Conary configuration for users (always displayed)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+*** FIXME -- add generic pointer to Conary docs ***
+
 You have two options available to you if you want to install software from
 this project:
 
@@ -34,10 +36,10 @@ automatically search this project's label.
 
 *Specifying This Project's Label as Part of the Conary command*
 
-    Use Conary's --install-label option to specify this project's label
-when issuing a conary update command:
+    Use the following command format to specify this project's label when
+issuing a conary update command:
 
-conary update --install-label [this project's label] <trove>
+conary update <trove>=[this project's label]
 
 (Where <trove> represents the name of the trove to be installed.)
 
@@ -73,8 +75,8 @@ installLabelPath line.  At this point, you must decide where in the list to
 place this project's label.
 
     In most cases, you can just add the project's label to the end of the
-list (Note: even though it can be quite long, the installLabelPath line
-*must* remain one line):
+list (Note: even though it can be quite long, the list *must* remain on one
+line):
 
 installLabelPath <label1> ... <labelN> [this project's label]
 
@@ -95,6 +97,36 @@ conary update <trove>
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Conary configuration for developers (displayed only for project members)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+* Short version
+** Display the project's label
+* Long version -- Setting up a Conary build environment
+** (Many ways of doing it; this is one possible approach)
+** Creating Directories
+*** Create a repo-specific directory
+**** Create ./src
+**** Create ./builds
+**** Create ./cache
+** Setting up conaryrc files
+*** /etc/conaryrc
+**** System-wide stuff, best not used to contain build-related settings
+*** $HOME/.conaryrc
+**** Stuff specific to the developer, like:
+***** name
+***** contact (may need to be repo-specific depending on the project)
+*** ./conaryrc
+**** Stuff specific to the repository, like:
+***** buildLabel
+***** buildPath
+***** lookaside
+***** repositoryMap (includes username/passwd for repo access -- https!)
+**** In ./src, symlink ./conary to ../conaryrc
+**** After after each "cvc newpkg" symlink ./conaryrc to ../../conaryrc
+** Using PGP keys
+*** Uploading your public key
+*** Configuring Conary to use your key
+**** signatureKey (may by developer- or repo-specific depending on project)
+* Pointer to Wiki for packaging tutorial
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Big picture stuff
