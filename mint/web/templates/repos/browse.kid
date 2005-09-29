@@ -9,8 +9,8 @@
 
 import string
 
-def pluralPackages(c):
-    return c == 1 and "package" or "packages"
+def pluralTroves(c):
+    return c == 1 and "trove" or "troves"
 
 ?>
 
@@ -34,7 +34,7 @@ def pluralPackages(c):
                 <h2>${project.getName()}<br />Repository Browser</h2>
 
                 <span py:for="l in string.uppercase" py:strip="True">
-                    <span py:if="totals[l]"><a href="browse?char=${l}" title="${totals[l]} ${pluralPackages(totals[l])}">${l}</a> |</span>
+                    <span py:if="totals[l]"><a href="browse?char=${l}" title="${totals[l]} ${pluralTroves(totals[l])}">${l}</a> |</span>
                 </span>
                 <?python
                     total = 0
@@ -42,7 +42,7 @@ def pluralPackages(c):
                         total += totals[x]
                 ?>
                 <span>
-                    <a py:if="l not in string.digits and total" href="browse?char=0" title="${total} ${pluralPackages(total)}">0-9</a>
+                    <a py:if="l not in string.digits and total" href="browse?char=0" title="${total} ${pluralTroves(total)}">0-9</a>
                 </span>
                 
                 <?python
