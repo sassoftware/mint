@@ -61,6 +61,8 @@ from mint import userlevels
                       </form>
                     </div>
                 </div>
+                ${releasesMenu(project.getReleases(), isOwner, display="none")}
+                ${commitsMenu(project.getCommits(), display="none")}
                 ${browseMenu(display='none')}
                 ${searchMenu(display='none')}
             </div>

@@ -26,6 +26,8 @@ def pluralTroves(c):
         <td id="left" class="side">
             <div class="pad">
                 ${projectResourcesMenu()} 
+                ${releasesMenu(project.getReleases(), isOwner, display="none")}
+                ${commitsMenu(project.getCommits(), display="none")}
                 ${browseMenu(display='none')}
                 ${searchMenu(display='none')}
             </div>

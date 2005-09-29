@@ -23,6 +23,52 @@
         </ul>
     </div>
 
+    <div py:def="releasesMenu(releases, isOwner=False, display='block')" py:strip="True">
+      <div py:if="isOwner or releases" class="palette" id="releases">
+        <h3>
+            Recent Releases
+            <a href="javascript:toggle_display('release_items');" class="trove"><img id="release_items_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_${display == 'block' and 'collapse' or 'expand'}.gif" border="0" /></a>
+        </h3>
+        <div id="release_items" style="display: $display">
+          <ul>
+            <li class="release" py:if="releases" py:for="release in releases[:3]">
+                <a href="${basePath}release?id=${release.getId()}">
+                    Version ${upstream(release.getTroveVersion())} for ${release.getArch()}
+                </a>
+            </li>
+            <li class="release" py:if="not releases">
+                No Releases
+            </li>
+            <div class="release" py:if="isOwner" align="right" style="padding-right:8px;">
+                <a href="newRelease"><strong>Create a new release...</strong></a>
+            </div>
+            <div class="release" py:if="not isOwner and len(releases) > 3" align="right" style="padding-right:8px;">
+                <a href="releases"><strong>More...</strong></a>
+            </div>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div py:def="commitsMenu(commits, display='block')" py:strip="True">
+      <div py:if="commits" class="palette" id="commits">
+        <h3>
+            Recent Commits
+            <a href="javascript:toggle_display('commit_items');" class="trove"><img id="commit_items_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_${display == 'block' and 'collapse' or 'expand'}.gif" border="0" /></a>
+        </h3>
+        <div id="commit_items" style="display: $display">
+          <ul>
+            <li class="release" py:for="commit in commits">
+                <a href="${cfg.basePath}repos/${project.getHostname()}/troveInfo?t=${commit[0]}">
+                    ${commit[0]}=${commit[1]}
+                </a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+
     <td py:def="projectsPane()" id="right" class="projects">
         <div py:if="not auth.authorized" class="pad">
             <h3>Start Using rBuilder Online Today</h3>
