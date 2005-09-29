@@ -6,7 +6,7 @@ be removed from this file and integrated into Mint proper.
 Conary configuration for users (always displayed)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-*** FIXME -- add generic pointer to Conary docs ***
+*** FIXME -- add generic pointer to Conary docs; cdtd? ***
 
 You have two options available to you if you want to install software from
 this project:
@@ -75,7 +75,7 @@ installLabelPath line.  At this point, you must decide where in the list to
 place this project's label.
 
     In most cases, you can just add the project's label to the end of the
-list (Note: even though it can be quite long, the list *must* remain on one
+list (Note: Even though it can be quite long, the list *must* remain on one
 line):
 
 installLabelPath <label1> ... <labelN> [this project's label]
@@ -100,33 +100,112 @@ Conary configuration for developers (displayed only for project members)
 
 * Short version
 ** Display the project's label
+
+If you've already packaged using Conary, the only information you need is
+the project's buildLabel:
+
+[this project's label]
+
+And the URL for the project's repositoryMap:
+
+[this project's repo url with <username>:<password> embedded]
+
+Note that you must replace <username> and <password> with your rBuilder
+Online username and password, respectively.
+
 * Long version -- Setting up a Conary build environment
 ** (Many ways of doing it; this is one possible approach)
+
+If you're new to packaging with Conary, you need to create some directories
+and Conary configuration files; there are many different ways to do this,
+but the following approach works for single or multiple projects.
+
 ** Creating Directories
 *** Create a repo-specific directory
 **** Create ./src
 **** Create ./builds
 **** Create ./cache
+
+First, you must create a directory tree that will contain all your
+packaging related to this project.  The name of the root directory for this
+tree should clearly identify the project; some people use the hostname of
+the project's repository ([repo hostname]), while others use just the
+project's name ([project name]) -- the choice is yours.
+
+(Note: If you anticipate packaging software for more than just this
+projects, you should consider making this project's directory tree a
+subdirectory of another directory (conary, for example).  This way, all
+your Conary packaging work will be in one place.)
+
+Once you've decided on a name for this project's directory, create it and
+populate it with the following subdirectories:
+
+    o src
+    o builds
+    o cache
+
 ** Setting up conaryrc files
 *** /etc/conaryrc
 **** System-wide stuff, best not used to contain build-related settings
+
+Next, it's time to set up Conary's configuration files.  The first one to
+consider is /etc/conaryrc -- this file should contain only system-wide
+settings; no settings related to packaging should be here.
+
 *** $HOME/.conaryrc
 **** Stuff specific to the developer, like:
 ***** name
 ***** contact (may need to be repo-specific depending on the project)
+
+Create a file called .conaryrc in your home directory.  This file should
+contain Conary settings that are specific to you, such as:
+
+    o name
+    o contact
+
 *** ./conaryrc
 **** Stuff specific to the repository, like:
 ***** buildLabel
 ***** buildPath
 ***** lookaside
 ***** repositoryMap (includes username/passwd for repo access -- https!)
+
+Finally, create a file called conaryrc (note the absence of a dot) in your
+project's root directory.  This file should contain Conary settings that
+are exclusively related to this project, such as:
+
+    o buildLabel ([this project's label])
+    o buildPath (full path to the builds subdirectory)
+    o lookaside (full path to the cache subdirectory)
+    o repositoryMap ([this project's repo URL with <username>:<password> embedded]
+
 **** In ./src, symlink ./conary to ../conaryrc
 **** After after each "cvc newpkg" symlink ./conaryrc to ../../conaryrc
+
+Because Conary only reads the conaryrc file when it is in the current
+directory, you need to create a symlink for it in the src subdirectory.
+This way, when you issue a "cvc newpkg" command in the src subdirectory,
+Conary will be configured properly.
+
+Note also that, whenever you issue a "cvc newpkg" command, you should then
+create a symlink to ../../conaryrc in the newly-created directory.  This
+way future Conary commands in that directory will work as expected.
+
 ** Using PGP keys
 *** Uploading your public key
 *** Configuring Conary to use your key
 **** signatureKey (may by developer- or repo-specific depending on project)
+
+Conary includes support for signed packages using OpenPGP keys.  To make
+use of this feature, you must first upload your public key to this
+project's repository.  This can be done by either clicking on the "upload a
+package signing key" link present below your username in the upper
+right-hand corner of the page, or 
+
 * Pointer to Wiki for packaging tutorial
+
+Now you're ready to start packaging!  If you're new to packaging with
+Conary, you can find an introduction here [link to conary wiki].
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Big picture stuff
