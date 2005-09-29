@@ -6,10 +6,16 @@
 
 from urllib import quote
 import time
+from mint import userlevels
+
 ?>
 <html xmlns:html="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'../layout.kid'">
+
+<?python
+isOwner = (userLevel == userlevels.OWNER or auth.admin)
+?>
 
     <div py:def="breadcrumb" py:strip="True">
         <a href="${cfg.basePath}project/${project.getHostname()}/">${project.getName()}</a>

@@ -8,7 +8,9 @@
 # All Rights Reserved
 
 import string
+from mint import userlevels
 
+isOwner = (userLevel == userlevels.OWNER or auth.admin)
 def pluralTroves(c):
     return c == 1 and "trove" or "troves"
 
