@@ -67,6 +67,7 @@
 
 #browse h3 {
 	background:#3D5192; border-color:#3A4D8B;
+	cursor:pointer;
 }
 #browse li {
 	background-image:none; padding:4px 0px 4px 0px;
@@ -81,31 +82,36 @@
 
 #search h3 {
 	background:#FF930B; border-color:#F28C0A;
-}
-
-#PGPKeys h3 {
-	background:#5DB285; border-color:#417D5D;
-}
-#PGPKeys li {
-	background-image:none; padding:4px 0px 4px 0px;
+	cursor:pointer;
 }
 
 #releases h3 {
-        background:#B25DB0; border-color:#7D417B;
+	background:#5D71b2; border-color:#5A6DaB;
+	cursor:pointer;
 }
 #releases li {
 	background-image:none; padding:4px 0px 4px 0px;
 }
 
 #commits h3 {
-        background:#A0B25D; border-color:#707D41;
+	background:#5D71b2; border-color:#5A6DaB;
+	cursor:pointer;
 }
 #commits li {
 	background-image:none; padding:4px 0px 4px 0px;
 }
 
+#PGPKeys h3 {
+	background:#5DB285; border-color:#417D5D;
+	cursor:pointer;
+}
+#PGPKeys li {
+	background-image:none; padding:4px 0px 4px 0px;
+}
+
 #addmember h3 {
-        background:#B2AC5D; border-color:#7D7941;
+	background:#5DB285; border-color:#417D5D;
+	cursor:pointer;
 }
 #addmember li {
 	background-image:none; padding:4px 0px 4px 0px;

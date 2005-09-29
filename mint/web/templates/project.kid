@@ -10,6 +10,7 @@
         <?python
             lastchunk = req.uri[req.uri.rfind('/')+1:]
             projectUrl = "%sproject/%s" % (cfg.basePath, project.getHostname())
+            isOwner = userLevel == userlevels.OWNER or auth.admin
         ?>
         <h3>Project Resources</h3>
         <ul>
@@ -17,7 +18,9 @@
             <li><a href="$projectUrl/releases"><strong py:strip="lastchunk not in ('release', 'releases', 'newRelease', 'editRelease')">Releases</strong></a></li>
 
             <li><a href="${cfg.basePath}repos/${project.getHostname()}/browse"><strong py:strip="lastchunk not in ('browse', 'troveInfo')">Repository</strong></a></li>
-            <li py:if="not project.external"><a href="$projectUrl/members"><strong py:strip="lastchunk != 'members'">Members</strong></a></li>
+            <li py:if="not project.external"><a href="$projectUrl/members"><strong py:strip="lastchunk != 'members'">Members</strong></a>
+                <li py:if="isOwner"><a href="${cfg.basePath}repos/${project.getHostname()}/pgpAdminForm">Manage Signing Keys</a></li>
+            </li>
             <li py:if="not project.external"><a href="$projectUrl/mailingLists"><strong py:strip="lastchunk != 'mailingLists'">Mailing Lists</strong></a></li>
             <li py:if="0"><a href="#"><strong py:strip="lastchunk != 'bugs'">Bug Tracking</strong></a></li>
         </ul>
@@ -25,9 +28,9 @@
 
     <div py:def="releasesMenu(releases, isOwner=False, display='block')" py:strip="True">
       <div py:if="isOwner or releases" class="palette" id="releases">
-        <h3>
+        <h3 onclick="javascript:toggle_display('release_items');">
             Recent Releases
-            <a href="javascript:toggle_display('release_items');" class="trove"><img id="release_items_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_${display == 'block' and 'collapse' or 'expand'}.gif" border="0" /></a>
+            <img id="release_items_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_${display == 'block' and 'collapse' or 'expand'}.gif" border="0" />
         </h3>
         <div id="release_items" style="display: $display">
           <ul>
@@ -52,9 +55,9 @@
 
     <div py:def="commitsMenu(commits, display='block')" py:strip="True">
       <div py:if="commits" class="palette" id="commits">
-        <h3>
+        <h3 onclick="javascript:toggle_display('commit_items');">
             Recent Commits
-            <a href="javascript:toggle_display('commit_items');" class="trove"><img id="commit_items_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_${display == 'block' and 'collapse' or 'expand'}.gif" border="0" /></a>
+            <img id="commit_items_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_${display == 'block' and 'collapse' or 'expand'}.gif" border="0" />
         </h3>
         <div id="commit_items" style="display: $display">
           <ul>

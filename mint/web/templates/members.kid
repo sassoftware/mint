@@ -27,20 +27,10 @@ from mint import userlevels
         <td id="left" class="side">
             <div class="pad">
                 ${projectResourcesMenu()}
-                <div id="PGPKeys" class="palette" py:if="isOwner">
-                    <h3>Users' OpenPGP Keys
-                        <a href="javascript:toggle_display('pgpkey_items');" class="trove"><img id="pgpkey_items_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" border="0" /></a>
-                    </h3>
-                    <div id="pgpkey_items" style="display: none">
-                      <ul>
-                        <li><a py:strip="not auth.authorized" href="${cfg.basePath}repos/${project.getHostname()}/pgpAdminForm">Manage OpenPGP/GnuPG Signing Keys</a></li>
-                      </ul>
-                    </div>
-                </div>
                 <div class="palette" id="addmember" py:if="isOwner">
 
-                    <h3>Add New Member
-                        <a href="javascript:toggle_display('addmember_items');" class="trove"><img id="addmember_items_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_collapse.gif" border="0" /></a>
+                    <h3 onclick="javascript:toggle_display('addmember_items');">Add New Member
+                        <img id="addmember_items_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_collapse.gif" border="0" />
                     </h3>
                     <div id="addmember_items" style="display: block">
                       <form method="post" action="addMember">
