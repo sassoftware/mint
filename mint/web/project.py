@@ -273,8 +273,7 @@ class ProjectHandler(WebHandler):
     @requiresAuth
     def adopt(self, auth):
         self.project.adopt(auth, self.cfg.MailListBaseURL, self.cfg.MailListPass)
-        self._write("members", reqList = [])
-        return apache.OK
+        return self._redirect(self.basePath + "members")
 
     @strFields(username = None)
     @intFields(level = None)
