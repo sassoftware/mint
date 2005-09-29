@@ -270,10 +270,6 @@ class ProjectHandler(WebHandler):
         self._write("members", reqList = reqList)
         return apache.OK
 
-    def memberSettings(self, auth):
-        self._write("memberSettings")
-        return apache.OK
-
     @requiresAuth
     def adopt(self, auth):
         self.project.adopt(auth, self.cfg.MailListBaseURL, self.cfg.MailListPass)
@@ -352,11 +348,37 @@ class ProjectHandler(WebHandler):
         # if there is only one owner, and that
         # owner is being changed to a non-owner, fail.
         if len(userDict[userlevels.OWNER]) == 1 and \
-           userDict[userlevels.OWNER][0][0] == userId and\
-           level != userlevels.OWNER:
+                userDict[userlevels.OWNER][0][0] == userId and\
+                level != userlevels.OWNER:
             raise users.LastOwner
 
         self.project.updateUserLevel(userId, level)
+        return self._redirect(self.basePath + "members")
+
+    @intFields(userId = None)
+    @ownerOnly
+    def promoteMember(self, auth, userId):
+        userDict = getUserDict(self.project.getMembers())
+        for level in [userlevels.DEVELOPER]:
+            for user in userDict[level]:
+                if user[0] == userId:
+                    self.project.updateUserLevel(userId, level-1)
+                    return self._redirect(self.basePath + "members")
+        return self._redirect(self.basePath + "members")
+
+    @intFields(userId = None)
+    @ownerOnly
+    def demoteMember(self, auth, userId):
+        userDict = getUserDict(self.project.getMembers())
+        if len(userDict[userlevels.OWNER]) == 1 and \
+                userDict[userlevels.OWNER][0][0] == userId and\
+                level != userlevels.OWNER:
+            raise users.LastOwner
+        for level in [userlevels.OWNER]:
+            for user in userDict[level]:
+                if user[0] == userId:
+                    self.project.updateUserLevel(userId, level+1)
+                    return self._redirect(self.basePath + "members")
         return self._redirect(self.basePath + "members")
 
     @intFields(id = None)
@@ -374,13 +396,6 @@ class ProjectHandler(WebHandler):
         if self.project.getMembers() == []:
             self.project.orphan(self.cfg.MailListBaseURL, self.cfg.MailListPass)
         return self._redirect(self.basePath + "members")
-
-    @intFields(userId = None)
-    @ownerOnly
-    def memberSettings(self, auth, userId):
-        user, level = self.client.getMembership(userId, self.project.getId())
-        self._write("memberSettings", user = user, otherUserLevel = level, userId = userId)
-        return apache.OK
 
     @requiresAuth
     @boolFields(confirmed = False)
