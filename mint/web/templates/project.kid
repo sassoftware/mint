@@ -5,7 +5,8 @@
 ?>
 <html xmlns:html="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#">
-    <div py:def="projectResourcesMenu" id="browse" class="palette">
+
+    <div py:def="projectResourcesMenu" id="project" class="palette">
         <?python
             lastchunk = req.uri[req.uri.rfind('/')+1:]
             projectUrl = "%sproject/%s" % (cfg.basePath, project.getHostname())
@@ -16,7 +17,7 @@
             <li><a href="$projectUrl/releases"><strong py:strip="lastchunk not in ('release', 'releases', 'newRelease', 'editRelease')">Releases</strong></a></li>
 
             <li><a href="${cfg.basePath}repos/${project.getHostname()}/browse"><strong py:strip="lastchunk not in ('browse', 'troveInfo')">Repository</strong></a></li>
-            <li py:if="not project.external"><a href="$projectUrl/members"><strong py:strip="lastchunk != 'members'">Project Members</strong></a></li>
+            <li py:if="not project.external"><a href="$projectUrl/members"><strong py:strip="lastchunk != 'members'">Members</strong></a></li>
             <li py:if="not project.external"><a href="$projectUrl/mailingLists"><strong py:strip="lastchunk != 'mailingLists'">Mailing Lists</strong></a></li>
             <li py:if="0"><a href="#"><strong py:strip="lastchunk != 'bugs'">Bug Tracking</strong></a></li>
         </ul>

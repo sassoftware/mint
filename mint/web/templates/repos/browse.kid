@@ -25,7 +25,9 @@ def pluralTroves(c):
     <body>
         <td id="left" class="side">
             <div class="pad">
-               ${projectResourcesMenu()} 
+                ${projectResourcesMenu()} 
+                ${browseMenu(display='none')}
+                ${searchMenu(display='none')}
             </div>
 
         </td>
@@ -62,7 +64,7 @@ def pluralTroves(c):
                         <td>
                             <a href="troveInfo?t=${package}">${package}</a>
                             <a py:if="package in components" class="trove"
-                               href="javascript:toggle_display('components__${i}');"><img border="0" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif"/></a>
+                               href="javascript:toggle_display('components__${i}');"><img border="0" id="components__${i}_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif"/></a>
                             <div py:if="package in components" id="components__${i}"
                                  class="trovelist" style="display: none;">
                                 <ul>

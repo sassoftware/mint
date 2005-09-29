@@ -65,26 +65,54 @@
 	width:95%;
 }
 
-#browse li {
-	background-image:none; padding:4px 0px 4px 0px;
-}
 #browse h3 {
 	background:#3D5192; border-color:#3A4D8B;
 }
+#browse li {
+	background-image:none; padding:4px 0px 4px 0px;
+}
+
+#project h3 {
+	background:#5D71b2; border-color:#5A6DaB;
+}
+#project li {
+	background-image:none; padding:4px 0px 4px 0px;
+}
+
 #search h3 {
 	background:#FF930B; border-color:#F28C0A;
 }
+
 #PGPKeys h3 {
-	background:#6cee4c; border-color:#60e140;
+	background:#5DB285; border-color:#417D5D;
 }
 #PGPKeys li {
 	background-image:none; padding:4px 0px 4px 0px;
 }
 
+#releases h3 {
+        background:#B25DB0; border-color:#7D417B;
+}
+#releases li {
+	background-image:none; padding:4px 0px 4px 0px;
+}
+
+#commits h3 {
+        background:#A0B25D; border-color:#707D41;
+}
+#commits li {
+	background-image:none; padding:4px 0px 4px 0px;
+}
+
+#addmember h3 {
+        background:#B2AC5D; border-color:#7D7941;
+}
+#addmember li {
+	background-image:none; padding:4px 0px 4px 0px;
+}
 #products h3 {     background-color: green !important;
         border-color: #080 !important;
 }
-
 #products li {
 	background-image:none; padding:4px 0px 4px 0px;
         color: #666;

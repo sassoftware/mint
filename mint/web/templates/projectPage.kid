@@ -37,8 +37,10 @@ from mint.mint import upstream
                             <div py:if="isOwner or releases" class="palette" id="releases">
                                 <h3>
                                     Recent Releases
+                                    <a href="javascript:toggle_display('release_items');" class="trove"><img id="release_items_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" border="0" /></a>
                                 </h3>
-                                <ul>
+                                <div id="release_items" style="display: none">
+                                  <ul>
                                     <li class="release" py:if="releases" py:for="release in releases[:3]">
                                         <a href="${basePath}release?id=${release.getId()}">
                                             Version ${upstream(release.getTroveVersion())} for ${release.getArch()}
@@ -53,21 +55,27 @@ from mint.mint import upstream
                                     <div class="release" py:if="not isOwner and len(releases) > 3" align="right" style="padding-right:8px;">
                                         <a href="releases"><strong>More...</strong></a>
                                     </div>
-                                </ul>
+                                  </ul>
+                                </div>
                             </div>
                             <?python commits = project.getCommits() ?>
                             <div py:if="commits" class="palette" id="commits">
                                 <h3>
                                     Recent Commits
+                                    <a href="javascript:toggle_display('commit_items');" class="trove"><img id="commit_items_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" border="0" /></a>
                                 </h3>
-                                <ul>
+                                <div id="commit_items" style="display: none">
+                                  <ul>
                                     <li class="release" py:for="commit in commits">
                                         <a href="${cfg.basePath}repos/${project.getHostname()}/troveInfo?t=${commit[0]}">
                                             ${commit[0]}=${commit[1]}
                                         </a>
                                     </li>
-                                </ul>
+                                  </ul>
+                                </div>
                             </div>
+                            ${browseMenu(display='none')}
+                            ${searchMenu(display='none')}
                         </div>
                     </td>
                     <td id="main">

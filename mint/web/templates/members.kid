@@ -28,15 +28,22 @@ from mint import userlevels
             <div class="pad">
                 ${projectResourcesMenu()}
                 <div id="PGPKeys" class="palette" py:if="isOwner">
-                    <h3>Users' OpenPGP Keys</h3>
-                    <ul>
-                    <li><a py:strip="not auth.authorized" href="${cfg.basePath}repos/${project.getHostname()}/pgpAdminForm">Manage OpenPGP/GnuPG Signing Keys</a></li>
-                    </ul>
+                    <h3>Users' OpenPGP Keys
+                        <a href="javascript:toggle_display('pgpkey_items');" class="trove"><img id="pgpkey_items_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" border="0" /></a>
+                    </h3>
+                    <div id="pgpkey_items" style="display: none">
+                      <ul>
+                        <li><a py:strip="not auth.authorized" href="${cfg.basePath}repos/${project.getHostname()}/pgpAdminForm">Manage OpenPGP/GnuPG Signing Keys</a></li>
+                      </ul>
+                    </div>
                 </div>
-                <div class="palette" py:if="isOwner">
+                <div class="palette" id="addmember" py:if="isOwner">
 
-                    <h3>Add New Member</h3>
-                    <form method="post" action="addMember">
+                    <h3>Add New Member
+                        <a href="javascript:toggle_display('addmember_items');" class="trove"><img id="addmember_items_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_collapse.gif" border="0" /></a>
+                    </h3>
+                    <div id="addmember_items" style="display: block">
+                      <form method="post" action="addMember">
                         <p>
                             <label>Username:</label><br/>
                             <input type="text" name="username" value="" />
@@ -51,8 +58,11 @@ from mint import userlevels
                             </select>
                         </p>
                         <p><button type="submit">Submit</button></p>
-                    </form>
+                      </form>
+                    </div>
                 </div>
+                ${browseMenu(display='none')}
+                ${searchMenu(display='none')}
             </div>
 
         </td>

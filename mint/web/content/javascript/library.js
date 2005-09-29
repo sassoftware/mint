@@ -23,9 +23,13 @@ function add(targetId, sourceId) {
 function toggle_display(tid) {
     if(document.getElementById(tid).style.display == "none") {
         document.getElementById(tid).style.display = "";
+        img = document.getElementById(tid + "_expander");
+        img.src = img.src.replace('expand', 'collapse')
     }
     else {
         document.getElementById(tid).style.display = "none";
+        img = document.getElementById(tid + "_expander");
+        img.src = img.src.replace('collapse', 'expand')
     }
 }
 
