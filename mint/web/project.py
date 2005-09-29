@@ -25,6 +25,8 @@ from web import fields
 from web.fields import strFields, intFields, listFields, boolFields
 from mint.users import sendMailWithChecks
 
+from mint.releases import RDT_STRING, RDT_BOOL, RDT_INT
+
 def getUserDict(members):
     users = { userlevels.DEVELOPER: [],
               userlevels.OWNER: [], }
@@ -145,7 +147,7 @@ class ProjectHandler(WebHandler):
                desc = "", mediaSize = "640")
     def editRelease2(self, auth, releaseId,
                      trove, version,
-                     desc, mediaSize):
+                     desc, mediaSize, **kwargs):
         release = self.client.getRelease(releaseId)
 
         version, flavor = version.split(" ")
@@ -155,6 +157,21 @@ class ProjectHandler(WebHandler):
         flavor = deps.ThawDependencySet(flavor)
         jobArch = flavor.members[deps.DEP_CLASS_IS].members.keys()[0]
         assert(jobArch in ('x86', 'x86_64'))
+
+        # get the template from the release and handle any relevant args
+        # remember that checkboxes don't pass args for unchecked boxxen
+        template = release.getDataTemplate()
+        for name in list(template):
+            try:
+                val = kwargs[name]
+                if template[name][0] == RDT_BOOL:
+                    val = True
+            except KeyError:
+                if template[name][0] == RDT_BOOL:
+                    val = False
+                else:
+                    val = template[name][1]
+            release.setDataValue(name, val)
 
         try:
             job = self.client.startImageJob(releaseId)

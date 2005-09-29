@@ -15,13 +15,42 @@ from mint_error import MintError
 import versions
 from deps import deps
 
+from releasedata import RDT_STRING, RDT_BOOL, RDT_INT
+
 class TroveNotSet(MintError):
     def __str__(self):
         return "this release needs a be associated with a group or fileset trove."
-        
+
 class ReleaseMissing(MintError):
     def __str__(self):
         return "the requested release does not exist"
+
+class ReleaseDataNameError(MintError):
+    def __str__(self):
+        return self.str
+
+    def __init__(self, reason = None):
+        if reason is None:
+            self.str = "Named value is not in data template"
+        else:
+            self.str = reason
+
+installableIsoTemplate = {
+    'skipMediaCheck': (RDT_BOOL, False, 'Iso should skip prompt for media check'),
+    'betaNag'   : (RDT_BOOL, False, 'Iso is a beta release'),
+}
+
+stubImageTemplate = {
+    'boolArg'   : (RDT_BOOL, False, 'Garbage Boolean'),
+    'stringArg' : (RDT_STRING, '', 'Garbage String'),
+    'intArg'    : (RDT_INT, 0, 'Garbage Integer'),
+}
+
+# It is not necessary to define templates for image types with no settings
+dataTemplates = {
+    releasetypes.INSTALLABLE_ISO : installableIsoTemplate,
+    releasetypes.STUB_IMAGE      : stubImageTemplate,
+}
 
 class Release(object):
     releaseId = None
@@ -33,7 +62,6 @@ class Release(object):
     imageType = None
     downloads = 0
     published = False
-
     server = None
     
     def __init__(self, server, releaseId):
@@ -126,6 +154,37 @@ class Release(object):
 
     def setPublished(self, published):
         return self.server.setReleasePublished(self.releaseId, published)
+
+    def getDataTemplate(self):
+        try:
+            return dataTemplates[self.getImageType()]
+        except KeyError:
+            return {}
+
+    def setDataValue(self, name, value, dataType = None):
+        template = self.getDataTemplate()
+        if name not in template:
+            raise ReleaseDataNameError("Named value not in data template: %s" %name)
+        if dataType is None:
+            dataType = template[name][0]
+        return self.server.setReleaseDataValue(self.getId(), name, value, dataType)
+
+    def getDataValue(self, name):
+        template = self.getDataTemplate()
+        if name not in template:
+            raise ReleaseDataNameError("Named value not in data template: %s" %name)
+        val = self.server.getReleaseDataValue(self.getId(), name)
+        if val is None:
+            val = template[name][1]
+        return val
+
+    def getDataDict(self):
+        dataDict = self.server.getReleaseDataDict(self.getId())
+        template = self.getDataTemplate()
+        for name in list(template):
+            if name not in dataDict:
+                dataDict[name] = template[name][1]
+        return dataDict
 
 class ReleasesTable(database.KeyedTable):
     name = "Releases"

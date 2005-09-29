@@ -2,6 +2,7 @@
 <?python
 import re
 from mint.mint import extractIs
+from mint.releasedata import RDT_STRING, RDT_BOOL, RDT_INT
 title = "Edit Release"
 
 def generateJs(archMap):
@@ -99,6 +100,25 @@ def generateJs(archMap):
                     <tr>
                         <td>Release:</td>
                         <td><span id="release">None</span></td>
+                    </tr>
+                    <?python
+                        template = release.getDataTemplate()
+                        dataDict = release.getDataDict()
+                    ?>
+                    <tr py:for="name in sorted(list(template))">
+                        <td py:if="(template[name][0] == RDT_BOOL) and dataDict[name]" colspan="2">
+                            <input type="checkbox" name="${name}" value="1" checked="checked"/> ${template[name][2]}
+                        </td>
+                        <td py:if="(template[name][0] == RDT_BOOL) and not dataDict[name]" colspan="2">
+                            <input type="checkbox" name="${name}" value="1"/> ${template[name][2]}
+                        </td>
+                        <td py:if="(template[name][0] == RDT_INT) or (template[name][0] == RDT_STRING)">
+                            ${template[name][2]}
+                        </td>
+                        <td py:if="(template[name][0] == RDT_INT) or (template[name][0] == RDT_STRING)">
+                            <input type="text" name="${name}" value="${dataDict[name]}"/>
+                        </td>
+
                     </tr>
                 </table>
 
