@@ -158,7 +158,7 @@ class MintServer(object):
         authUrl = "%s://%s:%s@%s/repos/%s/" % (protocol, self.cfg.authUser, self.cfg.authPass,
                                                self.cfg.siteHost, project.getHostname())
         authLabel = project.getLabel()
-        authRepo = {authLabel: authUrl}
+        authRepo = {versions.Label(authLabel).getHost(): authUrl}
 
         reposPath = os.path.join(self.cfg.reposPath, project.getFQDN())
         tmpPath = os.path.join(reposPath, "tmp")
@@ -884,8 +884,7 @@ class MintServer(object):
         project = projects.Project(self, projectId)
 
         labelIdMap = project.getLabelIdMap()
-        cfg = project.getConaryConfig()
-        nc = netclient.NetworkRepositoryClient(cfg.repositoryMap)
+        nc = self._getProjectRepo(project)
         
         troveDict = {}
         for label in labelIdMap.keys():
