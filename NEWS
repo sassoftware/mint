@@ -1,3 +1,11 @@
+Changes in 0.5.5:
+* Sidebars are collapsable for more screen real estate.
+* Symlinks are now properly displayed as such in the trove files view.
+* The buggy member edit popup has been replaced with "Promote"
+  and "Demote" buttons.
+* Releases can now have semi-arbitrary data attached, defined by
+  a template in the image generator.
+
 Changes in 0.5.4:
 
 * Many UI and documentation fixes.
