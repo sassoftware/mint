@@ -34,10 +34,10 @@ from mint import searcher
         </h3>
         <div id="browse_items" style="display: $display">
           <ul>
-            <li><a href="projects">All Projects</a></li>
-            <li><a href="projects?sortOrder=3">Most Active Projects</a></li>
-            <li><a href="projects?sortOrder=7">Most Popular Projects</a></li>
-            <li py:if="auth.admin"><a href="users">All Users</a></li>
+            <li><a href="${cfg.basePath}projects">All Projects</a></li>
+            <li><a href="${cfg.basePath}projects?sortOrder=3">Most Active Projects</a></li>
+            <li><a href="${cfg.basePath}projects?sortOrder=7">Most Popular Projects</a></li>
+            <li py:if="auth.admin"><a href="${cfg.basePath}users">All Users</a></li>
           </ul>
         </div>
     </div>
@@ -54,7 +54,7 @@ if auth.authorized:
             <a href="javascript:toggle_display('search_items');" class="trove"><img id="search_items_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_${display == 'block' and 'collapse' or 'expand'}.gif" border="0" /></a>
         </h3>
           <div style="display: $display" id="search_items">
-            <form action="search" method="get">
+            <form action="${cfg.basePath}search" method="get">
             <p>
                 <label>search type:</label><br/>
                 <select name="type">
