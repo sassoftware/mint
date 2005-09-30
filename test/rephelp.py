@@ -178,13 +178,12 @@ class ApacheServer(ChildRepository):
             print >> f, 'cacheChangeSets False'
 
         # write Mint configuration
-        os.mkdir(self.reposDir + "/repos/")
-        
         f = open("%s/mint.conf" % self.serverRoot, "w")
         print >> f, 'domainName localhost:%i' % self.port
         print >> f, 'dbPath %s' % self.reposDir + '/mintdb'
         print >> f, 'authDbPath %s' % self.reposDir + '/sqldb'
         print >> f, 'reposPath %s' % self.reposDir + '/repos/'
+        print >> f, 'imagesPath %s' % self.reposDir + '/images/'
         print >> f, 'authRepoMap %s http://mintauth:mintpass@127.0.0.1:%d/conary/' % (self.name, self.port)
         print >> f, 'debugMode False'
         print >> f, 'sendNotificationEmails False'
@@ -206,6 +205,7 @@ class ApacheServer(ChildRepository):
     def start(self):
         shutil.rmtree(self.reposDir)
         os.mkdir(self.reposDir)
+        os.mkdir(self.reposDir + "/images/")
         self.createUser()
         self.createMintUser()
         if self.serverpid != -1:

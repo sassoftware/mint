@@ -9,6 +9,8 @@ testsuite.setup()
 from mint_rephelp import MintRepositoryHelper
 from mint import jobstatus
 from mint import jobs
+from mint import releasetypes
+from mint.distro import stub_image
 
 class JobsTest(MintRepositoryHelper):
     def testJobs(self):
@@ -34,6 +36,22 @@ class JobsTest(MintRepositoryHelper):
             pass
         else:
             self.fail("expected exception jobs.DuplicateJob")
+
+    def testStubImage(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        projectId = client.newProject("Foo", "foo", "rpath.org")
+
+        release = client.newRelease(projectId, "Test Release")
+        release.setImageType(releasetypes.STUB_IMAGE)
+        release.setDataValue('stringArg', 'Hello World!')
+
+        job = client.startImageJob(release.getId())
+       
+        imagegen = stub_image.StubImage(client, client.getCfg(), job, release.getId())
+        imagegen.write()
+        
+        self.verifyFile(self.reposDir + "/images/stub.iso", "Hello World!\n")
+        
         
 if __name__ == "__main__":
     testsuite.main()
