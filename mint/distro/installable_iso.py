@@ -177,7 +177,7 @@ class InstallableIso(ImageGenerator):
         assertParentAlive()
 
         isoList = []
-        isoname = "%(safeName)s-%(version)s-%%(disc)s.iso" % infoMap
+        isoname = "%(safeName)s-%(version)s-%(arch)s-%%(disc)s.iso" % infoMap
         discdir = os.path.normpath(topdir + "/../")
         self.status("Building ISOs")
 
