@@ -113,7 +113,10 @@ class ProjectHandler(WebHandler):
             version = versions.ThawVersion(versionStr)
             label = version.branch().label()
 
-        cfg = self.project.getConaryConfig()
+        if self.project.external:
+            cfg = self.project.getConaryConfig()
+        else:
+            cfg = self.project.getConaryConfig(useSSL = self.cfg.SSL)
         nc = netclient.NetworkRepositoryClient(cfg.repositoryMap)
         leaves = nc.getTroveLeavesByLabel({trove: {label: None}})
 
