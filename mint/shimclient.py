@@ -10,6 +10,10 @@ class ShimMintClient(mint.MintClient):
     _allowPrivate = True # enable all private methods of MintClient
     def __init__(self, cfg, authToken):
         self.server = ShimServerProxy(cfg, authToken)
+        self._cfg = cfg
+
+    def getCfg(self):
+        return self._cfg
 
 class _ShimMethod(mint._Method):
     def __init__(self, server, authToken, name):
@@ -18,7 +22,7 @@ class _ShimMethod(mint._Method):
         self._name = name
 
     def __repr__(self):
-        return "<mint._ShimMethod(%r)>" % (self._ShimMethod__name)
+        return "<mint._ShimMethod(%r)>" % (self._name)
 
     def __call__(self, *args):
         isException, result = self._server.callWrapper(self._name, self._authToken, args)
