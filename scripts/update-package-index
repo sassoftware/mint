@@ -35,6 +35,8 @@ for r in cu.fetchall():
 
     l, repMap = labelsTable.getLabelsForProject(projectId, useSSL = cfg.SSL)
     repositoryMap.update(repMap)
+    
+    hostname = repMap.keys()[0]
     labels[hostname] = versions.Label(l.keys()[0])
     projectIds[hostname] = projectId
 
