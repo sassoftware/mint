@@ -11,7 +11,7 @@
 
         <p><a href="/legal?page=privacy">Privacy Policy</a></p>
 
-        <p>rPath, the rPath logo, Conary, rBuilder and rManager are
+        <p>rPath, the rPath logo, Conary, and rBuilder are
         trademarks of rPath, Inc.</p>
 
         <p>All other trademarks referenced are the property of their
