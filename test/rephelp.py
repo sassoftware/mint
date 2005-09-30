@@ -878,13 +878,13 @@ class RepositoryHelper(testsuite.TestCase):
     def cookTestPkg(self, num, logLevel=log.WARNING, macros={}):
         return cook.cookItem(self.repos, self.cfg, 'test%s' % num, macros=macros)
 
-    def cookFromRepository(self, troveName, buildLabel = None):
+    def cookFromRepository(self, troveName, buildLabel = None, ignoreDeps = False):
         if buildLabel:
             oldLabel = self.cfg.buildLabel
             self.cfg.buildLabel = buildLabel
 
         repos = self.openRepository()
-        built = cook.cookItem(repos, self.cfg, troveName)
+        built = cook.cookItem(repos, self.cfg, troveName, ignoreDeps = ignoreDeps)
 
         if buildLabel:
             self.cfg.buildLabel = oldLabel
