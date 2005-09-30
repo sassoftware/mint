@@ -149,29 +149,31 @@ class MintServer(object):
         return repo
 
     def _getProjectRepo(self, project):
-        if self.cfg.SSL:
-            protocol = "https"
-            port = 443
-        else:
-            protocol = "http"
-            port = 80
-        authUrl = "%s://%s:%s@%s/repos/%s/" % (protocol, self.cfg.authUser, self.cfg.authPass,
-                                               self.cfg.siteHost, project.getHostname())
-        authLabel = project.getLabel()
-        authRepo = {versions.Label(authLabel).getHost(): authUrl}
-
-        reposPath = os.path.join(self.cfg.reposPath, project.getFQDN())
-        tmpPath = os.path.join(reposPath, "tmp")
-        
-        # handle non-standard ports specified on cfg.domainName,
-        # most likely just used by the test suite
-        if ":" in self.cfg.domainName:
-            port = int(self.cfg.domainName.split(":")[1])
-        
         # use a shimclient for mint-handled repositories; netclient if not
-        if project.getDomainname() == self.cfg.domainName:
-            repo = netclient.NetworkRepositoryClient(authRepo)
+        if project.external:
+            cfg = project.getConaryConfig()
+            repo = netclient.NetworkRepositoryClient(cfg.repositoryMap)
         else:
+            if self.cfg.SSL:
+                protocol = "https"
+                port = 443
+            else:
+                protocol = "http"
+                port = 80
+
+            authUrl = "%s://%s:%s@%s/repos/%s/" % (protocol, self.cfg.authUser, self.cfg.authPass,
+                                                   self.cfg.siteHost, project.getHostname())
+            authLabel = project.getLabel()
+            authRepo = {versions.Label(authLabel).getHost(): authUrl}
+
+            reposPath = os.path.join(self.cfg.reposPath, project.getFQDN())
+            tmpPath = os.path.join(reposPath, "tmp")
+            
+            # handle non-standard ports specified on cfg.domainName,
+            # most likely just used by the test suite
+            if ":" in self.cfg.domainName:
+                port = int(self.cfg.domainName.split(":")[1])
+     
             server = netserver.NetworkRepositoryServer(reposPath, tmpPath, '', project.getFQDN(), authRepo)
             repo = shimclient.ShimNetClient(server, protocol, port, (self.cfg.authUser, self.cfg.authPass), authRepo)
         return repo
