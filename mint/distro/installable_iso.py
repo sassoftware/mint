@@ -80,6 +80,9 @@ class InstallableIso(ImageGenerator):
         flavor = deps.deps.ThawDependencySet(flavorStr)
         project = self.client.getProject(release.getProjectId())
 
+        skipMediaCheck = release.getDataValue('skipMediaCheck')
+        betaNag = release.getDataValue('betaNag')
+
         cfg = conarycfg.ConaryConfiguration()
         cfg.dbPath = ':memory:'
         cfg.root = ':memory:'
@@ -217,7 +220,10 @@ class InstallableIso(ImageGenerator):
             if not os.access(iso, os.R_OK):
                 raise RuntimeError, "ISO generation failed"
             else:
-                cmd = [isocfg.implantIsoMd5, iso]
+                cmd = [isocfg.implantIsoMd5]
+                if skipMediaCheck:
+                    cmd.append('--supported-iso')
+                cmd.append(iso)
                 print >> sys.stderr, cmd
                 sys.stderr.flush()
                 subprocess.call(cmd)
