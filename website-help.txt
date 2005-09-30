@@ -97,43 +97,36 @@ conary update <trove>
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Conary configuration for developers (displayed only for project members)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+*Setting up Your Conary Build Environment*
 
-* Short version
-** Display the project's label
+You will need the following pieces of information in order to start
+building packages for this project:
 
-If you've already packaged using Conary, the only information you need is
-the project's buildLabel:
+    o Build Label: [this project's label]
 
-[this project's label]
+    o Repository URL: [this project's repo url with <username>:<password>
+      embedded]
 
-And the URL for the project's repositoryMap:
+(Note that you must replace <username> and <password> with your rBuilder
+Online username and password, respectively.)
 
-[this project's repo url with <username>:<password> embedded]
-
-Note that you must replace <username> and <password> with your rBuilder
-Online username and password, respectively.
-
-* Long version -- Setting up a Conary build environment
-** (Many ways of doing it; this is one possible approach)
+*Getting Started*
 
 If you're new to packaging with Conary, you need to create some directories
 and Conary configuration files; there are many different ways to do this,
-but the following approach works for single or multiple projects.
+but the following approach works equally well when packaging for single or
+multiple projects.
 
-** Creating Directories
-*** Create a repo-specific directory
-**** Create ./src
-**** Create ./builds
-**** Create ./cache
+*Creating Directories*
 
-First, you must create a directory tree that will contain all your
-packaging related to this project.  The name of the root directory for this
-tree should clearly identify the project; some people use the hostname of
-the project's repository ([repo hostname]), while others use just the
-project's name ([project name]) -- the choice is yours.
+First, you must create a directory tree that will contain all the files
+related to this project.  The name of the root directory for this tree
+should clearly identify the project; some people use the hostname of the
+project's repository (<project-name>.rpath.org), while others use just the
+project's name -- the choice is yours.
 
-(Note: If you anticipate packaging software for more than just this
-projects, you should consider making this project's directory tree a
+(Hint: If you anticipate packaging software for more than just this
+project, you should consider making this project's directory tree a
 subdirectory of another directory (conary, for example).  This way, all
 your Conary packaging work will be in one place.)
 
@@ -144,31 +137,27 @@ populate it with the following subdirectories:
     o builds
     o cache
 
-** Setting up conaryrc files
-*** /etc/conaryrc
-**** System-wide stuff, best not used to contain build-related settings
+The src directory will contain subdirectories (one for each package), each
+containing the Conary recipe file (along with any other files that might be
+necessary to properly package the software).
 
-Next, it's time to set up Conary's configuration files.  The first one to
+The builds directory is where packages will actually be built.
+
+The cache directory is used to store the source archives downloaded during
+the build process, avoiding the necessity of repetitively downloading the
+same source archive each time a build is attempted.
+
+* Setting Up the conaryrc Files*
+
+Next, it's time to set up Conary's configuration files.  The first file to
 consider is /etc/conaryrc -- this file should contain only system-wide
-settings; no settings related to packaging should be here.
-
-*** $HOME/.conaryrc
-**** Stuff specific to the developer, like:
-***** name
-***** contact (may need to be repo-specific depending on the project)
+settings; no settings related to packaging should be present in this file.
 
 Create a file called .conaryrc in your home directory.  This file should
 contain Conary settings that are specific to you, such as:
 
     o name
     o contact
-
-*** ./conaryrc
-**** Stuff specific to the repository, like:
-***** buildLabel
-***** buildPath
-***** lookaside
-***** repositoryMap (includes username/passwd for repo access -- https!)
 
 Finally, create a file called conaryrc (note the absence of a dot) in your
 project's root directory.  This file should contain Conary settings that
@@ -179,30 +168,42 @@ are exclusively related to this project, such as:
     o lookaside (full path to the cache subdirectory)
     o repositoryMap ([this project's repo URL with <username>:<password> embedded]
 
-**** In ./src, symlink ./conary to ../conaryrc
-**** After after each "cvc newpkg" symlink ./conaryrc to ../../conaryrc
-
 Because Conary only reads the conaryrc file when it is in the current
-directory, you need to create a symlink for it in the src subdirectory.
-This way, when you issue a "cvc newpkg" command in the src subdirectory,
-Conary will be configured properly.
+directory, you must create a symlink for it in the src subdirectory.  This
+way, when you issue a "cvc newpkg" or "cvc checkout" command in the src
+subdirectory, Conary will be configured properly.
 
-Note also that, whenever you issue a "cvc newpkg" command, you should then
-create a symlink to ../../conaryrc in the newly-created directory.  This
-way future Conary commands in that directory will work as expected.
+Note also that, whenever you issue a "cvc newpkg" or "cvc checkout"
+command, you should then create a symlink to ../../conaryrc in the
+newly-created directory.  This way future Conary will work as expected
+while in that directory as well.
 
-** Using PGP keys
-*** Uploading your public key
-*** Configuring Conary to use your key
-**** signatureKey (may by developer- or repo-specific depending on project)
+*Signing Packages With OpenPGP Keys*
 
-Conary includes support for signed packages using OpenPGP keys.  To make
-use of this feature, you must first upload your public key to this
-project's repository.  This can be done by either clicking on the "upload a
-package signing key" link present below your username in the upper
-right-hand corner of the page, or 
+Conary includes support for signed packages using OpenPGP keys.  Projects
+have the option of using this feature or not; ask this project's owners if
+you should be signing packages or not.  They will also help you get a
+OpenPGP key pair if you do not already have one (or the project requires a
+special one).
 
-* Pointer to Wiki for packaging tutorial
+If this project requires you to sign packages, you must first upload your
+public key to this project's repository.  This can be done by logging in to
+rBuilder Online and clicking on the "upload a package signing key" link
+present below your username in the upper right-hand corner of the page.
+
+Next, you must configure Conary to use your key.  This is done by adding a
+signatureKey line (containing your key's fingerprint) to the appropriate
+Conary configuration file ($HOME/.conaryrc if the key will be shared
+between multiple projects, <project-dir>/conaryrc if the key is specific to
+one project).
+
+The following formats are acceptable for the signatureKey setting:
+
+signatureKey            B1EE 5468 2429 249E 3C24  FD50 E55A 1E3D 2417 65F8
+signatureKey            B1EE54682429249E3C24FD50E55A1E3D241765F8
+signatureKey            E55A1E3D241765F8
+
+
 
 Now you're ready to start packaging!  If you're new to packaging with
 Conary, you can find an introduction here [link to conary wiki].
