@@ -47,10 +47,11 @@ class JobsTest(MintRepositoryHelper):
 
         job = client.startImageJob(release.getId())
        
+        client.getCfg().imagesPath = self.imagePath
         imagegen = stub_image.StubImage(client, client.getCfg(), job, release.getId())
         imagegen.write()
         
-        self.verifyFile(self.reposDir + "/images/stub.iso", "Hello World!\n")
+        self.verifyFile(self.imagePath + "/stub.iso", "Hello World!\n")
         
         
 if __name__ == "__main__":

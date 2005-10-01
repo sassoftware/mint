@@ -205,7 +205,6 @@ class ApacheServer(ChildRepository):
     def start(self):
         shutil.rmtree(self.reposDir)
         os.mkdir(self.reposDir)
-        os.mkdir(self.reposDir + "/images/")
         self.createUser()
         self.createMintUser()
         if self.serverpid != -1:
@@ -1274,10 +1273,12 @@ class RepositoryHelper(testsuite.TestCase):
 	self.buildDir = self.tmpDir + "/build"
 	self.rootDir = self.tmpDir + "/root"
 	self.cacheDir = self.tmpDir + "/cache"
+        self.imagePath = self.tmpDir + "/images"
 	os.mkdir(self.reposDir)
 	os.mkdir(self.workDir)
 	os.mkdir(self.rootDir)
 	os.mkdir(self.cacheDir)
+        os.mkdir(self.imagePath)
 	self.cfg = conarycfg.ConaryConfiguration(False)
 	self.cfg.name = 'Test'
 	self.cfg.contact = 'http://bugzilla.rpath.com/'
