@@ -29,8 +29,9 @@ from mint import searcher
     </div>
 
     <div id="browse" class="palette" py:def="browseMenu(display='block')" py:strip="False">
-        <h3 onclick="javascript:toggle_display('browse_items');">Browse All Projects
+        <h3 onclick="javascript:toggle_display('browse_items');">
             <img id="browse_items_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_${display == 'block' and 'collapse' or 'expand'}.gif" border="0" />
+            Browse All Projects
         </h3>
         <div id="browse_items" style="display: $display">
           <ul>
@@ -50,8 +51,9 @@ searchTypes = ['Projects', 'Packages']
 if auth.authorized:
     searchTypes.append('Users')
         ?>
-        <h3 onclick="javascript:toggle_display('search_items');">Search
+        <h3 onclick="javascript:toggle_display('search_items');">
             <img id="search_items_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_${display == 'block' and 'collapse' or 'expand'}.gif" border="0" />
+            Search
         </h3>
           <div style="display: $display" id="search_items">
             <form action="${cfg.basePath}search" method="get">

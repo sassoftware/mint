@@ -42,6 +42,9 @@
 	color:#fff; background-color:#999;
 	border:1px #909090 solid; padding:4px 11px 6px 11px;
 }
+div.palette h3 img {
+        float: right;
+}
 .palette ul {
 	border:1px #dadada solid;
 	background-color:#e6e6e6; border-width:0px 1px 0px 1px;

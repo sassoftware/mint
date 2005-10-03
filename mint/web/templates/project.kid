@@ -29,8 +29,8 @@
     <div py:def="releasesMenu(releases, isOwner=False, display='block')" py:strip="True">
       <div py:if="isOwner or releases" class="palette" id="releases">
         <h3 onclick="javascript:toggle_display('release_items');">
-            Recent Releases
             <img id="release_items_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_${display == 'block' and 'collapse' or 'expand'}.gif" border="0" />
+            Recent Releases
         </h3>
         <div id="release_items" style="display: $display">
           <ul>
@@ -56,8 +56,8 @@
     <div py:def="commitsMenu(commits, display='block')" py:strip="True">
       <div py:if="commits" class="palette" id="commits">
         <h3 onclick="javascript:toggle_display('commit_items');">
-            Recent Commits
             <img id="commit_items_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_${display == 'block' and 'collapse' or 'expand'}.gif" border="0" />
+            Recent Commits
         </h3>
         <div id="commit_items" style="display: $display">
           <ul>

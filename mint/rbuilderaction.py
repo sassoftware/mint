@@ -45,7 +45,6 @@ def process(repos, cfg, commitList, srcMap, pkgMap, grpMap, argv, otherArgs):
     user = argSet['user']
 
     mint = mint_server.MintServer(cfg, allowPrivate = True)
-    commitsTable = stats.CommitsTable(mint.db)
     
     for commit in commitList:
         t, vStr, f = commit
@@ -53,8 +52,6 @@ def process(repos, cfg, commitList, srcMap, pkgMap, grpMap, argv, otherArgs):
         v = versions.VersionFromString(vStr)
         hostname = v.branch().label().getHost()
 
-        projectId = mint.getProjectIdByFQDN(hostname)
-        userId = mint.getUserIdByName(user)
-        commitsTable.new(projectId, time.time(), t, vStr, userId)
+        mint.registerCommit(hostname, user, t, vStr)
 
     return 0

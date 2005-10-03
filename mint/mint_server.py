@@ -698,6 +698,13 @@ class MintServer(object):
         return [releases.Release(self, x) for x in self.releases.iterReleasesForProject(projectId, showUnpublished)]
 
     @private
+    def registerCommit(self, hostname, username, name, version):
+        projectId = self.getProjectIdByFQDN(hostname)
+        userId = self.getUserIdByName(username)
+        self.commits.new(projectId, time.time(), name, version, userId)
+        return True
+
+    @private
     def getCommitsForProject(self, projectId):
         return self.commits.getCommitsByProject(projectId)
 
