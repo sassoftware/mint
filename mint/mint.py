@@ -382,6 +382,8 @@ class _Method(xmlrpclib._Method):
             raise projects.DuplicateName()
         elif exceptionName == "ItemNotFound":
             raise database.ItemNotFound(exceptionArgs[0])
+        elif exceptionName == "FileMissing":
+            raise jobs.FileMissing(exceptionArgs[0])
         elif exceptionName == "MethodNotSupported":
             raise MethodNotSupported(exceptionArgs[0])
         elif exceptionName == "SearchTermsError":

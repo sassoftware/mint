@@ -12,7 +12,7 @@ class JobMissing(MintError):
 
 class FileMissing(MintError):
     def __str__(self):
-        return "the request file does not exist"
+        return "the requested file does not exist"
 
 class DuplicateJob(MintError):
     def __str__(self):
