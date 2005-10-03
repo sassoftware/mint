@@ -89,7 +89,7 @@ def process(repos, cfg, commitList, srcMap, pkgMap, grpMap, argv, otherArgs):
                 try:
                     rBuilderServer.registerCommit(hostname, user, t, vStr)
                 except Exception, e:
-                    sys.stderr.write(e)
+                    sys.stderr.write(str(e))
                     sys.exit(1)
             sys.exit(0)
         else:
@@ -97,8 +97,6 @@ def process(repos, cfg, commitList, srcMap, pkgMap, grpMap, argv, otherArgs):
             pid2, status = os.waitpid(pid2, 0)
             if status:
                 sys.stderr.write("rBuilderAction failed with code %d" % status)
-            else:
-                sys.stdout.write("rBuilderAction completed successfully")
             sys.exit(0)
 
 
