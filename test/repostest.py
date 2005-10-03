@@ -3,6 +3,7 @@
 # Copyright (c) 2004-2005 rpath, Inc.
 #
 
+from time import sleep
 import testsuite
 testsuite.setup()
 
@@ -46,6 +47,7 @@ class RepositoryTest(MintRepositoryHelper):
         assert(troveNames == ["testcase:source"])
 
         # test that the commits table was updated
+        sleep(1) # make sure that the commitaction runs
         assert(project.getCommits() == [('testcase:source', '1.0-1')])
 
     def testCook(self):

@@ -3,6 +3,7 @@
 #
 # All Rights Reserved
 #
+import os
 import testsuite
 import rephelp
 import sqlite3
@@ -51,6 +52,13 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
             "http://testuser:testpass@%s:%d/repos/%s/" % (domainname, self.getPort(), hostname)}
 
         return projectId
+        
+    def tearDown(self):
+        rephelp.RepositoryHelper.tearDown(self) 
+        try:
+            os.unlink(self.servers.getServer().serverRoot + "/mintdb")
+        except:
+            pass
 
     def setUp(self):
         rephelp.RepositoryHelper.setUp(self)
@@ -61,6 +69,3 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
 
         self.mintServer = mint_server.MintServer(self.mintCfg)
         self.db = self.mintServer.db
-
-#        self.versionTable = dbversion.VersionTable(self.db)
-#        self.db.commit()

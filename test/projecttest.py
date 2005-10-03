@@ -25,7 +25,7 @@ class ProjectTest(MintRepositoryHelper):
         assert(project.getDesc() == "Description")
         assert(project.getProjectUrl() == "http://example.com/")
         assert(project.getMembers() ==\
-            [[2, 'testuser', userlevels.OWNER]])
+            [[userId, 'testuser', userlevels.OWNER]])
 
         assert(project.hidden == 0)
         assert(project.external == 0)

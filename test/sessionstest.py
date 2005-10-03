@@ -34,16 +34,6 @@ class SessionTest(MintRepositoryHelper):
         # confirm that expired session went away
         d = st.load("abcdefg123456")
         assert(not d)
-    
-    def setUp(self):
-        rephelp.RepositoryHelper.setUp(self)
-        try:
-            os.unlink(self.reposDir + "/db")
-        except:
-            pass
-        self.db = sqlite3.connect(self.reposDir + "/db")
-        self.versionTable = dbversion.VersionTable(self.db)
-        self.db.commit()
 
 if __name__ == "__main__":
     testsuite.main()

@@ -180,7 +180,7 @@ class ApacheServer(ChildRepository):
         # write Mint configuration
         f = open("%s/mint.conf" % self.serverRoot, "w")
         print >> f, 'domainName localhost:%i' % self.port
-        print >> f, 'dbPath %s' % self.reposDir + '/mintdb'
+        print >> f, 'dbPath %s' % self.serverRoot + '/mintdb'
         print >> f, 'authDbPath %s' % self.reposDir + '/sqldb'
         print >> f, 'reposPath %s' % self.reposDir + '/repos/'
         print >> f, 'imagesPath %s' % self.reposDir + '/images/'
@@ -208,7 +208,6 @@ class ApacheServer(ChildRepository):
         shutil.rmtree(self.reposDir)
         os.mkdir(self.reposDir)
         self.createUser()
-        self.createMintUser()
         if self.serverpid != -1:
             return
 
@@ -226,19 +225,6 @@ class ApacheServer(ChildRepository):
 	    os.execv(args[0], args)
         else:
             pass
-
-    def createMintUser(self):
-        cfg = config.MintConfig()
-        cfg.read("%s/mint.conf" % self.serverRoot)
-        db = sqlite3.connect(self.reposDir + "/mintdb", timeout = 30000)
-        versionTable = dbversion.VersionTable(db)
-        usersTable = users.UsersTable(db, cfg)
-        usersTable.new(username="test",
-                       fullName="Test User",
-                       email="test@example.com",
-                       active = True)
-
-
 
     def stop(self):
         if self.serverpid != -1:
