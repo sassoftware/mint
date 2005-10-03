@@ -7,18 +7,18 @@
 SUBDIRS = repos admin docs
 
 kid_files = \
+	conaryCfg.kid		\
 	confirmEmail.kid	\
 	confirm.kid		\
 	editProject.kid		\
 	editRelease.kid		\
-	conaryCfg.kid		\
 	error.kid		\
 	forgotPassword.kid	\
 	frontPage.kid		\
+	joinRequest.kid		\
 	layout.kid		\
 	library.kid		\
 	mailingLists.kid	\
-	memberSettings.kid	\
 	members.kid		\
 	newProject.kid		\
 	newRelease.kid		\
@@ -30,6 +30,7 @@ kid_files = \
 	register_conf.kid	\
 	register.kid		\
 	register_reconf.kid	\
+	rejectJoinRequest.kid   \
 	release.kid		\
 	releases.kid		\
 	rss20.kid		\
@@ -38,9 +39,7 @@ kid_files = \
 	userInfo.kid		\
 	userSettings.kid	\
 	users.kid		\
-	joinRequest.kid		\
-	viewJoinRequest.kid	\
-	rejectJoinRequest.kid
+	viewJoinRequest.kid
 
 python_files = __init__.py
 
