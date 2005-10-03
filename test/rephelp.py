@@ -187,6 +187,8 @@ class ApacheServer(ChildRepository):
         print >> f, 'authRepoMap %s http://mintauth:mintpass@127.0.0.1:%d/conary/' % (self.name, self.port)
         print >> f, 'debugMode False'
         print >> f, 'sendNotificationEmails False'
+        print >> f, """commitAction %s/scripts/commitaction --repmap '%%(repMap)s' --build-label %%(buildLabel)s --module \'%s/mint/rbuilderaction.py --user %%%%(user)s --url http://localhost:%d/xmlrpc-private/'""" % (conaryPath, mintPath, self.port)
+            
         f.close()
 
     def __del__(self):

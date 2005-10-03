@@ -41,8 +41,12 @@ class RepositoryTest(MintRepositoryHelper):
         cfg = project.getConaryConfig()
         nc = netclient.NetworkRepositoryClient(cfg.repositoryMap)
 
+        # test that the source trove landed properly
         troveNames = nc.troveNames(versions.Label("test.localhost@rpl:devel"))
         assert(troveNames == ["testcase:source"])
+
+        # test that the commits table was updated
+        assert(project.getCommits() == [('testcase:source', '1.0-1')])
 
     def testCook(self):
         client, userId = self.quickMintUser("testuser", "testpass")
