@@ -31,7 +31,7 @@ python_files =			\
 	session.py		\
 	sessiondb.py		\
 	shimclient.py		\
-	statsaction.py		\
+	rbuilderaction.py		\
 	stats.py		\
 	userlevels.py		\
 	userlisting.py		\
