@@ -13,5 +13,6 @@ install:
 	for f in $(image_files); do \
                 install -m 644 $$f $(DESTDIR)$(contentdir)/images/$$f; \
         done
+	install -m 644 favicon/rpath-16x16-favicon.ico $(DESTDIR)$(contentdir)/images/
 
 include ../../../../Make.rules
