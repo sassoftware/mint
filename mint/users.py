@@ -437,7 +437,27 @@ class ProjectUsersTable(database.DatabaseTable):
         self.db.commit()
         return 0
 
+    def onlyOwner(self, projectId, userId):
+        cu = self.db.cursor()
+        # verify userId is an owner of the project.
+        r = cu.execute("SELECT level from ProjectUsers where projectId=? and userId=?", projectId, userId)
+        res = r.fetchall()
+        if (not bool(res)) or (res[0][0] != userlevels.OWNER):
+            return False
+        r = cu.execute("SELECT count(userId) FROM ProjectUsers WHERE projectId=? AND userId<>? and level=?", projectId, userId, userlevels.OWNER)
+        return not r.fetchone()[0]
+
+    def lastOwner(self, projectId, userId):
+        cu = self.db.cursor()
+        # check that there are developers
+        r = cu.execute("SELECT count(userId) FROM ProjectUsers WHERE projectId=? AND userId<>? and level=?", projectId, userId, userlevels.DEVELOPER)
+        if not r.fetchone()[0]:
+            return False
+        return self.onlyOwner(projectId, userId)
+
     def delete(self, projectId, userId):
+        if self.lastOwner(projectId, userId):
+            raise LastOwner()
         cu = self.db.cursor()
         cu.execute("DELETE FROM ProjectUsers WHERE projectId=? AND userId=?", projectId, userId)
         self.db.commit()

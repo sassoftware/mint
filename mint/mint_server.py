@@ -323,6 +323,14 @@ class MintServer(object):
         self._notifyUser('Added', self.getUser(userId), projects.Project(self,projectId)) 
         return True
 
+    @private
+    def lastOwner(self, projectId, userId):
+        return self.projectUsers.lastOwner(projectId, userId)
+
+    @private
+    def onlyOwner(self, projectId, userId):
+        return self.projectUsers.onlyOwner(projectId, userId)
+
     @requiresAuth
     @private
     def delMember(self, projectId, userId, notify=True):
@@ -426,6 +434,8 @@ class MintServer(object):
     @requiresAuth
     @private
     def setUserLevel(self, userId, projectId, level):
+        if self.projectUsers.onlyOwner(projectId, userId):
+            raise users.LastOwner()
         cu = self.db.cursor()
         cu.execute("""UPDATE ProjectUsers SET level=? WHERE userId=? and 
             projectId=?""", level, userId, projectId)
@@ -521,7 +531,7 @@ class MintServer(object):
             r = cu.next()
             if r[0]:
                 raise users.LastOwner
-        except database.StopIteration:
+        except StopIteration:
             pass
 
         self.membershipRequests.userAccountCanceled(userId)

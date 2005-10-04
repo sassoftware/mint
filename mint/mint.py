@@ -15,7 +15,7 @@ import jobs
 import projects
 import releases
 import users
-from mint_error import MintError, UnknownException
+from mint_error import MintError, UnknownException, PermissionDenied
 from searcher import SearchTermsError
 
 from deps import deps
@@ -400,6 +400,10 @@ class _Method(xmlrpclib._Method):
             raise jobs.DuplicateJob(exceptionArgs[0])
         elif exceptionName == "OpenError":
             raise repository.OpenError(exceptionArgs[0])
+        elif exceptionName == "PermissionDenied":
+            raise PermissionDenied(exceptionArgs[0])
+        elif exceptionName == "LastOwner":
+            raise users.LastOwner(exceptionArgs[0])
         else:
             raise UnknownException(exceptionName, exceptionArgs)
 

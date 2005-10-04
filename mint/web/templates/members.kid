@@ -69,17 +69,17 @@ from mint import userlevels
                 for userId, username, level in project.getMembers():
                     users[level].append((userId, username,))
 
-                lastOwner = len(users[userlevels.OWNER]) == 1 and len(users[userlevels.DEVELOPER]) > 0
+                lastOwner = project.lastOwner(auth.userId)
+                onlyOwner = project.onlyOwner(auth.userId)
 
                 ?>
                 <h3>Project Owners</h3>
                 <table border="0" cellspacing="0" cellpadding="0" class="memberstable">
                     <tr py:for="userId, username in sorted(users[userlevels.OWNER], key=lambda x: x[1])">
                         <th><a py:strip="not auth.authorized" href="${cfg.basePath}userInfo?id=${userId}">${username}</a></th>
-                        <td py:if="isOwner and not lastOwner and userId != auth.userId">
+                        <td py:if="isOwner and not onlyOwner">
                             <a href="demoteMember?userId=${userId}" class="option">Demote</a>
                         </td>
-                        <td py:if="isOwner and not lastOwner and userId == auth.userId"></td>
                         <td py:if="isOwner and not lastOwner">
                             <a href="delMember?id=${userId}" class="option">Delete</a>
                         </td>

@@ -156,6 +156,12 @@ class Project(database.TableObject):
     def addUserKey(self, username, keydata):
         return self.server.addUserKey(self.id, username, keydata)
 
+    def lastOwner(self, userId):
+        return self.server.lastOwner(self.id, userId)
+
+    def onlyOwner(self, userId):
+        return self.server.onlyOwner(self.id, userId)
+
     def orphan(self, mlbaseurl, mlpasswd):
         #Take care of mailing lists
         mlists = mailinglists.MailingListClient(mlbaseurl + 'xmlrpc/')

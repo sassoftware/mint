@@ -364,14 +364,6 @@ class ProjectHandler(WebHandler):
     @intFields(userId = None, level = None)
     @ownerOnly
     def editMember(self, auth, userId, level):
-        userDict = getUserDict(self.project.getMembers())
-        # if there is only one owner, and that
-        # owner is being changed to a non-owner, fail.
-        if len(userDict[userlevels.OWNER]) == 1 and \
-                userDict[userlevels.OWNER][0][0] == userId and\
-                level != userlevels.OWNER:
-            raise users.LastOwner
-
         self.project.updateUserLevel(userId, level)
         return self._redirect(self.basePath + "members")
 
@@ -390,10 +382,6 @@ class ProjectHandler(WebHandler):
     @ownerOnly
     def demoteMember(self, auth, userId):
         userDict = getUserDict(self.project.getMembers())
-        if len(userDict[userlevels.OWNER]) == 1 and \
-                userDict[userlevels.OWNER][0][0] == userId and\
-                level != userlevels.OWNER:
-            raise users.LastOwner
         for level in [userlevels.OWNER]:
             for user in userDict[level]:
                 if user[0] == userId:
@@ -404,14 +392,6 @@ class ProjectHandler(WebHandler):
     @intFields(id = None)
     @ownerOnly
     def delMember(self, auth, id):
-        userDict = getUserDict(self.project.getMembers())
-        # if there are developers, only one owner, and that
-        # owner is being deleted from the project, fail.
-        if len(userDict[userlevels.DEVELOPER]) > 0 and \
-           len(userDict[userlevels.OWNER]) == 1 and \
-           userDict[userlevels.OWNER][0][0] == id:
-            raise users.LastOwner
-
         self.project.delMemberById(id)
         if self.project.getMembers() == []:
             self.project.orphan(self.cfg.MailListBaseURL, self.cfg.MailListPass)
