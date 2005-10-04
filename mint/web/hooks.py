@@ -260,9 +260,8 @@ def conaryHandler(req, cfg, pathInfo):
         # XXX hack to override commitAction for foresight until foresight
         # switches to our mailing lists.
         if req.hostname == "foresight.rpath.org":
-            commitAction = '/usr/lib64/python2.4/site-packages/conary/commitaction --module "/usr/lib64/python2.4/site-packages/conary/changemail.py --user %(user)s --email desktop-commits@bizrace.com"'
+            commitAction = '/usr/lib64/python2.4/site-packages/conary/commitaction --module "/usr/lib/python2.4/site-packages/mint/rbuilderaction.py --user %%(user)s --url http://www.rpath.org/xmlrpc-private/" --module "/usr/lib64/python2.4/site-packages/conary/changemail.py --user %(user)s --email desktop-commits@bizrace.com"'
                                 
-
         if os.access(repositoryDir, os.F_OK):
             repositories[repHash] = netserver.NetworkRepositoryServer(
                                         repositoryDir,
