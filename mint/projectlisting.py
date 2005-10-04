@@ -35,7 +35,7 @@ desctrunclength = 300
 
 sqlbase = """ SELECT projectId, hostname, name, desc, timeModified FROM
         (SELECT projects.projectId as projectId, Projects.hostname as hostname, Projects.name as name, Projects.desc as desc,
-    IFNULL(MAX(Commits.timestamp), Projects.timeCreated) AS timeModified
+    IFNULL(MAX(Commits.timestamp), Projects.timeCreated) AS timeModified, timeCreated
         FROM
     Projects
         LEFT JOIN Commits ON
@@ -56,8 +56,8 @@ ordersql = {
     PROJECTNAME_DES: "LOWER(name) DESC",
     LASTMODIFIED_ASC: "timeModified ASC",
     LASTMODIFIED_DES: "timeModified DESC",
-#    CREATED_ASC: "Projects.timeCreated ASC",
-#    CREATED_DES: "Projects.timeCreated DESC",
+    CREATED_ASC: "timeCreated ASC",
+    CREATED_DES: "timeCreated DESC",
     NUMDEVELOPERS_ASC: NUM_DEVS_STRING+" ASC",
     NUMDEVELOPERS_DES: NUM_DEVS_STRING+" DESC",
 }
@@ -67,8 +67,8 @@ orderhtml = {
     PROJECTNAME_DES: "Project name in descending order",
     LASTMODIFIED_ASC: "Least recently modified",
     LASTMODIFIED_DES: "Most recently modified",
-#    CREATED_ASC:      "Oldest",
-#    CREATED_DES:      "Newest",
+    CREATED_ASC:      "Oldest",
+    CREATED_DES:      "Newest",
     NUMDEVELOPERS_ASC: "Fewest developers",
     NUMDEVELOPERS_DES: "Most developers",
 }
