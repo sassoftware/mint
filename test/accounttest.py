@@ -10,6 +10,7 @@ from mint_rephelp import MintRepositoryHelper
 from mint import userlevels
 from mint.mint_error import PermissionDenied
 from mint.users import LastOwner
+from mint.database import DuplicateItem
 
 class AccountTest(MintRepositoryHelper):
 
@@ -66,43 +67,50 @@ class AccountTest(MintRepositoryHelper):
         client = self.openMintClient()
         ownerClient, ownerId = self.quickMintUser("ownerAcct","foo")
         develClient, develId = self.quickMintUser("develAcct","foo")
+        readerClient, readerId = self.quickMintUser("readerAcct", "foo")
 
         projectId = ownerClient.newProject("Foo", "foo", "rpath.org")
         project = ownerClient.getProject(projectId)
 
-        assert(not project.lastOwner(ownerId))
-        assert(project.onlyOwner(ownerId))
+        for i in range(2):
+            assert(not project.lastOwner(ownerId))
+            assert(project.onlyOwner(ownerId))
 
-        try:
-            project.updateUserLevel(ownerId, userlevels.DEVELOPER)
-            self.fail("Project allowed demotion of single owner")
-        except LastOwner:
-            pass
+            try:
+                project.updateUserLevel(ownerId, userlevels.DEVELOPER)
+                self.fail("Project allowed demotion of single owner")
+            except LastOwner:
+                pass
 
-        project.addMemberById(develId, userlevels.DEVELOPER)
+            project.addMemberById(develId, userlevels.DEVELOPER)
 
-        assert(project.lastOwner(ownerId))
-        assert(not project.lastOwner(develId))
-        assert(not project.lastOwner(0))
+            assert(project.lastOwner(ownerId))
+            assert(not project.lastOwner(develId))
+            assert(not project.lastOwner(0))
 
-        try:
-            project.delMemberById(ownerId)
-            self.fail("Project allowed deletion of single owner in a project with developers")
-        except LastOwner:
-            pass
+            try:
+                project.delMemberById(ownerId)
+                self.fail("Project allowed deletion of single owner in a project with developers")
+            except LastOwner:
+                pass
 
-        try:
-            project.updateUserLevel(ownerId, userlevels.DEVELOPER)
-            self.fail("Project allowed demotion of single owner")
-        except LastOwner:
-            pass
+            try:
+                project.updateUserLevel(ownerId, userlevels.DEVELOPER)
+                self.fail("Project allowed demotion of single owner")
+            except LastOwner:
+                pass
 
-        user = ownerClient.getUser(ownerId)
-        try:
-            user.cancelUserAccount()
-            self.fail("Project allowed owner to cancel account while orphaning a project with developers")
-        except LastOwner:
-            pass
+            user = ownerClient.getUser(ownerId)
+            try:
+                user.cancelUserAccount()
+                self.fail("Project allowed owner to cancel account while orphaning a project with developers")
+            except LastOwner:
+                pass
+
+            try:
+                project.addMemberById(readerId, userlevels.USER)
+            except DuplicateItem:
+                pass
 
 if __name__ == "__main__":
     testsuite.main()
