@@ -82,7 +82,10 @@ class AccountTest(MintRepositoryHelper):
             except LastOwner:
                 pass
 
-            project.addMemberById(develId, userlevels.DEVELOPER)
+            try:
+                project.addMemberById(develId, userlevels.DEVELOPER)
+            except DuplicateItem:
+                pass
 
             assert(project.lastOwner(ownerId))
             assert(not project.lastOwner(develId))
