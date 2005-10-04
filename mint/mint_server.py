@@ -162,7 +162,7 @@ class MintServer(object):
                 port = 80
 
             authUrl = "%s://%s:%s@%s/repos/%s/" % (protocol, self.cfg.authUser, self.cfg.authPass,
-                                                   self.cfg.siteHost, project.getHostname())
+                                                   self.cfg.projectSiteHost, project.getHostname())
             authLabel = project.getLabel()
             authRepo = {versions.Label(authLabel).getHost(): authUrl}
 
@@ -205,7 +205,7 @@ class MintServer(object):
         
         
         project.addLabel(fqdn + "@%s" % self.cfg.defaultBranch,
-            "http://%s%s/repos/%s/" % (self.cfg.siteHost, self.cfg.basePath, hostname),
+            "http://%s%s/repos/%s/" % (self.cfg.projectSiteHost, self.cfg.basePath, hostname),
             self.cfg.authUser, self.cfg.authPass)
 
         self.projects.createRepos(self.cfg.reposPath, self.cfg.reposContentsPath,
