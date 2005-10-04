@@ -205,7 +205,7 @@ class MintServer(object):
         
         
         project.addLabel(fqdn + "@%s" % self.cfg.defaultBranch,
-            "http://%s%srepos/%s/" % (self.cfg.siteHost, self.cfg.basePath, hostname),
+            "http://%s%s/repos/%s/" % (self.cfg.siteHost, self.cfg.basePath, hostname),
             self.cfg.authUser, self.cfg.authPass)
 
         self.projects.createRepos(self.cfg.reposPath, self.cfg.reposContentsPath,
