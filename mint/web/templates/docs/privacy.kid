@@ -103,7 +103,7 @@
         <p>We may change this policy from time to time.  Any such changes
         will not make previously private personal information public,
         unless required by law.  A change to this privacy policy will
-        be posted at the following URL <a href="${cfg.basePath}legal?page=privacy">http://${siteHost}${cfg.basePath}legal?page=privacy</a>,
+        be posted at the following URL <a href="${cfg.basePath}/legal?page=privacy">http://${siteHost}${cfg.basePath}/legal?page=privacy</a>,
         and we will send email to active users notifying them of the change
         15 days prior to change, unless otherwise required by law or regulation.</p>
 
