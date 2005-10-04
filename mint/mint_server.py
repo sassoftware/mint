@@ -438,6 +438,8 @@ class MintServer(object):
     def setUserLevel(self, userId, projectId, level):
         if self.projectUsers.onlyOwner(projectId, userId) and (level == userlevels.DEVELOPER):
             raise users.LastOwner()
+        if level in userlevels.WRITERS:
+            self.deleteJoinRequest(projectId, userId)
         cu = self.db.cursor()
         cu.execute("""UPDATE ProjectUsers SET level=? WHERE userId=? and 
             projectId=?""", level, userId, projectId)
