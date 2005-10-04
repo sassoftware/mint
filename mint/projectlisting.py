@@ -33,7 +33,7 @@ desctrunclength = 300
 #"""
 
 
-sqlbase = """ SELECT hostname, name, desc, timeModified FROM
+sqlbase = """ SELECT projectId, hostname, name, desc, timeModified FROM
         (SELECT projects.projectId as projectId, Projects.hostname as hostname, Projects.name as name, Projects.desc as desc,
     IFNULL(MAX(Commits.timestamp), Projects.timeCreated) AS timeModified
         FROM

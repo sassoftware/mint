@@ -22,9 +22,9 @@ from mint.mint import timeDelta
         <div py:def="formatResults(resultset = [])" py:strip="True">
             <?python
                 formattedresults = [
-                    ('%sproject/%s/' % (cfg.basePath,resultset[0]), resultset[1]),
-                    resultset[2],
-                    timeDelta(resultset[3]),
+                    (resultset[0].getUrl(), resultset[2]),
+                    resultset[3],
+                    timeDelta(resultset[4]),
                 ]
             ?>
             ${resultRow(formattedresults)}

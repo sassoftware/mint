@@ -56,7 +56,7 @@
                 <h3>${user.getUsername()}'s projects:</h3>
                 <ul py:if="userProjects">
                     <li py:for="project, level in userProjects">
-                        <a href="${cfg.basePath}project/${project.getHostname()}/">${project.getName()}</a>
+                        <a href="${project.getUrl()}">${project.getName()}</a>
                         (${userlevels. names[level]})
                     </li>
                 </ul>

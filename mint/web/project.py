@@ -47,6 +47,20 @@ class ProjectHandler(WebHandler):
         except database.ItemNotFound:
             return self._404
 
+        # redirect endorsed (external) projects
+        # to the right url if accessed incorrectly,
+        # and vice-versa for internal (unendorsed) projects
+        if self.project.external:
+            if self.req.hostname != self.cfg.siteHost:
+                self.req.log_error("%s %s accessed incorrectly; referer: %s" % \
+                    (self.req.hostname, self.req.unparsed_uri, self.req.headers_in.get('referer', 'N/A')))
+                return self._redirector("http://" + self.cfg.siteHost + self.req.unparsed_uri)
+        else:
+            if self.req.hostname != self.cfg.projectSiteHost:
+                self.req.log_error("%s %s accessed incorrectly; referer: %s" % \
+                    (self.req.hostname, self.req.unparsed_uri, self.req.headers_in.get('referer', 'N/A')))
+                return self._redirector("http://" + self.cfg.projectSiteHost + self.req.unparsed_uri)
+
         self.userLevel = self.project.getUserLevel(self.auth.userId)
 
         #Take care of hidden projects
@@ -446,4 +460,3 @@ class ProjectHandler(WebHandler):
 
         writeRss(items = items, title = title, link = link, desc = desc)
         return apache.OK
-

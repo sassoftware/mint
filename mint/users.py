@@ -146,15 +146,12 @@ class UsersTable(database.KeyedTable):
         user = self.get(userId)
 
         confirm = confirmString()
-        if self.cfg.hostName:
-            confirmDomain = "%s.%s" % (self.cfg.hostName, self.cfg.domainName)
-        else:
-            confirmDomain = self.cfg.domainName
+
         message = "\n".join(["Your account %s on %s must have its new email address confirmed." % (user['username'], self.cfg.productName),
                              "",
                              "Please follow the link below to confirm your new address",
                              "",
-                             "http://%s/confirm?id=%s" % (confirmDomain, confirm),
+                             "http://%s/confirm?id=%s" % (self.cfg.siteHost, confirm),
                              "",
                              "Note that your account cannot be used until your email address has been confirmed.",
                              "",
@@ -190,11 +187,6 @@ class UsersTable(database.KeyedTable):
         except repository.netrepos.netauth.GroupAlreadyExists:
             raise GroupAlreadyExists
 
-        if self.cfg.hostName:
-            confirmDomain = "%s.%s" % (self.cfg.hostName, self.cfg.domainName)
-        else:
-            confirmDomain = self.cfg.domainName
-
         if self.cfg.sendNotificationEmails:
             message = "\n".join(["Thank you for your interest in %s!" % self.cfg.productName,
                                  "",
@@ -202,7 +194,7 @@ class UsersTable(database.KeyedTable):
                                  "",
                                  "However, before you can use it, you must confirm your email address using this link:",
                                  "",
-                                 "http://%s/confirm?id=%s" % (confirmDomain, confirm),
+                                 "http://%s/confirm?id=%s" % (self.cfg.siteHost, confirm),
                                  "",
                                  "Contact %s"%self.cfg.supportContactTXT,
                                  "if you need assistance."])

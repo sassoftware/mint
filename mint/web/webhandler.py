@@ -34,6 +34,7 @@ class WebHandler(object):
                               siteHost = self.siteHost,
                               toUrl = self.toUrl,
                               basePath = self.basePath,
+                              SITE = self.SITE,
                               **values)
         t.write(self.req, encoding = "utf-8", output = self.output)
 
@@ -56,6 +57,11 @@ class WebHandler(object):
         self.req.headers_out['Location'] = location
         return apache.HTTP_MOVED_PERMANENTLY
 
+    def _redirector(self, location):
+        def wrapper(*args, **kwargs):
+            return self._redirect(location)
+        return wrapper
+
     def _clearAuth(self):
         self.auth = users.Authorization()
         self.authToken = ('anonymous', 'anonymous')
@@ -71,7 +77,7 @@ class WebHandler(object):
                              "    %s" % newpw,
                              "",
                              "Please log in at http://%s.%s/ and change" %
-                             (self.cfg.hostName, self.cfg.domainName),
+                             (self.cfg.hostName, self.cfg.siteDomainName),
                              "this password as soon as possible."
                              ])
 

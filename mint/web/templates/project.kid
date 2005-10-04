@@ -9,7 +9,7 @@
     <div py:def="projectResourcesMenu" id="project" class="palette">
         <?python
             lastchunk = req.uri[req.uri.rfind('/')+1:]
-            projectUrl = "%sproject/%s" % (cfg.basePath, project.getHostname())
+            projectUrl = project.getUrl()
             isOwner = userLevel == userlevels.OWNER or auth.admin
         ?>
         <h3>Project Resources</h3>
@@ -78,7 +78,7 @@
 
             <p>If you are new to rBuilder Online, create
             your new account by using the
-            <a href="${cfg.basePath}register"><strong>new account</strong></a>
+            <a href="http://$SITE/register"><strong>new account</strong></a>
             link above.</p>
 
             <p>If you already have an account, use the above form to login.</p>
@@ -107,11 +107,11 @@
             <h3>My Projects</h3>
             <ul>
                 <li py:for="project, level in sorted(projectList, key = lambda x: x[0].getName())">
-                    <a href="${cfg.basePath}project/${project.getHostname()}/">
+                    <a href="${project.getUrl()}">
                         ${project.getName()}</a><br/>
                         ${userlevels.names[level]}
                         <span py:if="not level and project.listJoinRequests()">
-                            <a href="${cfg.basePath}project/${project.getHostname()}/members"><b style="color: red;">Requests Pending</b></a>
+                            <a href="${project.getUrl()}/members"><b style="color: red;">Requests Pending</b></a>
                         </span>
                 </li>
             </ul>

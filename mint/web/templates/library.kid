@@ -35,10 +35,10 @@ from mint import searcher
         </h3>
         <div id="browse_items" style="display: $display">
           <ul>
-            <li><a href="${cfg.basePath}projects">All Projects</a></li>
-            <li><a href="${cfg.basePath}projects?sortOrder=3">Most Active Projects</a></li>
-            <li><a href="${cfg.basePath}projects?sortOrder=7">Most Popular Projects</a></li>
-            <li py:if="auth.admin"><a href="${cfg.basePath}users">All Users</a></li>
+            <li><a href="http://$SITE/projects">All Projects</a></li>
+            <li><a href="http://$SITE/projects?sortOrder=3">Most Active Projects</a></li>
+            <li><a href="http://$SITE/projects?sortOrder=7">Most Popular Projects</a></li>
+            <li py:if="auth.admin"><a href="http://$SITE/users">All Users</a></li>
           </ul>
         </div>
     </div>
@@ -56,7 +56,7 @@ if auth.authorized:
             Search
         </h3>
           <div style="display: $display" id="search_items">
-            <form action="${cfg.basePath}search" method="get">
+            <form action="http://$SITE/search" method="get">
             <p>
                 <label>search type:</label><br/>
                 <select name="type">

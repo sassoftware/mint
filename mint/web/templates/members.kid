@@ -76,7 +76,7 @@ from mint import userlevels
                 <h3>Project Owners</h3>
                 <table border="0" cellspacing="0" cellpadding="0" class="memberstable">
                     <tr py:for="userId, username in sorted(users[userlevels.OWNER], key=lambda x: x[1])">
-                        <th><a py:strip="not auth.authorized" href="${cfg.basePath}userInfo?id=${userId}">${username}</a></th>
+                        <th><a py:strip="not auth.authorized" href="http://$SITE/userInfo?id=${userId}">${username}</a></th>
                         <td py:if="isOwner and not onlyOwner">
                             <a href="demoteMember?userId=${userId}" class="option">Demote</a>
                         </td>
@@ -96,7 +96,7 @@ from mint import userlevels
 
                 <table border="0" cellspacing="0" cellpadding="0" class="memberstable">
                     <tr py:for="userId, username in sorted(users[userlevels.DEVELOPER], key=lambda x: x[1])">
-                        <th><a py:strip="not auth.authorized" href="${cfg.basePath}userInfo?id=${userId}">${username}</a></th>
+                        <th><a py:strip="not auth.authorized" href="http://$SITE/userInfo?id=${userId}">${username}</a></th>
                         <td py:if="isOwner">
                             <a href="promoteMember?userId=${userId}" class="option">Promote</a>
                         </td>
@@ -108,7 +108,7 @@ from mint import userlevels
                     <h3>Requestors</h3>
                     <table border="0" cellspacing="0" cellpadding="0" class="memberstable">
                         <tr py:for="userId, username in reqList">
-				<th><a href="${cfg.basePath}userInfo?id=${userId}">${username}</a></th>
+				<th><a href="http://$SITE/userInfo?id=${userId}">${username}</a></th>
                             <td>
                                 <a href="viewJoinRequest?userId=${userId}"
                                    class="option" style="position:relative;"

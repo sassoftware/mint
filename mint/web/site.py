@@ -34,6 +34,13 @@ class SiteHandler(WebHandler):
         path = normPath(context['cmd'])
         cmd = path.split('/')[1]
        
+        # if someone attempts to access the SITE from something other than
+        # the site host, redirect.
+        if self.req.hostname != self.cfg.siteHost:
+            self.req.log_error("%s %s accessed incorrectly; referer: %s" % \
+                (self.req.hostname, self.req.unparsed_uri, self.req.headers_in.get('referer', 'N/A')))
+            return self._redirector("http://" + self.cfg.siteHost + self.req.unparsed_uri)
+       
         if not cmd:
             return self._frontPage
         try:
@@ -52,6 +59,10 @@ class SiteHandler(WebHandler):
         news = self.client.getNews()
         self._write("frontPage", news = news, newsLink = self.client.getNewsLink(), firstTime=self.session.get('firstTimer', False))
         return apache.OK
+        
+    @strFields(toUrl = None, hostname = None)
+    def cloneCookie(self, auth, toUrl, hostname):
+        return self._redirect("http://%s/?toUrl=%s;pysid=%s" % (hostname, toUrl, self.session._sid))
         
     @redirectHttps
     def register(self, auth):
@@ -181,6 +192,10 @@ class SiteHandler(WebHandler):
                 # table.
                 c = self.session.make_cookie()
                 self.req.err_headers_out.add('Set-Cookie', str(c))
+
+                # and again for the project hostname
+                c.domain = "." + self.cfg.projectDomainName
+                self.req.err_headers_out.add('Set-Cookie', str(c))
                 self.req.err_headers_out.add('Cache-Control', 'no-cache="set-cookie"')
                 
                 return self._redirectHttp(unquote(to))
@@ -211,6 +226,9 @@ class SiteHandler(WebHandler):
             sortOrder = self.session.get('projectsSortOrder', 0)
         self.session['projectsSortOrder'] = sortOrder
         results, count = self.client.getProjects(sortOrder, limit, offset)
+        for i, x in enumerate(results[:]):
+            results[i][0] = self.client.getProject(x[0])
+
         self._write("projects", sortOrder=sortOrder, limit=limit, offset=offset, results=results, count=count)
         return apache.OK
 
@@ -327,10 +345,10 @@ class SiteHandler(WebHandler):
             error.append("You must supply a project hostname")
         if not errors:
             try:
-                #attempt to create the project
+                # attempt to create the project
                 projectId = self.client.newProject(title, hostname, 
-                                self.cfg.domainName, projecturl, blurb)
-                #Now create the mailing lists
+                    self.cfg.projectDomainName, projecturl, blurb)
+                # now create the mailing lists
                 if self.cfg.EnableMailLists and not errors:
                     if not self._createProjectLists(auth=auth, 
                                                     projectName=hostname,
@@ -422,6 +440,9 @@ class SiteHandler(WebHandler):
     
     def _projectSearch(self, terms, modified, limit, offset):
         results, count = self.client.getProjectSearchResults(terms, modified, limit, offset)
+        for i, x in enumerate(results[:]):
+            results[i][0] = self.client.getProject(x[0])
+
         self._write("searchResults", searchType = "Projects", terms = terms, results = results,
                                      count = count, limit = limit, offset = offset,
                                      modified = modified)

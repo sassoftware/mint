@@ -33,9 +33,9 @@
                 formattedresults = []
                 if searchType == "Projects":
                     formattedresults = [
-                        ('%sproject/%s/' % (cfg.basePath,resultset[0]), resultset[1]),
-                        resultset[2],
-                        timeDelta(resultset[3])
+                        (resultset[0].getUrl(), resultset[2]),
+                        resultset[3],
+                        timeDelta(resultset[4])
                     ]
                 elif searchType == "Users":
                     formattedresults = [

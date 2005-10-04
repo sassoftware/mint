@@ -209,7 +209,7 @@ def conaryHandler(req, cfg, pathInfo):
     paths = normPath(req.uri).split("/")
     if paths[1] == "repos":
         # test suite hook: lop off any port specified in cfg file
-        domainName = cfg.domainName.split(":")[0]
+        domainName = cfg.projectDomainName.split(":")[0]
         repName = paths[2] + "." + domainName
     else:
         repName = req.hostname

@@ -173,6 +173,12 @@ class Project(database.TableObject):
         mlists = mailinglists.MailingListClient(mlbaseurl + 'xmlrpc/')
         mlists.adopt_lists(auth, mlpasswd, self.getName())
 
+    def getUrl(self):
+        if self.external: # we control all external projects, so use externalSiteHost
+            return "http://%s%s/project/%s/" % (self.server._cfg.externalSiteHost, self.server._cfg.basePath, self.hostname)
+        else:
+            return "http://%s%s/project/%s/" % (self.server._cfg.projectSiteHost, self.server._cfg.basePath, self.hostname)
+            
 
 class ProjectsTable(database.KeyedTable):
     name = 'Projects'
@@ -322,7 +328,7 @@ class ProjectsTable(database.KeyedTable):
                         The project's description
                         The date last modified.
         """
-        columns = ['hostname', 'name', 'desc',
+        columns = ['projectId', 'hostname', 'name', 'desc',
                    """IFNULL(
                        (SELECT MAX(Commits.timestamp) FROM Commits
                        WHERE Commits.projectId=Projects.projectId),

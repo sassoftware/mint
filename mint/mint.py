@@ -433,6 +433,8 @@ def upstream(version):
     return version.trailingRevision().asString().split('-')[0]
 
 def timeDelta(t):
+    if not t:
+        return "Never"
     curTime = time.time()
     timeOffset = time.timezone + 3600 * (time.localtime()[-1])
     days = int((curTime - timeOffset) / 86400) - int((t - timeOffset) / 86400)

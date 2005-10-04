@@ -35,7 +35,9 @@ class MintConfig(ConfigFile):
         'tmpPath'           : '/srv/mint/tmp/',
         'imagesPath'        : '/srv/mint/images/',
         'logPath'           : '/srv/mint/logs/',
-        'domainName'        : 'rpath.org',
+        'siteDomainName'    : 'rpath.com',
+        'projectDomainName' : 'rpath.org',
+        'externalDomainName': 'rpath.com',
         'hostName'          : None, # optional domain name for main site
         'SSL'               : [ BOOLEAN, False ],
         'adminMail'         : 'mint@rpath.org',
@@ -46,7 +48,7 @@ class MintConfig(ConfigFile):
         'EnableMailLists'   : [ BOOLEAN, False ],
         'MailListBaseURL'   : 'http://lists.rpath.org/mailman/',
         'MailListPass'      : 'adminpass',
-        'basePath'          : '/',
+        'basePath'          : '',
         'cookieSecretKey'   : None,
         'bugsEmail'     : None,
         'bugsEmailName' : 'rBuilder Bugs',
@@ -81,15 +83,19 @@ class MintConfig(ConfigFile):
             self.setValue('MailListBaseURL', self.MailListBaseURL + '/')
 
         if self.hostName:
-            self.siteHost = self.hostName + "." + self.domainName
+            self.siteHost = self.hostName + "." + self.siteDomainName
+            self.projectSiteHost = self.hostName + "." + self.projectDomainName
+            self.externalSiteHost = self.hostName + "." + self.externalDomainName
         else:
-            self.siteHost = self.domainName
+            self.siteHost = self.siteDomainName
+            self.projectSiteHost = self.projectDomainName
+            self.externalSiteHost = self.externalDomainName
 
         if not self.reposContentsPath:
             self.reposContentsPath = self.reposPath
 
         if not self.commitEmail:
-            self.commitEmail = "rBuilder@%s" % self.domainName
+            self.commitEmail = "rBuilder@%s" % self.siteDomainName
 
         if not self.bugsEmail:
-            self.bugsEmail = "rBuilder-tracebacks@%s" % self.domainName
+            self.bugsEmail = "rBuilder-tracebacks@%s" % self.siteDomainName

@@ -15,7 +15,7 @@ from mod_python.util import FieldStorage
 
 from web import fields
 
-from mint.session import SqlSession
+from mint.session import SqlSession, COOKIE_NAME
 from mint import database
 from mint import mint_error
 from mint import mint_server
@@ -62,6 +62,7 @@ class MintApp(WebHandler):
             self.output = 'xhtml'
 
         self.req.content_type = self.content_type
+        self.fields = dict(FieldStorage(self.req))
         
         self.basePath = normPath(self.cfg.basePath)
 
@@ -79,21 +80,42 @@ class MintApp(WebHandler):
         anonToken = ('anonymous', 'anonymous')
         self.client = shimclient.ShimMintClient(self.cfg, anonToken)
 
+        # if we are passed a pysid, set the cookie and redirect to the toUrl
+        if COOKIE_NAME in self.fields and 'toUrl' in self.fields:
+            if self.cfg.cookieSecretKey:
+                c = Cookie.SignedCookie(COOKIE_NAME, self.fields.get(COOKIE_NAME),
+                                        secret = self.cfg.cookieSecretKey,
+                                        domain = self.req.hostname)
+            else:
+                c = Cookie.Cookie(COOKIE_NAME,
+                        self.fields.get(COOKIE_NAME),
+                        domain = self.req.hostname)
+
+            self.req.err_headers_out.add('Set-Cookie', str(c))
+            self.req.err_headers_out.add('Cache-Control', 'no-cache="set-cookie"')
+            return self._redirect(unquote(self.fields.get('toUrl')))
+
+        
         # prepare a new session
         sessionClient = shimclient.ShimMintClient(self.cfg, (self.cfg.authUser, self.cfg.authPass))
         self.session = SqlSession(self.req, sessionClient,
             secret = self.cfg.cookieSecretKey,
             timeout = 86400, # XXX timeout of one day; should it be configurable?
-            domain = self.cfg.domainName,
+            domain = self.cfg.siteDomainName,
             lock = False)
-        
+
         # default to anonToken if the current session has no authToken
         self.authToken = self.session.get('authToken', anonToken)
-       
+ 
         # open up a new client with the retrieved authToken
         self.client = shimclient.ShimMintClient(self.cfg, self.authToken)
         self.auth = self.client.checkAuth()
-        
+ 
+        # redirect to master site to clone cookie
+        if self.session._new and self.req.hostname != self.cfg.siteHost:
+            redir = "http://" + self.cfg.siteHost + "/cloneCookie?toUrl=%s;hostname=%s" % (quote(self.req.unparsed_uri), self.req.hostname)
+            return self._redirect(redir)
+
         if self.auth.authorized:
             self.user = self.client.getUser(self.auth.userId)
             self.projectList = self.client.getProjectsByMember(self.auth.userId)
@@ -133,22 +155,22 @@ class MintApp(WebHandler):
         dots = fullHost.split('.')
         hostname = dots[0]
 
-        if self.cfg.hostName:
-            siteHost = "%s.%s" % (self.cfg.hostName, self.cfg.domainName)
-        else:
-            siteHost = self.cfg.domainName
+       
         if hostname not in mint_server.reservedHosts and hostname != self.cfg.hostName:
             try:
                 project = self.client.getProjectByHostname(hostname)
             except:
                 raise Redirect(self.cfg.defaultRedirect)
             else:
-                raise Redirect("%s://%s%sproject/%s/" % (protocol, siteHost, self.cfg.basePath, hostname))
+                if project.external: # "external" projects are endorsed by us, so use siteHost
+                    raise Redirect("%s://%s%sproject/%s/" % (protocol, self.cfg.siteHost, self.cfg.basePath, hostname))
+                else:
+                    raise Redirect("%s://%s%sproject/%s/" % (protocol, self.cfg.projectSiteHost, self.cfg.basePath, hostname))
 
-        self.siteHost = siteHost
-        self.fields = dict(FieldStorage(self.req))
+        self.siteHost = self.cfg.siteHost
+        self.SITE = self.cfg.siteHost + self.cfg.basePath
         
-        if self.cfg.hostName and fullHost == self.cfg.domainName:
+        if self.cfg.hostName and fullHost == self.cfg.siteDomainName:
             raise Redirect(self.cfg.defaultRedirect)
         
         # mapping of url regexps to handlers
@@ -170,7 +192,8 @@ class MintApp(WebHandler):
             'projectList':      self.projectList,
             'req':              self.req,
             'session':          self.session,
-            'siteHost':         self.siteHost,
+            'siteHost':         self.cfg.siteHost,
+            'SITE':             self.SITE,
             'toUrl':            self.toUrl,
             'basePath':         self.basePath,
             'project':          None,

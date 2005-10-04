@@ -169,10 +169,10 @@ class MintServer(object):
             reposPath = os.path.join(self.cfg.reposPath, project.getFQDN())
             tmpPath = os.path.join(reposPath, "tmp")
             
-            # handle non-standard ports specified on cfg.domainName,
+            # handle non-standard ports specified on cfg.projectDomainName,
             # most likely just used by the test suite
-            if ":" in self.cfg.domainName:
-                port = int(self.cfg.domainName.split(":")[1])
+            if ":" in self.cfg.projectDomainName:
+                port = int(self.cfg.projectDomainName.split(":")[1])
      
             server = netserver.NetworkRepositoryServer(reposPath, tmpPath, '', project.getFQDN(), authRepo)
             repo = shimclient.ShimNetClient(server, protocol, port, (self.cfg.authUser, self.cfg.authPass), authRepo)
