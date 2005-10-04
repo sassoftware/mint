@@ -47,7 +47,12 @@ class RepositoryTest(MintRepositoryHelper):
         assert(troveNames == ["testcase:source"])
 
         # test that the commits table was updated
-        sleep(1) # make sure that the commitaction runs
+        # give some time for the commit action to run
+        while True:
+            sleep(0.1) 
+            if project.getCommits() != []:
+                break
+                
         assert(project.getCommits() == [('testcase:source', '1.0-1')])
 
     def testCook(self):
