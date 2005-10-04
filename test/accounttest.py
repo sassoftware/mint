@@ -72,6 +72,9 @@ class AccountTest(MintRepositoryHelper):
         projectId = ownerClient.newProject("Foo", "foo", "rpath.org")
         project = ownerClient.getProject(projectId)
 
+        project.updateUserLevel(ownerId, userlevels.USER)
+        project.updateUserLevel(ownerId, userlevels.OWNER)
+
         for i in range(2):
             assert(not project.lastOwner(ownerId))
             assert(project.onlyOwner(ownerId))

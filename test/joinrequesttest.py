@@ -64,7 +64,28 @@ class JoinRequestTest(MintRepositoryHelper):
         project.addMemberByName('member', userlevels.OWNER)
         # request should no longer be present
         assert(not client.userHasRequested(projectId, userId))
-        
+
+    def testUserEffects(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        projectId = client.newProject("Foo", "foo", "rpath.org")
+
+        project = client.getProject(projectId)
+
+        project.delMemberById(userId)
+        project.addMemberById(userId, userlevels.USER)
+
+        client.setJoinReqComments(projectId, userId, '')
+
+        # request should now be present. watching a project should not
+        # preclude being allowed to join
+        assert(client.userHasRequested(projectId, userId))
+
+        project.updateUserLevel(userId, userlevels.OWNER)
+
+        # request should no longer be present. updating user level to a
+        # writing member status should clear a join request
+        assert(not client.userHasRequested(projectId, userId))
+
     def testCancelAcctEffects(self):
         client, userId = self.quickMintUser("testuser", "testpass")
         projectId = client.newProject("Foo", "foo", "rpath.org")
