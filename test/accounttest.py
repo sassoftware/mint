@@ -72,6 +72,8 @@ class AccountTest(MintRepositoryHelper):
         projectId = ownerClient.newProject("Foo", "foo", "rpath.org")
         project = ownerClient.getProject(projectId)
 
+        assert(not project.lastOwner(ownerId))
+
         project.updateUserLevel(ownerId, userlevels.USER)
         project.updateUserLevel(ownerId, userlevels.OWNER)
 
@@ -117,6 +119,8 @@ class AccountTest(MintRepositoryHelper):
                 project.addMemberById(readerId, userlevels.USER)
             except DuplicateItem:
                 pass
+
+            project.delMemberById(develId)
 
 if __name__ == "__main__":
     testsuite.main()
