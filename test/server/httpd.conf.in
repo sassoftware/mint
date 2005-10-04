@@ -46,6 +46,7 @@ MaxRequestsPerChild  0
 NameVirtualHost *:@PORT@
 
 Listen 127.0.0.1:@PORT@
+Listen 127.0.0.5:@PORT@
 
 # ServerAdmin: Your address, where problems with the server should be
 # e-mailed.  This address appears on some server-generated pages, such
@@ -63,6 +64,7 @@ DocumentRoot "@DOCROOT@"
 PythonPath "['@MINTPATH@', '@CONARYPATH@'] + sys.path"
 <VirtualHost *:@PORT@>
     ServerName localhost
+    ServerAlias 127.0.0.5
     Alias / "@DOCROOT@/mint.conf/"
     <Location />
         AddHandler python-program .conf

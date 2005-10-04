@@ -179,7 +179,7 @@ class ApacheServer(ChildRepository):
 
         # write Mint configuration
         f = open("%s/mint.conf" % self.serverRoot, "w")
-        print >> f, 'siteDomainName localhost:%i' % self.port
+        print >> f, 'siteDomainName 127.0.0.5:%i' % self.port
         print >> f, 'projectDomainName localhost:%i' % self.port
         print >> f, 'externalDomainName localhost:%i' % self.port
 
@@ -190,7 +190,7 @@ class ApacheServer(ChildRepository):
         print >> f, 'authRepoMap %s http://mintauth:mintpass@127.0.0.1:%d/conary/' % (self.name, self.port)
         print >> f, 'debugMode False'
         print >> f, 'sendNotificationEmails False'
-        print >> f, """commitAction %s/scripts/commitaction --repmap '%%(repMap)s' --build-label %%(buildLabel)s --module \'%s/mint/rbuilderaction.py --user %%%%(user)s --url http://localhost:%d/xmlrpc-private/'""" % (conaryPath, mintPath, self.port)
+        print >> f, """commitAction %s/scripts/commitaction --repmap '%%(repMap)s' --build-label %%(buildLabel)s --module \'%s/mint/rbuilderaction.py --user %%%%(user)s --url http://127.0.0.5:%d/xmlrpc-private/'""" % (conaryPath, mintPath, self.port)
             
         f.close()
 

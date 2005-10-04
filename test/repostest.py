@@ -49,7 +49,7 @@ class RepositoryTest(MintRepositoryHelper):
         # test that the commits table was updated
         # give some time for the commit action to run
         while True:
-            sleep(0.1) 
+            sleep(0.1)
             if project.getCommits() != []:
                 break
                 
