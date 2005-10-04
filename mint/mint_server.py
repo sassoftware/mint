@@ -253,8 +253,10 @@ class MintServer(object):
     @requiresAuth
     def setJoinReqComments(self, projectId, userId, comments):
         # only add if user is already a member of project
-        if userId in [x[0] for x in self.getMembersByProjectId(projectId)]:
-            return
+        memberList = self.getMembersByProjectId(projectId)
+        if userId in [x[0] for x in memberList]:
+            if (userId, userlevels.USER) not in [(x[0], x[2]) for x in memberList]:
+                return
         if self.cfg.sendNotificationEmails and \
                not self.membershipRequests.userHasRequested(projectId, userId):
             projectName = self.getProject(projectId)['hostname']
@@ -434,7 +436,7 @@ class MintServer(object):
     @requiresAuth
     @private
     def setUserLevel(self, userId, projectId, level):
-        if self.projectUsers.onlyOwner(projectId, userId):
+        if self.projectUsers.onlyOwner(projectId, userId) and (level == userlevels.DEVELOPER):
             raise users.LastOwner()
         cu = self.db.cursor()
         cu.execute("""UPDATE ProjectUsers SET level=? WHERE userId=? and 
