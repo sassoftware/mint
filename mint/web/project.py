@@ -29,7 +29,8 @@ from mint.users import sendMailWithChecks
 from mint.releases import RDT_STRING, RDT_BOOL, RDT_INT
 
 def getUserDict(members):
-    users = { userlevels.DEVELOPER: [],
+    users = { userlevels.USER: [],
+              userlevels.DEVELOPER: [],
               userlevels.OWNER: [], }
     for userId, username, level in members:
         users[level].append((userId, username,))
@@ -317,6 +318,26 @@ class ProjectHandler(WebHandler):
         self.project.addMemberByName(username, level)
         return self._redirect(self.basePath + "members")
 
+    @requiresAuth
+    def watch(self, auth):
+        #some kind of check to make sure the user's not a member
+        if self.userLevel == userlevels.NONMEMBER:
+            self.project.addMemberByName(auth.username, userlevels.USER)
+        return self._redirect(self.basePath)
+
+    @requiresAuth
+    @boolFields(confirmed=False)
+    def unwatch(self, auth, confirmed):
+        if confirmed:
+            if self.userLevel == userlevels.USER:
+                self.project.delMemberById(auth.userId)
+            return self._redirect(self.basePath)
+        else:
+            self._write("confirm", message = "Are you sure you want to remove this project from your watch list?",
+                yesLink = "unwatch?confirmed=1",
+                noLink = "/")
+            return apache.OK
+
     @strFields(comments = '')
     @intFields(keepReq = None)
     @requiresAuth
@@ -385,10 +406,11 @@ class ProjectHandler(WebHandler):
     @ownerOnly
     def promoteMember(self, auth, userId):
         userDict = getUserDict(self.project.getMembers())
-        for level in [userlevels.DEVELOPER]:
+        for level in [userlevels.DEVELOPER, userlevels.USER]:
             for user in userDict[level]:
                 if user[0] == userId:
-                    self.project.updateUserLevel(userId, level-1)
+                    levelidx = userlevels.LEVELS.index(level)
+                    self.project.updateUserLevel(userId, userlevels.LEVELS[levelidx - 1])
                     return self._redirect(self.basePath + "members")
         return self._redirect(self.basePath + "members")
 
@@ -396,10 +418,11 @@ class ProjectHandler(WebHandler):
     @ownerOnly
     def demoteMember(self, auth, userId):
         userDict = getUserDict(self.project.getMembers())
-        for level in [userlevels.OWNER]:
+        for level in [userlevels.OWNER, userlevels.DEVELOPER]:
             for user in userDict[level]:
                 if user[0] == userId:
-                    self.project.updateUserLevel(userId, level+1)
+                    levelidx = userlevels.LEVELS.index(level)
+                    self.project.updateUserLevel(userId, userlevels.LEVELS[levelidx + 1])
                     return self._redirect(self.basePath + "members")
         return self._redirect(self.basePath + "members")
 

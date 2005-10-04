@@ -320,9 +320,9 @@ class MintServer(object):
         self.projectUsers.new(projectId, userId, level)
         repos = self._getProjectRepo(project)
         repos.addUserByMD5(project.getLabel(), username, salt, password)
-        repos.addAcl(project.getLabel(), username, None, None, True, False, level == userlevels.OWNER)
+        repos.addAcl(project.getLabel(), username, None, None, level in userlevels.WRITERS, False, level == userlevels.OWNER)
 
-        self._notifyUser('Added', self.getUser(userId), projects.Project(self,projectId)) 
+        self._notifyUser('Added', self.getUser(userId), projects.Project(self,projectId), level)
         return True
 
     @private
@@ -346,10 +346,11 @@ class MintServer(object):
             self._notifyUser('Removed', user, project)
 
     def _notifyUser(self, action, user, project, userlevel=None):
+        userlevelname = ((userlevel >=0) and userlevels.names[userlevel] or 'Unknown')
         actionText = {'Removed': "has been removed from the following project:",
-            'Added': "has been added to the following project:",
+            'Added': "has been added to the following project as %s:" % userlevelname,
             'Changed': "has had its current access level changed to %s on the following project:" % \
-                ((userlevel >=0) and userlevels.names[userlevel] or 'Unknown')
+                userlevelname
         }
         greeting = "Hello,"
         message = "Your %s account: %s\n" % (self.cfg.productName, user['username'])
@@ -438,6 +439,12 @@ class MintServer(object):
     def setUserLevel(self, userId, projectId, level):
         if self.projectUsers.onlyOwner(projectId, userId) and (level == userlevels.DEVELOPER):
             raise users.LastOwner()
+        #update the level on the project
+        username = self.users.getUsername(userId)
+        project = projects.Project(self, projectId)
+        repos = self._getProjectRepo(project)
+        repos.editAcl(project.getLabel(), username, "ALL", None, None, None, level in userlevels.WRITERS, False, level == userlevels.OWNER)
+        #Ok, now update the mint db
         if level in userlevels.WRITERS:
             self.deleteJoinRequest(projectId, userId)
         cu = self.db.cursor()

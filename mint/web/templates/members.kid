@@ -63,8 +63,11 @@ from mint import userlevels
             <div class="pad">
                 <h2>${project.getName()}<br />Memberships</h2>
                 <?python
-                users = { userlevels.DEVELOPER: [],
-                          userlevels.OWNER: [], }
+                users = {
+                          userlevels.OWNER: [], 
+                          userlevels.DEVELOPER: [],
+                          userlevels.USER: [],
+                        }
 
                 for userId, username, level in project.getMembers():
                     users[level].append((userId, username,))
@@ -98,6 +101,9 @@ from mint import userlevels
                     <tr py:for="userId, username in sorted(users[userlevels.DEVELOPER], key=lambda x: x[1])">
                         <th><a py:strip="not auth.authorized" href="http://$SITE/userInfo?id=${userId}">${username}</a></th>
                         <td py:if="isOwner">
+                            <a href="demoteMember?userId=${userId}" class="option">Demote</a>
+                        </td>
+                        <td py:if="isOwner">
                             <a href="promoteMember?userId=${userId}" class="option">Promote</a>
                         </td>
                         <td py:if="isOwner"><a href="delMember?id=${userId}" class="option">Delete</a></td>
@@ -117,6 +123,23 @@ from mint import userlevels
                         </tr>
                     </table>
 		</div>
+                <div py:if="isOwner" py:strip="True">
+                <h3>Users watching this project</h3>
+                <table border="0" cellspacing="0" cellpadding="0" class="memberstable">
+                    <tr py:for="userId, username in sorted(users[userlevels.USER], key=lambda x: x[1])">
+                        <th><a py:strip="not auth.authorized" href="${cfg.basePath}userInfo?id=${userId}">${username}</a></th>
+                        <td py:if="isOwner">
+                            <a href="promoteMember?userId=${userId}" class="option">Promote</a>
+                        </td>
+                    </tr>
+                    <tr><td py:if="not users[userlevels.USER]">No users are watching this project</td></tr>
+                </table>
+                </div>
+                <h3 py:if="not isOwner">
+                    <div py:if="not users[userlevels.USER]" py:strip="True">There are no users watching this project</div>
+                    <div py:if="len(users[userlevels.USER]) == 1" py:strip="True">There is one user watching this project</div>
+                    <div py:if="len(users[userlevels.USER]) > 1" py:strip="True">There are ${len(users[userlevels.USER])} users watching this project</div>
+                </h3>
             </div>
         </td>
         ${projectsPane()}        

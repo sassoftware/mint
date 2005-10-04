@@ -69,28 +69,31 @@ from mint.mint import upstream
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="${basePath}conaryCfg">add to my conary setup</a>
+                                    <a href="${basePath}conaryCfg">Add to my conary setup</a>
                                 </li>
+                                <li py:if="auth.authorized and userLevel == userlevels.NONMEMBER">
+                                    <a href="${basePath}watch">Watch this project</a>
+                                </li>
+                                <li py:if="userLevel == userlevels.USER">
+                                    <a href="${basePath}unwatch">Stop watching this project</a>
+                                </li>
+                                <div py:strip="True" py:if="not project.external">
+                                    <li py:if="isDeveloper"><a href="resign">Resign from this project</a></li>
+                                    <li py:if="auth.authorized and not isOwner and not isDeveloper and memberList">
+                                        <a py:if="not userHasReq" href="joinRequest">Request to join this project</a>
+                                        <a py:if="userHasReq" href="joinRequest">Modify your comments to a pending join request</a>
+                                    </li>
+                                    <li py:if="not memberList">
+                                        <a py:if="auth.authorized" href="${basePath}adopt">Adopt this project</a>
+                                        <span py:strip="True" py:if="not auth.authorized">Log in to adopt this project</span>
+                                    </li>
+                                    <li py:if="not auth.authorized">
+                                        Log in to:
+                                            <li>Watch this project</li>
+                                            <li>Request to join this project</li>
+                                    </li>
+                                </div>
                             </ul>
-                            
-                            <div py:strip="True" py:if="not project.external">
-                                <hr py:if="isDeveloper or not memberList or bool(auth.authorized) ^ bool(isOwner)" />
-                                <p py:if="isDeveloper">
-                                    <em class="resign">You are a developer of this project.</em>
-                                    <a href="resign">Resign</a>
-                                </p>
-                                <p py:if="auth.authorized and not isOwner and not isDeveloper and memberList">
-                                    <em py:if="not userHasReq" class="resign">You are not a member of this project.</em>
-                                    <em py:if="userHasReq" class="resign">Your request to join this project is pending.</em>
-                                    <a py:if="not userHasReq" href="joinRequest">Request to join</a>
-                                    <a py:if="userHasReq" href="joinRequest">Modify your comments</a>
-                                </p>
-                                <p py:if="not memberList">
-                                    <em class="resign">This project is orphaned.</em>
-                                    <a py:if="auth.authorized" href="${basePath}adopt">Adopt this project</a>
-                                    <span py:strip="True" py:if="not auth.authorized">Log in to adopt this project.</span>
-                                </p>
-                            </div>
                         </div>
                     </td>
                     ${projectsPane()}

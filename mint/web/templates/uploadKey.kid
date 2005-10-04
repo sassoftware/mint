@@ -1,4 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
+<?python
+from mint import userlevels
+?>
 <html xmlns:html="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'library.kid', 'layout.kid'">
@@ -31,7 +34,7 @@
                             <th><em class="required">Project or Projects:</em></th>
                             <td>
                                  <select class="wide" multiple="multiple" size="10" name="projects">
-                                    <option py:for="project, level in projectList" py:content="project.getName()" value="${project.getHostname()}"/>
+                                    <option py:for="project, level in [(x[0], x[1]) for x in projectList if x[1] in userlevels.WRITERS]" py:content="project.getName()" value="${project.getHostname()}"/>
                                  </select>
                                  <p class="help">Select one or more projects to which to upload this key.  To select multiple projects, hold down your keyboard's Ctrl key while clicking.<b>This key can never be deleted from the repository to which you submit it, so choose carefully.</b></p>
                             </td>
