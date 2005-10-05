@@ -105,7 +105,7 @@
         <div py:if="auth.authorized and projectList" class="pad">
             <h3>My Projects</h3>
             <ul>
-                <li py:for="project, level in sorted(projectList, key = lambda x: x[0].getName())">
+                <li py:for="project, level in sorted(projectList, cmp = userlevels.myProjectCompare)">
                     <a href="${project.getUrl()}">
                         ${project.getName()}</a><br/>
                         ${userlevels.names[level]}

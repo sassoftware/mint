@@ -21,3 +21,11 @@ names = {
     USER:       "User",
 }
 
+def myProjectCompare(x, y):
+    """This function is for use with displaying the user's projects in his My Projects
+    pane.  Sort first by "level", and then by project name.
+    """
+    returner = x[1] - y[1]
+    if not returner:
+        return cmp(x[0].getName(), y[0].getName())
+    return returner
