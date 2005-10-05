@@ -82,6 +82,11 @@ class MintConfig(ConfigFile):
         if self.MailListBaseURL[-1:] != '/':
             self.setValue('MailListBaseURL', self.MailListBaseURL + '/')
 
+        if not self.projectDomainName:
+            self.projectDomainName = self.siteDomainName
+        if not self.externalDomainName:
+            self.externalDomainName = self.siteDomainName
+
         if self.hostName:
             self.siteHost = self.hostName + "." + self.siteDomainName
             self.projectSiteHost = self.hostName + "." + self.projectDomainName
