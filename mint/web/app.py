@@ -110,8 +110,8 @@ class MintApp(WebHandler):
         self.auth = self.client.checkAuth()
  
         # redirect to master site to clone cookie
-        if self.session._new and self.req.hostname != self.cfg.siteHost:
-            redir = "http://" + self.cfg.siteHost + "/cloneCookie?toUrl=%s;hostname=%s" % (quote(self.req.unparsed_uri), self.req.hostname)
+        if self.session._new and self.req.hostname != self.cfg.secureHost:
+            redir = "http://" + self.cfg.secureHost + "/cloneCookie?toUrl=%s;hostname=%s" % (quote(self.req.unparsed_uri), self.req.hostname)
             return self._redirect(redir)
 
         if self.auth.authorized:

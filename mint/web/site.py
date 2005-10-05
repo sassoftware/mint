@@ -36,7 +36,7 @@ class SiteHandler(WebHandler):
        
         # if someone attempts to access the SITE from something other than
         # the site host, redirect.
-        if self.req.hostname != self.cfg.siteHost:
+        if self.req.hostname not in (self.cfg.siteHost, self.cfg.secureHost):
             self.req.log_error("%s %s accessed incorrectly; referer: %s" % \
                 (self.req.hostname, self.req.unparsed_uri, self.req.headers_in.get('referer', 'N/A')))
             return self._redirector("http://" + self.cfg.siteHost + self.req.unparsed_uri)
