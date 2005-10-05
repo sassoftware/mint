@@ -33,13 +33,15 @@ desctrunclength = 300
 #"""
 
 
-sqlbase = """ SELECT projectId, hostname, name, desc, timeModified FROM
+sqlbase = """ SELECT projectId, hostname, name, desc, timeModified, numDevs as numDevelopers FROM
         (SELECT projects.projectId as projectId, Projects.hostname as hostname, Projects.name as name, Projects.desc as desc,
-    IFNULL(MAX(Commits.timestamp), Projects.timeCreated) AS timeModified, timeCreated
+    IFNULL(MAX(Commits.timestamp), Projects.timeCreated) AS timeModified, timeCreated, count(ProjectUsers.userId) as numDevs
         FROM
     Projects
         LEFT JOIN Commits ON
     Projects.projectId=Commits.projectId
+        LEFT JOIN ProjectUsers ON
+    ProjectUsers.projectId=Projects.projectId
         GROUP BY Projects.projectId
         HAVING Projects.disabled=0 AND Projects.hidden=0)
         ORDER BY %s
@@ -58,8 +60,8 @@ ordersql = {
     LASTMODIFIED_DES: "timeModified DESC",
     CREATED_ASC: "timeCreated ASC",
     CREATED_DES: "timeCreated DESC",
-    NUMDEVELOPERS_ASC: NUM_DEVS_STRING+" ASC",
-    NUMDEVELOPERS_DES: NUM_DEVS_STRING+" DESC",
+    NUMDEVELOPERS_ASC: "numDevelopers ASC",
+    NUMDEVELOPERS_DES: "numDevelopers DESC",
 }
 
 orderhtml = {
