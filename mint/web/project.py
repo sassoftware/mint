@@ -405,6 +405,7 @@ class ProjectHandler(WebHandler):
     @intFields(userId = None)
     @ownerOnly
     def promoteMember(self, auth, userId):
+        #USERS and DEVELOPERS can be promoted (see below)
         userDict = getUserDict(self.project.getMembers())
         for level in [userlevels.DEVELOPER, userlevels.USER]:
             for user in userDict[level]:
@@ -417,8 +418,9 @@ class ProjectHandler(WebHandler):
     @intFields(userId = None)
     @ownerOnly
     def demoteMember(self, auth, userId):
+        #But only owners may be demoted.  Developers must be deleted. (see above)
         userDict = getUserDict(self.project.getMembers())
-        for level in [userlevels.OWNER, userlevels.DEVELOPER]:
+        for level in [userlevels.OWNER]:
             for user in userDict[level]:
                 if user[0] == userId:
                     levelidx = userlevels.LEVELS.index(level)
