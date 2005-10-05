@@ -79,6 +79,7 @@ class NewsCacheTable(database.KeyedTable):
             url = urllib2.urlopen(self.cfg.newsRssFeed)
             data = url.read()
         except urllib2.URLError:
+            self.db.rollback()
             return False
 
         tree = ElementTree.XML(data)

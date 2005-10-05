@@ -78,7 +78,6 @@ class MintApp(WebHandler):
             return apache.HTTP_METHOD_NOT_ALLOWED
 
         anonToken = ('anonymous', 'anonymous')
-        self.client = shimclient.ShimMintClient(self.cfg, anonToken)
 
         # if we are passed a pysid, set the cookie and redirect to the toUrl
         if COOKIE_NAME in self.fields and 'toUrl' in self.fields:
@@ -95,7 +94,6 @@ class MintApp(WebHandler):
             self.req.err_headers_out.add('Cache-Control', 'no-cache="set-cookie"')
             return self._redirect(unquote(self.fields.get('toUrl')))
 
-        
         # prepare a new session
         sessionClient = shimclient.ShimMintClient(self.cfg, (self.cfg.authUser, self.cfg.authPass))
         self.session = SqlSession(self.req, sessionClient,
