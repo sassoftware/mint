@@ -108,7 +108,7 @@ class JobDaemon:
         if x86_re.match(arch):
             archList = ["x86"]
         elif arch == "x86_64":
-            archList = ["x86", "x86_64"]
+            archList = ["x86_64"]
         else:
             log.error("unsupported architecture: %s", arch)
             sys.exit(1)
