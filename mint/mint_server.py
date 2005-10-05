@@ -318,9 +318,11 @@ class MintServer(object):
             raise
 
         self.projectUsers.new(projectId, userId, level)
-        repos = self._getProjectRepo(project)
-        repos.addUserByMD5(project.getLabel(), username, salt, password)
-        repos.addAcl(project.getLabel(), username, None, None, level in userlevels.WRITERS, False, level == userlevels.OWNER)
+
+        if not project.external:
+            repos = self._getProjectRepo(project)
+            repos.addUserByMD5(project.getLabel(), username, salt, password)
+            repos.addAcl(project.getLabel(), username, None, None, level in userlevels.WRITERS, False, level == userlevels.OWNER)
 
         self._notifyUser('Added', self.getUser(userId), projects.Project(self,projectId), level)
         return True
@@ -341,7 +343,9 @@ class MintServer(object):
         self.projectUsers.delete(projectId, userId)
         repos = self._getProjectRepo(project)
         user = self.getUser(userId)
-        repos.deleteUserByName(project.getLabel(), user['username'])
+
+        if not project.external:
+            repos.deleteUserByName(project.getLabel(), user['username'])
         if notify:
             self._notifyUser('Removed', user, project)
 
