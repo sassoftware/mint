@@ -101,9 +101,6 @@ from mint import userlevels
                     <tr py:for="userId, username in sorted(users[userlevels.DEVELOPER], key=lambda x: x[1])">
                         <th><a py:strip="not auth.authorized" href="http://$SITE/userInfo?id=${userId}">${username}</a></th>
                         <td py:if="isOwner">
-                            <a href="demoteMember?userId=${userId}" class="option">Demote</a>
-                        </td>
-                        <td py:if="isOwner">
                             <a href="promoteMember?userId=${userId}" class="option">Promote</a>
                         </td>
                         <td py:if="isOwner"><a href="delMember?id=${userId}" class="option">Delete</a></td>
