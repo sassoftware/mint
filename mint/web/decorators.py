@@ -30,7 +30,7 @@ def redirectHttp(func):
 def redirectHttps(func):
     def wrapper(self, *args, **kwargs):
         if self.req.subprocess_env.get('HTTPS', 'off') != 'on' and self.cfg.SSL:
-            return self._redirect('https://%s%s' %(self.req.hostname, self.req.unparsed_uri))
+            return self._redirect('https://%s%s' % (self.cfg.secureHost, self.req.unparsed_uri))
         else:
             return func(self, *args, **kwargs)
     return wrapper

@@ -242,14 +242,16 @@ def conaryHandler(req, cfg, pathInfo):
         projectName = repName.split(".")[0]
         if cfg.SSL:
             protocol = "https"
+            host = cfg.secureHost
         else:
             protocol = "http"
+            host = req.hostname
 
-        repMapStr = "%s://%s:%s@%s/repos/%s/" % (protocol, cfg.authUser, cfg.authPass, req.hostname, projectName)
+        repMapStr = "%s://%s:%s@%s/repos/%s/" % (protocol, cfg.authUser, cfg.authPass, host, projectName)
            
         repMap = {buildLabel: repMapStr,
-                  'conary.rpath.com': 'https://conary-commits.rpath.com/conary/',
-                  'contrib.rpath.com': 'https://conary-commits.rpath.com/contrib/'}
+                  'conary.rpath.com': 'http://conary-commits.rpath.com/conary/',
+                  'contrib.rpath.com': 'http://conary-commits.rpath.com/contrib/'}
         if cfg.commitAction:
             commitAction = cfg.commitAction % {'repMap': repName + " " + repMapStr,
                                                'buildLabel': buildLabel,

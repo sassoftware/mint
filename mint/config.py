@@ -38,6 +38,7 @@ class MintConfig(ConfigFile):
         'siteDomainName'    : 'rpath.com',
         'projectDomainName' : 'rpath.org',
         'externalDomainName': 'rpath.com',
+        'secureHost'        : 'www.rpath.org',
         'hostName'          : None, # optional domain name for main site
         'SSL'               : [ BOOLEAN, False ],
         'adminMail'         : 'mint@rpath.org',
