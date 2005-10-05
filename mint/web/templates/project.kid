@@ -17,9 +17,9 @@
             <li><a href="$projectUrl"><strong py:strip="lastchunk != ''">Project Home</strong></a></li>
             <li><a href="${projectUrl}releases"><strong py:strip="lastchunk not in ('release', 'releases', 'newRelease', 'editRelease')">Releases</strong></a></li>
 
-            <li><a href="${cfg.basePath}/repos/${project.getHostname()}/browse"><strong py:strip="lastchunk not in ('browse', 'troveInfo')">Repository</strong></a></li>
+            <li><a href="${projectUrl}../../repos/${project.getHostname()}/browse"><strong py:strip="lastchunk not in ('browse', 'troveInfo')">Repository</strong></a></li>
             <li py:if="not project.external"><a href="${projectUrl}members"><strong py:strip="lastchunk != 'members'">Members</strong></a>
-                <li py:if="isOwner"><a href="${cfg.basePath}/repos/${project.getHostname()}/pgpAdminForm">Manage Signing Keys</a></li>
+                <li py:if="isOwner"><a href="${projectUrl}../../repos/${project.getHostname()}/pgpAdminForm">Manage Signing Keys</a></li>
             </li>
             <li py:if="not project.external"><a href="${projectUrl}mailingLists"><strong py:strip="lastchunk != 'mailingLists'">Mailing Lists</strong></a></li>
             <li py:if="0"><a href="#"><strong py:strip="lastchunk != 'bugs'">Bug Tracking</strong></a></li>
