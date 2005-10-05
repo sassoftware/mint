@@ -385,6 +385,10 @@ class User(database.TableObject):
 class ProjectUsersTable(database.DatabaseTable):
     name = "ProjectUsers"
     fields = ["projectId", "userId"]
+    indexes = {'ProjectUsersIdx': "CREATE UNIQUE INDEX ProjectUsersIdx ON ProjectUsers(projectId, userId)",
+               'ProjectUsersProjectIdx': "CREATE INDEX ProjectUsersProjectIdx ON ProjectUsers(projectId)",
+               'ProjectUsersUserIdx': "CREATE INDEX ProjectUsersUserIdx ON ProjectUsers(userId)",
+              }
 
     createSQL = """
                 CREATE TABLE ProjectUsers (

@@ -305,21 +305,24 @@ class MintServer(object):
             username = self.users.getUsername(userId)
 
         self.membershipRequests.deleteRequest(projectId, userId)
-        acu = self.authDb.cursor()
-        password = ''
-        salt = ''
-        query = "SELECT salt, password FROM Users WHERE user=?"
-        acu.execute(query, username)
         try:
-            salt, password = acu.next()
-        except StopIteration, e:
-            raise database.ItemNotFound("user")
-        except DatabaseError, e:
-            raise
-
-        self.projectUsers.new(projectId, userId, level)
+            self.projectUsers.new(projectId, userId, level)
+        except database.DuplicateItem:
+            project.updateUserLevel(userId, level)
+            return True
 
         if not project.external:
+            acu = self.authDb.cursor()
+            password = ''
+            salt = ''
+            query = "SELECT salt, password FROM Users WHERE user=?"
+            acu.execute(query, username)
+            try:
+                salt, password = acu.next()
+            except StopIteration, e:
+                raise database.ItemNotFound("user")
+            except DatabaseError, e:
+                raise
             repos = self._getProjectRepo(project)
             repos.addUserByMD5(project.getLabel(), username, salt, password)
             repos.addAcl(project.getLabel(), username, None, None, level in userlevels.WRITERS, False, level == userlevels.OWNER)
@@ -443,13 +446,15 @@ class MintServer(object):
     @requiresAuth
     @private
     def setUserLevel(self, userId, projectId, level):
-        if self.projectUsers.onlyOwner(projectId, userId) and (level == userlevels.DEVELOPER):
+        if self.projectUsers.onlyOwner(projectId, userId) and (level != userlevels.OWNER):
             raise users.LastOwner()
         #update the level on the project
-        username = self.users.getUsername(userId)
         project = projects.Project(self, projectId)
-        repos = self._getProjectRepo(project)
-        repos.editAcl(project.getLabel(), username, "ALL", None, None, None, level in userlevels.WRITERS, False, level == userlevels.OWNER)
+        user = self.getUser(userId)
+        if not project.external:
+            repos = self._getProjectRepo(project)
+            repos.editAcl(project.getLabel(), user['username'], "ALL", None, None, None, level in userlevels.WRITERS, False, level == userlevels.OWNER)
+
         #Ok, now update the mint db
         if level in userlevels.WRITERS:
             self.deleteJoinRequest(projectId, userId)
@@ -458,7 +463,7 @@ class MintServer(object):
             projectId=?""", level, userId, projectId)
 
         self.db.commit()
-        self._notifyUser('Changed', self.getUser(userId), projects.Project(self, projectId), level)
+        self._notifyUser('Changed', user, project, level)
 
     @private
     def getProjectsByUser(self, userId):
