@@ -346,6 +346,8 @@ class MintServer(object):
             self._notifyUser('Removed', user, project)
 
     def _notifyUser(self, action, user, project, userlevel=None):
+        if self.auth.userId == user['userId']:
+            return
         userlevelname = ((userlevel >=0) and userlevels.names[userlevel] or 'Unknown')
         actionText = {'Removed': "has been removed from the following project:",
             'Added': "has been added to the following project as %s:" % userlevelname,
