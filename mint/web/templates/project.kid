@@ -95,7 +95,7 @@
             </ul>
 
             <p>To create a new project, click
-                <a href="http://$SITE/newProject"><strong>here</strong></a>.</p>
+                <a href="http://${SITE}newProject"><strong>here</strong></a>.</p>
 
             <p>To join an existing project, use the browse or search boxes
             in the left sidebar to find a project that interests you.
@@ -110,13 +110,13 @@
                         ${project.getName()}</a><br/>
                         ${userlevels.names[level]}
                         <span py:if="not level and project.listJoinRequests()">
-                            <a href="${project.getUrl()}/members"><b style="color: red;">Requests Pending</b></a>
+                            <a href="${project.getUrl()}members"><b style="color: red;">Requests Pending</b></a>
                         </span>
                 </li>
             </ul>
             <ul py:if="auth.authorized">
                 <li>
-                    <a href="http://$SITE/newProject"><strong>Create a new project</strong></a>
+                    <a href="http://${SITE}newProject"><strong>Create a new project</strong></a>
                 </li>
             </ul>
         </div>
