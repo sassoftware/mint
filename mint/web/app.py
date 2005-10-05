@@ -169,7 +169,6 @@ class MintApp(WebHandler):
                     raise Redirect("%s://%s%sproject/%s/" % (protocol, self.cfg.projectSiteHost, self.cfg.basePath, hostname))
 
         self.siteHost = self.cfg.siteHost
-        self.SITE = self.cfg.siteHost + self.cfg.basePath
         
         if self.cfg.hostName and fullHost == self.cfg.siteDomainName:
             raise Redirect(self.cfg.defaultRedirect)
@@ -183,6 +182,7 @@ class MintApp(WebHandler):
             (r'^/',             self.siteHandler),
         )
 
+        self.SITE = self.siteHost + self.basePath
         # a set of information to be passed into the next handler
         context = {
             'auth':             self.auth,
@@ -194,10 +194,10 @@ class MintApp(WebHandler):
             'req':              self.req,
             'session':          self.session,
             'siteHost':         self.cfg.siteHost,
-            'SITE':             self.SITE,
             'toUrl':            self.toUrl,
             'basePath':         self.basePath,
             'project':          None,
+            'SITE':             self.SITE,
             'userLevel':        self.userLevel,
             'user':             self.user,
         }

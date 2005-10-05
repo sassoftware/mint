@@ -16,7 +16,6 @@
         <ul>
             <li><a href="$projectUrl"><strong py:strip="lastchunk != ''">Project Home</strong></a></li>
             <li><a href="${projectUrl}releases"><strong py:strip="lastchunk not in ('release', 'releases', 'newRelease', 'editRelease')">Releases</strong></a></li>
-
             <li><a href="${projectUrl}../../repos/${project.getHostname()}/browse"><strong py:strip="lastchunk not in ('browse', 'troveInfo')">Repository</strong></a></li>
             <li py:if="not project.external"><a href="${projectUrl}members"><strong py:strip="lastchunk != 'members'">Members</strong></a>
                 <li py:if="isOwner"><a href="${projectUrl}../../repos/${project.getHostname()}/pgpAdminForm">Manage Signing Keys</a></li>
@@ -62,7 +61,7 @@
         <div id="commit_items" style="display: $display">
           <ul>
             <li class="release" py:for="commit in commits">
-                <a href="/repos/${project.getHostname()}/troveInfo?t=${commit[0]}">
+                <a href="${cfg.basePath}repos/${project.getHostname()}/troveInfo?t=${commit[0]}">
                     ${commit[0]}=${commit[1]}
                 </a>
             </li>
@@ -78,7 +77,7 @@
 
             <p>If you are new to rBuilder Online, create
             your new account by using the
-            <a href="http://$SITE/register"><strong>new account</strong></a>
+            <a href="http://${SITE}register"><strong>new account</strong></a>
             link above.</p>
 
             <p>If you already have an account, use the above form to login.</p>

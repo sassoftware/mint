@@ -48,7 +48,7 @@ class MintConfig(ConfigFile):
         'EnableMailLists'   : [ BOOLEAN, False ],
         'MailListBaseURL'   : 'http://lists.rpath.org/mailman/',
         'MailListPass'      : 'adminpass',
-        'basePath'          : '',
+        'basePath'          : '/',
         'cookieSecretKey'   : None,
         'bugsEmail'     : None,
         'bugsEmailName' : 'rBuilder Bugs',

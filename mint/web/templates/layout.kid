@@ -56,7 +56,7 @@ onload = "javascript:;"
         <div id="top" align="center">
             <div class="shadowLeft"><div class="shadowRight">
                 <div class="surfaceLeft" align="left"><div class="surfaceRight">
-                    <form method="post" action="${secureProtocol}://$SITE/$loginAction">
+                    <form method="post" action="${secureProtocol}://${SITE}$loginAction">
                         <input py:if="loginAction == 'processLogin'" type="hidden" name="to" value="${quote(toUrl)}" />
                         <table border="0" cellspacing="0" cellpadding="0" summary="layout">
                             <tr>
@@ -64,7 +64,7 @@ onload = "javascript:;"
                                 </td>
                                 <td id="user" py:if="not auth.authorized">
                                     <div class="pad">
-                                        <h4>not logged in | <a href="${secureProtocol}://$SITE/forgotPassword">Forgot Password</a></h4>
+                                        <h4>not logged in | <a href="${secureProtocol}://${SITE}forgotPassword">Forgot Password</a></h4>
                                         <div>
                                             <input type="text" name="username" size="16"/> <label>username</label><br />
                                             <input type="password" name="password" size="16"/> <label>password</label>
@@ -75,9 +75,9 @@ onload = "javascript:;"
                                     <div class="pad">
                                         <h3>${auth.fullName}</h3>
                                         <h4>${auth.username}</h4>
-                                        <div><a href="${secureProtocol}://$SITE/userSettings" class="arrows">view &#38; Edit My Account</a></div>
-                                        <div><a py:if="projectList" href="http://$SITE/uploadKey" class="arrows">Upload a Package Signing Key</a></div>
-                                        <div py:if='auth.admin'><a href="http://$SITE/administer" class="arrows">Administer</a></div>
+                                        <div><a href="${secureProtocol}://${SITE}userSettings" class="arrows">view &#38; Edit My Account</a></div>
+                                        <div><a py:if="projectList" href="http://${SITE}uploadKey" class="arrows">Upload a Package Signing Key</a></div>
+                                        <div py:if='auth.admin'><a href="http://${SITE}administer" class="arrows">Administer</a></div>
 
                                     </div>
                                 </td>
@@ -88,7 +88,7 @@ onload = "javascript:;"
                                         <a href="http://$SITE">Home</a> | 
                                         <a py:if="False" href="${cfg.corpSite}">About rPath</a>
                                         <a py:if="False" href="${cfg.corpSite}sales/">Contact rPath</a>
-                                        <a href="http://$SITE/help?page=feedback"><b style="color: red;">need help/have feedback?</b></a>
+                                        <a href="http://${SITE}help?page=feedback"><b style="color: red;">need help/have feedback?</b></a>
 				        <span py:if="cfg.debugMode">
                                             | <span style="color:red;">DEBUG MODE</span>
                                         </span>
@@ -97,7 +97,7 @@ onload = "javascript:;"
                                 <td id="log">
                                     <div class="pad" py:if="not auth.authorized">
                                         <button type="submit">Login</button> |
-                                        <a href="http://$SITE/register" class="arrows">New Account</a>
+                                        <a href="http://${SITE}register" class="arrows">New Account</a>
                                     </div>
                                     <div class="pad" py:if="auth.authorized">
                                         <button type="submit">Logout</button>
@@ -112,7 +112,7 @@ onload = "javascript:;"
         <div id="middle" align="center">
             <div id="crumb">
                 <div class="pad">
-                    You are here: <a href="http://$SITE/">home</a>
+                    You are here: <a href="http://$SITE">home</a>
                     ${breadcrumb()}
                 </div>
             </div>
@@ -132,7 +132,7 @@ onload = "javascript:;"
             <div id="copy">
                 <div class="pad" style="text-align: center;">
                     <span id="botnav">
-                        ${legal('http://%s/legal?page=legal' % SITE, 'Legal')}
+                        ${legal('http://%slegal?page=legal' % SITE, 'Legal')}
                     </span>
 
                     <span style="float: left;">Copyright &#169; 2005 rPath, Inc. </span>
