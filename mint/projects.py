@@ -175,9 +175,9 @@ class Project(database.TableObject):
 
     def getUrl(self):
         if self.external: # we control all external projects, so use externalSiteHost
-            return "http://%s%s/project/%s/" % (self.server._cfg.externalSiteHost, self.server._cfg.basePath, self.hostname)
+            return "http://%s%sproject/%s/" % (self.server._cfg.externalSiteHost, self.server._cfg.basePath, self.hostname)
         else:
-            return "http://%s%s/project/%s/" % (self.server._cfg.projectSiteHost, self.server._cfg.basePath, self.hostname)
+            return "http://%s%sproject/%s/" % (self.server._cfg.projectSiteHost, self.server._cfg.basePath, self.hostname)
             
 
 class ProjectsTable(database.KeyedTable):
