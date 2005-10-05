@@ -49,7 +49,7 @@ class WebHandler(object):
         else:
             while location and location[0] == '/':
                 location = location[1:]
-            location = 'http://%s%s/%s' % (self.req.hostname, self.cfg.basePath, location)
+            location = 'http://%s%s%s' % (self.req.hostname, self.cfg.basePath, location)
         self.req.headers_out['Location'] = location
         return apache.HTTP_MOVED_PERMANENTLY
 
