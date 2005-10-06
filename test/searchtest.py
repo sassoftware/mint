@@ -7,7 +7,7 @@ import testsuite
 testsuite.setup()
 
 from mint_rephelp import MintRepositoryHelper
-from mint.projectlisting import PROJECTNAME_ASC, PROJECTNAME_DES, LASTMODIFIED_ASC, LASTMODIFIED_DES, CREATED_ASC, CREATED_DES, NUMDEVELOPERS_ASC, NUMDEVELOPERS_DES, ordersql
+from mint.projectlisting import PROJECTNAME_ASC, PROJECTNAME_DES, LASTMODIFIED_ASC, LASTMODIFIED_DES, CREATED_ASC, CREATED_DES, NUMDEVELOPERS_ASC, NUMDEVELOPERS_DES, ACTIVITY_ASC, ACTIVITY_DES, ordersql
 from mint import userlevels
 
 class BrowseTest(MintRepositoryHelper):
@@ -24,14 +24,16 @@ class BrowseTest(MintRepositoryHelper):
 
     def _sortOrderDict(self):
         return {
-            0: [[4, 'bal', 'Bal', '', 1128500000.5450001], [2, 'bar', 'Bar', '', 1124550000.5455], [3, 'baz', 'Baz', '', 1129000000.0], [1, 'foo', 'Foo', '', 1128540046.5455239]],
-            1: [[1, 'foo', 'Foo', '', 1128540046.5455239], [3, 'baz', 'Baz', '', 1129000000.0], [2, 'bar', 'Bar', '', 1124550000.5455], [4, 'bal', 'Bal', '', 1128500000.5450001]],
-            2: [[2, 'bar', 'Bar', '', 1124550000.5455], [4, 'bal', 'Bal', '', 1128500000.5450001], [1, 'foo', 'Foo', '', 1128540046.5455239], [3, 'baz', 'Baz', '', 1129000000.0]],
-            3: [[3, 'baz', 'Baz', '', 1129000000], [1, 'foo', 'Foo', '', 1128540046], [4, 'bal', 'Bal', '', 1128500000], [2, 'bar', 'Bar', '', 1124550000]],
-            4: [[2, 'bar', 'Bar', '', 1124550000.5455], [3, 'baz', 'Baz', '', 1129000000.0], [4, 'bal', 'Bal', '', 1128500000.5450001], [1, 'foo', 'Foo', '', 1128540046.5455239]],
-            5: [[1, 'foo', 'Foo', '', 1128540046.5455239], [4, 'bal', 'Bal', '', 1128500000.5450001], [3, 'baz', 'Baz', '', 1129000000.0], [2, 'bar', 'Bar', '', 1124550000.5455]],
-            6: [[2, 'bar', 'Bar', '', 1124550000.5455], [3, 'baz', 'Baz', '', 1129000000.0], [4, 'bal', 'Bal', '', 1128500000.5450001], [1, 'foo', 'Foo', '', 1128540046.5455239]],
-            7: [[1, 'foo', 'Foo', '', 1128540046.5455239], [4, 'bal', 'Bal', '', 1128500000.5450001], [3, 'baz', 'Baz', '', 1129000000.0], [2, 'bar', 'Bar', '', 1124550000.5455]],
+            PROJECTNAME_ASC: [[4, 'bal', 'Bal', '', 1129542003.5455239], [2, 'bar', 'Bar', '', 1129550003.5455239], [3, 'baz', 'Baz', '', 1129560003.5455239], [1, 'foo', 'Foo', '', 1128540046.5455239]],
+            PROJECTNAME_DES: [[1, 'foo', 'Foo', '', 1128540046.5455239], [3, 'baz', 'Baz', '', 1129560003.5455239], [2, 'bar', 'Bar', '', 1129550003.5455239], [4, 'bal', 'Bal', '', 1129542003.5455239]],
+            LASTMODIFIED_ASC: [[1, 'foo', 'Foo', '', 1128540046.5455239], [4, 'bal', 'Bal', '', 1129542003.5455239], [2, 'bar', 'Bar', '', 1129550003.5455239], [3, 'baz', 'Baz', '', 1129560003.5455239]],
+            LASTMODIFIED_DES: [[3, 'baz', 'Baz', '', 1129560003.5455239], [2, 'bar', 'Bar', '', 1129550003.5455239], [4, 'bal', 'Bal', '', 1129542003.5455239], [1, 'foo', 'Foo', '', 1128540046.5455239]],
+            CREATED_ASC: [[2, 'bar', 'Bar', '', 1129550003.5455239], [3, 'baz', 'Baz', '', 1129560003.5455239], [4, 'bal', 'Bal', '', 1129542003.5455239], [1, 'foo', 'Foo', '', 1128540046.5455239]],
+            CREATED_DES: [[1, 'foo', 'Foo', '', 1128540046.5455239], [4, 'bal', 'Bal', '', 1129542003.5455239], [3, 'baz', 'Baz', '', 1129560003.5455239], [2, 'bar', 'Bar', '', 1129550003.5455239]],
+            NUMDEVELOPERS_ASC: [[2, 'bar', 'Bar', '', 1129550003.5455239], [3, 'baz', 'Baz', '', 1129560003.5455239], [4, 'bal', 'Bal', '', 1129542003.5455239], [1, 'foo', 'Foo', '', 1128540046.5455239]],
+            NUMDEVELOPERS_DES: [[1, 'foo', 'Foo', '', 1128540046.5455239], [4, 'bal', 'Bal', '', 1129542003.5455239], [3, 'baz', 'Baz', '', 1129560003.5455239], [2, 'bar', 'Bar', '', 1129550003.5455239]],
+            ACTIVITY_ASC: [[1, 'foo', 'Foo', '', 1128540046.5455239], [3, 'baz', 'Baz', '', 1129560003.5455239], [4, 'bal', 'Bal', '', 1129542003.5455239], [2, 'bar', 'Bar', '', 1129550003.5455239]],
+            ACTIVITY_DES: [[2, 'bar', 'Bar', '', 1129550003.5455239], [4, 'bal', 'Bal', '', 1129542003.5455239], [3, 'baz', 'Baz', '', 1129560003.5455239], [1, 'foo', 'Foo', '', 1128540046.5455239]],
             }
 
     def testBrowse(self):
@@ -55,13 +57,17 @@ class BrowseTest(MintRepositoryHelper):
         balProject = client.getProject(balId)
 
         # add some fake commits for sorting
-        self._fakeCommit(barId, 1124540086.5455239, userId)
-        self._fakeCommit(bazId, 1129000000, userId2)
-        self._fakeCommit(balId, 1128500000.545, userId4)
-        self._fakeCommit(balId, 1124550000.5239, userId3)
-        self._fakeCommit(barId, 1124550000.5455, userId)
+        self._fakeCommit(barId, 1129550003.5455239, userId)
+        self._fakeCommit(bazId, 1129560003.5455239, userId2)
+        self._fakeCommit(balId, 1129541003.5455239, userId4)
+        self._fakeCommit(balId, 1129542003.5455239, userId3)
+        self._fakeCommit(barId, 1129543003.5455239, userId)
+        self._fakeCommit(barId, 1129544003.5455239, userId)
+        # and a couple of really old ones that won't show up...
+        self._fakeCommit(bazId, 1120040003.5455239, userId2)
+        self._fakeCommit(bazId, 1120040013.5455239, userId2)
 
-        # add some members to each project to make the sort useful
+        # add some members to each project to make the popularity sort useful
         fooProject.addMemberById(userId2, userlevels. DEVELOPER)
         fooProject.addMemberById(userId3, userlevels. DEVELOPER)
         fooProject.addMemberById(userId4, userlevels. DEVELOPER)
@@ -72,7 +78,7 @@ class BrowseTest(MintRepositoryHelper):
         balProject.addMemberById(userId4, userlevels. DEVELOPER)
 
         sortOrderDict = self._sortOrderDict()
-        for sortOrder in range(8):
+        for sortOrder in range(10):
             results, count = client.getProjects(sortOrder, 30, 0)
             if results != sortOrderDict[sortOrder]:
                 self.fail("sort problem during sort: %s"% ordersql[sortOrder])

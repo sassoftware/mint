@@ -91,7 +91,7 @@ from urllib import quote
         <div id="browse_items" style="display: $display">
           <ul>
             <li><a href="http://${SITE}projects">All Projects</a></li>
-            <li><a href="http://${SITE}projects?sortOrder=3">Most Active Projects</a></li>
+            <li><a href="http://${SITE}projects?sortOrder=9">Most Active Projects</a></li>
             <li><a href="http://${SITE}projects?sortOrder=7">Most Popular Projects</a></li>
             <li py:if="auth.admin"><a href="http://${SITE}users">All Users</a></li>
           </ul>
