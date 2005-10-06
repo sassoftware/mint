@@ -191,13 +191,10 @@ class SiteHandler(WebHandler):
                 # so we have to manually add the cookie to the right headers
                 # table.
                 c = self.session.make_cookie()
-                self.req.err_headers_out.add('Set-Cookie', str(c))
-
-                # and again for the project hostname
-                c.domain = "." + self.cfg.projectDomainName
+                c.domain = self.cfg.secureHost
                 self.req.err_headers_out.add('Set-Cookie', str(c))
                 self.req.err_headers_out.add('Cache-Control', 'no-cache="set-cookie"')
-                
+                self.session.save()
                 return self._redirectHttp(unquote(to))
         else:
             return apache.HTTP_NOT_FOUND
@@ -340,9 +337,9 @@ class SiteHandler(WebHandler):
         hostname = hostname.lower()
         errors = []
         if not title:
-            error.append("You must supply a project title")
+            errors.append("You must supply a project title")
         if not hostname:
-            error.append("You must supply a project hostname")
+            errors.append("You must supply a project hostname")
         if not errors:
             try:
                 # attempt to create the project

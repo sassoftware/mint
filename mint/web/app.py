@@ -110,7 +110,7 @@ class MintApp(WebHandler):
         self.auth = self.client.checkAuth()
  
         # redirect to master site to clone cookie
-        if self.session._new and self.req.hostname != self.cfg.secureHost:
+        if self.session.is_new() and self.req.hostname != self.cfg.secureHost:
             redir = "http://" + self.cfg.secureHost + "/cloneCookie?toUrl=%s;hostname=%s" % (quote(self.req.unparsed_uri), self.req.hostname)
             return self._redirect(redir)
 
@@ -129,7 +129,9 @@ class MintApp(WebHandler):
         d['auth'] = self.auth
         try:
             returncode = method(**d)
-            self.session.save()
+            if 'authToken' in self.session:
+                self.session.save()
+            
             return returncode
         except mint_error.MintError, e:
             self.toUrl = "/"
