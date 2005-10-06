@@ -33,15 +33,13 @@ desctrunclength = 300
 #"""
 
 
-sqlbase = """ SELECT projectId, hostname, name, desc, timeModified, numDevs as numDevelopers FROM
+sqlbase = """ SELECT projectId, hostname, name, desc, timeModified FROM
         (SELECT projects.projectId as projectId, Projects.hostname as hostname, Projects.name as name, Projects.desc as desc,
-    IFNULL(MAX(Commits.timestamp), Projects.timeCreated) AS timeModified, timeCreated, count(ProjectUsers.userId) as numDevs
+    IFNULL(MAX(Commits.timestamp), Projects.timeCreated) AS timeModified, timeCreated, (SELECT COUNT(userId) AS numDevs FROM ProjectUsers WHERE ProjectUsers.projectId=projects.projectId) AS numDevs
         FROM
     Projects
         LEFT JOIN Commits ON
     Projects.projectId=Commits.projectId
-        LEFT JOIN ProjectUsers ON
-    ProjectUsers.projectId=Projects.projectId
         GROUP BY Projects.projectId
         HAVING Projects.disabled=0 AND Projects.hidden=0)
         ORDER BY %s
@@ -49,10 +47,6 @@ sqlbase = """ SELECT projectId, hostname, name, desc, timeModified, numDevs as n
         OFFSET %d
 """
 
-# FIXME NUM_DEVS_STRING has been modified to match new sqlbase
-NUM_DEVS_STRING = "(SELECT count(*) FROM ProjectUsers WHERE ProjectUsers.projectId=projectId)"
-
-# FIXME. NUMDEVELOPERS needs to go away and be replaced by a true popularity metric. Note the effect on "browse projects box"--most popular projects.
 ordersql = {
     PROJECTNAME_ASC: "LOWER(name) ASC",
     PROJECTNAME_DES: "LOWER(name) DESC",
@@ -60,8 +54,8 @@ ordersql = {
     LASTMODIFIED_DES: "timeModified DESC",
     CREATED_ASC: "timeCreated ASC",
     CREATED_DES: "timeCreated DESC",
-    NUMDEVELOPERS_ASC: "numDevelopers ASC",
-    NUMDEVELOPERS_DES: "numDevelopers DESC",
+    NUMDEVELOPERS_ASC: "numDevs ASC",
+    NUMDEVELOPERS_DES: "numDevs DESC",
 }
 
 orderhtml = {
