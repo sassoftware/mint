@@ -22,6 +22,7 @@ from mint import shimclient
 from mint import users
 from mint import userlevels
 from mint import mailinglists
+from mint.session import SqlSession
 
 from webhandler import WebHandler, normPath
 from decorators import requiresAdmin, requiresAuth, requiresHttps, redirectHttps, redirectHttp
@@ -36,7 +37,7 @@ class SiteHandler(WebHandler):
        
         # if someone attempts to access the SITE from something other than
         # the site host, redirect.
-        if self.req.hostname not in (self.cfg.siteHost, self.cfg.secureHost):
+        if self.req.hostname not in (self.cfg.siteHost, self.cfg.secureHost) and cmd != 'blank':
             self.req.log_error("%s %s accessed incorrectly; referer: %s" % \
                 (self.req.hostname, self.req.unparsed_uri, self.req.headers_in.get('referer', 'N/A')))
             return self._redirector("http://" + self.cfg.siteHost + self.req.unparsed_uri)
@@ -60,9 +61,10 @@ class SiteHandler(WebHandler):
         self._write("frontPage", news = news, newsLink = self.client.getNewsLink(), firstTime=self.session.get('firstTimer', False))
         return apache.OK
         
-    @strFields(toUrl = None, hostname = None)
-    def cloneCookie(self, auth, toUrl, hostname):
-        return self._redirect("http://%s/?toUrl=%s;pysid=%s" % (hostname, toUrl, self.session._sid))
+    def blank(self, auth, sid, hostname):
+        self.req.content_type = "image/gif"
+        self.req.write('GIF89a\x01\x00\x01\x00\x80\x00\x00\xff\xff\xff\xff\xff\xff!\xf9\x04\x01\n\x00\x01\x00,\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02L\x01\x00;')
+        return apache.OK
         
     @redirectHttps
     def register(self, auth):
@@ -182,20 +184,23 @@ class SiteHandler(WebHandler):
                 else:
                     firstTimer = True
                 client.updateAccessedTime(auth.userId)
+
+                sid = self.session.id()
+                self.session.invalidate()
+
+                self.session = SqlSession(self.req, client,
+                    sid = sid,
+                    secret = self.cfg.cookieSecretKey,
+                    timeout = 86400, # XXX timeout of one day; should it be configurable?
+                    domain = self.cfg.projectDomainName,
+                    lock = False)
+                
                 self.session['authToken'] = authToken
                 self.session['firstTimer'] = firstTimer
-                
-                # mod_python's cookie classes don't handle 301 redirects because
-                # Cookie.add_cookie only adds cookie headers to req.headers_out,
-                # not req_error_headers_out, which is used for redirects,
-                # so we have to manually add the cookie to the right headers
-                # table.
-                c = self.session.make_cookie()
-                c.domain = self.cfg.secureHost
-                self.req.err_headers_out.add('Set-Cookie', str(c))
-                self.req.err_headers_out.add('Cache-Control', 'no-cache="set-cookie"')
                 self.session.save()
-                return self._redirectHttp(unquote(to))
+                
+                self._write("loginLanding", to = unquote(to))
+                return apache.OK
         else:
             return apache.HTTP_NOT_FOUND
 

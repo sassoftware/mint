@@ -79,40 +79,29 @@ class MintApp(WebHandler):
 
         anonToken = ('anonymous', 'anonymous')
 
-        # if we are passed a pysid, set the cookie and redirect to the toUrl
-        if COOKIE_NAME in self.fields and 'toUrl' in self.fields:
-            if self.cfg.cookieSecretKey:
-                c = Cookie.SignedCookie(COOKIE_NAME, self.fields.get(COOKIE_NAME),
-                                        secret = self.cfg.cookieSecretKey,
-                                        domain = self.req.hostname)
-            else:
-                c = Cookie.Cookie(COOKIE_NAME,
-                        self.fields.get(COOKIE_NAME),
-                        domain = self.req.hostname)
-
-            self.req.err_headers_out.add('Set-Cookie', str(c))
-            self.req.err_headers_out.add('Cache-Control', 'no-cache="set-cookie"')
-            return self._redirect(unquote(self.fields.get('toUrl')))
-
         # prepare a new session
         sessionClient = shimclient.ShimMintClient(self.cfg, (self.cfg.authUser, self.cfg.authPass))
+
+        sid = self.fields.get('sid', 0)
         self.session = SqlSession(self.req, sessionClient,
+            sid = sid,
             secret = self.cfg.cookieSecretKey,
             timeout = 86400, # XXX timeout of one day; should it be configurable?
-            domain = self.cfg.siteDomainName,
+            domain = self.req.hostname,
             lock = False)
-
+        if sid:
+            c = self.session.make_cookie()
+            c.domain = self.fields['hostname']
+            print >> sys.stderr, "setting cookie:", str(c)
+            sys.stderr.flush()
+            Cookie.add_cookie(self.req, c)
+            
         # default to anonToken if the current session has no authToken
         self.authToken = self.session.get('authToken', anonToken)
  
         # open up a new client with the retrieved authToken
         self.client = shimclient.ShimMintClient(self.cfg, self.authToken)
         self.auth = self.client.checkAuth()
- 
-        # redirect to master site to clone cookie
-        if self.session.is_new() and self.req.hostname != self.cfg.secureHost:
-            redir = "http://" + self.cfg.secureHost + "/cloneCookie?toUrl=%s;hostname=%s" % (quote(self.req.unparsed_uri), self.req.hostname)
-            return self._redirect(redir)
 
         if self.auth.authorized:
             self.user = self.client.getUser(self.auth.userId)
@@ -129,8 +118,7 @@ class MintApp(WebHandler):
         d['auth'] = self.auth
         try:
             returncode = method(**d)
-            if 'authToken' in self.session:
-                self.session.save()
+            self.session.save()
             
             return returncode
         except mint_error.MintError, e:
