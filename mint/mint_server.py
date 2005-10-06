@@ -293,9 +293,6 @@ class MintServer(object):
     def addMember(self, projectId, userId, username, level):
         assert(level in userlevels.LEVELS)
 
-        if (self.auth.userId != userId) and level == userlevels.USER:
-            raise users.UserInduction()
-
         project = projects.Project(self, projectId)
 
         cu = self.db.cursor()
@@ -307,6 +304,9 @@ class MintServer(object):
                 raise database.ItemNotFound("user")
         elif userId and not username:
             username = self.users.getUsername(userId)
+
+        if (self.auth.userId != userId) and level == userlevels.USER:
+            raise users.UserInduction()
 
         self.membershipRequests.deleteRequest(projectId, userId)
         try:

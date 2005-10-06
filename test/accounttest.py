@@ -62,6 +62,28 @@ class AccountTest(MintRepositoryHelper):
         # check confs entry doesn't exist
         assert (self._getConfirmation(userId) is None)
 
+    def testWatchProjects(self):
+        # test watching projects in various ways
+
+        client = self.openMintClient()
+
+        ownerClient, ownerId = self.quickMintUser("owner", "foo")
+        readerClient, readerId = self.quickMintUser("reader", "foo")
+
+        projectId = ownerClient.newProject("Foo", "foo", "rpath.org")
+
+        project = readerClient.getProject(projectId)
+
+        # add by user name
+        project.addMemberByName("reader", userlevels.USER)
+        assert(project.getUserLevel(readerId) == userlevels.USER)
+
+        project.delMemberById(readerId)
+        
+        # add by user id
+        project.addMemberById(readerId, userlevels.USER)
+        assert(project.getUserLevel(readerId) == userlevels.USER)
+
     def testOrphanProjects(self):
         # owner tries to quit in various ways
 
