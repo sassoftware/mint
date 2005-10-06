@@ -19,3 +19,4 @@ dist: default-dist dist-subdirs
 clean: default-clean clean-subdirs
 
 include ../Make.rules
+# vim: set sts=8 sw=8 noexpandtab :

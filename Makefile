@@ -28,16 +28,24 @@ doc_files = NEWS TODO
 
 dist_files = $(extra_files) $(doc_files)
 
-dist: $(dist_files)
+tarball:
+	tar cjf $(DISTDIR).tar.bz2 `basename $(DISTDIR)`
+	rm -rf $(DISTDIR)
+
+product-dist:
+	make -C product DIR=mint/web dist || exit 1;
+
+main-dist: $(dist_files)
 	rm -rf $(DISTDIR)
 	mkdir $(DISTDIR)
 	for d in $(SUBDIRS); do make -C $$d DIR=$$d dist || exit 1; done
 	for f in $(dist_files); do \
                 mkdir -p $(DISTDIR)/`dirname $$f`; \
                 cp -a $$f $(DISTDIR)/$$f; \
-        done; \
-        tar cjf $(DISTDIR).tar.bz2 `basename $(DISTDIR)`
-	rm -rf $(DISTDIR)
+	done;
+
+dist: main-dist tarball
+product: main-dist product-dist tarball
 
 install: all install-subdirs
 	mkdir -p $(DESTDIR)$(datadir)/mint/
@@ -66,3 +74,5 @@ clean: clean-subdirs default-clean
 subdirs: default-subdirs
 
 include Make.rules
+
+# vim: set sts=8 sw=8 noexpandtab :

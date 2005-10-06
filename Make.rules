@@ -50,3 +50,4 @@ dist-subdirs:
 ifdef SUBDIRS
 	for d in $(SUBDIRS); do make -C $$d DIR=$(DIR)/$$d dist || exit 1; done
 endif
+# vim: set sts=8 sw=8 noexpandtab :

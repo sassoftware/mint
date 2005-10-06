@@ -29,3 +29,4 @@ dist: default-dist
 install: default-install
 
 include ../Make.rules
+# vim: set sts=8 sw=8 noexpandtab :

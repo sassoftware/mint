@@ -18,3 +18,4 @@ install:
 	install -m 644 favicon/rpath-16x16-favicon.ico $(DESTDIR)$(contentdir)/images/rpath-16x16-favicon.ico
 
 include ../../../../Make.rules
+# vim: set sts=8 sw=8 noexpandtab :
