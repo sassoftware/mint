@@ -37,5 +37,4 @@ clean: default-clean
 
 include ../Make.rules
 
-#vim: sts=0 noexpandtab ts=8
 # vim: set sts=8 sw=8 noexpandtab :
