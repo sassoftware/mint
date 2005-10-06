@@ -292,6 +292,10 @@ class MintServer(object):
     @private
     def addMember(self, projectId, userId, username, level):
         assert(level in userlevels.LEVELS)
+
+        if (self.auth.userId != userId) and level == userlevels.USER:
+            raise users.UserInduction()
+
         project = projects.Project(self, projectId)
 
         cu = self.db.cursor()
@@ -342,6 +346,13 @@ class MintServer(object):
     @private
     def delMember(self, projectId, userId, notify=True):
         #XXX Make this atomic
+        try:
+            userLevel = self.getUserLevel(userId, projectId)
+        except database.ItemNotFound:
+            raise netclient.UserNotFound()
+        if (self.auth.userId != userId) and userLevel == userlevels.USER:
+            raise users.UserInduction()
+
         project = projects.Project(self, projectId)
         self.projectUsers.delete(projectId, userId)
         repos = self._getProjectRepo(project)
@@ -446,6 +457,8 @@ class MintServer(object):
     @requiresAuth
     @private
     def setUserLevel(self, userId, projectId, level):
+        if (self.auth.userId != userId) and (level == userlevels.USER):
+            raise users.UserInduction()
         if self.projectUsers.onlyOwner(projectId, userId) and (level != userlevels.OWNER):
             raise users.LastOwner()
         #update the level on the project

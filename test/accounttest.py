@@ -9,8 +9,9 @@ testsuite.setup()
 from mint_rephelp import MintRepositoryHelper
 from mint import userlevels
 from mint.mint_error import PermissionDenied
-from mint.users import LastOwner
+from mint.users import LastOwner, UserInduction
 from mint.database import DuplicateItem
+from repository.netclient import UserNotFound
 
 class AccountTest(MintRepositoryHelper):
 
@@ -72,10 +73,13 @@ class AccountTest(MintRepositoryHelper):
         projectId = ownerClient.newProject("Foo", "foo", "rpath.org")
         project = ownerClient.getProject(projectId)
 
-        assert(not project.lastOwner(ownerId))
+        readerProject = readerClient.getProject(projectId)
 
-        project.updateUserLevel(ownerId, userlevels.USER)
-        project.updateUserLevel(ownerId, userlevels.OWNER)
+        try:
+            project.updateUserLevel(ownerId, userlevels.USER)
+            self.fail('Project allowed changing owner status to user status')
+        except LastOwner:
+            pass
 
         for i in range(2):
             assert(not project.lastOwner(ownerId))
@@ -90,6 +94,12 @@ class AccountTest(MintRepositoryHelper):
             try:
                 project.addMemberById(develId, userlevels.DEVELOPER)
             except DuplicateItem:
+                pass
+
+            try:
+                project.updateUserLevel(develId, userlevels.USER)
+                self.fail("Project allowed demotion from developer to user")
+            except UserInduction:
                 pass
 
             assert(project.lastOwner(ownerId))
@@ -116,11 +126,26 @@ class AccountTest(MintRepositoryHelper):
                 pass
 
             try:
+                readerProject.delMemberById(readerId)
+            except UserNotFound:
+                pass
+
+            try:
                 project.addMemberById(readerId, userlevels.USER)
-            except DuplicateItem:
+                self.fail('Owner inducted a user')
+            except UserInduction:
+                pass
+
+            readerProject.addMemberById(readerId, userlevels.USER)
+            try:
+                project.delMemberById(readerId)
+                self.fail('owner ejected a reader')
+            except UserInduction:
                 pass
 
             project.delMemberById(develId)
+
+        readerProject.delMemberById(readerId)
 
 if __name__ == "__main__":
     testsuite.main()

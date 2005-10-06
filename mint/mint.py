@@ -9,6 +9,7 @@ import xmlrpclib
 import time
 
 from repository import repository
+from repository.netclient import UserNotFound
 
 import database
 import jobs
@@ -404,6 +405,10 @@ class _Method(xmlrpclib._Method):
             raise PermissionDenied(exceptionArgs[0])
         elif exceptionName == "LastOwner":
             raise users.LastOwner(exceptionArgs[0])
+        elif exceptionName == "UserInduction":
+            raise users.UserInduction(exceptionArgs[0])
+        elif exceptionName == "UserNotFound":
+            raise UserNotFound(exceptionArgs[0])
         else:
             raise UnknownException(exceptionName, exceptionArgs)
 

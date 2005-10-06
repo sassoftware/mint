@@ -54,6 +54,10 @@ class LastOwner(MintError):
     def __str__(self):
         return "attempted to orphan a project with developers"
 
+class UserInduction(MintError):
+    def __str__(self):
+        return "Project owner attempted to manipulate a project user in an illegal fashion"
+
 class ConfirmationsTable(database.KeyedTable):
     name = 'Confirmations'
     key = 'userid'
