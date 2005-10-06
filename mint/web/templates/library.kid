@@ -2,6 +2,7 @@
 <?python
 import time
 from mint import searcher
+from urllib import quote
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#">
@@ -10,6 +11,60 @@ from mint import searcher
     All Rights Reserved
 -->
     <div py:def="formatTitle(str)" py:strip="True" py:content="'%s - %s'%(str, cfg.productName)"/>
+
+    <div py:def="userActions()" py:strip="True">
+        <?python
+            secureProtocol = 'http'
+            if auth.authorized:
+                loginAction = "logout"
+            else:
+                loginAction = "processLogin"
+                if cfg.SSL:
+                    secureProtocol = "https"
+        ?>
+
+        <form method="post" action="${secureProtocol}://${cfg.secureHost}${cfg.basePath}$loginAction">
+            <input py:if="loginAction == 'processLogin'" type="hidden" name="to" value="${quote(toUrl)}" />
+            <table border="0" cellspacing="0" cellpadding="0" summary="layout">
+                <tr>
+                    <td id="logo">
+                    </td>
+                    <td id="user" py:if="not auth.authorized">
+                        <div class="pad">
+                            <h4>not logged in | <a href="${secureProtocol}://${cfg.secureHost}${cfg.basePath}forgotPassword">Forgot Password</a></h4>
+                            <div>
+                                <input type="text" name="username" size="16"/> <label>username</label><br />
+                                <input type="password" name="password" size="16"/> <label>password</label>
+                            </div>
+                        </div>
+                    </td>
+                    <td id="user" py:if="auth.authorized">
+                        <div class="pad">
+                            <h3>${auth.fullName}</h3>
+                            <h4>${auth.username}</h4>
+                            <div><a href="${secureProtocol}://${cfg.secureHost}${cfg.basePath}userSettings" class="arrows">view &#38; Edit My Account</a></div>
+                            <div><a py:if="projectList" href="http://${SITE}uploadKey" class="arrows">Upload a Package Signing Key</a></div>
+                            <div py:if='auth.admin'><a href="http://${SITE}administer" class="arrows">Administer</a></div>
+
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    ${topnav()}
+                    <td id="log">
+                        <div class="pad" py:if="not auth.authorized">
+                            <button type="submit">Login</button> |
+                            <a href="http://${SITE}register" class="arrows">New Account</a>
+                        </div>
+                        <div class="pad" py:if="auth.authorized">
+                            <button type="submit">Logout</button>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </form>
+    </div>
+
 
     <thead py:def="columnTitles(columns = [])" py:strip="False">
         <tr>
