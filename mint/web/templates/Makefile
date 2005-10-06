@@ -18,6 +18,7 @@ kid_files = \
 	joinRequest.kid		\
 	layout.kid		\
 	library.kid		\
+	loginLanding.kid	\
 	mailingLists.kid	\
 	members.kid		\
 	newProject.kid		\
