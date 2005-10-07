@@ -74,6 +74,11 @@ def post(port, isSecure, repos, cfg, req):
     else:
         protocol = "http"
 
+    encoding = req.headers_in.get('Content-Encoding', None)
+    data = req.read()
+    if encoding == 'deflate':
+        data = zlib.decompress(data)
+
     if req.headers_in['Content-Type'] == "text/xml":
         authToken = getHttpAuth(req)
         if type(authToken) is int:
@@ -82,7 +87,7 @@ def post(port, isSecure, repos, cfg, req):
         if authToken[0] != "anonymous" and not isSecure and repos.forceSecure:
             return apache.HTTP_FORBIDDEN
 
-        (params, method) = xmlrpclib.loads(req.read())
+        (params, method) = xmlrpclib.loads(data)
 
         wrapper = repos.callWrapper
         params = [protocol, port, method, authToken, params]
