@@ -59,7 +59,7 @@ from mint.mint import upstream
                             <h4>What can I do with this project?</h4>
                             <ul>
                                 <li py:if="isOwner">
-                                    <a href="${basePath}editProject">edit project details</a>
+                                    <a href="${basePath}editProject">Edit project details</a>
                                 </li>
                                 <li py:if="releases">
                                     <a href="${basePath}rss">
