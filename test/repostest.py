@@ -1,6 +1,6 @@
 #!/usr/bin/python2.4
 #
-# Copyright (c) 2004-2005 rpath, Inc.
+# Copyright (c) 2004-2005 rPath, Inc.
 #
 
 from time import sleep
