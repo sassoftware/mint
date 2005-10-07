@@ -4,7 +4,7 @@
 # All Rights Reserved
 #
 
-SUBDIRS = css
+SUBDIRS = css images
 
 dist_files =
 
