@@ -73,9 +73,9 @@
 
     <td py:def="projectsPane()" id="right" class="projects">
         <div py:if="not auth.authorized" class="pad">
-            <h3>Start Using rBuilder Online Today</h3>
+            <h3>Start Using ${cfg.productName} Today</h3>
 
-            <p>If you are new to rBuilder Online, create
+            <p>If you are new to ${cfg.productName}, create
             your new account by using the
             <a href="http://${SITE}register"><strong>new account</strong></a>
             link above.</p>
@@ -85,7 +85,7 @@
         <div py:if="auth.authorized and not projectList" class="pad">
             <h3>Get Involved</h3>
 
-            <p>Now's the time to get involved with the rBuilder Online
+            <p>Now's the time to get involved with the ${cfg.productName}
             community. There are two ways you can do this:</p>
 
             <ul>
