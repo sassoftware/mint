@@ -255,7 +255,8 @@ def conaryHandler(req, cfg, pathInfo):
         if cfg.commitAction:
             commitAction = cfg.commitAction % {'repMap': repName + " " + repMapStr,
                                                'buildLabel': buildLabel,
-                                               'projectName': projectName}
+                                               'projectName': projectName,
+                                               'commitEmail': cfg.commitEmail}
         else:
             commitAction = None
 
