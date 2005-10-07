@@ -1,4 +1,7 @@
 /* BASIC STYLES */
+html {
+	background-color:#6DABAD; color:#333;
+}
 body {
 	background-color:#6DABAD; color:#333;
 	margin:0px; padding:12px;

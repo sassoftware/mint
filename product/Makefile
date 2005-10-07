@@ -6,7 +6,7 @@
 
 SUBDIRS = content templates
 
-dist_files =
+dist_files = mint.conf httpd.conf
 
 all: default-subdirs
 
@@ -14,7 +14,13 @@ install: install-subdirs
 
 subdirs: default-subdirs
 
-dist: default-dist dist-subdirs
+dist: defaultdist dist-subdirs
+
+defaultdist: $(dist_files)
+	mkdir -p $(DISTDIR)
+	for f in $(dist_files); do \
+		cp -a $$f $(DISTDIR); \
+	done
 
 clean: default-clean clean-subdirs
 

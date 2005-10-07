@@ -4,23 +4,21 @@
 # All Rights Reserved
 #
 
-SUBDIRS = docs
+kid_files =			\
+        feedback.kid            \
+        privacy.kid             \
+        tos.kid                 \
+	legal.kid
 
-kid_files = \
-	frontPage.kid		\
-	layout.kid
+python_files =
 
-python_files = __init__.py
-
-extra_dist =
+extra_dist = 
 
 dist_files = $(extra_dist) $(kid_files) $(python_files)
 
-all: default-all default-subdirs
+all: default-all
 
-install: kidfiles-install install-subdirs pyfiles-install
-
-subdirs: default-subdirs
+install: kidfiles-install pyfiles-install
 
 kidfiles-install:
 	kidc --strip-dest-dir $$(pwd) $$(pwd)
@@ -33,5 +31,5 @@ dist: default-dist
 
 clean: default-clean
 
-include ../../Make.rules
+include ../../../Make.rules
 # vim: set sts=8 sw=8 noexpandtab :
