@@ -105,8 +105,8 @@ class Project(database.TableObject):
     def delMemberById(self, userId):
         return self.server.delMember(self.id, userId)
 
-    def editProject(self, projecturl, desc):
-        return self.server.editProject(self.id, projecturl, desc)
+    def editProject(self, projecturl, desc, name):
+        return self.server.editProject(self.id, projecturl, desc, name)
 
     def updateUser(self, userId, **kwargs):
         return self.users.update(userId, **kwargs)

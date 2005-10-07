@@ -229,7 +229,15 @@ class KeyedTable(DatabaseTable):
         stmt = "UPDATE %s SET %s WHERE %s=?" % (self.name, params, self.key)
 
         cu = self.db.cursor()
-        cu.execute(*[stmt] + values + [id])
+        try:
+            cu.execute(*[stmt] + values + [id])
+        except sqlite3.ProgrammingError, e:
+            self.db.rollback()
+            if e.args[0].startswith("column") and e.args[0].endswith("not unique"):
+                raise DuplicateItem(self.name)
+            else:
+                raise
+
         self.db.commit()
         return True
 

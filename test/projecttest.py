@@ -8,6 +8,7 @@ testsuite.setup()
 
 from mint_rephelp import MintRepositoryHelper
 from mint import userlevels
+from mint.database import DuplicateItem
 
 class ProjectTest(MintRepositoryHelper):
     def testBasicAttributes(self):
@@ -15,22 +16,41 @@ class ProjectTest(MintRepositoryHelper):
         projectId = client.newProject("Foo", "foo", "rpath.org")
 
         project = client.getProject(projectId)
-        project.editProject("http://example.com/", "Description")
 
         project = client.getProject(projectId)
         assert(project.getFQDN() == "foo.rpath.org")
         assert(project.getHostname() == "foo")
         assert(project.getDomainname() == "rpath.org")
         assert(project.getName() == "Foo")
-        assert(project.getDesc() == "Description")
-        assert(project.getProjectUrl() == "http://example.com/")
         assert(project.getMembers() ==\
             [[userId, 'testuser', userlevels.OWNER]])
 
         assert(project.hidden == 0)
         assert(project.external == 0)
         assert(project.disabled == 0)
-    
+   
+    def testEditProject(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        projectId = client.newProject("Foo", "foo", "rpath.org")
+
+        project = client.getProject(projectId)
+        project.editProject("http://example.com/", "Description", "Foo Title")
+        project.refresh()
+        
+        assert(project.getName() == "Foo Title")
+        assert(project.getDesc() == "Description")
+        assert(project.getProjectUrl() == "http://example.com/")
+  
+        # create a new project to conflict with
+        newProjectId = client.newProject("Foo2", "foo2", "rpath.org")
+        
+        try:
+            project.editProject("http://example.com/", "Description", "Foo2")
+        except DuplicateItem:
+            pass
+        else:
+            self.fail("expected DuplicateItem exception")
+   
     def testGetProjects(self):
         client, userId = self.quickMintUser("testuser", "testpass")
         projectId = self.newProject(client, hostname = "test1")

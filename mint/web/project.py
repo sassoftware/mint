@@ -303,14 +303,29 @@ class ProjectHandler(WebHandler):
     @requiresAuth
     @ownerOnly
     def editProject(self, auth):
-        self._write("editProject")
+        kwargs = {
+            'projecturl': self.project.getProjectUrl(),
+            'name': self.project.getName(),
+            'desc': self.project.getDesc(),
+        }
+        self._write("editProject", errors = [], kwargs = kwargs)
         return apache.OK
 
-    @strFields(projecturl = '', desc = '')
+    @strFields(projecturl = '', desc = '', name = '')
     @ownerOnly
-    def processEditProject(self, auth, projecturl, desc):
-        self.project.editProject(projecturl, desc)
-        return self._redirect(self.basePath)
+    def processEditProject(self, auth, projecturl, desc, name):
+        errors = []
+        try:
+            self.project.editProject(projecturl, desc, name)
+        except database.DuplicateItem:
+            errors.append("Project title conflicts with another project.")
+
+        if errors:
+            kwargs = {'projecturl': projecturl, 'desc': desc, 'name': name}
+            self._write("editProject", kwargs = kwargs, errors = errors)
+            return apache.OK
+        else:
+            return self._redirect(self.basePath)
 
     def members(self, auth):
         if (self.userLevel == userlevels.OWNER or auth.admin):

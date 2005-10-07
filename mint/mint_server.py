@@ -406,8 +406,8 @@ class MintServer(object):
 
     @requiresAuth
     @private
-    def editProject(self, projectId, projecturl, desc):
-        return self.projects.update(projectId, projecturl=projecturl, desc = desc)
+    def editProject(self, projectId, projecturl, desc, name):
+        return self.projects.update(projectId, projecturl=projecturl, desc = desc, name = name)
 
     @requiresAdmin
     @private
