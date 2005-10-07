@@ -71,8 +71,8 @@ orderhtml = {
     LASTMODIFIED_DES:  "Most recently modified",
     CREATED_ASC:       "Oldest",
     CREATED_DES:       "Newest",
-    NUMDEVELOPERS_ASC: "Fewest developers",
-    NUMDEVELOPERS_DES: "Most developers",
+    NUMDEVELOPERS_ASC: "Least Popular",
+    NUMDEVELOPERS_DES: "Most Popular",
     ACTIVITY_ASC:      "Least Active",
     ACTIVITY_DES:      "Most Active",
 }
