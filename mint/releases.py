@@ -152,24 +152,25 @@ class Release(database.TableObject):
         return tuple(self.server.getReleaseTrove(self.releaseId))
 
     def getTroveName(self):
-        return self.trove[0]
+        return self.troveName
 
     def getTroveVersion(self):
-        return versions.ThawVersion(self.trove[1])
+        return versions.ThawVersion(self.troveVersion)
 
     def getTroveFlavor(self):
-        return deps.ThawDependencySet(self.trove[2])
+        return deps.ThawDependencySet(self.troveFlavor)
 
     def getChangedTime(self):
         return self.troveLastChanged
 
     def setTrove(self, troveName, troveVersion, troveFlavor):
-        return self.server.setReleaseTrove(self.releaseId,
+        self.server.setReleaseTrove(self.releaseId,
             troveName, troveVersion, troveFlavor)
+        self.refresh()
 
     def setImageType(self, imageType):
         assert(imageType in releasetypes.TYPES)
-
+        
         return self.server.setImageType(self.releaseId, imageType)
 
     def getImageType(self):
