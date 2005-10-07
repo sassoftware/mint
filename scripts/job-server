@@ -236,18 +236,12 @@ if __name__ == "__main__":
     pid = os.fork()
 
     if pid == 0:
-        os.setsid()
-
-        # will this solve my shell-exiting problems?
-        #f = file('/dev/null', 'r+')
-        #fd = f.fileno()
-        #os.dup2(fd,0)
-        #os.dup2(fd,1)
-        #os.dup2(fd,2)
-        #f.close()
-        
         pid = os.fork()
         if pid == 0:
+            # abandon the controlling tty totally by placing this thread in a
+            # new session
+            os.setsid()
+
             logFile = os.path.join(cfg.logPath, "job-server.log")
             logfd = os.open(logFile, os.O_APPEND | os.O_WRONLY | os.O_CREAT)
             sys.stdout.flush()
