@@ -23,6 +23,14 @@ class BrowseTest(MintRepositoryHelper):
         r = cu.execute("INSERT INTO Commits VALUES(?, ?, 'whoCares', '1.0', ?)", projectId, timestamp, userId)
         self.db.commit()
 
+    def _fakePackage(self, projectId, name):
+        cu = self.db.cursor()
+        r = cu.execute("SELECT IFNULL(MAX(pkgId) + 1, 1) FROM PackageIndex")
+        pkgId = r.fetchone()[0]
+
+        r = cu.execute("INSERT INTO PackageIndex VALUES(?, ?, ?, 'whoCares')", (pkgId, projectId, name))
+        self.db.commit()
+
     def _sortOrderDict(self):
         return {
             PROJECTNAME_ASC: [[4, 'bal', 'Bal', '', 1129542003.5455239], [2, 'bar', 'Bar', '', 1129550003.5455239], [3, 'baz', 'Baz', '', 1129560003.5455239], [1, 'foo', 'Foo', '', 1128540046.5455239]],
@@ -118,6 +126,16 @@ class BrowseTest(MintRepositoryHelper):
         assert(len(client.getUserSearchResults('test')[0]) == 4)
         assert(client.getUserSearchResults('er3') == ([[3, 'testuser3', 'Test User', 'test at example.com', '', 0]], 1))
         assert(client.getUserSearchResults('Sir Not Appearing In This Film') == ([], 0) )
+
+    def testSearchPackages(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        projectId = client.newProject("Foo", "foo", "rpath.org")
+        self._fakePackage(projectId, "brokenPackage")
+        self._fakePackage(projectId, "foomatic")
+        self._fakePackage(projectId, "barmatic")
+        self._fakePackage(projectId, "foobar")
+        assert(client.getPackageSearchResults('broken') == ([['brokenPackage', 'whoCares', 1]], 1))
+        assert(client.getPackageSearchResults('foo')[1] == 2)
 
 if __name__ == "__main__":
     testsuite.main()
