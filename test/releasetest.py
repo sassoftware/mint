@@ -18,9 +18,12 @@ class ReleaseTest(MintRepositoryHelper):
 
         release = client.newRelease(projectId, "Test Release")
         assert(release.getName() == "Test Release")
-        release.setTrove("group-trove", "/conary.rpath.com@rpl:devel/1.0-1-1", "1#x86")
+        release.setTrove("group-trove", "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
         assert(release.getTrove() ==\
-            ('group-trove', '/conary.rpath.com@rpl:devel/1.0-1-1', '1#x86'))
+            ('group-trove', '/conary.rpath.com@rpl:devel/0.0:1.0-1-1', '1#x86'))
+        assert(release.getTroveName() == 'group-trove')
+        assert(release.getTroveVersion().asString() == '/conary.rpath.com@rpl:devel/1.0-1-1')
+        assert(release.getTroveFlavor().freeze() == '1#x86')
         assert(release.getArch() == "x86")
 
         release.setFiles([("file1", "File Title 1"), ("file2", "File Title 2")])
