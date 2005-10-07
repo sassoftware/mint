@@ -9,6 +9,7 @@ testsuite.setup()
 from mint_rephelp import MintRepositoryHelper
 from mint.projectlisting import PROJECTNAME_ASC, PROJECTNAME_DES, LASTMODIFIED_ASC, LASTMODIFIED_DES, CREATED_ASC, CREATED_DES, NUMDEVELOPERS_ASC, NUMDEVELOPERS_DES, ACTIVITY_ASC, ACTIVITY_DES, ordersql
 from mint import userlevels
+from mint.searcher import SearchTermsError
 
 class BrowseTest(MintRepositoryHelper):
 
@@ -82,6 +83,41 @@ class BrowseTest(MintRepositoryHelper):
             results, count = client.getProjects(sortOrder, 30, 0)
             if results != sortOrderDict[sortOrder]:
                 self.fail("sort problem during sort: %s"% ordersql[sortOrder])
+
+    def testSearchProjects(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        fooId = client.newProject("Foo Project", "foo", "rpath.org")
+        self._changeTimestamps(fooId, 1128540046.5455239, 1128540046.5455239)
+        booId = client.newProject("Boo Project", "boo", "rpath.org")
+        self._changeTimestamps(booId, 1124540046.5455239, 1124540046.5455239)
+        snoozeId = client.newProject("Snooze Project", "snooze", "rpath.org")
+        self._changeTimestamps(snoozeId, 1126540046.5455239, 1126640046.5455239)
+        snoofId = client.newProject("Snoof Project", "snoof", "rpath.org")
+        self._changeTimestamps(snoofId, 1128540003.5455239, 1129540003.5455239)
+
+        try:
+            client.getProjectSearchResults('oo ')
+            self.fail("Search for illegal values 'oo ' succeeded")
+        except SearchTermsError:
+            pass
+
+        if client.getProjectSearchResults('Foo') != ([[1, 'foo', 'Foo Project', '', 1128540046.5455239]], 1):
+            self.fail("Search for 'Foo' did not return the correct results.")
+        res = client.getProjectSearchResults('Project')
+        assert(res[1] == 4)
+        assert(len(res[0]) == res[1])
+        assert(client.getProjectSearchResults('Snoo')[1] == 2)
+        assert(client.getProjectSearchResults('Camp Town Racers sing this song... doo dah... doo dah...') == ([], 0) )
+        assert(client.getProjectSearchResults('snooze OR Boo')[1] == 2)
+
+    def testSearchUsers(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        client2, userId2 = self.quickMintUser("testuser2", "testpass")
+        client3, userId3 = self.quickMintUser("testuser3", "testpass")
+        client4, userId4 = self.quickMintUser("testuser4", "testpass")
+        assert(len(client.getUserSearchResults('test')[0]) == 4)
+        assert(client.getUserSearchResults('er3') == ([[3, 'testuser3', 'Test User', 'test at example.com', '', 0]], 1))
+        assert(client.getUserSearchResults('Sir Not Appearing In This Film') == ([], 0) )
 
 if __name__ == "__main__":
     testsuite.main()
