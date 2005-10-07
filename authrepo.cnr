@@ -1,5 +1,5 @@
-repositoryDir /srv/authrepo/repo/
-tmpDir /srv/authrepo/tmp
-serverName authrepo.rpath.org
+repositoryDir @DESTDIR@/srv/authrepo/repo/
+tmpDir @DESTDIR@/srv/authrepo/tmp
+logFile @DESTDIR@/srv/authrepo/tmp/contents-log
+serverName authrepo.example.com
 cacheChangeSets false
-logFile /srv/authrepo/tmp/contents-log
