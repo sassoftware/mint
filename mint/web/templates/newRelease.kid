@@ -13,6 +13,10 @@ title = "Create New Release"
         <a href="${basePath}releases">Releases</a>
         <a href="#">Create a Release</a>
     </div>
+    <?python
+        for var in ['releaseId', 'imageType', 'trove', 'releaseName']:
+            kwargs[var] = kwargs.get(var, '')
+    ?>
 
     <head>
         <title>${formatTitle('Create a Release')}</title>
@@ -30,6 +34,11 @@ title = "Create New Release"
                 <form method="post" action="editRelease" id="mainForm">
 
                     <table cellspacing="0" cellpadding="0" border="0" class="mainformhorizontal">
+                        <tr py:if="errors"><td colspan="2">
+                            <p py:if="errors" class="error">Release Creation Error${len(errors) > 1 and 's' or ''}</p>
+                            <p py:for="error in errors" class="errormessage" py:content="error"/>
+                        </td></tr>
+
                         <tr>
                             <th><em class="required">Distribution Trove:</em></th>
                             <td>
