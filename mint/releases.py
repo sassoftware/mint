@@ -52,140 +52,6 @@ dataTemplates = {
     releasetypes.STUB_IMAGE      : stubImageTemplate,
 }
 
-class Release(object):
-    releaseId = None
-    name = None
-    projectId = None
-    userId = None
-    desc = None
-    trove = (None, None, None)
-    imageType = None
-    downloads = 0
-    published = False
-    server = None
-    
-    def __init__(self, server, releaseId):
-        self.releaseId = releaseId
-        self.server = server
-        self._refresh()
-
-    def _refresh(self):
-        data = self.server.getRelease(self.releaseId)
-        self.__dict__.update(data)
-        self.trove = (self.troveName, self.troveVersion, self.troveFlavor)
-
-    def getId(self):
-        return self.releaseId
-
-    def getName(self):
-        return self.name
-
-    def getDesc(self):
-        self._refresh()
-        return self.desc
-
-    def setDesc(self, desc):
-        return self.server.setReleaseDesc(self.releaseId, desc)
-
-    def getProjectId(self):
-        return self.projectId
-
-    def getUserId(self):
-        return self.userId
-
-    def getTrove(self):
-        return tuple(self.server.getReleaseTrove(self.releaseId))
-
-    def getTroveName(self):
-        return self.trove[0]
-
-    def getTroveVersion(self):
-        return versions.ThawVersion(self.trove[1])
-
-    def getTroveFlavor(self):
-        return deps.ThawDependencySet(self.trove[2])
-
-    def getChangedTime(self):
-        return self.troveLastChanged
-
-    def setTrove(self, troveName, troveVersion, troveFlavor):
-        return self.server.setReleaseTrove(self.releaseId,
-            troveName, troveVersion, troveFlavor)
-
-    def setImageType(self, imageType):
-        assert(imageType in releasetypes.TYPES)
-
-        return self.server.setImageType(self.releaseId, imageType)
-
-    def getImageType(self):
-        self._refresh()
-        return self.imageType
-
-    def getImageTypeName(self):
-        return releasetypes.typeNames[self.getImageType()]
-
-    def getJob(self):
-        jobIds = self.server.getJobIds(self.releaseId)
-        if len(jobIds) > 0:
-            job = jobs.Job(self.server, jobIds[0])
-        else:
-            job = None
-        return job
-
-    def getFiles(self):
-        return [(x[0], x[1], x[2]) for x in self.server.getImageFilenames(self.releaseId)]
-
-    def setFiles(self, filenames):
-        return self.server.setImageFilenames(self.releaseId, filenames)
-        
-    def getArch(self):
-        flavor = deps.ThawDependencySet(self.getTrove()[2])
-        if flavor.members:
-            return flavor.members[deps.DEP_CLASS_IS].members.keys()[0]
-        else:
-            return "none" 
-
-    def getDownloads(self):
-        self._refresh()
-        return self.downloads
-
-    def getPublished(self):
-        return self.published
-
-    def setPublished(self, published):
-        return self.server.setReleasePublished(self.releaseId, published)
-
-    def getDataTemplate(self):
-        try:
-            return dataTemplates[self.getImageType()]
-        except KeyError:
-            return {}
-
-    def setDataValue(self, name, value, dataType = None):
-        template = self.getDataTemplate()
-        if name not in template:
-            raise ReleaseDataNameError("Named value not in data template: %s" %name)
-        if dataType is None:
-            dataType = template[name][0]
-        return self.server.setReleaseDataValue(self.getId(), name, value, dataType)
-
-    def getDataValue(self, name):
-        template = self.getDataTemplate()
-        if name not in template:
-            raise ReleaseDataNameError("Named value not in data template: %s" %name)
-        val = self.server.getReleaseDataValue(self.getId(), name)
-        if val is None:
-            val = template[name][1]
-        return val
-
-    def getDataDict(self):
-        dataDict = self.server.getReleaseDataDict(self.getId())
-        template = self.getDataTemplate()
-        for name in list(template):
-            if name not in dataDict:
-                dataDict[name] = template[name][1]
-        return dataDict
-
 class ReleasesTable(database.KeyedTable):
     name = "Releases"
     key = "releaseId"
@@ -257,3 +123,120 @@ class ReleasesTable(database.KeyedTable):
             raise TroveNotSet
         else:
             return name, version, flavor
+
+class Release(database.TableObject):
+    __slots__ = [ReleasesTable.key] + ReleasesTable.fields
+
+    def getItem(self, id):
+        return self.server.getRelease(id)
+
+    def getId(self):
+        return self.releaseId
+
+    def getName(self):
+        return self.name
+
+    def getDesc(self):
+        return self.desc
+
+    def setDesc(self, desc):
+        return self.server.setReleaseDesc(self.releaseId, desc)
+
+    def getProjectId(self):
+        return self.projectId
+
+    def getUserId(self):
+        return self.userId
+
+    def getTrove(self):
+        return tuple(self.server.getReleaseTrove(self.releaseId))
+
+    def getTroveName(self):
+        return self.trove[0]
+
+    def getTroveVersion(self):
+        return versions.ThawVersion(self.trove[1])
+
+    def getTroveFlavor(self):
+        return deps.ThawDependencySet(self.trove[2])
+
+    def getChangedTime(self):
+        return self.troveLastChanged
+
+    def setTrove(self, troveName, troveVersion, troveFlavor):
+        return self.server.setReleaseTrove(self.releaseId,
+            troveName, troveVersion, troveFlavor)
+
+    def setImageType(self, imageType):
+        assert(imageType in releasetypes.TYPES)
+
+        return self.server.setImageType(self.releaseId, imageType)
+
+    def getImageType(self):
+        return self.imageType
+
+    def getImageTypeName(self):
+        return releasetypes.typeNames[self.getImageType()]
+
+    def getJob(self):
+        jobIds = self.server.getJobIds(self.releaseId)
+        if len(jobIds) > 0:
+            job = jobs.Job(self.server, jobIds[0])
+        else:
+            job = None
+        return job
+
+    def getFiles(self):
+        return [(x[0], x[1], x[2]) for x in self.server.getImageFilenames(self.releaseId)]
+
+    def setFiles(self, filenames):
+        return self.server.setImageFilenames(self.releaseId, filenames)
+        
+    def getArch(self):
+        flavor = deps.ThawDependencySet(self.getTrove()[2])
+        if flavor.members:
+            return flavor.members[deps.DEP_CLASS_IS].members.keys()[0]
+        else:
+            return "none" 
+
+    def getDownloads(self):
+        return self.downloads
+
+    def getPublished(self):
+        return self.published
+
+    def setPublished(self, published):
+        return self.server.setReleasePublished(self.releaseId, published)
+
+    def getDataTemplate(self):
+        self.refresh()
+        try:
+            return dataTemplates[self.getImageType()]
+        except KeyError:
+            return {}
+
+    def setDataValue(self, name, value, dataType = None):
+        template = self.getDataTemplate()
+        if name not in template:
+            raise ReleaseDataNameError("Named value not in data template: %s" %name)
+        if dataType is None:
+            dataType = template[name][0]
+        return self.server.setReleaseDataValue(self.getId(), name, value, dataType)
+
+    def getDataValue(self, name):
+        template = self.getDataTemplate()
+        if name not in template:
+            raise ReleaseDataNameError("Named value not in data template: %s" %name)
+        val = self.server.getReleaseDataValue(self.getId(), name)
+        if val is None:
+            val = template[name][1]
+        return val
+
+    def getDataDict(self):
+        dataDict = self.server.getReleaseDataDict(self.getId())
+        template = self.getDataTemplate()
+        for name in list(template):
+            if name not in dataDict:
+                dataDict[name] = template[name][1]
+        return dataDict
+
