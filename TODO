@@ -1,40 +1,17 @@
 DATABASE 
 
 * a separate database table for namespaces; maybe not needed; maybe we can use Labels table?
-* refactor mint -> imagetool-backend, imagetool (product frontend), mint (public frontend)
 
 TEST SUITE
 
 * test suite improvements
-    * be able to test membership levels (trouble is accessing new project's repository by hostname
-      which doesn't really exist)
     * check coverage
     * test image creation
-
-JOB SERVER
-
-* improve job-server
-    * [PENDING TESTING] more robust (handle server restarts, etc)
-	job-server should now handle mint server downtime
-	job-server worker threads should now safely abort if job-server quits
-
-USER INTERFACE
-
-* [SORT OF DONE] Fix 'most active' and 'most popular' project links
- - We need to parse the Commits table and downloads counter and distill some real
-   statistical information to use for these links.
-* Fix up news handling
 
 MISSING FEATURES
 
 * [POSTPONED] Bug tracking
 * Metadata editing for packages (blocking on Conary metadata handling)
-* Each project site should have a sidebar with recently updated packages
-  (see http://www.archlinux.org/)
-* Server -> User messaging system
- - we need an in-band way for users to ask to join a project (only one time
-   to prevent DoS-style issues with hundreds of join requests), and for
-   project owners to offer membership.
 
 ADMIN INTERFACE
 * Method for deleting a project completely

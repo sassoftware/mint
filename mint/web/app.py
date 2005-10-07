@@ -89,11 +89,12 @@ class MintApp(WebHandler):
             timeout = 86400, # XXX timeout of one day; should it be configurable?
             domain = self.req.hostname,
             lock = False)
+
+        # if we were passed a sid, specifically set a cookie
+        # for the requested domain with that sid.
         if sid:
             c = self.session.make_cookie()
             c.domain = self.fields['hostname']
-            print >> sys.stderr, "setting cookie:", str(c)
-            sys.stderr.flush()
             Cookie.add_cookie(self.req, c)
             
         # default to anonToken if the current session has no authToken
