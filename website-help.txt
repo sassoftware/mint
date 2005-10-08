@@ -240,10 +240,10 @@ their customized system images).  Here's how to get started:
 
 *1. Create an rBuilder Online Account*
 
-Creating an rBuiilder Online account costs nothing and takes only a
-minute.  Here's what you need to do:
+Creating an rBuiilder Online account costs nothing and takes only moments.
+Here's what you need to do:
 
-    o Click on the new account link at the top right-hand side of the
+    o Click on the "new account" link at the top right-hand side of the
       rBuilder Online homepage. You'll be taken to a form to fill out. At a
       minimum you must fill in the following fields:
 
@@ -257,12 +257,13 @@ minute.  Here's what you need to do:
 
         -  Confirm Password -- Confirmation of the password you entered above.
 
-Finally, you must check the two checkboxes entitled "I have read and accept
-the Terms of Service" and "I have read and accept the Privacy Policy".
+    o You must check the two checkboxes entitled "I have read and accept
+      the Terms of Service" and "I have read and accept the Privacy
+      Policy".
 
-Click on Register, and you will receive an email (sent to the email address
-you entered) with a confirmation link. Use your browser to follow the link,
-and you'll then be able to login.
+    o Finally, click on "Register", and you will receive an email (sent to
+      the email address you entered) with a confirmation link. Use your
+      browser to follow the link, and you'll then be able to login.
 
 
 *2. Create (or Join) a Project*
@@ -275,32 +276,62 @@ on either:
 
     o Packaging software for inclusion in other projects' system images
 
-If you'd like to create a new project, start the project creation process
-by clicking on the "Create a new project" link. After that, the process is
-no more complex than filling in a few text fields and clicking on a Create
-button.
+You can either create a new project, or join an already-existing project.
 
-If you're interested in joining an already-existing project, go to the
-project's homepage. Click on the "Request to join" link at the bottom of
-the page, enter any comments you'd like to make to the project's owners,
-and click on Submit. Your request will be forwarded to the project's
-owners, who can then review your request.
+If you'd like to create a new project, here's what you need to do:
 
-3. Create Your System Image's Group
+    o Click on the "Create a new project" link on the right-hand side of
+      the rBuilder Online homepage. You'll be taken to a form to fill out.
+      At a minimum, you must fill in the following fields:
+
+        - Project Name -- Limit to no more than 16 characters
+
+        - Project Title -- A more human-friendly description of your
+          project 
+
+    o Finally, click on "Create".  Your project is now ready!
+
+If you're interested in joining an already-existing project, here's what
+you need to do:
+
+    o Search or browse for a project that interests you.
+
+    o Click on the project's name to go to the project's homepage.
+
+    o Click on the "Request to join this project" link.  You'll be taken to
+      a page where you can enter any comments you'd like to pass on to the
+      project's owner.
+
+    o Finally, click on "Submit".  Your request will be forwarded to the
+      project's owner, who can then review your request.
+
+
+3. Create Your Conary Development Environment
+
+Before you can start committing things to your rBuilder Online repository,
+you must first configure Conary.  Here's what you need to do:
+
+    o Go to your project's homepage.
+
+    o Click on the "Create my Conary development environment" link.  You'll
+      be taken to a page containing instructions on the directories and
+      files you'll need to create.
+
+4. Create Your System Image's Group
 
 To create a customized system image, you must first create a group recipe
 that reflects the software comprising your image.
 
 *** Details ***
 
-4. Generate Your System Image
+5. Generate Your System Image
 
 Once you're satisfied with (and have cooked) your group, you can create an
 image.
 
 *** Details ***
 
-5. Publish Your System Image
+6. Publish Your System Image
 
 After your newly-create system image has been tested, it's time to make it
 available to the general public.
