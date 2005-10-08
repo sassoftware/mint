@@ -4,6 +4,7 @@
 # All rights reserved
 #
 import base64
+import email
 import os
 import stat
 import sys
@@ -22,6 +23,7 @@ from mint import shimclient
 from mint import users
 from mint import userlevels
 from mint import mailinglists
+from mint import projectlisting
 from mint.session import SqlSession
 
 from webhandler import WebHandler, normPath
@@ -483,4 +485,27 @@ class SiteHandler(WebHandler):
             self._write("confirm", message = "Are you sure you want to delete your account?",
                 yesLink = "cancelAccount?confirmed=1",
                 noLink = "/")
+        return apache.OK
+
+    @strFields(feed = 'newProjects')
+    def rss(self, auth, feed):
+        if feed == "newProjects":
+            results, count = self.client.getProjects(projectlisting.CREATED_DES, 10, 0)
+            
+            title = "New %s Projects" % self.cfg.productName
+            link = "http://%s%s/rss?feed=newProjects" % (self.cfg.siteHost, self.cfg.basePath)
+            desc = "New projects created on %s" % self.cfg.productName
+
+            items = []
+            for p in results:
+                item = {}
+                project = self.client.getProject(p[0])
+                
+                item['title'] = project.getName()
+                item['link'] = project.getUrl()
+                item['content'] = "A new project named <a href=\"%s\">%s</a> has been created." % (project.getUrl(), project.getName())
+                item['date_822'] = email.Utils.formatdate(project.getTimeCreated())
+                item['creator'] = "http://%s/" % self.siteHost
+                items.append(item)
+        self.writeRss(items = items, title = title, link = link, desc = desc)
         return apache.OK

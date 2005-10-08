@@ -479,13 +479,6 @@ class ProjectHandler(WebHandler):
 
     @strFields(feed= "releases")
     def rss(self, auth, feed):
-        def writeRss(**values):
-            path = os.path.join(self.cfg.templatePath, "rss20.kid")
-            template = kid.load_template(path)
-            t = template.Template(**values)
-            self.req.content_type = "text/xml"
-            t.write(self.req, encoding = "utf-8", output = "xml")
-
         if feed == "releases":
             title = "%s releases" % self.project.getName()
             link = "%sproject/%s/releases" % \
@@ -512,5 +505,5 @@ class ProjectHandler(WebHandler):
             link = ""
             desc = ""
 
-        writeRss(items = items, title = title, link = link, desc = desc)
+        self.writeRss(items = items, title = title, link = link, desc = desc)
         return apache.OK

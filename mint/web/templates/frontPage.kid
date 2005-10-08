@@ -16,6 +16,9 @@ from mint import searcher
         <title>${formatTitle('Front Page')}</title>
         <link py:if="cfg.newsRssFeed" rel="alternate" type="application/rss+xml"
               title="${cfg.productName} Site Announcements" href="${cfg.newsRssFeed}" />
+        <link rel="alternate" type="application/rss+xml"
+              title="New ${cfg.productName} Projects" href="http://${cfg.siteHost}${cfg.basePath}rss?feed=newProjects" />
+
     </head>
     <body>
         <td>

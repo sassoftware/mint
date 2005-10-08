@@ -85,6 +85,14 @@ class WebHandler(object):
                    user.getEmail(),
                    "%s forgotten password"%self.cfg.productName, message)
 
+    def writeRss(self, **values):
+        path = os.path.join(self.cfg.templatePath, "rss20.kid")
+        template = kid.load_template(path)
+        t = template.Template(**values)
+        self.req.content_type = "text/xml"
+        t.write(self.req, encoding = "utf-8", output = "xml")
+
+
 
 def normPath(path):
     """Normalize a web path by prepending a / if missing, and appending
