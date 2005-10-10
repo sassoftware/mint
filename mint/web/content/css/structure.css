@@ -26,9 +26,14 @@ sup.tm {
 	background:url(../images/top_right.gif) top right no-repeat;
 }
 td#logo {
-	width:76%; min-width:564px; height:78px;
+	width:76%; min-width:256px; height:64px;
 	background:url(../images/logo.gif) no-repeat top left;
+        padding: 10px;
+        position: absolute;
+        left: 20px;
+        top: 20px;
 }
+
 td#user {
 	width:24%; min-width:180px; height:78px; font-size:0.6333em;
 	background:url(../images/user_border.gif) no-repeat;
