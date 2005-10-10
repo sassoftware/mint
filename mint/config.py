@@ -36,8 +36,8 @@ class MintConfig(ConfigFile):
         'imagesPath'        : '/srv/mint/images/',
         'logPath'           : '/srv/mint/logs/',
         'siteDomainName'    : 'rpath.com',
-        'projectDomainName' : 'rpath.org',
-        'externalDomainName': 'rpath.com',
+        'projectDomainName' : None,
+        'externalDomainName': None,
         'secureHost'        : 'www.rpath.org',
         'hostName'          : None, # optional domain name for main site
         'SSL'               : [ BOOLEAN, False ],

@@ -242,8 +242,7 @@ def conaryHandler(req, cfg, pathInfo):
                         (req.hostname) + rest
         
         # set up the commitAction
-        # FIXME: don't hardcode @rpl:devel
-        buildLabel = repName + "@rpl:devel"
+        buildLabel = repName + "@" + cfg.defaultBranch
         projectName = repName.split(".")[0]
         if cfg.SSL:
             protocol = "https"
