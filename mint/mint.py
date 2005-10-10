@@ -313,8 +313,8 @@ class MintClient:
         for jobId in self.server.getJobIds(releaseId):
             yield self.getJob(jobId)
 
-    def getFilename(self, fileId):
-        return self.server.getFilename(fileId)
+    def getFileInfo(self, fileId):
+        return self.server.getFileInfo(fileId)
 
     def getNews(self):
         """

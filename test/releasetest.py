@@ -69,5 +69,17 @@ class ReleaseTest(MintRepositoryHelper):
             release.setDataValue('intArg', intArg)
             assert(intArg == release.getDataValue('intArg'))
 
+    def testDownloadIncrementing(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        projectId = client.newProject("Foo", "foo", "rpath.org")
+
+        release = client.newRelease(projectId, "Test Release")
+
+        assert(release.getDownloads() == 0)
+        release.incDownloads()
+        release.refresh()
+        assert(release.getDownloads() == 1)
+
+
 if __name__ == "__main__":
     testsuite.main()

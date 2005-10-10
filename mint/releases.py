@@ -67,8 +67,8 @@ class ReleasesTable(database.KeyedTable):
                     troveVersion         STR,
                     troveFlavor	         STR,
                     troveLastChanged     INT,
-                    published            INT,
-                    downloads            INT
+                    published            INT DEFAULT 0,
+                    downloads            INT DEFAULT 0
                 )"""
 
     fields = ['releaseId', 'projectId', 'name', 'desc', 'imageType',
@@ -202,6 +202,9 @@ class Release(database.TableObject):
 
     def getDownloads(self):
         return self.downloads
+
+    def incDownloads(self):
+        return self.server.incReleaseDownloads(self.releaseId)
 
     def getPublished(self):
         return self.published

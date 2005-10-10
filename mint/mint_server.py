@@ -799,6 +799,15 @@ class MintServer(object):
 
     @requiresAuth
     @private
+    def incReleaseDownloads(self, releaseId):
+        cu = self.db.cursor()
+        cu.execute("UPDATE Releases SET downloads = downloads + 1 WHERE releaseId=?",
+            releaseId)
+        self.db.commit()
+        return True
+
+    @requiresAuth
+    @private
     def setReleasePublished(self, releaseId, published):
         cu = self.db.cursor()
         cu.execute("UPDATE Releases SET published=? WHERE releaseId=?",
@@ -918,13 +927,13 @@ class MintServer(object):
             return [(x[0], x[1], x[2]) for x in results]
    
     @private
-    def getFilename(self, fileId):
+    def getFileInfo(self, fileId):
         cu = self.db.cursor()
-        cu.execute("SELECT filename FROM ImageFiles WHERE fileId=?", fileId)
+        cu.execute("SELECT releaseId, idx, filename, title FROM ImageFiles WHERE fileId=?", fileId)
 
-        results = cu.fetchone()
-        if results:
-            return results[0]
+        r = cu.fetchone()
+        if r:
+            return r[0], r[1], r[2], r[3]
         else:
             raise jobs.FileMissing
 

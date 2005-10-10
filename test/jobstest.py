@@ -50,9 +50,17 @@ class JobsTest(MintRepositoryHelper):
         client.getCfg().imagesPath = self.imagePath
         imagegen = stub_image.StubImage(client, client.getCfg(), job, release.getId())
         imagegen.write()
+        release.setFiles([(self.imagePath + "/stub.iso", "Stub")])
         
         self.verifyFile(self.imagePath + "/stub.iso", "Hello World!\n")
         
+        release.refresh()
+        files = release.getFiles()
+        assert(files == [(1, self.imagePath + "/stub.iso", "Stub")])
+
+        fileInfo = client.getFileInfo(files[0][0])
+        assert(fileInfo == (release.getId(), 0, self.imagePath + '/stub.iso', 'Stub'))
         
+
 if __name__ == "__main__":
     testsuite.main()

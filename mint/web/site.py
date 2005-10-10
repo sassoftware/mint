@@ -458,7 +458,12 @@ class SiteHandler(WebHandler):
 
     @intFields(fileId = None)
     def downloadImage(self, auth, fileId):
-        filename = self.client.getFilename(fileId)
+        releaseId, idx, filename, title = self.client.getFileInfo(fileId)
+
+        # only count downloads of the first ISO
+        if idx == 0:
+            release = self.client.getRelease(releaseId)
+            release.incDownloads()
 
         try:
             size = os.stat(filename)[stat.ST_SIZE]
