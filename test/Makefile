@@ -13,7 +13,6 @@ python_files = \
 	rephelp.py		\
 	tablestest.py		\
 	testsuite.py		\
-	webtest.py		\
 	joinrequesttest.py
 
 extra_dist = Makefile
