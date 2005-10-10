@@ -6,7 +6,7 @@ all: subdirs
 
 DESTDIR=$(installdir)
 export DESTDIR=$(DESTDIR)
-export VERSION=0.5.5
+export VERSION=0.6.0
 export TOPDIR = $(shell pwd)
 export DISTDIR = $(TOPDIR)/mint-$(VERSION)
 export prefix = /usr

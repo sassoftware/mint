@@ -1,4 +1,5 @@
-Changes in 0.5.5:
+Changes in 0.6.0:
+
 * Sidebars are collapsable for more screen real estate.
 * Symlinks are now properly displayed as such in the trove files view.
 * The buggy member edit popup has been replaced with "Promote"
@@ -8,6 +9,8 @@ Changes in 0.5.5:
 * Some bugs have been fixed in the code that retrieves the list of
   group-* troves for the AJAX-powered new release page.
 * Using a separate domain name for hosted projects is now possible.
+* Editing a project title is new possible.
+* Many small fixes and improvements.
 
 Changes in 0.5.4:
 
