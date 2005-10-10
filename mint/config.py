@@ -32,7 +32,6 @@ class MintConfig(ConfigFile):
         'reposPath'         : '/srv/mint/repos/',
         'reposContentsPath' : None,
         'dbPath'            : '/srv/mint/data/db',
-        'tmpPath'           : '/srv/mint/tmp/',
         'imagesPath'        : '/srv/mint/images/',
         'logPath'           : '/srv/mint/logs/',
         'siteDomainName'    : 'rpath.com',

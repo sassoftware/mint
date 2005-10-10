@@ -1,3 +1,8 @@
+Changes in 0.6.1:
+
+* Downloads of the first file in a release are counted.
+* Breadcrumbs in the repository trove file list are fixed.
+
 Changes in 0.6.0:
 
 * Sidebars are collapsable for more screen real estate.
