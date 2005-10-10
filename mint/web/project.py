@@ -15,6 +15,7 @@ from mint import mailinglists
 from mint import releasetypes
 from mint import userlevels
 from mint import users
+from mint import jobs
 
 from repository import netclient
 import versions
