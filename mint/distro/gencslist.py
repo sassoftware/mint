@@ -16,12 +16,14 @@ import conary
 
 from deps import deps
 from lib import util, sha1helper
-from repository import changeset, trovesource
+from repository import changeset, trovesource, netclient, shimclient
+from repository.netrepos import netserver
 import conarycfg
 import conaryclient
 import files
 import trove
 import updatecmd
+import versions
 
 def _getTrove(cs, name, version, flavor):
     troveCs = cs.getNewTroveVersion(name, version, flavor)
@@ -36,19 +38,24 @@ def _handleKernelPackage(cs, name, version, flavor):
     #
     # FIXME: we assume that the kernel package will have a kernel:runtime
     # component.  Hopefully this will continue to be true.
-    compName = name + ':runtime'
+    if not name.endswith(':runtime'):
+        compName = name + ':runtime'
+    else:
+        compName = name
     compCs = cs.getNewTroveVersion(compName, version, flavor)
     provides = compCs.provides()
     if deps.DEP_CLASS_TROVES in provides.members:
         kernelProv = provides.members[deps.DEP_CLASS_TROVES].members.values()[0]
         kernelStr = kernelProv.flags.keys()[0]
 
+    name = name.split(':')[0]
     # other kernel types should be handled here, such as numa.
     if 'smp' in kernelStr:
         name = name + '-smp'
     return name, kernelStr
 
-def _findValidTroves(cs, groupName, groupVersion, groupFlavor):
+def _findValidTroves(cs, groupName, groupVersion, groupFlavor,
+                     skipNotByDefault=False):
     # start the set of valid troves with the group itself
     valid = set()
     valid.add((groupName, groupVersion, groupFlavor))
@@ -57,7 +64,7 @@ def _findValidTroves(cs, groupName, groupVersion, groupFlavor):
     # it with byDetault=True
     t = _getTrove(cs, groupName, groupVersion, groupFlavor)
     for name, version, flavor in t.iterTroveList():
-        if t.includeTroveByDefault(name, version, flavor):
+        if not skipNotByDefault or t.includeTroveByDefault(name, version, flavor):
             valid.add((name, version, flavor))
             if name.startswith('group-'):
                 # recurse into included groups
@@ -73,29 +80,29 @@ def _removeInvalidTroves(changeSetList, valid):
             (name, (oldVersion, oldFlavor),
                    (newVersion, newFlavor), absolute) = csInfo
             entry = (name, newVersion, newFlavor)
-            if entry in handled:
-                continue
-            # try to see if the package is included.  if so, go ahead
-            # and add it to the finalCsList and mark it as included
-            # already.  This makes the whole package get installed at
-            # the first mention of a component, instead of the final
-            # mention of the package.  It also means that we'll make
-            # packages where possible 
             if ':' in name:
-                pkgEntry = (name.split(':')[0], entry[1], entry[2])
-                if pkgEntry in valid:
-                    if not pkgEntry in handled:
-                        finalCsList.append(pkgEntry)
-                        handled.add(pkgEntry)
+                # see if the package is included too.  If it is
+                # go ahead and handle it now.
+                pkgname = name.split(':')[0]
+                pkgentry = (pkgname, entry[1], entry[2])
+                if pkgentry in valid:
+                    if not pkgentry in handled:
+                        finalCsList.append(pkgentry)
+                        # mark the package as handled so we don't do it
+                        # again later.
+                        handled.add(pkgentry)
+                    # already (or just) handled, carry on
                     continue
-            if entry in valid:
+
+            if entry in valid and not entry in handled:
                 finalCsList.append(entry)
+                handled.add(pkgentry)
 
     return finalCsList
 
 def _makeEntry(groupCs, name, version, flavor):
     # set up the base name, version, release that we'll use for anaconda
-    dispName = name
+    base = name
     trailing = version.trailingRevision().asString()
     ver = trailing.split('-')
     verStr = '-'.join(ver[:-2])
@@ -103,18 +110,18 @@ def _makeEntry(groupCs, name, version, flavor):
 
     # handle kernel as a special case, so that anaconda can set up grub
     # entries and so on
-    if name == 'kernel':
-        dispName, kernelVer = _handleKernelPackage(groupCs, name, version,
-                                                   flavor)
-        verStr, release = kernelVer.split('-')
+    kernelSpec = "none"
+    if name == 'kernel' or name == 'kernel:runtime':
+        base, kernelVer = _handleKernelPackage(groupCs, name, version,
+                                                     flavor)
+        kernelSpec = '='.join((base, kernelVer))
 
-    # grab the arch out of the flavor, this isn't perfect.
     if deps.DEP_CLASS_IS in flavor.members:
         pkgarch = flavor.members[deps.DEP_CLASS_IS].members.keys()[0]
     else:
         pkgarch = 'none';
 
-    csfile = "%s-%s-%s.ccs" % (dispName, trailing, pkgarch)
+    csfile = "%s-%s-%s.ccs" % (base, trailing, pkgarch)
 
     # instantiate the trove so we canget the size out of it
     t = _getTrove(groupCs, name, version, flavor)
@@ -122,8 +129,10 @@ def _makeEntry(groupCs, name, version, flavor):
     # we don't want to double count the space that the group trove reports
     if name.startswith('group-'):
         size = 0
-    # filename, trove name, version, release, size, discnum
-    entry = "%s %s %s %s %s %s" %(csfile, dispName, verStr, release, size, 1)
+    # filename, trove name, version, flavor, kernel=version, size, discnum
+    frozenFlavor = flavor.freeze() or 'none'
+    entry = "%s %s %s %s %s" %(csfile, name, version.asString(),
+                               frozenFlavor, 1)
 
     return csfile, entry
 
@@ -243,14 +252,13 @@ def extractChangeSets(client, cfg, csdir, groupName, groupVer, groupFlavor,
 
     cl = [ (groupName, (None, None), (groupVer, groupFlavor), 0) ]
     print >> sys.stderr, 'requesting changeset', groupName, groupVer
-    group = client.createChangeSet(cl, withFiles=False, withFileContents=False)
+    group = client.createChangeSet(cl, withFiles=False, withFileContents=False,
+                                   skipNotByDefault = False)
     print >> sys.stderr, 'done!'
-
     # find the order that we should install things in
     jobSet = group.getJobSet()
     trvSrc = trovesource.ChangesetFilesTroveSource(client.db)
     trvSrc.addChangeSet(group, includesFileContents = False)
-    failedDeps = client.db.depCheck(jobSet, trvSrc)[0]
 
     rc = client.db.depCheck(jobSet, trvSrc, findOrdering=True)
     failedList, unresolveableList, changeSetList = rc
@@ -326,20 +334,192 @@ def extractChangeSets(client, cfg, csdir, groupName, groupVer, groupFlavor,
 
         cslist.append(entry)
 
-    return cslist
+    return cslist, group
+
+
+class LocalRepository(netserver.NetworkRepositoryServer):
+    """
+    this is a small shim that set up a local NetworkRepositoryServer
+    and provides a modified getChangeSet() method that works over local
+    storage
+    """
+    def getChangeSet(self, authToken, clientVersin, chgSetList, recurse,
+                     withFiles, withFileContents, excludeAutoSource):
+        paths = []
+        csList = []
+	for (name, (old, oldFlavor), (new, newFlavor), absolute) in chgSetList:
+	    newVer = self.toVersion(new)
+	    if old == 0:
+		l = (name, (None, None),
+			   (self.toVersion(new), self.toFlavor(newFlavor)),
+			   absolute)
+	    else:
+		l = (name, (self.toVersion(old), self.toFlavor(oldFlavor)),
+			   (self.toVersion(new), self.toFlavor(newFlavor)),
+			   absolute)
+            csList.append(l)
+
+        ret = self.repos.createChangeSet(csList,
+                                recurse = recurse,
+                                withFiles = withFiles,
+                                withFileContents = withFileContents,
+                                excludeAutoSource = excludeAutoSource)
+
+        (cs, trovesNeeded, filesNeeded) = ret
+        cs.writeToFile('/tmp/foo.ccs')
+        size = os.stat('/tmp/foo.ccs').st_size
+        return ('/tmp/foo.ccs', [size], [], [])
+
+    def commitChangeSet(self, cs):
+        self.repos.commitChangeSet(cs, self.name)
+
+    def __init__(self, serverName, dbpath):
+        util.mkdirChain(dbpath)
+        self.serverName = serverName
+        netserver.NetworkRepositoryServer.__init__(self, dbpath, '/tmp',
+                                                   '/tmp', serverName,
+                                                   {})
+        user = 'anonymous'
+        try:
+            self.auth.addUser(user, user)
+            self.auth.addAcl(user, None, None, True, False, True)
+        except:
+            self.repos.troveStore.db.rollback()
+            pass
+
+class LocalServerCache:
+    # build a local repository on the fly for whatever we're asked for
+    def __getitem__(self, item):
+	if isinstance(item, versions.Label):
+	    serverName = item.getHost()
+	elif isinstance(item, str):
+	    serverName = item
+	else:
+            if isinstance(item, versions.Branch):
+		serverName = item.label().getHost()
+	    else:
+		serverName = item.branch().label().getHost()
+
+	server = self.cache.get(serverName, None)
+	if server is None:
+            repos = LocalRepository(serverName, self.path)
+            server = shimclient.ShimServerProxy(repos, 'http', 80,
+                                                ('anonymous', 'anonymous'))
+	return server
+
+    def __init__(self, path):
+        """
+        initializes the LocalServerCache
+        @param path: path to the local repository
+        """
+	self.cache = {}
+	self.path = path
+
+class LocalNetClient(netclient.NetworkRepositoryClient):
+    def __init__(self, path):
+        self.c = LocalServerCache(path)
+        self.localRep = None
+
+def _getTrove(cs, name, version, flavor):
+    pkgCs = cs.getNewTroveVersion(name, version, flavor)
+    t = trove.Trove(pkgCs.getName(), pkgCs.getOldVersion(),
+                    pkgCs.getNewFlavor(), pkgCs.getChangeLog())
+    t.applyChangeSet(pkgCs)
+    return t
+
+def _getSourceBranches(cs, name, version, flavor):
+    rc = set()
+    metadataToName = {}
+
+    # start with ourselves
+    col = _getTrove(cs, name, version, flavor)
+    key = (col.getSourceName(), col.getVersion().branch())
+    rc.add(key)
+    metadataToName[key] = name
+    for (n, v, f) in col.iterTroveList():
+        t = _getTrove(cs, n, v, f)
+        key = (t.getSourceName(), t.getVersion().branch())
+        rc.add(key)
+        metadataToName[key] = n
+        # recurse into things that are not components
+        if ':' not in n:
+            d, sources = _getSourceBranches(cs, n, v, f)
+            metadataToName.update(d)
+            rc.update(sources)
+    return metadataToName, rc
+
+def _getDescriptions(client, cs, name, version, flavor):
+    byLabel = {}
+
+    metadataToName, sources = _getSourceBranches(cs, name, version, flavor)
+    for name, branch in sources:
+        label = branch.label()
+        if label in byLabel:
+            byLabel[label].add((name, branch))
+        else:
+            byLabel[label] = set(((name, branch),))
+
+    metadata = {}
+    for label, trvlist in byLabel.iteritems():
+        metadata.update(client.getMetadata(list(trvlist), label))
+    sources = dict(sources)
+    return sources, metadataToName, metadata
+
+def writeReposSqldb(cs, path):
+    tmpdir = tempfile.mkdtemp()
+
+    if len(cs.primaryTroveList) != 1:
+        raise RuntimeError, 'more than one top-level group is not supported'
+    name, version, flavor = cs.primaryTroveList[0]
+    # grab the server name from the version of the changeset
+    for v in reversed(version.versions):
+        if isinstance(v, versions.Label):
+            serverName = v.getHost()
+    assert(serverName is not None)
+    # set up a local repository where we can commit the changeset
+    localRepos = LocalRepository(serverName, tmpdir)
+    localRepos.commitChangeSet(cs)
+
+    # set up a conaryclient to get descriptions
+    cfg = conarycfg.ConaryConfiguration()
+    cfg.dbPath = ':memory:'
+    cfg.root = ':memory:'
+    cfg.initializeFlavors()
+    client = conaryclient.ConaryClient(cfg)
+
+    sources, metadataToName, metadata = _getDescriptions(client, cs, name, version, flavor)
+
+    # set up a local net client to commit the descriptions
+    repos = LocalNetClient(tmpdir)
+    client.repos = repos
+
+    for srcname, data in metadata.iteritems():
+        branch = sources[srcname]
+        name = metadataToName[(srcname, branch)]
+        repos.updateMetadata(name, branch,
+                             data.shortDesc, '', [], [], [],
+                             data.source, data.language)
+
+    # copy the file to the final location
+    shutil.copyfile(tmpdir + '/sqldb', path)
+    shutil.rmtree(tmpdir)
 
 def usage():
-    print "usage: %s group /path/to/changesets/" %sys.argv[0]
+    print "usage: %s group /path/to/changesets/ [sqldb]" %sys.argv[0]
     sys.exit(1)
 
 if __name__ == '__main__':
     sys.excepthook = util.genExcepthook()
 
-    if len(sys.argv) != 3:
+    if len(sys.argv) < 3 or len(sys.argv) > 4:
         usage()
 
     topGroup = sys.argv[1]
     csdir = sys.argv[2]
+    sqldbpath = None
+    if len(sys.argv) == 4:
+        sqldbpath = sys.argv[3]
+
     util.mkdirChain(csdir)
 
     cfg = conarycfg.ConaryConfiguration()
@@ -365,13 +545,20 @@ if __name__ == '__main__':
         raise RuntimeException
 
     groupName, groupVer, groupFlavor = trvList[0]
-    cslist = extractChangeSets(client, cfg, csdir, groupName,
-                               groupVer, groupFlavor,
-                               oldFiles = existingChangesets,
-                               cacheDir = '/tmp/cscache')
+    cslist, groupcs = extractChangeSets(client, cfg, csdir, groupName,
+                                        groupVer, groupFlavor,
+                                        oldFiles = existingChangesets,
+                                        cacheDir = '/tmp/cscache')
     print '\n'.join(cslist)
 
     # delete any changesets that should not be around anymore
     for path in existingChangesets:
         print >> sys.stderr, 'removing unused', path
         os.unlink(path)
+
+    if sqldbpath:
+        tmpdir = tempfile.mkdtemp()
+        writeReposSqldb(groupcs, sqldbpath)
+        shutil.copyfile(tmpdir + '/sqldb', sqldbpath)
+        shutil.rmtree(tmpdir)
+
