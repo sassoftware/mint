@@ -12,7 +12,13 @@ import conary
 from lib import options
 import versions
 
-from mint.mint_error import UnknownException
+class UnknownException(Exception):
+    def __str__(self):
+        return "%s %s" % (self.eName, self.eArgs)
+
+    def __init__(self, eName, eArgs):
+        self.eName = eName
+        self.eArgs = eArgs
 
 def usage(exitcode=1):
     sys.stderr.write("\n".join((
