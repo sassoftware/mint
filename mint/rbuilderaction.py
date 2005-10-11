@@ -12,7 +12,7 @@ import conary
 from lib import options
 import versions
 
-from mint_error import UnknownException
+from mint.mint_error import UnknownException
 
 def usage(exitcode=1):
     sys.stderr.write("\n".join((
