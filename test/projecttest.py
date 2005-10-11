@@ -86,6 +86,15 @@ class ProjectTest(MintRepositoryHelper):
         assert(project.getMembers() == [[userId, 'testuser', userlevels.OWNER],
                                         [otherUserId, 'member', userlevels.DEVELOPER]])
 
+    def testGetProjectsByMember(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        projectId = client.newProject("Test Project", "test", "localhost")
+
+        projects = client.getProjectsByMember(userId)
+        assert(projects[0][0].getId() == projectId)
+        assert(projects[0][1] == userlevels.OWNER)
+
+
 
 if __name__ == "__main__":
     testsuite.main()
