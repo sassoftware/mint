@@ -1,22 +1,90 @@
-install rbuilder (needs dnspython from contrib)
+rBuilder Installation Instructions
 
-Erase sendmail
+    This document describes the steps necessary to install and configure
+rBuilder.
 
-Install postfix
+Software Installation
 
-Install mailmain from noprivate label (conary update mailman=:noprivate
+    o Perform an "Everything" installation of rPath Linux
 
-Follow joseph's mailman config, but in mm_cfg.py, also modify
-default_url_host and default_email_host, noting that the getfqdn has issues
-that joseph will explain later....
+    o Install dnspython from contrib.rpath.com@rpl:devel
 
-ignore warning from genaliases
+        (conary update dnspython)
 
-change alias_maps in /etc/postfix/main.cf (will be commented out; needs to
-be either uncommented and modified or a complete new line added)
+    o Install rbuilder from *** FIXME pointer to trove? ***
 
-On to mint configuration
+        (conary update rbuilder=*** FIXME pointer to trove? ***)
 
+    o Erase sendmail
+
+        (conary erase sendmail)
+
+    o Install postfix
+
+        (conary update postfix)
+
+    o Install mailmain from contrib.rpath.com@rpl:noprivate
+
+        (conary update mailman=:noprivate)
+
+
+NOTE: Further configuration may be required to ensure that postfix and
+mailman can accept mail for the desired domain.
+
+Postfix Configuration
+
+    o Set the postfix service to start at boot
+
+        (chkconfig postfix on)
+
+    o Start the postfix service
+
+        (/sbin/service postfix start)
+
+    o Edit /etc/postfix/main.cf and change the alias_maps line to read:
+
+        alias_map = hash:/etc/aliases, hash:/var/mailman/data/aliases
+      
+Mailman Configuration
+
+    o Set the mailman service to start at boot
+
+        (chkconfig mailman on)
+
+    o Start the mailman service
+
+        (/sbin/service mailman start)
+
+    o run /var/mailman/bin/mmsitepass to set a site password for mailman
+
+        (*** FIXME need sample output ***)
+
+      NOTE: Choose this password carefully, as it will be stored -- in
+      cleartext -- in a file readable by group apache
+
+    o Using the text editor of your choice, modify the following settings
+      in /var/mailman/Mailman/mm_cfg.py:
+
+        - DEFAULT_URL_HOST (Set to fqdn appropriate for your site)
+        - DEFAULT_EMAIL_HOST (Set to fqdn appropriate for your site)
+        - MTA (Set to "Postfix")
+
+        (*** FIXME see Joseph regarding issues regarding getfqdn ***)
+
+
+    o Run /var/mailman/bin/genaliases to regenerate Mailman-specific
+      aliases; ignore any warning messages
+
+    o Run the following command as root:
+
+        /var/mailman/bin/newlist mailman
+
+      (This creates the "mailman" list used to communicate with all mailman
+      list owners.)
+
+*** FIXME continue here ***
+
+rBuilder Configuration
 
 copy mint.conf.dist to mint.conf in /srv/mint
 
@@ -34,33 +102,3 @@ change to be localhost.localdomain)
 In /etc/httpd/conf.d, copy mint.conf.dist to mint.conf
 
 Start apache
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-Mailman Integration
-
-      Remove sendmail, and install postfix from conary.rpath.com@rpl:devel
-
-      check that the postfix service is configured to start at boot
-
-      Install mailman from contrib.rpath.com@rpl:noprivate
-
-      set the mailman service to start at boot
-
-      run /var/mailman/bin/mmsitepass # to set a new site password
-
-      modify /var/mailman/Mailman/mm_cfg.py to add MTA='Postfix' {TODO:
-      Move this to the noprivate mailman package and add a requirement}
-
-      run /var/mailman/bin/genaliases
-
-      chown mailman:mailman /var/mailman/data/aliases*
-
-      chmod 660 /var/mailman/data/aliases*
-
-      add 'alias_map = hash:/var/mailman/data/aliases' to
-      /etc/postfix/main.cf
-
-      Set up a mailman list: run '/var/mailman/bin/newlist mailman' as root
-
-Further configuration may be required to ensure that postfix and mailman
-can accept mail for the desired domain.
