@@ -69,52 +69,57 @@ div.palette h3 img {
 }
 
 #browse h3 {
-	background:#3D5192; border-color:#3A4D8B;
-	cursor:pointer;
+	background: #3D5192; 
+        border-color: #607fe6 #202a4c #202a4c #607fe6;
+        border-width: 2px;
+        cursor:pointer;
 }
 #browse li {
 	background-image:none; padding:4px 0px 4px 0px;
 }
 
 #project h3 {
-	background:#5D71b2; border-color:#5A6DaB;
+	background:#5D71b2;
+        border-color: #7e9af2 #3c4973 #3c4973 #7e9af2;
+        border-width: 2px;
+
 }
 #project li {
 	background-image:none; padding:4px 0px 4px 0px;
 }
 
 #search h3 {
-	background:#FF930B; border-color:#F28C0A;
+	background: #FF930B;
+        border-color: #ffc780 #bf6e08 #bf6e08 #ffc780;
 	cursor:pointer;
+        border-width: 2px;
 }
 
 #releases h3 {
-	background:#5D71b2; border-color:#5A6DaB;
+	background:#5D71b2;
+        border-color: #7e9af2 #3c4973 #3c4973 #7e9af2;
 	cursor:pointer;
+        border-width: 2px;
 }
 #releases li {
 	background-image:none; padding:4px 0px 4px 0px;
 }
 
 #commits h3 {
-	background:#5D71b2; border-color:#5A6DaB;
+	background:#5D71b2;
+        border-color: #7e9af2 #3c4973 #3c4973 #7e9af2;
 	cursor:pointer;
+        border-width: 2px;
 }
 #commits li {
 	background-image:none; padding:4px 0px 4px 0px;
 }
 
-#PGPKeys h3 {
-	background:#5DB285; border-color:#417D5D;
-	cursor:pointer;
-}
-#PGPKeys li {
-	background-image:none; padding:4px 0px 4px 0px;
-}
-
 #addmember h3 {
-	background:#5DB285; border-color:#417D5D;
+	background:#5DB285;
+        border-color: #78e6ab #3c7356 #3c7356 #78e6ab;
 	cursor:pointer;
+        border-width: 2px;
 }
 #addmember li {
 	background-image:none; padding:4px 0px 4px 0px;
@@ -125,6 +130,7 @@ div.palette h3 img {
 #products li {
 	background-image:none; padding:4px 0px 4px 0px;
         color: #666;
+        border-width: 2px;
 }
 
 
