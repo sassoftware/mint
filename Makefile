@@ -36,8 +36,6 @@ tarball:
 	rm -rf $(DISTDIR)
 
 product-dist:
-	echo $(OVERRIDEME)
-	exit 1
 	make -C product DIR=mint/web dist || exit 1;
 
 main-dist: $(dist_files)

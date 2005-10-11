@@ -39,7 +39,7 @@
 
                 <p>Contact:</p>
 
-                ${cfg.supportContactHTML}
+                ${XML(cfg.supportContactHTML)}
             </div>
         </td>
         <td id="right" class="projects">
