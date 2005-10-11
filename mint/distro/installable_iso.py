@@ -30,6 +30,13 @@ class IsoConfig(ConfigFile):
         'implantIsoMd5':    '/usr/lib/anaconda-runtime/implantisomd5'
     }
 
+class AnacondaTemplateMissing(Exception):
+    def __init__(arch = "arch"):
+        self._arch = arch
+        
+    def __str__(self):
+        return "Anaconda template missing for architecture: %s" % self._arch
+
 class Callback(callbacks.UpdateCallback, callbacks.ChangesetCallback):
     def requestingChangeSet(self):
         self._update('requesting %s from repository')
@@ -111,6 +118,9 @@ class InstallableIso(ImageGenerator):
         
         # hardlink template files to topdir
         templateDir = os.path.join(isocfg.templateDir, release.getArch())
+        if not os.path.exists(templateDir):
+            raise AnacondaTemplateMissing(release.getArch())
+
         self.status("Preparing ISO template")
         _linkRecurse(templateDir, topdir)
         assertParentAlive()
