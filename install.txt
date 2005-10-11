@@ -1,9 +1,40 @@
 rBuilder Installation Instructions
 
     This document describes the steps necessary to install and configure
-rBuilder.
+rBuilder.  You will be performing the following tasks:
 
+    o Installing software
+
+    o Configuring Postfix
+
+    o Configuring Mailman
+
+    o Configuring rBuilder
+
+    o Testing and troubleshooting your rBuilder installation
+
+Let's start by installing the necessary software.
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Software Installation
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    In this section you'll be installing the following software necessary
+to run rBuilder:
+
+    o rPath Linux
+
+    o dnspython
+
+    o rbuilder *** FIXME -- name? ***
+
+    o Postfix (after erasing sendmail)
+
+    o Mailman
+
+Before you begin, you'll need to identify the system which will be running
+rBuilder.  Once your hardware is ready, perform the following steps:
 
     o Perform an "Everything" installation of rPath Linux
 
@@ -11,9 +42,9 @@ Software Installation
 
         (conary update dnspython)
 
-    o Install rbuilder from *** FIXME pointer to trove? ***
+    o Install rbuilder from *** FIXME -- pointer to trove? ***
 
-        (conary update rbuilder=*** FIXME pointer to trove? ***)
+        (conary update rbuilder=*** FIXME -- pointer to trove? ***)
 
     o Erase sendmail
 
@@ -27,12 +58,22 @@ Software Installation
 
         (conary update mailman=:noprivate)
 
-
 NOTE: Further configuration may be required to ensure that postfix and
 mailman can accept mail for the desired domain.
 
-Postfix Configuration
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Postfix Configuration
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    In this section, you'll be configuring Postfix to be integrated with
+Mailman, and to run every time the system boots.  This requires the
+following steps:
+
+    o Edit /etc/postfix/main.cf and change the alias_maps line to read:
+
+        alias_map = hash:/etc/aliases, hash:/var/mailman/data/aliases
+      
     o Set the postfix service to start at boot
 
         (chkconfig postfix on)
@@ -41,11 +82,33 @@ Postfix Configuration
 
         (/sbin/service postfix start)
 
-    o Edit /etc/postfix/main.cf and change the alias_maps line to read:
 
-        alias_map = hash:/etc/aliases, hash:/var/mailman/data/aliases
-      
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Mailman Configuration
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    In this section, you'll be configuring Mailman to correspond with your
+system environment, and to run every time the system boots.  This requires
+the following steps:
+
+    o run /var/mailman/bin/mmsitepass to set a site password for mailman
+
+        (*** FIXME -- need sample output ***)
+
+      NOTE: Choose a password that is not used in any other context, as it
+      will be stored -- in cleartext -- in a file readable by group apache!
+
+    o Using the text editor of your choice, modify the following settings
+      in /var/mailman/Mailman/mm_cfg.py:
+
+        - DEFAULT_URL_HOST (Set to fqdn appropriate for your site)
+        - DEFAULT_EMAIL_HOST (Set to fqdn appropriate for your site)
+        - MTA (Set to "Postfix")
+
+        (*** FIXME -- see Joseph regarding issues regarding getfqdn ***)
+
+    o Run /var/mailman/bin/genaliases to regenerate Mailman-specific
+      aliases; ignore any warning messages
 
     o Set the mailman service to start at boot
 
@@ -55,50 +118,52 @@ Mailman Configuration
 
         (/sbin/service mailman start)
 
-    o run /var/mailman/bin/mmsitepass to set a site password for mailman
-
-        (*** FIXME need sample output ***)
-
-      NOTE: Choose this password carefully, as it will be stored -- in
-      cleartext -- in a file readable by group apache
-
-    o Using the text editor of your choice, modify the following settings
-      in /var/mailman/Mailman/mm_cfg.py:
-
-        - DEFAULT_URL_HOST (Set to fqdn appropriate for your site)
-        - DEFAULT_EMAIL_HOST (Set to fqdn appropriate for your site)
-        - MTA (Set to "Postfix")
-
-        (*** FIXME see Joseph regarding issues regarding getfqdn ***)
-
-
-    o Run /var/mailman/bin/genaliases to regenerate Mailman-specific
-      aliases; ignore any warning messages
-
     o Run the following command as root:
 
         /var/mailman/bin/newlist mailman
-
-      (This creates the "mailman" list used to communicate with all mailman
-      list owners.)
-
-*** FIXME continue here ***
-
-rBuilder Configuration
-
-copy mint.conf.dist to mint.conf in /srv/mint
-
-Check with Joseph regarding supportContact[TXT|HTML]
-
-in /srv/authrepo, copy authrepo.cnr.dist to authrepo.cnr
-
-in authrepo.cnr, no changes except possibly serverName (though joseph may
-change to be localhost.localdomain)
 
 ***don't use a special password for the mailman site password and the
    mailman list password, as they are stored in plaintext or mailed in
    cleartext to the user ***
 
-In /etc/httpd/conf.d, copy mint.conf.dist to mint.conf
+      (This creates the "mailman" list used to communicate with all Mailman
+      list owners.)
 
-Start apache
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+rBuilder Configuration
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    In this section, you'll be configuring rBuilder to correspond with your
+system environment.  This requires the following steps:
+
+    o Copy /srv/mint/mint.conf.dist to /srv/mint/mint.conf
+
+    o Using the comments in mint.conf as a guide, edit the file as
+      appropriate for your site.
+
+    o Copy /srv/authrepo/authrepo.cnr.dist to /srv/authrepo/authrepo.cnr
+
+    o *** FIXME -- finalize? *** in authrepo.cnr, no changes except
+      possibly serverName (though joseph may change to be
+      localhost.localdomain)
+
+    o Copy /etc/httpd/conf.d/mint.conf.dist to /etc/httpd/conf.d/mint.conf
+
+    o Set the httpd service to start at boot
+
+        (chkconfig httpd on)
+
+    o Start the httpd service
+
+        (/sbin/service httpd start)
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+rBuilder Testing and Troubleshooting
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+    In this section, you'll be testing your new rBuilder installation.  ***
+FIXME -- flesh this out ***
+
+    o Using the browser of your choice, open *** FIXME -- how to describe
+      url to use? *** to access rBuilder.
