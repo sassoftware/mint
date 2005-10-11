@@ -33,7 +33,7 @@
         </h3>
         <div id="release_items" style="display: $display">
           <ul>
-            <li class="release" py:if="releases" py:for="release in releases[:6]">
+            <li class="release" py:if="releases" py:for="release in sorted(releases[:6], key=lambda x: x.getTroveVersion(), reverse=True)">
                 <a href="${basePath}release?id=${release.getId()}">
                     Version ${upstream(release.getTroveVersion())} for ${release.getArch()}
                 </a>

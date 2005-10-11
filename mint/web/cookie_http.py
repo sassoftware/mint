@@ -28,6 +28,7 @@ class ConaryHandler(WebHandler, http.HttpHandler):
 
         if repServer:
             self.repServer = repServer
+            self.troveStore = self.repServer.troveStore
         if 'mint.web.templates.repos' in sys.modules:
             self.reposTemplatePath = os.path.dirname(sys.modules['mint.web.templates.repos'].__file__) + "/repos/"
     
