@@ -97,7 +97,8 @@ def process(repos, cfg, commitList, srcMap, pkgMap, grpMap, argv, otherArgs):
                 try:
                     rBuilderServer.registerCommit(hostname, user, t, vStr)
                 except Exception, e:
-                    sys.stderr.write(str(e))
+                    exc = sys.exc_info()
+                    traceback.print_exception(exc[0], exc[1], exc[2], file = sys.stderr)
                     sys.exit(1)
             sys.exit(0)
         else:
