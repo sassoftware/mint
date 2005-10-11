@@ -148,11 +148,13 @@ class InstallableIso(ImageGenerator):
         groupName, groupVer, groupFlavor = trvList[0]
 
         callback = Callback(self.status)
-        cslist = gencslist.extractChangeSets(client, cfg, csdir, groupName,
-                                             groupVer, groupFlavor,
-                                             oldFiles = existingChangesets,
-                                             cacheDir = isocfg.cacheDir,
-                                             callback = callback)
+        rc = gencslist.extractChangeSets(client, cfg, csdir, groupName,
+                                         groupVer, groupFlavor,
+                                         oldFiles = existingChangesets,
+                                         cacheDir = isocfg.cacheDir,
+                                         callback = callback)
+        cslist, groupcs = rc
+
         # Abort if parent thread has died
         assertParentAlive()
 
@@ -164,7 +166,12 @@ class InstallableIso(ImageGenerator):
             anacondaArch = 'i386'
         else:
             anacondaArch = arch
- 
+
+        # write the sqldb file
+        sqldbPath = os.path.join(topdir, subdir, 'sqldb')
+        gencslist.writeSqldb(groupcs, sqldbPath)
+
+        # write the cslist
         cslistPath = os.path.join(topdir, subdir, 'base')
         util.mkdirChain(cslistPath)
         cslistFile = file(cslistPath + '/cslist', "w")

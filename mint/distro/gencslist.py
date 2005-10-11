@@ -465,7 +465,7 @@ def _getDescriptions(client, cs, name, version, flavor):
     sources = dict(sources)
     return sources, metadataToName, metadata
 
-def writeReposSqldb(cs, path):
+def writeSqldb(cs, path):
     tmpdir = tempfile.mkdtemp()
 
     if len(cs.primaryTroveList) != 1:
@@ -558,7 +558,7 @@ if __name__ == '__main__':
 
     if sqldbpath:
         tmpdir = tempfile.mkdtemp()
-        writeReposSqldb(groupcs, sqldbpath)
+        writeSqldb(groupcs, sqldbpath)
         shutil.copyfile(tmpdir + '/sqldb', sqldbpath)
         shutil.rmtree(tmpdir)
 
