@@ -2,6 +2,7 @@ Changes in 0.6.1:
 
 * Downloads of the first file in a release are counted.
 * Breadcrumbs in the repository trove file list are fixed.
+* Sort releases in "Recent Releases" sidebar by version, descending.
 
 Changes in 0.6.0:
 

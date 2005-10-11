@@ -66,6 +66,7 @@ def process(repos, cfg, commitList, srcMap, pkgMap, grpMap, argv, otherArgs):
     argDef = {
         'url' : options.ONE_PARAM,
         'user': options.ONE_PARAM,
+        'hostname': options.ONE_PARAM,
     }
 
     # create an argv[0] for processArgs to ignore
@@ -87,11 +88,19 @@ def process(repos, cfg, commitList, srcMap, pkgMap, grpMap, argv, otherArgs):
             user = argSet['user']
             url  = argSet['url']
 
+            overrideHostname = None
+            if 'hostname' in argSet:
+                overrideHostname = argSet['hostname']
+
             for commit in commitList:
                 t, vStr, f = commit
 
                 v = versions.VersionFromString(vStr)
-                hostname = v.branch().label().getHost()
+
+                if overrideHostname:
+                    hostname = overrideHostname
+                else:
+                    hostname = v.branch().label().getHost()
 
                 rBuilderServer = ServerProxy(url)
 
