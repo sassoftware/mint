@@ -103,7 +103,7 @@ the following steps:
 
         - DEFAULT_URL_HOST (Set to fqdn appropriate for your site)
         - DEFAULT_EMAIL_HOST (Set to fqdn appropriate for your site)
-        - MTA (Set to "Postfix")
+        - MTA (Set to "Postfix" -- should be done already)
 
         (*** FIXME -- see Joseph regarding issues regarding getfqdn ***)
 
@@ -118,17 +118,19 @@ the following steps:
 
         (/sbin/service mailman start)
 
-    o Run the following command as root:
+    o Run the following command as root to create the "mailman" list used
+      to communicate with all Mailman list owners:
 
         /var/mailman/bin/newlist mailman
 
-***don't use a special password for the mailman site password and the
-   mailman list password, as they are stored in plaintext or mailed in
-   cleartext to the user ***
+      (NOTE: Choose a password that is not used in any other context, as it
+      will occasionally appear -- in cleartext -- in the email messages
+      Mailman sends out.)
 
-      (This creates the "mailman" list used to communicate with all Mailman
-      list owners.)
-
+      Once the list has been created, Mailman will send out an email to ***
+      FIXME -- where was this email address set? ***.  If you receive this
+      email, your general Mailman and Postfix configuration is working
+      properly.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 rBuilder Configuration
