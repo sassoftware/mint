@@ -111,7 +111,7 @@ class InstallableIso(ImageGenerator):
         client = conaryclient.ConaryClient(cfg)
         
         revision = version.trailingRevision().asString()
-        topdir = os.path.join(isocfg.imagesPath, project.getHostname(), revision, "unified") 
+        topdir = os.path.join(isocfg.imagesPath, project.getHostname(), release.getArch(), revision, "unified") 
         subdir = 'rPath' # XXX parameterize
         csdir = os.path.join(topdir, subdir, 'changesets')
         util.mkdirChain(csdir)
