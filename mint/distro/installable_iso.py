@@ -26,6 +26,7 @@ class IsoConfig(ConfigFile):
         'imagesPath':       '/srv/mint/images/',
         'scriptPath':       '/srv/mint/code/scripts/',
         'cacheDir':         '/srv/mint/changesets/',
+        'templateDir':      '/srv/mint/templates/',
         'implantIsoMd5':    '/usr/lib/anaconda-runtime/implantisomd5'
     }
 
@@ -63,6 +64,19 @@ class Callback(callbacks.UpdateCallback, callbacks.ChangesetCallback):
         self.changeset = ''
         self.prefix = ''
 
+
+def _linkRecurse(fromDir, toDir):
+    for root, dirs, files in os.walk(fromDir):
+        for dir in dirs:
+            newRoot = toDir + root[len(fromDir):]
+            util.mkdirChain(os.path.join(newRoot, dir))
+        for file in files:
+            newRoot = toDir + root[len(fromDir):]
+            src = os.path.join(root, file)
+            dest = os.path.join(newRoot, file)
+            gencslist._linkOrCopyFile(src, dest)
+
+
 class InstallableIso(ImageGenerator):
     def getIsoConfig(self):
         isocfg = IsoConfig()
@@ -91,14 +105,18 @@ class InstallableIso(ImageGenerator):
         
         revision = version.trailingRevision().asString()
         topdir = os.path.join(isocfg.imagesPath, project.getHostname(), revision, "unified") 
-        subdir = 'rPath'
-        
+        subdir = 'rPath' # XXX parameterize
         csdir = os.path.join(topdir, subdir, 'changesets')
-
         util.mkdirChain(csdir)
-        self.status("Extracting changesets")
-
+        
+        # hardlink template files to topdir
+        templateDir = os.path.join(isocfg.templateDir, release.getArch())
+        self.status("Preparing ISO template")
+        _linkRecurse(templateDir, topdir)
+        assertParentAlive()
+        
         # build a set of the things we already have extracted.
+        self.status("Extracting changesets")
         existingChangesets = set()
         for path in (os.path.join(csdir, x) for x in os.listdir(csdir)):
             existingChangesets.add(path)
