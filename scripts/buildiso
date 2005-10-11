@@ -12,10 +12,11 @@ CONARY=/usr/bin/conary
 alias conary="$CONARY"
 export PYTHONPATH=$CONARY_PATH
 
-version=1nubb
+version=nubb
 lastversion=none
 phase=ALPHA
 basedir=/data/msw/linux/$version
+#basedir=/tmp/msw/linux
 topdir=$basedir/unified
 #template=/spx/spx-linux-template
 name="Pound Key"
@@ -38,7 +39,7 @@ fi
 if [ -f $topdir/README ]; then
     sed -i "s/@VERSION@/$version ($phase)/g" $topdir/README
 fi
-../mint/distro/gencslist.py group-asterisk-all=asterisk.rpath.org@rpl:devel $topdir/$subdir/changesets > $topdir/$subdir/base/cslist
+../mint/distro/gencslist.py group-asterisk-all=asterisk.rpath.org@rpl:devel $topdir/$subdir/changesets $topdir/subdir/base/sqldb > $topdir/$subdir/base/cslist
 
 if [ ! -f $topdir/$subdir/changesets/distro-release-$version* ]; then
     echo "no distro-release for version $version"
