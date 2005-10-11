@@ -4,12 +4,12 @@
 
 all: subdirs
 
-product=
+product=mint
 export DESTDIR=/
 installdir=$(DESTDIR)
 export VERSION=0.6.0
 export TOPDIR = $(shell pwd)
-export DISTDIR = $(TOPDIR)/rbuilder$(product)-$(VERSION)
+export DISTDIR = $(TOPDIR)/$(product)$(productqualifier)-$(VERSION)
 export prefix = /usr
 export sysconfdir = /etc
 export servicedir= /srv
@@ -47,8 +47,9 @@ main-dist: $(dist_files)
                 cp -a $$f $(DISTDIR)/$$f; \
 	done;
 
-dist: product=-online
+dist: productqualifier=-online
 dist: main-dist tarball
+
 product: main-dist product-dist tarball
 
 install: all install-subdirs
