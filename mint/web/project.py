@@ -114,15 +114,16 @@ class ProjectHandler(WebHandler):
     @strFields(trove = "", releaseName = "")
     def editRelease(self, auth, releaseId, imageType, trove, releaseName):
         errors = []
-        if '=' not in trove:
-            errors.append("You must select a group trove.")
         if imageType not in releasetypes.TYPES:
             errors.append("Invalid image type selected.")
 
-        if not errors:
-            projectId = self.project.getId()
-            if releaseId == -1:
-                assert(projectId != -1)
+        projectId = self.project.getId()
+        if releaseId == -1:
+            assert(projectId != -1)
+            if '=' not in trove:
+                errors.append("You must select a group trove.")
+
+            if not errors:
                 release = self.client.newRelease(projectId, releaseName)
 
                 release.setImageType(imageType)
@@ -131,50 +132,50 @@ class ProjectHandler(WebHandler):
                 version = None
                 flavor = None
             else:
-                release = self.client.getRelease(releaseId)
-
-                trove, versionStr, flavor = release.getTrove()
-                version = versions.ThawVersion(versionStr)
-                label = version.branch().label()
-
-            if self.project.external:
-                cfg = self.project.getConaryConfig()
-            else:
-                cfg = self.project.getConaryConfig(useSSL = self.cfg.SSL)
-            nc = netclient.NetworkRepositoryClient(cfg.repositoryMap)
-            leaves = nc.getTroveLeavesByLabel({trove: {label: None}})
-
-            # group troves by major architecture
-            def dictByArch(leaves, troveName):
-                archMap = {}
-                for v, flavors in reversed(sorted(leaves[troveName].items())):
-                    for f in flavors:
-                        arch = f.members[deps.DEP_CLASS_IS].members.keys()[0]
-
-                        l = archMap.setdefault(arch, [])
-                        l.append((v, f, ))
-                return archMap
-
-            archMap = dictByArch(leaves, trove)
-            versionFlavors = []
-            for arch, vfList in archMap.items():
-                for vf in vfList:
-                    versionFlavors.append(vf)
-            versionFlavors.sort(key=lambda x: x[0], reverse=True)
-
-            self._write("editRelease", trove = trove, version = version,
-                                       flavor = deps.ThawDependencySet(flavor),
-                                       label = label.asString(), release = release,
-                                       archMap = archMap)
-            return apache.OK
+                kwargs = {'releaseId':      releaseId,
+                          'imageType':      imageType,
+                          'trove':          trove,
+                          'releaseName':    releaseName}
+                self._write("newRelease", errors = errors, kwargs = kwargs)
+                return apache.OK
         else:
-            kwargs = {'releaseId':      releaseId,
-                      'imageType':      imageType,
-                      'trove':          trove,
-                      'releaseName':    releaseName}
-            self._write("newRelease", errors = errors, kwargs = kwargs)
-            return apache.OK
+            release = self.client.getRelease(releaseId)
 
+            trove, versionStr, flavor = release.getTrove()
+            version = versions.ThawVersion(versionStr)
+            label = version.branch().label()
+
+        if self.project.external:
+            cfg = self.project.getConaryConfig()
+        else:
+            cfg = self.project.getConaryConfig(useSSL = self.cfg.SSL)
+        nc = netclient.NetworkRepositoryClient(cfg.repositoryMap)
+        leaves = nc.getTroveLeavesByLabel({trove: {label: None}})
+
+        # group troves by major architecture
+        def dictByArch(leaves, troveName):
+            archMap = {}
+            for v, flavors in reversed(sorted(leaves[troveName].items())):
+                for f in flavors:
+                    arch = f.members[deps.DEP_CLASS_IS].members.keys()[0]
+
+                    l = archMap.setdefault(arch, [])
+                    l.append((v, f, ))
+            return archMap
+
+        archMap = dictByArch(leaves, trove)
+        versionFlavors = []
+        for arch, vfList in archMap.items():
+            for vf in vfList:
+                versionFlavors.append(vf)
+        versionFlavors.sort(key=lambda x: x[0], reverse=True)
+
+        self._write("editRelease", trove = trove, version = version,
+                                   flavor = deps.ThawDependencySet(flavor),
+                                   label = label.asString(), release = release,
+                                   archMap = archMap)
+        return apache.OK
+        
     @requiresAuth
     @intFields(releaseId = None)
     @strFields(trove = None, version = None,
