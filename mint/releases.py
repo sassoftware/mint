@@ -127,7 +127,25 @@ class ReleasesTable(database.KeyedTable):
     def getPublished(self, releaseId):
         cu = self.db.cursor()
 
-        r = cu.execute("SELECT IFNULL(published, 0) FROM Releases WHERE releaseId=?", releaseId)
+        r = cu.execute("SELECT IFNULL((SELECT published FROM Releases WHERE releaseId=?), 0)", releaseId)
+        return r.fetchone()[0]
+
+    def deleteRelease(self, releaseId):
+        cu = self.db.cursor()
+
+        self.db._begin()
+
+        r = cu.execute("DELETE FROM Releases WHERE releaseId=?", releaseId)
+        r = cu.execute("DELETE FROM ReleaseData WHERE releaseId=?", releaseId)
+        r = cu.execute("DELETE FROM Jobs WHERE releaseId=?", releaseId)
+        r = cu.execute("DELETE FROM ImageFiles WHERE releaseId=?", releaseId)
+
+        self.db.commit()
+
+    def releaseExists(self, releaseId):
+        cu = self.db.cursor()
+
+        r = cu.execute("SELECT count(*) FROM Releases WHERE releaseId=?", releaseId)
         return r.fetchone()[0]
 
 class Release(database.TableObject):
@@ -250,3 +268,5 @@ class Release(database.TableObject):
                 dataDict[name] = template[name][1]
         return dataDict
 
+    def deleteRelease(self):
+        return self.server.deleteRelease(self.getId())

@@ -29,7 +29,6 @@ class ReleaseDataTable(database.DatabaseTable):
     def setReleaseDataValue(self, releaseId, name, value, dataType):
         cu = self.db.cursor()
         self.db._begin()
-
         #do any data conversions necessary to safely store value as a string
         if dataType == RDT_BOOL:
             value=str(int(value))

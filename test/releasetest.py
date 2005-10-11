@@ -9,7 +9,7 @@ testsuite.setup()
 from mint_rephelp import MintRepositoryHelper
 from mint.releasedata import RDT_STRING, RDT_BOOL, RDT_INT
 from mint.releases import ReleaseDataNameError
-from mint.mint_error import ReleasePublished
+from mint.mint_error import ReleasePublished, ReleaseMissing
 from mint import releasetypes
 
 class ReleaseTest(MintRepositoryHelper):
@@ -124,6 +124,38 @@ class ReleaseTest(MintRepositoryHelper):
             client.startImageJob(release.getId())
             self.fail("Allowed to start a job after release was published")
         except ReleasePublished:
+            pass
+
+    def testDeleteRelease(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        projectId = client.newProject("Foo", "foo", "rpath.org")
+
+        release = client.newRelease(projectId, "Test Release")
+
+        release.setImageType(releasetypes.STUB_IMAGE)
+        release.setPublished(1)
+        
+        try:
+            release.deleteRelease()
+            self.fail("Release could be deleted after it was published")
+        except ReleasePublished:
+            pass
+
+    def testMissingRelease(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        projectId = client.newProject("Foo", "foo", "rpath.org")
+
+        # make a release and delete it, to emulate a race condition
+        # from the web UI
+        release = client.newRelease(projectId, "Test Release")
+        release.deleteRelease()
+        
+        # messing with that same release should now fail in a controlled
+        # manner. no UnknownErrors allowed!
+        try:
+            release.setImageType(releasetypes.STUB_IMAGE)
+            self.fail("Allowed to set imgage type of a deleted release")
+        except ReleaseMissing:
             pass
 
     def testDownloadIncrementing(self):

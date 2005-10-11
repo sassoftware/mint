@@ -26,3 +26,7 @@ class UnknownException(Exception):
 class ReleasePublished(MintError):
     def __str__(self):
         return "Cannot alter a release once it is published."
+
+class ReleaseMissing(MintError):
+    def __str__(self):
+        return "The referenced release does not exist."

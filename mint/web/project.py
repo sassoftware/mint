@@ -215,6 +215,12 @@ class ProjectHandler(WebHandler):
 
         return self._redirect(self.basePath + "release?id=%d" % releaseId)
 
+    @ownerOnly
+    def deleteRelease(self, auth, releaseId):
+        release = self.client.getRelease(releaseId)
+        release.deleteRelease()
+        return self._redirect(self.basePath + "releases")
+
     @intFields(id = None)
     def release(self, auth, id):
         release = self.client.getRelease(id)

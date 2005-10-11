@@ -29,8 +29,11 @@
                     ${release.getTroveName()}=${release.getTroveVersion().trailingRevision().asString()}
                 </a>
             </th>
-            <td py:if="isOwner"><a href="editRelease?releaseId=${release.getId()}"
+            <td py:if="isOwner and not release.getPublished()"><a href="editRelease?releaseId=${release.getId()}"
                                    id="{release.getId()}Edit" class="option">Edit</a>
+            </td>
+            <td py:if="isOwner and not release.getPublished()"><a href="deleteRelease?releaseId=${release.getId()}"
+                                   id="{release.getId()}Delete" class="option">Delete</a>
             </td>
         </tr>
     </table>

@@ -63,7 +63,7 @@ class NewsCacheTable(database.KeyedTable):
     def refresh(self, items = 5, purge = True):
         def toUnixTime(t):
             return calendar.timegm(rfc822.parsedate_tz(item.find("pubDate").text))
-    
+
         if not self.cfg.newsRssFeed:
             return False
 
