@@ -1,0 +1,66 @@
+install rbuilder (needs dnspython from contrib)
+
+Erase sendmail
+
+Install postfix
+
+Install mailmain from noprivate label (conary update mailman=:noprivate
+
+Follow joseph's mailman config, but in mm_cfg.py, also modify
+default_url_host and default_email_host, noting that the getfqdn has issues
+that joseph will explain later....
+
+ignore warning from genaliases
+
+change alias_maps in /etc/postfix/main.cf (will be commented out; needs to
+be either uncommented and modified or a complete new line added)
+
+On to mint configuration
+
+
+copy mint.conf.dist to mint.conf in /srv/mint
+
+Check with Joseph regarding supportContact[TXT|HTML]
+
+in /srv/authrepo, copy authrepo.cnr.dist to authrepo.cnr
+
+in authrepo.cnr, no changes except possibly serverName (though joseph may
+change to be localhost.localdomain)
+
+***don't use a special password for the mailman site password and the
+   mailman list password, as they are stored in plaintext or mailed in
+   cleartext to the user ***
+
+In /etc/httpd/conf.d, copy mint.conf.dist to mint.conf
+
+Start apache
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Mailman Integration
+
+      Remove sendmail, and install postfix from conary.rpath.com@rpl:devel
+
+      check that the postfix service is configured to start at boot
+
+      Install mailman from contrib.rpath.com@rpl:noprivate
+
+      set the mailman service to start at boot
+
+      run /var/mailman/bin/mmsitepass # to set a new site password
+
+      modify /var/mailman/Mailman/mm_cfg.py to add MTA='Postfix' {TODO:
+      Move this to the noprivate mailman package and add a requirement}
+
+      run /var/mailman/bin/genaliases
+
+      chown mailman:mailman /var/mailman/data/aliases*
+
+      chmod 660 /var/mailman/data/aliases*
+
+      add 'alias_map = hash:/var/mailman/data/aliases' to
+      /etc/postfix/main.cf
+
+      Set up a mailman list: run '/var/mailman/bin/newlist mailman' as root
+
+Further configuration may be required to ensure that postfix and mailman
+can accept mail for the desired domain.
