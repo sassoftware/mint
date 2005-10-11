@@ -22,3 +22,7 @@ class UnknownException(Exception):
     def __init__(self, eName, eArgs):
         self.eName = eName
         self.eArgs = eArgs
+
+class ReleasePublished(MintError):
+    def __str__(self):
+        return "Cannot alter a release once it is published."

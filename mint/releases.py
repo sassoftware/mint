@@ -23,7 +23,7 @@ class TroveNotSet(MintError):
 
 class ReleaseMissing(MintError):
     def __str__(self):
-        return "the requested release does not exist"
+        return "the requested release does not exist."
 
 class ReleaseDataNameError(MintError):
     def __str__(self):
@@ -31,7 +31,7 @@ class ReleaseDataNameError(MintError):
 
     def __init__(self, reason = None):
         if reason is None:
-            self.str = "Named value is not in data template"
+            self.str = "Named value is not in data template."
         else:
             self.str = reason
 
@@ -123,6 +123,12 @@ class ReleasesTable(database.KeyedTable):
             raise TroveNotSet
         else:
             return name, version, flavor
+
+    def getPublished(self, releaseId):
+        cu = self.db.cursor()
+
+        r = cu.execute("SELECT IFNULL(published, 0) FROM Releases WHERE releaseId=?", releaseId)
+        return r.fetchone()[0]
 
 class Release(database.TableObject):
     __slots__ = [ReleasesTable.key] + ReleasesTable.fields

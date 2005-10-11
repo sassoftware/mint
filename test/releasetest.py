@@ -9,6 +9,7 @@ testsuite.setup()
 from mint_rephelp import MintRepositoryHelper
 from mint.releasedata import RDT_STRING, RDT_BOOL, RDT_INT
 from mint.releases import ReleaseDataNameError
+from mint.mint_error import ReleasePublished
 from mint import releasetypes
 
 class ReleaseTest(MintRepositoryHelper):
@@ -29,7 +30,6 @@ class ReleaseTest(MintRepositoryHelper):
         release.setFiles([("file1", "File Title 1"), ("file2", "File Title 2")])
         assert(release.getFiles() ==\
             [(1, 'file1', 'File Title 1'), (2, 'file2', 'File Title 2')])
-
 
     def testReleaseData(self):
         client, userId = self.quickMintUser("testuser", "testpass")
@@ -69,6 +69,63 @@ class ReleaseTest(MintRepositoryHelper):
             release.setDataValue('intArg', intArg)
             assert(intArg == release.getDataValue('intArg'))
 
+    def testPublished(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        projectId = client.newProject("Foo", "foo", "rpath.org")
+
+        release = client.newRelease(projectId, "Test Release")
+
+        release.setImageType(releasetypes.STUB_IMAGE)
+        release.setPublished(1)
+
+        try:
+            release.setDataValue('stringArg', 'bar')
+            self.fail("Release allowed setting of release data after publish")
+        except ReleasePublished:
+            pass
+
+        try:
+            release.setImageType(releasetypes.STUB_IMAGE)
+            self.fail("Release allowed setting of image type after publish")
+        except ReleasePublished:
+            pass
+
+        try:
+            release.setFiles(tuple())
+            self.fail("Release allowed setting of files after publish")
+        except ReleasePublished:
+            pass
+
+        try:
+            release.setTrove('Some','Dummy','Args')
+            self.fail("Release allowed setting of troves after publish")
+        except ReleasePublished:
+            pass
+
+        try:
+            release.setDesc('Not allowed')
+            self.fail("Release allowed setting of troves after publish")
+        except ReleasePublished:
+            pass
+
+        try:
+            release.setPublished(0)
+            self.fail("Release allowed altering published state after publish")
+        except ReleasePublished:
+            pass
+
+        try:
+            release.setPublished(1)
+            self.fail("Release allowed altering published state after publish")
+        except ReleasePublished:
+            pass
+
+        try:
+            client.startImageJob(release.getId())
+            self.fail("Allowed to start a job after release was published")
+        except ReleasePublished:
+            pass
+
     def testDownloadIncrementing(self):
         client, userId = self.quickMintUser("testuser", "testpass")
         projectId = client.newProject("Foo", "foo", "rpath.org")
@@ -79,7 +136,6 @@ class ReleaseTest(MintRepositoryHelper):
         release.incDownloads()
         release.refresh()
         assert(release.getDownloads() == 1)
-
 
 if __name__ == "__main__":
     testsuite.main()

@@ -16,7 +16,7 @@ import jobs
 import projects
 import releases
 import users
-from mint_error import MintError, UnknownException, PermissionDenied
+from mint_error import MintError, UnknownException, PermissionDenied, ReleasePublished
 from searcher import SearchTermsError
 
 from deps import deps
@@ -409,6 +409,8 @@ class _Method(xmlrpclib._Method):
             raise users.UserInduction(exceptionArgs[0])
         elif exceptionName == "UserNotFound":
             raise UserNotFound(exceptionArgs[0])
+        elif exceptionName == "ReleasePublished":
+            raise ReleasePublished(exceptionArgs[0])
         else:
             raise UnknownException(exceptionName, exceptionArgs)
 

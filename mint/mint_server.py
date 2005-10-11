@@ -27,7 +27,7 @@ import dbversion
 import stats
 import releasedata
 from cache import TroveNamesCache
-from mint_error import PermissionDenied
+from mint_error import PermissionDenied, ReleasePublished
 from searcher import SearchTermsError
 
 from repository import netclient
@@ -767,6 +767,8 @@ class MintServer(object):
     @requiresAuth
     @private
     def setReleaseDataValue(self, releaseId, name, value, dataType):
+        if self.releases.getPublished(releaseId):
+            raise ReleasePublished()
         return self.releaseData.setReleaseDataValue(releaseId, name, value, dataType)
 
     @private
@@ -784,6 +786,8 @@ class MintServer(object):
     @requiresAuth
     @private
     def setReleaseTrove(self, releaseId, troveName, troveVersion, troveFlavor):
+        if self.releases.getPublished(releaseId):
+            raise ReleasePublished()
         return self.releases.setTrove(releaseId, troveName,
                                                  troveVersion,
                                                  troveFlavor)
@@ -791,6 +795,8 @@ class MintServer(object):
     @requiresAuth
     @private
     def setReleaseDesc(self, releaseId, desc):
+        if self.releases.getPublished(releaseId):
+            raise ReleasePublished()
         cu = self.db.cursor()
         cu.execute("UPDATE Releases SET desc=? WHERE releaseId=?",
                    desc, releaseId)
@@ -809,6 +815,8 @@ class MintServer(object):
     @requiresAuth
     @private
     def setReleasePublished(self, releaseId, published):
+        if self.releases.getPublished(releaseId):
+            raise ReleasePublished()
         cu = self.db.cursor()
         cu.execute("UPDATE Releases SET published=? WHERE releaseId=?",
             published, releaseId)
@@ -818,6 +826,8 @@ class MintServer(object):
     @requiresAuth
     @private
     def setImageType(self, releaseId, imageType):
+        if self.releases.getPublished(releaseId):
+            raise ReleasePublished()
         cu = self.db.cursor()
         cu.execute("UPDATE Releases SET imageType=? WHERE releaseId=?",
                    imageType, releaseId)
@@ -827,6 +837,8 @@ class MintServer(object):
     @requiresAuth
     @private
     def startImageJob(self, releaseId):
+        if self.releases.getPublished(releaseId):
+            raise ReleasePublished()
         cu = self.db.cursor()
 
         cu.execute("SELECT jobId, status FROM Jobs WHERE releaseId=?",
@@ -906,6 +918,8 @@ class MintServer(object):
     @requiresAuth
     @private
     def setImageFilenames(self, releaseId, filenames):
+        if self.releases.getPublished(releaseId):
+            raise ReleasePublished()
         cu = self.db.cursor()
         cu.execute("DELETE FROM ImageFiles WHERE releaseId=?", releaseId)
         for idx, file in enumerate(sorted(filenames)):
