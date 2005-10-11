@@ -5,8 +5,8 @@
 all: subdirs
 
 product=mint
-export DESTDIR=/
-installdir=$(DESTDIR)
+export DESTDIR=
+installdir=
 export VERSION=0.6.0
 export TOPDIR = $(shell pwd)
 export DISTDIR = $(TOPDIR)/$(product)$(productqualifier)-$(VERSION)
