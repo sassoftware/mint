@@ -6,6 +6,7 @@
 #
 
 import os, sys, time
+import traceback
 import xmlrpclib
 
 import conary
