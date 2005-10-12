@@ -1,5 +1,8 @@
+# Change the following line to reflect your site's hostname
+serverName authrepo.example.com
+
+# The rest of this file should not need to be modified
 repositoryDir @DESTDIR@/srv/authrepo/repo/
 tmpDir @DESTDIR@/srv/authrepo/tmp
 logFile @DESTDIR@/srv/authrepo/tmp/contents-log
-serverName authrepo.example.com
 cacheChangeSets false
