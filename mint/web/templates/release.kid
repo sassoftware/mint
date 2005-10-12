@@ -30,6 +30,13 @@ from mint.mint import upstream
             else:
                 job = None
 
+            if job and job.getStatus() > jobstatus.RUNNING:
+                editOptionsStyle = "display: none;"
+                editOptionsDisabledStyle = "color: gray; font-style: italic;"
+            else:
+                editOptionsStyle = ""
+                editOptionsDisabledStyle = "color: gray; font-style: italic; display: none;"
+             
             files = release.getFiles()
             published = release.getPublished()
 
@@ -68,7 +75,7 @@ from mint.mint import upstream
                     <p id="jobStatus">Retrieving job status...</p>
 
                     <h3>Options</h3>
-                    <ul id="editOptions" style="display: none;">
+                    <ul id="editOptions" py:attrs="{'style': editOptionsStyle}">
                         <li>
                             <a href="${basePath}editRelease?releaseId=${release.getId()}">Edit Release</a>
                         </li>
@@ -79,7 +86,7 @@ from mint.mint import upstream
                             <a href="publish?releaseId=${release.getId()}">Publish Release</a>
                         </li>
                     </ul>
-                    <ul id="editOptionsDisabled" style="color: gray; font-style: italic;">
+                    <ul id="editOptionsDisabled" py:attrs="{'style': editOptionsDisabledStyle}">
                         <li>Edit Release</li>
                         <li>Re-generate Release</li>
                         <li>Publish Release</li>
