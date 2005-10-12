@@ -30,7 +30,6 @@ from mint.mint import upstream
             else:
                 job = None
 
-            preventEdit = job and job.getStatus() in (jobstatus.WAITING, jobstatus.RUNNING)
             files = release.getFiles()
             published = release.getPublished()
 
@@ -69,8 +68,8 @@ from mint.mint import upstream
                     <p id="jobStatus">Retrieving job status...</p>
 
                     <h3>Options</h3>
-                    <ul id="editOptions">
-                        <li py:if="not preventEdit">
+                    <ul id="editOptions" style="display: none;">
+                        <li>
                             <a href="${basePath}editRelease?releaseId=${release.getId()}">Edit Release</a>
                         </li>
                         <li>
@@ -80,7 +79,7 @@ from mint.mint import upstream
                             <a href="publish?releaseId=${release.getId()}">Publish Release</a>
                         </li>
                     </ul>
-                    <ul id="editOptionsDisabled" style="color: gray; display: none;">
+                    <ul id="editOptionsDisabled" style="color: gray; font-style: italic;">
                         <li>Edit Release</li>
                         <li>Re-generate Release</li>
                         <li>Publish Release</li>
