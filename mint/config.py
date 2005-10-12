@@ -37,7 +37,7 @@ class MintConfig(ConfigFile):
         'siteDomainName'    : 'rpath.com',
         'projectDomainName' : None,
         'externalDomainName': None,
-        'secureHost'        : 'www.rpath.org',
+        'secureHost'        : None,
         'hostName'          : None, # optional domain name for main site
         'SSL'               : [ BOOLEAN, False ],
         'adminMail'         : 'mint@rpath.org',
@@ -95,6 +95,9 @@ class MintConfig(ConfigFile):
             self.siteHost = self.siteDomainName
             self.projectSiteHost = self.projectDomainName
             self.externalSiteHost = self.externalDomainName
+
+        if not self.SSL:
+            self.secureHost = self.siteHost
 
         if not self.reposContentsPath:
             self.reposContentsPath = self.reposPath
