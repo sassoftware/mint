@@ -180,7 +180,6 @@ class InstallableIso(ImageGenerator):
 
         # write the cslist
         cslistPath = os.path.join(baseDir, 'cslist')
-        util.mkdirChain(cslistPath)
         cslistFile = file(cslistPath, "w")
         cslistFile.write("\n".join(cslist))
         cslistFile.close()
