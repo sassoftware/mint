@@ -119,7 +119,7 @@ class JobDaemon:
             # it all depends on what the xmlrpc lib was trying to do when
             # the server went byebye.
             except (ProtocolError, socket.error), e:
-                log.warn("Error retrieving job list:" + str(e))
+                log.warning("Error retrieving job list:" + str(e))
             time.sleep(5)
 
 def kill(lockFile):
