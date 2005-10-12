@@ -52,7 +52,7 @@ from mint.mint import upstream
 
                 <h3>Version ${upstream(version)} of ${trove} for ${release.getArch()}</h3>
 
-                <ul>
+                <ul id="downloads">
                     <li py:for="i, file in enumerate(files)">
                         <a href="${cfg.basePath}downloadImage?fileId=${file[0]}">Download ${file[2] and file[2] or "Disc " + str(i+1)}</a>
                     </li>
@@ -69,7 +69,7 @@ from mint.mint import upstream
                     <p id="jobStatus">Retrieving job status...</p>
 
                     <h3>Options</h3>
-                    <ul>
+                    <ul id="editOptions">
                         <li py:if="not preventEdit">
                             <a href="${basePath}editRelease?releaseId=${release.getId()}">Edit Release</a>
                         </li>

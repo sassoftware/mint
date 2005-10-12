@@ -114,6 +114,13 @@ function getCookieValue (cookie) {
         return false;
 }
 
+var STATUS_WAITING = 0;
+var STATUS_RUNNING = 1;
+var STATUS_FINISHED = 2;
+var STATUS_DELETED = 3;
+var STATUS_ERROR = 4;
+var refreshed = false;
+
 function processGetReleaseStatus(xml) {
     el = document.getElementById("jobStatus");
 
@@ -126,10 +133,20 @@ function processGetReleaseStatus(xml) {
     el.replaceChild(document.createTextNode(statusText), el.firstChild);
     
     downloads = document.getElementById("downloads");
-    if(status == 2) {
+    editOptions = document.getElementById("editOptions");
+    if(status != STATUS_FINISHED) {
         downloads.style.visibility = "visible";
     } else {
         downloads.style.visibility = "hidden";
+    }
+    var editLinks = editOptions.getElementsByTagName("a");
+    for(var i = 0; i < editLinks.length; i++) {
+        element = editLinks[i]
+        if(status > STATUS_RUNNING) {
+            element.disabled = false;
+        } else {
+            element.disabled = true;
+        }
     }
 }
 
