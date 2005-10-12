@@ -12,9 +12,6 @@
 CONFIG_FILE='@DESTDIR@/srv/mint/iso_gen.conf'
 SCRIPT_PATH='@DESTDIR@/usr/share/mint/scripts'
 
-if [ -f $CONFIG_FILE ]; then
-    
-
 case "$1" in
   start)
 	$SCRIPT_PATH/job-server --config $CONFIG_FILE
