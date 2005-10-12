@@ -71,11 +71,6 @@ class JobRunner(threading.Thread):
         log.info("job %d started", jobId)
 
         try:
-            try:
-                os.makedirs(self.cfg.imagesPath)
-            except OSError, err:
-                if err.errno != errno.EEXIST:
-                    raise
             generator = generators[release.getImageType()]
             
             # save the current working directory in case the generator 
