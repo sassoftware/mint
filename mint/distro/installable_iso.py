@@ -196,7 +196,7 @@ class InstallableIso(ImageGenerator):
         # Abort if parent thread has died
         assertParentAlive()
 
-        # write the buildstamp
+        # write the buildstamp: XXX needs to be in a cramfs product.img
         bsPath = os.path.join(topdir, ".buildstamp")
         bsFile = file(bsPath, "w")
         print >> bsFile, time.time()
