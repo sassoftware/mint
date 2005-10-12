@@ -126,6 +126,11 @@ class InstallableIso(ImageGenerator):
 
         self.status("Preparing ISO template")
         _linkRecurse(templateDir, topdir)
+        productDir = os.path.join(topdir, subdir)
+        if os.path.isdir(productDir):
+            # reinit template if we're working with an existing image
+            util.rmtree(os.path.join(topdir, 'PRODUCTNAME'))
+            os.rename(productDir, os.path.join(topdir, 'PRODUCTNAME'))
         os.rename(os.path.join(topdir, 'PRODUCTNAME'), os.path.join(topdir, subdir))
         csdir = os.path.join(topdir, subdir, 'changesets')
         util.mkdirChain(csdir)
@@ -198,6 +203,17 @@ class InstallableIso(ImageGenerator):
 
         # Abort if parent thread has died
         assertParentAlive()
+
+        # write .discinfo
+        discInfoPath = os.path.join(topdir, ".discinfo")
+        discInfoFile = open(discInfoPath, "w")
+        print >> discInfoFile, time.time()
+        print >> discInfoFile, project.getName()
+        print >> discInfoFile, anacondaArch
+        print >> discInfoFile, "1"
+        for x in ["base", "changesets", "pixmaps"]:
+            print >> discInfoFile, "%s/%s" % (subdir, x)
+        discInfoFile.close()
 
         # write the product.img cramfs
         productPath = os.path.join(baseDir, "product.img")
