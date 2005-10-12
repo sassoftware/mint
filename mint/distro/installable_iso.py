@@ -25,8 +25,8 @@ class IsoConfig(ConfigFile):
     defaults = {
         'imagesPath':       '/srv/mint/images/',
         'scriptPath':       '/srv/mint/code/scripts/',
-        'cacheDir':         '/srv/mint/changesets/',
-        'templateDir':      '/srv/mint/templates/',
+        'cachePath':        '/srv/mint/changesets/',
+        'templatePath':     '/srv/mint/templates/',
         'implantIsoMd5':    '/usr/lib/anaconda-runtime/implantisomd5'
     }
 
@@ -65,6 +65,7 @@ class Callback(callbacks.UpdateCallback, callbacks.ChangesetCallback):
         self.prefix = prefix
 
     def __init__(self, status):
+        self.abortEvent = None
         self.status = status
         self.restored = 0
         self.msg = ''
@@ -117,7 +118,7 @@ class InstallableIso(ImageGenerator):
         util.mkdirChain(csdir)
         
         # hardlink template files to topdir
-        templateDir = os.path.join(isocfg.templateDir, release.getArch())
+        templateDir = os.path.join(isocfg.templatePath, release.getArch())
         if not os.path.exists(templateDir):
             raise AnacondaTemplateMissing(release.getArch())
 
@@ -151,7 +152,7 @@ class InstallableIso(ImageGenerator):
         rc = gencslist.extractChangeSets(client, cfg, csdir, groupName,
                                          groupVer, groupFlavor,
                                          oldFiles = existingChangesets,
-                                         cacheDir = isocfg.cacheDir,
+                                         cacheDir = isocfg.cachePath,
                                          callback = callback)
         cslist, groupcs = rc
 
@@ -189,16 +190,6 @@ class InstallableIso(ImageGenerator):
             "scriptsdir":   isocfg.scriptPath,
         }
         util.mkdirChain(infoMap['isodir'])
-
-        self.status("Building Anaconda installation")
-        cmd = [isocfg.scriptPath + '/buildinstall', '--topdir', topdir,
-               '--subdir', subdir, '--name', '%s' % project.getName(),
-               '--version', releaseVer, '--arch', anacondaArch,
-               '--install-label', 'conary.rpath.com@rpl:devel']
-        print >> sys.stderr, " ".join(cmd)
-        sys.stderr.flush()
-
-        subprocess.call(['setarch', anacondaArch] + cmd)
 
         # Abort if parent thread has died
         assertParentAlive()

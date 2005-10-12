@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -x
 #
 # Copyright (c) 2004-2005 rPath, Inc.
 # All rights reserved
@@ -45,8 +45,8 @@ instroot=$(mktemp -d /tmp/bd-instroot-XXXXXX)
 instrootgr=$(mktemp -d /tmp/bd-instrootgr-XXXXXX)
 
 # build the images
-$scriptdir/upd-instroot --conary --install-label "$installlabel" --arch "$arch" $topdir/$subdir/changesets $instroot $instrootgr
-$scriptdir/mk-images --conary $topdir/$subdir/changesets $topdir $instroot $instrootgr $arch "$distroname" $distroversion $subdir
+sh -x $scriptdir/upd-instroot --conary --install-label "$installlabel" --arch "$arch" $topdir/$subdir/changesets $instroot $instrootgr
+sh -x $scriptdir/mk-images --conary $topdir/$subdir/changesets $topdir $instroot $instrootgr $arch "$distroname" $distroversion $subdir
 
 $scriptdir/makestamp.py --releasestr="$distroname" --arch="$arch" --discNum="1" --baseDir=$subdir/base --packagesDir=$subdir/changesets --pixmapsDir=$subdir/pixmaps --outfile=$topdir/.discinfo
 
