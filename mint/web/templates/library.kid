@@ -86,7 +86,7 @@ from urllib import quote
     <div id="browse" class="palette" py:def="browseMenu(display='block')" py:strip="False">
         <h3 onclick="javascript:toggle_display('browse_items');">
             <img id="browse_items_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_${display == 'block' and 'collapse' or 'expand'}.gif" border="0" />
-            Browse All Projects
+            Browse
         </h3>
         <div id="browse_items" style="display: $display">
           <ul>
