@@ -201,7 +201,7 @@ class InstallableIso(ImageGenerator):
         bsFile = file(bsPath, "w")
         print >> bsFile, time.time()
         print >> bsFile, project.getName()
-        print >> bsFile, upstream(release.getVersion())
+        print >> bsFile, upstream(release.getTroveVersion())
         print >> bsFile, 'rPath'
         print >> bsFile, 'http://bugs.rpath.com/'
         print >> bsFile, "%s %s %s" % (release.getTroveName(),
