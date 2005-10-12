@@ -169,7 +169,7 @@ class InstallableIso(ImageGenerator):
             anacondaArch = arch
 
         # write the sqldb file
-        sqldbPath = os.path.join(topdir, subdir, 'base/sqldb')
+        sqldbPath = os.path.join(topdir, subdir, 'base', 'sqldb')
         gencslist.writeSqldb(groupcs, sqldbPath)
 
         # write the cslist
