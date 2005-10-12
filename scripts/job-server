@@ -1,6 +1,6 @@
 #!/usr/bin/python
 #
-# Copyright (c) 2004-2005 rpath, Inc.
+# Copyright (c) 2004-2005 rPath, Inc.
 #
 # All Rights Reserved
 #
@@ -21,7 +21,7 @@ import conary
 import conarycfg
 import conaryclient
 from conarycfg import ConfigFile, ConaryConfiguration
-from conarycfg import STRINGLIST, STRINGLIST, BOOLEAN
+from conarycfg import STRINGLIST, BOOLEAN
 from deps import deps
 from lib import log
 from lib import util
@@ -29,7 +29,6 @@ from lib import util
 # to run from CVS
 sys.path.append('..')
 
-from mint.config import MintConfig
 from mint.mint import MintClient 
 from mint import jobs
 from mint import jobstatus
@@ -68,7 +67,7 @@ class JobRunner(threading.Thread):
         project = self.client.getProject(release.getProjectId())
         
         self.job.setStatus(jobstatus.RUNNING, 'Running')
-        log.info("job %d started", jobId)
+        log.info("job for %s started (id %d)" % (release.getHostname(), jobId))
 
         try:
             generator = generators[release.getImageType()]
@@ -100,7 +99,7 @@ class JobDaemon:
      
         # normalize the job daemon machine's architecture
         # right now we only handle x86 and x86_64 images
-        log.info("handling jobs of architecture: %s", cfg.archList)
+        log.info("handling jobs of architecture: %s", cfg.supportedArch)
         
         while(True):
             try:
@@ -108,7 +107,7 @@ class JobDaemon:
                 for job in joblist:
                     release = client.getRelease(job.getReleaseId())
                     if job.getStatus() == jobstatus.WAITING\
-                           and release.getArch() in cfg.archList:
+                           and release.getArch() in cfg.supportedArch:
                         th = JobRunner(cfg, client, job)
                         threads.append(th)
                         th.start()
@@ -119,10 +118,8 @@ class JobDaemon:
             # a ProtocolError...
             # it all depends on what the xmlrpc lib was trying to do when
             # the server went byebye.
-            except ProtocolError:
-                pass
-            except socket.error:
-                pass
+            except (ProtocolError, socket.error), e:
+                log.warn("Error retrieving job list:" + str(e))
             time.sleep(5)
 
 def kill(lockFile):
@@ -137,9 +134,9 @@ def kill(lockFile):
         procName = pipeFD.readline().strip()
         pipeFD.close()
         if procName not in sys.argv[0]:
-            log.error("pid: %d does not seem to be a mint job server.")
+            log.error("pid: %d does not seem to be an rBuilder ISO generation server.")
             sys.exit(1)
-        log.info("killing job server pid %d" % pid)
+        log.info("killing rBuilder ISO generation server pid %d" % pid)
         try:
             pass
             os.kill(pid, signal.SIGINT)
@@ -167,7 +164,7 @@ def daemon(options, cfg):
        
         jd = JobDaemon(cfg)
     except socket.error, msg:
-        log.error("connecting to Mint XMLRPC server: %s", msg[1])
+        log.error("connecting to rBuilder server: %s", msg[1])
     except KeyboardInterrupt:
         log.info("interrupt caught; exiting")
 
@@ -178,28 +175,28 @@ def daemon(options, cfg):
 
 class IsoGenConfig(ConfigFile):
     defaults = {
-        'archList'        : [ STRINGLIST, [] ],
-        'serverURL'       : None,
+        'supportedArch'   : [ STRINGLIST, [] ],
+        'serverUrl'       : None,
         'logPath'         : '/srv/mint/logs',
         'lockFile'        : '/var/run/mint-jobdaemon.pid',
         }
 
     def read(self, path, exception = False):
         ConfigFile.read(self, path, exception)
-        for arch in cfg.archList:
+        for arch in cfg.supportedArch:
             if arch not in SUPPORTED_ARCHS:
                 log.error("unsupported architecture: %s", arch)
                 sys.exit(1)
         if self.serverURL is None:
             log.error("a server URL must be specified in the config file, for example:")
-            log.error("serverURL http://username:userpass@www.example.com/xmlrpc-private/")
+            log.error("serverUrl http://username:userpass@www.example.com/xmlrpc-private/")
             sys.exit(1)
 
 if __name__ == "__main__":
     parser = OptionParser()
     parser.add_option("-k", "--kill", dest = "kill",
                       action = "store_true",
-                      help = "Kill the running job daemon.")
+                      help = "Kill the running ISO generation server.")
     parser.add_option("-c", "--config", dest = "config", default = None,
                       help = "Location of the iso_gen.conf file.")
     parser.add_option("-d", "--debug", dest = "debug", action = "store_true",
@@ -222,8 +219,9 @@ if __name__ == "__main__":
             if cfgFile:
                 if os.access(cfgFile, os.R_OK) and os.path.isfile(cfgFile):
                     break
-            else:
-                log.error("unable to open mint.conf configuration file. Please use --config=<path>.")
+    if not cfgFile:
+        log.error("unable to open iso_gen.conf configuration file. Please use --config=<path>.")
+        sys.exit(1) 
 
     cfg = IsoGenConfig()
     cfg.read(cfgFile)
@@ -242,7 +240,7 @@ if __name__ == "__main__":
         pipeFD.close()
 
         if pid in pidLine:
-            log.error("Mint job daemon already running as pid %s", pid)
+            log.error("rBuilder ISO generation server already running as pid %s", pid)
             sys.exit(1)
         else:
             log.info("Old job daemon pid seems to be invalid. killing.")
@@ -272,5 +270,5 @@ if __name__ == "__main__":
             
             daemon(options, cfg)
     else:
-        log.info("Mint job server started")
+        log.info("rBuilder ISO generation server started")
         os._exit(0)

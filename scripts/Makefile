@@ -6,7 +6,13 @@
 
 script_dist = job-server mklivecd reset update-package-index buildinstall splitdistro
 
-extra_dist = Makefile installable_iso.conf live_iso.conf buildiso
+extra_dist = \
+	Makefile		\
+	installable_iso.conf	\
+	iso_gen.conf		\
+	live_iso.conf		\
+	buildiso		\
+	job-server.init.in
 
 dist_files = $(script_dist) $(extra_dist)
 
@@ -18,8 +24,14 @@ install: default-install
 		install -m 755 $$f $(DESTDIR)/$(datadir)/mint/scripts/$$f; \
 	done;
 	mkdir -p $(DESTDIR)/$(confdir)
-	install -m 644 installable_iso.conf $(DESTDIR)/$(confdir)
-	install -m 644 live_iso.conf $(DESTDIR)/$(confdir)
+	install -m 644 installable_iso.conf $(DESTDIR)/$(confdir)/installable_iso.conf.dist
+	install -m 644 live_iso.conf $(DESTDIR)/$(confdir)/live_iso.conf.dist
+	install -m 644 iso_gen.conf $(DESTDIR)/$(confdir)/iso_gen.conf.dist
+
+	mkdir -p $(DESTDIR)/$(sysconfdir)/init.d/
+	install -m 755 job-server.init.in $(DESTDIR)/$(sysconfdir)/init.d/rbuilder-isogen
+	sed -i "s,@DESTDIR@,$(installdir),g" $(DESTDIR)/$(sysconfdir)/init.d/rbuilder-isogen
+
 
 dist: default-dist
 
