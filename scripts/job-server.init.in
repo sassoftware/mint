@@ -17,7 +17,7 @@ case "$1" in
 	$SCRIPT_PATH/job-server --config $CONFIG_FILE
 	;;
   stop)
-	$SCRIPT_PATH/job-server -k
+	$SCRIPT_PATH/job-server --config $CONFIG_FILE -k
 	;;
   restart)
 	$0 stop
