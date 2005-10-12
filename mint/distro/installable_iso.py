@@ -195,6 +195,19 @@ class InstallableIso(ImageGenerator):
         # Abort if parent thread has died
         assertParentAlive()
 
+        # write the buildstamp
+        bsPath = os.path.join(topdir, ".buildstamp")
+        bsFile = file(bsPath, "w")
+        print >> bsFile, time.time()
+        print >> bsFile, project.getName()
+        print >> bsFile, upstream(release.getVersion())
+        print >> bsFile, 'rPath'
+        print >> bsFile, 'http://bugs.rpath.com/'
+        print >> bsFile, "%s %s %s" % (release.getTroveName(),
+                                       release.getTroveVersion().asString(),
+                                       release.getTroveFlavor().freeze())
+        bsFile.close()
+
         cmd = [isocfg.scriptPath + "/splitdistro", topdir]
         print >> sys.stderr, " ".join(cmd)
         sys.stderr.flush()
