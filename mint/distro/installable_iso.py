@@ -7,6 +7,7 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 import time
 
 import callbacks
@@ -196,9 +197,11 @@ class InstallableIso(ImageGenerator):
         # Abort if parent thread has died
         assertParentAlive()
 
-        # write the buildstamp: XXX needs to be in a cramfs product.img
-        bsPath = os.path.join(topdir, ".buildstamp")
-        bsFile = file(bsPath, "w")
+        # write the product.img cramfs
+        productPath = os.path.join(baseDir, "product.img")
+        tmpPath = tempfile.mkdtemp()
+
+        bsFile = file(os.path.join(tmpPath, ".buildstamp"), "w")
         print >> bsFile, time.time()
         print >> bsFile, project.getName()
         print >> bsFile, upstream(release.getTroveVersion())
@@ -208,6 +211,13 @@ class InstallableIso(ImageGenerator):
                                        release.getTroveVersion().asString(),
                                        release.getTroveFlavor().freeze())
         bsFile.close()
+        cmd = ['mkcramfs', tmpPath, productPath]
+        print >> sys.stderr, " ".join(cmd)
+        sys.stderr.flush()
+                        
+        subprocess.call(cmd)
+        util.rmtree(tmpPath)
+        assertParentAlive()
 
         cmd = [isocfg.scriptPath + "/splitdistro", topdir]
         print >> sys.stderr, " ".join(cmd)
