@@ -6,6 +6,7 @@
 import os
 import re
 import subprocess
+import string
 import sys
 import tempfile
 import time
