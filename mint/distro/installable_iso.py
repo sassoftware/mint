@@ -116,17 +116,19 @@ class InstallableIso(ImageGenerator):
         
         revision = version.trailingRevision().asString()
         topdir = os.path.join(isocfg.imagesPath, project.getHostname(), release.getArch(), revision, "unified") 
+        util.mkdirChain(topdir)
         subdir = string.capwords(project.getHostname())
-        csdir = os.path.join(topdir, subdir, 'changesets')
-        util.mkdirChain(csdir)
-        
+       
         # hardlink template files to topdir
         templateDir = os.path.join(isocfg.templatePath, release.getArch())
-        if not os.path.exists(templateDir):
+        if not os.path.exists(os.path.join(templateDir, 'PRODUCTNAME')):
             raise AnacondaTemplateMissing(release.getArch())
 
         self.status("Preparing ISO template")
         _linkRecurse(templateDir, topdir)
+        os.rename(os.path.join(topdir, 'PRODUCTNAME'), os.path.join(topdir, subdir))
+        csdir = os.path.join(topdir, subdir, 'changesets')
+        util.mkdirChain(csdir)
         assertParentAlive()
         
         # build a set of the things we already have extracted.
