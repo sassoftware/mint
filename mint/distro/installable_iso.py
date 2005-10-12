@@ -116,7 +116,7 @@ class InstallableIso(ImageGenerator):
         
         revision = version.trailingRevision().asString()
         topdir = os.path.join(isocfg.imagesPath, project.getHostname(), release.getArch(), revision, "unified") 
-        subdir = string.capwords(project.getHostname)
+        subdir = string.capwords(project.getHostname())
         csdir = os.path.join(topdir, subdir, 'changesets')
         util.mkdirChain(csdir)
         
