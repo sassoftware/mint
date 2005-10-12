@@ -27,7 +27,7 @@ label as part of the conary command.  Note that this does *not* prevent
 Conary from accessing this project's repository to find (and install)
 updates to the software you install -- Conary takes care of that for you.
 
-    On the other hand, if this project has lots of interesting troves and
+    On the other hand, if this project has lots of interesting software and
 you expect that you'll be coming back from time to time to see what
 newly-available software there is, you should configure Conary to
 automatically search this project's label.
@@ -93,6 +93,9 @@ install trove's from the project's repository takes the form:
 conary update <trove>
 
 (Where <trove> represents the name of the trove to be installed.)
+
+    You can find more information on using Conary to keep your system
+updated here [link to conary day-to-day].
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Conary configuration for developers (displayed only for project members)
@@ -175,8 +178,8 @@ subdirectory, Conary will be configured properly.
 
 Note also that, whenever you issue a "cvc newpkg" or "cvc checkout"
 command, you should then create a symlink to ../../conaryrc in the
-newly-created directory.  This way future Conary will work as expected
-while in that directory as well.
+newly-created directory.  By doing this, conary commands will work as
+expected while in that directory as well.
 
 *Signing Packages With OpenPGP Keys*
 
