@@ -48,7 +48,7 @@ from mint.mint import upstream
         </td>
         <td id="main">
             <div class="pad">
-                <h2>${project.getName()}<br/>Release: ${name}</h2>
+                <h2>${project.getName()}<br/>Release: ${name} <span py:if="release.getPublished()">(published)</span></h2>
 
                 <h3>Version ${upstream(version)} of ${trove} for ${release.getArch()}</h3>
 
@@ -60,8 +60,6 @@ from mint.mint import upstream
                 </ul>
 
                 <div py:strip="True" py:if="isOwner">
-                    <p py:if="not preventEdit"><a href="${basePath}editRelease?releaseId=${release.getId()}">Edit Release</a></p>
-                    <p py:if="preventEdit" class="help">Release cannot be modified while it is being generated.</p>
                     
                     <h3>Description</h3>
                     <p>${release.getDesc() or "Release has no description."}</p>
@@ -69,11 +67,19 @@ from mint.mint import upstream
                     <h3>Image Generation Status:</h3>
 
                     <p id="jobStatus">Retrieving job status...</p>
-                    <p>
-                        <a href="${basePath}restartJob?releaseId=${release.getId()}">Re-generate</a>
-                        <a class="button" py:if="not release.getPublished() and files" href="publish?releaseId=${release.getId()}">Publish Image</a>
-                    </p>
-                    <p py:if="release.getPublished()">Image Published</p>
+
+                    <h3>Options</h3>
+                    <ul>
+                        <li py:if="not preventEdit">
+                            <a href="${basePath}editRelease?releaseId=${release.getId()}">Edit Release</a>
+                        </li>
+                        <li>
+                            <a href="${basePath}restartJob?releaseId=${release.getId()}">Re-generate Image</a>
+                        </li>
+                        <li py:if="not release.getPublished() and files">
+                            <a href="publish?releaseId=${release.getId()}">Publish Image</a>
+                        </li>
+                    </ul>
                 </div>
             </div>
         </td>
