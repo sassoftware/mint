@@ -1,0 +1,41 @@
+#!/bin/bash
+
+CONFIG_FILE='/srv/mint/iso_gen.conf'
+BIN_PATH='/usr/bin'
+
+case "$1" in
+  start)
+	$BIN_PATH/job-server --config $CONFIG_FILE
+	;;
+  stop)
+	$BIN_PATH/job-server -k
+	;;
+  restart)
+	$0 stop
+	$0 start
+	;;
+  status)
+	lockFile=`cat $CONFIG_FILE 2>&1 | grep "lockFile" | sed "s/.* //"`
+	pid=`cat "$lockFile" 2>&1`
+	case "$pid" in
+	  *'No such file or directory')
+		echo "Job server not running"
+		exit 0
+		;;
+	  *)
+		case "`ps -p $pid -o pid=`" in
+		  '')
+		    echo "lockfile is stale. fixing"
+		    rm "$lockFile"
+		    ;;
+		  *)
+		    echo "Job server is running"
+		    ;;
+		esac
+		;;
+	esac
+	;;
+  *)
+    echo "Usage: `basename $0` {start|stop|restart|status}"
+    ;;
+esac

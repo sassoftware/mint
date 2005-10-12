@@ -21,6 +21,7 @@ import conary
 import conarycfg
 import conaryclient
 from conarycfg import ConfigFile, ConaryConfiguration
+from conarycfg import STRINGLIST, STRINGLIST, BOOLEAN
 from deps import deps
 from lib import log
 from lib import util
@@ -48,6 +49,8 @@ generators = {
     releasetypes.STUB_IMAGE:         StubImage,
     releasetypes.NETBOOT_IMAGE:      NetbootImage,
 }
+
+SUPPORTED_ARCHS = ('x86', 'x86_64')
 
 class JobRunner(threading.Thread):
     def __init__(self, cfg, client, job):
@@ -89,8 +92,8 @@ class JobRunner(threading.Thread):
             log.info("job %d finished: %s", jobId, str(imageFilenames))
 
 class JobDaemon:
-    def __init__(self, cfg, serverUrl):
-        client = MintClient(serverUrl)
+    def __init__(self, cfg):
+        client = MintClient(cfg.serverURL)
        
         threads = []
 
@@ -102,18 +105,7 @@ class JobDaemon:
      
         # normalize the job daemon machine's architecture
         # right now we only handle x86 and x86_64 images
-        arch = os.uname()[4]
-        
-        x86_re = re.compile('i.86')
-        if x86_re.match(arch):
-            archList = ["x86"]
-        elif arch == "x86_64":
-            archList = ["x86_64"]
-        else:
-            log.error("unsupported architecture: %s", arch)
-            sys.exit(1)
-
-        log.info("handling jobs of architecture: %s", archList)
+        log.info("handling jobs of architecture: %s", cfg.archList)
         
         while(True):
             try:
@@ -121,7 +113,7 @@ class JobDaemon:
                 for job in joblist:
                     release = client.getRelease(job.getReleaseId())
                     if job.getStatus() == jobstatus.WAITING\
-                           and release.getArch() in archList:
+                           and release.getArch() in cfg.archList:
                         th = JobRunner(cfg, client, job)
                         threads.append(th)
                         th.start()
@@ -146,8 +138,15 @@ def kill(lockFile):
     except:
         log.warning("unable to open lockfile: %s", lockFile)
     else:
+        pipeFD = os.popen("ps -p %d -o comm=" %pid)
+        procName = pipeFD.readline().strip()
+        pipeFD.close()
+        if procName not in sys.argv[0]:
+            log.error("pid: %d does not seem to be a mint job server.")
+            sys.exit(1)
         log.info("killing job server pid %d" % pid)
         try:
+            pass
             os.kill(pid, signal.SIGINT)
         except OSError, e:
             if e.errno != errno.ESRCH:
@@ -158,60 +157,69 @@ def kill(lockFile):
         else:
             try:
                 os.unlink(lockFile)
-            except OSError, IOError:
-                log.warning("unable to remove lockfile")
+            except OSError, e:
+                pass
 
-def daemon(options, cfg, serverUrl, lockFile):
+def daemon(options, cfg):
     try:
-        lock = open(lockFile, "w")
+        lock = open(cfg.lockFile, "w")
         lock.write("%d" % os.getpid())
         lock.close()
     except:
-        log.warning("unable to open lockfile: %s", lockFile)
+        log.warning("unable to open lockfile: %s", cfg.lockFile)
     
     try:
        
-        jd = JobDaemon(cfg, serverUrl)
+        jd = JobDaemon(cfg)
     except socket.error, msg:
         log.error("connecting to Mint XMLRPC server: %s", msg[1])
     except KeyboardInterrupt:
         log.info("interrupt caught; exiting")
 
     try:
-        os.unlink(lockFile)
+        os.unlink(cfg.lockFile)
     except IOError, OSError:
-        log.warning("unable to remove lockfile: %s", lockFile)
+        log.warning("unable to remove lockfile: %s", cfg.lockFile)
+
+class IsoGenConfig(ConfigFile):
+    defaults = {
+        'archList'        : [ STRINGLIST, [] ],
+        'serverURL'       : None,
+        'logPath'         : '/srv/mint/logs',
+        'lockFile'        : '/var/run/mint-jobdaemon.pid',
+        }
+
+    def read(self, path, exception = False):
+        ConfigFile.read(self, path, exception)
+        for arch in cfg.archList:
+            if arch not in SUPPORTED_ARCHS:
+                log.error("unsupported architecture: %s", arch)
+                sys.exit(1)
+        if self.serverURL is None:
+            log.error("a server URL must be specified in the config file, for example:")
+            log.error("serverURL http://username:userpass@www.example.com/xmlrpc-private/")
+            sys.exit(1)
 
 if __name__ == "__main__":
-    lockFile = "/var/run/mint-jobdaemon.pid"
-    
     parser = OptionParser()
     parser.add_option("-k", "--kill", dest = "kill",
                       action = "store_true",
                       help = "Kill the running job daemon.")
     parser.add_option("-c", "--config", dest = "config", default = None,
-                      help = "Location of the Mint configuration file.")
+                      help = "Location of the iso_gen.conf file.")
     parser.add_option("-d", "--debug", dest = "debug", action = "store_true",
                       help = "Enable the debugger on errors.")
     (options, args) = parser.parse_args()
-    
-    if not args:
-        log.error("You must specify the URL to an mint XMLRPC server on the command line.")
-        sys.exit(1)
     
     if options.debug:
         sys.excepthook = util.genExcepthook()
         log.setVerbosity(log.DEBUG)
     else: 
         log.setVerbosity(log.INFO)
-    
-    if options.kill:
-        kill(lockFile)
-        sys.exit(1)
-    
+
     # use sys.argv[1] as config file if provided
     # if not, try some standard locations
-    cfgFiles = ["mint.conf", "../mint.conf", None]
+    cfgFiles = ["iso_gen.conf", None]
     if options.config:
         cfgFile = options.config
     else:
@@ -221,17 +229,32 @@ if __name__ == "__main__":
                     break
             else:
                 log.error("unable to open mint.conf configuration file. Please use --config=<path>.")
-    
-    if os.access(lockFile, os.R_OK):
-        lock = open(lockFile, "r")
-        pid = lock.read()
-        log.error("Mint job daemon already running as pid %s", pid)
+
+    cfg = IsoGenConfig()
+    cfg.read(cfgFile)
+
+    if options.kill:
+        kill(cfg.lockFile)
         sys.exit(1)
-   
+
+    if os.access(cfg.lockFile, os.R_OK):
+        lock = open(cfg.lockFile, "r")
+        pid = lock.read()
+        lock.close()
+        # check if the pid is actually valid...
+        pipeFD = os.popen("ps -p %s -o pid="% pid)
+        pidLine = pipeFD.readline()
+        pipeFD.close()
+
+        if pid in pidLine:
+            log.error("Mint job daemon already running as pid %s", pid)
+            sys.exit(1)
+        else:
+            log.info("Old job daemon pid seems to be invalid. killing.")
+            kill(cfg.lockFile)
+
     log.debug("loading configuration file: %s", cfgFile)
     log.info("using Conary in %s", os.path.dirname(sys.modules['conary'].__file__))
-    cfg = MintConfig()
-    cfg.read(cfgFile)
 
     pid = os.fork()
 
@@ -252,7 +275,7 @@ if __name__ == "__main__":
             os.dup2(logfd, sys.stdout.fileno())
             os.dup2(logfd, sys.stderr.fileno())
             
-            daemon(options, cfg, args[0], lockFile)
+            daemon(options, cfg)
     else:
         log.info("Mint job server started")
         os._exit(0)
