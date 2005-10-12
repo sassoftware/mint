@@ -115,7 +115,7 @@ class InstallableIso(ImageGenerator):
         
         revision = version.trailingRevision().asString()
         topdir = os.path.join(isocfg.imagesPath, project.getHostname(), release.getArch(), revision, "unified") 
-        subdir = 'rPath' # XXX parameterize
+        subdir = string.capwords(project.getHostname)
         csdir = os.path.join(topdir, subdir, 'changesets')
         util.mkdirChain(csdir)
         
@@ -205,7 +205,7 @@ class InstallableIso(ImageGenerator):
         print >> bsFile, time.time()
         print >> bsFile, project.getName()
         print >> bsFile, upstream(release.getTroveVersion())
-        print >> bsFile, 'rPath'
+        print >> bsFile, subdir
         print >> bsFile, 'http://bugs.rpath.com/'
         print >> bsFile, "%s %s %s" % (release.getTroveName(),
                                        release.getTroveVersion().asString(),
