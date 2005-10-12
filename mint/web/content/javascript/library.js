@@ -119,34 +119,33 @@ var STATUS_RUNNING = 1;
 var STATUS_FINISHED = 2;
 var STATUS_DELETED = 3;
 var STATUS_ERROR = 4;
+var STATUS_NOJOB = 5;
 var refreshed = false;
 
 function processGetReleaseStatus(xml) {
     el = document.getElementById("jobStatus");
-
-    var status = xml.getElementsByTagName("int")[0].nodeValue;
+    var status = xml.getElementsByTagName("int")[0].firstChild.data;
     var statusText = xml.getElementsByTagName("string")[0];
-    if(!statusText.firstChild)
+    if(!statusText.firstChild) {
         statusText = "No status";
-    else
+        status = STATUS_NOJOB;
+    } else {
         statusText = statusText.firstChild.nodeValue;
+    }
     el.replaceChild(document.createTextNode(statusText), el.firstChild);
     
     downloads = document.getElementById("downloads");
     editOptions = document.getElementById("editOptions");
-    if(status != STATUS_FINISHED) {
+    editOptionsDisabled = document.getElementById("editOptionsDisabled");
+
+    if(status > STATUS_RUNNING) {
+        editOptionsDisabled.style.display = "none";
+        editOptions.style.display = "block";
         downloads.style.visibility = "visible";
     } else {
+        editOptionsDisabled.style.display = "block";
+        editOptions.style.display = "none";
         downloads.style.visibility = "hidden";
-    }
-    var editLinks = editOptions.getElementsByTagName("a");
-    for(var i = 0; i < editLinks.length; i++) {
-        element = editLinks[i]
-        if(status > STATUS_RUNNING) {
-            element.disabled = false;
-        } else {
-            element.disabled = true;
-        }
     }
 }
 

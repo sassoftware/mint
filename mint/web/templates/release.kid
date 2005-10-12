@@ -31,11 +31,12 @@ from mint.mint import upstream
                 job = None
 
             if job and job.getStatus() > jobstatus.RUNNING:
-                editOptionsStyle = "display: none;"
-                editOptionsDisabledStyle = "color: gray; font-style: italic;"
-            else:
                 editOptionsStyle = ""
                 editOptionsDisabledStyle = "color: gray; font-style: italic; display: none;"
+            else:
+                editOptionsStyle = "display: none;"
+                editOptionsDisabledStyle = "color: gray; font-style: italic;"
+
              
             files = release.getFiles()
             published = release.getPublished()
