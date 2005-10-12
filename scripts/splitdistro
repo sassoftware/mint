@@ -55,6 +55,11 @@ def spaceused(path):
     return total
 
 def preparedir(unified, path, csdir):
+    if os.path.isdir(path):
+        print >> sys.stderr, 'removing stale', path
+        util.rmtree(path)
+
+    print >> sys.stderr, 'creating', path 
     os.mkdir(path)
     base = path
     for d in csdir.split(os.sep):
@@ -91,8 +96,11 @@ if __name__ == '__main__':
 
     # create disc1, it needs to contain all the disc1 files
     current = join(os.path.dirname(unified), 'disc1')
-    print >> sys.stderr, 'creating', current
     discnum = 1
+    if os.path.isdir(current):
+        print >> sys.stderr, 'removing stale', current 
+        util.rmtree(current)
+    print >> sys.stderr, 'creating', current
     os.mkdir(current)
     lndir(unified, current, excludes=(csdir, cslist, '.discinfo'))
     writediscinfo(current, discnum, discinfo)
@@ -110,7 +118,6 @@ if __name__ == '__main__':
             # oops, ran out of space.  set up a new disc
             discnum += 1
             current = join(os.path.dirname(unified), 'disc%d' %discnum)
-            print >> sys.stderr, 'creating', current
             preparedir(unified, current, csdir)
             writediscinfo(current, discnum, discinfo)
             used = spaceused(current)
