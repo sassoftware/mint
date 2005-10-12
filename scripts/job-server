@@ -67,7 +67,7 @@ class JobRunner(threading.Thread):
         project = self.client.getProject(release.getProjectId())
         
         self.job.setStatus(jobstatus.RUNNING, 'Running')
-        log.info("job for %s started (id %d)" % (release.getHostname(), jobId))
+        log.info("job for %s started (id %d)" % (project.getHostname(), jobId))
 
         try:
             generator = generators[release.getImageType()]
