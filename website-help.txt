@@ -122,23 +122,24 @@ multiple projects.
 
 *Creating Directories*
 
-First, you must create a directory tree that will contain all the files
+In order to keep all your Conary-related packaging in one place, start by
+creating a top-level directory -- in this example, we'll call it
+"conary", and put it in our login directory.  All your Conary packaging --
+no matter what the project -- will be done under this directory.
+
+Next, you must create a directory tree that will contain all the files
 related to this project.  The name of the root directory for this tree
 should clearly identify the project; some people use the hostname of the
-project's repository (<project-name>.rpath.org), while others use just the
-project's name -- the choice is yours.
-
-(Hint: If you anticipate packaging software for more than just this
-project, you should consider making this project's directory tree a
-subdirectory of another directory (conary, for example).  This way, all
-your Conary packaging work will be in one place.)
+project's repository, while others use just the project's name -- the
+choice is yours.  In this example, we'll use
+"<project-name>.rpath.org".
 
 Once you've decided on a name for this project's directory, create it and
 populate it with the following subdirectories:
 
-    o src
-    o builds
-    o cache
+    o ~/conary/<project-name>.rpath.org/src
+    o ~/conary/<project-name>.rpath.org/builds
+    o ~/conary/<project-name>.rpath.org/cache
 
 The src directory will contain subdirectories (one for each package), each
 containing the Conary recipe file (along with any other files that might be
