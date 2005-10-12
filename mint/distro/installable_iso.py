@@ -34,7 +34,7 @@ class IsoConfig(ConfigFile):
     }
 
 class AnacondaTemplateMissing(Exception):
-    def __init__(arch = "arch"):
+    def __init__(self, arch = "arch"):
         self._arch = arch
         
     def __str__(self):
@@ -117,7 +117,8 @@ class InstallableIso(ImageGenerator):
         revision = version.trailingRevision().asString()
         topdir = os.path.join(isocfg.imagesPath, project.getHostname(), release.getArch(), revision, "unified") 
         util.mkdirChain(topdir)
-        subdir = string.capwords(project.getHostname())
+        # subdir = string.capwords(project.getHostname())
+        subdir = 'rPath'
        
         # hardlink template files to topdir
         templateDir = os.path.join(isocfg.templatePath, release.getArch())
