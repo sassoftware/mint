@@ -1,14 +1,26 @@
 #!/bin/bash
+#
+# rbuilder-isogen:  Starts the rBuilder ISO generation server.
+#
+# chkconfig: - 24 15
+# description: This is the daemon which periodically requests a list of
+#              ISO generation jobs from an rBuilder server and generates
+#              the requested images.
+# processname: job-server 
+# config: @DESTDIR@/usr/bin
 
-CONFIG_FILE='/srv/mint/iso_gen.conf'
-BIN_PATH='/usr/bin'
+CONFIG_FILE='@DESTDIR@/srv/mint/iso_gen.conf'
+SCRIPT_PATH='@DESTDIR@/usr/share/mint/scripts'
+
+if [ -f $CONFIG_FILE ]; then
+    
 
 case "$1" in
   start)
-	$BIN_PATH/job-server --config $CONFIG_FILE
+	$SCRIPT_PATH/job-server --config $CONFIG_FILE
 	;;
   stop)
-	$BIN_PATH/job-server -k
+	$SCRIPT_PATH/job-server -k
 	;;
   restart)
 	$0 stop
