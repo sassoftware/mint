@@ -87,7 +87,7 @@ class JobRunner(threading.Thread):
 
 class JobDaemon:
     def __init__(self, cfg):
-        client = MintClient(cfg.serverURL)
+        client = MintClient(cfg.serverUrl)
        
         threads = []
 
@@ -187,7 +187,7 @@ class IsoGenConfig(ConfigFile):
             if arch not in SUPPORTED_ARCHS:
                 log.error("unsupported architecture: %s", arch)
                 sys.exit(1)
-        if self.serverURL is None:
+        if self.serverUrl is None:
             log.error("a server URL must be specified in the config file, for example:")
             log.error("serverUrl http://username:userpass@www.example.com/xmlrpc-private/")
             sys.exit(1)
