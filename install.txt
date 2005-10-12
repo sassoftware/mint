@@ -27,36 +27,36 @@ to run rBuilder:
 
     o dnspython
 
-    o rbuilder *** FIXME -- name? ***
-
     o Postfix (after erasing sendmail)
 
     o Mailman
+
+    o rBuilder (mint)
 
 Before you begin, you'll need to identify the system which will be running
 rBuilder.  Once your hardware is ready, perform the following steps:
 
     o Perform an "Everything" installation of rPath Linux
 
-    o Install dnspython from contrib.rpath.com@rpl:devel
-
-        (conary update dnspython)
-
-    o Install rbuilder from *** FIXME -- pointer to trove? ***
-
-        (conary update rbuilder=*** FIXME -- pointer to trove? ***)
-
-    o Erase sendmail
+    o Erase Sendmail
 
         (conary erase sendmail)
 
-    o Install postfix
+    o Install dnspython from contrib.rpath.org@rpl:devel
+
+        (conary update dnspython)
+
+    o Install Postfix
 
         (conary update postfix)
 
-    o Install mailmain from contrib.rpath.com@rpl:noprivate
+    o Install Mailmain from contrib.rpath.org@rpl:noprivate
 
         (conary update mailman=:noprivate)
+
+    o Install the main rBuilder trove (called "mint") provided by rPath
+
+        (conary update mint *** FIXME -- Update once settled ***)
 
 NOTE: Further configuration may be required to ensure that postfix and
 mailman can accept mail for the desired domain.
@@ -82,6 +82,8 @@ following steps:
 
         (/sbin/service postfix start)
 
+NOTE: Further configuration may be required to ensure that postfix and
+mailman can accept mail for the desired domain.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Mailman Configuration
@@ -91,9 +93,12 @@ Mailman Configuration
 system environment, and to run every time the system boots.  This requires
 the following steps:
 
-    o run /var/mailman/bin/mmsitepass to set a site password for mailman
+    o run (as root) /var/mailman/bin/mmsitepass to set a site password for mailman
 
-        (*** FIXME -- need sample output ***)
+# /var/mailman/bin/mmsitepass
+New site password:
+Again to confirm password:
+Password changed.
 
       NOTE: Choose a password that is not used in any other context, as it
       will be stored -- in cleartext -- in a file readable by group apache!
@@ -103,12 +108,39 @@ the following steps:
 
         - DEFAULT_URL_HOST (Set to fqdn appropriate for your site)
         - DEFAULT_EMAIL_HOST (Set to fqdn appropriate for your site)
-        - MTA (Set to "Postfix" -- should be done already)
 
-        (*** FIXME -- see Joseph regarding issues regarding getfqdn ***)
+*** FIXME -- If you need these to be something else, you can change it, but
+    it will default to a valid hostname under rPath Linux, assuming proper
+    dns server configuration (reverse lookups not working) ***
+
+        - MTA (Set to "Postfix" -- should be done already)
 
     o Run /var/mailman/bin/genaliases to regenerate Mailman-specific
       aliases; ignore any warning messages
+
+# sudo -u mailman /var/mailman/bin/genaliases
+postalias: warning: removing zero-length database file: /var/mailman/data/aliases.db
+
+    o Run the following command as root to create the "mailman" list used
+      to communicate with all Mailman list owners:
+
+# sudo -u mailman /var/mailman/bin/newlist mailman
+Enter the email of the person running the list: ed@rpath.com
+Initial mailman password:
+Hit enter to notify mailman owner...
+
+      (NOTE: Choose a password that is not used in any other context, as it
+      will occasionally appear -- in cleartext -- in the email messages
+      Mailman sends out.)
+
+      Once the list has been created (and Mailman started), Mailman will
+      send out an email to the email address you specified.  If you receive
+      this email, your general Mailman and Postfix configuration is working
+      properly.
+
+    o chmod the aliases and aliases.db files in /var/mailman/data to mode 660
+
+        (chmod 660 /var/mailman/data/aliases*)
 
     o Set the mailman service to start at boot
 
@@ -117,20 +149,6 @@ the following steps:
     o Start the mailman service
 
         (/sbin/service mailman start)
-
-    o Run the following command as root to create the "mailman" list used
-      to communicate with all Mailman list owners:
-
-        /var/mailman/bin/newlist mailman
-
-      (NOTE: Choose a password that is not used in any other context, as it
-      will occasionally appear -- in cleartext -- in the email messages
-      Mailman sends out.)
-
-      Once the list has been created, Mailman will send out an email to ***
-      FIXME -- where was this email address set? ***.  If you receive this
-      email, your general Mailman and Postfix configuration is working
-      properly.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 rBuilder Configuration
@@ -144,13 +162,60 @@ system environment.  This requires the following steps:
     o Using the comments in mint.conf as a guide, edit the file as
       appropriate for your site.
 
+    o Copy /srv/mint/iso_gen.conf.dist to /srv/mint/iso_gen.conf
+
+    o Edit /srv/mint/iso_gen.conf and change serverURL to reflect your
+      site's hostname (Note that the username and password in this URL must
+      reflect the username and password of an rBuilder account that you
+      will be creating later in this document.)
+
+    o Copy /srv/mint/installable_iso.conf.dist to
+      /srv/mint/installable_iso.conf
+
+    o Copy /srv/mint/live_iso.conf.dist to /srv/mint/live_iso.conf
+
     o Copy /srv/authrepo/authrepo.cnr.dist to /srv/authrepo/authrepo.cnr
 
-    o *** FIXME -- finalize? *** in authrepo.cnr, no changes except
-      possibly serverName (though joseph may change to be
-      localhost.localdomain)
+    o Edit authrepo.cnr and change serverName to reflect your site's
+      hostname
 
-    o Copy /etc/httpd/conf.d/mint.conf.dist to /etc/httpd/conf.d/mint.conf
+    o Execute the following command as root:
+
+# /usr/lib/python2.4/site-packages/conary/server/server.py --add-user <user> /srv/authrepo/repo/
+Password: <password>
+Reenter password: <password>
+
+    (Where <user> and <password> is the same as the username and password
+    reflected in the authRepoMap URL.)
+
+    o Issue the following commands:
+
+# chgrp -R apache /srv/authrepo/repo/
+# chmod -R g+w /srv/authrepo/repo/
+
+    *** FIXME -- the following section still needs work.  Blame Joseph ***
+
+    o Copy /etc/httpd/conf.d/mint.conf.dist to /etc/httpd/conf.d/mint.conf.last
+
+    o Edit /etc/httpd/conf/httpd.conf, go to the last line and add the
+      following line:
+
+Include conf.d/mint.conf.last
+
+    o If you want to address your repository as
+      <hostname>.<domain-name>/repos/<project>, you need do nothing to
+      /etc/httpd/conf.d/mint.conf.
+
+      On the other hand, if you want to address your repository using
+      <project>.<domain-name>, uncomment the following lines, and change
+      ServerName to reflect your site's hostname:
+
+        - <VirtualHost *:80>
+        - ServerName
+        - Alias /conary-static/
+        - </VirtualHost>
+
+    *** FIXME -- end section needing work ***
 
     o Set the httpd service to start at boot
 
@@ -161,11 +226,27 @@ system environment.  This requires the following steps:
         (/sbin/service httpd start)
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-rBuilder Testing and Troubleshooting
+Final Steps
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    In this section, you'll be testing your new rBuilder installation.  ***
-FIXME -- flesh this out ***
+    In this section, you'll be performing the final steps required to
+complete the rBuilder installation.
 
-    o Using the browser of your choice, open *** FIXME -- how to describe
-      url to use? *** to access rBuilder.
+    o Using the browser of your choice, open your rBuilder site's using the
+      following URL:
+
+http://<hostName>.<siteDomainName>/
+
+      (Where <hostName> and <siteDomainName> are the settings for the
+      hostName siteDomainName configuration options in
+      /srv/mint/mint.conf.)
+
+    o Create an rBuilder account using the same name and password as
+      mentioned in the serverURL setting in /srv/mint/iso_gen.conf.
+
+      (NOTE: Make sure you have access to read email directed to the email
+      address you provide, as you will receive a confirmation email from
+      rBuilder.)
+
+    o Once the confirmation email arrives, use the URL provided to activate
+      this account.
