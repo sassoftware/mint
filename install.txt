@@ -103,17 +103,16 @@ Password changed.
       NOTE: Choose a password that is not used in any other context, as it
       will be stored -- in cleartext -- in a file readable by group apache!
 
-    o Using the text editor of your choice, modify the following settings
-      in /var/mailman/Mailman/mm_cfg.py:
+    o Using the text editor of your choice, open
+      /var/mailman/Mailman/mm_cfg.py, and review the following settings:
 
-        - DEFAULT_URL_HOST (Set to fqdn appropriate for your site)
-        - DEFAULT_EMAIL_HOST (Set to fqdn appropriate for your site)
+        - MTA (Must be set to "Postfix")
+        - DEFAULT_URL_HOST (See below)
+        - DEFAULT_EMAIL_HOST (See below)
 
-*** FIXME -- If you need these to be something else, you can change it, but
-    it will default to a valid hostname under rPath Linux, assuming proper
-    dns server configuration (reverse lookups not working) ***
-
-        - MTA (Set to "Postfix" -- should be done already)
+      Both DEFAULT_URL_HOST and DEFAULT_EMAIL_HOST will default to the
+      system's hostname (assuming reverse DNS lookups work properly at your
+      site), but you can explicitly set them if required.
 
     o Run /var/mailman/bin/genaliases to regenerate Mailman-specific
       aliases; ignore any warning messages
@@ -193,29 +192,28 @@ Reenter password: <password>
 # chgrp -R apache /srv/authrepo/repo/
 # chmod -R g+w /srv/authrepo/repo/
 
-    *** FIXME -- the following section still needs work.  Blame Joseph ***
+    o If you want to address your projects' repositories as
+      <hostname>.<domain-name>/repos/<project>, copy
+      /etc/httpd/conf.d/mint.conf.dist to /etc/httpd/conf.d/mint.conf.
 
-    o Copy /etc/httpd/conf.d/mint.conf.dist to /etc/httpd/conf.d/mint.conf.last
+      On the other hand, if you want to address your projects' repositories
+      using <project>.<domain-name>, perform the following steps:
 
-    o Edit /etc/httpd/conf/httpd.conf, go to the last line and add the
-      following line:
+        - Copy /etc/httpd/conf.d/mint.conf.dist to /etc/httpd/conf.d/mint.conf.last
+
+        - Uncomment the following lines in ,
+          /etc/httpd/conf.d/mint.conf.last, and change ServerName to
+          reflect your site's hostname:
+
+            * <VirtualHost *:80>
+            * ServerName
+            * Alias /conary-static/
+            * </VirtualHost>
+
+        - Edit /etc/httpd/conf/httpd.conf, go to the last line and add the
+          following line:
 
 Include conf.d/mint.conf.last
-
-    o If you want to address your repository as
-      <hostname>.<domain-name>/repos/<project>, you need do nothing to
-      /etc/httpd/conf.d/mint.conf.
-
-      On the other hand, if you want to address your repository using
-      <project>.<domain-name>, uncomment the following lines, and change
-      ServerName to reflect your site's hostname:
-
-        - <VirtualHost *:80>
-        - ServerName
-        - Alias /conary-static/
-        - </VirtualHost>
-
-    *** FIXME -- end section needing work ***
 
     o Set the httpd service to start at boot
 
