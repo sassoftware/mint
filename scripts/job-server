@@ -226,6 +226,10 @@ if __name__ == "__main__":
     cfg = IsoGenConfig()
     cfg.read(cfgFile)
 
+    # set up the cfg.configPath location so that the image generators
+    # know where to look for their configuration files.
+    self.cfg.configPath = os.path.dirname(cfgFile)
+
     if options.kill:
         kill(cfg.lockFile)
         sys.exit(1)

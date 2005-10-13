@@ -40,6 +40,15 @@ class AnacondaTemplateMissing(Exception):
     def __str__(self):
         return "Anaconda template missing for architecture: %s" % self._arch
 
+
+class NoConfigFile(Exception):
+    def __init__(self, path = "installable_iso.conf"):
+        self._path = path
+
+    def __str__(self):
+        return "Unable to access configuration file: %s" % self._path
+
+
 class Callback(callbacks.UpdateCallback, callbacks.ChangesetCallback):
     def requestingChangeSet(self):
         self._update('requesting %s from repository')
@@ -91,7 +100,12 @@ def _linkRecurse(fromDir, toDir):
 class InstallableIso(ImageGenerator):
     def getIsoConfig(self):
         isocfg = IsoConfig()
-        isocfg.read("installable_iso.conf")
+
+        cfgFile = os.path.join(self.cfg.configPath, "installable_iso.conf")
+        if os.access(cfgFile, os.R_OK):
+            isocfg.read(os.path.join(self.cfg.configPath, "installable_iso.conf"))
+        else:
+            raise NoConfigFile(cfgFile)
         return isocfg
 
     def write(self):
