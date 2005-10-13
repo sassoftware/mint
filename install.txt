@@ -248,3 +248,11 @@ http://<hostName>.<siteDomainName>/
 
     o Once the confirmation email arrives, use the URL provided to activate
       this account.
+
+    o Set the rbuilder-isogen service to start at boot:
+
+        (chkconfig rbuilder-isogen on)
+
+    o Start the rbuilder-isogen service using the following command:
+
+# /sbin/service rbuilder-isogen start
