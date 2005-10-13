@@ -25,26 +25,26 @@
         </ul>
     </div>
 
-    <div py:def="releasesMenu(releases, isOwner=False, display='block')" py:strip="True">
-      <div py:if="isOwner or releases" class="palette" id="releases">
+    <div py:def="releasesMenu(releaseList, isOwner=False, display='block')" py:strip="True">
+      <div py:if="isOwner or releaseList" class="palette" id="releases">
         <h3 onclick="javascript:toggle_display('release_items');">
             <img id="release_items_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_${display == 'block' and 'collapse' or 'expand'}.gif" border="0" />
             Recent Releases
         </h3>
         <div id="release_items" style="display: $display">
           <ul>
-            <li class="release" py:if="releases" py:for="release in sorted(releases[:6], key=lambda x: x.getTroveVersion(), reverse=True)">
+            <li class="release" py:if="releaseList" py:for="release in sorted(releaseList[:6], key=lambda x: x.getTroveVersion(), reverse=True)">
                 <a href="${basePath}release?id=${release.getId()}">
                     Version ${upstream(release.getTroveVersion())} for ${release.getArch()}
                 </a>
             </li>
-            <li class="release" py:if="not releases">
+            <li class="release" py:if="not releaseList">
                 No Releases
             </li>
             <div class="release" py:if="isOwner" align="right" style="padding-right:8px;">
                 <a href="newRelease"><strong>Create a new release...</strong></a>
             </div>
-            <div class="release" py:if="not isOwner and len(releases) > 3" align="right" style="padding-right:8px;">
+            <div class="release" py:if="not isOwner and len(releaseList) > 6" align="right" style="padding-right:8px;">
                 <a href="releases"><strong>More...</strong></a>
             </div>
           </ul>

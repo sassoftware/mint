@@ -14,7 +14,7 @@ from mint.mint import upstream
         isDeveloper = userLevel == userlevels.DEVELOPER
         memberList = project.getMembers()
 
-        releases = project.getReleases()
+        releases = project.getReleases(showUnpublished = False)
         commits = project.getCommits()
     ?>
 

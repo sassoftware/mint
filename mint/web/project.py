@@ -93,6 +93,7 @@ class ProjectHandler(WebHandler):
 
     def releases(self, auth):
         releases = self.project.getReleases(showUnpublished = True)
+        publishedReleases = [x for x in releases if x.getPublished()]
 
         #releasesByTrove = {}
         #for release in releases:
@@ -101,7 +102,7 @@ class ProjectHandler(WebHandler):
         #for l in releasesByTrove.values():
         #    l.sort(key = lambda x: x.getTroveVersion(), reverse = True)
 
-        self._write("releases", releases = releases)
+        self._write("releases", releases = releases, publishedReleases = publishedReleases)
         return apache.OK
 
     @ownerOnly

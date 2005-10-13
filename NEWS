@@ -1,3 +1,11 @@
+Changes in 0.6.2:
+
+* Shows only published releases in the releases sidebar.
+* Fix a bug where a user would end up in the authrepo
+  even if the confirmation email failed to send.
+* Made the email domain checks a little smarter to allow
+  sending to localhost and siteHost.
+
 Changes in 0.6.1:
 
 * Downloads of the first file in a release are counted.
