@@ -5,6 +5,9 @@ Changes in 0.6.2:
   even if the confirmation email failed to send.
 * Made the email domain checks a little smarter to allow
   sending to localhost and siteHost.
+* The image generation modules will look for their config
+  files in the same directory that job-server found its
+  config file.
 
 Changes in 0.6.1:
 
