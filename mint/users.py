@@ -58,6 +58,10 @@ class UserInduction(MintError):
     def __str__(self):
         return "Project owner attempted to manipulate a project user in an illegal fashion"
 
+class AuthRepoError(MintError):
+    def __str__(self):
+        return "The authentication repository is not available."
+
 class ConfirmationsTable(database.KeyedTable):
     name = 'Confirmations'
     key = 'userid'
@@ -124,6 +128,9 @@ class UsersTable(database.KeyedTable):
                     groups = repo.getUserGroups(authLabel)
                 except OpenError:
                     auth = noAuth
+
+                if type(groups) != list:
+                    raise AuthRepoError
 
             if username in groups or not checkRepo:
                 auth = {'authorized':   True,

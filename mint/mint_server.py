@@ -119,6 +119,8 @@ class MintServer(object):
             return (True, ("ItemNotFound", e.item))
         except SearchTermsError, e:
             return (True, ("SearchTermsError", str(e)))
+        except users.AuthRepoError, e:
+            return (True, ("AuthRepoError", str(e)))
         except Exception, error:
             exc_name = sys.exc_info()[0].__name__
             return (True, (exc_name, error, str(error)))

@@ -1,3 +1,8 @@
+Changes in 0.6.3:
+
+* A missing or broken authrepo is now handled more
+  gracefully.
+
 Changes in 0.6.2:
 
 * Shows only published releases in the releases sidebar.
