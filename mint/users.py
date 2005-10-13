@@ -179,6 +179,9 @@ class UsersTable(database.KeyedTable):
         # XXX this should be an atomic operation if possible:
         #     it would be nice to roll back previous operations
         #     if one in the chain fails
+        if self.cfg.sendNotificationEmails:
+            validateEmailDomain(email)
+
         authRepo = netclient.NetworkRepositoryClient(self.cfg.authRepoMap)
         confirm = confirmString()
         repoLabel = self.cfg.authRepoMap.keys()[0]
@@ -202,8 +205,12 @@ class UsersTable(database.KeyedTable):
                                  "",
                                  "Contact %s"%self.cfg.supportContactTXT,
                                  "if you need assistance."])
-            sendMailWithChecks(self.cfg.adminMail, self.cfg.productName, email,
-                    "Welcome to %s!" % self.cfg.productName, message)
+            try:
+                sendMailWithChecks(self.cfg.adminMail, self.cfg.productName, email, "Welcome to %s!" % self.cfg.productName, message)
+            except:
+                # must roll back authrepo
+                authRepo.deleteUserByName(repoLabel, username)
+                raise
         try:
             userId = self.new(username = username,
                               fullName = fullName,
@@ -527,14 +534,21 @@ def newPassword(length = 6):
     return pw
 
 def sendMailWithChecks(fromEmail, fromEmailName, toEmail, subject, body):
-    email = smtplib.quoteaddr(toEmail)
+    validateEmailDomain(toEmail)
     try:
-        if not digMX(email[email.find('@')+1:email.rfind('>')]):
-            socket.gethostbyname(email[email.find('@')+1:email.rfind('>')])
-        #If we get this far, we know we can send the mail
         sendMail(fromEmail, fromEmailName, toEmail, subject, body)
     except smtplib.SMTPRecipientsRefused:
         raise MailError("Email could not be sent: Recipient refused by server.")
+
+def validateEmailDomain(toEmail):
+    toDomain = smtplib.quoteaddr(toEmail).split('@')[-1][0:-1]
+    VALIDATED_DOMAINS = ('localhost', 'localhost.localdomain')
+    # basically if we don't implicitly know this domain,
+    # and we can't look up the DNS entry of the MX
+    # use gethostbyname to validate the email address
+    try:
+        if not ((toDomain in VALIDATED_DOMAINS) or digMX(toDomain)):
+            socket.gethostbyname(toDomain)
     except (socket.gaierror, dns.resolver.NXDOMAIN):
         raise MailError("Email could not be sent: Bad domain name.")
 
