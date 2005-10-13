@@ -16,22 +16,24 @@
 	 */
 if( !defined('DB_USER') ) die( 'Please, do not access this page directly.' );
 ?>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+   "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
-	<meta http-equiv="Content-Type" content="text/html; charset=<?php locale_charset() ?>" />
-        <script src="http://www.rpath.org/conary-static//apps/mint/javascript/generic.js" type="text/javascript" />
-        <script src="http://www.rpath.org/conary-static//apps/mint/javascript/library.js" type="text/javascript" />
-        <script src="http://www.rpath.org/conary-static//apps/mint/javascript/xmlrpc.js" type="text/javascript" />
-        <link href="http://www.rpath.org/conary-static/apps/mint/css/basic.css" type="text/css" rel="stylesheet" />
-        <link href="http://www.rpath.org/conary-static/apps/mint/css/structure.css" type="text/css" rel="stylesheet" />
-        <link href="http://www.rpath.org/conary-static/apps/mint/css/user.css" type="text/css" rel="stylesheet" />
-        <link href="http://www.rpath.org/conary-static/apps/mint/css/topNav.css" type="text/css" rel="stylesheet" />
-        <link href="http://www.rpath.org/conary-static/apps/mint/css/log.css" type="text/css" rel="stylesheet" />
-        <link href="http://www.rpath.org/conary-static/apps/mint/css/contentTypes.css" type="text/css" rel="stylesheet" />
-        <link href="http://www.rpath.org/conary-static/apps/mint/css/mint.css" type="text/css" rel="stylesheet" />
+	<meta http-equiv="Content-Type" content="text/html; charset=<?php locale_charset() ?>" >
+        <link href="http://www.rpath.org/conary-static/apps/mint/css/basic.css" type="text/css" rel="stylesheet" >
+        <link href="http://www.rpath.org/conary-static/apps/mint/css/structure.css" type="text/css" rel="stylesheet" >
+        <link href="http://www.rpath.org/conary-static/apps/mint/css/user.css" type="text/css" rel="stylesheet" >
+        <link href="http://www.rpath.org/conary-static/apps/mint/css/topNav.css" type="text/css" rel="stylesheet" >
+        <link href="http://www.rpath.org/conary-static/apps/mint/css/log.css" type="text/css" rel="stylesheet" >
+        <link href="http://www.rpath.org/conary-static/apps/mint/css/contentTypes.css" type="text/css" rel="stylesheet" >
+        <link href="http://www.rpath.org/conary-static/apps/mint/css/mint.css" type="text/css" rel="stylesheet" >
 
-        <link href="http://www.rpath.org/favicon.ico" rel="shortcut icon" />
-        <link href="http://www.rpath.org/favicon.ico" rel="icon" />
+        <link href="http://www.rpath.org/favicon.ico" rel="shortcut icon" >
+        <link href="http://www.rpath.org/favicon.ico" rel="icon" >
+
+	<base href="<?php skinbase(); // Base URL for this skin. You need this to fix relative links! ?>" >
+	<meta name="generator" content="b2evolution <?php echo $b2_version ?>" > <!-- Please leave this for stats -->
 
 	<title><?php
 		$Blog->disp('name', 'htmlhead');
@@ -40,18 +42,15 @@ if( !defined('DB_USER') ) die( 'Please, do not access this page directly.' );
 		single_post_title( ' - ', 'htmlhead' );
 		arcdir_title( ' - ', 'htmlhead' );
 		profile_title( ' - ', 'htmlhead' );
-	?>
-	</title>
-	<base href="<?php skinbase(); // Base URL for this skin. You need this to fix relative links! ?>" />
-	<meta name="generator" content="b2evolution <?php echo $b2_version ?>" /> <!-- Please leave this for stats -->
+	?></title>
 </head>
-<body xmlns="http://www.w3.org/1999/xhtml">
+<body>
 
     <div align="center" id="top">
     <div class="shadowLeft"><div class="shadowRight">
         <div align="left" class="surfaceLeft"><div class="surfaceRight">
             <table cellpadding="0" cellspacing="0" border="0" summary="layout">
-        <tr><td colspan="2"><div class="pad"><img src="http://www.rpath.org/conary-static/apps/mint/images/logo.gif"/></div></td>
+        <tr><td colspan="2"><div class="pad"><img src="http://www.rpath.org/conary-static/apps/mint/images/logo.gif" alt="rPath Logo"></div></td>
 </tr>
     <tr>
     <td id="topnav">
@@ -112,9 +111,9 @@ if( !defined('DB_USER') ) die( 'Please, do not access this page directly.' );
             <h3 class="sideItemTitle"><?php echo T_('Search') ?></h3>
             <?php form_formstart( $Blog->dget( 'blogurl', 'raw' ), 'search', 'SearchForm' ) ?>
                     <p><input type="text" name="s" size="30" value="<?php echo htmlspecialchars($s) ?>" class="SearchField" /><br />
-                    <input type="radio" style="width:auto;" name="sentence" value="AND" id="sentAND" <?php if( $sentence=='AND' ) echo 'checked="checked" ' ?>/><label for="sentAND"><?php echo T_('All Words') ?></label><br />
-                    <input type="radio" style="width:auto;" name="sentence" value="OR" id="sentOR" <?php if( $sentence=='OR' ) echo 'checked="checked" ' ?>/><label for="sentOR"><?php echo T_('Some Word') ?></label><br />
-                    <input type="radio" style="width:auto;" name="sentence" value="sentence" id="sentence" <?php if( $sentence=='sentence' ) echo 'checked="checked" ' ?>/><label for="sentence"><?php echo T_('Entire phrase') ?></label></p>
+                    <input type="radio" style="width:auto; background-color: #e6e6e6;" name="sentence" value="AND" id="sentAND" <?php if( $sentence=='AND' ) echo 'checked="checked" ' ?>/><label for="sentAND"><?php echo T_('All Words') ?></label><br />
+                    <input type="radio" style="width:auto; background-color: #e6e6e6;" name="sentence" value="OR" id="sentOR" <?php if( $sentence=='OR' ) echo 'checked="checked" ' ?>/><label for="sentOR"><?php echo T_('Some Word') ?></label><br />
+                    <input type="radio" style="width:auto; background-color: #e6e6e6;" name="sentence" value="sentence" id="sentence" <?php if( $sentence=='sentence' ) echo 'checked="checked" ' ?>/><label for="sentence"><?php echo T_('Entire phrase') ?></label></p>
                     <button type="submit" name="submit" class="submit"><?php echo T_('Search') ?></button>
             </form>
     </div>
@@ -198,7 +197,7 @@ if( !defined('DB_USER') ) die( 'Please, do not access this page directly.' );
             <a href="<?php $Blog->disp( 'arcdirurl', 'raw' ) ?>"><?php echo T_('Archives') ?></a>
             </strong>
     </div>
-
+</div>
 </td>
 <td id="right" class="projects">	
 <div class="pad">
@@ -300,5 +299,6 @@ if( !defined('DB_USER') ) die( 'Please, do not access this page directly.' );
 		log_hit();	// log the hit on this page
 		debug_info();	// output debug info if requested
 	?>
+</div>
 </body>
 </html>
