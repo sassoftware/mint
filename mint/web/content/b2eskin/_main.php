@@ -132,43 +132,35 @@ if( !defined('DB_USER') ) die( 'Please, do not access this page directly.' );
             $Item->anchor(); 
             locale_temp_switch( $Item->locale ); // Temporarily switch to post locale
             ?>
-            <h3>
-                    <?php $Item->issue_time(); ?>
-                    <a href="<?php $Item->permalink() ?>" title="<?php echo T_('Permanent link to full entry') ?>"><img src="img/icon_minipost.gif" alt="Permalink" width="12" height="9" border="0" align="middle" /></a>
-                    <?php $Item->title(); ?>
-                    &nbsp;
-                    <?php locale_flag( $Item->locale, 'h10px', '', 'middle' ); // Display flag for post locale ?>
-            </h3>
+            <div class="newsItem">
+                <h3>
+                    <span style="float: right;" class="date">
+                        <?php $Item->issue_time(); ?>
+                        <a href="<?php $Item->permalink() ?>" 
+                           title="<?php echo T_('Permanent link to full entry') ?>">
+                            <img src="img/icon_minipost.gif" alt="Permalink" width="12" height="9" border="0" align="middle" />
+                        </a>
+                    </span>
+                    <span class="newsTitle"><?php $Item->title(); ?></span>
+                </h3>
 
-            <blockquote>
+                <blockquote style="margin-left: 1em;">
 
-                    <small>
-                    <?php
-                            echo T_('Categories'), ': ';
-                            $Item->categories();
-                            echo ', ';
-                            $Item->wordcount();
-                            echo ' ', T_('words');
-                    ?>
-                    </small>
-            
-                    <div>
-                            <?php $Item->content( '#', '#', T_('Read more...') ); ?>
-                            <?php link_pages() ?>
-                    </div>
+                        <div>
+                                <?php $Item->content( '#', '#', T_('Read more...') ); ?>
+                                <?php link_pages() ?>
+                        </div>
 
-                    <small>
+                        <small>
 
-                    <?php $Item->feedback_link( 'feedbacks', '', ' &bull; ' ) // Link to comments, trackback... ?>
+                        <?php $Item->feedback_link( 'feedbacks', '', ' &bull; ' ) // Link to comments, trackback... ?>
 
-                    <?php $Item->edit_link( '', ' &bull; ' ) // Link to backoffice for editing ?>
+                        <?php $Item->edit_link( '', ' ' ) // Link to backoffice for editing ?>
 
-                    <?php $Item->trackback_rdf() // trackback autodiscovery information ?>
+                        </small>
 
-                    <a href="<?php $Item->permalink() ?>" title="<?php echo T_('Permanent link to full entry') ?>"><?php echo T_('Permalink') ?></a>
-                    </small>
-
-            </blockquote>
+                </blockquote>
+            </div>
 
             <?php	// ------------- START OF INCLUDE FOR COMMENTS, TRACKBACK, PINGBACK, ETC. --------------
             $disp_comments = 1;					// Display the comments if requested
@@ -199,16 +191,12 @@ if( !defined('DB_USER') ) die( 'Please, do not access this page directly.' );
             }
             // ------------------- END OF INCLUDES FOR LAST COMMENTS, STATS ETC. ------------------- ?>
 
-    <hr>
-
-    <div align="center">
+    <div align="center" style="margin-bottom: 0.5em;">
             <strong>
             <?php posts_nav_link(); ?>
             ::
             <a href="<?php $Blog->disp( 'arcdirurl', 'raw' ) ?>"><?php echo T_('Archives') ?></a>
             </strong>
-
-
     </div>
 
 </td>
@@ -222,10 +210,6 @@ if( !defined('DB_USER') ) die( 'Please, do not access this page directly.' );
             <?php // -------------------------- CALENDAR INCLUDED HERE -----------------------------
                     require( dirname(__FILE__).'/_calendar.php' );
                     // -------------------------------- END OF CALENDAR ---------------------------------- ?>
-            <ul>
-                    <li><a href="<?php $Blog->disp( 'lastcommentsurl', 'raw' ) ?>"><strong><?php echo T_('Last comments') ?></strong></a></li>
-                    <li><a href="<?php $Blog->disp( 'blogstatsurl', 'raw' ) ?>"><strong><?php echo T_('Some viewing statistics') ?></strong></a></li>
-            </ul>
     </div>
 
     <?php if( ! $Blog->get('force_skin') )
@@ -241,7 +225,7 @@ if( !defined('DB_USER') ) die( 'Please, do not access this page directly.' );
             </div>
     <?php } ?>
     
-    <?php if ($disp != 'stats') 
+    <?php if (false) 
     { ?>
     <div class="bSideItem">
             <h3><?php echo T_('Recent Referers') ?></h3>
@@ -290,8 +274,6 @@ if( !defined('DB_USER') ) die( 'Please, do not access this page directly.' );
 					<a href="<?php $Blog->disp( 'comments_atom_url', 'raw' ) ?>"><?php echo T_('Comments') ?></a>
 				</li>
 			</ul>
-			<a href="http://fplanque.net/Blog/devblog/2004/01/10/p456" title="External - English">What is RSS?</a>
-
 	</div>
      </div>
 </td>
