@@ -33,26 +33,27 @@ from mint import searcher
                     </td>
                     <td id="main">
                         <div class="pad">
-                            <h2 class="header">Welcome to rBuilder Online</h2>
+                            <h2 class="header">Welcome to rBuilder Online<sup class="tm">TM</sup></h2>
                             <div py:if="not firstTime">
-                              <p>Welcome to rBuilder<sup class="tm">TM</sup>
-                              Online&#8212;the site for collaborative open
-                              source development.  Using rBuilder Online's
-                              free services:</p>
 
-                              <p><a
-                              href="/help?page=dev-help">Developers</a> can
-                              use rPath's technologies to easily create
-                              highly-customized Linux distributions and
-                              package software using the <a
-                              href="http://wiki.conary.com/">Conary</a><sup class="tm">TM</sup>
-                              system software management tool.</p>
+                              <p>You can use rBuilder Online to create a
+                              Linux distribution that meets your specific
+                              needs, or to find an existing distribution
+                              that is just right for you.</p>
 
-                              <p><a href="/help?page=user-help">Users</a>
-                              can browse and download ISO images of
-                              Conary-based distributions and update their
-                              Conary-based systems using software on the
-                              repositories hosted here.</p>
+                            <h3><a href="/help?page=dev-help">Create</a></h3>
+
+                              <p>Use rBuilder Online's collaborative
+                              development environment to package open
+                              source software and produce complete
+                              distributions.</p>
+
+                            <h3><a href="/help?page=user-help">Find</a></h3>
+
+                              <p>Locate and download the distribution that
+                              suits you, or find a package to add to your
+                              system &#8212; rBuilder Online makes it
+                              easy.</p>
 
                               <p><b>Want to learn more?  <a
                               href="/help?page=overview">Go here</a></b></p>
