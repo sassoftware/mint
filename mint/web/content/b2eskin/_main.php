@@ -82,7 +82,7 @@ if( !defined('DB_USER') ) die( 'Please, do not access this page directly.' );
         <div id="crumb">
 
             <div class="pad">
-                You are here: <a href="http://www.rpath.org/">Home</a> <a href="#">Blog</a>
+                You are here: <a href="http://www.rpath.org/">Home</a> <a href="#"><?php $Blog->disp('name', 'htmlbody')?></a>
             </div>
         </div>
     </div>

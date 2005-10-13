@@ -34,6 +34,8 @@ from mint import searcher
                     <td id="main">
                         <div class="pad">
                             <h2 class="header">Welcome to rBuilder Online<sup class="tm">TM</sup></h2>
+
+
                             <div py:if="not firstTime">
 
                               <p>You can use rBuilder Online to create a
@@ -41,24 +43,39 @@ from mint import searcher
                               needs, or to find an existing distribution
                               that is just right for you.</p>
 
-                            <h3><a href="/help?page=dev-help">Create</a></h3>
+                            <table id="tasks">
+                                <tr>
+                                    <td id="tasksBlock" style="margin-right: 1em;"
+                                        onclick="javascript:window.location='/help?page=dev-help';">
+                                        <h3><a href="/help?page=dev-help">Create</a></h3>
 
-                              <p>Use rBuilder Online's collaborative
-                              development environment to package open
-                              source software and produce complete
-                              distributions.</p>
+                                          <p>Use rBuilder Online's collaborative
+                                          development environment to package open
+                                          source software and produce complete
+                                          distributions.</p>
+                                    </td>
+                                    <td id="spacer"></td>
+                                    <td id="tasksBlock"
+                                        onclick="javascript:window.location='/help?page=user-help';">
+                                        <h3><a href="/help?page=user-help">Find</a></h3>
 
-                            <h3><a href="/help?page=user-help">Find</a></h3>
+                                          <p>Locate and download the distribution that
+                                          suits you, or find a package to add to your
+                                          system&#8212;rBuilder Online makes it
+                                          easy.</p>
 
-                              <p>Locate and download the distribution that
-                              suits you, or find a package to add to your
-                              system &#8212; rBuilder Online makes it
-                              easy.</p>
+                                    </td>
+                                </tr>
+                            </table>
 
-                              <p><b>Want to learn more?  <a
-                              href="/help?page=overview">Go here</a></b></p>
+                            <p><b>Want to learn more? <a href="/help?page=overview">Go here</a></b></p>
 
                             </div>
+
+
+
+
+
                             <div py:if="firstTime">
 
                               <p>Congratulations!  Your new rBuilder Online

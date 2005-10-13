@@ -158,3 +158,39 @@ code {
 table.mainformhorizontal select {
     width: 80%;
 }
+
+table#tasks {
+    padding: 0.25em;
+    margin-bottom: 1em;
+}
+
+table#tasks td {
+    padding: 0em;
+    margin: 0.1em;
+    width: 48%;
+}
+
+table#tasks td#spacer {
+    width: 4%;
+}
+
+table#tasks td p {
+    padding: 0.5em;
+}
+
+td#tasksBlock:hover {
+    background: #dfdfdf;
+    cursor: pointer;
+}
+
+td#tasksBlock{
+    background: #efefef;
+    padding-left: 1em;
+}
+
+td#tasksBlock h3 {
+    font-size: 150%;
+    padding: 0.25em;
+    
+    color: #FF930B;
+}
