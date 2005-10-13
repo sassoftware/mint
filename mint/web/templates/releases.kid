@@ -8,6 +8,8 @@
 -->
     <head>
         <title>${formatTitle('Releases: %s' % project.getName())}</title>
+        <link py:if="releases" rel="alternate" type="application/rss+xml"
+              title="${project.getName()} Releases" href="${basePath}rss" />
     </head>
     <?python # this comment has to be here if the first line is an import...weird!
         from mint import userlevels
