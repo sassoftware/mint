@@ -228,7 +228,7 @@ if __name__ == "__main__":
 
     # set up the cfg.configPath location so that the image generators
     # know where to look for their configuration files.
-    self.cfg.configPath = os.path.dirname(cfgFile)
+    cfg.configPath = os.path.dirname(cfgFile)
 
     if options.kill:
         kill(cfg.lockFile)
