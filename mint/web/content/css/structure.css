@@ -27,11 +27,14 @@ sup.tm {
 }
 td#logo {
 	width:76%; min-width:256px; height:64px;
-	background:url(../images/logo.gif) no-repeat top left;
         padding: 10px;
         position: absolute;
         left: 20px;
         top: 20px;
+}
+
+td#logo img {
+    border: none;
 }
 
 td#user {

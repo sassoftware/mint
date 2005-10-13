@@ -28,6 +28,9 @@ from urllib import quote
             <table border="0" cellspacing="0" cellpadding="0" summary="layout">
                 <tr>
                     <td id="logo">
+                        <a href="http://$SITE">
+                            <img src="${cfg.staticPath}/apps/mint/images/logo.gif" width="256" height="64" alt="rPath Logo"/>
+                        </a>
                     </td>
                     <td id="user" py:if="not auth.authorized">
                         <div class="pad">
