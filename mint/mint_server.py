@@ -1005,7 +1005,8 @@ class MintServer(object):
         job = release.getJob()
 
         if not job:
-            return {'status': -1, 'message': 'No job.'}
+            return {'status': jobstatus.NOJOB,
+                    'message': jobstatus.statusNames[jobstatus.NOJOB]}
         else:
             return {'status':  job.getStatus(),
                     'message': job.getStatusMessage()}
