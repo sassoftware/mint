@@ -4,6 +4,9 @@ Changes in 0.6.3:
   gracefully.
 * ISO generation: Long project titles are properly
   truncated when preparing a volume name for mkisofs.
+* Custom Anaconda artwork is automatically extracted
+  from anaconda-images on the project repository, if exists,
+  and inserted into the product.img overlay.
 
 Changes in 0.6.2:
 
