@@ -15,6 +15,7 @@ import callbacks
 import conaryclient
 import deps
 import versions
+from repository import repository
 from build import use
 from conarycfg import ConfigFile
 from lib import util
@@ -108,16 +109,73 @@ class InstallableIso(ImageGenerator):
             raise NoConfigFile(cfgFile)
         return isocfg
 
+    def writeProductImage(self):
+        # write the product.img cramfs
+        productPath = os.path.join(self.baseDir, "product.img")
+        tmpPath = tempfile.mkdtemp()
+        tmpRoot = tempfile.mkdtemp()
+
+        # write .buildstamp
+        bsFile = file(os.path.join(tmpPath, ".buildstamp"), "w")
+        print >> bsFile, time.time()
+        print >> bsFile, self.project.getName()
+        print >> bsFile, upstream(self.release.getTroveVersion())
+        print >> bsFile, self.subdir
+        print >> bsFile, 'http://bugs.rpath.com/'
+        print >> bsFile, "%s %s %s" % (self.release.getTroveName(),
+                                       self.release.getTroveVersion().asString(),
+                                       self.release.getTroveFlavor().freeze())
+        bsFile.close()
+
+        # extract anaconda-images from repository, if exists
+        cfg = self.project.getConaryConfig(newUser='anonymous', newPass='anonymous', useSSL = False)
+        cfg.root = tmpRoot
+        cclient = conaryclient.ConaryClient(cfg)
+
+        print >> sys.stderr, "attempting to extract artwork from anaconda-images from project repository"
+        try:
+            self.callback.setChangeSet('anaconda-images')
+            itemList = [('anaconda-images', (None, None), (None, None), True)]
+            uJob, suggMap = cclient.updateChangeSet(itemList,
+                resolveDeps = False,
+                callback = self.callback)
+        except repository.TroveNotFound:
+            print >> sys.stderr, "anaconda-images not found on repository, skipping custom artwork"
+        else:
+            cclient.applyUpdate(uJob, callback = self.callback)
+            print >> sys.stderr, "success."
+            sys.stderr.flush()
+        
+            # copy pixmaps into cramfs root
+            cmd = ['cp', '-av', tmpRoot + "/usr/share/anaconda/pixmaps/", tmpPath]
+            print >> sys.stderr, " ".join(cmd)
+            sys.stderr.flush()
+            subprocess.call(cmd)
+            
+        # create cramfs
+        cmd = ['mkcramfs', tmpPath, productPath]
+        print >> sys.stderr, " ".join(cmd)
+        sys.stderr.flush()
+        subprocess.call(cmd)
+        
+        # clean up
+        util.rmtree(tmpPath)
+        util.rmtree(tmpRoot)
+        
+        assertParentAlive()
+
     def write(self):
         isocfg = self.getIsoConfig()
     
         releaseId = self.job.getReleaseId()
 
         release = self.client.getRelease(releaseId)
+        self.release = release
         troveName, versionStr, flavorStr = release.getTrove()
         version = versions.ThawVersion(versionStr)
         flavor = deps.deps.ThawDependencySet(flavorStr)
         project = self.client.getProject(release.getProjectId())
+        self.project = project
 
         skipMediaCheck = release.getDataValue('skipMediaCheck')
         betaNag = release.getDataValue('betaNag')
@@ -133,6 +191,7 @@ class InstallableIso(ImageGenerator):
         util.mkdirChain(topdir)
         # subdir = string.capwords(project.getHostname())
         subdir = 'rPath'
+        self.subdir = subdir
        
         # hardlink template files to topdir
         templateDir = os.path.join(isocfg.templatePath, release.getArch())
@@ -173,12 +232,12 @@ class InstallableIso(ImageGenerator):
 
         groupName, groupVer, groupFlavor = trvList[0]
 
-        callback = Callback(self.status)
+        self.callback = Callback(self.status)
         rc = gencslist.extractChangeSets(client, cfg, csdir, groupName,
                                          groupVer, groupFlavor,
                                          oldFiles = existingChangesets,
                                          cacheDir = isocfg.cachePath,
-                                         callback = callback)
+                                         callback = self.callback)
         cslist, groupcs = rc
 
         # Abort if parent thread has died
@@ -195,6 +254,7 @@ class InstallableIso(ImageGenerator):
 
         # write the sqldb file
         baseDir = os.path.join(topdir, subdir, 'base')
+        self.baseDir = baseDir
         sqldbPath = os.path.join(baseDir, 'sqldb')
         gencslist.writeSqldb(groupcs, sqldbPath)
 
@@ -230,27 +290,7 @@ class InstallableIso(ImageGenerator):
             print >> discInfoFile, "%s/%s" % (subdir, x)
         discInfoFile.close()
 
-        # write the product.img cramfs
-        productPath = os.path.join(baseDir, "product.img")
-        tmpPath = tempfile.mkdtemp()
-
-        bsFile = file(os.path.join(tmpPath, ".buildstamp"), "w")
-        print >> bsFile, time.time()
-        print >> bsFile, project.getName()
-        print >> bsFile, upstream(release.getTroveVersion())
-        print >> bsFile, subdir
-        print >> bsFile, 'http://bugs.rpath.com/'
-        print >> bsFile, "%s %s %s" % (release.getTroveName(),
-                                       release.getTroveVersion().asString(),
-                                       release.getTroveFlavor().freeze())
-        bsFile.close()
-        cmd = ['mkcramfs', tmpPath, productPath]
-        print >> sys.stderr, " ".join(cmd)
-        sys.stderr.flush()
-                        
-        subprocess.call(cmd)
-        util.rmtree(tmpPath)
-        assertParentAlive()
+        self.writeProductImage()
 
         cmd = [isocfg.scriptPath + "/splitdistro", topdir]
         print >> sys.stderr, " ".join(cmd)
