@@ -36,8 +36,9 @@ class ReleaseDataNameError(MintError):
             self.str = reason
 
 installableIsoTemplate = {
-    'skipMediaCheck': (RDT_BOOL, False, 'Skip prompt for ISO media check.'),
-    'betaNag'   : (RDT_BOOL, False, 'Show a "beta nag" screen before installation.'),
+    'installLabelPath': (RDT_STRING, '', 'Default Conary installLabelPath setting:'),
+    'skipMediaCheck':   (RDT_BOOL, False, 'Skip prompt for ISO media check.'),
+    'betaNag':          (RDT_BOOL, False, 'Show a "beta nag" screen before installation.'),
 }
 
 stubImageTemplate = {

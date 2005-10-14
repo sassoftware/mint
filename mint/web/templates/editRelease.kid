@@ -53,8 +53,6 @@ def generateJs(archMap):
         {
             arch = document.getElementById("arch").selectedIndex;
             sel = document.getElementById("versions").selectedIndex;
-            release = document.getElementById("release");
-            release.replaceChild(document.createTextNode(versionFlavors[arch][sel][0]), release.firstChild);
         }
     ]]>
     </script>
@@ -89,34 +87,29 @@ def generateJs(archMap):
 
                 <h2>Release Notes</h2>
                 <p>Please provide notes for this release:</p>
-                <textarea style="width: 80%; margin-left: 10px;" rows="6" name="desc">${release.getDesc()}</textarea>
+                <textarea style="background-color: #eee; width: 80%; margin-left: 10px;"
+                          rows="6" name="desc">${release.getDesc()}</textarea>
                 
                 <h2>Settings</h2>
-                <table cellpadding="6" style="width: 50%;">
-                    <tr>
-                        <td>Distribution Name:</td>
-                        <td>${release.getName()}</td>
-                    </tr>
-                    <tr>
-                        <td>Release:</td>
-                        <td><span id="release">None</span></td>
-                    </tr>
+                <table cellpadding="6" id="releaseData">
                     <?python
                         template = release.getDataTemplate()
                         dataDict = release.getDataDict()
+                        
                     ?>
-                    <tr py:for="name in sorted(list(template))">
-                        <td py:if="(template[name][0] == RDT_BOOL) and dataDict[name]" colspan="2">
-                            <input type="checkbox" name="${name}" value="1" checked="checked"/> ${template[name][2]}
+                    <tr py:for="name, dataRow in sorted(template.items(), key = lambda x: x[1][0])"
+                        style="width: 25%;">
+                        <td py:if="(dataRow[0] == RDT_BOOL) and dataDict[name]" colspan="2">
+                            <input type="checkbox" name="${name}" value="1" checked="checked"/> ${dataRow[2]}
                         </td>
-                        <td py:if="(template[name][0] == RDT_BOOL) and not dataDict[name]" colspan="2">
-                            <input type="checkbox" name="${name}" value="1"/> ${template[name][2]}
+                        <td py:if="(dataRow[0] == RDT_BOOL) and not dataDict[name]" colspan="2">
+                            <input type="checkbox" name="${name}" value="1"/> ${dataRow[2]}
                         </td>
-                        <td py:if="(template[name][0] == RDT_INT) or (template[name][0] == RDT_STRING)">
-                            ${template[name][2]}
+                        <td py:if="(dataRow[0] == RDT_INT) or (dataRow[0] == RDT_STRING)">
+                            ${dataRow[2]}
                         </td>
-                        <td py:if="(template[name][0] == RDT_INT) or (template[name][0] == RDT_STRING)">
-                            <input type="text" name="${name}" value="${dataDict[name]}"/>
+                        <td py:if="(dataRow[0] == RDT_INT) or (dataRow[0] == RDT_STRING)">
+                            <input class="text" type="text" name="${name}" value="${dataDict[name]}"/>
                         </td>
 
                     </tr>

@@ -127,6 +127,8 @@ class ProjectHandler(WebHandler):
             if not errors:
                 release = self.client.newRelease(projectId, releaseName)
 
+                ilp = "%s conary.rpath.com@rpl:devel contrib.rpath.org@rpl:devel" % self.project.getLabel()
+                release.setDataValue("installLabelPath", ilp)
                 release.setImageType(imageType)
                 trove, label = trove.split("=")
                 label = versions.Label(label)
@@ -141,7 +143,10 @@ class ProjectHandler(WebHandler):
                 return apache.OK
         else:
             release = self.client.getRelease(releaseId)
-
+            if not release.getDataValue("installLabelPath"):
+                ilp = "%s conary.rpath.com@rpl:devel contrib.rpath.org@rpl:devel" % self.project.getLabel()
+                release.setDataValue("installLabelPath", ilp)
+                
             trove, versionStr, flavor = release.getTrove()
             version = versions.ThawVersion(versionStr)
             label = version.branch().label()

@@ -194,3 +194,16 @@ td#tasksBlock h3 {
     
     color: #FF930B;
 }
+
+table#releaseData {
+    width: 100%;
+}
+
+table#releaseData td:first-child {
+    width: 25%;
+}
+
+table#releaseData input.text {
+    width: 100%;
+    background-color:#eee;
+}
