@@ -820,7 +820,6 @@ class MintServer(object):
         self.db.commit()
         return True
 
-    @requiresAuth
     @private
     def incReleaseDownloads(self, releaseId):
         cu = self.db.cursor()
