@@ -50,7 +50,7 @@ if( !defined('DB_USER') ) die( 'Please, do not access this page directly.' );
     <div class="shadowLeft"><div class="shadowRight">
         <div align="left" class="surfaceLeft"><div class="surfaceRight">
             <table cellpadding="0" cellspacing="0" border="0" summary="layout">
-        <tr><td colspan="2"><div class="pad"><img src="http://www.rpath.org/conary-static/apps/mint/images/logo.gif" alt="rPath Logo"></div></td>
+        <tr><td colspan="2" id="logo"><img src="http://www.rpath.org/conary-static/apps/mint/images/logo.gif" alt="rPath Logo"></td>
 </tr>
     <tr>
     <td id="topnav">
@@ -81,7 +81,7 @@ if( !defined('DB_USER') ) die( 'Please, do not access this page directly.' );
         <div id="crumb">
 
             <div class="pad">
-                You are here: <a href="http://www.rpath.org/">Home</a> <a href="#"><?php $Blog->disp('name', 'htmlbody')?></a>
+                You are here: <a href="http://www.rpath.org/">Home</a> <a href="http://blogs.conary.com/index.php/rpathcom"><?php $Blog->disp('name', 'htmlbody')?></a>
             </div>
         </div>
     </div>
