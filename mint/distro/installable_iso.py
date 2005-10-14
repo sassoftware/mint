@@ -271,9 +271,9 @@ class InstallableIso(ImageGenerator):
             
             discNum = d.split("disc")[-1]
             infoMap['disc'] = d
-            d = "Disk %d" % int(discNum)
-            truncatedName = infoMap['name'][:31-len(d)]
-            infoMap['discname'] = "%s %s" % (truncatedName, d)
+            discNumStr = "Disk %d" % int(discNum)
+            truncatedName = infoMap['name'][:31-len(discNumStr)]
+            infoMap['discname'] = "%s %s" % (truncatedName, discNumStr)
             infoMap['iso'] =  isoname % infoMap
             if os.access(os.path.join(discdir, d, "isolinux/isolinux.bin"), os.R_OK):
                 os.chdir(os.path.join(discdir, d))
