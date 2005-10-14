@@ -46,8 +46,8 @@ from mint import userlevels
                                 <textarea rows="15" type="text" name="keydata" py:content="kwargs['keydata']" />
 
                                 <p class="help">Insert your PGP or GnuPG Public Key here in ascii format.  Paste only one key at a time.  Please only submit your own public keys.  Once a key is submitted, it cannot be removed.</p>
-                                <p class="help">For help generating a PGP key, visit <a href="#">here</a></p>
-                                <p class="help">For help getting the public key in a format suitable for pasting, click <a href="#">here</a></p>
+                                <p class="help">For help generating a PGP key, visit <a href="http://webber.dewinter.com/gnupg_howto/english/GPGMiniHowto-3.html#ss3.1">here</a></p>
+                                <p class="help">For help getting the public key in a format suitable for pasting, click <a href="http://webber.dewinter.com/gnupg_howto/english/GPGMiniHowto-3.html#ss3.2">here</a></p>
                             </td>
                         </tr>
                     </table>
