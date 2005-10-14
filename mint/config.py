@@ -44,7 +44,6 @@ class MintConfig(ConfigFile):
         'newsRssFeed'       : '',
         'commitAction'      : None,
         'commitEmail'       : None,
-        'commitEmailName'   : 'rBuilder Commit Message',
         'EnableMailLists'   : [ BOOLEAN, False ],
         'MailListBaseURL'   : 'http://lists.rpath.org/mailman/',
         'MailListPass'      : 'adminpass',
