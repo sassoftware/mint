@@ -141,7 +141,7 @@ if auth.authorized:
 
 
     <table border="0" cellspacing="0" cellpadding="0"
-           summary="layout" class="pager"
+           summary="layout" class="pager" style="margin-bottom: 1em;"
            py:def="navigation(urlbase, terms, count, limit, offset, footer=False)">
         <?python
             plural=""
