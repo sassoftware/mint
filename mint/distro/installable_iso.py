@@ -269,8 +269,10 @@ class InstallableIso(ImageGenerator):
             if not d.startswith('disc'):
                 continue
             
-            infoMap['disc'] = d
-            infoMap['discname'] = ("%(name)s %(disc)s" % infoMap)[:32]
+            discNum = infoMap['discname'].split("disc")[-1]
+            d = "Disk %d" % discNum
+            truncatedName = infoMap['name'][:31-len(d)]
+            infoMap['discname'] = "%s %s" % (truncatedName, d)
             infoMap['iso'] =  isoname % infoMap
             if os.access(os.path.join(discdir, d, "isolinux/isolinux.bin"), os.R_OK):
                 os.chdir(os.path.join(discdir, d))
@@ -280,7 +282,7 @@ class InstallableIso(ImageGenerator):
                                   "-no-emul-boot",
                                   "-boot-load-size", "4",
                                   "-boot-info-table", "-R", "-J",
-                                  "-V",  "\"%(discname)s\"" % infoMap, "-T", "."]
+                                  "-V",  "%(discname)s" % infoMap, "-T", "."]
                 print >> sys.stderr, cmd
                 sys.stderr.flush()
                 subprocess.call(cmd)
@@ -296,7 +298,6 @@ class InstallableIso(ImageGenerator):
                 # Abort if parent thread has died
                 assertParentAlive()
 
-            discNum = infoMap['discname'].split("disc")[-1]
             isoList.append((infoMap['iso'], "%s Disk %s" % (infoMap['name'], discNum)))
 
         isoList = [ (os.path.join(infoMap['isodir'], iso[0]), iso[1]) for iso in isoList ]
