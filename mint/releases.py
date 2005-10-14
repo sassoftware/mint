@@ -36,8 +36,8 @@ class ReleaseDataNameError(MintError):
             self.str = reason
 
 installableIsoTemplate = {
-    'skipMediaCheck': (RDT_BOOL, False, 'Iso should skip prompt for media check'),
-    'betaNag'   : (RDT_BOOL, False, 'Iso is a beta release'),
+    'skipMediaCheck': (RDT_BOOL, False, 'Skip prompt for ISO media check.'),
+    'betaNag'   : (RDT_BOOL, False, 'Show a "beta nag" screen before installation.'),
 }
 
 stubImageTemplate = {
