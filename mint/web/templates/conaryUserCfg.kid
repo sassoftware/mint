@@ -54,11 +54,14 @@
                         care of that for you.</p>
 
                         <p>On the other hand, if this project has lots of
-                        interesting software and you expect that you'll be
-                        coming back from time to time to see what
-                        newly-available software there is, you should
-                        configure Conary to automatically search this
-                        project's label.</p>
+                        interesting software, you could configure Conary to
+                        automatically search this project's label.  That
+                        said, you should keep in mind that, for each label
+                        that Conary is configured to search, the amount of
+                        time it will take for Conary to completely search
+                        the labels will increase.  Therefore, you should
+                        weigh the convenience of such a change against the
+                        longer search times that will result.</p>
 
                     <h3>How do I do it?</h3>
 
