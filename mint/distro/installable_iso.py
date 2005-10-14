@@ -116,7 +116,7 @@ class InstallableIso(ImageGenerator):
         tmpRoot = tempfile.mkdtemp()
 
         # write .buildstamp
-        bsFile = file(os.path.join(tmpPath, ".buildstamp"), "w")
+        bsFile = open(os.path.join(tmpPath, ".buildstamp"), "w")
         print >> bsFile, time.time()
         print >> bsFile, self.project.getName()
         print >> bsFile, upstream(self.release.getTroveVersion())
@@ -132,7 +132,7 @@ class InstallableIso(ImageGenerator):
         cfg.root = tmpRoot
         cclient = conaryclient.ConaryClient(cfg)
 
-        print >> sys.stderr, "attempting to extract artwork from anaconda-images from project repository"
+        print >> sys.stderr, "extracting artwork from anaconda-images from project repository"
         try:
             self.callback.setChangeSet('anaconda-images')
             itemList = [('anaconda-images', (None, None), (None, None), True)]
@@ -151,6 +151,11 @@ class InstallableIso(ImageGenerator):
             print >> sys.stderr, " ".join(cmd)
             sys.stderr.flush()
             subprocess.call(cmd)
+                
+        # write the conaryrc file
+        conaryrcFile = open(os.path.join(tmpPath, "conaryrc"), "w")
+        print >> conaryrcFile, "installLabelPath " + self.release.getDataValue("installLabelPath")
+        conaryrcFile.close()
             
         # create cramfs
         cmd = ['mkcramfs', tmpPath, productPath]
