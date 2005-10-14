@@ -270,7 +270,7 @@ class InstallableIso(ImageGenerator):
                 continue
             
             discNum = d.split("disc")[-1]
-            d = "Disk %d" % discNum
+            d = "Disk %d" % int(discNum)
             truncatedName = infoMap['name'][:31-len(d)]
             infoMap['discname'] = "%s %s" % (truncatedName, d)
             infoMap['iso'] =  isoname % infoMap
