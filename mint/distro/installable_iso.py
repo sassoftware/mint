@@ -155,6 +155,7 @@ class InstallableIso(ImageGenerator):
         # write the conaryrc file
         conaryrcFile = open(os.path.join(tmpPath, "conaryrc"), "w")
         print >> conaryrcFile, "installLabelPath " + self.release.getDataValue("installLabelPath")
+        print >> conaryrcFile, "pinTroves kernel.*"
         conaryrcFile.close()
             
         # create cramfs
