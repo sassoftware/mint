@@ -45,7 +45,7 @@ for r in cu.fetchall():
 rows = []
 for host in netclients.keys():
     try:
-        troves = netclients[host].getAllTroveLeaves({None: {None: None}})
+        troves = netclients[host].getAllTroveLeaves(host, {None: {None: None}})
 
     except repository.OpenError, e:
         print "warning: unable to access %s" % host
