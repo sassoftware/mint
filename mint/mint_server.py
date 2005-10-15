@@ -27,7 +27,7 @@ import dbversion
 import stats
 import releasedata
 from cache import TroveNamesCache
-from mint_error import PermissionDenied, ReleasePublished, ReleaseMissing
+from mint_error import PermissionDenied, ReleasePublished, ReleaseMissing, MintError
 from searcher import SearchTermsError
 
 from repository import netclient
@@ -39,12 +39,29 @@ reservedHosts = ['admin', 'mail', 'mint', 'www', 'web', 'rpath', 'wiki', 'conary
 
 allTroveNames = TroveNamesCache()
 
+class ParameterError(MintError):
+    def __str__(self):
+        return self.reason
+    def __init__(self, reason = "A required Parameter had an incorrect type"):
+        self.reason = reason
+
+def deriveBaseFunc(func):
+    r = func
+    done = 0
+    while not done:
+        try:
+            r = r.__wrapped_func__
+        except AttributeError:
+            done = 1
+    return r
+
 def requiresAdmin(func):
     def wrapper(self, *args):
         if self.authToken == [self.cfg.authUser, self.cfg.authPass] or self.auth.admin:
             return func(self, *args)
         else:
             raise PermissionDenied
+    wrapper.__wrapped_func__ = func
     return wrapper
 
 def requiresAuth(func):
@@ -53,6 +70,7 @@ def requiresAuth(func):
             raise PermissionDenied
         else:
             return func(self, *args)
+    wrapper.__wrapped_func__ = func
     return wrapper
 
 def private(func):
@@ -63,7 +81,64 @@ def private(func):
             return func(self, *args)
         else:
             raise PermissionDenied
+    trueFunc = deriveBaseFunc(func)
+    trueFunc.__private_enforced__ = True
+    wrapper.__wrapped_func__ = func
     return wrapper
+
+# recursively type check a paramter list. allows one to type check nested
+# containers if need be. returns true if param should be allowed through.
+# Due to it's recursive nature, the behavior of this function is quite
+# different from a simple isinstance call.
+def checkParam(param, paramType):
+    if type(paramType) == tuple:
+        if len(paramType) == 1:
+            # paramType[0] is a tuple of possible values
+            match = False
+            for p_type in paramType[0]:
+                if type(p_type) is tuple:
+                    match = match or checkParam(param, p_type)
+                else:
+                    match = match or (type(param) == p_type)
+            return match
+        else:
+            # paramType[0] is the type of the container.
+            # paramType[1] is the type of item the container contains.
+            if type(param) != paramType[0]:
+                return False
+            for item in param:
+                # remember to type check the value of a dict, not the key
+                if isinstance(param, dict):
+                    if not checkParam(param[item], paramType[1]):
+                        return False
+                else:
+                    if not checkParam(item, paramType[1]):
+                        return False
+            return True
+    else:
+        # the paramType IS the type
+        return type(param) == paramType
+
+def typeCheck(*paramTypes):
+    """This decorator will be required on all functions callable over xmlrpc.
+    This will force consistent calling conventions or explicit typecasting
+    for all xmlrpc calls made to ensure extraneous calls won't be allowed."""
+    def deco(func):
+        def wrapper(self, *args):
+            # FIXME: enable this test in production mode once we are certain
+            # that the web api honors all typeCheck conventions
+            if not self.cfg.debugMode:
+                return func(self, *args)
+            for i in range(len(args)):
+                if (not checkParam(args[i],paramTypes[i])):
+                    baseFunc = deriveBaseFunc(func)
+                    raise ParameterError('%s was passed %s of type %s when expecting %s for paramter number %d' %(baseFunc.__name__, repr(args[i]), str(type(args[i])), str(paramTypes[i]), i+1))
+            return func(self, *args)
+        trueFunc = deriveBaseFunc(func)
+        trueFunc.__args_enforced__ = True
+        wrapper.__wrapped_func__ = func
+        return wrapper
+    return deco
 
 class MintServer(object):
     _checkRepo = True 
@@ -180,6 +255,7 @@ class MintServer(object):
             repo = shimclient.ShimNetClient(server, protocol, port, (self.cfg.authUser, self.cfg.authPass), authRepo)
         return repo
 
+    @typeCheck(str, str, str, str, str)
     # project methods
     @requiresAuth
     @private
@@ -215,42 +291,51 @@ class MintServer(object):
                                   self.authToken[1])
 
         return projectId
-    
+
+    @typeCheck(int)
     @private
     def getProject(self, id):
         return self.projects.get(id)
 
+    @typeCheck(str)
     @private
     def getProjectIdByFQDN(self, fqdn):
         return self.projects.getProjectIdByFQDN(fqdn)
 
+    @typeCheck(str)
     @private
     def getProjectIdByHostname(self, hostname):
         return self.projects.getProjectIdByHostname(hostname)
 
+    @typeCheck(int)
     @private
     def getProjectIdsByMember(self, userId):
         return self.projects.getProjectIdsByMember(userId)
 
+    @typeCheck(int)
     @private
     def getMembersByProjectId(self, id):
         return self.projectUsers.getMembersByProjectId(id)
 
+    @typeCheck(int, int)
     @private
     def userHasRequested(self, projectId, userId):
         return self.membershipRequests.userHasRequested(projectId, userId)
 
+    @typeCheck(int, int)
     @private
     @requiresAuth
     def deleteJoinRequest(self, projectId, userId):
         return self.membershipRequests.deleteRequest(projectId, userId)
 
+    @typeCheck(int)
     @private
     @requiresAuth
     def listJoinRequests(self, projectId):
         reqList = self.membershipRequests.listRequests(projectId)
         return [ (x, self.users.getUsername(x)) for x in reqList]
 
+    @typeCheck(int, int, str)
     @private
     @requiresAuth
     def setJoinReqComments(self, projectId, userId, comments):
@@ -280,16 +365,19 @@ class MintServer(object):
                 users.sendMailWithChecks(self.cfg.adminMail, self.cfg.productName, email, subject, message)
         return self.membershipRequests.setComments(projectId, userId, comments)
 
+    @typeCheck(int, int)
     @private
     @requiresAuth
     def getJoinReqComments(self, projectId, userId):
         return self.membershipRequests.getComments(projectId, userId)
 
+    @typeCheck(str)
     @requiresAdmin
     @private
     def getOwnersByProjectName(self, name):
         return self.projectUsers.getOwnersByProjectName(name)
 
+    @typeCheck(int, ((int, type(None)),), ((str, type(None)),), int)
     @requiresAuth
     @private
     def addMember(self, projectId, userId, username, level):
@@ -336,14 +424,17 @@ class MintServer(object):
         self._notifyUser('Added', self.getUser(userId), projects.Project(self,projectId), level)
         return True
 
+    @typeCheck(int, int)
     @private
     def lastOwner(self, projectId, userId):
         return self.projectUsers.lastOwner(projectId, userId)
 
+    @typeCheck(int, int)
     @private
     def onlyOwner(self, projectId, userId):
         return self.projectUsers.onlyOwner(projectId, userId)
 
+    @typeCheck(int, int, bool)
     @requiresAuth
     @private
     def delMember(self, projectId, userId, notify=True):
@@ -386,6 +477,7 @@ class MintServer(object):
                         "%s user account modification" % self.cfg.productName,
                         '\n\n'.join((greeting, message, closing)))
 
+    @typeCheck(str, str)
     @requiresAdmin
     @private
     def notifyUsers(self, subject, body):
@@ -406,11 +498,13 @@ class MintServer(object):
                 # Invalidate the user, so he/she must change his/her address at the next login
                 self.users.invalidateUser(user[0])
 
+    @typeCheck(int, str, str, str)
     @requiresAuth
     @private
     def editProject(self, projectId, projecturl, desc, name):
         return self.projects.update(projectId, projecturl=projecturl, desc = desc, name = name)
 
+    @typeCheck(int)
     @requiresAdmin
     @private
     def hideProject(self, projectId):
@@ -420,6 +514,7 @@ class MintServer(object):
 
         return self.projects.hide(projectId)
 
+    @typeCheck(int)
     @requiresAdmin
     @private
     def unhideProject(self, projectId):
@@ -430,21 +525,25 @@ class MintServer(object):
 
         return self.projects.unhide(projectId)
 
+    @typeCheck(int)
     @requiresAdmin
     @private
     def disableProject(self, projectId):
         return self.projects.disable(projectId, self.cfg.reposPath)
 
+    @typeCheck(int)
     @requiresAdmin
     @private
     def enableProject(self, projectId):
         return self.projects.enable(projectId, self.cfg.reposPath)
 
+    @typeCheck(int)
     # user methods
     @private
     def getUser(self, id):
         return self.users.get(id)
 
+    @typeCheck(int, int)
     @private
     def getUserLevel(self, userId, projectId):
         cu = self.db.cursor()
@@ -456,6 +555,7 @@ class MintServer(object):
         except StopIteration:
             raise database.ItemNotFound("membership")
 
+    @typeCheck(int, int, int)
     @requiresAuth
     @private
     def setUserLevel(self, userId, projectId, level):
@@ -480,6 +580,7 @@ class MintServer(object):
         self.db.commit()
         self._notifyUser('Changed', user, project, level)
 
+    @typeCheck(int)
     @private
     def getProjectsByUser(self, userId):
         cu = self.db.cursor()
@@ -494,39 +595,47 @@ class MintServer(object):
             rows.append([r[0], r[1], r[2]])
         return rows
 
+    @typeCheck(str, str, str, str, str, str, bool)
     @private
     def registerNewUser(self, username, password, fullName, email, displayEmail, blurb, active):
         return self.users.registerNewUser(username, password, fullName, email, displayEmail, blurb, active)
 
+    @typeCheck()
     @private
     def checkAuth(self):
         return self.auth.getDict()
         
+    @typeCheck(int)
     @requiresAuth
     @private
     def updateAccessedTime(self, userId):
         return self.users.update(userId, timeAccessed = time.time())
 
+    @typeCheck(int, str)
     @requiresAuth
     @private
     def setUserEmail(self, userId, email):
         return self.users.update(userId, email = email)
 
+    @typeCheck(int, str)
     @requiresAuth
     @private
     def validateNewEmail(self, userId, email):
         return self.users.validateNewEmail(userId, email)
 
+    @typeCheck(int, str)
     @requiresAuth
     @private
     def setUserDisplayEmail(self, userId, displayEmail):
         return self.users.update(userId, displayEmail = displayEmail)
 
+    @typeCheck(int, str)
     @requiresAuth
     @private
     def setUserBlurb(self, userId, blurb):
         return self.users.update(userId, blurb = blurb)
 
+    @typeCheck(int, str, str)
     @requiresAuth
     @private
     def addUserKey(self, projectId, username, keydata):
@@ -537,11 +646,13 @@ class MintServer(object):
         #Call the repository's addKey function
         return repos.addNewAsciiPGPKey(project.getLabel(), username, keydata)
 
+    @typeCheck(int, str)
     @requiresAuth
     @private
     def setUserFullName(self, userId, fullName):
         return self.users.update(userId, fullName = fullName)
 
+    @typeCheck(int)
     @requiresAuth
     @private
     def cancelUserAccount(self, userId):
@@ -575,6 +686,7 @@ class MintServer(object):
 
         return self.removeUserAccount(userId)
 
+    @typeCheck(int)
     @requiresAuth
     @private
     def removeUserAccount(self, userId):
@@ -603,15 +715,18 @@ class MintServer(object):
 
         self.db.commit()
 
+    @typeCheck(str)
     @private
     def confirmUser(self, confirmation):
         userId = self.users.confirm(confirmation)
         return userId
 
+    @typeCheck(str)
     @private
     def getUserIdByName(self, username):
         return self.users.getIdByColumn("username", username)
 
+    @typeCheck(int, str)
     @private
     def setPassword(self, userId, newPassword):
         username = self.users.get(userId)['username']
@@ -628,6 +743,7 @@ class MintServer(object):
 
         return True
 
+    @typeCheck(str, int, int)
     @requiresAuth
     @private
     def searchUsers(self, terms, limit, offset):
@@ -640,6 +756,7 @@ class MintServer(object):
         """
         return self.users.search(terms, limit, offset)
 
+    @typeCheck(str, int, int, int)
     @private
     def searchProjects(self, terms, modified, limit, offset):
         """
@@ -652,6 +769,7 @@ class MintServer(object):
         """
         return self.projects.search(terms, modified, limit, offset)
 
+    @typeCheck(str, int, int)
     @private
     def searchPackages(self, terms, limit, offset):
         """
@@ -663,6 +781,7 @@ class MintServer(object):
         """
         return self.pkgIndex.search(terms, limit, offset)
 
+    @typeCheck()
     @private
     def getProjectsList(self):
         """
@@ -670,6 +789,7 @@ class MintServer(object):
         """
         return self.projects.getProjectsList()
 
+    @typeCheck(int, int, int)
     @private
     def getProjects(self, sortOrder, limit, offset):
         """
@@ -680,6 +800,7 @@ class MintServer(object):
         """
         return self.projects.getProjects(sortOrder, limit, offset), self.projects.getNumProjects()
 
+    @typeCheck()
     @requiresAdmin
     @private
     def getUsersList(self):
@@ -688,6 +809,7 @@ class MintServer(object):
         """
         return self.users.getUsersList()
 
+    @typeCheck(int, int, int)
     @requiresAdmin
     @private
     def getUsers(self, sortOrder, limit, offset):
@@ -699,39 +821,49 @@ class MintServer(object):
         """
         return self.users.getUsers(sortOrder, limit, offset), self.users.getNumUsers()
 
+    @typeCheck()
+    @private
     def getNews(self):
         return self.newsCache.getNews()
 
+    @typeCheck()
+    @private
     def getNewsLink(self):
         return self.newsCache.getNewsLink()
 
     #
     # LABEL STUFF
     #
+    @typeCheck(int)
     @private
     def getDefaultProjectLabel(self, projectId):
         return self.labels.getDefaultProjectLabel(projectId)
 
+    @typeCheck(int, ((str, type(None)),), ((str, type(None)),), ((bool, type(None)),))
     @private
     def getLabelsForProject(self, projectId, newUser, newPass, useSSL):
         """Returns a mapping of labels to labelIds and a repository map dictionary for the current user"""
         return self.labels.getLabelsForProject(projectId, useSSL, newUser, newPass)
 
+    @typeCheck(int, str, str, str, str)
     @requiresAuth
     @private
     def addLabel(self, projectId, label, url, username, password):
         return self.labels.addLabel(projectId, label, url, username, password)
 
+    @typeCheck(int)
     @requiresAuth
     @private
     def getLabel(self, labelId):
         return self.labels.getLabel(labelId)
 
+    @typeCheck(int, str, str, str, str)
     @requiresAuth
     @private
     def editLabel(self, labelId, label, url, username, password):
         return self.labels.editLabel(labelId, label, url, username, password)
 
+    @typeCheck(int, int)
     @requiresAuth
     @private
     def removeLabel(self, projectId, labelId):
@@ -740,10 +872,12 @@ class MintServer(object):
     #
     # RELEASE STUFF
     #
+    @typeCheck(int, bool)
     @private
     def getReleasesForProject(self, projectId, showUnpublished = False):
         return [releases.Release(self, x) for x in self.releases.iterReleasesForProject(projectId, showUnpublished)]
 
+    @typeCheck(str, str, str, str)
     @private
     def registerCommit(self, hostname, username, name, version):
         projectId = self.getProjectIdByFQDN(hostname)
@@ -751,14 +885,17 @@ class MintServer(object):
         self.commits.new(projectId, time.time(), name, version, userId)
         return True
 
+    @typeCheck(int)
     @private
     def getCommitsForProject(self, projectId):
         return self.commits.getCommitsByProject(projectId)
 
+    @typeCheck(int)
     @private
     def getRelease(self, releaseId):
         return self.releases.get(releaseId)
 
+    @typeCheck(int, str, bool)
     @requiresAuth
     @private
     def newRelease(self, projectId, releaseName, published):
@@ -766,6 +903,7 @@ class MintServer(object):
                                  name = releaseName,
                                  published = published)
 
+    @typeCheck(int)
     @requiresAuth
     @private
     def deleteRelease(self, releaseId):
@@ -775,6 +913,7 @@ class MintServer(object):
             raise ReleasePublished()
         return self.releases.deleteRelease(releaseId)
 
+    @typeCheck(int, str, ((str, int, bool),), int)
     @requiresAuth
     @private
     def setReleaseDataValue(self, releaseId, name, value, dataType):
@@ -784,18 +923,22 @@ class MintServer(object):
             raise ReleasePublished()
         return self.releaseData.setReleaseDataValue(releaseId, name, value, dataType)
 
+    @typeCheck(int, str)
     @private
     def getReleaseDataValue(self, releaseId, name):
         return self.releaseData.getReleaseDataValue(releaseId, name)
 
+    @typeCheck(int)
     @private
     def getReleaseDataDict(self, releaseId):
         return self.releaseData.getReleaseDataDict(releaseId)
 
+    @typeCheck(int)
     @private
     def getReleaseTrove(self, releaseId):
         return self.releases.getTrove(releaseId)
 
+    @typeCheck(int, str, str, str)
     @requiresAuth
     @private
     def setReleaseTrove(self, releaseId, troveName, troveVersion, troveFlavor):
@@ -807,6 +950,7 @@ class MintServer(object):
                                                  troveVersion,
                                                  troveFlavor)
 
+    @typeCheck(int, str)
     @requiresAuth
     @private
     def setReleaseDesc(self, releaseId, desc):
@@ -820,6 +964,7 @@ class MintServer(object):
         self.db.commit()
         return True
 
+    @typeCheck(int)
     @private
     def incReleaseDownloads(self, releaseId):
         cu = self.db.cursor()
@@ -828,6 +973,7 @@ class MintServer(object):
         self.db.commit()
         return True
 
+    @typeCheck(int, int)
     @requiresAuth
     @private
     def setReleasePublished(self, releaseId, published):
@@ -841,6 +987,7 @@ class MintServer(object):
         self.db.commit()
         return True
 
+    @typeCheck(int, int)
     @requiresAuth
     @private
     def setImageType(self, releaseId, imageType):
@@ -854,6 +1001,7 @@ class MintServer(object):
         self.db.commit()
         return True
 
+    @typeCheck(int)
     @requiresAuth
     @private
     def startImageJob(self, releaseId):
@@ -886,6 +1034,7 @@ class MintServer(object):
         self.db.commit()
         return retval
 
+    @typeCheck(int)
     @requiresAuth
     @private
     def getJob(self, jobId):
@@ -907,6 +1056,7 @@ class MintServer(object):
             data[key] = p[i]
         return data
 
+    @typeCheck(int)
     @requiresAuth
     @private
     def getJobIds(self, releaseId):
@@ -924,7 +1074,8 @@ class MintServer(object):
         for row in p:
             rows.append(row[0])
         return rows
-   
+
+    @typeCheck(int, int, str)
     @requiresAuth
     @private
     def setJobStatus(self, jobId, newStatus, statusMessage):
@@ -937,6 +1088,7 @@ class MintServer(object):
         self.db.commit()
         return True
 
+    @typeCheck(int, (list, (tuple, str)))
     @requiresAuth
     @private
     def setImageFilenames(self, releaseId, filenames):
@@ -953,6 +1105,7 @@ class MintServer(object):
         self.db.commit()
         return True
 
+    @typeCheck(int)
     @private
     def getImageFilenames(self, releaseId):
         cu = self.db.cursor()
@@ -964,6 +1117,7 @@ class MintServer(object):
         else:
             return [(x[0], x[1], x[2]) for x in results]
    
+    @typeCheck(int)
     @private
     def getFileInfo(self, fileId):
         cu = self.db.cursor()
@@ -975,6 +1129,7 @@ class MintServer(object):
         else:
             raise jobs.FileMissing
 
+    @typeCheck(int)
     @requiresAuth
     def getGroupTroves(self, projectId):
         # enable internal methods so that public methods can make 
@@ -997,6 +1152,7 @@ class MintServer(object):
 
         return troveDict
 
+    @typeCheck(int)
     @requiresAuth
     def getReleaseStatus(self, releaseId):
         self._allowPrivate = True
@@ -1012,18 +1168,22 @@ class MintServer(object):
                     'message': job.getStatusMessage()}
 
     # session management
+    @typeCheck(str)
     @private
     def loadSession(self, sid):
         return self.sessions.load(sid)
 
+    @typeCheck(str, (dict, ((int, float, (dict, ((int, bool, str, (tuple, str)),))),)))
     @private
     def saveSession(self, sid, data):
         self.sessions.save(sid, data)
 
+    @typeCheck(str)
     @private
     def deleteSession(self, sid):
         self.sessions.delete(sid)
 
+    @typeCheck()
     @private
     def cleanupSessions(self):
         self.sessions.cleanup()
