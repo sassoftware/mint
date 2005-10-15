@@ -173,6 +173,24 @@
 
                     <p>Next, you must configure Conary to use your key.</p>
 
+                    <p>To do this, you will be using two Conary
+                    configuration options:</p>
+
+                    <ul>
+                        <li><tt><strong>signatureKey</strong></tt></li>
+                        <li><tt><strong>signatureKeyMap</strong></tt></li>
+                    </ul>
+
+                    <p>These two options interact in a specific way.  It is
+                    possible to build up a list of keys (along with the
+                    circumstances in which they should be used) by
+                    repetitively including <tt>signatureKeyMap</tt> lines
+                    in one or more Conary configuration files.  However,
+                    as soon as Conary encounters a <tt>signatureKey</tt>
+                    line, all previous <tt>signatureKeyMap</tt>
+                    <em>and</em> <tt>signatureKey</tt> settings are
+                    ignored.</p>
+
                     <p>As with configuring your Conary development
                     environment, there are many different ways of
                     configuring Conary to use OpenPGP keys.  However, the
@@ -180,18 +198,21 @@
                     packages for one or many projects.</p>
 
                     <p>First, edit <tt>.conaryrc</tt>, and include the
-                    following line at the top:</p>
+                    following line <em>at the top</em>:</p>
 
                     <p><tt><strong>signatureKey    None</strong></tt></p>
 
                     <p>This line ensures that, if any system-wide
                     signature-related settings were made in
-                    <tt>/etc/conaryrc</tt>, they will be ignored.</p>
+                    <tt>/etc/conaryrc</tt>, they will be ignored.  Note
+                    that, if you also do not include any other key-related
+                    settings in this (or any project-specific
+                    <tt>conaryrc</tt> file), Conary will never attempt to
+                    use a key to sign any packages.</p>
 
                     <p>Next, add a <tt>signatureKeyMap</tt> entry for this
-                    project.  Note that it must be added <em>after</em> the
-                    <tt>signatureKey None</tt> line; otherwise it will be
-                    ignored.  The <tt>signatureKeyMap</tt> uses the
+                    project <em>after</em> the <tt>signatureKey</tt> entry
+                    at the top.  The <tt>signatureKeyMap</tt> uses the
                     following format:</p>
 
                     <p><tt><strong>signatureKeyMap  &lt;regular-expression&gt; &lt;key-fingerprint&gt;</strong></tt></p>
@@ -215,9 +236,10 @@
                     replace everything after the <tt>@</tt> with
                     <tt>.*</tt>.  Also note that, strictly speaking, the
                     dots in this project's label should be replaced with
-                    <tt>\.</tt>, although leaving them as-is will still
-                    work (though doing so does leave open the possibility
-                    of inadvertent matches).</p>
+                    <tt>\.</tt> (remember, this is a regular expression),
+                    although leaving them as-is will still work (though
+                    doing so does leave open the possibility of inadvertent
+                    matches).</p>
 
                     <p>The following formats are acceptable for expressing
                     your key's fingerprint &#8212; all would reference the
