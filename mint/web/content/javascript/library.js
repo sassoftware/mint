@@ -121,10 +121,18 @@ var STATUS_DELETED = 3;
 var STATUS_ERROR = 4;
 var STATUS_NOJOB = 5;
 var refreshed = false;
+var oldStatus = -1;
 
 function processGetReleaseStatus(xml) {
     el = document.getElementById("jobStatus");
     var status = xml.getElementsByTagName("int")[0].firstChild.data;
+    if(status != oldStatus) {
+        if(oldStatus != -1) {
+            document.location = document.location;
+        }
+        oldStatus = status;
+    }
+
     var statusText = xml.getElementsByTagName("string")[0];
     if(!statusText.firstChild) {
         statusText = "No status";
