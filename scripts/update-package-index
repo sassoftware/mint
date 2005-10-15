@@ -28,24 +28,24 @@ cu = db.cursor()
 cu.execute("SELECT projectId, hostname || '.' || domainname FROM Projects WHERE hidden=0 AND disabled=0")
 
 labels = {}
-repositoryMap = {}
 projectIds = {}
+netclients = {}
 for r in cu.fetchall():
     projectId, hostname = r
 
     l, repMap = labelsTable.getLabelsForProject(projectId, useSSL = cfg.SSL)
-    repositoryMap.update(repMap)
     
     hostname = repMap.keys()[0]
     labels[hostname] = versions.Label(l.keys()[0])
     projectIds[hostname] = projectId
 
-repos = netclient.NetworkRepositoryClient(repositoryMap)
+    repos = netclient.NetworkRepositoryClient(repMap)
+    netclients[hostname] = repos
 
 rows = []
-for host in repositoryMap.keys():
+for host in netclients.keys():
     try:
-        troves = repos.getTroveVersionsByLabel({None: {labels[host]: None}})
+        troves = netclients[host].getAllTroveLeaves({None: {None: None}})
 
     except repository.OpenError, e:
         print "warning: unable to access %s" % host
