@@ -122,10 +122,10 @@
                             as:</p>
 
                             <ul>
-                                <li><strong><tt>buildLabel (${project.getLabel()})</tt></strong></li>
+                                <li><strong><tt>buildLabel ${project.getLabel()}</tt></strong></li>
                                 <li><strong><tt>buildPath (full path to the builds subdirectory)</tt></strong></li>
                                 <li><strong><tt>lookaside (full path to the cache subdirectory)</tt></strong></li>
-                                <li><strong><tt>repositoryMap (${project.getConaryConfig(newUser='&lt;username&gt;', newPass='&lt;password&gt;').repositoryMap.values()[0]}</tt></strong></li>
+                                <li><strong><tt>repositoryMap ${project.getFQDN()} ${project.getConaryConfig(newUser='&lt;username&gt;', newPass='&lt;password&gt;').repositoryMap.values()[0]}</tt></strong></li>
                             </ul>
 
                             <p>Because Conary only reads the
