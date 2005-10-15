@@ -38,16 +38,15 @@ class ReleaseTest(MintRepositoryHelper):
 
         release.setImageType(releasetypes.INSTALLABLE_ISO)
 
-        #print repr(release.getDataDict())
-        assert(release.getDataDict() == {'skipMediaCheck': False, 'betaNag': False})
+        rDict = release.getDataDict()
+        tDict = release.getDataTemplate()
+        for key in tDict:
+            assert(tDict[key][1] == rDict[key])
 
         # test behavior of booleans
         for mediaCheck in (False, True):
             release.setDataValue('skipMediaCheck', mediaCheck)
             assert (mediaCheck == release.getDataValue('skipMediaCheck'))
-
-        assert(release.getDataDict() ==
-               {'skipMediaCheck': True, 'betaNag': False})
 
         # test bad name lockdown
         try:
@@ -91,7 +90,7 @@ class ReleaseTest(MintRepositoryHelper):
             pass
 
         try:
-            release.setFiles(tuple())
+            release.setFiles(list())
             self.fail("Release allowed setting of files after publish")
         except ReleasePublished:
             pass
