@@ -7,6 +7,8 @@ Changes in 0.6.3:
 * Custom Anaconda artwork is automatically extracted
   from anaconda-images on the project repository, if exists,
   and inserted into the product.img overlay.
+* A project-specific conaryrc is inserted into the product.img
+  overlay.
 
 Changes in 0.6.2:
 
