@@ -881,7 +881,10 @@ class MintServer(object):
     @private
     def registerCommit(self, hostname, username, name, version):
         projectId = self.getProjectIdByFQDN(hostname)
-        userId = self.getUserIdByName(username)
+        try:
+            userId = self.getUserIdByName(username)
+        except database.ItemNotFound:
+            userId = 0
         self.commits.new(projectId, time.time(), name, version, userId)
         return True
 
