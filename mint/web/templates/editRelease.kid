@@ -11,7 +11,7 @@ def generateJs(archMap):
     
     for i, arch in enumerate(arches):
         js += "versionFlavors[%d] = Array(" % i
-        js += ", ".join("Array('%s', '%s', '%s')" % (x[0].trailingRevision().asString(),
+        js += ", ".join("Array('%s', '%s', '%s')" % (x[0].asString(),
                                                      x[0].freeze(),
                                                      x[1].freeze()) for x in archMap[arch])
         js += ");\n";

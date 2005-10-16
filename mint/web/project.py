@@ -156,7 +156,7 @@ class ProjectHandler(WebHandler):
         else:
             cfg = self.project.getConaryConfig(useSSL = self.cfg.SSL)
         nc = netclient.NetworkRepositoryClient(cfg.repositoryMap)
-        leaves = nc.getTroveLeavesByLabel({trove: {label: None}})
+        leaves = nc.getAllTroveLeaves(cfg.repositoryMap.keys()[0], {trove: {None: None}})
 
         # group troves by major architecture
         def dictByArch(leaves, troveName):

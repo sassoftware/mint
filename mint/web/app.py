@@ -82,12 +82,12 @@ class MintApp(WebHandler):
         # prepare a new session
         sessionClient = shimclient.ShimMintClient(self.cfg, (self.cfg.authUser, self.cfg.authPass))
 
-        sid = self.fields.get('sid', 0)
+        sid = self.fields.get('sid', None)
         self.session = SqlSession(self.req, sessionClient,
             sid = sid,
             secret = self.cfg.cookieSecretKey,
             timeout = 86400, # XXX timeout of one day; should it be configurable?
-            domain = self.req.hostname,
+            domain = ".".join(self.req.hostname.split(".")[1:]),
             lock = False)
 
         # if we were passed a sid, specifically set a cookie

@@ -1149,7 +1149,6 @@ class MintServer(object):
                                             x.startswith("fileset-")) and\
                                             ":" not in x]
             troveDict[label] = troves
-
         return troveDict
 
     @typeCheck(int)

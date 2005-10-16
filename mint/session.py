@@ -36,13 +36,13 @@ class SqlSession(BaseSession):
                             apache.APLOG_NOTICE)
 
     def do_load(self):
-        return self._client.loadSession(self._sid)
+        return self._client.loadSession(str(self._sid))
 
     def do_save(self, data):
-        self._client.saveSession(self._sid, data)
+        self._client.saveSession(str(self._sid), data)
 
     def do_delete(self):
-        self._client.deleteSession(self._sid)
+        self._client.deleteSession(str(self._sid))
 
 def sql_cleanup(client):
     client.cleanupSessions()
