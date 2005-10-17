@@ -15,6 +15,7 @@ Changes in 0.6.3:
      /downloadImages/<fileid>/<filename>
 * release.getFiles() now returns tuples of (fileId, file basename, title)
   instead of returning the entire pathname.
+* Some login cookie bugs were fixed.
 
 Changes in 0.6.2:
 

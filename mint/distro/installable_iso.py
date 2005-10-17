@@ -365,8 +365,7 @@ class InstallableIso(ImageGenerator):
                 subprocess.call(cmd)
 
         # add the netboot images
-        isoList += [ (os.path.join(topdir, 'images/boot.iso'), "boot.iso"),
-                     (os.path.join(topdir, 'images/diskboot.img'), "diskboot.img"),
-                   ]
+        isoList += ( (os.path.join(topdir, 'images/boot.iso'), "boot.iso"),
+                     (os.path.join(topdir, 'images/diskboot.img'), "diskboot.img"), )
 
         return isoList
