@@ -393,7 +393,11 @@ class MintServer(object):
             except StopIteration, e:
                 raise database.ItemNotFound("user")
         elif userId and not username:
-            username = self.users.getUsername(userId)
+            cu.execute("SELECT username FROM Users WHERE userId=? AND active=1", userId)
+            try:
+                username = cu.next()[0]
+            except StopIteration, e:
+                raise database.ItemNotFound("userId")
 
         if (self.auth.userId != userId) and level == userlevels.USER:
             raise users.UserInduction()
