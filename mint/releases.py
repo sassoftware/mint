@@ -89,7 +89,8 @@ class ReleasesTable(database.KeyedTable):
                       WHERE projectId=? AND
                             troveName IS NOT NULL AND
                             troveVersion IS NOT NULL AND
-                            troveFlavor IS NOT NULL""" + published, projectId)
+                            troveFlavor IS NOT NULL AND
+                            troveLastChanged IS NOT NULL""" + published, projectId)
         for results in cu:
             yield results[0]
 
