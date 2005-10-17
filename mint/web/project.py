@@ -207,6 +207,8 @@ class ProjectHandler(WebHandler):
                 val = kwargs[name]
                 if template[name][0] == RDT_BOOL:
                     val = True
+                if template[name][0] == RDT_STRING:
+                    val = str(val)
             except KeyError:
                 if template[name][0] == RDT_BOOL:
                     val = False
