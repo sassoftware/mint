@@ -114,7 +114,7 @@ if auth.authorized:
             Search
         </h3>
           <div style="display: $display" id="search_items">
-            <form action="http://$SITE/search" method="get">
+            <form action="http://${SITE}search" method="get">
             <p>
                 <label>search type:</label><br/>
                 <select name="type">
