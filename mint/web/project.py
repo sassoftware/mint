@@ -223,6 +223,7 @@ class ProjectHandler(WebHandler):
 
         return self._redirect(self.basePath + "release?id=%d" % releaseId)
 
+    @intFields(releaseId = None)
     @ownerOnly
     def deleteRelease(self, auth, releaseId):
         release = self.client.getRelease(releaseId)
