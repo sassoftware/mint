@@ -1,4 +1,4 @@
-Changes in 0.6.3:
+Changes in 0.8.0:
 
 * A missing or broken authrepo is now handled more
   gracefully.
