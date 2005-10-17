@@ -41,9 +41,9 @@ onload = "javascript:;"
 
     <head py:match="item.tag == 'head'" xmlns="http://www.w3.org/1999/xhtml">
         <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=utf-8" />
-        <script type="text/javascript" src="${cfg.staticPath}/apps/mint/javascript/generic.js"/>
-        <script type="text/javascript" src="${cfg.staticPath}/apps/mint/javascript/library.js"/>
-        <script type="text/javascript" src="${cfg.staticPath}/apps/mint/javascript/xmlrpc.js"/>
+        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/generic.js"/>
+        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/library.js"/>
+        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/xmlrpc.js"/>
         <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/basic.css"/>
         <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/structure.css"/>
         <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/user.css"/>
