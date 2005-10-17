@@ -9,6 +9,7 @@ from mod_python import apache
 
 from mint import mint_error
 from webhandler import WebHandler
+from web.fields import strFields, intFields, listFields, boolFields
 
 class AdminHandler(WebHandler):
     def handle(self, context):
@@ -32,13 +33,15 @@ class AdminHandler(WebHandler):
         self._write('admin/user', userlist=userlist, kwargs = kwargs)
         return apache.OK
 
-    def _admin_user_cancel(self, *args, **kwargs):
-        self.client.removeUserAccount(kwargs['userId'])
+    @intFields(userId=None)
+    def _admin_user_cancel(self, userId, *args, **kwargs):
+        self.client.removeUserAccount(userId)
         kwargs['extraMsg'] = "User account deleted"
         return self._admin_user(*args, **kwargs)
 
-    def _admin_user_reset_password(self, *args, **kwargs):
-        self._resetPasswordById(kwargs['userId'])
+    @intFields(userId=None)
+    def _admin_user_reset_password(self, userId, *args, **kwargs):
+        self._resetPasswordById(userId)
         kwargs['extraMsg'] = "User password reset"
         return self._admin_user(*args, **kwargs)
 
@@ -54,23 +57,27 @@ class AdminHandler(WebHandler):
         # XXX Go through with it.  This functionality may be added in some later release
         return self._admin_project(*args, **kwargs)
 
-    def _admin_project_hide(self, *args, **kwargs):
-        self.client.hideProject(int(kwargs['projectId']))
+    @intFields(projectId = None)
+    def _admin_project_hide(self, projectId, *args, **kwargs):
+        self.client.hideProject(projectId)
         kwargs['extraMsg'] = "Project hidden"
         return self._admin_project(*args, **kwargs)
 
-    def _admin_project_unhide(self, *args, **kwargs):
-        self.client.unhideProject(int(kwargs['projectId']))
+    @intFields(projectId = None)
+    def _admin_project_unhide(self, projectId, *args, **kwargs):
+        self.client.unhideProject(projectId)
         kwargs['extraMsg'] = "Project unhidden"
         return self._admin_project(*args, **kwargs)
 
-    def _admin_project_disable(self, *args, **kwargs):
-        self.client.disableProject(int(kwargs['projectId']))
+    @intFields(projectId = None)
+    def _admin_project_disable(self, projectId, *args, **kwargs):
+        self.client.disableProject(projectId)
         kwargs['extraMsg'] = "Project disabled"
         return self._admin_project(*args, **kwargs)
 
-    def _admin_project_enable(self, *args, **kwargs):
-        self.client.enableProject(int(kwargs['projectId']))
+    @intFields(projectId = None)
+    def _admin_project_enable(self, projectId, *args, **kwargs):
+        self.client.enableProject(projectId)
         kwargs['extraMsg'] = "Project enabled"
         return self._admin_project(*args, **kwargs)
 
