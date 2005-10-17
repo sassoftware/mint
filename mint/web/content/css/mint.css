@@ -207,3 +207,8 @@ table#releaseData input.text {
     width: 100%;
     background-color:#eee;
 }
+
+#main h4.helpHeader {
+    color: #bf6e08;
+    font-weight: bold;
+}

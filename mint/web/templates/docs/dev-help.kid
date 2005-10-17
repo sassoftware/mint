@@ -40,12 +40,16 @@
                 <p>If coding is your thing, you can use rBuilder Online to
                 host your open source development project.</p>
 
-                <p>What's a project?  It can be anything from packaging an
+                <h4 class="helpHeader">What's a project?</h4>
+
+                <p>It can be anything from packaging an
                 app so it'll be available for use on Conary-based systems,
                 to the creation of an operating system environment tailored
                 for a specific purpose.</p>
 
-                <p>What do you get?  Here's the list:</p>
+                <h4 class="helpHeader">What do you get?</h4>
+
+                <p>Here's the list:</p>
 
                 <ul>
 
@@ -83,7 +87,9 @@
 
                 </ul>
 
-                <p>How much does it cost?  Nothing &#8212; rBuilder
+                <h4 class="helpHeader">How much does it cost?</h4>
+
+                <p>Nothing&#8212;rBuilder
                 Online's services are free for any open source project.</p>
 
                 <p>Not the project creating type?  If you see an
