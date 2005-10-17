@@ -24,6 +24,7 @@ from mint import users
 from mint import userlevels
 from mint import mailinglists
 from mint import projectlisting
+from mint import database
 from mint.session import SqlSession
 
 from webhandler import WebHandler, normPath
@@ -391,21 +392,24 @@ class SiteHandler(WebHandler):
     @requiresAuth
     def userInfo(self, auth, id):
         user = self.client.getUser(id)
-        userProjects = []
-        if auth.userId == id:
-            #Show all the projects.  The user is viewing his own profile
-            userProjects = [x for x in self.client.getProjectsByMember(id)]
+        if user.active or auth.admin:
+            userProjects = []
+            if auth.userId == id:
+                #Show all the projects.  The user is viewing his own profile
+                userProjects = [x for x in self.client.getProjectsByMember(id)]
+            else:
+                for x in self.client.getProjectsByMember(id):
+                    if x[0].hidden and (x[0].getUserLevel(auth.userId) == userlevels.NONMEMBER):
+                        if not auth.admin:
+                            #Skip this project, it's hidden and the user requesting is
+                            #not a member the project
+                            continue
+                    userProjects.append(x)
+            self._write("userInfo", user = user,
+                userProjects = userProjects)
+            return apache.OK
         else:
-            for x in self.client.getProjectsByMember(id):
-                if x[0].hidden and (x[0].getUserLevel(auth.userId) == userlevels.NONMEMBER):
-                    if not auth.admin:
-                        #Skip this project, it's hidden and the user requesting is
-                        #not a member the project
-                        continue
-                userProjects.append(x)
-        self._write("userInfo", user = user,
-            userProjects = userProjects)
-        return apache.OK
+            raise database.ItemNotFound('userid')
 
     @strFields(search = "", type = None)
     @intFields(limit = 10, offset = 0, modified = 0)
