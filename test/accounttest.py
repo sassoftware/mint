@@ -169,5 +169,23 @@ class AccountTest(MintRepositoryHelper):
 
         readerProject.delMemberById(readerId)
 
+    # one could argue that this test could go here or in searchtest. we put it
+    # here so we can use the _getConfirmation shortcut...
+    def testSearchUnconfUsers(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        
+        newUserId = client.registerNewUser("newuser", "memberpass", "Test Member",
+                                        "test@example.com", "test at example.com", "", active=False)
+
+        if client.getUserSearchResults('newuser') != ([], 0):
+            self.fail("Allowed to search for an unconfirmed user")
+
+        conf = self._getConfirmation(newUserId)
+
+        client.confirmUser(conf)
+
+        if client.getUserSearchResults('newuser') == ([], 0):
+            self.fail("Failed a search for a newly confirmed user")
+
 if __name__ == "__main__":
     testsuite.main()
