@@ -8,7 +8,7 @@ testsuite.setup()
 
 from mint_rephelp import MintRepositoryHelper
 from mint import userlevels
-from mint.database import DuplicateItem
+from mint.database import DuplicateItem, ItemNotFound
 
 class ProjectTest(MintRepositoryHelper):
     def testBasicAttributes(self):
@@ -67,7 +67,7 @@ class ProjectTest(MintRepositoryHelper):
                         "test@example.com", "test at example.com", "", active=True)
  
         client, userId = self.quickMintUser("testuser", "testpass")
-                                                       
+
         projectId = client.newProject("Foo", "foo", "localhost")
         project = client.getProject(projectId)
 
@@ -81,10 +81,38 @@ class ProjectTest(MintRepositoryHelper):
         project.addMemberByName('member', userlevels.OWNER)
         assert(project.getMembers() == [[userId, 'testuser', userlevels.OWNER],
                                         [otherUserId, 'member', userlevels.OWNER]])
-        
+
         project.updateUserLevel(otherUserId, userlevels.DEVELOPER)
         assert(project.getMembers() == [[userId, 'testuser', userlevels.OWNER],
                                         [otherUserId, 'member', userlevels.DEVELOPER]])
+
+    def testUnconfirmedMembers(self):
+        client = self.openMintClient(("test", "foo"))
+        otherUserId = client.registerNewUser("member", "memberpass", "Test Member",
+                        "test@example.com", "test at example.com", "", active=True)
+        unconfirmedUserId = client.registerNewUser("unconfirmed", "memberpass", "Unconfirmed Member",
+                        "test@example.com", "test at example.com", "", active=False)
+ 
+        client, userId = self.quickMintUser("testuser", "testpass")
+        
+        projectId = client.newProject("Foo", "foo", "localhost")
+        project = client.getProject(projectId)
+
+        #Try to add an unconfirmed member to the project by userName
+        try:
+            project.addMemberByName("unconfirmed", userlevels.DEVELOPER)
+        except ItemNotFound, e:
+            pass
+        else:
+            self.fail("ItemNotFound Exception expected")
+
+        #Try to add an unconfirmed member to the project by userId
+        try:
+            project.addMemberById(unconfirmedUserId, userlevels.DEVELOPER)
+        except ItemNotFound, e:
+            pass
+        else:
+            self.fail("ItemNotFound Exception expected")
 
     def testGetProjectsByMember(self):
         client, userId = self.quickMintUser("testuser", "testpass")

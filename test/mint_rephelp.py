@@ -21,12 +21,12 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
         """Return a mint client authenticated via authToken, defaults to 'mintauth', 'mintpass'"""
         return shimclient.ShimMintClient(self.mintCfg, authToken)
 
-    def quickMintUser(self, username, password):
+    def quickMintUser(self, username, password, active=True):
         """Retrieves a client, creates a user as specified by username and password,
            and returns a connection to mint as that new user, and the user ID.:"""
         client = self.openMintClient()
         userId = client.registerNewUser(username, password, "Test User",
-                "test@example.com", "test at example.com", "", active=True)
+                "test@example.com", "test at example.com", "", active=active)
 
         return self.openMintClient((username, password)), userId
 
