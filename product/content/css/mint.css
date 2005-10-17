@@ -16,7 +16,7 @@ td#user {
 #crumb {
     position:relative; min-width:744px; /* width:85%; */
     color:#fff; font-size:0.6333em;
-    text-transform:lowercase; text-align:left;
+    text-align:left;
 }
 #crumb .pad {
     padding:8px 12px 8px 12px; margin:0px;
@@ -119,14 +119,6 @@ code {
         margin-left: 1em;
 }
 
-.arrows {
-        text-transform: lowercase;
-}
-
-.palette a {
-        text-transform: lowercase;
-}
-
 .troveallversions li {
         background: none;
 }
@@ -142,7 +134,6 @@ code {
 #botnav a {
     color: #d9dde8;
     margin-right: 12px;
-    text-transform: lowercase;
 }
 
 #top .surfaceLeft {
