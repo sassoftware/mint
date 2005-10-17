@@ -45,7 +45,7 @@ from urllib import quote
                         <div class="pad">
                             <h3>${auth.fullName}</h3>
                             <h4>${auth.username}</h4>
-                            <div><a href="${secureProtocol}://${cfg.secureHost}${cfg.basePath}userSettings" class="arrows">view &#38; Edit My Account</a></div>
+                            <div><a href="${secureProtocol}://${cfg.secureHost}${cfg.basePath}userSettings" class="arrows">View &#38; Edit My Account</a></div>
                             <div><a py:if="projectList" href="http://${SITE}uploadKey" class="arrows">Upload a Package Signing Key</a></div>
                             <div py:if='auth.admin'><a href="http://${SITE}administer" class="arrows">Administer</a></div>
 
