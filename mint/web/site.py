@@ -458,6 +458,7 @@ class SiteHandler(WebHandler):
 
     @intFields(fileId = 0)
     def downloadImage(self, auth, fileId):
+        reqFilename = None
         if not fileId:
             cmds = self.cmd.split('/')
             fileId = int(cmds[1])
