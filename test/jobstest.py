@@ -56,7 +56,7 @@ class JobsTest(MintRepositoryHelper):
         
         release.refresh()
         files = release.getFiles()
-        assert(files == [(1, self.imagePath + "/stub.iso", "Stub")])
+        assert(files == [(1, "stub.iso", "Stub")])
 
         fileInfo = client.getFileInfo(files[0][0])
         assert(fileInfo == (release.getId(), 0, self.imagePath + '/stub.iso', 'Stub'))

@@ -1118,7 +1118,7 @@ class MintServer(object):
         if len(results) < 1:
             return []
         else:
-            return [(x[0], x[1], x[2]) for x in results]
+            return [(x[0], os.path.basename(x[1]), x[2]) for x in results]
    
     @typeCheck(int)
     @private

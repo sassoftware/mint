@@ -456,9 +456,16 @@ class SiteHandler(WebHandler):
                                      modified = modified)
         return apache.OK
 
-    @intFields(fileId = None)
+    @intFields(fileId = 0)
     def downloadImage(self, auth, fileId):
+        if not fileId:
+            cmds = self.cmd.split('/')
+            fileId = int(cmds[1])
+            reqFilename = cmds[2]
+
         releaseId, idx, filename, title = self.client.getFileInfo(fileId)
+        if reqFilename and os.path.basename(filename) != reqFilename:
+            return apache.HTTP_NOT_FOUND
 
         # only count downloads of the first ISO
         if idx == 0:

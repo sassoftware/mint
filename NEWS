@@ -9,6 +9,12 @@ Changes in 0.6.3:
   and inserted into the product.img overlay.
 * A project-specific conaryrc is inserted into the product.img
   overlay.
+* You can now choose versions of a group trove from any branch
+  on the repository to construct an image.
+* Image files are now accessible without a CGI-style query param:
+     /downloadImages/<fileid>/<filename>
+* release.getFiles() now returns tuples of (fileId, file basename, title)
+  instead of returning the entire pathname.
 
 Changes in 0.6.2:
 
