@@ -21,7 +21,7 @@ onload = "javascript:;"
                 <a href="http://$SITE">Home</a> | 
                 <a py:if="False" href="${cfg.corpSite}">About rPath</a>
                 <a py:if="False" href="${cfg.corpSite}sales/">Contact rPath</a>
-                <a href="http://${SITE}help?page=feedback"><b style="color: red;">need help/have feedback?</b></a>
+                <a href="http://${SITE}help?page=feedback"><b style="color: red;">Need Help/Have Feedback?</b></a>
                 <span py:if="cfg.debugMode">
                     | <span style="color:red;">DEBUG MODE</span>
                 </span>
@@ -74,7 +74,7 @@ onload = "javascript:;"
         <div id="middle" align="center">
             <div id="crumb">
                 <div class="pad">
-                    You are here: <a href="http://$SITE">home</a>
+                    You are here: <a href="http://$SITE">Home</a>
                     ${breadcrumb()}
                 </div>
             </div>

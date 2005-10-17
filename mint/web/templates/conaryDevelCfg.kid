@@ -23,7 +23,7 @@
         </td>
         <td id="main">
             <div class="pad">
-                <h2>${project.getName()}<br />Setting up Your Conary Build Environment*</h2>
+                <h2>${project.getName()}<br />Setting up Your Conary Build Environment</h2>
 
                     <p>NOTE: You will need the following pieces of
                     information in order to start building packages for
