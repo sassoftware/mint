@@ -187,6 +187,10 @@ class InstallableIso(ImageGenerator):
         betaNag = release.getDataValue('betaNag')
 
         cfg = conarycfg.ConaryConfiguration()
+        conarycfgFile = os.path.join(self.cfg.configPath, 'conaryrc')
+        if os.path.exists(conarycfgFile):
+            cfg.read(conarycfgFile)
+
         cfg.dbPath = ':memory:'
         cfg.root = ':memory:'
         cfg.initializeFlavors()
