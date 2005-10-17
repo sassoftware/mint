@@ -55,27 +55,27 @@ class AdminHandler(WebHandler):
         return self._admin_project(*args, **kwargs)
 
     def _admin_project_hide(self, *args, **kwargs):
-        self.client.hideProject(kwargs['projectId'])
+        self.client.hideProject(int(kwargs['projectId']))
         kwargs['extraMsg'] = "Project hidden"
         return self._admin_project(*args, **kwargs)
 
     def _admin_project_unhide(self, *args, **kwargs):
-        self.client.unhideProject(kwargs['projectId'])
+        self.client.unhideProject(int(kwargs['projectId']))
         kwargs['extraMsg'] = "Project unhidden"
         return self._admin_project(*args, **kwargs)
 
     def _admin_project_disable(self, *args, **kwargs):
-        self.client.disableProject(kwargs['projectId'])
+        self.client.disableProject(int(kwargs['projectId']))
         kwargs['extraMsg'] = "Project disabled"
         return self._admin_project(*args, **kwargs)
 
     def _admin_project_enable(self, *args, **kwargs):
-        self.client.enableProject(kwargs['projectId'])
+        self.client.enableProject(int(kwargs['projectId']))
         kwargs['extraMsg'] = "Project enabled"
         return self._admin_project(*args, **kwargs)
 
     def _admin_project_jump(self, page, **kwargs):
-        name = self.client.getProject(kwargs['projectId']).getHostname()
+        name = self.client.getProject(int(kwargs['projectId'])).getHostname()
         return self._redirect('/project/%s/%s' % (name, page))
 
     def _admin_project_maillists(self, *args, **kwargs):
