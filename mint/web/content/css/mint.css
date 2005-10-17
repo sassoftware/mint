@@ -68,8 +68,8 @@ body#legal h2, body#legal h3 {
 }
 
 .hiddenOption {
-    color: blue;
-    background-color: teal;
+    color: #FF930B;
+    background-color: #6D7CAD;
     text-decoration: line-through;
 }
 

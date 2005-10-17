@@ -294,7 +294,7 @@ class UsersTable(database.KeyedTable):
         """
         cu = self.db.cursor()
 
-        SQL = """SELECT userId, username || ' - ' || fullName
+        SQL = """SELECT userId, username || ' - ' || fullName, active
                 FROM users
                 ORDER BY username"""
 
