@@ -86,7 +86,7 @@ def private(func):
     wrapper.__wrapped_func__ = func
     return wrapper
 
-# recursively type check a paramter list. allows one to type check nested
+# recursively type check a parameter list. allows one to type check nested
 # containers if need be. returns true if param should be allowed through.
 # Due to it's recursive nature, the behavior of this function is quite
 # different from a simple isinstance call.
@@ -132,7 +132,7 @@ def typeCheck(*paramTypes):
             for i in range(len(args)):
                 if (not checkParam(args[i],paramTypes[i])):
                     baseFunc = deriveBaseFunc(func)
-                    raise ParameterError('%s was passed %s of type %s when expecting %s for paramter number %d' %(baseFunc.__name__, repr(args[i]), str(type(args[i])), str(paramTypes[i]), i+1))
+                    raise ParameterError('%s was passed %s of type %s when expecting %s for parameter number %d' %(baseFunc.__name__, repr(args[i]), str(type(args[i])), str(paramTypes[i]), i+1))
             return func(self, *args)
         trueFunc = deriveBaseFunc(func)
         trueFunc.__args_enforced__ = True
