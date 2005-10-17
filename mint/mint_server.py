@@ -387,7 +387,7 @@ class MintServer(object):
 
         cu = self.db.cursor()
         if username and not userId:
-            cu.execute("SELECT userId FROM Users WHERE username=?", username)
+            cu.execute("SELECT userId FROM Users WHERE username=? AND active=1", username)
             try:
                 userId = cu.next()[0]
             except StopIteration, e:
