@@ -11,6 +11,7 @@ from mint.releasedata import RDT_STRING, RDT_BOOL, RDT_INT
 from mint.releases import ReleaseDataNameError
 from mint.mint_error import ReleasePublished, ReleaseMissing
 from mint import releasetypes
+from mint.database import ItemNotFound
 
 class ReleaseTest(MintRepositoryHelper):
     def testBasicAttributes(self):
@@ -167,6 +168,25 @@ class ReleaseTest(MintRepositoryHelper):
         release.incDownloads()
         release.refresh()
         assert(release.getDownloads() == 1)
+
+    def testUnfinishedRelease(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        projectId = client.newProject("Foo", "foo", "rpath.org")
+
+        brokenRelease = client.newRelease(projectId, "Test Release")
+        brokenReleaseId = brokenRelease.getId()
+        # because the first release is not yet finished, creating a new
+        # release before finishing it should kill the first.
+        release = client.newRelease(projectId, "Test Release")
+        releaseId = brokenRelease.getId()
+
+        # this if statement might look a little strange, but remember what's
+        # actually happening: all unfinished releases are deleted THEN
+        # the new one is made. because releaseId's are one-up the now-stale
+        # brokenReleaseId should be re-used!
+
+        if (releaseId != brokenReleaseId):
+            self.fail("Previous unfinished releases should be removed!")
 
 if __name__ == "__main__":
     testsuite.main()

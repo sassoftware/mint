@@ -77,6 +77,13 @@ class ReleasesTable(database.KeyedTable):
               'troveLastChanged', 'published', 'downloads']
     indexes = {"ReleaseProjectIdIdx": "CREATE INDEX ReleaseProjectIdIdx ON Releases(projectId)"}
 
+    def new(self, **kwargs):
+        projectId = kwargs['projectId']
+        cu = self.db.cursor()
+        cu.execute("DELETE FROM Releases WHERE projectId=? AND troveLastChanged IS NULL", projectId)
+        self.db.commit()
+        return database.KeyedTable.new(self, **kwargs)
+
     def iterReleasesForProject(self, projectId, showUnpublished = False):
         cu = self.db.cursor()
         
