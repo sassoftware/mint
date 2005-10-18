@@ -60,9 +60,9 @@ onload = "javascript:;"
           py:match="item.tag == 'body'"
           py:attrs="item.attrib"> 
         <img style="display: none;"
-             src="http://${cfg.siteHost}/blank?sid=${session.id()};hostname=.${cfg.siteDomainName}" width="1" height="1" />
+             src="http://${cfg.siteHost}${cfg.basePath}blank?sid=${session.id()};hostname=.${cfg.siteDomainName}" width="1" height="1" />
         <img style="display: none;"
-             src="http://${cfg.projectSiteHost}/blank?sid=${session.id()};hostname=.${cfg.projectDomainName}" width="1" height="1" />
+             src="http://${cfg.projectSiteHost}${cfg.basePath}blank?sid=${session.id()};hostname=.${cfg.projectDomainName}" width="1" height="1" />
 
         <div id="top" align="center">
             <div class="shadowLeft"><div class="shadowRight">
