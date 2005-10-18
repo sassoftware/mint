@@ -46,7 +46,7 @@ from mint import searcher
                             <table id="tasks">
                                 <tr>
                                     <td id="tasksBlock" style="margin-right: 1em;"
-                                        onclick="javascript:window.location='/help?page=dev-help';">
+                                        onclick="javascript:window.location='${cfg.basePath}help?page=dev-help';">
                                         <h3><a href="${cfg.basePath}help?page=dev-help">Create</a></h3>
 
                                           <p>Use ${cfg.productName}'s collaborative
@@ -56,7 +56,7 @@ from mint import searcher
                                     </td>
                                     <td id="spacer"></td>
                                     <td id="tasksBlock"
-                                        onclick="javascript:window.location='/help?page=user-help';">
+                                        onclick="javascript:window.location='${cfg.basePath}help?page=user-help';">
                                         <h3><a href="${cfg.basePath}help?page=user-help">Find</a></h3>
 
                                           <p>Locate and download the distribution that
