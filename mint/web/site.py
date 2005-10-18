@@ -520,7 +520,9 @@ class SiteHandler(WebHandler):
                 
                 item['title'] = project.getName()
                 item['link'] = project.getUrl()
-                item['content'] = "A new project named <a href=\"%s\">%s</a> has been created." % (project.getUrl(), project.getName())
+                item['content'] = "<p>A new project named <a href=\"%s\">%s</a> has been created.</p>" % \
+                    (project.getUrl(), project.getName())
+                item['content'] += "<blockquote>%s</blockquote>" % project.getDesc()
                 item['date_822'] = email.Utils.formatdate(project.getTimeCreated())
                 item['creator'] = "http://%s%s" % (self.siteHost, self.cfg.basePath)
                 items.append(item)
