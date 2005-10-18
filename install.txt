@@ -210,10 +210,8 @@ Reenter password: <password>
             * Alias /conary-static/
             * </VirtualHost>
 
-        - Edit /etc/httpd/conf/httpd.conf, go to the last line and add the
-          following line:
-
-Include conf.d/mint.conf.last
+        o This setup requires that apache already be configured for virtual
+          hosting, and that a wildcard or other DNS arrangment set up.
 
     o Set the httpd service to start at boot
 
@@ -233,7 +231,7 @@ complete the rBuilder installation.
     o Using the browser of your choice, open your rBuilder site's using the
       following URL:
 
-http://<hostName>.<siteDomainName>/
+http://<hostName>.<siteDomainName>/<basePath>/
 
       (Where <hostName> and <siteDomainName> are the settings for the
       hostName siteDomainName configuration options in
