@@ -391,6 +391,9 @@ def logErrorAndEmail(req, cfg, Exception, e, bt):
                              cfg.bugsEmail, cfg.bugsEmailSubject, body)
 
 def handler(req):
+    if not req.hostname:
+        return apache.HTTP_BAD_REQUEST
+
     cfg = config.MintConfig()
     cfg.read(req.filename)
 
