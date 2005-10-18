@@ -33,12 +33,12 @@ from mint import searcher
                     </td>
                     <td id="main">
                         <div class="pad">
-                            <h2 class="header">Welcome to rBuilder Online<sup class="tm">TM</sup></h2>
+                            <h2 class="header">Welcome to ${cfg.productName}<sup class="tm">TM</sup></h2>
 
 
                             <div py:if="not firstTime">
 
-                              <p>You can use rBuilder Online to create a
+                              <p>You can use ${cfg.productName} to create a
                               Linux distribution that meets your specific
                               needs, or to find an existing distribution
                               that is just right for you.</p>
@@ -49,7 +49,7 @@ from mint import searcher
                                         onclick="javascript:window.location='/help?page=dev-help';">
                                         <h3><a href="/help?page=dev-help">Create</a></h3>
 
-                                          <p>Use rBuilder Online's collaborative
+                                          <p>Use ${cfg.productName}'s collaborative
                                           development environment to package open
                                           source software and produce complete
                                           distributions.</p>
@@ -61,7 +61,7 @@ from mint import searcher
 
                                           <p>Locate and download the distribution that
                                           suits you, or find a package to add to your
-                                          system&#8212;rBuilder Online makes it
+                                          system&#8212;${cfg.productName} makes it
                                           easy.</p>
 
                                     </td>
@@ -78,7 +78,7 @@ from mint import searcher
 
                             <div py:if="firstTime">
 
-                              <p>Congratulations!  Your new rBuilder Online
+                              <p>Congratulations!  Your new ${cfg.productName}
                               account is active!</p>
 
                               <p><b>Need some help getting started?  Go
