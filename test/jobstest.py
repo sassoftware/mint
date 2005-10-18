@@ -60,7 +60,12 @@ class JobsTest(MintRepositoryHelper):
 
         fileInfo = client.getFileInfo(files[0][0])
         assert(fileInfo == (release.getId(), 0, self.imagePath + '/stub.iso', 'Stub'))
-        
+
+        try:
+            fileInfo = client.getFileInfo(99999)
+            self.fail("Should have failed to find file")
+        except jobs.FileMissing:
+            pass
 
 if __name__ == "__main__":
     testsuite.main()

@@ -12,6 +12,7 @@ from mint.releases import ReleaseDataNameError
 from mint.mint_error import ReleasePublished, ReleaseMissing
 from mint import releasetypes
 from mint.database import ItemNotFound
+from mint.mint_server import deriveBaseFunc
 
 class ReleaseTest(MintRepositoryHelper):
     def testBasicAttributes(self):
@@ -148,6 +149,7 @@ class ReleaseTest(MintRepositoryHelper):
         # make a release and delete it, to emulate a race condition
         # from the web UI
         release = client.newRelease(projectId, "Test Release")
+        releaseId = release.getId()
         release.deleteRelease()
         
         # messing with that same release should now fail in a controlled
@@ -155,6 +157,34 @@ class ReleaseTest(MintRepositoryHelper):
         try:
             release.setImageType(releasetypes.STUB_IMAGE)
             self.fail("Allowed to set imgage type of a deleted release")
+        except ReleaseMissing:
+            pass
+
+        try:
+            release.deleteRelease()
+            self.fail("Allowed to delete a deleted release")
+        except ReleaseMissing:
+            pass
+
+        # nasty hack. unwrap the release data value so that we can attack
+        # codepaths not normally allowed by client code.
+        setReleaseDataValue = deriveBaseFunc(self.mintServer.setReleaseDataValue)
+
+        try:
+            setReleaseDataValue(self.mintServer, releaseId, 'someKey', 'someVal', RDT_STRING)
+            self.fail("Allowed to set data for a deleted release")
+        except ReleaseMissing:
+            pass
+
+        try:
+            release.setDesc('some string')
+            self.fail("Allowed to set description for a deleted release")
+        except ReleaseMissing:
+            pass
+
+        try:
+            client.startImageJob(releaseId)
+            self.fail("Allowed to start a job for a deleted release")
         except ReleaseMissing:
             pass
 
