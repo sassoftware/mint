@@ -146,7 +146,7 @@ class SiteHandler(WebHandler):
     @strFields(message = "")
     @redirectHttps
     def forgotPassword(self, auth, message):
-        self.toUrl = "/"
+        self.toUrl = self.cfg.basePath
         self._write("forgotPassword", message = message)
         return apache.OK
 
@@ -164,7 +164,7 @@ class SiteHandler(WebHandler):
 
     def logout(self, auth):
         self._clearAuth()
-        return self._redirect("/")
+        return self._redirect(self.cfg.basePath)
 
     @requiresHttps
     @strFields(username = None)
@@ -224,7 +224,7 @@ class SiteHandler(WebHandler):
                 error = "Your account has already been confirmed.")
         else:
             if auth.authorized:
-                return self._redirect("/")
+                return self._redirect(self.cfg.basePath)
             else:
                 self._write("register_active")
         return apache.OK 
@@ -289,7 +289,7 @@ class SiteHandler(WebHandler):
                 self.user.setPassword(password1)
                 return self._redirectHttp("logout")
 
-        return self._redirectHttp("/")
+        return self._redirectHttp(self.cfg.basePath)
 
     @requiresAuth
     @listFields(str, projects=[])
@@ -313,7 +313,7 @@ class SiteHandler(WebHandler):
                     self._write("uploadKey", errors = ['Error uploading key: %s' % str(e)], 
                             kwargs={'projects': projects, 'keydata': keydata})
                     return apache.OK
-        return self._redirect("/")
+        return self._redirect(self.cfg.basePath)
         
     @requiresAuth
     def newProject(self, auth):
@@ -497,11 +497,11 @@ class SiteHandler(WebHandler):
             #do the actual deletion
             self.user.cancelUserAccount()
             self._clearAuth()
-            return self._redirect("/")
+            return self._redirect(self.cfg.basePath)
         else:
             self._write("confirm", message = "Are you sure you want to delete your account?",
                 yesLink = "cancelAccount?confirmed=1",
-                noLink = "/")
+                noLink = self.cfg.basePath)
         return apache.OK
 
     @strFields(feed = 'newProjects')

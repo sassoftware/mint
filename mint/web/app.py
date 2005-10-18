@@ -123,7 +123,7 @@ class MintApp(WebHandler):
             
             return returncode
         except mint_error.MintError, e:
-            self.toUrl = "/"
+            self.toUrl = self.cfg.basePath
             err_name = sys.exc_info()[0].__name__
             self.req.log_error("%s: %s" % (err_name, str(e)))
             self._write("error", shortError = err_name, error = str(e))
