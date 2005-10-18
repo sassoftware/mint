@@ -145,9 +145,9 @@ class MintServer(object):
     _cachedGroups = []
 
     def callWrapper(self, methodName, authToken, args):
-        if methodName.startswith('_'):
-            raise AttributeError
         try:
+            if methodName.startswith('_'):
+                raise AttributeError
             method = self.__getattribute__(methodName)
         except AttributeError:
             return (True, ("MethodNotSupported", methodName, ""))

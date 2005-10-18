@@ -128,5 +128,13 @@ class XmlIntrfaceTest(MintRepositoryHelper):
             except AttributeError:
                 self.fail('XML-RPC Method: %s needs a private decorator' %method.func_name)
 
+    def testBadCall(self):
+        funcName = "someRandomFunction"
+        if self.mintServer.callWrapper(funcName, ('username, userpass'), None) != (True, ("MethodNotSupported", funcName, "")):
+            self.fail("xml rpc server responded to bad method call")
+        funcName = '_' + funcName
+        if self.mintServer.callWrapper(funcName, ('username, userpass'), None) != (True, ("MethodNotSupported", funcName, "")):
+            self.fail("xml rpc server responded to hidden method call")
+
 if __name__ == "__main__":
     testsuite.main()

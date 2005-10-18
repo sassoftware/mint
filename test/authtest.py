@@ -39,13 +39,23 @@ class AuthTest(MintRepositoryHelper):
         try:
             userId = client.registerNewUser("Member", "memberpass", "Test Member",
                                             "test@example.com", "test at example.com", "", active=True)
-            # the above line should have raised an exception. if code flow
-            # reaches this point, that's an error.
-            assert (1 == 0)
+            self.fail("conflicting usernames allowed to be created")
         except users.GroupAlreadyExists:
             pass
         userId = client.registerNewUser("different", "memberpass", "Test Member",
                                         "test@example.com", "test at example.com", "", active=True)
+
+    def testRequiresAuth(self):
+        client = self.openMintClient()
+
+        try:
+            client.getUserSearchResults('Any String Will Do')
+            self.fail("Not-logged-in client was allowed to perform a function requiring authorization")
+        except mint_server.PermissionDenied:
+            pass
+
+        client, userid = self.quickMintUser('testuser','testpass')
+        client.getUserSearchResults('Any String Will Do')
 
 if __name__ == "__main__":
     testsuite.main()
