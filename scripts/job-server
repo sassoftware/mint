@@ -256,21 +256,23 @@ if __name__ == "__main__":
     pid = os.fork()
 
     if pid == 0:
+        # redirect stdout and stderr to job-server.log
+        logFile = os.path.join(cfg.logPath, "job-server.log")
+        nullf = file("/dev/null", "r+")
+        logfd = os.open(logFile, os.O_APPEND | os.O_WRONLY | os.O_CREAT)
+        os.dup2(logfd, sys.stdout.fileno())
+        os.dup2(logfd, sys.stderr.fileno())
+        os.dup2(nullf.fileno(), sys.stdin.fileno())
+        nullf.close()
+    
         pid = os.fork()
         if pid == 0:
             # abandon the controlling tty totally by placing this thread in a
             # new session
             os.setsid()
 
-            logFile = os.path.join(cfg.logPath, "job-server.log")
-            logfd = os.open(logFile, os.O_APPEND | os.O_WRONLY | os.O_CREAT)
             sys.stdout.flush()
             sys.stderr.flush()
-
-            stdout = os.dup(sys.stdout.fileno())
-            stderr = os.dup(sys.stderr.fileno())
-            os.dup2(logfd, sys.stdout.fileno())
-            os.dup2(logfd, sys.stderr.fileno())
             
             daemon(options, cfg)
     else:
