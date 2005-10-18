@@ -130,9 +130,10 @@ class InstallableIso(ImageGenerator):
         # extract anaconda-images from repository, if exists
         cfg = self.project.getConaryConfig(newUser='anonymous', newPass='anonymous', useSSL = False)
         cfg.root = tmpRoot
+        cfg.installLabelPath = [self.version.branch().label()]
         cclient = conaryclient.ConaryClient(cfg)
 
-        print >> sys.stderr, "extracting artwork from anaconda-images from project repository"
+        print >> sys.stderr, "extracting artwork from anaconda-images=%s" % cfg.installLabelPath[0].asString()
         try:
             self.callback.setChangeSet('anaconda-images')
             itemList = [('anaconda-images', (None, None), (None, None), True)]
@@ -182,6 +183,7 @@ class InstallableIso(ImageGenerator):
         flavor = deps.deps.ThawDependencySet(flavorStr)
         project = self.client.getProject(release.getProjectId())
         self.project = project
+        self.version = version
 
         skipMediaCheck = release.getDataValue('skipMediaCheck')
         betaNag = release.getDataValue('betaNag')
