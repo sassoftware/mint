@@ -188,7 +188,7 @@ class ApacheServer(ChildRepository):
         print >> f, 'reposPath %s' % self.reposDir + '/repos/'
         print >> f, 'imagesPath %s' % self.reposDir + '/images/'
         print >> f, 'authRepoMap %s http://mintauth:mintpass@127.0.0.1:%d/conary/' % (self.name, self.port)
-        print >> f, 'debugMode False'
+        print >> f, 'debugMode True'
         print >> f, 'sendNotificationEmails False'
         print >> f, """commitAction %s/scripts/commitaction --repmap '%%(repMap)s' --build-label %%(buildLabel)s --module \'%s/mint/rbuilderaction.py --user %%%%(user)s --url http://127.0.0.5:%d/xmlrpc-private/'""" % (conaryPath, mintPath, self.port)
             
