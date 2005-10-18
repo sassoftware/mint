@@ -522,7 +522,7 @@ class SiteHandler(WebHandler):
                 item['link'] = project.getUrl()
                 item['content'] = "A new project named <a href=\"%s\">%s</a> has been created." % (project.getUrl(), project.getName())
                 item['date_822'] = email.Utils.formatdate(project.getTimeCreated())
-                item['creator'] = "http://%s/" % self.siteHost
+                item['creator'] = "http://%s%s" % (self.siteHost, self.cfg.basePath)
                 items.append(item)
         self.writeRss(items = items, title = title, link = link, desc = desc)
         return apache.OK
