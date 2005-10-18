@@ -518,7 +518,7 @@ class ProjectHandler(WebHandler):
                     (release.getName(), release.getTroveName(),
                      release.getTroveVersion().trailingRevision().asString())
                 item['date_822'] = email.Utils.formatdate(release.getChangedTime())
-                item['creator'] = "http://%s/" % self.siteHost
+                item['creator'] = "http://%s%s" % (self.siteHost, self.cfg.basePath)
                 items.append(item)
         else:
             items = []
