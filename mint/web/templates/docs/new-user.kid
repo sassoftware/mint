@@ -36,7 +36,7 @@
         <td id="main">
             <div class="pad">
 
-                <h3>Your new rBuilder Online account is active!</h3>
+                <h3>Your new ${cfg.productName} account is active!</h3>
 
                 <p>It's time to take the next step &#8212; but what that
                 step is depends on you:</p>
@@ -67,8 +67,8 @@
 
                 <p>To create a project, click on the <tt>Create a new
                 project</tt> link under the <tt>My Projects</tt> sidebar on
-                the rBuilder Online homepage.  You'll be taken to a form to
-                fill out.  At a minimum you must fill in the following
+                the ${cfg.productName} homepage.  You'll be taken to a form
+                to fill out.  At a minimum you must fill in the following
                 fields:</p>
 
                 <ul>

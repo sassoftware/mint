@@ -35,9 +35,9 @@
 
         <td id="main">
             <div class="pad">
-                <h2>rBuilder Online for Users</h2>
+                <h2>${cfg.productName} for Users</h2>
 
-                <p>Even if you're not the coding type, rBuilder Online
+                <p>Even if you're not the coding type, ${cfg.productName}
                 still has a lot to offer.</p>
 
                 <p>Already using a Conary-based system?  You came to the
@@ -46,7 +46,7 @@
                 install it right off the project's repository.</p>
 
                 <p>Looking for a Conary-based system?  Search and/or browse
-                the projects on rBuilder Online, and pick the one that best
+                the projects on ${cfg.productName}, and pick the one that best
                 meets your needs.  Download the release ISO image(s), and
                 you're off and running.</p>
 
@@ -59,12 +59,12 @@
                 <p>Of course, all projects need people to help out with
                 testing, documentation, and the like, so if there's an
                 interesting project, feel free to <a
-                href="/register">create</a> an rBuilder Online account, and
-                offer your services to the project owners.</p>
+                href="/register">create</a> an ${cfg.productName} account,
+                and offer your services to the project owners.</p>
 
                 <h2>HOW DO I GET STARTED?</h2>
 
-                <p>Use rBuilder Online's browse and search functions to
+                <p>Use ${cfg.productName}'s browse and search functions to
                 learn more about the projects and software available.</p>
 
                 <p>Found an interesting project?  Here are some helpful

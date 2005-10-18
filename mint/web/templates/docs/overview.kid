@@ -35,16 +35,16 @@
 
         <td id="main">
             <div class="pad">
-                <h3>An Overview of rBuilder Online</h3>
+                <h3>An Overview of ${cfg.productName}</h3>
 
                 <p>rPath's mission is to provide system software that is
                 easily tailored to suit unique application needs.</p>
 
-                <p>As part of that mission, we've deployed rBuilder Online
-                for you to use.</p>
+                <p>As part of that mission, we've deployed
+                ${cfg.productName} for you to use.</p>
 
-                <p>rBuilder Online provides the infrastructure necessary to
-                support the development of:</p>
+                <p>${cfg.productName} provides the infrastructure necessary
+                to support the development of:</p>
 
                 <ul>
                     <li><a href="http://wiki.conary.com/">Conary</a>-based
@@ -75,9 +75,9 @@
                     releases) generated from the project's software</li>
                 </ul>
 
-                <p>rBuilder Online also provides a way to browse and search
-                projects and packages, making it a single source for all
-                Conary-based software development.</p>
+                <p>${cfg.productName} also provides a way to browse and
+                search projects and packages, making it a single source for
+                all Conary-based software development.</p>
 
                 <p>Need more details?  Pick the link that best matches your
                 interest:</p>

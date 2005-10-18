@@ -37,14 +37,14 @@
             <div class="pad">
                 <h3>Need Help? Have Feedback?</h3>
 
-                <p>rBuilder Online is a work in progress, so if you need help or have any
+                <p>${cfg.productName} is a work in progress, so if you need help or have any
                 feedback, we'd love to hear from you!</p>
 
                 <p>You can reach us two ways:</p>
 
                 <h3>IRC</h3>
 
-                <p>To chat online with the rBuilder Online developers, join the IRC channel
+                <p>To chat online with the ${cfg.productName} developers, join the IRC channel
                 #conary on the <a href="http://www.freenode.net/">Freenode IRC network</a>.</p>
 
                 <p>(Note that, although we often work long hours, we do sleep occasionally, so
@@ -52,7 +52,7 @@
 
                 <h3>EMAIL</h3>
 
-                <p>To contact the rBuilder Online developers via email, send your mail to
+                <p>To contact the ${cfg.productName} developers via email, send your mail to
                 <a href="mailto:rbuilder@rpath.com">rbuilder@rpath.com</a> and we'll get
                 back to you as soon as we can.</p>
             </div>

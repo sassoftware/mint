@@ -35,9 +35,9 @@
 
         <td id="main">
             <div class="pad">
-                <h3>rBuilder Online for Developers</h3>
+                <h3>${cfg.productName} for Developers</h3>
 
-                <p>If coding is your thing, you can use rBuilder Online to
+                <p>If coding is your thing, you can use ${cfg.productName} to
                 host your open source development project.</p>
 
                 <h4 class="helpHeader">What's a project?</h4>
@@ -89,8 +89,8 @@
 
                 <h4 class="helpHeader">How much does it cost?</h4>
 
-                <p>Nothing&#8212;rBuilder
-                Online's services are free for any open source project.</p>
+                <p>Nothing&#8212;${cfg.productName}'s services are free
+                for any open source project.</p>
 
                 <p>Not the project creating type?  If you see an
                 interesting project, offer your services to the project's
@@ -100,13 +100,14 @@
 
                 <h2>HOW DO I GET STARTED?</h2>
 
-                <p>First, you need to create your own rBuilder Online
+                <p>First, you need to create your own ${cfg.productName}
                 account.</p>
 
                 <p>To do this, click on the <a href="/register">new
-                account</a> link at the top right-hand side of the rBuilder
-                Online homepage.  You'll be taken to a form to fill out.
-                At a minimum you must fill in the following fields:</p>
+                account</a> link at the top right-hand side of the
+                ${cfg.productName} homepage.  You'll be taken to a form to
+                fill out.  At a minimum you must fill in the following
+                fields:</p>
 
                 <ul>
 
@@ -114,8 +115,8 @@
                     characters</li>
 
                     <li><tt>Email Address</tt> &#8212; This email address is
-                    strictly for rPath to contact you regarding rBuilder
-                    Online</li>
+                    strictly for rPath to contact you regarding
+                    ${cfg.productName}</li>
 
                     <li><tt>New Password</tt> &#8212; The password you'll
                     use to login to your account (must be at least 6
