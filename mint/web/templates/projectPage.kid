@@ -69,7 +69,8 @@ from mint.mint import upstream
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="${basePath}conaryUserCfg">Add to my conary setup</a>
+                                    <a
+                            href="${basePath}conaryUserCfg">Install software on my Conary-based system</a>
                                 </li>
                                 <li py:if="isOwner or isDeveloper">
                                     <a href="${basePath}conaryDevelCfg">Set up my Conary development environment</a>

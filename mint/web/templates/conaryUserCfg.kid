@@ -8,11 +8,11 @@
 -->
     <div py:def="breadcrumb()" py:strip="True">
         <a href="$basePath">${project.getName()}</a>
-        <a href="#">Conary Settings</a>
+        <a href="#">Installing Software</a>
     </div>
 
     <head>
-        <title>${formatTitle('Conary Settings: %s'%project.getName())}</title>
+        <title>${formatTitle('Installing Software: %s'%project.getName())}</title>
     </head>
     <body>
         <td id="left" class="side">
@@ -23,30 +23,44 @@
         </td>
         <td id="main">
             <div class="pad">
-                <h2>${project.getName()}<br />Conary Settings</h2>
+                <h2>${project.getName()}<br />Installing Software with Conary</h2>
 
-                <p>You have two options available to you if you want to
-                install software from this project:</p>
+                <p>You have the following options available to you if you
+                want to install this project's software on your
+                Conary-based system:</p>
 
                 <ul>
 
-                    <li>You can perform an installation by specifying this
+                    <li>If this project produces releases (and you wish to
+                    install a new operating system), you should start by
+                    installing the project's release onto your system.</li>
+
+                    <li>If you're already running a Conary-based system,
+                    you can perform an installation by specifying this
                     project's label as part of the <tt>conary</tt>
                     command.</li>
 
-                    <li>You can configure Conary to automatically search
-                    this project's label so that subsequent <tt>conary</tt>
-                    commands need not explicitly specify it.</li>
+                    <li>You can also configure Conary to automatically
+                    search this project's label so that subsequent
+                    <tt>conary</tt> commands need not explicitly specify
+                    it.</li>
 
                 </ul>
 
                     <h3>Which option should I choose?</h3>
 
-                        <p>It really depends on what your long-term
-                        expectations are with respect to this project.</p>
+                        <p>It really depends on your needs, and what your
+                        long-term expectations are with respect to this
+                        project.</p>
 
-                        <p>If this project has only one trove that
-                        interests you, specify the label as part of the
+                        <p>If you do not yet have a Conary-based system,
+                        the first step you must take is to install a
+                        release from this or another ${cfg.productName}
+                        project.</p>
+
+                        <p>Once you have a Conary-based system installed,
+                        if this project has only one trove that interests
+                        you, specify the label as part of the
                         <tt>conary</tt> command.  Note that this does
                         <em>not</em> prevent Conary from accessing this
                         project's repository to find (and install) updates
