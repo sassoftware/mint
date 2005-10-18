@@ -96,7 +96,7 @@ from mint import searcher
                                 </h3>
                                 <div py:for="item in news" class="newsItem">
                                     <h3>
-                                        <span class="date" style="float: right;">${time.ctime(item['pubDate'])}</span>
+                                        <span class="date" style="float: right;">${time.strftime("%A, %d-%B", item['pubDate'])}</span>
                                         <span class="newsTitle">${item['title']}</span>
                                     </h3>
                                     <p>${XML(item['content'])} <a class="newsContinued" href="${item['link']}">read more</a></p>
