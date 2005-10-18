@@ -17,7 +17,7 @@
     ?>
 
     <div py:def="breadcrumb()" py:strip="True">
-        <a href="/help">Help</a>
+        <a href="${cfg.basePath}help">Help</a>
         <a href="#">Overview</a>
     </div>
 
@@ -84,9 +84,9 @@
 
                 <ul>
                     <li>I'm a <a
-                    href="/help?page=dev-help">Developer</a></li>
+                    href="${cfg.basePath}help?page=dev-help">Developer</a></li>
 
-                    <li>I'm a <a href="/help?page=user-help">User</a></li>
+                    <li>I'm a <a href="${cfg.basePath}help?page=user-help">User</a></li>
                 </ul>
             </div>
         </td>

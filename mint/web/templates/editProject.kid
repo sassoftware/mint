@@ -7,7 +7,7 @@
     All Rights Reserved
 -->
     <div py:def="breadcrumb" py:strip="True">
-        <a href="/">${project.getName()}</a>
+        <a href="$basePath">${project.getName()}</a>
         <a href="#">Edit Project</a>
     </div>
     <head>

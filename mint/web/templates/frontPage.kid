@@ -47,7 +47,7 @@ from mint import searcher
                                 <tr>
                                     <td id="tasksBlock" style="margin-right: 1em;"
                                         onclick="javascript:window.location='/help?page=dev-help';">
-                                        <h3><a href="/help?page=dev-help">Create</a></h3>
+                                        <h3><a href="${cfg.basePath}help?page=dev-help">Create</a></h3>
 
                                           <p>Use ${cfg.productName}'s collaborative
                                           development environment to package open
@@ -57,7 +57,7 @@ from mint import searcher
                                     <td id="spacer"></td>
                                     <td id="tasksBlock"
                                         onclick="javascript:window.location='/help?page=user-help';">
-                                        <h3><a href="/help?page=user-help">Find</a></h3>
+                                        <h3><a href="${cfg.basePath}help?page=user-help">Find</a></h3>
 
                                           <p>Locate and download the distribution that
                                           suits you, or find a package to add to your
@@ -68,7 +68,7 @@ from mint import searcher
                                 </tr>
                             </table>
 
-                            <p><b>Want to learn more? <a href="/help?page=overview">Go here</a></b></p>
+                            <p><b>Want to learn more? <a href="${cfg.basePath}help?page=overview">Go here</a></b></p>
 
                             </div>
 
@@ -82,7 +82,7 @@ from mint import searcher
                               account is active!</p>
 
                               <p><b>Need some help getting started?  Go
-                              <a href="/help?page=new-user">here</a></b></p>
+                              <a href="${cfg.basePath}help?page=new-user">here</a></b></p>
 
                             </div>
 

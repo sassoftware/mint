@@ -16,7 +16,7 @@
             <div class="pad">
                 <h2>Thank you for logging in.</h2>
 
-                <p>You will be redirected immediately. If you aren't: <a href="/">Continue</a></p>
+                <p>You will be redirected immediately. If you aren't: <a href="${cfg.basePath}">Continue</a></p>
             </div>
         </td>
     </body>

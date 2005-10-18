@@ -17,7 +17,7 @@
     ?>
 
     <div py:def="breadcrumb()" py:strip="True">
-        <a href="/help">Help</a>
+        <a href="help">Help</a>
         <a href="#">Feedback</a>
     </div>
 

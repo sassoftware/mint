@@ -17,7 +17,7 @@
     ?>
 
     <div py:def="breadcrumb()" py:strip="True">
-        <a href="/help">Help</a>
+        <a href="${cfg.basePath}help">Help</a>
         <a href="#">Developers</a>
     </div>
 
@@ -103,7 +103,7 @@
                 <p>First, you need to create your own ${cfg.productName}
                 account.</p>
 
-                <p>To do this, click on the <a href="/register">new
+                <p>To do this, click on the <a href="${cfg.basePath}register">new
                 account</a> link at the top right-hand side of the
                 ${cfg.productName} homepage.  You'll be taken to a form to
                 fill out.  At a minimum you must fill in the following

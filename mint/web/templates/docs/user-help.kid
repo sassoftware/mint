@@ -17,7 +17,7 @@
     ?>
 
     <div py:def="breadcrumb()" py:strip="True">
-        <a href="/help">Help</a>
+        <a href="${cfg.basePath}help">Help</a>
         <a href="#">Users</a>
     </div>
 
@@ -59,7 +59,7 @@
                 <p>Of course, all projects need people to help out with
                 testing, documentation, and the like, so if there's an
                 interesting project, feel free to <a
-                href="/register">create</a> an ${cfg.productName} account,
+                href="${cfg.basePath}register">create</a> an ${cfg.productName} account,
                 and offer your services to the project owners.</p>
 
                 <h2>HOW DO I GET STARTED?</h2>
