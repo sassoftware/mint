@@ -28,7 +28,7 @@
 
             <th>
                 <a href="release?id=${release.getId()}">
-                    ${release.getTroveName()}=${release.getTroveVersion().trailingRevision().asString()}
+                    ${release.getTroveName()}=${release.getTroveVersion().trailingRevision().asString()} (${release.getArch()})
                 </a>
             </th>
             <td py:if="isOwner and not release.getPublished()"><a href="editRelease?releaseId=${release.getId()}"
