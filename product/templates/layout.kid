@@ -15,15 +15,6 @@ onload = "javascript:;"
     <div py:def="breadcrumb()" class="pad" py:strip="True">
     </div>
 
-    <div py:def="rPathProductsMenu" id="products" class="palette" py:if="False">
-        <h3>rPath products</h3>
-        <ul>
-            <li><a href="#">Product 1</a></li>
-            <li><a href="#">Product 2</a></li>
-            <li>Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Cras erat. Curabitur tempus nulla sit amet justo. Morbi quis tellus sed turpis bibendum egestas. Phasellus nonummy!</li>
-        </ul>
-    </div>
-
     <head py:match="item.tag == 'head'" xmlns="http://www.w3.org/1999/xhtml">
         <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=utf-8" />
         <script type="text/javascript" src="${cfg.staticPath}/apps/mint/javascript/generic.js"/>

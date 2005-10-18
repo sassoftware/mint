@@ -7,9 +7,9 @@
     <body id="legal">
         <h2>Legal Information</h2>
 
-        <p><a href="/legal?page=tos">Terms of Service</a></p>
+        <p><a href="${cfg.basePath}legal?page=tos">Terms of Service</a></p>
 
-        <p><a href="/legal?page=privacy">Privacy Policy</a></p>
+        <p><a href="${cfg.basePath}legal?page=privacy">Privacy Policy</a></p>
 
         <p>rPath, the rPath logo, Conary, and rBuilder are
         trademarks of rPath, Inc.</p>

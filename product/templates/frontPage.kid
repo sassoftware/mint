@@ -39,7 +39,7 @@ from mint import searcher
                               </p>
 
                               <p><b>Want to learn more?  <a
-                              href="/help?page=overview">Go here</a></b></p>
+                              href="${cfg.basepath}help?page=overview">Go here</a></b></p>
 
                             </div>
                             <div py:if="firstTime">
@@ -48,7 +48,7 @@ from mint import searcher
                               account is active!</p>
 
                               <p><b>Need some help getting started?  Go
-                              <a href="/help?page=new-user">here</a></b></p>
+                              <a href="${cfg.basepath}help?page=new-user">here</a></b></p>
 
                             </div>
 
