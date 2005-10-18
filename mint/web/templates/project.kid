@@ -86,16 +86,15 @@
             <h3>Get Involved</h3>
 
             <p>Now's the time to get involved with the ${cfg.productName}
-            community. There are two ways you can do this:</p>
+            community. There are several ways you can do this:</p>
 
             <ul>
-                <p>You can create a new project.</p>
+                <p>You can <a
+                href="http://${SITE}newProject"><strong>create a new
+                project</strong></a>.</p>
 
                 <p>You can join an existing project.</p>
             </ul>
-
-            <p>To create a new project, click
-                <a href="http://${SITE}newProject"><strong>here</strong></a>.</p>
 
             <p>To join an existing project, use the browse or search boxes
             in the left sidebar to find a project that interests you.
