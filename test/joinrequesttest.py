@@ -14,18 +14,19 @@ class JoinRequestTest(MintRepositoryHelper):
         client, userId = self.quickMintUser("testuser", "testpass")
         projectId = client.newProject("Foo", "foo", "rpath.org")
 
-        userId = client.registerNewUser("member", "memberpass", "Test Member",
-                                        "test@example.com", "test at example.com", "", active=True)
+        # abandon the old user. you can't make requests against
+        # projects you're a member of, so that one's useless for testing
+        client, userId = self.quickMintUser("seconduser", "testpass")
 
         # initially the request should not be present
         assert(not client.userHasRequested(projectId, userId))
 
-        client.setJoinReqComments(projectId, userId, '')
+        client.setJoinReqComments(projectId, '')
 
         # request should now be present
         assert(client.userHasRequested(projectId, userId))
 
-        client.setJoinReqComments(projectId, userId, 'foo')
+        client.setJoinReqComments(projectId, 'foo')
         assert(client.getJoinReqComments(projectId, userId) == 'foo')
 
         client.deleteJoinRequest(projectId, userId)
@@ -37,31 +38,32 @@ class JoinRequestTest(MintRepositoryHelper):
         client, userId = self.quickMintUser("testuser", "testpass")
         projectId = client.newProject("Foo", "foo", "rpath.org")
 
+        # uses original client -- meaning has auth tokens for project owner
         project = client.getProject(projectId)
 
-        userId = client.registerNewUser("member", "memberpass", "Test Member",
-                                        "test@example.com", "test at example.com", "", active=True)
-        client.setJoinReqComments(projectId, userId, '')
+        # abandon the old user so we can make join reqs
+        client, userId = self.quickMintUser("newuser", "testpass")
+        client.setJoinReqComments(projectId, '')
 
         # request should now be present
         assert(client.userHasRequested(projectId, userId))
 
         project.addMemberById(userId, userlevels.DEVELOPER)
-        
+
         # request should no longer be present
         assert(not client.userHasRequested(projectId, userId))
 
-        client.setJoinReqComments(projectId, userId, 'foo')
-        
+        client.setJoinReqComments(projectId, 'foo')
+
         # request should not have been added -- user is already a member
         assert(not client.userHasRequested(projectId, userId))
 
         # exercise addMemberByName code path. same as adopting project
         project.delMemberById(userId)
-        client.setJoinReqComments(projectId, userId, 'foo')
+        client.setJoinReqComments(projectId, 'foo')
         for memberId, x, y in project.getMembers():
             project.delMemberById(memberId)
-        project.addMemberByName('member', userlevels.OWNER)
+        project.addMemberByName('newuser', userlevels.OWNER)
         # request should no longer be present
         assert(not client.userHasRequested(projectId, userId))
 
@@ -74,7 +76,7 @@ class JoinRequestTest(MintRepositoryHelper):
         project.delMemberById(userId)
         project.addMemberById(userId, userlevels.USER)
 
-        client.setJoinReqComments(projectId, userId, '')
+        client.setJoinReqComments(projectId, '')
 
         # request should now be present. watching a project should not
         # preclude being allowed to join
@@ -90,17 +92,31 @@ class JoinRequestTest(MintRepositoryHelper):
         client, userId = self.quickMintUser("testuser", "testpass")
         projectId = client.newProject("Foo", "foo", "rpath.org")
 
-        userId = client.registerNewUser("member", "memberpass", "Test Member",
-                                        "test@example.com", "test at example.com", "", active=True)
+        newClient, newUserId = self.quickMintUser("member", "memberpass")
 
-        client = self.openMintClient(('member', 'memberpass'))
-        user = client.getUser(userId)
-        client.setJoinReqComments(projectId, userId, 'foo')
+        user = newClient.getUser(newUserId)
+        newClient.setJoinReqComments(projectId, 'foo')
         # cancel account and check again
         user.cancelUserAccount()
         # request should no longer be present
         assert(not client.userHasRequested(projectId, userId))
-        
+
+    # FIXME. need to exercise listJoinRequests
+    def testListJoinRequests(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        projectId = client.newProject("Foo", "foo", "rpath.org")
+
+        for i in range(2, 7):
+            newClient, newUserId = self.quickMintUser('newUser_%d' %i,'testpass')
+            newClient.setJoinReqComments(projectId, 'foo-%d' %i)
+        joinReqs = client.listJoinRequests(projectId)
+        if len(joinReqs) != 5:
+                self.fail("listJoinRequest returned wrong number of results")
+        for req in  joinReqs:
+            #if (len(req) != 2)  or (type(req[1]) != str):
+            if (len(req) != 2) or (req[0] not in range(2,7)) or (type(req[1]) != str):
+                self.fail("join Request returned improper format")
+            
 
 if __name__ == "__main__":
     testsuite.main()

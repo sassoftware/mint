@@ -395,7 +395,7 @@ class ProjectHandler(WebHandler):
         projectId = self.project.getId()
         userId = auth.userId
         if(keepReq):
-            self.client.setJoinReqComments(projectId, userId, comments)
+            self.client.setJoinReqComments(projectId, comments)
         else:
             self.client.deleteJoinRequest(projectId, userId)
         return self._redirect(self.basePath)

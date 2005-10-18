@@ -115,8 +115,8 @@ class MintClient:
     def listJoinRequests(self, projectId):
         return self.server.listJoinRequests(projectId)
 
-    def setJoinReqComments(self, projectId, userId, comments):
-        return self.server.setJoinReqComments(projectId, userId, comments)
+    def setJoinReqComments(self, projectId, comments):
+        return self.server.setJoinReqComments(projectId, comments)
 
     def getJoinReqComments(self, projectId, userId):
         return self.server.getJoinReqComments(projectId, userId)

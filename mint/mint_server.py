@@ -335,13 +335,15 @@ class MintServer(object):
         reqList = self.membershipRequests.listRequests(projectId)
         return [ (x, self.users.getUsername(x)) for x in reqList]
 
-    @typeCheck(int, int, str)
+    @typeCheck(int, str)
     @private
     @requiresAuth
-    def setJoinReqComments(self, projectId, userId, comments):
+    def setJoinReqComments(self, projectId, comments):
         # only add if user is already a member of project
+        userId = self.auth.userId
         memberList = self.getMembersByProjectId(projectId)
         if userId in [x[0] for x in memberList]:
+            # in other words, filter emails for alterations to a join request
             if (userId, userlevels.USER) not in [(x[0], x[2]) for x in memberList]:
                 return
         if self.cfg.sendNotificationEmails and \
@@ -662,6 +664,8 @@ class MintServer(object):
     def cancelUserAccount(self, userId):
         """ Checks to see if the the user to be deleted is leaving in a lurch developers of projects that would be left ownerless.  Then deletes the user.
         """
+        if (self.auth.userId != userId) and (not self.auth.admin):
+            raise PermissionDenied()
         cu = self.db.cursor()
         username = self.users.getUsername(userId)
 
