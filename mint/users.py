@@ -186,7 +186,7 @@ class UsersTable(database.KeyedTable):
         # XXX this should be an atomic operation if possible:
         #     it would be nice to roll back previous operations
         #     if one in the chain fails
-        if self.cfg.sendNotificationEmails:
+        if self.cfg.sendNotificationEmails and not active:
             validateEmailDomain(email)
 
         authRepo = netclient.NetworkRepositoryClient(self.cfg.authRepoMap)
@@ -201,7 +201,7 @@ class UsersTable(database.KeyedTable):
         except repository.netrepos.netauth.GroupAlreadyExists:
             raise GroupAlreadyExists
 
-        if self.cfg.sendNotificationEmails:
+        if self.cfg.sendNotificationEmails and not active:
             message = "\n".join(["Thank you for your interest in %s!" % self.cfg.productName,
                                  "",
                                  "Your account (%s) has been created." % username,
