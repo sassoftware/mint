@@ -70,7 +70,9 @@
 
                             <p>Once you've decided on a name for this
                             project's directory, create it and populate it
-                            with the following subdirectories:</p>
+                            with subdirectories named <tt>src</tt>,
+                            <tt>builds</tt>, and <tt>cache</tt>.  Our
+                            example directory tree looks like this:</p>
 
                             <ul>
                                 <li><strong><tt>~/conary/${project.getFQDN()}/src</tt></strong></li>
@@ -78,12 +80,12 @@
                                 <li><strong><tt>~/conary/${project.getFQDN()}/cache</tt></strong></li>
                             </ul>
 
-                            <p>The <tt>src</tt> directory will contain
+                            <p>The <tt>src</tt> directory will have
                             subdirectories (one for each package), each
                             containing a <tt>CONARY</tt> file created by
-                            Conary, and a recipe file (along with
-                            any other files that might be necessary to
-                            properly package the software).</p>
+                            Conary, and a recipe file (along with any other
+                            files that might be necessary to properly
+                            package the software).</p>
 
                             <p>The <tt>builds</tt> directory is where
                             packages will actually be built.</p>
@@ -135,7 +137,7 @@
                             way, when you issue a <tt>cvc newpkg</tt> or
                             <tt>cvc checkout</tt> command in the
                             <tt>src</tt> subdirectory, Conary will be
-                            configured properly.</p>
+                            configured to respond properly.</p>
 
                             <p>Note also that, whenever you issue a <tt>cvc
                             newpkg</tt> or <tt>cvc checkout</tt> command,
@@ -241,8 +243,8 @@
                     replace everything after the <tt>@</tt> with
                     <tt>.*</tt>.  Also note that, strictly speaking, the
                     dots in this project's label should be replaced with
-                    <tt>\.</tt> (remember, this is a regular expression),
-                    although leaving them as-is will still work (though
+                    <tt>\.</tt> (remember, this is a regular expression).
+                    However, leaving them as-is will still work (though
                     doing so does leave open the possibility of inadvertent
                     matches).</p>
 
