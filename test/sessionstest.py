@@ -35,5 +35,31 @@ class SessionTest(MintRepositoryHelper):
         d = st.load("abcdefg123456")
         assert(not d)
 
+    # note: sessionData should really mimic what we'd see from a web
+    # client since this will help detect errors due to typeChecking
+    def testClientSessions(self):
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        sid = "abcdefg123456"
+        sessionData = {'_data':      {},
+                       '_accessed':  time.time() - 20,
+                       '_timeout':   10}
+        client.saveSession(sid, sessionData)
+
+        d = client.loadSession(sid)
+
+        if d != sessionData:
+            self.fail("Data did not survive being saved on server")
+
+        client.cleanupSessions()
+
+        d = client.loadSession("abcdefg123456")
+        assert not d
+
+        client.saveSession(sid, sessionData)
+        client.deleteSession(sid)
+
+        d = client.loadSession("abcdefg123456")
+        assert not d
+
 if __name__ == "__main__":
     testsuite.main()
