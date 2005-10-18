@@ -62,7 +62,13 @@ class MintApp(WebHandler):
             self.output = 'xhtml'
 
         self.req.content_type = self.content_type
-        self.fields = dict(FieldStorage(self.req))
+        
+        try:
+            self.fields = dict(FieldStorage(self.req))
+        except apache.SERVER_RETURN:
+            # failed to parse fields; must be an incorrect POST
+            # request, so fail with a better error message.
+            raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND
         
         self.basePath = normPath(self.cfg.basePath)
 
@@ -144,7 +150,6 @@ class MintApp(WebHandler):
         dots = fullHost.split('.')
         hostname = dots[0]
 
-       
         if hostname not in mint_server.reservedHosts and hostname != self.cfg.hostName:
             try:
                 project = self.client.getProjectByHostname(hostname)

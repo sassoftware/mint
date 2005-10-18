@@ -254,8 +254,7 @@ def conaryHandler(req, cfg, pathInfo):
         repMapStr = "%s://%s:%s@%s/repos/%s/" % (protocol, cfg.authUser, cfg.authPass, host, projectName)
            
         repMap = {buildLabel: repMapStr,
-                  'conary.rpath.com': 'http://conary-commits.rpath.com/conary/',
-                  'contrib.rpath.com': 'http://conary-commits.rpath.com/contrib/'}
+                  'conary.rpath.com': 'http://conary-commits.rpath.com/conary/'}
         if cfg.commitAction:
             commitAction = cfg.commitAction % {'repMap': repName + " " + repMapStr,
                                                'buildLabel': buildLabel,
