@@ -8,7 +8,7 @@
 -->
     <div py:def="breadcrumb()" py:strip="True">
         <a href="$basePath">${project.getName()}</a>
-        <a href="#">Conary Settings</a>
+        <a href="#">Conary Development Environment</a>
     </div>
 
     <head>
@@ -23,7 +23,7 @@
         </td>
         <td id="main">
             <div class="pad">
-                <h2>${project.getName()}<br />Setting up Your Conary Build Environment</h2>
+                <h2>${project.getName()}<br />Setting up Your Conary Development Environment</h2>
 
                     <p>NOTE: You will need the following pieces of
                     information in order to start building packages for
@@ -37,7 +37,7 @@
 
                     <p>(Note that you must replace
                     <tt>&lt;username&gt;</tt> and <tt>&lt;password&gt;</tt>
-                    with your rBuilder Online username and password,
+                    with your ${cfg.productName} username and password,
                     respectively.)</p>
 
                     <h3>Getting Started</h3>
@@ -66,16 +66,16 @@
                             hostname of the project's repository, while
                             others use just the project's name &#8212; the
                             choice is yours.  In this example, we'll use
-                            <tt>&lt;project-name&gt;.rpath.org</tt>.</p>
+                            <tt>${project.getFQDN()}</tt>.</p>
 
                             <p>Once you've decided on a name for this
                             project's directory, create it and populate it
                             with the following subdirectories:</p>
 
                             <ul>
-                                <li><strong><tt>~/conary/&lt;project-name&gt;.rpath.org/src</tt></strong></li>
-                                <li><strong><tt>~/conary/&lt;project-name&gt;.rpath.org/builds</tt></strong></li>
-                                <li><strong><tt>~/conary/&lt;project-name&gt;.rpath.org/cache</tt></strong></li>
+                                <li><strong><tt>~/conary/${project.getFQDN()}/src</tt></strong></li>
+                                <li><strong><tt>~/conary/${project.getFQDN()}/builds</tt></strong></li>
+                                <li><strong><tt>~/conary/${project.getFQDN()}/cache</tt></strong></li>
                             </ul>
 
                             <p>The <tt>src</tt> directory will contain
@@ -109,17 +109,17 @@
                             as:</p>
 
                             <ul>
-                                <li><strong><tt>name</tt></strong></li>
-                                <li><strong><tt>contact</tt></strong></li>
+                                <li><strong><tt>name &lt;your-name&gt;</tt></strong></li>
+                                <li><strong><tt>contact &lt;your-contact-info&gt;</tt></strong></li>
                             </ul>
 
                             <p>Finally, create a file called
                             <tt>conaryrc</tt> (<em>note the absence of a
-                            dot</em>) in
-                            <tt>~/conary/&lt;project-name&gt;.rpath.org/</tt>.
-                            This file should contain Conary settings that
-                            are exclusively related to this project, such
-                            as:</p>
+                            dot</em>) in the
+                            <tt>~/conary/${project.getFQDN()}/</tt>
+                            directory.  This file should contain Conary
+                            settings that are exclusively related to this
+                            project, such as:</p>
 
                             <ul>
                                 <li><strong><tt>buildLabel ${project.getLabel()}</tt></strong></li>
@@ -148,7 +148,7 @@
 
                             <p>Now you're ready to start packaging!  If
                             you're new to packaging with Conary, you can
-                            find information in the <a
+                            find information on the <a
                             href="http://wiki.conary.com/">Conary
                             Wiki</a>.</p>
 
@@ -165,7 +165,7 @@
                     <p>If this project's owners require you to sign
                     packages, you must first upload your public key to this
                     project's repository.  This can be done by logging in
-                    to rBuilder Online and clicking on the <tt>upload a
+                    to ${cfg.productName} and clicking on the <tt>upload a
                     package signing key</tt> link present below your
                     username in the upper right-hand corner of the page.
                     You'll be taken to a page where your public key can be
@@ -185,11 +185,16 @@
                     possible to build up a list of keys (along with the
                     circumstances in which they should be used) by
                     repetitively including <tt>signatureKeyMap</tt> lines
-                    in one or more Conary configuration files.  However,
-                    as soon as Conary encounters a <tt>signatureKey</tt>
-                    line, all previous <tt>signatureKeyMap</tt>
-                    <em>and</em> <tt>signatureKey</tt> settings are
-                    ignored.</p>
+                    in one or more Conary configuration files.  The first
+                    <tt>signatureKeyMap</tt> line that matches will be
+                    used.</p>
+
+                    <p>However, as soon as Conary encounters a
+                    <tt>signatureKey</tt> line, all previous
+                    <tt>signatureKeyMap</tt> <em>and</em>
+                    <tt>signatureKey</tt> settings are ignored, and the
+                    setting of the current <tt>signatureKey</tt> is used
+                    instead.</p>
 
                     <p>As with configuring your Conary development
                     environment, there are many different ways of
@@ -226,8 +231,8 @@
 
                     <p>Here is an example <tt>signatureKeyMap</tt> line
                     (using a invalid fingerprint; use <tt>gpg --list-keys
-                    --fingerprint</tt> to obtain the finger print for
-                    your key):</p>
+                    --fingerprint</tt> to obtain the fingerprint for your
+                    key):</p>
 
                     <p><tt><strong>signatureKeyMap ${project.getLabel()} B1EE 5468 2429 249E 3C24  FD50 E55A 1E3D 2417 65F8</strong></tt></p>
 
@@ -253,13 +258,10 @@
 
                     <p>If you need additional keys for additional projects
                     (or even for specific branches in a single project),
-                    simply add the appropriate <tt>signatureKeyMap</tt>
-                    line(s), one after the other, in your
-                    <tt>.conaryrc</tt> file.  In this way, the settings for
-                    all the keys Conary is configured to use are in one
-                    place.</p>
-            </div>
-        </td>
-        ${projectsPane()}        
-    </body>
-</html>
+                    add the appropriate <tt>signatureKeyMap</tt> line(s),
+                    one after the other, in your <tt>.conaryrc</tt> file
+                    (after the <tt>signatureKey</tt> line at the top of the
+                    file, of course).  In this way, the settings for all
+                    the keys Conary is configured to use are in one
+                    place.</p> </div> </td> ${projectsPane()} </body>
+                    </html>
