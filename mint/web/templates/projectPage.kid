@@ -69,7 +69,10 @@ from mint.mint import upstream
                                     </a>
                                 </li>
                                 <li>
-                                    <a href="${basePath}conaryCfg">Add to my conary setup</a>
+                                    <a href="${basePath}conaryUserCfg">Add to my conary setup</a>
+                                </li>
+                                <li py:if="isOwner or isDeveloper">
+                                    <a href="${basePath}conaryDevelCfg">Set up my Conary development environment</a>
                                 </li>
                                 <li py:if="auth.authorized and userLevel == userlevels.NONMEMBER">
                                     <a href="${basePath}watch">Watch this project</a>
