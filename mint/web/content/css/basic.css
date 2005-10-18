@@ -30,6 +30,10 @@ h2.header {
     border-bottom: 2px solid gray;
 }
 
+h3.header {
+    border-bottom: 2px solid gray;
+}
+
 h3 {
 	font-size:110%;
 	font-weight:bold; padding-top:0.75em;
