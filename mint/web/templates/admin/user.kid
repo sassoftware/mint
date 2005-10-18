@@ -36,6 +36,10 @@
                   <button name="operation" value="user_cancel">Cancel User Account</button>
                 </p>
               </form>
+              <div>
+                <h2>Other user operations</h2>
+                <p><a href="administer?operation=user_new">Create a new user</a></p>
+              </div>
             </div>
         </td>
     </body>

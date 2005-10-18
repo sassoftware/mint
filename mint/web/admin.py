@@ -39,6 +39,48 @@ class AdminHandler(WebHandler):
         kwargs['extraMsg'] = "User account deleted"
         return self._admin_user(*args, **kwargs)
 
+    def _admin_user_new(self, *args, **kwargs):
+        self._write('admin/newUser', kwargs = kwargs, errors=[])
+        return apache.OK
+
+    @strFields(username = '', email = '', password = '', password2 = '',
+               fullName = '', displayEmail = '', blurb = '')
+    def _admin_user_register(self, username, fullName, email, password,
+                             password2, displayEmail, blurb, *args, **kwargs):
+        errors = []
+        if not username:
+            errors.append("You must supply a username.")
+        if not email:
+            errors.append("You must supply a valid e-mail address.  This will be used to confirm your account.")
+        if not password or not password2:
+            errors.append("Password field left blank.")
+        if password != password2:
+            errors.append("Passwords do not match.")
+        if len(password) < 6:
+            errors.append("Password must be 6 characters or longer.")
+        if not errors:
+            try:
+                self.client.registerNewUser(username, password, fullName, email,
+                            displayEmail, blurb, active=True)
+            except users.UserAlreadyExists:
+                errors.append("An account with that username already exists.")
+            except users.GroupAlreadyExists:
+                errors.append("An account with that username already exists.")
+            except users.MailError,e:
+                errors.append(e.context);
+        if not errors:
+            kwargs['extraMsg'] = "User account created"
+            return self._admin_user(*args, **kwargs)
+        else:
+            kwargs = {'username': username,
+                      'email': email,
+                      'fullName': fullName,
+                      'displayEmail': displayEmail,
+                      'blurb': blurb
+                     }
+            self._write("admin/newUser", errors=errors, kwargs = kwargs)
+        return apache.OK
+
     @intFields(userId=None)
     def _admin_user_reset_password(self, userId, *args, **kwargs):
         self._resetPasswordById(userId)
