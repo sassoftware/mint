@@ -67,7 +67,7 @@ def pluralTroves(c):
 
                     <tr py:for="i, package in enumerate(packages)">
                         <td>
-                            <a href="troveInfo?t=${package}">${package}</a>
+                            <a href="troveInfo?t=${quote(package)}">${package}</a>
                             <a py:if="package in components" class="trove"
                                href="javascript:toggle_display('components__${i}');"><img border="0" id="components__${i}_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif"/></a>
                             <div py:if="package in components" id="components__${i}"
