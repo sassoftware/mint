@@ -53,16 +53,16 @@ from mint import searcher
                             </div>
 
                             <div py:strip="True" py:if="news">
-                                <h2 class="header">
+                                <h3 class="header">
                                     <a href="${cfg.newsRssFeed}">
                                         <img style="border: none; vertical-align: middle; float: right;"
                                              src="${cfg.staticPath}apps/mint/images/xml.gif" />
                                     </a>
                                     Site Announcements
-                                </h2>
+                                </h3>
                                 <div py:for="item in news" class="newsItem">
                                     <h3>
-                                        <span class="date" style="float: right;">${time.ctime(item['pubDate'])}</span>
+                                        <span class="date" style="float: right;">${time.strftime("%A, %B %d, %Y", time.localtime(item['pubDate']))}</span>
                                         <span class="newsTitle">${item['title']}</span>
                                     </h3>
                                     <p>${XML(item['content'])} <a class="newsContinued" href="${item['link']}">read more</a></p>
