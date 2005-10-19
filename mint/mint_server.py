@@ -299,18 +299,6 @@ class MintServer(object):
         if len(r):
             self._filterProjectAccess(r[0][0])
 
-    def _filterProjectList(self, projectList):
-        if self.auth.admin:
-            return projectList
-        r = []
-        for projectId, userLevel in projectList:
-            try:
-                self._filterProjectAccess(projectId)
-                r.append((projectId, userLevel))
-            except database.ItemNotFound:
-                pass
-        return r
-
     @typeCheck(str, str, str, str, str)
     # project methods
     @requiresAuth
@@ -371,7 +359,7 @@ class MintServer(object):
     @typeCheck(int)
     @private
     def getProjectIdsByMember(self, userId):
-        return self._filterProjectList(self.projects.getProjectIdsByMember(userId))
+        return self.projects.getProjectIdsByMember(userId)
 
     @typeCheck(int)
     @private
@@ -616,8 +604,8 @@ class MintServer(object):
     def enableProject(self, projectId):
         return self.projects.enable(projectId, self.cfg.reposPath)
 
-    @typeCheck(int)
     # user methods
+    @typeCheck(int)
     @private
     def getUser(self, id):
         return self.users.get(id)
@@ -661,7 +649,6 @@ class MintServer(object):
         self.db.commit()
         self._notifyUser('Changed', user, project, level)
 
-    # FIXME. need to filter this one!
     @typeCheck(int)
     @private
     def getProjectsByUser(self, userId):
@@ -669,7 +656,7 @@ class MintServer(object):
         cu.execute("""SELECT hostname||'.'||domainname, name, level
                       FROM Projects, ProjectUsers
                       WHERE Projects.projectId=ProjectUsers.projectId AND
-                            ProjectUsers.userId=? and Projects.disabled=0
+                            ProjectUsers.userId=? AND projects.disabled=0
                       ORDER BY level, name""", userId)
 
         rows = []
@@ -841,7 +828,6 @@ class MintServer(object):
         """
         return self.users.search(terms, limit, offset)
 
-    # FIXME: need to filter this one
     @typeCheck(str, int, int, int)
     @private
     def searchProjects(self, terms, modified, limit, offset):
@@ -855,7 +841,6 @@ class MintServer(object):
         """
         return self.projects.search(terms, modified, limit, offset)
 
-    # FIXME ensure results get filtered
     @typeCheck(str, int, int)
     @private
     def searchPackages(self, terms, limit, offset):
@@ -868,7 +853,6 @@ class MintServer(object):
         """
         return self.pkgIndex.search(terms, limit, offset)
 
-    # FIXME ensure results get filtered
     @typeCheck()
     @private
     def getProjectsList(self):
@@ -877,7 +861,6 @@ class MintServer(object):
         """
         return self.projects.getProjectsList()
 
-    # fixme ensure results get filtered
     @typeCheck(int, int, int)
     @private
     def getProjects(self, sortOrder, limit, offset):

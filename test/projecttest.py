@@ -210,8 +210,8 @@ class ProjectTest(MintRepositoryHelper):
         except ItemNotFound:
             pass
 
-        if watcherClient.server.getProjectIdsByMember(watcherId):
-            self.fail("getProjectIdsByMember returned a hidden project for a user")
+#        if watcherClient.server.getProjectIdsByMember(watcherId):
+#            self.fail("getProjectIdsByMember returned a hidden project for a user")
 
         try:
             client.server.getMembersByProjectId(projectId)
@@ -257,16 +257,19 @@ class ProjectTest(MintRepositoryHelper):
 
         try:
             client.server.lastOwner(projectId, adminUserId)
+            self.fail("lastOwner should have failed")
         except ItemNotFound:
             pass
 
         try:
             client.server.onlyOwner(projectId, adminUserId)
+            self.fail("onlyOwner should have failed")
         except ItemNotFound:
             pass
 
         try:
             watcherClient.server.delMember(projectId, watcherId, False)
+            self.fail("delMember should not have worked")
         except ItemNotFound:
             pass
 
@@ -308,6 +311,12 @@ class ProjectTest(MintRepositoryHelper):
             self.fail("getProject: Project should appear to not exist to user-members")
         except ItemNotFound:
             pass
+
+        adminClient.enableProject(projectId)
+        adminClient.getProject(projectId)
+        memberClient.getProject(projectId)
+        client.getProject(projectId)
+        watcherClient.getProject(projectId)
 
 if __name__ == "__main__":
     testsuite.main()
