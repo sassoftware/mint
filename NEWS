@@ -1,3 +1,17 @@
+Changes in 0.8.1:
+
+* Lots of updated documentation.
+* Lots of basePath usage fixes.
+* Traps certain broken requests earlier, and returns
+  better HTTP errors rather than an ISE 500.
+* The architecture of a release is now shown in the list of
+  releases on the project releases page.
+* The "Adopt" link is again visible when necessary.
+* Descriptions of new projects are now shown in the RSS feed.
+* Anaconda artwork is now extracted from the exact label of
+  the release being created, instead of the default label of
+  the project.
+
 Changes in 0.8.0:
 
 * A missing or broken authrepo is now handled more
