@@ -274,6 +274,40 @@ class ProjectTest(MintRepositoryHelper):
 
         adminClient.unhideProject(projectId)
 
+    def testDisableProject(self):
+        adminClient, adminUserId = self.quickMintAdmin("adminuser", "testpass")
+        client, userId = self.quickMintUser("testuser", "testpass")
+        memberClient, memberId = self.quickMintUser("memberuser","testpass")
+        watcherClient, watcherId = self.quickMintUser("watcher","testpass")
+        #client.server.auth.admin = True
+        projectId = adminClient.newProject("Test Project", "test", "localhost")
+        project = adminClient.getProject(projectId)
+        project.addMemberById(memberId, userlevels.OWNER)
+        watcherProject = watcherClient.getProject(projectId)
+        watcherProject.addMemberById(watcherId, userlevels.USER)
+        project = client.getProject(projectId)
+        adminClient.disableProject(projectId)
+
+        # try getting the project from various levels
+        adminClient.getProject(projectId)
+
+        try:
+            memberClient.getProject(projectId)
+            self.fail("getProject: Members should not be able to see disabled projects")
+        except ItemNotFound:
+            pass
+
+        try:
+            client.getProject(projectId)
+            self.fail("getProject: Project should appear to not exist to non-members")
+        except ItemNotFound:
+            pass
+
+        try:
+            watcherClient.getProject(projectId)
+            self.fail("getProject: Project should appear to not exist to user-members")
+        except ItemNotFound:
+            pass
 
 if __name__ == "__main__":
     testsuite.main()

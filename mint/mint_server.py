@@ -277,8 +277,6 @@ class MintServer(object):
         res = res.fetchall()
         if len(res):
             self._filterProjectAccess(res[0][0])
-        else:
-            raise database.ItemNotFound()
 
     def _filterLabelAccess(self, labelId):
         cu = self.db.cursor()
@@ -286,8 +284,6 @@ class MintServer(object):
         r = r.fetchall()
         if len(r):
             self._filterProjectAccess(r[0][0])
-        else:
-            raise database.ItemNotFound()
 
     def _filterJobAccess(self, jobId):
         cu = self.db.cursor()
@@ -295,17 +291,13 @@ class MintServer(object):
         r = r.fetchall()
         if len(r):
             self._filterProjectAccess(r[0][0])
-        else:
-            raise database.ItemNotFound()
 
-    def _filterFileImageAccess(self, fileId):
+    def _filterImageFileAccess(self, fileId):
         cu = self.db.cursor()
-        r = cu.execute("SELECT projectId FROM ImageFiles LEFT JOIN Releases ON Releases.releaseId = ImageFiles.releaseId WHERE fileId = ?", jobId)
+        r = cu.execute("SELECT projectId FROM ImageFiles LEFT JOIN Releases ON Releases.releaseId = ImageFiles.releaseId WHERE fileId = ?", fileId)
         r = r.fetchall()
         if len(r):
             self._filterProjectAccess(r[0][0])
-        else:
-            raise database.ItemNotFound()
 
     def _filterProjectList(self, projectList):
         if self.auth.admin:
@@ -448,6 +440,7 @@ class MintServer(object):
         self._filterProjectAccess(projectId)
         return self.membershipRequests.getComments(projectId, userId)
 
+    # FIXME: filter this for hidden projects
     @typeCheck(str)
     @requiresAdmin
     @private
@@ -778,7 +771,6 @@ class MintServer(object):
 
         return self.removeUserAccount(userId)
 
-    # fixme ensure user is also removed from hidden/disabled projects
     @typeCheck(int)
     @requiresAuth
     @private
@@ -955,12 +947,14 @@ class MintServer(object):
     @requiresAuth
     @private
     def getLabel(self, labelId):
+        self._filterLabelAccess(labelId)
         return self.labels.getLabel(labelId)
 
     @typeCheck(int, str, str, str, str)
     @requiresAuth
     @private
     def editLabel(self, labelId, label, url, username, password):
+        self._filterLabelAccess(labelId)
         return self.labels.editLabel(labelId, label, url, username, password)
 
     @typeCheck(int, int)
@@ -1016,6 +1010,7 @@ class MintServer(object):
     @requiresAuth
     @private
     def deleteRelease(self, releaseId):
+        self._filterReleaseAccess(releaseId)
         if not self.releases.releaseExists(releaseId):
             raise ReleaseMissing()
         if self.releases.getPublished(releaseId):
@@ -1026,6 +1021,7 @@ class MintServer(object):
     @requiresAuth
     @private
     def setReleaseDataValue(self, releaseId, name, value, dataType):
+        self._filterReleaseAccess(releaseId)
         if not self.releases.releaseExists(releaseId):
             raise ReleaseMissing()
         if self.releases.getPublished(releaseId):
@@ -1035,22 +1031,26 @@ class MintServer(object):
     @typeCheck(int, str)
     @private
     def getReleaseDataValue(self, releaseId, name):
+        self._filterReleaseAccess(releaseId)
         return self.releaseData.getReleaseDataValue(releaseId, name)
 
     @typeCheck(int)
     @private
     def getReleaseDataDict(self, releaseId):
+        self._filterReleaseAccess(releaseId)
         return self.releaseData.getReleaseDataDict(releaseId)
 
     @typeCheck(int)
     @private
     def getReleaseTrove(self, releaseId):
+        self._filterReleaseAccess(releaseId)
         return self.releases.getTrove(releaseId)
 
     @typeCheck(int, str, str, str)
     @requiresAuth
     @private
     def setReleaseTrove(self, releaseId, troveName, troveVersion, troveFlavor):
+        self._filterReleaseAccess(releaseId)
         if not self.releases.releaseExists(releaseId):
             raise ReleaseMissing()
         if self.releases.getPublished(releaseId):
@@ -1063,6 +1063,7 @@ class MintServer(object):
     @requiresAuth
     @private
     def setReleaseDesc(self, releaseId, desc):
+        self._filterReleaseAccess(releaseId)
         if not self.releases.releaseExists(releaseId):
             raise ReleaseMissing()
         if self.releases.getPublished(releaseId):
@@ -1076,6 +1077,7 @@ class MintServer(object):
     @typeCheck(int)
     @private
     def incReleaseDownloads(self, releaseId):
+        self._filterReleaseAccess(releaseId)
         cu = self.db.cursor()
         cu.execute("UPDATE Releases SET downloads = downloads + 1 WHERE releaseId=?",
             releaseId)
@@ -1086,6 +1088,7 @@ class MintServer(object):
     @requiresAuth
     @private
     def setReleasePublished(self, releaseId, published):
+        self._filterReleaseAccess(releaseId)
         if not self.releases.releaseExists(releaseId):
             raise ReleaseMissing()
         if self.releases.getPublished(releaseId):
@@ -1100,6 +1103,7 @@ class MintServer(object):
     @requiresAuth
     @private
     def setImageType(self, releaseId, imageType):
+        self._filterReleaseAccess(releaseId)
         if not self.releases.releaseExists(releaseId):
             raise ReleaseMissing()
         if self.releases.getPublished(releaseId):
@@ -1114,6 +1118,7 @@ class MintServer(object):
     @requiresAuth
     @private
     def startImageJob(self, releaseId):
+        self._filterReleaseAccess(releaseId)
         if not self.releases.releaseExists(releaseId):
             raise ReleaseMissing()
         if self.releases.getPublished(releaseId):
@@ -1147,6 +1152,7 @@ class MintServer(object):
     @requiresAuth
     @private
     def getJob(self, jobId):
+        self._filterJobAccess(jobId)
         cu = self.db.cursor()
 
         cu.execute("SELECT userId, releaseId, status,"
@@ -1169,6 +1175,7 @@ class MintServer(object):
     @requiresAuth
     @private
     def getJobIds(self, releaseId):
+        self._filterReleaseAccess(releaseId)
         cu = self.db.cursor()
 
         stmt = """SELECT jobId FROM Jobs"""
@@ -1188,6 +1195,7 @@ class MintServer(object):
     @requiresAuth
     @private
     def setJobStatus(self, jobId, newStatus, statusMessage):
+        self._filterJobAccess(jobId)
         cu = self.db.cursor()
         cu.execute("UPDATE Jobs SET status=?, statusMessage=? WHERE jobId=?",
                    newStatus, statusMessage, jobId)
@@ -1201,6 +1209,7 @@ class MintServer(object):
     @requiresAuth
     @private
     def setImageFilenames(self, releaseId, filenames):
+        self._filterReleaseAccess(releaseId)
         if not self.releases.releaseExists(releaseId):
             raise ReleaseMissing()
         if self.releases.getPublished(releaseId):
@@ -1217,6 +1226,7 @@ class MintServer(object):
     @typeCheck(int)
     @private
     def getImageFilenames(self, releaseId):
+        self._filterReleaseAccess(releaseId)
         cu = self.db.cursor()
         cu.execute("SELECT fileId, filename, title FROM ImageFiles WHERE releaseId=? ORDER BY idx", releaseId)
 
@@ -1229,6 +1239,7 @@ class MintServer(object):
     @typeCheck(int)
     @private
     def getFileInfo(self, fileId):
+        self._filterImageFileAccess(fileId)
         cu = self.db.cursor()
         cu.execute("SELECT releaseId, idx, filename, title FROM ImageFiles WHERE fileId=?", fileId)
 
@@ -1264,6 +1275,7 @@ class MintServer(object):
     @typeCheck(int)
     @requiresAuth
     def getReleaseStatus(self, releaseId):
+        self._filterReleaseAccess(releaseId)
         self._allowPrivate = True
 
         release = releases.Release(self, releaseId)
