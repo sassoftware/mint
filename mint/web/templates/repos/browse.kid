@@ -8,6 +8,7 @@
 # All Rights Reserved
 
 import string
+from urllib import quote
 from mint import userlevels
 
 isOwner = (userLevel == userlevels.OWNER or auth.admin)
@@ -73,7 +74,7 @@ def pluralTroves(c):
                                  class="trovelist" style="display: none;">
                                 <ul>
                                     <li py:for="component in components[package]">
-                                        <a href="troveInfo?t=${package}:${component}">
+                                        <a href="troveInfo?t=${quote(package)}:${quote(component)}">
                                             ${component}
                                         </a>
                                     </li>
