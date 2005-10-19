@@ -376,6 +376,11 @@ class ProjectsTable(database.KeyedTable):
         cu.execute("UPDATE Projects SET hidden=0, timeModified=? WHERE projectId=?", time.time(), projectId)
         self.db.commit()
 
+    def isHidden(self, projectId):
+        cu = self.db.cursor()
+        r = cu.execute("SELECT IFNULL(hidden, 0) from Projects WHERE projectId=?", projectId)
+        return r.fetchone()[0]
+
     def disable(self, projectId, reposPath):
         cu = self.db.cursor()
 
@@ -397,6 +402,11 @@ class ProjectsTable(database.KeyedTable):
 
         cu.execute("UPDATE Projects SET disabled=0, timeModified=? WHERE projectId=?", time.time(), projectId)
         self.db.commit()
+
+    def isDisabled(self, projectId):
+        cu = self.db.cursor()
+        r = cu.execute("SELECT IFNULL(disabled, 0) from Projects WHERE projectId=?", projectId)
+        return r.fetchone()[0]
 
 class LabelsTable(database.KeyedTable):
     name = 'Labels'

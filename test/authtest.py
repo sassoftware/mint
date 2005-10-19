@@ -57,5 +57,15 @@ class AuthTest(MintRepositoryHelper):
         client, userid = self.quickMintUser('testuser','testpass')
         client.getUserSearchResults('Any String Will Do')
 
+    def testRequiresAdmin(self):
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        projectId = client.newProject('Foo', 'foo', 'localhost')
+
+        try:
+            client.hideProject(projectId)
+            self.fail("User was allowed to perform an admin only function")
+        except mint_server.PermissionDenied:
+            pass
+
 if __name__ == "__main__":
     testsuite.main()

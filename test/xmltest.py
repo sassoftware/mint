@@ -10,7 +10,7 @@ from mint_rephelp import MintRepositoryHelper
 from mint import userlevels
 from mint.mint_server import deriveBaseFunc, checkParam, typeCheck, ParameterError
 
-SKIP_TYPE_CHECK = ('callWrapper')
+SKIP_TYPE_CHECK = ('callWrapper', 'loadSession', 'saveSession', 'deleteSession', 'cleanupSessions')
 SKIP_PRIVATE = ('callWrapper', 'getReleaseStatus', 'getGroupTroves')
 
 class XmlIntrfaceTest(MintRepositoryHelper):

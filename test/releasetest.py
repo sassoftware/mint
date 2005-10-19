@@ -33,6 +33,11 @@ class ReleaseTest(MintRepositoryHelper):
         assert(release.getFiles() ==\
             [(1, 'file1', 'File Title 1'), (2, 'file2', 'File Title 2')])
 
+        desc = 'Just some random words'
+        release.setDesc(desc)
+        release.refresh()
+        assert desc == release.getDesc()
+
     def testReleaseData(self):
         client, userId = self.quickMintUser("testuser", "testpass")
         projectId = client.newProject("Foo", "foo", "rpath.org")
@@ -217,6 +222,16 @@ class ReleaseTest(MintRepositoryHelper):
 
         if (releaseId != brokenReleaseId):
             self.fail("Previous unfinished releases should be removed!")
+
+    def testReleaseStatus(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        projectId = client.newProject("Foo", "foo", "rpath.org")
+
+        release = client.newRelease(projectId, "Test Release")
+        releaseId = release.getId()
+
+        if client.server.getReleaseStatus(releaseId) != {'status': 5, 'message': 'No Job'}:
+            self.fail("getReleaseStatus returned unknown values")
 
 if __name__ == "__main__":
     testsuite.main()

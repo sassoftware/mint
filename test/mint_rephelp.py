@@ -30,6 +30,28 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
 
         return self.openMintClient((username, password)), userId
 
+    def quickMintAdmin(self, username, password):
+        # manipulate the UserGroups and UserGroup
+        cu = self.mintServer.authDb.cursor()
+
+        r = cu.execute("SELECT COUNT(*) FROM UserGroups WHERE UserGroup = 'MintAdmin'")
+        if r.fetchone()[0] == 0:
+            r = cu.execute("SELECT IFNULL(MAX(userGroupId) + 1, 1) FROM UserGroups")
+            groupId = r.fetchone()[0]
+            cu.execute("INSERT INTO UserGroups VALUES(?, 'MintAdmin')", groupId)
+            cu.execute("INSERT INTO UserGroupMembers VALUES (?,?)", groupId, groupId)
+            self.mintServer.authDb.commit()
+        else:
+            r = cu.execute("SELECT userGroupId FROM UserGroups WHERE UserGroup = 'MintAdmin'")
+            groupId = r.fetchone()[0]
+        client, userId = self.quickMintUser(username, password)
+
+        authUserId = cu.execute("SELECT userId from users where user=?", username).fetchone()[0]
+
+        cu.execute("INSERT INTO UserGroupMembers VALUES(?, ?)", groupId, authUserId)
+        self.mintServer.authDb.commit()
+        return client, userId
+
     def newProject(self, client, name = "Test Project",
                          hostname = "test",
                          domainname = "localhost",

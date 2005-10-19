@@ -12,9 +12,14 @@ from mint_rephelp import MintRepositoryHelper
 from mint import userlevels
 from mint.database import DuplicateItem, ItemNotFound
 from mint.projects import InvalidHostname
-from mint.mint_server import ParameterError
+from mint.mint_server import ParameterError, PermissionDenied
 
 class ProjectTest(MintRepositoryHelper):
+    #def _makeAdmin(self, server, userId):
+    #    cu = server.authDb.cursor()
+    #    cu.execute("UPDATE Permissions set admin = 1 where userId = ?", userId)
+    #    self.db.commit()
+    
     def testBasicAttributes(self):
         client, userId = self.quickMintUser("testuser", "testpass")
         projectId = client.newProject("Foo", "foo", "rpath.org")
@@ -163,6 +168,111 @@ class ProjectTest(MintRepositoryHelper):
         assert(projects[0][0].getId() == projectId)
         assert(projects[0][1] == userlevels.OWNER)
 
+    def testHideProject(self):
+        adminClient, adminUserId = self.quickMintAdmin("adminuser", "testpass")
+        client, userId = self.quickMintUser("testuser", "testpass")
+        memberClient, memberId = self.quickMintUser("memberuser","testpass")
+        watcherClient, watcherId = self.quickMintUser("watcher","testpass")
+        #client.server.auth.admin = True
+        projectId = adminClient.newProject("Test Project", "test", "localhost")
+        project = adminClient.getProject(projectId)
+        project.addMemberById(memberId, userlevels.OWNER)
+        watcherProject = watcherClient.getProject(projectId)
+        watcherProject.addMemberById(watcherId, userlevels.USER)
+        project = client.getProject(projectId)
+        adminClient.hideProject(projectId)
+
+        # try getting the project from various levels
+        memberClient.getProject(projectId)
+        adminClient.getProject(projectId)
+
+        try:
+            client.getProject(projectId)
+            self.fail("getProject: Project should appear to not exist to non-members")
+        except ItemNotFound:
+            pass
+
+        try:
+            watcherClient.getProject(projectId)
+            self.fail("getProject: Project should appear to not exist to user-members")
+        except ItemNotFound:
+            pass
+
+        try:
+            client.server.getProjectIdByFQDN("test.localhost")
+            self.fail("getProjectIdByFQDN: Project should appear to not exist to non-members")
+        except ItemNotFound:
+            pass
+
+        try:
+            client.server.getProjectIdByHostname("test")
+            self.fail("getProjectIdByHostname: Project should appear to not exist to non-members")
+        except ItemNotFound:
+            pass
+
+        if watcherClient.server.getProjectIdsByMember(watcherId):
+            self.fail("getProjectIdsByMember returned a hidden project for a user")
+
+        try:
+            client.server.getMembersByProjectId(projectId)
+            self.fail("getMembersByProjectId: Project should appear to not exist to non-members")
+        except ItemNotFound:
+            pass
+
+        try:
+            client.userHasRequested(projectId, userId)
+            self.fail("userHasRequested: did not result in error for non-member")
+        except ItemNotFound:
+            pass
+
+        try:
+            client.setJoinReqComments(projectId, "foo")
+            self.fail("non-member was allowed to set join request")
+        except ItemNotFound:
+            pass
+
+        try:
+            client.getJoinReqComments(projectId, userId)
+            self.fail("non-member was allowed to get join request")
+        except ItemNotFound:
+            pass
+
+        try:
+            client.deleteJoinRequest(projectId, userId)
+            self.fail("non-member was allowed to delete join request")
+        except ItemNotFound:
+            pass
+
+        try:
+            client.listJoinRequests(projectId)
+            self.fail("non-member was allowed to set join request")
+        except ItemNotFound:
+            pass
+
+        try:
+            project.addMemberById(userId, userlevels.USER)
+            self.fail("user was allowed to watch a hidden project")
+        except ItemNotFound:
+            pass
+
+        try:
+            client.server.lastOwner(projectId, adminUserId)
+        except ItemNotFound:
+            pass
+
+        try:
+            client.server.onlyOwner(projectId, adminUserId)
+        except ItemNotFound:
+            pass
+
+        try:
+            watcherClient.server.delMember(projectId, watcherId, False)
+        except ItemNotFound:
+            pass
+
+        memberClient.server.getUserLevel(watcherId, projectId)
+
+        adminClient.unhideProject(projectId)
 
 
 if __name__ == "__main__":

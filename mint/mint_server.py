@@ -255,6 +255,70 @@ class MintServer(object):
             repo = shimclient.ShimNetClient(server, protocol, port, (self.cfg.authUser, self.cfg.authPass), authRepo)
         return repo
 
+    # unfortunately this function can't be a proper decorator because we
+    # can't always know which param is the projectId.
+    # We'll just call it at the begining of every function that needs it.
+    def _filterProjectAccess(self, projectId):
+        if self.auth.admin:
+            return
+        if self.projects.isDisabled(projectId):
+            raise database.ItemNotFound()
+        if not self.projects.isHidden(projectId):
+            return
+        members = self.projectUsers.getMembersByProjectId(projectId)
+        for userId, username, level in members:
+            if (userId == self.auth.userId) and (level in userlevels.WRITERS):
+                return
+        raise database.ItemNotFound()
+
+    def _filterReleaseAccess(self, releaseId):
+        cu = self.db.cursor()
+        res = cu.execute("SELECT projectId FROM Releases WHERE releaseId = ?", releaseId)
+        res = res.fetchall()
+        if len(res):
+            self._filterProjectAccess(res[0][0])
+        else:
+            raise database.ItemNotFound()
+
+    def _filterLabelAccess(self, labelId):
+        cu = self.db.cursor()
+        r = cu.execute("SELECT projectId FROM Labels WHERE labelId = ?", labelId)
+        r = r.fetchall()
+        if len(r):
+            self._filterProjectAccess(r[0][0])
+        else:
+            raise database.ItemNotFound()
+
+    def _filterJobAccess(self, jobId):
+        cu = self.db.cursor()
+        r = cu.execute("SELECT projectId FROM Jobs LEFT JOIN Releases ON Releases.releaseId = Jobs.releaseId WHERE jobId = ?", jobId)
+        r = r.fetchall()
+        if len(r):
+            self._filterProjectAccess(r[0][0])
+        else:
+            raise database.ItemNotFound()
+
+    def _filterFileImageAccess(self, fileId):
+        cu = self.db.cursor()
+        r = cu.execute("SELECT projectId FROM ImageFiles LEFT JOIN Releases ON Releases.releaseId = ImageFiles.releaseId WHERE fileId = ?", jobId)
+        r = r.fetchall()
+        if len(r):
+            self._filterProjectAccess(r[0][0])
+        else:
+            raise database.ItemNotFound()
+
+    def _filterProjectList(self, projectList):
+        if self.auth.admin:
+            return projectList
+        r = []
+        for projectId, userLevel in projectList:
+            try:
+                self._filterProjectAccess(projectId)
+                r.append((projectId, userLevel))
+            except database.ItemNotFound:
+                pass
+        return r
+
     @typeCheck(str, str, str, str, str)
     # project methods
     @requiresAuth
@@ -295,43 +359,52 @@ class MintServer(object):
     @typeCheck(int)
     @private
     def getProject(self, id):
+        self._filterProjectAccess(id)
         return self.projects.get(id)
 
     @typeCheck(str)
     @private
     def getProjectIdByFQDN(self, fqdn):
-        return self.projects.getProjectIdByFQDN(fqdn)
+        projectId = self.projects.getProjectIdByFQDN(fqdn)
+        self._filterProjectAccess(projectId)
+        return projectId
 
     @typeCheck(str)
     @private
     def getProjectIdByHostname(self, hostname):
-        return self.projects.getProjectIdByHostname(hostname)
+        projectId = self.projects.getProjectIdByHostname(hostname)
+        self._filterProjectAccess(projectId)
+        return projectId
 
     @typeCheck(int)
     @private
     def getProjectIdsByMember(self, userId):
-        return self.projects.getProjectIdsByMember(userId)
+        return self._filterProjectList(self.projects.getProjectIdsByMember(userId))
 
     @typeCheck(int)
     @private
     def getMembersByProjectId(self, id):
+        self._filterProjectAccess(id)
         return self.projectUsers.getMembersByProjectId(id)
 
     @typeCheck(int, int)
     @private
     def userHasRequested(self, projectId, userId):
+        self._filterProjectAccess(projectId)
         return self.membershipRequests.userHasRequested(projectId, userId)
 
     @typeCheck(int, int)
     @private
     @requiresAuth
     def deleteJoinRequest(self, projectId, userId):
+        self._filterProjectAccess(projectId)
         return self.membershipRequests.deleteRequest(projectId, userId)
 
     @typeCheck(int)
     @private
     @requiresAuth
     def listJoinRequests(self, projectId):
+        self._filterProjectAccess(projectId)
         reqList = self.membershipRequests.listRequests(projectId)
         return [ (x, self.users.getUsername(x)) for x in reqList]
 
@@ -339,6 +412,7 @@ class MintServer(object):
     @private
     @requiresAuth
     def setJoinReqComments(self, projectId, comments):
+        self._filterProjectAccess(projectId)
         # only add if user is already a member of project
         userId = self.auth.userId
         memberList = self.getMembersByProjectId(projectId)
@@ -371,6 +445,7 @@ class MintServer(object):
     @private
     @requiresAuth
     def getJoinReqComments(self, projectId, userId):
+        self._filterProjectAccess(projectId)
         return self.membershipRequests.getComments(projectId, userId)
 
     @typeCheck(str)
@@ -383,6 +458,7 @@ class MintServer(object):
     @requiresAuth
     @private
     def addMember(self, projectId, userId, username, level):
+        self._filterProjectAccess(projectId)
         assert(level in userlevels.LEVELS)
 
         project = projects.Project(self, projectId)
@@ -433,17 +509,20 @@ class MintServer(object):
     @typeCheck(int, int)
     @private
     def lastOwner(self, projectId, userId):
+        self._filterProjectAccess(projectId)
         return self.projectUsers.lastOwner(projectId, userId)
 
     @typeCheck(int, int)
     @private
     def onlyOwner(self, projectId, userId):
+        self._filterProjectAccess(projectId)
         return self.projectUsers.onlyOwner(projectId, userId)
 
     @typeCheck(int, int, bool)
     @requiresAuth
     @private
     def delMember(self, projectId, userId, notify=True):
+        self._filterProjectAccess(projectId)
         #XXX Make this atomic
         try:
             userLevel = self.getUserLevel(userId, projectId)
@@ -508,6 +587,7 @@ class MintServer(object):
     @requiresAuth
     @private
     def editProject(self, projectId, projecturl, desc, name):
+        self._filterProjectAccess(projectId)
         return self.projects.update(projectId, projecturl=projecturl, desc = desc, name = name)
 
     @typeCheck(int)
@@ -552,6 +632,7 @@ class MintServer(object):
     @typeCheck(int, int)
     @private
     def getUserLevel(self, userId, projectId):
+        self._filterProjectAccess(projectId)
         cu = self.db.cursor()
         cu.execute("SELECT level FROM ProjectUsers WHERE userId=? and projectId=?",
                    userId, projectId)
@@ -565,6 +646,7 @@ class MintServer(object):
     @requiresAuth
     @private
     def setUserLevel(self, userId, projectId, level):
+        self._filterProjectAccess(projectId)
         if (self.auth.userId != userId) and (level == userlevels.USER):
             raise users.UserInduction()
         if self.projectUsers.onlyOwner(projectId, userId) and (level != userlevels.OWNER):
@@ -586,6 +668,7 @@ class MintServer(object):
         self.db.commit()
         self._notifyUser('Changed', user, project, level)
 
+    # FIXME. need to filter this one!
     @typeCheck(int)
     @private
     def getProjectsByUser(self, userId):
@@ -645,6 +728,7 @@ class MintServer(object):
     @requiresAuth
     @private
     def addUserKey(self, projectId, username, keydata):
+        self._filterProjectAccess(projectId)
         #find the project repository
         project = projects.Project(self, projectId)
         repos = self._getProjectRepo(project)
@@ -694,6 +778,7 @@ class MintServer(object):
 
         return self.removeUserAccount(userId)
 
+    # fixme ensure user is also removed from hidden/disabled projects
     @typeCheck(int)
     @requiresAuth
     @private
@@ -764,6 +849,7 @@ class MintServer(object):
         """
         return self.users.search(terms, limit, offset)
 
+    # FIXME: need to filter this one
     @typeCheck(str, int, int, int)
     @private
     def searchProjects(self, terms, modified, limit, offset):
@@ -777,6 +863,7 @@ class MintServer(object):
         """
         return self.projects.search(terms, modified, limit, offset)
 
+    # FIXME ensure results get filtered
     @typeCheck(str, int, int)
     @private
     def searchPackages(self, terms, limit, offset):
@@ -789,6 +876,7 @@ class MintServer(object):
         """
         return self.pkgIndex.search(terms, limit, offset)
 
+    # FIXME ensure results get filtered
     @typeCheck()
     @private
     def getProjectsList(self):
@@ -797,6 +885,7 @@ class MintServer(object):
         """
         return self.projects.getProjectsList()
 
+    # fixme ensure results get filtered
     @typeCheck(int, int, int)
     @private
     def getProjects(self, sortOrder, limit, offset):
@@ -845,18 +934,21 @@ class MintServer(object):
     @typeCheck(int)
     @private
     def getDefaultProjectLabel(self, projectId):
+        self._filterProjectAccess(projectId)
         return self.labels.getDefaultProjectLabel(projectId)
 
     @typeCheck(int, ((str, type(None)),), ((str, type(None)),), ((bool, type(None)),))
     @private
     def getLabelsForProject(self, projectId, newUser, newPass, useSSL):
         """Returns a mapping of labels to labelIds and a repository map dictionary for the current user"""
+        self._filterProjectAccess(projectId)
         return self.labels.getLabelsForProject(projectId, useSSL, newUser, newPass)
 
     @typeCheck(int, str, str, str, str)
     @requiresAuth
     @private
     def addLabel(self, projectId, label, url, username, password):
+        self._filterProjectAccess(projectId)
         return self.labels.addLabel(projectId, label, url, username, password)
 
     @typeCheck(int)
@@ -875,6 +967,7 @@ class MintServer(object):
     @requiresAuth
     @private
     def removeLabel(self, projectId, labelId):
+        self._filterProjectAccess(projectId)
         return self.labels.removeLabel(projectId, labelId)
 
     #
@@ -883,12 +976,14 @@ class MintServer(object):
     @typeCheck(int, bool)
     @private
     def getReleasesForProject(self, projectId, showUnpublished = False):
+        self._filterProjectAccess(projectId)
         return [releases.Release(self, x) for x in self.releases.iterReleasesForProject(projectId, showUnpublished)]
 
     @typeCheck(str, str, str, str)
     @private
     def registerCommit(self, hostname, username, name, version):
         projectId = self.getProjectIdByFQDN(hostname)
+        self._filterProjectAccess(projectId)
         try:
             userId = self.getUserIdByName(username)
         except database.ItemNotFound:
@@ -899,17 +994,20 @@ class MintServer(object):
     @typeCheck(int)
     @private
     def getCommitsForProject(self, projectId):
+        self._filterProjectAccess(projectId)
         return self.commits.getCommitsByProject(projectId)
 
     @typeCheck(int)
     @private
     def getRelease(self, releaseId):
+        self._filterReleaseAccess(releaseId)
         return self.releases.get(releaseId)
 
     @typeCheck(int, str, bool)
     @requiresAuth
     @private
     def newRelease(self, projectId, releaseName, published):
+        self._filterProjectAccess(projectId)
         return self.releases.new(projectId = projectId,
                                  name = releaseName,
                                  published = published)
@@ -1143,6 +1241,7 @@ class MintServer(object):
     @typeCheck(int)
     @requiresAuth
     def getGroupTroves(self, projectId):
+        self._filterProjectAccess(projectId)
         # enable internal methods so that public methods can make 
         # private calls; this is safe because only one instance
         # of MintServer is instantiated per call.
@@ -1178,7 +1277,6 @@ class MintServer(object):
                     'message': job.getStatusMessage()}
 
     # session management
-    @typeCheck(str)
     @private
     def loadSession(self, sid):
         return self.sessions.load(sid)
@@ -1187,12 +1285,10 @@ class MintServer(object):
     def saveSession(self, sid, data):
         self.sessions.save(sid, data)
 
-    @typeCheck(str)
     @private
     def deleteSession(self, sid):
         self.sessions.delete(sid)
 
-    @typeCheck()
     @private
     def cleanupSessions(self):
         self.sessions.cleanup()
