@@ -21,7 +21,7 @@ from mint import userlevels
     </div>
 
     <head>
-        <title>${formatTitle('Member Settings: %s'%project.getName())}</title>
+        <title>${formatTitle('Members: %s'%project.getName())}</title>
     </head>
     <body>
         <td id="left" class="side">
@@ -61,7 +61,7 @@ from mint import userlevels
         </td>
         <td id="main">
             <div class="pad">
-                <h2>${project.getName()}<br />Memberships</h2>
+                <h2>${project.getName()}<br />Members</h2>
                 <?python
                 users = {
                           userlevels.OWNER: [], 
