@@ -3,6 +3,7 @@
 import time
 from mint import searcher
 from urllib import quote
+from mint import userlevels
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#">
@@ -10,6 +11,11 @@ from urllib import quote
     Copyright 2005 rPath, Inc.
     All Rights Reserved
 -->
+    <?python
+        isOwner = (userLevel == userlevels.OWNER or auth.admin)
+        isDeveloper = userLevel == userlevels.DEVELOPER
+    ?>
+
     <div py:def="formatTitle(str)" py:strip="True" py:content="'%s - %s'%(str, cfg.productName)"/>
 
     <div py:def="userActions()" py:strip="True">
@@ -46,7 +52,7 @@ from urllib import quote
                             <h3>${auth.fullName}</h3>
                             <h4>${auth.username}</h4>
                             <div><a href="${secureProtocol}://${cfg.secureHost}${cfg.basePath}userSettings" class="arrows">View &#38; Edit My Account</a></div>
-                            <div><a py:if="projectList" href="http://${SITE}uploadKey" class="arrows">Upload a Package Signing Key</a></div>
+                            <div><a py:if="isOwner or isDeveloper" href="http://${SITE}uploadKey" class="arrows">Upload a Package Signing Key</a></div>
                             <div py:if='auth.admin'><a href="http://${SITE}administer" class="arrows">Administer</a></div>
 
                         </div>
