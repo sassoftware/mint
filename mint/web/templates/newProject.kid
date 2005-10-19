@@ -32,7 +32,7 @@
                             <th><em class="required">Project Name:</em></th>
                             <td>
                                 <input type="text" name="hostname" value="${kwargs['hostname']}" maxlength="16"/> .${cfg.projectDomainName}
-                                <p class="help">Please choose a name for your project. This will be used as the hostname for your project site and repository (http://myproj.${cfg.projectDomainName}/) and the prefix for all of the project mailing lists. It must start with a letter and contain only letters and numbers, and be less than or equal to 16 characters long.</p>
+                                <p class="help">Please choose a name for your project. This will be used as the hostname for your project site and repository (http://&lt;project-name&gt;.${cfg.projectDomainName}/) and the prefix for all of the project mailing lists. It must start with a letter and contain only letters and numbers, and be less than or equal to 16 characters long.</p>
                             </td>
                         </tr>
 
@@ -40,15 +40,7 @@
                             <th><em class="required">Project Title:</em></th>
                             <td>
                                 <input type="text" name="title" value="${kwargs['title']}"/>
-                                <p class="help">The title is a longer, more descriptive name for your project. Eg., <strong>My Custom Linux</strong></p>
-                            </td>
-                        </tr>
-
-                        <tr>
-                            <th>Project Home Page</th>
-                            <td>
-                                <input type="text" name="projecturl" value="${kwargs['projecturl']}"/>
-                                <p class="help">The project home page is an externally hosted web page that will be linked on your project's main page.  This can be useful to provide documentation, forums, or other web services not provided by ${cfg.productName}.</p>
+                                <p class="help">The title is a longer, more descriptive name for your project. For example, <strong>My Custom Linux</strong></p>
                             </td>
                         </tr>
 
@@ -57,24 +49,37 @@
                             <th>Project Description:</th>
                             <td>
                                 <textarea rows="6" name="blurb" py:content="kwargs['blurb']"></textarea>
+                                <p class="help">Please provide a description of your project and your goals for it.</p>
                             </td>
                         </tr>
+                        <tr>
+                            <th>Project Home Page</th>
+                            <td>
+                                <input type="text" name="projecturl" value="${kwargs['projecturl']}"/>
+                                <p class="help">Please enter the URL for an externally-hosted web page that will be linked from your project's main page.</p>
+                            </td>
+                        </tr>
+
                         <?python
                             from mint import mailinglists
                         ?>
                         <tr py:if="cfg.EnableMailLists">
-                            <th>Additional Mailing Lists:</th>
+                            <th>Mailing Lists:</th>
                             <td>
+                                <p>By default, your project will be created with two mailing lists:</p>
+                                    <ul>
+                                        <li>&lt;project-name&gt;</li>
+                                        <li>&lt;project-name&gt;-commits</li>
+                                    </ul>
+
+                                <p>You can also select the following lists to be created along with your project:</p>
                                 <span py:for="listid in mailinglists.optionallists" style="margin-right: 1em;">
                                     <input class="check" type="checkbox"
                                            name="optlists" value="${listid}" py:attrs="{'checked': (kwargs['optlists'] and listid in kwargs['optlists']) and 'checked' or None}" />
                                         ${mailinglists.listnames[listid]%'projectname'}
                                 </span>
-                                <p class="help">Two mailing lists will be created automatically, one
-                                    matching your project name, and projectname-commits.  Select additional
-                                    lists to create.  You may create new lists at any time from your
-                                    projects administration page.
-                                </p>
+                                <p class="help">Note that, once your project has been created, you can create new lists at any time from your
+                                    project's administration page.</p>
                             </td>
                         </tr>
                     </table>
