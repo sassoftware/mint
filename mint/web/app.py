@@ -150,6 +150,8 @@ class MintApp(WebHandler):
         dots = fullHost.split('.')
         hostname = dots[0]
 
+        # if it looks like we're requesting a project (hostname isn't in reserved hosts
+        # and doesn't match cfg.hostName, try to request the project.
         if hostname not in mint_server.reservedHosts and hostname != self.cfg.hostName:
             try:
                 project = self.client.getProjectByHostname(hostname)
@@ -157,6 +159,8 @@ class MintApp(WebHandler):
                 self.req.log_error(str(e))
                 raise Redirect(self.cfg.defaultRedirect)
             else:
+                # coerce "external" projects to the externalSiteHost, or
+                # internal projects to projectSiteHost.
                 if project.external: # "external" projects are endorsed by us, so use siteHost
                     raise Redirect("%s://%s%sproject/%s/" % (protocol, self.cfg.externalSiteHost, self.cfg.basePath, hostname))
                 else:
@@ -164,6 +168,7 @@ class MintApp(WebHandler):
 
         self.siteHost = self.cfg.siteHost
         
+        # eg., redirect from http://rpath.com -> <defaultRedirect>
         if self.cfg.hostName and fullHost == self.cfg.siteDomainName:
             raise Redirect(self.cfg.defaultRedirect)
         
