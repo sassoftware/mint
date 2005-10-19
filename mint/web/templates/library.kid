@@ -11,11 +11,6 @@ from mint import userlevels
     Copyright 2005 rPath, Inc.
     All Rights Reserved
 -->
-    <?python
-        isOwner = (userLevel == userlevels.OWNER or auth.admin)
-        isDeveloper = userLevel == userlevels.DEVELOPER
-    ?>
-
     <div py:def="formatTitle(str)" py:strip="True" py:content="'%s - %s'%(str, cfg.productName)"/>
 
     <div py:def="userActions()" py:strip="True">
@@ -32,6 +27,11 @@ from mint import userlevels
         <form method="post" action="${secureProtocol}://${cfg.secureHost}${cfg.basePath}$loginAction">
             <input py:if="loginAction == 'processLogin'" type="hidden" name="to" value="${quote(toUrl)}" />
             <table border="0" cellspacing="0" cellpadding="0" summary="layout">
+                <?python
+                    isOwner = (userLevel == userlevels.OWNER or auth.admin)
+                    isDeveloper = userLevel == userlevels.DEVELOPER
+                ?>
+
                 <tr>
                     <td id="logo">
                         <a href="http://$SITE">
