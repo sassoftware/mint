@@ -78,6 +78,56 @@ class MintApp(WebHandler):
         self.errorHandler = ErrorHandler()
         self.conaryHandler = ConaryHandler(req, cfg, repServer)
 
+    def _session_start(self):
+        # prepare a new session
+        sessionClient = shimclient.ShimMintClient(self.cfg, (self.cfg.authUser, self.cfg.authPass))
+
+        protocol='https'
+        if self.req.subprocess_env.get('HTTPS', 'off') != 'on':
+            protocol='http'
+        sid = self.fields.get('sid', None)
+        domain = ".".join(self.req.hostname.split(".")[1:])
+        self.session = SqlSession(self.req, sessionClient,
+            sid = sid,
+            secret = self.cfg.cookieSecretKey,
+            timeout = 86400, # XXX timeout of one day; should it be configurable?
+            domain = domain,
+            lock = False)
+        if self.session.is_new():
+            self.session['firstPage'] = "%s://%s%s" %(protocol, self.req.hostname, self.req.unparsed_uri)
+            self.session['visited'] = { }
+            self.session['pages'] = [ ]
+        #Mark the current domain as visited
+        self.session['visited'][domain] = True
+        #This is just for debugging purposes
+        self.session['pages'].append(self.req.hostname + self.req.unparsed_uri)
+
+        #Now figure out if we need to redirect
+        nexthop = None
+        for dom in (self.cfg.siteDomainName, self.cfg.projectDomainName):
+            if not self.session['visited'].get(dom, None):
+                #Yeah we need to redirect
+                nexthop = dom
+                break
+        # if we were passed a sid, specifically set a cookie
+        # for the requested domain with that sid.
+        if sid or nexthop:
+            c = self.session.make_cookie()
+            c.domain = domain
+            #add it to the err_headers_out because these ALWAYS go to the browser
+            self.req.err_headers_out.add('Set-Cookie', str(c))
+            self.req.err_headers_out.add('Cache-Control', 'no-cache="set-cookie"')
+
+        if nexthop:
+            #Save the session
+            self.session.save()
+            raise Redirect("%s://%s.%s%sblank?sid=%s" % (protocol, self.cfg.hostName, nexthop, self.cfg.basePath, self.session.id()))
+        else:
+            if sid:
+                #Clear the sid from the request by redirecting to the first page.
+                self.session.save()
+                raise Redirect(self.session['firstPage'])
+
     def _handle(self, pathInfo):
         method = self.req.method.upper()
         if method not in ('GET', 'POST'):
@@ -85,24 +135,11 @@ class MintApp(WebHandler):
 
         anonToken = ('anonymous', 'anonymous')
 
-        # prepare a new session
-        sessionClient = shimclient.ShimMintClient(self.cfg, (self.cfg.authUser, self.cfg.authPass))
+        try:
+            self._session_start()
+        except Redirect, e:
+            return self._redirect(e.location)
 
-        sid = self.fields.get('sid', None)
-        self.session = SqlSession(self.req, sessionClient,
-            sid = sid,
-            secret = self.cfg.cookieSecretKey,
-            timeout = 86400, # XXX timeout of one day; should it be configurable?
-            domain = ".".join(self.req.hostname.split(".")[1:]),
-            lock = False)
-
-        # if we were passed a sid, specifically set a cookie
-        # for the requested domain with that sid.
-        if sid:
-            c = self.session.make_cookie()
-            c.domain = self.fields['hostname']
-            Cookie.add_cookie(self.req, c)
-            
         # default to anonToken if the current session has no authToken
         self.authToken = self.session.get('authToken', anonToken)
  

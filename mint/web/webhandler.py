@@ -65,7 +65,8 @@ class WebHandler(object):
     def _clearAuth(self):
         self.auth = users.Authorization()
         self.authToken = ('anonymous', 'anonymous')
-        self.session.invalidate()
+        self.session['authToken'] = self.authToken
+        # Don't invalidate the session.  This should save a redirect storm
 
     def _resetPasswordById(self, userId):
         newpw = users.newPassword()

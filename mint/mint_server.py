@@ -1183,7 +1183,6 @@ class MintServer(object):
     def loadSession(self, sid):
         return self.sessions.load(sid)
 
-    @typeCheck(str, (dict, ((int, float, (dict, ((int, bool, str, (tuple, str)),))),)))
     @private
     def saveSession(self, sid, data):
         self.sessions.save(sid, data)

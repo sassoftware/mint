@@ -192,22 +192,11 @@ class SiteHandler(WebHandler):
                     firstTimer = True
                 client.updateAccessedTime(auth.userId)
 
-                sid = self.session.id()
-                self.session.invalidate()
-
-                self.session = SqlSession(self.req, client,
-                    sid = sid,
-                    secret = self.cfg.cookieSecretKey,
-                    timeout = 86400, # XXX timeout of one day; should it be configurable?
-                    domain = self.cfg.projectDomainName,
-                    lock = False)
-                
                 self.session['authToken'] = authToken
                 self.session['firstTimer'] = firstTimer
                 self.session.save()
                 
-                self._write("loginLanding", to = unquote(to))
-                return apache.OK
+                return self._redirect(unquote(to))
         else:
             return apache.HTTP_NOT_FOUND
 
