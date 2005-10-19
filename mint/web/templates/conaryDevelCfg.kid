@@ -1,4 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
+<?python
+from mint import userlevels
+?>
 <html xmlns:html="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'library.kid', 'layout.kid', 'project.kid'">
@@ -6,6 +9,11 @@
     Copyright 2005 rPath, Inc.
     All Rights Reserved
 -->
+    <?python
+        isOwner = (userLevel == userlevels.OWNER or auth.admin)
+        releases = project.getReleases(showUnpublished = False)
+        commits = project.getCommits()
+    ?>
     <div py:def="breadcrumb()" py:strip="True">
         <a href="$basePath">${project.getName()}</a>
         <a href="#">Conary Development Environment</a>
@@ -18,6 +26,10 @@
         <td id="left" class="side">
             <div class="pad">
                 ${projectResourcesMenu()}
+                ${releasesMenu(releases, isOwner, display='none')}
+                ${commitsMenu(commits, display='none')}
+                ${browseMenu(display='none')}
+                ${searchMenu(display='none')}
             </div>
 
         </td>

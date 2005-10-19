@@ -1,4 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
+<?python
+from mint import userlevels
+?>
 <html xmlns:html="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'library.kid', 'layout.kid', 'project.kid'">
@@ -6,6 +9,11 @@
     Copyright 2005 rPath, Inc.
     All Rights Reserved
 -->
+    <?python
+        isOwner = (userLevel == userlevels.OWNER or auth.admin)
+        releases = project.getReleases(showUnpublished = False)
+        commits = project.getCommits()
+    ?>
     <div py:def="breadcrumb()" py:strip="True">
         <a href="$basePath">${project.getName()}</a>
         <a href="#">Installing Software</a>
@@ -18,12 +26,16 @@
         <td id="left" class="side">
             <div class="pad">
                 ${projectResourcesMenu()}
+                ${releasesMenu(releases, isOwner, display='none')}
+                ${commitsMenu(commits, display='none')}
+                ${browseMenu(display='none')}
+                ${searchMenu(display='none')}
             </div>
 
         </td>
         <td id="main">
             <div class="pad">
-                <h2>${project.getName()}<br />Installing Software with Conary</h2>
+                <h2>${project.getName()}<br />Installing Software</h2>
 
                 <p>You have the following options available to you if you
                 want to install this project's software on your
