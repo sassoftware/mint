@@ -32,6 +32,14 @@ class GroupTest(GroupRecipe):
 """
 
 class RepositoryTest(MintRepositoryHelper):
+    def testCommitStats(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        projectId = self.newProject(client)
+
+        client.server.registerCommit('test.localhost', 'testuser', 'mytrove:source', '/test.localhost@rpl:devel/1.0-1')
+        project = client.getProject(projectId)
+        assert(project.getCommits() == [('mytrove:source', '1.0-1')])
+
     def testBasicRepository(self):
         client, userId = self.quickMintUser("testuser", "testpass")
         projectId = self.newProject(client)
