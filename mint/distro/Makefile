@@ -5,6 +5,7 @@
 #
 
 python_files = \
+	cleanup.py		\
 	gencslist.py		\
 	imagegen.py		\
 	__init__.py		\
