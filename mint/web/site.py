@@ -87,6 +87,8 @@ class SiteHandler(WebHandler):
                         fullName, email, password,
                         password2, displayEmail,
                         blurb, tos, privacy):
+        self.toUrl = self.cfg.basePath
+
         errors = []
         if not username:
             errors.append("You must supply a username.")
@@ -202,7 +204,7 @@ class SiteHandler(WebHandler):
 
     @strFields(id = None)
     def confirm(self, auth, id):
-        self.toUrl = '/'
+        self.toUrl = self.cfg.basePath 
         try:
             self.client.confirmUser(id)
         except users.ConfirmError:
