@@ -29,11 +29,6 @@
                  confirmation email containing a link required to complete
                  creation of your account.
                 </p>
-                <p>
-                  Your email address will never be shared or sold. More
-                  information can be found in our
-                  ${legal('%slegal?page=privacy' % cfg.basePath, 'Privacy Policy')}.
-                </p>
                 <form method="post" action="processRegister">
 
                     <h3>Your ${cfg.productName} Account</h3>
