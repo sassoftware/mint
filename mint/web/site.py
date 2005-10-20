@@ -75,6 +75,7 @@ class SiteHandler(WebHandler):
         
     @redirectHttps
     def register(self, auth):
+        self.toUrl = self.cfg.basePath
         self._write("register", errors=[], kwargs={})
         return apache.OK
 
