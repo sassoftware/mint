@@ -187,5 +187,36 @@ class AccountTest(MintRepositoryHelper):
         if client.getUserSearchResults('newuser') == ([], 0):
             self.fail("Failed a search for a newly confirmed user")
 
+    def testIllegalCancel(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        client2, userId2 = self.quickMintUser("testuser2", "testpass")
+
+        try:
+            client.server.cancelUserAccount(userId2)
+            self.fail("User was allowed to cancel the wrong account")
+        except PermissionDenied:
+            pass
+
+    def testUserList(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        client2, userId2 = self.quickMintUser("testuser2", "testpass")
+        adminClient, adminId = self.quickMintAdmin("adminuser", "testpass")
+
+        userList = adminClient.getUsers(0, 10, 0)
+        if userList[1] != 3:
+            self.fail("admin account couldn't find all users from UserList")
+
+        try:
+            client.getUsers(0, 10, 0)
+            self.fail("Client allowed to list users")
+        except PermissionDenied:
+            pass
+
+        if len(adminClient.getUsersList()) != 3:
+            self.fail("admin account could not see all users from getUsersList")
+
+        if client.server.searchUsers('test', 10, 0)[1] != 3:
+            self.fail("user level user search returned incorrect results.")
+
 if __name__ == "__main__":
     testsuite.main()
