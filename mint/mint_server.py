@@ -309,6 +309,8 @@ class MintServer(object):
         if hostname in reservedHosts:
             raise projects.InvalidHostname
         fqdn = ".".join((hostname, domainname))
+        if not (projecturl.startswith('https://') or projecturl.startswith('http://')):
+            projecturl = "http://" + projecturl
 
         # XXX this set of operations should be atomic if possible
         projectId = self.projects.new(name = projectName,
@@ -568,6 +570,8 @@ class MintServer(object):
     @requiresAuth
     @private
     def editProject(self, projectId, projecturl, desc, name):
+        if not (projecturl.startswith('https://') or projecturl.startswith('http://')):
+            projecturl = "http://" + projecturl
         self._filterProjectAccess(projectId)
         return self.projects.update(projectId, projecturl=projecturl, desc = desc, name = name)
 
