@@ -4,8 +4,8 @@
 # All Rights Reserved
 #
 
-LIVE_ISO, INSTALLABLE_ISO, LIVE_CF_IMAGE, STUB_IMAGE, NETBOOT_IMAGE = range(0, 5)
-TYPES = range(0, 5)
+LIVE_ISO, INSTALLABLE_ISO, LIVE_CF_IMAGE, STUB_IMAGE, NETBOOT_IMAGE, CLEANUP = range(0, 6)
+TYPES = range(0, 6)
 
 typeNames = {
     NETBOOT_IMAGE:      "Netboot Image",

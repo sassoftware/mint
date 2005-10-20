@@ -26,8 +26,9 @@ from imagegen import ImageGenerator, assertParentAlive
 import gencslist
 
 class IsoConfig(ConfigFile):
+    filename = 'installable_iso.conf'
     defaults = {
-        'imagesPath':       '/srv/mint/images/',
+        'imagesPath':       None,
         'scriptPath':       '/srv/mint/code/scripts/',
         'cachePath':        '/srv/mint/changesets/',
         'templatePath':     '/srv/mint/templates/',
@@ -40,15 +41,6 @@ class AnacondaTemplateMissing(Exception):
         
     def __str__(self):
         return "Anaconda template missing for architecture: %s" % self._arch
-
-
-class NoConfigFile(Exception):
-    def __init__(self, path = "installable_iso.conf"):
-        self._path = path
-
-    def __str__(self):
-        return "Unable to access configuration file: %s" % self._path
-
 
 class Callback(callbacks.UpdateCallback, callbacks.ChangesetCallback):
     def requestingChangeSet(self):
@@ -99,15 +91,7 @@ def _linkRecurse(fromDir, toDir):
 
 
 class InstallableIso(ImageGenerator):
-    def getIsoConfig(self):
-        isocfg = IsoConfig()
-
-        cfgFile = os.path.join(self.cfg.configPath, "installable_iso.conf")
-        if os.access(cfgFile, os.R_OK):
-            isocfg.read(os.path.join(self.cfg.configPath, "installable_iso.conf"))
-        else:
-            raise NoConfigFile(cfgFile)
-        return isocfg
+    configObject = IsoConfig
 
     def writeProductImage(self):
         # write the product.img cramfs
@@ -172,8 +156,11 @@ class InstallableIso(ImageGenerator):
         assertParentAlive()
 
     def write(self):
-        isocfg = self.getIsoConfig()
-    
+        isocfg = self.getConfig()
+        if isocfg.imagesPath != None:
+            print >> sys.stderr, "WARNING: The imagesPath configuration entry has moved from installable_iso.conf to iso_gen.conf."
+            sys.stderr.flush()
+        
         releaseId = self.job.getReleaseId()
 
         release = self.client.getRelease(releaseId)
@@ -199,7 +186,7 @@ class InstallableIso(ImageGenerator):
         client = conaryclient.ConaryClient(cfg)
         
         revision = version.trailingRevision().asString()
-        topdir = os.path.join(isocfg.imagesPath, project.getHostname(), release.getArch(), revision, "unified") 
+        topdir = os.path.join(self.cfg.imagesPath, project.getHostname(), release.getArch(), revision, "unified") 
         util.mkdirChain(topdir)
         # subdir = string.capwords(project.getHostname())
         subdir = 'rPath'

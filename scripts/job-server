@@ -40,6 +40,7 @@ from mint.distro.live_iso import LiveIso
 from mint.distro.live_cf_image import LiveCFImage
 from mint.distro.stub_image import StubImage
 from mint.distro.netboot_image import NetbootImage
+from mint.distro.cleanup import Cleanup
 
 generators = {
     releasetypes.LIVE_ISO:           LiveIso,
@@ -47,6 +48,7 @@ generators = {
     releasetypes.LIVE_CF_IMAGE:      LiveCFImage,
     releasetypes.STUB_IMAGE:         StubImage,
     releasetypes.NETBOOT_IMAGE:      NetbootImage,
+    releasetypes.CLEANUP:            Cleanup, 
 }
 
 SUPPORTED_ARCHS = ('x86', 'x86_64')
@@ -67,10 +69,10 @@ class JobRunner(threading.Thread):
         project = self.client.getProject(release.getProjectId())
         
         self.job.setStatus(jobstatus.RUNNING, 'Running')
-        log.info("job for %s started (id %d)" % (project.getHostname(), jobId))
 
         try:
             generator = generators[release.getImageType()]
+            log.info("%s job for %s started (id %d)" % (generator.__name__, project.getHostname(), jobId))
             
             # save the current working directory in case the generator 
             # (or scripts that change the wd)
@@ -178,6 +180,7 @@ class IsoGenConfig(ConfigFile):
         'supportedArch'   : [ STRINGLIST, [] ],
         'serverUrl'       : None,
         'logPath'         : '/srv/mint/logs',
+        'imagesPath'      : '/srv/mint/images/',
         'lockFile'        : '/var/run/mint-jobdaemon.pid',
         }
 

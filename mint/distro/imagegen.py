@@ -11,12 +11,32 @@ from mint import jobstatus
 
 from threading import currentThread
 
+class NoConfigFile(Exception):
+    def __init__(self, path = ""):
+        self._path = path
+
+    def __str__(self):
+        return "Unable to access configuration file: %s" % self._path
+
 class ImageGenerator:
+    configObject = None
+
     def __init__(self, client, cfg, job, profileId):
         self.client = client
         self.cfg = cfg
         self.job = job
         self.profileId = profileId
+
+    def getConfig(self):
+        assert(self.configObject)
+        imageCfg = self.configObject()
+
+        cfgFile = os.path.join(self.cfg.configPath, imageCfg.filename)
+        if os.access(cfgFile, os.R_OK):
+            imageCfg.read(cfgFile)
+        else:
+            raise NoConfigFile(cfgFile)
+        return imageCfg
 
     def write(self):
         raise NotImplementedError
