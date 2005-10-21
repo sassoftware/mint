@@ -162,7 +162,7 @@ class UsersTable(database.KeyedTable):
                              "",
                              "Please follow the link below to confirm your new address",
                              "",
-                             "http://%s/confirm?id=%s" % (self.cfg.siteHost, confirm),
+                             "http://%s%sconfirm?id=%s" % (self.cfg.siteHost, self.cfg.basePath, confirm),
                              "",
                              "Note that your account cannot be used until your email address has been confirmed.",
                              "",
@@ -208,7 +208,7 @@ class UsersTable(database.KeyedTable):
                                  "",
                                  "However, before you can use it, you must confirm your email address using this link:",
                                  "",
-                                 "http://%s/confirm?id=%s" % (self.cfg.siteHost, confirm),
+                                 "http://%s%sconfirm?id=%s" % (self.cfg.siteHost, self.cfg.basePath, confirm),
                                  "",
                                  "Contact %s"%self.cfg.supportContactTXT,
                                  "if you need assistance."])
