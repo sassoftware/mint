@@ -242,7 +242,7 @@ class ReleaseTest(MintRepositoryHelper):
             release = client.newRelease(projId, relName)
             release.setTrove("group-trove", "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
             release.setPublished(1)
-        releaseList = client.server.getReleaseList()
+        releaseList = client.server.getReleaseList(10, 0)
         releasesToMake.reverse()
         for i in range(len(releaseList)):
             if tuple(releasesToMake[i]) != (releaseList[i][1].projectId, releaseList[i][1].name):
