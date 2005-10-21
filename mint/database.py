@@ -75,7 +75,7 @@ class DatabaseTable:
     those indeces
     """
 
-    schemaVersion = 3 
+    schemaVersion = 4
     name = "Table"
     fields = []
     createSQL = "CREATE TABLE Table ();"

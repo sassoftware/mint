@@ -233,5 +233,21 @@ class ReleaseTest(MintRepositoryHelper):
         if client.server.getReleaseStatus(releaseId) != {'status': 5, 'message': 'No Job'}:
             self.fail("getReleaseStatus returned unknown values")
 
+    def testReleaseList(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        projectId = client.newProject("Foo", "foo", "rpath.org")
+        project2Id = client.newProject("Bar", "bar", "rpath.org")
+        releasesToMake = [ (projectId, "Foo Release"), (projectId, "Foo Release 2"), (project2Id, "Bar Release"), (project2Id, "Bar Release 2"), (projectId, "Foo Release 3") ]
+        for projId, relName in releasesToMake:
+            release = client.newRelease(projId, relName)
+            release.setTrove("group-trove", "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
+            release.setPublished(1)
+        releaseList = client.server.getReleaseList()
+        releasesToMake.reverse()
+        for i in range(len(releaseList)):
+            if tuple(releasesToMake[i]) != (releaseList[i][1].projectId, releaseList[i][1].name):
+                self.fail("Ordering of most recent releases is broken.")
+            
+
 if __name__ == "__main__":
     testsuite.main()

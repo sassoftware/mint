@@ -69,13 +69,26 @@ class ReleasesTable(database.KeyedTable):
                     troveFlavor	         STR,
                     troveLastChanged     INT,
                     published            INT DEFAULT 0,
-                    downloads            INT DEFAULT 0
+                    downloads            INT DEFAULT 0,
+                    timePublished        INT
                 )"""
 
     fields = ['releaseId', 'projectId', 'name', 'desc', 'imageType',
               'troveName', 'troveVersion', 'troveFlavor',
-              'troveLastChanged', 'published', 'downloads']
+              'troveLastChanged', 'published', 'downloads', 'timePublished']
     indexes = {"ReleaseProjectIdIdx": "CREATE INDEX ReleaseProjectIdIdx ON Releases(projectId)"}
+
+    def versionCheck(self):
+        dbversion = self.getDBVersion()
+        if dbversion != self.schemaVersion:
+            if dbversion == 3:
+                cu = self.db.cursor()
+                try:
+                    cu.execute("ALTER TABLE Releases ADD COLUMN timePublished INT DEFAULT 0")
+                    cu.execute("UPDATE Releases SET timePublished=0")
+                except:
+                    return False
+        return True
 
     def new(self, **kwargs):
         projectId = kwargs['projectId']
