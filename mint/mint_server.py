@@ -960,11 +960,11 @@ class MintServer(object):
         self._filterProjectAccess(projectId)
         return [releases.Release(self, x) for x in self.releases.iterReleasesForProject(projectId, showUnpublished)]
 
-    @typeCheck(((int, type(None)),), ((int, type(None)),))
+    @typeCheck(int, int)
     @private
-    def getReleaseList(self, limit = 10 , offset = 0):
+    def getReleaseList(self, limit, offset):
         cu = self.db.cursor()
-        r = cu.execute("SELECT Projects.name, releaseId FROM Releases LEFT Join Projects ON Projects.projectId = Releases.projectId ORDER BY timePublished DESC LIMIT ? OFFSET ?", limit, offset)
+        r = cu.execute("SELECT Projects.name, releaseId FROM Releases LEFT JOIN Projects ON Projects.projectId = Releases.projectId ORDER BY timePublished DESC LIMIT ? OFFSET ?", limit, offset)
         return [(x[0], releases.Release(self, x[1])) for x in r.fetchall()]
 
     @typeCheck(str, str, str, str)

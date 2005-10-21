@@ -61,7 +61,8 @@ class SiteHandler(WebHandler):
     @redirectHttp
     def _frontPage(self, auth):
         news = self.client.getNews()
-        self._write("frontPage", news = news, newsLink = self.client.getNewsLink(), firstTime=self.session.get('firstTimer', False))
+        releases = self.client.getReleaseList()
+        self._write("frontPage", news = news, newsLink = self.client.getNewsLink(), firstTime=self.session.get('firstTimer', False), releases=releases)
         return apache.OK
         
     def blank(self, auth, sid, hostname):

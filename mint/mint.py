@@ -282,6 +282,14 @@ class MintClient:
         releaseId = self.server.newRelease(projectId, releaseName, published) 
         return self.getRelease(releaseId)
 
+    def getReleaseList(self, limit=10, offset=0):
+        """
+        Get a list of the most recent releases as ordered by their published date.
+        @param limit: The number of releases to display
+        @param offset: List @limit starting at item @offset
+        """
+        return self.server.getReleaseList(limit, offset)
+
     def startImageJob(self, releaseId):
         """
         Start a new image generation job.

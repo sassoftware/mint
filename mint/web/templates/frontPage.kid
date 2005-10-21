@@ -28,6 +28,7 @@ from mint import searcher
                         <div class="pad">
                             ${browseMenu()}
                             ${searchMenu()}
+                            ${recentReleasesMenu(releases)}
                             ${rPathProductsMenu()}
                         </div>
                     </td>

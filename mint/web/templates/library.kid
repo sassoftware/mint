@@ -143,6 +143,21 @@ if auth.authorized:
           </div>
     </div>
 
+    <div py:def="recentReleasesMenu(releases, display='none')" py:strip="True">
+      <div id="releases" class="palette" py:if="releases">
+        <h3 onclick="javascript:toggle_display('recentRelease_items');">
+            <img id="browse_items_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_${display == 'block' and 'collapse' or 'expand'}.gif" border="0" />
+            Recent Releases
+        </h3>
+        <div id="recentRelease_items" style="display: $display">
+          <ul>
+            <li py:for="release in releases" py:content="release[0]">
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
 
     <table border="0" cellspacing="0" cellpadding="0"
            summary="layout" class="pager" style="margin-bottom: 1em;"
