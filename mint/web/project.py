@@ -243,8 +243,6 @@ class ProjectHandler(WebHandler):
         except releases.TroveNotSet:
             return self._redirect(self.basePath + "editRelease?releaseId=%d" % release.getId())
         else:
-            print >> sys.stderr, "my flavor:", flavor
-            sys.stderr.flush()
             self._write("release", release = release,
                                    name = release.getName(),
                                    trove = trove, version = versions.ThawVersion(version),
