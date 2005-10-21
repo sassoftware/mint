@@ -336,10 +336,13 @@ class ProjectHandler(WebHandler):
     @ownerOnly
     def processEditProject(self, auth, projecturl, desc, name):
         errors = []
-        try:
-            self.project.editProject(projecturl, desc, name)
-        except database.DuplicateItem:
-            errors.append("Project title conflicts with another project.")
+        if not name:
+            errors.append("You must supply a project title")
+        if not errors:
+            try:
+                self.project.editProject(projecturl, desc, name)
+            except database.DuplicateItem:
+                errors.append("Project title conflicts with another project.")
 
         if errors:
             kwargs = {'projecturl': projecturl, 'desc': desc, 'name': name}
