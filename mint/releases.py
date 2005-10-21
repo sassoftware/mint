@@ -72,66 +72,6 @@ class ReleasesTable(database.KeyedTable):
                     downloads            INT DEFAULT 0,
                     timePublished        INT
                 )"""
-    createSQL_mysql = """
-                CREATE TABLE Releases (
-                    releaseId            INT PRIMARY KEY AUTO_INCREMENT,
-                    projectId            INT,
-                    name                 VARCHAR(128),
-                    description          VARCHAR(255),
-                    imageType            INT,
-                    troveName            VARCHAR(128),
-                    troveVersion         VARCHAR(255),
-                    troveFlavor	         VARCHAR(4096),
-                    troveLastChanged     INT,
-                    published            INT DEFAULT 0,
-                    downloads            INT DEFAULT 0
-                )"""
-    createSQL_mysql = """
-                CREATE TABLE Releases (
-                    releaseId            INT PRIMARY KEY AUTO_INCREMENT,
-                    projectId            INT,
-                    name                 VARCHAR(128),
-                    description          VARCHAR(255),
-                    imageType            INT,
-                    troveName            VARCHAR(128),
-                    troveVersion         VARCHAR(255),
-                    troveFlavor	         VARCHAR(4096),
-                    troveLastChanged     INT,
-                    published            INT DEFAULT 0,
-                    downloads            INT DEFAULT 0
-                )"""
-    createSQL_mysql = """
-                CREATE TABLE Releases (
-                    releaseId            INT PRIMARY KEY AUTO_INCREMENT,
-                    projectId            INT,
-                    name                 VARCHAR(128),
-                    description          VARCHAR(255),
-                    imageType            INT,
-                    troveName            VARCHAR(128),
-                    troveVersion         VARCHAR(255),
-                    troveFlavor	         VARCHAR(4096),
-                    troveLastChanged     INT,
-                    published            INT DEFAULT 0,
-                    downloads            INT DEFAULT 0
-                )"""
-    createSQL_mysql = """
-                CREATE TABLE Releases (
-                    releaseId            INT PRIMARY KEY AUTO_INCREMENT,
-                    projectId            INT,
-                    name                 VARCHAR(128),
-                    description          VARCHAR(255),
-                    imageType            INT,
-                    troveName            VARCHAR(128),
-                    troveVersion         VARCHAR(255),
-                    troveFlavor	         VARCHAR(4096),
-                    troveLastChanged     INT,
-                    published            INT DEFAULT 0,
-                    downloads            INT DEFAULT 0
-                )"""
-
-
-
-
 
     fields = ['releaseId', 'projectId', 'name', 'desc', 'imageType',
               'troveName', 'troveVersion', 'troveFlavor',
