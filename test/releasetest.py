@@ -247,7 +247,10 @@ class ReleaseTest(MintRepositoryHelper):
         for i in range(len(releaseList)):
             if tuple(releasesToMake[i]) != (releaseList[i][1].projectId, releaseList[i][1].name):
                 self.fail("Ordering of most recent releases is broken.")
-            
+
+        for rel in client.server.getReleasesForProject(projectId):
+            if rel.getId() not in (1, 2, 5):
+                self.fail("getReleasesForProject returned incorrect results")
 
 if __name__ == "__main__":
     testsuite.main()

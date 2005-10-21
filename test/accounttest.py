@@ -32,6 +32,29 @@ class AccountTest(MintRepositoryHelper):
         r = cu.execute("SELECT active FROM Users WHERE userId=?", userId)
         return r.fetchone()[0]
 
+    def testBasicAttributes(self):
+        client, userId = self.quickMintUser("testuser","testpass")
+        user = client.getUser(userId)
+
+        displayEmail = "some@invalid.email"
+        fullName = "Test A. User"
+        password = "passtest"
+
+        user.setDisplayEmail(displayEmail)
+        user.setFullName(fullName)
+        user.setPassword(password)
+
+        # refresh the user
+        user = client.getUser(userId)
+
+        if user.getDisplayEmail() != displayEmail:
+            self.fail("User's display email lost in translation")
+
+        if user.getFullName() != fullName:
+            self.fail("User's full name lost in translation")
+
+        client.server.updateAccessedTime(userId)
+
     def testAccountConfirmation(self):
         client = self.openMintClient()
         # ignore the userId and make a new one that's not registered...
