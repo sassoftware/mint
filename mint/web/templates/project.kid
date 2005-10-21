@@ -2,6 +2,13 @@
 <?python #need a comment?
     from mint import userlevels
     from mint.mint import upstream
+
+    def condUpstream(upstreams, version):
+        up = upstream(version)
+        if upstreams[up] > 1:
+            return version.trailingRevision().asString()
+        else:
+            return up
 ?>
 <html xmlns:html="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#">
@@ -28,14 +35,21 @@
     <div py:def="releasesMenu(releaseList, isOwner=False, display='block')" py:strip="True">
       <div py:if="isOwner or releaseList" class="palette" id="releases">
         <h3 onclick="javascript:toggle_display('release_items');">
-            <img id="release_items_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_${display == 'block' and 'collapse' or 'expand'}.gif" border="0" />
+            <img id="release_items_expander"
+                 src="${cfg.staticPath}/apps/mint/images/BUTTON_${display == 'block' and 'collapse' or 'expand'}.gif" border="0" />
             Recent Releases
         </h3>
         <div id="release_items" style="display: $display">
-          <ul>
-            <li class="release" py:if="releaseList" py:for="release in sorted(releaseList[:6], key=lambda x: x.getTroveVersion(), reverse=True)">
+            <ul>
+            <?python
+                upstreamList = [upstream(x.getTroveVersion()) for x in releaseList[:6]]
+                # create a dictionary with counts of duplicate upstream versions
+                counts = dict(zip(set(upstreamList), [upstreamList.count(x) for x in set(upstreamList)]))
+            ?>
+            <li class="release"
+                py:if="releaseList" py:for="release in sorted(releaseList[:6], key=lambda x: x.getTroveVersion(), reverse=True)">
                 <a href="${basePath}release?id=${release.getId()}">
-                    Version ${upstream(release.getTroveVersion())} for ${release.getArch()}
+                    Version ${condUpstream(release.getTroveVersion())} for ${release.getArch()}
                 </a>
             </li>
             <li class="release" py:if="not releaseList">
