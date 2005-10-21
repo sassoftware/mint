@@ -19,7 +19,7 @@ sup.tm {
 }
 #top .surfaceLeft {
 	margin:0px 0px 0px 0px; padding:0px;
-	background:#fff url(../images/top_left.gif) top left no-repeat;
+	//background:#fff url(../images/top_left.gif) top left no-repeat;
 }
 #top .surfaceRight {
 	margin:0px; padding:0px;
@@ -40,7 +40,6 @@ td#user {
 }
 td#tabs {
 	width:76%; min-width:564px; font-size:0.6967em; height:30px;
-	background:#C5CBDE url(../images/tab_bg.gif) bottom left repeat-x;
 	margin:0px; vertical-align:bottom;
 }
 td#tabs table {
@@ -56,15 +55,12 @@ td#tabs table td a {
 	background:none;
 }
 td#tabs table td.selected {
-	background:#C5CBDE url(../images/tab_left.gif) top left no-repeat;
 }
 td#tabs table td.selected a {
 	color:#fff;
-	background:url(../images/tab_right.gif) top right no-repeat;
 }
 td#blank {
 	width:24%; min-width:180px; font-size:0.6967em; height:30px;
-	background:#C5CBDE url(../images/tab_bg.gif) bottom left repeat-x;
 	vertical-align:bottom;
 }
 td#topnav {
@@ -81,7 +77,6 @@ td#log {
 #middle { }
 #tabs {
 	width:76%; min-width:564px; font-size:0.6967em; height:30px;
-	background:#C5CBDE url(../images/tab_bg.gif) bottom left repeat-x;
 	vertical-align:bottom;
 }
 td#tabs table {

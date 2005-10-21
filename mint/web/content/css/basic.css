@@ -92,7 +92,6 @@ a.noarrow:link, a.noarrow:visited, a.noarrow:hover, a.noarrow:active {
 }
 a.backarrow:link, a.backarrow:visited, a.backarrow:hover, a.backarrow:active {
 	color:#3D5192; padding-left:11px; text-decoration:none;
-	background:url(../images/B.gif) no-repeat left 60%;
 }
 a:hover {
 	text-decoration:underline;
@@ -119,10 +118,6 @@ button:hover {
 button.warn {
 	background:transparent url(../images/BUTTON_warn.gif) no-repeat left 50%;
 	color:#770000;
-}
-button.disabled {
-	background:transparent url(../images/BUTTON_disabled.gif) no-repeat left 50%;
-	color:#999;
 }
 form {
 	margin:0px; padding:0px;
