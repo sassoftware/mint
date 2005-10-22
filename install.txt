@@ -20,18 +20,20 @@ Let's start by installing the necessary software.
 Software Installation
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-    In this section you'll be installing the following software necessary
-to run rBuilder:
+    In this section you'll be setting up an environment that supports
+    rBuilder by performing the following tasks:
 
-    o rPath Linux
+    o Installing rPath Linux
 
-    o dnspython
+    o Erasing sendmail
 
-    o Postfix (after erasing sendmail)
+    o Installing dnspython
 
-    o Mailman
+    o Installing Postfix
 
-    o rBuilder (mint)
+    o Installing Mailman
+
+    o Installing rBuilder (mint)
 
 Before you begin, you'll need to identify the system which will be running
 rBuilder.  Once your hardware is ready, perform the following steps:
@@ -56,10 +58,11 @@ rBuilder.  Once your hardware is ready, perform the following steps:
 
     o Install the main rBuilder trove (called "mint") provided by rPath
 
-        (conary update mint *** FIXME -- Update once settled ***)
+        (conary update mint)
 
 NOTE: Further configuration may be required to ensure that postfix and
-mailman can accept mail for the desired domain.
+mailman can accept mail for the desired domain in your particular network
+configuration.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -72,9 +75,9 @@ following steps:
 
     o Edit /etc/postfix/main.cf and change the alias_maps line to read:
 
-        alias_map = hash:/etc/aliases, hash:/var/mailman/data/aliases
+        alias_maps = hash:/etc/aliases, hash:/var/mailman/data/aliases
       
-    o Set the postfix service to start at boot
+    o Ensure that tet the postfix service to start at boot
 
         (chkconfig postfix on)
 
@@ -114,14 +117,14 @@ Password changed.
       system's hostname (assuming reverse DNS lookups work properly at your
       site), but you can explicitly set them if required.
 
-    o Run /var/mailman/bin/genaliases to regenerate Mailman-specific
-      aliases; ignore any warning messages
+    o Run (as the mailman user) /var/mailman/bin/genaliases to regenerate
+      Mailman-specific aliases; ignore any warning messages
 
 # sudo -u mailman /var/mailman/bin/genaliases
 postalias: warning: removing zero-length database file: /var/mailman/data/aliases.db
 
-    o Run the following command as root to create the "mailman" list used
-      to communicate with all Mailman list owners:
+    o Run the following command (as the mailman user) to create the
+      "mailman" list used to communicate with all Mailman list owners:
 
 # sudo -u mailman /var/mailman/bin/newlist mailman
 Enter the email of the person running the list: ed@rpath.com
@@ -129,13 +132,8 @@ Initial mailman password:
 Hit enter to notify mailman owner...
 
       (NOTE: Choose a password that is not used in any other context, as it
-      will occasionally appear -- in cleartext -- in the email messages
-      Mailman sends out.)
-
-      Once the list has been created (and Mailman started), Mailman will
-      send out an email to the email address you specified.  If you receive
-      this email, your general Mailman and Postfix configuration is working
-      properly.
+      will appear -- in cleartext -- in the email messages Mailman sends
+      to the list's owner)
 
     o chmod the aliases and aliases.db files in /var/mailman/data to mode 660
 
@@ -149,6 +147,11 @@ Hit enter to notify mailman owner...
 
         (/sbin/service mailman start)
 
+      Once the list has been created (and Mailman started), Mailman will
+      send out an email to the email address you specified.  If that
+      address receives this email, your general Mailman and Postfix
+      configuration is working properly.
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 rBuilder Configuration
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -156,24 +159,26 @@ rBuilder Configuration
     In this section, you'll be configuring rBuilder to correspond with your
 system environment.  This requires the following steps:
 
-    o Copy /srv/mint/mint.conf.dist to /srv/mint/mint.conf
+    o Perform the following commands:
 
-    o Using the comments in mint.conf as a guide, edit the file as
-      appropriate for your site.
+# cd /srv/mint
+# cp mint.conf.dist mint.conf
+# cp iso_gen.conf.dist iso_gen.conf
+# cp installable_iso.conf.dist installable_iso.conf
+# cp live_iso.conf.dist live_iso.conf
 
-    o Copy /srv/mint/iso_gen.conf.dist to /srv/mint/iso_gen.conf
-
-    o Edit /srv/mint/iso_gen.conf and change serverURL to reflect your
+    o Edit /srv/mint/iso_gen.conf and change serverUrl to reflect your
       site's hostname (Note that the username and password in this URL must
       reflect the username and password of an rBuilder account that you
       will be creating later in this document.)
 
-    o Copy /srv/mint/installable_iso.conf.dist to
-      /srv/mint/installable_iso.conf
+    o Using the comments in mint.conf as a guide, edit /srv/mint/mint.conf
+      as appropriate for your site.
 
-    o Copy /srv/mint/live_iso.conf.dist to /srv/mint/live_iso.conf
+    o Copy /srv/authrepo/authrepo.cnr.dist to /srv/authrepo/authrepo.cnr:
 
-    o Copy /srv/authrepo/authrepo.cnr.dist to /srv/authrepo/authrepo.cnr
+# cd /srv/authrepo
+# cp authrepo.cnr.dist authrepo.cnr
 
     o Edit authrepo.cnr and change serverName to reflect your site's
       hostname
@@ -185,7 +190,7 @@ Password: <password>
 Reenter password: <password>
 
     (Where <user> and <password> is the same as the username and password
-    reflected in the authRepoMap URL.)
+    reflected in the authRepoMap URL setting in /srv/mint/mint.conf.)
 
     o Issue the following commands:
 
@@ -194,24 +199,33 @@ Reenter password: <password>
 
     o If you want to address your projects' repositories as
       <hostname>.<domain-name>/repos/<project>, copy
-      /etc/httpd/conf.d/mint.conf.dist to /etc/httpd/conf.d/mint.conf.
+      /etc/httpd/conf.d/mint.conf.dist to /etc/httpd/conf.d/mint.conf:
 
-      On the other hand, if you want to address your projects' repositories
-      using <project>.<domain-name>, perform the following steps:
+# cd /etc/httpd/conf.d
+# cp mint.conf.dist mint.conf
 
-        - Copy /etc/httpd/conf.d/mint.conf.dist to /etc/httpd/conf.d/mint.conf.last
+    o If you want to address your projects' repositories using
+      <project>.<domain-name>, perform the following steps:
 
-        - Uncomment the following lines in ,
+        - Copy /etc/httpd/conf.d/mint.conf.dist to
+          /etc/httpd/conf.d/mint.conf.last:
+
+# cd /etc/httpd/conf.d
+# cp mint.conf.dist mint.conf.last
+
+
+        - Uncomment the following lines in
           /etc/httpd/conf.d/mint.conf.last, and change ServerName to
           reflect your site's hostname:
 
-            * <VirtualHost *:80>
             * ServerName
+            * <VirtualHost *:80>
             * Alias /conary-static/
             * </VirtualHost>
 
-        o This setup requires that apache already be configured for virtual
-          hosting, and that a wildcard or other DNS arrangment set up.
+      NOTE: This approach requires that apache already be configured for
+      virtual hosting, and that a wildcard or other DNS arrangment has been
+      configured.
 
     o Set the httpd service to start at boot
 
@@ -233,12 +247,16 @@ complete the rBuilder installation.
 
 http://<hostName>.<siteDomainName>/<basePath>/
 
-      (Where <hostName> and <siteDomainName> are the settings for the
-      hostName siteDomainName configuration options in
-      /srv/mint/mint.conf.)
+      Or:
+
+http://<hostName>.<siteDomainName>/ *** FIXME -- describe ***
+
+      (Where <hostName>, <siteDomainName>, and <basePath> are the settings
+      for the hostName, siteDomainName, and basePath configuration options
+      specified in /srv/mint/mint.conf.)
 
     o Create an rBuilder account using the same name and password as
-      mentioned in the serverURL setting in /srv/mint/iso_gen.conf.
+      referenced in the serverURL setting in /srv/mint/iso_gen.conf.
 
       (NOTE: Make sure you have access to read email directed to the email
       address you provide, as you will receive a confirmation email from
