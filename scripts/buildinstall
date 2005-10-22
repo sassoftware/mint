@@ -32,8 +32,8 @@ done
 
 mkdir -p $topdir/$subdir/changesets/
 
-conary --install-label $installlabel kernel[!kernel.smp] $topdir/$subdir/changesets/kernel-$arch.ccs
-conary --install-label $installlabel kernel[kernel.sml] $topdir/$subdir/changesets/kernel-smp-$arch.ccs
+conary --install-label $installlabel changeset kernel[!kernel.smp] $topdir/$subdir/changesets/kernel-$arch.ccs
+conary --install-label $installlabel changeset kernel[kernel.sml] $topdir/$subdir/changesets/kernel-smp-$arch.ccs
 
 # Internal variables: No need to modify these
 # temporary directory where anaconda is extracted
