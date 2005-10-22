@@ -8,7 +8,7 @@ conary=conary
 
 scriptdir=                  # directory to run anaconda scripts from
 topdir=/mnt/foo             # top directory of the CD image
-subdir=Specifix             # directory under $topdir that contains base/
+subdir=rPath                # directory under $topdir that contains base/
 distroname="rPath Linux"    # name of the distro
 distroversion=0.50          # version of the distro
 arch=i386                   # architecture of the distro
@@ -29,6 +29,11 @@ while [ $# -ge 1 ]; do
 	*) echo "unknown option $1";;
     esac
 done
+
+mkdir -p $topdir/$subdir/changesets/
+
+conary --install-label $installlabel kernel[!kernel.smp] $topdir/$subdir/changesets/kernel-$arch.ccs
+conary --install-label $installlabel kernel[kernel.sml] $topdir/$subdir/changesets/kernel-smp-$arch.ccs
 
 # Internal variables: No need to modify these
 # temporary directory where anaconda is extracted
