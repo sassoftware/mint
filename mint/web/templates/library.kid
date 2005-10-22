@@ -147,11 +147,15 @@ if auth.authorized:
       <div id="releases" class="palette" py:if="releases">
         <h3 onclick="javascript:toggle_display('recentRelease_items');">
             <img id="browse_items_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_${display == 'block' and 'collapse' or 'expand'}.gif" border="0" />
-            Recent Releases
+            ISO Factory
         </h3>
         <div id="recentRelease_items" style="display: $display">
           <ul>
-            <li py:for="release in releases" py:content="release[0]">
+            <li py:for="release in releases">
+                <div class="releases_project"><a class="releases_project" href="${cfg.basePath}project/${release[1]}">${release[0]}</a></div>
+                <div class="releases_release">
+                    <a href="${cfg.basePath}project/${release[1]}/release?id=${release[2].getId()}">${release[2].getTroveName()}=${release[2].getTroveVersion().trailingRevision().asString()} (${release[2].getArch()})</a>
+                </div>
             </li>
           </ul>
         </div>

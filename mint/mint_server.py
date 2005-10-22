@@ -963,8 +963,8 @@ class MintServer(object):
     @private
     def getReleaseList(self, limit, offset):
         cu = self.db.cursor()
-        r = cu.execute("SELECT Projects.name, releaseId FROM Releases LEFT JOIN Projects ON Projects.projectId = Releases.projectId ORDER BY timePublished DESC LIMIT ? OFFSET ?", limit, offset)
-        return [(x[0], releases.Release(self, x[1])) for x in r.fetchall()]
+        r = cu.execute("SELECT Projects.name, Projects.hostname, releaseId FROM Releases LEFT JOIN Projects ON Projects.projectId = Releases.projectId ORDER BY timePublished DESC LIMIT ? OFFSET ?", limit, offset)
+        return [(x[0], x[1], releases.Release(self, x[2])) for x in r.fetchall()]
 
     @typeCheck(str, str, str, str)
     @private

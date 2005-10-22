@@ -173,6 +173,7 @@ class SiteHandler(WebHandler):
     @requiresHttps
     @strFields(username = None)
     def resetPassword(self, auth, username):
+        self.toUrl = self.cfg.basePath
         userId = self.client.getUserIdByName(username)
         user = self.client.getUser(userId)
         self._resetPasswordById(userId)

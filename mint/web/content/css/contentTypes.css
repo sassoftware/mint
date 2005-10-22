@@ -130,6 +130,15 @@ div.palette h3 img {
         border-width: 2px;
 }
 
+/* RECENT RELEASES STYLES */
+div.releases_project {
+}
+a.releases_project {
+        font-weight: bold;
+}
+div.releases_release {
+        padding: 0px 0px 0px 18px;
+}
 
 /* PLAIN COLUMN CONTENT STYLES */
 .date {
