@@ -14,6 +14,19 @@ onload = "javascript:;"
       py:extends="'project.kid', 'library.kid'">
     <div py:def="breadcrumb()" class="pad" py:strip="True">
     </div>
+    <div py:def="rPathProductsMenu()" py:strip="True">
+    </div>
+    <div py:def="topnav()" py:strip="True">
+        <td id="topnav">
+            <div class="pad">
+                <a href="http://$SITE">Home</a> |
+                <a href="http://${SITE}help?page=feedback"><b style="color: red;">Need Help/Have Feedback?</b></a>
+                <span py:if="cfg.debugMode">
+                    | <span style="color:red;">DEBUG MODE</span>
+                </span>
+            </div>
+        </td>
+    </div>
 
     <head py:match="item.tag == 'head'" xmlns="http://www.w3.org/1999/xhtml">
         <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=utf-8" />
@@ -48,56 +61,7 @@ onload = "javascript:;"
         <div id="top" align="center">
             <div class="shadowLeft"><div class="shadowRight">
                 <div class="surfaceLeft" align="left"><div class="surfaceRight">
-                    <form method="post" action="${secureProtocol}://${cfg.secureHost}${cfg.basePath}$loginAction">
-                        <input py:if="loginAction == 'processLogin'" type="hidden" name="to" value="${quote(toUrl)}" />
-                        <table border="0" cellspacing="0" cellpadding="0" summary="layout">
-                            <tr>
-                                <td id="logo">
-                                </td>
-                                <td id="user" py:if="not auth.authorized">
-                                    <div class="pad">
-                                        <h4>not logged in | <a href="${secureProtocol}://${cfg.secureHost}${cfg.basePath}forgotPassword">Forgot Password</a></h4>
-                                        <div>
-                                            <input type="text" name="username" size="16"/> <label>username</label><br />
-                                            <input type="password" name="password" size="16"/> <label>password</label>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td id="user" py:if="auth.authorized">
-                                    <div class="pad">
-                                        <h3>${auth.fullName}</h3>
-                                        <h4>${auth.username}</h4>
-                                        <div><a href="${secureProtocol}://${cfg.secureHost}${cfg.basePath}userSettings" class="arrows">view &#38; Edit My Account</a></div>
-                                        <div><a py:if="projectList" href="http://${SITE}uploadKey" class="arrows">Upload a Package Signing Key</a></div>
-                                        <div py:if='auth.admin'><a href="http://${SITE}administer" class="arrows">Administer</a></div>
-
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td id="topnav">
-                                    <div class="pad">
-                                        <a href="http://$SITE">Home</a> | 
-                                        <a py:if="False" href="${cfg.corpSite}">About rPath</a>
-                                        <a py:if="False" href="${cfg.corpSite}sales/">Contact rPath</a>
-                                        <a href="http://${SITE}help?page=feedback"><b style="color: red;">Need Help/Have Feedback?</b></a>
-				        <span py:if="cfg.debugMode">
-                                            | <span style="color:red;">DEBUG MODE</span>
-                                        </span>
-	                            </div>
-                                </td>
-                                <td id="log">
-                                    <div class="pad" py:if="not auth.authorized">
-                                        <button type="submit">Login</button> |
-                                        <a href="http://${SITE}register" class="arrows">New Account</a>
-                                    </div>
-                                    <div class="pad" py:if="auth.authorized">
-                                        <button type="submit">Logout</button>
-                                    </div>
-                                </td>
-                            </tr>
-                        </table>
-                    </form>
+                    ${userActions()}
                 </div></div>
             </div></div>
         </div>
