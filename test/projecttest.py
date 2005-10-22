@@ -15,11 +15,6 @@ from mint.projects import InvalidHostname
 from mint.mint_server import ParameterError, PermissionDenied
 
 class ProjectTest(MintRepositoryHelper):
-    #def _makeAdmin(self, server, userId):
-    #    cu = server.authDb.cursor()
-    #    cu.execute("UPDATE Permissions set admin = 1 where userId = ?", userId)
-    #    self.db.commit()
-    
     def testBasicAttributes(self):
         client, userId = self.quickMintUser("testuser", "testpass")
         projectId = client.newProject("Foo", "foo", "rpath.org")
@@ -37,7 +32,7 @@ class ProjectTest(MintRepositoryHelper):
         assert(project.hidden == 0)
         assert(project.external == 0)
         assert(project.disabled == 0)
-   
+
     def testEditProject(self):
         client, userId = self.quickMintUser("testuser", "testpass")
         projectId = client.newProject("Foo", "foo", "rpath.org")
@@ -168,6 +163,9 @@ class ProjectTest(MintRepositoryHelper):
         assert(projects[0][0].getId() == projectId)
         assert(projects[0][1] == userlevels.OWNER)
 
+        if client.server.getProjectsByUser(userId) !=  [['test.localhost', 'Test Project', 0]]:
+            self.fail("getProjectsByUser returned incorrect results")
+
     def testHideProject(self):
         adminClient, adminUserId = self.quickMintAdmin("adminuser", "testpass")
         client, userId = self.quickMintUser("testuser", "testpass")
@@ -218,6 +216,8 @@ class ProjectTest(MintRepositoryHelper):
             self.fail("getMembersByProjectId: Project should appear to not exist to non-members")
         except ItemNotFound:
             pass
+
+        adminClient.server.getOwnersByProjectName(project.getName())
 
         try:
             client.userHasRequested(projectId, userId)

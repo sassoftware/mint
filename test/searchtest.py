@@ -91,6 +91,8 @@ class BrowseTest(MintRepositoryHelper):
             results, count = client.getProjects(sortOrder, 30, 0)
             if results != sortOrderDict[sortOrder]:
                 self.fail("sort problem during sort: %s"% ordersql[sortOrder])
+        if client.getProjectsList() != [(4, 0, 0, 'bal - Bal'), (2, 0, 0, 'bar - Bar'), (3, 0, 0, 'baz - Baz'), (1, 0, 0, 'foo - Foo')]:
+            self.fail("getProjectsList did not return alphabetical results")
 
     def testSearchProjects(self):
         client, userId = self.quickMintUser("testuser", "testpass")

@@ -40,6 +40,9 @@ class RepositoryTest(MintRepositoryHelper):
         project = client.getProject(projectId)
         assert(project.getCommits() == [('mytrove:source', '1.0-1')])
 
+        # using a bogus username should not fail
+        client.server.registerCommit('test.localhost', 'nonexistentuser', 'mytrove:source', '/test.localhost@rpl:devel/1.0-1')
+
     def testBasicRepository(self):
         client, userId = self.quickMintUser("testuser", "testpass")
         projectId = self.newProject(client)

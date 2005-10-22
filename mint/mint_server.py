@@ -430,7 +430,6 @@ class MintServer(object):
         self._filterProjectAccess(projectId)
         return self.membershipRequests.getComments(projectId, userId)
 
-    # FIXME: filter this for hidden projects
     @typeCheck(str)
     @requiresAdmin
     @private

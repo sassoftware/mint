@@ -423,6 +423,8 @@ class _Method(xmlrpclib._Method):
             raise ReleaseMissing(exceptionArgs[0])
         elif exceptionName == "AuthRepoError":
             raise users.AuthRepoError(exceptionArgs[0])
+        elif exceptionName == "LabelMissing":
+            raise projects.LabelMissing(exceptionArgs[0])
         else:
             raise UnknownException(exceptionName, exceptionArgs)
 

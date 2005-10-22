@@ -9,7 +9,7 @@ testsuite.setup()
 from mint_rephelp import MintRepositoryHelper
 from mint import userlevels
 from mint.mint_error import PermissionDenied
-from mint.users import LastOwner, UserInduction
+from mint.users import LastOwner, UserInduction, MailError
 from mint.database import DuplicateItem
 from repository.netclient import UserNotFound
 
@@ -36,13 +36,18 @@ class AccountTest(MintRepositoryHelper):
         client, userId = self.quickMintUser("testuser","testpass")
         user = client.getUser(userId)
 
+        eMail = "not_for_real@localhost"
         displayEmail = "some@invalid.email"
         fullName = "Test A. User"
-        password = "passtest"
+        blurb = "A blurb of a user."
 
         user.setDisplayEmail(displayEmail)
         user.setFullName(fullName)
-        user.setPassword(password)
+        user.setBlurb(blurb)
+        # FIXME: move validation logic to server side. this should not pass
+        # in the future
+        user.setEmail(eMail)
+        user.setPassword("passtest")
 
         # refresh the user
         user = client.getUser(userId)
@@ -53,7 +58,29 @@ class AccountTest(MintRepositoryHelper):
         if user.getFullName() != fullName:
             self.fail("User's full name lost in translation")
 
+        if user.getBlurb() != blurb:
+            self.fail("User's Blurb lost in translation")
+
+        if user.getEmail() != eMail:
+            self.fail("User's email lost in translation")
+
         client.server.updateAccessedTime(userId)
+        try:
+            client.server.validateNewEmail(userId, eMail)
+            self.fail("Email address was definitely bogus")
+        except MailError:
+            pass
+
+    def testProjectInteraction(self):
+        client, userId = self.quickMintUser("testuser","testpass")
+        user = client.getUser(userId)
+        projectId = client.newProject("Foo","foo", "example.com")
+        project = client.getProject(projectId)
+        project.addMemberById(userId, userlevels.OWNER)
+        # these functions have a different code path if the
+        # user is a member of projects
+        user.setPassword("passtest")
+        user.cancelUserAccount()
 
     def testAccountConfirmation(self):
         client = self.openMintClient()
@@ -217,6 +244,12 @@ class AccountTest(MintRepositoryHelper):
         try:
             client.server.cancelUserAccount(userId2)
             self.fail("User was allowed to cancel the wrong account")
+        except PermissionDenied:
+            pass
+
+        try:
+            client.server.removeUserAccount(userId2)
+            self.fail("You can pick your friends, and you can pick your nose, but you can't cancel your buddy's account.")
         except PermissionDenied:
             pass
 

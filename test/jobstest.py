@@ -37,6 +37,12 @@ class JobsTest(MintRepositoryHelper):
         else:
             self.fail("expected exception jobs.DuplicateJob")
 
+        if len(client.server.getJobIds(-1)) != 1:
+            self.fail("get all Job Id's returned incorrect results")
+        # important to test separately: finishing a job generates
+        # follow-on SQL statements
+        job.setStatus(jobstatus.FINISHED,"Finished")
+
     def testStubImage(self):
         client, userId = self.quickMintUser("testuser", "testpass")
         projectId = client.newProject("Foo", "foo", "rpath.org")

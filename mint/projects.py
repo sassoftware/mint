@@ -34,6 +34,10 @@ class DuplicateName(MintError):
     def __str__(self):
         return "A project using this project title already exists"
 
+class LabelMissing(MintError):
+    def __str__(self):
+        return "Project label does not exist"
+
 class Project(database.TableObject):
     __slots__ = ('creatorId', 'name',
                  'desc', 'hostname', 'domainname', 'projecturl', 

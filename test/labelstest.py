@@ -7,10 +7,9 @@ import testsuite
 testsuite.setup()
 
 from mint_rephelp import MintRepositoryHelper
-
 from mint import mint_server
-
 from mint import users
+from mint.projects import LabelMissing
 
 class LabelsTest(MintRepositoryHelper):
     def testBasicAttributes(self):
@@ -39,9 +38,17 @@ class LabelsTest(MintRepositoryHelper):
             "http://bar.rpath.org/conary/", "user1", "pass1")
         assert(project.getLabelById(newLabelId) == "bar.rpath.org@rpl:testbranch")
 
+        assert client.server.getLabel(newLabelId) == ('bar.rpath.org@rpl:testbranch', 'http://bar.rpath.org/conary/', 'user1', 'pass1')
+
         project.removeLabel(newLabelId)
         assert(project.getLabelIdMap() ==\
             {"foo.rpath.org@rpl:devel": 1})
+
+        try:
+            client.server.getLabel(newLabelId)
+            self.fail("label should not exist")
+        except LabelMissing:
+            pass
 
     def testSSL(self):
         client, userId = self.quickMintUser("testuser", "testpass")
