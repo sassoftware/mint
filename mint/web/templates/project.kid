@@ -49,7 +49,7 @@
             <li class="release"
                 py:if="releaseList" py:for="release in sorted(releaseList[:6], key=lambda x: x.getTroveVersion(), reverse=True)">
                 <a href="${basePath}release?id=${release.getId()}">
-                    Version ${condUpstream(release.getTroveVersion())} for ${release.getArch()}
+                    Version ${condUpstream(counts, release.getTroveVersion())} for ${release.getArch()}
                 </a>
             </li>
             <li class="release" py:if="not releaseList">
