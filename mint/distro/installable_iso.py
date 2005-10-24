@@ -201,10 +201,9 @@ class InstallableIso(ImageGenerator):
         _linkRecurse(templateDir, topdir)
         productDir = os.path.join(topdir, subdir)
         if os.path.isdir(productDir):
-            # reinit template if we're working with an existing image
-            util.rmtree(os.path.join(topdir, 'PRODUCTNAME'))
-            os.rename(productDir, os.path.join(topdir, 'PRODUCTNAME'))
-        os.rename(os.path.join(topdir, 'PRODUCTNAME'), os.path.join(topdir, subdir))
+            # reinit template if exists
+            util.rmtree(productDir)
+        os.rename(os.path.join(topdir, 'PRODUCTNAME'), productDir)
         csdir = os.path.join(topdir, subdir, 'changesets')
         util.mkdirChain(csdir)
         assertParentAlive()
