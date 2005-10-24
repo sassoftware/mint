@@ -35,7 +35,10 @@ from mint import searcher
                     <td id="main">
                         <div class="pad">
                             <h2 class="header">Welcome to ${cfg.productName}</h2>
-                            <div py:if="not firstTime">
+                            <div>
+                              <p py:if="firstTime">Congratulations!  Your new ${cfg.productName}
+                              account is active!</p>
+
                               <p>Welcome to ${cfg.productName} at ${cfg.siteDomainName}
                               </p>
 
@@ -45,15 +48,6 @@ from mint import searcher
 
                               <p><b>Want to learn more?  <a
                               href="${cfg.basePath}help?page=overview">Go here</a></b></p>
-
-                            </div>
-                            <div py:if="firstTime">
-
-                              <p>Congratulations!  Your new ${cfg.productName}
-                              account is active!</p>
-
-                              <p><b>Need some help getting started?  Go
-                              <a href="${cfg.basePath}help?page=new-user">here</a></b></p>
 
                             </div>
 
