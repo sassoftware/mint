@@ -11,6 +11,11 @@ Changes in 0.8.1:
 * Anaconda artwork is now extracted from the exact label of
   the release being created, instead of the default label of
   the project.
+* The multi-site cookie handling has been reworked to use 
+  session objects and multiple redirects instead of hidden
+  images.
+* A "New Releases" sitebar has been added, with an associated
+  RSS feed.
 
 Changes in 0.8.0:
 
