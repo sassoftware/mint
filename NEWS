@@ -1,3 +1,9 @@
+Changes in 0.9.1:
+
+* Filter hidden and disabled projects out of the ISO Factory
+  box.
+* Properly call condUpstream in web/templates/project.kid.
+
 Changes in 0.9.0:
 
 * Lots of updated documentation.
