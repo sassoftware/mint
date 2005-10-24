@@ -38,7 +38,10 @@ from mint import searcher
                             <h2 class="header">Welcome to ${cfg.productName}<sup class="tm">TM</sup></h2>
 
 
-                            <div py:if="not firstTime">
+                            <div>
+
+                              <p py:if="firstTime">Congratulations!  Your new ${cfg.productName}
+                              account is active!</p>
 
                               <p>You can use ${cfg.productName} to create a
                               Linux distribution that meets your specific
@@ -71,20 +74,6 @@ from mint import searcher
                             </table>
 
                             <p><b>Want to learn more? <a href="${cfg.basePath}help?page=overview">Go here</a></b></p>
-
-                            </div>
-
-
-
-
-
-                            <div py:if="firstTime">
-
-                              <p>Congratulations!  Your new ${cfg.productName}
-                              account is active!</p>
-
-                              <p><b>Need some help getting started?  Go
-                              <a href="${cfg.basePath}help?page=new-user">here</a></b></p>
 
                             </div>
 
