@@ -4,7 +4,7 @@
 # All Rights Reserved
 #
 
-script_dist = job-server mklivecd reset update-package-index buildinstall splitdistro
+script_dist = job-server mklivecd reset update-package-index buildinstall splitdistro buildtemplates
 
 extra_dist = \
 	Makefile		\
@@ -12,6 +12,7 @@ extra_dist = \
 	iso_gen.conf		\
 	live_iso.conf		\
 	buildiso		\
+	buildtemplates		\
 	job-server.init.in
 
 dist_files = $(script_dist) $(extra_dist)
