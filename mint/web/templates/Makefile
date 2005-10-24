@@ -7,7 +7,8 @@
 SUBDIRS = repos admin docs
 
 kid_files = \
-	conaryCfg.kid		\
+	conaryDevelCfg.kid	\
+	conaryUserCfg.kid	\
 	confirmEmail.kid	\
 	confirm.kid		\
 	editProject.kid		\
@@ -18,7 +19,6 @@ kid_files = \
 	joinRequest.kid		\
 	layout.kid		\
 	library.kid		\
-	loginLanding.kid	\
 	mailingLists.kid	\
 	members.kid		\
 	newProject.kid		\
