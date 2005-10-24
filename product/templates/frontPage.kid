@@ -16,6 +16,10 @@ from mint import searcher
         <title>${formatTitle('Front Page')}</title>
         <link py:if="cfg.newsRssFeed" rel="alternate" type="application/rss+xml"
               title="${cfg.productName} Site Announcements" href="${cfg.newsRssFeed}" />
+        <link rel="alternate" type="application/rss+xml"
+              title="New ${cfg.productName} Projects" href="http://${cfg.siteHost}${cfg.basePath}rss?feed=newProjects" />
+        <link rel="alternate" type="application/rss+xml"
+              title="New ${cfg.productName} ISO Releases" href="http://${cfg.siteHost}${cfg.basePath}rss?feed=newReleases" />
     </head>
     <body>
         <td>
@@ -25,6 +29,7 @@ from mint import searcher
                         <div class="pad">
                             ${browseMenu()}
                             ${searchMenu()}
+                            ${recentReleasesMenu(releases)}
                         </div>
                     </td>
                     <td id="main">
