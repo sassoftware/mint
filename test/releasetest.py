@@ -237,15 +237,20 @@ class ReleaseTest(MintRepositoryHelper):
         client, userId = self.quickMintUser("testuser", "testpass")
         projectId = client.newProject("Foo", "foo", "rpath.org")
         project2Id = client.newProject("Bar", "bar", "rpath.org")
-        releasesToMake = [ (projectId, "Foo Release"), (projectId, "Foo Release 2"), (project2Id, "Bar Release"), (project2Id, "Bar Release 2"), (projectId, "Foo Release 3") ]
-        for projId, relName in releasesToMake:
+        releasesToMake = [ (projectId, "foo", "Foo Release"),
+                           (projectId, "foo", "Foo Release 2"),
+                           (project2Id, "bar", "Bar Release"),
+                           (project2Id, "bar", "Bar Release 2"),
+                           (projectId, "foo", "Foo Release 3") ]
+        for projId, hostname, relName in releasesToMake:
             release = client.newRelease(projId, relName)
             release.setTrove("group-trove", "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
             release.setPublished(1)
         releaseList = client.server.getReleaseList(10, 0)
         releasesToMake.reverse()
+        hostnames = [x[1] for x in releasesToMake]
         for i in range(len(releaseList)):
-            if tuple(releasesToMake[i]) != (releaseList[i][1].projectId, releaseList[i][1].name):
+            if tuple(releasesToMake[i]) != (releaseList[i][2].projectId, hostnames[i], releaseList[i][2].name):
                 self.fail("Ordering of most recent releases is broken.")
 
         for rel in client.server.getReleasesForProject(projectId):
