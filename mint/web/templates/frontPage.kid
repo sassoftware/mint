@@ -18,7 +18,8 @@ from mint import searcher
               title="${cfg.productName} Site Announcements" href="${cfg.newsRssFeed}" />
         <link rel="alternate" type="application/rss+xml"
               title="New ${cfg.productName} Projects" href="http://${cfg.siteHost}${cfg.basePath}rss?feed=newProjects" />
-
+        <link rel="alternate" type="application/rss+xml"
+              title="New ${cfg.productName} ISO Releases" href="http://${cfg.siteHost}${cfg.basePath}rss?feed=newReleases" />
     </head>
     <body>
         <td>

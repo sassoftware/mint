@@ -504,7 +504,7 @@ class SiteHandler(WebHandler):
             results, count = self.client.getProjects(projectlisting.CREATED_DES, 10, 0)
             
             title = "New %s Projects" % self.cfg.productName
-            link = "http://%s%s/rss?feed=newProjects" % (self.cfg.siteHost, self.cfg.basePath)
+            link = "http://%s%srss?feed=newProjects" % (self.cfg.siteHost, self.cfg.basePath)
             desc = "New projects created on %s" % self.cfg.productName
 
             items = []
@@ -518,6 +518,25 @@ class SiteHandler(WebHandler):
                     (project.getUrl(), project.getName())
                 item['content'] += "<blockquote>%s</blockquote>" % project.getDesc()
                 item['date_822'] = email.Utils.formatdate(project.getTimeCreated())
+                item['creator'] = "http://%s%s" % (self.siteHost, self.cfg.basePath)
+                items.append(item)
+        elif feed == "newReleases":
+            results = self.client.getReleaseList()
+            title = "New releases on %s" % self.cfg.productName
+            link = "http://%s%srss?feed=newReleases" % (self.cfg.siteHost, self.cfg.basePath)
+            desc = "New releases published at %s" % self.cfg.productName
+
+            items = []
+            for p in results:
+                item = {}
+                release = p[2]
+                item['title'] = p[0]
+                item['link'] = 'http://%s%sproject/%s/release?id=%d' % (self.cfg.projectSiteHost, self.cfg.basePath, p[1], release.getId())
+                item['content'] = "<p>A new release has been published by the <a href=\"http://%s%sproject/%s\">%s</a> project.</p>\n" % (self.cfg.projectSiteHost, self.cfg.basePath, p[1], p[0])
+                item['content'] += "<p><a href=\"http://%s%sproject/%s/release?id=%d\">" % (self.cfg.projectSiteHost, self.cfg.basePath, p[1], release.getId())
+                item['content'] += "%s=%s (%s)</a></p>" % (release.getTroveName(), release.getTroveVersion().trailingRevision().asString(), release.getArch())
+
+                item['date_822'] = email.Utils.formatdate(release.timePublished)
                 item['creator'] = "http://%s%s" % (self.siteHost, self.cfg.basePath)
                 items.append(item)
         self.writeRss(items = items, title = title, link = link, desc = desc)
