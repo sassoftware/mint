@@ -39,8 +39,8 @@ class SiteHandler(WebHandler):
         cmd = path.split('/')[1]
        
         # if someone attempts to access the SITE from something other than
-        # the site host, redirect.
-        if self.req.hostname not in (self.cfg.siteHost, self.cfg.secureHost) and cmd != 'blank':
+        # the site host and SSL is not requested, redirect.
+        if self.req.hostname != self.cfg.siteHost and self.req.subprocess_env.get('HTTPS', 'off') == 'off':
             self.req.log_error("%s %s accessed incorrectly; referer: %s" % \
                 (self.req.hostname, self.req.unparsed_uri, self.req.headers_in.get('referer', 'N/A')))
             return self._redirector("http://" + self.cfg.siteHost + self.req.unparsed_uri)
