@@ -29,7 +29,7 @@ from mint import searcher
                         <div class="pad">
                             ${browseMenu()}
                             ${searchMenu()}
-                            ${recentReleasesMenu(releases)}
+                            ${recentReleasesMenu(releases, display="block")}
                             ${rPathProductsMenu()}
                         </div>
                     </td>
