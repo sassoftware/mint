@@ -4,6 +4,7 @@
 #
 
 import testsuite
+import time
 testsuite.setup()
 
 from mint_rephelp import MintRepositoryHelper
@@ -235,16 +236,23 @@ class ReleaseTest(MintRepositoryHelper):
 
     def testReleaseList(self):
         client, userId = self.quickMintUser("testuser", "testpass")
+        adminClient, adminuserId = self.quickMintAdmin("adminauth", "adminpass")
         projectId = client.newProject("Foo", "foo", "rpath.org")
         project2Id = client.newProject("Bar", "bar", "rpath.org")
+        project3Id = adminClient.newProject("Hide", "hide", "rpath.org")
+        adminClient.hideProject(project3Id)
         releasesToMake = [ (projectId, "foo", "Foo Unpublished"),
+                           (project3Id, "hide", "Hide Release 1"),
                            (projectId, "foo", "Foo Release"),
                            (projectId, "foo", "Foo Release 2"),
                            (project2Id, "bar", "Bar Release"),
                            (project2Id, "bar", "Bar Release 2"),
                            (projectId, "foo", "Foo Release 3")]
         for projId, hostname, relName in releasesToMake:
-            release = client.newRelease(projId, relName)
+            if "Hide" in relName:
+                release = adminClient.newRelease(projId, relName)
+            else:
+                release = client.newRelease(projId, relName)
             release.setTrove("group-trove", "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
             if "Unpublished" not in relName:
                 release.setPublished(1)
@@ -256,10 +264,23 @@ class ReleaseTest(MintRepositoryHelper):
         for i in range(len(releaseList)):
             if tuple(releasesToMake[i]) != (releaseList[i][2].projectId, hostnames[i], releaseList[i][2].name):
                 self.fail("Ordering of most recent releases is broken.")
+            if releaseList[i][2].projectId == project3Id:
+                self.fail("Should not have listed hidden release")
 
         for rel in client.server.getReleasesForProject(projectId):
-            if rel.getId() not in (2, 3, 6):
+            if rel.getId() not in (3, 4, 7):
                 self.fail("getReleasesForProject returned incorrect results")
+
+        try:
+            adminClient.server.getReleasesForProject(project3Id)
+        except ItemNotFound, e:
+            pass
+        else:
+            self.fail("getReleasesForProject returned hidden releases in non-admin context when it shouldn't have")
+
+        rel = adminClient.server.getReleasesForProject(project3Id)
+        if len(rel) != 1:
+            self.fail("getReleasesForProject did not return hidden releases for admin")
 
 if __name__ == "__main__":
     testsuite.main()
