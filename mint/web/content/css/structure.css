@@ -29,10 +29,22 @@ td#logo {
 	width:76%; min-width:256px; height:64px;
         padding: 10px;
 }
-
-td#logo img {
-    border: none;
+td#logo div {
+        padding-top: 2px;
 }
+td#logo div span#product {
+        float: left;
+        padding-left: 20px;
+}
+td#logo div span#rpath{
+        float: left;
+        padding-left: 5px;
+}
+
+td#logo img{
+        border: none;
+}
+
 
 td#user {
 	width:24%; min-width:180px; height:78px; font-size:0.6333em;

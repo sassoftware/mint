@@ -32,9 +32,18 @@ from mint import userlevels
             <table border="0" cellspacing="0" cellpadding="0" summary="layout">
                 <tr>
                     <td id="logo">
-                        <a href="http://$SITE">
-                            <img src="${cfg.staticPath}/apps/mint/images/logo.gif" width="256" height="64" alt="rPath Logo"/>
-                        </a>
+                        <div>
+                          <span id="rpath">
+                            <a href="http://www.rpath.com/" title="rPath Corporate Website">
+                                <img src="${cfg.staticPath}/apps/mint/images/corplogo.gif" alt="rPath Logo"/>
+                            </a>
+                          </span>
+                          <span id="product">
+                            <a href="http://$SITE" title="rBuilder main site">
+                                <img src="${cfg.staticPath}/apps/mint/images/prodlogo.gif" alt="rBuilder Logo"/>
+                            </a>
+                          </span>
+                        </div>
                     </td>
                     <td id="user" py:if="not auth.authorized">
                         <div class="pad">
