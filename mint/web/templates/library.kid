@@ -147,7 +147,7 @@ if auth.authorized:
       <div id="releases" class="palette" py:if="releases">
         <h3 onclick="javascript:toggle_display('recentRelease_items');">
             <img id="browse_items_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_${display == 'block' and 'collapse' or 'expand'}.gif" border="0" />
-            All Recent Releases
+            Recently Published Releases
         </h3>
         <div id="recentRelease_items" style="display: $display">
           <ul>
