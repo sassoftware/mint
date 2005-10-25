@@ -569,7 +569,7 @@ class MintServer(object):
     @requiresAuth
     @private
     def editProject(self, projectId, projecturl, desc, name):
-        if not (projecturl.startswith('https://') or projecturl.startswith('http://')):
+        if projecturl and not (projecturl.startswith('https://') or projecturl.startswith('http://')):
             projecturl = "http://" + projecturl
         self._filterProjectAccess(projectId)
         return self.projects.update(projectId, projecturl=projecturl, desc = desc, name = name)

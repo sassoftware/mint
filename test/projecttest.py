@@ -55,6 +55,16 @@ class ProjectTest(MintRepositoryHelper):
         else:
             self.fail("expected DuplicateItem exception")
    
+        # test automatic prepending of http://
+        project.editProject("www.example.com", "Description", "Foo Title")
+        project.refresh()
+        assert(project.getProjectUrl() == "http://www.example.com")
+
+        # except when there's no project URL
+        project.editProject("", "Description", "Foo Title")
+        project.refresh()
+        assert(project.getProjectUrl() == "")
+        
     def testGetProjects(self):
         client, userId = self.quickMintUser("testuser", "testpass")
         projectId = self.newProject(client, hostname = "test1")
