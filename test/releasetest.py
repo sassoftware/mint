@@ -272,7 +272,7 @@ class ReleaseTest(MintRepositoryHelper):
                 self.fail("getReleasesForProject returned incorrect results")
 
         try:
-            adminClient.server.getReleasesForProject(project3Id)
+            client.server.getReleasesForProject(project3Id)
         except ItemNotFound, e:
             pass
         else:
