@@ -18,9 +18,10 @@ onload = "javascript:;"
     <div py:def="topnav()" py:strip="True">
         <td id="topnav">
             <div class="pad">
-                <a href="http://$SITE">Home</a> | 
-                <a py:if="False" href="${cfg.corpSite}">About rPath</a>
-                <a py:if="False" href="${cfg.corpSite}sales/">Contact rPath</a>
+                <a href="http://$SITE">rBuilder Online</a> | 
+                <a href="${cfg.corpSite}products/">Products</a> |
+                <a href="${cfg.corpSite}sales/">Sales</a> |
+                <a href="${cfg.corpSite}about/">About Us</a> |
                 <a href="http://${SITE}help?page=feedback"><b style="color: red;">Need Help/Have Feedback?</b></a>
                 <span py:if="cfg.debugMode">
                     | <span style="color:red;">DEBUG MODE</span>
@@ -85,7 +86,7 @@ onload = "javascript:;"
         <div id="middle" align="center">
             <div id="crumb">
                 <div class="pad">
-                    You are here: <a href="http://$SITE">Home</a>
+                    You are here: <a href="http://$SITE">rBuilder Online</a>
                     ${breadcrumb()}
                 </div>
             </div>
