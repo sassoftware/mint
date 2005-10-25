@@ -28,6 +28,21 @@ onload = "javascript:;"
         </td>
     </div>
 
+    <td py:def="logo()" id="logo">
+        <div>
+          <span id="rpath">
+            <a href="http://$SITE" title="rBuilder main site">
+                <img src="${cfg.staticPath}/apps/mint/images/corplogo.gif" alt="rPath Logo"/>
+            </a>
+          </span>
+          <span id="product">
+            <a href="http://$SITE" title="rBuilder main site">
+                <img src="${cfg.staticPath}/apps/mint/images/prodlogo.gif" alt="rBuilder Logo"/>
+            </a>
+          </span>
+        </div>
+    </td>
+
     <head py:match="item.tag == 'head'" xmlns="http://www.w3.org/1999/xhtml">
         <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=utf-8" />
         <script type="text/javascript" src="${cfg.staticPath}/apps/mint/javascript/generic.js"/>

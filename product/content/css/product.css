@@ -5,3 +5,7 @@ html {
 body {
 	background-color:#6DABAD;
 }
+
+td#logo div span#product {
+        padding-top: 12px;
+}
