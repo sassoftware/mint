@@ -7,7 +7,7 @@ all: subdirs
 product=mint
 export DESTDIR=
 installdir=
-export VERSION=0.9.1
+export VERSION=0.9.2
 export TOPDIR = $(shell pwd)
 export DISTDIR = $(TOPDIR)/$(product)$(productqualifier)-$(VERSION)
 export prefix = /usr
