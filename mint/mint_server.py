@@ -1077,7 +1077,7 @@ class MintServer(object):
         self.db.commit()
         return True
 
-    @typeCheck(int, int)
+    @typeCheck(int, bool)
     @requiresAuth
     @private
     def setReleasePublished(self, releaseId, published):

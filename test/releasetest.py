@@ -83,7 +83,7 @@ class ReleaseTest(MintRepositoryHelper):
         release = client.newRelease(projectId, "Test Release")
 
         release.setImageType(releasetypes.STUB_IMAGE)
-        release.setPublished(1)
+        release.setPublished(True)
 
         try:
             release.setDataValue('stringArg', 'bar')
@@ -116,13 +116,13 @@ class ReleaseTest(MintRepositoryHelper):
             pass
 
         try:
-            release.setPublished(0)
+            release.setPublished(True)
             self.fail("Release allowed altering published state after publish")
         except ReleasePublished:
             pass
 
         try:
-            release.setPublished(1)
+            release.setPublished(True)
             self.fail("Release allowed altering published state after publish")
         except ReleasePublished:
             pass
@@ -140,7 +140,7 @@ class ReleaseTest(MintRepositoryHelper):
         release = client.newRelease(projectId, "Test Release")
 
         release.setImageType(releasetypes.STUB_IMAGE)
-        release.setPublished(1)
+        release.setPublished(True)
         
         try:
             release.deleteRelease()
@@ -255,7 +255,7 @@ class ReleaseTest(MintRepositoryHelper):
                 release = client.newRelease(projId, relName)
             release.setTrove("group-trove", "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
             if "Unpublished" not in relName:
-                release.setPublished(1)
+                release.setPublished(True)
         releaseList = client.server.getReleaseList(20, 0)
         releasesToMake.reverse()
         hostnames = [x[1] for x in releasesToMake]
