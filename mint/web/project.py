@@ -12,6 +12,7 @@ from mod_python import apache
 
 from mint import database
 from mint import mailinglists
+from mint import releases
 from mint import releasetypes
 from mint import userlevels
 from mint import users
