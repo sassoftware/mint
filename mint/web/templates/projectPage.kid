@@ -63,7 +63,7 @@ from mint.mint import upstream
                                 </li>
                                 <li py:if="releases">
                                     <a href="${basePath}rss">
-                                        subscribe to release news 
+                                        Subscribe to release news 
                                             <img style="border: none; vertical-align: middle;"
                                                  src="${cfg.staticPath}apps/mint/images/xml.gif" />
                                     </a>
