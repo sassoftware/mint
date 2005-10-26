@@ -50,8 +50,21 @@ if( !defined('DB_USER') ) die( 'Please, do not access this page directly.' );
     <div class="shadowLeft"><div class="shadowRight">
         <div align="left" class="surfaceLeft"><div class="surfaceRight">
             <table cellpadding="0" cellspacing="0" border="0" summary="layout">
-        <tr><td colspan="2" id="logo"><img src="http://www.rpath.org/conary-static/apps/mint/images/logo.gif" alt="rPath Logo"></td>
-</tr>
+        <tr>
+            <td colspan="2" id="logo">          
+                <span id="rpath">
+                    <a href="http://www.rpath.com/" title="rBuilder main site">
+                        <img src="http://www.rpath.com/conary-static/apps/mint/images/corplogo.gif" alt="rPath Logo" width="80" height="80" />
+                    </a>
+                </span>
+
+                <span id="product">
+                    <a href="http://www.rpath.com/" title="rBuilder main site">
+                        <img src="http://www.rpath.com/conary-static/apps/mint/images/prodlogo.gif" alt="rBuilder Logo" width="218" height="80" />
+                    </a>
+                </span>
+            </td>
+        </tr>
     <tr>
     <td id="topnav">
         <div class="pad">
