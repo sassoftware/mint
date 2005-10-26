@@ -43,8 +43,7 @@ from mint import userlevels
 
                     <ul>
                         <li>Build Label: <strong><tt>${project.getLabel()}</tt></strong></li>
-
-                        <li>Repository URL: <strong><tt>${project.getConaryConfig(newUser='&lt;username&gt;', newPass='&lt;password&gt;').repositoryMap.values()[0]}</tt></strong></li>
+                        <li>Repository URL: <strong><tt>${protocol}://username:password@${project.getFQDN()}/conary/</tt></strong></li>
                     </ul>
 
                     <p>(Note that you must replace
@@ -139,7 +138,7 @@ from mint import userlevels
                                 <li><strong><tt>buildLabel ${project.getLabel()}</tt></strong></li>
                                 <li><strong><tt>buildPath (full path to the builds subdirectory)</tt></strong></li>
                                 <li><strong><tt>lookaside (full path to the cache subdirectory)</tt></strong></li>
-                                <li><strong><tt>repositoryMap ${project.getFQDN()} ${project.getConaryConfig(newUser='&lt;username&gt;', newPass='&lt;password&gt;').repositoryMap.values()[0]}</tt></strong></li>
+                                <li><strong><tt>repositoryMap ${project.getFQDN()} ${protocol}://username:password@${project.getFQDN()}/conary/</tt></strong></li>
                             </ul>
 
                             <p>Because Conary only reads the
