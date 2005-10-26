@@ -13,7 +13,7 @@ from mint.mint_server import deriveBaseFunc, checkParam, typeCheck, ParameterErr
 SKIP_TYPE_CHECK = ('callWrapper', 'loadSession', 'saveSession', 'deleteSession', 'cleanupSessions')
 SKIP_PRIVATE = ('callWrapper', 'getReleaseStatus', 'getGroupTroves')
 
-class XmlIntrfaceTest(MintRepositoryHelper):
+class XmlInterfaceTest(MintRepositoryHelper):
     def _getMethods(self, skipSet):
         keys = self.mintServer.__class__.__dict__.keys()
         methods = []

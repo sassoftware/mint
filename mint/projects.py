@@ -282,9 +282,12 @@ class ProjectsTable(database.KeyedTable):
             raise database.ItemNotFound
         return r[0]
 
-    def getProjectIdsByMember(self, userId):
+    def getProjectIdsByMember(self, userId, filter = False):
         cu = self.db.cursor()
-        cu.execute("SELECT projectId, level FROM ProjectUsers WHERE userId=?", userId)
+        stmt = "SELECT ProjectUsers.projectId, level FROM ProjectUsers LEFT JOIN Projects ON Projects.projectId=ProjectUsers.projectId WHERE ProjectUsers.userId=? AND disabled=0"
+        if filter:
+            stmt += " AND hidden=0"
+        cu.execute(stmt, userId)
 
         ids = []
         for r in cu.fetchall():

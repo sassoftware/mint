@@ -218,6 +218,9 @@ class ProjectTest(MintRepositoryHelper):
         except ItemNotFound:
             pass
 
+        if client.server.getProjectIdsByMember(watcherId):
+            self.fail("getProjectIdsByMember returned a hidden project for a nonmember")
+
 #        if watcherClient.server.getProjectIdsByMember(watcherId):
 #            self.fail("getProjectIdsByMember returned a hidden project for a user")
 

@@ -361,7 +361,8 @@ class MintServer(object):
     @typeCheck(int)
     @private
     def getProjectIdsByMember(self, userId):
-        return self.projects.getProjectIdsByMember(userId)
+        filter = (self.auth.userId != userId) or (self.auth.admin)
+        return self.projects.getProjectIdsByMember(userId, filter)
 
     @typeCheck(int)
     @private
