@@ -90,8 +90,8 @@ class JobRunner(threading.Thread):
 class JobDaemon:
     def __init__(self, cfg):
         client = MintClient(cfg.serverUrl)
-       
-        threads = []
+
+        confirmedAlive = False
 
         try:
             os.makedirs(cfg.logPath)
@@ -106,12 +106,12 @@ class JobDaemon:
         while(True):
             try:
                 joblist = list(client.iterJobs(releaseId=-1))
+                confirmedAlive = True
                 for job in joblist:
                     release = client.getRelease(job.getReleaseId())
                     if job.getStatus() == jobstatus.WAITING\
                            and release.getArch() in cfg.supportedArch:
                         th = JobRunner(cfg, client, job)
-                        threads.append(th)
                         th.start()
             # We can't assume the mint server will stay up forever.
             # We'd like to ignore exceptions raised if/when the mint server
@@ -121,6 +121,9 @@ class JobDaemon:
             # it all depends on what the xmlrpc lib was trying to do when
             # the server went byebye.
             except (ProtocolError, socket.error), e:
+                if not confirmedAlive:
+                    log.error("rBuilder Server Unreachable; exiting")
+                    return
                 log.warning("Error retrieving job list:" + str(e))
             time.sleep(5)
 
