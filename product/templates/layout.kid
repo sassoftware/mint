@@ -32,12 +32,12 @@ onload = "javascript:;"
         <div>
           <span id="rpath">
             <a href="http://$SITE" title="rBuilder main site">
-                <img src="${cfg.staticPath}/apps/mint/images/corplogo.gif" alt="rPath Logo"/>
+                <img src="${cfg.staticPath}apps/mint/images/corplogo.gif" alt="rPath Logo"/>
             </a>
           </span>
           <span id="product">
             <a href="http://$SITE" title="rBuilder main site">
-                <img src="${cfg.staticPath}/apps/mint/images/prodlogo.gif" alt="rBuilder Logo"/>
+                <img src="${cfg.staticPath}apps/mint/images/prodlogo.gif" alt="rBuilder Logo"/>
             </a>
           </span>
         </div>
