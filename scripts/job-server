@@ -113,6 +113,8 @@ class JobDaemon:
                            and release.getArch() in cfg.supportedArch:
                         th = JobRunner(cfg, client, job)
                         th.start()
+                        # wait for this one to finish before starting more
+                        th.join()
             # We can't assume the mint server will stay up forever.
             # We'd like to ignore exceptions raised if/when the mint server
             # dies, and just wait for it to come back up.
