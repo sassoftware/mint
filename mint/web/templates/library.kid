@@ -36,8 +36,8 @@ from mint import userlevels
                         <div class="pad">
                             <h4>not logged in | <a href="${secureProtocol}://${cfg.secureHost}${cfg.basePath}forgotPassword">Forgot Password</a></h4>
                             <div>
-                                <input type="text" name="username" size="16"/> <label>username</label><br />
-                                <input type="password" name="password" size="16"/> <label>password</label>
+                                <input type="text" name="username" size="16" tabindex="1" /> <label>username</label><br />
+                                <input type="password" name="password" size="16" tabindex="2" /> <label>password</label>
                             </div>
                         </div>
                     </td>
@@ -56,7 +56,7 @@ from mint import userlevels
                     ${topnav()}
                     <td id="log">
                         <div class="pad" py:if="not auth.authorized">
-                            <button type="submit">Login</button> |
+                            <button type="submit" tabindex="3">Login</button> |
                             <a href="http://${SITE}register" class="arrows">New Account</a>
                         </div>
                         <div class="pad" py:if="auth.authorized">
