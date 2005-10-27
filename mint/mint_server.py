@@ -309,7 +309,7 @@ class MintServer(object):
         if hostname in reservedHosts:
             raise projects.InvalidHostname
         fqdn = ".".join((hostname, domainname))
-        if not (projecturl.startswith('https://') or projecturl.startswith('http://')):
+        if projecturl and not (projecturl.startswith('https://') or projecturl.startswith('http://')):
             projecturl = "http://" + projecturl
 
         # XXX this set of operations should be atomic if possible
