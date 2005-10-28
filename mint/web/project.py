@@ -250,7 +250,7 @@ class ProjectHandler(WebHandler):
                                    name = release.getName(),
                                    trove = trove, version = versions.ThawVersion(version),
                                    flavor = deps.ThawDependencySet(flavor),
-                                   releaseId = id, projectId = self.project.getId()
+                                   releaseId = id, projectId = self.project.getId(),
                                    publishedReleases = publishedReleases)
         return apache.OK
 
