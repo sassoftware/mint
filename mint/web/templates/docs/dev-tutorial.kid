@@ -46,8 +46,18 @@
                         document.getElementById("prevImg").style.visibility = "visible";
                         document.getElementById("nextImg").style.visibility = "visible";
                     }
+                    document.getElementById("showAll").style.visibility = "visible";
+
                     curStep = step;
                 }
+                function showAll() {
+                    for(var i = 1; i < steps.length; i++ )
+                        document.getElementById(steps[i]).style.display = "block";
+                    document.getElementById("prevImg").style.visibility = "hidden";
+                    document.getElementById("nextImg").style.visibility = "hidden";
+                    document.getElementById("showAll").style.visibility = "hidden";
+                }
+
             ]]>
         </script>
     </head>
@@ -61,7 +71,7 @@
         </td>
         <?python
             attrs = dict([(i, {'style': i == step and "display: block;" or "display: none;"}) for i in range(1, 9)])
-        ?>
+    ?>
 
         <td id="main">
             <div class="pad">
@@ -113,10 +123,6 @@
                     </div>
                 </div>
 
-
-
-
-
                 <h2><a href="javascript:showStep(3);">Step 3. Install a Conary-based Linux distribution</a></h2>
                 <div py:attrs="attrs[3]" id="step3">
                     <p>A good choice is rPath Linux, but there are many others available to choose from.</p>
@@ -166,13 +172,9 @@ name               &lt;your full name&gt;
                         in your main <tt>.conaryrc</tt> file in your home directory.</p>
                     </div>
                 </div>
-
-
                 
 
-                
                 <h2><a href="javascript:showStep(5);">Step 5. Create your recipe</a></h2>
-
                 <div py:attrs="attrs[5]" id="step5">
                     <p>A recipe controls how a package is built or how an entire distribution is
                     put together.</p>
@@ -200,8 +202,8 @@ name               &lt;your full name&gt;
                     </div>
                 </div>
 
-                <h2><a href="javascript:showStep(6);">Step 6. Cook your recipe</a></h2>
 
+                <h2><a href="javascript:showStep(6);">Step 6. Cook your recipe</a></h2>
                 <div py:attrs="attrs[6]" id="step6">
                     <p>What else would you do with a recipe?  This is how you test that your
                     recipe will build your project properly.</p>
@@ -220,8 +222,8 @@ name               &lt;your full name&gt;
                     </div>
                 </div>
 
-                <h2><a href="javascript:showStep(7);">Step 7. Check your recipe into the repository</a></h2>
 
+                <h2><a href="javascript:showStep(7);">Step 7. Check your recipe into the repository</a></h2>
                 <div py:attrs="attrs[7]" id="step7">
                     <p>Now that you have verified that your recipe was cooked correctly, you will
                     want to check it into the repository.</p>
@@ -249,7 +251,6 @@ name               &lt;your full name&gt;
 
 
                 <h2><a href="javascript:showStep(8);">Step 8. Publish your results</a></h2>
-
                 <div py:attrs="attrs[8]" id="step8">
 
                     <p>Share what you have created with everyone else.</p>
@@ -276,6 +277,9 @@ name               &lt;your full name&gt;
                         <td id="prevImg" style="text-align: left;">
                             <img src="${cfg.staticPath}/apps/mint/images/prev.gif" /> 
                             <a href="javascript:showStep(curStep-1);">Previous Step</a>
+                        </td>
+                        <td id="showAll" style="text-align: center;">
+                            <a href="javascript:showAll();">Show All</a>
                         </td>
                         <td id="nextImg" style="text-align: right;">
                             <a href="javascript:showStep(curStep+1);">Next Step 
