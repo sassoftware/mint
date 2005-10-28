@@ -156,10 +156,11 @@ class SiteHandler(WebHandler):
 
     @redirectHttp
     @strFields(page = "")
-    def help(self, auth, page):
+    @intFields(step = 1)
+    def help(self, auth, page, step):
         if page:
             try:
-                self._write("docs/" + page)
+                self._write("docs/" + page, step = step)
             except IOError:
                 self._write("docs/overview")
         else:
