@@ -203,3 +203,17 @@ table#releaseData input.text {
     color: #bf6e08;
     font-weight: bold;
 }
+
+div.helpBlock {
+    border: 2px solid #eeeeee;
+    background: #efefef;
+    padding: 0.5em;
+}
+
+div.helpBlock pre, div.helpBlock.tt {
+    color: #000055;
+}
+
+div.helpBlock pre {
+    margin-left: 2em;
+}
