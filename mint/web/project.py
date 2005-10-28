@@ -237,6 +237,8 @@ class ProjectHandler(WebHandler):
 
     @intFields(id = None)
     def release(self, auth, id):
+        releases = self.project.getReleases(showUnpublished = True)
+        publishedReleases = [x for x in releases if x.getPublished()]
         release = self.client.getRelease(id)
 
         try:
@@ -248,7 +250,8 @@ class ProjectHandler(WebHandler):
                                    name = release.getName(),
                                    trove = trove, version = versions.ThawVersion(version),
                                    flavor = deps.ThawDependencySet(flavor),
-                                   releaseId = id, projectId = self.project.getId())
+                                   releaseId = id, projectId = self.project.getId()
+                                   publishedReleases = publishedReleases)
         return apache.OK
 
     @ownerOnly
