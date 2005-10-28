@@ -243,8 +243,8 @@ name               &lt;your full name&gt;
 
                 <table style="width: 100%; padding: 0.5em; border-top: 2px solid gray;">
                     <tr>
-                        <td style="text-align: left;"><img src="${cfg.staticPath}/apps/mint/images/prev.gif" /> <a py:if="step &gt; 1" href="help?page=dev-tutorial;step=${step-1}">Previous Step</a></td>
-                        <td style="text-align: right;"><a py:if="step &lt; 8" href="help?page=dev-tutorial;step=${step+1}">Next Step <img border="0" src="${cfg.staticPath}/apps/mint/images/next.gif" /></a></td>
+                        <td style="text-align: left;"><img py:if="step &gt; 1" src="${cfg.staticPath}/apps/mint/images/prev.gif" /> <a py:if="step &gt; 1" href="help?page=dev-tutorial;step=${step-1}">Previous Step</a></td>
+                        <td style="text-align: right;"><a py:if="step &lt; 8" href="help?page=dev-tutorial;step=${step+1}">Next Step <img py:if="step &lt; 8" border="0" src="${cfg.staticPath}/apps/mint/images/next.gif" /></a></td>
                     </tr>
                 </table>
                 <p />
