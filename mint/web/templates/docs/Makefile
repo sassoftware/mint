@@ -6,6 +6,7 @@
 
 kid_files =			\
         dev-help.kid            \
+	dev-tutorial.kid	\
         feedback.kid            \
         overview.kid            \
         privacy.kid             \
