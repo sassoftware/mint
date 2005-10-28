@@ -51,6 +51,10 @@ from mint.mint import upstream
         <td id="left" class="side">
             <div class="pad">
                 ${projectResourcesMenu()}
+                ${releasesMenu(publishedReleases, isOwner, display="none")}
+                ${commitsMenu(project.getCommits(), display="none")}
+                ${browseMenu(display='none')}
+                ${searchMenu(display='none')}
             </div>
         </td>
         <td id="main">
