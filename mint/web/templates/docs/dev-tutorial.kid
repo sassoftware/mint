@@ -23,15 +23,45 @@
 
     <head>
         <title>${formatTitle('Help: Developers')}</title>
+        <script>
+            <![CDATA[
+                var curStep = ${step};
+                var steps = Array('none', 'step1', 'step2', 'step3', 'step4', 'step5', 'step6', 'step7', 'step8');
+                function showStep(step) {
+                    for(var i = 1; i < steps.length; i++ ) {
+                        stepEl = document.getElementById(steps[i]);
+                        if(!stepEl)
+                            alert(i + " - " + steps[i] + " - " + stepEl);
+                        stepEl.style.display = "none";
+                    }
+                    stepEl = document.getElementById(steps[step]);
+                    stepEl.style.display = "block";
+                    if(step == 1) {
+                        document.getElementById("prevImg").style.visibility = "hidden";
+                        document.getElementById("nextImg").style.visibility = "visible";
+                    } else if(step == 8) {
+                        document.getElementById("prevImg").style.visibility = "visible";
+                        document.getElementById("nextImg").style.visibility = "hidden";
+                    } else {
+                        document.getElementById("prevImg").style.visibility = "visible";
+                        document.getElementById("nextImg").style.visibility = "visible";
+                    }
+                    curStep = step;
+                }
+            ]]>
+        </script>
     </head>
 
-    <body>
+    <body onload="javascript:showStep(curStep);">
         <td id="left" class="side">
             <div class="pad">
                 ${browseMenu()}
                 ${searchMenu()}
             </div>
         </td>
+        <?python
+            attrs = dict([(i, {'style': i == step and "display: block;" or "display: none;"}) for i in range(1, 9)])
+        ?>
 
         <td id="main">
             <div class="pad">
@@ -41,8 +71,8 @@
                 following these simple steps:</p>
 
 
-                <h2><a href="help?page=dev-tutorial;step=1">Step 1. Create an rBuilder Online account</a></h2>
-                <div py:if="step == 1" id="step1">
+                <h2><a href="javascript:showStep(1);">Step 1. Create an rBuilder Online account</a></h2>
+                <div py:attrs="attrs[1]" id="step1">
 
                     <p>Anyone can search and download from rBuilder Online, but if you want to do
                     development on a package or create a distribution, you will need to create
@@ -62,8 +92,8 @@
                     </div>
                 </div>
 
-                <h2><a href="help?page=dev-tutorial;step=2">Step 2. Create a project or join an existing project</a></h2>
-                <div py:if="step == 2" id="step2">
+                <h2><a href="javascript:showStep(2);">Step 2. Create a project or join an existing project</a></h2>
+                <div py:attrs="attrs[2]" id="step2">
                     <p>What is a project? It can be anything from a single application to a
                     complete operating system.</p>
 
@@ -87,8 +117,8 @@
 
 
 
-                <h2><a href="help?page=dev-tutorial;step=3">Step 3. Install a Conary-based Linux distribution</a></h2>
-                <div py:if="step == 3" id="step3">
+                <h2><a href="javascript:showStep(3);">Step 3. Install a Conary-based Linux distribution</a></h2>
+                <div py:attrs="attrs[3]" id="step3">
                     <p>A good choice is rPath Linux, but there are many others available to choose from.</p>
 
                     <div class="helpBlock"> 
@@ -100,9 +130,9 @@
 
 
                 
-                <h2><a href="help?page=dev-tutorial;step=4">Step 4. Set up your build environment</a></h2>
+                <h2><a href="javascript:showStep(4);">Step 4. Set up your build environment</a></h2>
 
-                <div py:if="step == 4" id="step4">
+                <div py:attrs="attrs[4]" id="step4">
                     <p>In order to build and contribute packages, you will need to setup a build
                     environment on your local machine.</p>
 
@@ -141,9 +171,9 @@ name               &lt;your full name&gt;
                 
 
                 
-                <h2><a href="help?page=dev-tutorial;step=5">Step 5. Create your recipe</a></h2>
+                <h2><a href="javascript:showStep(5);">Step 5. Create your recipe</a></h2>
 
-                <div py:if="step == 5" id="step5">
+                <div py:attrs="attrs[5]" id="step5">
                     <p>A recipe controls how a package is built or how an entire distribution is
                     put together.</p>
 
@@ -170,9 +200,9 @@ name               &lt;your full name&gt;
                     </div>
                 </div>
 
-                <h2><a href="help?page=dev-tutorial;step=6">Step 6. Cook your recipe</a></h2>
+                <h2><a href="javascript:showStep(6);">Step 6. Cook your recipe</a></h2>
 
-                <div py:if="step == 6" if="step6">
+                <div py:attrs="attrs[6]" id="step6">
                     <p>What else would you do with a recipe?  This is how you test that your
                     recipe will build your project properly.</p>
                 
@@ -190,9 +220,9 @@ name               &lt;your full name&gt;
                     </div>
                 </div>
 
-                <h2><a href="help?page=dev-tutorial;step=7">Step 7. Check your recipe into the repository</a></h2>
+                <h2><a href="javascript:showStep(7);">Step 7. Check your recipe into the repository</a></h2>
 
-                <div py:if="step == 7" id="step7">
+                <div py:attrs="attrs[7]" id="step7">
                     <p>Now that you have verified that your recipe was cooked correctly, you will
                     want to check it into the repository.</p>
 
@@ -218,9 +248,9 @@ name               &lt;your full name&gt;
                 </div>
 
 
-                <h2><a href="help?page=dev-tutorial;step=8">Step 8. Publish your results</a></h2>
+                <h2><a href="javascript:showStep(8);">Step 8. Publish your results</a></h2>
 
-                <div py:if="step == 8" id="step8">
+                <div py:attrs="attrs[8]" id="step8">
 
                     <p>Share what you have created with everyone else.</p>
 
@@ -243,8 +273,14 @@ name               &lt;your full name&gt;
 
                 <table style="width: 100%; padding: 0.5em; border-top: 2px solid gray;">
                     <tr>
-                        <td style="text-align: left;"><img py:if="step &gt; 1" src="${cfg.staticPath}/apps/mint/images/prev.gif" /> <a py:if="step &gt; 1" href="help?page=dev-tutorial;step=${step-1}">Previous Step</a></td>
-                        <td style="text-align: right;"><a py:if="step &lt; 8" href="help?page=dev-tutorial;step=${step+1}">Next Step <img py:if="step &lt; 8" border="0" src="${cfg.staticPath}/apps/mint/images/next.gif" /></a></td>
+                        <td id="prevImg" style="text-align: left;">
+                            <img src="${cfg.staticPath}/apps/mint/images/prev.gif" /> 
+                            <a href="javascript:showStep(curStep-1);">Previous Step</a>
+                        </td>
+                        <td id="nextImg" style="text-align: right;">
+                            <a href="javascript:showStep(curStep+1);">Next Step 
+                            <img border="0" src="${cfg.staticPath}/apps/mint/images/next.gif" /></a>
+                        </td>
                     </tr>
                 </table>
                 <p />
