@@ -66,7 +66,8 @@ class WebHandler(object):
         self.auth = users.Authorization()
         self.authToken = ('anonymous', 'anonymous')
         #Add additional data to clear here
-        del self.session['firstTimer']
+        if 'firstTimer' in self.session.keys():
+            del self.session['firstTimer']
 
         self.session['authToken'] = self.authToken
         # Don't invalidate the session.  This should save a redirect storm
