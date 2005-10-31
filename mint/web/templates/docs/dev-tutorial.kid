@@ -84,7 +84,7 @@
         <td id="main">
             <div class="pad">
 
-                <a href="xxx" style="float: right;">PDF of this document
+                <a href="http://wiki.conary.com/DerivativeDistroTutorial?action=AttachFile;do=get;target=rBuilderOnlineTutorial.pdf" style="float: right;">PDF of this document
                     <img style="border: none;" src="${cfg.staticPath}/apps/mint/images/pdficon_small.gif" />
                 </a>
 

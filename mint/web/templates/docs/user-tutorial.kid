@@ -107,9 +107,8 @@
                     <p>Browse the repository or search for the right package.</p>
                     <div class="helpBlock">
                         <p>Use the Browse and Search boxes on the left hand side to find the projects 
-                        packages that suites your needs.  If you are looking for a complete 
-                        distribution, look for the Recent Releases box on the left side of a 
-                        project's home page.</p>
+                        or packages that suits your needs. If you are looking for a complete distribution, 
+                        look for the Recent Releases box on the left side of a project's home page.</p>
                     </div>
                 </div>
 
