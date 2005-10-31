@@ -48,12 +48,12 @@ from mint import searcher
                                   needs, or to find an existing distribution
                                   that is just right for you.</p>
 
-                                <h3>Start using rBuilder Online. Select an option below:</h3>
+                                <h3 style="color:#FF7001;">Start using rBuilder Online. Select an option below:</h3>
                                 <table id="tasks">
                                     <tr>
                                         <td id="tasksBlock" style="margin-right: 1em;"
-                                            onclick="javascript:window.location='${cfg.basePath}help?page=dev-help';">
-                                            <h3><a href="${cfg.basePath}help?page=dev-help">Create</a></h3>
+                                            onclick="javascript:window.location='${cfg.basePath}help?page=dev-tutorial';">
+                                            <h3><a href="${cfg.basePath}help?page=dev-tutorial">Create</a></h3>
 
                                               <p>Use ${cfg.productName}'s collaborative
                                               development environment to package open

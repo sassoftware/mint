@@ -145,7 +145,6 @@
                             <li>External Project Page</li>
                             <li>Mailing Lists</li>
                         </ul>
-                        <p>If you want to join an existing project, <a href="FIXME">go here.</a></p>
                     </div>
                 </div>
 
