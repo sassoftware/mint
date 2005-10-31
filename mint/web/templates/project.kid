@@ -87,7 +87,7 @@
 
     <td py:def="projectsPane()" id="right" class="projects">
         <div py:if="not auth.authorized" class="pad">
-            <h3>Start Using ${cfg.productName} Today</h3>
+            <h3>Sign up for ${cfg.productName} Today</h3>
 
             <p>If you are new to ${cfg.productName}, create
             your new account by using the

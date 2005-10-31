@@ -40,40 +40,39 @@ from mint import searcher
 
                             <div>
 
-                              <p py:if="firstTime">Congratulations!  Your new ${cfg.productName}
-                              account is active!</p>
+                                <p py:if="firstTime">Congratulations!  Your new ${cfg.productName}
+                                  account is active!</p>
 
-                              <p>You can use ${cfg.productName} to create a
-                              Linux distribution that meets your specific
-                              needs, or to find an existing distribution
-                              that is just right for you.</p>
+                                <p>You can use ${cfg.productName} to create a
+                                  Linux distribution that meets your specific
+                                  needs, or to find an existing distribution
+                                  that is just right for you.</p>
 
-                            <table id="tasks">
-                                <tr>
-                                    <td id="tasksBlock" style="margin-right: 1em;"
-                                        onclick="javascript:window.location='${cfg.basePath}help?page=dev-help';">
-                                        <h3><a href="${cfg.basePath}help?page=dev-help">Create</a></h3>
+                                <h3>Start using rBuilder Online. Select an option below:</h3>
+                                <table id="tasks">
+                                    <tr>
+                                        <td id="tasksBlock" style="margin-right: 1em;"
+                                            onclick="javascript:window.location='${cfg.basePath}help?page=dev-help';">
+                                            <h3><a href="${cfg.basePath}help?page=dev-help">Create</a></h3>
 
-                                          <p>Use ${cfg.productName}'s collaborative
-                                          development environment to package open
-                                          source software and produce complete
-                                          distributions.</p>
-                                    </td>
-                                    <td id="spacer"></td>
-                                    <td id="tasksBlock"
-                                        onclick="javascript:window.location='${cfg.basePath}help?page=user-help';">
-                                        <h3><a href="${cfg.basePath}help?page=user-help">Find</a></h3>
+                                              <p>Use ${cfg.productName}'s collaborative
+                                              development environment to package open
+                                              source software and produce complete
+                                              distributions.</p>
+                                        </td>
+                                        <td id="spacer"></td>
+                                        <td id="tasksBlock"
+                                            onclick="javascript:window.location='${cfg.basePath}help?page=user-help';">
+                                            <h3><a href="${cfg.basePath}help?page=user-help">Find</a></h3>
 
-                                          <p>Locate and download the distribution that
-                                          suits you, or find a package to add to your
-                                          system&#8212;${cfg.productName} makes it
-                                          easy.</p>
+                                              <p>Locate and download the distribution that
+                                              suits you, or find a package to add to your
+                                              system&#8212;${cfg.productName} makes it
+                                              easy.</p>
 
-                                    </td>
-                                </tr>
-                            </table>
-
-                            <p><b>Want to learn more? <a href="${cfg.basePath}help?page=overview">Go here</a></b></p>
+                                        </td>
+                                    </tr>
+                                </table>
 
                             </div>
 

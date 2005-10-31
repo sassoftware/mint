@@ -37,25 +37,35 @@
                     stepEl = document.getElementById(steps[step]);
                     stepEl.style.display = "block";
                     if(step == 1) {
-                        document.getElementById("prevImg").style.visibility = "hidden";
-                        document.getElementById("nextImg").style.visibility = "visible";
+                        document.getElementById("prevImg1").style.visibility = "hidden";
+                        document.getElementById("nextImg1").style.visibility = "visible";
+                        document.getElementById("prevImg2").style.visibility = "hidden";
+                        document.getElementById("nextImg2").style.visibility = "visible";
                     } else if(step == 8) {
-                        document.getElementById("prevImg").style.visibility = "visible";
-                        document.getElementById("nextImg").style.visibility = "hidden";
+                        document.getElementById("prevImg1").style.visibility = "visible";
+                        document.getElementById("nextImg1").style.visibility = "hidden";
+                        document.getElementById("prevImg2").style.visibility = "visible";
+                        document.getElementById("nextImg2").style.visibility = "hidden";
                     } else {
-                        document.getElementById("prevImg").style.visibility = "visible";
-                        document.getElementById("nextImg").style.visibility = "visible";
+                        document.getElementById("prevImg1").style.visibility = "visible";
+                        document.getElementById("nextImg1").style.visibility = "visible";
+                        document.getElementById("prevImg2").style.visibility = "visible";
+                        document.getElementById("nextImg2").style.visibility = "visible";
                     }
-                    document.getElementById("showAll").style.visibility = "visible";
+                    document.getElementById("showAll1").style.visibility = "visible";
+                    document.getElementById("showAll2").style.visibility = "visible";
 
                     curStep = step;
                 }
                 function showAll() {
                     for(var i = 1; i < steps.length; i++ )
                         document.getElementById(steps[i]).style.display = "block";
-                    document.getElementById("prevImg").style.visibility = "hidden";
-                    document.getElementById("nextImg").style.visibility = "hidden";
-                    document.getElementById("showAll").style.visibility = "hidden";
+                    document.getElementById("prevImg1").style.visibility = "hidden";
+                    document.getElementById("nextImg1").style.visibility = "hidden";
+                    document.getElementById("showAll1").style.visibility = "hidden";
+                    document.getElementById("prevImg2").style.visibility = "hidden";
+                    document.getElementById("nextImg2").style.visibility = "hidden";
+                    document.getElementById("showAll2").style.visibility = "hidden";
                 }
 
             ]]>
@@ -75,6 +85,22 @@
 
         <td id="main">
             <div class="pad">
+                <table style="width: 100%;">
+                    <tr>
+                        <td id="prevImg1" style="text-align: left;">
+                            <img src="${cfg.staticPath}/apps/mint/images/prev.gif" /> 
+                            <a href="javascript:showStep(curStep-1);">Previous Step</a>
+                        </td>
+                        <td id="showAll1" style="text-align: center;">
+                            <a href="javascript:showAll();">Show All</a>
+                        </td>
+                        <td id="nextImg1" style="text-align: right;">
+                            <a href="javascript:showStep(curStep+1);">Next Step 
+                            <img border="0" src="${cfg.staticPath}/apps/mint/images/next.gif" /></a>
+                        </td>
+                    </tr>
+                </table>
+
                 <h1>rBuilder Online for Developers</h1>
 
                 <p>You can create and publish your own packages or a complete distribution by
@@ -85,8 +111,8 @@
                 <div py:attrs="attrs[1]" id="step1">
 
                     <p>Anyone can search and download from rBuilder Online, but if you want to do
-                    development on a package or create a distribution, you will need to create
-                    an account.</p>
+                    development on a package or create a distribution, you will need to <a href="/register">create
+                    an account</a>.</p>
 
                     <div class="helpBlock">
                         <p>By clicking on the new account link above, you will be taken to a form where 
@@ -95,7 +121,7 @@
                           <li>Username</li>
                           <li>Password</li>
                           <li>Email Address</li>
-                          <li>Contact Information</li>
+                          <li>Information About You</li>
                         </ul>
                         <p>Even though it is not required, you should provide as much Contact Information 
                         as possible so that people who you collaborate with on projects may contact you.</p>
@@ -119,7 +145,7 @@
                             <li>External Project Page</li>
                             <li>Mailing Lists</li>
                         </ul>
-                        <p>If you want to join an existing project, <a href="Help-Joining a Project">go here.</a></p>
+                        <p>If you want to join an existing project, <a href="FIXME">go here.</a></p>
                     </div>
                 </div>
 
@@ -145,11 +171,11 @@
                     <div class="helpBlock">
                         <p>You will need to create the following directories on your local machine:</p>
                 
-                        <pre>$$HOME/conary
-$$HOME/conary/&lt;projectname&gt;
-$$HOME/conary/&lt;projectname&gt;/builds
-$$HOME/conary/&lt;projectname&gt;/cache
-$$HOME/conary/&lt;projectname&gt;/src
+                        <pre>[user@host ~]$ <b>mkdir ~/conary</b>
+[user@host ~]$ <b>mkdir ~/conary/&lt;projectname&gt;</b>
+[user@host ~]$ <b>mkdir ~/conary/&lt;projectname&gt;/builds</b>
+[user@host ~]$ <b>mkdir ~/conary/&lt;projectname&gt;/cache</b>
+[user@host ~]$ <b>mkdir ~/conary/&lt;projectname&gt;/src</b>
 
 </pre>
 
@@ -160,14 +186,14 @@ $$HOME/conary/&lt;projectname&gt;/src
                         <pre>repositoryMap      &lt;projectname&gt;.rpath.org http://&lt;username:password&gt;@&lt;projectname&gt;.rpath.org/conary/
 installLabelPath   &lt;projectname&gt;.rpath.org@rpl:devel
 buildLabel         &lt;projectname&gt;.rpath.org@rpl:devel
-buildPath          $$HOME/conary/&lt;projectname&gt;/builds
-lookaside          $$HOME/conary/&lt;projectname&gt;/cache
+buildPath          ~/conary/&lt;projectname&gt;/builds
+lookaside          ~/conary/&lt;projectname&gt;/cache
 contact            &lt;your email address&gt;
 name               &lt;your full name&gt;
 
 </pre>
 
-                        <p>Put this conaryrc file in <tt>$$HOME/conary/projectname/</tt> and any time you use
+                        <p>Put this conaryrc file in <tt>~/conary/projectname/</tt> and any time you use
                         Conary from that directory, it will override any settings such as buildLabel specified
                         in your main <tt>.conaryrc</tt> file in your home directory.</p>
                     </div>
@@ -183,22 +209,24 @@ name               &lt;your full name&gt;
                         <p>From the project source directory on your local system, create a new package:</p>
 
                         <p>Text in <b>bold</b> are the commands that you type.</p>
-                        <pre>[user@host src]$ <b>cvc newpkg</b>
-[user@host src]$ <b>cvc newpkg &lt;package&gt;</b>
+                        <pre>[user@host src]$ <b>cvc newpkg &lt;package&gt;</b>
 
 </pre>
                         <p>A package directory will be created.  Change into that
                         package directory and create the package recipe:</p>
 
                         <pre>[user@host src]$ <b>cd &lt;package&gt;</b>
-[user@host package]$ <b>vi &lt;package&gt;.recipe</b>
+[user@host package]$ <b>gedit &lt;package&gt;.recipe</b>
 
 </pre>
-                        <p>It is often best to start developing your recipe by looking at existing 
-                        recipes.  There are a myriad of recipes in existing projects.  Browse the 
-                        <a href="http://www.rpath.com/repos/rpath/browse">rPath Linux project repository</a> 
-                        for some good examples.  In particular, look at <tt>group-dist</tt> for an example
-                        recipe that can be used to build an entire distribution.</p>
+                        <p>To begin building your recipe, you may look at the 
+                            <a href="http://wiki.conary.com/ConaryRecipe">documentation</a>.
+                            It is often best to start developing your recipe by looking at 
+                            existing recipes.  A good place to start is this 
+                            <a href="http://wiki.conary.com/GroupSampleRecipePage">sample recipe</a>.
+                            There are also a myriad of recipes in existing projects.
+                            Browse the rPath Linux project repository for some good examples.
+                        </p>
                     </div>
                 </div>
 
@@ -234,13 +262,13 @@ name               &lt;your full name&gt;
                         following command:</p>
 
                         <pre>[user@host &lt;package&gt;]$ <b>cvc add &lt;projectname&gt;.recipe</b>
-[user@host &lt;package&gt;]$ <b>cvc commit</b>
+[user@host &lt;package&gt;]$ <b>cvc commit --message "new recipe"</b>
 
 </pre>
 
                         <p>Now you need to cook your package into the repository:</p>
 
-                        <pre>[user@host &lt;package&gt;]$ cvc <b>cook &lt;package&gt;</b>
+                        <pre>[user@host &lt;package&gt;]$ <b>cvc cook &lt;package&gt;</b>
 
 </pre>
 
@@ -274,14 +302,14 @@ name               &lt;your full name&gt;
 
                 <table style="width: 100%; padding: 0.5em; border-top: 2px solid gray;">
                     <tr>
-                        <td id="prevImg" style="text-align: left;">
+                        <td id="prevImg2" style="text-align: left;">
                             <img src="${cfg.staticPath}/apps/mint/images/prev.gif" /> 
                             <a href="javascript:showStep(curStep-1);">Previous Step</a>
                         </td>
-                        <td id="showAll" style="text-align: center;">
+                        <td id="showAll2" style="text-align: center;">
                             <a href="javascript:showAll();">Show All</a>
                         </td>
-                        <td id="nextImg" style="text-align: right;">
+                        <td id="nextImg2" style="text-align: right;">
                             <a href="javascript:showStep(curStep+1);">Next Step 
                             <img border="0" src="${cfg.staticPath}/apps/mint/images/next.gif" /></a>
                         </td>
