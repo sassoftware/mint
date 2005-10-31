@@ -12,6 +12,7 @@ kid_files =			\
         privacy.kid             \
         tos.kid                 \
         user-help.kid		\
+	user-tutorial.kid	\
 	legal.kid
 
 python_files =

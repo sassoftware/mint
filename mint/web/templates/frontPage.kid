@@ -62,8 +62,8 @@ from mint import searcher
                                         </td>
                                         <td id="spacer"></td>
                                         <td id="tasksBlock"
-                                            onclick="javascript:window.location='${cfg.basePath}help?page=user-help';">
-                                            <h3><a href="${cfg.basePath}help?page=user-help">Find</a></h3>
+                                            onclick="javascript:window.location='${cfg.basePath}help?page=user-tutorial';">
+                                            <h3><a href="${cfg.basePath}help?page=user-tutorial">Find</a></h3>
 
                                               <p>Locate and download the distribution that
                                               suits you, or find a package to add to your
