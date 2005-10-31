@@ -52,7 +52,6 @@
                         document.getElementById("prevImg2").style.visibility = "visible";
                         document.getElementById("nextImg2").style.visibility = "visible";
                     }
-                    document.getElementById("showAll1").style.visibility = "visible";
                     document.getElementById("showAll2").style.visibility = "visible";
 
                     curStep = step;
@@ -62,7 +61,6 @@
                         document.getElementById(steps[i]).style.display = "block";
                     document.getElementById("prevImg1").style.visibility = "hidden";
                     document.getElementById("nextImg1").style.visibility = "hidden";
-                    document.getElementById("showAll1").style.visibility = "hidden";
                     document.getElementById("prevImg2").style.visibility = "hidden";
                     document.getElementById("nextImg2").style.visibility = "hidden";
                     document.getElementById("showAll2").style.visibility = "hidden";
@@ -85,26 +83,29 @@
 
         <td id="main">
             <div class="pad">
+
+                <a href="xxx" style="float: right;">PDF of this document
+                    <img style="border: none;" src="${cfg.staticPath}/apps/mint/images/pdficon_small.gif" />
+                </a>
+
+                <h1>rBuilder Online for Developers</h1>
+
+                <p>You can create and publish your own packages or a complete distribution by
+                following these simple steps:</p>
+
                 <table style="width: 100%;">
                     <tr>
-                        <td id="prevImg1" style="text-align: left;">
+                        <td id="prevImg1" style="text-align: left; width: 50%;">
                             <img src="${cfg.staticPath}/apps/mint/images/prev.gif" /> 
                             <a href="javascript:showStep(curStep-1);">Previous Step</a>
                         </td>
-                        <td id="showAll1" style="text-align: center;">
-                            <a href="javascript:showAll();">Show All</a>
-                        </td>
-                        <td id="nextImg1" style="text-align: right;">
+                        <td id="nextImg1" style="text-align: right; width: 50%;">
                             <a href="javascript:showStep(curStep+1);">Next Step 
                             <img border="0" src="${cfg.staticPath}/apps/mint/images/next.gif" /></a>
                         </td>
                     </tr>
                 </table>
 
-                <h1>rBuilder Online for Developers</h1>
-
-                <p>You can create and publish your own packages or a complete distribution by
-                following these simple steps:</p>
 
 
                 <h2><a href="javascript:showStep(1);">Step 1. Create an rBuilder Online account</a></h2>
@@ -301,14 +302,14 @@ name               &lt;your full name&gt;
 
                 <table style="width: 100%; padding: 0.5em; border-top: 2px solid gray;">
                     <tr>
-                        <td id="prevImg2" style="text-align: left;">
+                        <td id="prevImg2" style="text-align: left; width: 33%;">
                             <img src="${cfg.staticPath}/apps/mint/images/prev.gif" /> 
                             <a href="javascript:showStep(curStep-1);">Previous Step</a>
                         </td>
-                        <td id="showAll2" style="text-align: center;">
+                        <td id="showAll2" style="text-align: center; width: 33%;">
                             <a href="javascript:showAll();">Show All</a>
                         </td>
-                        <td id="nextImg2" style="text-align: right;">
+                        <td id="nextImg2" style="text-align: right; width: 33%;">
                             <a href="javascript:showStep(curStep+1);">Next Step 
                             <img border="0" src="${cfg.staticPath}/apps/mint/images/next.gif" /></a>
                         </td>

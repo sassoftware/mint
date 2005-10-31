@@ -52,7 +52,6 @@
                         document.getElementById("prevImg2").style.visibility = "visible";
                         document.getElementById("nextImg2").style.visibility = "visible";
                     }
-                    document.getElementById("showAll1").style.visibility = "visible";
                     document.getElementById("showAll2").style.visibility = "visible";
 
                     curStep = step;
@@ -62,7 +61,6 @@
                         document.getElementById(steps[i]).style.display = "block";
                     document.getElementById("prevImg1").style.visibility = "hidden";
                     document.getElementById("nextImg1").style.visibility = "hidden";
-                    document.getElementById("showAll1").style.visibility = "hidden";
                     document.getElementById("prevImg2").style.visibility = "hidden";
                     document.getElementById("nextImg2").style.visibility = "hidden";
                     document.getElementById("showAll2").style.visibility = "hidden";
@@ -85,26 +83,23 @@
 
         <td id="main">
             <div class="pad">
+                <h1>rBuilder Online for Users</h1>
+
+                <p>If you are already using a Conary-based system, then you have come to the
+                    right place to look for software.</p>
+
                 <table style="width: 100%;">
                     <tr>
-                        <td id="prevImg1" style="text-align: left;">
+                        <td id="prevImg1" style="text-align: left; width: 50%;">
                             <img src="${cfg.staticPath}/apps/mint/images/prev.gif" /> 
                             <a href="javascript:showStep(curStep-1);">Previous Step</a>
                         </td>
-                        <td id="showAll1" style="text-align: center;">
-                            <a href="javascript:showAll();">Show All</a>
-                        </td>
-                        <td id="nextImg1" style="text-align: right;">
+                        <td id="nextImg1" style="text-align: right; width: 50%;">
                             <a href="javascript:showStep(curStep+1);">Next Step 
                             <img border="0" src="${cfg.staticPath}/apps/mint/images/next.gif" /></a>
                         </td>
                     </tr>
                 </table>
-
-                <h1>rBuilder Online for Users</h1>
-
-                <p>If you are already using a Conary-based system, then you have come to the
-                    right place to look for software.</p>
 
 
                 <h2><a href="javascript:showStep(1);">Step 1. Find the right package or distribution</a></h2>
@@ -195,14 +190,14 @@
 
                 <table style="width: 100%; padding: 0.5em; border-top: 2px solid gray;">
                     <tr>
-                        <td id="prevImg2" style="text-align: left;">
+                        <td id="prevImg2" style="text-align: left; width: 33%;">
                             <img src="${cfg.staticPath}/apps/mint/images/prev.gif" /> 
                             <a href="javascript:showStep(curStep-1);">Previous Step</a>
                         </td>
-                        <td id="showAll2" style="text-align: center;">
+                        <td id="showAll2" style="text-align: center; width: 33%;">
                             <a href="javascript:showAll();">Show All</a>
                         </td>
-                        <td id="nextImg2" style="text-align: right;">
+                        <td id="nextImg2" style="text-align: right; width: 33%;">
                             <a href="javascript:showStep(curStep+1);">Next Step 
                             <img border="0" src="${cfg.staticPath}/apps/mint/images/next.gif" /></a>
                         </td>
