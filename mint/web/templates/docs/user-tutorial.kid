@@ -41,7 +41,7 @@
                         document.getElementById("nextImg1").style.visibility = "visible";
                         document.getElementById("prevImg2").style.visibility = "hidden";
                         document.getElementById("nextImg2").style.visibility = "visible";
-                    } else if(step == 8) {
+                    } else if(step == 4) {
                         document.getElementById("prevImg1").style.visibility = "visible";
                         document.getElementById("nextImg1").style.visibility = "hidden";
                         document.getElementById("prevImg2").style.visibility = "visible";
