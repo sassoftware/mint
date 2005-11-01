@@ -25,24 +25,24 @@ class BrowseTest(MintRepositoryHelper):
 
     def _fakePackage(self, projectId, name):
         cu = self.db.cursor()
-        r = cu.execute("SELECT IFNULL(MAX(pkgId) + 1, 1) FROM PackageIndex")
-        pkgId = r.fetchone()[0]
+        cu.execute("SELECT IFNULL(MAX(pkgId) + 1, 1) FROM PackageIndex")
+        pkgId = cu.fetchone()[0]
 
         r = cu.execute("INSERT INTO PackageIndex VALUES(?, ?, ?, 'whoCares')", (pkgId, projectId, name))
         self.db.commit()
 
     def _sortOrderDict(self):
         return {
-            PROJECTNAME_ASC: [[4, 'bal', 'Bal', '', 1129542003.5455239], [2, 'bar', 'Bar', '', 1129550003.5455239], [3, 'baz', 'Baz', '', 1129560003.5455239], [1, 'foo', 'Foo', '', 1128540046.5455239]],
-            PROJECTNAME_DES: [[1, 'foo', 'Foo', '', 1128540046.5455239], [3, 'baz', 'Baz', '', 1129560003.5455239], [2, 'bar', 'Bar', '', 1129550003.5455239], [4, 'bal', 'Bal', '', 1129542003.5455239]],
-            LASTMODIFIED_ASC: [[1, 'foo', 'Foo', '', 1128540046.5455239], [4, 'bal', 'Bal', '', 1129542003.5455239], [2, 'bar', 'Bar', '', 1129550003.5455239], [3, 'baz', 'Baz', '', 1129560003.5455239]],
-            LASTMODIFIED_DES: [[3, 'baz', 'Baz', '', 1129560003.5455239], [2, 'bar', 'Bar', '', 1129550003.5455239], [4, 'bal', 'Bal', '', 1129542003.5455239], [1, 'foo', 'Foo', '', 1128540046.5455239]],
-            CREATED_ASC: [[2, 'bar', 'Bar', '', 1129550003.5455239], [3, 'baz', 'Baz', '', 1129560003.5455239], [4, 'bal', 'Bal', '', 1129542003.5455239], [1, 'foo', 'Foo', '', 1128540046.5455239]],
-            CREATED_DES: [[1, 'foo', 'Foo', '', 1128540046.5455239], [4, 'bal', 'Bal', '', 1129542003.5455239], [3, 'baz', 'Baz', '', 1129560003.5455239], [2, 'bar', 'Bar', '', 1129550003.5455239]],
-            NUMDEVELOPERS_ASC: [[2, 'bar', 'Bar', '', 1129550003.5455239], [3, 'baz', 'Baz', '', 1129560003.5455239], [4, 'bal', 'Bal', '', 1129542003.5455239], [1, 'foo', 'Foo', '', 1128540046.5455239]],
-            NUMDEVELOPERS_DES: [[1, 'foo', 'Foo', '', 1128540046.5455239], [4, 'bal', 'Bal', '', 1129542003.5455239], [3, 'baz', 'Baz', '', 1129560003.5455239], [2, 'bar', 'Bar', '', 1129550003.5455239]],
-            ACTIVITY_ASC: [[1, 'foo', 'Foo', '', 1128540046.5455239], [3, 'baz', 'Baz', '', 1129560003.5455239], [4, 'bal', 'Bal', '', 1129542003.5455239], [2, 'bar', 'Bar', '', 1129550003.5455239]],
-            ACTIVITY_DES: [[2, 'bar', 'Bar', '', 1129550003.5455239], [4, 'bal', 'Bal', '', 1129542003.5455239], [3, 'baz', 'Baz', '', 1129560003.5455239], [1, 'foo', 'Foo', '', 1128540046.5455239]],
+            PROJECTNAME_ASC: [[4, 'bal', 'Bal', '', 1129542003], [2, 'bar', 'Bar', '', 1129550003], [3, 'baz', 'Baz', '', 1129560003], [1, 'foo', 'Foo', '', 1128540046]],
+            PROJECTNAME_DES: [[1, 'foo', 'Foo', '', 1128540046], [3, 'baz', 'Baz', '', 1129560003], [2, 'bar', 'Bar', '', 1129550003], [4, 'bal', 'Bal', '', 1129542003]],
+            LASTMODIFIED_ASC: [[1, 'foo', 'Foo', '', 1128540046], [4, 'bal', 'Bal', '', 1129542003], [2, 'bar', 'Bar', '', 1129550003], [3, 'baz', 'Baz', '', 1129560003]],
+            LASTMODIFIED_DES: [[3, 'baz', 'Baz', '', 1129560003], [2, 'bar', 'Bar', '', 1129550003], [4, 'bal', 'Bal', '', 1129542003], [1, 'foo', 'Foo', '', 1128540046]],
+            CREATED_ASC: [[2, 'bar', 'Bar', '', 1129550003], [3, 'baz', 'Baz', '', 1129560003], [4, 'bal', 'Bal', '', 1129542003], [1, 'foo', 'Foo', '', 1128540046]],
+            CREATED_DES: [[1, 'foo', 'Foo', '', 1128540046], [4, 'bal', 'Bal', '', 1129542003], [3, 'baz', 'Baz', '', 1129560003], [2, 'bar', 'Bar', '', 1129550003]],
+            NUMDEVELOPERS_ASC: [[2, 'bar', 'Bar', '', 1129550003], [3, 'baz', 'Baz', '', 1129560003], [4, 'bal', 'Bal', '', 1129542003], [1, 'foo', 'Foo', '', 1128540046]],
+            NUMDEVELOPERS_DES: [[1, 'foo', 'Foo', '', 1128540046], [4, 'bal', 'Bal', '', 1129542003], [3, 'baz', 'Baz', '', 1129560003], [2, 'bar', 'Bar', '', 1129550003]],
+            ACTIVITY_ASC: [[1, 'foo', 'Foo', '', 1128540046], [3, 'baz', 'Baz', '', 1129560003], [4, 'bal', 'Bal', '', 1129542003], [2, 'bar', 'Bar', '', 1129550003]],
+            ACTIVITY_DES: [[2, 'bar', 'Bar', '', 1129550003], [4, 'bal', 'Bal', '', 1129542003], [3, 'baz', 'Baz', '', 1129560003], [1, 'foo', 'Foo', '', 1128540046]],
             }
 
     def testBrowse(self):
@@ -52,13 +52,13 @@ class BrowseTest(MintRepositoryHelper):
         client4, userId4 = self.quickMintUser("testuser4", "testpass")
 
         fooId = client.newProject("Foo", "foo", "rpath.org")
-        self._changeTimestamps(fooId, 1128540046.5455239, 1128540046.5455239)
+        self._changeTimestamps(fooId, 1128540046, 1128540046)
         barId = client.newProject("Bar", "bar", "rpath.org")
-        self._changeTimestamps(barId, 1124540046.5455239, 1124540046.5455239)
+        self._changeTimestamps(barId, 1124540046, 1124540046)
         bazId = client.newProject("Baz", "baz", "rpath.org")
-        self._changeTimestamps(bazId, 1126540046.5455239, 1126640046.5455239)
+        self._changeTimestamps(bazId, 1126540046, 1126640046)
         balId = client.newProject("Bal", "bal", "rpath.org")
-        self._changeTimestamps(balId, 1128540003.5455239, 1129540003.5455239)
+        self._changeTimestamps(balId, 1128540003, 1129540003)
 
         fooProject = client.getProject(fooId)
         barProject = client.getProject(barId)
@@ -66,15 +66,15 @@ class BrowseTest(MintRepositoryHelper):
         balProject = client.getProject(balId)
 
         # add some fake commits for sorting
-        self._fakeCommit(barId, 1129550003.5455239, userId)
-        self._fakeCommit(bazId, 1129560003.5455239, userId2)
-        self._fakeCommit(balId, 1129541003.5455239, userId4)
-        self._fakeCommit(balId, 1129542003.5455239, userId3)
-        self._fakeCommit(barId, 1129543003.5455239, userId)
-        self._fakeCommit(barId, 1129544003.5455239, userId)
+        self._fakeCommit(barId, 1129550003, userId)
+        self._fakeCommit(bazId, 1129560003, userId2)
+        self._fakeCommit(balId, 1129541003, userId4)
+        self._fakeCommit(balId, 1129542003, userId3)
+        self._fakeCommit(barId, 1129543003, userId)
+        self._fakeCommit(barId, 1129544003, userId)
         # and a couple of really old ones that won't show up...
-        self._fakeCommit(bazId, 1120040003.5455239, userId2)
-        self._fakeCommit(bazId, 1120040013.5455239, userId2)
+        self._fakeCommit(bazId, 1120040003, userId2)
+        self._fakeCommit(bazId, 1120040013, userId2)
 
         # add some members to each project to make the popularity sort useful
         fooProject.addMemberById(userId2, userlevels. DEVELOPER)
@@ -97,13 +97,13 @@ class BrowseTest(MintRepositoryHelper):
     def testSearchProjects(self):
         client, userId = self.quickMintUser("testuser", "testpass")
         fooId = client.newProject("Foo Project", "foo", "rpath.org")
-        self._changeTimestamps(fooId, 1128540046.5455239, 1128540046.5455239)
+        self._changeTimestamps(fooId, 1128540046, 1128540046)
         booId = client.newProject("Boo Project", "boo", "rpath.org")
-        self._changeTimestamps(booId, 1124540046.5455239, 1124540046.5455239)
+        self._changeTimestamps(booId, 1124540046, 1124540046)
         snoozeId = client.newProject("Snooze Project", "snooze", "rpath.org")
-        self._changeTimestamps(snoozeId, 1126540046.5455239, 1126640046.5455239)
+        self._changeTimestamps(snoozeId, 1126540046, 1126640046)
         snoofId = client.newProject("Snoof Project", "snoof", "rpath.org")
-        self._changeTimestamps(snoofId, 1128540003.5455239, 1129540003.5455239)
+        self._changeTimestamps(snoofId, 1128540003, 1129540003)
 
         try:
             client.getProjectSearchResults('oo ')
@@ -111,7 +111,7 @@ class BrowseTest(MintRepositoryHelper):
         except SearchTermsError:
             pass
 
-        if client.getProjectSearchResults('Foo') != ([[1, 'foo', 'Foo Project', '', 1128540046.5455239]], 1):
+        if client.getProjectSearchResults('Foo') != ([[1, 'foo', 'Foo Project', '', 1128540046]], 1):
             self.fail("Search for 'Foo' did not return the correct results.")
         res = client.getProjectSearchResults('Project')
         assert(res[1] == 4)

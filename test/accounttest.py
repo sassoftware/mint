@@ -19,9 +19,9 @@ class AccountTest(MintRepositoryHelper):
     # call for it
     def _getConfirmation(self, userId):
         cu = self.db.cursor()
-        r = cu.execute("SELECT confirmation FROM Confirmations WHERE userId=?", userId)
+        cu.execute("SELECT confirmation FROM Confirmations WHERE userId=?", userId)
         try:
-            return r.fetchone()[0]
+            return cu.fetchone()[0]
         except TypeError:
             return None
 
@@ -29,8 +29,58 @@ class AccountTest(MintRepositoryHelper):
     # xmlrpc call. if there ever is in the future, consider dropping this func.
     def _userActive(self, userId):
         cu = self.db.cursor()
-        r = cu.execute("SELECT active FROM Users WHERE userId=?", userId)
-        return r.fetchone()[0]
+        cu.execute("SELECT active FROM Users WHERE userId=?", userId)
+        return cu.fetchone()[0]
+
+    def testBasicAttributes(self):
+        client, userId = self.quickMintUser("testuser","testpass")
+        user = client.getUser(userId)
+
+        eMail = "not_for_real@broken.domain"
+        displayEmail = "some@invalid.email"
+        fullName = "Test A. User"
+        blurb = "A blurb of a user."
+
+        user.setDisplayEmail(displayEmail)
+        user.setFullName(fullName)
+        user.setBlurb(blurb)
+        # FIXME: move validation logic to server side. this should not pass
+        # in the future
+        user.setEmail(eMail)
+        user.setPassword("passtest")
+
+        # refresh the user
+        user = client.getUser(userId)
+
+        if user.getDisplayEmail() != displayEmail:
+            self.fail("User's display email lost in translation")
+
+        if user.getFullName() != fullName:
+            self.fail("User's full name lost in translation")
+
+        if user.getBlurb() != blurb:
+            self.fail("User's Blurb lost in translation")
+
+        if user.getEmail() != eMail:
+            self.fail("User's email lost in translation")
+
+        client.server.updateAccessedTime(userId)
+        try:
+            client.server.validateNewEmail(userId, eMail)
+            self.fail("Email address was definitely bogus")
+        except MailError:
+            pass
+
+    def testProjectInteraction(self):
+        client, userId = self.quickMintUser("testuser","testpass")
+        user = client.getUser(userId)
+        projectId = client.newProject("Foo","foo", "example.com")
+        project = client.getProject(projectId)
+        project.addMemberById(userId, userlevels.OWNER)
+        # these functions have a different code path if the
+        # user is a member of projects
+        user.setPassword("passtest")
+        user.cancelUserAccount()
 
     def testBasicAttributes(self):
         client, userId = self.quickMintUser("testuser","testpass")

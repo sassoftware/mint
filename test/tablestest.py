@@ -13,11 +13,11 @@ from mint_rephelp import MintRepositoryHelper
 class TablesTest(MintRepositoryHelper):
     def testReleasesTable(self):
         releaseTable = releases.ReleasesTable(self.db)
-        id = releaseTable.new(projectId = 0, name = "Release", desc = "A release.")
+        id = releaseTable.new(projectId = 0, name = "Release", description = "A release.")
         release = releaseTable.get(id)
         
         assert(release['name'] == 'Release')
-        assert(release['desc'] == 'A release.')
+        assert(release['description'] == 'A release.')
         assert(release['releaseId'] == id)
 
 if __name__ == "__main__":

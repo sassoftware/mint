@@ -15,26 +15,6 @@ from mint import dbversion
 from mint import sessiondb
 
 class SessionTest(MintRepositoryHelper):
-    def testSessions(self):
-        st = sessiondb.SessionsTable(self.db)
-
-        # create a session
-        st.save("abcdefg123456", {'_data':      'data',
-                                  '_accessed':  time.time() - 20,
-                                  '_timeout':   10}
-        )
-
-        # load and check data
-        d = st.load("abcdefg123456")
-        assert(d['_data'] == 'data')
-
-        # clean up expired sessions
-        st.cleanup()
-
-        # confirm that expired session went away
-        d = st.load("abcdefg123456")
-        assert(not d)
-
     # note: sessionData should really mimic what we'd see from a web
     # client since this will help detect errors due to typeChecking
     def testClientSessions(self):

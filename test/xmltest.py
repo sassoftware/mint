@@ -115,7 +115,7 @@ class XmlInterfaceTest(MintRepositoryHelper):
 
         try:
             foo(self, 'string')
-            self.fail("Illegal paramter should have failed.")
+            self.fail("Illegal parameter should have failed.")
         except ParameterError:
             pass
 

@@ -59,10 +59,14 @@ class RepositoryTest(MintRepositoryHelper):
 
         # test that the commits table was updated
         # give some time for the commit action to run
+        iters = 0
         while True:
             sleep(0.1)
+            iters += 1
             if project.getCommits() != []:
                 break
+            if iters > 50:
+                self.fail("commits didn't show up")
                 
         assert(project.getCommits() == [('testcase:source', '1.0-1')])
 

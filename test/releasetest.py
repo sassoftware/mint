@@ -122,7 +122,7 @@ class ReleaseTest(MintRepositoryHelper):
             pass
 
         try:
-            release.setPublished(True)
+            release.setPublished(False)
             self.fail("Release allowed altering published state after publish")
         except ReleasePublished:
             pass
@@ -141,7 +141,7 @@ class ReleaseTest(MintRepositoryHelper):
 
         release.setImageType(releasetypes.STUB_IMAGE)
         release.setPublished(True)
-        
+
         try:
             release.deleteRelease()
             self.fail("Release could be deleted after it was published")
@@ -241,13 +241,13 @@ class ReleaseTest(MintRepositoryHelper):
         project2Id = client.newProject("Bar", "bar", "rpath.org")
         project3Id = adminClient.newProject("Hide", "hide", "rpath.org")
         adminClient.hideProject(project3Id)
-        releasesToMake = [ (projectId, "foo", "Foo Unpublished"),
-                           (project3Id, "hide", "Hide Release 1"),
-                           (projectId, "foo", "Foo Release"),
-                           (projectId, "foo", "Foo Release 2"),
-                           (project2Id, "bar", "Bar Release"),
-                           (project2Id, "bar", "Bar Release 2"),
-                           (projectId, "foo", "Foo Release 3")]
+        releasesToMake = [ (int(projectId), "foo", "Foo Unpublished"),
+                           (int(project3Id), "hide", "Hide Release 1"),
+                           (int(projectId), "foo", "Foo Release"),
+                           (int(projectId), "foo", "Foo Release 2"),
+                           (int(project2Id), "bar", "Bar Release"),
+                           (int(project2Id), "bar", "Bar Release 2"),
+                           (int(projectId), "foo", "Foo Release 3")]
         for projId, hostname, relName in releasesToMake:
             if "Hide" in relName:
                 release = adminClient.newRelease(projId, relName)
@@ -256,6 +256,7 @@ class ReleaseTest(MintRepositoryHelper):
             release.setTrove("group-trove", "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
             if "Unpublished" not in relName:
                 release.setPublished(True)
+            time.sleep(1) # hack: let the timestamp increment since mysql doesn't do sub-second resolution 
         releaseList = client.server.getReleaseList(20, 0)
         releasesToMake.reverse()
         hostnames = [x[1] for x in releasesToMake]
