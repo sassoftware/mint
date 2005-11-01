@@ -1,3 +1,9 @@
+Changes in 1.0.2:
+
+* Finished ISOs are placed in a separate path from the temporary generation
+  location, to ease cleanup and pure-http access of images.
+* The job server now prefers to run a user 'isogen', instead of root.
+
 Changes in 1.0.1:
 
 * Highly improved developer and user tutorials.
