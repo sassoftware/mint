@@ -356,8 +356,11 @@ class InstallableIso(ImageGenerator):
         bootDest = os.path.join(infoMap['isodir'], 'boot.iso')
         diskbootDest = os.path.join(infoMap['isodir'], 'diskboot.img')
         gencslist._linkOrCopyFile(os.path.join(topdir, 'images', 'boot.iso'), bootDest)
-        gencslist._linkOrCopyFile(os.path.join(topdir, 'images', 'diskimage.img'), diskimageDest)
-                
+        gencslist._linkOrCopyFile(os.path.join(topdir, 'images', 'diskboot.img'), diskbootDest)
+        
+        # clean up
+        self.status("Cleaning up...")
+        util.rmtree(os.path.normpath(os.path.join(topdir, "..")))
         isoList += ( (bootDest, "boot.iso"),
                      (diskbootDest, "diskboot.img"), )
 
