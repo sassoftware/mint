@@ -40,7 +40,7 @@ class LabelMissing(MintError):
 
 class Project(database.TableObject):
     __slots__ = ('creatorId', 'name',
-                 'desc', 'hostname', 'domainname', 'projecturl', 
+                 'description', 'hostname', 'domainname', 'projecturl', 
                  'hidden', 'external', 'disabled',
                  'timeCreated', 'timeModified')
 
@@ -69,7 +69,7 @@ class Project(database.TableObject):
         return self.server.getDefaultProjectLabel(self.id)
 
     def getDesc(self):
-        return self.desc
+        return self.description
 
     def getTimeCreated(self):
         return self.timeCreated
@@ -187,6 +187,21 @@ class Project(database.TableObject):
 class ProjectsTable(database.KeyedTable):
     name = 'Projects'
     key = 'projectId'
+    createSQL_mysql = """CREATE TABLE Projects (
+                    projectId       INT PRIMARY KEY AUTO_INCREMENT,
+                    creatorId       INT,
+                    name            varchar(128) UNIQUE,
+                    hostname        varchar(128) UNIQUE,
+                    domainname      varchar(128) DEFAULT '' NOT NULL,
+                    projecturl      varchar(128) DEFAULT '' NOT NULL,
+                    description     text NOT NULL DEFAULT '',
+                    disabled        INT DEFAULT 0,
+                    hidden          INT DEFAULT 0,
+                    external        INT DEFAULT 0,
+                    timeCreated     INT,
+                    timeModified    INT DEFAULT 0
+                )"""
+
     createSQL = """CREATE TABLE Projects (
                     projectId       INTEGER PRIMARY KEY,
                     creatorId       INT,
@@ -194,7 +209,7 @@ class ProjectsTable(database.KeyedTable):
                     hostname        STR UNIQUE,
                     domainname      STR DEFAULT '' NOT NULL,
                     projecturl      STR DEFAULT '' NOT NULL,
-                    desc            STR NOT NULL DEFAULT '',
+                    description     STR NOT NULL DEFAULT '',
                     disabled        INT DEFAULT 0,
                     hidden          INT DEFAULT 0,
                     external        INT DEFAULT 0,
@@ -202,7 +217,7 @@ class ProjectsTable(database.KeyedTable):
                     timeModified    INT DEFAULT 0
                 )"""
     fields = ['creatorId', 'name', 'hostname', 'domainname', 'projecturl', 
-              'desc', 'disabled', 'hidden', 'external', 'timeCreated', 'timeModified']
+              'description', 'disabled', 'hidden', 'external', 'timeCreated', 'timeModified']
     indexes = { "ProjectsHostnameIdx": "CREATE INDEX ProjectsHostnameIdx ON Projects(hostname)",
                 "ProjectsDisabledIdx": "CREATE INDEX ProjectsDisabledIdx ON Projects(disabled)",
                 "ProjectsHiddenIdx": "CREATE INDEX ProjectsHiddenIdx ON Projects(hidden)"
@@ -229,6 +244,13 @@ class ProjectsTable(database.KeyedTable):
                     cu.execute("UPDATE Projects SET external=0")
                 except:
                     return False
+            if dbversion == 3:
+                cu = self.db.cursor()
+                try:
+                    cu.execute("ALTER TABLE Projects ADD COLUMN description STR")
+                    cu.execute("UPDATE Projects SET description=desc")
+                except:
+                    return False
                     
         return True
 
@@ -251,36 +273,38 @@ class ProjectsTable(database.KeyedTable):
         cu = self.db.cursor()
 
         sql = """
-            SELECT projectId, disabled, hidden, hostname || ' - ' || name 
+            SELECT projectId, disabled, hidden, %s
             FROM Projects
             ORDER BY hostname
-        """
+        """ % database.concat(self.db, "hostname", "' - '", "name")
         cu.execute(sql)
 
         results = cu.fetchall()
-        return results
+        return [(int(x[0]), x[1], x[2], x[3]) for x in results]
 
     def getProjectIdByFQDN(self, fqdn):
         cu = self.db.cursor()
 
-        cu.execute("SELECT projectId FROM Projects WHERE hostname || '.' || domainname=? AND disabled=0", fqdn)
+        fqdnConcat = database.concat(self.db, "hostname", "'.'", "domainname")
+        cu.execute("""SELECT projectId FROM Projects 
+                      WHERE %s=? AND disabled=0""" % fqdnConcat, fqdn)
 
-        try:
-            r = cu.next()
-        except StopIteration:
+        r = cu.fetchone()
+        if not r:
             raise database.ItemNotFound
-        return r[0]
+        else:
+            return r[0]
 
     def getProjectIdByHostname(self, hostname):
         cu = self.db.cursor()
 
         cu.execute("SELECT projectId FROM Projects WHERE hostname=? AND disabled=0", hostname)
 
-        try:
-            r = cu.next()
-        except StopIteration:
+        r = cu.fetchone()
+        if not r:
             raise database.ItemNotFound
-        return r[0]
+        else:
+            return r[0]
 
     def getProjectIdsByMember(self, userId, filter = False):
         cu = self.db.cursor()
@@ -298,7 +322,7 @@ class ProjectsTable(database.KeyedTable):
         cu = self.db.cursor()
         cu.execute("SELECT count(name) FROM Projects WHERE disabled=0 AND hidden=0")
 
-        return cu.next()[0]
+        return cu.fetchone()[0]
 
     def getProjects(self, sortOrder, limit, offset):
         """ Return a list of projects with no filtering whatsoever
@@ -313,8 +337,12 @@ class ProjectsTable(database.KeyedTable):
         cu.execute(SQL)
 
         ids = []
-        for x in cu:
+        for x in cu.fetchall():
             ids.append(list(x))
+
+            # cast id and timestamp to int
+            ids[-1][0] = int(ids[-1][0])
+            ids[-1][4] = int(ids[-1][4])
             if len(ids[-1][projectlisting.descindex]) > projectlisting.desctrunclength:
                 ids[-1][projectlisting.descindex] = ids[-1][projectlisting.descindex][:projectlisting.desctrunclength] + "..."
 
@@ -335,12 +363,12 @@ class ProjectsTable(database.KeyedTable):
                         The project's description
                         The date last modified.
         """
-        columns = ['projectId', 'hostname', 'name', 'desc',
+        columns = ['projectId', 'hostname', 'name', 'description',
                    """IFNULL(
                        (SELECT MAX(Commits.timestamp) FROM Commits
                        WHERE Commits.projectId=Projects.projectId),
                    Projects.timeCreated) AS timeModified"""]
-        searchcols = ['name', 'desc']
+        searchcols = ['name', 'description']
         ids, count = database.KeyedTable.search(self, columns, 'Projects', 
             searcher.Searcher.where(terms, searchcols, 'AND disabled=0 AND hidden=0'),
             'NAME', searcher.Searcher.lastModified('timeModified', modified),
@@ -385,8 +413,8 @@ class ProjectsTable(database.KeyedTable):
 
     def isHidden(self, projectId):
         cu = self.db.cursor()
-        r = cu.execute("SELECT IFNULL(hidden, 0) from Projects WHERE projectId=?", projectId)
-        return r.fetchone()[0]
+        cu.execute("SELECT IFNULL(hidden, 0) from Projects WHERE projectId=?", projectId)
+        return cu.fetchone()[0]
 
     def disable(self, projectId, reposPath):
         cu = self.db.cursor()
@@ -412,8 +440,8 @@ class ProjectsTable(database.KeyedTable):
 
     def isDisabled(self, projectId):
         cu = self.db.cursor()
-        r = cu.execute("SELECT IFNULL(disabled, 0) from Projects WHERE projectId=?", projectId)
-        return r.fetchone()[0]
+        cu.execute("SELECT IFNULL(disabled, 0) from Projects WHERE projectId=?", projectId)
+        return cu.fetchone()[0]
 
 class LabelsTable(database.KeyedTable):
     name = 'Labels'
@@ -427,6 +455,15 @@ class LabelsTable(database.KeyedTable):
                     username        STR,
                     password        STR
                 )"""
+    createSQL_mysql = """CREATE TABLE Labels (
+                    labelId         INT PRIMARY KEY AUTO_INCREMENT,
+                    projectId       INT,
+                    label           VARCHAR(128),
+                    url             VARCHAR(128),
+                    username        VARCHAR(128),
+                    password        VARCHAR(128)
+                )"""
+
 
     fields = ['labelId', 'projectId', 'label', 'url', 'username', 'password']
 
@@ -450,7 +487,7 @@ class LabelsTable(database.KeyedTable):
 
         repoMap = {}
         labelIdMap = {}
-        for labelId, label, url, username, password in cu:
+        for labelId, label, url, username, password in cu.fetchall():
             if newUser and newPass:
                 username = newUser
                 password = newPass
@@ -499,7 +536,10 @@ class LabelsTable(database.KeyedTable):
         cu.execute("""INSERT INTO Labels (projectId, label, url, username, password)
                       VALUES (?, ?, ?, ?, ?)""", projectId, label, url, username, password)
         self.db.commit()
-        return cu.lastrowid
+        if self.db.type == "native_sqlite":
+            return cu.lastrowid
+        else:
+            return cu._cursor.lastrowid
 
     def editLabel(self, labelId, label, url, username=None, password=None):
         cu = self.db.cursor()
@@ -518,7 +558,7 @@ class LabelsTable(database.KeyedTable):
                         AND l.labelId=?""",
                    projectId, labelId)
 
-        for versionStr, label in cu:
+        for versionStr, label in cu.fetchall():
             if versionStr:
                 v = versions.ThawVersion(versionStr)
                 if v.branch().label().asString() == label:

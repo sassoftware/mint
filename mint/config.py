@@ -32,6 +32,7 @@ class MintConfig(ConfigFile):
         'reposPath'         : '/srv/mint/repos/',
         'reposContentsPath' : None,
         'dbPath'            : '/srv/mint/data/db',
+        'dbDriver'          : 'native_sqlite',
         'imagesPath'        : '/srv/mint/images/',
         'logPath'           : '/srv/mint/logs/',
         'siteDomainName'    : 'rpath.com',
@@ -49,11 +50,13 @@ class MintConfig(ConfigFile):
         'MailListPass'      : 'adminpass',
         'basePath'          : '/',
         'cookieSecretKey'   : None,
-        'bugsEmail'     : None,
-        'bugsEmailName' : 'rBuilder Bugs',
+        'bugsEmail'         : None,
+        'bugsEmailName'     : 'rBuilder Bugs',
         'bugsEmailSubject'  : 'Mint Unhandled Exception Report',
+        'smallBugsEmail'    : None,
         'debugMode'         : [ BOOLEAN, False ],
         'sendNotificationEmails': [ BOOLEAN, True ],
+        'profiling'         : [ BOOLEAN, False ],
 
         # don't set these yourself; they will be automatically generated 
         # from authRepoMap:

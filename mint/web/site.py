@@ -540,5 +540,6 @@ class SiteHandler(WebHandler):
                 item['date_822'] = email.Utils.formatdate(release.timePublished)
                 item['creator'] = "http://%s%s" % (self.siteHost, self.cfg.basePath)
                 items.append(item)
-        self.writeRss(items = items, title = title, link = link, desc = desc)
+
+        self._writeRss(items = items, title = title, link = link, desc = desc)
         return apache.OK

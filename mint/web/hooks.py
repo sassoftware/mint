@@ -339,7 +339,7 @@ urls = (
     (r'^/',                  mintHandler),
 )
 
-def logErrorAndEmail(req, cfg, Exception, e, bt):
+def logErrorAndEmail(req, cfg, exception, e, bt):
     c = req.connection
     req.add_common_vars()
     info_dict = {
@@ -374,28 +374,47 @@ def logErrorAndEmail(req, cfg, Exception, e, bt):
         'filename'       : req.filename,
         'subprocess_env' : req.subprocess_env,
         'referer'        : req.headers_in.get('referer', 'N/A')
-        }
+    }
+    info_dict_small = {
+        'local_addr'     : c.local_ip + ':' + str(c.local_addr[1]),
+        'uri'            : req.uri,
+        'request_time'   : time.ctime(req.request_time),
+    }
+        
     timeStamp = time.ctime(time.time())
     # log error
-    log.error('[%s] Unhandled exception from mint web interface: %s: %s', timeStamp, Exception.__name__, e)
+    log.error('[%s] Unhandled exception from mint web interface: %s: %s', timeStamp, exception.__name__, e)
+    log.error('sending mail to %s and %s' % (cfg.bugsEmail, cfg.smallBugsEmail))
     # send email
-    body = 'Unhandled exception from mint web interface:\n\n%s: %s\n\n' %(Exception.__name__, e)
+    body = 'Unhandled exception from mint web interface:\n\n%s: %s\n\n' %(exception.__name__, e)
     body += 'Time of occurrence: %s\n\n' %timeStamp
     body += ''.join( traceback.format_tb(bt))
     body += '\nConnection Information:\n'
-    keys = list(info_dict)
-    keys.sort()
-    for key in keys:
-        body += '\n' + key + ': ' + str(info_dict[key])
-    users.sendMailWithChecks(cfg.bugsEmail, cfg.bugsEmailName,
-                             cfg.bugsEmail, cfg.bugsEmailSubject, body)
+    for key, val in sorted(info_dict.items()):
+        body += '\n' + key + ': ' + str(val)
 
+    body_small = 'Mint Exception: %s: %s' % (exception.__name__, e)
+    for key, val in sorted(info_dict_small.items()):
+        body_small += '\n' + key + ': ' + str(val)
+    
+    if cfg.bugsEmail:
+        users.sendMailWithChecks(cfg.bugsEmail, cfg.bugsEmailName,
+                                 cfg.bugsEmail, cfg.bugsEmailSubject, body)
+    if cfg.smallBugsEmail:
+        users.sendMailWithChecks(cfg.bugsEmail, cfg.bugsEmailName,
+                                 cfg.smallBugsEmail, cfg.bugsEmailSubject, body_small)
+                             
+
+cfg = None
 def handler(req):
+    startTime = time.time()
     if not req.hostname:
         return apache.HTTP_BAD_REQUEST
 
-    cfg = config.MintConfig()
-    cfg.read(req.filename)
+    global cfg
+    if not cfg:
+        cfg = config.MintConfig()
+        cfg.read(req.filename)
 
     # normalize req path and base path
     pathInfo = normPath(req.uri)
@@ -405,11 +424,12 @@ def handler(req):
     pathInfo = pathInfo[len(basePath):]
     pathInfo = normPath(pathInfo)
 
+    ret = apache.HTTP_NOT_FOUND
     for match, urlHandler in urls:
         if re.match(match, pathInfo):
             newPath = normPath(pathInfo[len(match)-1:])
             try:
-                return urlHandler(req, cfg, newPath)
+                ret = urlHandler(req, cfg, newPath)
             except:
                 # we only want to handle errors in production mode
                 if cfg.debugMode or req.bytes_sent > 0:
@@ -417,10 +437,13 @@ def handler(req):
                 # only handle actual mint errors
                 if match !='^/':
                     raise
-                Exception, e, bt = sys.exc_info()
-                logErrorAndEmail(req, cfg, Exception, e, bt)
-                return urlHandler(req, cfg, '/unknownError')
-                
-    return apache.HTTP_NOT_FOUND
+                exception, e, bt = sys.exc_info()
+                logErrorAndEmail(req, cfg, exception, e, bt)
+                ret = urlHandler(req, cfg, '/unknownError')
+            break
+    if cfg.profiling:
+        print >> sys.stderr, "WEB HIT: %.2fms" % ((time.time() - startTime) * 1000)
+        sys.stderr.flush()
+    return ret
 
 repositories = {}

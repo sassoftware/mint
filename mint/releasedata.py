@@ -17,7 +17,7 @@ class ReleaseDataTable(database.DatabaseTable):
     createSQL = """
         CREATE TABLE ReleaseData(
                                  releaseId INTEGER,
-                                 name TEXT,
+                                 name STR,
                                  value TEXT,
                                  dataType INTEGER,
                                  PRIMARY KEY(releaseId, name)
@@ -28,22 +28,28 @@ class ReleaseDataTable(database.DatabaseTable):
 
     def setReleaseDataValue(self, releaseId, name, value, dataType):
         cu = self.db.cursor()
-        self.db._begin()
-        #do any data conversions necessary to safely store value as a string
+
+        if self.db.type == "native_sqlite":
+            cu.execute("BEGIN")
+        else:
+            self.db.transaction(None)
+
+        # do any data conversions necessary to safely store value as a string
         if dataType == RDT_BOOL:
             value=str(int(value))
         elif dataType == RDT_INT:
             value=str(value)
 
-        cu.execute("INSERT OR REPLACE INTO ReleaseData (releaseId, name, value, dataType) VALUES(?, ?, ?, ?)",
+        cu.execute("DELETE FROM ReleaseData WHERE releaseId=? AND name=?", releaseId, name)
+        cu.execute("INSERT INTO ReleaseData (releaseId, name, value, dataType) VALUES(?, ?, ?, ?)",
                    (releaseId, name, value, dataType))
         self.db.commit()
         return True
 
     def getReleaseDataValue(self, releaseId, name):
         cu = self.db.cursor()
-        r = cu.execute("SELECT value, dataType FROM ReleaseData WHERE releaseId=? AND name=?", (releaseId, name))
-        res = r.fetchall()
+        cu.execute("SELECT value, dataType FROM ReleaseData WHERE releaseId=? AND name=?", (releaseId, name))
+        res = cu.fetchall()
         if len(res) != 1:
             return None
         value, dataType = res[0]
@@ -55,9 +61,9 @@ class ReleaseDataTable(database.DatabaseTable):
 
     def getReleaseDataDict(self, releaseId):
         cu = self.db.cursor()
-        r = cu.execute("SELECT name, value, dataType FROM ReleaseData WHERE releaseId=?", releaseId)
+        cu.execute("SELECT name, value, dataType FROM ReleaseData WHERE releaseId=?", releaseId)
         dataDict = {}
-        for name, value, dataType in r.fetchall():
+        for name, value, dataType in cu.fetchall():
             if dataType == RDT_BOOL:
                 value=bool(int(value))
             elif dataType == RDT_INT:

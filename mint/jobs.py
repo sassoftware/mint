@@ -31,6 +31,17 @@ class JobsTable(database.KeyedTable):
                     timeStarted     INT,
                     timeFinished    INT
                 )"""
+    createSQL_mysql = """
+                CREATE TABLE Jobs (
+                    jobId           INT PRIMARY KEY AUTO_INCREMENT,
+                    releaseId       INT,
+                    userId          INT,
+                    status          INT,
+                    statusMessage   VARCHAR(128),
+                    timeStarted     INT,
+                    timeFinished    INT
+                )"""
+
     fields = ['jobId', 'releaseId', 'userId', 'status',
               'statusMessage', 'timeStarted', 'timeFinished']
 

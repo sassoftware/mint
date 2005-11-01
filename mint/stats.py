@@ -29,9 +29,8 @@ class CommitsTable(database.DatabaseTable):
     def getCommitsByProject(self, projectId, limit = 10):
         cu = self.db.cursor()
 
-        r = cu.execute("""SELECT troveName, version 
+        cu.execute("""SELECT troveName, version 
                             FROM Commits 
-                            WHERE projectId = ? 
-                                    AND troveName like '%:source' 
-                            ORDER BY timestamp DESC LIMIT ?""", (projectId, limit))
-        return [(x[0], versions.VersionFromString(x[1]).trailingRevision().asString()) for x in r.fetchall()]
+                            WHERE projectId = ? AND troveName like '%%:source' 
+                            ORDER BY timestamp DESC LIMIT ?""", projectId, limit)
+        return [(x[0], versions.VersionFromString(x[1]).trailingRevision().asString()) for x in cu.fetchall()]

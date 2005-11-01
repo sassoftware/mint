@@ -62,7 +62,7 @@ class ReleasesTable(database.KeyedTable):
                     releaseId            INTEGER PRIMARY KEY,
                     projectId            INT,
                     name                 STR,
-                    desc                 STR,
+                    description          STR,
                     imageType            INT,
                     troveName            STR,
                     troveVersion         STR,
@@ -72,8 +72,23 @@ class ReleasesTable(database.KeyedTable):
                     downloads            INT DEFAULT 0,
                     timePublished        INT
                 )"""
+    createSQL_mysql = """
+                CREATE TABLE Releases (
+                    releaseId            INT PRIMARY KEY AUTO_INCREMENT,
+                    projectId            INT,
+                    name                 VARCHAR(128),
+                    description          VARCHAR(255),
+                    imageType            INT,
+                    troveName            VARCHAR(128),
+                    troveVersion         VARCHAR(255),
+                    troveFlavor	         VARCHAR(4096),
+                    troveLastChanged     INT,
+                    published            INT DEFAULT 0,
+                    downloads            INT DEFAULT 0,
+                    timePublished        INT
+                )"""
 
-    fields = ['releaseId', 'projectId', 'name', 'desc', 'imageType',
+    fields = ['releaseId', 'projectId', 'name', 'description', 'imageType',
               'troveName', 'troveVersion', 'troveFlavor',
               'troveLastChanged', 'published', 'downloads', 'timePublished']
     indexes = {"ReleaseProjectIdIdx": "CREATE INDEX ReleaseProjectIdIdx ON Releases(projectId)"}
@@ -88,8 +103,16 @@ class ReleasesTable(database.KeyedTable):
                     cu.execute("UPDATE Releases SET timePublished=0")
                 except:
                     return False
+            if dbversion == 4:
+                cu = self.db.cursor()
+                try:
+                    cu.execute("ALTER TABLE Releases ADD COLUMN description STR")
+                    cu.execute("UPDATE Releases SET description=desc")
+                except Exception, e:
+                    print str(e)
+                    return False
         return True
-
+    
     def new(self, **kwargs):
         projectId = kwargs['projectId']
         cu = self.db.cursor()
@@ -111,7 +134,7 @@ class ReleasesTable(database.KeyedTable):
                             troveVersion IS NOT NULL AND
                             troveFlavor IS NOT NULL AND
                             troveLastChanged IS NOT NULL""" + published, projectId)
-        for results in cu:
+        for results in cu.fetchall():
             yield results[0]
 
     def setTrove(self, releaseId, troveName, troveVersion, troveFlavor):
@@ -149,13 +172,16 @@ class ReleasesTable(database.KeyedTable):
     def getPublished(self, releaseId):
         cu = self.db.cursor()
 
-        r = cu.execute("SELECT IFNULL((SELECT published FROM Releases WHERE releaseId=?), 0)", releaseId)
-        return r.fetchone()[0]
+        cu.execute("SELECT IFNULL((SELECT published FROM Releases WHERE releaseId=?), 0)", releaseId)
+        return cu.fetchone()[0]
 
     def deleteRelease(self, releaseId):
         cu = self.db.cursor()
 
-        self.db._begin()
+        if self.db.type == "native_sqlite":
+            cu.execute("BEGIN")
+        else:
+            self.db.transaction(None)
 
         r = cu.execute("DELETE FROM Releases WHERE releaseId=?", releaseId)
         r = cu.execute("DELETE FROM ReleaseData WHERE releaseId=?", releaseId)
@@ -167,8 +193,8 @@ class ReleasesTable(database.KeyedTable):
     def releaseExists(self, releaseId):
         cu = self.db.cursor()
 
-        r = cu.execute("SELECT count(*) FROM Releases WHERE releaseId=?", releaseId)
-        return r.fetchone()[0]
+        cu.execute("SELECT count(*) FROM Releases WHERE releaseId=?", releaseId)
+        return cu.fetchone()[0]
 
 class Release(database.TableObject):
     __slots__ = [ReleasesTable.key] + ReleasesTable.fields
@@ -183,7 +209,7 @@ class Release(database.TableObject):
         return self.name
 
     def getDesc(self):
-        return self.desc
+        return self.description
 
     def setDesc(self, desc):
         return self.server.setReleaseDesc(self.releaseId, desc)

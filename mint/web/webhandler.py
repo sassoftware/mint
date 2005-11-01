@@ -6,11 +6,14 @@
 import kid
 import os
 import time
+import sys
 
 from mod_python import apache
 from mod_python import Cookie
 
 from mint import users
+
+kidCache = {}
 
 class WebHandler(object):
     #Default content-type to send to browser
@@ -20,10 +23,16 @@ class WebHandler(object):
 
     """Mixin class for various helpful web methods."""
     def _write(self, template, templatePath = None, **values):
+        startTime = time.time()
         if not templatePath:
             templatePath = self.cfg.templatePath
-        path = os.path.join(templatePath, template + ".kid")
-        template = kid.load_template(path)
+
+        global kidCache
+        if template not in kidCache:
+            path = os.path.join(templatePath, template + ".kid")
+            kidCache[template] = kid.load_template(path)
+        
+        template = kidCache[template]
         t = template.Template(cfg = self.cfg,
                               auth = self.auth,
                               project = self.project,
@@ -36,7 +45,9 @@ class WebHandler(object):
                               basePath = self.basePath,
                               SITE = self.SITE,
                               **values)
-        t.write(self.req, encoding = "utf-8", output = self.output)
+        s = t.serialize(encoding = "utf-8", output = self.output)
+        print >> sys.stderr, "Kid page rendered: %.2f" % ((time.time() - startTime) * 1000)
+        self.req.write(s)
 
     def _404(self, *args, **kwargs):
         return apache.HTTP_NOT_FOUND
@@ -90,13 +101,16 @@ class WebHandler(object):
                    user.getEmail(),
                    "%s forgotten password"%self.cfg.productName, message)
 
-    def writeRss(self, **values):
-        path = os.path.join(self.cfg.templatePath, "rss20.kid")
-        template = kid.load_template(path)
+    def _writeRss(self, **values):
+        if "rss20.kid" not in kidCache:
+            path = os.path.join(self.cfg.templatePath, "rss20.kid")
+            kidCache["rss20.kid"] = kid.load_template(path)
+            
+        template = kidCache["rss20.kid"]
         t = template.Template(**values)
         self.req.content_type = "text/xml"
-        t.write(self.req, encoding = "utf-8", output = "xml")
-
+        s = t.serialize(encoding = "utf-8", output = "xml")
+        self.req.write(s)
 
 
 def normPath(path):

@@ -38,6 +38,8 @@ validHost = re.compile('^[a-zA-Z][a-zA-Z0-9\-]*$')
 reservedHosts = ['admin', 'mail', 'mint', 'www', 'web', 'rpath', 'wiki', 'conary', 'lists']
 
 allTroveNames = TroveNamesCache()
+dbConnection = None
+authDbConnection = None
 
 class ParameterError(MintError):
     def __str__(self):
@@ -127,7 +129,7 @@ def typeCheck(*paramTypes):
         def wrapper(self, *args):
             # FIXME: enable this test in production mode once we are certain
             # that the web api honors all typeCheck conventions
-            if not self.cfg.debugMode:
+            if 1 or not self.cfg.debugMode:
                 return func(self, *args)
             for i in range(len(args)):
                 if (not checkParam(args[i],paramTypes[i])):
@@ -139,6 +141,25 @@ def typeCheck(*paramTypes):
         wrapper.__wrapped_func__ = func
         return wrapper
     return deco
+
+tables = {}
+def getTables(db, cfg):
+    d = {}
+    d['version'] = dbversion.VersionTable(db)
+    d['labels'] = projects.LabelsTable(db)
+    d['projects'] = projects.ProjectsTable(db, cfg)
+    d['jobs'] = jobs.JobsTable(db)
+    d['images'] = jobs.ImageFilesTable(db)
+    d['users'] = users.UsersTable(db, cfg)
+    d['projectUsers'] = users.ProjectUsersTable(db)
+    d['releases'] = releases.ReleasesTable(db)
+    d['pkgIndex'] = pkgindex.PackageIndexTable(db)
+    d['newsCache'] = news.NewsCacheTable(db, cfg)
+    d['sessions'] = sessiondb.SessionsTable(db)
+    d['membershipRequests'] = requests.MembershipRequestTable(db)
+    d['commits'] = stats.CommitsTable(db)
+    d['releaseData'] = releasedata.ReleaseDataTable(db)
+    return d
 
 class MintServer(object):
     _checkRepo = True 
@@ -152,6 +173,7 @@ class MintServer(object):
         except AttributeError:
             return (True, ("MethodNotSupported", methodName, ""))
         try:
+            startTime = time.time()
             # check authorization
 
             # grab authToken from a session id if passed a session id
@@ -186,6 +208,9 @@ class MintServer(object):
                 self._checkRepo = False
 
             r = method(*args)
+            if self.cfg.profiling:
+                print >> sys.stderr, "Ending XMLRPC request:\t\t%-25s\t%.2f" % (methodName, (time.time() - startTime) * 1000)
+                sys.stderr.flush()
         except users.UserAlreadyExists, e:
             return (True, ("UserAlreadyExists", str(e)))
         except database.DuplicateItem, e:
@@ -196,9 +221,9 @@ class MintServer(object):
             return (True, ("SearchTermsError", str(e)))
         except users.AuthRepoError, e:
             return (True, ("AuthRepoError", str(e)))
-        except Exception, error:
-            exc_name = sys.exc_info()[0].__name__
-            return (True, (exc_name, error, str(error)))
+        #except Exception, error:
+        #    exc_name = sys.exc_info()[0].__name__
+        #    return (True, (exc_name, error, str(error)))
         else:
             return (False, r)
 
@@ -273,29 +298,29 @@ class MintServer(object):
 
     def _filterReleaseAccess(self, releaseId):
         cu = self.db.cursor()
-        res = cu.execute("SELECT projectId FROM Releases WHERE releaseId = ?", releaseId)
-        res = res.fetchall()
+        cu.execute("SELECT projectId FROM Releases WHERE releaseId = ?", releaseId)
+        res = cu.fetchall()
         if len(res):
             self._filterProjectAccess(res[0][0])
 
     def _filterLabelAccess(self, labelId):
         cu = self.db.cursor()
-        r = cu.execute("SELECT projectId FROM Labels WHERE labelId = ?", labelId)
-        r = r.fetchall()
+        cu.execute("SELECT projectId FROM Labels WHERE labelId = ?", labelId)
+        r = cu.fetchall()
         if len(r):
             self._filterProjectAccess(r[0][0])
 
     def _filterJobAccess(self, jobId):
         cu = self.db.cursor()
-        r = cu.execute("SELECT projectId FROM Jobs LEFT JOIN Releases ON Releases.releaseId = Jobs.releaseId WHERE jobId = ?", jobId)
-        r = r.fetchall()
+        cu.execute("SELECT projectId FROM Jobs LEFT JOIN Releases ON Releases.releaseId = Jobs.releaseId WHERE jobId = ?", jobId)
+        r = cu.fetchall()
         if len(r):
             self._filterProjectAccess(r[0][0])
 
     def _filterImageFileAccess(self, fileId):
         cu = self.db.cursor()
-        r = cu.execute("SELECT projectId FROM ImageFiles LEFT JOIN Releases ON Releases.releaseId = ImageFiles.releaseId WHERE fileId = ?", fileId)
-        r = r.fetchall()
+        cu.execute("SELECT projectId FROM ImageFiles LEFT JOIN Releases ON Releases.releaseId = ImageFiles.releaseId WHERE fileId = ?", fileId)
+        r = cu.fetchall()
         if len(r):
             self._filterProjectAccess(r[0][0])
 
@@ -304,6 +329,8 @@ class MintServer(object):
     @requiresAuth
     @private
     def newProject(self, projectName, hostname, domainname, projecturl, desc):
+        if not hostname:
+            raise projects.InvalidHostname
         if validHost.match(hostname) == None:
             raise projects.InvalidHostname
         if hostname in reservedHosts:
@@ -315,7 +342,7 @@ class MintServer(object):
         # XXX this set of operations should be atomic if possible
         projectId = self.projects.new(name = projectName,
                                       creatorId = self.auth.userId,
-                                      desc = desc,
+                                      description = desc,
                                       hostname = hostname,
                                       domainname = domainname,
                                       projecturl = projecturl,
@@ -449,16 +476,18 @@ class MintServer(object):
         cu = self.db.cursor()
         if username and not userId:
             cu.execute("SELECT userId FROM Users WHERE username=? AND active=1", username)
-            try:
-                userId = cu.next()[0]
-            except StopIteration, e:
-                raise database.ItemNotFound("user")
+            r = cu.fetchone()
+            if not r:
+                raise database.ItemNotFound("username")
+            else:
+                userId = r[0]
         elif userId and not username:
             cu.execute("SELECT username FROM Users WHERE userId=? AND active=1", userId)
-            try:
-                username = cu.next()[0]
-            except StopIteration, e:
+            r = cu.fetchone()
+            if not r:
                 raise database.ItemNotFound("userId")
+            else:
+                username = r[0]
 
         if (self.auth.userId != userId) and level == userlevels.USER:
             raise users.UserInduction()
@@ -477,11 +506,9 @@ class MintServer(object):
             query = "SELECT salt, password FROM Users WHERE user=?"
             acu.execute(query, username)
             try:
-                salt, password = acu.next()
-            except StopIteration, e:
+                salt, password = acu.fetchone()
+            except TypeError:
                 raise database.ItemNotFound("user")
-            except DatabaseError, e:
-                raise
             repos = self._getProjectRepo(project)
             repos.addUserByMD5(project.getLabel(), username, salt, password)
             repos.addAcl(project.getLabel(), username, None, None, level in userlevels.WRITERS, False, level == userlevels.OWNER)
@@ -573,7 +600,7 @@ class MintServer(object):
         if projecturl and not (projecturl.startswith('https://') or projecturl.startswith('http://')):
             projecturl = "http://" + projecturl
         self._filterProjectAccess(projectId)
-        return self.projects.update(projectId, projecturl=projecturl, desc = desc, name = name)
+        return self.projects.update(projectId, projecturl=projecturl, description = desc, name = name)
 
     @typeCheck(int)
     @requiresAdmin
@@ -621,11 +648,12 @@ class MintServer(object):
         cu = self.db.cursor()
         cu.execute("SELECT level FROM ProjectUsers WHERE userId=? and projectId=?",
                    userId, projectId)
-        try:
-            l = cu.next()[0]
-            return l
-        except StopIteration:
+
+        r = cu.fetchone()
+        if not r:
             raise database.ItemNotFound("membership")
+        else:
+            return r[0]
 
     @typeCheck(int, int, int)
     @requiresAuth
@@ -657,11 +685,13 @@ class MintServer(object):
     @private
     def getProjectsByUser(self, userId):
         cu = self.db.cursor()
-        cu.execute("""SELECT hostname||'.'||domainname, name, level
+       
+        fqdnConcat = database.concat(self.db, "hostname", "'.'", "domainname")
+        cu.execute("""SELECT %s, name, level
                       FROM Projects, ProjectUsers
                       WHERE Projects.projectId=ProjectUsers.projectId AND
-                            ProjectUsers.userId=? AND projects.disabled=0
-                      ORDER BY level, name""", userId)
+                            ProjectUsers.userId=? AND Projects.disabled=0
+                      ORDER BY level, name""" % fqdnConcat, userId)
 
         rows = []
         for r in cu.fetchall():
@@ -739,7 +769,7 @@ class MintServer(object):
 
         # Find all projects of which userId is an owner, has no other owners, and/or
         # has developers.
-        cu.execute("""SELECT MAX(flagged)
+        cu.execute("""SELECT MAX(D.flagged)
                         FROM (SELECT A.projectId,
                                COUNT(B.userId)*not(COUNT(C.userId)) AS flagged
                                  FROM ProjectUsers AS A
@@ -748,15 +778,12 @@ class MintServer(object):
                                                                   C.level = 0 AND
                                                                   C.userId <> A.userId AND
                                                                   A.level = 0
-                                       WHERE A.userId=? GROUP BY A.projectId)
+                                       WHERE A.userId=? GROUP BY A.projectId) AS D
                    """, userId)
 
-        try:
-            r = cu.next()
-            if r[0]:
-                raise users.LastOwner
-        except StopIteration:
-            pass
+        r = cu.fetchone()
+        if r and r[0]:
+            raise users.LastOwner
 
         self.membershipRequests.userAccountCanceled(userId)
 
@@ -964,8 +991,11 @@ class MintServer(object):
     @private
     def getReleaseList(self, limit, offset):
         cu = self.db.cursor()
-        r = cu.execute("SELECT Projects.name, Projects.hostname, releaseId FROM Releases LEFT JOIN Projects ON Projects.projectId = Releases.projectId WHERE Projects.hidden=0 AND Projects.disabled=0 AND published=1 ORDER BY timePublished DESC LIMIT ? OFFSET ?", limit, offset)
-        return [(x[0], x[1], releases.Release(self, x[2])) for x in r.fetchall()]
+        cu.execute("""SELECT Projects.name, Projects.hostname, releaseId 
+                         FROM Releases LEFT JOIN Projects ON Projects.projectId = Releases.projectId 
+                         WHERE Projects.hidden=0 AND Projects.disabled=0 and published=1 
+                         ORDER BY timePublished DESC LIMIT ? OFFSET ?""", limit, offset)
+        return [(x[0], x[1], releases.Release(self, x[2])) for x in cu.fetchall()]
 
     @typeCheck(str, str, str, str)
     @private
@@ -1063,7 +1093,7 @@ class MintServer(object):
         if self.releases.getPublished(releaseId):
             raise ReleasePublished()
         cu = self.db.cursor()
-        cu.execute("UPDATE Releases SET desc=? WHERE releaseId=?",
+        cu.execute("UPDATE Releases SET description=? WHERE releaseId=?",
                    desc, releaseId)
         self.db.commit()
         return True
@@ -1090,7 +1120,7 @@ class MintServer(object):
         timeStamp = time.time()
         cu = self.db.cursor()
         cu.execute("UPDATE Releases SET published=?, timePublished=? WHERE releaseId=?",
-            published, timeStamp, releaseId)
+            int(published), timeStamp, releaseId)
         self.db.commit()
         return True
 
@@ -1128,7 +1158,10 @@ class MintServer(object):
                        releaseId, self.auth.userId, jobstatus.WAITING,
                        jobstatus.statusNames[jobstatus.WAITING],
                        time.time())
-            retval = cu.lastrowid
+            if self.db.type == "native_sqlite":
+                retval = cu.lastrowid
+            else:
+                retval = cu._cursor.lastrowid
         else:
             jobId, status = r[0]
             if status in (jobstatus.WAITING, jobstatus.RUNNING):
@@ -1300,38 +1333,55 @@ class MintServer(object):
     def cleanupSessions(self):
         self.sessions.cleanup()
     
-    def __init__(self, cfg, allowPrivate = False):
+    def __init__(self, cfg, allowPrivate = False, alwaysReload = False):
         self.cfg = cfg
      
         # all methods are private (not callable via XMLRPC)
         # except the ones specifically decorated with @public.
         self._allowPrivate = allowPrivate
-        
-        self.db = sqlite3.connect(cfg.dbPath, timeout = 30000)
-        self.authDb = sqlite3.connect(cfg.authDbPath, timeout = 30000)
+
+        if cfg.dbDriver == "native_sqlite":
+            self.db = sqlite3.connect(cfg.dbPath)
+            self.db.type = "native_sqlite"
+            cu = self.db.cursor()
+            
+            cu.execute("SELECT tbl_name FROM sqlite_master WHERE type = 'table'")
+            self.db.tables = [ x[0] for x in cu.fetchall() ]
+        elif cfg.dbDriver == "sqlite":
+            from dbstore import sqlite_drv
+            self.db = sqlite_drv.Database(cfg.dbPath)
+            self.db.connect()
+        elif cfg.dbDriver == "mysql":
+            global dbConnection 
+            if not dbConnection:
+                from dbstore import mysql_drv
+                self.db = mysql_drv.Database(cfg.dbPath)
+                self.db.connect()
+                dbConnection = self.db
+            else:
+                self.db = dbConnection
+        else:
+            assert("invalid SQL driver specified: %s" % cfg.dbDriver)
+
+        self.authDb = sqlite3.connect(cfg.authDbPath)
 
         #An explicit transaction.  Make sure you don't have any implicit
         #commits until the database version has been asserted
-        self.db.cursor().execute('BEGIN')
+        if self.db.type == "native_sqlite":
+            self.db.cursor().execute("BEGIN")
+        else:
+            self.db.transaction(None)
         try:
             #The database version object has a dummy check so that it always passes.
             #At the end of all database object creation, fix the version
-            self.version = dbversion.VersionTable(self.db)
 
-            self.projects = projects.ProjectsTable(self.db, self.cfg)
-            self.labels = projects.LabelsTable(self.db)
-            self.jobs = jobs.JobsTable(self.db)
-            self.images = jobs.ImageFilesTable(self.db)
-            self.users = users.UsersTable(self.db, self.cfg)
-            self.projectUsers = users.ProjectUsersTable(self.db)
-            self.releases = releases.ReleasesTable(self.db)
-            self.pkgIndex = pkgindex.PackageIndexTable(self.db)
-            self.newsCache = news.NewsCacheTable(self.db, self.cfg)
-            self.sessions = sessiondb.SessionsTable(self.db)
-            self.membershipRequests = requests.MembershipRequestTable(self.db)
-            self.commits = stats.CommitsTable(self.db)
-            self.releaseData = releasedata.ReleaseDataTable(self.db)
-
+            global tables           
+            if not tables or alwaysReload:
+                if self.db.type != "native_sqlite":
+                    self.db._getSchema()
+                tables = getTables(self.db, self.cfg)
+            self.__dict__.update(tables)
+           
             #now fix the version
             self.version.fixVersion()
 
@@ -1344,3 +1394,5 @@ class MintServer(object):
             raise
 
         self.newsCache.refresh()
+
+

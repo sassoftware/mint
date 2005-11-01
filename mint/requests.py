@@ -22,19 +22,11 @@ class MembershipRequestTable(database.DatabaseTable):
 
     def setComments(self, projectId, userId, comments):
         cu = self.db.cursor()
-        try:
-            cu.execute("INSERT INTO MembershipRequests VALUES(?,?,?)",
-                       projectId, userId, comments)
-        except sqlite3.ProgrammingError, e:
-            if e.args[0].startswith("column") and \
-                   e.args[0].endswith("not unique"):
-                cu.execute("""
-                    UPDATE MembershipRequests SET comments=?
-                    WHERE projectId=? AND userId=?
-                    """, comments, projectId, userId)
-            else:
-                # exception wasn't a duplicate item error...
-                raise
+
+        cu.execute("DELETE FROM MembershipRequests WHERE projectId=? AND userId=?",
+            projectId, userId)
+        cu.execute("INSERT INTO MembershipRequests VALUES(?,?,?)",
+           projectId, userId, comments)
         self.db.commit()
 
     def userAccountCanceled(self, userId):
@@ -50,7 +42,7 @@ class MembershipRequestTable(database.DatabaseTable):
     def listRequests(self, projectId):
         cu = self.db.cursor()
         cu.execute("SELECT userId FROM MembershipRequests WHERE projectId=?", projectId)
-        return [ x[0] for x in cu ]
+        return [ x[0] for x in cu.fetchall() ]
 
     def userHasRequested(self, projectId, userId):
         return userId in self.listRequests(projectId)

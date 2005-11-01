@@ -5,6 +5,7 @@
 #
 import random
 import string
+import md5
 import re
 import sys
 import time
@@ -27,6 +28,7 @@ import database
 import userlevels
 import searcher
 import userlisting
+import sqlite3
 
 class MailError(MintError):
     def __str__(self):
@@ -107,25 +109,50 @@ class UsersTable(database.KeyedTable):
         database.DatabaseTable.__init__(self, db)
         self.cfg = cfg
         self.confirm_table = ConfirmationsTable(db)
+        # even though the mint_server re-creates one every time, we need one
+        # here and we can't pass it to init sice each KeyedTable must be the
+        # same
+        self.authDb = sqlite3.connect(cfg.authDbPath)
+
+    def _checkPassword(self, salt, password, challenge):
+        m = md5.new()
+        m.update(salt)
+        m.update(challenge)
+
+        return m.hexdigest() == password
+
+    def _getUserGroups(self, authToken):
+        user, challenge = authToken
+
+        cu = self.authDb.cursor()
+        cu.execute("SELECT salt, password FROM Users WHERE user=?", user)
+        r = cu.fetchone()
+        if r  and self._checkPassword(r[0], r[1], challenge):
+            cu.execute("""SELECT UserGroups.userGroup
+                          FROM UserGroups, Users, UserGroupMembers 
+                          WHERE UserGroups.userGroupId = UserGroupMembers.userGroupId AND
+                                UserGroupMembers.userId = Users.userId AND
+                                Users.user = ?""", user)
+            return [row[0] for row in cu]
+        else:
+            return []
 
     def checkAuth(self, authToken, checkRepo = True, cachedGroups = []):
+        noAuth = {'authorized': False, 'userId': -1}
+        if authToken == ('anonymous', 'anonymous'):
+            return noAuth
+        
         username, password = authToken
         cu = self.db.cursor()
         cu.execute("""SELECT userId, email, displayEmail, fullName, blurb, timeAccessed FROM Users 
                       WHERE username=? AND active=1""", username)
         r = cu.fetchone()
    
-        noAuth = {'authorized': False, 'userId': -1}
         if r:
             groups = cachedGroups
             if checkRepo:
-                authUrl = self.cfg.authRepoUrl % (username, password)
-                authLabel = self.cfg.authRepoMap.keys()[0]
-
-                authRepo = {authLabel: authUrl}
-                repo = netclient.NetworkRepositoryClient(authRepo)
                 try:
-                    groups = repo.getUserGroups(authLabel)
+                    groups = self._getUserGroups(authToken)
                 except OpenError:
                     auth = noAuth
 
@@ -226,7 +253,7 @@ class UsersTable(database.KeyedTable):
                               timeCreated = time.time(),
                               timeAccessed = 0,
                               blurb = blurb,
-                              active = active)
+                              active = int(active))
         except database.DuplicateItem:
             raise UserAlreadyExists
         self.confirm_table.new(userId = userId,
@@ -295,7 +322,7 @@ class UsersTable(database.KeyedTable):
         cu = self.db.cursor()
 
         SQL = """SELECT userId, username || ' - ' || fullName, active
-                FROM users
+                FROM Users
                 ORDER BY username"""
 
         cu.execute(SQL)
@@ -308,7 +335,7 @@ class UsersTable(database.KeyedTable):
         Returns a list of all users suitable for sending e-mail
         """
         cu = self.db.cursor()
-        SQL = """SELECT userId, fullName, email FROM users"""
+        SQL = """SELECT userId, fullName, email FROM Users"""
 
         cu.execute(SQL)
 
@@ -331,7 +358,7 @@ class UsersTable(database.KeyedTable):
         cu.execute(SQL)
 
         ids = []
-        for x in cu:
+        for x in cu.fetchall():
             ids.append(list(x))
             if len(ids[-1][userlisting.blurbindex]) > userlisting.blurbtrunclength:
                 ids[-1][userlisting.blurbindex] = ids[-1][userlisting.blurbindex][:userlisting.blurbtrunclength] + "..."
@@ -345,17 +372,16 @@ class UsersTable(database.KeyedTable):
         cu = self.db.cursor()
         cu.execute( "SELECT count(userId) FROM Users WHERE active=1" )
 
-        return cu.next()[0]
+        return cu.fetchone()[0]
 
 
     def getUsername(self, userId):
         cu = self.db.cursor()
         cu.execute ( "SELECT username FROM Users WHERE userId = ?", userId)
-        try:
-            username = cu.next()[0]
-        except StopIteration, e:
+        username = cu.fetchone()
+        if not username:
             raise database.ItemNotFound("UserId: %d does not exist!"% userId)
-        return username
+        return username[0]
 
 
 class User(database.TableObject):
@@ -442,7 +468,7 @@ class ProjectUsersTable(database.DatabaseTable):
         assert(level in userlevels.LEVELS)
         cu = self.db.cursor()
 
-        cu.execute("SELECT * FROM ProjectUsers WHERE projectId=? AND userId=?",
+        cu.execute("SELECT * FROM ProjectUsers WHERE projectId=? AND userId = ?",
                    projectId, userId)
         if cu.fetchall():
             raise database.DuplicateItem("membership")
@@ -454,18 +480,18 @@ class ProjectUsersTable(database.DatabaseTable):
     def onlyOwner(self, projectId, userId):
         cu = self.db.cursor()
         # verify userId is an owner of the project.
-        r = cu.execute("SELECT level from ProjectUsers where projectId=? and userId=?", projectId, userId)
-        res = r.fetchall()
+        cu.execute("SELECT level from ProjectUsers where projectId=? and userId = ?", projectId, userId)
+        res = cu.fetchall()
         if (not bool(res)) or (res[0][0] != userlevels.OWNER):
             return False
-        r = cu.execute("SELECT count(userId) FROM ProjectUsers WHERE projectId=? AND userId<>? and level=?", projectId, userId, userlevels.OWNER)
-        return not r.fetchone()[0]
+        cu.execute("SELECT count(userId) FROM ProjectUsers WHERE projectId=? AND userId<>? and LEVEL = ?", projectId, userId, userlevels.OWNER)
+        return not cu.fetchone()[0]
 
     def lastOwner(self, projectId, userId):
         cu = self.db.cursor()
         # check that there are developers
-        r = cu.execute("SELECT count(userId) FROM ProjectUsers WHERE projectId=? AND userId<>? and level=?", projectId, userId, userlevels.DEVELOPER)
-        if not r.fetchone()[0]:
+        cu.execute("SELECT count(userId) FROM ProjectUsers WHERE projectId=? AND userId<>? and LEVEL = ?", projectId, userId, userlevels.DEVELOPER)
+        if not cu.fetchone()[0]:
             return False
         return self.onlyOwner(projectId, userId)
 

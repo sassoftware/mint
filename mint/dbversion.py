@@ -13,7 +13,11 @@ class VersionTable(database.KeyedTable):
                     version INTEGER PRIMARY KEY,
                     timestamp REAL
                 )"""
-
+    createSQL_mysql = """
+        CREATE TABLE DatabaseVersion (
+            version INT PRIMARY KEY,
+            timestamp INT
+            )"""
     fields = ['version']
     indexes = {'DatabaseVersionIdx': 'CREATE INDEX DatabaseVersionIdx ON DatabaseVersion(version)'}
 

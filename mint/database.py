@@ -29,6 +29,13 @@ class UpToDateException(MintError):
     def __str__(self):
             return "The table '%s' is not up to date" % self.table
 
+def concat(db, *items):
+    if db.type == "mysql":
+        return "CONCAT(%s)" % ", ".join(items)
+    elif db.type in ("native_sqlite", "sqlite"):
+        return " || ".join(items)
+    raise Exception("Unsupported database")
+
 class TableObject(object):
     """A simple base class defining a object-oriented interface to an SQL table.
        @cvar server: Internal L{mint.mint_server.MintServer} object to modify the object in
@@ -75,10 +82,11 @@ class DatabaseTable:
     those indeces
     """
 
-    schemaVersion = 4
+    schemaVersion = 5 
     name = "Table"
     fields = []
     createSQL = "CREATE TABLE Table ();"
+    createSQL_mysql = None
     indexes = {} 
 
     def __init__(self, db):
@@ -89,11 +97,18 @@ class DatabaseTable:
         cu = self.db.cursor()
         
         # create missing tables
-        cu.execute("SELECT tbl_name FROM sqlite_master WHERE type = 'table'")
-        tables = [ x[0].lower() for x in cu ]
-        if self.name.lower() not in tables:
-            cu.execute(self.createSQL)
-        
+        if self.name not in self.db.tables:
+            if self.db.type == "mysql":
+                if not self.createSQL_mysql:
+                    s = self.createSQL.replace("STR", "VARCHAR(255)")
+                    s = s.replace("INTEGER PRIMARY KEY", "INT PRIMARY KEY AUTO_INCREMENT")
+                    self.createSQL_mysql = s
+                cu.execute(self.createSQL_mysql)
+            elif self.db.type in ("native_sqlite", "sqlite"):
+                cu.execute(self.createSQL)
+            else:
+                assert("INVALID DATABASE TYPE: " + self.db.type)
+
         #Don't commit here.  Commits must be handled up stream to enable
         #upgrading
         if not self.versionCheck():
@@ -105,10 +120,11 @@ class DatabaseTable:
         # before the upgrade check is done, a column not found exception
         # could be raised if a new index is created referencing a new column
         # created in the upgrade procedures.
-        cu.execute("SELECT name FROM sqlite_master WHERE type = 'index'")
-        missing = set(self.indexes.keys()) - set(x[0] for x in cu) 
-        for index in missing:
-            cu.execute(self.indexes[index])
+#        cu.execute("SELECT name FROM sqlite_master WHERE type = 'index'")
+#        missing = set(self.indexes.keys()) - set(self.db.indexes) 
+#        
+#        for index in missing:
+#            cu.execute(self.indexes[index])
 
     def __del__(self):
         if not self.db.closed:
@@ -117,14 +133,14 @@ class DatabaseTable:
 
     def getDBVersion(self):
         cu = self.db.cursor()
-        try:
-            cu.execute("SELECT MAX(version) FROM DatabaseVersion")
-            version = cu.next()[0]
-            if version is None:
-                raise StopIteration
-        except StopIteration:
+        
+        cu.execute("SELECT MAX(version) FROM DatabaseVersion")
+        version = cu.fetchone()[0]
+
+        if not version:
             cu.execute("INSERT INTO DatabaseVersion(version, timestamp) VALUES(?,?)", self.schemaVersion, time.time())
             version = self.schemaVersion
+            
         return version
 
     def versionCheck(self):
@@ -161,9 +177,9 @@ class KeyedTable(DatabaseTable):
         cu = self.db.cursor()
         stmt = "SELECT %s FROM %s WHERE %s=?" % (", ".join(self.fields), self.name, self.key)
         cu.execute(stmt, id)
-        try:
-            r = cu.next()
-        except StopIteration:
+
+        r = cu.fetchone()
+        if not r:
             raise ItemNotFound
 
         data = {}
@@ -185,10 +201,11 @@ class KeyedTable(DatabaseTable):
 
         stmt = "SELECT %s FROM %s WHERE %s = ?" % (self.key, self.name, column)
         cu.execute(stmt, value)
-        try:
-            return cu.next()[0]
-        except StopIteration:
+        r = cu.fetchone()
+        if not r:
             raise ItemNotFound
+        else:
+            return r[0]
 
     def new(self, **kwargs):
         """
@@ -212,7 +229,10 @@ class KeyedTable(DatabaseTable):
                 raise
 
         self.db.commit()
-        return cu.lastrowid
+        if self.db.type == "native_sqlite":
+            return cu.lastrowid
+        else:
+            return cu._cursor.lastrowid
 
     def update(self, id, **kwargs):
         """
@@ -229,6 +249,10 @@ class KeyedTable(DatabaseTable):
         stmt = "UPDATE %s SET %s WHERE %s=?" % (self.name, params, self.key)
 
         cu = self.db.cursor()
+        if self.db.type == "native_sqlite":
+            cu.execute("BEGIN")
+        else:
+            self.db.transaction(None)
         try:
             cu.execute(*[stmt] + values + [id])
         except sqlite3.ProgrammingError, e:
@@ -268,14 +292,13 @@ class KeyedTable(DatabaseTable):
         #First get the search result count
         query = "SELECT count(%s) FROM %s " % (columns[0], table) + where[0]
         try:
-            cu.execute(query, where[1])
+            cu.execute(query, *where[1])
             r = cu.fetchone()
             count = r[0]
         except Exception, e:
             print >> sys.stderr, str(e), query
             sys.stderr.flush()
             raise
-
         #Now the actual search results
         query = "SELECT " + ", ".join(columns) + " FROM %s " % table
         query += where[0] + " ORDER BY %s" % order

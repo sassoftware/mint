@@ -7,6 +7,7 @@ import base64
 import os
 import sys
 import re
+import time
 from urllib import quote, unquote
 
 from mod_python import apache
@@ -145,8 +146,8 @@ class MintApp(WebHandler):
  
         # open up a new client with the retrieved authToken
         self.client = shimclient.ShimMintClient(self.cfg, self.authToken)
-        self.auth = self.client.checkAuth()
 
+        self.auth = self.client.checkAuth()
         if self.auth.authorized:
             self.user = self.client.getUser(self.auth.userId)
             self.projectList = self.client.getProjectsByMember(self.auth.userId)
@@ -160,10 +161,10 @@ class MintApp(WebHandler):
        
         d = self.fields.copy()
         d['auth'] = self.auth
+
         try:
             returncode = method(**d)
             self.session.save()
-            
             return returncode
         except mint_error.MintError, e:
             self.toUrl = self.cfg.basePath
@@ -244,7 +245,9 @@ class MintApp(WebHandler):
                 urlHandler.content_type=self.content_type
                 urlHandler.output = self.output
                 context['cmd'] = pathInfo[len(match)-1:]
-                return urlHandler.handle(context)
+                
+                ret = urlHandler.handle(context)
+                return ret
 
         # fell through, nothing matched
         return self._404

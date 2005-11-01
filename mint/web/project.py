@@ -533,5 +533,5 @@ class ProjectHandler(WebHandler):
             link = ""
             desc = ""
 
-        self.writeRss(items = items, title = title, link = link, desc = desc)
+        self._writeRss(items = items, title = title, link = link, desc = desc)
         return apache.OK

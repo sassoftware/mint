@@ -18,7 +18,7 @@
 blurbindex = 4
 blurbtrunclength = 300
 sqlbase = """SELECT userid, username, fullname, displayEmail, blurb, timeCreated, timeAccessed
-FROM users WHERE active=1
+FROM Users WHERE active=1
     ORDER BY %s
     LIMIT %d
     OFFSET %d"""

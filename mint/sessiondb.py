@@ -16,6 +16,12 @@ class SessionsTable(DatabaseTable):
             data        STR
         );
     """
+    createSQL_mysql = """
+        CREATE TABLE Sessions (
+            sid     VARCHAR(64),
+            data    TEXT
+        );
+    """
     fields = ['sid', 'data']
 
     def load(self, sid):
@@ -29,10 +35,18 @@ class SessionsTable(DatabaseTable):
 
     def save(self, sid, data):
         cu = self.db.cursor()
-        cu.execute("DELETE FROM Sessions WHERE sid=?", sid)
-        cu.execute("INSERT INTO Sessions VALUES(?, ?)",
-            sid, cPickle.dumps(data))
-        self.db.commit()
+        if self.db.type == "native_sqlite":
+            cu.execute("BEGIN")
+        else:
+            self.db.transaction()
+        try:
+            cu.execute("DELETE FROM Sessions WHERE sid=?", sid)
+            cu.execute("INSERT INTO Sessions VALUES(?, ?)",
+                sid, cPickle.dumps(data))
+        except:
+            self.db.rollback()
+        else:
+            self.db.commit()
 
     def delete(self, sid):
         cu = self.db.cursor()

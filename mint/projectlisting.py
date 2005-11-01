@@ -21,7 +21,7 @@ desctrunclength = 300
 
 # FIXME sqlbase has been badly mangled due to sqlite3 not handling "group by" and "order by" combined with joins in any semblance of a sane fashion. the code below is a workaround. original sqlbase is included in comments. note that group by and having alteration should probably be worked into original code. it's faster.
 
-#sqlbase = """SELECT Projects.hostname, Projects.name, Projects.desc,
+#sqlbase = """SELECT Projects.projectId, Projects.hostname, Projects.name, Projects.description,
 #    IFNULL(MAX(Commits.timestamp), Projects.timeCreated) AS timeModified
 #        FROM
 #    Projects
@@ -35,20 +35,16 @@ desctrunclength = 300
 #"""
 
 
-sqlbase = """SELECT projectId, hostname, name, desc, timeModified FROM
-        (SELECT projects.projectId as projectId, Projects.hostname AS hostname, Projects.name AS name, Projects.desc AS desc,
-    IFNULL(MAX(Commits.timestamp), Projects.timeCreated) AS timeModified,
-    (SELECT count(*) FROM Commits WHERE Commits.projectId=Projects.projectId AND Commits.timestamp> (SELECT IFNULL(MAX(timestamp)-604800, 0) FROM Commits)) AS recentCommits,
-    timeCreated, (SELECT COUNT(userId) AS numDevs FROM ProjectUsers WHERE ProjectUsers.projectId=projects.projectId) AS numDevs
-        FROM
-    Projects
-        LEFT JOIN Commits ON
-    Projects.projectId=Commits.projectId
-        GROUP BY Projects.projectId
-        HAVING Projects.disabled=0 AND Projects.hidden=0)
-        ORDER BY %s
-        LIMIT %d
-        OFFSET %d
+sqlbase = """        
+    SELECT projectId, hostname, name, description, timeModified
+        FROM (SELECT Projects.projectId AS projectId,
+                     Projects.hostname AS hostname,
+                     Projects.name AS name,
+                     Projects.description AS description,    IFNULL(MAX(Commits.timestamp), Projects.timeCreated) AS timeModified,     (SELECT count(*) FROM Commits WHERE Commits.projectId=Projects.projectId AND Commits.timestamp > (SELECT IFNULL(MAX(timestamp)-604800, 0) FROM Commits)) AS recentCommits,     timeCreated, (SELECT COUNT(userId) AS numDevs FROM ProjectUsers WHERE ProjectUsers.projectId=Projects.projectId) AS numDevs         FROM     Projects         LEFT JOIN Commits ON     Projects.projectId=Commits.projectId AND Projects.disabled=0 AND Projects.hidden=0        GROUP BY Projects.projectId) as P
+
+    ORDER BY %s
+    LIMIT %d
+    OFFSET %d
 """
 
 ordersql = {
