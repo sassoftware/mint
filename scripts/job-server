@@ -134,8 +134,8 @@ def kill(lockFile):
         lock = open(lockFile, "r")
         pid = int(lock.read())
         lock.close()
-    except:
-        log.warning("unable to open lockfile: %s", lockFile)
+    except Exception, e:
+        log.warning("unable to open lockfile: %s (%s)", lockFile, str(e))
     else:
         pipeFD = os.popen("ps -p %d -o comm=" %pid)
         procName = pipeFD.readline().strip()
@@ -164,11 +164,9 @@ def daemon(options, cfg):
         lock = open(cfg.lockFile, "w")
         lock.write("%d" % os.getpid())
         lock.close()
-    except:
-        log.warning("unable to open lockfile: %s", cfg.lockFile)
-    
+    except Exception, e:
+        log.warning("unable to open lockfile: %s (%s)", cfg.lockFile, str(e))
     try:
-       
         jd = JobDaemon(cfg)
     except socket.error, msg:
         log.error("connecting to rBuilder server: %s", msg[1])
