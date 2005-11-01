@@ -20,8 +20,9 @@ cfg = config.MintConfig()
 cfg.read(cfgPath)
 
 db = sqlite3.connect(cfg.dbPath, timeout = 30000)
+cu = db.cursor()
 cu.execute("SELECT tbl_name FROM sqlite_master WHERE type = 'table'")
-self.db.tables = [ x[0] for x in cu.fetchall() ]
+db.tables = [ x[0] for x in cu.fetchall() ]
 
 pkgIdx = pkgindex.PackageIndexTable(db)
 labelsTable = projects.LabelsTable(db)
