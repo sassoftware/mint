@@ -244,7 +244,7 @@ class ProjectsTable(database.KeyedTable):
                     cu.execute("UPDATE Projects SET external=0")
                 except:
                     return False
-            if dbversion == 3:
+            if dbversion == 4:
                 cu = self.db.cursor()
                 try:
                     cu.execute("ALTER TABLE Projects ADD COLUMN description STR")
