@@ -1,3 +1,11 @@
+Changes in 1.1.0:
+
+* Massive performance improvements including caching of kid table objects,
+  not reloading the database structure every hit, accessing the authrepo
+  database file directly instead of spawning an http access, and many
+  more small improvements.
+* MySQL support is included, but not turned on by default.
+
 Changes in 1.0.2:
 
 * Finished ISOs are placed in a separate path from the temporary generation
