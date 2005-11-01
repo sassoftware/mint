@@ -263,7 +263,7 @@ class InstallableIso(ImageGenerator):
         cslistFile.close()
 
         infoMap = {
-            "isodir":       os.path.normpath(os.path.join(topdir, "..", "iso")),
+            "isodir":       os.path.normpath(os.path.join(self.cfg.finishedPath, project.getHostname(), str(release.getId()))),
             "topdir":       topdir,
             "subdir":       subdir,
             "name":         project.getName(),
@@ -353,7 +353,12 @@ class InstallableIso(ImageGenerator):
                 subprocess.call(cmd)
 
         # add the netboot images
-        isoList += ( (os.path.join(topdir, 'images/boot.iso'), "boot.iso"),
-                     (os.path.join(topdir, 'images/diskboot.img'), "diskboot.img"), )
+        bootDest = os.path.join(infoMap['isodir'], 'boot.iso')
+        diskbootDest = os.path.join(infoMap['isodir'], 'diskboot.img')
+        gencslist._linkOrCopyFile(os.path.join(topdir, 'images', 'boot.iso'), bootDest)
+        gencslist._linkOrCopyFile(os.path.join(topdir, 'images', 'diskimage.img'), diskimageDest)
+                
+        isoList += ( (bootDest, "boot.iso"),
+                     (diskbootDest, "diskboot.img"), )
 
         return isoList

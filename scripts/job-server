@@ -186,6 +186,7 @@ class IsoGenConfig(ConfigFile):
         'serverUrl'       : None,
         'logPath'         : '/srv/mint/logs',
         'imagesPath'      : '/srv/mint/images/',
+        'finishedPath'    : '/srv/mint/finished-images/',
         'lockFile'        : '/var/run/mint-jobdaemon.pid',
         }
 
