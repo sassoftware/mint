@@ -220,6 +220,8 @@ class MintApp(WebHandler):
         )
 
         self.SITE = self.siteHost + self.basePath
+        groupTrove = None
+        
         # a set of information to be passed into the next handler
         context = {
             'auth':             self.auth,
@@ -237,6 +239,8 @@ class MintApp(WebHandler):
             'SITE':             self.SITE,
             'userLevel':        self.userLevel,
             'user':             self.user,
+            'isOwner':          self.userLevel == userlevels.OWNER or self.auth.admin,
+            'groupTrove':       groupTrove,
         }
 
         # match the requested url to the right url handler

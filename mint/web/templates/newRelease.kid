@@ -70,6 +70,8 @@ title = "Create New Release"
                 </form>
             </div>
         </td>
-        ${projectsPane()}
+        <td id="right" class="projects">
+            ${projectsPane()}
+        </td>
     </body>
 </html>

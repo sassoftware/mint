@@ -24,7 +24,7 @@
 
     <table border="0" cellspacing="0" cellpadding="0"
            class="releasestable" py:def="releasesTable(releaseList, isOwner)">
-        <tr py:for="release in releaseList">
+        <tr py:for="release in reversed(releaseList)">
 
             <th>
                 <a href="release?id=${release.getId()}">
@@ -65,6 +65,8 @@
                 </div>
             </div>
         </td>
-        ${projectsPane()}
+        <td id="right" class="projects">
+            ${projectsPane()}
+        </td>
     </body>
 </html>

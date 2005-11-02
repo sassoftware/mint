@@ -99,6 +99,8 @@ from mint.mint import upstream
                 </div>
             </div>
         </td>
-        ${projectsPane()}
+        <td id="right" class="projects">
+            ${projectsPane()}
+        </td>
     </body>
 </html>

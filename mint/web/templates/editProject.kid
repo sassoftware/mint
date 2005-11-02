@@ -53,6 +53,8 @@
                 </form>
             </div>
         </td>
-        ${projectsPane()}
+        <td id="right" class="projects">
+            ${projectsPane()}
+        </td>
     </body>
 </html>

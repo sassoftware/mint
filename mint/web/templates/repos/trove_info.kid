@@ -37,13 +37,26 @@ isOwner = (userLevel == userlevels.OWNER or auth.admin)
         </tr>
     </table>
 
+    <span py:def="lockedAdder(trove)" style="float: right;" py:if="groupTrove">
+        <a href="addTrove?id=${groupTrove.id};trove=${quote(trove.getName())};version=${quote(trove.getVersion().asString())};locked=1">
+            Add this exact version <img style="border: none;" src="${cfg.staticPath}apps/mint/images/group.png" />
+        </a>
+    </span>
+    
+    <span py:def="adder(trove)" style="float: right;" py:if="groupTrove">
+        <a href="addTrove?id=${groupTrove.id};trove=${quote(trove.getName())};version=${quote(trove.getVersion().asString())}">
+            Add this trove <img style="border: none;" src="${cfg.staticPath}apps/mint/images/group.png" />
+        </a>
+    </span>
+
+
     <table py:def="binaryTroveInfo(trove)" class="troveinfo">
         <?python
             sourceVersion = trove.getVersion().getSourceVersion().freeze()
             sourceLink = "troveInfo?t=%s;v=%s" % (quote(trove.getSourceName()), quote(sourceVersion))
         ?>
-        <tr><th>Trove name:</th><td>${trove.getName()}</td></tr>
-        <tr><th>Version:</th><td>${trove.getVersion().asString()}</td></tr>
+        <tr><th>Trove name:</th><td>${adder(trove)} ${trove.getName()}</td></tr>
+        <tr><th>Version:</th><td>${lockedAdder(trove)} ${trove.getVersion().asString()}</td></tr>
         <tr><th>Flavor:</th><td>${trove.getFlavor()}</td></tr>
         <tr><th>Built from trove:</th><td><a href="${sourceLink}">${trove.getSourceName()}</a></td></tr>
         <tr><th>Build time:</th><td>${time.ctime(trove.getBuildTime())} using Conary ${trove.getConaryVersion()}</td></tr>
@@ -103,6 +116,12 @@ isOwner = (userLevel == userlevels.OWNER or auth.admin)
                 </ul>
             </div>
         </td>
-        ${projectsPane()}
+        <td id="right" class="projects">
+            ${projectsPane()}
+            <div class="pad">
+                ${groupTroveBuilder()}
+            </div>
+        </td>
+
     </body>
 </html>

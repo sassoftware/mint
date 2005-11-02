@@ -139,6 +139,8 @@ from mint import userlevels
                 </h3>
             </div>
         </td>
-        ${projectsPane()}        
+        <td id="right" class="projects">
+            ${projectsPane()}
+        </td> 
     </body>
 </html>

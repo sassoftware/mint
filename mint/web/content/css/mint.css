@@ -217,3 +217,8 @@ div.helpBlock pre, div.helpBlock.tt {
 div.helpBlock pre {
     margin-left: 2em;
 }
+
+div.palette#groupbuilder table tr:first-child {
+    color: black;
+    font-weight: bold;
+}

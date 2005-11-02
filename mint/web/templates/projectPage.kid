@@ -100,7 +100,9 @@ from mint.mint import upstream
                             </ul>
                         </div>
                     </td>
-                    ${projectsPane()}
+                    <td id="right" class="projects">
+                        ${projectsPane()}
+                    </td>
                 </tr>
             </table>
         </td>

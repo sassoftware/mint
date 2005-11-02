@@ -111,6 +111,43 @@ class ProjectHandler(WebHandler):
         return apache.OK
 
     @ownerOnly
+    def groups(self, auth):
+        releases = self.project.getReleases(showUnpublished = True)
+        publishedReleases = [x for x in releases if x.getPublished()]
+            
+        self._write("groups", publishedReleases = publishedReleases)
+        return apache.OK
+
+    @ownerOnly
+    def newGroup(self, auth):
+        self._write("newGroup", errors = [], kwargs = {})
+        return apache.OK
+
+    @ownerOnly
+    @strFields(groupName = "", version = "")
+    def editGroup(self, auth, groupName, version):
+        errors = []
+        groupName = "group-" + groupName
+
+        # validate version
+        try:
+            versions.Revision(version + "-1-1")
+        except versions.ParseError, e:
+            errors.append("Error parsing version string: %s" % version)
+
+        # validate group name
+        if not re.match("group-[a-zA-Z0-9\-_]+$", groupName):
+            errors.append("Invalid group trove name: %s" % groupName)
+
+        if not errors:
+            # do stuff
+            return apache.OK
+        else:
+            kwargs = {'groupName': groupName, 'version': version}
+            self._write("newGroup", errors = errors, kwargs = kwargs)
+            return apache.OK
+    
+    @ownerOnly
     def newRelease(self, auth):
         self._write("newRelease", errors = [], kwargs = {})
         return apache.OK

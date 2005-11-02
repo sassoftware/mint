@@ -95,7 +95,12 @@ from mint import searcher
                             </div>
                         </div>
                     </td>
-                    ${projectsPane()}
+                    <td id="right" class="projects">
+                        ${projectsPane()}
+                        <div class="pad">
+                            ${groupTroveBuilder()}
+                        </div>
+                    </td>
                 </tr>
             </table>
         </td>

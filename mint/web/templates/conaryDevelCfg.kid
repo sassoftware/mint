@@ -279,5 +279,11 @@ from mint import userlevels
                     (after the <tt>signatureKey</tt> line at the top of the
                     file, of course).  In this way, the settings for all
                     the keys Conary is configured to use are in one
-                    place.</p> </div> </td> ${projectsPane()} </body>
-                    </html>
+                    place.</p> 
+            </div> 
+        </td>
+        <td id="right" class="projects">
+            ${projectsPane()}
+        </td>
+    </body>
+</html>
