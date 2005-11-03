@@ -220,7 +220,15 @@ class MintApp(WebHandler):
         )
 
         self.SITE = self.siteHost + self.basePath
-        groupTrove = None
+        self.isOwner = self.userLevel == userlevels.OWNER or self.auth.admin
+
+        class boba(object):
+            pass
+
+        groupTrove = boba()
+        groupTrove.id = 0
+        groupTrove.name = "group-dist"
+        #groupTrove = None
         
         # a set of information to be passed into the next handler
         context = {
@@ -239,7 +247,7 @@ class MintApp(WebHandler):
             'SITE':             self.SITE,
             'userLevel':        self.userLevel,
             'user':             self.user,
-            'isOwner':          self.userLevel == userlevels.OWNER or self.auth.admin,
+            'isOwner':          self.isOwner,
             'groupTrove':       groupTrove,
         }
 
