@@ -65,8 +65,8 @@ isOwner = (userLevel == userlevels.OWNER or auth.admin)
                     <table class="troveflavor">
                       <tr>
                         <td class="col1">${trove.getFlavor()}</td>
-                        <td class="col2" onclick="javascript:toggle_display('${trove.getFlavor().freeze()}_items');">
-                            Details <img id="${trove.getFlavor().freeze()}_items_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" border="0" />
+                        <td class="col2">
+                            <a href="#" onclick="javascript:toggle_display('${trove.getFlavor().freeze()}_items'); return false;">Details <img id="${trove.getFlavor().freeze()}_items_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" border="0" /></a>
                         </td>
                       </tr>
                     </table>
