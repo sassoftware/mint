@@ -1346,14 +1346,7 @@ class MintServer(object):
         self.sessions.cleanup()
 
     # group trove specific functions
-    @typeCheck(int)
-    @private
-    @requiresAuth
-    def getRecipe(self, groupTroveId):
-        projectId = self.groupTroves.getProjectId(groupTroveId)
-        self._filterProjectAccess(projectId)
-        self._requireProjectOwner(projectId)
-
+    def _getRecipe(self, groupTroveId):
         groupTrove = self.groupTroves.get(groupTroveId)
         groupTroveItems = self.groupTroveItems.listByGroupTroveId(groupTroveId)
 
@@ -1372,6 +1365,41 @@ class MintServer(object):
         for trv in groupTroveItems:
             recipe += indent + "r.add('" + trv['trvName'] + "', '" + trv['trvVersion'] + "', '" + trv['trvFlavor'] + "', groupName = '" +trv['subGroup'] +"')\n"
         return recipe
+
+    @typeCheck(int)
+    @private
+    @requiresAuth
+    def getRecipe(self, groupTroveId):
+        projectId = self.groupTroves.getProjectId(groupTroveId)
+        self._filterProjectAccess(projectId)
+        self._requireProjectOwner(projectId)
+        return self._getRecipe(groupTroveId)
+
+    @typeCheck(int)
+    @private
+    @requiresAuth
+    def cookGroupTrove(self, groupTroveId):
+        import checkin
+        projectId = self.groupTroves.getProjectId(groupTroveId)
+        self._filterProjectAccess(projectId)
+        self._requireProjectOwner(projectId)
+        recipe = self._getRecipe(groupTroveId)
+        groupTrove = self.groupTroves.get(groupTroveId)
+
+        project = projects.Project(self, projectId)
+
+        repos = self._getProjectRepo(project)
+
+        # try to grab recipe source component
+
+        #if it IS in the repo, grab version and increment properly
+
+        # if not, create first version based on upstream version
+
+        # commit recipe as changeset
+        message = "Auto generated commit from rBuilder online."
+        
+        # cook on repository
 
     @private
     @requiresAuth

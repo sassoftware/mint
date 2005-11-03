@@ -14,6 +14,7 @@ from mint import grouptrove
 from mint.database import ItemNotFound
 from mint import userlevels
 from mint.mint_error import PermissionDenied
+from repository import netclient
 
 refRecipe = """class GroupTest(GroupRecipe):
     name = 'group-test'
@@ -273,12 +274,14 @@ class GroupTroveTest(MintRepositoryHelper):
 
         trvId = self.addTestTrove(groupTrove, "testcase")
 
-        if (client.server.getRecipe(groupTroveId) != refRecipe):
+        if (groupTrove.getRecipe() != refRecipe):
             self.fail("auto generated recipe did not return expected results")
 
     def testCookAutoRecipe(self):
         client, userId = self.quickMintUser('testuser', 'testpass')
         projectId = self.newProject(client)
+
+        project = client.getProject(projectId)
 
         groupTrove = self.createTestGroupTrove(client, projectId)
         groupTroveId = groupTrove.getId()
@@ -290,9 +293,48 @@ class GroupTroveTest(MintRepositoryHelper):
 
         trvId = self.addTestTrove(groupTrove, "testcase")
 
-        self.makeSourceTrove("group-test", client.server.getRecipe(groupTroveId))
+        self.makeSourceTrove("group-test", groupTrove.getRecipe())
         self.cookFromRepository("group-test",
             versions.Label("test.localhost@rpl:devel"))
+
+        cfg = project.getConaryConfig()
+        nc = netclient.NetworkRepositoryClient(cfg.repositoryMap)
+
+        troveNames = nc.troveNames(versions.Label("test.localhost@rpl:devel"))
+        assert(troveNames == ['testcase', 'testcase:runtime', 'group-test',
+                              'group-test:source', 'testcase:source'])
+
+        groupTroves = client.server.getGroupTroves(projectId)
+        assert(groupTroves == {'test.localhost@rpl:devel': ['group-test']})
+
+    def testCookOnServer(self):
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client)
+
+        project = client.getProject(projectId)
+
+        groupTrove = self.createTestGroupTrove(client, projectId)
+        groupTroveId = groupTrove.getId()
+
+        self.makeSourceTrove("testcase", testRecipe)
+        self.cookFromRepository("testcase",
+            versions.Label("test.localhost@rpl:devel"),
+            ignoreDeps = True)
+
+        trvId = self.addTestTrove(groupTrove, "testcase")
+        groupTrove.cook()
+
+        cfg = project.getConaryConfig()
+        nc = netclient.NetworkRepositoryClient(cfg.repositoryMap)
+
+        # FIXME: cook twice in a row and actually verify version numbers
+
+        troveNames = nc.troveNames(versions.Label("test.localhost@rpl:devel"))
+        assert(troveNames == ['testcase', 'testcase:runtime', 'group-test',
+                              'group-test:source', 'testcase:source'])
+
+        groupTroves = client.server.getGroupTroves(projectId)
+        assert(groupTroves == {'test.localhost@rpl:devel': ['group-test']})
 
 if __name__ == "__main__":
     testsuite.main()

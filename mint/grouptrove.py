@@ -278,3 +278,9 @@ class GroupTrove(database.TableObject):
 
     def setAutoResolve(self, resolve):
         self.server.setGroupTroveAutoResolve(self.getId(), resolve)
+
+    def getRecipe(self):
+        return self.server.getRecipe(self.getId())
+
+    def cook(self):
+        self.server.cookGroupTrove(self.getId())
