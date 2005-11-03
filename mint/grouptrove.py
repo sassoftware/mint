@@ -119,14 +119,15 @@ class GroupTroveItemsTable(database.KeyedTable):
 
     def updateModifiedTime(self, groupTroveItemId):
         cu = self.db.cursor()
-        r = cu.execute("SELECT groupTroveId FROM GroupTroveItems WHERE groupTroveItemId=?", groupTroveItemId)
-        cu.execute("UPDATE GroupTroves SET timeModified=? WHERE groupTroveId=?", time.time(), r.fetchone()[0])
+        cu.execute("SELECT groupTroveId FROM GroupTroveItems WHERE groupTroveItemId=?", groupTroveItemId)
+        cu.execute("UPDATE GroupTroves SET timeModified=? WHERE groupTroveId=?", time.time(), cu.fetchone()[0])
 
     def setVersionLocked(self, groupTroveItemId, lock):
         cu = self.db.cursor()
         cu.execute("BEGIN")
         cu.execute("UPDATE GroupTroveItems SET versionLock=? WHERE groupTroveItemId=?", lock, groupTroveItemId)
         self.updateModifiedTime(groupTroveItemId)
+        
         self.db.commit()
 
     def setUseLocked(self, groupTroveItemId, lock):
@@ -134,6 +135,7 @@ class GroupTroveItemsTable(database.KeyedTable):
         cu.execute("BEGIN")
         cu.execute("UPDATE GroupTroveItems SET useLock=? WHERE groupTroveItemId=?", lock, groupTroveItemId)
         self.updateModifiedTime(groupTroveItemId)
+        
         self.db.commit()
 
     def setInstSetLocked(self, groupTroveItemId, lock):
@@ -141,13 +143,15 @@ class GroupTroveItemsTable(database.KeyedTable):
         cu.execute("BEGIN")
         cu.execute("UPDATE GroupTroveItems SET instSetLock=? WHERE groupTroveItemId=?", lock, groupTroveItemId)
         self.updateModifiedTime(groupTroveItemId)
+        
         self.db.commit()
 
     def addTroveItem(self, groupTroveId, creatorId, trvName, trvVersion, trvFlavor, subGroup, versionLock, useLock, instSetLock):
         cu = self.db.cursor()
         cu.execute("BEGIN")
-        r = cu.execute("SELECT IFNULL(MAX(groupTroveItemId), 0) + 1 as groupTroveItemId FROM GroupTroveItems")
-        groupTroveItemId = r.fetchone()[0]
+        cu.execute("SELECT IFNULL(MAX(groupTroveItemId), 0) + 1 as groupTroveItemId FROM GroupTroveItems")
+        
+        groupTroveItemId = cu.fetchone()[0]
         self.new(groupTroveItemId = groupTroveItemId,
                  groupTroveId = groupTroveId,
                  creatorId = creatorId,
@@ -159,6 +163,7 @@ class GroupTroveItemsTable(database.KeyedTable):
                  useLock = useLock,
                  instSetLock = instSetLock)
         self.updateModifiedTime(groupTroveItemId)
+        
         self.db.commit()
         return groupTroveItemId
 
@@ -167,12 +172,13 @@ class GroupTroveItemsTable(database.KeyedTable):
         cu.execute("BEGIN")
         self.updateModifiedTime(groupTroveItemId)
         cu.execute("DELETE FROM GroupTroveItems WHERE groupTroveItemId=?", groupTroveItemId)
+        
         self.db.commit()
 
     def listByGroupTroveId(self, groupTroveId):
         cu = self.db.cursor()
-        r = cu.execute("SELECT groupTroveItemId FROM GroupTroveItems WHERE groupTroveId=?", groupTroveId)
-        trvIdList = [x[0] for x in r.fetchall()]
+        cu.execute("SELECT groupTroveItemId FROM GroupTroveItems WHERE groupTroveId=?", groupTroveId)
+        trvIdList = [x[0] for x in cu.fetchall()]
         trvList = []
         for trvId in trvIdList:
             trvList.append(self.get(trvId))
@@ -184,7 +190,8 @@ class GroupTroveItemsTable(database.KeyedTable):
         ret['useLock'] = bool(ret['useLock'])
         ret['instSetLock'] = bool(ret['instSetLock'])
         if not ret['versionLock']:
-            ret['trvVersion'] = '/'.join(ret['trvVersion'].split('/')[:2])
+            parsedVer = versions.VersionFromString(ret['trvVersion'])
+            ret['trvVersion'] = parsedVer.branch().label().asString()
 
         flav = deps.ThawDependencySet(ret['trvFlavor'])
         if not (ret['useLock'] or ret['instSetLock']):
@@ -204,14 +211,18 @@ class GroupTroveItemsTable(database.KeyedTable):
         ret['trvFlavor'] = flavStr
         if ret['subGroup'] == '':
             cu = self.db.cursor()
-            r = cu.execute("SELECT recipeName from GroupTroveItems, GroupTroves WHERE GroupTroveItems.groupTroveItemId=? AND GroupTroveItems.groupTroveId=GroupTroves.groupTroveId", groupTroveItemId)
-            ret['subGroup'] = r.fetchone()[0]
+            cu.execute("""SELECT recipeName from GroupTroveItems, GroupTroves 
+                            WHERE GroupTroveItems.groupTroveItemId=? AND
+                                  GroupTroveItems.groupTroveId=GroupTroves.groupTroveId""", groupTroveItemId)
+            ret['subGroup'] = cu.fetchone()[0]
         return ret
 
     def getProjectId(self, groupTroveItemId):
         cu = self.db.cursor()
-        r = cu.execute("SELECT projectId from GroupTroveItems, GroupTroves WHERE GroupTroveItems.groupTroveItemId=? AND GroupTroveItems.groupTroveId=GroupTroves.groupTroveId", groupTroveItemId)
-        return r.fetchone()[0]
+        cu.execute("""SELECT projectId from GroupTroveItems, GroupTroves
+                        WHERE GroupTroveItems.groupTroveItemId=? AND 
+                              GroupTroveItems.groupTroveId=GroupTroves.groupTroveId""", groupTroveItemId)
+        return cu.fetchone()[0]
 
 ############ Client Side ##############
 

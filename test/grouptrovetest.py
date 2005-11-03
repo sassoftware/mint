@@ -64,7 +64,7 @@ class GroupTroveTest(MintRepositoryHelper):
         gTrv = groupTrove.getTrove(trvId)
         assert(gTrv['versionLock'] is False)
 
-        assert(gTrv['trvVersion'] == '/test.localhost@rpl:devel')
+        assert(gTrv['trvVersion'] == 'test.localhost@rpl:devel')
 
         groupTrove.setTroveVersionLocked(trvId, True)
 
