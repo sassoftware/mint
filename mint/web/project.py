@@ -124,8 +124,8 @@ class ProjectHandler(WebHandler):
         return apache.OK
 
     @ownerOnly
-    @strFields(groupName = "", version = "")
-    def editGroup(self, auth, groupName, version):
+    @strFields(groupName = "", version = "", description = "")
+    def editGroup(self, auth, groupName, version, description):
         errors = []
         groupName = "group-" + groupName
 
@@ -141,6 +141,7 @@ class ProjectHandler(WebHandler):
 
         if not errors:
             # do stuff
+            self.client.newGroupTrove(groupName, version, description)
             return apache.OK
         else:
             kwargs = {'groupName': groupName, 'version': version}

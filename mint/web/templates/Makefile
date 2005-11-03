@@ -21,6 +21,7 @@ kid_files = \
 	library.kid		\
 	mailingLists.kid	\
 	members.kid		\
+	newGroup.kid		\
 	newProject.kid		\
 	newRelease.kid		\
 	passwordReset.kid	\
