@@ -13,9 +13,9 @@ from mint import userlevels
         isOwner = (userLevel == userlevels.OWNER or auth.admin)
         releases = project.getReleases(showUnpublished = False)
         commits = project.getCommits()
-        protocol = http
+        protocol = 'http'
         if cfg.SSL:
-            protocol = https
+            protocol = 'https'
     ?>
     <div py:def="breadcrumb()" py:strip="True">
         <a href="$basePath">${project.getName()}</a>
