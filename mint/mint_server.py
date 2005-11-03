@@ -1575,5 +1575,3 @@ class MintServer(object):
             raise
 
         self.newsCache.refresh()
-
-

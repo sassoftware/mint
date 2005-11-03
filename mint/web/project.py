@@ -114,8 +114,10 @@ class ProjectHandler(WebHandler):
     def groups(self, auth):
         releases = self.project.getReleases(showUnpublished = True)
         publishedReleases = [x for x in releases if x.getPublished()]
+        groupTrovesInProject = self.client.listGroupTrovesByProject(self.project.id)
             
-        self._write("groups", publishedReleases = publishedReleases)
+        self._write("groups", publishedReleases = publishedReleases,
+                    groupTrovesInProject = groupTrovesInProject)
         return apache.OK
 
     @ownerOnly
@@ -125,7 +127,7 @@ class ProjectHandler(WebHandler):
 
     @ownerOnly
     @strFields(groupName = "", version = "", description = "")
-    def editGroup(self, auth, groupName, version, description):
+    def createGroup(self, auth, groupName, version, description):
         errors = []
         groupName = "group-" + groupName
 
@@ -141,8 +143,9 @@ class ProjectHandler(WebHandler):
 
         if not errors:
             # do stuff
-            self.client.newGroupTrove(groupName, version, description)
-            return apache.OK
+            gtId = self.client.createGroupTrove(self.projectId, groupName,
+                version, description, True)
+            return self._redirect("editGroup?id=%d" % gtId)
         else:
             kwargs = {'groupName': groupName, 'version': version}
             self._write("newGroup", errors = errors, kwargs = kwargs)

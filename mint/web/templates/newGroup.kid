@@ -30,7 +30,7 @@
                 <p py:for="error in errors" class="errormessage" py:content="error"/>
                 <h2>Create a Group Trove</h2>
                 <p>Fields labeled with a <em class="required">red arrow</em> are required.</p>
-                <form method="post" action="editGroup">
+                <form method="post" action="createGroup">
 
                     <table border="0" cellspacing="0" cellpadding="0" class="mainformhorizontal">
                         <tr>

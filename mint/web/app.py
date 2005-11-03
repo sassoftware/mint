@@ -222,14 +222,11 @@ class MintApp(WebHandler):
         self.SITE = self.siteHost + self.basePath
         self.isOwner = self.userLevel == userlevels.OWNER or self.auth.admin
 
-        class boba(object):
-            pass
-
-        self.groupTrove = boba()
-        self.groupTrove.id = 0
-        self.groupTrove.name = "group-dist"
-        #groupTrove = None
-        
+        if self.session.has_key('groupTroveId'):
+            self.groupTrove = self.client.getGroupTrove(self.session['groupTroveId'])
+        else:
+            self.groupTrove = None
+            
         # a set of information to be passed into the next handler
         context = {
             'auth':             self.auth,

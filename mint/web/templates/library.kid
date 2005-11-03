@@ -107,14 +107,8 @@ from mint import userlevels
         </h3>
         <div id="group_trove_builder_items" style="display: $display">
             <table>
-                <tr><td colspan="3"><a href="foo">Group in progress: group-dist</a></td></tr>
-                <tr><td style="width: 0px; padding: 0px;"><img src="${cfg.staticPath}/apps/mint/images/group.png"/></td><td>group-core</td><td>conary.rpath.com@rpl:devel</td></tr>
-                <tr><td></td><td>nautilus</td><td>conary.rpath.com@rpl:devel</td></tr>
-                <tr><td></td><td>gnome-panel</td><td>conary.rpath.com@rpl:devel</td></tr>
-                <tr><td></td><td>cherokee</td><td>popcorn.rpath.org@rpl:devel</td></tr>
-                <tr><td></td><td>httpd</td><td>conary.rpath.com@rpl:devel</td></tr>
-                <tr><td></td><td>openssl:lib</td><td>conary.rpath.com@rpl:devel</td></tr>
-                <tr><td></td><td>php:runtime</td><td>conary.rpath.com@rpl:devel</td></tr>
+                <tr><td colspan="3"><a href="foo">Group in progress: ${groupTrove.recipeName}</a></td></tr>
+                <tr py:for="item in groupTrove.listTroves()"><td></td><td>${item['trvName']}</td><td>${item['trvVersion']}</td></tr>
                 <tr>
                     <td colspan="3" style="text-align: center; padding: 1em;">
                         <a class="option" style="display: inline;" href="cook">Cook This Group</a>
