@@ -130,6 +130,7 @@ class SiteHandler(WebHandler):
         return apache.OK
 
     def registerComplete(self, auth):
+        self.toUrl = self.cfg.basePath
         self._write("register_conf")
         return apache.OK
 
