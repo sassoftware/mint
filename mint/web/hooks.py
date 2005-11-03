@@ -19,6 +19,7 @@ from lib import epdb, log
 from repository.netrepos import netserver
 from repository.filecontainer import FileContainer
 from repository import changeset
+from repository import errors
 
 from mint import config
 from mint import mint_server
@@ -93,7 +94,7 @@ def post(port, isSecure, repos, cfg, req):
         params = [protocol, port, method, authToken, params]
         try:
             result = wrapper(*params)
-        except (netserver.InsufficientPermission):
+        except (errors.InsufficientPermission):
             sys.stderr.flush()
             return apache.HTTP_FORBIDDEN
 
@@ -315,7 +316,7 @@ def xmlrpcHandler(req, cfg, pathInfo):
         server = mint_server.MintServer(cfg, allowPrivate = False)
     try:
         result = server.callWrapper(*params)
-    except (netserver.InsufficientPermission, mint_server.PermissionDenied):
+    except (errors.InsufficientPermission, mint_server.PermissionDenied):
         return apache.HTTP_FORBIDDEN
 
     resp = xmlrpclib.dumps((result,), methodresponse=1)
