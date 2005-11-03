@@ -193,11 +193,13 @@ class GroupTroveItemsTable(database.KeyedTable):
             flavStr = str(flav)
         elif ret['useLock']:
             depSet = deps.DependencySet()
-            depSet.getDepClasses()[deps.DEP_CLASS_USE] = flav.getDepClasses()[deps.DEP_CLASS_USE]
+            depSet.addDeps(deps.UseDependency,
+                           flav.iterDepsByClass(deps.UseDependency))
             flavStr = str(depSet)
         else:
             depSet = deps.DependencySet()
-            depSet.getDepClasses()[deps.DEP_CLASS_IS] = flav.getDepClasses()[deps.DEP_CLASS_IS]
+            depSet.addDeps(deps.InstructionSetDependency,
+                           flav.iterDepsByClass(deps.InstructionSetDependency))
             flavStr = str(depSet)
         ret['trvFlavor'] = flavStr
         if ret['subGroup'] == '':
