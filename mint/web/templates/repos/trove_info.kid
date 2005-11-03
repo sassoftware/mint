@@ -50,29 +50,50 @@ isOwner = (userLevel == userlevels.OWNER or auth.admin)
     </span>
 
 
-    <table py:def="binaryTroveInfo(trove)" class="troveinfo">
+    <table py:def="binaryTroveInfo(troves)" class="troveinfo">
         <?python
+            trove = troves[0]
             sourceVersion = trove.getVersion().getSourceVersion().freeze()
             sourceLink = "troveInfo?t=%s;v=%s" % (quote(trove.getSourceName()), quote(sourceVersion))
         ?>
         <tr><th>Trove name:</th><td>${adder(trove)} ${trove.getName()}</td></tr>
-        <tr><th>Version:</th><td>${lockedAdder(trove)} ${trove.getVersion().asString()}</td></tr>
-        <tr><th>Flavor:</th><td>${trove.getFlavor()}</td></tr>
         <tr><th>Built from trove:</th><td><a href="${sourceLink}">${trove.getSourceName()}</a></td></tr>
-        <tr><th>Build time:</th><td>${time.ctime(trove.getBuildTime())} using Conary ${trove.getConaryVersion()}</td></tr>
-        <tr><th>Provides:</th>
+        <tr><th>Version:</th><td>${lockedAdder(trove)} ${trove.getVersion().asString()}</td></tr>
+        <tr><th>Flavor:</th>
             <td>
-                <div py:for="dep in str(trove.provides.deps).split('\n')">${dep}</div>
-                <div py:if="not trove.provides.deps">
-                    Trove satisfies no dependencies.
-                </div>
-            </td>
-        </tr>
-        <tr><th>Requires:</th>
-            <td>
-                <div py:for="dep in str(trove.requires.deps).split('\n')">${dep}</div>
-                <div py:if="not trove.requires.deps">
-                    Trove has no requirements.
+                <div py:for="trove in troves" py:strip="True">
+                    <table class="troveflavor">
+                      <tr>
+                        <td class="col1">${trove.getFlavor()}</td>
+                        <td class="col2" onclick="javascript:toggle_display('${trove.getFlavor().freeze()}_items');">
+                            Details <img id="${trove.getFlavor().freeze()}_items_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" border="0" />
+                        </td>
+                      </tr>
+                    </table>
+                    <table>
+                        <tbody style="display: none;" id="${trove.getFlavor().freeze()}_items">
+                            <tr><th>Build time: </th><td>${time.ctime(trove.getBuildTime())} using Conary ${trove.getConaryVersion()}</td></tr>
+                            <tr>
+                                <th>Provides: </th>
+                                <td>
+                                    <div py:for="dep in str(trove.provides.deps).split('\n')">${dep}</div>
+                                    <div py:if="not trove.provides.deps">
+                                        Trove satisfies no dependencies.
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>Requires: </th>
+                                <td>
+                                    <div py:for="dep in str(trove.requires.deps).split('\n')">${dep}</div>
+                                    <div py:if="not trove.requires.deps">
+                                        Trove has no requirements.
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr><td colspan="2"><a href="files?t=${quote(troveName)};v=${quote(trove.getVersion().freeze())};f=${quote(trove.getFlavor().freeze())}">Show Files</a></td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </td>
         </tr>
@@ -99,10 +120,8 @@ isOwner = (userLevel == userlevels.OWNER or auth.admin)
                     ${sourceTroveInfo(troves[0])}
                     <p><a href="files?t=${quote(troveName)};v=${quote(troves[0].getVersion().freeze())};f=${quote(troves[0].getFlavor().freeze())}">Show Files</a></p>
                 </div>
-                <div py:strip="True" py:if="not trove.getName().endswith(':source')"
-                     py:for="trove in troves">
-                    ${binaryTroveInfo(trove)}
-                    <p><a href="files?t=${quote(troveName)};v=${quote(trove.getVersion().freeze())};f=${quote(trove.getFlavor().freeze())}">Show Files</a></p>
+                <div py:strip="True" py:if="not troves[0].getName().endswith(':source')">
+                    ${binaryTroveInfo(troves)}
                 </div>
 
                 <h3>All Versions:</h3>

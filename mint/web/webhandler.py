@@ -28,6 +28,8 @@ class WebHandler(object):
             templatePath = self.cfg.templatePath
 
         global kidCache
+        if self.cfg.debugMode:
+            kidCache={}
         if template not in kidCache:
             path = os.path.join(templatePath, template + ".kid")
             kidCache[template] = kid.load_template(path)

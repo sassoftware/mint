@@ -236,16 +236,31 @@ strong.keyword {
 .troveinfo {
 	padding:0px 0px 4px 0px; margin:8px 0px 8px 0px;
 	border-bottom:1px #ccc solid; border-top:1px #ccc solid;
+        width: 100%;
 }
 .troveinfo th {
 	font-weight:normal; color:#999;
 	border-top:1px #e6e6e6 solid;
 	padding:6px 12px 6px 0px;
+        width: 15%;
 }
 .troveinfo td {
 	font-weight:normal;
 	vertical-align:top; padding:6px 12px 6px 0px;
 	border-top:1px #e6e6e6 solid;
+        width: 85%;
+}
+
+.troveflavor {
+        border-style: none;
+}
+.troveflavor td.col1 {
+        text-align: left;
+        border-style: none;
+}
+.troveflavor td.col2 {
+        text-align: right;
+        border-style: none;
 }
 .troveallversions {
 	font-weight:normal;
