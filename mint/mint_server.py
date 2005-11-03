@@ -26,6 +26,7 @@ import userlevels
 import dbversion
 import stats
 import releasedata
+import grouptrove
 from cache import TroveNamesCache
 from mint_error import PermissionDenied, ReleasePublished, ReleaseMissing, MintError
 from searcher import SearchTermsError
@@ -129,7 +130,7 @@ def typeCheck(*paramTypes):
         def wrapper(self, *args):
             # FIXME: enable this test in production mode once we are certain
             # that the web api honors all typeCheck conventions
-            if 1 or not self.cfg.debugMode:
+            if not self.cfg.debugMode:
                 return func(self, *args)
             for i in range(len(args)):
                 if (not checkParam(args[i],paramTypes[i])):
@@ -159,6 +160,8 @@ def getTables(db, cfg):
     d['membershipRequests'] = requests.MembershipRequestTable(db)
     d['commits'] = stats.CommitsTable(db)
     d['releaseData'] = releasedata.ReleaseDataTable(db)
+    d['groupTroves'] = grouptrove.GroupTroveTable(db)
+    d['groupTroveItems'] = grouptrove.GroupTroveItemsTable(db)
     return d
 
 class MintServer(object):
@@ -323,6 +326,14 @@ class MintServer(object):
         r = cu.fetchall()
         if len(r):
             self._filterProjectAccess(r[0][0])
+
+    def _requireProjectOwner(self, projectId):
+        if self.auth.admin:
+            return
+        members = self.projectUsers.getMembersByProjectId(projectId)
+        for userId, username, level in members:
+            if (userId == self.auth.userId) and (level != userlevels.OWNER):
+                raise PermissionDenied
 
     @typeCheck(str, str, str, str, str)
     # project methods
@@ -1332,7 +1343,146 @@ class MintServer(object):
     @private
     def cleanupSessions(self):
         self.sessions.cleanup()
-    
+
+    # group trove specific functions
+    @typeCheck(int)
+    @private
+    @requiresAuth
+    def makeRecipe(self, groupTroveId):
+        pass
+
+    @private
+    @requiresAuth
+    @typeCheck(int)
+    def listGroupTrovesByProject(self, projectId):
+        self._filterProjectAccess(projectId)
+        self._requireProjectOwner(projectId)
+        return self.groupTroves.listGroupTrovesByProject(projectId)
+
+    @private
+    @typeCheck(int, str, str, str, bool)
+    @requiresAuth
+    def createGroupTrove(self, projectId, recipeName, upstreamVersion,
+                         desc, autoResolve):
+        self._filterProjectAccess(projectId)
+        self._requireProjectOwner(projectId)
+        creatorId = self.users.getIdByColumn("username", self.authToken[0])
+        return self.groupTroves.createGroupTrove(projectId, creatorId,
+                                                 recipeName, upstreamVersion,
+                                                 desc, autoResolve)
+
+    @private
+    @typeCheck(int)
+    @requiresAuth
+    def getGroupTrove(self, groupTroveId):
+        projectId = self.groupTroves.getProjectId(groupTroveId)
+        self._filterProjectAccess(projectId)
+        self._requireProjectOwner(projectId)
+        return self.groupTroves.get(groupTroveId)
+
+    @private
+    @typeCheck(int)
+    @requiresAuth
+    def deleteGroupTrove(self, groupTroveId):
+        projectId = self.groupTroves.getProjectId(groupTroveId)
+        self._filterProjectAccess(projectId)
+        self._requireProjectOwner(projectId)
+        self.groupTroves.delGroupTrove(groupTroveId)
+
+    @private
+    @typeCheck(int, str)
+    @requiresAuth
+    def setGroupTroveDesc(self, groupTroveId, desc):
+        projectId = self.groupTroves.getProjectId(groupTroveId)
+        self._filterProjectAccess(projectId)
+        self._requireProjectOwner(projectId)
+        self.groupTroves.update(groupTroveId, desc = desc, timeModified = time.time())
+
+    @private
+    @typeCheck(int, str)
+    @requiresAuth
+    def setGroupTroveUpstreamVersion(self, groupTroveId, vers):
+        projectId = self.groupTroves.getProjectId(groupTroveId)
+        self._filterProjectAccess(projectId)
+        self._requireProjectOwner(projectId)
+        self.groupTroves.setUpstreamVersion(groupTroveId, vers)
+
+    #group trove item specific functions
+
+    @private
+    @typeCheck(int)
+    @requiresAuth
+    def listGroupTroveItemsByGroupTrove(self, groupTroveId):
+        projectId = self.groupTroves.getProjectId(groupTroveId)
+        self._filterProjectAccess(projectId)
+        self._requireProjectOwner(projectId)
+        return self.groupTroveItems.listByGroupTroveId(groupTroveId)
+
+    @private
+    @typeCheck(int, bool)
+    @requiresAuth
+    def setGroupTroveItemVersionLocked(self, groupTroveItemId, locked):
+        projectId = self.groupTroveItems.getProjectId(groupTroveItemId)
+        self._filterProjectAccess(projectId)
+        self._requireProjectOwner(projectId)
+        self.groupTroveItems.setVersionLocked(groupTroveItemId, locked)
+
+    @private
+    @typeCheck(int, bool)
+    @requiresAuth
+    def setGroupTroveItemUseLocked(self, groupTroveItemId, locked):
+        projectId = self.groupTroveItems.getProjectId(groupTroveItemId)
+        self._filterProjectAccess(projectId)
+        self._requireProjectOwner(projectId)
+        self.groupTroveItems.setUseLocked(groupTroveItemId, locked)
+
+    @private
+    @typeCheck(int, bool)
+    @requiresAuth
+    def setGroupTroveItemInstSetLocked(self, groupTroveItemId, locked):
+        projectId = self.groupTroveItems.getProjectId(groupTroveItemId)
+        self._filterProjectAccess(projectId)
+        self._requireProjectOwner(projectId)
+        self.groupTroveItems.setInstSetLocked(groupTroveItemId, locked)
+
+    @private
+    @typeCheck(int, str, str, str, str, bool, bool, bool)
+    @requiresAuth
+    def addGroupTroveItem(self, groupTroveId, trvname, trvVersion, trvFlavor,
+                     subGroup, versionLock, useLock, instSetLock):
+        projectId = self.groupTroves.getProjectId(groupTroveId)
+        self._filterProjectAccess(projectId)
+        self._requireProjectOwner(projectId)
+        creatorId = self.users.getIdByColumn("username", self.authToken[0])
+        return self.groupTroveItems.addTroveItem(groupTroveId, creatorId, trvname, trvVersion, trvFlavor, subGroup, versionLock, useLock, instSetLock)
+
+    @private
+    @typeCheck(int)
+    @requiresAuth
+    def delGroupTroveItem(self, groupTroveItemId):
+        projectId = self.groupTroveItems.getProjectId(groupTroveItemId)
+        self._filterProjectAccess(projectId)
+        self._requireProjectOwner(projectId)
+        self.groupTroveItems.delGroupTroveItem(groupTroveItemId)
+
+    @private
+    @typeCheck(int)
+    @requiresAuth
+    def getGroupTroveItem(self, groupTroveItemId):
+        projectId = self.groupTroveItems.getProjectId(groupTroveItemId)
+        self._filterProjectAccess(projectId)
+        self._requireProjectOwner(projectId)
+        return self.groupTroveItems.get(groupTroveItemId)
+
+    @private
+    @typeCheck(int, str)
+    @requiresAuth
+    def setGroupTroveItemSubGroup(self, groupTroveItemId, subGroup):
+        projectId = self.groupTroveItems.getProjectId(groupTroveItemId)
+        self._filterProjectAccess(projectId)
+        self._requireProjectOwner(projectId)
+        self.groupTroveItems.update(groupTroveItemId, subGroup = subGroup)
+
     def __init__(self, cfg, allowPrivate = False, alwaysReload = False):
         self.cfg = cfg
      

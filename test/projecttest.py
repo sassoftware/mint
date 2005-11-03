@@ -126,7 +126,7 @@ class ProjectTest(MintRepositoryHelper):
 
     def testBadHostname(self):
         client, userId = self.quickMintUser("testuser", "testpass")
-        for hostname in ('admin', 'a bad name', None):
+        for hostname in ('admin', 'a bad name', ''):
             try:
                 projectId = client.newProject("Foo", hostname, 'localhost')
                 self.fail("allowed to create a project with a bad name")

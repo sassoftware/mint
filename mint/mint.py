@@ -16,6 +16,7 @@ import jobs
 import projects
 import releases
 import users
+import grouptrove
 from mint_error import MintError, UnknownException, PermissionDenied, ReleasePublished, ReleaseMissing
 from searcher import SearchTermsError
 
@@ -358,6 +359,19 @@ class MintClient:
     def cleanupSessions(self):
         self.server.cleanupSessions()
 
+    # group trove functions
+    def createGroupTrove(self, projectId, recipeName, upstreamVersion,
+                         desc, autoResolve):
+        groupTroveId = self.server.createGroupTrove(projectId, recipeName,
+                                                    upstreamVersion,
+                                                    desc, autoResolve)
+        return self.getGroupTrove(groupTroveId)
+
+    def getGroupTrove(self, groupTroveId):
+        return grouptrove.GroupTrove(self.server, groupTroveId)
+
+    def listGroupTrovesByProject(self, projectId):
+        return self.server.listGroupTrovesByProject(projectId)
 
 class ServerProxy(xmlrpclib.ServerProxy):
     def __getattr__(self, name):
