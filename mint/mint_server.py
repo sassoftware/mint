@@ -1363,13 +1363,13 @@ class MintServer(object):
     @typeCheck(int, str, str, str, bool)
     @requiresAuth
     def createGroupTrove(self, projectId, recipeName, upstreamVersion,
-                         desc, autoResolve):
+                         description, autoResolve):
         self._filterProjectAccess(projectId)
         self._requireProjectOwner(projectId)
         creatorId = self.users.getIdByColumn("username", self.authToken[0])
         return self.groupTroves.createGroupTrove(projectId, creatorId,
                                                  recipeName, upstreamVersion,
-                                                 desc, autoResolve)
+                                                 description, autoResolve)
 
     @private
     @typeCheck(int)
@@ -1392,11 +1392,11 @@ class MintServer(object):
     @private
     @typeCheck(int, str)
     @requiresAuth
-    def setGroupTroveDesc(self, groupTroveId, desc):
+    def setGroupTroveDesc(self, groupTroveId, description):
         projectId = self.groupTroves.getProjectId(groupTroveId)
         self._filterProjectAccess(projectId)
         self._requireProjectOwner(projectId)
-        self.groupTroves.update(groupTroveId, desc = desc, timeModified = time.time())
+        self.groupTroves.update(groupTroveId, description = description, timeModified = time.time())
 
     @private
     @typeCheck(int, str)

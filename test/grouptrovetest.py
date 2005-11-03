@@ -137,7 +137,7 @@ class GroupTroveTest(MintRepositoryHelper):
         groupTrove.setDesc(desc)
 
         groupTrove = client.getGroupTrove(groupTroveId)
-        assert(groupTrove.desc == desc)
+        assert(groupTrove.description == desc)
 
     def testSubGroup(self):
         client, userId = self.quickMintUser('testuser', 'testpass')

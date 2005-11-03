@@ -34,7 +34,7 @@ class GroupTroveTable(database.KeyedTable):
                                  creatorId INTEGER,
                                  recipeName STR,
                                  upstreamVersion STR,
-                                 desc STR,
+                                 description STR,
                                  timeCreated INTEGER,
                                  timeModified INTEGER,
                                  autoResolve INTEGER,
@@ -43,7 +43,7 @@ class GroupTroveTable(database.KeyedTable):
     """
     
     fields = ['groupTroveId', 'projectId', 'creatorId', 'recipeName',
-              'upstreamVersion', 'desc', 'timeCreated', 'timeModified',
+              'upstreamVersion', 'description', 'timeCreated', 'timeModified',
               'autoResolve']
 
     def listGroupTrovesByProject(self, projectId):
@@ -59,7 +59,7 @@ class GroupTroveTable(database.KeyedTable):
         self.update(groupTroveId, upstreamVersion = vers, timeModified = time.time())
 
     def createGroupTrove(self, projectId, creatorId, recipeName,
-                         upstreamVersion, desc, autoResolve):
+                         upstreamVersion, description, autoResolve):
         if not re.match("group-[a-zA-Z0-9\-_]+$", recipeName):
             raise GroupTroveNameError
         try:
@@ -76,7 +76,7 @@ class GroupTroveTable(database.KeyedTable):
                  creatorId = creatorId,
                  recipeName = recipeName,
                  upstreamVersion = upstreamVersion,
-                 desc = desc,
+                 description = description,
                  timeCreated = timeStamp,
                  timeModified = timeStamp,
                  autoResolve = autoResolve)
@@ -251,8 +251,8 @@ class GroupTrove(database.TableObject):
     def listTroves(self):
         return self.server.listGroupTroveItemsByGroupTrove(self.getId())
 
-    def setDesc(self, desc):
-        self.server.setGroupTroveDesc(self.getId(), desc)
+    def setDesc(self, description):
+        self.server.setGroupTroveDesc(self.getId(), description)
 
     def setTroveSubGroup(self, trvId, subGroup):
         self.server.setGroupTroveItemSubGroup(trvId, subGroup)
