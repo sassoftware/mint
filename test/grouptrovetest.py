@@ -276,5 +276,23 @@ class GroupTroveTest(MintRepositoryHelper):
         if (client.server.getRecipe(groupTroveId) != refRecipe):
             self.fail("auto generated recipe did not return expected results")
 
+    def testCookAutoRecipe(self):
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client)
+
+        groupTrove = self.createTestGroupTrove(client, projectId)
+        groupTroveId = groupTrove.getId()
+
+        self.makeSourceTrove("testcase", testRecipe)
+        self.cookFromRepository("testcase",
+            versions.Label("test.localhost@rpl:devel"),
+            ignoreDeps = True)
+
+        trvId = self.addTestTrove(groupTrove, "testcase")
+
+        self.makeSourceTrove("group-test", client.server.getRecipe(groupTroveId))
+        self.cookFromRepository("group-test",
+            versions.Label("test.localhost@rpl:devel"))
+
 if __name__ == "__main__":
     testsuite.main()
