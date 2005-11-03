@@ -225,9 +225,9 @@ class MintApp(WebHandler):
         class boba(object):
             pass
 
-        groupTrove = boba()
-        groupTrove.id = 0
-        groupTrove.name = "group-dist"
+        self.groupTrove = boba()
+        self.groupTrove.id = 0
+        self.groupTrove.name = "group-dist"
         #groupTrove = None
         
         # a set of information to be passed into the next handler
@@ -248,7 +248,7 @@ class MintApp(WebHandler):
             'userLevel':        self.userLevel,
             'user':             self.user,
             'isOwner':          self.isOwner,
-            'groupTrove':       groupTrove,
+            'groupTrove':       self.groupTrove,
         }
 
         # match the requested url to the right url handler
