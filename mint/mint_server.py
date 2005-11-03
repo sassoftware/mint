@@ -8,6 +8,7 @@ import sqlite3
 import sys
 import os
 import time
+import string
 from urlparse import urlparse
 
 import database
@@ -1348,8 +1349,38 @@ class MintServer(object):
     @typeCheck(int)
     @private
     @requiresAuth
-    def makeRecipe(self, groupTroveId):
-        pass
+    def getRecipe(self, groupTroveId):
+        projectId = self.groupTroves.getProjectId(groupTroveId)
+        self._filterProjectAccess(projectId)
+        self._requireProjectOwner(projectId)
+
+        groupTrove = self.groupTroves.get(groupTroveId)
+        groupTroveItems = self.groupTroveItems.listByGroupTroveId(groupTroveId)
+
+        recipe = ""
+        name = ''.join((string.capwords(' '.join(groupTrove['recipeName'].split('-')))).split(' '))
+        indent = 4 * " "
+
+        recipe += "class " + name + "(GroupRecipe):\n"
+        recipe += indent + "name = '%s'\n" % groupTrove['recipeName']
+        recipe += indent + "version = '%s'\n\n" % groupTrove['upstreamVersion']
+        recipe += indent + "autoResolve = %s\n\n" % str(groupTrove['autoResolve'])
+        recipe += indent + 'def setup(r):\n'
+
+        indent = 8 * " "
+
+        for trv in groupTroveItems:
+            recipe += indent + "r.add('" + trv['trvName'] + "', '" + trv['trvVersion'] + "', '" + trv['trvFlavor'] + "', groupName = '" +trv['subGroup'] +"')\n"
+        return recipe
+
+    @private
+    @requiresAuth
+    @typeCheck(int, bool)
+    def setGroupTroveAutoResolve(self, groupTroveId, resolve):
+        projectId = self.groupTroves.getProjectId(groupTroveId)
+        self._filterProjectAccess(projectId)
+        self._requireProjectOwner(projectId)
+        self.groupTroves.setAutoResolve(groupTroveId, resolve)
 
     @private
     @requiresAuth

@@ -15,6 +15,17 @@ from mint.database import ItemNotFound
 from mint import userlevels
 from mint.mint_error import PermissionDenied
 
+refRecipe = """class GroupTest(GroupRecipe):
+    name = 'group-test'
+    version = '1.0.0'
+
+    autoResolve = False
+
+    def setup(r):
+        r.add('testcase', 'test.localhost@rpl:devel', '', groupName = 'group-test')
+"""
+
+
 class GroupTroveTest(MintRepositoryHelper):
     def addTestTrove(self, groupTrove, trvName):
         trvVersion='/test.localhost@rpl:devel/1.0-1-1'
@@ -73,6 +84,22 @@ class GroupTroveTest(MintRepositoryHelper):
 
         assert(gTrv['trvVersion'] == '/test.localhost@rpl:devel/1.0-1-1')
 
+    def testAutoResolve(self):
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client)
+
+        groupTrove = self.createTestGroupTrove(client, projectId)
+        groupTroveId = groupTrove.getId()
+
+        assert(groupTrove.autoResolve is False)
+
+        groupTrove.setAutoResolve(True)
+        groupTrove = client.getGroupTrove(groupTroveId)
+        assert(groupTrove.autoResolve is True)
+
+        groupTrove.setAutoResolve(False)
+        groupTrove = client.getGroupTrove(groupTroveId)
+        assert(groupTrove.autoResolve is False)
 
     def testFlavorLock(self):
         client, userId = self.quickMintUser('testuser', 'testpass')
@@ -236,6 +263,18 @@ class GroupTroveTest(MintRepositoryHelper):
         project.addMemberById(userId, userlevels.OWNER)
         client.server.getGroupTrove(groupTroveId)
         client.server.delGroupTroveItem(trvId)
+
+    def testGetRecipe(self):
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client)
+
+        groupTrove = self.createTestGroupTrove(client, projectId)
+        groupTroveId = groupTrove.getId()
+
+        trvId = self.addTestTrove(groupTrove, "testcase")
+
+        if (client.server.getRecipe(groupTroveId) != refRecipe):
+            self.fail("auto generated recipe did not return expected results")
 
 if __name__ == "__main__":
     testsuite.main()

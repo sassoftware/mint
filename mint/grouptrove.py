@@ -79,7 +79,7 @@ class GroupTroveTable(database.KeyedTable):
                  description = description,
                  timeCreated = timeStamp,
                  timeModified = timeStamp,
-                 autoResolve = autoResolve)
+                 autoResolve = int(autoResolve))
         self.db.commit()
         return groupTroveId
 
@@ -92,6 +92,14 @@ class GroupTroveTable(database.KeyedTable):
 
     def getProjectId(self, groupTroveId):
         return self.get(groupTroveId)['projectId']
+
+    def setAutoResolve(self, groupTroveId, resolve):
+        self.update(groupTroveId, autoResolve = int(resolve), timeModified = (time.time()))
+
+    def get(self, groupTroveId):
+        ret = database.KeyedTable.get(self, groupTroveId)
+        ret['autoResolve'] = bool(ret['autoResolve'])
+        return ret
 
 class GroupTroveItemsTable(database.KeyedTable):
     name = "GroupTroveItems"
@@ -127,7 +135,6 @@ class GroupTroveItemsTable(database.KeyedTable):
         cu.execute("BEGIN")
         cu.execute("UPDATE GroupTroveItems SET versionLock=? WHERE groupTroveItemId=?", lock, groupTroveItemId)
         self.updateModifiedTime(groupTroveItemId)
-        
         self.db.commit()
 
     def setUseLocked(self, groupTroveItemId, lock):
@@ -135,7 +142,6 @@ class GroupTroveItemsTable(database.KeyedTable):
         cu.execute("BEGIN")
         cu.execute("UPDATE GroupTroveItems SET useLock=? WHERE groupTroveItemId=?", lock, groupTroveItemId)
         self.updateModifiedTime(groupTroveItemId)
-        
         self.db.commit()
 
     def setInstSetLocked(self, groupTroveItemId, lock):
@@ -143,7 +149,6 @@ class GroupTroveItemsTable(database.KeyedTable):
         cu.execute("BEGIN")
         cu.execute("UPDATE GroupTroveItems SET instSetLock=? WHERE groupTroveItemId=?", lock, groupTroveItemId)
         self.updateModifiedTime(groupTroveItemId)
-        
         self.db.commit()
 
     def addTroveItem(self, groupTroveId, creatorId, trvName, trvVersion, trvFlavor, subGroup, versionLock, useLock, instSetLock):
@@ -270,3 +275,6 @@ class GroupTrove(database.TableObject):
 
     def setUpstreamVersion(self, vers):
         self.server.setGroupTroveUpstreamVersion(self.getId(), vers)
+
+    def setAutoResolve(self, resolve):
+        self.server.setGroupTroveAutoResolve(self.getId(), resolve)
