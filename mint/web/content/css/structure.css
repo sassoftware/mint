@@ -4,7 +4,7 @@
 }
 
 sup.tm {
-        font-size; -2;
+        font-size: 50%;
 }
 
 /* TOP */
@@ -19,7 +19,7 @@ sup.tm {
 }
 #top .surfaceLeft {
 	margin:0px 0px 0px 0px; padding:0px;
-	//background:#fff url(../images/top_left.gif) top left no-repeat;
+	/*background:#fff url(../images/top_left.gif) top left no-repeat;*/
 }
 #top .surfaceRight {
 	margin:0px; padding:0px;
