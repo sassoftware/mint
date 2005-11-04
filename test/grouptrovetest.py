@@ -322,12 +322,13 @@ class GroupTroveTest(MintRepositoryHelper):
             ignoreDeps = True)
 
         trvId = self.addTestTrove(groupTrove, "testcase")
+        # cook once to ensure we can create a new package
+        groupTrove.cook()
+        # cook a second time to ensure we follow the checkout codepath
         groupTrove.cook()
 
         cfg = project.getConaryConfig()
         nc = netclient.NetworkRepositoryClient(cfg.repositoryMap)
-
-        # FIXME: cook twice in a row and actually verify version numbers
 
         troveNames = nc.troveNames(versions.Label("test.localhost@rpl:devel"))
         assert(troveNames == ['testcase', 'testcase:runtime', 'group-test',

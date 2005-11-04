@@ -31,6 +31,7 @@ import grouptrove
 from cache import TroveNamesCache
 from mint_error import PermissionDenied, ReleasePublished, ReleaseMissing, MintError
 from searcher import SearchTermsError
+from repository.errors import TroveNotFound
 
 from repository import netclient
 from repository import shimclient
@@ -1380,26 +1381,52 @@ class MintServer(object):
     @requiresAuth
     def cookGroupTrove(self, groupTroveId):
         import checkin
-        projectId = self.groupTroves.getProjectId(groupTroveId)
-        self._filterProjectAccess(projectId)
-        self._requireProjectOwner(projectId)
-        recipe = self._getRecipe(groupTroveId)
-        groupTrove = self.groupTroves.get(groupTroveId)
+        import tempfile
+        import conarycfg
+        from build import cook
+        curDir = os.getcwd()
+        try:
+            path = tempfile.mkdtemp()
+            os.chdir(path)
+            projectId = self.groupTroves.getProjectId(groupTroveId)
+            self._filterProjectAccess(projectId)
+            self._requireProjectOwner(projectId)
+            recipe = self._getRecipe(groupTroveId)
+            groupTrove = self.groupTroves.get(groupTroveId)
+            sourceName = groupTrove['recipeName'] + ":source"
 
-        project = projects.Project(self, projectId)
+            project = projects.Project(self, projectId)
 
-        repos = self._getProjectRepo(project)
+            cfg = conarycfg.ConaryConfiguration()
+            cfg.name = "rBuilder Online"
+            cfg.contact = "http://www.rpath.org"
+            cfg.quiet = True
+            cfg.buildLabel = versions.Label(project.getLabel())
+            cfg.repositoryMap = project.getConaryConfig(newUser = self.authToken[0], newPass = self.authToken[1]).repositoryMap
 
-        # try to grab recipe source component
+            repos = netclient.NetworkRepositoryClient(cfg.repositoryMap)
 
-        #if it IS in the repo, grab version and increment properly
+            trvLeaves = repos.getTroveLeavesByLabel({sourceName : {cfg.buildLabel : None} }).get(sourceName, [])
 
-        # if not, create first version based on upstream version
+            if trvLeaves:
+                checkin.checkout(repos, cfg, path, groupTrove['recipeName'])
+            else:
+                checkin.newTrove(repos, cfg, groupTrove['recipeName'], path)
 
-        # commit recipe as changeset
-        message = "Auto generated commit from rBuilder online."
-        
-        # cook on repository
+            recipeFile = open(groupTrove['recipeName'] + '.recipe', 'w')
+            recipeFile.write(recipe)
+            recipeFile.flush()
+            recipeFile.close()
+
+            if trvLeaves:
+                checkin.addFiles([groupTrove['recipeName'] + '.recipe'])
+
+            # commit recipe as changeset
+            message = "Auto generated commit from rBuilder online."
+            checkin.commit(repos, cfg, message)
+            cook.cookItem(repos, cfg, groupTrove['recipeName'])
+        finally:
+            os.chdir(curDir)
 
     @private
     @requiresAuth
