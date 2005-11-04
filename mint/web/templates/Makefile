@@ -11,11 +11,13 @@ kid_files = \
 	conaryUserCfg.kid	\
 	confirmEmail.kid	\
 	confirm.kid		\
+	editGroup.kid		\
 	editProject.kid		\
 	editRelease.kid		\
 	error.kid		\
 	forgotPassword.kid	\
 	frontPage.kid		\
+	groups.kid		\
 	joinRequest.kid		\
 	layout.kid		\
 	library.kid		\

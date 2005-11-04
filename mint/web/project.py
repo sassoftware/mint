@@ -152,6 +152,14 @@ class ProjectHandler(WebHandler):
             return apache.OK
     
     @ownerOnly
+    @intFields(id = None)
+    def editGroup(self, auth, id):
+        curGroupTrove = self.client.getGroupTrove(id)
+
+        self._write("editGroup", curGroupTrove = curGroupTrove)
+        return apache.OK
+    
+    @ownerOnly
     def newRelease(self, auth):
         self._write("newRelease", errors = [], kwargs = {})
         return apache.OK

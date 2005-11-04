@@ -224,8 +224,10 @@ class MintApp(WebHandler):
 
         if self.session.has_key('groupTroveId'):
             self.groupTrove = self.client.getGroupTrove(self.session['groupTroveId'])
+            self.groupProject = self.client.getProject(self.groupTrove.projectId)
         else:
             self.groupTrove = None
+            self.groupProject = None
             
         # a set of information to be passed into the next handler
         context = {
@@ -246,6 +248,7 @@ class MintApp(WebHandler):
             'user':             self.user,
             'isOwner':          self.isOwner,
             'groupTrove':       self.groupTrove,
+            'groupProject':     self.groupProject,
         }
 
         # match the requested url to the right url handler

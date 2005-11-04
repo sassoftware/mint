@@ -48,6 +48,7 @@ class WebHandler(object):
                               SITE = self.SITE,
                               isOwner = self.isOwner,
                               groupTrove = self.groupTrove,
+                              groupProject = self.groupProject,
                               **values)
         s = t.serialize(encoding = "utf-8", output = self.output)
         print >> sys.stderr, "Kid page rendered: %.2f" % ((time.time() - startTime) * 1000)

@@ -107,8 +107,8 @@ from mint import userlevels
         </h3>
         <div id="group_trove_builder_items" style="display: $display">
             <table>
-                <tr><td colspan="3"><a href="foo">Group in progress: ${groupTrove.recipeName}</a></td></tr>
-                <tr py:for="item in groupTrove.listTroves()"><td></td><td>${item['trvName']}</td><td>${item['trvVersion']}</td></tr>
+                <tr><td colspan="3"><a href="${groupProject.getUrl()}/editGroup?id=${groupTrove.id}">Group in progress: ${groupTrove.recipeName}</a></td></tr>
+                <tr py:for="item in groupTrove.listTroves()"><td></td><td>${item['trvName']}</td><td>X</td></tr>
                 <tr>
                     <td colspan="3" style="text-align: center; padding: 1em;">
                         <a class="option" style="display: inline;" href="cook">Cook This Group</a>
