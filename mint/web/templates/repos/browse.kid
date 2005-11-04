@@ -89,8 +89,8 @@ def pluralTroves(c):
                         </td>
                     </tr>
                 </table>
-                <div class="pad">
-                    Click on the <img style="border: none;" src="${cfg.staticPath}apps/mint/images/group.png" /> to add a trove to ${groupTrove.name}.
+                <div py:if="groupTrove" class="pad">
+                    Click on the <img style="border: none;" src="${cfg.staticPath}apps/mint/images/group.png" /> to add a trove to ${groupTrove.name()}.
                 </div>
             </div>
         </td>
