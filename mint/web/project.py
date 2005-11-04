@@ -146,8 +146,6 @@ class ProjectHandler(WebHandler):
             gt = self.client.createGroupTrove(self.project.getId(), groupName,
                 version, description, True)
             gtId = gt.getId()
-            print >> sys.stderr, gtId
-            sys.stderr.flush()
             return self._redirect("editGroup?id=%d" % gtId)
         else:
             kwargs = {'groupName': groupName, 'version': version}
