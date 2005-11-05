@@ -36,6 +36,7 @@ from repository.errors import TroveNotFound
 from repository import netclient
 from repository import shimclient
 from repository.netrepos import netserver
+from deps import deps
 
 validHost = re.compile('^[a-zA-Z][a-zA-Z0-9\-]*$')
 reservedHosts = ['admin', 'mail', 'mint', 'www', 'web', 'rpath', 'wiki', 'conary', 'lists']
@@ -1363,6 +1364,7 @@ class MintServer(object):
 
         indent = 8 * " "
 
+        recipe += indent + "r.setLabelPath('conary.rpath.com@rpl:rpl1')\n" 
         for trv in groupTroveItems:
             recipe += indent + "r.add('" + trv['trvName'] + "', '" + trv['trvVersion'] + "', '" + trv['trvFlavor'] + "', groupName = '" +trv['subGroup'] +"')\n"
         return recipe
@@ -1385,6 +1387,8 @@ class MintServer(object):
         import conarycfg
         from build import cook
         curDir = os.getcwd()
+
+        ret = None
         try:
             path = tempfile.mkdtemp()
             projectId = self.groupTroves.getProjectId(groupTroveId)
@@ -1401,7 +1405,10 @@ class MintServer(object):
             cfg.contact = "http://www.rpath.org"
             cfg.quiet = True
             cfg.buildLabel = versions.Label(project.getLabel())
+            
+            cfg.initializeFlavors()
             cfg.repositoryMap = project.getConaryConfig(newUser = self.authToken[0], newPass = self.authToken[1]).repositoryMap
+            cfg.repositoryMap.update({'conary.rpath.com': 'http://conary-commits.rpath.com/conary/'})
 
             repos = netclient.NetworkRepositoryClient(cfg.repositoryMap)
 
@@ -1424,9 +1431,15 @@ class MintServer(object):
             # commit recipe as changeset
             message = "Auto generated commit from rBuilder online."
             checkin.commit(repos, cfg, message)
-            cook.cookItem(repos, cfg, groupTrove['recipeName'])
+            ret = cook.cookItem(repos, cfg, groupTrove['recipeName'])
+            ret = ret[0][0]
         finally:
             os.chdir(curDir)
+            
+        if ret:
+            return ret[0], ret[1], ret[2].freeze()
+        else:
+            return None
 
     @private
     @requiresAuth

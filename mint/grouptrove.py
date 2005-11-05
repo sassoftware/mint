@@ -283,4 +283,4 @@ class GroupTrove(database.TableObject):
         return self.server.getRecipe(self.getId())
 
     def cook(self):
-        self.server.cookGroupTrove(self.getId())
+        return self.server.cookGroupTrove(self.getId())
