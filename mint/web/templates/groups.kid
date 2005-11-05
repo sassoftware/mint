@@ -47,10 +47,10 @@
                 <p>Click on a trove name to stop working on the current trove and begin editing another group trove.</p>
                 <ul>
                     <li py:for="gt in groupTrovesInProject">
-                        <a py:if="gt[0] != groupTrove.id" href="editGroup?id=${gt[0]}">${gt[1]}</a>
+                        <a href="editGroup?id=${gt[0]}">${gt[1]} <span py:if="groupTrove and groupTrove.id == gt[0]">(currently selected)</span></a>
                     </li>
                     <li>
-                        <a href="newGroup">Create a new group trove.</a>
+                        <a href="newGroup"><b>Create a new group trove.</b></a>
                     </li>
                 </ul>
             </div>

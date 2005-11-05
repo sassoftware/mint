@@ -156,6 +156,7 @@ class ProjectHandler(WebHandler):
     @intFields(id = None)
     def editGroup(self, auth, id):
         curGroupTrove = self.client.getGroupTrove(id)
+        self.session['groupTroveId'] = id
 
         self._write("editGroup", curGroupTrove = curGroupTrove)
         return apache.OK
