@@ -1387,7 +1387,6 @@ class MintServer(object):
         curDir = os.getcwd()
         try:
             path = tempfile.mkdtemp()
-            os.chdir(path)
             projectId = self.groupTroves.getProjectId(groupTroveId)
             self._filterProjectAccess(projectId)
             self._requireProjectOwner(projectId)
@@ -1408,6 +1407,7 @@ class MintServer(object):
 
             trvLeaves = repos.getTroveLeavesByLabel({sourceName : {cfg.buildLabel : None} }).get(sourceName, [])
 
+            os.chdir(path)
             if trvLeaves:
                 checkin.checkout(repos, cfg, path, groupTrove['recipeName'])
             else:
@@ -1418,7 +1418,7 @@ class MintServer(object):
             recipeFile.flush()
             recipeFile.close()
 
-            if trvLeaves:
+            if not trvLeaves:
                 checkin.addFiles([groupTrove['recipeName'] + '.recipe'])
 
             # commit recipe as changeset
