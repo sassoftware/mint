@@ -325,7 +325,11 @@ class GroupTroveTest(MintRepositoryHelper):
         # cook once to ensure we can create a new package
         groupTrove.cook()
         # cook a second time to ensure we follow the checkout codepath
-        groupTrove.cook()
+        trvName, trvVersion, trvFlavor = groupTrove.cook()
+
+        assert(trvName == 'group-test')
+        assert(trvVersion == '/test.localhost@rpl:devel/1.0.0-1-2')
+        assert(trvFlavor == '')
 
         cfg = project.getConaryConfig()
         nc = netclient.NetworkRepositoryClient(cfg.repositoryMap)
