@@ -140,8 +140,9 @@ class InstallableIso(ImageGenerator):
             print >> sys.stderr, "success."
             sys.stderr.flush()
         
-            # copy pixmaps into cramfs root
-            cmd = ['cp', '-av', tmpRoot + "/usr/share/anaconda/{pixmaps,scripts}/", tmpPath]
+            # copy pixmaps and scripts into cramfs root
+            cmd = ['cp', '-av', tmpRoot + "/usr/share/anaconda/pixmaps/",
+                                tmpRoot + "/usr/share/anaconda/scripts/", tmpPath]
             print >> sys.stderr, " ".join(cmd)
             sys.stderr.flush()
             subprocess.call(cmd)
