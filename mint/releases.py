@@ -37,6 +37,7 @@ class ReleaseDataNameError(MintError):
 
 installableIsoTemplate = {
     'installLabelPath': (RDT_STRING, '', 'Default Conary installLabelPath setting:'),
+    'autoResolve':      (RDT_BOOL, False, "Add 'autoResolve True' to default /etc/conaryrc"),
     'skipMediaCheck':   (RDT_BOOL, False, 'Skip prompt for ISO media check.'),
     'betaNag':          (RDT_BOOL, False, 'Show a "beta nag" screen before installation.'),
 }

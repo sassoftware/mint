@@ -1364,7 +1364,7 @@ class MintServer(object):
 
         indent = 8 * " "
 
-        recipe += indent + "r.setLabelPath('conary.rpath.com@rpl:rpl1')\n" 
+        recipe += indent + "r.setLabelPath('conary.rpath.com@rpl:rpl1')\n"
         for trv in groupTroveItems:
             recipe += indent + "r.add('" + trv['trvName'] + "', '" + trv['trvVersion'] + "', '" + trv['trvFlavor'] + "', groupName = '" +trv['subGroup'] +"')\n"
         return recipe

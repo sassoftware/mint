@@ -93,6 +93,17 @@ def _linkRecurse(fromDir, toDir):
 class InstallableIso(ImageGenerator):
     configObject = IsoConfig
 
+    def _getUpdateJob(self, cclient, troveName):
+        self.callback.setChangeSet(troveName)
+        try:
+            itemList = [(troveName, (None, None), (None, None), True)]
+            uJob, suggMap = cclient.updateChangeSet(itemList,
+                resolveDeps = False,
+                callback = self.callback)
+        except errors.TroveNotFound:
+            return None
+        return uJob
+
     def writeProductImage(self):
         # write the product.img cramfs
         productPath = os.path.join(self.baseDir, "product.img")
@@ -117,30 +128,32 @@ class InstallableIso(ImageGenerator):
         cfg.installLabelPath = [self.version.branch().label()]
         cclient = conaryclient.ConaryClient(cfg)
 
-        print >> sys.stderr, "extracting artwork from anaconda-images=%s" % cfg.installLabelPath[0].asString()
-        try:
-            self.callback.setChangeSet('anaconda-images')
-            itemList = [('anaconda-images', (None, None), (None, None), True)]
-            uJob, suggMap = cclient.updateChangeSet(itemList,
-                resolveDeps = False,
-                callback = self.callback)
-        except repository.TroveNotFound:
-            print >> sys.stderr, "anaconda-images not found on repository, skipping custom artwork"
-        else:
+        uJob = None
+        print >> sys.stderr, "extracting artwork from anaconda-custom=%s" % cfg.installLabelPath[0].asString()
+        uJob = self._getUpdateJob(cclient, "anaconda-custom")
+        if not uJob:
+            print >> sys.stderr, "anaconda-custom not found on repository, falling back to anaconda-images"
+            uJob = self._getUpdateJob(cclient, "anaconda-images")
+
+        if uJob:
             cclient.applyUpdate(uJob, callback = self.callback)
             print >> sys.stderr, "success."
             sys.stderr.flush()
         
             # copy pixmaps into cramfs root
-            cmd = ['cp', '-av', tmpRoot + "/usr/share/anaconda/pixmaps/", tmpPath]
+            cmd = ['cp', '-av', tmpRoot + "/usr/share/anaconda/{pixmaps,scripts}/", tmpPath]
             print >> sys.stderr, " ".join(cmd)
             sys.stderr.flush()
             subprocess.call(cmd)
+        else:
+            print >> sys.stderr, "anaconda-images not found on repository either, not including custom artwork or scripts."
                 
         # write the conaryrc file
         conaryrcFile = open(os.path.join(tmpPath, "conaryrc"), "w")
         print >> conaryrcFile, "installLabelPath " + self.release.getDataValue("installLabelPath")
         print >> conaryrcFile, "pinTroves kernel.*"
+        if self.release.getDataValue("autoResolve"):
+            print >> conaryrcFile, "autoResolve True"
         conaryrcFile.close()
             
         # create cramfs
