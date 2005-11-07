@@ -1364,7 +1364,22 @@ class MintServer(object):
 
         indent = 8 * " "
 
-        recipe += indent + "r.setLabelPath('conary.rpath.com@rpl:rpl1')\n"
+        # build a dependency resolution scheme.
+        # own project's labels come first.
+        # the rest are sorted alphabetically.
+        # this approach is definitely sub-optimal, but has the advantage of
+        # consistent results.
+        recipeLabels = [str(versions.Label(x['trvVersion'])) for x in groupTroveItems]
+        projectLabels = self.labels.getLabelsForProject(groupTrove['projectId'])[0].keys()
+        for label in projectLabels:
+            if label in recipeLabels:
+                recipeLabels.remove(label)
+        recipeLabels.sort()
+        for label in projectLabels:
+            recipeLabels.insert(0, label)
+
+        recipe += indent + "r.setLabelPath(%s)\n" % str(recipeLabels).split('[')[1].split(']')[0]
+
         for trv in groupTroveItems:
             recipe += indent + "r.add('" + trv['trvName'] + "', '" + trv['trvVersion'] + "', '" + trv['trvFlavor'] + "', groupName = '" +trv['subGroup'] +"')\n"
         return recipe

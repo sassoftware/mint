@@ -16,15 +16,7 @@ from mint import userlevels
 from mint.mint_error import PermissionDenied
 from repository import netclient
 
-refRecipe = """class GroupTest(GroupRecipe):
-    name = 'group-test'
-    version = '1.0.0'
-
-    autoResolve = False
-
-    def setup(r):
-        r.add('testcase', 'test.localhost@rpl:devel', '', groupName = 'group-test')
-"""
+refRecipe = "class GroupTest(GroupRecipe):\n    name = 'group-test'\n    version = '1.0.0'\n\n    autoResolve = False\n\n    def setup(r):\n        r.setLabelPath('test.localhost@rpl:devel')\n        r.add('testcase', 'test.localhost@rpl:devel', '', groupName = 'group-test')\n"
 
 
 class GroupTroveTest(MintRepositoryHelper):

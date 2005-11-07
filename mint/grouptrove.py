@@ -105,6 +105,10 @@ class GroupTroveItemsTable(database.KeyedTable):
     name = "GroupTroveItems"
     key = "groupTroveItemId"
 
+    # unique index to prevent common case of clicking on "add this trove"
+    # button twice in a row.
+    indexes = {'groupTroveItemIdIdx': "CREATE UNIQUE INDEX groupTroveItemIdIdx ON GroupTroveItems(groupTroveId, trvName, trvVersion, trvFlavor)"}
+
     createSQL = """
         CREATE TABLE GroupTroveItems(
                                  groupTroveItemId INTEGER,
