@@ -15,7 +15,7 @@ import callbacks
 import conaryclient
 import deps
 import versions
-from repository import repository
+from repository import errors
 from build import use
 from conarycfg import ConfigFile
 from lib import util
