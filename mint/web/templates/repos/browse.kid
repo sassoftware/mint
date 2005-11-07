@@ -67,12 +67,6 @@ def pluralTroves(c):
 
                     <tr py:for="i, package in enumerate(packages)">
                         <td>
-                            <span py:if="groupTrove" style="float: right;">
-                                <a href="addTrove;id=${groupTrove.id};trove=${package};label=${project.getLabel()}">
-                                    Add <img style="border: none;" src="${cfg.staticPath}apps/mint/images/group.png" />
-                                </a>
-                            </span>
-
                             <a href="troveInfo?t=${quote(package)}">${package}</a>
                             <a py:if="package in components" class="trove"
                                href="javascript:toggle_display('components__${i}');"><img border="0" id="components__${i}_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif"/></a>
@@ -89,9 +83,7 @@ def pluralTroves(c):
                         </td>
                     </tr>
                 </table>
-                <div py:if="groupTrove" class="pad">
-                    Click on the <img style="border: none;" src="${cfg.staticPath}apps/mint/images/group.png" /> to add a trove to ${groupTrove.recipeName}.
-                </div>
+                <div py:if="groupTrove">Select a trove to add it to ${groupTrove.recipeName}</div>
             </div>
         </td>
         <td id="right" class="projects">

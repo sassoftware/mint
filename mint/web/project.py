@@ -160,7 +160,30 @@ class ProjectHandler(WebHandler):
 
         self._write("editGroup", curGroupTrove = curGroupTrove)
         return apache.OK
-    
+
+    @ownerOnly
+    @intFields(id=None)
+    @strFields(trove=None, version=None, flavor='', referer='')
+    @boolFields(versionlocked=False)
+    def addGroupTrove(self, auth, id, trove, version, flavor, referer, versionlocked):
+        assert(id == self.session['groupTroveId'])
+        curGroupTrove = self.client.getGroupTrove(id)
+        curGroupTrove.addTrove(trove, version, '', '', versionlocked, False, False)
+        if not referer:
+            referer = project.getUrl()
+        return self._redirect(referer)
+
+    @ownerOnly
+    @intFields(id=None, troveId=None)
+    @strFields(referer='')
+    def deleteGroupTrove(self, auth, id, troveId, referer):
+        assert(id == self.session['groupTroveId'])
+        curGroupTrove = self.client.getGroupTrove(id)
+        curGroupTrove.delTrove(troveId)
+        if not referer:
+            referer = project.getUrl()
+        return self._redirect(referer)
+
     @ownerOnly
     @intFields(id = None)
     def cookGroup(self, auth, id):

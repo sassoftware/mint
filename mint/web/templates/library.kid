@@ -106,14 +106,24 @@ from mint import userlevels
             Group Trove Builder 
         </h3>
         <div id="group_trove_builder_items" style="display: $display">
+            <h4><a href="${groupProject.getUrl()}/editGroup?id=${groupTrove.id}">Group in progress: ${groupTrove.recipeName}</a></h4>
             <table>
-                <tr><td colspan="3"><a href="${groupProject.getUrl()}editGroup?id=${groupTrove.id}">Group in progress: ${groupTrove.recipeName}</a></td></tr>
-                <tr py:for="item in groupTrove.listTroves()"><td></td><td>${item['trvName']}</td><td>X</td></tr>
+              <thead>
                 <tr>
+                    <th colspan="2">Name</th>
+                    <th>Label</th>
+                    <th>Delete</th>
+                </tr>
+              </thead>
+              <tbody class="group-builder">
+                <tr></tr>
+                <tr py:for="item in groupTrove.listTroves()"><td></td><td>${item['trvName']}</td><td>${item['trvVersion']}</td><td><a href="${groupProject.getUrl()}deleteGroupTrove?id=${groupTrove.id};troveId=${item['groupTroveItemId']};referer=${quote(req.unparsed_uri)}">X</a></td></tr>
+                <tr class="groupcook">
                     <td colspan="3" style="text-align: center; padding: 1em;">
                         <a class="option" style="display: inline;" href="cook">Cook This Group</a>
                     </td>
                 </tr>
+              </tbody>
             </table>
         </div>
     </div>
