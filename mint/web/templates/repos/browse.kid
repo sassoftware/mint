@@ -90,7 +90,7 @@ def pluralTroves(c):
                     </tr>
                 </table>
                 <div py:if="groupTrove" class="pad">
-                    Click on the <img style="border: none;" src="${cfg.staticPath}apps/mint/images/group.png" /> to add a trove to ${groupTrove.name()}.
+                    Click on the <img style="border: none;" src="${cfg.staticPath}apps/mint/images/group.png" /> to add a trove to ${groupTrove.recipeName}.
                 </div>
             </div>
         </td>
