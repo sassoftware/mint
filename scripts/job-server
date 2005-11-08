@@ -40,7 +40,6 @@ from mint.distro.live_iso import LiveIso
 from mint.distro.live_cf_image import LiveCFImage
 from mint.distro.stub_image import StubImage
 from mint.distro.netboot_image import NetbootImage
-from mint.distro.cleanup import Cleanup
 
 generators = {
     releasetypes.LIVE_ISO:           LiveIso,
@@ -48,7 +47,6 @@ generators = {
     releasetypes.LIVE_CF_IMAGE:      LiveCFImage,
     releasetypes.STUB_IMAGE:         StubImage,
     releasetypes.NETBOOT_IMAGE:      NetbootImage,
-    releasetypes.CLEANUP:            Cleanup, 
 }
 
 SUPPORTED_ARCHS = ('x86', 'x86_64')
