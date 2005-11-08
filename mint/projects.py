@@ -116,16 +116,17 @@ class Project(database.TableObject):
         return self.users.update(userId, **kwargs)
 
     def getRepoMap(self):
-        labelPath, repoMap = self.server.getLabelsForProject(self.id, None, None, None)
+        labelPath, repoMap = self.server.getLabelsForProject(self.id, False, False, '', '', False)
         return [x[0] + " " + x[1] for x in repoMap.items()]
 
     def getLabelIdMap(self):
         """Returns a dictionary mapping of label names to database IDs"""
-        labelPath, repoMap = self.server.getLabelsForProject(self.id, None, None, None)
+        labelPath, repoMap = self.server.getLabelsForProject(self.id, False, False, '', '', False)
         return labelPath
 
-    def getConaryConfig(self, newUser = None, newPass = None, useSSL = None):
-        labelPath, repoMap = self.server.getLabelsForProject(self.id, newUser, newPass, useSSL)
+    def getConaryConfig(self, overrideSSL = False, overrideAuth = False, newUser = '', newPass = '', useSSL = False):
+        # XXX fixme getLabelsForProject
+        labelPath, repoMap = self.server.getLabelsForProject(self.id, overrideSSL, overrideAuth, newUser, newPass, useSSL)
 
         cfg = ConaryConfiguration(readConfigFiles=False)
         cfg.initializeFlavors()
@@ -141,11 +142,11 @@ class Project(database.TableObject):
         return self.server.addLabel(self.id, label, url, username, password)
 
     def getLabelIds(self):
-        labelPath, repoMap = self.server.getLabelsForProject(self.id, None, None, None)
+        labelPath, repoMap = self.server.getLabelsForProject(self.id)
         return labelPath.values()
 
     def getLabelById(self, labelId):
-        labelPath, repoMap = self.server.getLabelsForProject(self.id, None, None, None)
+        labelPath, repoMap = self.server.getLabelsForProject(self.id, False, False, '', '', False)
         # turn labelPath inside-out
         revMap = dict(zip(labelPath.values(), labelPath.keys()))
 
@@ -478,7 +479,9 @@ class LabelsTable(database.KeyedTable):
         label = cu.fetchone()
         return label[0]
 
-    def getLabelsForProject(self, projectId, useSSL = None, newUser = None, newPass = None):
+    def getLabelsForProject(self, projectId,
+            overrideSSL = False, overrideAuth = False,
+            useSSL = False, newUser = '', newPass = ''):
         cu = self.db.cursor()
 
         cu.execute("""SELECT labelId, label, url, username, password
@@ -488,7 +491,7 @@ class LabelsTable(database.KeyedTable):
         repoMap = {}
         labelIdMap = {}
         for labelId, label, url, username, password in cu.fetchall():
-            if newUser and newPass:
+            if overrideAuth:
                 username = newUser
                 password = newPass
 
@@ -498,7 +501,7 @@ class LabelsTable(database.KeyedTable):
                 if username and password:
                     urlparts = urlparse.urlparse(url)
 
-                    if useSSL == None: # don't override what the db says
+                    if not overrideSSL:
                         protocol = urlparts[0]
                     elif useSSL == True:
                         protocol = "https"

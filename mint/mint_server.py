@@ -963,12 +963,12 @@ class MintServer(object):
         self._filterProjectAccess(projectId)
         return self.labels.getDefaultProjectLabel(projectId)
 
-    @typeCheck(int, ((str, type(None)),), ((str, type(None)),), ((str, bool, type(None)),))
+    @typeCheck(int, bool, bool, ((str, type(None)),), ((str, type(None)),), ((bool, type(None)),))
     @private
-    def getLabelsForProject(self, projectId, newUser, newPass, useSSL):
+    def getLabelsForProject(self, projectId, overrideSSL, overrideAuth, newUser, newPass, useSSL):
         """Returns a mapping of labels to labelIds and a repository map dictionary for the current user"""
         self._filterProjectAccess(projectId)
-        return self.labels.getLabelsForProject(projectId, useSSL, newUser, newPass)
+        return self.labels.getLabelsForProject(projectId, overrideSSL, overrideAuth, useSSL, newUser, newPass)
 
     @typeCheck(int, str, str, str, str)
     @requiresAuth

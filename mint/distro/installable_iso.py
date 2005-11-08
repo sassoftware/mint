@@ -123,7 +123,8 @@ class InstallableIso(ImageGenerator):
         bsFile.close()
 
         # extract anaconda-images from repository, if exists
-        cfg = self.project.getConaryConfig(newUser='anonymous', newPass='anonymous', useSSL = False)
+        cfg = self.project.getConaryConfig(overrideSSL = True, overrideAuth = True, 
+            newUser='anonymous', newPass='anonymous', useSSL = False)
         cfg.root = tmpRoot
         cfg.installLabelPath = [self.version.branch().label()]
         cclient = conaryclient.ConaryClient(cfg)

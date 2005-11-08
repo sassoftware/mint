@@ -57,11 +57,11 @@ class LabelsTest(MintRepositoryHelper):
         project = client.getProject(projectId)
 
         # require no SSL repository map
-        noSSL = project.getConaryConfig(useSSL = False)
+        noSSL = project.getConaryConfig(overrideSSL = True, useSSL = False)
         assert(noSSL.repositoryMap.values()[0].startswith("http://"))
         
         # require SSLized repository map
-        SSL = project.getConaryConfig(useSSL = True)
+        SSL = project.getConaryConfig(overrideSSL = True, useSSL = True)
         assert(SSL.repositoryMap.values()[0].startswith("https://"))
         
         # let the database decide

@@ -38,7 +38,7 @@ class GroupTroveCook(ImageGenerator):
             cfg.buildLabel = versions.Label(project.getLabel())
 
             cfg.initializeFlavors()
-            cfg.repositoryMap = project.getConaryConfig(newUser='', newPass='', useSSL = '').repositoryMap
+            cfg.repositoryMap = project.getConaryConfig().repositoryMap
             cfg.repositoryMap.update({'conary.rpath.com': 'http://conary-commits.rpath.com/conary/'})
 
             repos = netclient.NetworkRepositoryClient(cfg.repositoryMap)

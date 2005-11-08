@@ -244,7 +244,7 @@ class ProjectHandler(WebHandler):
         if self.project.external:
             cfg = self.project.getConaryConfig()
         else:
-            cfg = self.project.getConaryConfig(useSSL = self.cfg.SSL)
+            cfg = self.project.getConaryConfig(overrideSSL = True, useSSL = self.cfg.SSL)
         nc = netclient.NetworkRepositoryClient(cfg.repositoryMap)
         leaves = nc.getAllTroveLeaves(cfg.repositoryMap.keys()[0], {trove: {None: None}})
 

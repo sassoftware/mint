@@ -58,7 +58,8 @@ class ConaryHandler(WebHandler, http.HttpHandler):
             useSSL = None # use the label as-is for external projects
         else:
             useSSL = self.cfg.SSL
-        cfg = self.project.getConaryConfig(newUser = self.authToken[0],
+        cfg = self.project.getConaryConfig(overrideSSL = True, overrideAuth = True,
+                                           newUser = self.authToken[0],
                                            newPass = self.authToken[1],
                                            useSSL = useSSL)
         self.repos = netclient.NetworkRepositoryClient(cfg.repositoryMap)
