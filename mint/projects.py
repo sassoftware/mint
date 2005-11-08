@@ -320,7 +320,7 @@ class ProjectsTable(database.KeyedTable):
 
     def getNumProjects(self):
         cu = self.db.cursor()
-        cu.execute("SELECT count(name) FROM Projects WHERE disabled=0 AND hidden=0")
+        cu.execute("SELECT count(name) FROM Projects WHERE disabled=0 AND hidden=0 AND EXISTS(SELECT * FROM Commits WHERE Commits.projectId = Projects.projectId)")
 
         return cu.fetchone()[0]
 
