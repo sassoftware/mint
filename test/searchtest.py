@@ -33,16 +33,16 @@ class BrowseTest(MintRepositoryHelper):
 
     def _sortOrderDict(self):
         return {
-            PROJECTNAME_ASC: [[4, 'bal', 'Bal', '', 1129542003], [2, 'bar', 'Bar', '', 1129550003], [3, 'baz', 'Baz', '', 1129560003], [1, 'foo', 'Foo', '', 1128540046]],
-            PROJECTNAME_DES: [[1, 'foo', 'Foo', '', 1128540046], [3, 'baz', 'Baz', '', 1129560003], [2, 'bar', 'Bar', '', 1129550003], [4, 'bal', 'Bal', '', 1129542003]],
-            LASTMODIFIED_ASC: [[1, 'foo', 'Foo', '', 1128540046], [4, 'bal', 'Bal', '', 1129542003], [2, 'bar', 'Bar', '', 1129550003], [3, 'baz', 'Baz', '', 1129560003]],
-            LASTMODIFIED_DES: [[3, 'baz', 'Baz', '', 1129560003], [2, 'bar', 'Bar', '', 1129550003], [4, 'bal', 'Bal', '', 1129542003], [1, 'foo', 'Foo', '', 1128540046]],
-            CREATED_ASC: [[2, 'bar', 'Bar', '', 1129550003], [3, 'baz', 'Baz', '', 1129560003], [4, 'bal', 'Bal', '', 1129542003], [1, 'foo', 'Foo', '', 1128540046]],
-            CREATED_DES: [[1, 'foo', 'Foo', '', 1128540046], [4, 'bal', 'Bal', '', 1129542003], [3, 'baz', 'Baz', '', 1129560003], [2, 'bar', 'Bar', '', 1129550003]],
-            NUMDEVELOPERS_ASC: [[2, 'bar', 'Bar', '', 1129550003], [3, 'baz', 'Baz', '', 1129560003], [4, 'bal', 'Bal', '', 1129542003], [1, 'foo', 'Foo', '', 1128540046]],
-            NUMDEVELOPERS_DES: [[1, 'foo', 'Foo', '', 1128540046], [4, 'bal', 'Bal', '', 1129542003], [3, 'baz', 'Baz', '', 1129560003], [2, 'bar', 'Bar', '', 1129550003]],
-            ACTIVITY_ASC: [[1, 'foo', 'Foo', '', 1128540046], [3, 'baz', 'Baz', '', 1129560003], [4, 'bal', 'Bal', '', 1129542003], [2, 'bar', 'Bar', '', 1129550003]],
-            ACTIVITY_DES: [[2, 'bar', 'Bar', '', 1129550003], [4, 'bal', 'Bal', '', 1129542003], [3, 'baz', 'Baz', '', 1129560003], [1, 'foo', 'Foo', '', 1128540046]],
+            PROJECTNAME_ASC:   ['bal', 'bar', 'baz', 'biz'],
+            PROJECTNAME_DES:   ['biz', 'baz', 'bar', 'bal'],
+            LASTMODIFIED_ASC:  ['biz', 'bal', 'bar', 'baz'],
+            LASTMODIFIED_DES:  ['baz', 'bar', 'bal', 'biz'],
+            CREATED_ASC:       ['bar', 'baz', 'bal', 'biz'],
+            CREATED_DES:       ['biz', 'bal', 'baz', 'bar'],
+            NUMDEVELOPERS_ASC: ['bar', 'biz', 'baz', 'bal'],
+            NUMDEVELOPERS_DES: ['bal', 'baz', 'bar', 'biz'],
+            ACTIVITY_ASC:      ['biz', 'baz', 'bal', 'bar'],
+            ACTIVITY_DES:      ['bar', 'bal', 'baz', 'biz'],
             }
 
     def testBrowse(self):
@@ -58,6 +58,8 @@ class BrowseTest(MintRepositoryHelper):
         bazId = client.newProject("Baz", "baz", "rpath.org")
         self._changeTimestamps(bazId, 1126540046, 1126640046)
         balId = client.newProject("Bal", "bal", "rpath.org")
+        self._changeTimestamps(balId, 1128540003, 1129540003)
+        bizId = client.newProject("Biz", "biz", "rpath.org")
         self._changeTimestamps(balId, 1128540003, 1129540003)
 
         fooProject = client.getProject(fooId)
@@ -75,6 +77,7 @@ class BrowseTest(MintRepositoryHelper):
         # and a couple of really old ones that won't show up...
         self._fakeCommit(bazId, 1120040003, userId2)
         self._fakeCommit(bazId, 1120040013, userId2)
+        self._fakeCommit(bizId, 1120040008, userId2)
 
         # add some members to each project to make the popularity sort useful
         fooProject.addMemberById(userId2, userlevels. DEVELOPER)
@@ -89,9 +92,9 @@ class BrowseTest(MintRepositoryHelper):
         sortOrderDict = self._sortOrderDict()
         for sortOrder in range(10):
             results, count = client.getProjects(sortOrder, 30, 0)
-            if results != sortOrderDict[sortOrder]:
-                self.fail("sort problem during sort: %s"% ordersql[sortOrder])
-        if client.getProjectsList() != [(4, 0, 0, 'bal - Bal'), (2, 0, 0, 'bar - Bar'), (3, 0, 0, 'baz - Baz'), (1, 0, 0, 'foo - Foo')]:
+            if [x[1] for x in results] != sortOrderDict[sortOrder]:
+                self.fail("sort problem during sort: %s. expected %s, but got %s"% (ordersql[sortOrder], sortOrderDict[sortOrder],[x[1] for x in results]))
+        if client.getProjectsList() != [(4, 0, 0, 'bal - Bal'), (2, 0, 0, 'bar - Bar'), (3, 0, 0, 'baz - Baz'), (5, 0, 0, 'biz - Biz'), (1, 0, 0, 'foo - Foo')]:
             self.fail("getProjectsList did not return alphabetical results")
 
     def testSearchProjects(self):

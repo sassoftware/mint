@@ -34,13 +34,12 @@ desctrunclength = 300
 #        OFFSET %d
 #"""
 
-
 sqlbase = """        
     SELECT projectId, hostname, name, description, timeModified
         FROM (SELECT Projects.projectId AS projectId,
                      Projects.hostname AS hostname,
                      Projects.name AS name,
-                     Projects.description AS description,    IFNULL(MAX(Commits.timestamp), Projects.timeCreated) AS timeModified,     (SELECT count(*) FROM Commits WHERE Commits.projectId=Projects.projectId AND Commits.timestamp > (SELECT IFNULL(MAX(timestamp)-604800, 0) FROM Commits)) AS recentCommits,     timeCreated, (SELECT COUNT(userId) AS numDevs FROM ProjectUsers WHERE ProjectUsers.projectId=Projects.projectId) AS numDevs         FROM     Projects         LEFT JOIN Commits ON     Projects.projectId=Commits.projectId AND Projects.disabled=0 AND Projects.hidden=0        GROUP BY Projects.projectId) as P
+                     Projects.description AS description,    IFNULL(MAX(Commits.timestamp), Projects.timeCreated) AS timeModified,     (SELECT count(*) FROM Commits WHERE Commits.projectId=Projects.projectId AND Commits.timestamp > (SELECT IFNULL(MAX(timestamp)-604800, 0) FROM Commits)) AS recentCommits,     timeCreated, (SELECT COUNT(userId) AS numDevs FROM ProjectUsers WHERE ProjectUsers.projectId=Projects.projectId) AS numDevs         FROM     Projects         LEFT JOIN Commits ON     Projects.projectId=Commits.projectId AND Projects.disabled=0 AND Projects.hidden=0 AND EXISTS(SELECT * FROM Commits WHERE Commits.projectId = Projects.projectId)       GROUP BY Projects.projectId) as P
 
     ORDER BY %s
     LIMIT %d
