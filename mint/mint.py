@@ -311,16 +311,13 @@ class MintClient:
         """
         return jobs.Job(self.server, jobId)
         
-    def iterJobs(self, releaseId = -1):
+    def getJobs(self):
         """
-        Iterates through all jobs, optionally by release id.
-        @param releaseId: Filter jobs by release id. Pass -1 to return all jobs.
-        @type releaseId: int
-        @returns: iterator jobs found
-        @rtype: iterator of L{jobs.Job}s
+        Iterates through all jobs.
+        @returns: list jobs found
+        @rtype: list of L{jobs.Job}s
         """
-        for jobId in self.server.getJobIds(releaseId):
-            yield self.getJob(jobId)
+        return [self.getJob(x) for x in self.server.getJobIds()]
 
     def getFileInfo(self, fileId):
         return self.server.getFileInfo(fileId)

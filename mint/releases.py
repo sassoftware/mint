@@ -253,12 +253,11 @@ class Release(database.TableObject):
         return releasetypes.typeNames[self.getImageType()]
 
     def getJob(self):
-        jobIds = self.server.getJobIds(self.releaseId)
-        if len(jobIds) > 0:
-            job = jobs.Job(self.server, jobIds[0])
+        jobId = self.server.getJobIdsForRelease(self.id)
+        if jobId:
+            return jobs.Job(self.server, jobId)
         else:
-            job = None
-        return job
+            return None
 
     def getFiles(self):
         return [(x[0], x[1], x[2]) for x in self.server.getImageFilenames(self.releaseId)]

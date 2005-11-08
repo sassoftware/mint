@@ -25,6 +25,7 @@ class JobsTable(database.KeyedTable):
                 CREATE TABLE Jobs (
                     jobId           INTEGER PRIMARY KEY,
                     releaseId       INT,
+                    groupTroveId    INT,
                     userId          INT,
                     status          INT,
                     statusMessage   STR,
@@ -35,6 +36,7 @@ class JobsTable(database.KeyedTable):
                 CREATE TABLE Jobs (
                     jobId           INT PRIMARY KEY AUTO_INCREMENT,
                     releaseId       INT,
+                    groupTroveId    INT,
                     userId          INT,
                     status          INT,
                     statusMessage   VARCHAR(128),
@@ -42,8 +44,20 @@ class JobsTable(database.KeyedTable):
                     timeFinished    INT
                 )"""
 
-    fields = ['jobId', 'releaseId', 'userId', 'status',
+    fields = ['jobId', 'releaseId', 'groupTroveId', 'userId', 'status',
               'statusMessage', 'timeStarted', 'timeFinished']
+
+    def versionCheck(self):
+        dbversion = self.getDBVersion()
+        if dbversion != self.schemaVersion:
+            if dbversion == 5:
+                cu = self.db.cursor()
+                try:
+                    cu.execute("ALTER TABLE Jobs ADD COLUMN groupTroveId INT")
+                except:
+                    return False
+        return True
+
 
 class Job(database.TableObject):
     __slots__ = [JobsTable.key] + JobsTable.fields
@@ -56,6 +70,9 @@ class Job(database.TableObject):
 
     def getReleaseId(self):
         return self.releaseId
+
+    def getGroupTroveId(self):
+        return self.groupTroveId
 
     def getUserId(self):
         return self.userId

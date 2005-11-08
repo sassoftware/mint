@@ -40,6 +40,7 @@ from mint.distro.live_iso import LiveIso
 from mint.distro.live_cf_image import LiveCFImage
 from mint.distro.stub_image import StubImage
 from mint.distro.netboot_image import NetbootImage
+from mint.distro.group_trove import GroupTroveCook
 
 generators = {
     releasetypes.LIVE_ISO:           LiveIso,
@@ -61,29 +62,41 @@ class JobRunner(threading.Thread):
         self.parentThread = threading.currentThread()
 
     def run(self):
+        ret = None
         jobId = self.job.getId()
-        releaseId = self.job.getReleaseId()
-        release = self.client.getRelease(releaseId)
-        project = self.client.getProject(release.getProjectId())
-        
         self.job.setStatus(jobstatus.RUNNING, 'Running')
 
-        try:
-            generator = generators[release.getImageType()]
-            log.info("%s job for %s started (id %d)" % (generator.__name__, project.getHostname(), jobId))
+        print >> sys.stderr, dir(self.job)
+        if self.job.releaseId:
+            releaseId = self.job.getReleaseId()
+            release = self.client.getRelease(releaseId)
+            project = self.client.getProject(release.getProjectId())
             
-            # save the current working directory in case the generator 
-            # (or scripts that change the wd)
-            cwd = os.getcwd()
-            imageFilenames = generator(self.client, self.cfg, self.job, releaseId).write()
-            os.chdir(cwd)
-        except Exception, e:
-            self.job.setStatus(jobstatus.ERROR, str(e))
-            raise
-        else:
-            release.setFiles(imageFilenames)
-            self.job.setStatus(jobstatus.FINISHED, "Finished")
-            log.info("job %d finished: %s", jobId, str(imageFilenames))
+            try:
+                generator = generators[release.getImageType()]
+                log.info("%s job for %s started (id %d)" % (generator.__name__, project.getHostname(), jobId))
+                # save the current working directory in case the generator 
+                # (or scripts that change the wd)
+                cwd = os.getcwd()
+                imageFilenames = generator(self.client, self.cfg, self.job, releaseId).write()
+                os.chdir(cwd)
+            except Exception, e:
+                self.job.setStatus(jobstatus.ERROR, str(e))
+                raise
+            else:
+                release.setFiles(imageFilenames)
+                log.info("job %d finished: %s", jobId, str(imageFilenames))
+        elif self.job.getGroupTroveId():
+            try:
+                log.info("GroupTroveCook job started (id %d)" % (jobId))
+                ret = GroupTroveCook(self.client, self.cfg, self.job, None).write()
+            except Exception, e:
+                self.job.setStatus(jobstatus.ERROR, str(e))
+                raise
+            else:
+                log.info("job %d succeeded: %s" % (jobId, str(ret)))
+            
+        self.job.setStatus(jobstatus.FINISHED, "Finished: " + str(ret))
 
 class JobDaemon:
     def __init__(self, cfg):
@@ -103,16 +116,23 @@ class JobDaemon:
         
         while(True):
             try:
-                joblist = list(client.iterJobs(releaseId=-1))
+                joblist = client.getJobs()
                 confirmedAlive = True
                 for job in joblist:
-                    release = client.getRelease(job.getReleaseId())
-                    if job.getStatus() == jobstatus.WAITING\
-                           and release.getArch() in cfg.supportedArch:
-                        th = JobRunner(cfg, client, job)
-                        th.start()
-                        # wait for this one to finish before starting more
-                        th.join()
+                    if job.getStatus() != jobstatus.WAITING:
+                        continue
+
+                    if job.releaseId:
+                        release = client.getRelease(job.getReleaseId())
+                        if release.getArch() not in cfg.supportedArch:
+                            continue
+
+                    th = JobRunner(cfg, client, job)
+                    th.start()
+                    # wait for this one to finish before starting more
+                    th.join()
+
+                    
             # We can't assume the mint server will stay up forever.
             # We'd like to ignore exceptions raised if/when the mint server
             # dies, and just wait for it to come back up.

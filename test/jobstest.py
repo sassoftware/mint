@@ -20,8 +20,8 @@ class JobsTest(MintRepositoryHelper):
         release = client.newRelease(projectId, "Test Release")
 
         job = client.startImageJob(release.getId())
-        jobList = list(client.iterJobs(releaseId = release.getId()))
-        assert(jobList[0].getReleaseId() == release.getId())
+        job = release.getJob()
+        assert(job.getReleaseId() == release.getId())
 
         # test restarting jobs
         job.setStatus(jobstatus.ERROR, "Error Message")
@@ -37,7 +37,7 @@ class JobsTest(MintRepositoryHelper):
         else:
             self.fail("expected exception jobs.DuplicateJob")
 
-        if len(client.server.getJobIds(-1)) != 1:
+        if len(client.server.getJobIds()) != 1:
             self.fail("get all Job Id's returned incorrect results")
         # important to test separately: finishing a job generates
         # follow-on SQL statements

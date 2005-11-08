@@ -319,7 +319,13 @@ class MintServer(object):
 
     def _filterJobAccess(self, jobId):
         cu = self.db.cursor()
-        cu.execute("SELECT projectId FROM Jobs LEFT JOIN Releases ON Releases.releaseId = Jobs.releaseId WHERE jobId = ?", jobId)
+        cu.execute("""SELECT projectId FROM Jobs
+                        JOIN Releases USING(releaseId)
+                      WHERE jobId = ?
+                        UNION SELECT projectId FROM Jobs
+                               JOIN GroupTroves USING(groupTroveId)
+                               WHERE jobId = ?
+                                """, jobId, jobId)
         r = cu.fetchall()
         if len(r):
             self._filterProjectAccess(r[0][0])
@@ -1165,12 +1171,51 @@ class MintServer(object):
             raise ReleasePublished()
         cu = self.db.cursor()
 
-        cu.execute("SELECT jobId, status FROM Jobs WHERE releaseId=?",
+        cu.execute("SELECT jobId, status FROM Jobs WHERE releaseId=? AND groupTroveId IS NULL",
                    releaseId)
         r = cu.fetchall()
         if len(r) == 0:
-            cu.execute("INSERT INTO Jobs VALUES (NULL, ?, ?, ?, ?, ?, 0)",
+            cu.execute("""INSERT INTO Jobs
+                                   (releaseId, userId, status, statusMessage, timeStarted, timeFinished)
+                            VALUES (?, ?, ?, ?, ?, 0)""",
                        releaseId, self.auth.userId, jobstatus.WAITING,
+                       jobstatus.statusNames[jobstatus.WAITING],
+                       time.time())
+            if self.db.type == "native_sqlite":
+                retval = cu.lastrowid
+            else:
+                retval = cu._cursor.lastrowid
+        else:
+            jobId, status = r[0]
+            if status in (jobstatus.WAITING, jobstatus.RUNNING):
+                raise jobs.DuplicateJob
+            else:
+                cu.execute("""UPDATE Jobs SET status=?, statusMessage='Waiting',
+                                              timeStarted=?, timeFinished=0
+                              WHERE jobId=?""", jobstatus.WAITING, time.time(),
+                                                jobId)
+                retval = jobId
+
+        self.db.commit()
+        return retval
+
+    @typeCheck(int)
+    @requiresAuth
+    @private
+    def startCookJob(self, groupTroveId):
+        projectId = self.groupTroveItems.getProjectId(groupTroveItemId)
+        self._filterProjectAccess(projectId)
+        self._requireProjectOwner(projectId)
+
+        cu = self.db.cursor()
+        cu.execute("SELECT jobId, status FROM Jobs WHERE groupTroveId=? AND releaseId IS NULL",
+                   groupTroveId)
+        r = cu.fetchall()
+        if len(r) == 0:
+            cu.execute("""INSERT INTO Jobs 
+                                   (groupTroveId, userId, status, statusMessage, timeStarted, timeFinished) 
+                            VALUES (?, ?, ?, ?, ?, 0)""",
+                       groupTroveId, self.auth.userId, jobstatus.WAITING,
                        jobstatus.statusNames[jobstatus.WAITING],
                        time.time())
             if self.db.type == "native_sqlite":
@@ -1198,7 +1243,7 @@ class MintServer(object):
         self._filterJobAccess(jobId)
         cu = self.db.cursor()
 
-        cu.execute("SELECT userId, releaseId, status,"
+        cu.execute("SELECT userId, releaseId, groupTroveId, status,"
                    "  statusMessage, timeStarted, "
                    "  timeFinished FROM Jobs "
                    " WHERE jobId=?", jobId)
@@ -1207,32 +1252,43 @@ class MintServer(object):
         if not p:
             raise jobs.JobMissing
 
-        dataKeys = ['userId', 'releaseId', 'status',
+        dataKeys = ['userId', 'releaseId', 'groupTroveId', 'status',
                     'statusMessage', 'timeStarted', 'timeFinished']
         data = {}
         for i, key in enumerate(dataKeys):
-            data[key] = p[i]
+            # these keys can be NULL from the db
+            if key in ('releaseId', 'groupTroveId'):
+                if p[i] is None:
+                    data[key] = 0
+                else:
+                    data[key] = p[i]
+            else:
+                data[key] = p[i]
         return data
+
+    @typeCheck()
+    @requiresAuth
+    @private
+    def getJobIds(self):
+        cu = self.db.cursor()
+
+        cu.execute("SELECT jobId FROM Jobs")
+
+        return [x[0] for x in cu.fetchall()]
 
     @typeCheck(int)
     @requiresAuth
     @private
-    def getJobIds(self, releaseId):
+    def getJobIdsForRelease(self, releaseId):
         self._filterReleaseAccess(releaseId)
         cu = self.db.cursor()
 
-        stmt = """SELECT jobId FROM Jobs"""
-        if releaseId != -1:
-            stmt += " WHERE releaseId=?"
-            cu.execute(stmt, releaseId)
+        cu.execute("SELECT jobId FROM Jobs WHERE releaseId=?", releaseId)
+        r = cu.fetchone()
+        if r:
+            return r[0]
         else:
-            cu.execute(stmt)
-
-        p = cu.fetchall()
-        rows = []
-        for row in p:
-            rows.append(row[0])
-        return rows
+            return 0
 
     @typeCheck(int, int, str)
     @requiresAuth
