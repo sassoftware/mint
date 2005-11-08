@@ -58,9 +58,6 @@ from urllib import quote
         </td>
         <td id="right" class="projects">
             ${projectsPane()}
-            <td class="pad">
-                ${groupTroveBuilder()}
-            </td>
         </td>
     </body>
 </html>
