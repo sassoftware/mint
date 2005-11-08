@@ -7,6 +7,15 @@
 from urllib import quote
 import time
 from mint import userlevels
+import textwrap
+
+# wrap a flavor on commas
+def flavorWrap(f):
+    f = str(f).replace(" ", "\n")
+    f = f.replace(",", " ")
+    f = f.replace("\n", "\t")
+    f = textwrap.wrap(f, expand_tabs=False, replace_whitespace=False)
+    return ",\n".join(x.replace(" ", ",") for x in f)
 
 ?>
 <html xmlns:html="http://www.w3.org/1999/xhtml"
@@ -64,7 +73,7 @@ isOwner = (userLevel == userlevels.OWNER or auth.admin)
                 <div py:for="trove in troves" py:strip="True">
                     <table class="troveflavor">
                       <tr>
-                        <td class="col1">${trove.getFlavor()}</td>
+                        <td class="col1">${flavorWrap(trove.getFlavor())}</td>
                         <td class="col2">
                             <a href="#" onclick="javascript:toggle_display('${trove.getFlavor().freeze()}_items'); return false;">Details <img id="${trove.getFlavor().freeze()}_items_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" border="0" /></a>
                         </td>
