@@ -96,7 +96,7 @@ class JobRunner(threading.Thread):
             else:
                 log.info("job %d succeeded: %s" % (jobId, str(ret)))
             
-        self.job.setStatus(jobstatus.FINISHED, "Finished: " + str(ret))
+        self.job.setStatus(jobstatus.FINISHED, "Finished")
 
 class JobDaemon:
     def __init__(self, cfg):
