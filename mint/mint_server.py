@@ -37,6 +37,7 @@ from repository import netclient
 from repository import shimclient
 from repository.netrepos import netserver
 from deps import deps
+from lib.util import rmtree
 
 validHost = re.compile('^[a-zA-Z][a-zA-Z0-9\-]*$')
 reservedHosts = ['admin', 'mail', 'mint', 'www', 'web', 'rpath', 'wiki', 'conary', 'lists']
@@ -1363,13 +1364,30 @@ class MintServer(object):
         recipe += indent + 'def setup(r):\n'
 
         indent = 8 * " "
+        recipeLabels = self.getGroupTroveLabelPath(groupTroveId)
+        recipe += indent + "r.setLabelPath(%s)\n" % str(recipeLabels).split('[')[1].split(']')[0]
+
+        for trv in groupTroveItems:
+            recipe += indent + "r.add('" + trv['trvName'] + "', '" + trv['trvVersion'] + "', '" + trv['trvFlavor'] + "', groupName = '" +trv['subGroup'] +"')\n"
+        return recipe
+
+    @typeCheck(int)
+    @private
+    @requiresAuth
+    def getGroupTroveLabelPath(self, groupTroveId):
+        projectId = self.groupTroves.getProjectId(groupTroveId)
+        self._filterProjectAccess(projectId)
+        self._requireProjectOwner(projectId)
+
+        groupTrove = self.groupTroves.get(groupTroveId)
+        groupTroveItems = self.groupTroveItems.listByGroupTroveId(groupTroveId)
 
         # build a dependency resolution scheme.
         # own project's labels come first.
         # the rest are sorted alphabetically.
         # this approach is definitely sub-optimal, but has the advantage of
         # consistent results.
-        recipeLabels = [str(versions.Label(x['trvVersion'])) for x in groupTroveItems]
+        recipeLabels = list(set([str(versions.Label(x['trvVersion'])) for x in groupTroveItems]))
         projectLabels = self.labels.getLabelsForProject(groupTrove['projectId'])[0].keys()
         for label in projectLabels:
             if label in recipeLabels:
@@ -1377,12 +1395,7 @@ class MintServer(object):
         recipeLabels.sort()
         for label in projectLabels:
             recipeLabels.insert(0, label)
-
-        recipe += indent + "r.setLabelPath(%s)\n" % str(recipeLabels).split('[')[1].split(']')[0]
-
-        for trv in groupTroveItems:
-            recipe += indent + "r.add('" + trv['trvName'] + "', '" + trv['trvVersion'] + "', '" + trv['trvFlavor'] + "', groupName = '" +trv['subGroup'] +"')\n"
-        return recipe
+        return recipeLabels
 
     @typeCheck(int)
     @private
@@ -1450,7 +1463,7 @@ class MintServer(object):
             ret = ret[0][0]
         finally:
             os.chdir(curDir)
-            
+        rmtree(path)
         if ret:
             return ret[0], ret[1], ret[2].freeze()
         else:

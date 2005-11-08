@@ -288,3 +288,6 @@ class GroupTrove(database.TableObject):
 
     def cook(self):
         return self.server.cookGroupTrove(self.getId())
+
+    def getLabelPath(self):
+        return self.server.getGroupTroveLabelPath(self.getId())

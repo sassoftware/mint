@@ -269,6 +269,31 @@ class GroupTroveTest(MintRepositoryHelper):
         if (groupTrove.getRecipe() != refRecipe):
             self.fail("auto generated recipe did not return expected results")
 
+    def testMultipleAdditions(self):
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client)
+
+        groupTrove = self.createTestGroupTrove(client, projectId)
+        groupTroveId = groupTrove.getId()
+
+        self.addTestTrove(groupTrove, "testcase")
+        try:
+            self.addTestTrove(groupTrove, "testcase")
+            self.fail("GroupTrove.addTrove allowed a duplicate entry. addTrove relies on a unique index, please check that it's operative.")
+        except PermissionDenied:
+            pass
+
+    def testDuplicateLabels(self):
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client)
+
+        groupTrove = self.createTestGroupTrove(client, projectId)
+        groupTroveId = groupTrove.getId()
+
+        self.addTestTrove(groupTrove, "testcase")
+        self.addTestTrove(groupTrove, "testcase2")
+        assert (groupTrove.getLabelPath() == ['test.localhost@rpl:devel'])
+
     def testCookAutoRecipe(self):
         client, userId = self.quickMintUser('testuser', 'testpass')
         projectId = self.newProject(client)
