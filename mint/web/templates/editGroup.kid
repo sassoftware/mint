@@ -1,4 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
+<?python
+from urllib import quote
+?>
 <html xmlns:html="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'library.kid', 'layout.kid', 'project.kid'">
@@ -44,7 +47,7 @@
                             <td>${t['trvName']}</td>
                             <td>${t['trvVersion']}</td>
                             <td><input type="checkbox" name="${t['groupTroveItemId']}_locked" /></td>
-                            <td><a href="delTrove?id=${t['groupTroveItemId']}">X</a></td>
+                            <td><a href="deleteGroupTrove?id=${curGroupTrove.getId()};troveId=${t['groupTroveItemId']};referer=${quote(req.unparsed_uri)}">X</a></td>
                         </tr>
                     </table>
                     <br/>
