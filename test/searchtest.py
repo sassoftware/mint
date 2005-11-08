@@ -92,6 +92,8 @@ class BrowseTest(MintRepositoryHelper):
         sortOrderDict = self._sortOrderDict()
         for sortOrder in range(10):
             results, count = client.getProjects(sortOrder, 30, 0)
+            if count != 4:
+                self.fail('getProjects returned the wrong project count.')
             if [x[1] for x in results] != sortOrderDict[sortOrder]:
                 self.fail("sort problem during sort: %s. expected %s, but got %s"% (ordersql[sortOrder], sortOrderDict[sortOrder],[x[1] for x in results]))
         if client.getProjectsList() != [(4, 0, 0, 'bal - Bal'), (2, 0, 0, 'bar - Bar'), (3, 0, 0, 'baz - Baz'), (5, 0, 0, 'biz - Biz'), (1, 0, 0, 'foo - Foo')]:
