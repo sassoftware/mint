@@ -19,9 +19,8 @@ onload = "javascript:;"
         <td id="topnav">
             <div class="pad">
                 <a href="http://$SITE">rBuilder Online</a> | 
-                <a href="${cfg.corpSite}products/">Products</a> |
-                <a href="${cfg.corpSite}sales/">Sales</a> |
-                <a href="${cfg.corpSite}about/">About Us</a> |
+                <a href="${cfg.corpSite}sales/">Information</a> |
+                <a href="${cfg.corpSite}about/contact/">About Us</a> |
                 <a href="http://${SITE}help?page=feedback"><b style="color: red;">Need Help/Have Feedback?</b></a>
                 <span py:if="cfg.debugMode">
                     | <span style="color:red;">DEBUG MODE</span>
