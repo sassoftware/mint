@@ -431,6 +431,8 @@ def handler(req):
             newPath = normPath(pathInfo[len(match)-1:])
             try:
                 ret = urlHandler(req, cfg, newPath)
+            except apache.SERVER_RETURN:
+                raise
             except:
                 # we only want to handle errors in production mode
                 if cfg.debugMode or req.bytes_sent > 0:
