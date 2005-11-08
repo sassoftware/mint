@@ -120,7 +120,7 @@ from mint import userlevels
                 <tr py:for="item in groupTrove.listTroves()"><td></td><td>${item['trvName']}</td><td>${item['trvVersion']}</td><td><a href="${groupProject.getUrl()}deleteGroupTrove?id=${groupTrove.id};troveId=${item['groupTroveItemId']};referer=${quote(req.unparsed_uri)}">X</a></td></tr>
                 <tr class="groupcook">
                     <td colspan="3" style="text-align: center; padding: 1em;">
-                        <a class="option" style="display: inline;" href="cook">Cook This Group</a>
+                        <a class="option" style="display: inline;" href="${groupProject.getUrl()}/cookGroup?id=${groupTrove.id}">Cook This Group</a>
                     </td>
                 </tr>
               </tbody>
