@@ -37,7 +37,6 @@ from repository import netclient
 from repository import shimclient
 from repository.netrepos import netserver
 from deps import deps
-from lib.util import rmtree
 
 validHost = re.compile('^[a-zA-Z][a-zA-Z0-9\-]*$')
 reservedHosts = ['admin', 'mail', 'mint', 'www', 'web', 'rpath', 'wiki', 'conary', 'lists']
@@ -964,7 +963,7 @@ class MintServer(object):
         self._filterProjectAccess(projectId)
         return self.labels.getDefaultProjectLabel(projectId)
 
-    @typeCheck(int, ((str, type(None)),), ((str, type(None)),), ((bool, type(None)),))
+    @typeCheck(int, ((str, type(None)),), ((str, type(None)),), ((str, bool, type(None)),))
     @private
     def getLabelsForProject(self, projectId, newUser, newPass, useSSL):
         """Returns a mapping of labels to labelIds and a repository map dictionary for the current user"""
@@ -1203,7 +1202,7 @@ class MintServer(object):
     @requiresAuth
     @private
     def startCookJob(self, groupTroveId):
-        projectId = self.groupTroveItems.getProjectId(groupTroveItemId)
+        projectId = self.groupTroves.getProjectId(groupTroveId)
         self._filterProjectAccess(projectId)
         self._requireProjectOwner(projectId)
 
@@ -1461,69 +1460,6 @@ class MintServer(object):
         self._filterProjectAccess(projectId)
         self._requireProjectOwner(projectId)
         return self._getRecipe(groupTroveId)
-
-    @typeCheck(int)
-    @private
-    @requiresAuth
-    def cookGroupTrove(self, groupTroveId):
-        import checkin
-        import tempfile
-        import conarycfg
-        from build import cook
-        curDir = os.getcwd()
-
-        ret = None
-        try:
-            path = tempfile.mkdtemp()
-            projectId = self.groupTroves.getProjectId(groupTroveId)
-            self._filterProjectAccess(projectId)
-            self._requireProjectOwner(projectId)
-            recipe = self._getRecipe(groupTroveId)
-            groupTrove = self.groupTroves.get(groupTroveId)
-            sourceName = groupTrove['recipeName'] + ":source"
-
-            project = projects.Project(self, projectId)
-
-            cfg = conarycfg.ConaryConfiguration()
-            cfg.name = "rBuilder Online"
-            cfg.contact = "http://www.rpath.org"
-            cfg.quiet = True
-            cfg.buildLabel = versions.Label(project.getLabel())
-            
-            cfg.initializeFlavors()
-            cfg.repositoryMap = project.getConaryConfig(newUser = self.authToken[0], newPass = self.authToken[1]).repositoryMap
-            cfg.repositoryMap.update({'conary.rpath.com': 'http://conary-commits.rpath.com/conary/'})
-
-            repos = netclient.NetworkRepositoryClient(cfg.repositoryMap)
-
-            trvLeaves = repos.getTroveLeavesByLabel({sourceName : {cfg.buildLabel : None} }).get(sourceName, [])
-
-            os.chdir(path)
-            if trvLeaves:
-                checkin.checkout(repos, cfg, path, groupTrove['recipeName'])
-            else:
-                checkin.newTrove(repos, cfg, groupTrove['recipeName'], path)
-
-            recipeFile = open(groupTrove['recipeName'] + '.recipe', 'w')
-            recipeFile.write(recipe)
-            recipeFile.flush()
-            recipeFile.close()
-
-            if not trvLeaves:
-                checkin.addFiles([groupTrove['recipeName'] + '.recipe'])
-
-            # commit recipe as changeset
-            message = "Auto generated commit from rBuilder online."
-            checkin.commit(repos, cfg, message)
-            ret = cook.cookItem(repos, cfg, groupTrove['recipeName'])
-            ret = ret[0][0]
-        finally:
-            os.chdir(curDir)
-        rmtree(path)
-        if ret:
-            return ret[0], ret[1], ret[2].freeze()
-        else:
-            return None
 
     @private
     @requiresAuth

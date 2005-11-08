@@ -15,6 +15,9 @@ from mint.database import ItemNotFound
 from mint import userlevels
 from mint.mint_error import PermissionDenied
 from repository import netclient
+from mint.distro import group_trove
+from mint.jobs import DuplicateJob
+from mint import jobstatus
 
 refRecipe = "class GroupTest(GroupRecipe):\n    name = 'group-test'\n    version = '1.0.0'\n\n    autoResolve = False\n\n    def setup(r):\n        r.setLabelPath('test.localhost@rpl:devel')\n        r.add('testcase', 'test.localhost@rpl:devel', '', groupName = 'group-test')\n"
 
@@ -340,9 +343,22 @@ class GroupTroveTest(MintRepositoryHelper):
 
         trvId = self.addTestTrove(groupTrove, "testcase")
         # cook once to ensure we can create a new package
-        groupTrove.cook()
+        jobId = groupTrove.startCookJob()
+        job = client.getJob(jobId)
+        try:
+            groupTrove.startCookJob()
+            self.fail('groupTrove.cook() allowed conflicting cook job.')
+        except DuplicateJob:
+            pass
+
+        cookJob = group_trove.GroupTroveCook(client, client.getCfg(), job, groupTrove.getId())
+        trvName, trvVersion, trvFlavor = cookJob.write()
+        job.setStatus(jobstatus.FINISHED,"Finished")
         # cook a second time to ensure we follow the checkout codepath
-        trvName, trvVersion, trvFlavor = groupTrove.cook()
+        jobId = groupTrove.startCookJob()
+        job = client.getJob(jobId)
+        cookJob = group_trove.GroupTroveCook(client, client.getCfg(), job, groupTrove.getId())
+        trvName, trvVersion, trvFlavor = cookJob.write()
 
         assert(trvName == 'group-test')
         assert(trvVersion == '/test.localhost@rpl:devel/1.0.0-1-2')

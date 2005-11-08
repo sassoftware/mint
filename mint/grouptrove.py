@@ -286,8 +286,8 @@ class GroupTrove(database.TableObject):
     def getRecipe(self):
         return self.server.getRecipe(self.getId())
 
-    def cook(self):
-        return self.server.cookGroupTrove(self.getId())
+    def startCookJob(self):
+        return self.server.startCookJob(self.getId())
 
     def getLabelPath(self):
         return self.server.getGroupTroveLabelPath(self.getId())
