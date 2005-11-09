@@ -30,7 +30,8 @@
  
                 <pre style="padding: 1em; border: 1px solid #dddddd; background: #efefef; margin: 1em;">${XML(recipe.replace('\n', '&lt;br/&gt;'))}</pre>
                 
-                <p>When the group has finished cooking, click on Releases on the left and pick ${groupTrove.recipeName} to create a release.</p>
+                <p><i>[FIXME: improve wording and instructions]</i> When the group has finished cooking,
+                    click on Releases on the left and pick ${groupTrove.recipeName} to create a release.</p>
             </div>
         </td>
         <td id="right" class="projects">
