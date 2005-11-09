@@ -1310,15 +1310,21 @@ class MintServer(object):
     def setJobStatus(self, jobId, newStatus, statusMessage):
         self._filterJobAccess(jobId)
         cu = self.db.cursor()
-        cu.execute("UPDATE Jobs SET status=?, statusMessage=? WHERE jobId=?",
-                   newStatus, statusMessage, jobId)
-        if newStatus == jobstatus.FINISHED:
-            cu.execute("UPDATE Jobs SET timeFinished=? WHERE jobId=?",
-                       time.time(), jobId)
-        self.db.commit()
+        cu.execute("BEGIN")
+        try:
+            cu.execute("UPDATE Jobs SET status=?, statusMessage=? WHERE jobId=?",
+                       newStatus, statusMessage, jobId)
+            if newStatus == jobstatus.FINISHED:
+                cu.execute("UPDATE Jobs SET timeFinished=? WHERE jobId=?",
+                           time.time(), jobId)
+        except:
+            self.db.rollback()
+            raise
+        else:
+            self.db.commit()
         return True
 
-    @typeCheck(int, (list, (tuple, str)))
+    @typeCheck(int, (list, (list, str)))
     @requiresAuth
     @private
     def setImageFilenames(self, releaseId, filenames):
@@ -1327,13 +1333,21 @@ class MintServer(object):
             raise ReleaseMissing()
         if self.releases.getPublished(releaseId):
             raise ReleasePublished()
+
         cu = self.db.cursor()
-        cu.execute("DELETE FROM ImageFiles WHERE releaseId=?", releaseId)
-        for idx, file in enumerate(sorted(filenames)):
-            fileName, title = file
-            cu.execute("INSERT INTO ImageFiles VALUES (NULL, ?, ?, ?, ?)",
-                       releaseId, idx, fileName, title)
-        self.db.commit()
+
+        cu.execute("BEGIN")
+        try:
+            cu.execute("DELETE FROM ImageFiles WHERE releaseId=?", releaseId)
+            for idx, file in enumerate(sorted(filenames)):
+                fileName, title = file
+                cu.execute("INSERT INTO ImageFiles VALUES (NULL, ?, ?, ?, ?)",
+                           releaseId, idx, fileName, title)
+        except:
+            self.db.rollback()
+            raise
+        else:
+            self.db.commit()
         return True
 
     @typeCheck(int)

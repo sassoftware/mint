@@ -61,7 +61,7 @@ for host in netclients.keys():
         row = (projectIds[host], pkg, latestVer.asString())
         rows.append(row)
 
-#cu = db.cursor()
+cu.execute("BEGIN")
 try:
     cu.execute("DELETE FROM PackageIndex")
     for row in rows:

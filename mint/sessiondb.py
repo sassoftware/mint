@@ -45,6 +45,7 @@ class SessionsTable(DatabaseTable):
                 sid, cPickle.dumps(data))
         except:
             self.db.rollback()
+            raise
         else:
             self.db.commit()
 

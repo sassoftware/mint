@@ -29,7 +29,8 @@ class CommitsTable(database.DatabaseTable):
         except:
             self.db.rollback()
             raise
-        self.db.commit()
+        else:
+            self.db.commit()
 
     def getCommitsByProject(self, projectId, limit = 10):
         cu = self.db.cursor()

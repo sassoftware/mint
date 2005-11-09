@@ -63,6 +63,7 @@ class JobRunner(threading.Thread):
 
     def run(self):
         ret = None
+        error = None
         jobId = self.job.getId()
         self.job.setStatus(jobstatus.RUNNING, 'Running')
 
@@ -80,6 +81,7 @@ class JobRunner(threading.Thread):
                 imageFilenames = generator(self.client, self.cfg, self.job, releaseId).write()
                 os.chdir(cwd)
             except Exception, e:
+                error = e
                 self.job.setStatus(jobstatus.ERROR, str(e))
             else:
                 release.setFiles(imageFilenames)
