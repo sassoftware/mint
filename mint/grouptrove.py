@@ -69,27 +69,37 @@ class GroupTroveTable(database.KeyedTable):
             raise GroupTroveVersionError
         cu = self.db.cursor()
         cu.execute("BEGIN")
-        r = cu.execute("SELECT IFNULL(MAX(groupTroveId), 0) + 1 AS groupTroveId FROM GroupTroves")
-        groupTroveId = r.fetchone()[0]
-        timeStamp = time.time()
-        self.new(groupTroveId = groupTroveId,
-                 projectId = projectId,
-                 creatorId = creatorId,
-                 recipeName = recipeName,
-                 upstreamVersion = upstreamVersion,
-                 description = description,
-                 timeCreated = timeStamp,
-                 timeModified = timeStamp,
-                 autoResolve = int(autoResolve))
-        self.db.commit()
+        try:
+            r = cu.execute("SELECT IFNULL(MAX(groupTroveId), 0) + 1 AS groupTroveId FROM GroupTroves")
+            groupTroveId = r.fetchone()[0]
+            timeStamp = time.time()
+            self.new(groupTroveId = groupTroveId,
+                     projectId = projectId,
+                     creatorId = creatorId,
+                     recipeName = recipeName,
+                     upstreamVersion = upstreamVersion,
+                     description = description,
+                     timeCreated = timeStamp,
+                     timeModified = timeStamp,
+                     autoResolve = int(autoResolve))
+        except:
+            self.db.rollback()
+            raise
+        else:
+            self.db.commit()
         return groupTroveId
 
     def delGroupTrove(self, groupTroveId):
         cu = self.db.cursor()
-        self.db._begin()
-        cu.execute("DELETE FROM GroupTroveItems WHERE groupTroveId=?", groupTroveId)
-        cu.execute("DELETE FROM GroupTroves WHERE groupTroveId=?", groupTroveId)
-        self.db.commit()
+        cu.execute("BEGIN")
+        try:
+            cu.execute("DELETE FROM GroupTroveItems WHERE groupTroveId=?", groupTroveId)
+            cu.execute("DELETE FROM GroupTroves WHERE groupTroveId=?", groupTroveId)
+        except:
+            self.db.rollback()
+            raise
+        else:
+            self.db.commit()
 
     def getProjectId(self, groupTroveId):
         return self.get(groupTroveId)['projectId']
@@ -138,52 +148,75 @@ class GroupTroveItemsTable(database.KeyedTable):
     def setVersionLocked(self, groupTroveItemId, lock):
         cu = self.db.cursor()
         cu.execute("BEGIN")
-        cu.execute("UPDATE GroupTroveItems SET versionLock=? WHERE groupTroveItemId=?", lock, groupTroveItemId)
-        self.updateModifiedTime(groupTroveItemId)
-        self.db.commit()
+        try:
+            cu.execute("UPDATE GroupTroveItems SET versionLock=? WHERE groupTroveItemId=?", lock, groupTroveItemId)
+            self.updateModifiedTime(groupTroveItemId)
+        except:
+            self.db.rollback()
+            raise
+        else:
+            self.db.commit()
 
     def setUseLocked(self, groupTroveItemId, lock):
         cu = self.db.cursor()
         cu.execute("BEGIN")
-        cu.execute("UPDATE GroupTroveItems SET useLock=? WHERE groupTroveItemId=?", lock, groupTroveItemId)
-        self.updateModifiedTime(groupTroveItemId)
-        self.db.commit()
+        try:
+            cu.execute("UPDATE GroupTroveItems SET useLock=? WHERE groupTroveItemId=?", lock, groupTroveItemId)
+            self.updateModifiedTime(groupTroveItemId)
+        except:
+            self.db.rollback()
+            raise
+        else:
+            self.db.commit()
 
     def setInstSetLocked(self, groupTroveItemId, lock):
         cu = self.db.cursor()
         cu.execute("BEGIN")
-        cu.execute("UPDATE GroupTroveItems SET instSetLock=? WHERE groupTroveItemId=?", lock, groupTroveItemId)
-        self.updateModifiedTime(groupTroveItemId)
-        self.db.commit()
+        try:
+            cu.execute("UPDATE GroupTroveItems SET instSetLock=? WHERE groupTroveItemId=?", lock, groupTroveItemId)
+            self.updateModifiedTime(groupTroveItemId)
+        except:
+            self.db.rollback()
+            raise
+        else:
+            self.db.commit()
 
     def addTroveItem(self, groupTroveId, creatorId, trvName, trvVersion, trvFlavor, subGroup, versionLock, useLock, instSetLock):
         cu = self.db.cursor()
         cu.execute("BEGIN")
-        cu.execute("SELECT IFNULL(MAX(groupTroveItemId), 0) + 1 as groupTroveItemId FROM GroupTroveItems")
-        
-        groupTroveItemId = cu.fetchone()[0]
-        self.new(groupTroveItemId = groupTroveItemId,
-                 groupTroveId = groupTroveId,
-                 creatorId = creatorId,
-                 trvName = trvName,
-                 trvVersion = trvVersion,
-                 trvFlavor = trvFlavor,
-                 subGroup = subGroup,
-                 versionLock = versionLock,
-                 useLock = useLock,
-                 instSetLock = instSetLock)
-        self.updateModifiedTime(groupTroveItemId)
-        
-        self.db.commit()
+        try:
+            cu.execute("SELECT IFNULL(MAX(groupTroveItemId), 0) + 1 as groupTroveItemId FROM GroupTroveItems")
+
+            groupTroveItemId = cu.fetchone()[0]
+            self.new(groupTroveItemId = groupTroveItemId,
+                     groupTroveId = groupTroveId,
+                     creatorId = creatorId,
+                     trvName = trvName,
+                     trvVersion = trvVersion,
+                     trvFlavor = trvFlavor,
+                     subGroup = subGroup,
+                     versionLock = versionLock,
+                     useLock = useLock,
+                     instSetLock = instSetLock)
+            self.updateModifiedTime(groupTroveItemId)
+        except:
+            self.db.rollback()
+            raise
+        else:
+            self.db.commit()
         return groupTroveItemId
 
     def delGroupTroveItem(self, groupTroveItemId):
         cu = self.db.cursor()
         cu.execute("BEGIN")
-        self.updateModifiedTime(groupTroveItemId)
-        cu.execute("DELETE FROM GroupTroveItems WHERE groupTroveItemId=?", groupTroveItemId)
-        
-        self.db.commit()
+        try:
+            self.updateModifiedTime(groupTroveItemId)
+            cu.execute("DELETE FROM GroupTroveItems WHERE groupTroveItemId=?", groupTroveItemId)
+        except:
+            self.db.rollback()
+            raise
+        else:
+            self.db.commit()
 
     def listByGroupTroveId(self, groupTroveId):
         cu = self.db.cursor()
