@@ -7,10 +7,11 @@ import time
 import testsuite
 testsuite.setup()
 
-import sqlite3
 import rephelp 
-from mint_rephelp import MintRepositoryHelper
 
+from conary import sqlite3
+
+from mint_rephelp import MintRepositoryHelper
 from mint import dbversion
 from mint import sessiondb
 
