@@ -11,16 +11,16 @@ import sys
 import tempfile
 import time
 
-import callbacks
-import conaryclient
-import deps
-import versions
-from repository import errors
-from build import use
-from conarycfg import ConfigFile
-from lib import util
+from conary import callbacks
+from conary import conaryclient
+from conary import conarycfg
+from conary import deps
+from conary import versions
+from conary.repository import errors
+from conary.build import use
+from conary.conarycfg import ConfigFile
+from conary.lib import util
 
-import conarycfg
 from mint.mint import upstream
 from imagegen import ImageGenerator, assertParentAlive
 import gencslist

@@ -13,14 +13,14 @@ import subprocess
 from imagegen import ImageGenerator
 
 # conary imports
-import conary
-import conaryclient
-import deps
-import flavorcfg
-import versions
-from callbacks import UpdateCallback, ChangesetCallback
-from conarycfg import ConfigFile
-from lib import log
+from conary import conary
+from conary import conaryclient
+from conary import deps
+from conary import flavorcfg
+from conary import versions
+from conary.callbacks import UpdateCallback, ChangesetCallback
+from conary.conarycfg import ConfigFile
+from conary.lib import log
 
 class LiveIsoConfig(ConfigFile):
     defaults = {

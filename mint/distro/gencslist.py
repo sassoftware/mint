@@ -12,18 +12,16 @@ import string
 import sys
 import tempfile
 
-import conary
-
-from deps import deps
-from lib import util, sha1helper
-from repository import changeset, trovesource, netclient, shimclient
-from repository.netrepos import netserver
-import conarycfg
-import conaryclient
-import files
-import trove
-import updatecmd
-import versions
+from conary.deps import deps
+from conary.lib import util, sha1helper
+from conary.repository import changeset, trovesource, netclient, shimclient
+from conary.repository.netrepos import netserver
+from conary import conarycfg
+from conary import conaryclient
+from conary import files
+from conary import trove
+from conary import updatecmd
+from conary import versions
 
 def _getTrove(cs, name, version, flavor):
     troveCs = cs.getNewTroveVersion(name, version, flavor)
