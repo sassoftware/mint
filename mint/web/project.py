@@ -19,17 +19,15 @@ from mint import users
 from mint import jobs
 from mint import jobstatus
 
-from repository import netclient
-import versions
-from deps import deps
-
 from webhandler import WebHandler, normPath
 from decorators import ownerOnly, requiresAuth, requiresAdmin, mailList, redirectHttp
-from web import fields
-from web.fields import strFields, intFields, listFields, boolFields
 from mint.users import sendMailWithChecks
-
 from mint.releases import RDT_STRING, RDT_BOOL, RDT_INT
+
+from conary.repository import netclient
+from conary import versions
+from conary.deps import deps
+from conary.web.fields import strFields, intFields, listFields, boolFields
 
 def getUserDict(members):
     users = { userlevels.USER: [],

@@ -14,7 +14,7 @@ from mod_python import apache
 from mod_python import Cookie
 from mod_python.util import FieldStorage
 
-from web import fields
+from conary.web import fields
 
 from mint.session import SqlSession, COOKIE_NAME
 from mint import database

@@ -15,11 +15,11 @@ import sys
 import time
 import traceback
 
-from lib import epdb, log
-from repository.netrepos import netserver
-from repository.filecontainer import FileContainer
-from repository import changeset
-from repository import errors
+from conary.lib import epdb, log
+from conary.repository.netrepos import netserver
+from conary.repository.filecontainer import FileContainer
+from conary.repository import changeset
+from conary.repository import errors
 
 from mint import config
 from mint import mint_server

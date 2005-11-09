@@ -13,9 +13,8 @@ from urllib import quote, unquote
 
 from mod_python import apache
 
-import versions
-from web import fields
-from web.fields import strFields, intFields, listFields, boolFields
+import conary.versions
+from conary.web.fields import strFields, intFields, listFields, boolFields
 
 from mint import mint_error
 from mint import projects

@@ -9,11 +9,13 @@ import sys
 import traceback
 
 from mod_python import apache
-from server import http
-from repository import netclient, repository
-from repository.netrepos import netserver
-from templates import repos
+
+from conary.server import http
+from conary.repository import netclient, errors 
+from conary.repository.netrepos import netserver
+
 from webhandler import WebHandler, normPath
+from templates import repos
 from mint.session import SqlSession
 
 class ConaryHandler(WebHandler, http.HttpHandler):
@@ -73,7 +75,7 @@ class ConaryHandler(WebHandler, http.HttpHandler):
         d['auth'] = self.authToken
         try:
             return method(**d)
-        except repository.OpenError:
+        except errors.OpenError:
             return self._requestAuth()
 
     def _requestAuth(self):
