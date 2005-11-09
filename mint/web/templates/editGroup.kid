@@ -52,8 +52,8 @@ from urllib import quote
                     </table>
                     <br/>
                     <button type="submit">Apply Changes</button>
-                    <button type="submit">Cook This Group</button>
                 </form>
+                <p><button onclick="javascript:window.location='cookGroup?id=${curGroupTrove.getId()}';">Cook This Group</button></p>
             </div>
         </td>
         <td id="right" class="projects">
