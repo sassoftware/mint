@@ -12,6 +12,7 @@ from deps import deps
 import versions
 import re
 import mint_error
+import jobs
 
 class GroupTroveNameError(mint_error.MintError):
     def __str__(self):
@@ -289,7 +290,11 @@ class GroupTrove(database.TableObject):
         return self.server.startCookJob(self.id)
 
     def getJob(self):
-        return self.server.getJobIdForCook(self.id)
+        jobId = self.server.getJobIdForCook(self.id)
+        if jobId:
+            return jobs.Job(self.server, jobId)
+        else:
+            return None
 
     def getLabelPath(self):
         return self.server.getGroupTroveLabelPath(self.getId())

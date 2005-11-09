@@ -349,6 +349,7 @@ class GroupTroveTest(MintRepositoryHelper):
         trvId = self.addTestTrove(groupTrove, "testcase")
         # cook once to ensure we can create a new package
         jobId = groupTrove.startCookJob()
+        assert(jobId == groupTrove.getJob().id)
         job = client.getJob(jobId)
         try:
             groupTrove.startCookJob()

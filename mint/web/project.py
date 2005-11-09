@@ -190,9 +190,11 @@ class ProjectHandler(WebHandler):
         curGroupTrove = self.client.getGroupTrove(id)
         
         recipe = curGroupTrove.getRecipe()
-        jobId = curGroupTrove.getJob()
-        if not jobId:
+        job = curGroupTrove.getJob()
+        if not job:
             jobId = curGroupTrove.startCookJob()
+        else:
+            jobId = job.id
 
         self._write("cookGroup", jobId = jobId, recipe = recipe)
         return apache.OK
