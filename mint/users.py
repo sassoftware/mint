@@ -17,6 +17,7 @@ import smtplib
 import socket
 from string import find
 
+from conary import repository
 from conary.repository import netclient
 from conary.repository.errors import OpenError, UserAlreadyExists, GroupAlreadyExists
 from conary.lib import sha1helper
@@ -224,7 +225,7 @@ class UsersTable(database.KeyedTable):
             authRepo.addAcl(repoLabel, username, None, None, False, False, False)
         except UserAlreadyExists:
             raise UserAlreadyExists
-        except GroupAlreadyExists:
+        except repository.errors.GroupAlreadyExists:
             raise GroupAlreadyExists
 
         if self.cfg.sendNotificationEmails and not active:
