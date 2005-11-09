@@ -30,7 +30,7 @@ class ReleaseTest(MintRepositoryHelper):
         assert(release.getTroveFlavor().freeze() == '1#x86')
         assert(release.getArch() == "x86")
 
-        release.setFiles([("file1", "File Title 1"), ("file2", "File Title 2")])
+        release.setFiles([["file1", "File Title 1"], ["file2", "File Title 2"]])
         assert(release.getFiles() ==\
             [(1, 'file1', 'File Title 1'), (2, 'file2', 'File Title 2')])
 
