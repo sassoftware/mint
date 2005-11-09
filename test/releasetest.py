@@ -214,7 +214,7 @@ class ReleaseTest(MintRepositoryHelper):
         # because the first release is not yet finished, creating a new
         # release before finishing it should kill the first.
         release = client.newRelease(projectId, "Test Release")
-        releaseId = brokenRelease.getId()
+        releaseId = release.getId()
 
         # this if statement might look a little strange, but remember what's
         # actually happening: all unfinished releases are deleted THEN
