@@ -17,6 +17,7 @@ from mint import releasetypes
 from mint import userlevels
 from mint import users
 from mint import jobs
+from mint import jobstatus
 
 from repository import netclient
 import versions
@@ -191,7 +192,7 @@ class ProjectHandler(WebHandler):
         
         recipe = curGroupTrove.getRecipe()
         job = curGroupTrove.getJob()
-        if not job:
+        if not job or (job and job.status not in (jobstatus.WAITING, jobstatus.RUNNING)):
             jobId = curGroupTrove.startCookJob()
         else:
             jobId = job.id
