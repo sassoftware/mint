@@ -60,7 +60,7 @@ class GroupTroveCook(ImageGenerator):
                 checkin.addFiles([groupTrove.recipeName + '.recipe'])
 
             # commit recipe as changeset
-            message = "Auto generated commit from rBuilder online."
+            message = "Auto generated commit from %s." % cfg.name
             checkin.commit(repos, cfg, message)
             ret = cook.cookItem(repos, cfg, groupTrove.recipeName)
             ret = ret[0][0]
