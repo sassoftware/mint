@@ -81,7 +81,6 @@ class JobRunner(threading.Thread):
                 os.chdir(cwd)
             except Exception, e:
                 self.job.setStatus(jobstatus.ERROR, str(e))
-                raise
             else:
                 release.setFiles(imageFilenames)
                 log.info("job %d finished: %s", jobId, str(imageFilenames))
@@ -91,7 +90,6 @@ class JobRunner(threading.Thread):
                 ret = GroupTroveCook(self.client, self.cfg, self.job, None).write()
             except Exception, e:
                 self.job.setStatus(jobstatus.ERROR, str(e))
-                raise
             else:
                 log.info("job %d succeeded: %s" % (jobId, str(ret)))
             
