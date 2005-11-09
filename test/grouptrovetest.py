@@ -71,7 +71,8 @@ class GroupTroveTest(MintRepositoryHelper):
         gTrv = groupTrove.getTrove(trvId)
         assert(gTrv['versionLock'] is False)
 
-        assert(gTrv['trvVersion'] == 'test.localhost@rpl:devel')
+        assert(gTrv['trvVersion'] == '/test.localhost@rpl:devel/1.0-1-1')
+        assert(gTrv['trvLabel'] == 'test.localhost@rpl:devel')
 
         groupTrove.setTroveVersionLocked(trvId, True)
 
@@ -79,6 +80,7 @@ class GroupTroveTest(MintRepositoryHelper):
         assert(gTrv['versionLock'] is True)
 
         assert(gTrv['trvVersion'] == '/test.localhost@rpl:devel/1.0-1-1')
+        assert(gTrv['trvLabel'] == 'test.localhost@rpl:devel')
 
     def testAutoResolve(self):
         client, userId = self.quickMintUser('testuser', 'testpass')
@@ -272,6 +274,9 @@ class GroupTroveTest(MintRepositoryHelper):
         if (groupTrove.getRecipe() != refRecipe):
             self.fail("auto generated recipe did not return expected results")
 
+        groupTrove.setTroveVersionLocked(trvId, True)
+        groupTrove.getRecipe()
+
     def testMultipleAdditions(self):
         client, userId = self.quickMintUser('testuser', 'testpass')
         projectId = self.newProject(client)
@@ -355,13 +360,15 @@ class GroupTroveTest(MintRepositoryHelper):
         trvName, trvVersion, trvFlavor = cookJob.write()
         job.setStatus(jobstatus.FINISHED,"Finished")
         # cook a second time to ensure we follow the checkout codepath
+        # set the version lock while we're at it, to test the getRecipe path
+        groupTrove.setTroveVersionLocked(trvId, True)
         jobId = groupTrove.startCookJob()
         job = client.getJob(jobId)
         cookJob = group_trove.GroupTroveCook(client, client.getCfg(), job, groupTrove.getId())
         trvName, trvVersion, trvFlavor = cookJob.write()
 
         assert(trvName == 'group-test')
-        assert(trvVersion == '/test.localhost@rpl:devel/1.0.0-1-2')
+        assert(trvVersion == '/test.localhost@rpl:devel/1.0.0-2-1')
         assert(trvFlavor == '')
 
         cfg = project.getConaryConfig()

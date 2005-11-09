@@ -198,9 +198,8 @@ class GroupTroveItemsTable(database.KeyedTable):
         ret['versionLock'] = bool(ret['versionLock'])
         ret['useLock'] = bool(ret['useLock'])
         ret['instSetLock'] = bool(ret['instSetLock'])
-        if not ret['versionLock']:
-            parsedVer = versions.VersionFromString(ret['trvVersion'])
-            ret['trvVersion'] = parsedVer.branch().label().asString()
+        parsedVer = versions.VersionFromString(ret['trvVersion'])
+        ret['trvLabel'] = str(parsedVer.branch().label())
 
         flav = deps.ThawDependencySet(ret['trvFlavor'])
         if not (ret['useLock'] or ret['instSetLock']):

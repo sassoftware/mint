@@ -1423,7 +1423,10 @@ class MintServer(object):
         recipe += indent + "r.setLabelPath(%s)\n" % str(recipeLabels).split('[')[1].split(']')[0]
 
         for trv in groupTroveItems:
-            recipe += indent + "r.add('" + trv['trvName'] + "', '" + trv['trvVersion'] + "', '" + trv['trvFlavor'] + "', groupName = '" +trv['subGroup'] +"')\n"
+            if trv['versionLock']:
+                recipe += indent + "r.add('" + trv['trvName'] + "', '" + trv['trvVersion'] + "', '" + trv['trvFlavor'] + "', groupName = '" +trv['subGroup'] +"')\n"
+            else:
+                recipe += indent + "r.add('" + trv['trvName'] + "', '" + trv['trvLabel'] + "', '" + trv['trvFlavor'] + "', groupName = '" +trv['subGroup'] +"')\n"
         return recipe
 
     @typeCheck(int)
@@ -1442,7 +1445,7 @@ class MintServer(object):
         # the rest are sorted alphabetically.
         # this approach is definitely sub-optimal, but has the advantage of
         # consistent results.
-        recipeLabels = list(set([str(versions.Label(x['trvVersion'])) for x in groupTroveItems]))
+        recipeLabels = list(set([x['trvLabel'] for x in groupTroveItems]))
         projectLabels = self.labels.getLabelsForProject(groupTrove['projectId'])[0].keys()
         for label in projectLabels:
             if label in recipeLabels:
