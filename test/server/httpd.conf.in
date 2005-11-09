@@ -81,7 +81,7 @@ PythonPath "['@MINTPATH@', '@CONARYPATH@'] + sys.path"
         AllowOverride None
 
         AddHandler python-program .cnr
-        PythonHandler server.apachehooks
+        PythonHandler conary.server.apachehooks
     </Location>
 </VirtualHost>
 

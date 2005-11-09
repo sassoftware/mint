@@ -4,13 +4,13 @@
 # All Rights Reserved
 #
 import os.path
-
-import checkin
 import tempfile
-import conarycfg
-from repository import netclient
-import versions
-from build import cook
+
+from conary import checkin
+from conary import conarycfg
+from conary.repository import netclient
+from conary import versions
+from conary.build import cook
 
 from imagegen import ImageGenerator
 from mint import projects

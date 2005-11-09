@@ -14,6 +14,8 @@ import tempfile
 import types
 import unittest
 
+from conary.lib import log, util
+
 archivePath = None
 testPath = None
 
@@ -25,13 +27,11 @@ class LogFilter:
         self.ignorelist = []
 
     def clear(self):
-        from lib import log
         self.records = []
         self.ignorelist = []
         log.logger.removeFilter(self)
 
     def filter(self, record):
-        from lib import log
         text = log.formatter.format(record)
         for regex in self.ignorelist:
             if regex.match(text):
@@ -43,11 +43,9 @@ class LogFilter:
         self.ignorelist.append(re.compile(regexp))
 
     def add(self):
-        from lib import log
         log.logger.addFilter(self)
 
     def remove(self):
-        from lib import log
         log.logger.removeFilter(self)
 
     def compareWithOrder(self, records):
@@ -109,7 +107,7 @@ def setup():
         sys.exit(1)
     sys.path.insert(0, os.environ['CONARY_PATH'])
     sys.path.insert(0, os.environ['MINT_PATH'])
-    sys.path.insert(1, os.path.join(os.environ['CONARY_PATH'], 'server'))
+    sys.path.insert(1, os.path.join(os.environ['CONARY_PATH'], 'conary/server'))
     if 'PYTHONPATH' in os.environ:
         os.environ['PYTHONPATH'] = os.pathsep.join((os.environ['CONARY_PATH'],
                                                     os.environ['PYTHONPATH']))
@@ -145,7 +143,7 @@ def setup():
     if parent not in sys.path:
 	sys.path.append(parent)
 
-    from lib import util
+    from conary.lib import util
     sys.excepthook = util.genExcepthook(False)
 
     return path
@@ -200,11 +198,9 @@ class Loader(unittest.TestLoader):
 
 class TestCase(unittest.TestCase):
     def setUp(self):
-        from lib import log
         self._logLevel = log.getVerbosity()
 
     def tearDown(self):
-        from lib import log
         log.setVerbosity(self._logLevel)
 
     def captureOutput(self, fn, *args, **namedArgs):
@@ -310,7 +306,6 @@ class TestCase(unittest.TestCase):
 	self.chownLog = []
 
 def main(*args, **keywords):
-    from lib import util
     sys.excepthook = util.genExcepthook(False)
 
     global _individual
@@ -357,7 +352,6 @@ if __name__ == '__main__':
         sys.path.append(cwd)
     setup()
 
-    from lib import util
     sys.excepthook = util.genExcepthook(False)
 
     debug = False

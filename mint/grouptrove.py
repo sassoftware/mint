@@ -5,14 +5,14 @@
 #
 
 import database
-import sqlite3
-import time
-from deps import deps
-
-import versions
 import re
-import mint_error
+import time
+
+from conary.deps import deps
+from conary import versions
+
 import jobs
+import mint_error
 
 class GroupTroveNameError(mint_error.MintError):
     def __str__(self):

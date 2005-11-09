@@ -4,7 +4,6 @@
 # All rights reserved
 #
 import database
-import sqlite3
 
 class MembershipRequestTable(database.DatabaseTable):
     name = "MembershipRequests"

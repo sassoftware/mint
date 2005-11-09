@@ -21,30 +21,30 @@ from urlparse import urlparse
 from webunit import webunittest
 
 #conary
-import sqlite3
-import branch
-from build import cook
-from build import recipe, use
-import checkin
-import clone
-import conaryclient
-import conarycfg
-import cscmd
-import cvc
-import deps
-import files
-import flavorcfg
-from lib import log
-from lib import sha1helper
-from lib import util
-from lib import openpgpkey
-from lib import openpgpfile
-from local import database
-from repository import netclient, changeset, filecontents
-import repository
-import trove
-import updatecmd
-import versions
+from conary import sqlite3
+from conary import branch
+from conary.build import cook
+from conary.build import recipe, use
+from conary import checkin
+from conary import clone
+from conary import conaryclient
+from conary import conarycfg
+from conary import cscmd
+from conary import cvc
+from conary import deps
+from conary import files
+from conary import flavorcfg
+from conary.lib import log
+from conary.lib import sha1helper
+from conary.lib import util
+from conary.lib import openpgpkey
+from conary.lib import openpgpfile
+from conary.local import database
+from conary.repository import netclient, changeset, filecontents
+from conary import repository
+from conary import trove
+from conary import updatecmd
+from conary import versions
 
 #test
 import recipes
@@ -391,7 +391,7 @@ class ServerCache:
         useDefault = False
         server = os.environ.get(envname, None)
         kw = {}
-        serverDir = os.environ.get('CONARY_PATH') + '/server'
+        serverDir = os.environ.get('CONARY_PATH') + '/conary/server'
         serverClass = ApacheServer
         self.servers[serverIdx] = serverClass(name, server, serverDir, 
                                               reposDir,

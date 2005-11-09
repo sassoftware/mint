@@ -4,7 +4,7 @@
 # All Rights Reserved
 #
 import database
-import versions
+from conary import versions
 
 class CommitsTable(database.DatabaseTable):
     name = "Commits"

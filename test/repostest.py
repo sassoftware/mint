@@ -10,8 +10,8 @@ testsuite.setup()
 from mint_rephelp import MintRepositoryHelper
 import recipes
 
-from repository import netclient
-import versions
+from conary.repository import netclient
+from conary import versions
 
 testRecipe = """
 class TestCase(PackageRecipe):

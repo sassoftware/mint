@@ -6,15 +6,16 @@
 import testsuite
 testsuite.setup()
 
+from conary import versions
+from conary.repository import netclient
+
 from mint_rephelp import MintRepositoryHelper
 from mint import mint_server
 from repostest import testRecipe
-import versions
 from mint import grouptrove
 from mint.database import ItemNotFound
 from mint import userlevels
 from mint.mint_error import PermissionDenied
-from repository import netclient
 from mint.distro import group_trove
 from mint.jobs import DuplicateJob
 from mint import jobstatus

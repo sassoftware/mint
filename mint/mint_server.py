@@ -3,8 +3,8 @@
 #
 # All Rights Reserved
 #
+import hmac
 import re
-import sqlite3
 import sys
 import os
 import time
@@ -12,7 +12,6 @@ import string
 from urlparse import urlparse
 
 import database
-import hmac
 import jobs
 import jobstatus
 import news
@@ -21,7 +20,6 @@ import projects
 import requests
 import releases
 import sessiondb
-import versions
 import users
 import userlevels
 import dbversion
@@ -31,12 +29,14 @@ import grouptrove
 from cache import TroveNamesCache
 from mint_error import PermissionDenied, ReleasePublished, ReleaseMissing, MintError
 from searcher import SearchTermsError
-from repository.errors import TroveNotFound
 
-from repository import netclient
-from repository import shimclient
-from repository.netrepos import netserver
-from deps import deps
+from conary import sqlite3
+from conary import versions
+from conary.repository.errors import TroveNotFound
+from conary.repository import netclient
+from conary.repository import shimclient
+from conary.repository.netrepos import netserver
+from conary.deps import deps
 
 validHost = re.compile('^[a-zA-Z][a-zA-Z0-9\-]*$')
 reservedHosts = ['admin', 'mail', 'mint', 'www', 'web', 'rpath', 'wiki', 'conary', 'lists']

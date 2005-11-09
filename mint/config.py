@@ -8,9 +8,9 @@ import sys
 
 import mint
 
-import conarycfg
-from conarycfg import ConfigFile
-from conarycfg import STRINGDICT, STRINGLIST, BOOLEAN
+from conary import conarycfg
+from conary.conarycfg import ConfigFile
+from conary.conarycfg import STRINGDICT, STRINGLIST, BOOLEAN
 
 from urlparse import urlsplit
 

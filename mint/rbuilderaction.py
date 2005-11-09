@@ -9,9 +9,8 @@ import os, sys, time
 import traceback
 import xmlrpclib
 
-import conary
-from lib import options
-import versions
+from conary.lib import options
+from conary import versions
 
 class UnknownException(Exception):
     def __str__(self):

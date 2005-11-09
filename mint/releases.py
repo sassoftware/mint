@@ -11,11 +11,11 @@ import database
 import jobs
 import releasetypes
 from mint_error import MintError 
-
-import versions
-from deps import deps
-
 from releasedata import RDT_STRING, RDT_BOOL, RDT_INT
+
+from conary import versions
+from conary.deps import deps
+
 
 class TroveNotSet(MintError):
     def __str__(self):
@@ -117,6 +117,7 @@ class ReleasesTable(database.KeyedTable):
     def new(self, **kwargs):
         projectId = kwargs['projectId']
         cu = self.db.cursor()
+         
         cu.execute("DELETE FROM Releases WHERE projectId=? AND troveLastChanged IS NULL", projectId)
         self.db.commit()
         return database.KeyedTable.new(self, **kwargs)

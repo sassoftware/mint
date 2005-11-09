@@ -17,10 +17,9 @@ import smtplib
 import socket
 from string import find
 
-from repository import netclient
-from repository.repository import OpenError
-import repository.netrepos.netauth
-from lib import sha1helper
+from conary.repository import netclient
+from conary.repository.errors import OpenError, UserAlreadyExists, GroupAlreadyExists
+from conary.lib import sha1helper
 
 from mint_error import MintError
 from mint_error import PermissionDenied
@@ -28,7 +27,7 @@ import database
 import userlevels
 import searcher
 import userlisting
-import sqlite3
+from conary import sqlite3
 
 class MailError(MintError):
     def __str__(self):
@@ -223,9 +222,9 @@ class UsersTable(database.KeyedTable):
         try: 
             authRepo.addUser(repoLabel, username, password)
             authRepo.addAcl(repoLabel, username, None, None, False, False, False)
-        except repository.netrepos.netauth.UserAlreadyExists:
+        except UserAlreadyExists:
             raise UserAlreadyExists
-        except repository.netrepos.netauth.GroupAlreadyExists:
+        except GroupAlreadyExists:
             raise GroupAlreadyExists
 
         if self.cfg.sendNotificationEmails and not active:

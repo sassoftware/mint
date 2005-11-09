@@ -6,10 +6,10 @@
 import os
 import testsuite
 import rephelp
-import sqlite3
 
-import versions
-from lib import openpgpkey
+from conary import sqlite3
+from conary import versions
+from conary.lib import openpgpkey
 
 from mint import config
 from mint import shimclient

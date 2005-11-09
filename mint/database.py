@@ -4,7 +4,7 @@
 # All Rights Reserved
 #
 import sys, time
-import sqlite3
+from conary import sqlite3
 
 from mint_error import MintError
 

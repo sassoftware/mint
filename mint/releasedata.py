@@ -5,7 +5,6 @@
 #
 
 import database
-import sqlite3
 
 (RDT_STRING,
      RDT_BOOL,

@@ -8,8 +8,9 @@ import sys
 import xmlrpclib
 import time
 
-from repository import repository
-from repository.netclient import UserNotFound
+from conary.repository import repository
+from conary.repository.netclient import UserNotFound
+from conary.deps import deps
 
 import database
 import jobs
@@ -20,7 +21,6 @@ import grouptrove
 from mint_error import MintError, UnknownException, PermissionDenied, ReleasePublished, ReleaseMissing
 from searcher import SearchTermsError
 
-from deps import deps
 
 class MintClient:
     def __init__(self, server):

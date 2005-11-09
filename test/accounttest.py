@@ -11,7 +11,7 @@ from mint import userlevels
 from mint.mint_error import PermissionDenied
 from mint.users import LastOwner, UserInduction, MailError
 from mint.database import DuplicateItem
-from repository.netclient import UserNotFound
+from conary.repository.netclient import UserNotFound
 
 class AccountTest(MintRepositoryHelper):
 
@@ -33,6 +33,9 @@ class AccountTest(MintRepositoryHelper):
         return cu.fetchone()[0]
 
     def testBasicAttributes(self):
+        from conary.lib import epdb
+        epdb.st()
+
         client, userId = self.quickMintUser("testuser","testpass")
         user = client.getUser(userId)
 
