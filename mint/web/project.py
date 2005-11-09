@@ -258,6 +258,9 @@ class ProjectHandler(WebHandler):
             archMap = {}
             for v, flavors in reversed(sorted(leaves[troveName].items())):
                 for f in flavors:
+                    # skip broken groups that don't have an instruction set
+                    if deps.DEP_CLASS_IS not in f.members:
+                        continue
                     arch = f.members[deps.DEP_CLASS_IS].members.keys()[0]
 
                     l = archMap.setdefault(arch, [])
