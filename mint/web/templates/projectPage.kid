@@ -46,6 +46,18 @@ from mint.mint import upstream
 
 
                             <h2>${project.getName()}</h2>
+
+                            <p class="help" py:if="not commits">
+                                This is a fledgling project. The developers of this project
+                                have not yet committed software into the project's repository.
+                                To give the project's developers time to get started before
+                                becoming fully visible to the rest of the rBuilder Online
+                                community, fledgling projects do not appear on "Browse Projects" 
+                                pages (but will appear in search results). When software has been 
+                                committed into this project's repository, it will no longer be
+                                considered fledgling, and will appear on "Browse Projects" pages.
+                            </p>
+
                             <h3 py:if="project.getProjectUrl()">Project Home Page &#160;</h3>
                             <p py:if="project.getProjectUrl()"><a href="${project.getProjectUrl()}" py:content="project.getProjectUrl()" />
                             </p>
