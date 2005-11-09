@@ -117,7 +117,10 @@ from mint import userlevels
               </thead>
               <tbody class="group-builder">
                 <tr></tr>
-                <tr py:for="item in groupTrove.listTroves()"><td></td><td>${item['trvName']}</td><td>${item['trvVersion']}</td><td><a href="${groupProject.getUrl()}deleteGroupTrove?id=${groupTrove.id};troveId=${item['groupTroveItemId']};referer=${quote(req.unparsed_uri)}">X</a></td></tr>
+                <tr py:for="item in groupTrove.listTroves()"><td></td><td>${item['trvName']}</td>
+                    <td py:if="item['versionLock']">${item['trvVersion']}</td>
+                    <td py:if="not item['versionLock']">${item['trvLabel']}</td>
+                    <td><a href="${groupProject.getUrl()}deleteGroupTrove?id=${groupTrove.id};troveId=${item['groupTroveItemId']};referer=${quote(req.unparsed_uri)}">X</a></td></tr>
                 <tr class="groupcook">
                     <td colspan="3" style="text-align: center; padding: 1em;">
                         <a class="option" style="display: inline;" href="${groupProject.getUrl()}/cookGroup?id=${groupTrove.id}">Cook This Group</a>
