@@ -22,8 +22,13 @@ class CommitsTable(database.DatabaseTable):
     def new(self, projectId, timestamp, troveName, troveVersion, userId):
         cu = self.db.cursor()
 
-        cu.execute("INSERT INTO Commits VALUES (?, ?, ?, ?, ?)",
-            projectId, timestamp, troveName, troveVersion, userId)
+        cu.execute("BEGIN")
+        try:
+            cu.execute("INSERT INTO Commits VALUES (?, ?, ?, ?, ?)",
+                projectId, timestamp, troveName, troveVersion, userId)
+        except:
+            self.db.rollback()
+            raise
         self.db.commit()
 
     def getCommitsByProject(self, projectId, limit = 10):

@@ -50,6 +50,7 @@ class SessionsTable(DatabaseTable):
 
     def delete(self, sid):
         cu = self.db.cursor()
+        cu.execute("BEGIN")
         cu.execute("DELETE FROM Sessions WHERE sid=?", sid)
         self.db.commit()
 
@@ -58,9 +59,15 @@ class SessionsTable(DatabaseTable):
         # separate table fields, but instead encoded as a pickle object.
         cu  = self.db.cursor()
 
-        cu.execute("SELECT sid, data FROM Sessions")
-        for r in cu.fetchall():
-            d = cPickle.loads(r[1])
-            if (time.time() - d["_accessed"]) > d["_timeout"]:
-                cu.execute("DELETE FROM Sessions WHERE sid=?", r[0])
-        self.db.commit()
+        cu.execute("BEGIN")
+        try:
+            cu.execute("SELECT sid, data FROM Sessions")
+            for r in cu.fetchall():
+                d = cPickle.loads(r[1])
+                if (time.time() - d["_accessed"]) > d["_timeout"]:
+                    cu.execute("DELETE FROM Sessions WHERE sid=?", r[0])
+        except:
+            self.db.rollback()
+            raise
+        else:
+            self.db.commit()
