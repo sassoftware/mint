@@ -157,6 +157,27 @@ function processGetReleaseStatus(xml) {
     }
 }
 
+var tickerId;
+var statusId;
+function processGetCookStatus(xml) {
+    el = document.getElementById("jobStatus");
+    var status = xml.getElementsByTagName("int")[0].firstChild.data;
+
+    var statusText = xml.getElementsByTagName("string")[0];
+    if(!statusText.firstChild) {
+        statusText = "Finished";
+        status = STATUS_FINISHED;
+    } else {
+        statusText = statusText.firstChild.nodeValue;
+    }
+    if(status == STATUS_FINISHED) {
+        clearTimeout(tickerId);
+        clearTimeout(statusId);
+    }
+    el.replaceChild(document.createTextNode(statusText), el.firstChild);
+}
+
+
 function processGetTroveList(xml) {
     sel = document.getElementById("trove");
 
@@ -186,6 +207,16 @@ function getReleaseStatus(releaseId) {
 
     // restart the timeout to refresh every 1 seconds
     setTimeout("getReleaseStatus(" + releaseId + ")", 5000);
+}
+
+function getCookStatus(jobId) {
+    var req = new XmlRpcRequest("/xmlrpc", "getJobStatus");
+    req.setAuth(getCookieValue("pysid"));
+    req.setHandler(processGetCookStatus);
+    req.send(jobId);
+
+    statusId = setTimeout("getCookStatus(" + jobId + ")", 500);
+    tickerId = setTimeout("ticker()", 200);
 }
 
 function getTroveList(projectId) {

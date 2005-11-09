@@ -15,7 +15,7 @@
         <a href="#">Group Trove Builder</a>
     </div>
 
-    <body>
+    <body onload="getCookStatus(${jobId});">
         <td id="left" class="side">
             <div class="pad">
                 ${projectResourcesMenu()}
@@ -25,15 +25,12 @@
         </td>
         <td id="main">
             <div class="pad">
-                <h1>Cooking Group Trove</h1>
-
-
-                <h2>Currently In Progress</h2>
-
-                <pre>${XML(recipe.replace('\n', '&lt;br/&gt;'))}</pre>
-
-                <pre>${repr(ret)}</pre>
+                <h1 id="pleaseWait">Cooking Group Trove</h1>
+                <h2>Progress: <span id="jobStatus"> </span></h2>
+ 
+                <pre style="padding: 1em; border: 1px solid #dddddd; background: #efefef; margin: 1em;">${XML(recipe.replace('\n', '&lt;br/&gt;'))}</pre>
                 
+                <p>When the group has finished cooking, click on Releases on the left and pick ${groupTrove.recipeName} to create a release.</p>
             </div>
         </td>
         <td id="right" class="projects">

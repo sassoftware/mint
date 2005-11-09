@@ -45,7 +45,8 @@ function XmlRpcRequest(url, method)
                 }
             }
             else {
-                alert("There was a problem processing the XML data:\n" + req.statusText);
+                // don't do this, because we could spam the user with dialog boxes.
+                // alert("There was a problem processing the XML data:\n" + req.statusText);
             }
         }
     }

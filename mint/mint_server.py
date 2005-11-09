@@ -1289,6 +1289,21 @@ class MintServer(object):
         else:
             return 0
 
+    @typeCheck(int)
+    @requiresAuth
+    @private
+    def getJobIdForCook(self, groupTroveId):
+        self._filterReleaseAccess(groupTroveId)
+        cu = self.db.cursor()
+
+        cu.execute("SELECT jobId FROM Jobs WHERE groupTroveId=?", groupTroveId)
+        r = cu.fetchone()
+        if r:
+            return r[0]
+        else:
+            return 0
+
+
     @typeCheck(int, int, str)
     @requiresAuth
     @private
@@ -1370,6 +1385,7 @@ class MintServer(object):
             troveDict[label] = troves
         return troveDict
 
+    # XXX refactor to getJobStatus instead of two functions
     @typeCheck(int)
     @requiresAuth
     def getReleaseStatus(self, releaseId):
@@ -1385,6 +1401,23 @@ class MintServer(object):
         else:
             return {'status':  job.getStatus(),
                     'message': job.getStatusMessage()}
+
+    @typeCheck(int)
+    @requiresAuth
+    def getJobStatus(self, jobId):
+        self._filterJobAccess(jobId)
+        self._allowPrivate = True
+
+        job = jobs.Job(self, jobId)
+
+        if not job:
+            return {'status': jobstatus.NOJOB,
+                    'message': jobstatus.statusNames[jobstatus.NOJOB]}
+        else:
+            return {'status':  job.getStatus(),
+                    'message': job.getStatusMessage()}
+
+
 
     # session management
     @private
