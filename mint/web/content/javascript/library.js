@@ -205,8 +205,7 @@ function getReleaseStatus(releaseId) {
     req.setHandler(processGetReleaseStatus);
     req.send(releaseId);
 
-    // restart the timeout to refresh every 1 seconds
-    setTimeout("getReleaseStatus(" + releaseId + ")", 5000);
+    setTimeout("getReleaseStatus(" + releaseId + ")", 500);
 }
 
 function getCookStatus(jobId) {

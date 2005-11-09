@@ -14,7 +14,7 @@ from mint.mint import upstream
     <?python
     isOwner = (userLevel == userlevels.OWNER or auth.admin)
     if isOwner:
-        onload = "setTimeout('getReleaseStatus(" + str(release.getId()) + ")', 1000);"
+        onload = "getReleaseStatus(" + str(release.getId()) + ");"
     else:
         onload = None
 
