@@ -1667,13 +1667,13 @@ class MintServer(object):
             cu.execute("SELECT tbl_name FROM sqlite_master WHERE type = 'table'")
             self.db.tables = [ x[0] for x in cu.fetchall() ]
         elif cfg.dbDriver == "sqlite":
-            from dbstore import sqlite_drv
+            from conary.dbstore import sqlite_drv
             self.db = sqlite_drv.Database(cfg.dbPath)
             self.db.connect()
         elif cfg.dbDriver == "mysql":
             global dbConnection 
             if not dbConnection:
-                from dbstore import mysql_drv
+                from conary.dbstore import mysql_drv
                 self.db = mysql_drv.Database(cfg.dbPath)
                 self.db.connect()
                 dbConnection = self.db
