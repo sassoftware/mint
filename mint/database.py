@@ -223,6 +223,7 @@ class KeyedTable(DatabaseTable):
         try:
             cu.execute(*[stmt] + values)
         except sqlite3.ProgrammingError, e:
+            self.db.rollback()
             if e.args[0].startswith("column") and e.args[0].endswith("not unique"):
                 raise DuplicateItem(self.name)
             else:
