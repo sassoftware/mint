@@ -9,7 +9,7 @@ from mod_python import apache
 
 from mint import mint_error
 from webhandler import WebHandler
-from web.fields import strFields, intFields, listFields, boolFields
+from conary.web.fields import strFields, intFields, listFields, boolFields
 
 class AdminHandler(WebHandler):
     def handle(self, context):

@@ -21,9 +21,9 @@
         <table style="width: 100%;">
             <tr py:for="pathId, path, fileId, version, fObj in fList">
                 <?python
-                    from lib import sha1helper
+                    from conary.lib import sha1helper
                     from urllib import quote
-                    import files
+                    from conary import files
                     import os
 
                     url = "getFile?path=%s;pathId=%s;fileId=%s;fileV=%s" % (os.path.basename(path),
