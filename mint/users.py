@@ -19,7 +19,6 @@ from string import find
 
 from conary import repository
 from conary.repository import netclient
-from conary.repository.errors import OpenError, UserAlreadyExists, GroupAlreadyExists
 from conary.lib import sha1helper
 
 from mint_error import MintError
@@ -153,7 +152,7 @@ class UsersTable(database.KeyedTable):
             if checkRepo:
                 try:
                     groups = self._getUserGroups(authToken)
-                except OpenError:
+                except repository.errors.OpenError:
                     auth = noAuth
 
                 if type(groups) != list:
@@ -223,7 +222,7 @@ class UsersTable(database.KeyedTable):
         try: 
             authRepo.addUser(repoLabel, username, password)
             authRepo.addAcl(repoLabel, username, None, None, False, False, False)
-        except UserAlreadyExists:
+        except repository.errors.UserAlreadyExists:
             raise UserAlreadyExists
         except repository.errors.GroupAlreadyExists:
             raise GroupAlreadyExists
