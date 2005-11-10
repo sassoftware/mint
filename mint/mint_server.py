@@ -105,7 +105,11 @@ def checkParam(param, paramType):
                 if type(p_type) is tuple:
                     match = match or checkParam(param, p_type)
                 else:
-                    match = match or (type(param) == p_type)
+                    if p_type in (int, long):
+                        # allow ints and longs to be interchangeable
+                        match = match or type(param) in (int, long)
+                    else:
+                        match = match or (type(param) == p_type)
             return match
         else:
             # paramType[0] is the type of the container.
@@ -123,6 +127,9 @@ def checkParam(param, paramType):
             return True
     else:
         # the paramType IS the type
+        if paramType in (int, long):
+            # make ints interchangeable with longs
+            return type(param) in (int, long)
         return type(param) == paramType
 
 def typeCheck(*paramTypes):
