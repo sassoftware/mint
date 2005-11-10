@@ -1253,7 +1253,7 @@ class MintServer(object):
     def getJobIds(self):
         cu = self.db.cursor()
 
-        cu.execute("SELECT jobId FROM Jobs")
+        cu.execute("SELECT jobId FROM Jobs ORDER BY timeStarted")
 
         return [x[0] for x in cu.fetchall()]
 
@@ -1382,11 +1382,13 @@ class MintServer(object):
         job = release.getJob()
 
         if not job:
-            return {'status': jobstatus.NOJOB,
-                    'message': jobstatus.statusNames[jobstatus.NOJOB]}
+            return {'status'  : jobstatus.NOJOB,
+                    'message' : jobstatus.statusNames[jobstatus.NOJOB],
+                    'queueLen': 0}
         else:
-            return {'status':  job.getStatus(),
-                    'message': job.getStatusMessage()}
+            return {'status'  : job.getStatus(),
+                    'message' : job.getStatusMessage(),
+                    'queueLen': self._getJobQueueLength(job.getId())}
 
     @typeCheck(int)
     @requiresAuth
@@ -1397,12 +1399,20 @@ class MintServer(object):
         job = jobs.Job(self, jobId)
 
         if not job:
-            return {'status': jobstatus.NOJOB,
-                    'message': jobstatus.statusNames[jobstatus.NOJOB]}
+            return {'status'  : jobstatus.NOJOB,
+                    'message' : jobstatus.statusNames[jobstatus.NOJOB],
+                    'queueLen': 0}
         else:
-            return {'status':  job.getStatus(),
-                    'message': job.getStatusMessage()}
+            return {'status'  : job.getStatus(),
+                    'message' : job.getStatusMessage(),
+                    'queueLen': self._getJobQueueLength(jobId)}
 
+    def _getJobQueueLength(self, jobId):
+        self._filterJobAccess(jobId)
+        self._allowPrivate = True
+        cu = self.db.cursor()
+        cu.execute("SELECT COUNT(*) FROM Jobs WHERE timeStarted < (SELECT timeStarted FROM Jobs WHERE jobId = ?) AND status = 0", jobId)
+        return cu.fetchone()[0]
 
 
     # session management

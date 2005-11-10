@@ -231,7 +231,7 @@ class ReleaseTest(MintRepositoryHelper):
         release = client.newRelease(projectId, "Test Release")
         releaseId = release.getId()
 
-        if client.server.getReleaseStatus(releaseId) != {'status': 5, 'message': 'No Job'}:
+        if client.server.getReleaseStatus(releaseId) != {'status': 5, 'message': 'No Job', 'queueLen': 0}:
             self.fail("getReleaseStatus returned unknown values")
 
     def testReleaseList(self):

@@ -12,6 +12,9 @@ from mint import jobs
 from mint import releasetypes
 from mint.distro import stub_image
 
+from repostest import testRecipe
+from conary import versions
+
 class JobsTest(MintRepositoryHelper):
     def testJobs(self):
         client, userId = self.quickMintUser("testuser", "testpass")
@@ -72,6 +75,49 @@ class JobsTest(MintRepositoryHelper):
             self.fail("Should have failed to find file")
         except jobs.FileMissing:
             pass
+
+    def testJobQueue(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        projectId = client.newProject("Foo", "foo", "rpath.org")
+
+        release = client.newRelease(projectId, "Test Release")
+        release.setImageType(releasetypes.STUB_IMAGE)
+        release.setDataValue('stringArg', 'Hello World!')
+
+        job = client.startImageJob(release.getId())
+
+        assert(client.server.getJobStatus(job.getId())['queueLen'] == 0)
+        assert(client.server.getReleaseStatus(release.getId())['queueLen'] == 0)
+
+        projectId = self.newProject(client)
+
+        project = client.getProject(projectId)
+
+        groupTrove = client.createGroupTrove(projectId, 'group-test', '1.0.0',
+                                             'No Description', False)
+        groupTroveId = groupTrove.getId()
+
+        self.makeSourceTrove("testcase", testRecipe)
+        self.cookFromRepository("testcase",
+            versions.Label("test.localhost@rpl:devel"),
+            ignoreDeps = True)
+
+        trvName = 'testtrove'
+        trvVersion = '/test.localhost@rpl:devel/1.0-1-1'
+        trvFlavor = '1#x86|5#use:~!kernel.debug:~kernel.smp'
+        subGroup = ''
+
+        trvid = groupTrove.addTrove(trvName, trvVersion, trvFlavor,
+                                    subGroup, False, False, False)
+        cookJobId = groupTrove.startCookJob()
+        assert(client.server.getJobStatus(cookJobId)['queueLen'] == 1)
+
+        job.setStatus(jobstatus.FINISHED, 'Finished')
+        assert(client.server.getJobStatus(cookJobId)['queueLen'] == 0)
+
+        job = client.startImageJob(release.getId())
+        assert(client.server.getJobStatus(cookJobId)['queueLen'] == 0)
+        assert(client.server.getJobStatus(job.getId())['queueLen'] == 1)
 
 if __name__ == "__main__":
     testsuite.main()
