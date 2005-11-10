@@ -11,7 +11,7 @@ from mint import userlevels
 from mint.mint_server import deriveBaseFunc, checkParam, typeCheck, ParameterError
 
 SKIP_TYPE_CHECK = ('callWrapper', 'loadSession', 'saveSession', 'deleteSession', 'cleanupSessions')
-SKIP_PRIVATE = ('callWrapper', 'getReleaseStatus', 'getGroupTroves', 'getJobStatus', 'addGroupTroveItem')
+SKIP_PRIVATE = ('callWrapper', 'getReleaseStatus', 'getGroupTroves', 'getJobStatus', 'addGroupTroveItem', 'delGroupTroveItem')
 
 class XmlInterfaceTest(MintRepositoryHelper):
     def _getMethods(self, skipSet):
