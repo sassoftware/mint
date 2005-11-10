@@ -57,4 +57,5 @@ $scriptdir/makestamp.py --releasestr="$distroname" --arch="$arch" --discNum="1" 
 
 rm -rf $anacondadir $instroot $instrootgr
 rm -f $topdir/$subdir/changesets/*.ccs
+chmod 0664 $topdir/isolinux/isolinux.*
 mv $topdir/$subdir $topdir/PRODUCTNAME
