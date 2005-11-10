@@ -32,7 +32,7 @@ class MintConfig(ConfigFile):
         'reposPath'         : '/srv/mint/repos/',
         'reposContentsPath' : None,
         'dbPath'            : '/srv/mint/data/db',
-        'dbDriver'          : 'native_sqlite',
+        'dbDriver'          : 'sqlite',
         'imagesPath'        : '/srv/mint/images/',
         'logPath'           : '/srv/mint/logs/',
         'siteDomainName'    : 'rpath.com',
