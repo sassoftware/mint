@@ -14,7 +14,6 @@ import subprocess
 from imagegen import ImageGenerator
 
 # conary imports
-from conary import conary
 from conary import conaryclient
 from conary import deps
 from conary import flavorcfg

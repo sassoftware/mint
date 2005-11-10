@@ -17,11 +17,9 @@ import threading
 from xmlrpclib import ProtocolError
 from optparse import OptionParser
 
-import conary
-import conarycfg
-import conaryclient
-from conarycfg import ConfigFile, ConaryConfiguration
-from conarycfg import STRINGLIST, BOOLEAN
+from conary import conaryclient
+from conary.conarycfg import ConfigFile, ConaryConfiguration
+from conary.conarycfg import STRINGLIST, BOOLEAN
 from conary.deps import deps
 from conary.lib import log, util
 
