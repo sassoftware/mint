@@ -51,6 +51,12 @@ class ParameterError(MintError):
     def __init__(self, reason = "A required Parameter had an incorrect type"):
         self.reason = reason
 
+class GroupTroveEmpty(MintError):
+    def __str__(self):
+        return self.reason
+    def __init__(self, reason = "Group Trove cannot be empty"):
+        self.reason = reason
+
 def deriveBaseFunc(func):
     r = func
     done = 0
@@ -1197,6 +1203,9 @@ class MintServer(object):
         projectId = self.groupTroves.getProjectId(groupTroveId)
         self._filterProjectAccess(projectId)
         self._requireProjectOwner(projectId)
+
+        if not self.listGroupTroveItemsByGroupTrove(groupTroveId):
+            raise GroupTroveEmpty
 
         cu = self.db.cursor()
         cu.execute("SELECT jobId, status FROM Jobs WHERE groupTroveId=? AND releaseId IS NULL",

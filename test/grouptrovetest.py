@@ -406,5 +406,32 @@ class GroupTroveTest(MintRepositoryHelper):
         groupTroves = client.server.getGroupTroves(projectId)
         assert(groupTroves == {'test.localhost@rpl:devel': ['group-test']})
 
+    def testEmptyCook(self):
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client)
+
+        project = client.getProject(projectId)
+
+        groupTrove = self.createTestGroupTrove(client, projectId)
+        groupTroveId = groupTrove.getId()
+
+        self.makeSourceTrove("testcase", testRecipe)
+        self.cookFromRepository("testcase",
+            versions.Label("test.localhost@rpl:devel"),
+            ignoreDeps = True)
+
+        assert(len(groupTrove.listTroves()) == 0)
+
+        try:
+            groupTrove.startCookJob()
+        except mint_server.GroupTroveEmpty:
+            pass
+        else:
+            self.fail("allowed to start an empty cook job")
+
+        trvId = self.addTestTrove(groupTrove, "testcase")
+
+        assert(len(groupTrove.listTroves()) == 1)
+
 if __name__ == "__main__":
     testsuite.main()
