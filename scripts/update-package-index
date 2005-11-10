@@ -11,8 +11,8 @@ import versions
 from mint import config
 from mint import pkgindex
 from mint import projects
-from repository import netclient
-from repository import repository
+from conary.repository import netclient
+from conary.repository import repository
 
 cfgPath = "/srv/mint/mint.conf"
 

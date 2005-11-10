@@ -22,9 +22,8 @@ import conarycfg
 import conaryclient
 from conarycfg import ConfigFile, ConaryConfiguration
 from conarycfg import STRINGLIST, BOOLEAN
-from deps import deps
-from lib import log
-from lib import util
+from conary.deps import deps
+from conary.lib import log, util
 
 # to run from CVS
 sys.path.append('..')

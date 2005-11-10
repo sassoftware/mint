@@ -9,7 +9,7 @@ import sys
 import os
 
 import conary
-from lib import util
+from conary.lib import util
 sys.excepthook = util.genExcepthook()
 
 isoblocksize = 2048
