@@ -222,7 +222,7 @@ class MintApp(WebHandler):
         self.SITE = self.siteHost + self.basePath
         self.isOwner = self.userLevel == userlevels.OWNER or self.auth.admin
 
-        if self.session.has_key('groupTroveId'):
+        if self.session.has_key('groupTroveId') and self.auth.authorized:
             self.groupTrove = self.client.getGroupTrove(self.session['groupTroveId'])
             self.groupProject = self.client.getProject(self.groupTrove.projectId)
         else:
