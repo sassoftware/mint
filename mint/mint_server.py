@@ -698,7 +698,6 @@ class MintServer(object):
         cu.execute("""UPDATE ProjectUsers SET level=? WHERE userId=? and 
             projectId=?""", level, userId, projectId)
 
-        self.db.commit()
         self._notifyUser('Changed', user, project, level)
 
     @typeCheck(int)
@@ -820,7 +819,6 @@ class MintServer(object):
             raise PermissionDenied
         repoLabel = self.cfg.authRepoMap.keys()[0]
         username = self.users.getUsername(userId)
-        cu = self.db.cursor()
         authRepo = self._getAuthRepo()
 
         #Handle projects
@@ -830,13 +828,19 @@ class MintServer(object):
 
         authRepo.deleteUserByName(repoLabel, username)
 
-        cu.execute("UPDATE Projects SET creatorId=NULL WHERE creatorId=?", userId)
-        cu.execute("UPDATE Jobs SET userId=NULL WHERE userId=?", userId)
-        cu.execute("DELETE FROM ProjectUsers WHERE userId=?", userId)
-        cu.execute("DELETE FROM Confirmations WHERE userId=?", userId)
-        cu.execute("DELETE FROM Users WHERE userId=?", userId)
-
-        self.db.commit()
+        cu = self.db.cursor()
+        self.db.transaction()
+        try:
+            cu.execute("UPDATE Projects SET creatorId=NULL WHERE creatorId=?", userId)
+            cu.execute("UPDATE Jobs SET userId=NULL WHERE userId=?", userId)
+            cu.execute("DELETE FROM ProjectUsers WHERE userId=?", userId)
+            cu.execute("DELETE FROM Confirmations WHERE userId=?", userId)
+            cu.execute("DELETE FROM Users WHERE userId=?", userId)
+        except:
+            self.db.rollback()
+            raise
+        else:
+            self.db.commit()
 
     @typeCheck(str)
     @private
@@ -1112,10 +1116,7 @@ class MintServer(object):
             raise ReleaseMissing()
         if self.releases.getPublished(releaseId):
             raise ReleasePublished()
-        cu = self.db.cursor()
-        cu.execute("UPDATE Releases SET description=? WHERE releaseId=?",
-                   desc, releaseId)
-        self.db.commit()
+        self.releases.update(releaseId, description = desc)
         return True
 
     @typeCheck(int)
@@ -1125,7 +1126,6 @@ class MintServer(object):
         cu = self.db.cursor()
         cu.execute("UPDATE Releases SET downloads = downloads + 1 WHERE releaseId=?",
             releaseId)
-        self.db.commit()
         return True
 
     @typeCheck(int, bool)
@@ -1138,10 +1138,7 @@ class MintServer(object):
         if self.releases.getPublished(releaseId):
             raise ReleasePublished()
         timeStamp = time.time()
-        cu = self.db.cursor()
-        cu.execute("UPDATE Releases SET published=?, timePublished=? WHERE releaseId=?",
-            int(published), timeStamp, releaseId)
-        self.db.commit()
+        self.releases.update(releaseId, published = int(published), timePublished = timeStamp) 
         return True
 
     @typeCheck(int, int)
@@ -1153,10 +1150,7 @@ class MintServer(object):
             raise ReleaseMissing()
         if self.releases.getPublished(releaseId):
             raise ReleasePublished()
-        cu = self.db.cursor()
-        cu.execute("UPDATE Releases SET imageType=? WHERE releaseId=?",
-                   imageType, releaseId)
-        self.db.commit()
+        self.releases.update(releaseId, imageType = imageType)
         return True
 
     @typeCheck(int)
@@ -1168,34 +1162,25 @@ class MintServer(object):
             raise ReleaseMissing()
         if self.releases.getPublished(releaseId):
             raise ReleasePublished()
+            
         cu = self.db.cursor()
-
         cu.execute("SELECT jobId, status FROM Jobs WHERE releaseId=? AND groupTroveId IS NULL",
                    releaseId)
         r = cu.fetchall()
         if len(r) == 0:
-            cu.execute("""INSERT INTO Jobs
-                                   (releaseId, userId, status, statusMessage, timeStarted, timeFinished)
-                            VALUES (?, ?, ?, ?, ?, 0)""",
-                       releaseId, self.auth.userId, jobstatus.WAITING,
-                       jobstatus.statusNames[jobstatus.WAITING],
-                       time.time())
-            if self.db.type == "native_sqlite":
-                retval = cu.lastrowid
-            else:
-                retval = cu._cursor.lastrowid
+            retval = self.jobs.new(releaseId = releaseId, userId = self.auth.userId,
+                status = jobstatus.WAITING, statusMessage = jobstatus.statusNames[jobstatus.WAITING],
+                timeStarted = time.time(), timeFinished = 0)
         else:
             jobId, status = r[0]
             if status in (jobstatus.WAITING, jobstatus.RUNNING):
                 raise jobs.DuplicateJob
             else:
-                cu.execute("""UPDATE Jobs SET status=?, statusMessage='Waiting',
-                                              timeStarted=?, timeFinished=0
-                              WHERE jobId=?""", jobstatus.WAITING, time.time(),
-                                                jobId)
+                self.jobs.update(jobId, status = jobstatus.WAITING,
+                    statusMessage = "Waiting for job server",
+                    timeStarted = time.time(), timeFinished = 0)
                 retval = jobId
 
-        self.db.commit()
         return retval
 
     @typeCheck(int)
@@ -1211,28 +1196,18 @@ class MintServer(object):
                    groupTroveId)
         r = cu.fetchall()
         if len(r) == 0:
-            cu.execute("""INSERT INTO Jobs 
-                                   (groupTroveId, userId, status, statusMessage, timeStarted, timeFinished) 
-                            VALUES (?, ?, ?, ?, ?, 0)""",
-                       groupTroveId, self.auth.userId, jobstatus.WAITING,
-                       jobstatus.statusNames[jobstatus.WAITING],
-                       time.time())
-            if self.db.type == "native_sqlite":
-                retval = cu.lastrowid
-            else:
-                retval = cu._cursor.lastrowid
+            retval = self.jobs.new(groupTroveId = groupTroveId, userId = self.auth.userId,
+                status = jobstatus.WAITING, statusMessage = jobstatus.statusNames[jobstatus.WAITING],
+                timeStarted = time.time(), timeFinished = 0)
         else:
             jobId, status = r[0]
             if status in (jobstatus.WAITING, jobstatus.RUNNING):
                 raise jobs.DuplicateJob
             else:
-                cu.execute("""UPDATE Jobs SET status=?, statusMessage='Waiting',
-                                              timeStarted=?, timeFinished=0
-                              WHERE jobId=?""", jobstatus.WAITING, time.time(),
-                                                jobId)
+                self.jobs.update(jobId, status = jobstatus.WAITING,
+                    statusMessage = "Waiting for job server",
+                    timeStarted = time.time(), timeFinished = 0)
                 retval = jobId
-
-        self.db.commit()
         return retval
 
     @typeCheck(int)
@@ -1309,19 +1284,10 @@ class MintServer(object):
     @private
     def setJobStatus(self, jobId, newStatus, statusMessage):
         self._filterJobAccess(jobId)
-        cu = self.db.cursor()
-        cu.execute("BEGIN")
-        try:
-            cu.execute("UPDATE Jobs SET status=?, statusMessage=? WHERE jobId=?",
-                       newStatus, statusMessage, jobId)
-            if newStatus == jobstatus.FINISHED:
-                cu.execute("UPDATE Jobs SET timeFinished=? WHERE jobId=?",
-                           time.time(), jobId)
-        except:
-            self.db.rollback()
-            raise
+        if newStatus == jobstatus.FINISHED:
+            self.jobs.update(jobId, status = newStatus, statusMessage = statusMessage, timeFinished = time.time())
         else:
-            self.db.commit()
+            self.jobs.update(jobId, status = newStatus, statusMessage = statusMessage)
         return True
 
     @typeCheck(int, (list, (list, str)))
@@ -1335,8 +1301,7 @@ class MintServer(object):
             raise ReleasePublished()
 
         cu = self.db.cursor()
-
-        cu.execute("BEGIN")
+        self.db.transaction()
         try:
             cu.execute("DELETE FROM ImageFiles WHERE releaseId=?", releaseId)
             for idx, file in enumerate(sorted(filenames)):
@@ -1659,14 +1624,7 @@ class MintServer(object):
         # except the ones specifically decorated with @public.
         self._allowPrivate = allowPrivate
 
-        if cfg.dbDriver == "native_sqlite":
-            self.db = sqlite3.connect(cfg.dbPath)
-            self.db.type = "native_sqlite"
-            cu = self.db.cursor()
-            
-            cu.execute("SELECT tbl_name FROM sqlite_master WHERE type = 'table'")
-            self.db.tables = [ x[0] for x in cu.fetchall() ]
-        elif cfg.dbDriver == "sqlite":
+        if cfg.dbDriver == "sqlite":
             from conary.dbstore import sqlite_drv
             self.db = sqlite_drv.Database(cfg.dbPath)
             self.db.connect()
@@ -1686,18 +1644,14 @@ class MintServer(object):
 
         #An explicit transaction.  Make sure you don't have any implicit
         #commits until the database version has been asserted
-        if self.db.type == "native_sqlite":
-            self.db.cursor().execute("BEGIN")
-        else:
-            self.db.transaction(None)
+        self.db.transaction(None)
         try:
             #The database version object has a dummy check so that it always passes.
             #At the end of all database object creation, fix the version
 
             global tables           
             if not tables or alwaysReload:
-                if self.db.type != "native_sqlite":
-                    self.db._getSchema()
+                self.db._getSchema()
                 tables = getTables(self.db, self.cfg)
             self.__dict__.update(tables)
            

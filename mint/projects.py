@@ -403,14 +403,12 @@ class ProjectsTable(database.KeyedTable):
         cu = self.db.cursor()
 
         cu.execute("UPDATE Projects SET hidden=1, timeModified=? WHERE projectId=?", time.time(), projectId)
-        self.db.commit()
 
     def unhide(self, projectId):
         # Anonymous user is added/removed in mint_server
         cu = self.db.cursor()
 
         cu.execute("UPDATE Projects SET hidden=0, timeModified=? WHERE projectId=?", time.time(), projectId)
-        self.db.commit()
 
     def isHidden(self, projectId):
         cu = self.db.cursor()
@@ -426,7 +424,6 @@ class ProjectsTable(database.KeyedTable):
         os.rename(path, path+'.disabled')
 
         cu.execute("UPDATE Projects SET disabled=1, timeModified=? WHERE projectId=?", time.time(), projectId)
-        self.db.commit()
 
     def enable(self, projectId, reposPath):
         cu = self.db.cursor()
@@ -437,7 +434,6 @@ class ProjectsTable(database.KeyedTable):
         os.rename(path+'.disabled', path)
 
         cu.execute("UPDATE Projects SET disabled=0, timeModified=? WHERE projectId=?", time.time(), projectId)
-        self.db.commit()
 
     def isDisabled(self, projectId):
         cu = self.db.cursor()
@@ -538,17 +534,12 @@ class LabelsTable(database.KeyedTable):
 
         cu.execute("""INSERT INTO Labels (projectId, label, url, username, password)
                       VALUES (?, ?, ?, ?, ?)""", projectId, label, url, username, password)
-        self.db.commit()
-        if self.db.type == "native_sqlite":
-            return cu.lastrowid
-        else:
-            return cu._cursor.lastrowid
+        return cu._cursor.lastrowid
 
     def editLabel(self, labelId, label, url, username=None, password=None):
         cu = self.db.cursor()
         cu.execute("""UPDATE Labels SET label=?, url=?, username=?, password=?
                       WHERE labelId=?""", label, url, username, password, labelId)
-        self.db.commit()
         return False
 
     def removeLabel(self, projectId, labelId):
@@ -568,7 +559,6 @@ class LabelsTable(database.KeyedTable):
                     raise LabelInUse
 
         cu.execute("""DELETE FROM Labels WHERE projectId=? AND labelId=?""", projectId, labelId)
-        self.db.commit()
         return False
     
 # XXX sort of stolen from conary/server/server.py

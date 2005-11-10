@@ -279,10 +279,7 @@ class UsersTable(database.KeyedTable):
             r = cu.fetchone()
 
             cu.execute("UPDATE Users SET active=1 WHERE userId=?", r[0])
-            self.db.commit()
-
             cu.execute("DELETE FROM Confirmations WHERE userId=?", r[0])
-            self.db.commit()
 
             return r[0]
 
@@ -473,7 +470,6 @@ class ProjectUsersTable(database.DatabaseTable):
             raise database.DuplicateItem("membership")
         
         cu.execute("INSERT INTO ProjectUsers VALUES(?, ?, ?)", projectId, userId, level)
-        self.db.commit()
         return 0
 
     def onlyOwner(self, projectId, userId):
@@ -499,7 +495,6 @@ class ProjectUsersTable(database.DatabaseTable):
             raise LastOwner()
         cu = self.db.cursor()
         cu.execute("DELETE FROM ProjectUsers WHERE projectId=? AND userId=?", projectId, userId)
-        self.db.commit()
         return 0
 
 

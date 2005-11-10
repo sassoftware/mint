@@ -4,7 +4,7 @@
 # All Rights Reserved
 #
 import sys, time
-from conary import sqlite3
+from conary.dbstore import sql_error
 
 from mint_error import MintError
 
@@ -120,11 +120,14 @@ class DatabaseTable:
         # before the upgrade check is done, a column not found exception
         # could be raised if a new index is created referencing a new column
         # created in the upgrade procedures.
-#        cu.execute("SELECT name FROM sqlite_master WHERE type = 'index'")
-#        missing = set(self.indexes.keys()) - set(self.db.indexes) 
-#        
-#        for index in missing:
-#            cu.execute(self.indexes[index])
+       
+        if self.db.type != "native_sqlite":
+            self.db._getSchema()
+            indexes = set(self.db.tables[self.name])
+            missing = set(self.indexes.keys()) - indexes
+            
+            for index in missing:
+                cu.execute(self.indexes[index])
 
     def __del__(self):
         if not self.db.closed:
@@ -213,6 +216,7 @@ class KeyedTable(DatabaseTable):
         @param kwargs: map of database column names to values.
         @return: primary key id of new item.
         """
+        # XXX fix to handle sequences
         values = kwargs.values()
         cols = kwargs.keys()
 
@@ -222,18 +226,10 @@ class KeyedTable(DatabaseTable):
 
         try:
             cu.execute(*[stmt] + values)
-        except sqlite3.ProgrammingError, e:
-            self.db.rollback()
-            if e.args[0].startswith("column") and e.args[0].endswith("not unique"):
-                raise DuplicateItem(self.name)
-            else:
-                raise
+        except sql_error.ColumnNotUnique:
+            raise DuplicateItem(self.name)
 
-        self.db.commit()
-        if self.db.type == "native_sqlite":
-            return cu.lastrowid
-        else:
-            return cu._cursor.lastrowid
+        return cu._cursor.lastrowid
 
     def update(self, id, **kwargs):
         """
@@ -250,20 +246,11 @@ class KeyedTable(DatabaseTable):
         stmt = "UPDATE %s SET %s WHERE %s=?" % (self.name, params, self.key)
 
         cu = self.db.cursor()
-        if self.db.type == "native_sqlite":
-            cu.execute("BEGIN")
-        else:
-            self.db.transaction(None)
         try:
             cu.execute(*[stmt] + values + [id])
-        except sqlite3.ProgrammingError, e:
-            self.db.rollback()
-            if e.args[0].startswith("column") and e.args[0].endswith("not unique"):
-                raise DuplicateItem(self.name)
-            else:
-                raise
+        except sql_error.ColumnNotUnique:
+            raise DuplicateItem(self.name)
 
-        self.db.commit()
         return True
 
     def search(self, columns, table, where, order, modified, limit, offset):
