@@ -53,7 +53,8 @@ from urllib import quote
                     <br/>
                     <button type="submit">Apply Changes</button>
                 </form>
-                <p><button onclick="javascript:window.location='cookGroup?id=${curGroupTrove.getId()}';">Cook This Group</button></p>
+                <p><button onclick="javascript:window.location='cookGroup?id=${curGroupTrove.getId()}';">Cook This Group</button><br/>
+                <button onclick="javascript:window.location='deleteGroup?id=${curGroupTrove.getId()}';">Delete This Group</button></p>
                 <p><i>[FIXME: improve wording and instructions here]</i> To add items to this group trove, use the repository browser
                     for any project on the site.</p>
             </div>
