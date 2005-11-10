@@ -88,11 +88,15 @@ class JobRunner(threading.Thread):
                 log.info("GroupTroveCook job started (id %d)" % (jobId))
                 ret = GroupTroveCook(self.client, self.cfg, self.job, None).write()
             except Exception, e:
+                error = e
                 self.job.setStatus(jobstatus.ERROR, str(e))
             else:
                 log.info("job %d succeeded: %s" % (jobId, str(ret)))
-            
-        self.job.setStatus(jobstatus.FINISHED, "Finished")
+
+        if error:
+            log.info(error)
+        except:
+            self.job.setStatus(jobstatus.FINISHED, "Finished")
 
 class JobDaemon:
     def __init__(self, cfg):
