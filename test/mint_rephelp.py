@@ -78,7 +78,7 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
     def tearDown(self):
         rephelp.RepositoryHelper.tearDown(self) 
         try:
-            if self.mintCfg.dbDriver in ("native_sqlite", "sqlite"):
+            if self.mintCfg.dbDriver == "sqlite":
                 os.unlink(self.servers.getServer().serverRoot + "/mintdb")
         except:
             pass
@@ -95,10 +95,4 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
 
         self.mintServer = mint_server.MintServer(self.mintCfg, alwaysReload = True)
         self.db = self.mintServer.db
-        if self.db.type != "native_sqlite":
-            self.db.connect()
-        else:
-            cu = self.db.cursor()
-
-            cu.execute("SELECT tbl_name FROM sqlite_master WHERE type = 'table'")
-            self.db.tables = [ x[0] for x in cu.fetchall() ]
+        self.db.connect()

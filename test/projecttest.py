@@ -50,7 +50,7 @@ class ProjectTest(MintRepositoryHelper):
         
         try:
             project.editProject("http://example.com/", "Description", "Foo2")
-        except: # XXX this shouldn't be generic
+        except DuplicateItem: # XXX this shouldn't be generic
             pass
         else:
             self.fail("expected DuplicateItem exception")

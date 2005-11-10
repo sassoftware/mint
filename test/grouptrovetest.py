@@ -9,16 +9,17 @@ testsuite.setup()
 from conary import versions
 from conary.repository import netclient
 
-from mint_rephelp import MintRepositoryHelper
-from mint import mint_server
 from repostest import testRecipe
+from mint_rephelp import MintRepositoryHelper
+
+from mint import jobstatus
+from mint import mint_server
 from mint import grouptrove
-from mint.database import ItemNotFound, DuplicateItem
 from mint import userlevels
+from mint.database import ItemNotFound, DuplicateItem
 from mint.mint_error import PermissionDenied
 from mint.distro import group_trove
 from mint.jobs import DuplicateJob
-from mint import jobstatus
 
 refRecipe = "class GroupTest(GroupRecipe):\n    name = 'group-test'\n    version = '1.0.0'\n\n    autoResolve = False\n\n    def setup(r):\n        r.setLabelPath('test.localhost@rpl:devel')\n        r.add('testcase', 'test.localhost@rpl:devel', '', groupName = 'group-test')\n"
 
@@ -288,9 +289,10 @@ class GroupTroveTest(MintRepositoryHelper):
         self.addTestTrove(groupTrove, "testcase")
         try:
             self.addTestTrove(groupTrove, "testcase")
-            self.fail("GroupTrove.addTrove allowed a duplicate entry. addTrove relies on a unique index, please check that it's operative.")
         except DuplicateItem:
             pass
+        else:
+            self.fail("GroupTrove.addTrove allowed a duplicate entry. addTrove relies on a unique index, please check that it's operative.")
 
     def testDuplicateLabels(self):
         client, userId = self.quickMintUser('testuser', 'testpass')

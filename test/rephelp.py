@@ -183,11 +183,8 @@ class ApacheServer(ChildRepository):
         print >> f, 'projectDomainName localhost:%i' % self.port
         print >> f, 'externalDomainName localhost:%i' % self.port
 
-        sqldriver = os.environ.get('MINT_SQL', 'native_sqlite')
-        if sqldriver == 'native_sqlite':
-            print "Using native sqlite driver"
-            print >> f, 'dbPath %s' % self.serverRoot + '/mintdb'
-        elif sqldriver == 'sqlite':
+        sqldriver = os.environ.get('MINT_SQL', 'sqlite')
+        if sqldriver == 'sqlite':
             print "Using sqlite driver"
             print >> f, 'dbPath %s' % self.serverRoot + '/mintdb'
         elif sqldriver == 'mysql':
