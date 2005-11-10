@@ -4,6 +4,7 @@
 #
 
 import testsuite
+from time import sleep
 testsuite.setup()
 
 from conary import versions
@@ -335,6 +336,16 @@ class GroupTroveTest(MintRepositoryHelper):
         groupTroves = client.server.getGroupTroves(projectId)
         assert(groupTroves == {'test.localhost@rpl:devel': ['group-test']})
 
+    def waitForCommit(self, project, troveList):
+        iters = 0
+        while True:
+            sleep(0.1)
+            iters += 1
+            if project.getCommits() == troveList:
+                break
+            if iters > 50:
+                self.fail("commits didn't show up") 
+
     def testCookOnServer(self):
         client, userId = self.quickMintUser('testuser', 'testpass')
         projectId = self.newProject(client)
@@ -362,6 +373,11 @@ class GroupTroveTest(MintRepositoryHelper):
 
         cookJob = group_trove.GroupTroveCook(client, client.getCfg(), job, groupTrove.getId())
         trvName, trvVersion, trvFlavor = cookJob.write()
+
+        # give some time for the commit action to run
+        self.waitForCommit(project, [('group-test:source', '1.0.0-1'),
+                                     ('testcase:source', '1.0-1')])
+        
         job.setStatus(jobstatus.FINISHED,"Finished")
         # cook a second time to ensure we follow the checkout codepath
         # set the version lock while we're at it, to test the getRecipe path
@@ -370,6 +386,11 @@ class GroupTroveTest(MintRepositoryHelper):
         job = client.getJob(jobId)
         cookJob = group_trove.GroupTroveCook(client, client.getCfg(), job, groupTrove.getId())
         trvName, trvVersion, trvFlavor = cookJob.write()
+
+        # give some time for the commit action to run
+        self.waitForCommit(project, [('group-test:source', '1.0.0-2'),
+                                     ('group-test:source', '1.0.0-1'),
+                                     ('testcase:source', '1.0-1')])
 
         assert(trvName == 'group-test')
         assert(trvVersion == '/test.localhost@rpl:devel/1.0.0-2-1')
