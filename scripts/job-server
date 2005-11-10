@@ -95,7 +95,7 @@ class JobRunner(threading.Thread):
 
         if error:
             log.info(error)
-        except:
+        else:
             self.job.setStatus(jobstatus.FINISHED, "Finished")
 
 class JobDaemon:
