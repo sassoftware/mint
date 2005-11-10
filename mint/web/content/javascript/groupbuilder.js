@@ -166,7 +166,7 @@ groupTroveManager = null;
 linkManager = null;
 
 function initGroupTroveManager() {
-    createLoggingPane(true);
+    //createLoggingPane(true);
     groupTroveManager = new GroupTroveManager();
 }
 
