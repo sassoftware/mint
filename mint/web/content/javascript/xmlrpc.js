@@ -22,6 +22,7 @@ function XmlRpcRequest(url, method)
     var req = new XMLHttpRequest();
     var auth = null;
     var handler = null;
+    var data = null;
 
     this.req = req;
     this.url = url;
@@ -33,15 +34,21 @@ function XmlRpcRequest(url, method)
         this.auth = auth;
     }
 
-    function setHandler(myHandler) {
+    function setHandler(myHandler, myData) {
         handler = myHandler;
+        data = myData;
     }
 
     function stateChange() {
         if(req.readyState == 4) {
             if(req.status == 200) {
                 if(handler) {
-                    handler(req.responseXML);
+                    if(data){
+                        handler(req.responseXML, data);
+                    }
+                    else {
+                        handler(req.responseXML);
+                    }
                 }
             }
             else {
@@ -70,7 +77,7 @@ function XmlRpcRequest(url, method)
                     msg += '<value><string>' + p + '</string></value>';
                     break;
                 case "boolean":
-                    msg += '<value><boolean>' + p + '</boolean></value>';
+                    msg += '<value><boolean>' + Number(p) + '</boolean></value>';
                     break;
                 default:
                     alert("Unable to marshal " + t + " types");
@@ -91,4 +98,5 @@ function XmlRpcRequest(url, method)
     this.setAuth = setAuth;
     this.setHandler = setHandler;
     this.send = send;
+    this.data = data;
 }

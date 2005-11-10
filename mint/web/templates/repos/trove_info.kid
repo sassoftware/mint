@@ -47,7 +47,7 @@ isOwner = (userLevel == userlevels.OWNER or auth.admin)
     </table>
 
     <span py:def="lockedAdder(trove)" style="float: right;" py:if="groupTrove">
-        <a href="${groupProject.getUrl()}addGroupTrove?id=${groupTrove.id};trove=${quote(trove.getName())};version=${quote(trove.getVersion().asString())};versionlocked=1;referer=${quote(req.unparsed_uri)}">
+        <a href="${groupProject.getUrl()}addGroupTrove?id=${groupTrove.id};trove=${quote(trove.getName())};version=${quote(trove.getVersion().asString())};versionLock=1;referer=${quote(req.unparsed_uri)}">
             Add this exact version <img style="border: none;" src="${cfg.staticPath}apps/mint/images/group.png" />
         </a>
     </span>

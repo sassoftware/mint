@@ -176,6 +176,7 @@ class GroupTroveItemsTable(database.KeyedTable):
         cu = self.db.cursor()
         self.updateModifiedTime(groupTroveItemId)
         cu.execute("DELETE FROM GroupTroveItems WHERE groupTroveItemId=?", groupTroveItemId)
+        return groupTroveItemId
 
     def listByGroupTroveId(self, groupTroveId):
         cu = self.db.cursor()

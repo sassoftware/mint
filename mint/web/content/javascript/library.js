@@ -202,7 +202,7 @@ function processGetTroveList(xml) {
 function getReleaseStatus(releaseId) {
     var req = new XmlRpcRequest("/xmlrpc", "getReleaseStatus");
     req.setAuth(getCookieValue("pysid"));
-    req.setHandler(processGetReleaseStatus);
+    req.setHandler(processGetReleaseStatus, {});
     req.send(releaseId);
 
     setTimeout("getReleaseStatus(" + releaseId + ")", 500);
@@ -211,7 +211,7 @@ function getReleaseStatus(releaseId) {
 function getCookStatus(jobId) {
     var req = new XmlRpcRequest("/xmlrpc", "getJobStatus");
     req.setAuth(getCookieValue("pysid"));
-    req.setHandler(processGetCookStatus);
+    req.setHandler(processGetCookStatus, {});
     req.send(jobId);
 
     statusId = setTimeout("getCookStatus(" + jobId + ")", 500);
@@ -221,7 +221,7 @@ function getCookStatus(jobId) {
 function getTroveList(projectId) {
     var req = new XmlRpcRequest("/xmlrpc", "getGroupTroves");
     req.setAuth(getCookieValue("pysid"));
-    req.setHandler(processGetTroveList);
+    req.setHandler(processGetTroveList, {});
     req.send(projectId);
 
     setTimeout("ticker()", 200);

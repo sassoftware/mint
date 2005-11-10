@@ -102,6 +102,13 @@ from mint import userlevels
     </div>
 
     <div id="groupbuilder" class="palette" py:def="groupTroveBuilder(display='block')" py:strip="False" py:if="groupTrove">
+        <script type="text/javascript" src="${cfg.staticPath}apps/MochiKit/MochiKit.js"/>
+        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/groupbuilder.js"/>
+        <script type="text/javascript">
+            var XmlRpcUrl = '${cfg.basePath}xmlrpc';
+            addLoadEvent(initLinkManager);
+            addLoadEvent(initGroupTroveManager);
+        </script>
         <h3>
             Group Trove Builder 
         </h3>
@@ -115,18 +122,27 @@ from mint import userlevels
                     <th>Delete</th>
                 </tr>
               </thead>
-              <tbody class="group-builder">
+              <tbody class="group-builder" id="groupbuilder-tbody">
                 <tr></tr>
-                <tr py:for="item in groupTrove.listTroves()"><td></td><td>${item['trvName']}</td>
+                <tr py:for="item in groupTrove.listTroves()" id="groupbuilder-item-${item['groupTroveItemId']}"><td></td><td>${item['trvName']}</td>
                     <td py:if="item['versionLock']">${item['trvVersion']}</td>
                     <td py:if="not item['versionLock']">${item['trvLabel']}</td>
-                    <td><a href="${groupProject.getUrl()}deleteGroupTrove?id=${groupTrove.id};troveId=${item['groupTroveItemId']};referer=${quote(req.unparsed_uri)}">X</a></td></tr>
+                    <td><a href="${groupProject.getUrl()}deleteGroupTrove?id=${groupTrove.id};troveId=${item['groupTroveItemId']};referer=${quote(req.unparsed_uri)}">X</a></td>
+                </tr>
+                <tr id="groupbuilder-example" style="display:none">
+                    <td id="groupbuilder-example group"><img src="/conary-static/apps/mint/images/group.png" style="border: none;" /></td>
+                    <td id="groupbuilder-example name">Name</td>
+                    <td id="groupbuilder-example version">Version</td>
+                    <td id="groupbuilder-example delete"><a href="${groupProject.getUrl()}deleteGroupTrove?id=${groupTrove.id};troveId=TROVEID;referer=${quote(req.unparsed_uri)}">X</a></td>
+                </tr>
+              </tbody>
+              <tfoot>
                 <tr class="groupcook">
                     <td colspan="3" style="text-align: center; padding: 1em;">
                         <a class="option" style="display: inline;" href="${groupProject.getUrl()}cookGroup?id=${groupTrove.id}">Cook This Group</a>
                     </td>
                 </tr>
-              </tbody>
+              </tfoot>
             </table>
         </div>
     </div>

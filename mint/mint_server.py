@@ -1596,7 +1596,6 @@ class MintServer(object):
         self._requireProjectOwner(projectId)
         self.groupTroveItems.setInstSetLocked(groupTroveItemId, locked)
 
-    @private
     @typeCheck(int, str, str, str, str, bool, bool, bool)
     @requiresAuth
     def addGroupTroveItem(self, groupTroveId, trvname, trvVersion, trvFlavor,
@@ -1607,14 +1606,13 @@ class MintServer(object):
         creatorId = self.users.getIdByColumn("username", self.authToken[0])
         return self.groupTroveItems.addTroveItem(groupTroveId, creatorId, trvname, trvVersion, trvFlavor, subGroup, versionLock, useLock, instSetLock)
 
-    @private
     @typeCheck(int)
     @requiresAuth
     def delGroupTroveItem(self, groupTroveItemId):
         projectId = self.groupTroveItems.getProjectId(groupTroveItemId)
         self._filterProjectAccess(projectId)
         self._requireProjectOwner(projectId)
-        self.groupTroveItems.delGroupTroveItem(groupTroveItemId)
+        return self.groupTroveItems.delGroupTroveItem(groupTroveItemId)
 
     @private
     @typeCheck(int)

@@ -163,11 +163,11 @@ class ProjectHandler(WebHandler):
     @ownerOnly
     @intFields(id=None)
     @strFields(trove=None, version=None, flavor='', referer='')
-    @boolFields(versionlocked=False)
-    def addGroupTrove(self, auth, id, trove, version, flavor, referer, versionlocked):
+    @boolFields(versionLock=False)
+    def addGroupTrove(self, auth, id, trove, version, flavor, referer, versionLock):
         assert(id == self.session['groupTroveId'])
         curGroupTrove = self.client.getGroupTrove(id)
-        curGroupTrove.addTrove(trove, version, '', '', versionlocked, False, False)
+        curGroupTrove.addTrove(trove, version, '', '', versionLock, False, False)
         if not referer:
             referer = project.getUrl()
         return self._redirect(referer)
