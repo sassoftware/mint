@@ -94,6 +94,7 @@ class GroupTroveTable(database.KeyedTable):
             raise
         else:
             self.db.commit()
+            return groupTroveId
 
     def getProjectId(self, groupTroveId):
         return self.get(groupTroveId)['projectId']

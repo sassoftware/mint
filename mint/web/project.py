@@ -128,7 +128,7 @@ class ProjectHandler(WebHandler):
     @strFields(groupName = "", version = "", description = "")
     def createGroup(self, auth, groupName, version, description):
         errors = []
-        groupName = "group-" + groupName
+        fullGroupName = "group-" + groupName
 
         # validate version
         try:
@@ -137,12 +137,12 @@ class ProjectHandler(WebHandler):
             errors.append("Error parsing version string: %s" % version)
 
         # validate group name
-        if not re.match("group-[a-zA-Z0-9\-_]+$", groupName):
-            errors.append("Invalid group trove name: %s" % groupName)
+        if not re.match("group-[a-zA-Z0-9\-_]+$", fullGroupName):
+            errors.append("Invalid group trove name: %s" % fullGroupName)
 
         if not errors:
             # do stuff
-            gt = self.client.createGroupTrove(self.project.getId(), groupName,
+            gt = self.client.createGroupTrove(self.project.getId(), fullGroupName,
                 version, description, True)
             gtId = gt.getId()
             return self._redirect("editGroup?id=%d" % gtId)
@@ -159,6 +159,22 @@ class ProjectHandler(WebHandler):
 
         self._write("editGroup", curGroupTrove = curGroupTrove)
         return apache.OK
+
+    @ownerOnly
+    @intFields(id = None)
+    @boolFields(confirmed=False)
+    def deleteGroup(self, auth, id, confirmed):
+        if confirmed:
+            # Delete the group
+            self.client.deleteGroupTrove(id)
+            if self.session['groupTroveId'] == id:
+                del self.session['groupTroveId']
+            return self._redirect('groups')
+        else:
+            self._write('confirm', message = "Are you sure you want to delete this group trove?",
+                yesLink = "deleteGroup?id=%d;confirmed=1" % id,
+                noLink = "groups")
+            return apache.OK
 
     @ownerOnly
     @intFields(id=None)

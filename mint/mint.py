@@ -364,6 +364,9 @@ class MintClient:
                                                     desc, autoResolve)
         return self.getGroupTrove(groupTroveId)
 
+    def deleteGroupTrove(self, groupTroveId):
+        return self.server.deleteGroupTrove(groupTroveId)
+
     def getGroupTrove(self, groupTroveId):
         return grouptrove.GroupTrove(self.server, groupTroveId)
 

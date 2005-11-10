@@ -1547,7 +1547,7 @@ class MintServer(object):
         projectId = self.groupTroves.getProjectId(groupTroveId)
         self._filterProjectAccess(projectId)
         self._requireProjectOwner(projectId)
-        self.groupTroves.delGroupTrove(groupTroveId)
+        return self.groupTroves.delGroupTrove(groupTroveId)
 
     @private
     @typeCheck(int, str)

@@ -35,7 +35,7 @@
                 
                 <ul>
                     <li py:if="groupTrove and groupTrove.projectId == project.id" style="font-weight: bold;">
-                        <a href="editGroup?id=${groupTrove.id}">${groupTrove.recipeName}</a> (${len(groupTrove.listTroves())} troves)
+                        <a href="${basePath}editGroup?id=${groupTrove.id}">${groupTrove.recipeName}</a> (${len(groupTrove.listTroves())} troves)
                     </li>
                     <li py:if="not groupTrove">
                         You are not currently working on a group trove.
@@ -47,10 +47,10 @@
                 <p>Click on a trove name to stop working on the current trove and begin editing another group trove.</p>
                 <ul>
                     <li py:for="gt in groupTrovesInProject">
-                        <a href="editGroup?id=${gt[0]}">${gt[1]} <span py:if="groupTrove and groupTrove.id == gt[0]">(currently selected)</span></a>
+                        <a href="${basePath}editGroup?id=${gt[0]}">${gt[1]} <span py:if="groupTrove and groupTrove.id == gt[0]">(currently selected)</span></a> <a href="${basePath}deleteGroup?id=${gt[0]}">Delete</a>
                     </li>
                     <li>
-                        <a href="newGroup"><b>Create a new group trove.</b></a>
+                        <a href="${basePath}newGroup"><b>Create a new group trove.</b></a>
                     </li>
                 </ul>
             </div>
