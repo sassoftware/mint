@@ -34,7 +34,7 @@
                 <h2>Currently In Progress</h2>
                 
                 <ul>
-                    <li py:if="groupTrove" style="font-weight: bold;">
+                    <li py:if="groupTrove and groupTrove.projectId == project.id" style="font-weight: bold;">
                         <a href="editGroup?id=${groupTrove.id}">${groupTrove.recipeName}</a> (${len(groupTrove.listTroves())} troves)
                     </li>
                     <li py:if="not groupTrove">
