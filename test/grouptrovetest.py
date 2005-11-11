@@ -51,6 +51,7 @@ class GroupTroveTest(MintRepositoryHelper):
         client.createGroupTrove(projectId, 'group-test2', '1.0.1',
                                 'some sort of description', False)
         gtList = client.listGroupTrovesByProject(projectId)
+        gtList = [(int(x[0]), x[1]) for x in gtList] # normalize longs returned from mysql
         refGtList = [(1, 'group-test'), (2, 'group-test2')]
         if gtList != refGtList:
             self.fail("listGroupTrovesByProject returned the wrong results: got %s but expected %s"% (str(gtList), str(refGtList)))

@@ -31,14 +31,14 @@ class GroupTroveTable(database.KeyedTable):
     createSQL = """
         CREATE TABLE GroupTroves(
                                  groupTroveId INTEGER,
-                                 projectId INTEGER,
-                                 creatorId INTEGER,
+                                 projectId INT,
+                                 creatorId INT,
                                  recipeName STR,
                                  upstreamVersion STR,
                                  description STR,
-                                 timeCreated INTEGER,
-                                 timeModified INTEGER,
-                                 autoResolve INTEGER,
+                                 timeCreated INT,
+                                 timeModified INT,
+                                 autoResolve INT,
                                  PRIMARY KEY (groupTroveId)
                                  );
     """
@@ -118,15 +118,15 @@ class GroupTroveItemsTable(database.KeyedTable):
     createSQL = """
         CREATE TABLE GroupTroveItems(
                                  groupTroveItemId INTEGER,
-                                 groupTroveId INTEGER,
-                                 creatorId INTEGER,
+                                 groupTroveId INT,
+                                 creatorId INT,
                                  trvName STR,
                                  trvVersion STR,
                                  trvFlavor STR,
                                  subGroup STR,
-                                 versionLock INTEGER,
-                                 useLock INTEGER,
-                                 instSetLock INTEGER,
+                                 versionLock INT,
+                                 useLock INT,
+                                 instSetLock INT,
                                  PRIMARY KEY (groupTroveItemId)
                                  );
     """

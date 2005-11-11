@@ -102,6 +102,11 @@ class DatabaseTable:
                 if not self.createSQL_mysql:
                     s = self.createSQL.replace("STR", "VARCHAR(255)")
                     s = s.replace("INTEGER PRIMARY KEY", "INT PRIMARY KEY AUTO_INCREMENT")
+                    lines = s.split("\n")
+                    for i, l in enumerate(lines[:]):
+                        if 'time' in l and 'INT' in l:
+                            lines[i] = l.replace('INT', 'DOUBLE')
+                    s = "\n".join(lines)
                     self.createSQL_mysql = s
                 cu.execute(self.createSQL_mysql)
             elif self.db.type in ("native_sqlite", "sqlite"):

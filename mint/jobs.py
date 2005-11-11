@@ -40,8 +40,8 @@ class JobsTable(database.KeyedTable):
                     userId          INT,
                     status          INT,
                     statusMessage   VARCHAR(128),
-                    timeStarted     INT,
-                    timeFinished    INT
+                    timeStarted     DOUBLE,
+                    timeFinished    DOUBLE 
                 )"""
 
     fields = ['jobId', 'releaseId', 'groupTroveId', 'userId', 'status',
