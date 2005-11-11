@@ -93,8 +93,7 @@ class ProjectTest(MintRepositoryHelper):
         assert(project.getMembers() == [[userId, 'testuser', userlevels.OWNER]])
 
         project.addMemberByName('member', userlevels.OWNER)
-        assert(project.getMembers() == [[userId, 'testuser', userlevels.OWNER],
-                                        [otherUserId, 'member', userlevels.OWNER]])
+        assert(project.getMembers() == [[otherUserId, 'member', userlevels.OWNER], [userId, 'testuser', userlevels.OWNER]])
 
         project.updateUserLevel(otherUserId, userlevels.DEVELOPER)
         assert(project.getMembers() == [[userId, 'testuser', userlevels.OWNER],
