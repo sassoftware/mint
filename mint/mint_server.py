@@ -1182,15 +1182,16 @@ class MintServer(object):
         r = cu.fetchall()
         if len(r) == 0:
             retval = self.jobs.new(releaseId = releaseId, userId = self.auth.userId,
-                status = jobstatus.WAITING, statusMessage = jobstatus.statusNames[jobstatus.WAITING],
+                status = jobstatus.WAITING, statusMessage = self.getJobWaitMessage(0),
                 timeStarted = time.time(), timeFinished = 0)
         else:
             jobId, status = r[0]
             if status in (jobstatus.WAITING, jobstatus.RUNNING):
                 raise jobs.DuplicateJob
             else:
+                msg = self.getJobWaitMessage(jobId)
                 self.jobs.update(jobId, status = jobstatus.WAITING,
-                    statusMessage = "Waiting for job server",
+                    statusMessage = msg,
                     timeStarted = time.time(), timeFinished = 0)
                 retval = jobId
 
@@ -1213,18 +1214,33 @@ class MintServer(object):
         r = cu.fetchall()
         if len(r) == 0:
             retval = self.jobs.new(groupTroveId = groupTroveId, userId = self.auth.userId,
-                status = jobstatus.WAITING, statusMessage = jobstatus.statusNames[jobstatus.WAITING],
+                status = jobstatus.WAITING, statusMessage = self.getJobWaitMessage(0),
                 timeStarted = time.time(), timeFinished = 0)
         else:
             jobId, status = r[0]
             if status in (jobstatus.WAITING, jobstatus.RUNNING):
                 raise jobs.DuplicateJob
             else:
+                msg = self.getJobWaitMessage(jobId)
                 self.jobs.update(jobId, status = jobstatus.WAITING,
-                    statusMessage = "Waiting for job server",
+                    statusMessage = msg,
                     timeStarted = time.time(), timeFinished = 0)
                 retval = jobId
         return retval
+
+    @private
+    @requiresAuth
+    @typeCheck(int)
+    def getJobWaitMessage(self, jobId):
+        queueLen = self._getJobQueueLength(jobId)
+        msg = "Waiting for job server"
+        if queueLen:
+            if queueLen == 1:
+                suffix = ''
+            else:
+                suffix = 's'
+            msg = "Waiting for %d job%s to complete" % (queueLen, suffix)
+        return msg
 
     @typeCheck(int)
     @requiresAuth
@@ -1420,7 +1436,10 @@ class MintServer(object):
         self._filterJobAccess(jobId)
         self._allowPrivate = True
         cu = self.db.cursor()
-        cu.execute("SELECT COUNT(*) FROM Jobs WHERE timeStarted < (SELECT timeStarted FROM Jobs WHERE jobId = ?) AND status = 0", jobId)
+        if jobId:
+            cu.execute("SELECT COUNT(*) FROM Jobs WHERE timeStarted < (SELECT timeStarted FROM Jobs WHERE jobId = ?) AND status = 0", jobId)
+        else:
+            cu.execute("SELECT COUNT(*) FROM Jobs WHERE status = 0")
         return cu.fetchone()[0]
 
 

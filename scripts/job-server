@@ -98,6 +98,12 @@ class JobRunner(threading.Thread):
         else:
             self.job.setStatus(jobstatus.FINISHED, "Finished")
 
+def updateWaitStatus(client):
+    joblist = client.getJobs()
+    for job in joblist:
+        if job.getStatus() == jobstatus.WAITING:
+            job.setStatus(jobstatus.WAITING, client.server.getJobWaitMessage(job.getId()))
+
 class JobDaemon:
     def __init__(self, cfg):
         client = MintClient(cfg.serverUrl)
@@ -127,8 +133,10 @@ class JobDaemon:
                         if release.getArch() not in cfg.supportedArch:
                             continue
 
+                    job.setStatus(jobstatus.RUNNING, 'Starting')
                     th = JobRunner(cfg, client, job)
                     th.start()
+                    updateWaitStatus(client)
                     # wait for this one to finish before starting more
                     th.join()
 

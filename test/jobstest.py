@@ -88,6 +88,7 @@ class JobsTest(MintRepositoryHelper):
 
         assert(client.server.getJobStatus(job.getId())['queueLen'] == 0)
         assert(client.server.getReleaseStatus(release.getId())['queueLen'] == 0)
+        assert(client.server.getJobWaitMessage(job.getId()) == 'Waiting for job server')
 
         projectId = self.newProject(client)
 
@@ -111,9 +112,11 @@ class JobsTest(MintRepositoryHelper):
                                     subGroup, False, False, False)
         cookJobId = groupTrove.startCookJob()
         assert(client.server.getJobStatus(cookJobId)['queueLen'] == 1)
+        assert(client.server.getJobWaitMessage(cookJobId) == 'Waiting for 1 job to complete')
 
         job.setStatus(jobstatus.FINISHED, 'Finished')
         assert(client.server.getJobStatus(cookJobId)['queueLen'] == 0)
+        assert(client.server.getJobWaitMessage(cookJobId) == 'Waiting for job server')
 
         job = client.startImageJob(release.getId())
         assert(client.server.getJobStatus(cookJobId)['queueLen'] == 0)
