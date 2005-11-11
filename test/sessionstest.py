@@ -16,14 +16,15 @@ from mint import dbversion
 from mint import sessiondb
 
 class SessionTest(MintRepositoryHelper):
-    # note: sessionData should really mimic what we'd see from a web
-    # client since this will help detect errors due to typeChecking
     def testClientSessions(self):
         client, userId = self.quickMintUser('testuser', 'testpass')
         sid = "abcdefg123456"
+
         sessionData = {'_data':      {},
                        '_accessed':  time.time() - 20,
                        '_timeout':   10}
+        client.saveSession(sid, sessionData)
+        # exercise the cached index codepath in saveSession
         client.saveSession(sid, sessionData)
 
         d = client.loadSession(sid)
@@ -38,6 +39,17 @@ class SessionTest(MintRepositoryHelper):
 
         client.saveSession(sid, sessionData)
         client.deleteSession(sid)
+
+        d = client.loadSession("abcdefg123456")
+        assert not d
+
+        # now emulate a thread race condition... this is different than a
+        # deleteSession call because the session table's internal index
+        # caching is guaranteed to be out of sync
+        client.saveSession(sid, sessionData)
+        client.loadSession("abcdefg123456")
+        cu = self.db.cursor()
+        cu.execute("DELETE FROM Sessions")
 
         d = client.loadSession("abcdefg123456")
         assert not d
