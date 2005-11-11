@@ -157,7 +157,30 @@ class ProjectHandler(WebHandler):
         curGroupTrove = self.client.getGroupTrove(id)
         self.session['groupTroveId'] = id
 
-        self._write("editGroup", curGroupTrove = curGroupTrove)
+        self._write("editGroup", message = None, curGroupTrove = curGroupTrove)
+        return apache.OK
+
+    @ownerOnly
+    @intFields(id = None)
+    @strFields(version = None, description = '')
+    def editGroup2(self, auth, id, version, description, **kwargs):
+        curGroupTrove = self.client.getGroupTrove(id)
+        assert(self.session['groupTroveId'] == id)
+
+        # Set the new version and description
+        if description != curGroupTrove.description:
+            curGroupTrove.setDesc(description)
+        if version != curGroupTrove.upstreamVersion:
+            curGroupTrove.setUpstreamVersion(version)
+
+        # Set the troveItems lock states
+        for t in curGroupTrove.listTroves():
+            cvalue = kwargs.get('%d_versionLock' % t['groupTroveItemId'], 'off')
+            if t['versionLock'] ^ (cvalue == 'on'):
+                curGroupTrove.setTroveVersionLock(t['groupTroveItemId'], cvalue == 'on')
+
+        curGroupTrove.refresh()
+        self._write("editGroup", message='Changes saved successfully', curGroupTrove = curGroupTrove)
         return apache.OK
 
     @ownerOnly

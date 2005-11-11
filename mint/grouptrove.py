@@ -140,17 +140,17 @@ class GroupTroveItemsTable(database.KeyedTable):
         cu.execute("SELECT groupTroveId FROM GroupTroveItems WHERE groupTroveItemId=?", groupTroveItemId)
         cu.execute("UPDATE GroupTroves SET timeModified=? WHERE groupTroveId=?", time.time(), cu.fetchone()[0])
 
-    def setVersionLocked(self, groupTroveItemId, lock):
+    def setVersionLock(self, groupTroveItemId, lock):
         cu = self.db.cursor()
         cu.execute("UPDATE GroupTroveItems SET versionLock=? WHERE groupTroveItemId=?", lock, groupTroveItemId)
         self.updateModifiedTime(groupTroveItemId)
         
-    def setUseLocked(self, groupTroveItemId, lock):
+    def setUseLock(self, groupTroveItemId, lock):
         cu = self.db.cursor()
         cu.execute("UPDATE GroupTroveItems SET useLock=? WHERE groupTroveItemId=?", lock, groupTroveItemId)
         self.updateModifiedTime(groupTroveItemId)
 
-    def setInstSetLocked(self, groupTroveItemId, lock):
+    def setInstSetLock(self, groupTroveItemId, lock):
         cu = self.db.cursor()
         cu.execute("UPDATE GroupTroveItems SET instSetLock=? WHERE groupTroveItemId=?", lock, groupTroveItemId)
         self.updateModifiedTime(groupTroveItemId)
@@ -253,14 +253,14 @@ class GroupTrove(database.TableObject):
     def getTrove(self, groupTroveItemId):
         return self.server.getGroupTroveItem(groupTroveItemId)
 
-    def setTroveVersionLocked(self, groupTroveItemId, locked):
-        return self.server.setGroupTroveItemVersionLocked(groupTroveItemId, locked)
+    def setTroveVersionLock(self, groupTroveItemId, lock):
+        return self.server.setGroupTroveItemVersionLock(groupTroveItemId, lock)
 
-    def setTroveInstSetLocked(self, groupTroveItemId, locked):
-        return self.server.setGroupTroveItemInstSetLocked(groupTroveItemId, locked)
+    def setTroveInstSetLock(self, groupTroveItemId, lock):
+        return self.server.setGroupTroveItemInstSetLock(groupTroveItemId, lock)
 
-    def setTroveUseLocked(self, groupTroveItemId, locked):
-        return self.server.setGroupTroveItemUseLocked(groupTroveItemId, locked)
+    def setTroveUseLock(self, groupTroveItemId, lock):
+        return self.server.setGroupTroveItemUseLock(groupTroveItemId, lock)
 
     def listTroves(self):
         return self.server.listGroupTroveItemsByGroupTrove(self.getId())

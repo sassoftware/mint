@@ -78,7 +78,7 @@ class GroupTroveTest(MintRepositoryHelper):
         assert(gTrv['trvVersion'] == '/test.localhost@rpl:devel/1.0-1-1')
         assert(gTrv['trvLabel'] == 'test.localhost@rpl:devel')
 
-        groupTrove.setTroveVersionLocked(trvId, True)
+        groupTrove.setTroveVersionLock(trvId, True)
 
         gTrv = groupTrove.getTrove(trvId)
         assert(gTrv['versionLock'] is True)
@@ -117,19 +117,19 @@ class GroupTroveTest(MintRepositoryHelper):
 
         assert(gTrv['useLock'] is False)
         assert(gTrv['instSetLock'] is False)
-        groupTrove.setTroveUseLocked(trvId, True)
+        groupTrove.setTroveUseLock(trvId, True)
         gTrv = groupTrove.getTrove(trvId)
 
         assert(gTrv['useLock'] is True)
         assert(gTrv['trvFlavor'] == '~!kernel.debug,~kernel.smp')
 
-        groupTrove.setTroveInstSetLocked(trvId, True)
+        groupTrove.setTroveInstSetLock(trvId, True)
         gTrv = groupTrove.getTrove(trvId)
 
         assert(gTrv['instSetLock'] is True)
         assert(gTrv['trvFlavor'] == '~!kernel.debug,~kernel.smp is: x86')
 
-        groupTrove.setTroveUseLocked(trvId, False)
+        groupTrove.setTroveUseLock(trvId, False)
         gTrv = groupTrove.getTrove(trvId)
         assert(gTrv['trvFlavor'] == 'is: x86')
 
@@ -278,7 +278,7 @@ class GroupTroveTest(MintRepositoryHelper):
         if (groupTrove.getRecipe() != refRecipe):
             self.fail("auto generated recipe did not return expected results")
 
-        groupTrove.setTroveVersionLocked(trvId, True)
+        groupTrove.setTroveVersionLock(trvId, True)
         groupTrove.getRecipe()
 
     def testMultipleAdditions(self):
@@ -382,7 +382,7 @@ class GroupTroveTest(MintRepositoryHelper):
         job.setStatus(jobstatus.FINISHED,"Finished")
         # cook a second time to ensure we follow the checkout codepath
         # set the version lock while we're at it, to test the getRecipe path
-        groupTrove.setTroveVersionLocked(trvId, True)
+        groupTrove.setTroveVersionLock(trvId, True)
         jobId = groupTrove.startCookJob()
         job = client.getJob(jobId)
         cookJob = group_trove.GroupTroveCook(client, client.getCfg(), job, groupTrove.getId())
