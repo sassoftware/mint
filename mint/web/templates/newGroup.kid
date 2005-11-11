@@ -7,7 +7,7 @@
     All Rights Reserved
 -->
     <div py:def="breadcrumb()" py:strip="True">
-        <a href="#">Create a Project</a>
+        <a href="#">Create a Group</a>
     </div>
 
     <?python
@@ -16,7 +16,7 @@
     ?>
 
     <head>
-        <title>${formatTitle('Create a Group Trove')}</title>
+        <title>${formatTitle('Create a Group')}</title>
     </head>
     <body>
         <td id="left" class="side">
@@ -26,9 +26,9 @@
         </td>
         <td id="main" class="main" >
             <div class="pad">
-                <p py:if="errors" class="error">Group Trove Creation Error${len(errors) > 1 and 's' or ''}</p>
+                <p py:if="errors" class="error">Group Creation Error${len(errors) > 1 and 's' or ''}</p>
                 <p py:for="error in errors" class="errormessage" py:content="error"/>
-                <h2>Create a Group Trove</h2>
+                <h2>Create a Group</h2>
                 <p>Fields labeled with a <em class="required">red arrow</em> are required.</p>
                 <form method="post" action="createGroup">
 

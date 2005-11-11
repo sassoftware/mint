@@ -7,12 +7,12 @@
     All Rights Reserved
 -->
     <head>
-        <title>${formatTitle('Group Trove Builder: %s' % project.getName())}</title>
+        <title>${formatTitle('Group Builder: %s' % project.getName())}</title>
     </head>
 
     <div py:def="breadcrumb()" py:strip="True">
         <a href="$basePath">${project.getName()}</a>
-        <a href="#">Group Trove Builder</a>
+        <a href="#">Group Builder</a>
     </div>
 
     <body>
@@ -27,9 +27,9 @@
         </td>
         <td id="main">
             <div class="pad">
-                <h1>Group Trove Builder</h1>
+                <h1>Group Builder</h1>
 
-                <p>You can create a group trove here. The trove defines what your application image contains.</p>
+                <p>You can create a group here. The group defines what your application image contains.</p>
 
                 <h2>Currently In Progress</h2>
                 
@@ -38,19 +38,19 @@
                         <a href="${basePath}editGroup?id=${groupTrove.id}">${groupTrove.recipeName}</a> (${len(groupTrove.listTroves())} troves)
                     </li>
                     <li py:if="not groupTrove">
-                        You are not currently working on a group trove.
+                        You are not currently working on a group.
                     </li>
                 </ul>
 
                 <h2>Other Groups</h2>
 
-                <p>Click on a trove name to stop working on the current trove and begin editing another group trove.</p>
+                <p>Click on a group name to stop working on the current group and begin editing another.</p>
                 <ul>
                     <li py:for="gt in groupTrovesInProject">
                         <a href="${basePath}editGroup?id=${gt[0]}">${gt[1]} <span py:if="groupTrove and groupTrove.id == gt[0]">(currently selected)</span></a> <a href="${basePath}deleteGroup?id=${gt[0]}">Delete</a>
                     </li>
                     <li>
-                        <a href="${basePath}newGroup"><b>Create a new group trove.</b></a>
+                        <a href="${basePath}newGroup"><b>Create a new group.</b></a>
                     </li>
                 </ul>
             </div>

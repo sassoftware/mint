@@ -10,12 +10,12 @@ from urllib import quote
     All Rights Reserved
 -->
     <head>
-        <title>${formatTitle('Edit Group Trove: %s' % project.getName())}</title>
+        <title>${formatTitle('Edit Group: %s' % project.getName())}</title>
     </head>
 
     <div py:def="breadcrumb()" py:strip="True">
         <a href="$basePath">${project.getName()}</a>
-        <a href="#">Edit Group Trove</a>
+        <a href="#">Edit Group</a>
     </div>
 
     <body>
@@ -29,7 +29,7 @@ from urllib import quote
         <td id="main">
             <p py:if="message" class="message" py:content="message"/>
             <div class="pad">
-                <h1>Edit Group Trove</h1>
+                <h1>Edit Group</h1>
                 <script type="text/javascript">
                   function dropdown()
                   {
