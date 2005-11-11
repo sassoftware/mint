@@ -453,7 +453,8 @@ class ProjectUsersTable(database.DatabaseTable):
         cu = self.db.cursor()
         cu.execute("""SELECT p.userId, u.username, p.level
                       FROM ProjectUsers p, Users u
-                      WHERE p.userId=u.userId AND p.projectId=?""",
+                      WHERE p.userId=u.userId AND p.projectId=?
+                      ORDER BY p.level, u.username""",
                    projectId)
         data = []
         for r in cu.fetchall():
