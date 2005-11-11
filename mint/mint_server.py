@@ -1648,21 +1648,13 @@ class MintServer(object):
         # except the ones specifically decorated with @public.
         self._allowPrivate = allowPrivate
 
-        if cfg.dbDriver == "sqlite":
-            from conary.dbstore import sqlite_drv
-            self.db = sqlite_drv.Database(cfg.dbPath)
-            self.db.connect()
-        elif cfg.dbDriver == "mysql":
-            global dbConnection 
-            if not dbConnection:
-                from conary.dbstore import mysql_drv
-                self.db = mysql_drv.Database(cfg.dbPath)
-                self.db.connect()
-                dbConnection = self.db
-            else:
-                self.db = dbConnection
+        from conary import dbstore
+        global dbConnection
+        if cfg.dbDriver in ["mysql", "postgresql"] and dbConnection:
+            self.db = dbConnection
         else:
-            assert("invalid SQL driver specified: %s" % cfg.dbDriver)
+            self.db = dbstore.connect(cfg.dbPath, driver=cfg.dbDriver)
+            dbConnection = self.db
 
         self.authDb = sqlite3.connect(cfg.authDbPath)
 
