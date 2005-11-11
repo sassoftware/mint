@@ -216,13 +216,10 @@ class ReleaseTest(MintRepositoryHelper):
         release = client.newRelease(projectId, "Test Release")
         releaseId = release.getId()
 
-        # this if statement might look a little strange, but remember what's
-        # actually happening: all unfinished releases are deleted THEN
-        # the new one is made. because releaseId's are one-up the now-stale
-        # brokenReleaseId should be re-used!
-
-        if (releaseId != brokenReleaseId):
-            self.fail("Previous unfinished releases should be removed!")
+        cu = self.db.cursor()
+        cu.execute("SELECT COUNT(*) FROM Releases")
+        if cu.fetchone()[0] != 1:
+            self.fail("Previous unfinished releases should be removed")
 
     def testReleaseStatus(self):
         client, userId = self.quickMintUser("testuser", "testpass")
