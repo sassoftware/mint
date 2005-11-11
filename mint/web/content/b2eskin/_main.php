@@ -161,7 +161,7 @@ if( !defined('DB_USER') ) die( 'Please, do not access this page directly.' );
                             <img src="img/icon_minipost.gif" alt="Permalink" width="12" height="9" border="0" align="middle" />
                         </a>
                     </span>
-                    <span class="newsTitle"><?php $Item->title(); ?></span>
+                    <span class="newsTitle"><?php $Item->title(); ?> (<?php $Item->Author->prefered_name() ?>)</span>
                 </h3>
 
                 <blockquote style="margin-left: 1em;">
