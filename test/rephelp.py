@@ -24,7 +24,7 @@ from webunit import webunittest
 from conary import sqlite3
 from conary import branch
 from conary.build import cook
-from conary.build import recipe, use
+from conary.build import loadrecipe, use
 from conary import checkin
 from conary import clone
 from conary import conaryclient
@@ -1165,7 +1165,7 @@ class RepositoryHelper(testsuite.TestCase):
         use.setBuildFlagsFromFlavor(theName, self.cfg.buildFlavor)
 
 	built = []
-	recipe.setupRecipeDict(d, "test1")
+	loadrecipe.setupRecipeDict(d, "test1")
 
 	code = compile(theClass, theName, "exec")
 	exec code in d
@@ -1191,7 +1191,7 @@ class RepositoryHelper(testsuite.TestCase):
         use.setBuildFlagsFromFlavor(theName, self.cfg.buildFlavor)
 
 	built = []
-	recipe.setupRecipeDict(d, "test1")
+	loadrecipe.setupRecipeDict(d, "test1")
 
 	code = compile(theClass, theName, "exec")
 	exec code in d
