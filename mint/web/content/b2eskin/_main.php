@@ -51,7 +51,7 @@ if( !defined('DB_USER') ) die( 'Please, do not access this page directly.' );
         <div align="left" class="surfaceLeft"><div class="surfaceRight">
             <table cellpadding="0" cellspacing="0" border="0" summary="layout">
         <tr>
-            <td colspan="2" id="logo">          
+            <td colspan="1" id="logo">          
                 <div>
                     <span id="rpath">
                         <a href="http://www.rpath.com/" title="rBuilder main site">
@@ -65,6 +65,15 @@ if( !defined('DB_USER') ) die( 'Please, do not access this page directly.' );
                         </a>
                     </span>
                 </div>
+            </td>
+            <td id="user">
+		<div class="pad">
+			<div><?php user_login_link( '', '' ); ?></div>
+			<div><?php user_register_link( '', '' ); ?></div>
+			<div><?php user_admin_link( '', '' ); ?></div>
+			<div><?php user_profile_link( '', '' ); ?></div>
+			<div><?php user_logout_link( '', '' ); ?></div>
+		</div>
             </td>
         </tr>
     <tr>
@@ -81,14 +90,11 @@ if( !defined('DB_USER') ) die( 'Please, do not access this page directly.' );
     </td>
        	<td id="log">
             <div class="pad">
-        <?php 
-                    user_login_link( '', '' ); 
-                    user_register_link( '', '' ); 
-                    user_admin_link( '', '' ); 
-                    user_profile_link( '', '' ); 
-                    user_logout_link( '', '' ); 
-            ?> </div> </td>    </tr>
-        </table>
+            </div> 
+        </td>
+    </tr>
+</table>
+
 </div></div></div></div>
 </div>
 

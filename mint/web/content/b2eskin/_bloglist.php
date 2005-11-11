@@ -20,7 +20,7 @@
 	}
 
 	# this is what will start and end your blog links
-	if(!isset($blog_list_start)) $blog_list_start = T_('Select blog:').' ';				
+	if(!isset($blog_list_start)) $blog_list_start = T_('<span style="color: black;">Select blog:</span>').' ';				
 	if(!isset($blog_list_end)) $blog_list_end = '<br />';				
 	# this is what will separate your blog links
 	if(!isset($blog_item_start)) $blog_item_start = ' [';				
