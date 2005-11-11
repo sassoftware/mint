@@ -7,12 +7,12 @@
     All Rights Reserved
 -->
     <head>
-        <title>${formatTitle('Group Trove Builder: %s' % project.getName())}</title>
+        <title>${formatTitle('Group Builder: %s' % project.getName())}</title>
     </head>
 
     <div py:def="breadcrumb()" py:strip="True">
         <a href="$basePath">${project.getName()}</a>
-        <a href="#">Group Trove Builder</a>
+        <a href="#">Group Builder</a>
     </div>
 
     <body onload="getCookStatus(${jobId});">
@@ -25,7 +25,7 @@
         </td>
         <td id="main">
             <div class="pad">
-                <h1 id="pleaseWait">Cooking Group Trove</h1>
+                <h1 id="pleaseWait">Cooking Group</h1>
                 <h2>Progress: <span id="jobStatus"> </span></h2>
  
                 <pre style="padding: 1em; border: 1px solid #dddddd; background: #efefef; margin: 1em;">${XML(recipe.replace('\n', '&lt;br/&gt;'))}</pre>
@@ -36,9 +36,6 @@
         </td>
         <td id="right" class="projects">
             ${projectsPane()}
-            <td class="pad">
-                ${groupTroveBuilder()}
-            </td>
         </td>
     </body>
 </html>
