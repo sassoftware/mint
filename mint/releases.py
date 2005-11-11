@@ -119,7 +119,6 @@ class ReleasesTable(database.KeyedTable):
         cu = self.db.cursor()
          
         cu.execute("DELETE FROM Releases WHERE projectId=? AND troveLastChanged IS NULL", projectId)
-        self.db.commit()
         return database.KeyedTable.new(self, **kwargs)
 
     def iterReleasesForProject(self, projectId, showUnpublished = False):
@@ -149,7 +148,6 @@ class ReleasesTable(database.KeyedTable):
                    troveName, troveVersion,
                    troveFlavor, time.time(),
                    releaseId)
-        self.db.commit()
         return 0
 
     def getTrove(self, releaseId):
@@ -180,17 +178,16 @@ class ReleasesTable(database.KeyedTable):
     def deleteRelease(self, releaseId):
         cu = self.db.cursor()
 
-        if self.db.type == "native_sqlite":
-            cu.execute("BEGIN")
+        self.db.transaction(None)
+        try:
+            r = cu.execute("DELETE FROM Releases WHERE releaseId=?", releaseId)
+            r = cu.execute("DELETE FROM ReleaseData WHERE releaseId=?", releaseId)
+            r = cu.execute("DELETE FROM Jobs WHERE releaseId=?", releaseId)
+            r = cu.execute("DELETE FROM ImageFiles WHERE releaseId=?", releaseId)
+        except:
+            self.db.rollback()
         else:
-            self.db.transaction(None)
-
-        r = cu.execute("DELETE FROM Releases WHERE releaseId=?", releaseId)
-        r = cu.execute("DELETE FROM ReleaseData WHERE releaseId=?", releaseId)
-        r = cu.execute("DELETE FROM Jobs WHERE releaseId=?", releaseId)
-        r = cu.execute("DELETE FROM ImageFiles WHERE releaseId=?", releaseId)
-
-        self.db.commit()
+            self.db.commit()
 
     def releaseExists(self, releaseId):
         cu = self.db.cursor()
