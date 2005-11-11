@@ -5,6 +5,7 @@ Changes in 1.1.0:
   database file directly instead of spawning an http access, and many
   more small improvements.
 * MySQL support is included, but not turned on by default.
+* Group troves in the repository browser show contained troves instead of files.
 
 Changes in 1.0.2:
 
