@@ -34,7 +34,7 @@ function GroupTroveManager() {
     //wipe the style attribute that keeps this node hidden
     this.exampleNode.style.display="";
     //Delete the template node
-    removeElement(exampleNode);
+    swapDOM(exampleNode, null);
 }
 
 GroupTroveManager.prototype.addTrove = function (url, id, name, version, versionLock) {
@@ -112,7 +112,7 @@ GroupTroveManager.prototype.troveDeleted = function(items) {
     var nodes = items.getElementsByTagName('int')
     var retVal = scrapeText(nodes[0]);
     //find the table row in question and remove it.
-    removeElement('groupbuilder-item-' + retVal);
+    swapDOM('groupbuilder-item-' + retVal, null);
 }
 
 function LinkManager()
