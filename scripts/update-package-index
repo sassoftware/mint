@@ -12,16 +12,16 @@ from mint import pkgindex
 from mint import projects
 from conary.repository import netclient
 from conary.repository import repository
+from conary import dbstore
 
 cfgPath = "/srv/mint/mint.conf"
 
 cfg = config.MintConfig()
 cfg.read(cfgPath)
 
-db = sqlite3.connect(cfg.dbPath, timeout = 30000)
+db = dbstore.connect(cfg.dbPath, driver = cfg.dbDriver)
+db.connect()
 cu = db.cursor()
-cu.execute("SELECT tbl_name FROM sqlite_master WHERE type = 'table'")
-db.tables = [ x[0] for x in cu.fetchall() ]
 
 pkgIdx = pkgindex.PackageIndexTable(db)
 labelsTable = projects.LabelsTable(db)
@@ -60,6 +60,7 @@ for host in netclients.keys():
         row = (projectIds[host], pkg, latestVer.asString())
         rows.append(row)
 
+db.transaction()
 try:
     cu.execute("DELETE FROM PackageIndex")
     for row in rows:
