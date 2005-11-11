@@ -117,7 +117,6 @@ class ReleasesTable(database.KeyedTable):
     def new(self, **kwargs):
         projectId = kwargs['projectId']
         cu = self.db.cursor()
-         
         cu.execute("DELETE FROM Releases WHERE projectId=? AND troveLastChanged IS NULL", projectId)
         return database.KeyedTable.new(self, **kwargs)
 
