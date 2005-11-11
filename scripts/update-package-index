@@ -4,9 +4,8 @@
 #
 # All rights reserved
 #
-import conary
-import sqlite3
-import versions
+from conary import sqlite3
+from conary import versions
 
 from mint import config
 from mint import pkgindex
