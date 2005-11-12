@@ -5,6 +5,7 @@
 #
 import kid
 import os
+import textwrap
 import time
 import sys
 

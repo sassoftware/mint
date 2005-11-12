@@ -6,6 +6,7 @@
 import os
 import sys
 import xmlrpclib
+import textwrap
 import time
 
 from conary.repository import repository
@@ -466,6 +467,13 @@ def upstream(version):
     @rtype: str
     """
     return version.trailingRevision().asString().split('-')[0]
+
+def flavorWrap(f):
+    f = str(f).replace(" ", "\n")
+    f = f.replace(",", " ")
+    f = f.replace("\n", "\t")
+    f = textwrap.wrap(f, expand_tabs=False, replace_whitespace=False)
+    return ",\n".join(x.replace(" ", ",") for x in f)
 
 def timeDelta(t):
     if not t:
