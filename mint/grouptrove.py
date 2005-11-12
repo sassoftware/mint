@@ -141,18 +141,15 @@ class GroupTroveItemsTable(database.KeyedTable):
         cu.execute("UPDATE GroupTroves SET timeModified=? WHERE groupTroveId=?", time.time(), cu.fetchone()[0])
 
     def setVersionLock(self, groupTroveItemId, lock):
-        cu = self.db.cursor()
-        cu.execute("UPDATE GroupTroveItems SET versionLock=? WHERE groupTroveItemId=?", lock, groupTroveItemId)
+        self.update(groupTroveItemId, versionLock = lock)
         self.updateModifiedTime(groupTroveItemId)
         
     def setUseLock(self, groupTroveItemId, lock):
-        cu = self.db.cursor()
-        cu.execute("UPDATE GroupTroveItems SET useLock=? WHERE groupTroveItemId=?", lock, groupTroveItemId)
+        self.update(groupTroveItemId, useLock = lock)
         self.updateModifiedTime(groupTroveItemId)
 
     def setInstSetLock(self, groupTroveItemId, lock):
-        cu = self.db.cursor()
-        cu.execute("UPDATE GroupTroveItems SET instSetLock=? WHERE groupTroveItemId=?", lock, groupTroveItemId)
+        self.update(groupTroveItemId, instSetLock = lock)
         self.updateModifiedTime(groupTroveItemId)
 
     def addTroveItem(self, groupTroveId, creatorId, trvName, trvVersion, trvFlavor, subGroup, versionLock, useLock, instSetLock):
