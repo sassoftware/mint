@@ -90,9 +90,21 @@ class SessionsTable(DatabaseTable):
         try:
             sessIdx = self.getSessIndex(sid)
             if sessIdx:
-                cu.execute("DELETE FROM Sessions WHERE sessIdx=?", sessIdx)
-                cu.execute("INSERT INTO Sessions VALUES(?, ?, ?)",
-                           sessIdx, sid, cPickle.dumps(data))
+                #cu.execute("DELETE FROM Sessions WHERE sessIdx=?", sessIdx)
+                #cu.execute("INSERT INTO Sessions VALUES(?, ?, ?)",
+                #           sessIdx, sid, cPickle.dumps(data))
+
+                # beware of this UPDATE statement. There exists one extrmely
+                # unlikely corner case which is probably an error condition
+                # anyway... you could get here if the session was deleted and
+                # then the same sid was re-saved in a different thread.
+                # under these conditions, your session WON'T get saved--
+                # however the only realisticly imaginible time that could
+                # happen is if someone hijacked a session anyway.
+                # UPDATE was chosen because empirical data suggests it is
+                # up to 100 times faster than delete->insert.
+                cu.execute("UPDATE Sessions SET sid=?, data=? WHERE sessidx=?",
+                           sid, cPickle.dumps(data), sessIdx)            
             else:
                 cu.execute("INSERT INTO Sessions (sid, data) VALUES(?, ?)",
                            sid, cPickle.dumps(data))
