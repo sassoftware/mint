@@ -30,6 +30,11 @@ from cookie_http import ConaryHandler
 
 from webhandler import WebHandler, normPath
 
+# hack to set the default encoding to utf-8
+# to overcome a kid bug.
+reload(sys)
+sys.setdefaultencoding("utf-8")
+
 class Redirect(Exception):
     def __init__(self, location):
         self.location = location
