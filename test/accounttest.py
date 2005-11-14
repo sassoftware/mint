@@ -41,7 +41,6 @@ class AccountTest(MintRepositoryHelper):
         fullName = "Test A. User"
         blurb = 'An all-singing all-dancing \xe2\x99\xaa blurb \xe2\x99\xac for a user.'
 
-
         user.setDisplayEmail(displayEmail)
         user.setFullName(fullName)
         user.setBlurb(blurb)
