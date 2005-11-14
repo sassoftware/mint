@@ -33,16 +33,13 @@ class AccountTest(MintRepositoryHelper):
         return cu.fetchone()[0]
 
     def testBasicAttributes(self):
-        from conary.lib import epdb
-        epdb.st()
-
-        client, userId = self.quickMintUser("testuser","testpass")
+        client, userId = self.quickMintUser("testuser", "testpass")
         user = client.getUser(userId)
 
         eMail = "not_for_real@broken.domain"
         displayEmail = "some@invalid.email"
         fullName = "Test A. User"
-        blurb = "A blurb of a user."
+        blurb = "An all-singing all-dancing ♪ blurb ♬ for a user."
 
         user.setDisplayEmail(displayEmail)
         user.setFullName(fullName)
@@ -84,45 +81,6 @@ class AccountTest(MintRepositoryHelper):
         # user is a member of projects
         user.setPassword("passtest")
         user.cancelUserAccount()
-
-    def testBasicAttributes(self):
-        client, userId = self.quickMintUser("testuser","testpass")
-        user = client.getUser(userId)
-
-        eMail = "not_for_real@localhost"
-        displayEmail = "some@invalid.email"
-        fullName = "Test A. User"
-        blurb = "A blurb of a user."
-
-        user.setDisplayEmail(displayEmail)
-        user.setFullName(fullName)
-        user.setBlurb(blurb)
-        # FIXME: move validation logic to server side. this should not pass
-        # in the future
-        user.setEmail(eMail)
-        user.setPassword("passtest")
-
-        # refresh the user
-        user = client.getUser(userId)
-
-        if user.getDisplayEmail() != displayEmail:
-            self.fail("User's display email lost in translation")
-
-        if user.getFullName() != fullName:
-            self.fail("User's full name lost in translation")
-
-        if user.getBlurb() != blurb:
-            self.fail("User's Blurb lost in translation")
-
-        if user.getEmail() != eMail:
-            self.fail("User's email lost in translation")
-
-        client.server.updateAccessedTime(userId)
-        try:
-            client.server.validateNewEmail(userId, eMail)
-            self.fail("Email address was definitely bogus")
-        except MailError:
-            pass
 
     def testProjectInteraction(self):
         client, userId = self.quickMintUser("testuser","testpass")
