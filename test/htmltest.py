@@ -13,8 +13,8 @@ xml = '<?xml version="1.0"?>\n'
 wrap = '<div>%s</div>'
 
 good1 = "<b>Hello</b> world."
-good2 = "Now is the time for <span class='foo'><b>all<b> <i>good</i></span> men to blah blah blah..."
-good3 = "This is a <b>test <i>some</b>html</i>"
+good2 = "Now is the time for <span class='foo'><b>all</b> <i>good</i></span> men to blah blah blah..."
+good3 = "This is a <b>test <i>some</i> html</b>"
 
 bad1 = "I'm a nasty <script />!"
 bad2 = "I'm broken.<hr"
