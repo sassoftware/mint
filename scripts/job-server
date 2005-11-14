@@ -68,21 +68,21 @@ class JobRunner(threading.Thread):
             releaseId = self.job.getReleaseId()
             release = self.client.getRelease(releaseId)
             project = self.client.getProject(release.getProjectId())
-            
+           
+            # save the current working directory in case the generator 
+            # (or scripts that change the wd)
+            cwd = os.getcwd()
             try:
                 generator = generators[release.getImageType()]
                 log.info("%s job for %s started (id %d)" % (generator.__name__, project.getHostname(), jobId))
-                # save the current working directory in case the generator 
-                # (or scripts that change the wd)
-                cwd = os.getcwd()
                 imageFilenames = generator(self.client, self.cfg, self.job, releaseId).write()
-                os.chdir(cwd)
             except Exception, e:
                 error = e
                 self.job.setStatus(jobstatus.ERROR, str(e))
             else:
                 release.setFiles(imageFilenames)
                 log.info("job %d finished: %s", jobId, str(imageFilenames))
+            os.chdir(cwd)
         elif self.job.getGroupTroveId():
             try:
                 log.info("GroupTroveCook job started (id %d)" % (jobId))
