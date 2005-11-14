@@ -2,6 +2,7 @@
 <?python
     from mint import searcher
     import time
+    from urllib import quote
     from mint.mint import timeDelta
 ?>
 <html xmlns:html="http://www.w3.org/1999/xhtml"
@@ -18,7 +19,10 @@
         elif searchType == "Users":
             columns = ('User Name', 'Full Name', 'Contact Info', 'About', 'Last Accessed')
         elif searchType == "Packages":
-            columns = ('Package Name', 'Version', 'Project')
+            if groupTrove:
+                columns = ('Package Name', 'Version', 'Project', '')
+            else:
+                columns = ('Package Name', 'Version', 'Project')
     ?>
     <div py:def="breadcrumb()" py:strip="True">
         <a href="#">Search Results</a>
@@ -49,8 +53,10 @@
                     formattedresults = [
                         (resultset[2], resultset[0]),
                         resultset[1],
-                        (resultset[4], resultset[3]),
+                        (resultset[4], resultset[3])
                     ]
+                    if groupTrove:
+                        formattedresults.append(('project/stuff/addGroupTrove?id=%d;trove=%s;version=%s;referer=%s' %(groupTrove.getId(), resultset[0], resultset[1], quote(req.unparsed_uri)) , 'Add Trove'))
             ?>
             ${resultRow(formattedresults)}
         </div>
@@ -72,5 +78,11 @@
                 ${navigation("search?type=%s;search=%s;modified=%d"%(searchType, terms, modified), terms, count, limit, offset, True)}
             </div>
         </td>
+        <td id="right" class="projects">
+            ${projectsPane()}
+            <div class="pad">
+                ${groupTroveBuilder()}
+                </div>
+            </td>
     </body>
 </html>

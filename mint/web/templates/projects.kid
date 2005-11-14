@@ -59,5 +59,11 @@ from mint.mint import timeDelta
                 ${navigation("projects?sortOrder=%d"%(sortOrder), "all projects", count, limit, offset, True)}
             </div>
         </td>
+        <td id="right" class="projects">
+            ${projectsPane()}
+            <div class="pad">
+                ${groupTroveBuilder()}
+            </div>
+        </td>
     </body>
 </html>
