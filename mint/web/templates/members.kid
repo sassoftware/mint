@@ -141,6 +141,9 @@ from mint import userlevels
         </td>
         <td id="right" class="projects">
             ${projectsPane()}
+            <div class="pad">
+                ${groupTroveBuilder()}
+            </div>
         </td> 
     </body>
 </html>

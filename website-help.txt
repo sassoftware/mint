@@ -509,6 +509,11 @@ Big picture stuff
 
 ***Need a 'What Next?' section with links to the following:***
 
+Everyone:
+
+    o Need some sort of "Community Resources" link/tab to serve as a focal
+      point for all users
+
 Developers:
 
     o Learning more about Conary

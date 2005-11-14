@@ -114,6 +114,9 @@ from mint.mint import upstream
                     </td>
                     <td id="right" class="projects">
                         ${projectsPane()}
+                        <div class="pad">
+                            ${groupTroveBuilder()}
+                        </div>
                     </td>
                 </tr>
             </table>
