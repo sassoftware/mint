@@ -9,7 +9,7 @@ import os
 import stat
 import sys
 import re
-from urllib import quote, unquote
+from urllib import quote, unquote, quote_plus
 
 from mod_python import apache
 
@@ -437,7 +437,7 @@ class SiteHandler(WebHandler):
             p = self.client.getProject(x[2])
             host = p.getHostname()
             reposUrl = '/project/%s/' % host
-            packageUrl = '/repos/%s/troveInfo?t=%s' % (host, x[0])
+            packageUrl = '/repos/%s/troveInfo?t=%s' % (host, quote_plus(x[0]))
             searchResults.append( (x[0], x[1], packageUrl, p.getName(), reposUrl) )
             
         self._write("searchResults", searchType = "Packages", terms = terms, results = searchResults,
