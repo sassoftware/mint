@@ -462,24 +462,40 @@ class ProjectHandler(WebHandler):
             'projecturl': self.project.getProjectUrl(),
             'name': self.project.getName(),
             'desc': self.project.getDesc(),
+            'branch': self.project.getLabel().split('@')[1],
         }
         self._write("editProject", errors = [], kwargs = kwargs)
         return apache.OK
 
-    @strFields(projecturl = '', desc = '', name = '')
+    @strFields(projecturl = '', desc = '', name = '', branch = '')
     @ownerOnly
-    def processEditProject(self, auth, projecturl, desc, name):
+    def processEditProject(self, auth, projecturl, desc, name, branch):
         errors = []
         if not name:
             errors.append("You must supply a project title")
+        try:
+            label = self.project.getFQDN() + '@' + branch
+            versions.Label(label)
+        except versions.ParseError:
+            errors.append("Invalid branch name.")
+
         if not errors:
             try:
                 self.project.editProject(projecturl, desc, name)
+
+                # this is a little bit nasty because the label API
+                # needs some work.
+                oldLabel = self.project.getLabel()
+                if oldLabel != label:
+                    labelId = self.project.getLabelIdMap()[oldLabel]
+                    oldLabel, oldUrl, oldUser, oldPass = self.client.server.getLabel(labelId)
+                    self.project.editLabel(labelId, label, oldUrl, oldUser, oldPass)
             except database.DuplicateItem:
                 errors.append("Project title conflicts with another project.")
-
+                
         if errors:
-            kwargs = {'projecturl': projecturl, 'desc': desc, 'name': name}
+            kwargs = {'projecturl': projecturl, 'desc': desc, 'name': name,
+                'branch': self.project.getLabel().split('@')[1]}
             self._write("editProject", kwargs = kwargs, errors = errors)
             return apache.OK
         else:

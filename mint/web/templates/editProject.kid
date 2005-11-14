@@ -32,18 +32,29 @@
                             </td>
                         </tr>
                         <tr>
+                            <th>Default Branch Name</th>
+                            <td>
+                                <input type="text" name="branch" value="${kwargs['branch']}" />
+                                <p class="help">The default Conary branch name for your project.
+                                    A branch name consists of: &lt;namespace&gt;:&lt;tag&gt;. See
+                                    <a href="http://www.rpath.com/technology/techoverview/distributedversions.html#labels">
+                                        Labels and Branches</a> from the Conary technology whitepaper for more information.
+                                </p>
+                            </td>
+                        </tr>
+                        <tr>
                             <th>Project Home Page</th>
                             <td>
                                 <input type="text" name="projecturl" value="${kwargs['projecturl']}" />
                                 <p class="help">A link to an external site providing more information, forums, documentation, etc.</p>
                             </td>
                         </tr>
-
                         <tr>
                             <th>Project Description</th>
                             <td>
                                 <textarea name="desc" cols="70" rows="12">${kwargs['desc']}</textarea>
-                                <p class="help">It may be useful to put alternate branch labels, project goals, mechanisms for joining a project, or other relevant information here.</p>
+                                <p class="help">It may be useful to put alternate branch labels, project goals,
+                                    mechanisms for joining a project, or other relevant information here.</p>
                             </td>
                         </tr>
                     </table>
