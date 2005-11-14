@@ -16,7 +16,7 @@
     <body>
         <td id="main" class="spanleft">
             <div class="pad">
-                <p py:if="errors" class="error">Release Creation Error${len(errors) > 1 and 's' or ''}</p>
+                <p py:if="errors" class="error">Project Details Error${len(errors) > 1 and 's' or ''}</p>
                 <p py:for="error in errors" class="errormessage" py:content="error"/>
 
                 <h2>Edit Project Properties</h2>
