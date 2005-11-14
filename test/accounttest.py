@@ -39,7 +39,8 @@ class AccountTest(MintRepositoryHelper):
         eMail = "not_for_real@broken.domain"
         displayEmail = "some@invalid.email"
         fullName = "Test A. User"
-        blurb = "An all-singing all-dancing ♪ blurb ♬ for a user."
+        blurb = 'An all-singing all-dancing \xe2\x99\xaa blurb \xe2\x99\xac for a user.'
+
 
         user.setDisplayEmail(displayEmail)
         user.setFullName(fullName)
