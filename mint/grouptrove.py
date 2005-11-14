@@ -105,6 +105,9 @@ class GroupTroveTable(database.KeyedTable):
     def get(self, groupTroveId):
         ret = database.KeyedTable.get(self, groupTroveId)
         ret['autoResolve'] = bool(ret['autoResolve'])
+        cu = self.db.cursor()
+        cu.execute("SELECT hostname from Projects where projectId=?", ret['projectId'])
+        ret['projectName'] = cu.fetchone()[0]
         return ret
 
 class GroupTroveItemsTable(database.KeyedTable):
@@ -227,7 +230,7 @@ class GroupTroveItemsTable(database.KeyedTable):
 ############ Client Side ##############
 
 class GroupTrove(database.TableObject):
-    __slots__ = [GroupTroveTable.key] + GroupTroveTable.fields
+    __slots__ = [GroupTroveTable.key, 'projectName'] + GroupTroveTable.fields
 
     # don't mistake the name collision! this has nothing to do with
     # group trove items! it's something required from TableObject
