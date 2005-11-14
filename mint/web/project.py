@@ -121,12 +121,45 @@ class ProjectHandler(WebHandler):
 
     @ownerOnly
     def newGroup(self, auth):
-        self._write("newGroup", errors = [], kwargs = {})
+
+        # XXX all of this is kind of a hardcoded hack that should be pulled out
+        # into a config file somewhere, or something.
+        repoMap = {'conary.rpath.com': 'http://conary-commits.rpath.com/conary/'}
+        label = versions.Label('conary.rpath.com@rpl:1')
+        repos = netclient.NetworkRepositoryClient(repoMap)
+        troves = repos.getTroveLeavesByLabel({'group-dist': {label: None}})
+        print >> sys.stderr, troves
+        sys.stderr.flush()
+
+        version, flavor = troves['group-dist'].items()[0]
+        trove = repos.getTroves([('group-dist', version, flavor[0])])[0]
+
+        # mash the trove list into something usable
+        troves = [(x[0], (x[1], x[2])) for x in trove.iterTroveList()]
+
+        # pop group-core out of the list and stick it on the top
+        troveNames = [x[0] for x in sorted(troves)]
+        troveNames = [troveNames.pop(troveNames.index('group-core'))] + troveNames
+        troveDict = dict(troves)
+
+        metadata = {'group-core':           'A basic set of packages required for a functional system.',
+                    'group-base':           'Basic but non-essential packages.',
+                    'group-devel':          'Software development tools.',
+                    'group-dist-base':      None,
+                    'group-dist-extras':    'Some assorted extra packages.',
+                    'group-gnome':          'The GNOME desktop environment.',
+                    'group-kde':            'The KDE desktop environment.',
+                    'group-netserver':      'Network servers, tools, and support.',
+                    'group-xorg':           'The X.org windowing system.'}
+        
+        self._write("newGroup", errors = [], kwargs = {}, troves = troveNames,
+            troveDict = troveDict, metadata = metadata)
         return apache.OK
 
     @ownerOnly
     @strFields(groupName = "", version = "", description = "")
-    def createGroup(self, auth, groupName, version, description):
+    @listFields(str, initialTrove = [])
+    def createGroup(self, auth, groupName, version, description, initialTrove):
         errors = []
         fullGroupName = "group-" + groupName
 
@@ -145,6 +178,10 @@ class ProjectHandler(WebHandler):
             gt = self.client.createGroupTrove(self.project.getId(), fullGroupName,
                 version, description, True)
             gtId = gt.getId()
+
+            for troveName, troveVersion, troveFlavor in (x.split(" ") for x in initialTrove):
+                gt.addTrove(troveName, troveVersion, troveFlavor, fullGroupName, False, False, False)
+            
             return self._redirect("editGroup?id=%d" % gtId)
         else:
             kwargs = {'groupName': groupName, 'version': version}
