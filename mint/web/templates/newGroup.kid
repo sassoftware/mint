@@ -60,6 +60,25 @@
                                 <p class="help">Please enter a description of this group.</p>
                             </td>
                         </tr>
+                        <tr>
+                            <th colspan="2">Start Your Group:</th>
+                            <td>
+                                <p class="help">You can choose some predefined groups of packages to add to your own group.
+                                    If you want to choose the individual troves entirely yourself, you don't have to select
+                                    any here.
+                                </p>
+
+                                <ul>
+                                    <li py:for="t in troves" py:if="metadata[t]">
+                                        <input type="checkbox" class="check"
+                                               name="initialTrove" py:attrs="{'checked': 'checked' and t == 'group-core' or None}"
+                                               value="${t} ${troveDict[t][0].asString()} ${troveDict[t][1].freeze()}" />
+                                            <b>${t}</b> - ${metadata[t]}
+                                    </li>
+                                </ul>
+                            </td>
+                        </tr>
+                        
                     </table>
                     <p><button type="submit">Create</button></p>
                 </form>
