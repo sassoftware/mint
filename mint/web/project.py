@@ -238,12 +238,17 @@ class ProjectHandler(WebHandler):
 
     @ownerOnly
     @intFields(id=None)
-    @strFields(trove=None, version='', flavor='', referer='')
+    @strFields(trove=None, version='', flavor='', referer='', projectName = '')
     @boolFields(versionLock=False)
-    def addGroupTrove(self, auth, id, trove, version, flavor, referer, versionLock):
+    def addGroupTrove(self, auth, id, trove, version, flavor, referer, versionLock, projectName):
         assert(id == self.session['groupTroveId'])
         curGroupTrove = self.client.getGroupTrove(id)
-        curGroupTrove.addTrove(trove, version, '', '', versionLock, False, False)
+        if version != '':
+            curGroupTrove.addTrove(trove, version, '', '', versionLock, False, False)
+        else:
+            import sys
+            print >> sys.stderr, "Trying the translation method..."
+            curGroupTrove.addTroveByProject(trove, projectName, '', '', versionLock, False, False)
         if not referer:
             referer = project.getUrl()
         return self._redirect(referer)

@@ -1643,26 +1643,45 @@ class MintServer(object):
         projectId = self.groupTroves.getProjectId(groupTroveId)
         self._filterProjectAccess(projectId)
         self._requireProjectOwner(projectId)
-        if trvVersion == '':
-            # if the trvVersion is blank, we need to properly populate it.
-            # this is not the preferred method, but needs to be supported so
-            # that we can call this function from contexts where the version is
-            # not readily available...
-            project = projects.Project(self, projectId)
-            repos = self._getProjectRepo(project)
-            leaves = repos.getTroveVersionsByLabel(
-                {trvName:{versions.Label(project.getLabel()):None}})
-            if trvName not in leaves:
-                raise TroveNotFound
-            trvVersion = sorted(leaves[trvName].keys(),
-                                reverse = True)[0].asString()
-
         creatorId = self.users.getIdByColumn("username", self.authToken[0])
         return self.groupTroveItems.addTroveItem(groupTroveId, creatorId,
                                                  trvName, trvVersion,
                                                  trvFlavor, subGroup,
                                                  versionLock, useLock,
                                                  instSetLock)
+
+    @typeCheck(int, str, str, str, str, bool, bool, bool)
+    @requiresAuth
+    def addGroupTroveItemByProject(self, groupTroveId, trvName, projectName,
+                                   trvFlavor, subGroup, versionLock, useLock,
+                                   instSetLock):
+        projectId = self.projects.getProjectIdByHostname(projectName)
+        project = projects.Project(self, projectId)
+        repos = self._getProjectRepo(project)
+        groupTrove = grouptrove.GroupTrove(self, groupTroveId)
+        groupProject = projects.Project(self, groupTrove.projectId)
+        affineLabel = project.getLabel().split('@')[0] + '@' + groupProject.getLabel().split('@')[1]
+        # initial try. see if there's a trove affinite with branchName from
+        # groupTroveId's project
+        leaves = repos.getTroveVersionsByLabel(
+            {trvName:{versions.Label(affineLabel):None}})
+        # fallback 1. pick default branchName of that project
+        if not leaves:
+            leaves = repos.getTroveVersionsByLabel(
+                {trvName:{versions.Label(project.getLabel()):None}})
+        # fallback 2. find the first branchName match that we can...
+        if not leaves:
+            leaves = repos.getAllTroveLeaves(0, {trvName: None})
+        if trvName not in leaves:
+            raise TroveNotFound
+        trvVersion = sorted(leaves[trvName].keys(),
+                            reverse = True)[0].asString()
+        
+        groupTroveItemId = self.addGroupTroveItem(groupTroveId, trvName,
+                                                  trvVersion, trvFlavor,
+                                                  subGroup, versionLock,
+                                                  useLock, instSetLock)
+        return (groupTroveItemId, trvName, trvVersion)
 
     @typeCheck(int)
     @requiresAuth

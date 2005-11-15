@@ -241,6 +241,13 @@ class GroupTrove(database.TableObject):
     def delete(self):
         return self.server.deleteGroupTrove(self.groupTroveId)
 
+    def addTroveByProject(self, trvname, projectName, trvFlavor, subGroup,
+                          versionLock, useLock, InstSetLock):
+        return self.server.addGroupTroveItemByProject(self.getId(), trvname,
+                                                      projectName, trvFlavor,
+                                                      subGroup, versionLock,
+                                                      useLock, InstSetLock)
+
     def addTrove(self, trvname, trvVersion, trvFlavor, subGroup, versionLock,
                  useLock, InstSetLock):
         return self.server.addGroupTroveItem(self.getId(), trvname, trvVersion,

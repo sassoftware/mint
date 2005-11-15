@@ -31,7 +31,7 @@ def pluralTroves(c):
             package += ':' + component
             str = 'trove'
         ?>
-        <a href="${groupProject.getUrl()}addGroupTrove?id=${groupTrove.id};trove=${quote(package)};referer=${quote(req.unparsed_uri)}">
+        <a href="${groupProject.getUrl()}addGroupTrove?id=${groupTrove.id};trove=${quote(package)};referer=${quote(req.unparsed_uri)};projectName=${project.hostname}">
         Add this ${str} <img style="border: none;" src="${cfg.staticPath}apps/mint/images/group.png" />
         </a>
     </span>

@@ -86,7 +86,7 @@ class GroupTroveTest(MintRepositoryHelper):
         assert(gTrv['trvVersion'] == '/test.localhost@rpl:devel/1.0-1-1')
         assert(gTrv['trvLabel'] == 'test.localhost@rpl:devel')
 
-    def testMissingVersion(self):
+    def testAddByProject(self):
         client, userId = self.quickMintUser('testuser', 'testpass')
         projectId = self.newProject(client)
 
@@ -104,13 +104,20 @@ class GroupTroveTest(MintRepositoryHelper):
             versions.Label("test.localhost@rpl:devel"),
             ignoreDeps = True)
 
-        trvId = groupTrove.addTrove(trvName, trvVersion, trvFlavor,
-                                   subGroup, False, False, False)
+        trvId, newTrvName, trvVersion = \
+               groupTrove.addTroveByProject(trvName, 'test', trvFlavor,
+                                            subGroup, False, False, False)
+
+        if newTrvName != trvName:
+            self.fail("wrong name returned")
 
         gTrv = groupTrove.getTrove(trvId)
 
         if gTrv['trvVersion'] != refTrvVersion:
-            self.fail('Blank trove version was mangled. It is: %s, but it should have been: %s' %(gTrv['trvVersion'], refTrvVersion))
+            self.fail('Trove Version not stored correctly. It is:\n%s, but it should have been:\n%s' %(gTrv['trvVersion'], refTrvVersion))
+
+        if trvVersion != refTrvVersion:
+            self.fail('Trove version was mangled. It is:\n%s, but it should have been:\n%s' %(trvVersion, refTrvVersion))
 
     def testAutoResolve(self):
         client, userId = self.quickMintUser('testuser', 'testpass')
