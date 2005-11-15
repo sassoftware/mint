@@ -67,11 +67,13 @@
                                     If you want to choose the individual troves entirely yourself, you don't have to select
                                     any here.
                                 </p>
+                                <p class="help">These troves come from rPath Linux on the conary.rpath.com@rpl:1 label</p>
 
                                 <ul>
                                     <li py:for="t in troves" py:if="metadata[t]">
                                         <input type="checkbox" class="check"
-                                               name="initialTrove" py:attrs="{'checked': 'checked' and t == 'group-core' or None}"
+                                               name="initialTrove" py:attrs="{'checked': 'checked' and t == 'group-core' or None,
+                                                                              'disabled': 'disabled' and t == 'group-core' or None}"
                                                value="${t} ${troveDict[t][0].asString()} ${troveDict[t][1].freeze()}" />
                                             <b>${t}</b> - ${metadata[t]}
                                     </li>
