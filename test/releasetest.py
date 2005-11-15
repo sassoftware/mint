@@ -32,7 +32,9 @@ class ReleaseTest(MintRepositoryHelper):
 
         release.setFiles([["file1", "File Title 1"], ["file2", "File Title 2"]])
         assert(release.getFiles() ==\
-            [(1, 'file1', 'File Title 1'), (2, 'file2', 'File Title 2')])
+            [{'fileId': 1, 'filename': 'file1', 'title': 'File Title 1', 'size': 0,},
+             {'fileId': 2, 'filename': 'file2', 'title': 'File Title 2', 'size': 0,}]
+        )
 
         desc = 'Just some random words'
         release.setDesc(desc)
