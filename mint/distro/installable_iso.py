@@ -149,7 +149,7 @@ class InstallableIso(ImageGenerator):
         
             # copy pixmaps and scripts into cramfs root
             tmpTar = tempfile.mktemp(suffix = '.tar')
-            call('tar', 'cf', tmpTar, tmpRoot + "/usr/share/anaconda/")
+            call('tar', 'cf', tmpTar, '-C', tmpRoot + '/usr/share/anaconda/', './')
             call('tar', 'xf', tmpTar, '-C', tmpPath)
         else:
             print >> sys.stderr, "anaconda-images not found on repository either, not including custom artwork or scripts."
