@@ -1358,7 +1358,19 @@ class MintServer(object):
         if len(results) < 1:
             return []
         else:
-            return [(x[0], os.path.basename(x[1]), x[2]) for x in results]
+            l = []
+            for x in results:
+                try:
+                    size = os.stat(x[1])[6]
+                except OSError:
+                    size = 0
+                d = {'fileId':      x[0],
+                     'filename':    os.path.basename(x[1]),
+                     'title':       x[2],
+                     'size':        size,
+                    }
+                l.append(d)
+            return l
    
     @typeCheck(int)
     @private

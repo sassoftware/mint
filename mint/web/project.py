@@ -238,7 +238,7 @@ class ProjectHandler(WebHandler):
 
     @ownerOnly
     @intFields(id=None)
-    @strFields(trove=None, version=None, flavor='', referer='')
+    @strFields(trove=None, version='', flavor='', referer='')
     @boolFields(versionLock=False)
     def addGroupTrove(self, auth, id, trove, version, flavor, referer, versionLock):
         assert(id == self.session['groupTroveId'])
