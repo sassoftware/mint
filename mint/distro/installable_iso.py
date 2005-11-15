@@ -90,6 +90,12 @@ def _linkRecurse(fromDir, toDir):
             gencslist._linkOrCopyFile(src, dest)
 
 
+def call(*cmds):
+    print >> sys.stderr, " ".join(cmds)
+    sys.stderr.flush()
+    subprocess.call(cmds)
+
+
 class InstallableIso(ImageGenerator):
     configObject = IsoConfig
 
@@ -142,10 +148,9 @@ class InstallableIso(ImageGenerator):
             sys.stderr.flush()
         
             # copy pixmaps and scripts into cramfs root
-            cmd = ['cp', '-av', tmpRoot + "/usr/share/anaconda/*", tmpPath]
-            print >> sys.stderr, " ".join(cmd)
-            sys.stderr.flush()
-            subprocess.call(cmd)
+            tmpTar = tempfile.mktemp(suffix = '.tar')
+            call('tar', 'xf', tmpTar, tmpRoot + "/usr/share/anaconda/")
+            call('tar', 'cf', tmpTar, '-C', tmpPath)
         else:
             print >> sys.stderr, "anaconda-images not found on repository either, not including custom artwork or scripts."
                 
@@ -158,10 +163,7 @@ class InstallableIso(ImageGenerator):
         conaryrcFile.close()
             
         # create cramfs
-        cmd = ['mkcramfs', tmpPath, productPath]
-        print >> sys.stderr, " ".join(cmd)
-        sys.stderr.flush()
-        subprocess.call(cmd)
+        call('mkcramfs', tmpPath, productPath)
         
         # clean up
         util.rmtree(tmpPath)
@@ -304,10 +306,7 @@ class InstallableIso(ImageGenerator):
 
         self.writeProductImage()
 
-        cmd = [isocfg.scriptPath + "/splitdistro", topdir]
-        print >> sys.stderr, " ".join(cmd)
-        sys.stderr.flush()
-        subprocess.call(cmd)
+        call(isocfg.scriptPath + "/splitdistro", topdir)
 
         # Abort if parent thread has died
         assertParentAlive()
@@ -329,25 +328,20 @@ class InstallableIso(ImageGenerator):
             infoMap['iso'] =  isoname % infoMap
             if os.access(os.path.join(discdir, d, "isolinux/isolinux.bin"), os.R_OK):
                 os.chdir(os.path.join(discdir, d))
-                cmd = ["mkisofs", "-o", "%(isodir)s/%(iso)s" % infoMap,
-                                  "-b", "isolinux/isolinux.bin",
-                                  "-c", "isolinux/boot.cat",
-                                  "-no-emul-boot",
-                                  "-boot-load-size", "4",
-                                  "-boot-info-table", "-R", "-J",
-                                  "-V",  "%(discname)s" % infoMap, "-T", "."]
-                print >> sys.stderr, cmd
-                sys.stderr.flush()
-                subprocess.call(cmd)
+                call("mkisofs", "-o", "%(isodir)s/%(iso)s" % infoMap,
+                                "-b", "isolinux/isolinux.bin",
+                                "-c", "isolinux/boot.cat",
+                                "-no-emul-boot",
+                                "-boot-load-size", "4",
+                                "-boot-info-table", "-R", "-J",
+                                "-V",  "%(discname)s" % infoMap,
+                                "-T", ".")
                 # Abort if parent thread has died
                 assertParentAlive()
             else:
                 os.chdir(os.path.join(discdir, d))
-                cmd = ["mkisofs", "-o", "%(isodir)s/%(iso)s" % infoMap,
-                       "-R", "-J", "-V", "\"%(discname)s\"" % infoMap, "-T", "."]
-                print >> sys.stderr, cmd
-                sys.stderr.flush()
-                subprocess.call(cmd)
+                call("mkisofs", "-o", "%(isodir)s/%(iso)s" % infoMap,
+                     "-R", "-J", "-V", "\"%(discname)s\"" % infoMap, "-T", ".")
                 # Abort if parent thread has died
                 assertParentAlive()
 
@@ -362,9 +356,7 @@ class InstallableIso(ImageGenerator):
                 if skipMediaCheck:
                     cmd.append('--supported-iso')
                 cmd.append(iso)
-                print >> sys.stderr, cmd
-                sys.stderr.flush()
-                subprocess.call(cmd)
+                call(*cmd)
 
         # add the netboot images
         bootDest = os.path.join(infoMap['isodir'], 'boot.iso')
