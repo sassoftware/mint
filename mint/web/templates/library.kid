@@ -117,28 +117,39 @@ from mint import userlevels
             <table>
               <thead>
                 <tr>
-                    <th colspan="2">Name</th>
-                    <th>Label</th>
+                    <th colspan="3">Trove</th>
+                    <th>Project</th>
                     <th>Delete</th>
                 </tr>
               </thead>
               <tbody class="group-builder" id="groupbuilder-tbody">
                 <tr></tr>
-                <tr py:for="item in groupTrove.listTroves()" id="groupbuilder-item-${item['groupTroveItemId']}"><td></td><td>${item['trvName']}</td>
-                    <td py:if="item['versionLock']">${item['trvVersion']}</td>
-                    <td py:if="not item['versionLock']">${item['trvLabel']}</td>
+                <?python
+                    from conary import versions
+                ?>
+                <tr py:for="item in groupTrove.listTroves()" id="groupbuilder-item-${item['groupTroveItemId']}">
+                    <?python
+                        host = versions.VersionFromString(item['trvVersion']).branch().label().getHost()
+                        shorthost = host.split('.')[0]
+                    ?>
+                    <td><img py:if="item['trvName'].startswith('group-')" src="${cfg.staticPath}apps/mint/images/group.png" border="0" /></td>
+                    <td py:if="item['versionLock']"><img src="${cfg.staticPath}apps/mint/images/locked.gif" height="10"/></td>
+                    <td py:if="not item['versionLock']"><img src="${cfg.staticPath}apps/mint/images/unlocked.gif" height="10"/></td>
+                    <td><a href="${cfg.basePath}repos/${shorthost}/troveInfo?t=${quote(item['trvName'])};v=${quote(item['trvVersion'])}" title="Name: ${item['trvName']}; Version: ${item['trvVersion']}">${item['trvName']}</a></td>
+                    <td><a href="${cfg.basePath}repos/${shorthost}/browse">${shorthost}</a></td>
                     <td><a href="${groupProject.getUrl()}deleteGroupTrove?id=${groupTrove.id};troveId=${item['groupTroveItemId']};referer=${quote(req.unparsed_uri)}">X</a></td>
                 </tr>
                 <tr id="groupbuilder-example" style="display:none">
-                    <td id="groupbuilder-example group"><img src="/conary-static/apps/mint/images/group.png" style="border: none;" /></td>
-                    <td id="groupbuilder-example name">Name</td>
-                    <td id="groupbuilder-example version">Version</td>
+                    <td id="groupbuilder-example group"><img src="${cfg.staticPath}apps/mint/images/group.png" style="border: none;" /></td>
+                    <td id="groupbuilder-example versionLock"><img src="${cfg.staticPath}apps/mint/images/locked.gif"/></td>
+                    <td id="groupbuilder-example name"><a href="#">Trove</a></td>
+                    <td id="groupbuilder-example project">Project</td>
                     <td id="groupbuilder-example delete"><a href="${groupProject.getUrl()}deleteGroupTrove?id=${groupTrove.id};troveId=TROVEID;referer=${quote(req.unparsed_uri)}">X</a></td>
                 </tr>
               </tbody>
               <tfoot>
                 <tr class="groupcook">
-                    <td colspan="3" style="text-align: center; padding: 1em;">
+                    <td colspan="4" style="text-align: center; padding: 1em;">
                         <a class="option" style="display: inline;" href="${groupProject.getUrl()}cookGroup?id=${groupTrove.id}">Cook This Group</a>
                     </td>
                 </tr>
