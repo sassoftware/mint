@@ -152,6 +152,9 @@ LinkManager.prototype.getUrlData = function(link) {
         args['versionLock'] = true;
     else
         args['versionLock'] = false;
+
+    if(args['version'] == undefined)
+        args['version'] = '';
     return args;
 }
 
