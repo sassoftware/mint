@@ -71,7 +71,8 @@
 
                                 <ul>
                                     <li py:for="t in troves" py:if="metadata[t]">
-                                        <input type="checkbox" class="check"
+                                        <input type="hidden" name="initialTrove" value="${t} ${troveDict[t][0].asString()} ${troveDict[t][1].freeze()}" py:if="t == 'group-core'"/>
+                                        <input type="checkbox" class="check" py:if="t != 'group-core'"
                                                name="initialTrove" py:attrs="{'checked': 'checked' and t == 'group-core' or None,
                                                                               'disabled': 'disabled' and t == 'group-core' or None}"
                                                value="${t} ${troveDict[t][0].asString()} ${troveDict[t][1].freeze()}" />
