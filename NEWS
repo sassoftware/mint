@@ -6,6 +6,9 @@ Changes in 1.1.0:
   more small improvements.
 * MySQL support is included, but not turned on by default.
 * Group troves in the repository browser show contained troves instead of files.
+* A group builder has been implemented.
+* The installable ISO generator now copies anything from /usr/share/anaconda/ in
+  anaconda-custom to the product.img.
 
 Changes in 1.0.2:
 
