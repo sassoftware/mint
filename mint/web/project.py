@@ -227,7 +227,7 @@ class ProjectHandler(WebHandler):
         if confirmed:
             # Delete the group
             self.client.deleteGroupTrove(id)
-            if self.session['groupTroveId'] == id:
+            if 'groupTroveId' in self.session and self.session['groupTroveId'] == id:
                 del self.session['groupTroveId']
             return self._redirect('groups')
         else:
