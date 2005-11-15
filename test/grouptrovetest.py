@@ -86,6 +86,32 @@ class GroupTroveTest(MintRepositoryHelper):
         assert(gTrv['trvVersion'] == '/test.localhost@rpl:devel/1.0-1-1')
         assert(gTrv['trvLabel'] == 'test.localhost@rpl:devel')
 
+    def testMissingVersion(self):
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client)
+
+        groupTrove = self.createTestGroupTrove(client, projectId)
+        groupTroveId = groupTrove.getId()
+
+        trvName = 'testcase'
+        trvVersion = ''
+        refTrvVersion = '/test.localhost@rpl:devel/1.0-1-1'
+        trvFlavor = '1#x86|5#use:~!kernel.debug:~kernel.smp'
+        subGroup = ''
+
+        self.makeSourceTrove("testcase", testRecipe)
+        self.cookFromRepository("testcase",
+            versions.Label("test.localhost@rpl:devel"),
+            ignoreDeps = True)
+
+        trvId = groupTrove.addTrove(trvName, trvVersion, trvFlavor,
+                                   subGroup, False, False, False)
+
+        gTrv = groupTrove.getTrove(trvId)
+
+        if gTrv['trvVersion'] != refTrvVersion:
+            self.fail('Blank trove version was mangled. It is: %s, but it should have been: %s' %(gTrv['trvVersion'], refTrvVersion))
+
     def testAutoResolve(self):
         client, userId = self.quickMintUser('testuser', 'testpass')
         projectId = self.newProject(client)

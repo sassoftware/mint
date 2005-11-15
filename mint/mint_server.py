@@ -1626,13 +1626,31 @@ class MintServer(object):
 
     @typeCheck(int, str, str, str, str, bool, bool, bool)
     @requiresAuth
-    def addGroupTroveItem(self, groupTroveId, trvname, trvVersion, trvFlavor,
+    def addGroupTroveItem(self, groupTroveId, trvName, trvVersion, trvFlavor,
                      subGroup, versionLock, useLock, instSetLock):
         projectId = self.groupTroves.getProjectId(groupTroveId)
         self._filterProjectAccess(projectId)
         self._requireProjectOwner(projectId)
+        if trvVersion == '':
+            # if the trvVersion is blank, we need to properly populate it.
+            # this is not the preferred method, but needs to be supported so
+            # that we can call this function from contexts where the version is
+            # not readily available...
+            project = projects.Project(self, projectId)
+            repos = self._getProjectRepo(project)
+            leaves = repos.getTroveVersionsByLabel(
+                {trvName:{versions.Label(project.getLabel()):None}})
+            if trvName not in leaves:
+                raise TroveNotFound
+            trvVersion = sorted(leaves[trvName].keys(),
+                                reverse = True)[0].asString()
+
         creatorId = self.users.getIdByColumn("username", self.authToken[0])
-        return self.groupTroveItems.addTroveItem(groupTroveId, creatorId, trvname, trvVersion, trvFlavor, subGroup, versionLock, useLock, instSetLock)
+        return self.groupTroveItems.addTroveItem(groupTroveId, creatorId,
+                                                 trvName, trvVersion,
+                                                 trvFlavor, subGroup,
+                                                 versionLock, useLock,
+                                                 instSetLock)
 
     @typeCheck(int)
     @requiresAuth
