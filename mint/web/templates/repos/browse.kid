@@ -108,7 +108,6 @@ def pluralTroves(c):
                         </td>
                     </tr>
                 </table>
-                <div py:if="groupTrove">Select a trove to add it to ${groupTrove.recipeName}</div>
             </div>
         </td>
         <td id="right" class="projects">
