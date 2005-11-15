@@ -53,6 +53,7 @@ function XmlRpcRequest(url, method)
             }
             else {
                 // don't do this, because we could spam the user with dialog boxes.
+                log("XMLRPC call returned " + req.status);
                 // alert("There was a problem processing the XML data:\n" + req.statusText);
             }
         }

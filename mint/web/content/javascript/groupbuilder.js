@@ -190,5 +190,5 @@ function initGroupTroveManager() {
 function initLinkManager() {
     linkManager = new LinkManager();
     linkManager.url = XmlRpcUrl;
-    linkManager.reworkLinks();
+    //linkManager.reworkLinks();
 }
