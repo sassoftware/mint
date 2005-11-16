@@ -25,14 +25,8 @@ def pluralTroves(c):
     </div>
 
     <span py:def="adder(package, component='')" style="float: right;" py:if="groupTrove">
-        <?python
-          str = 'package'
-          if component:
-            package += ':' + component
-            str = 'trove'
-        ?>
         <a href="${groupProject.getUrl()}addGroupTrove?id=${groupTrove.id};trove=${quote(package)};referer=${quote(req.unparsed_uri)};projectName=${project.hostname}">
-        Add this ${str} <img style="border: none;" src="${cfg.staticPath}apps/mint/images/group.png" />
+            Add to ${groupTrove.recipeName} <img style="border: none;" src="${cfg.staticPath}apps/mint/images/group.png" />
         </a>
     </span>
 

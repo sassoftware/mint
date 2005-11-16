@@ -56,7 +56,7 @@
                         (resultset[4], resultset[3])
                     ]
                     if groupTrove:
-                        formattedresults.append(('project/%s/addGroupTrove?id=%d;trove=%s;version=%s;referer=%s' % (groupTrove.projectName, groupTrove.getId(), quote(resultset[0]), resultset[1], quote(req.unparsed_uri)) , 'Add this trove'))
+                        formattedresults.append(('project/%s/addGroupTrove?id=%d;trove=%s;version=%s;referer=%s' % (groupTrove.projectName, groupTrove.getId(), quote(resultset[0]), resultset[1], quote(req.unparsed_uri)) , 'Add to %s' % groupTrove.recipeName))
             ?>
             ${resultRow(formattedresults)}
         </div>
