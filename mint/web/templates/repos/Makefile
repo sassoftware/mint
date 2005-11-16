@@ -8,6 +8,7 @@ kid_files =			\
 	browse.kid		\
 	error.kid		\
 	files.kid		\
+	group_contents.kid	\
 	notice.kid		\
 	pgp_admin.kid		\
 	pgp_submit_key.kid	\
