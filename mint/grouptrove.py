@@ -33,9 +33,9 @@ class GroupTroveTable(database.KeyedTable):
                                  groupTroveId INTEGER,
                                  projectId INT,
                                  creatorId INT,
-                                 recipeName STR,
-                                 upstreamVersion STR,
-                                 description STR,
+                                 recipeName CHAR(32),
+                                 upstreamVersion CHAR(128),
+                                 description TEXT,
                                  timeCreated INT,
                                  timeModified INT,
                                  autoResolve INT,
@@ -123,10 +123,10 @@ class GroupTroveItemsTable(database.KeyedTable):
                                  groupTroveItemId INTEGER,
                                  groupTroveId INT,
                                  creatorId INT,
-                                 trvName STR,
-                                 trvVersion STR,
-                                 trvFlavor STR,
-                                 subGroup STR,
+                                 trvName CHAR(128),
+                                 trvVersion TEXT,
+                                 trvFlavor TEXT,
+                                 subGroup CHAR(128),
                                  versionLock INT,
                                  useLock INT,
                                  instSetLock INT,
@@ -281,7 +281,7 @@ class GroupTrove(database.TableObject):
         return self.server.getRecipe(self.getId())
 
     def startCookJob(self):
-        return self.server.startCookJob(self.id)
+        return self.server.startCookJob(self.id) 
 
     def getJob(self):
         jobId = self.server.getJobIdForCook(self.id)
