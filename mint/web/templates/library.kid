@@ -4,6 +4,11 @@ import time
 from mint import searcher
 from urllib import quote
 from mint import userlevels
+
+def injectVersion(version):
+    parts = version.split('/')
+    parts[-1] = str(time.time()) + ':' + parts[-1]
+    return '/'.join(parts)
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#">
@@ -128,16 +133,18 @@ from mint import userlevels
                 <tr></tr>
                 <?python
                     from conary import versions
+                    import time
                 ?>
                 <tr py:for="item in groupTrove.listTroves()" id="groupbuilder-item-${item['groupTroveItemId']}">
                     <?python
                         host = versions.VersionFromString(item['trvVersion']).branch().label().getHost()
                         shorthost = host.split('.')[0]
+
                     ?>
                     <td><img py:if="item['trvName'].startswith('group-')" src="${cfg.staticPath}apps/mint/images/group.png" border="0" /></td>
                     <td py:if="item['versionLock']"><img src="${cfg.staticPath}apps/mint/images/locked.gif" height="10"/></td>
                     <td py:if="not item['versionLock']"><img src="${cfg.staticPath}apps/mint/images/unlocked.gif" height="10"/></td>
-                    <td><a href="${cfg.basePath}repos/${shorthost}/troveInfo?t=${quote(item['trvName'])};v=${quote(item['trvVersion'])}" title="Name: ${item['trvName']}; Version: ${item['trvVersion']}">${item['trvName']}</a></td>
+                    <td><a href="${cfg.basePath}repos/${shorthost}/troveInfo?t=${quote(item['trvName'])};v=${quote(injectVersion(item['trvVersion']))}" title="Name: ${item['trvName']}; Version: ${item['trvVersion']}">${item['trvName']}</a></td>
                     <td><a href="${cfg.basePath}repos/${shorthost}/browse">${shorthost}</a></td>
                     <td><a href="${groupProject.getUrl()}deleteGroupTrove?id=${groupTrove.id};troveId=${item['groupTroveItemId']};referer=${quote(req.unparsed_uri)}">X</a></td>
                 </tr>
