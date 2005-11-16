@@ -35,7 +35,7 @@ netclients = {}
 for r in cu.fetchall():
     projectId, hostname = r
 
-    l, repMap = labelsTable.getLabelsForProject(projectId, useSSL = cfg.SSL)
+    l, repMap = labelsTable.getLabelsForProject(projectId, overrideSSL=True, useSSL = cfg.SSL)
     
     hostname = repMap.keys()[0]
     labels[hostname] = versions.Label(l.keys()[0])
