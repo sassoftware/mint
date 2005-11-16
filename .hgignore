@@ -2,3 +2,4 @@
 (^|/)\.hg($|/)
 ^state$
 ^state.journal$
+~$
