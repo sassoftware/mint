@@ -72,6 +72,7 @@ class NewsCacheTable(database.KeyedTable):
 
         cu = self.db.cursor()
 
+        self.db.transaction()
         if purge:
             cu.execute("DELETE FROM NewsCache")
 
