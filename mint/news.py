@@ -70,18 +70,15 @@ class NewsCacheTable(database.KeyedTable):
         if (time.time() - REFRESH_TIME) < self.ageTable.getAge():
             return False
 
-        cu = self.db.cursor()
-
-        self.db.transaction()
-        if purge:
-            cu.execute("DELETE FROM NewsCache")
-
         try:
             url = urllib2.urlopen(self.cfg.newsRssFeed)
             data = url.read()
         except urllib2.URLError:
-            self.db.rollback()
             return False
+
+        cu = self.db.cursor()
+        if purge:
+            cu.execute("DELETE FROM NewsCache")
 
         tree = ElementTree.XML(data)
         feedLink = tree.find("channel/link").text
@@ -96,7 +93,6 @@ class NewsCacheTable(database.KeyedTable):
             cu.execute(query, title, pubDate, content, link, category)
         
         self.ageTable.set(t = time.time(), link = feedLink)
-        self.db.commit()
         return True
 
     def getNews(self):
