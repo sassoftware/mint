@@ -47,7 +47,7 @@ from mint.mint import timeDelta
                 ${searchMenu()}
             </div>
         </td>
-        <td id="main" class="spanall">
+        <td id="main">
             <div class="pad">
                 <h2>Browse Projects</h2>
                 ${sortOrderForm(sortOrder)}
