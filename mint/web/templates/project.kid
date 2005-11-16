@@ -134,5 +134,12 @@
                 </li>
             </ul>
         </div>
+        <div class="pad" py:if="output != 'xhtml'">
+            <p class="help">
+                <span style="color: red;">PLEASE NOTE:</span>
+                Internet Explorer is not supported by rBuilder Online.
+                Please use Firefox or Mozilla for a fully-functional experience.
+            </p>
+        </div>
     </td>
 </html>

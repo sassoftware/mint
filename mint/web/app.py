@@ -254,6 +254,7 @@ class MintApp(WebHandler):
             'isOwner':          self.isOwner,
             'groupTrove':       self.groupTrove,
             'groupProject':     self.groupProject,
+            'output':           self.output,
         }
 
         # match the requested url to the right url handler
