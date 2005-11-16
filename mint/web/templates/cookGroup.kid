@@ -25,13 +25,17 @@
         </td>
         <td id="main">
             <div class="pad">
-                <h1 id="pleaseWait">Cooking Group</h1>
-                <h2>Progress: <span id="jobStatus"> </span></h2>
+                <h1 id="pleaseWait">Cooking Your Group</h1>
+
+                <p>Your request to cook ${groupTrove.recipeName} has been
+                submitted.</p>
+
+                <h2>Request Status: <span id="jobStatus"> </span></h2>
  
-                <pre style="padding: 1em; border: 1px solid #dddddd; background: #efefef; margin: 1em;">${XML(recipe.replace('\n', '&lt;br/&gt;'))}</pre>
-                
-                <p><i>[FIXME: improve wording and instructions]</i> When the group has finished cooking,
-                    click on Releases on the left and pick ${groupTrove.recipeName} to create a release.</p>
+                <p>When the request status "Finished" appears, your group
+                has finished cooking. Click on the "Releases" link in the
+                "Project Resources" sidebar, and select
+                ${groupTrove.recipeName} to create a release.</p>
             </div>
         </td>
         <td id="right" class="projects">
