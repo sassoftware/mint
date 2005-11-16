@@ -105,7 +105,7 @@ from mint import userlevels
         <script type="text/javascript" src="${cfg.staticPath}apps/MochiKit/MochiKit.js"/>
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/groupbuilder.js"/>
         <script type="text/javascript">
-            var XmlRpcUrl = '${cfg.basePath}xmlrpc';
+            var BaseUrl = '${cfg.basePath}';
             addLoadEvent(initLinkManager);
             addLoadEvent(initGroupTroveManager);
         </script>
@@ -143,7 +143,7 @@ from mint import userlevels
                     <td id="groupbuilder-example group"><img src="${cfg.staticPath}apps/mint/images/group.png" style="border: none;" /></td>
                     <td id="groupbuilder-example versionLock"><img src="${cfg.staticPath}apps/mint/images/locked.gif"/></td>
                     <td id="groupbuilder-example name"><a href="#">Trove</a></td>
-                    <td id="groupbuilder-example project">Project</td>
+                    <td id="groupbuilder-example projectName">Project</td>
                     <td id="groupbuilder-example delete"><a href="${groupProject.getUrl()}deleteGroupTrove?id=${groupTrove.id};troveId=TROVEID;referer=${quote(req.unparsed_uri)}">X</a></td>
                 </tr>
               </tbody>

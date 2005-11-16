@@ -48,6 +48,17 @@ GroupTroveManager.prototype.addTrove = function (url, id, name, version, version
     req.send(id, name, version, '', '', Boolean(versionLock), false, false);
 }
 
+GroupTroveManager.prototype.addTroveByProject = function (url, id, name, projectName, versionLock, referer) {
+    /* Form up the xmlrpc call and add this trove.
+    */
+    logDebug('Creating the addTroveByProject xmlrpc request object');
+    var req = new XmlRpcRequest(url, 'addGroupTroveItemByProject');
+    req.setAuth(getCookieValue("pysid"));
+    req.setHandler(this.troveAddedByProject, {'id': id, 'name': name, 'projectName': projectName, 'versionLock': versionLock, 'referer': referer});
+    logDebug("Sending the request");
+    req.send(id, name, projectName, '', '', Boolean(versionLock), false, false);
+}
+
 GroupTroveManager.prototype.deleteTrove = function(url, id, troveId) {
     logDebug('Creating the deleteTrove xmlrpc request object');
     var req = new XmlRpcRequest(url, 'delGroupTroveItem');
@@ -58,37 +69,38 @@ GroupTroveManager.prototype.deleteTrove = function(url, id, troveId) {
     req.send(troveId);
 }
 
-GroupTroveManager.prototype.troveAdded = function(items, data) {
-    logDebug("troveAdded");
-    var nodes = items.getElementsByTagName('int');
-    var retVal = scrapeText(nodes[0]);
-    //Now create the table row
+GroupTroveManager.prototype.createTroveRow = function(data) {
+    logDebug("createTroveRow");
     newRow = this.exampleNode.cloneNode(true);
-    newRow.id = 'groupbuilder-item-' + retVal;
+    logDebug("New row created");
+    newRow.id = 'groupbuilder-item-' + data['groupTroveItemId'];
+    logDebug('id set to: ' + newRow.id);
     for (var col = 0; col < newRow.childNodes.length; col++)
     {
+        logDebug("working on item " + col);
         //Pull the id tag of this child
         var child = newRow.childNodes[col];
         if(child.nodeType == 1)
         {
+            logDebug("Working on an element node: " + child.nodeName);
             var idstr = getNodeAttribute(child, 'id');
             child.id = null;
             var parsed = idstr.split(' ');
             if(parsed[1] == 'delete'){
-                logDebug("troveAdded 'delete'");
+                logDebug("createTroveRow 'delete'");
                 //Replace the TROVEID string with the returned value
                 var a = child.getElementsByTagName('a');
                 var link = a[0].href;
-                a[0].href = link.replace(/TROVEID/, retVal);
+                a[0].href = link.replace(/TROVEID/, data['groupTroveItemId']);
             }
             else if(parsed[1] == 'group') {
-                logDebug("troveAdded 'group'");
+                logDebug("createTroveRow 'group'");
                 if (data['name'].indexOf('group-') != 0) {
                     replaceChildNodes(child, null);
                 }
             }
             else if(parsed[1] == 'versionLock') {
-                logDebug("troveAdded 'versionLock'");
+                logDebug("createTroveRow 'versionLock'");
                 if (! data['versionLock']) {
                     var img = child.getElementsByTagName('img');
                     src = img[0].src;
@@ -96,18 +108,21 @@ GroupTroveManager.prototype.troveAdded = function(items, data) {
                 }
             }
             else if(parsed[1] == 'name') {
-                logDebug("troveAdded 'name'");
+                logDebug("createTroveRow 'name'");
                 replaceChildNodes(child, A({'href': data['referer'],
                                             'title': 'Name: ' + data['name'] + '; Version: ' +
                                             data['version']}, data['name']));
                 logDebug("name finished");
             }
-            else if(parsed[1] == 'project') {
-                logDebug("troveAdded 'project'");
-                replaceChildNodes(child, 'current');
+            else if(parsed[1] == 'projectName') {
+                logDebug("createTroveRow 'projectName'");
+                if(data[parsed[1]])
+                    replaceChildNodes(child, A({'href': this.baseUrl + 'project/' + data[parsed[1]]}, data[parsed[1]]));
+                else
+                    replaceChildNodes(child, 'current');
             }
             else {
-                logDebug("troveAdded 'other'");
+                logDebug("createTroveRow 'other'");
                 log(data[parsed[1]]);
                 replaceChildNodes(child, data[parsed[1]]);
             }
@@ -119,6 +134,26 @@ GroupTroveManager.prototype.troveAdded = function(items, data) {
     }
     logDebug("Appending new row" + toHTML(newRow));
     this.tableNode.appendChild(newRow);
+}
+
+GroupTroveManager.prototype.troveAdded = function(items, data) {
+    logDebug("troveAdded");
+    var nodes = items.getElementsByTagName('int');
+    data['groupTroveItemId'] = scrapeText(nodes[0]);
+    //Now create the table row
+    logDebug('data: ' + data);
+    this.createTroveRow(data);
+}
+
+GroupTroveManager.prototype.troveAddedByProject = function(items, data) {
+    logDebug('troveAddedByProject');
+    logDebug('data: ' + data);
+    var array = items.getElementsByTagName('array')[0].getElementsByTagName('array')[0];
+    var values = array.getElementsByTagName('value');
+    data['groupTroveItemId'] = scrapeText(values[0]);
+    data['version'] = scrapeText(values[2]);
+    logDebug("data is now: " + data);
+    this.createTroveRow(data);
 }
 
 GroupTroveManager.prototype.troveDeleted = function(items) {
@@ -173,8 +208,16 @@ LinkManager.prototype.reworkLinks = function () {
         else if (href.indexOf('addGroupTrove') >= 0) {
             //Replace this with a javascript command
             var args = this.getUrlData(href);
-            anchor.href = "javascript:groupTroveManager.addTrove('" + this.url + "', " +
-                args['id'] + ", '"+ args['trove'] + "', '" + args['version'] + "', " + args['versionLock'] + ");";
+            if (args['version']) {
+                anchor.href = "javascript:groupTroveManager.addTrove('" + this.url + "', " +
+                    args['id'] + ", '" + args['trove'] + "', '" + args['version'] + "', " +
+                    args['versionLock'] + ", '" + args['referer'] + "');";
+            }
+            else if(args['projectName']){
+                anchor.href = "javascript:groupTroveManager.addTroveByProject('" + this.url + "', " +
+                    args['id'] + ", '" + args['trove'] + "', '" + args['projectName'] + "', " +
+                    args['versionLock'] + ", '" + args['referer'] + "');";
+            }
         }
     }
 }
@@ -185,10 +228,11 @@ linkManager = null;
 function initGroupTroveManager() {
     //createLoggingPane(true);
     groupTroveManager = new GroupTroveManager();
+    groupTroveManager.baseUrl = BaseUrl;
 }
 
 function initLinkManager() {
     linkManager = new LinkManager();
-    linkManager.url = XmlRpcUrl;
+    linkManager.url = BaseUrl + 'xmlrpc';
     linkManager.reworkLinks();
 }
