@@ -40,12 +40,12 @@ title = "Create New Release"
                         </td></tr>
 
                         <tr>
-                            <th><em class="required">Distribution Trove:</em></th>
+                            <th><em class="required">Distribution Group:</em></th>
                             <td>
 
-                                <p class="help">Please select the group or fileset trove that makes up your distribution</p>
+                                <p class="help">Please select the group that defines your distribution</p>
                                 <select name="trove" size="15" id="trove" >
-                                    <option value="" id="pleaseWait">Loading trove list, please wait</option>
+                                    <option value="" id="pleaseWait">Loading group list, please wait</option>
                                 </select>
                             </td>
                         </tr>
