@@ -67,7 +67,7 @@
                 ${searchMenu(searchType)}
             </div>
         </td>
-        <td id="main" class="spanall">
+        <td id="main">
             <div class="pad">
                 <h2>search results: ${searchType}</h2>
                 ${navigation("search?type=%s;search=%s;modified=%d"%(searchType, terms, modified), terms, count, limit, offset)}
