@@ -88,15 +88,22 @@ from urllib import quote
                 <button onclick="javascript:window.location='deleteGroup?id=${curGroupTrove.getId()}';">Delete This Group</button></p>
 
                 <h3 style="color:#FF7001;">Step 1: Add Packages To Your Group</h3>
-                <p>Now that you have a basic group, you can add additional packages to it. You can add any package from any ${cfg.productName} project.</p>
+                <p>You have a group. Now add packages to it from any
+                ${cfg.productName} project. To add a package, search or browse for
+                the desired package, and click on its "Add to &lt;group-name&gt;"
+                link.</p>
 
                 <h3 style="color:#FF7001;">Step 2: Cook Your Group</h3>
-                <p>"Cooking" the group assembles your chosen packages, resolves any library dependencies, and creates a representation of the group in
-                binary form on your project's repository.</p>
+                <p>"Cooking" the group assembles your chosen packages, resolves any
+                library dependencies, and creates a binary representation of the group
+                that is committed into your project's repository.</p>
 
                 <h3 style="color:#ff7001;">Step 3: Create A Release</h3>
-                <p>Once you have cooked a group successfully, create a <a href="releases"><b>New Release</b></a> and select the name of the group you just cooked.
-                  Select a version, architecture, and a handful of other options, and you will have an installable ISO-9660 image in less than 5 minutes!
+                <p>Once your group has cooked successfully, create a
+                <a href="releases"><b>New Release</b></a> by selecting the name of
+                the group you just cooked. Select a version, architecture, and a
+                handful of other options, and you will have an installable ISO-9660
+                image in minutes!
                 </p>
             </div>
         </td>
