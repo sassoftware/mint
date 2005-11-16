@@ -221,6 +221,13 @@ class ProjectHandler(WebHandler):
         return apache.OK
 
     @ownerOnly
+    @strFields(referer = None)
+    def closeCurrentGroup(self, auth, referer):
+        if 'groupTroveId' in self.session:
+            del self.session['groupTroveId']
+        return self._redirect(referer)
+
+    @ownerOnly
     @intFields(id = None)
     @boolFields(confirmed=False)
     def deleteGroup(self, auth, id, confirmed):

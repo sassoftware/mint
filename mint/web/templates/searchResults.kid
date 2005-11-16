@@ -81,7 +81,7 @@
         <td id="right" class="projects">
             ${projectsPane()}
             <div class="pad">
-                ${groupTroveBuilder()}
+                ${groupTroveBuilder(searchType=='Packages' and 'block' or 'none')}
             </div>
         </td>
     </body>

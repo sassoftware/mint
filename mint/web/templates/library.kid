@@ -101,7 +101,7 @@ from mint import userlevels
         </div>
     </div>
 
-    <div id="groupbuilder" class="palette" py:def="groupTroveBuilder(display='block')" py:strip="False" py:if="groupTrove">
+    <div id="groupbuilder" class="palette" py:def="groupTroveBuilder(display='none')" py:strip="False" py:if="groupTrove">
         <script type="text/javascript" src="${cfg.staticPath}apps/MochiKit/MochiKit.js"/>
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/groupbuilder.js"/>
         <script type="text/javascript">
@@ -110,9 +110,11 @@ from mint import userlevels
             addLoadEvent(initGroupTroveManager);
         </script>
         <h3>
+            <a href="${groupProject.getUrl()}closeCurrentGroup?referer=${quote(req.unparsed_uri)}" title="Close"><img id="groupbuilder_items_close" src="${cfg.staticPath}/apps/mint/images/BUTTON_close.gif" border="0" /></a>
+            <a href="javascript:toggle_display('groupbuilder_items');" title="Minimize/Maximize"><img id="groupbuilder_items_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_${display == 'block' and 'collapse' or 'expand'}.gif" border="0" /></a>
             Group Builder 
         </h3>
-        <div id="group_trove_builder_items" style="display: $display">
+        <div id="groupbuilder_items" style="display: $display">
             <h4><a href="${groupProject.getUrl()}editGroup?id=${groupTrove.id}">Current Group: ${groupTrove.recipeName}</a></h4>
             <table>
               <thead>
