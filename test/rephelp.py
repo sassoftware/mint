@@ -584,15 +584,20 @@ class RepositoryHelper(testsuite.TestCase):
 	self.openRepository()
 	cvc.sourceCommand(self.cfg, [ "newpkg", name], {})
 
-    def makeSourceTrove(self, name, recipeFile, branch=None):
-        origDir = os.getcwd()
-        os.chdir(self.workDir)
-        self.newpkg(name)
-        os.chdir(name)
-        self.writeFile(name + '.recipe', recipeFile)
-        self.addfile(name + '.recipe')
-        self.commit()
-        os.chdir(origDir)
+    def makeSourceTrove(self, name, recipeFile, branch = 'rpl:devel'):
+        buildLabel = self.cfg.buildLabel
+        self.cfg.buildLabel = versions.Label(buildLabel.asString().split("@")[0] + "@" + branch)
+        try:
+            origDir = os.getcwd()
+            os.chdir(self.workDir)
+            self.newpkg(name)
+            os.chdir(name)
+            self.writeFile(name + '.recipe', recipeFile)
+            self.addfile(name + '.recipe')
+            self.commit()
+            os.chdir(origDir)
+        finally:
+            self.cfg.buildLabel = buildLabel
 
     def updateSourceTrove(self, name, recipeFile, versionStr=None):
         origDir = os.getcwd()

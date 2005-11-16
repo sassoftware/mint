@@ -86,38 +86,43 @@ class GroupTroveTest(MintRepositoryHelper):
         assert(gTrv['trvVersion'] == '/test.localhost@rpl:devel/1.0-1-1')
         assert(gTrv['trvLabel'] == 'test.localhost@rpl:devel')
 
-    def testAddByProject(self):
-        client, userId = self.quickMintUser('testuser', 'testpass')
-        projectId = self.newProject(client)
-
-        groupTrove = self.createTestGroupTrove(client, projectId)
-        groupTroveId = groupTrove.getId()
-
-        trvName = 'testcase'
-        trvVersion = ''
-        refTrvVersion = '/test.localhost@rpl:devel/1.0-1-1'
-        trvFlavor = '1#x86|5#use:~!kernel.debug:~kernel.smp'
-        subGroup = ''
-
-        self.makeSourceTrove("testcase", testRecipe)
+    def makeCookedTrove(self, branch):
+        self.makeSourceTrove("testcase", testRecipe, branch = branch)
         self.cookFromRepository("testcase",
-            versions.Label("test.localhost@rpl:devel"),
+            versions.Label("test.localhost@%s" % branch),
             ignoreDeps = True)
 
-        trvId, newTrvName, trvVersion = \
-               groupTrove.addTroveByProject(trvName, 'test', trvFlavor,
-                                            subGroup, False, False, False)
+    def testAddByProject(self):
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        groupProjectId = self.newProject(client, name = 'Foo',
+                                         hostname = 'foo')
+        groupProject = client.getProject(groupProjectId)
 
-        if newTrvName != trvName:
-            self.fail("wrong name returned")
+        cu = self.db.cursor()
+        cu.execute('UPDATE Labels SET label=? WHERE projectId=?',
+                   'test.localhost@foo:bar', groupProjectId)
 
-        gTrv = groupTrove.getTrove(trvId)
+        projectId = self.newProject(client)
 
-        if gTrv['trvVersion'] != refTrvVersion:
-            self.fail('Trove Version not stored correctly. It is:\n%s, but it should have been:\n%s' %(gTrv['trvVersion'], refTrvVersion))
+        groupTrove = self.createTestGroupTrove(client, groupProjectId)
+        groupTroveId = groupTrove.getId()
 
-        if trvVersion != refTrvVersion:
-            self.fail('Trove version was mangled. It is:\n%s, but it should have been:\n%s' %(trvVersion, refTrvVersion))
+        # these branch names are not haphazard choices. order and exact
+        # contents matter. each one is designed to override the previous.
+        # the first is utterly random
+        # the second is the default project branch name from the target proejct
+        # the third is the branch name of the project containing groupTrove
+        for branch in ('ravenous:bugblatterbeast', 'rpl:devel', 'foo:bar'):
+            refTrvVersion = '/test.localhost@%s/1.0-1-1' % branch
+
+            self.makeCookedTrove(branch)
+
+            trvId, trvName, trvVersion = \
+                   groupTrove.addTroveByProject('testcase', 'test', '', '',
+                                                False, False, False)
+
+            if trvVersion != refTrvVersion:
+                self.fail('Trove version was mangled. It is:\n%s, but it should have been:\n%s' %(trvVersion, refTrvVersion))
 
     def testAutoResolve(self):
         client, userId = self.quickMintUser('testuser', 'testpass')
