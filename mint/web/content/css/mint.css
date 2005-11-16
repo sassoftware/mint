@@ -223,13 +223,13 @@ div.palette#groupbuilder table tr:first-child {
     font-weight: bold;
 }
 
-table#groupTroveItems tr:first-child {
+table#groupTroveItems > tr:first-child {
     font-size: 110%;
     font-weight: bold;
     color: white;
     background-color: rgb(153, 153, 153);
 }
 
-table#groupTroveItems tr:first-child td {
+table#groupTroveItems > tr:first-child td {
     padding: 0.5em;
 }

@@ -33,7 +33,7 @@ from urllib import quote
                 <script type="text/javascript">
                   function dropdown()
                   {
-                    var verelem = document.getElementById('version');
+                    var verelem = document.getElementById('editGTDropdown');
                     var state = verelem.style.display;
                     var newstate = null;
                     var img = document.getElementById('version_expander');
@@ -46,7 +46,6 @@ from urllib import quote
                         img.src = img.src.replace('collapse', 'expand');
                     }
                     verelem.style.display = newstate;
-                    document.getElementById('description').style.display = newstate;
                     return false;
                   }
                 </script>
@@ -58,15 +57,20 @@ from urllib import quote
                             <div style="float:right"><a onclick="javascript:dropdown();" href="#">Edit 
                                 <img id="version_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" border="0"/></a></div>
                         </td></tr>
-                        <tr style="display:none" id="version">
-                            <td>Version</td>
-                            <td colspan="3"><input type="text" value="${curGroupTrove.upstreamVersion}" name="version"/></td>
+                        <tr id="editGTDropdown" style="display:none;">
+                            <td colspan="4">
+                                <table style="padding: 0.75em; background: #eeeeee;">
+                                    <tr>
+                                        <td>Version</td>
+                                        <td colspan="3"><input type="text" value="${curGroupTrove.upstreamVersion}" name="version"/></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Description</td>
+                                        <td colspan="3"><textarea rows="10" cols="70" name="description" py:content="curGroupTrove.description"/></td>
+                                    </tr>
+                                </table>
+                            </td>
                         </tr>
-                        <tr style="display:none" id="description">
-                            <td>Description</td>
-                            <td colspan="3"><textarea rows="10" cols="70" name="description" py:content="curGroupTrove.description"/></td>
-                        </tr>
-
                         <tr style="background: #efefef;">
                             <td>Trove</td>
                             <td>Version</td>

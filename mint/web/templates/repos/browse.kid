@@ -24,7 +24,7 @@ def pluralTroves(c):
         <a href="#">Repository Browser</a>
     </div>
 
-    <span py:def="adder(package, component='')" style="float: right;" py:if="groupTrove">
+    <span py:def="adder(package, component='')" style="float: right;" py:if="groupTrove and package != groupTrove.recipeName">
         <a href="${groupProject.getUrl()}addGroupTrove?id=${groupTrove.id};trove=${quote(package)};referer=${quote(req.unparsed_uri)};projectName=${project.hostname}">
             Add to ${groupTrove.recipeName} <img style="border: none;" src="${cfg.staticPath}apps/mint/images/group.png" />
         </a>
