@@ -6,6 +6,7 @@
 
 python_files = \
 	gencslist.py		\
+	group_trove.py		\
 	imagegen.py		\
 	__init__.py		\
 	installable_iso.py	\

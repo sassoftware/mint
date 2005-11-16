@@ -11,6 +11,7 @@ kid_files = \
 	conaryUserCfg.kid	\
 	confirmEmail.kid	\
 	confirm.kid		\
+	cookGroup.kid		\
 	editGroup.kid		\
 	editProject.kid		\
 	editRelease.kid		\

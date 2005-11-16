@@ -14,6 +14,7 @@ python_files =			\
 	constants.py		\
 	database.py		\
 	dbversion.py		\
+	grouptrove.py		\
 	jobs.py			\
 	jobstatus.py		\
 	mailinglists.py		\
