@@ -113,7 +113,7 @@ from mint import userlevels
             Group Builder 
         </h3>
         <div id="group_trove_builder_items" style="display: $display">
-            <h4><a href="${groupProject.getUrl()}editGroup?id=${groupTrove.id}">Group in progress: ${groupTrove.recipeName}</a></h4>
+            <h4><a href="${groupProject.getUrl()}editGroup?id=${groupTrove.id}">Current Group: ${groupTrove.recipeName}</a></h4>
             <table>
               <thead>
                 <tr>
