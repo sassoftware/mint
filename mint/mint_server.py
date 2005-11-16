@@ -356,6 +356,8 @@ class MintServer(object):
         for userId, username, level in members:
             if (userId == self.auth.userId) and (level != userlevels.OWNER):
                 raise PermissionDenied
+        if self.auth.userId not in [x[0] for x in members]:
+            raise PermissionDenied
 
     @typeCheck(str, str, str, str, str)
     # project methods
@@ -1655,7 +1657,9 @@ class MintServer(object):
     def addGroupTroveItemByProject(self, groupTroveId, trvName, projectName,
                                    trvFlavor, subGroup, versionLock, useLock,
                                    instSetLock):
+        self._allowPrivate = True
         projectId = self.projects.getProjectIdByHostname(projectName)
+        self._filterProjectAccess(projectId)
         project = projects.Project(self, projectId)
         repos = self._getProjectRepo(project)
         groupTrove = grouptrove.GroupTrove(self, groupTroveId)

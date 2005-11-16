@@ -109,6 +109,7 @@ class GroupTroveTest(MintRepositoryHelper):
 
         # these branch names are not haphazard choices. order and exact
         # contents matter. each one is designed to override the previous.
+        # other constructs may pass, but not consistently.
         # the first is utterly random
         # the second is the default project branch name from the target proejct
         # the third is the branch name of the project containing groupTrove
@@ -123,6 +124,35 @@ class GroupTroveTest(MintRepositoryHelper):
 
             if trvVersion != refTrvVersion:
                 self.fail('Trove version was mangled. It is:\n%s, but it should have been:\n%s' %(trvVersion, refTrvVersion))
+
+    def testAddPermissions(self):
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client)
+
+        groupTrove = self.createTestGroupTrove(client, projectId)
+        groupTroveId = groupTrove.getId()
+        newClient = self.openMintClient(('anonymous', 'anonymous'))
+        try:
+            newClient.server.addGroupTroveItemByProject(groupTroveId,
+                                                        'testcase', 'test', '',
+                                                        '', False, False,
+                                                        False)
+        except PermissionDenied:
+            pass
+        else:
+            self.fail('Anonymous user allowed to add group trove item')
+        
+        newClient, garbage = self.quickMintUser('anotherGuy','testpass')
+        try:
+            newClient.server.addGroupTroveItemByProject(groupTroveId,
+                                                        'testcase', 'test', '',
+                                                        '', False, False,
+                                                        False)
+        except PermissionDenied:
+            pass
+        else:
+            self.fail('Non-member user allowed to add group trove item')
+
 
     def testAutoResolve(self):
         client, userId = self.quickMintUser('testuser', 'testpass')
