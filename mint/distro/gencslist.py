@@ -409,6 +409,7 @@ class LocalServerCache:
             repos = LocalRepository(serverName, self.path)
             server = shimclient.ShimServerProxy(repos, 'http', 80,
                                                 ('anonymous', 'anonymous'))
+            self.cache[item] = server
 	return server
 
     def __init__(self, path):
@@ -420,7 +421,7 @@ class LocalServerCache:
 	self.path = path
 
     def close(self):
-        for server in self.cache:
+        for server in self.cache.values():
             server.close()
 
 
