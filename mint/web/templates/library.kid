@@ -107,7 +107,6 @@ def injectVersion(version):
     </div>
 
     <div id="groupbuilder" class="palette" py:def="groupTroveBuilder(display='none')" py:strip="False" py:if="groupTrove">
-        <script type="text/javascript" src="${cfg.staticPath}apps/MochiKit/MochiKit.js"/>
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/groupbuilder.js"/>
         <script type="text/javascript">
             var BaseUrl = '${cfg.basePath}';
