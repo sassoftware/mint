@@ -55,4 +55,3 @@ class MembershipRequestTable(database.DatabaseTable):
             return r[0]
         else:
             return ''
-            #raise database.ItemNotFound('comment')
