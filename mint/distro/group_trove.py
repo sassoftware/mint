@@ -5,12 +5,14 @@
 #
 import os.path
 import tempfile
+import sys
 
 from conary import checkin
 from conary import conarycfg
-from conary.repository import netclient
 from conary import versions
 from conary.build import cook
+from conary.deps import deps
+from conary.repository import netclient
 
 from imagegen import ImageGenerator
 from mint import projects
@@ -28,6 +30,7 @@ class GroupTroveCook(ImageGenerator):
             projectId = groupTrove.projectId
             recipe = groupTrove.getRecipe()
             sourceName = groupTrove.recipeName + ":source"
+            arch = str(deps.ThawDependencySet(self.job.getDataValue("arch")))
 
             project = self.client.getProject(projectId)
 
@@ -62,7 +65,9 @@ class GroupTroveCook(ImageGenerator):
             # commit recipe as changeset
             message = "Auto generated commit from %s.\n%s" % (cfg.name, groupTrove.description)
             checkin.commit(repos, cfg, message)
-            ret = cook.cookItem(repos, cfg, groupTrove.recipeName)
+
+            troveSpec = "%s[%s]" % (groupTrove.recipeName, arch)
+            ret = cook.cookItem(repos, cfg, troveSpec)
             ret = ret[0][0]
         finally:
             os.chdir(curDir)
