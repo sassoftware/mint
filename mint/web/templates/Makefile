@@ -28,6 +28,7 @@ kid_files = \
 	newProject.kid		\
 	newRelease.kid		\
 	passwordReset.kid	\
+	pickArch.kid		\
 	project.kid		\
 	projectPage.kid		\
 	projects.kid		\
