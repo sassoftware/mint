@@ -386,7 +386,7 @@ class LocalRepository(netserver.NetworkRepositoryServer):
             self.repos.troveStore.db.rollback()
             pass
 
-    def close(self):
+    def __del__(self):
         self.db.close()
         del self.db
 
@@ -420,18 +420,11 @@ class LocalServerCache:
 	self.cache = {}
 	self.path = path
 
-    def close(self):
-        for server in self.cache.values():
-            server.close()
-
 
 class LocalNetClient(netclient.NetworkRepositoryClient):
     def __init__(self, path):
         self.c = LocalServerCache(path)
         self.localRep = None
-
-    def close(self):
-        self.c.close()
 
 
 def _getTrove(cs, name, version, flavor):
@@ -517,7 +510,6 @@ def writeSqldb(cs, path):
     # copy the file to the final location
     shutil.copyfile(tmpdir + '/sqldb', path)
     shutil.rmtree(tmpdir)
-    repos.close()
 
 def usage():
     print "usage: %s group /path/to/changesets/ [sqldb]" %sys.argv[0]
@@ -572,8 +564,4 @@ if __name__ == '__main__':
         os.unlink(path)
 
     if sqldbpath:
-        tmpdir = tempfile.mkdtemp()
         writeSqldb(groupcs, sqldbpath)
-        shutil.copyfile(tmpdir + '/sqldb', sqldbpath)
-        shutil.rmtree(tmpdir)
-
