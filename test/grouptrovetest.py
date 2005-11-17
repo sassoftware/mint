@@ -22,8 +22,42 @@ from mint.mint_error import PermissionDenied
 from mint.distro import group_trove
 from mint.jobs import DuplicateJob
 
-refRecipe = "class GroupTest(GroupRecipe):\n    name = 'group-test'\n    version = '1.0.0'\n\n    autoResolve = False\n\n    def setup(r):\n        r.setLabelPath('test.localhost@rpl:devel')\n        r.add('testcase', 'test.localhost@rpl:devel', '', groupName = 'group-test')\n"
+refRecipe = """class GroupTest(GroupRecipe):
+    name = 'group-test'
+    version = '1.0.0'
 
+    autoResolve = False
+
+    def setup(r):
+        r.setLabelPath('test.localhost@rpl:devel')
+        r.add('testcase', 'test.localhost@rpl:devel', '', groupName = 'group-test')
+"""
+
+groupsRecipe = """class GroupTest(GroupRecipe):
+    name = 'group-test'
+    version = '1.0.0'
+
+    autoResolve = False
+
+    def setup(r):
+        r.setLabelPath('test.localhost@rpl:devel', 'conary.rpath.com@rpl:1')
+        r.add('testcase', 'test.localhost@rpl:devel', '', groupName = 'group-test')
+        if Arch.x86_64:
+            r.add('group-core', 'conary.rpath.com@rpl:1', 'is:x86(i486,i586,i686) x86_64', groupName = 'group-test')
+        else:
+            r.add('group-core', 'conary.rpath.com@rpl:1', '', groupName = 'group-test')
+"""
+
+lockedRecipe = """class GroupTest(GroupRecipe):
+    name = 'group-test'
+    version = '1.0.0'
+
+    autoResolve = False
+
+    def setup(r):
+        r.setLabelPath('test.localhost@rpl:devel')
+        r.add('testcase', '/test.localhost@rpl:devel/1.0-1-1', '', groupName = 'group-test')
+"""
 
 class GroupTroveTest(MintRepositoryHelper):
     def addTestTrove(self, groupTrove, trvName):
@@ -366,12 +400,22 @@ class GroupTroveTest(MintRepositoryHelper):
         groupTroveId = groupTrove.getId()
 
         trvId = self.addTestTrove(groupTrove, "testcase")
-
-        if (groupTrove.getRecipe() != refRecipe):
-            self.fail("auto generated recipe did not return expected results")
+        assert(groupTrove.getRecipe() == refRecipe)
 
         groupTrove.setTroveVersionLock(trvId, True)
-        groupTrove.getRecipe()
+        assert(groupTrove.getRecipe() == lockedRecipe)   
+        groupTrove.setTroveVersionLock(trvId, False)
+
+        # test the "fancy-flavored" group-core hack:
+        groupTrove.addTrove('group-core', '/conary.rpath.com@rpl:devel//1/0.99.0-0.1-1',
+            '1#x86:i486:i586:i686:~!sse2|1#x86_64|5#use:X:~!alternatives:~!bootstrap:'
+            '~!builddocs:~buildtests:desktop:~!dietlibc:emacs:gcj:~glibc.tls:gnome:'
+            '~grub.static:gtk:ipv6:kde:~!kernel.debug:~!kernel.debugdata:~!kernel.numa:'
+            'krb:ldap:nptl:~!openssh.smartcard:~!openssh.static_libcrypto:pam:pcre:perl:'
+            '~!pie:~!postfix.mysql:python:qt:readline:sasl:~!selinux:~sqlite.threadsafe:'
+            'ssl:tcl:tcpwrappers:tk:~!xorg-x11.xprint', 'group-test', False, False, False)
+        assert(groupTrove.getRecipe() == groupsRecipe)
+        
 
     def testMultipleAdditions(self):
         client, userId = self.quickMintUser('testuser', 'testpass')

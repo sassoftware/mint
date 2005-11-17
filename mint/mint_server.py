@@ -1513,9 +1513,16 @@ class MintServer(object):
 
         for trv in groupTroveItems:
             if trv['versionLock']:
-                recipe += indent + "r.add('" + trv['trvName'] + "', '" + trv['trvVersion'] + "', '" + trv['trvFlavor'] + "', groupName = '" +trv['subGroup'] +"')\n"
+                ver = trv['trvVersion']
             else:
-                recipe += indent + "r.add('" + trv['trvName'] + "', '" + trv['trvLabel'] + "', '" + trv['trvFlavor'] + "', groupName = '" +trv['subGroup'] +"')\n"
+                ver = trv['trvLabel']
+                
+            # XXX HACK to use the "fancy-flavored" group troves from conary.rpath.com
+            if trv['trvName'].startswith('group-') and trv['trvLabel'].startswith('conary.rpath.com@'):
+                recipe += indent + "if Arch.x86_64:\n"
+                recipe += (12 * " ") + "r.add('" + trv['trvName'] + "', '" + ver + "', 'is:x86(i486,i586,i686) x86_64', groupName = '" +trv['subGroup'] +"')\n"
+                recipe += indent + "else:\n" + (4 * " ") 
+            recipe += indent + "r.add('" + trv['trvName'] + "', '" + ver + "', '" + trv['trvFlavor'] + "', groupName = '" +trv['subGroup'] +"')\n"
         return recipe
 
     @typeCheck(int)
