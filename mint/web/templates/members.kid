@@ -30,7 +30,7 @@ from mint import userlevels
                 <div class="palette" id="addmember" py:if="isOwner">
 
                     <h3 onclick="javascript:toggle_display('addmember_items');">
-                        <img id="addmember_items_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_collapse.gif" border="0" />
+                        <img id="addmember_items_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_collapse.gif" class="noborder" />
                         Add New Member
                     </h3>
                     <div id="addmember_items" style="display: block">

@@ -55,7 +55,7 @@ from urllib import quote
                         <tr><td colspan="4">
                             <div style="float:left">${curGroupTrove.recipeName} version ${curGroupTrove.upstreamVersion}</div>
                             <div style="float:right"><a onclick="javascript:dropdown();" href="#">Edit 
-                                <img id="version_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" border="0"/></a></div>
+                                <img id="version_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" /></a></div>
                         </td></tr>
                         <tr id="editGTDropdown" style="display:none;">
                             <td colspan="4">

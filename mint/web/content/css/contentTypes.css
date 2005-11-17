@@ -37,7 +37,9 @@
 }
 .palette h3 {
 	color:#fff; background-color:#999;
-	border:1px #909090 solid; padding:4px 11px 6px 11px;
+	border:2px solid;
+        border-color: #b0b0b0 #808080 #808080 #b0b0b0;
+        padding:4px 11px 6px 11px;
 }
 div.palette h3 img {
         float: right;
@@ -130,6 +132,7 @@ div.palette h3 img {
         border-width: 2px;
 }
 
+
 /* RECENT RELEASES STYLES */
 div.releases_project {
 }
@@ -198,6 +201,10 @@ th .required {
 	background:url(../images/required.gif) no-repeat 0em 0.45em;
 }
 
+.noborder, .lockicon {
+        border: 0;
+}
+
 /* SEARCH RESULTS TABLE LAYOUT */
 .results {
 	padding:0px 0px 4px 0px; margin:8px 0px 8px 0px;
@@ -218,6 +225,12 @@ th .required {
 }
 strong.keyword {
 	color:#FF7C04;
+}
+
+table.pager {
+        border: 0px;
+        padding: 0px;
+        margin: 0px 0px 1em 0px;
 }
 
 .pager td {

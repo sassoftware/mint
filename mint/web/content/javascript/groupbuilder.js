@@ -17,6 +17,9 @@ On pages that allow for group manipulation do the following:
     TODO:
         Sorting of the list
 */
+// Some frequently used strings
+const LockedVersionTitle = "Click to use the most recent version";
+const UnlockedVersionTitle = "Click to lock version";
 
 function GroupTroveItem(item) {
     bindMethods(this);
@@ -116,11 +119,14 @@ GroupTroveManager.prototype.createTroveRow = function(data) {
             }
             else if(parsed[1] == 'versionLock') {
                 logDebug("createTroveRow 'versionLock'");
+                var img = child.getElementsByTagName('img')[0];
                 if (! data['versionLock']) {
-                    var img = child.getElementsByTagName('img');
-                    src = img[0].src;
-                    img[0].src = src.replace(/locked/, 'unlocked');
+                    var src = img.src;
+                    img.src = src.replace(/locked/, 'unlocked');
                 }
+                img.id = img.id.replace(/TROVEID/, data['groupTroveItemId']);
+                logDebug("Image ID: " + img.id);
+                this.LinkManager.addLockLink(img);
             }
             else if(parsed[1] == 'name') {
                 logDebug("createTroveRow 'name'");
@@ -156,16 +162,22 @@ GroupTroveManager.prototype.toggleVersionLock = function(items, data) {
     var img = getElement('groupbuilder-item-lockicon-' + data['id']);
     var bools = items.getElementsByTagName('boolean');
     var str = null;
-    logDebug("returned state: " + scrapeText(bools[1]));
-    if(scrapeText(bools[1]) == '1') {
+    var title = null;
+    locked = scrapeText(bools[1]) == '1'
+    logDebug("returned state: " + locked);
+    if(locked) {
         str = 'locked';
+        title = LockedVersionTitle;
     }
     else{
         str = 'unlocked';
+        title = UnlockedVersionTitle;
     }
     logDebug("current state as returned: " + str);
     img.src = img.src.replace(/unlocked|locked/, str);
     logDebug("Set src to: " + img.src);
+    // Fix the tooltip
+    img.title = title;
 }
 
 GroupTroveManager.prototype.troveAdded = function(items, data) {
@@ -225,15 +237,30 @@ LinkManager.prototype.getUrlData = function(link) {
     return args;
 }
 
+LinkManager.prototype.addLockLink = function (img) {
+    logDebug('working with ' + img.id);
+    var parts = img.id.split('-');
+    var id = parts[parts.length-1];
+    if(id != 'TROVEID'){
+        var title = LockedVersionTitle;
+        if(img.src.indexOf('unlocked') >= 0) {
+            title = UnlockedVersionTitle;
+        }
+        img.title = title;
+        var newimg = A({'href': 'javascript: groupTroveManager.toggleLockState("' +
+                                this.url + '", ' + id + ');'
+                       },
+                       img.cloneNode(true));
+        log("Swapping in " + toHTML(newimg));
+        swapDOM(img, newimg);
+    }
+}
+
 LinkManager.prototype.setupLockLinks = function () {
     logDebug("setupLockLinks");
     images = getElementsByTagAndClassName('img', 'lockicon');
     for(var i=0; i < images.length; i++) {
-        var img = images[i];
-        logDebug('working with ' + img.id);
-        var parts = img.id.split('-');
-        var id = parts[parts.length-1];
-        swapDOM(img, A({'href': 'javascript: groupTroveManager.toggleLockState("' + this.url + '", ' + id + ');'}, img.cloneNode(true)));
+        this.addLockLink(images[i]);
     }
     logDebug('finished');
 }
@@ -274,6 +301,7 @@ function initGroupTroveManager() {
     //createLoggingPane(true);
     groupTroveManager = new GroupTroveManager();
     groupTroveManager.baseUrl = BaseUrl;
+    groupTroveManager.LinkManager = linkManager;
 }
 
 function initLinkManager() {
