@@ -85,7 +85,7 @@ def pluralTroves(c):
                               <span>
                                 <a href="troveInfo?t=${quote(package)}">${package}</a>
                                 <a py:if="package in components" class="trove"
-                                   href="javascript:toggle_display('components__${i}');"><img border="0" id="components__${i}_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif"/></a>
+                                   href="javascript:toggle_display('components__${i}');"><img class="noborder" id="components__${i}_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif"/></a>
                               </span>
                             </div>
                             <div py:if="package in components" id="components__${i}"

@@ -96,7 +96,7 @@
                         </td>
                         <td id="nextImg1" style="text-align: right; width: 50%;">
                             <a href="javascript:showStep(curStep+1);">Next Step 
-                            <img border="0" src="${cfg.staticPath}/apps/mint/images/next.gif" /></a>
+                            <img class="noborder" src="${cfg.staticPath}/apps/mint/images/next.gif" /></a>
                         </td>
                     </tr>
                 </table>
@@ -198,7 +198,7 @@
                         </td>
                         <td id="nextImg2" style="text-align: right; width: 33%;">
                             <a href="javascript:showStep(curStep+1);">Next Step 
-                            <img border="0" src="${cfg.staticPath}/apps/mint/images/next.gif" /></a>
+                            <img class="noborder" src="${cfg.staticPath}/apps/mint/images/next.gif" /></a>
                         </td>
                     </tr>
                 </table>

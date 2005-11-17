@@ -34,7 +34,7 @@ def injectVersion(version):
 
         <form method="post" action="${secureProtocol}://${cfg.secureHost}${cfg.basePath}$loginAction">
             <input py:if="loginAction == 'processLogin'" type="hidden" name="to" value="${quote(toUrl)}" />
-            <table border="0" cellspacing="0" cellpadding="0" summary="layout">
+            <table class="noborder" cellspacing="0" cellpadding="0" summary="layout">
                 <tr>
                     ${logo()}
                     <td id="user" py:if="not auth.authorized">
@@ -93,7 +93,7 @@ def injectVersion(version):
 
     <div id="browse" class="palette" py:def="browseMenu(display='block')" py:strip="False">
         <h3 onclick="javascript:toggle_display('browse_items');">
-            <img id="browse_items_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_${display == 'block' and 'collapse' or 'expand'}.gif" border="0" />
+            <img id="browse_items_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_${display == 'block' and 'collapse' or 'expand'}.gif" class="noborder" />
             Browse
         </h3>
         <div id="browse_items" style="display: $display">
@@ -115,8 +115,8 @@ def injectVersion(version):
             addLoadEvent(initGroupTroveManager);
         </script>
         <h3>
-            <a href="${groupProject.getUrl()}closeCurrentGroup?referer=${quote(req.unparsed_uri)}" title="Close"><img id="groupbuilder_items_close" src="${cfg.staticPath}/apps/mint/images/BUTTON_close.gif" border="0" /></a>
-            <a href="javascript:toggle_display('groupbuilder_items');" title="Minimize/Maximize"><img id="groupbuilder_items_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_${display == 'block' and 'collapse' or 'expand'}.gif" border="0" /></a>
+            <a href="${groupProject.getUrl()}closeCurrentGroup?referer=${quote(req.unparsed_uri)}" title="Close"><img id="groupbuilder_items_close" src="${cfg.staticPath}/apps/mint/images/BUTTON_close.gif" class="noborder" /></a>
+            <a href="javascript:toggle_display('groupbuilder_items');" title="Minimize/Maximize"><img id="groupbuilder_items_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_${display == 'block' and 'collapse' or 'expand'}.gif" class="noborder" /></a>
             Group Builder 
         </h3>
         <div id="groupbuilder_items" style="display: $display">
@@ -141,16 +141,16 @@ def injectVersion(version):
                         shorthost = host.split('.')[0]
 
                     ?>
-                    <td><img py:if="item['trvName'].startswith('group-')" src="${cfg.staticPath}apps/mint/images/group.png" border="0" /></td>
-                    <td py:if="item['versionLock']"><img class="lockicon" id="groupbuilder-item-lockicon-${item['groupTroveItemId']}" src="${cfg.staticPath}apps/mint/images/locked.gif" border="0"/></td>
-                    <td py:if="not item['versionLock']"><img class="lockicon" id="groupbuilder-item-lockicon-${item['groupTroveItemId']}" src="${cfg.staticPath}apps/mint/images/unlocked.gif" border="0"/></td>
+                    <td><img py:if="item['trvName'].startswith('group-')" src="${cfg.staticPath}apps/mint/images/group.png" class="noborder" /></td>
+                    <td py:if="item['versionLock']"><img class="lockicon" id="groupbuilder-item-lockicon-${item['groupTroveItemId']}" src="${cfg.staticPath}apps/mint/images/locked.gif" title="Version is locked" /></td>
+                    <td py:if="not item['versionLock']"><img class="lockicon" id="groupbuilder-item-lockicon-${item['groupTroveItemId']}" src="${cfg.staticPath}apps/mint/images/unlocked.gif" title="Version is unlocked"/></td>
                     <td><a href="${cfg.basePath}repos/${shorthost}/troveInfo?t=${quote(item['trvName'])};v=${quote(injectVersion(item['trvVersion']))}" title="Name: ${item['trvName']}; Version: ${item['trvVersion']}">${item['trvName']}</a></td>
                     <td><a href="${cfg.basePath}repos/${shorthost}/browse">${shorthost}</a></td>
                     <td><a href="${groupProject.getUrl()}deleteGroupTrove?id=${groupTrove.id};troveId=${item['groupTroveItemId']};referer=${quote(req.unparsed_uri)}">X</a></td>
                 </tr>
                 <tr id="groupbuilder-example" style="display:none">
-                    <td id="groupbuilder-example group"><img src="${cfg.staticPath}apps/mint/images/group.png" style="border: none;" /></td>
-                    <td id="groupbuilder-example versionLock"><img src="${cfg.staticPath}apps/mint/images/locked.gif"/></td>
+                    <td id="groupbuilder-example group"><img src="${cfg.staticPath}apps/mint/images/group.png" class="noborder" /></td>
+                    <td id="groupbuilder-example versionLock"><img class="lockicon" id="groupbuilder-item-lockicon-TROVEID" src="${cfg.staticPath}apps/mint/images/locked.gif" /></td>
                     <td id="groupbuilder-example name"><a href="#">Trove</a></td>
                     <td id="groupbuilder-example projectName">Project</td>
                     <td id="groupbuilder-example delete"><a href="${groupProject.getUrl()}deleteGroupTrove?id=${groupTrove.id};troveId=TROVEID;referer=${quote(req.unparsed_uri)}">X</a></td>
@@ -178,7 +178,7 @@ if auth.authorized:
     searchTypes.append('Users')
         ?>
         <h3 onclick="javascript:toggle_display('search_items');">
-            <img id="search_items_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_${display == 'block' and 'collapse' or 'expand'}.gif" border="0" />
+            <img id="search_items_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_${display == 'block' and 'collapse' or 'expand'}.gif" class="noborder" />
             Search
         </h3>
           <div style="display: $display" id="search_items">
@@ -210,7 +210,7 @@ if auth.authorized:
     <div py:def="recentReleasesMenu(releases, display='none')" py:strip="True">
       <div id="releases" class="palette" py:if="releases">
         <h3 onclick="javascript:toggle_display('recentRelease_items');">
-            <img id="browse_items_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_${display == 'block' and 'collapse' or 'expand'}.gif" border="0" />
+            <img id="browse_items_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_${display == 'block' and 'collapse' or 'expand'}.gif" class="noborder" />
             Recently Published Releases
         </h3>
         <div id="recentRelease_items" style="display: $display">
@@ -227,8 +227,7 @@ if auth.authorized:
     </div>
 
 
-    <table border="0" cellspacing="0" cellpadding="0"
-           summary="layout" class="pager" style="margin-bottom: 1em;"
+    <table summary="layout" class="pager" style="margin-bottom: 1em;"
            py:def="navigation(urlbase, terms, count, limit, offset, footer=False)">
         <?python
             plural=""
@@ -246,13 +245,13 @@ if auth.authorized:
                         Showing page ${offset/limit+1} of ${(count+limit-1)/limit}
 
                         <a href="${urlbase};limit=${limit};offset=${max(offset-limit, 0)}" py:if="offset != 0">
-                            <img src="${cfg.staticPath}/apps/mint/images/prev.gif" alt="Previous" title="Previous Page" width="11" height="11" border="0" />
+                            <img src="${cfg.staticPath}/apps/mint/images/prev.gif" alt="Previous" title="Previous Page" width="11" height="11" class="noborder" />
                         </a>
-                        <img py:if="offset == 0" src="${cfg.staticPath}/apps/mint/images/prev_disabled.gif" alt="Previous" title="No previous results" width="11" height="11" border="0"/>
+                        <img py:if="offset == 0" src="${cfg.staticPath}/apps/mint/images/prev_disabled.gif" alt="Previous" title="No previous results" width="11" height="11" class="noborder"/>
                         <a href="${urlbase};limit=${limit};offset=${offset+limit}" py:if="offset+limit &lt; count">
-                            <img src="${cfg.staticPath}/apps/mint/images/next.gif" alt="Next" title="Next Page" width="11" height="11" border="0" />
+                            <img src="${cfg.staticPath}/apps/mint/images/next.gif" alt="Next" title="Next Page" width="11" height="11" class="noborder" />
                         </a>
-                        <img py:if="offset+limit &gt;= count" src="${cfg.staticPath}/apps/mint/images/next_disabled.gif" alt="No next page" title="No subsequent results" width="11" height="11" border="0"/>
+                        <img py:if="offset+limit &gt;= count" src="${cfg.staticPath}/apps/mint/images/next_disabled.gif" alt="No next page" title="No subsequent results" width="11" height="11" class="noborder"/>
                     </span>
                 </form>
             </td>
