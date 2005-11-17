@@ -142,8 +142,8 @@ def injectVersion(version):
 
                     ?>
                     <td><img py:if="item['trvName'].startswith('group-')" src="${cfg.staticPath}apps/mint/images/group.png" border="0" /></td>
-                    <td py:if="item['versionLock']"><img src="${cfg.staticPath}apps/mint/images/locked.gif" height="10"/></td>
-                    <td py:if="not item['versionLock']"><img src="${cfg.staticPath}apps/mint/images/unlocked.gif" height="10"/></td>
+                    <td py:if="item['versionLock']"><img class="lockicon" id="groupbuilder-item-lockicon-${item['groupTroveItemId']}" src="${cfg.staticPath}apps/mint/images/locked.gif" border="0"/></td>
+                    <td py:if="not item['versionLock']"><img class="lockicon" id="groupbuilder-item-lockicon-${item['groupTroveItemId']}" src="${cfg.staticPath}apps/mint/images/unlocked.gif" border="0"/></td>
                     <td><a href="${cfg.basePath}repos/${shorthost}/troveInfo?t=${quote(item['trvName'])};v=${quote(injectVersion(item['trvVersion']))}" title="Name: ${item['trvName']}; Version: ${item['trvVersion']}">${item['trvName']}</a></td>
                     <td><a href="${cfg.basePath}repos/${shorthost}/browse">${shorthost}</a></td>
                     <td><a href="${groupProject.getUrl()}deleteGroupTrove?id=${groupTrove.id};troveId=${item['groupTroveItemId']};referer=${quote(req.unparsed_uri)}">X</a></td>

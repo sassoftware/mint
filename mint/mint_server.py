@@ -1611,7 +1611,6 @@ class MintServer(object):
         self._requireProjectOwner(projectId)
         return self.groupTroveItems.listByGroupTroveId(groupTroveId)
 
-    @private
     @typeCheck(int, bool)
     @requiresAuth
     def setGroupTroveItemVersionLock(self, groupTroveItemId, lock):
@@ -1619,6 +1618,7 @@ class MintServer(object):
         self._filterProjectAccess(projectId)
         self._requireProjectOwner(projectId)
         self.groupTroveItems.setVersionLock(groupTroveItemId, lock)
+        return lock
 
     @private
     @typeCheck(int, bool)
@@ -1628,6 +1628,7 @@ class MintServer(object):
         self._filterProjectAccess(projectId)
         self._requireProjectOwner(projectId)
         self.groupTroveItems.setUseLock(groupTroveItemId, lock)
+        return lock
 
     @private
     @typeCheck(int, bool)
@@ -1637,6 +1638,7 @@ class MintServer(object):
         self._filterProjectAccess(projectId)
         self._requireProjectOwner(projectId)
         self.groupTroveItems.setInstSetLock(groupTroveItemId, lock)
+        return lock
 
     @typeCheck(int, str, str, str, str, bool, bool, bool)
     @requiresAuth

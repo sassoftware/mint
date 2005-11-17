@@ -37,6 +37,22 @@ function GroupTroveManager() {
     swapDOM(exampleNode, null);
 }
 
+GroupTroveManager.prototype.toggleLockState = function (url, id) {
+    //Figure out what to do first
+    img = getElement('groupbuilder-item-lockicon-' + id);
+    var lock = true;
+    if(img.src.indexOf('unlocked') >= 0) {
+        lock = false;
+    }
+    log("Current lock state: " + lock);
+    logDebug('creating toggleLockState XMLRPC request object');
+    var req = new XmlRpcRequest(url, 'setGroupTroveItemVersionLock');
+    req.setAuth(getCookieValue('pysid'));
+    req.setHandler(this.toggleVersionLock, {'id': id});
+    logDebug("Sending the request");
+    req.send(id, Boolean(!lock));
+}
+
 GroupTroveManager.prototype.addTrove = function (url, id, name, version, versionLock, referer) {
     /* Form up the xmlrpc call and add this trove. 
     */
@@ -62,7 +78,6 @@ GroupTroveManager.prototype.addTroveByProject = function (url, id, name, project
 GroupTroveManager.prototype.deleteTrove = function(url, id, troveId) {
     logDebug('Creating the deleteTrove xmlrpc request object');
     var req = new XmlRpcRequest(url, 'delGroupTroveItem');
-    log("Cookie value: " + getCookieValue('pysid'));
     req.setAuth(getCookieValue("pysid"));
     req.setHandler(this.troveDeleted);
     logDebug("Sending the request");
@@ -136,6 +151,23 @@ GroupTroveManager.prototype.createTroveRow = function(data) {
     this.tableNode.appendChild(newRow);
 }
 
+GroupTroveManager.prototype.toggleVersionLock = function(items, data) {
+    logDebug('toggleVersionLock');
+    var img = getElement('groupbuilder-item-lockicon-' + data['id']);
+    var bools = items.getElementsByTagName('boolean');
+    var str = null;
+    logDebug("returned state: " + scrapeText(bools[1]));
+    if(scrapeText(bools[1]) == '1') {
+        str = 'locked';
+    }
+    else{
+        str = 'unlocked';
+    }
+    logDebug("current state as returned: " + str);
+    img.src = img.src.replace(/unlocked|locked/, str);
+    logDebug("Set src to: " + img.src);
+}
+
 GroupTroveManager.prototype.troveAdded = function(items, data) {
     logDebug("troveAdded");
     var nodes = items.getElementsByTagName('int');
@@ -193,6 +225,19 @@ LinkManager.prototype.getUrlData = function(link) {
     return args;
 }
 
+LinkManager.prototype.setupLockLinks = function () {
+    logDebug("setupLockLinks");
+    images = getElementsByTagAndClassName('img', 'lockicon');
+    for(var i=0; i < images.length; i++) {
+        var img = images[i];
+        logDebug('working with ' + img.id);
+        var parts = img.id.split('-');
+        var id = parts[parts.length-1];
+        swapDOM(img, A({'href': 'javascript: groupTroveManager.toggleLockState("' + this.url + '", ' + id + ');'}, img.cloneNode(true)));
+    }
+    logDebug('finished');
+}
+
 LinkManager.prototype.reworkLinks = function () {
     anchors = getElementsByTagAndClassName("a", null);
     //Iterate through the anchors looking for the links to addGroupTrove and deleteGroupTrove
@@ -235,4 +280,5 @@ function initLinkManager() {
     linkManager = new LinkManager();
     linkManager.url = BaseUrl + 'xmlrpc';
     linkManager.reworkLinks();
+    linkManager.setupLockLinks();
 }
