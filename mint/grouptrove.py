@@ -114,10 +114,6 @@ class GroupTroveItemsTable(database.KeyedTable):
     name = "GroupTroveItems"
     key = "groupTroveItemId"
 
-    # unique index to prevent common case of clicking on "add this trove"
-    # button twice in a row.
-    indexes = {'groupTroveItemIdIdx': "CREATE UNIQUE INDEX groupTroveItemIdIdx ON GroupTroveItems(groupTroveId, trvName, trvVersion, trvFlavor)"}
-
     createSQL = """
         CREATE TABLE GroupTroveItems(
                                  groupTroveItemId INTEGER,
@@ -157,6 +153,13 @@ class GroupTroveItemsTable(database.KeyedTable):
 
     def addTroveItem(self, groupTroveId, creatorId, trvName, trvVersion, trvFlavor, subGroup, versionLock, useLock, instSetLock):
         cu = self.db.cursor()
+        cu.execute("""SELECT COUNT(groupTroveId)
+                        FROM GroupTroveItems 
+                        WHERE trvName=? AND trvVersion=? AND trvFlavor=? AND groupTroveId=?""",
+            trvName, trvVersion, trvFlavor, groupTroveId)
+        if cu.fetchone()[0] > 0:
+            raise database.DuplicateItem
+        
         cu.execute("SELECT IFNULL(MAX(groupTroveItemId), 0) + 1 as groupTroveItemId FROM GroupTroveItems")
 
         groupTroveItemId = cu.fetchone()[0]
