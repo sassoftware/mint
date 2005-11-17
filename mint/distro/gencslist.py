@@ -429,7 +429,7 @@ class LocalNetClient(netclient.NetworkRepositoryClient):
         self.c = LocalServerCache(path)
         self.localRep = None
 
-    def close(self, path):
+    def close(self):
         self.c.close()
 
 
