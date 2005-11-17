@@ -88,7 +88,7 @@ from urllib import quote
                     <br/>
                     <button type="submit">Apply Changes</button>
                 </form>
-                <p><button onclick="javascript:window.location='cookGroup?id=${curGroupTrove.getId()}';">Cook This Group</button><br/>
+                <p><button onclick="javascript:window.location='pickArch?id=${curGroupTrove.getId()}';">Cook This Group</button><br/>
                 <button onclick="javascript:window.location='deleteGroup?id=${curGroupTrove.getId()}';">Delete This Group</button></p>
 
                 <h3 style="color:#FF7001;">Step 1: Add Packages To Your Group</h3>

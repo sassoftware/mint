@@ -158,7 +158,7 @@ def injectVersion(version):
               <tfoot>
                 <tr class="groupcook">
                     <td colspan="4" style="text-align: center; padding: 1em;">
-                        <a class="option" style="display: inline;" href="${groupProject.getUrl()}cookGroup?id=${groupTrove.id}">Cook This Group</a>
+                        <a class="option" style="display: inline;" href="${groupProject.getUrl()}pickArch?id=${groupTrove.id}">Cook This Group</a>
                     </td>
                 </tr>
               </tfoot>

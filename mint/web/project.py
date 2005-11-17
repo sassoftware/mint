@@ -273,6 +273,12 @@ class ProjectHandler(WebHandler):
 
     @ownerOnly
     @intFields(id = None)
+    def pickArch(self, auth, id):
+        self._write("pickArch", groupTroveId = id)
+        return apache.OK
+
+    @ownerOnly
+    @intFields(id = None)
     @strFields(arch = "1#x86")
     def cookGroup(self, auth, id, arch):
         curGroupTrove = self.client.getGroupTrove(id)
