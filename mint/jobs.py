@@ -92,6 +92,13 @@ class Job(database.TableObject):
     def getTimeFinished(self):
         return self.timeFinished
 
+    def setDataValue(self, name, value):
+        return self.server.setJobDataValue(self.id, name, value)
+
+    def getDataValue(self, name):
+        return self.server.getJobDataValue(self.id, name)
+
+
 class ImageFilesTable(database.KeyedTable):
     name = 'ImageFiles'
     key = 'fileId'

@@ -273,13 +273,14 @@ class ProjectHandler(WebHandler):
 
     @ownerOnly
     @intFields(id = None)
-    def cookGroup(self, auth, id):
+    @strFields(arch = "1#x86")
+    def cookGroup(self, auth, id, arch):
         curGroupTrove = self.client.getGroupTrove(id)
         
         recipe = curGroupTrove.getRecipe()
         job = curGroupTrove.getJob()
         if not job or (job and job.status not in (jobstatus.WAITING, jobstatus.RUNNING)):
-            jobId = curGroupTrove.startCookJob()
+            jobId = curGroupTrove.startCookJob(arch)
         else:
             jobId = job.id
 

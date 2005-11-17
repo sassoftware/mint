@@ -455,11 +455,11 @@ class GroupTroveTest(MintRepositoryHelper):
 
         trvId = self.addTestTrove(groupTrove, "testcase")
         # cook once to ensure we can create a new package
-        jobId = groupTrove.startCookJob()
+        jobId = groupTrove.startCookJob("1#x86")
         assert(jobId == groupTrove.getJob().id)
         job = client.getJob(jobId)
         try:
-            groupTrove.startCookJob()
+            groupTrove.startCookJob("1#x86")
             self.fail('groupTrove.cook() allowed conflicting cook job.')
         except DuplicateJob:
             pass
@@ -475,8 +475,10 @@ class GroupTroveTest(MintRepositoryHelper):
         # cook a second time to ensure we follow the checkout codepath
         # set the version lock while we're at it, to test the getRecipe path
         groupTrove.setTroveVersionLock(trvId, True)
-        jobId = groupTrove.startCookJob()
+        jobId = groupTrove.startCookJob("1#x86")
         job = client.getJob(jobId)
+        assert(job.getDataValue("arch") == "1#x86")
+
         cookJob = group_trove.GroupTroveCook(client, client.getCfg(), job, groupTrove.getId())
         trvName, trvVersion, trvFlavor = cookJob.write()
 
@@ -516,12 +518,12 @@ class GroupTroveTest(MintRepositoryHelper):
         assert(len(groupTrove.listTroves()) == 0)
 
         try:
-            groupTrove.startCookJob()
+            groupTrove.startCookJob("1#x86")
         except mint_server.GroupTroveEmpty:
             pass
         else:
             self.fail("allowed to start an empty cook job")
-
+            
         trvId = self.addTestTrove(groupTrove, "testcase")
 
         assert(len(groupTrove.listTroves()) == 1)

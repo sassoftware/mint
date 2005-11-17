@@ -110,7 +110,7 @@ class JobsTest(MintRepositoryHelper):
 
         trvid = groupTrove.addTrove(trvName, trvVersion, trvFlavor,
                                     subGroup, False, False, False)
-        cookJobId = groupTrove.startCookJob()
+        cookJobId = groupTrove.startCookJob("1#x86")
         assert(client.server.getJobStatus(cookJobId)['queueLen'] == 1)
         assert(client.server.getJobWaitMessage(cookJobId) == 'Waiting for 1 job to complete')
 
@@ -121,6 +121,20 @@ class JobsTest(MintRepositoryHelper):
         job = client.startImageJob(release.getId())
         assert(client.server.getJobStatus(cookJobId)['queueLen'] == 0)
         assert(client.server.getJobStatus(job.getId())['queueLen'] == 1)
+
+    def testJobData(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        projectId = client.newProject("Foo", "foo", "rpath.org")
+
+        release = client.newRelease(projectId, "Test Release")
+
+        job = client.startImageJob(release.getId())
+        job.setDataValue("mystring", "testing")
+        job.setDataValue("myint", 123)
+
+        assert(job.getDataValue("mystring") == "testing")
+        assert(int(job.getDataValue("myint")) == 123)
+
 
 if __name__ == "__main__":
     testsuite.main()

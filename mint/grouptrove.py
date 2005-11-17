@@ -290,8 +290,8 @@ class GroupTrove(database.TableObject):
     def getRecipe(self):
         return self.server.getRecipe(self.getId())
 
-    def startCookJob(self):
-        return self.server.startCookJob(self.id) 
+    def startCookJob(self, arch):
+        return self.server.startCookJob(self.id, arch)
 
     def getJob(self):
         jobId = self.server.getJobIdForCook(self.id)
