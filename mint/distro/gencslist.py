@@ -364,9 +364,10 @@ class LocalRepository(netserver.NetworkRepositoryServer):
                                 excludeAutoSource = excludeAutoSource)
 
         (cs, trovesNeeded, filesNeeded) = ret
-        cs.writeToFile('/tmp/foo.ccs')
-        size = os.stat('/tmp/foo.ccs').st_size
-        return ('/tmp/foo.ccs', [size], [], [])
+        tmpFile = tempfile.mktemp(suffix = '.ccs')
+        cs.writeToFile(tmpFile)
+        size = os.stat(tmpFile).st_size
+        return (tmpFile, [size], [], [])
 
     def commitChangeSet(self, cs):
         self.repos.commitChangeSet(cs, self.name)
@@ -384,6 +385,11 @@ class LocalRepository(netserver.NetworkRepositoryServer):
         except:
             self.repos.troveStore.db.rollback()
             pass
+
+    def close(self):
+        self.db.close()
+        del self.db
+
 
 class LocalServerCache:
     # build a local repository on the fly for whatever we're asked for
@@ -413,10 +419,19 @@ class LocalServerCache:
 	self.cache = {}
 	self.path = path
 
+    def close(self):
+        for server in self.cache:
+            server.close()
+
+
 class LocalNetClient(netclient.NetworkRepositoryClient):
     def __init__(self, path):
         self.c = LocalServerCache(path)
         self.localRep = None
+
+    def close(self, path):
+        self.c.close()
+
 
 def _getTrove(cs, name, version, flavor):
     pkgCs = cs.getNewTroveVersion(name, version, flavor)
@@ -501,6 +516,7 @@ def writeSqldb(cs, path):
     # copy the file to the final location
     shutil.copyfile(tmpdir + '/sqldb', path)
     shutil.rmtree(tmpdir)
+    repos.close()
 
 def usage():
     print "usage: %s group /path/to/changesets/ [sqldb]" %sys.argv[0]

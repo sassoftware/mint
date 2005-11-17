@@ -1,3 +1,10 @@
+Changes in 1.1.1:
+
+* Bug fixes in the database code, RSS news handling.
+* Groups built using the group builder can now be cooked against
+  both x86 and x86_64.
+* Fixed an fd leak in the installable ISO generation code.
+
 Changes in 1.1.0:
 
 * Massive performance improvements including caching of kid table objects,
