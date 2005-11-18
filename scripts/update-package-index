@@ -60,13 +60,10 @@ for host in netclients.keys():
         row = (projectIds[host], pkg, latestVer.asString())
         rows.append(row)
 
-db.transaction()
-try:
-    cu.execute("DELETE FROM PackageIndex")
-    for row in rows:
+for row in rows:
+    cu.execute("SELECT COUNT(*) FROM PackageIndex WHERE projectId=? AND name=? AND version=?")
+    numEntries = cu.fetchone()
+    if numEntries:
+        cu.execute("UPDATE PackageIndex SET projectId=?, name=?, version=? WHERE pkgId=?", row[1], row[2], row[3], row[0])
+    else:
         cu.execute("INSERT INTO PackageIndex VALUES (NULL, ?, ?, ?)", *row)
-except:
-    db.rollback()
-    raise
-else:
-    db.commit()
