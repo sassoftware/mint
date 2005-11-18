@@ -1,26 +1,5 @@
-function add(targetId, sourceId) {
-    target = document.getElementById(targetId);
-    source = document.getElementById(sourceId);
-
-    var source_len = source.length;
-    var target_len = target.length;
-
-    for (var i=0; i < source_len; i++) {
-    
-        opt = source.options[i];
-        if (opt.selected == true && opt.value != "") {
-            if (opt.style.fontWeight == "bold")
-                return;
-
-            opt.style.fontWeight = "bold";
-
-            target.options[target_len] = new Option(opt.text, opt.value);
-            target_len ++;
-        }
-    }
-}
-
 function toggle_display(tid) {
+    el = $(tid);
     if(document.getElementById(tid).style.display == "none") {
         document.getElementById(tid).style.display = "";
         img = document.getElementById(tid + "_expander");
@@ -30,60 +9,6 @@ function toggle_display(tid) {
         document.getElementById(tid).style.display = "none";
         img = document.getElementById(tid + "_expander");
         img.src = img.src.replace('collapse', 'expand');
-    }
-}
-
-function remove(targetId, sourceId) {
-    target = document.getElementById(targetId);
-    source = document.getElementById(sourceId);
-
-    var source_len = source.length;
-    var target_len = target.length;
-
-    for (var i = target_len-1; i >= 0; i--) {
-        opt = target.options[i];
-
-        if (opt.selected == true) {
-            target.options[i] = null;
-            target_len--;           
- 
-            for (var j=0; j < source_len; j++) {
-                sopt = source.options[j];
-                if (opt.value == sopt.value) {
-                    sopt.style.fontWeight = "normal";
-                }
-            }
-        }
-    }
-}
-
-function select_all(selId) {
-  sel = document.getElementById(selId);
-  for (i=0; i < sel.length; i++) {
-    sel.options[i].selected = true;
-  }
-}
-
-// check all checkboxes of name 'name'
-// if self.checked, and vice-versa
-function mark_all(selfId, id, name) {
-    self = document.getElementById(selfId);
-    items = document.getElementsByName(name);
-
-    for(var i = 0; i < items.length; i++) {
-        item = items[i];
-        if(item.id == id) {
-            item.checked = self.checked;
-        }
-    }
-}
-
-// check or uncheck all checkboxes of name 'name'
-function check_all(name, checked) {
-    items = document.getElementsByName(name);
-
-    for(var i = 0; i < items.length; i++) {
-        items[i].checked = checked;
     }
 }
 
@@ -150,7 +75,7 @@ function processGetReleaseStatus(xml) {
     } else {
         statusText = statusText.firstChild.nodeValue;
     }
-    el.replaceChild(document.createTextNode(statusText), el.firstChild);
+    replaceChildNodes(el, statusText);
 }
 
 var tickerId;
