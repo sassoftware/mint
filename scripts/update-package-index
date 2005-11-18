@@ -62,7 +62,7 @@ for host in netclients.keys():
 
 for row in rows:
     cu.execute("SELECT pkgId FROM PackageIndex WHERE projectId=? AND name=? AND version=?", *row)
-    pkgId = cu.fetchone()
+    pkgId = cu.fetchone()[0]
     if pkgId:
         cu.execute("UPDATE PackageIndex SET projectId=?, name=?, version=? WHERE pkgId=?", row[0], row[1], row[2], pkgId)
     else:
