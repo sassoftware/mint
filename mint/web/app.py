@@ -85,6 +85,8 @@ class MintApp(WebHandler):
         self.conaryHandler = ConaryHandler(req, cfg, repServer)
 
     def _session_start(self):
+        #from conary.lib import epdb
+        #epdb.st()
         # prepare a new session
         sessionClient = shimclient.ShimMintClient(self.cfg, (self.cfg.authUser, self.cfg.authPass))
 
@@ -110,7 +112,7 @@ class MintApp(WebHandler):
 
         #Now figure out if we need to redirect
         nexthop = None
-        for dom in (self.cfg.siteDomainName, self.cfg.projectDomainName):
+        for dom in ('.'+self.cfg.siteDomainName, '.'+self.cfg.projectDomainName):
             if not self.session['visited'].get(dom, None):
                 #Yeah we need to redirect
                 nexthop = dom
