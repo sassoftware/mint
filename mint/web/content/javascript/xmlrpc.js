@@ -19,7 +19,7 @@
 
 function XmlRpcRequest(url, method)
 {
-    var req = new XMLHttpRequest();
+    var req = getXMLHttpRequest();
     var auth = null;
     var handler = null;
     var data = null;
