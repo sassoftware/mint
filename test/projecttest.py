@@ -220,6 +220,9 @@ class ProjectTest(MintRepositoryHelper):
         if client.server.getProjectIdsByMember(watcherId):
             self.fail("getProjectIdsByMember returned a hidden project for a nonmember")
 
+        if not adminClient.server.getProjectIdsByMember(adminUserId):
+            self.fail("getProjectIdsByMember didn't return hidden project for admin")
+
 #        if watcherClient.server.getProjectIdsByMember(watcherId):
 #            self.fail("getProjectIdsByMember returned a hidden project for a user")
 
