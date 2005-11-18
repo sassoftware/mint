@@ -85,8 +85,6 @@ class MintApp(WebHandler):
         self.conaryHandler = ConaryHandler(req, cfg, repServer)
 
     def _session_start(self):
-        #from conary.lib import epdb
-        #epdb.st()
         # prepare a new session
         sessionClient = shimclient.ShimMintClient(self.cfg, (self.cfg.authUser, self.cfg.authPass))
 
