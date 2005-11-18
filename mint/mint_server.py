@@ -1320,7 +1320,10 @@ class MintServer(object):
     @requiresAuth
     @private
     def getJobIdForCook(self, groupTroveId):
-        self._filterReleaseAccess(groupTroveId)
+        projectId = self.groupTroves.getProjectId(groupTroveId)
+        self._filterProjectAccess(projectId)
+        self._requireProjectOwner(projectId)
+                        
         cu = self.db.cursor()
 
         cu.execute("SELECT jobId FROM Jobs WHERE groupTroveId=?", groupTroveId)
@@ -1329,7 +1332,6 @@ class MintServer(object):
             return r[0]
         else:
             return 0
-
 
     @typeCheck(int, int, str)
     @requiresAuth
