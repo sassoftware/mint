@@ -124,8 +124,8 @@ var refreshed = false;
 var oldStatus = -1;
 
 function processGetReleaseStatus(xml) {
-    el = document.getElementById("jobStatus");
-    var status = xml.getElementsByTagName("int")[0].firstChild.data;
+    el = $("jobStatus");
+    var status = getElementsByTagAndClassName("int", null, xml)[0].firstChild.data;
     if(status != oldStatus) {
         if(oldStatus != -1) {
             document.location = document.location;
@@ -133,7 +133,17 @@ function processGetReleaseStatus(xml) {
         oldStatus = status;
     }
 
-    var statusText = xml.getElementsByTagName("string")[0];
+    if(status > STATUS_RUNNING) {
+        hideElement('editOptionsDisabled');
+        showElement('editOptions');
+        showElement('downloads');
+    } else {
+        showElement('editOptionsDisabled');
+        hideElement('editOptions');
+        hideElement('downloads');
+    }
+
+    var statusText = getElementsByTagAndClassName("string", null, xml)[0];
     if(!statusText.firstChild) {
         statusText = "No status";
         status = STATUS_NOJOB;
@@ -141,20 +151,6 @@ function processGetReleaseStatus(xml) {
         statusText = statusText.firstChild.nodeValue;
     }
     el.replaceChild(document.createTextNode(statusText), el.firstChild);
-    
-    downloads = document.getElementById("downloads");
-    editOptions = document.getElementById("editOptions");
-    editOptionsDisabled = document.getElementById("editOptionsDisabled");
-
-    if(status > STATUS_RUNNING) {
-        editOptionsDisabled.style.display = "none";
-        editOptions.style.display = "block";
-        downloads.style.visibility = "visible";
-    } else {
-        editOptionsDisabled.style.display = "block";
-        editOptions.style.display = "none";
-        downloads.style.visibility = "hidden";
-    }
 }
 
 var tickerId;
