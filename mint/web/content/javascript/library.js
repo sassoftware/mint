@@ -156,7 +156,7 @@ function processGetReleaseStatus(xml) {
 var tickerId;
 var statusId;
 function processGetCookStatus(xml) {
-    el = document.getElementById("jobStatus");
+    el = $("jobStatus");
     var status = getElementsByTagAndClassName("int", null, xml)[0].firstChild.data;
     var statusText = getElementsByTagAndClassName("string", null, xml)[0];
 
@@ -170,7 +170,7 @@ function processGetCookStatus(xml) {
         clearTimeout(tickerId);
         clearTimeout(statusId);
     }
-    el.replaceChild(document.createTextNode(statusText), el.firstChild);
+    replaceChildNodes(el, statusText);
 }
 
 
