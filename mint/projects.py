@@ -403,6 +403,7 @@ class ProjectsTable(database.KeyedTable):
         cu = self.db.cursor()
 
         cu.execute("UPDATE Projects SET hidden=1, timeModified=? WHERE projectId=?", time.time(), projectId)
+        cu.execute("DELETE FROM PackageIndex WHERE projectId=?", projectId)
 
     def unhide(self, projectId):
         # Anonymous user is added/removed in mint_server
@@ -424,6 +425,7 @@ class ProjectsTable(database.KeyedTable):
         os.rename(path, path+'.disabled')
 
         cu.execute("UPDATE Projects SET disabled=1, timeModified=? WHERE projectId=?", time.time(), projectId)
+        cu.execute("DELETE FROM PackageIndex WHERE projectId=?", projectId)
 
     def enable(self, projectId, reposPath):
         cu = self.db.cursor()
