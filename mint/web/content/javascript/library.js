@@ -161,9 +161,9 @@ var tickerId;
 var statusId;
 function processGetCookStatus(xml) {
     el = document.getElementById("jobStatus");
-    var status = xml.getElementsByTagName("int")[0].firstChild.data;
+    var status = getElementsByTagAndClassName("int", null, xml)[0].firstChild.data;
+    var statusText = getElementsByTagAndClassName("string", null, xml)[0];
 
-    var statusText = xml.getElementsByTagName("string")[0];
     if(!statusText.firstChild) {
         statusText = "Finished";
         status = STATUS_FINISHED;
