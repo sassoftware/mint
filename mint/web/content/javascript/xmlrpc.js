@@ -43,7 +43,6 @@ function XmlRpcRequest(url, method)
         if(req.readyState == 4) {
             if(req.status == 200) {
                 if(handler) {
-                    log(req.responseText);
                     if(data){
                         handler(req.responseXML, data);
                     }

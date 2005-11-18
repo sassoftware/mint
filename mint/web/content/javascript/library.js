@@ -182,13 +182,12 @@ function processGetTroveList(xml) {
     sel = document.getElementById("trove");
 
     clearSelection(sel);
-    var response = xml.getElementsByTagName("struct")[0];
+    var response = getElementsByTagAndClassName("struct", null, xml);
+    var members = getElementsByTagAndClassName("member", null, response[0]);
 
-    var members = response.getElementsByTagName("member");
     for(var i = 0; i < members.length; i++) {
         var nameNode = members[i].getElementsByTagName("name")[0];
         var label = nameNode.firstChild.nodeValue;
-        // appendToSelect(sel, label, document.createTextNode(label), "label");
 
         var troves = members[i].getElementsByTagName("string");
         for(var j = 0; j < troves.length; j++) {
