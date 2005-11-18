@@ -92,7 +92,7 @@ class MintApp(WebHandler):
         if self.req.subprocess_env.get('HTTPS', 'off') != 'on':
             protocol='http'
         sid = self.fields.get('sid', None)
-        domain = ".".join(self.req.hostname.split(".")[1:])
+        domain = '.'+".".join(self.req.hostname.split(".")[1:])
         self.session = SqlSession(self.req, sessionClient,
             sid = sid,
             secret = self.cfg.cookieSecretKey,
