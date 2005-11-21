@@ -36,8 +36,6 @@ from conary import flavorcfg
 from conary.lib import log
 from conary.lib import sha1helper
 from conary.lib import util
-from conary.lib import openpgpkey
-from conary.lib import openpgpfile
 from conary.local import database
 from conary.repository import netclient, changeset, filecontents
 from conary import repository
@@ -98,7 +96,6 @@ class IdGen3(IdGen0):
 class RepositoryServer:
     def __init__(self, name):
         self.name = name
-        self.needsPGPKey = True
 
     def start(self):
         raise NotImplementedError
@@ -142,9 +139,9 @@ class ChildRepository(RepositoryServer):
     def createUser(self):
         # using echo to send the password isn't secure, but the password
         # is foo, so who cares?
-        os.system("cd %s; echo mintpass | ./server.py --add-user mintauth %s" 
+        os.system("cd %s; echo mintpass | ./server.py --add-user mintauth %s"
                   % (self.serverDir, self.reposDir))
-        os.system("cd %s; echo anonymous | ./server.py --add-user anonymous %s" 
+        os.system("cd %s; echo anonymous | ./server.py --add-user anonymous %s"
                   % (self.serverDir, self.reposDir))
 
 class ApacheServer(ChildRepository):
@@ -219,7 +216,6 @@ class ApacheServer(ChildRepository):
     def reset(self):
         self.stop()
         self.start()
-        self.needsPGPKey = True
 
     def start(self):
         shutil.rmtree(self.reposDir)
@@ -251,124 +247,6 @@ class ApacheServer(ChildRepository):
             os.kill(self.serverpid, signal.SIGTERM)
             os.waitpid(self.serverpid, 0)
             self.serverpid = -1
-
-class ApacheServerWithCache(ApacheServer):
-    def __init__(self, name, server, serverDir, reposDir, conaryPath, repMap):
-        ApacheServer.__init__(self, name, server, serverDir, reposDir,
-                              conaryPath, repMap, useCache = True)
-
-class NetworkReposServer(ChildRepository):
-    def __init__(self, name, server, serverDir, reposDir, conaryPath, repMap):
-        ChildRepository.__init__(self, name, server, serverDir, reposDir,
-                                 conaryPath)
-        self.repMap = repMap
-        self.serverpid = -1
-        if 'SERVER_FILE_PATH' in os.environ:
-            self.serverFilePath = os.environ['SERVER_FILE_PATH']
-            self.delServerPath = False
-        else:
-            self.serverFilePath =  None
-            self.delServerPath = True
-        self.serverLog = '/tmp/conary-server-%s.log' % self.name
-        try:
-            os.unlink(self.serverLog)
-        except OSError, err:
-            if err.errno == errno.ENOENT:
-                pass
-            elif err.errno == errno.EPERM:
-                try:
-                    self.serverLog = '/tmp/conary-server-%s-%s.log' \
-                                % (self.name, pwd.getpwuid(os.getuid())[0])
-                    os.unlink(self.serverLog)
-                except OSError, err:
-                    if err.errno == errno.ENOENT:
-                        pass
-        except OSError:
-            pass
-
-    def start(self):
-        if self.serverpid != -1:
-            return
-        shutil.rmtree(self.reposDir)
-        os.mkdir(self.reposDir)
-        self.createUser()
-        
-	sb = os.stat(self.server)
-	if not stat.S_ISREG(sb.st_mode) or not os.access(self.server, os.X_OK):
-	    print "bad server path: %s" % self.server
-	    sys.exit(1)
-
-        self.serverpid = os.fork()
-        if self.serverpid == 0:
-	    os.environ['CONARY_PATH'] = self.conaryPath
-            log = os.open(self.serverLog, os.O_WRONLY | os.O_CREAT | os.O_APPEND)
-            os.dup2(log, sys.stdout.fileno())
-            os.dup2(log, sys.stderr.fileno())
-            print "starting server"
-            sys.stdout.flush()
-            f = open(self.reposDir + '/serverrc', 'w')
-            print >> f, 'port %d' %self.port
-            for repname, reppath in self.repMap.iteritems():
-                print >> f, 'repositoryMap %s %s' %(repname, reppath)
-            f.close()
-
-            if self.serverFilePath is None:
-                self.serverFilePath = tempfile.mkdtemp()
-            args = (self.server, self.reposDir, 
-                    self.name, 
-                    '--config-file', self.reposDir + '/serverrc', 
-                    '--tmp-file-path', self.serverFilePath)
-	    os.execv(args[0], args)
-        else:
-            pass
-
-    def stop(self):
-        if self.serverpid != -1:
-            os.kill(self.serverpid, signal.SIGKILL)
-            os.waitpid(self.serverpid, 0)
-            self.serverpid = -1
-        if self.serverFilePath and self.delServerPath:
-            util.rmtree(self.serverFilePath)
-            self.serverFilePath = None
-
-    def getMap(self, user = 'mintauth', password = 'mintpass'):
-        return {self.name: 'http://%s:%s@127.0.0.1:%d/' %
-                                        (user, password, self.port) }
-
-    def reset(self):
-	repos = netclient.NetworkRepositoryClient(self.getMap())
-        repos.c[self.name].reset()
-        self.createUser()
-        self.needsPGPKey = True
-
-    def __del__(self):
-        self.stop()
-
-
-class ExistingServer(RepositoryServer):
-    def __init__(self, name, port=8000):
-        RepositoryServer.__init__(self, name)
-	self.port = port
-        self.reposDir = None
-        #self.reset()
-        
-    def getMap(self):
-        return {self.name: 'http://mintauth:mintpass@127.0.0.1:%d/' %self.port}
-
-    def reset(self):
-	repos = netclient.NetworkRepositoryClient(self.getMap())
-        repos.c[self.name].reset()
-        self.needsPGPKey = True
-
-    def start(self):
-        pass
-
-    def stop(self):
-        pass
-
-    def getMap(self, user = 'mintauth', password = 'mintpass'):
-        return {self.name: 'http://%s:%s@127.0.0.1:%d/' %
-                                        (user, password, self.port) }
 
 class ServerCache:
 
@@ -433,21 +311,6 @@ class RepositoryHelper(testsuite.TestCase):
         self.cfg.buildLabel = self.defLabel
         self.logFilter.clear()
 
-        # set up the keyCache so that it won't prompt for passwords in
-        # any of the test suites.
-        keyCache = openpgpkey.OpenPGPKeyFileCache()
-        openpgpkey.setKeyCache(keyCache)
-
-        # pre-populate private key cache
-        keyCache.setPrivatePath(testsuite.archivePath + '/secring.gpg')
-        fingerprint = '95B457D16843B21EA3FC73BBC7C32FC1F94E405E'
-        keyCache.getPrivateKey(fingerprint, '111111')
-        keyCache.getPrivateKey('', '111111')
-
-        # pre-populate public key cache
-        keyCache.setPublicPath(testsuite.archivePath + '/pubring.gpg')
-        keyCache.getPublicKey('')
-
     def tearDown(self):
         self.resetFlavors()
         self.reset()
@@ -497,10 +360,6 @@ class RepositoryHelper(testsuite.TestCase):
         if not ready:
             raise RuntimeError, "unable to open networked repository"
 
-        if server.needsPGPKey:
-            ascKey = open(testsuite.archivePath + '/key.asc', 'r').read()
-            repos.addNewAsciiPGPKey(label, 'mintauth', ascKey)
-            server.needsPGPKey = False
         return repos
    
     def addfile(self, file):
