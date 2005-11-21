@@ -15,6 +15,8 @@ extra_dist = \
 	buildtemplates		\
 	job-server.init.in
 
+SUBDIRS = data
+
 dist_files = $(script_dist) $(extra_dist)
 
 all: default-all
