@@ -7,9 +7,6 @@
 import testsuite
 testsuite.setup()
 
-import mod_python
-from mint.web import hooks
-
 import mint_rephelp
 
 class MintTest(mint_rephelp.WebRepositoryHelper):

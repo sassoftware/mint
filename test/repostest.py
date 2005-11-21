@@ -36,12 +36,12 @@ class RepositoryTest(MintRepositoryHelper):
         client, userId = self.quickMintUser("testuser", "testpass")
         projectId = self.newProject(client)
 
-        client.server.registerCommit('test.localhost', 'testuser', 'mytrove:source', '/test.localhost@rpl:devel/1.0-1')
+        client.server.registerCommit('test.rpath.local', 'testuser', 'mytrove:source', '/test.rpath.local@rpl:devel/1.0-1')
         project = client.getProject(projectId)
         assert(project.getCommits() == [('mytrove:source', '1.0-1')])
 
         # using a bogus username should not fail
-        client.server.registerCommit('test.localhost', 'nonexistentuser', 'mytrove:source', '/test.localhost@rpl:devel/1.0-1')
+        client.server.registerCommit('test.rpath.local', 'nonexistentuser', 'mytrove:source', '/test.rpath.local@rpl:devel/1.0-1')
 
     def testBasicRepository(self):
         client, userId = self.quickMintUser("testuser", "testpass")
@@ -54,7 +54,7 @@ class RepositoryTest(MintRepositoryHelper):
         nc = netclient.NetworkRepositoryClient(cfg.repositoryMap)
 
         # test that the source trove landed properly
-        troveNames = nc.troveNames(versions.Label("test.localhost@rpl:devel"))
+        troveNames = nc.troveNames(versions.Label("test.rpath.local@rpl:devel"))
         assert(troveNames == ["testcase:source"])
 
         # test that the commits table was updated
@@ -77,22 +77,22 @@ class RepositoryTest(MintRepositoryHelper):
         project = client.getProject(projectId)
         self.makeSourceTrove("testcase", testRecipe)
         self.cookFromRepository("testcase",
-            versions.Label("test.localhost@rpl:devel"),
+            versions.Label("test.rpath.local@rpl:devel"),
             ignoreDeps = True)
 
         self.makeSourceTrove("group-test", testGroup)
         self.cookFromRepository("group-test",
-            versions.Label("test.localhost@rpl:devel"))
+            versions.Label("test.rpath.local@rpl:devel"))
 
         cfg = project.getConaryConfig()
         nc = netclient.NetworkRepositoryClient(cfg.repositoryMap)
 
-        troveNames = nc.troveNames(versions.Label("test.localhost@rpl:devel"))
+        troveNames = nc.troveNames(versions.Label("test.rpath.local@rpl:devel"))
         assert(troveNames == ['testcase', 'testcase:runtime', 'group-test',
                               'group-test:source', 'testcase:source'])
 
         groupTroves = client.server.getGroupTroves(projectId)
-        assert(groupTroves == {'test.localhost@rpl:devel': ['group-test']})
+        assert(groupTroves == {'test.rpath.local@rpl:devel': ['group-test']})
 
 
 if __name__ == "__main__":

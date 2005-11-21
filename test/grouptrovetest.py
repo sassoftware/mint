@@ -29,8 +29,8 @@ refRecipe = """class GroupTest(GroupRecipe):
     autoResolve = False
 
     def setup(r):
-        r.setLabelPath('test.localhost@rpl:devel')
-        r.add('testcase', 'test.localhost@rpl:devel', '', groupName = 'group-test')
+        r.setLabelPath('test.rpath.local@rpl:devel')
+        r.add('testcase', 'test.rpath.local@rpl:devel', '', groupName = 'group-test')
 """
 
 groupsRecipe = """class GroupTest(GroupRecipe):
@@ -40,8 +40,8 @@ groupsRecipe = """class GroupTest(GroupRecipe):
     autoResolve = False
 
     def setup(r):
-        r.setLabelPath('test.localhost@rpl:devel', 'conary.rpath.com@rpl:1')
-        r.add('testcase', 'test.localhost@rpl:devel', '', groupName = 'group-test')
+        r.setLabelPath('test.rpath.local@rpl:devel', 'conary.rpath.com@rpl:1')
+        r.add('testcase', 'test.rpath.local@rpl:devel', '', groupName = 'group-test')
         if Arch.x86_64:
             r.add('group-core', 'conary.rpath.com@rpl:1', 'is:x86(i486,i586,i686) x86_64', groupName = 'group-test')
         else:
@@ -55,13 +55,13 @@ lockedRecipe = """class GroupTest(GroupRecipe):
     autoResolve = False
 
     def setup(r):
-        r.setLabelPath('test.localhost@rpl:devel')
-        r.add('testcase', '/test.localhost@rpl:devel/1.0-1-1', '', groupName = 'group-test')
+        r.setLabelPath('test.rpath.local@rpl:devel')
+        r.add('testcase', '/test.rpath.local@rpl:devel/1.0-1-1', '', groupName = 'group-test')
 """
 
 class GroupTroveTest(MintRepositoryHelper):
     def addTestTrove(self, groupTrove, trvName):
-        trvVersion='/test.localhost@rpl:devel/1.0-1-1'
+        trvVersion='/test.rpath.local@rpl:devel/1.0-1-1'
         trvFlavor='1#x86|5#use:~!kernel.debug:~kernel.smp'
         subGroup = ''
 
@@ -133,21 +133,21 @@ class GroupTroveTest(MintRepositoryHelper):
         gTrv = groupTrove.getTrove(trvId)
         assert(gTrv['versionLock'] is False)
 
-        assert(gTrv['trvVersion'] == '/test.localhost@rpl:devel/1.0-1-1')
-        assert(gTrv['trvLabel'] == 'test.localhost@rpl:devel')
+        assert(gTrv['trvVersion'] == '/test.rpath.local@rpl:devel/1.0-1-1')
+        assert(gTrv['trvLabel'] == 'test.rpath.local@rpl:devel')
 
         groupTrove.setTroveVersionLock(trvId, True)
 
         gTrv = groupTrove.getTrove(trvId)
         assert(gTrv['versionLock'] is True)
 
-        assert(gTrv['trvVersion'] == '/test.localhost@rpl:devel/1.0-1-1')
-        assert(gTrv['trvLabel'] == 'test.localhost@rpl:devel')
+        assert(gTrv['trvVersion'] == '/test.rpath.local@rpl:devel/1.0-1-1')
+        assert(gTrv['trvLabel'] == 'test.rpath.local@rpl:devel')
 
     def makeCookedTrove(self, branch):
         self.makeSourceTrove("testcase", testRecipe, branch = branch)
         self.cookFromRepository("testcase",
-            versions.Label("test.localhost@%s" % branch),
+            versions.Label("test.rpath.local@%s" % branch),
             ignoreDeps = True)
 
     def testAddByProject(self):
@@ -158,7 +158,7 @@ class GroupTroveTest(MintRepositoryHelper):
 
         cu = self.db.cursor()
         cu.execute('UPDATE Labels SET label=? WHERE projectId=?',
-                   'test.localhost@foo:bar', groupProjectId)
+                   'test.rpath.local@foo:bar', groupProjectId)
 
         projectId = self.newProject(client)
 
@@ -172,7 +172,7 @@ class GroupTroveTest(MintRepositoryHelper):
         # the second is the default project branch name from the target proejct
         # the third is the branch name of the project containing groupTrove
         for branch in ('ravenous:bugblatterbeast', 'rpl:devel', 'foo:bar'):
-            refTrvVersion = '/test.localhost@%s/1.0-1-1' % branch
+            refTrvVersion = '/test.rpath.local@%s/1.0-1-1' % branch
 
             self.makeCookedTrove(branch)
 
@@ -441,7 +441,7 @@ class GroupTroveTest(MintRepositoryHelper):
 
         self.addTestTrove(groupTrove, "testcase")
         self.addTestTrove(groupTrove, "testcase2")
-        assert (groupTrove.getLabelPath() == ['test.localhost@rpl:devel'])
+        assert (groupTrove.getLabelPath() == ['test.rpath.local@rpl:devel'])
 
     def testCookAutoRecipe(self):
         client, userId = self.quickMintUser('testuser', 'testpass')
@@ -454,24 +454,24 @@ class GroupTroveTest(MintRepositoryHelper):
 
         self.makeSourceTrove("testcase", testRecipe)
         self.cookFromRepository("testcase",
-            versions.Label("test.localhost@rpl:devel"),
+            versions.Label("test.rpath.local@rpl:devel"),
             ignoreDeps = True)
 
         trvId = self.addTestTrove(groupTrove, "testcase")
 
         self.makeSourceTrove("group-test", groupTrove.getRecipe())
         self.cookFromRepository("group-test",
-            versions.Label("test.localhost@rpl:devel"))
+            versions.Label("test.rpath.local@rpl:devel"))
 
         cfg = project.getConaryConfig()
         nc = netclient.NetworkRepositoryClient(cfg.repositoryMap)
 
-        troveNames = nc.troveNames(versions.Label("test.localhost@rpl:devel"))
+        troveNames = nc.troveNames(versions.Label("test.rpath.local@rpl:devel"))
         assert(troveNames == ['testcase', 'testcase:runtime', 'group-test',
                               'group-test:source', 'testcase:source'])
 
         groupTroves = client.server.getGroupTroves(projectId)
-        assert(groupTroves == {'test.localhost@rpl:devel': ['group-test']})
+        assert(groupTroves == {'test.rpath.local@rpl:devel': ['group-test']})
 
     def waitForCommit(self, project, troveList):
         iters = 0
@@ -494,7 +494,7 @@ class GroupTroveTest(MintRepositoryHelper):
 
         self.makeSourceTrove("testcase", testRecipe)
         self.cookFromRepository("testcase",
-            versions.Label("test.localhost@rpl:devel"),
+            versions.Label("test.rpath.local@rpl:devel"),
             ignoreDeps = True)
 
         trvId = self.addTestTrove(groupTrove, "testcase")
@@ -532,18 +532,18 @@ class GroupTroveTest(MintRepositoryHelper):
                                      ('testcase:source', '1.0-1')])
 
         assert(trvName == 'group-test')
-        assert(trvVersion == '/test.localhost@rpl:devel/1.0.0-2-1')
+        assert(trvVersion == '/test.rpath.local@rpl:devel/1.0.0-2-1')
         assert(trvFlavor == '')
 
         cfg = project.getConaryConfig()
         nc = netclient.NetworkRepositoryClient(cfg.repositoryMap)
 
-        troveNames = nc.troveNames(versions.Label("test.localhost@rpl:devel"))
+        troveNames = nc.troveNames(versions.Label("test.rpath.local@rpl:devel"))
         assert(troveNames == ['testcase', 'testcase:runtime', 'group-test',
                               'group-test:source', 'testcase:source'])
 
         groupTroves = client.server.getGroupTroves(projectId)
-        assert(groupTroves == {'test.localhost@rpl:devel': ['group-test']})
+        assert(groupTroves == {'test.rpath.local@rpl:devel': ['group-test']})
 
     def testEmptyCook(self):
         client, userId = self.quickMintUser('testuser', 'testpass')
@@ -556,7 +556,7 @@ class GroupTroveTest(MintRepositoryHelper):
 
         self.makeSourceTrove("testcase", testRecipe)
         self.cookFromRepository("testcase",
-            versions.Label("test.localhost@rpl:devel"),
+            versions.Label("test.rpath.local@rpl:devel"),
             ignoreDeps = True)
 
         assert(len(groupTrove.listTroves()) == 0)

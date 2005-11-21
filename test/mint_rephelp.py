@@ -59,7 +59,7 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
 
     def newProject(self, client, name = "Test Project",
                          hostname = "test",
-                         domainname = "localhost",
+                         domainname = "rpath.local",
                          username = "mintauth"):
         """Create a new mint project and return that project ID."""
         # save the current openpgpkey cache

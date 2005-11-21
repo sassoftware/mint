@@ -100,11 +100,11 @@ class JobsTest(MintRepositoryHelper):
 
         self.makeSourceTrove("testcase", testRecipe)
         self.cookFromRepository("testcase",
-            versions.Label("test.localhost@rpl:devel"),
+            versions.Label("test.rpath.local@rpl:devel"),
             ignoreDeps = True)
 
         trvName = 'testtrove'
-        trvVersion = '/test.localhost@rpl:devel/1.0-1-1'
+        trvVersion = '/test.rpath.local@rpl:devel/1.0-1-1'
         trvFlavor = '1#x86|5#use:~!kernel.debug:~kernel.smp'
         subGroup = ''
 
