@@ -154,6 +154,12 @@ class InstallableIso(ImageGenerator):
             call('tar', 'cf', tmpTar, '-C', tmpRoot + '/usr/share/anaconda/', './')
             call('tar', 'xf', tmpTar, '-C', tmpPath)
             call('rm', tmpTar)
+
+            # copy the splash.lss files to the appropriate place
+            if os.path.exists(tmpRoot + '/usr/share/anaconda/pixmaps/splash.lss'):
+                print >> sys.stderr, "found splash.lss; moving to isolinux directory"
+                call('cp', '-v', tmpRoot + '/usr/share/anaconda/pixmaps/splash.lss', os.path.normpath(self.subdir + '/../isolinux/')
+                # FIXME: regenerate boot.iso here
         else:
             print >> sys.stderr, "anaconda-images not found on repository either, using generated artwork."
             util.mkdirChain(tmpPath + '/pixmaps')
