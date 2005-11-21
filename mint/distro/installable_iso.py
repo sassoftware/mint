@@ -156,9 +156,9 @@ class InstallableIso(ImageGenerator):
             call('rm', tmpTar)
         else:
             print >> sys.stderr, "anaconda-images not found on repository either, using generated artwork."
-            ai = AnacondaImages(self.project.getName(), indir= isocfg.anacondaImagesPath,
-                    outdir=tmpPath + '/usr/share/anaconda/pixmaps',
-                    fontfile='/usr/share/fonts/bitstream-vera/Vera.ttf')
+            ai = AnacondaImages(self.project.getName(), indir = self.isocfg.anacondaImagesPath,
+                    outdir = tmpPath + '/usr/share/anaconda/pixmaps',
+                    fontfile = '/usr/share/fonts/bitstream-vera/Vera.ttf')
             ai.processImages()
                 
         # write the conaryrc file
@@ -180,6 +180,7 @@ class InstallableIso(ImageGenerator):
 
     def write(self):
         isocfg = self.getConfig()
+        self.isocfg
         if isocfg.imagesPath != None:
             print >> sys.stderr, "WARNING: The imagesPath configuration entry has moved from installable_iso.conf to iso_gen.conf."
             sys.stderr.flush()
