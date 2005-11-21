@@ -156,6 +156,7 @@ class InstallableIso(ImageGenerator):
             call('rm', tmpTar)
         else:
             print >> sys.stderr, "anaconda-images not found on repository either, using generated artwork."
+            util.mkdirChain(tmpPath + '/usr/share/anaconda/pixmaps')
             ai = AnacondaImages(self.project.getName(), indir = self.isocfg.anacondaImagesPath,
                     outdir = tmpPath + '/usr/share/anaconda/pixmaps',
                     fontfile = '/usr/share/fonts/bitstream-vera/Vera.ttf')
