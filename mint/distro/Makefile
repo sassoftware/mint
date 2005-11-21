@@ -5,6 +5,7 @@
 #
 
 python_files = \
+	anaconda_images.py	\
 	gencslist.py		\
 	group_trove.py		\
 	imagegen.py		\

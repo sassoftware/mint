@@ -10,6 +10,7 @@ import string
 import sys
 import tempfile
 import time
+import anaconda_images
 
 from conary import callbacks
 from conary import conaryclient
@@ -33,6 +34,7 @@ class IsoConfig(ConfigFile):
         'cachePath':        '/srv/mint/changesets/',
         'templatePath':     '/srv/mint/templates/',
         'implantIsoMd5':    '/usr/lib/anaconda-runtime/implantisomd5'
+        'anacondaImagesPath': '/usr/share/mint/pixmaps'
     }
 
 class AnacondaTemplateMissing(Exception):
@@ -153,7 +155,11 @@ class InstallableIso(ImageGenerator):
             call('tar', 'xf', tmpTar, '-C', tmpPath)
             call('rm', tmpTar)
         else:
-            print >> sys.stderr, "anaconda-images not found on repository either, not including custom artwork or scripts."
+            ai = AnacondaImages(self.project.getName(), indir= isocfg.anacondaImagesPath,
+                    outdir=tmpRoot + '/usr/share/anaconda/pixmaps',
+                    fontfile='/usr/share/fonts/bitstream-vera/Vera.ttf')
+            ai.ProcessImages()
+            print >> sys.stderr, "anaconda-images not found on repository either, using generated artwork or scripts."
                 
         # write the conaryrc file
         conaryrcFile = open(os.path.join(tmpPath, "conaryrc"), "w")
