@@ -1358,7 +1358,7 @@ class MintServer(object):
         self.db.transaction()
         try:
             cu.execute("DELETE FROM ImageFiles WHERE releaseId=?", releaseId)
-            for idx, file in enumerate(sorted(filenames)):
+            for idx, file in enumerate(filenames):
                 fileName, title = file
                 cu.execute("INSERT INTO ImageFiles VALUES (NULL, ?, ?, ?, ?)",
                            releaseId, idx, fileName, title)
