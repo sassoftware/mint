@@ -180,7 +180,7 @@ class InstallableIso(ImageGenerator):
 
     def write(self):
         isocfg = self.getConfig()
-        self.isocfg
+        self.isocfg = isocfg
         if isocfg.imagesPath != None:
             print >> sys.stderr, "WARNING: The imagesPath configuration entry has moved from installable_iso.conf to iso_gen.conf."
             sys.stderr.flush()
