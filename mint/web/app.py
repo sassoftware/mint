@@ -92,12 +92,12 @@ class MintApp(WebHandler):
         if self.req.subprocess_env.get('HTTPS', 'off') != 'on':
             protocol='http'
         sid = self.fields.get('sid', None)
-        domain = '.'+".".join(self.req.hostname.split(".")[1:])
+        domain = ".".join(self.req.hostname.split(".")[1:])
         self.session = SqlSession(self.req, sessionClient,
             sid = sid,
             secret = self.cfg.cookieSecretKey,
             timeout = 86400, # XXX timeout of one day; should it be configurable?
-            domain = domain,
+            domain = '.' + domain,
             lock = False)
         if self.session.is_new():
             self.session['firstPage'] = "%s://%s%s" %(protocol, self.req.hostname, self.req.unparsed_uri)
@@ -110,7 +110,8 @@ class MintApp(WebHandler):
 
         #Now figure out if we need to redirect
         nexthop = None
-        for dom in ('.'+self.cfg.siteDomainName, '.'+self.cfg.projectDomainName):
+        # split is used to ensure port number doesn't affect cookie domain
+        for dom in (self.cfg.siteDomainName.split(':')[0], self.cfg.projectDomainName.split(':')[0]):
             if not self.session['visited'].get(dom, None):
                 #Yeah we need to redirect
                 nexthop = dom
@@ -119,7 +120,7 @@ class MintApp(WebHandler):
         # for the requested domain with that sid.
         if sid or nexthop:
             c = self.session.make_cookie()
-            c.domain = domain
+            c.domain = '.' + domain
             #add it to the err_headers_out because these ALWAYS go to the browser
             self.req.err_headers_out.add('Set-Cookie', str(c))
             self.req.err_headers_out.add('Cache-Control', 'no-cache="set-cookie"')
