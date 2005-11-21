@@ -116,7 +116,6 @@ class InstallableIso(ImageGenerator):
         # write the product.img cramfs
         productPath = os.path.join(self.baseDir, "product.img")
         tmpPath = tempfile.mkdtemp()
-        tmpRoot = tempfile.mkdtemp()
 
         # write .buildstamp
         bsFile = open(os.path.join(tmpPath, ".buildstamp"), "w")
@@ -131,6 +130,7 @@ class InstallableIso(ImageGenerator):
         bsFile.close()
 
         # extract anaconda-images from repository, if exists
+        tmpRoot = tempfile.mkdtemp()
         cfg = self.project.getConaryConfig(overrideSSL = True, overrideAuth = True, 
             newUser='anonymous', newPass='anonymous', useSSL = False)
         cfg.root = tmpRoot
@@ -155,11 +155,11 @@ class InstallableIso(ImageGenerator):
             call('tar', 'xf', tmpTar, '-C', tmpPath)
             call('rm', tmpTar)
         else:
+            print >> sys.stderr, "anaconda-images not found on repository either, using generated artwork."
             ai = AnacondaImages(self.project.getName(), indir= isocfg.anacondaImagesPath,
-                    outdir=tmpRoot + '/usr/share/anaconda/pixmaps',
+                    outdir=tmpPath + '/usr/share/anaconda/pixmaps',
                     fontfile='/usr/share/fonts/bitstream-vera/Vera.ttf')
-            ai.ProcessImages()
-            print >> sys.stderr, "anaconda-images not found on repository either, using generated artwork or scripts."
+            ai.processImages()
                 
         # write the conaryrc file
         conaryrcFile = open(os.path.join(tmpPath, "conaryrc"), "w")
