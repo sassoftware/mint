@@ -10,7 +10,7 @@ import string
 import sys
 import tempfile
 import time
-import anaconda_images
+from anaconda_images import AnacondaImages
 
 from conary import callbacks
 from conary import conaryclient
