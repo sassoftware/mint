@@ -76,6 +76,11 @@ class JobsTest(MintRepositoryHelper):
         except jobs.FileMissing:
             pass
 
+        # make sure that the incoming ordering of files is preserved
+        release.setFiles([['zaaa.iso', 'Zaaa'], ['aaaa.iso', 'Aaaa']])
+        assert(release.getFiles() == [{'size': 0, 'title': 'Zaaa', 'filename': 'zaaa.iso', 'fileId': 1},
+                                      {'size': 0, 'title': 'Aaaa', 'filename': 'aaaa.iso', 'fileId': 2}])
+
     def testJobQueue(self):
         client, userId = self.quickMintUser("testuser", "testpass")
         projectId = client.newProject("Foo", "foo", "rpath.org")
