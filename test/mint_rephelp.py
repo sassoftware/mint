@@ -7,6 +7,8 @@ import os
 import testsuite
 import rephelp
 
+from webunit import webunittest
+
 from conary import sqlite3
 from conary import versions
 from conary.lib import openpgpkey
@@ -27,6 +29,9 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
         client = self.openMintClient()
         userId = client.registerNewUser(username, password, "Test User",
                 "test@example.com", "test at example.com", "", active=True)
+
+        cu = self.db.cursor()
+        cu.execute("DELETE FROM Confirmations WHERE userId=?", userId)
 
         return self.openMintClient((username, password)), userId
 
@@ -96,3 +101,42 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
         self.mintServer = mint_server.MintServer(self.mintCfg, alwaysReload = True)
         self.db = self.mintServer.db
         self.db.connect()
+
+class WebRepositoryHelper(MintRepositoryHelper, webunittest.WebTestCase):
+    def __init__(self, methodName):
+        webunittest.WebTestCase.__init__(self, methodName)
+        MintRepositoryHelper.__init__(self, methodName)
+
+    def getServerData(self):
+        server = 'test.rpath.local'
+        # spawn a server if needed, then point our code at it...
+        if self.servers.servers[0] is None:
+            self.openRepository()
+        return server, self.servers.servers[0].port
+
+    def getMintUrl(self):
+        return 'http://%s:%d/' % (self.getServerData())
+
+    def setUp(self):
+        webunittest.WebTestCase.setUp(self)
+        MintRepositoryHelper.setUp(self)
+        self.setAcceptCookies(True)
+        self.server, self.port = self.getServerData()
+        self.URL = self.getMintUrl()
+        # this is tortured, but webunit won't run without it.
+        webunittest.HTTPResponse._TestCase__testMethodName = \
+                                          self._TestCase__testMethodName
+
+    def tearDown(self):
+        MintRepositoryHelper.tearDown(self)
+        webunittest.WebTestCase.tearDown(self)
+        # tear down the running server...
+
+    def webLogin(self, username, password):
+        page = self.fetch('')
+        page = self.fetch('/processLogin', postdata = \
+            {'username': username,
+             'password': password})
+        page = self.fetch('')
+        self.registerExpectedCookie(self.cookies.keys()[0])
+        return page

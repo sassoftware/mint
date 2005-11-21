@@ -18,7 +18,6 @@ import tempfile
 import time
 import unittest
 from urlparse import urlparse
-from webunit import webunittest
 
 #conary
 from conary import sqlite3
@@ -55,6 +54,9 @@ from mint import dbversion
 from mint import mint
 from mint import users
 from mint import config
+
+MINT_DOMAIN = 'rpath.local'
+MINT_HOST = 'test'
 
 # this is an override for deps.arch.x86flags -- we never want to use
 # any system flags (normally gathered from places like /proc/cpuinfo)
@@ -179,9 +181,11 @@ class ApacheServer(ChildRepository):
 
         # write Mint configuration
         f = open("%s/mint.conf" % self.serverRoot, "w")
-        print >> f, 'siteDomainName 127.0.0.5:%i' % self.port
-        print >> f, 'projectDomainName localhost:%i' % self.port
-        print >> f, 'externalDomainName localhost:%i' % self.port
+        print >> f, 'siteDomainName %s:%i' % (MINT_DOMAIN, self.port)
+        print >> f, 'projectDomainName %s:%i' % (MINT_DOMAIN, self.port)
+        print >> f, 'externalDomainName %s:%i' % (MINT_DOMAIN, self.port)
+        print >> f, 'hostName %s' % MINT_HOST
+        print >> f, 'secureHost %s.%s' % (MINT_HOST, MINT_DOMAIN)
 
         sqldriver = os.environ.get('MINT_SQL', 'sqlite')
         if sqldriver == 'sqlite':
@@ -200,7 +204,7 @@ class ApacheServer(ChildRepository):
         print >> f, 'authRepoMap %s http://mintauth:mintpass@127.0.0.1:%d/conary/' % (self.name, self.port)
         print >> f, 'debugMode True'
         print >> f, 'sendNotificationEmails False'
-        print >> f, """commitAction %s/scripts/commitaction --repmap '%%(repMap)s' --build-label %%(buildLabel)s --module \'%s/mint/rbuilderaction.py --user %%%%(user)s --url http://127.0.0.5:%d/xmlrpc-private/'""" % (conaryPath, mintPath, self.port)
+        print >> f, """commitAction %s/scripts/commitaction --repmap '%%(repMap)s' --build-label %%(buildLabel)s --module \'%s/mint/rbuilderaction.py --user %%%%(user)s --url http://%s:%d/xmlrpc-private/'""" % (conaryPath, mintPath, 'test.rpath.local', self.port)
             
         f.close()
 
