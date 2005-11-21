@@ -72,7 +72,7 @@ class ProjectTest(MintRepositoryHelper):
         project = client.getProjectByHostname("test1")
         assert(projectId == project.getId())
 
-        project = client.getProjectByFQDN("test1.localhost")
+        project = client.getProjectByFQDN("test1.rpath.local")
         assert(projectId == project.getId())
    
     def testMembers(self):
