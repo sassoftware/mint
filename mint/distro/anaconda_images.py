@@ -69,11 +69,16 @@ class AnacondaImages:
 
     def processImages(self):
         for image in self.images:
+            if image.mode == 'P':
+                color = 15 
+            else:
+                color = self.color
+                
             self.image = Image.open(os.path.join(self.indir,image[TEMPLATE]))
             self.draw = ImageDraw.Draw(self.image)
             self.font = ImageFont.truetype(self.fontfile, image[FONTSIZE])
             if(type(image[POSITION]) == tuple):
-                self.draw.text(image[POSITION], self.text, font=self.font, fill=self.color)
+                self.draw.text(image[POSITION], self.text, font=self.font, fill=color)
             elif(type(image[POSITION]) == float):
                 self.centerInTopSection(image[POSITION])
             self.image.save(os.path.join(self.outdir, image[FILENAME]))
