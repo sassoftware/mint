@@ -155,11 +155,6 @@ class InstallableIso(ImageGenerator):
             call('tar', 'xf', tmpTar, '-C', tmpPath)
             call('rm', tmpTar)
 
-            # copy the splash.lss files to the appropriate place
-            if os.path.exists(tmpRoot + '/usr/share/anaconda/pixmaps/splash.lss'):
-                print >> sys.stderr, "found splash.lss; moving to isolinux directory"
-                call('cp', '-v', tmpRoot + '/usr/share/anaconda/pixmaps/splash.lss', os.path.normpath(self.subdir + '/../isolinux/'))
-                # FIXME: regenerate boot.iso here
         else:
             print >> sys.stderr, "anaconda-images not found on repository either, using generated artwork."
             util.mkdirChain(tmpPath + '/pixmaps')
@@ -168,6 +163,14 @@ class InstallableIso(ImageGenerator):
                     fontfile = '/usr/share/fonts/bitstream-vera/Vera.ttf')
             ai.processImages()
                 
+        # copy the splash.lss files to the appropriate place
+        if os.path.exists(tmpPath + '/pixmaps/splash.lss'):
+            print >> sys.stderr, "found splash.lss; moving to isolinux directory"
+            splashTarget = os.path.join(self.topdir, 'isolinux')
+            call('cp', '-v', tmpPath + '/pixmaps/splash.lss', splashTarget)
+            call('ls', '-l', splashTarget)
+            # FIXME: regenerate boot.iso here
+
         # write the conaryrc file
         conaryrcFile = open(os.path.join(tmpPath, "conaryrc"), "w")
         print >> conaryrcFile, "installLabelPath " + self.release.getDataValue("installLabelPath")
@@ -218,6 +221,7 @@ class InstallableIso(ImageGenerator):
         
         revision = version.trailingRevision().asString()
         topdir = os.path.join(self.cfg.imagesPath, project.getHostname(), release.getArch(), revision, "unified") 
+        self.topdir = topdir
         util.mkdirChain(topdir)
         # subdir = string.capwords(project.getHostname())
         subdir = 'rPath'
