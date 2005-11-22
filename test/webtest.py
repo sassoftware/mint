@@ -52,6 +52,25 @@ class MintTest(mint_rephelp.WebRepositoryHelper):
         project = client.getProjectByHostname("test")
         assert(project.getName() == 'Test Project')
 
+    def testEditProject(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        projectId = client.newProject('Foo', 'foo', 'rpath.local')
+        page = self.webLogin('foouser', 'foopass')
+
+        page = page.assertCode('/project/foo/editProject', code = 200)
+
+    def testProcessEditProject(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        projectId = client.newProject('Foo', 'foo', 'rpath.local')
+        page = self.webLogin('foouser', 'foopass')
+        page = page.fetch('/project/foo/processEditProject', postdata =
+                          {'name'   : 'Bar',
+                           'branch' : 'foo:bar'},
+                          ok_codes = [301])
+
+        project = client.getProject(projectId)
+        assert(project.name == 'Bar')
+
     def testBrowseProjects(self):
         client, userId = self.quickMintUser('foouser','foopass')
         projectId = client.newProject('Foo', 'foo', 'rpath.local')
@@ -190,6 +209,26 @@ class MintTest(mint_rephelp.WebRepositoryHelper):
                           groupTrove.id)
 
         assert groupTrove.listTroves != []
+
+    def testUserSettings(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+
+        page = self.webLogin('foouser', 'foopass')
+
+        page = self.fetch('/userSettings',
+                          ok_codes = [200])
+
+    def testEditUserSettings(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+
+        user = client.getUser(userId)
+
+        page = self.webLogin('foouser', 'foopass')
+
+        page = self.fetch('/editUserSettings', postdata =
+                          { 'fullName' : 'Bob Loblaw',
+                            'email'    : user.email},
+                          ok_codes = [301])
 
 if __name__ == "__main__":
     testsuite.main()
