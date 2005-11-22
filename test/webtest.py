@@ -9,6 +9,9 @@ testsuite.setup()
 
 import mint_rephelp
 
+from repostest import testRecipe
+from conary import versions
+
 class MintTest(mint_rephelp.WebRepositoryHelper):
     def testNoLocalRedirect(self):
         page = self.assertCode('', code = 200)
@@ -151,6 +154,42 @@ class MintTest(mint_rephelp.WebRepositoryHelper):
                            'keydata' : keyData})
         if 'error' in page.body:
             self.fail('Posting OpenPGP Key to project failed.')
+
+    def testCreateGroup(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        projectId = client.newProject('Foo', 'foo', 'rpath.local')
+
+        page = self.webLogin('foouser', 'foopass')
+
+        page = self.fetch('/project/foo/createGroup', postdata =
+                          { 'groupName' : 'foo',
+                            'version'   : '1.0.0' })
+
+        groupTrove = client.getGroupTrove(1)
+
+        assert(groupTrove.recipeName == 'group-foo')
+
+    def testAddGroupTroveItem(self):
+        client, userId = self.quickMintUser('testuser','testpass')
+        projectId = self.newProject(client)
+
+        self.makeSourceTrove("testcase", testRecipe)
+        self.cookFromRepository("testcase",
+            versions.Label("test.rpath.local@rpl:devel"),
+            ignoreDeps = True)
+
+        page = self.webLogin('testuser', 'testpass')
+
+        groupTrove = client.createGroupTrove(projectId, 'group-foo',
+                                             '1.0.0', '', False)
+
+        page = self.fetch('/project/test/editGroup?id=%d' % groupTrove.id,
+                          ok_codes = [200])
+
+        page = self.fetch('/project/test/addGroupTrove?id=%d&trove=testcase&projectName=test&referer=/' %
+                          groupTrove.id)
+
+        assert groupTrove.listTroves != []
 
 if __name__ == "__main__":
     testsuite.main()
