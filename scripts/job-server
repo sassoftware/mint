@@ -94,7 +94,8 @@ class JobRunner(threading.Thread):
                 log.info("job %d succeeded: %s" % (jobId, str(ret)))
 
         if error:
-            log.info(error)
+            log.warning(error)
+            raise
         else:
             self.job.setStatus(jobstatus.FINISHED, "Finished")
 

@@ -13,6 +13,10 @@ from mint import projects
 from conary.repository import netclient
 from conary.repository import repository
 from conary import dbstore
+from conary.lib import util
+
+import sys
+sys.excepthook = util.genExcepthook()
 
 cfgPath = "/srv/mint/mint.conf"
 

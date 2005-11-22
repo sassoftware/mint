@@ -92,10 +92,10 @@ def _linkRecurse(fromDir, toDir):
             gencslist._linkOrCopyFile(src, dest)
 
 
-def call(*cmds, **kwargs):
+def call(*cmds):
     print >> sys.stderr, " ".join(cmds)
     sys.stderr.flush()
-    subprocess.call(cmds, **kwargs)
+    subprocess.call(cmds)
 
 
 class InstallableIso(ImageGenerator):
@@ -166,18 +166,19 @@ class InstallableIso(ImageGenerator):
         # convert syslinux-splash.png to splash.lss, if exists
         if os.path.exists(tmpPath + '/pixmaps/syslinux-splash.png'):
             print >> sys.stderr, "found syslinux-splash.png, converting to splash.lss"
-            cmd = ["pngtopnm", tmpPath + '/pixmaps/syslinux-splash.png', '|', 'ppmtolss16',
-                   '\#000000=0', '\#cdcfd5=7', '\#c90000=2', '\#ffffff=15', '\#5b6c93=9', '>',
-                    tmpPath + '/pixmaps/splash.lss']
-            call(*cmd, **dict(shell = True))
-            print >> sys.stderr, " ".join(cmd)
+            call('ls', '-l', tmpPath + "/pixmaps/")
+
+            splash = file(tmpPath + '/pixmaps/splash.lss', 'w')
+            palette = [] # '#000000=0', '#cdcfd5=7', '#c90000=2', '#ffffff=15', '#5b6c93=9']
+            pngtopnm = subprocess.Popen(['pngtopnm', tmpPath + '/pixmaps/syslinux-splash.png'], stdout = subprocess.PIPE)
+            ppmtolss16 = subprocess.Popen(['ppmtolss16'] + palette, stdin = pngtopnm.stdout, stdout = splash)
+            ppmtolss16.communicate()
             
         # copy the splash.lss files to the appropriate place
         if os.path.exists(tmpPath + '/pixmaps/splash.lss'):
             print >> sys.stderr, "found splash.lss; moving to isolinux directory"
             splashTarget = os.path.join(self.topdir, 'isolinux')
             call('cp', '-v', tmpPath + '/pixmaps/splash.lss', splashTarget)
-            call('ls', '-l', splashTarget)
             # FIXME: regenerate boot.iso here
 
         # write the conaryrc file
