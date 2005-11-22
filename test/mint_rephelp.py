@@ -126,8 +126,11 @@ class WebRepositoryHelper(MintRepositoryHelper, webunittest.WebTestCase):
         # this is tortured, but webunit won't run without it.
         webunittest.HTTPResponse._TestCase__testMethodName = \
                                           self._TestCase__testMethodName
+        # set the cookie to stop the redirect madness
+        page = self.fetch('')
 
     def tearDown(self):
+        self.clearCookies()
         MintRepositoryHelper.tearDown(self)
         webunittest.WebTestCase.tearDown(self)
         # tear down the running server...
@@ -138,5 +141,4 @@ class WebRepositoryHelper(MintRepositoryHelper, webunittest.WebTestCase):
             {'username': username,
              'password': password})
         page = self.fetch('')
-        self.registerExpectedCookie(self.cookies.keys()[0])
         return page

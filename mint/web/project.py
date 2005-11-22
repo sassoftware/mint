@@ -41,7 +41,7 @@ def getUserDict(members):
 class ProjectHandler(WebHandler):
     def handle(self, context):
         self.__dict__.update(**context)
-        
+
         cmds = self.cmd.split("/")
 
         try:
@@ -53,12 +53,12 @@ class ProjectHandler(WebHandler):
         # to the right url if accessed incorrectly,
         # and vice-versa for internal (unendorsed) projects
         if self.project.external:
-            if self.req.hostname != self.cfg.siteHost:
+            if self.req.hostname != self.cfg.siteHost.split(':')[0]:
                 self.req.log_error("%s %s accessed incorrectly; referer: %s" % \
                     (self.req.hostname, self.req.unparsed_uri, self.req.headers_in.get('referer', 'N/A')))
                 return self._redirector("http://" + self.cfg.siteHost + self.req.unparsed_uri)
         else:
-            if self.req.hostname != self.cfg.projectSiteHost:
+            if self.req.hostname != self.cfg.projectSiteHost.split(':')[0]:
                 self.req.log_error("%s %s accessed incorrectly; referer: %s" % \
                     (self.req.hostname, self.req.unparsed_uri, self.req.headers_in.get('referer', 'N/A')))
                 return self._redirector("http://" + self.cfg.projectSiteHost + self.req.unparsed_uri)
