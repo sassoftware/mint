@@ -92,10 +92,10 @@ def _linkRecurse(fromDir, toDir):
             gencslist._linkOrCopyFile(src, dest)
 
 
-def call(*cmds):
+def call(*cmds, **kwargs):
     print >> sys.stderr, " ".join(cmds)
     sys.stderr.flush()
-    subprocess.call(cmds)
+    subprocess.call(cmds, **kwargs)
 
 
 class InstallableIso(ImageGenerator):
@@ -163,6 +163,15 @@ class InstallableIso(ImageGenerator):
                     fontfile = '/usr/share/fonts/bitstream-vera/Vera.ttf')
             ai.processImages()
                 
+        # convert syslinux-splash.png to splash.lss, if exists
+        if os.path.exists(tmpPath + '/pixmaps/syslinux-splash.png'):
+            print >> sys.stderr, "found syslinux-splash.png, converting to splash.lss"
+            cmd = ["pngtopnm", tmpPath + '/pixmaps/syslinux-splash.png', '|', 'ppmtolss16',
+                   '\#000000=0', '\#cdcfd5=7', '\#c90000=2', '\#ffffff=15', '\#5b6c93=9', '>',
+                    tmpPath + '/pixmaps/splash.lss']
+            call(*cmd, **dict(shell = True))
+            print >> sys.stderr, " ".join(cmd)
+            
         # copy the splash.lss files to the appropriate place
         if os.path.exists(tmpPath + '/pixmaps/splash.lss'):
             print >> sys.stderr, "found splash.lss; moving to isolinux directory"
