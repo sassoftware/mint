@@ -1,3 +1,16 @@
+Changes in 1.1.2:
+
+* Customized Anaconda images are now automatically generated if
+  anaconda-custom does not exist on the project repository.
+* Group Builder groups can be cooked to x86 and x86_64 targets.
+* Installable ISO releases now have the install ISOs show up in the
+  release files list before boot.iso and diskimage.img.
+* The test suite now has the beginnings of web-based functional
+  tests to actually test the web front end.
+* Many Javascript operations were ported to MochiKit calls, increasing
+  browser compatibility.
+* Many other small bug fixes.
+
 Changes in 1.1.1:
 
 * Bug fixes in the database code, RSS news handling.
