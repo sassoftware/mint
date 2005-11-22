@@ -69,12 +69,12 @@ class AnacondaImages:
 
     def processImages(self):
         for image in self.images:
-            if image.mode == 'P':
+            self.image = Image.open(os.path.join(self.indir,image[TEMPLATE]))
+            if self.image.mode == 'P':
                 color = 15 
             else:
                 color = self.color
-                
-            self.image = Image.open(os.path.join(self.indir,image[TEMPLATE]))
+ 
             self.draw = ImageDraw.Draw(self.image)
             self.font = ImageFont.truetype(self.fontfile, image[FONTSIZE])
             if(type(image[POSITION]) == tuple):
