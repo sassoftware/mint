@@ -83,7 +83,7 @@ from mint.mint import upstream
                             <a href="${basePath}editRelease?releaseId=${release.getId()}">Edit Release</a>
                         </li>
                         <li>
-                            <a href="${basePath}restartJob?releaseId=${release.getId()}">Re-generate Release</a>
+                            <a href="${basePath}restartJob?releaseId=${release.getId()}">Regenerate Release</a>
                         </li>
                         <li py:if="not release.getPublished() and files">
                             <a href="publish?releaseId=${release.getId()}">Publish Release</a>
@@ -91,7 +91,7 @@ from mint.mint import upstream
                     </ul>
                     <ul id="editOptionsDisabled" py:attrs="{'style': editOptionsDisabledStyle}">
                         <li>Edit Release</li>
-                        <li>Re-generate Release</li>
+                        <li>Regenerate Release</li>
                         <li>Publish Release</li>
                     </ul>
                 </div>
