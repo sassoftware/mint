@@ -392,7 +392,7 @@ class MintServer(object):
         project = projects.Project(self, projectId)
         
         
-        project.addLabel(fqdn + "@%s" % self.cfg.defaultBranch,
+        project.addLabel(fqdn.split(':')[0] + "@%s" % self.cfg.defaultBranch,
             "http://%s%srepos/%s/" % (self.cfg.projectSiteHost, self.cfg.basePath, hostname),
             self.cfg.authUser, self.cfg.authPass)
 

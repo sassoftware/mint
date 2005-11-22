@@ -33,10 +33,10 @@ from decorators import mailList
 class SiteHandler(WebHandler):
     def handle(self, context):
         self.__dict__.update(**context)
-            
+
         path = normPath(context['cmd'])
         cmd = path.split('/')[1]
-       
+
         # if someone attempts to access the SITE from something other than
         # the site host and SSL is not requested, redirect.
         if self.req.hostname != self.cfg.siteHost.split(':')[0] and self.req.subprocess_env.get('HTTPS', 'off') == 'off':

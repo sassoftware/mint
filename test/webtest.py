@@ -41,12 +41,35 @@ class MintTest(mint_rephelp.WebRepositoryHelper):
 
         page = page.assertCode('/newProject', code = 200)
 
+        # explicit redirect expected
         page = page.fetch('/createProject', postdata =
                           {'title': 'Test Project',
                            'hostname': 'test'})
 
         project = client.getProjectByHostname("test")
         assert(project.getName() == 'Test Project')
-        
+
+    def testSearchProjects(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        projectId = client.newProject('Foo', 'foo', 'rpath.local')
+
+        page = self.fetch('/search?type=Projects&search=foo',
+                          ok_codes = {200: ''})
+        assert('match found for') in page.body
+
+    def testProjectsPage(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        projectId = client.newProject('Foo', 'foo', 'rpath.local')
+
+        page = self.fetch('')
+        page = page.fetch('/project/foo/', ok_codes = {200: ''})
+
+    def testMembersPage(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        projectId = client.newProject('Foo', 'foo', 'rpath.local')
+
+        page = self.fetch('')
+        page = page.fetch('/project/foo/members/', ok_codes = {200: ''})
+
 if __name__ == "__main__":
     testsuite.main()
