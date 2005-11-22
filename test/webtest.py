@@ -49,27 +49,57 @@ class MintTest(mint_rephelp.WebRepositoryHelper):
         project = client.getProjectByHostname("test")
         assert(project.getName() == 'Test Project')
 
+    def testBrowseProjects(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        projectId = client.newProject('Foo', 'foo', 'rpath.local')
+        for sortOrder in range(10):
+            page = self.fetch('/projects?sortOrder=%d' % sortOrder,
+                               ok_codes = [200])
+
     def testSearchProjects(self):
         client, userId = self.quickMintUser('foouser','foopass')
         projectId = client.newProject('Foo', 'foo', 'rpath.local')
 
         page = self.fetch('/search?type=Projects&search=foo',
-                          ok_codes = {200: ''})
+                          ok_codes = [200])
         assert('match found for') in page.body
+
+    def testSearchPackages(self):
+        page = self.fetch('/search?type=Packages&search=%25%25%25',
+                          ok_codes = [200])
 
     def testProjectsPage(self):
         client, userId = self.quickMintUser('foouser','foopass')
         projectId = client.newProject('Foo', 'foo', 'rpath.local')
 
-        page = self.fetch('')
-        page = page.fetch('/project/foo/', ok_codes = {200: ''})
+        page = self.fetch('/project/foo/', ok_codes = [200])
 
     def testMembersPage(self):
         client, userId = self.quickMintUser('foouser','foopass')
         projectId = client.newProject('Foo', 'foo', 'rpath.local')
 
-        page = self.fetch('')
-        page = page.fetch('/project/foo/members/', ok_codes = {200: ''})
+        page = self.fetch('/project/foo/members/', ok_codes = [200])
+
+    def testReleasesPage(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        projectId = client.newProject('Foo', 'foo', 'rpath.local')
+
+        page = self.assertContent('/project/foo/releases/',
+                                  ok_codes = [200],
+                                  content = 'This project has no releases.')
+
+
+    def testGroupBuilderInResources(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        projectId = client.newProject('Foo', 'foo', 'rpath.local')
+
+        # test for group builder while not logged in
+        page = self.assertNotContent('/project/foo/', ok_codes = [200],
+                                 content = "Group Builder")
+
+        page = self.webLogin('foouser', 'foopass')
+        page = self.assertContent('/project/foo/', ok_codes = [200],
+                                 content = "Group Builder")
 
 if __name__ == "__main__":
     testsuite.main()
