@@ -49,27 +49,108 @@ class MintTest(mint_rephelp.WebRepositoryHelper):
         project = client.getProjectByHostname("test")
         assert(project.getName() == 'Test Project')
 
+    def testBrowseProjects(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        projectId = client.newProject('Foo', 'foo', 'rpath.local')
+        for sortOrder in range(10):
+            page = self.fetch('/projects?sortOrder=%d' % sortOrder,
+                               ok_codes = [200])
+
     def testSearchProjects(self):
         client, userId = self.quickMintUser('foouser','foopass')
         projectId = client.newProject('Foo', 'foo', 'rpath.local')
 
         page = self.fetch('/search?type=Projects&search=foo',
-                          ok_codes = {200: ''})
+                          ok_codes = [200])
         assert('match found for') in page.body
+
+    def testSearchPackages(self):
+        page = self.fetch('/search?type=Packages&search=%25%25%25',
+                          ok_codes = [200])
 
     def testProjectsPage(self):
         client, userId = self.quickMintUser('foouser','foopass')
         projectId = client.newProject('Foo', 'foo', 'rpath.local')
 
-        page = self.fetch('')
-        page = page.fetch('/project/foo/', ok_codes = {200: ''})
+        page = self.fetch('/project/foo/', ok_codes = [200])
 
     def testMembersPage(self):
         client, userId = self.quickMintUser('foouser','foopass')
         projectId = client.newProject('Foo', 'foo', 'rpath.local')
 
-        page = self.fetch('')
-        page = page.fetch('/project/foo/members/', ok_codes = {200: ''})
+        page = self.fetch('/project/foo/members/', ok_codes = [200])
+
+    def testReleasesPage(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        projectId = client.newProject('Foo', 'foo', 'rpath.local')
+
+        page = self.assertContent('/project/foo/releases/',
+                                  ok_codes = [200],
+                                  content = 'This project has no releases.')
+
+    def testMailListsPage(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        projectId = client.newProject('Foo', 'foo', 'rpath.local')
+
+        page = self.fetch('/project/foo/mailingLists',
+                                  ok_codes = [200])
+
+# FIXME: implement skipped tests.
+# FIXME: these tests can't be run until mint shims pages in the /repos stack.
+#    def testPgpAdminPage(self):
+#        raise SkipTestException
+#        client, userId = self.quickMintUser('foouser','foopass')
+#        projectId = client.newProject('Foo', 'foo', 'rpath.local')
+#
+#        page = self.fetch('/repos/foo/pgpAdminForm',
+#                                  ok_codes = [200])
+
+#    def testRepoBrowserPage(self):
+#        client, userId = self.quickMintUser('foouser','foopass')
+#        projectId = client.newProject('Foo', 'foo', 'rpath.local')
+#
+#        page = self.assertContent('/repos/foo/browse',
+#                                  ok_codes = [200],
+#                                  content = 'Repository Browser')
+
+    def testGroupBuilderInResources(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        projectId = client.newProject('Foo', 'foo', 'rpath.local')
+
+        # test for group builder while not logged in
+        page = self.assertNotContent('/project/foo/', ok_codes = [200],
+                                 content = "Group Builder")
+
+        page = self.webLogin('foouser', 'foopass')
+        page = self.assertContent('/project/foo/', ok_codes = [200],
+                                 content = "Group Builder")
+
+    def testUploadKeyPage(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        projectId = client.newProject('Foo', 'foo', 'rpath.local')
+
+        page = self.assertContent('/uploadKey', ok_codes = [200],
+                                 content = "Permission Denied")
+
+        page = self.webLogin('foouser', 'foopass')
+
+        page = self.assertNotContent('/uploadKey', ok_codes = [200],
+                                 content = "Permission Denied")
+
+    def testUploadKey(self):
+        keyFile = open(testsuite.archivePath + '/key.asc')
+        keyData = keyFile.read()
+        keyFile.close()
+        client, userId = self.quickMintUser('foouser','foopass')
+        projectId = client.newProject('Foo', 'foo', 'rpath.local')
+
+        page = self.webLogin('foouser', 'foopass')
+
+        page = self.fetch('/processKey', postdata =
+                          {'projects' : ['foo'],
+                           'keydata' : keyData})
+        if 'error' in page.body:
+            self.fail('Posting OpenPGP Key to project failed.')
 
 if __name__ == "__main__":
     testsuite.main()
