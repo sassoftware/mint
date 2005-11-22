@@ -345,7 +345,7 @@ class InstallableIso(ImageGenerator):
         discdir = os.path.normpath(topdir + "/../")
         self.status("Building ISOs")
 
-        for d in os.listdir(discdir):
+        for d in sorted(os.listdir(discdir)):
             if not d.startswith('disc'):
                 continue
             
