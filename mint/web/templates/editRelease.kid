@@ -104,7 +104,7 @@ def generateJs(archMap):
                         <td py:if="(dataRow[0] == RDT_BOOL) and not dataDict[name]" colspan="2">
                             <input type="checkbox" name="${name}" value="1"/> ${dataRow[2]}
                         </td>
-                        <td py:if="(dataRow[0] == RDT_INT) or (dataRow[0] == RDT_STRING)" width="40%;">
+                        <td py:if="(dataRow[0] == RDT_INT) or (dataRow[0] == RDT_STRING)" style="width: 40%;">
                             ${dataRow[2]}
                         </td>
                         <td py:if="(dataRow[0] == RDT_INT) or (dataRow[0] == RDT_STRING)">
