@@ -472,7 +472,7 @@ def _getDescriptions(client, cs, name, version, flavor):
     sources = dict(sources)
     return sources, metadataToName, metadata
 
-def writeSqldb(cs, path):
+def writeSqldb(cs, path, cfgFile = None):
     tmpdir = tempfile.mkdtemp()
 
     if len(cs.primaryTroveList) != 1:
@@ -489,6 +489,8 @@ def writeSqldb(cs, path):
 
     # set up a conaryclient to get descriptions
     cfg = conarycfg.ConaryConfiguration()
+    if cfgFile and os.path.exists(cfgFile):
+        cfg.read(cfgFile)
     cfg.dbPath = ':memory:'
     cfg.root = ':memory:'
     cfg.initializeFlavors()

@@ -299,7 +299,7 @@ class InstallableIso(ImageGenerator):
         baseDir = os.path.join(topdir, subdir, 'base')
         self.baseDir = baseDir
         sqldbPath = os.path.join(baseDir, 'sqldb')
-        gencslist.writeSqldb(groupcs, sqldbPath)
+        gencslist.writeSqldb(groupcs, sqldbPath, cfgFile = conarycfgFile)
 
         # write the cslist
         cslistPath = os.path.join(baseDir, 'cslist')
