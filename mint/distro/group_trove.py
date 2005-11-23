@@ -30,7 +30,7 @@ class GroupTroveCook(ImageGenerator):
             projectId = groupTrove.projectId
             recipe = groupTrove.getRecipe()
             sourceName = groupTrove.recipeName + ":source"
-            arch = str(deps.ThawDependencySet(self.job.getDataValue("arch")))
+            arch = deps.ThawDependencySet(self.job.getDataValue("arch"))
 
             project = self.client.getProject(projectId)
 
@@ -39,11 +39,9 @@ class GroupTroveCook(ImageGenerator):
             cfg.contact = "http://www.rpath.org"
             cfg.quiet = True
             cfg.buildLabel = versions.Label(project.getLabel())
-
-            cfg.initializeFlavors()
+            cfg.buildFlavor = arch
             cfg.repositoryMap = project.getConaryConfig().repositoryMap
-            cfg.repositoryMap.update({'conary.rpath.com': 'http://conary-commits.rpath.com/conary/'})
-
+            
             repos = netclient.NetworkRepositoryClient(cfg.repositoryMap)
 
             trvLeaves = repos.getTroveLeavesByLabel({sourceName : {cfg.buildLabel : None} }).get(sourceName, [])
@@ -66,7 +64,7 @@ class GroupTroveCook(ImageGenerator):
             message = "Auto generated commit from %s.\n%s" % (cfg.name, groupTrove.description)
             checkin.commit(repos, cfg, message)
 
-            troveSpec = "%s[%s]" % (groupTrove.recipeName, arch)
+            troveSpec = "%s[%s]" % (groupTrove.recipeName, str(arch))
             ret = cook.cookItem(repos, cfg, troveSpec)
             ret = ret[0][0]
         finally:
