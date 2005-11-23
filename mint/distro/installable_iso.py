@@ -165,7 +165,6 @@ class InstallableIso(ImageGenerator):
         # convert syslinux-splash.png to splash.lss, if exists
         if os.path.exists(tmpPath + '/pixmaps/syslinux-splash.png'):
             print >> sys.stderr, "found syslinux-splash.png, converting to splash.lss"
-            call('ls', '-l', tmpPath + "/pixmaps/")
 
             splash = file(tmpPath + '/pixmaps/splash.lss', 'w')
             palette = [] # '#000000=0', '#cdcfd5=7', '#c90000=2', '#ffffff=15', '#5b6c93=9']
