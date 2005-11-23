@@ -46,17 +46,20 @@ class ReleaseDataTable(database.DatabaseTable):
         return True
 
     def getReleaseDataValue(self, releaseId, name):
+        # this function returns a tuple: isPresent, value to avoid
+        # passing None to indicate that no value is set, since we don't
+        # allow our XMLRPC server to pass None values.
         cu = self.db.cursor()
         cu.execute("SELECT value, dataType FROM ReleaseData WHERE releaseId=? AND name=?", (releaseId, name))
         res = cu.fetchall()
         if len(res) != 1:
-            return None
+            return False, 0
         value, dataType = res[0]
         if dataType == RDT_BOOL:
             value=bool(int(value))
         elif dataType == RDT_INT:
             value=int(value)
-        return value
+        return True, value
 
     def getReleaseDataDict(self, releaseId):
         cu = self.db.cursor()

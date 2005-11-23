@@ -78,6 +78,20 @@ class ReleaseTest(MintRepositoryHelper):
             release.setDataValue('intArg', intArg)
             assert(intArg == release.getDataValue('intArg'))
 
+    def testMissingReleaseData(self):
+        # make sure releasedata properly returns the default value
+        # if the row is missing. this will handle the case of a modified
+        # releasedata template with old releases in the database.
+
+        client, userId = self.quickMintUser("testuser", "testpass")
+        projectId = client.newProject("Foo", "foo", "rpath.org")
+        release = client.newRelease(projectId, "Test Release")
+        release.setImageType(releasetypes.INSTALLABLE_ISO)
+
+        self.db.cursor().execute("DELETE FROM ReleaseData WHERE name='bugsUrl'")
+
+        assert(release.getDataValue("bugsUrl") == "http://bugs.rpath.com/")
+
     def testPublished(self):
         client, userId = self.quickMintUser("testuser", "testpass")
         projectId = client.newProject("Foo", "foo", "rpath.org")

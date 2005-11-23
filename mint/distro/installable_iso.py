@@ -123,7 +123,7 @@ class InstallableIso(ImageGenerator):
         print >> bsFile, self.project.getName()
         print >> bsFile, upstream(self.release.getTroveVersion())
         print >> bsFile, self.subdir
-        print >> bsFile, 'http://bugs.rpath.com/'
+        print >> bsFile, self.release.getDataValue("bugsUrl")
         print >> bsFile, "%s %s %s" % (self.release.getTroveName(),
                                        self.release.getTroveVersion().asString(),
                                        self.release.getTroveFlavor().freeze())
