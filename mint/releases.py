@@ -36,11 +36,11 @@ class ReleaseDataNameError(MintError):
             self.str = reason
 
 installableIsoTemplate = {
-    'installLabelPath': (RDT_STRING, '',  'Default Conary installLabelPath setting:'),
+    'installLabelPath': (RDT_STRING, '',  'Default Conary installLabelPath setting'),
     'autoResolve':      (RDT_BOOL, False, "Add 'autoResolve True' to default /etc/conaryrc"),
-    'skipMediaCheck':   (RDT_BOOL, False, 'Skip prompt for ISO media check.'),
-    'betaNag':          (RDT_BOOL, False, 'Show a "beta nag" screen before installation.'),
-    'bugsUrl':          (RDT_STRING, 'http://bugs.rpath.com/', 'Bug report URL advertised in installer.')
+    'skipMediaCheck':   (RDT_BOOL, False, 'Skip prompt for ISO media check'),
+    'betaNag':          (RDT_BOOL, False, 'Show a "beta nag" screen before installation'),
+    'bugsUrl':          (RDT_STRING, 'http://bugs.rpath.com/', 'Bug report URL advertised in installer')
 }
 
 stubImageTemplate = {
