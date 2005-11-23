@@ -98,7 +98,7 @@ def generateJs(archMap):
                         
                     ?>
                     <tr py:for="name, dataRow in sorted(template.items(), key = lambda x: x[1][0])"
-                        style="width: 25%;">
+                        style="width: 40%;">
                         <td py:if="(dataRow[0] == RDT_BOOL) and dataDict[name]" colspan="2">
                             <input type="checkbox" name="${name}" value="1" checked="checked"/> ${dataRow[2]}
                         </td>
