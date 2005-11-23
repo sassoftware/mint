@@ -40,6 +40,7 @@ class GroupTroveCook(ImageGenerator):
             cfg.quiet = True
             cfg.buildLabel = versions.Label(project.getLabel())
             cfg.buildFlavor = arch
+            cfg.initializeFlavors()
             cfg.repositoryMap = project.getConaryConfig().repositoryMap
             
             repos = netclient.NetworkRepositoryClient(cfg.repositoryMap)
