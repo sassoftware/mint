@@ -144,6 +144,7 @@ class InstallableIso(ImageGenerator):
             print >> sys.stderr, "anaconda-custom not found on repository, falling back to anaconda-images"
             uJob = self._getUpdateJob(cclient, "anaconda-images")
 
+        util.mkdirChain(tmpPath + '/pixmaps')
         if uJob:
             cclient.applyUpdate(uJob, callback = self.callback)
             print >> sys.stderr, "success."
@@ -154,8 +155,6 @@ class InstallableIso(ImageGenerator):
             call('tar', 'cf', tmpTar, '-C', tmpRoot + '/usr/share/anaconda/', './')
             call('tar', 'xf', tmpTar, '-C', tmpPath)
             call('rm', tmpTar)
-
-        util.mkdirChain(tmpPath + '/pixmaps')
         elif not self.project.external:
             print >> sys.stderr, "anaconda-images not found on repository either, using generated artwork."
             ai = AnacondaImages(self.project.getName(), indir = self.isocfg.anacondaImagesPath,
