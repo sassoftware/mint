@@ -97,15 +97,14 @@ def generateJs(archMap):
                         dataDict = release.getDataDict()
                         
                     ?>
-                    <tr py:for="name, dataRow in sorted(template.items(), key = lambda x: x[1][0])"
-                        style="width: 40%;">
+                    <tr py:for="name, dataRow in sorted(template.items(), key = lambda x: x[1][0])">
                         <td py:if="(dataRow[0] == RDT_BOOL) and dataDict[name]" colspan="2">
                             <input type="checkbox" name="${name}" value="1" checked="checked"/> ${dataRow[2]}
                         </td>
                         <td py:if="(dataRow[0] == RDT_BOOL) and not dataDict[name]" colspan="2">
                             <input type="checkbox" name="${name}" value="1"/> ${dataRow[2]}
                         </td>
-                        <td py:if="(dataRow[0] == RDT_INT) or (dataRow[0] == RDT_STRING)">
+                        <td py:if="(dataRow[0] == RDT_INT) or (dataRow[0] == RDT_STRING)" width="40%;">
                             ${dataRow[2]}
                         </td>
                         <td py:if="(dataRow[0] == RDT_INT) or (dataRow[0] == RDT_STRING)">
