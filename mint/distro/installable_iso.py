@@ -187,6 +187,15 @@ class InstallableIso(ImageGenerator):
         if self.release.getDataValue("autoResolve"):
             print >> conaryrcFile, "autoResolve True"
         conaryrcFile.close()
+
+        # extract constants.py from the stage2.img template and override the BETANAG flag
+        # this would be better if constants.py could load a secondary constants.py
+        stage2Path = tempfile.mkdtemp()
+        call('/sbin/fsck.cramfs', self.topdir + '/rPath/base/stage2.img', '-x', stage2Path)
+        call('cp', stage2Path + '/usr/lib/anaconda/constants.py', tmpPath)
+        betaNag = self.release.getDataValue('betaNag')
+        call('sed', '-i', 's/BETANAG = 1/BETANAG = %d/' % int(betaNag), tmpPath + '/constants.py')
+        util.rmtree(stage2Path)
             
         # create cramfs
         call('mkcramfs', tmpPath, productPath)
@@ -216,7 +225,6 @@ class InstallableIso(ImageGenerator):
         self.version = version
 
         skipMediaCheck = release.getDataValue('skipMediaCheck')
-        betaNag = release.getDataValue('betaNag')
 
         cfg = conarycfg.ConaryConfiguration()
         conarycfgFile = os.path.join(self.cfg.configPath, 'conaryrc')
