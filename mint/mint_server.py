@@ -39,6 +39,10 @@ from conary.repository import shimclient
 from conary.repository.netrepos import netserver
 from conary.deps import deps
 
+import reports
+from reports import new_users
+from reports.reports import getAvailableReports, MintReport
+
 validHost = re.compile('^[a-zA-Z][a-zA-Z0-9\-]*$')
 reservedHosts = ['admin', 'mail', 'mint', 'www', 'web', 'rpath', 'wiki', 'conary', 'lists']
 
@@ -1741,6 +1745,43 @@ class MintServer(object):
         self._filterProjectAccess(projectId)
         self._requireProjectOwner(projectId)
         self.groupTroveItems.update(groupTroveItemId, subGroup = subGroup)
+
+    ### Site reports ###
+    @private
+    @typeCheck()
+    @requiresAdmin
+    def listAvailableReports(self):
+        reports =  getAvailableReports()
+        res = {}
+        for rep in reports:
+            res[rep] = self._getReportObject(rep).title
+        return res
+
+    def _getReportObject(self, name):
+        repModule = reports.__dict__[name]
+        for objName in repModule.__dict__.keys():
+            try:
+                if objName != 'MintReport' and \
+                       MintReport in repModule.__dict__[objName].__bases__:
+                    return repModule.__dict__[objName](self.db)
+            except AttributeError:
+                pass
+
+    @private
+    @typeCheck(str)
+    @requiresAdmin
+    def getReport(self, name):
+        if name not in getAvailableReports():
+            raise PermissionDenied
+        return self._getReportObject(name).getReport()
+
+    @private
+    @typeCheck(str)
+    @requiresAdmin
+    def getReportPdf(self, name):
+        if name not in getAvailableReports():
+            raise PermissionDenied
+        return self._getReportObject(name).getPdf()
 
     def __init__(self, cfg, allowPrivate = False, alwaysReload = False):
         self.cfg = cfg
