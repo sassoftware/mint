@@ -1,4 +1,4 @@
-Changes in 1.1.2:
+Changes in 1.1.1:
 
 * Customized Anaconda images are now automatically generated if
   anaconda-custom does not exist on the project repository.
@@ -10,12 +10,7 @@ Changes in 1.1.2:
 * Many Javascript operations were ported to MochiKit calls, increasing
   browser compatibility.
 * Many other small bug fixes.
-
-Changes in 1.1.1:
-
 * Bug fixes in the database code, RSS news handling.
-* Groups built using the group builder can now be cooked against
-  both x86 and x86_64.
 * Fixed an fd leak in the installable ISO generation code.
 
 Changes in 1.1.0:
