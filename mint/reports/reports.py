@@ -18,7 +18,7 @@ except ImportError:
 
 global availableReports
 if _reportlab_present:
-    availableReports = ['new_users']
+    availableReports = ['new_users', 'new_projects']
 else:
     availableReports = []
 

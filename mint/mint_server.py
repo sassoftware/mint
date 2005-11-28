@@ -40,7 +40,7 @@ from conary.repository.netrepos import netserver
 from conary.deps import deps
 
 import reports
-from reports import new_users
+from reports import new_users, new_projects
 from reports.reports import getAvailableReports, MintReport
 
 validHost = re.compile('^[a-zA-Z][a-zA-Z0-9\-]*$')

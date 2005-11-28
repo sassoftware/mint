@@ -18,7 +18,3 @@ class NewUsersReport(MintReport):
         for row in cu.fetchall():
             data.append([row[0], row[1] or '(none)', row[2], time.ctime(row[3])])
         return data
-
-if __name__ == "__main__":
-    newUsers = NewUsersReport("sqldb", "new_users.pdf")
-    newUsers.create()
