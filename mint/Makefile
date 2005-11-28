@@ -4,7 +4,7 @@
 # All Rights Reserved
 #
 
-SUBDIRS = web distro
+SUBDIRS = web distro reports
 
 python_files =			\
 	__init__.py		\
@@ -16,6 +16,7 @@ python_files =			\
 	dbversion.py		\
 	grouptrove.py		\
 	jobs.py			\
+	jobdata.py		\
 	jobstatus.py		\
 	mailinglists.py		\
 	mint_error.py		\

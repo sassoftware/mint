@@ -8,6 +8,8 @@ all:
 
 clean: default-clean
 
+dist: default-dist
+
 install: 
 	mkdir -p $(DESTDIR)$(datadir)/pixmaps
 	for f in $(image_files); do \
