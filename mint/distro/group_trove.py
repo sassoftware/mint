@@ -54,7 +54,7 @@ class GroupTroveCook(ImageGenerator):
             cfg.contact = "http://www.rpath.org"
             cfg.quiet = True
             cfg.buildLabel = versions.Label(project.getLabel())
-            cfg.buildFlavor = stockFlavors[arch]
+            cfg.buildFlavor = deps.parseFlavor(stockFlavors[arch.freeze()])
             cfg.initializeFlavors()
             cfg.repositoryMap = project.getConaryConfig().repositoryMap
             
