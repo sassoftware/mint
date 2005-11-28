@@ -9,7 +9,7 @@ testsuite.setup()
 from mint_rephelp import MintRepositoryHelper
 from mint.mint_server import PermissionDenied
 
-class ProjectTest(MintRepositoryHelper):
+class ReportTest(MintRepositoryHelper):
     def testReportList(self):
         client, userId = self.quickMintAdmin('adminuser', 'adminpass')
         reports = client.server.listAvailableReports()
@@ -28,12 +28,20 @@ class ProjectTest(MintRepositoryHelper):
         if not reportPdf.startswith('%PDF-'):
             self.fail('resulting data format was not a PDF.')
 
-    def testNewUserReport(self):
+    def testNewUsersReport(self):
         client, userId = self.quickMintAdmin('adminuser', 'adminpass')
         for i in range(3):
             report = client.server.getReport('new_users')
             assert(len(report['data']) == i+1)
             self.quickMintUser('foouser%d' % i, 'foopass')
+
+    def testNewProjectsReport(self):
+        client, userId = self.quickMintAdmin('adminuser', 'adminpass')
+        projectId = client.newProject('Foo Project', 'foo', 'rpath.local')
+        report = client.server.getReport('new_projects')
+        if report['data'][0][:3] != ['foo', 'Foo Project', 'adminuser']:
+            self.fail("New Projects report returned incorrect data")
+        
 
 if __name__ == "__main__":
     testsuite.main()
