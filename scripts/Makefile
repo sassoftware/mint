@@ -21,7 +21,7 @@ dist_files = $(script_dist) $(extra_dist)
 
 all: default-all
 
-install: default-install
+install: install-subdirs
 	mkdir -p $(DESTDIR)/$(datadir)/mint/scripts/
 	for f in $(script_dist); do \
 		install -m 755 $$f $(DESTDIR)/$(datadir)/mint/scripts/$$f; \
