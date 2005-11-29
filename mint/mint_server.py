@@ -27,7 +27,6 @@ import stats
 import releasedata
 import grouptrove
 import jobdata
-from cache import TroveNamesCache
 from mint_error import PermissionDenied, ReleasePublished, ReleaseMissing, MintError
 from searcher import SearchTermsError
 
@@ -45,7 +44,6 @@ from reports import MintReport
 validHost = re.compile('^[a-zA-Z][a-zA-Z0-9\-]*$')
 reservedHosts = ['admin', 'mail', 'mint', 'www', 'web', 'rpath', 'wiki', 'conary', 'lists']
 
-allTroveNames = TroveNamesCache()
 dbConnection = None
 authDbConnection = None
 
@@ -1426,7 +1424,7 @@ class MintServer(object):
 
         troveDict = {}
         for label in labelIdMap.keys():
-            troves = allTroveNames.getTroveNames(versions.Label(label), nc)
+            troves = nc.troveNames(versions.Label(label))
             troves = [x for x in troves if (x.startswith("group-") or\
                                             x.startswith("fileset-")) and\
                                             ":" not in x]
