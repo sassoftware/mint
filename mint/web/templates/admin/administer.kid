@@ -33,6 +33,7 @@
                 <li><a href="administer?operation=user">User Operations</a></li>
                 <li><a href="administer?operation=project">Project Operations</a></li>
                 <li><a href="administer?operation=notify">Notify All Users</a></li>
+                <li><a href="administer?operation=report">View Reports</a></li>
               </ul>
             </div>
         </td>

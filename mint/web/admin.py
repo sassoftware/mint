@@ -158,6 +158,19 @@ class AdminHandler(WebHandler):
             return self._admin_notify(*args, **kwargs)
         return self._administer(*args, **kwargs)
 
+    def _admin_report(self, *args, **kwargs):
+        reports = self.client.listAvailableReports()
+        self._write('admin/report', kwargs=kwargs,
+                    availableReports = reports.iteritems())
+        return apache.OK
+
+    @strFields(reportName = None)
+    def _admin_report_view(self, *args, **kwargs):
+        pdfData = self.client.getReportPdf(kwargs['reportName'])
+        self.req.content_type = "application/x-pdf"
+        self.req.write(pdfData)
+        return apache.OK
+
     def _administer(self, *args, **kwargs):
         self._write('admin/administer', kwargs=kwargs)
         return apache.OK

@@ -374,6 +374,13 @@ class MintClient:
     def listGroupTrovesByProject(self, projectId):
         return self.server.listGroupTrovesByProject(projectId)
 
+    # report functions
+    def listAvailableReports(self):
+        return self.server.listAvailableReports()
+
+    def getReportPdf(self, name):
+        return self.server.getReportPdf(name)
+
 class ServerProxy(xmlrpclib.ServerProxy):
     def __getattr__(self, name):
         return _Method(self.__request, name)
