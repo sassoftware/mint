@@ -40,8 +40,7 @@ from conary.repository.netrepos import netserver
 from conary.deps import deps
 
 import reports
-from reports import new_users, new_projects
-from reports.reports import getAvailableReports, MintReport
+from reports import MintReport
 
 validHost = re.compile('^[a-zA-Z][a-zA-Z0-9\-]*$')
 reservedHosts = ['admin', 'mail', 'mint', 'www', 'web', 'rpath', 'wiki', 'conary', 'lists']
@@ -1751,10 +1750,12 @@ class MintServer(object):
     @typeCheck()
     @requiresAdmin
     def listAvailableReports(self):
-        reports =  getAvailableReports()
+        reportNames = reports.getAvailableReports()
         res = {}
-        for rep in reports:
-            res[rep] = self._getReportObject(rep).title
+        for rep in reportNames:
+            repObj = self._getReportObject(rep)
+            if repObj is not None:
+                res[rep] = repObj.title
         return res
 
     def _getReportObject(self, name):
@@ -1766,12 +1767,13 @@ class MintServer(object):
                     return repModule.__dict__[objName](self.db)
             except AttributeError:
                 pass
+        return None
 
     @private
     @typeCheck(str)
     @requiresAdmin
     def getReport(self, name):
-        if name not in getAvailableReports():
+        if name not in reports.getAvailableReports():
             raise PermissionDenied
         return self._getReportObject(name).getReport()
 
@@ -1779,7 +1781,7 @@ class MintServer(object):
     @typeCheck(str)
     @requiresAdmin
     def getReportPdf(self, name):
-        if name not in getAvailableReports():
+        if name not in reports.getAvailableReports():
             raise PermissionDenied
         return self._getReportObject(name).getPdf()
 

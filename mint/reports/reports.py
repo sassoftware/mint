@@ -16,15 +16,6 @@ try:
 except ImportError:
     _reportlab_present = False
 
-global availableReports
-if _reportlab_present:
-    availableReports = ['new_users', 'new_projects']
-else:
-    availableReports = []
-
-def getAvailableReports():
-    return availableReports
-
 import conary
 from conary.lib.util import mkstemp, rmtree
 import time

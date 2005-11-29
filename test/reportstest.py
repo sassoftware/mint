@@ -15,12 +15,7 @@ class ReportTest(MintRepositoryHelper):
         reports = client.server.listAvailableReports()
         for rep in reports.keys():
             client.server.getReport(rep)
-
-        try:
-            client.server.getReport('')
-            self.fail("Illegal report request didn't fail")
-        except PermissionDenied:
-            pass
+        self.assertRaises(PermissionDenied, client.server.getReport, '')
 
     def testReportPdf(self):
         client, userId = self.quickMintAdmin('adminuser', 'adminpass')
