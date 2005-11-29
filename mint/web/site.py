@@ -284,7 +284,7 @@ class SiteHandler(WebHandler):
                 self.user.setPassword(password1)
                 return self._redirectHttp("logout")
 
-        return self._redirectHttp(self.cfg.basePath)
+        return self._redirectHttp('/')
 
     @requiresAuth
     @listFields(str, projects=[])
