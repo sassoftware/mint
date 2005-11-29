@@ -8,7 +8,6 @@ SUBDIRS = web distro reports
 
 python_files =			\
 	__init__.py		\
-	cache.py		\
 	checkhtml.py		\
 	config.py		\
 	constants.py		\
