@@ -82,6 +82,8 @@ class GroupTroveCook(ImageGenerator):
 
             troveSpec = "%s[%s]" % (groupTrove.recipeName, str(arch))
             ret = cook.cookItem(repos, cfg, troveSpec)
+            sys.stderr.flush()
+            sys.stdout.flush()
             ret = ret[0][0]
         finally:
             os.chdir(curDir)
