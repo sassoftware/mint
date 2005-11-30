@@ -82,7 +82,7 @@ class DatabaseTable:
     those indeces
     """
 
-    schemaVersion = 7
+    schemaVersion = 8
     name = "Table"
     fields = []
     createSQL = "CREATE TABLE Table ();"
@@ -133,11 +133,6 @@ class DatabaseTable:
             
             for index in missing:
                 cu.execute(self.indexes[index])
-
-    def __del__(self):
-        if not self.db.closed:
-            self.db.close()
-        del self.db
 
     def getDBVersion(self):
         cu = self.db.cursor()

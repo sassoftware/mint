@@ -1,3 +1,10 @@
+Changes in 1.1.2:
+
+* The JobData and ReleaseData tables are now abstracted into a new
+  GenericDataTable for future reuse.  As part of this change the JobData table
+  will be dropped and recreated.  As such any jobs happening during the upgrade
+  to this version will need to be restarted.
+
 Changes in 1.1.1:
 
 * Customized Anaconda images are now automatically generated if

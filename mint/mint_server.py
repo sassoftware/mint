@@ -24,9 +24,9 @@ import users
 import userlevels
 import dbversion
 import stats
-import releasedata
+import data
 import grouptrove
-import jobdata
+from cache import TroveNamesCache
 from mint_error import PermissionDenied, ReleasePublished, ReleaseMissing, MintError
 from searcher import SearchTermsError
 
@@ -177,10 +177,10 @@ def getTables(db, cfg):
     d['sessions'] = sessiondb.SessionsTable(db)
     d['membershipRequests'] = requests.MembershipRequestTable(db)
     d['commits'] = stats.CommitsTable(db)
-    d['releaseData'] = releasedata.ReleaseDataTable(db)
+    d['releaseData'] = data.ReleaseDataTable(db)
     d['groupTroves'] = grouptrove.GroupTroveTable(db)
     d['groupTroveItems'] = grouptrove.GroupTroveItemsTable(db)
-    d['jobData'] = jobdata.JobDataTable(db)
+    d['jobData'] = data.JobDataTable(db)
     return d
 
 class MintServer(object):
@@ -1093,33 +1093,33 @@ class MintServer(object):
             raise ReleaseMissing()
         if self.releases.getPublished(releaseId):
             raise ReleasePublished()
-        return self.releaseData.setReleaseDataValue(releaseId, name, value, dataType)
+        return self.releaseData.setDataValue(releaseId, name, value, dataType)
 
     @typeCheck(int, str)
     @private
     def getReleaseDataValue(self, releaseId, name):
         self._filterReleaseAccess(releaseId)
-        return self.releaseData.getReleaseDataValue(releaseId, name)
+        return self.releaseData.getDataValue(releaseId, name)
 
     @typeCheck(int)
     @private
     def getReleaseDataDict(self, releaseId):
         self._filterReleaseAccess(releaseId)
-        return self.releaseData.getReleaseDataDict(releaseId)
+        return self.releaseData.getDataDict(releaseId)
 
     # job data calls
-    @typeCheck(int, str, ((str, int, bool),))
+    @typeCheck(int, str, ((str, int, bool),), int)
     @requiresAuth
     @private
-    def setJobDataValue(self, jobId, name, value):
+    def setJobDataValue(self, jobId, name, value, dataType):
         self._filterJobAccess(jobId)
-        return self.jobData.setJobDataValue(jobId, name, value)
+        return self.jobData.setDataValue(jobId, name, value, dataType)
 
     @typeCheck(int, str)
     @private
     def getJobDataValue(self, jobId, name):
         self._filterJobAccess(jobId)
-        return self.jobData.getJobDataValue(jobId, name)
+        return self.jobData.getDataValue(jobId, name)
 
     @typeCheck(int)
     @private
@@ -1246,7 +1246,7 @@ class MintServer(object):
                     statusMessage = msg,
                     timeStarted = time.time(), timeFinished = 0)
                 retval = jobId
-        self.jobData.setJobDataValue(retval, "arch", arch)
+        self.jobData.setDataValue(retval, "arch", arch, data.RDT_STRING)
         return retval
 
     @private

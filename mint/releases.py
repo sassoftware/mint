@@ -11,7 +11,7 @@ import database
 import jobs
 import releasetypes
 from mint_error import MintError 
-from releasedata import RDT_STRING, RDT_BOOL, RDT_INT
+from data import RDT_STRING, RDT_BOOL, RDT_INT
 
 from conary import versions
 from conary.deps import deps

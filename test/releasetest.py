@@ -8,7 +8,7 @@ import time
 testsuite.setup()
 
 from mint_rephelp import MintRepositoryHelper
-from mint.releasedata import RDT_STRING, RDT_BOOL, RDT_INT
+from mint.data import RDT_STRING, RDT_BOOL, RDT_INT
 from mint.releases import ReleaseDataNameError
 from mint.mint_error import ReleasePublished, ReleaseMissing
 from mint import releasetypes

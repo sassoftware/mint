@@ -2,7 +2,7 @@
 <?python
 import re
 from mint.mint import extractIs
-from mint.releasedata import RDT_STRING, RDT_BOOL, RDT_INT
+from mint.data import RDT_STRING, RDT_BOOL, RDT_INT
 title = "Edit Release"
 
 def generateJs(archMap):
