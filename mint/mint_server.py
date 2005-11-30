@@ -26,7 +26,6 @@ import dbversion
 import stats
 import data
 import grouptrove
-from cache import TroveNamesCache
 from mint_error import PermissionDenied, ReleasePublished, ReleaseMissing, MintError
 from searcher import SearchTermsError
 
