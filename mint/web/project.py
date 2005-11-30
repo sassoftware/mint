@@ -119,17 +119,13 @@ class ProjectHandler(WebHandler):
                     groupTrovesInProject = groupTrovesInProject)
         return apache.OK
 
-    @ownerOnly
-    def newGroup(self, auth):
-
+    def _getBasicTroves(self):
         # XXX all of this is kind of a hardcoded hack that should be pulled out
         # into a config file somewhere, or something.
         repoMap = {'conary.rpath.com': 'http://conary-commits.rpath.com/conary/'}
         label = versions.Label('conary.rpath.com@rpl:1')
         repos = netclient.NetworkRepositoryClient(repoMap)
         troves = repos.getTroveLeavesByLabel({'group-dist': {label: None}})
-        print >> sys.stderr, troves
-        sys.stderr.flush()
 
         version, flavor = troves['group-dist'].items()[0]
         trove = repos.getTroves([('group-dist', version, flavor[0])])[0]
@@ -151,8 +147,13 @@ class ProjectHandler(WebHandler):
                     'group-kde':            'The KDE desktop environment.',
                     'group-netserver':      'Network servers, tools, and support.',
                     'group-xorg':           'The X.org windowing system.'}
+        return troveNames, troveDict, metadata
+
+    @ownerOnly
+    def newGroup(self, auth):
+        troves, troveDict, metadata = self._getBasicTroves()
         
-        self._write("newGroup", errors = [], kwargs = {}, troves = troveNames,
+        self._write("newGroup", errors = [], kwargs = {}, troves = troves,
             troveDict = troveDict, metadata = metadata)
         return apache.OK
 
@@ -185,7 +186,10 @@ class ProjectHandler(WebHandler):
             return self._redirect("editGroup?id=%d" % gtId)
         else:
             kwargs = {'groupName': groupName, 'version': version}
-            self._write("newGroup", errors = errors, kwargs = kwargs)
+            troves, troveDict, metadata = self._getBasicTroves()
+                    
+            self._write("newGroup", errors = errors, kwargs = kwargs,
+                troves = troves, troveDict = troveDict, metadata = metadata)
             return apache.OK
     
     @ownerOnly
