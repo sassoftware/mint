@@ -231,6 +231,7 @@ class ProjectsTable(database.KeyedTable):
     def versionCheck(self):
         dbversion = self.getDBVersion()
         if dbversion != self.schemaVersion:
+            falling = False
             if dbversion == 0:
                 sql = """ALTER TABLE Projects ADD COLUMN hidden INT DEFAULT 0"""
                 cu = self.db.cursor()
@@ -238,20 +239,23 @@ class ProjectsTable(database.KeyedTable):
                     cu.execute(sql)
                 except:
                     return False
-            if dbversion == 2:
+                falling = True
+            if dbversion == 2 or falling:
                 cu = self.db.cursor()
                 try:
                     cu.execute("ALTER TABLE Projects ADD COLUMN external INT DEFAULT 0")
                     cu.execute("UPDATE Projects SET external=0")
                 except:
                     return False
-            if dbversion == 4:
+                falling = True
+            if dbversion == 4 or falling:
                 cu = self.db.cursor()
                 try:
                     cu.execute("ALTER TABLE Projects ADD COLUMN description STR")
                     cu.execute("UPDATE Projects SET description=desc")
                 except:
                     return False
+                falling = True
                     
         return True
 

@@ -98,6 +98,7 @@ class ReleasesTable(database.KeyedTable):
     def versionCheck(self):
         dbversion = self.getDBVersion()
         if dbversion != self.schemaVersion:
+            falling = False
             if dbversion == 3:
                 cu = self.db.cursor()
                 try:
@@ -105,7 +106,8 @@ class ReleasesTable(database.KeyedTable):
                     cu.execute("UPDATE Releases SET timePublished=0")
                 except:
                     return False
-            if dbversion == 4:
+                falling = True
+            if dbversion == 4 or falling:
                 cu = self.db.cursor()
                 try:
                     cu.execute("ALTER TABLE Releases ADD COLUMN description STR")
@@ -113,6 +115,8 @@ class ReleasesTable(database.KeyedTable):
                 except Exception, e:
                     print str(e)
                     return False
+                falling = True
+
         return True
     
     def new(self, **kwargs):
