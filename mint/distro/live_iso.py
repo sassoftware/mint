@@ -102,7 +102,7 @@ class LiveIso(ImageGenerator):
         # set up configuration
         cfg = project.getConaryConfig()
         # turn off threading
-        cfg.threadded = False
+        cfg.threaded = False
         # configure flavor
         flavorConfig = flavorcfg.FlavorConfig(cfg.useDirs, cfg.archDirs)
         cfg.flavor = flavorConfig.toDependency(override=cfg.flavor[0])

@@ -261,6 +261,7 @@ def extractChangeSets(client, cfg, csdir, groupName, groupVer, groupFlavor,
     rc = client.db.depCheck(jobSet, trvSrc, findOrdering=True)
     failedList, unresolveableList, changeSetList = rc
     if failedList:
+        #TODO display this to the user
         print >> sys.stderr, 'WARNING: unresolved dependencies:', failedList
 
     # instantiate all the trove objects in the group, make a set

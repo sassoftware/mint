@@ -180,6 +180,7 @@ class InstallableIso(ImageGenerator):
             # FIXME: regenerate boot.iso here
 
         # write the conaryrc file
+        # TODO move this up to ImageGenerator
         conaryrcFile = open(os.path.join(tmpPath, "conaryrc"), "w")
         print >> conaryrcFile, "installLabelPath " + self.release.getDataValue("installLabelPath")
         print >> conaryrcFile, "pinTroves kernel.*"
