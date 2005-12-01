@@ -4,6 +4,9 @@ Changes in 1.1.2:
   GenericDataTable for future reuse.  As part of this change the JobData table
   will be dropped and recreated.  As such any jobs happening during the upgrade
   to this version will need to be restarted.
+* More new source files are included in the Makefiles.
+* Reports can be accessed in PDF format on the web.
+* Lots of bug fixes.
 
 Changes in 1.1.1:
 
