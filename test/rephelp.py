@@ -330,7 +330,7 @@ class RepositoryHelper(testsuite.TestCase):
         self.cfg.repositoryMap.update(self.servers.getMap())
 
 	count = 0
-	repos = netclient.NetworkRepositoryClient(self.cfg.repositoryMap)
+        repos = conaryclient.ConaryClient(self.cfg).getRepos()
 
         name = "127.0.0.1"
         if serverIdx:

@@ -8,7 +8,7 @@ from time import sleep
 testsuite.setup()
 
 from conary import versions
-from conary.repository import netclient
+from conary.conaryclient import ConaryClient 
 
 from repostest import testRecipe
 from mint_rephelp import MintRepositoryHelper
@@ -464,7 +464,7 @@ class GroupTroveTest(MintRepositoryHelper):
             versions.Label("test.rpath.local@rpl:devel"))
 
         cfg = project.getConaryConfig()
-        nc = netclient.NetworkRepositoryClient(cfg.repositoryMap)
+        nc = ConaryClient(cfg).getRepos()
 
         troveNames = nc.troveNames(versions.Label("test.rpath.local@rpl:devel"))
         assert(troveNames == ['testcase', 'testcase:runtime', 'group-test',
@@ -536,7 +536,7 @@ class GroupTroveTest(MintRepositoryHelper):
         assert(trvFlavor == '')
 
         cfg = project.getConaryConfig()
-        nc = netclient.NetworkRepositoryClient(cfg.repositoryMap)
+        nc = ConaryClient(cfg).getRepos()
 
         troveNames = nc.troveNames(versions.Label("test.rpath.local@rpl:devel"))
         assert(troveNames == ['testcase', 'testcase:runtime', 'group-test',

@@ -10,60 +10,58 @@ import mint
 
 from conary import conarycfg
 from conary.conarycfg import ConfigFile
-from conary.conarycfg import STRINGDICT, STRINGLIST, BOOLEAN
+from conary.conarycfg import CfgString, CfgDict, CfgBool
 
 from urlparse import urlsplit
 
 templatePath = os.path.dirname(sys.modules['mint'].__file__)
 
 class MintConfig(ConfigFile):
-    defaults = {
-        'companyName'       : 'rPath Inc.',
-        'productName'       : 'rBuilder at rpath.org',
-        'defaultRedirect'   : 'http://rpath.com',
-        'corpSite'          : 'http://www.rpath.com/corp/',
-        'defaultBranch'     : 'rpl:devel',
-        'supportContactHTML': 'Contact information in HTML.',
-        'supportContactTXT' : 'Contact information in text.',
-        'staticPath'        : '/conary-static/',
-        'authRepoMap'       : [ STRINGDICT, {} ],
-        'authDbPath'        : '/srv/authrepo/repos/sqldb',
-        'templatePath'      : os.path.join(templatePath, 'web', 'templates'),
-        'reposPath'         : '/srv/mint/repos/',
-        'reposContentsPath' : None,
-        'dbPath'            : '/srv/mint/data/db',
-        'dbDriver'          : 'sqlite',
-        'imagesPath'        : '/srv/mint/images/',
-        'logPath'           : '/srv/mint/logs/',
-        'siteDomainName'    : 'rpath.com',
-        'projectDomainName' : None,
-        'externalDomainName': None,
-        'secureHost'        : None,
-        'hostName'          : None, # optional domain name for main site
-        'SSL'               : [ BOOLEAN, False ],
-        'adminMail'         : 'mint@rpath.org',
-        'newsRssFeed'       : '',
-        'commitAction'      : None,
-        'commitEmail'       : None,
-        'EnableMailLists'   : [ BOOLEAN, False ],
-        'MailListBaseURL'   : 'http://lists.rpath.org/mailman/',
-        'MailListPass'      : 'adminpass',
-        'basePath'          : '/',
-        'cookieSecretKey'   : None,
-        'bugsEmail'         : None,
-        'bugsEmailName'     : 'rBuilder Bugs',
-        'bugsEmailSubject'  : 'Mint Unhandled Exception Report',
-        'smallBugsEmail'    : None,
-        'debugMode'         : [ BOOLEAN, False ],
-        'sendNotificationEmails': [ BOOLEAN, True ],
-        'profiling'         : [ BOOLEAN, False ],
+    companyName             = 'rPath Inc.'
+    productName             = 'rBuilder at rpath.org'
+    defaultRedirect         = 'http://rpath.com'
+    corpSite                = 'http://www.rpath.com/corp/'
+    defaultBranch           = 'rpl:devel'
+    supportContactHTML      = 'Contact information in HTML.'
+    supportContactTXT       = 'Contact information in text.'
+    staticPath              = '/conary-static/'
+    authRepoMap             = CfgDict(CfgString)
+    authDbPath              = '/srv/authrepo/repos/sqldb'
+    templatePath            = os.path.join(templatePath, 'web', 'templates')
+    reposPath               = '/srv/mint/repos/'
+    reposContentsPath       = None
+    dbPath                  = '/srv/mint/data/db'
+    dbDriver                = 'sqlite'
+    imagesPath              = '/srv/mint/images/'
+    logPath                 = '/srv/mint/logs/'
+    siteDomainName          = 'rpath.com'
+    projectDomainName       = None
+    externalDomainName      = None
+    secureHost              = None
+    hostName                = None # optional domain name for main site
+    SSL                     = (CfgBool, False)
+    adminMail               = 'mint@rpath.org'
+    newsRssFeed             = ''
+    commitAction            = None
+    commitEmail             = None
+    EnableMailLists         = (CfgBool, False)
+    MailListBaseURL         = 'http://lists.rpath.org/mailman/'
+    MailListPass            = 'adminpass'
+    basePath                = '/'
+    cookieSecretKey         = None
+    bugsEmail               = None
+    bugsEmailName           = 'rBuilder Bugs'
+    bugsEmailSubject        = 'Mint Unhandled Exception Report'
+    smallBugsEmail          = None
+    debugMode               = (CfgBool, False)
+    sendNotificationEmails  = (CfgBool, True)
+    profiling               = (CfgBool, False)
 
-        # don't set these yourself; they will be automatically generated 
-        # from authRepoMap:
-        'authUser'          : '',
-        'authPass'          : '',
-        'authRepoUrl'       : '',
-    }
+    # don't set these yourself; they will be automatically generated 
+    # from authRepoMap:
+    authUser                = ''
+    authPass                = ''
+    authRepoUrl             = ''
 
     def read(self, path, exception = False):
         ConfigFile.read(self, path, exception)
@@ -76,7 +74,7 @@ class MintConfig(ConfigFile):
         self.setValue('authUser', username)
         self.setValue('authPass', password)
 
-        repoUrl = '%s://%%s:%%s@%s/' % (urlparts[0], hostname)
+        repoUrl = '%s://%s/' % (urlparts[0], hostname)
         repoUrl += "".join(urlparts[2:])
         
         self.setValue('authRepoUrl', repoUrl)

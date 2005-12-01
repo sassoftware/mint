@@ -15,6 +15,7 @@ import sys
 import time
 import traceback
 
+from conary.lib import util as conaryutil
 from conary.lib import epdb, log
 from conary.repository.netrepos import netserver
 from conary.repository.filecontainer import FileContainer

@@ -134,8 +134,7 @@ class Project(database.TableObject):
         installLabelPath = " ".join(x for x in labelPath.keys())
         cfg.setValue("installLabelPath", installLabelPath)
 
-        for m in [x[0] + " " + x[1] for x in repoMap.items()]:
-            cfg.setValue("repositoryMap", m)
+        cfg.repositoryMap.update(dict((x[0], x[1]) for x in repoMap.items()))
         return cfg
 
     def addLabel(self, label, url, username="", password=""):

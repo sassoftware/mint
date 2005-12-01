@@ -36,6 +36,7 @@ from conary.repository import netclient
 from conary.repository import shimclient
 from conary.repository.netrepos import netserver
 from conary.deps import deps
+from conary import conarycfg
 
 import reports
 from reports import MintReport
@@ -265,17 +266,21 @@ class MintServer(object):
         else:
             port = 80
     
+        cfg = conarycfg.ConaryConfiguration()
+        cfg.repositoryMap = self.cfg.authRepoMap
+        cfg.user.addServerGlob(repoUrl[0], self.cfg.authUser, self.cfg.authPass)
+    
         repo = shimclient.ShimNetClient(
             server, repoUrl[0], port,
             (self.cfg.authUser, self.cfg.authPass),
-            self.cfg.authRepoMap)
+            cfg.repositoryMap, cfg.user)
         return repo
 
     def _getProjectRepo(self, project):
         # use a shimclient for mint-handled repositories; netclient if not
         if project.external:
             cfg = project.getConaryConfig()
-            repo = netclient.NetworkRepositoryClient(cfg.repositoryMap)
+            repo = conaryclient.ConaryClient(cfg).getRepos()
         else:
             if self.cfg.SSL:
                 protocol = "https"
@@ -298,7 +303,12 @@ class MintServer(object):
                 port = int(self.cfg.projectDomainName.split(":")[1])
      
             server = netserver.NetworkRepositoryServer(reposPath, tmpPath, '', project.getFQDN(), authRepo)
-            repo = shimclient.ShimNetClient(server, protocol, port, (self.cfg.authUser, self.cfg.authPass), authRepo)
+            
+            cfg = conarycfg.ConaryConfiguration()
+            cfg.repositoryMap = authRepo
+            cfg.user.addServerGlob(versions.Label(authLabel).getHost(), self.cfg.authUser, self.cfg.authPass)
+            repo = shimclient.ShimNetClient(server, protocol, port,
+                (self.cfg.authUser, self.cfg.authPass), cfg.repositoryMap, cfg.user)
         return repo
 
     # unfortunately this function can't be a proper decorator because we
@@ -737,7 +747,8 @@ class MintServer(object):
     @typeCheck(str, str, str, str, str, str, bool)
     @private
     def registerNewUser(self, username, password, fullName, email, displayEmail, blurb, active):
-        return self.users.registerNewUser(username, password, fullName, email, displayEmail, blurb, active)
+        authRepo = self._getAuthRepo()
+        return self.users.registerNewUser(authRepo, username, password, fullName, email, displayEmail, blurb, active)
 
     @typeCheck()
     @private

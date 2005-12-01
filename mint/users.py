@@ -15,11 +15,10 @@ import email
 from email import MIMEText
 import smtplib
 import socket
-from string import find
 
 from conary import repository
-from conary.repository import netclient
 from conary.lib import sha1helper
+from conary import conaryclient
 
 from mint_error import MintError
 from mint_error import PermissionDenied
@@ -208,14 +207,13 @@ class UsersTable(database.KeyedTable):
         except database.DuplicateItem:
             self.confirm_table.update(userId, confirmation = confirm)
 
-    def registerNewUser(self, username, password, fullName, email, displayEmail, blurb, active):
+    def registerNewUser(self, authRepo, username, password, fullName, email, displayEmail, blurb, active):
         # XXX this should be an atomic operation if possible:
         #     it would be nice to roll back previous operations
         #     if one in the chain fails
         if self.cfg.sendNotificationEmails and not active:
             validateEmailDomain(email)
 
-        authRepo = netclient.NetworkRepositoryClient(self.cfg.authRepoMap)
         confirm = confirmString()
         repoLabel = self.cfg.authRepoMap.keys()[0]
 
