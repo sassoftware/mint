@@ -13,24 +13,29 @@ from mod_python import apache
 from mod_python import Cookie
 
 from mint import users
+from cache import pageCache, reqHash
+
+from mint import shimclient
+from mint.session import SqlSession
 
 kidCache = {}
 
 class WebHandler(object):
+    """Mixin class for various helpful web methods."""
+    
     #Default content-type to send to browser
     content_type='text/html'
     #Default render type to send to kid
     output = 'html-strict'
 
-    """Mixin class for various helpful web methods."""
     def _write(self, template, templatePath = None, **values):
         startTime = time.time()
         if not templatePath:
             templatePath = self.cfg.templatePath
 
         global kidCache
-        if self.cfg.debugMode:
-            kidCache={}
+        #if self.cfg.debugMode:
+        #    kidCache={}
         if template not in kidCache:
             path = os.path.join(templatePath, template + ".kid")
             kidCache[template] = kid.load_template(path)
@@ -53,8 +58,12 @@ class WebHandler(object):
                               output = self.output,
                               **values)
         s = t.serialize(encoding = "utf-8", output = self.output)
-        print >> sys.stderr, "Kid page rendered: %.2f" % ((time.time() - startTime) * 1000)
         self.req.write(s)
+        
+        caller = sys._getframe(-1)
+        funcName = caller.f_back.f_code.co_name
+        if 'cacheable' in caller.f_back.f_back.f_locals['func'].__dict__ and not self.auth.authorized:
+            pageCache[reqHash(self.req)] = s
 
     def _404(self, *args, **kwargs):
         return apache.HTTP_NOT_FOUND
@@ -68,17 +77,11 @@ class WebHandler(object):
             while location and location[0] == '/':
                 location = location[1:]
             location = 'http://%s%s%s' % (self.req.hostname, self.cfg.basePath, location)
-        self.req.headers_out['Location'] = location
-        return apache.HTTP_MOVED_PERMANENTLY
+        self._redirect(location)
 
     def _redirect(self, location):
         self.req.headers_out['Location'] = location
-        return apache.HTTP_MOVED_PERMANENTLY
-
-    def _redirector(self, location):
-        def wrapper(*args, **kwargs):
-            return self._redirect(location)
-        return wrapper
+        raise apache.SERVER_RETURN, apache.HTTP_MOVED_PERMANENTLY
 
     def _clearAuth(self):
         self.auth = users.Authorization()
@@ -88,7 +91,7 @@ class WebHandler(object):
             del self.session['firstTimer']
 
         self.session['authToken'] = self.authToken
-        # Don't invalidate the session.  This should save a redirect storm
+        self.session.invalidate()
 
     def _resetPasswordById(self, userId):
         newpw = users.newPassword()
@@ -118,6 +121,70 @@ class WebHandler(object):
         self.req.content_type = "text/xml"
         s = t.serialize(encoding = "utf-8", output = "xml")
         self.req.write(s)
+
+    def _protocol(self):
+        protocol = 'https'
+        if self.req.subprocess_env.get('HTTPS', 'off') != 'on':
+            protocol = 'http'
+        return protocol
+
+    def _session_start(self):
+        # prepare a new session
+        sid = self.fields.get('sid', None)
+
+        sessionClient = shimclient.ShimMintClient(self.cfg, (self.cfg.authUser, self.cfg.authPass))
+
+        domain = ".".join(self.req.hostname.split(".")[1:])
+        self.session = SqlSession(self.req, sessionClient,
+            sid = sid,
+            secret = self.cfg.cookieSecretKey,
+            timeout = 86400, # XXX timeout of one day; should it be configurable?
+            domain = '.' + domain,
+            lock = False)
+        if self.session.is_new():
+            self.session['firstPage'] = "%s://%s%s" %(self._protocol(), self.req.hostname, '/')
+            self.session['visited'] = { }
+            self.session['pages'] = [ ]
+        #Mark the current domain as visited
+        self.session['visited'][domain] = True
+        #This is just for debugging purposes
+        self.session['pages'].append(self.req.hostname + self.req.unparsed_uri)
+
+        c = self.session.make_cookie()
+        c.domain = '.' + domain
+        #add it to the err_headers_out because these ALWAYS go to the browser
+        self.req.err_headers_out.add('Set-Cookie', str(c))
+        self.req.err_headers_out.add('Cache-Control', 'no-cache="set-cookie"')
+
+    def _redirect_storm(self, sid):
+        #Now figure out if we need to redirect
+        nexthop = None
+        # split is used to ensure port number doesn't affect cookie domain
+        for dom in (self.cfg.siteDomainName.split(':')[0], self.cfg.projectDomainName.split(':')[0]):
+            if not self.session['visited'].get(dom, None):
+                #Yeah we need to redirect
+                nexthop = dom
+                print >> sys.stderr, "hopping to", nexthop
+                sys.stderr.flush()
+                break
+        # if we were passed a sid, specifically set a cookie
+        # for the requested domain with that sid.
+        if sid or nexthop:
+            c = self.session.make_cookie()
+            c.domain = '.' + ".".join(self.req.hostname.split(".")[1:])
+            #add it to the err_headers_out because these ALWAYS go to the browser
+            self.req.err_headers_out.add('Set-Cookie', str(c))
+            self.req.err_headers_out.add('Cache-Control', 'no-cache="set-cookie"')
+
+        if nexthop:
+            #Save the session
+            self.session.save()
+            self._redirect("%s://%s.%s%sblank?sid=%s" % (self._protocol(), self.cfg.hostName, nexthop, self.cfg.basePath, self.session.id()))
+        else:
+            if sid:
+                #Clear the sid from the request by redirecting to the first page.
+                self.session.save()
+                self._redirect(self.session['firstPage'])
 
 
 def normPath(path):
