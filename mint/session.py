@@ -22,7 +22,7 @@ class SqlSession(BaseSession):
     def make_cookie(self):
         if self._secret:
             c = Cookie.SignedCookie(COOKIE_NAME, self._sid,
-                                    secret=self._secret,
+                                    secret = self._secret,
                                     domain = self._domain)
         else:
             c = Cookie.Cookie(COOKIE_NAME, self._sid, domain = self._domain)

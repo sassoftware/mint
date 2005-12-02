@@ -27,20 +27,14 @@ from admin import AdminHandler
 from project import ProjectHandler
 from site import SiteHandler
 from cookie_http import ConaryHandler
+import cache
 
-from webhandler import WebHandler, normPath
+from webhandler import WebHandler, normPath 
 
 # hack to set the default encoding to utf-8
 # to overcome a kid bug.
 reload(sys)
 sys.setdefaultencoding("utf-8")
-
-class Redirect(Exception):
-    def __init__(self, location):
-        self.location = location
-
-    def __str__(self):
-        return "Location: %s" % self.location
 
 #called from hooks.py if an exception was not caught
 class ErrorHandler(WebHandler):
@@ -57,6 +51,7 @@ class MintApp(WebHandler):
     projectList = []
     userLevel = userlevels.NONMEMBER
     user = None
+    session = {} 
 
     def __init__(self, req, cfg, repServer = None):
         self.req = req
@@ -84,57 +79,6 @@ class MintApp(WebHandler):
         self.errorHandler = ErrorHandler()
         self.conaryHandler = ConaryHandler(req, cfg, repServer)
 
-    def _session_start(self):
-        # prepare a new session
-        sessionClient = shimclient.ShimMintClient(self.cfg, (self.cfg.authUser, self.cfg.authPass))
-
-        protocol='https'
-        if self.req.subprocess_env.get('HTTPS', 'off') != 'on':
-            protocol='http'
-        sid = self.fields.get('sid', None)
-        domain = ".".join(self.req.hostname.split(".")[1:])
-        self.session = SqlSession(self.req, sessionClient,
-            sid = sid,
-            secret = self.cfg.cookieSecretKey,
-            timeout = 86400, # XXX timeout of one day; should it be configurable?
-            domain = '.' + domain,
-            lock = False)
-        if self.session.is_new():
-            self.session['firstPage'] = "%s://%s%s" %(protocol, self.req.hostname, self.req.unparsed_uri)
-            self.session['visited'] = { }
-            self.session['pages'] = [ ]
-        #Mark the current domain as visited
-        self.session['visited'][domain] = True
-        #This is just for debugging purposes
-        self.session['pages'].append(self.req.hostname + self.req.unparsed_uri)
-
-        #Now figure out if we need to redirect
-        nexthop = None
-        # split is used to ensure port number doesn't affect cookie domain
-        for dom in (self.cfg.siteDomainName.split(':')[0], self.cfg.projectDomainName.split(':')[0]):
-            if not self.session['visited'].get(dom, None):
-                #Yeah we need to redirect
-                nexthop = dom
-                break
-        # if we were passed a sid, specifically set a cookie
-        # for the requested domain with that sid.
-        if sid or nexthop:
-            c = self.session.make_cookie()
-            c.domain = '.' + domain
-            #add it to the err_headers_out because these ALWAYS go to the browser
-            self.req.err_headers_out.add('Set-Cookie', str(c))
-            self.req.err_headers_out.add('Cache-Control', 'no-cache="set-cookie"')
-
-        if nexthop:
-            #Save the session
-            self.session.save()
-            raise Redirect("%s://%s.%s%sblank?sid=%s" % (protocol, self.cfg.hostName, nexthop, self.cfg.basePath, self.session.id()))
-        else:
-            if sid:
-                #Clear the sid from the request by redirecting to the first page.
-                self.session.save()
-                raise Redirect(self.session['firstPage'])
-
     def _handle(self, pathInfo):
         method = self.req.method.upper()
         if method not in ('GET', 'POST'):
@@ -142,14 +86,27 @@ class MintApp(WebHandler):
 
         anonToken = ('anonymous', 'anonymous')
 
-        try:
+        if self.cfg.cookieSecretKey:
+            cookies = Cookie.get_cookies(self.req, Cookie.SignedCookie, secret = self.cfg.cookieSecretKey)
+        else:
+            cookies = Cookie.get_cookies(self.req, Cookie.Cookie)
+            
+        sid = self.fields.get('sid', None)
+        if sid:
             self._session_start()
-        except Redirect, e:
-            return self._redirect(e.location)
+            self._redirect_storm(sid)
+
+        if 'pysid' not in cookies:
+            rh = cache.reqHash(self.req)
+            if rh in cache.pageCache:
+                self.req.write(cache.pageCache[rh])
+                return apache.OK
+        else:
+            self._session_start()
 
         # default to anonToken if the current session has no authToken
         self.authToken = self.session.get('authToken', anonToken)
- 
+    
         # open up a new client with the retrieved authToken
         self.client = shimclient.ShimMintClient(self.cfg, self.authToken)
 
@@ -160,17 +117,15 @@ class MintApp(WebHandler):
         
         self.auth.setToken(self.authToken)
 
-        try:
-            method = self._getHandler(pathInfo)
-        except Redirect, e:
-            return self._redirect(e.location)
+        method = self._getHandler(pathInfo)
        
         d = self.fields.copy()
         d['auth'] = self.auth
 
         try:
             returncode = method(**d)
-            self.session.save()
+            if self.session:
+                self.session.save()
             return returncode
         except mint_error.MintError, e:
             self.toUrl = self.cfg.basePath
@@ -201,20 +156,20 @@ class MintApp(WebHandler):
                 project = self.client.getProjectByHostname(hostname)
             except Exception, e:
                 self.req.log_error(str(e))
-                raise Redirect(self.cfg.defaultRedirect)
+                self._redirect(self.cfg.defaultRedirect)
             else:
                 # coerce "external" projects to the externalSiteHost, or
                 # internal projects to projectSiteHost.
                 if project.external: # "external" projects are endorsed by us, so use siteHost
-                    raise Redirect("%s://%s%sproject/%s/" % (protocol, self.cfg.externalSiteHost, self.cfg.basePath, hostname))
+                    self._redirect("%s://%s%sproject/%s/" % (protocol, self.cfg.externalSiteHost, self.cfg.basePath, hostname))
                 else:
-                    raise Redirect("%s://%s%sproject/%s/" % (protocol, self.cfg.projectSiteHost, self.cfg.basePath, hostname))
+                    self._redirect("%s://%s%sproject/%s/" % (protocol, self.cfg.projectSiteHost, self.cfg.basePath, hostname))
 
         self.siteHost = self.cfg.siteHost
         
         # eg., redirect from http://rpath.com -> <defaultRedirect>
         if self.cfg.hostName and fullHost == self.cfg.siteDomainName:
-            raise Redirect(self.cfg.defaultRedirect)
+            self._redirect(self.cfg.defaultRedirect)
         
         # mapping of url regexps to handlers
         urls = (
