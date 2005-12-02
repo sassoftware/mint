@@ -115,18 +115,14 @@ class Project(database.TableObject):
     def updateUser(self, userId, **kwargs):
         return self.users.update(userId, **kwargs)
 
-    def getRepoMap(self):
-        labelPath, repoMap = self.server.getLabelsForProject(self.id, False, False, '', '', False)
-        return [x[0] + " " + x[1] for x in repoMap.items()]
-
     def getLabelIdMap(self):
         """Returns a dictionary mapping of label names to database IDs"""
-        labelPath, repoMap = self.server.getLabelsForProject(self.id, False, False, '', '', False)
+        labelPath, repoMap, userMap = self.server.getLabelsForProject(self.id, False, False, '', '', False)
         return labelPath
 
     def getConaryConfig(self, overrideSSL = False, overrideAuth = False, newUser = '', newPass = '', useSSL = False):
         # XXX fixme getLabelsForProject
-        labelPath, repoMap = self.server.getLabelsForProject(self.id, overrideSSL, overrideAuth, newUser, newPass, useSSL)
+        labelPath, repoMap, userMap = self.server.getLabelsForProject(self.id, overrideSSL, overrideAuth, newUser, newPass, useSSL)
 
         cfg = ConaryConfiguration(readConfigFiles=False)
         cfg.initializeFlavors()
@@ -134,23 +130,14 @@ class Project(database.TableObject):
         installLabelPath = " ".join(x for x in labelPath.keys())
         cfg.setValue("installLabelPath", installLabelPath)
 
-        for m in [x[0] + " " + x[1] for x in repoMap.items()]:
-            cfg.setValue("repositoryMap", m)
+        for server, auth in userMap.items():
+            cfg.user.addServerGlob(server, auth[0], auth[1])
+
+        cfg.repositoryMap.update(dict((x[0], x[1]) for x in repoMap.items()))
         return cfg
 
     def addLabel(self, label, url, username="", password=""):
         return self.server.addLabel(self.id, label, url, username, password)
-
-    def getLabelIds(self):
-        labelPath, repoMap = self.server.getLabelsForProject(self.id)
-        return labelPath.values()
-
-    def getLabelById(self, labelId):
-        labelPath, repoMap = self.server.getLabelsForProject(self.id, False, False, '', '', False)
-        # turn labelPath inside-out
-        revMap = dict(zip(labelPath.values(), labelPath.keys()))
-
-        return revMap[int(labelId)]
 
     def editLabel(self, labelId, label, url, username, password):
         return self.server.editLabel(labelId, label, url, username, password)
@@ -492,6 +479,7 @@ class LabelsTable(database.KeyedTable):
 
         repoMap = {}
         labelIdMap = {}
+        userMap = {}
         for labelId, label, url, username, password in cu.fetchall():
             if overrideAuth:
                 username = newUser
@@ -509,15 +497,16 @@ class LabelsTable(database.KeyedTable):
                         protocol = "https"
                     else:
                         protocol = "http"
-                    map = "".join((protocol, "://%s:%s@" % (username, password)) + urlparts[1:])
+                    map = "%s://%s" % (protocol, "".join(urlparts[1:]))
                 else:
                     map = url
             else:
                 map = "http://%s/conary/" % (host)
 
             repoMap[host] = map
+            userMap[host] = (username, password)
 
-        return labelIdMap, repoMap
+        return labelIdMap, repoMap, userMap
 
     def getLabel(self, labelId):
         cu = self.db.cursor()

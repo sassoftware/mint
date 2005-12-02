@@ -24,7 +24,8 @@ from decorators import ownerOnly, requiresAuth, requiresAdmin, mailList, redirec
 from mint.users import sendMailWithChecks
 from mint.releases import RDT_STRING, RDT_BOOL, RDT_INT
 
-from conary.repository import netclient
+from conary import conaryclient
+from conary import conarycfg
 from conary import versions
 from conary.deps import deps
 from conary.web.fields import strFields, intFields, listFields, boolFields
@@ -56,12 +57,12 @@ class ProjectHandler(WebHandler):
             if self.req.hostname != self.cfg.siteHost.split(':')[0]:
                 self.req.log_error("%s %s accessed incorrectly; referer: %s" % \
                     (self.req.hostname, self.req.unparsed_uri, self.req.headers_in.get('referer', 'N/A')))
-                return self._redirector("http://" + self.cfg.siteHost + self.req.unparsed_uri)
+                self._redirect("http://" + self.cfg.siteHost + self.req.unparsed_uri)
         else:
             if self.req.hostname != self.cfg.projectSiteHost.split(':')[0]:
                 self.req.log_error("%s %s accessed incorrectly; referer: %s" % \
                     (self.req.hostname, self.req.unparsed_uri, self.req.headers_in.get('referer', 'N/A')))
-                return self._redirector("http://" + self.cfg.projectSiteHost + self.req.unparsed_uri)
+                self._redirect("http://" + self.cfg.projectSiteHost + self.req.unparsed_uri)
 
         self.userLevel = self.project.getUserLevel(self.auth.userId)
 
@@ -122,9 +123,10 @@ class ProjectHandler(WebHandler):
     def _getBasicTroves(self):
         # XXX all of this is kind of a hardcoded hack that should be pulled out
         # into a config file somewhere, or something.
-        repoMap = {'conary.rpath.com': 'http://conary-commits.rpath.com/conary/'}
+        cfg = conarycfg.ConaryConfiguration()
+        cfg.repositoryMap = {'conary.rpath.com': 'http://conary-commits.rpath.com/conary/'}
         label = versions.Label('conary.rpath.com@rpl:1')
-        repos = netclient.NetworkRepositoryClient(repoMap)
+        repos = conaryclient.ConaryClient(cfg).getRepos()
         troves = repos.getTroveLeavesByLabel({'group-dist': {label: None}})
 
         version, flavor = troves['group-dist'].items()[0]
@@ -347,7 +349,7 @@ class ProjectHandler(WebHandler):
             cfg = self.project.getConaryConfig()
         else:
             cfg = self.project.getConaryConfig(overrideSSL = True, useSSL = self.cfg.SSL)
-        nc = netclient.NetworkRepositoryClient(cfg.repositoryMap)
+        nc = conaryclient.ConaryClient(cfg).getRepos()
         leaves = nc.getAllTroveLeaves(cfg.repositoryMap.keys()[0], {trove: {None: None}})
 
         # group troves by major architecture

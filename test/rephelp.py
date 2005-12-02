@@ -201,7 +201,7 @@ class ApacheServer(ChildRepository):
         print >> f, 'authRepoMap %s http://mintauth:mintpass@127.0.0.1:%d/conary/' % (self.name, self.port)
         print >> f, 'debugMode True'
         print >> f, 'sendNotificationEmails False'
-        print >> f, """commitAction %s/scripts/commitaction --repmap '%%(repMap)s' --build-label %%(buildLabel)s --module \'%s/mint/rbuilderaction.py --user %%%%(user)s --url http://%s:%d/xmlrpc-private/'""" % (conaryPath, mintPath, 'test.rpath.local', self.port)
+        print >> f, """commitAction python %s/test/coverage.py -x %s/scripts/commitaction --repmap '%%(repMap)s' --build-label %%(buildLabel)s --module \'%s/mint/rbuilderaction.py --user %%%%(user)s --url http://%s:%d/xmlrpc-private/'""" % (mintPath, conaryPath, mintPath, 'test.rpath.local', self.port)
             
         f.close()
 
@@ -330,7 +330,7 @@ class RepositoryHelper(testsuite.TestCase):
         self.cfg.repositoryMap.update(self.servers.getMap())
 
 	count = 0
-	repos = netclient.NetworkRepositoryClient(self.cfg.repositoryMap)
+        repos = conaryclient.ConaryClient(self.cfg).getRepos()
 
         name = "127.0.0.1"
         if serverIdx:
@@ -427,7 +427,7 @@ class RepositoryHelper(testsuite.TestCase):
 	self.resetWork()
 	self.resetRoot()
 	self.resetCache()
-        sys.excepthook = util.genExcepthook(False)
+        sys.excepthook = util.genExcepthook(True)
 
     def writeFile(self, file, contents):
 	if os.path.exists(file):

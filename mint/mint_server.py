@@ -24,9 +24,8 @@ import users
 import userlevels
 import dbversion
 import stats
-import releasedata
+import data
 import grouptrove
-import jobdata
 from mint_error import PermissionDenied, ReleasePublished, ReleaseMissing, MintError
 from searcher import SearchTermsError
 
@@ -37,6 +36,7 @@ from conary.repository import netclient
 from conary.repository import shimclient
 from conary.repository.netrepos import netserver
 from conary.deps import deps
+from conary import conarycfg
 
 import reports
 from reports import MintReport
@@ -177,10 +177,10 @@ def getTables(db, cfg):
     d['sessions'] = sessiondb.SessionsTable(db)
     d['membershipRequests'] = requests.MembershipRequestTable(db)
     d['commits'] = stats.CommitsTable(db)
-    d['releaseData'] = releasedata.ReleaseDataTable(db)
+    d['releaseData'] = data.ReleaseDataTable(db)
     d['groupTroves'] = grouptrove.GroupTroveTable(db)
     d['groupTroveItems'] = grouptrove.GroupTroveItemsTable(db)
-    d['jobData'] = jobdata.JobDataTable(db)
+    d['jobData'] = data.JobDataTable(db)
     return d
 
 class MintServer(object):
@@ -266,17 +266,21 @@ class MintServer(object):
         else:
             port = 80
     
+        cfg = conarycfg.ConaryConfiguration()
+        cfg.repositoryMap = self.cfg.authRepoMap
+        cfg.user.addServerGlob(repoUrl[0], self.cfg.authUser, self.cfg.authPass)
+    
         repo = shimclient.ShimNetClient(
             server, repoUrl[0], port,
             (self.cfg.authUser, self.cfg.authPass),
-            self.cfg.authRepoMap)
+            cfg.repositoryMap, cfg.user)
         return repo
 
     def _getProjectRepo(self, project):
         # use a shimclient for mint-handled repositories; netclient if not
         if project.external:
             cfg = project.getConaryConfig()
-            repo = netclient.NetworkRepositoryClient(cfg.repositoryMap)
+            repo = conaryclient.ConaryClient(cfg).getRepos()
         else:
             if self.cfg.SSL:
                 protocol = "https"
@@ -299,7 +303,12 @@ class MintServer(object):
                 port = int(self.cfg.projectDomainName.split(":")[1])
      
             server = netserver.NetworkRepositoryServer(reposPath, tmpPath, '', project.getFQDN(), authRepo)
-            repo = shimclient.ShimNetClient(server, protocol, port, (self.cfg.authUser, self.cfg.authPass), authRepo)
+            
+            cfg = conarycfg.ConaryConfiguration()
+            cfg.repositoryMap = authRepo
+            cfg.user.addServerGlob(versions.Label(authLabel).getHost(), self.cfg.authUser, self.cfg.authPass)
+            repo = shimclient.ShimNetClient(server, protocol, port,
+                (self.cfg.authUser, self.cfg.authPass), cfg.repositoryMap, cfg.user)
         return repo
 
     # unfortunately this function can't be a proper decorator because we
@@ -738,7 +747,8 @@ class MintServer(object):
     @typeCheck(str, str, str, str, str, str, bool)
     @private
     def registerNewUser(self, username, password, fullName, email, displayEmail, blurb, active):
-        return self.users.registerNewUser(username, password, fullName, email, displayEmail, blurb, active)
+        authRepo = self._getAuthRepo()
+        return self.users.registerNewUser(authRepo, username, password, fullName, email, displayEmail, blurb, active)
 
     @typeCheck()
     @private
@@ -1093,33 +1103,33 @@ class MintServer(object):
             raise ReleaseMissing()
         if self.releases.getPublished(releaseId):
             raise ReleasePublished()
-        return self.releaseData.setReleaseDataValue(releaseId, name, value, dataType)
+        return self.releaseData.setDataValue(releaseId, name, value, dataType)
 
     @typeCheck(int, str)
     @private
     def getReleaseDataValue(self, releaseId, name):
         self._filterReleaseAccess(releaseId)
-        return self.releaseData.getReleaseDataValue(releaseId, name)
+        return self.releaseData.getDataValue(releaseId, name)
 
     @typeCheck(int)
     @private
     def getReleaseDataDict(self, releaseId):
         self._filterReleaseAccess(releaseId)
-        return self.releaseData.getReleaseDataDict(releaseId)
+        return self.releaseData.getDataDict(releaseId)
 
     # job data calls
-    @typeCheck(int, str, ((str, int, bool),))
+    @typeCheck(int, str, ((str, int, bool),), int)
     @requiresAuth
     @private
-    def setJobDataValue(self, jobId, name, value):
+    def setJobDataValue(self, jobId, name, value, dataType):
         self._filterJobAccess(jobId)
-        return self.jobData.setJobDataValue(jobId, name, value)
+        return self.jobData.setDataValue(jobId, name, value, dataType)
 
     @typeCheck(int, str)
     @private
     def getJobDataValue(self, jobId, name):
         self._filterJobAccess(jobId)
-        return self.jobData.getJobDataValue(jobId, name)
+        return self.jobData.getDataValue(jobId, name)
 
     @typeCheck(int)
     @private
@@ -1246,7 +1256,7 @@ class MintServer(object):
                     statusMessage = msg,
                     timeStarted = time.time(), timeFinished = 0)
                 retval = jobId
-        self.jobData.setJobDataValue(retval, "arch", arch)
+        self.jobData.setDataValue(retval, "arch", arch, data.RDT_STRING)
         return retval
 
     @private

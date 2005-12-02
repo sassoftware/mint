@@ -10,6 +10,7 @@ from mint_rephelp import MintRepositoryHelper
 from mint import jobstatus
 from mint import jobs
 from mint import releasetypes
+from mint.data import RDT_INT, RDT_STRING, RDT_BOOL
 from mint.distro import stub_image
 
 from repostest import testRecipe
@@ -141,8 +142,8 @@ class JobsTest(MintRepositoryHelper):
         release = client.newRelease(projectId, "Test Release")
 
         job = client.startImageJob(release.getId())
-        job.setDataValue("mystring", "testing")
-        job.setDataValue("myint", 123)
+        job.setDataValue("mystring", "testing", RDT_STRING)
+        job.setDataValue("myint", 123, RDT_INT)
 
         assert(job.getDataValue("mystring") == "testing")
         assert(int(job.getDataValue("myint")) == 123)

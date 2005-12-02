@@ -28,14 +28,14 @@ import gencslist
 
 class IsoConfig(ConfigFile):
     filename = 'installable_iso.conf'
-    defaults = {
-        'imagesPath':       None,
-        'scriptPath':       '/srv/mint/code/scripts/',
-        'cachePath':        '/srv/mint/changesets/',
-        'templatePath':     '/srv/mint/templates/',
-        'implantIsoMd5':    '/usr/lib/anaconda-runtime/implantisomd5',
-        'anacondaImagesPath': '/usr/share/mint/pixmaps'
-    }
+    
+    imagesPath          = None
+    scriptPath          = '/srv/mint/code/scripts/'
+    cachePath           = '/srv/mint/changesets/'
+    templatePath        = '/srv/mint/templates/'
+    implantIsoMd5       = '/usr/lib/anaconda-runtime/implantisomd5'
+    anacondaImagesPath  = '/usr/share/mint/pixmaps'
+
 
 class AnacondaTemplateMissing(Exception):
     def __init__(self, arch = "arch"):
@@ -43,6 +43,7 @@ class AnacondaTemplateMissing(Exception):
         
     def __str__(self):
         return "Anaconda template missing for architecture: %s" % self._arch
+
 
 class Callback(callbacks.UpdateCallback, callbacks.ChangesetCallback):
     def requestingChangeSet(self):
@@ -180,6 +181,7 @@ class InstallableIso(ImageGenerator):
             # FIXME: regenerate boot.iso here
 
         # write the conaryrc file
+        # TODO move this up to ImageGenerator
         conaryrcFile = open(os.path.join(tmpPath, "conaryrc"), "w")
         print >> conaryrcFile, "installLabelPath " + self.release.getDataValue("installLabelPath")
         print >> conaryrcFile, "pinTroves kernel.*"

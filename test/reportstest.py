@@ -29,6 +29,12 @@ class ReportTest(MintRepositoryHelper):
             report = client.server.getReport('new_users')
             assert(len(report['data']) == i+1)
             self.quickMintUser('foouser%d' % i, 'foopass')
+        client.registerNewUser("member", "memberpass", "Test Member",
+                               "test@example.com", "test at example.com", "",
+                               active=False)
+        report = client.server.getReport('new_users')
+        assert ([x[4] for x in report['data'] if x[0] == 'member'] \
+                == [False]), "Confirmed column of new user report misfired"
 
     def testNewProjectsReport(self):
         client, userId = self.quickMintAdmin('adminuser', 'adminpass')
@@ -36,7 +42,12 @@ class ReportTest(MintRepositoryHelper):
         report = client.server.getReport('new_projects')
         if report['data'][0][:3] != ['foo', 'Foo Project', 'adminuser']:
             self.fail("New Projects report returned incorrect data")
-        
+
+    def testSiteSummary(self):
+        client, userId = self.quickMintAdmin('adminuser', 'adminpass')
+        projectId = client.newProject('Foo Project', 'foo', 'rpath.local')
+        self.quickMintUser('foouser', 'foopass')
+        report = client.server.getReport('site_summary')
 
 if __name__ == "__main__":
     testsuite.main()

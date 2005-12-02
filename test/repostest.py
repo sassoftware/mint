@@ -10,7 +10,7 @@ testsuite.setup()
 from mint_rephelp import MintRepositoryHelper
 import recipes
 
-from conary.repository import netclient
+from conary.conaryclient import ConaryClient
 from conary import versions
 
 testRecipe = """
@@ -51,7 +51,7 @@ class RepositoryTest(MintRepositoryHelper):
         project = client.getProject(projectId)
 
         cfg = project.getConaryConfig()
-        nc = netclient.NetworkRepositoryClient(cfg.repositoryMap)
+        nc = ConaryClient(cfg).getRepos()
 
         # test that the source trove landed properly
         troveNames = nc.troveNames(versions.Label("test.rpath.local@rpl:devel"))
@@ -85,7 +85,7 @@ class RepositoryTest(MintRepositoryHelper):
             versions.Label("test.rpath.local@rpl:devel"))
 
         cfg = project.getConaryConfig()
-        nc = netclient.NetworkRepositoryClient(cfg.repositoryMap)
+        nc = ConaryClient(cfg).getRepos()
 
         troveNames = nc.troveNames(versions.Label("test.rpath.local@rpl:devel"))
         assert(troveNames == ['testcase', 'testcase:runtime', 'group-test',

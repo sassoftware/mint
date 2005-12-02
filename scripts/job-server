@@ -19,7 +19,7 @@ from optparse import OptionParser
 
 from conary import conaryclient
 from conary.conarycfg import ConfigFile, ConaryConfiguration
-from conary.conarycfg import STRINGLIST, BOOLEAN
+from conary.conarycfg import CfgList, CfgString
 from conary.deps import deps
 from conary.lib import log, util
 
@@ -205,14 +205,12 @@ def daemon(options, cfg):
         log.warning("unable to remove lockfile: %s", cfg.lockFile)
 
 class IsoGenConfig(ConfigFile):
-    defaults = {
-        'supportedArch'   : [ STRINGLIST, [] ],
-        'serverUrl'       : None,
-        'logPath'         : '/srv/mint/logs',
-        'imagesPath'      : '/srv/mint/images/',
-        'finishedPath'    : '/srv/mint/finished-images/',
-        'lockFile'        : '/var/run/mint-jobdaemon.pid',
-        }
+    supportedArch   = CfgList(CfgString)
+    serverUrl       = None
+    logPath         = '/srv/mint/logs'
+    imagesPath      = '/srv/mint/images/'
+    finishedPath    = '/srv/mint/finished-images/'
+    lockFile        = '/var/run/mint-jobdaemon.pid'
 
     def read(self, path, exception = False):
         ConfigFile.read(self, path, exception)

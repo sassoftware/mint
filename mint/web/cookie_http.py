@@ -11,8 +11,8 @@ import traceback
 from mod_python import apache
 
 from conary.server import http
-from conary.repository import netclient, errors 
-from conary.repository.netrepos import netserver
+from conary.repository import errors 
+from conary import conaryclient
 
 from webhandler import WebHandler, normPath
 from templates import repos
@@ -64,7 +64,7 @@ class ConaryHandler(WebHandler, http.HttpHandler):
                                            newUser = self.authToken[0],
                                            newPass = self.authToken[1],
                                            useSSL = useSSL)
-        self.repos = netclient.NetworkRepositoryClient(cfg.repositoryMap)
+        self.repos = conaryclient.ConaryClient(cfg).getRepos()
 
         try:
             method = self.__getattribute__(self.cmd)

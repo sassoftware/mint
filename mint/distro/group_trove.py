@@ -12,7 +12,7 @@ from conary import conarycfg
 from conary import versions
 from conary.build import cook
 from conary.deps import deps
-from conary.repository import netclient
+from conary import conaryclient
 
 from imagegen import ImageGenerator
 from mint import projects
@@ -49,17 +49,15 @@ class GroupTroveCook(ImageGenerator):
 
             project = self.client.getProject(projectId)
 
-            cfg = conarycfg.ConaryConfiguration()
+            cfg = project.getConaryConfig()
             cfg.name = "rBuilder Online"
             cfg.contact = "http://www.rpath.org"
             cfg.quiet = True
             cfg.buildLabel = versions.Label(project.getLabel())
             cfg.buildFlavor = deps.parseFlavor(stockFlavors[arch.freeze()])
             cfg.initializeFlavors()
-            cfg.repositoryMap = project.getConaryConfig().repositoryMap
             
-            repos = netclient.NetworkRepositoryClient(cfg.repositoryMap)
-
+            repos = conaryclient.ConaryClient(cfg).getRepos()
             trvLeaves = repos.getTroveLeavesByLabel({sourceName : {cfg.buildLabel : None} }).get(sourceName, [])
 
             os.chdir(path)

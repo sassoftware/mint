@@ -14,7 +14,7 @@ import tempfile
 import types
 import unittest
 
-from conary.lib import log, util
+from conary.lib import util, log
 
 archivePath = None
 testPath = None
@@ -144,7 +144,7 @@ def setup():
 	sys.path.append(parent)
 
     from conary.lib import util
-    sys.excepthook = util.genExcepthook(False)
+    sys.excepthook = util.genExcepthook(True)
 
     return path
 
@@ -306,7 +306,7 @@ class TestCase(unittest.TestCase):
 	self.chownLog = []
 
 def main(*args, **keywords):
-    sys.excepthook = util.genExcepthook(False)
+    sys.excepthook = util.genExcepthook(True)
 
     global _individual
     _individual = True
@@ -352,7 +352,7 @@ if __name__ == '__main__':
         sys.path.append(cwd)
     setup()
 
-    sys.excepthook = util.genExcepthook(False)
+    sys.excepthook = util.genExcepthook(True)
 
     debug = False
     if '--debug' in sys.argv:

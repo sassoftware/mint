@@ -92,12 +92,14 @@ class Job(database.TableObject):
     def getTimeFinished(self):
         return self.timeFinished
 
-    def setDataValue(self, name, value):
-        return self.server.setJobDataValue(self.id, name, value)
+    def setDataValue(self, name, value, dataType):
+        return self.server.setJobDataValue(self.id, name, value, dataType)
 
     def getDataValue(self, name):
-        return self.server.getJobDataValue(self.id, name)
-
+        isPresent, val = self.server.getJobDataValue(self.getId(), name)
+        if not isPresent:
+            val = None
+        return val
 
 class ImageFilesTable(database.KeyedTable):
     name = 'ImageFiles'

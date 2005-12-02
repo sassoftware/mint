@@ -18,26 +18,15 @@ class LabelsTest(MintRepositoryHelper):
         projectId = client.newProject("Foo", "foo", "rpath.org")
         project = client.getProject(projectId)
 
-        assert(project.getRepoMap() ==\
-            ["foo.rpath.org http://mintauth:mintpass@test.rpath.local:%i/repos/foo/" %self.getPort()])
-        assert(project.getLabelIdMap() ==\
-            {"foo.rpath.org@rpl:devel": 1})
-
         newLabelId = project.addLabel("bar.rpath.org@rpl:devel",
             "http://rpath.org/repos/bar/", "user1", "pass1")
-        assert(project.getLabelById(newLabelId) == "bar.rpath.org@rpl:devel")
 
-        assert(project.getRepoMap() ==\
-            ['foo.rpath.org http://mintauth:mintpass@test.rpath.local:%i/repos/foo/' %self.getPort(),
-             'bar.rpath.org http://user1:pass1@rpath.org/repos/bar/'])
         assert(project.getLabelIdMap() ==\
             {'bar.rpath.org@rpl:devel': newLabelId,
              'foo.rpath.org@rpl:devel': 1})
 
         project.editLabel(newLabelId, "bar.rpath.org@rpl:testbranch",
             "http://bar.rpath.org/conary/", "user1", "pass1")
-        assert(project.getLabelById(newLabelId) == "bar.rpath.org@rpl:testbranch")
-
         assert client.server.getLabel(newLabelId) == ('bar.rpath.org@rpl:testbranch', 'http://bar.rpath.org/conary/', 'user1', 'pass1')
 
         project.removeLabel(newLabelId)
