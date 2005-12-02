@@ -28,7 +28,7 @@ class GenericDataTable(database.DatabaseTable):
         self.createSQL = """
             CREATE TABLE %s (
                                  %sId INTEGER,
-                                 name STR,
+                                 name CHAR(32),
                                  value TEXT,
                                  dataType INTEGER,
                                  PRIMARY KEY(%sId, name)
@@ -93,7 +93,7 @@ class JobDataTable(GenericDataTable):
                 try:
                     #Need to drop the JobData Table.  It's not compatible
                     #with the new genericdatatable
-                    cu.execute('DROP TABLE jobData')
+                    cu.execute('DROP TABLE JobData')
                     cu.execute(self.createSQL)
                 except:
                     return False
