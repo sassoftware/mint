@@ -427,7 +427,7 @@ class RepositoryHelper(testsuite.TestCase):
 	self.resetWork()
 	self.resetRoot()
 	self.resetCache()
-        sys.excepthook = util.genExcepthook(False)
+        sys.excepthook = util.genExcepthook(True)
 
     def writeFile(self, file, contents):
 	if os.path.exists(file):
