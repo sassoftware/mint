@@ -1,13 +1,13 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <?python
-from mint import userlevels
 import time
+from mint import userlevels
 from mint import searcher
 ?>
 <html
       xmlns:py="http://purl.org/kid/ns#"
       xmlns:html="http://www.w3.org/1999/xhtml"
-      py:extends="'library.kid', 'layout.kid', 'project.kid'">
+      py:extends="'layout.kid'">
 <!--
     Copyright 2005 rPath, Inc.
     All Rights Reserved

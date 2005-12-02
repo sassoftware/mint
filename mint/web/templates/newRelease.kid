@@ -7,7 +7,7 @@ title = "Create New Release"
 
 <html xmlns:html="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
-      py:extends="'library.kid', 'layout.kid'">
+      py:extends="'layout.kid'">
     <div py:def="breadcrumb()" py:strip="True">
         <a href="$basePath">${project.getName()}</a>
         <a href="${basePath}releases">Releases</a>

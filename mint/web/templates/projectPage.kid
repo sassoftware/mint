@@ -4,7 +4,7 @@ from mint import userlevels
 from mint.mint import upstream 
 ?>
 <html xmlns:py="http://purl.org/kid/ns#"
-      py:extends="'library.kid', 'layout.kid', 'project.kid'">
+      py:extends="'layout.kid'">
 <!--
     Copyright 2005 rPath, Inc.
     All Rights Reserved 

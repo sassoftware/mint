@@ -6,7 +6,7 @@ from mint.mint import timeDelta
 ?>
 <html xmlns:html="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
-      py:extends="'library.kid', 'layout.kid'">
+      py:extends="'layout.kid'">
 <!--
     Copyright 2005 rPath, Inc.
     All Rights Reserved
