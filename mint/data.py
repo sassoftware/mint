@@ -47,8 +47,8 @@ class GenericDataTable(database.DatabaseTable):
 
         cu = self.db.cursor()
 
-        cu.execute("DELETE FROM %s WHERE %sId=? AND name=?" % (self.lowered, self.front), id, name)
-        cu.execute("INSERT INTO %s (%sId, name, value, dataType) VALUES(?, ?, ?, ?)" % (self.lowered, self.front),
+        cu.execute("DELETE FROM %s WHERE %sId=? AND name=?" % (self.name, self.front), id, name)
+        cu.execute("INSERT INTO %s (%sId, name, value, dataType) VALUES(?, ?, ?, ?)" % (self.name, self.front),
                    (id, name, value, dataType))
         return True
 
@@ -57,7 +57,7 @@ class GenericDataTable(database.DatabaseTable):
         # passing None to indicate that no value is set, since we don't
         # allow our XMLRPC server to pass None values.
         cu = self.db.cursor()
-        cu.execute("SELECT value, dataType FROM %s WHERE %sId=? AND name=?" % (self.lowered, self.front), (id, name))
+        cu.execute("SELECT value, dataType FROM %s WHERE %sId=? AND name=?" % (self.name, self.front), (id, name))
         res = cu.fetchall()
         if len(res) != 1:
             return False, 0
@@ -70,7 +70,7 @@ class GenericDataTable(database.DatabaseTable):
 
     def getDataDict(self, id):
         cu = self.db.cursor()
-        cu.execute("SELECT name, value, dataType FROM %s WHERE %sId=?" % (self.lowered, self.front), id)
+        cu.execute("SELECT name, value, dataType FROM %s WHERE %sId=?" % (self.name, self.front), id)
         dataDict = {}
         for name, value, dataType in cu.fetchall():
             if dataType == RDT_BOOL:
