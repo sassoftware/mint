@@ -115,7 +115,7 @@ class SessionsTable(DatabaseTable):
         # separate table fields, but instead encoded as a pickle object.
         cu  = self.db.cursor()
 
-        cu.execute("BEGIN")
+        self.db.transaction(None)
         try:
             cu.execute("SELECT sessIdx, data FROM Sessions")
             for r in cu.fetchall():

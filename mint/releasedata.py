@@ -28,11 +28,6 @@ class ReleaseDataTable(database.DatabaseTable):
     def setReleaseDataValue(self, releaseId, name, value, dataType):
         cu = self.db.cursor()
 
-        if self.db.type == "native_sqlite":
-            cu.execute("BEGIN")
-        else:
-            self.db.transaction(None)
-
         # do any data conversions necessary to safely store value as a string
         if dataType == RDT_BOOL:
             value=str(int(value))
@@ -42,7 +37,6 @@ class ReleaseDataTable(database.DatabaseTable):
         cu.execute("DELETE FROM ReleaseData WHERE releaseId=? AND name=?", releaseId, name)
         cu.execute("INSERT INTO ReleaseData (releaseId, name, value, dataType) VALUES(?, ?, ?, ?)",
                    (releaseId, name, value, dataType))
-        self.db.commit()
         return True
 
     def getReleaseDataValue(self, releaseId, name):
