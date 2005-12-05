@@ -3,6 +3,14 @@
 #
 # All Rights Reserved
 #
+
+try:
+    import coverage
+    coverage.use_cache(True)
+    coverage.start()
+except ImportError:
+    coverage = None
+
 from mod_python import apache
 from mod_python import util
 
@@ -444,6 +452,12 @@ def handler(req):
     if cfg.profiling:
         print >> sys.stderr, "WEB HIT: %.2fms" % ((time.time() - startTime) * 1000)
         sys.stderr.flush()
+    if coverage:
+        coverage.the_coverage.save()
     return ret
-
+    
 repositories = {}
+
+if coverage:
+    import atexit
+    atexit.register(coverage.the_coverage.save)
