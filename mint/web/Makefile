@@ -10,6 +10,7 @@ python_files = \
 	__init__.py	\
 	admin.py	\
 	app.py		\
+	cache.py	\
 	cookie_http.py	\
 	decorators.py	\
 	hooks.py	\
