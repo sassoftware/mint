@@ -75,8 +75,7 @@ class ConaryHandler(WebHandler, http.HttpHandler):
         d['auth'] = self.authToken
         try:
             output = method(**d)
-            self.req.write(output)
-            return apache.OK
+            return output
         except errors.OpenError:
             return self._requestAuth()
 
@@ -86,10 +85,10 @@ class ConaryHandler(WebHandler, http.HttpHandler):
             self.authToken = ('anonymous', 'anonymous')
             return self._handle()
         else:
-            return self._redirect(self.cfg.defaultRedirect)
+            self._redirect(self.cfg.defaultRedirect)
 
     def _write(self, templateName, **values):
-        WebHandler._write(self, templateName, templatePath = self.reposTemplatePath, **values)
+        return WebHandler._write(self, templateName, templatePath = self.reposTemplatePath, **values)
 
     # XXX: I'm wondering if this is the best approach.
     # maybe it would be better to override _getHandler and
