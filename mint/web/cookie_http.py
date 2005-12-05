@@ -74,7 +74,9 @@ class ConaryHandler(WebHandler, http.HttpHandler):
         d = self.fields
         d['auth'] = self.authToken
         try:
-            return method(**d)
+            output = method(**d)
+            self.req.write(output)
+            return apache.OK
         except errors.OpenError:
             return self._requestAuth()
 

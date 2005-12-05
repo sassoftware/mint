@@ -44,42 +44,39 @@ class SiteHandler(WebHandler):
             self.req.log_error("%s %s accessed incorrectly; referer: %s" % \
                 (self.req.hostname, self.req.unparsed_uri, self.req.headers_in.get('referer', 'N/A')))
             self._redirect("http://" + self.cfg.siteHost + self.req.unparsed_uri)
-        print cmd 
         if not cmd:
             return self._frontPage
         try:
             method = self.__getattribute__(cmd)
         except AttributeError:
-            return self._404
+            raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND
 
         if self.auth.stagnant and cmd not in ['editUserSettings','confirm','logout']:
             return self.confirmEmail
         if not callable(method):
-            method = self._404
+            raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND
+
         return method
 
-    @redirectHttp
     @cache
+    @redirectHttp
     def _frontPage(self, auth):
         news = self.client.getNews()
         releases = self.client.getReleaseList()
-        self._write("frontPage", news = news, newsLink = self.client.getNewsLink(), firstTime=self.session.get('firstTimer', False), releases=releases)
-        return apache.OK
+        return self._write("frontPage", news = news, newsLink = self.client.getNewsLink(), firstTime=self.session.get('firstTimer', False), releases=releases)
         
     def blank(self, auth, sid, hostname):
         self.req.content_type = "image/gif"
 
         # 1x1 transparent gif
-        self.req.write('GIF89a\x01\x00\x01\x00\x80\x00\x00\xff\xff\xff\xff\xff\xff!'
-                       '\xf9\x04\x01\n\x00\x01\x00,\x00\x00\x00\x00\x01\x00\x01\x00'
-                       '\x00\x02\x02L\x01\x00;')
-        return apache.OK
+        return 'GIF89a\x01\x00\x01\x00\x80\x00\x00\xff\xff\xff\xff\xff\xff!'\
+               '\xf9\x04\x01\n\x00\x01\x00,\x00\x00\x00\x00\x01\x00\x01\x00'\
+               '\x00\x02\x02L\x01\x00;'
         
     @redirectHttps
     def register(self, auth):
         self.toUrl = self.cfg.basePath
-        self._write("register", errors=[], kwargs={})
-        return apache.OK
+        return self._write("register", errors=[], kwargs={})
 
     @strFields(username = '', email = '',
                password = '', password2 = '',
@@ -118,7 +115,7 @@ class SiteHandler(WebHandler):
             except users.MailError,e:
                 errors.append(e.context);
         if not errors:
-            return self._redirectHttp('registerComplete')
+            self._redirectHttp('registerComplete')
         else:
             kwargs = {'username': username,
                       'email': email,
@@ -127,34 +124,29 @@ class SiteHandler(WebHandler):
                       'blurb': blurb,
                       'tos': tos,
                       'privacy': privacy}
-            self._write("register", errors=errors, kwargs = kwargs)
-        return apache.OK
+            return self._write("register", errors=errors, kwargs = kwargs)
 
     def registerComplete(self, auth):
         self.toUrl = self.cfg.basePath
-        self._write("register_conf")
-        return apache.OK
+        return self._write("register_conf")
 
     @redirectHttps
     def confirmEmail(self, auth, **kwargs):
-        self._write("confirmEmail", email=auth.email)
-        return apache.OK
+        return self._write("confirmEmail", email=auth.email)
 
     @strFields(page = None)
     def legal(self, auth, page):
         try:
-            self._write("docs/" + page)
+            return self._write("docs/" + page)
         except IOError:
+            raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND
             return apache.HTTP_NOT_FOUND
-            
-        return apache.OK
 
     @strFields(message = "")
     @redirectHttps
     def forgotPassword(self, auth, message):
         self.toUrl = self.cfg.basePath
-        self._write("forgotPassword", message = message)
-        return apache.OK
+        return self._write("forgotPassword", message = message)
 
     @redirectHttp
     @strFields(page = "")
@@ -162,16 +154,15 @@ class SiteHandler(WebHandler):
     def help(self, auth, page, step):
         if page:
             try:
-                self._write("docs/" + page, step = step)
+                return self._write("docs/" + page, step = step)
             except IOError:
-                self._write("docs/overview")
+                return self._write("docs/overview")
         else:
-            self._write("docs/overview")
-        return apache.OK
+            return self._write("docs/overview")
 
     def logout(self, auth):
         self._clearAuth()
-        return self._redirect(self.cfg.basePath)
+        self._redirect(self.cfg.basePath)
 
     @requiresHttps
     @strFields(username = None)
@@ -180,8 +171,8 @@ class SiteHandler(WebHandler):
         userId = self.client.getUserIdByName(username)
         user = self.client.getUser(userId)
         self._resetPasswordById(userId)
-        self._write("passwordReset", email = user.getEmail())
-        return apache.OK
+        
+        return self._write("passwordReset", email = user.getEmail())
 
     @requiresHttps
     @strFields(username = None, password = '', action = 'login', to = '/')
@@ -208,7 +199,7 @@ class SiteHandler(WebHandler):
                 self._redirect_storm(self.session.id())
                 self._redirect(unquote(to)) 
         else:
-            return apache.HTTP_NOT_FOUND
+            raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND
 
     @strFields(id = None)
     def confirm(self, auth, id):
@@ -216,17 +207,16 @@ class SiteHandler(WebHandler):
         try:
             self.client.confirmUser(id)
         except users.ConfirmError:
-            self._write("error", shortError = "Confirm Failed",
+            return self._write("error", shortError = "Confirm Failed",
                 error = "Sorry, an error has occurred while confirming your registration.")
         except users.AlreadyConfirmed:
-            self._write("error", shortError = "Already Confirmed",
+            return self._write("error", shortError = "Already Confirmed",
                 error = "Your account has already been confirmed.")
         else:
             if auth.authorized:
-                return self._redirect(self.cfg.basePath)
+                self._redirect(self.cfg.basePath)
             else:
-                self._write("register_active")
-        return apache.OK 
+                return self._write("register_active")
 
     @intFields(sortOrder = -1, limit = 10, offset = 0)
     def projects(self, auth, sortOrder, limit, offset, submit = 0):
@@ -237,8 +227,7 @@ class SiteHandler(WebHandler):
         for i, x in enumerate(results[:]):
             results[i][0] = self.client.getProject(x[0])
 
-        self._write("projects", sortOrder=sortOrder, limit=limit, offset=offset, results=results, count=count)
-        return apache.OK
+        return self._write("projects", sortOrder=sortOrder, limit=limit, offset=offset, results=results, count=count)
 
     @requiresAdmin
     @intFields(sortOrder = -1, limit = 10, offset = 0)
@@ -247,14 +236,13 @@ class SiteHandler(WebHandler):
             sortOrder = self.session.get('usersSortOrder', 0)
         self.session['usersSortOrder'] = sortOrder
         results, count = self.client.getUsers(sortOrder, limit, offset)
-        self._write("users", sortOrder=sortOrder, limit=limit, offset=offset, results=results, count=count)
-        return apache.OK
+        
+        return self._write("users", sortOrder=sortOrder, limit=limit, offset=offset, results=results, count=count)
 
     @requiresAuth
     @redirectHttps
     def userSettings(self, auth):
-        self._write("userSettings")
-        return apache.OK
+        return self._write("userSettings")
 
     @strFields(email = "", displayEmail = "",
                password1 = "", password2 = "",
@@ -267,8 +255,7 @@ class SiteHandler(WebHandler):
             self.user.validateNewEmail(email)
             self.user.setEmail(email)
             self._clearAuth()
-            self._write("register_reconf", email = email)
-            return apache.OK
+            return self._write("register_reconf", email = email)
 
         if displayEmail != auth.displayEmail:
             self.user.setDisplayEmail(displayEmail)
@@ -279,26 +266,28 @@ class SiteHandler(WebHandler):
 
         if password1 and password2:
             if password1 != password2:
-                self._write("error", shortError = "Registration Error",
+                return self._write("error", shortError = "Registration Error",
                             error = "Passwords do not match.")
             elif len(password1) < 6:
-                self._write("error", shortError = "Registration Error",
+                return self._write("error", shortError = "Registration Error",
                             error = "Password must be 6 characters or longer.")
             else:
                 self.user.setPassword(password1)
-                return self._redirectHttp("logout")
+                self._redirectHttp("logout")
 
-        return self._redirectHttp('/')
+        self._redirectHttp('/')
 
     @requiresAuth
     @listFields(str, projects=[])
     @strFields(keydata = '')
     def uploadKey(self, auth, projects, keydata):
         if self.projectList:
-            self._write("uploadKey", errors=[], kwargs={})
+            return self._write("uploadKey", errors=[], kwargs={})
         else:
-            self._write("error", shortError="Not a project member", error="You may not upload a key as you are not a member of any projects.  Create a project, or ask a project owner to add you to their project and then come back")
-        return apache.OK
+            return self._write("error", shortError="Not a project member",
+                error = "You may not upload a key as you are not a member of any projects. "
+                        "Create a project, or ask a project owner to add you to their "
+                        "project and then come back")
 
     @requiresAuth
     @listFields(str, projects=None)
@@ -309,15 +298,13 @@ class SiteHandler(WebHandler):
                 try:
                     project.addUserKey(auth.username, keydata)
                 except Exception, e:
-                    self._write("uploadKey", errors = ['Error uploading key: %s' % str(e)], 
+                    return self._write("uploadKey", errors = ['Error uploading key: %s' % str(e)], 
                             kwargs={'projects': projects, 'keydata': keydata})
-                    return apache.OK
-        return self._redirect(self.cfg.basePath)
+        self._redirect(self.cfg.basePath)
         
     @requiresAuth
     def newProject(self, auth):
-        self._write("newProject", errors=[], kwargs={})
-        return apache.OK
+        return self._write("newProject", errors=[], kwargs={})
 
     @mailList
     def _createProjectLists(self, mlists, auth, projectName, optlists = []):
@@ -371,11 +358,10 @@ class SiteHandler(WebHandler):
             except mint_error.MintError, e:
                 errors.append(str(e))
         if not errors:
-            return self._redirect("http://%s%s/project/%s/" % (self.cfg.projectSiteHost, self.cfg.basePath, hostname))
+            self._redirect("http://%s%s/project/%s/" % (self.cfg.projectSiteHost, self.cfg.basePath, hostname))
         else:
             kwargs = {'title': title, 'hostname': hostname, 'projecturl': projecturl, 'blurb': blurb, 'optlists': optlists}
-            self._write("newProject", errors=errors, kwargs=kwargs)
-            return apache.OK
+            return self._write("newProject", errors=errors, kwargs=kwargs)
 
     @intFields(userId = None, projectId = None, level = None)
     def addMemberById(self, auth, userId, projectId, level):
@@ -385,7 +371,7 @@ class SiteHandler(WebHandler):
             raise mint_error.PermissionDenied
     
         project.addMemberById(userId, level)
-        return self._redirect("%sproject/%s" % (self.cfg.basePath, project.getHostname()))
+        self._redirect("%sproject/%s" % (self.cfg.basePath, project.getHostname()))
 
     @intFields(id = None)
     @requiresAuth
@@ -404,9 +390,7 @@ class SiteHandler(WebHandler):
                             #not a member the project
                             continue
                     userProjects.append(x)
-            self._write("userInfo", user = user,
-                userProjects = userProjects)
-            return apache.OK
+            return self._write("userInfo", user = user, userProjects = userProjects)
         else:
             raise database.ItemNotFound('userid')
 
@@ -422,16 +406,13 @@ class SiteHandler(WebHandler):
             return self._packageSearch(search, limit, offset)
         else:
             self.session['searchType'] = ''
-            self._write("error", shortError = "Invalid Search Type",
+            return self._write("error", shortError = "Invalid Search Type",
                 error = "Invalid search type specified.")
-            return apache.OK
 
     def _userSearch(self, auth, terms, limit, offset):
         results, count = self.client.getUserSearchResults(terms, limit, offset)
-        self._write("searchResults", searchType = "Users", terms = terms, results = results,
-                                     count = count, limit = limit, offset = offset,
-                                     modified = 0)
-        return apache.OK
+        return self._write("searchResults", searchType = "Users", terms = terms, results = results,
+                                            count = count, limit = limit, offset = offset, modified = 0)
 
     def _packageSearch(self, terms, limit, offset):
         results, count = self.client.getPackageSearchResults(terms, limit, offset)
@@ -444,20 +425,16 @@ class SiteHandler(WebHandler):
             packageUrl = '/repos/%s/troveInfo?t=%s' % (host, quote_plus(x[0]))
             searchResults.append( (x[0], x[1], packageUrl, p.getName(), reposUrl) )
             
-        self._write("searchResults", searchType = "Packages", terms = terms, results = searchResults,
-                                     count = count, limit = limit, offset = offset,
-                                     modified = 0)
-        return apache.OK
+        return self._write("searchResults", searchType = "Packages", terms = terms, results = searchResults,
+                                            count = count, limit = limit, offset = offset, modified = 0)
     
     def _projectSearch(self, terms, modified, limit, offset):
         results, count = self.client.getProjectSearchResults(terms, modified, limit, offset)
         for i, x in enumerate(results[:]):
             results[i][0] = self.client.getProject(x[0])
 
-        self._write("searchResults", searchType = "Projects", terms = terms, results = results,
-                                     count = count, limit = limit, offset = offset,
-                                     modified = modified)
-        return apache.OK
+        return self._write("searchResults", searchType = "Projects", terms = terms, results = results,
+                                            count = count, limit = limit, offset = offset, modified = modified)
 
     @intFields(fileId = 0)
     def downloadImage(self, auth, fileId):
@@ -469,7 +446,7 @@ class SiteHandler(WebHandler):
 
         releaseId, idx, filename, title = self.client.getFileInfo(fileId)
         if reqFilename and os.path.basename(filename) != reqFilename:
-            return apache.HTTP_NOT_FOUND
+            raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND
 
         # only count downloads of the first ISO
         if idx == 0:
@@ -485,9 +462,8 @@ class SiteHandler(WebHandler):
             self.req.headers_out["Content-Length"] = str(size)
             self.req.sendfile(filename)
         except OSError, e:
-            self._write("error", shortError = "File error",
-                        error = "An error has occurred opening the image file: %s" % e)
-        return apache.OK
+            return self._write("error", shortError = "File error",
+                error = "An error has occurred opening the image file: %s" % e)
 
     @requiresAuth
     @boolFields(confirmed = False)
@@ -496,12 +472,10 @@ class SiteHandler(WebHandler):
             #do the actual deletion
             self.user.cancelUserAccount()
             self._clearAuth()
-            return self._redirect(self.cfg.basePath)
+            self._redirect(self.cfg.basePath)
         else:
-            self._write("confirm", message = "Are you sure you want to delete your account?",
-                yesLink = "cancelAccount?confirmed=1",
-                noLink = self.cfg.basePath)
-        return apache.OK
+            return self._write("confirm", message = "Are you sure you want to delete your account?",
+                yesLink = "cancelAccount?confirmed=1", noLink = self.cfg.basePath)
 
     @strFields(feed = 'newProjects')
     def rss(self, auth, feed):
@@ -545,5 +519,4 @@ class SiteHandler(WebHandler):
                 item['creator'] = "http://%s%s" % (self.siteHost, self.cfg.basePath)
                 items.append(item)
 
-        self._writeRss(items = items, title = title, link = link, desc = desc)
-        return apache.OK
+        return self._writeRss(items = items, title = title, link = link, desc = desc)

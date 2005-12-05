@@ -77,7 +77,6 @@ def mailList(func):
         try:
             return func(self, mlists=mlists, **kwargs)
         except mailinglists.MailingListException, e:
-            self._write("error", shortError = "Mailing List Error",
-                    error = "An error occured while talking to the mailing list server: %s" % str(e))
-            return apache.OK
+            return self._write("error", shortError = "Mailing List Error",
+                error = "An error occured while talking to the mailing list server: %s" % str(e))
     return wrapper

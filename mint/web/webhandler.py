@@ -57,16 +57,7 @@ class WebHandler(object):
                               groupProject = self.groupProject,
                               output = self.output,
                               **values)
-        s = t.serialize(encoding = "utf-8", output = self.output)
-        self.req.write(s)
-        
-        caller = sys._getframe(-1)
-        funcName = caller.f_back.f_code.co_name
-        if 'cacheable' in caller.f_back.f_back.f_locals['func'].__dict__ and not self.auth.authorized:
-            pageCache[reqHash(self.req)] = s
-
-    def _404(self, *args, **kwargs):
-        return apache.HTTP_NOT_FOUND
+        return t.serialize(encoding = "utf-8", output = self.output)
 
     def _redirectHttp(self, location):
         if location.startswith('http://'):
@@ -119,8 +110,7 @@ class WebHandler(object):
         template = kidCache["rss20.kid"]
         t = template.Template(**values)
         self.req.content_type = "text/xml"
-        s = t.serialize(encoding = "utf-8", output = "xml")
-        self.req.write(s)
+        return t.serialize(encoding = "utf-8", output = "xml")
 
     def _protocol(self):
         protocol = 'https'

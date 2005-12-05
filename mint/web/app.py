@@ -30,6 +30,7 @@ from cookie_http import ConaryHandler
 import cache
 
 from webhandler import WebHandler, normPath 
+from cache import pageCache, reqHash
 
 # hack to set the default encoding to utf-8
 # to overcome a kid bug.
@@ -123,22 +124,24 @@ class MintApp(WebHandler):
         d['auth'] = self.auth
 
         try:
-            returncode = method(**d)
+            output = method(**d)
             if self.auth.authorized:
                 self.session.save()
-            return returncode
+            elif 'cacheable' in method.__dict__:
+                pageCache[reqHash(self.req)] = output
+                        
         except mint_error.MintError, e:
             self.toUrl = self.cfg.basePath
             err_name = sys.exc_info()[0].__name__
             self.req.log_error("%s: %s" % (err_name, str(e)))
-            self._write("error", shortError = err_name, error = str(e))
-            return apache.OK
+            output = self._write("error", shortError = err_name, error = str(e))
         except fields.MissingParameterError, e:
-            self._write("error", shortError = "Missing Parameter", error = str(e))
-            return apache.OK
+            output = self._write("error", shortError = "Missing Parameter", error = str(e))
         except mint_error.PermissionDenied, e:
-            self._write("error", shortError = "Permission Denied", error = str(e))
-            return apache.OK
+            output = self._write("error", shortError = "Permission Denied", error = str(e))
+            
+        self.req.write(output)
+        return apache.OK
  
     def _getHandler(self, pathInfo):
         fullHost = self.req.hostname
@@ -224,4 +227,4 @@ class MintApp(WebHandler):
                 return ret
 
         # fell through, nothing matched
-        return self._404
+        raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND

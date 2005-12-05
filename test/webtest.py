@@ -15,8 +15,6 @@ from conary import versions
 class MintTest(mint_rephelp.WebRepositoryHelper):
     def testNoLocalRedirect(self):
         page = self.assertCode('', code = 200)
-        if self.cookies == {}:
-            self.fail("Web Server did not set session cookie")
 
     def testLogin(self):
         self.quickMintUser('foouser','foopass')

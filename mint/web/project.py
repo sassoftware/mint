@@ -48,7 +48,7 @@ class ProjectHandler(WebHandler):
         try:
             self.project = self.client.getProjectByHostname(cmds[0])
         except database.ItemNotFound:
-            return self._404
+            raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND
 
         # redirect endorsed (external) projects
         # to the right url if accessed incorrectly,
@@ -68,8 +68,8 @@ class ProjectHandler(WebHandler):
 
         #Take care of hidden projects
         if self.project.hidden and self.userLevel == userlevels.NONMEMBER:
-            return self._404
-        
+            raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND
+       
         # add the project name to the base path
         self.basePath += "project/%s" % (cmds[0])
         self.basePath = normPath(self.basePath)
@@ -79,22 +79,19 @@ class ProjectHandler(WebHandler):
         try:
             method = self.__getattribute__(cmds[1])
         except AttributeError:
-            return self._404
+            raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND
 
         return method
 
     @redirectHttp
     def projectPage(self, auth):
-        self._write("projectPage", userHasReq = self.client.userHasRequested(self.project.getId(), auth.userId))
-        return apache.OK
+        return self._write("projectPage", userHasReq = self.client.userHasRequested(self.project.getId(), auth.userId))
 
     def conaryUserCfg(self, auth):
-        self._write("conaryUserCfg")
-        return apache.OK
+        return self._write("conaryUserCfg")
 
     def conaryDevelCfg(self, auth):
-        self._write("conaryDevelCfg")
-        return apache.OK
+        return self._write("conaryDevelCfg")
 
     def releases(self, auth):
         releases = self.project.getReleases(showUnpublished = True)
@@ -107,8 +104,7 @@ class ProjectHandler(WebHandler):
         #for l in releasesByTrove.values():
         #    l.sort(key = lambda x: x.getTroveVersion(), reverse = True)
 
-        self._write("releases", releases = releases, publishedReleases = publishedReleases)
-        return apache.OK
+        return self._write("releases", releases = releases, publishedReleases = publishedReleases)
 
     @ownerOnly
     def groups(self, auth):
@@ -116,9 +112,8 @@ class ProjectHandler(WebHandler):
         publishedReleases = [x for x in releases if x.getPublished()]
         groupTrovesInProject = self.client.listGroupTrovesByProject(self.project.id)
             
-        self._write("groups", publishedReleases = publishedReleases,
-                    groupTrovesInProject = groupTrovesInProject)
-        return apache.OK
+        return self._write("groups", publishedReleases = publishedReleases,
+            groupTrovesInProject = groupTrovesInProject)
 
     def _getBasicTroves(self):
         # XXX all of this is kind of a hardcoded hack that should be pulled out
@@ -155,9 +150,8 @@ class ProjectHandler(WebHandler):
     def newGroup(self, auth):
         troves, troveDict, metadata = self._getBasicTroves()
         
-        self._write("newGroup", errors = [], kwargs = {}, troves = troves,
+        return self._write("newGroup", errors = [], kwargs = {}, troves = troves,
             troveDict = troveDict, metadata = metadata)
-        return apache.OK
 
     @ownerOnly
     @strFields(groupName = "", version = "", description = "")
@@ -190,9 +184,8 @@ class ProjectHandler(WebHandler):
             kwargs = {'groupName': groupName, 'version': version}
             troves, troveDict, metadata = self._getBasicTroves()
                     
-            self._write("newGroup", errors = errors, kwargs = kwargs,
+            return self._write("newGroup", errors = errors, kwargs = kwargs,
                 troves = troves, troveDict = troveDict, metadata = metadata)
-            return apache.OK
     
     @ownerOnly
     @intFields(id = None)
@@ -200,8 +193,7 @@ class ProjectHandler(WebHandler):
         curGroupTrove = self.client.getGroupTrove(id)
         self.session['groupTroveId'] = id
 
-        self._write("editGroup", message = None, curGroupTrove = curGroupTrove)
-        return apache.OK
+        return self._write("editGroup", message = None, curGroupTrove = curGroupTrove)
 
     @ownerOnly
     @intFields(id = None)
@@ -223,15 +215,14 @@ class ProjectHandler(WebHandler):
                 curGroupTrove.setTroveVersionLock(t['groupTroveItemId'], cvalue == 'on')
 
         curGroupTrove.refresh()
-        self._write("editGroup", message='Changes saved successfully', curGroupTrove = curGroupTrove)
-        return apache.OK
+        return self._write("editGroup", message='Changes saved successfully', curGroupTrove = curGroupTrove)
 
     @ownerOnly
     @strFields(referer = None)
     def closeCurrentGroup(self, auth, referer):
         if 'groupTroveId' in self.session:
             del self.session['groupTroveId']
-        return self._redirect(referer)
+        self._redirect(referer)
 
     @ownerOnly
     @intFields(id = None)
@@ -242,12 +233,10 @@ class ProjectHandler(WebHandler):
             self.client.deleteGroupTrove(id)
             if 'groupTroveId' in self.session and self.session['groupTroveId'] == id:
                 del self.session['groupTroveId']
-            return self._redirect('groups')
+            self._redirect('groups')
         else:
-            self._write('confirm', message = "Are you sure you want to delete this group trove?",
-                yesLink = "deleteGroup?id=%d;confirmed=1" % id,
-                noLink = "groups")
-            return apache.OK
+            return self._write('confirm', message = "Are you sure you want to delete this group trove?",
+                yesLink = "deleteGroup?id=%d;confirmed=1" % id, noLink = "groups")
 
     @ownerOnly
     @intFields(id=None)
@@ -259,12 +248,10 @@ class ProjectHandler(WebHandler):
         if version != '':
             curGroupTrove.addTrove(trove, version, '', '', versionLock, False, False)
         else:
-            import sys
-            print >> sys.stderr, "Trying the translation method..."
             curGroupTrove.addTroveByProject(trove, projectName, '', '', versionLock, False, False)
         if not referer:
             referer = project.getUrl()
-        return self._redirect(referer)
+        self._redirect(referer)
 
     @ownerOnly
     @intFields(id=None, troveId=None)
@@ -275,13 +262,12 @@ class ProjectHandler(WebHandler):
         curGroupTrove.delTrove(troveId)
         if not referer:
             referer = project.getUrl()
-        return self._redirect(referer)
+        self._redirect(referer)
 
     @ownerOnly
     @intFields(id = None)
     def pickArch(self, auth, id):
-        self._write("pickArch", groupTroveId = id)
-        return apache.OK
+        return self._write("pickArch", groupTroveId = id)
 
     @ownerOnly
     @intFields(id = None)
@@ -296,13 +282,11 @@ class ProjectHandler(WebHandler):
         else:
             jobId = job.id
 
-        self._write("cookGroup", jobId = jobId, recipe = recipe)
-        return apache.OK
+        return self._write("cookGroup", jobId = jobId, recipe = recipe)
     
     @ownerOnly
     def newRelease(self, auth):
-        self._write("newRelease", errors = [], kwargs = {})
-        return apache.OK
+        return self._write("newRelease", errors = [], kwargs = {})
 
     @ownerOnly
     @intFields(releaseId = -1, imageType = releasetypes.INSTALLABLE_ISO)
@@ -333,8 +317,7 @@ class ProjectHandler(WebHandler):
                           'imageType':      imageType,
                           'trove':          trove,
                           'releaseName':    releaseName}
-                self._write("newRelease", errors = errors, kwargs = kwargs)
-                return apache.OK
+                return self._write("newRelease", errors = errors, kwargs = kwargs)
         else:
             release = self.client.getRelease(releaseId)
             if not release.getDataValue("installLabelPath"):
@@ -373,11 +356,10 @@ class ProjectHandler(WebHandler):
                 versionFlavors.append(vf)
         versionFlavors.sort(key=lambda x: x[0], reverse=True)
 
-        self._write("editRelease", trove = trove, version = version,
-                                   flavor = deps.ThawDependencySet(flavor),
-                                   label = label.asString(), release = release,
-                                   archMap = archMap)
-        return apache.OK
+        return self._write("editRelease", trove = trove, version = version,
+            flavor = deps.ThawDependencySet(flavor),
+            label = label.asString(), release = release,
+            archMap = archMap)
         
     @requiresAuth
     @intFields(releaseId = None)
@@ -418,14 +400,14 @@ class ProjectHandler(WebHandler):
         except jobs.DuplicateJob:
             pass
 
-        return self._redirect(self.basePath + "release?id=%d" % releaseId)
+        self._redirect(self.basePath + "release?id=%d" % releaseId)
 
     @intFields(releaseId = None)
     @ownerOnly
     def deleteRelease(self, auth, releaseId):
         release = self.client.getRelease(releaseId)
         release.deleteRelease()
-        return self._redirect(self.basePath + "releases")
+        self._redirect(self.basePath + "releases")
 
     @intFields(id = None)
     def release(self, auth, id):
@@ -436,15 +418,14 @@ class ProjectHandler(WebHandler):
         try:
             trove, version, flavor = release.getTrove()
         except releases.TroveNotSet:
-            return self._redirect(self.basePath + "editRelease?releaseId=%d" % release.getId())
+            self._redirect(self.basePath + "editRelease?releaseId=%d" % release.getId())
         else:
-            self._write("release", release = release,
-                                   name = release.getName(),
-                                   trove = trove, version = versions.ThawVersion(version),
-                                   flavor = deps.ThawDependencySet(flavor),
-                                   releaseId = id, projectId = self.project.getId(),
-                                   publishedReleases = publishedReleases)
-        return apache.OK
+            return self._write("release", release = release,
+                name = release.getName(),
+                trove = trove, version = versions.ThawVersion(version),
+                flavor = deps.ThawDependencySet(flavor),
+                releaseId = id, projectId = self.project.getId(),
+                publishedReleases = publishedReleases)
 
     @ownerOnly
     @intFields(releaseId = None)
@@ -452,21 +433,20 @@ class ProjectHandler(WebHandler):
         release = self.client.getRelease(releaseId)
         release.setPublished(True)
 
-        return self._redirect(self.basePath + "release?id=%d" % releaseId)
+        self._redirect(self.basePath + "release?id=%d" % releaseId)
 
     @ownerOnly
     @intFields(releaseId = None)
     def restartJob(self, auth, releaseId):
         self.client.startImageJob(releaseId)
-        return self._redirect(self.basePath + "release?id=%d" % releaseId)
+        self._redirect(self.basePath + "release?id=%d" % releaseId)
 
     def _mailingLists(self, auth, mlists, messages=[]):
         if not self.cfg.EnableMailLists:
             raise mailinglists.MailingListException("Mail Lists Disabled")
         hostname = self.project.getHostname()
         lists = mlists.list_lists(hostname)
-        self._write("mailingLists", lists=lists, mailhost=self.cfg.MailListBaseURL, hostname=hostname, messages=messages)
-        return apache.OK
+        return self._write("mailingLists", lists=lists, mailhost=self.cfg.MailListBaseURL, hostname=hostname, messages=messages)
 
         
     @mailList
@@ -526,8 +506,7 @@ class ProjectHandler(WebHandler):
             'desc': self.project.getDesc(),
             'branch': self.project.getLabel().split('@')[1],
         }
-        self._write("editProject", errors = [], kwargs = kwargs)
-        return apache.OK
+        return self._write("editProject", errors = [], kwargs = kwargs)
 
     @strFields(projecturl = '', desc = '', name = '', branch = '')
     @ownerOnly
@@ -558,37 +537,35 @@ class ProjectHandler(WebHandler):
         if errors:
             kwargs = {'projecturl': projecturl, 'desc': desc, 'name': name,
                 'branch': self.project.getLabel().split('@')[1]}
-            self._write("editProject", kwargs = kwargs, errors = errors)
-            return apache.OK
+            return self._write("editProject", kwargs = kwargs, errors = errors)
         else:
-            return self._redirect(self.basePath)
+            self._redirect(self.basePath)
 
     def members(self, auth):
         if (self.userLevel == userlevels.OWNER or auth.admin):
             reqList = self.client.listJoinRequests(self.project.getId())
         else:
             reqList = []
-        self._write("members", reqList = reqList)
-        return apache.OK
+        return self._write("members", reqList = reqList)
 
     @requiresAuth
     def adopt(self, auth):
         self.project.adopt(auth, self.cfg.MailListBaseURL, self.cfg.MailListPass)
-        return self._redirect(self.basePath + "members")
+        self._redirect(self.basePath + "members")
 
     @strFields(username = None)
     @intFields(level = None)
     @ownerOnly
     def addMember(self, auth, username, level):
         self.project.addMemberByName(username, level)
-        return self._redirect(self.basePath + "members")
+        self._redirect(self.basePath + "members")
 
     @requiresAuth
     def watch(self, auth):
         #some kind of check to make sure the user's not a member
         if self.userLevel == userlevels.NONMEMBER:
             self.project.addMemberByName(auth.username, userlevels.USER)
-        return self._redirect(self.basePath)
+        self._redirect(self.basePath)
 
     @requiresAuth
     @boolFields(confirmed=False)
@@ -596,12 +573,10 @@ class ProjectHandler(WebHandler):
         if confirmed:
             if self.userLevel == userlevels.USER:
                 self.project.delMemberById(auth.userId)
-            return self._redirect(self.basePath)
+            self._redirect(self.basePath)
         else:
-            self._write("confirm", message = "Are you sure you want to remove this project from your watch list?",
-                yesLink = "unwatch?confirmed=1",
-                noLink = "/")
-            return apache.OK
+            return self._write("confirm", message = "Are you sure you want to remove this project from your watch list?",
+                yesLink = "unwatch?confirmed=1", noLink = "/")
 
     @strFields(comments = '')
     @intFields(keepReq = None)
@@ -613,14 +588,14 @@ class ProjectHandler(WebHandler):
             self.client.setJoinReqComments(projectId, comments)
         else:
             self.client.deleteJoinRequest(projectId, userId)
-        return self._redirect(self.basePath)
+        self._redirect(self.basePath)
 
     @requiresAuth
     @intFields(userId = None)
     def viewJoinRequest(self, auth, userId):
         user = self.client.getUser(userId)
-        self._write('viewJoinRequest', userId = userId, username = user.getUsername(), projectId = self.project.getId(), comments = self.client.getJoinReqComments(self.project.getId(), userId))
-        return apache.OK
+        return self._write('viewJoinRequest', userId = userId, username = user.getUsername(),
+            projectId = self.project.getId(), comments = self.client.getJoinReqComments(self.project.getId(), userId))
 
     @requiresAuth
     @intFields(makeOwner = False, makeDevel = False, reject = False, userId = None)
@@ -628,15 +603,14 @@ class ProjectHandler(WebHandler):
         projectId = self.project.getId()
         user = self.client.getUser(userId)
         if reject:
-            self._write('rejectJoinRequest', userId = userId, username = user.getUsername())
-            return apache.OK
+            return self._write('rejectJoinRequest', userId = userId, username = user.getUsername())
         user = self.client.getUser(userId)
         username = user.getUsername()
         if (makeOwner):
             self.project.addMemberByName(username, userlevels.OWNER)
         elif (makeDevel):
             self.project.addMemberByName(username, userlevels.DEVELOPER)
-        return self._redirect(self.basePath + "members")
+        self._redirect(self.basePath + "members")
 
     @requiresAuth
     @intFields(userId = None)
@@ -654,18 +628,17 @@ class ProjectHandler(WebHandler):
             user = self.client.getUser(userId)
             sendMailWithChecks(self.cfg.adminMail, self.cfg.productName, user.getEmail(), subject, body)
         self.client.deleteJoinRequest(self.project.getId(), userId)
-        return self._redirect(self.basePath + "members")
+        self._redirect(self.basePath + "members")
 
     @requiresAuth
     def joinRequest(self, auth):
-        self._write("joinRequest", comments = self.client.getJoinReqComments(self.project.getId(), auth.userId) )
-        return apache.OK
+        return self._write("joinRequest", comments = self.client.getJoinReqComments(self.project.getId(), auth.userId) )
 
     @intFields(userId = None, level = None)
     @ownerOnly
     def editMember(self, auth, userId, level):
         self.project.updateUserLevel(userId, level)
-        return self._redirect(self.basePath + "members")
+        self._redirect(self.basePath + "members")
 
     @intFields(userId = None)
     @ownerOnly
@@ -677,8 +650,8 @@ class ProjectHandler(WebHandler):
                 if user[0] == userId:
                     levelidx = userlevels.LEVELS.index(level)
                     self.project.updateUserLevel(userId, userlevels.LEVELS[levelidx - 1])
-                    return self._redirect(self.basePath + "members")
-        return self._redirect(self.basePath + "members")
+                    self._redirect(self.basePath + "members")
+        self._redirect(self.basePath + "members")
 
     @intFields(userId = None)
     @ownerOnly
@@ -690,8 +663,8 @@ class ProjectHandler(WebHandler):
                 if user[0] == userId:
                     levelidx = userlevels.LEVELS.index(level)
                     self.project.updateUserLevel(userId, userlevels.LEVELS[levelidx + 1])
-                    return self._redirect(self.basePath + "members")
-        return self._redirect(self.basePath + "members")
+                    self._redirect(self.basePath + "members")
+        self._redirect(self.basePath + "members")
 
     @intFields(id = None)
     @ownerOnly
@@ -699,19 +672,17 @@ class ProjectHandler(WebHandler):
         self.project.delMemberById(id)
         if self.project.getMembers() == []:
             self.project.orphan(self.cfg.MailListBaseURL, self.cfg.MailListPass)
-        return self._redirect(self.basePath + "members")
+        self._redirect(self.basePath + "members")
 
     @requiresAuth
     @boolFields(confirmed = False)
     def resign(self, auth, confirmed):
         if confirmed:
             self.project.delMemberById(auth.userId)
-            return self._redirect(self.basePath)
+            self._redirect(self.basePath)
         else:
-            self._write("confirm", message = "Are you sure you want to resign from this project?",
-                yesLink = "resign?confirmed=1",
-                noLink = "/")
-        return apache.OK
+            return self._write("confirm", message = "Are you sure you want to resign from this project?",
+                yesLink = "resign?confirmed=1", noLink = "/")
 
     @strFields(feed= "releases")
     def rss(self, auth, feed):
@@ -741,5 +712,4 @@ class ProjectHandler(WebHandler):
             link = ""
             desc = ""
 
-        self._writeRss(items = items, title = title, link = link, desc = desc)
-        return apache.OK
+        return self._writeRss(items = items, title = title, link = link, desc = desc)

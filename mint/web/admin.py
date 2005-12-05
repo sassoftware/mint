@@ -30,8 +30,7 @@ class AdminHandler(WebHandler):
         #get a list of all users in a format suitable for producing a
         #dropdown or multi-select list
         userlist = self.client.getUsersList()
-        self._write('admin/user', userlist=userlist, kwargs = kwargs)
-        return apache.OK
+        return self._write('admin/user', userlist=userlist, kwargs = kwargs)
 
     @intFields(userId=None)
     def _admin_user_cancel(self, userId, *args, **kwargs):
@@ -40,8 +39,7 @@ class AdminHandler(WebHandler):
         return self._admin_user(*args, **kwargs)
 
     def _admin_user_new(self, *args, **kwargs):
-        self._write('admin/newUser', kwargs = kwargs, errors=[])
-        return apache.OK
+        return self._write('admin/newUser', kwargs = kwargs, errors=[])
 
     @strFields(username = '', email = '', password = '', password2 = '',
                fullName = '', displayEmail = '', blurb = '')
@@ -78,8 +76,7 @@ class AdminHandler(WebHandler):
                       'displayEmail': displayEmail,
                       'blurb': blurb
                      }
-            self._write("admin/newUser", errors=errors, kwargs = kwargs)
-        return apache.OK
+            return self._write("admin/newUser", errors=errors, kwargs = kwargs)
 
     @intFields(userId=None)
     def _admin_user_reset_password(self, userId, *args, **kwargs):
@@ -92,8 +89,7 @@ class AdminHandler(WebHandler):
         #a dropdown or multi-select list.
         projects = self.client.getProjectsList()
 
-        self._write('admin/project', projects = projects, kwargs = kwargs)
-        return apache.OK
+        return self._write('admin/project', projects = projects, kwargs = kwargs)
 
     def _admin_project_delete(self, *args, **kwargs):
         # XXX Go through with it.  This functionality may be added in some later release
@@ -137,8 +133,7 @@ class AdminHandler(WebHandler):
         return self._admin_project_jump('members', **kwargs)
 
     def _admin_notify(self, *args, **kwargs):
-        self._write('admin/notify', kwargs=kwargs)
-        return apache.OK
+        return self._write('admin/notify', kwargs=kwargs)
 
     def _admin_notify_send(self, *args, **kwargs):
         #send the message
@@ -160,17 +155,14 @@ class AdminHandler(WebHandler):
 
     def _admin_report(self, *args, **kwargs):
         reports = self.client.listAvailableReports()
-        self._write('admin/report', kwargs=kwargs,
-                    availableReports = reports.iteritems())
-        return apache.OK
+        return self._write('admin/report', kwargs=kwargs,
+            availableReports = reports.iteritems())
 
     @strFields(reportName = None)
     def _admin_report_view(self, *args, **kwargs):
         pdfData = self.client.getReportPdf(kwargs['reportName'])
         self.req.content_type = "application/x-pdf"
-        self.req.write(pdfData)
-        return apache.OK
+        return self.req.write(pdfData)
 
     def _administer(self, *args, **kwargs):
-        self._write('admin/administer', kwargs=kwargs)
-        return apache.OK
+        return self._write('admin/administer', kwargs=kwargs)
