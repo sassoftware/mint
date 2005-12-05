@@ -124,7 +124,7 @@ class MintApp(WebHandler):
 
         try:
             returncode = method(**d)
-            if self.session is SqlSession:
+            if self.auth.authorized:
                 self.session.save()
             return returncode
         except mint_error.MintError, e:
