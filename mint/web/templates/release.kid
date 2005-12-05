@@ -10,7 +10,7 @@ from mint.mint import upstream
 ?>
 <html xmlns:html="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
-      py:extends="'library.kid', 'layout.kid'">
+      py:extends="'layout.kid'">
     <?python
     isOwner = (userLevel == userlevels.OWNER or auth.admin)
     if isOwner:
