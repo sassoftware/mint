@@ -26,9 +26,10 @@ from mint import projectlisting
 from mint import database
 from mint.session import SqlSession
 
-from webhandler import WebHandler, normPath
+from webhandler import WebHandler, normPath 
 from decorators import requiresAdmin, requiresAuth, requiresHttps, redirectHttps, redirectHttp
 from decorators import mailList
+from cache import cache
 
 class SiteHandler(WebHandler):
     def handle(self, context):
@@ -42,8 +43,8 @@ class SiteHandler(WebHandler):
         if self.req.hostname != self.cfg.siteHost.split(':')[0] and self.req.subprocess_env.get('HTTPS', 'off') == 'off':
             self.req.log_error("%s %s accessed incorrectly; referer: %s" % \
                 (self.req.hostname, self.req.unparsed_uri, self.req.headers_in.get('referer', 'N/A')))
-            return self._redirector("http://" + self.cfg.siteHost + self.req.unparsed_uri)
-       
+            self._redirect("http://" + self.cfg.siteHost + self.req.unparsed_uri)
+        print cmd 
         if not cmd:
             return self._frontPage
         try:
@@ -58,6 +59,7 @@ class SiteHandler(WebHandler):
         return method
 
     @redirectHttp
+    @cache
     def _frontPage(self, auth):
         news = self.client.getNews()
         releases = self.client.getReleaseList()
@@ -198,11 +200,13 @@ class SiteHandler(WebHandler):
                     firstTimer = True
                 client.updateAccessedTime(auth.userId)
 
+                self._session_start()
                 self.session['authToken'] = authToken
                 self.session['firstTimer'] = firstTimer
                 self.session.save()
-                
-                return self._redirect(unquote(to))
+
+                self._redirect_storm(self.session.id())
+                self._redirect(unquote(to)) 
         else:
             return apache.HTTP_NOT_FOUND
 

@@ -57,12 +57,12 @@ class ProjectHandler(WebHandler):
             if self.req.hostname != self.cfg.siteHost.split(':')[0]:
                 self.req.log_error("%s %s accessed incorrectly; referer: %s" % \
                     (self.req.hostname, self.req.unparsed_uri, self.req.headers_in.get('referer', 'N/A')))
-                return self._redirector("http://" + self.cfg.siteHost + self.req.unparsed_uri)
+                self._redirect("http://" + self.cfg.siteHost + self.req.unparsed_uri)
         else:
             if self.req.hostname != self.cfg.projectSiteHost.split(':')[0]:
                 self.req.log_error("%s %s accessed incorrectly; referer: %s" % \
                     (self.req.hostname, self.req.unparsed_uri, self.req.headers_in.get('referer', 'N/A')))
-                return self._redirector("http://" + self.cfg.projectSiteHost + self.req.unparsed_uri)
+                self._redirect("http://" + self.cfg.projectSiteHost + self.req.unparsed_uri)
 
         self.userLevel = self.project.getUserLevel(self.auth.userId)
 
