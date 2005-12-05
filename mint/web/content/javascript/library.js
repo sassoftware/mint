@@ -47,10 +47,12 @@ var STATUS_ERROR = 4;
 var STATUS_NOJOB = 5;
 var refreshed = false;
 var oldStatus = -1;
+var releaseStatusId;
 
 function processGetReleaseStatus(xml) {
     el = $("jobStatus");
     var status = getElementsByTagAndClassName("int", null, xml)[0].firstChild.data;
+
     if(status != oldStatus) {
         if(oldStatus != -1) {
             document.location = document.location;
@@ -75,6 +77,9 @@ function processGetReleaseStatus(xml) {
     } else {
         statusText = statusText.firstChild.nodeValue;
     }
+    if(status == STATUS_FINISHED)
+        clearTimeout(releaseStatusId);        
+
     replaceChildNodes(el, statusText);
 }
 
@@ -125,7 +130,7 @@ function getReleaseStatus(releaseId) {
     req.setHandler(processGetReleaseStatus, {});
     req.send(releaseId);
 
-    setTimeout("getReleaseStatus(" + releaseId + ")", 500);
+    releaseStatusId = setTimeout("getReleaseStatus(" + releaseId + ")", 500);
 }
 
 function getCookStatus(jobId) {
