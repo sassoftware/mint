@@ -1,4 +1,4 @@
-image_files = *.gif *.jpg
+image_files = *.gif *.jpg *.png
 
 favicon = favicon/rpath-16x16-favicon.ico
 
