@@ -1,3 +1,15 @@
+Changes in 1.1.3:
+
+* 1.1.2 was never launched to the live site.
+* Sessions are now saved only for logged-in users.
+* Redirect handling in the web code has been refactored
+  to use the mod_python apache.SERVER_RETURN exception
+  instead of custom support.
+* Basic static caching support for certain front-line pages
+  has been added to improve anonymous access performance.
+* Job status Javascript stops requesting status after the job
+  has finished.
+
 Changes in 1.1.2:
 
 * The JobData and ReleaseData tables are now abstracted into a new
