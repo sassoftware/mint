@@ -232,6 +232,9 @@ if __name__ == "__main__":
                       help = "Location of the iso_gen.conf file.")
     parser.add_option("-d", "--debug", dest = "debug", action = "store_true",
                       help = "Enable the debugger on errors.")
+    parser.add_option("-n", "--no-daemon", dest = "noDaemon",
+                      action = "store_true", default = False,
+                      help = "Do not run as a daemon")
     (options, args) = parser.parse_args()
     
     if options.debug:
@@ -284,28 +287,31 @@ if __name__ == "__main__":
     log.debug("loading configuration file: %s", cfgFile)
     log.info("using Conary in %s", os.path.dirname(sys.modules['conary'].__file__))
 
-    pid = os.fork()
-
-    if pid == 0:
-        # redirect stdout and stderr to job-server.log
-        logFile = os.path.join(cfg.logPath, "job-server.log")
-        nullf = file("/dev/null", "r+")
-        logfd = os.open(logFile, os.O_APPEND | os.O_WRONLY | os.O_CREAT)
-        os.dup2(logfd, sys.stdout.fileno())
-        os.dup2(logfd, sys.stderr.fileno())
-        os.dup2(nullf.fileno(), sys.stdin.fileno())
-        nullf.close()
-    
-        pid = os.fork()
-        if pid == 0:
-            # abandon the controlling tty totally by placing this thread in a
-            # new session
-            os.setsid()
-
-            sys.stdout.flush()
-            sys.stderr.flush()
-            
-            daemon(options, cfg)
+    if options.noDaemon:
+        daemon(options, cfg)
     else:
-        log.info("rBuilder ISO generation server started")
-        os._exit(0)
+        pid = os.fork()
+
+        if pid == 0:
+            # redirect stdout and stderr to job-server.log
+            logFile = os.path.join(cfg.logPath, "job-server.log")
+            nullf = file("/dev/null", "r+")
+            logfd = os.open(logFile, os.O_APPEND | os.O_WRONLY | os.O_CREAT)
+            os.dup2(logfd, sys.stdout.fileno())
+            os.dup2(logfd, sys.stderr.fileno())
+            os.dup2(nullf.fileno(), sys.stdin.fileno())
+            nullf.close()
+        
+            pid = os.fork()
+            if pid == 0:
+                # abandon the controlling tty totally by placing this thread in a
+                # new session
+                os.setsid()
+
+                sys.stdout.flush()
+                sys.stderr.flush()
+                
+                daemon(options, cfg)
+        else:
+            log.info("rBuilder ISO generation server started")
+            os._exit(0)
