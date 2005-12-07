@@ -26,7 +26,7 @@ from mint import projectlisting
 from mint import database
 from mint.session import SqlSession
 
-from webhandler import WebHandler, normPath 
+from webhandler import WebHandler, normPath, HttpNotFound
 from decorators import requiresAdmin, requiresAuth, requiresHttps, redirectHttps, redirectHttp
 from decorators import mailList
 from cache import cache
@@ -49,12 +49,12 @@ class SiteHandler(WebHandler):
         try:
             method = self.__getattribute__(cmd)
         except AttributeError:
-            raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND
+            raise HttpNotFound
 
         if self.auth.stagnant and cmd not in ['editUserSettings','confirm','logout']:
             return self.confirmEmail
         if not callable(method):
-            raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND
+            raise HttpNotFound
 
         return method
 
@@ -139,8 +139,7 @@ class SiteHandler(WebHandler):
         try:
             return self._write("docs/" + page)
         except IOError:
-            raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND
-            return apache.HTTP_NOT_FOUND
+            raise HttpNotFound
 
     @strFields(message = "")
     @redirectHttps
@@ -199,7 +198,7 @@ class SiteHandler(WebHandler):
                 self._redirect_storm(self.session.id())
                 self._redirect(unquote(to)) 
         else:
-            raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND
+            raise HttpNotFound
 
     @strFields(id = None)
     def confirm(self, auth, id):
@@ -446,7 +445,7 @@ class SiteHandler(WebHandler):
 
         releaseId, idx, filename, title = self.client.getFileInfo(fileId)
         if reqFilename and os.path.basename(filename) != reqFilename:
-            raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND
+            raise HttpNotFound
 
         # only count downloads of the first ISO
         if idx == 0:

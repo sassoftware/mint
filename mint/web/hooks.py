@@ -33,7 +33,7 @@ from conary.repository import errors
 from mint import config
 from mint import mint_server
 from mint import users
-from webhandler import normPath
+from webhandler import normPath, HttpError
 import app
 import cookie_http
 
@@ -436,8 +436,8 @@ def handler(req):
             newPath = normPath(pathInfo[len(match)-1:])
             try:
                 ret = urlHandler(req, cfg, newPath)
-            except apache.SERVER_RETURN:
-                raise
+            except HttpError, e:
+                raise apache.SERVER_RETURN, e.code
             except:
                 # we only want to handle errors in production mode
                 if cfg.debugMode or req.bytes_sent > 0:

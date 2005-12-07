@@ -19,7 +19,7 @@ from mint import users
 from mint import jobs
 from mint import jobstatus
 
-from webhandler import WebHandler, normPath
+from webhandler import WebHandler, normPath, HttpNotFound
 from decorators import ownerOnly, requiresAuth, requiresAdmin, mailList, redirectHttp
 from mint.users import sendMailWithChecks
 from mint.releases import RDT_STRING, RDT_BOOL, RDT_INT
@@ -48,7 +48,7 @@ class ProjectHandler(WebHandler):
         try:
             self.project = self.client.getProjectByHostname(cmds[0])
         except database.ItemNotFound:
-            raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND
+            raise HttNotFound
 
         # redirect endorsed (external) projects
         # to the right url if accessed incorrectly,
@@ -68,8 +68,8 @@ class ProjectHandler(WebHandler):
 
         #Take care of hidden projects
         if self.project.hidden and self.userLevel == userlevels.NONMEMBER:
-            raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND
-       
+            raise HttpNotFound
+      
         # add the project name to the base path
         self.basePath += "project/%s" % (cmds[0])
         self.basePath = normPath(self.basePath)
@@ -79,7 +79,7 @@ class ProjectHandler(WebHandler):
         try:
             method = self.__getattribute__(cmds[1])
         except AttributeError:
-            raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND
+            raise HttpNotFound
 
         return method
 

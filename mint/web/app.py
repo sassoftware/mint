@@ -29,7 +29,7 @@ from site import SiteHandler
 from cookie_http import ConaryHandler
 import cache
 
-from webhandler import WebHandler, normPath 
+from webhandler import WebHandler, normPath, HttpNotFound 
 from cache import pageCache, reqHash
 
 # hack to set the default encoding to utf-8
@@ -65,12 +65,7 @@ class MintApp(WebHandler):
 
         self.req.content_type = self.content_type
         
-        try:
-            self.fields = dict(FieldStorage(self.req))
-        except apache.SERVER_RETURN:
-            # failed to parse fields; must be an incorrect POST
-            # request, so fail with a better error message.
-            raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND
+        self.fields = dict(FieldStorage(self.req))
         
         self.basePath = normPath(self.cfg.basePath)
 
@@ -129,7 +124,7 @@ class MintApp(WebHandler):
                 self.session.save()
             elif 'cacheable' in method.__dict__:
                 pageCache[reqHash(self.req)] = output
-                        
+
         except mint_error.MintError, e:
             self.toUrl = self.cfg.basePath
             err_name = sys.exc_info()[0].__name__
@@ -137,8 +132,6 @@ class MintApp(WebHandler):
             output = self._write("error", shortError = err_name, error = str(e))
         except fields.MissingParameterError, e:
             output = self._write("error", shortError = "Missing Parameter", error = str(e))
-        except mint_error.PermissionDenied, e:
-            output = self._write("error", shortError = "Permission Denied", error = str(e))
             
         self.req.write(output)
         return apache.OK
@@ -227,4 +220,4 @@ class MintApp(WebHandler):
                 return ret
 
         # fell through, nothing matched
-        raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND
+        raise HttpNotFound

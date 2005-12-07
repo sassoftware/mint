@@ -72,7 +72,7 @@ class WebHandler(object):
 
     def _redirect(self, location):
         self.req.headers_out['Location'] = location
-        raise apache.SERVER_RETURN, apache.HTTP_MOVED_PERMANENTLY
+        raise HttpMoved
 
     def _clearAuth(self):
         self.auth = users.Authorization()
@@ -188,3 +188,14 @@ def normPath(path):
         path = "/" + path
     path = path.replace('//', '/')
     return path
+
+
+class HttpError(Exception):
+    def __str__(self):
+        return "HTTP error %d" % self.code
+
+class HttpNotFound(HttpError):
+    code = 404
+
+class HttpMoved(HttpError):
+    code = 301
