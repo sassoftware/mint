@@ -42,9 +42,9 @@ for r in cu.fetchall():
     labels[hostname] = versions.Label(l.keys()[0])
     projectIds[hostname] = projectId
 
-    cfg = conarycfg.ConaryConfiguration()
-    cfg.repositoryMap = repMap
-    repos = conaryclient.ConaryClient(cfg).getRepos()
+    ccfg = conarycfg.ConaryConfiguration()
+    ccfg.repositoryMap = repMap
+    repos = conaryclient.ConaryClient(ccfg).getRepos()
     netclients[hostname] = repos
 
 rows = []
