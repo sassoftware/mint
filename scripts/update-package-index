@@ -10,7 +10,8 @@ from conary import versions
 from mint import config
 from mint import pkgindex
 from mint import projects
-from conary.repository import netclient
+from conary import conaryclient
+from conary import conarycfg
 from conary.repository import repository
 from conary import dbstore
 
@@ -41,7 +42,9 @@ for r in cu.fetchall():
     labels[hostname] = versions.Label(l.keys()[0])
     projectIds[hostname] = projectId
 
-    repos = netclient.NetworkRepositoryClient(repMap)
+    cfg = conarycfg.ConaryConfiguration()
+    cfg.repositoryMap = repMap
+    repos = conaryclient.ConaryClient(cfg).getRepos()
     netclients[hostname] = repos
 
 rows = []
