@@ -48,7 +48,7 @@ class ProjectHandler(WebHandler):
         try:
             self.project = self.client.getProjectByHostname(cmds[0])
         except database.ItemNotFound:
-            raise HttNotFound
+            raise HttpNotFound
 
         # redirect endorsed (external) projects
         # to the right url if accessed incorrectly,

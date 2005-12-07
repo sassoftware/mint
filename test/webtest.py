@@ -228,5 +228,8 @@ class MintTest(mint_rephelp.WebRepositoryHelper):
                             'email'    : user.email},
                           ok_codes = [301])
 
+    def testNonExistProject(self):
+        self.assertCode('/project/doesnotexist', code = 404)
+
 if __name__ == "__main__":
     testsuite.main()
