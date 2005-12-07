@@ -11,7 +11,7 @@ from mint import userlevels
 ?>
 <html xmlns:html="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
-      py:extends="'../layout.kid', '../project.kid'">
+      py:extends="'../layout.kid'">
 <?python
 isOwner = (userLevel == userlevels.OWNER or auth.admin)
 def pluralTroves(c):

@@ -6,7 +6,7 @@
 ?>
 <html xmlns:html="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
-      py:extends="'../library.kid', '../layout.kid'">
+      py:extends="'../layout.kid'">
     <div id="fileList" py:def="troveList(troves)">
         <table style="width: 100%;">
             <tr py:for="name, version, flavor in troves">

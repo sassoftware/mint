@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <html xmlns:html="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
-      py:extends="'../layout.kid', '../project.kid'">
+      py:extends="'../project.kid'">
 
     <!-- table of pgp keys -->
     <head>
