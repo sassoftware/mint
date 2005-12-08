@@ -8,6 +8,7 @@ kid_files =			\
 	administer.kid		\
 	notify.kid		\
 	project.kid		\
+	report.kid		\
 	user.kid
 
 python_files =
