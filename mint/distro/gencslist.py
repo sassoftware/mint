@@ -473,6 +473,20 @@ def _getDescriptions(client, cs, name, version, flavor):
     sources = dict(sources)
     return sources, metadataToName, metadata
 
+oldTrove = trove.Trove
+class Trove(oldTrove):
+    def __init__(self, *args, **kw):
+        oldTrove.__init__(self, *args, **kw)
+
+    def applyChangeSet(self, *args, **kw):
+        # apply a troveCs to this Trove, but always skip integrity checks
+        kw['skipIntegrityChecks'] = True
+        rc = oldTrove.applyChangeSet(self, *args, **kw)
+        # then remove the signatures
+        self.troveInfo.sigs.reset()
+        return rc
+trove.Trove = Trove
+
 def writeSqldb(cs, path, cfgFile = None):
     tmpdir = tempfile.mkdtemp()
 
@@ -488,6 +502,15 @@ def writeSqldb(cs, path, cfgFile = None):
     localRepos = LocalRepository(serverName, tmpdir)
     localRepos.commitChangeSet(cs)
 
+    # FIXME: the description code isn't working properly.  skip it for now
+    # to re-enable, delete
+    # ---8<--- from HERE 
+    shutil.copyfile(tmpdir + '/sqldb', path)
+    shutil.rmtree(tmpdir)
+
+    return
+    # ---8<--- to HERE
+
     # set up a conaryclient to get descriptions
     cfg = conarycfg.ConaryConfiguration()
     if cfgFile and os.path.exists(cfgFile):
@@ -495,7 +518,6 @@ def writeSqldb(cs, path, cfgFile = None):
     cfg.dbPath = ':memory:'
     cfg.root = ':memory:'
     cfg.initializeFlavors()
-    cfg.pubRing = ['/dev/null']
     client = conaryclient.ConaryClient(cfg)
 
     sources, metadataToName, metadata = _getDescriptions(client, cs, name, version, flavor)
