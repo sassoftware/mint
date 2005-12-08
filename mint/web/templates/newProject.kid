@@ -82,11 +82,6 @@
                                     project's administration page.</p>
                             </td>
                         </tr>
-                        <tr py:if="self.auth.admin">
-                            <td>
-                            BLECK BLECK BLECK
-                            </td>
-                        </tr>
                     </table>
                     <p><button type="submit">Create</button></p>
                 </form>

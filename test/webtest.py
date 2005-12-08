@@ -50,20 +50,6 @@ class MintTest(mint_rephelp.WebRepositoryHelper):
         project = client.getProjectByHostname("test")
         assert(project.getName() == 'Test Project')
 
-    def testAdminNewProject(self):
-        client, userId = self.quickMintAdmin('adminuser','adminpass')
-        page = self.webLogin('adminuser', 'adminpass')
-
-        page = page.assertCode('/newProject', code = 200)
-
-        # explicit redirect expected
-        page = page.fetch('/createProject', postdata =
-                          {'title': 'Test Project',
-                           'hostname': 'test'})
-
-        project = client.getProjectByHostname("test")
-        assert(project.getName() == 'Test Project')
-
     def testEditProject(self):
         client, userId = self.quickMintUser('foouser','foopass')
         projectId = client.newProject('Foo', 'foo', 'rpath.local')

@@ -187,13 +187,6 @@ class MintServer(object):
     _checkRepo = True 
     _cachedGroups = []
 
-    def _transactionTattle(self, methodName, inException):
-        if self.cfg.profiling and self.db.dbh.inTransaction:
-            print >> sys.stderr, "Transaction Alert: %-40s" % methodName,
-            print >> sys.stderr, "Exception: %r" % bool(inException)
-            sys.stderr.flush()
-    
-
     def callWrapper(self, methodName, authToken, args):
         try:
             if methodName.startswith('_'):
@@ -241,27 +234,19 @@ class MintServer(object):
                 print >> sys.stderr, "Ending XMLRPC request:\t\t%-25s\t%.2f" % (methodName, (time.time() - startTime) * 1000)
                 sys.stderr.flush()
         except users.UserAlreadyExists, e:
-            self._transactionTattle(methodName, True)
             return (True, ("UserAlreadyExists", str(e)))
         except database.DuplicateItem, e:
-            self._transactionTattle(methodName, True)
             return (True, ("DuplicateItem", e.item))
         except database.ItemNotFound, e:
-            self._transactionTattle(methodName, True)
             return (True, ("ItemNotFound", e.item))
         except SearchTermsError, e:
-            self._transactionTattle(methodName, True)
             return (True, ("SearchTermsError", str(e)))
         except users.AuthRepoError, e:
-            self._transactionTattle(methodName, True)
             return (True, ("AuthRepoError", str(e)))
-        except Exception, error:
-            self._transactionTattle(methodName, True)
-            raise
+        #except Exception, error:
         #    exc_name = sys.exc_info()[0].__name__
         #    return (True, (exc_name, error, str(error)))
         else:
-            self._transactionTattle(methodName, False)
             return (False, r)
 
     def _getAuthRepo(self):
