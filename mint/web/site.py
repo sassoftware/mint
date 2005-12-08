@@ -451,7 +451,6 @@ class SiteHandler(WebHandler):
         if idx == 0:
             release = self.client.getRelease(releaseId)
             release.incDownloads()
-
         try:
             size = os.stat(filename)[stat.ST_SIZE]
 
@@ -459,6 +458,16 @@ class SiteHandler(WebHandler):
             self.req.headers_out["Content-Disposition"] = "attachment; filename=%s;" %\
                 os.path.basename(filename)
             self.req.headers_out["Content-Length"] = str(size)
+
+            # handle requests for partial content
+            if 'Range' in self.req.headers_in:
+                # only support a specific syntax of Range
+                m = re.match('bytes=(\d+)-')
+                if m:
+                    startByte = int(m.groups()[0])
+                    self.req.sendfile(filename, offset = startByte)
+                    raise HttpPartialContent
+                    
             self.req.sendfile(filename)
         except OSError, e:
             return self._write("error", shortError = "File error",

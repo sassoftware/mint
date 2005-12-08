@@ -199,3 +199,6 @@ class HttpNotFound(HttpError):
 
 class HttpMoved(HttpError):
     code = 301
+
+class HttpPartialContent(HttpError):
+    code = 206
