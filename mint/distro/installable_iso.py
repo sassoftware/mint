@@ -236,6 +236,7 @@ class InstallableIso(ImageGenerator):
         cfg.dbPath = ':memory:'
         cfg.root = ':memory:'
         cfg.initializeFlavors()
+        cfg.pubRing = ['/dev/null']
         client = conaryclient.ConaryClient(cfg)
         
         revision = version.trailingRevision().asString()
