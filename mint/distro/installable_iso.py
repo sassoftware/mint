@@ -132,53 +132,54 @@ class InstallableIso(ImageGenerator):
 
         # extract anaconda-images from repository, if exists
         tmpRoot = tempfile.mkdtemp()
-        cfg = self.project.getConaryConfig(overrideSSL = True, overrideAuth = True, 
-            newUser='anonymous', newPass='anonymous', useSSL = False)
-        cfg.root = tmpRoot
-        cfg.installLabelPath = [self.version.branch().label()]
-        cclient = conaryclient.ConaryClient(cfg)
+        if not self.project.external:
+            cfg = self.project.getConaryConfig(overrideSSL = True, overrideAuth = True, 
+                newUser='mintauth', newPass='mintpass', useSSL = True) 
+            cfg.root = tmpRoot
+            cfg.installLabelPath = [self.version.branch().label()]
+            cclient = conaryclient.ConaryClient(cfg)
 
-        uJob = None
-        print >> sys.stderr, "extracting artwork from anaconda-custom=%s" % cfg.installLabelPath[0].asString()
-        uJob = self._getUpdateJob(cclient, "anaconda-custom")
-        if not uJob:
-            print >> sys.stderr, "anaconda-custom not found on repository, falling back to anaconda-images"
-            uJob = self._getUpdateJob(cclient, "anaconda-images")
+            uJob = None
+            print >> sys.stderr, "extracting artwork from anaconda-custom=%s" % cfg.installLabelPath[0].asString()
+            uJob = self._getUpdateJob(cclient, "anaconda-custom")
+            if not uJob:
+                print >> sys.stderr, "anaconda-custom not found on repository, falling back to anaconda-images"
+                uJob = self._getUpdateJob(cclient, "anaconda-images")
 
-        util.mkdirChain(tmpPath + '/pixmaps')
-        if uJob:
-            cclient.applyUpdate(uJob, callback = self.callback)
-            print >> sys.stderr, "success."
-            sys.stderr.flush()
-        
-            # copy pixmaps and scripts into cramfs root
-            tmpTar = tempfile.mktemp(suffix = '.tar')
-            call('tar', 'cf', tmpTar, '-C', tmpRoot + '/usr/share/anaconda/', './')
-            call('tar', 'xf', tmpTar, '-C', tmpPath)
-            call('rm', tmpTar)
-        elif not self.project.external:
-            print >> sys.stderr, "anaconda-images not found on repository either, using generated artwork."
-            ai = AnacondaImages(self.project.getName(), indir = self.isocfg.anacondaImagesPath,
-                    outdir = tmpPath + '/pixmaps',
-                    fontfile = '/usr/share/fonts/bitstream-vera/Vera.ttf')
-            ai.processImages()
-                
-        # convert syslinux-splash.png to splash.lss, if exists
-        if os.path.exists(tmpPath + '/pixmaps/syslinux-splash.png'):
-            print >> sys.stderr, "found syslinux-splash.png, converting to splash.lss"
-
-            splash = file(tmpPath + '/pixmaps/splash.lss', 'w')
-            palette = [] # '#000000=0', '#cdcfd5=7', '#c90000=2', '#ffffff=15', '#5b6c93=9']
-            pngtopnm = subprocess.Popen(['pngtopnm', tmpPath + '/pixmaps/syslinux-splash.png'], stdout = subprocess.PIPE)
-            ppmtolss16 = subprocess.Popen(['ppmtolss16'] + palette, stdin = pngtopnm.stdout, stdout = splash)
-            ppmtolss16.communicate()
+            util.mkdirChain(tmpPath + '/pixmaps')
+            if uJob:
+                cclient.applyUpdate(uJob, callback = self.callback)
+                print >> sys.stderr, "success."
+                sys.stderr.flush()
             
-        # copy the splash.lss files to the appropriate place
-        if os.path.exists(tmpPath + '/pixmaps/splash.lss'):
-            print >> sys.stderr, "found splash.lss; moving to isolinux directory"
-            splashTarget = os.path.join(self.topdir, 'isolinux')
-            call('cp', '-v', tmpPath + '/pixmaps/splash.lss', splashTarget)
-            # FIXME: regenerate boot.iso here
+                # copy pixmaps and scripts into cramfs root
+                tmpTar = tempfile.mktemp(suffix = '.tar')
+                call('tar', 'cf', tmpTar, '-C', tmpRoot + '/usr/share/anaconda/', './')
+                call('tar', 'xf', tmpTar, '-C', tmpPath)
+                call('rm', tmpTar)
+            elif not self.project.external:
+                print >> sys.stderr, "anaconda-images not found on repository either, using generated artwork."
+                ai = AnacondaImages(self.project.getName(), indir = self.isocfg.anacondaImagesPath,
+                        outdir = tmpPath + '/pixmaps',
+                        fontfile = '/usr/share/fonts/bitstream-vera/Vera.ttf')
+                ai.processImages()
+                    
+            # convert syslinux-splash.png to splash.lss, if exists
+            if os.path.exists(tmpPath + '/pixmaps/syslinux-splash.png'):
+                print >> sys.stderr, "found syslinux-splash.png, converting to splash.lss"
+
+                splash = file(tmpPath + '/pixmaps/splash.lss', 'w')
+                palette = [] # '#000000=0', '#cdcfd5=7', '#c90000=2', '#ffffff=15', '#5b6c93=9']
+                pngtopnm = subprocess.Popen(['pngtopnm', tmpPath + '/pixmaps/syslinux-splash.png'], stdout = subprocess.PIPE)
+                ppmtolss16 = subprocess.Popen(['ppmtolss16'] + palette, stdin = pngtopnm.stdout, stdout = splash)
+                ppmtolss16.communicate()
+                
+            # copy the splash.lss files to the appropriate place
+            if os.path.exists(tmpPath + '/pixmaps/splash.lss'):
+                print >> sys.stderr, "found splash.lss; moving to isolinux directory"
+                splashTarget = os.path.join(self.topdir, 'isolinux')
+                call('cp', '-v', tmpPath + '/pixmaps/splash.lss', splashTarget)
+                # FIXME: regenerate boot.iso here
 
         # write the conaryrc file
         # TODO move this up to ImageGenerator
