@@ -186,10 +186,8 @@ class ApacheServer(ChildRepository):
 
         sqldriver = os.environ.get('MINT_SQL', 'sqlite')
         if sqldriver == 'sqlite':
-            print "Using sqlite driver"
             print >> f, 'dbPath %s' % self.serverRoot + '/mintdb'
         elif sqldriver == 'mysql':
-            print "Using mysql driver"
             print >> f, 'dbPath testuser:testpass@localhost/minttest'
         else:
             assert("Invalid database type")
