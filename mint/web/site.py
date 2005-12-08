@@ -459,14 +459,15 @@ class SiteHandler(WebHandler):
                 os.path.basename(filename)
             self.req.headers_out["Content-Length"] = str(size)
 
+            # XXX this doesn't work yet
             # handle requests for partial content
-            if 'Range' in self.req.headers_in:
-                # only support a specific syntax of Range
-                m = re.match('bytes=(\d+)-', self.req.headers_in['Range'])
-                if m:
-                    startByte = int(m.groups()[0])
-                    self.req.sendfile(filename, startByte)
-                    raise HttpPartialContent
+            #if 'Range' in self.req.headers_in:
+            #    # only support a specific syntax of Range
+            #    m = re.match('bytes=(\d+)-', self.req.headers_in['Range'])
+            #    if m:
+            #        startByte = int(m.groups()[0])
+            #        self.req.sendfile(filename, startByte)
+            #        raise HttpPartialContent
                     
             self.req.sendfile(filename)
         except OSError, e:
