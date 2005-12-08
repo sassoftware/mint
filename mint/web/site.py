@@ -465,7 +465,7 @@ class SiteHandler(WebHandler):
                 m = re.match('bytes=(\d+)-', self.req.headers_in['Range'])
                 if m:
                     startByte = int(m.groups()[0])
-                    self.req.sendfile(filename, offset = startByte)
+                    self.req.sendfile(filename, startByte)
                     raise HttpPartialContent
                     
             self.req.sendfile(filename)
