@@ -462,7 +462,7 @@ class SiteHandler(WebHandler):
             # handle requests for partial content
             if 'Range' in self.req.headers_in:
                 # only support a specific syntax of Range
-                m = re.match('bytes=(\d+)-')
+                m = re.match('bytes=(\d+)-', self.req.headers_in['Range'])
                 if m:
                     startByte = int(m.groups()[0])
                     self.req.sendfile(filename, offset = startByte)
