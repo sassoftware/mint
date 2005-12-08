@@ -4,6 +4,8 @@
 #
 # All rights reserved
 #
+import traceback
+
 from conary import sqlite3
 from conary import versions
 
@@ -36,7 +38,8 @@ netclients = {}
 for r in cu.fetchall():
     projectId, hostname = r
 
-    l, repMap, userMap = labelsTable.getLabelsForProject(projectId, overrideSSL=True, useSSL = cfg.SSL)
+    l, repMap, userMap = labelsTable.getLabelsForProject(projectId,
+        overrideAuth = True, newUser = 'anonymous', newPass = 'anonymous')
     
     hostname = repMap.keys()[0]
     labels[hostname] = versions.Label(l.keys()[0])
@@ -54,6 +57,7 @@ for host in netclients.keys():
 
     except repository.OpenError, e:
         print "warning: unable to access %s" % host
+        traceback.print_exc()
         continue
         
     pkgs = [x for x in troves.keys() if ':' not in x]
