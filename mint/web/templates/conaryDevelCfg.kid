@@ -46,13 +46,8 @@ from mint import userlevels
 
                     <ul>
                         <li>Build Label: <strong><tt>${project.getLabel()}</tt></strong></li>
-                        <li>Repository URL: <strong><tt>${protocol}://username:password@${project.getFQDN()}/conary/</tt></strong></li>
+                        <li>Your ${cfg.productName} username and password</li>
                     </ul>
-
-                    <p>(Note that you must replace
-                    <tt>&lt;username&gt;</tt> and <tt>&lt;password&gt;</tt>
-                    with your ${cfg.productName} username and password,
-                    respectively.)</p>
 
                     <h3>Getting Started</h3>
 
@@ -141,7 +136,7 @@ from mint import userlevels
                                 <li><strong><tt>buildLabel ${project.getLabel()}</tt></strong></li>
                                 <li><strong><tt>buildPath (full path to the builds subdirectory)</tt></strong></li>
                                 <li><strong><tt>lookaside (full path to the cache subdirectory)</tt></strong></li>
-                                <li><strong><tt>repositoryMap ${project.getFQDN()} ${protocol}://username:password@${project.getFQDN()}/conary/</tt></strong></li>
+                                <li><strong><tt>user *.rpath.org username password</tt></strong></li>
                             </ul>
 
                             <p>Because Conary only reads the
