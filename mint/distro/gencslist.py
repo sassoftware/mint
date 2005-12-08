@@ -432,7 +432,7 @@ def _getTrove(cs, name, version, flavor):
     pkgCs = cs.getNewTroveVersion(name, version, flavor)
     t = trove.Trove(pkgCs.getName(), pkgCs.getOldVersion(),
                     pkgCs.getNewFlavor(), pkgCs.getChangeLog())
-    t.applyChangeSet(pkgCs)
+    t.applyChangeSet(pkgCs, skipIntegrityChecks = True)
     return t
 
 def _getSourceBranches(cs, name, version, flavor):
