@@ -183,7 +183,7 @@
                         your system for this project.  The local <tt>conaryrc</tt> file should 
                         contain the following:</p>
 
-                        <pre>repositoryMap      &lt;projectname&gt;.rpath.org http://&lt;username:password&gt;@&lt;projectname&gt;.rpath.org/conary/
+                        <pre>user *.rpath.org &lt;username&gt; &lt;password&gt;
 installLabelPath   &lt;projectname&gt;.rpath.org@rpl:devel
 buildLabel         &lt;projectname&gt;.rpath.org@rpl:devel
 buildPath          ~/conary/&lt;projectname&gt;/builds
