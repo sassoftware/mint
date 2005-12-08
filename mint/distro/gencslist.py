@@ -495,6 +495,7 @@ def writeSqldb(cs, path, cfgFile = None):
     cfg.dbPath = ':memory:'
     cfg.root = ':memory:'
     cfg.initializeFlavors()
+    cfg.pubRing = ['/dev/null']
     client = conaryclient.ConaryClient(cfg)
 
     sources, metadataToName, metadata = _getDescriptions(client, cs, name, version, flavor)
