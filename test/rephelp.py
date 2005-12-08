@@ -30,7 +30,7 @@ from conary import conaryclient
 from conary import conarycfg
 from conary import cscmd
 from conary import cvc
-from conary import deps
+from conary.deps import deps, arch
 from conary import files
 from conary import flavorcfg
 from conary.lib import log
@@ -64,14 +64,14 @@ def x86flags(archTag, *args):
     if archTag == 'x86':
         flags = []
         for f in ('i486', 'i586', 'i686'):
-            flags.append((f, deps.deps.FLAG_SENSE_PREFERRED))
-        return deps.deps.Dependency(archTag, flags)
+            flags.append((f, deps.FLAG_SENSE_PREFERRED))
+        return deps.Dependency(archTag, flags)
     # otherwise, just use the archTag with no flags
-    return deps.deps.Dependency(archTag)
+    return deps.Dependency(archTag)
 # override the existing x86flags() function
-deps.arch.x86flags = x86flags
+arch.x86flags = x86flags
 # reinitialize deps.arch
-deps.arch.initializeArch()
+arch.initializeArch()
 
 class IdGen0(cook._IdGen):
 
@@ -477,7 +477,173 @@ class RepositoryHelper(testsuite.TestCase):
         self.cfg.archDirs = archiveDir + '/arch'
         self.cfg.initializeFlavors()
         use.setBuildFlagsFromFlavor('', self.cfg.buildFlavor)
-        
+
+    def _cvtVersion(self, verStr):
+        if isinstance(verStr, versions.Version):
+            return verStr
+        if verStr[0] == ':':
+            buildLabel = self.cfg.buildLabel
+            verStr = '/%s@%s%s' % (buildLabel.getHost(),
+                                   buildLabel.getNamespace(),
+                                   verStr)
+        elif verStr[0] != '/':
+            verStr = '/%s/%s' % (self.cfg.buildLabel.asString(), verStr)
+        try:
+            v = versions.VersionFromString(verStr)
+            v.setTimeStamps([ time.time() for x in v.versions ])
+        except versions.ParseError:
+            v = versions.ThawVersion(verStr)
+        return v
+
+    def addQuickTestCollection(self, name, version, troveList):
+        version = self._cvtVersion(version)
+        assert(':' not in name and not name.startswith('fileset'))
+
+        flavor = deps.DependencySet()
+        fullList = []
+        for info in troveList:
+            trvFlavor = None
+            trvVersion = None
+            byDefault = True
+            if isinstance(info, str):
+                trvName = info
+            elif len(info) == 1:
+                (trvName,) = info
+            elif len(info) == 2:
+                (trvName, trvVersion) = info
+            elif len(info) == 3:
+                (trvName, trvVersion, trvFlavor) = info
+            elif len(info) == 4:
+                (trvName, trvVersion, trvFlavor, byDefault) = info
+            else:
+                assert(False)
+
+
+            if not trvVersion:
+                trvVersion = version
+            else:
+                trvVersion = self._cvtVersion(trvVersion)
+
+            if not trvFlavor:
+                trvFlavor = deps.DependencySet()
+            elif type(trvFlavor) == str:
+                trvFlavor = deps.parseFlavor(trvFlavor)
+
+            flavor.union(trvFlavor, deps.DEP_MERGE_TYPE_DROP_CONFLICTS)
+            fullList.append(((trvName, trvVersion, trvFlavor), byDefault))
+
+        coll = trove.Trove(name, version, flavor, None)
+        coll.setIsCollection(True)
+        for (info, byDefault) in fullList:
+            coll.addTrove(*info, **{ 'byDefault' : byDefault })
+        coll.setSourceName(name + ":source")
+
+        # create an absolute changeset
+        cs = changeset.ChangeSet()
+        diff = coll.diff(None, absolute = True)[0]
+        cs.newTrove(diff)
+
+        repos = self.openRepository()
+        repos.commitChangeSet(cs)
+        return coll
+
+    def addQuickTestComponent(self, troveName, version, flavor='',
+                              fileContents=None,
+                              provides=deps.DependencySet(),
+                              requires=deps.DependencySet(),
+                              filePrimer=0, setConfigFlags = True):
+        troveVersion = self._cvtVersion(version)
+
+        assert(':' in troveName)
+
+        # set up a file with some contents
+        fileList = []
+        if fileContents is None:
+            cont = self.workDir + '/contents%s' % filePrimer
+            f = open(cont, 'w')
+            f.write('hello, world!\n')
+            f.close()
+            if not filePrimer:
+                filePrimer = '0'
+            filePrimer = str(filePrimer)
+            repeats = (32 / len(filePrimer) + 1)
+            pathId = (filePrimer * repeats)[:32]
+            pathId = sha1helper.md5FromString(pathId)
+            f = files.FileFromFilesystem(cont, pathId)
+            fileList.append((f, '/contents%s' % filePrimer, pathId, troveVersion))
+        else:
+            index = 0
+            for fileInfo in fileContents:
+                fileName, contents = fileInfo[0:2]
+                if len(fileInfo) > 3:
+                    fileDeps = fileInfo[3]
+                else:
+                    fileDeps = None
+
+                cont = self.workDir + '/' + fileName
+                dir = os.path.dirname(cont)
+                if not os.path.exists(dir):
+                    os.mkdir(dir)
+                f = open(cont, 'w')
+                f.write(contents)
+                f.close()
+                pathId = sha1helper.md5String(fileName)
+                f = files.FileFromFilesystem(cont, pathId)
+                if fileDeps is not None:
+                    f.requires.set(fileDeps)
+                if setConfigFlags and fileName.startswith('/etc'):
+                    f.flags.isConfig(True)
+                index += 1
+
+                if len(fileInfo) > 2 and fileInfo[2] is not None:
+                    fileVersion = self._cvtVersion(fileInfo[2])
+                else:
+                    fileVersion = troveVersion
+                fileList.append((f, fileName, pathId, fileVersion))
+        # create an absolute changeset
+        cs = changeset.ChangeSet()
+        # add a pkg diff
+
+        flavor = deps.parseFlavor(flavor)
+        t = trove.Trove(troveName, troveVersion, flavor, None)
+        if isinstance(requires, str):
+            req = deps.parseDep(requires)
+        else:
+            req = requires.copy()
+
+        for f, name, pathId, fileVersion in fileList:
+            if not troveName.endswith(':source'):
+                name = '/' + name
+
+            t.addFile(pathId, name, fileVersion, f.fileId())
+            req.union(f.requires())
+        t.setRequires(req)
+        if not troveName.endswith(':source'):
+            t.setSourceName(troveName.split(":")[0] + ":source")
+
+        if isinstance(provides, str):
+            prov = deps.parseDep(provides)
+        else:
+            prov = provides.copy()
+
+        prov.union(deps.parseDep('trove: %s' % t.getName()))
+        t.setProvides(prov)
+        t.computePathHashes()
+        diff = t.diff(None, absolute = True)[0]
+        cs.newTrove(diff)
+
+        # add the file and file contents
+        for f,name, pathId, fileVersion in fileList:
+            cs.addFile(None, f.fileId(), f.freeze())
+            cs.addFileContents(pathId, changeset.ChangedFileTypes.file,
+                               filecontents.FromFilesystem(
+                                 os.path.normpath(self.workDir + '/' + name)),
+                               f.flags.isConfig())
+        repos = self.openRepository()
+        repos.commitChangeSet(cs)
+        return t
+    
+    
     def __init__(self, methodName):
 	testsuite.TestCase.__init__(self, methodName)
 

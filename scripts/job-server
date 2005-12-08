@@ -293,6 +293,7 @@ if __name__ == "__main__":
     log.info("using Conary in %s", os.path.dirname(sys.modules['conary'].__file__))
 
     if options.noDaemon:
+        sys.excepthook = util.genExcepthook() 
         daemon(options, cfg)
     else:
         pid = os.fork()
