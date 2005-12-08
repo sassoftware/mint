@@ -9,6 +9,9 @@ Changes in 1.1.3:
   has been added to improve anonymous access performance.
 * Job status Javascript stops requesting status after the job
   has finished.
+* A couple of bug fixes in the recent releases listings.
+* The job server now has a --no-daemon option to prevent
+  the server from forking off to a separate process.
 
 Changes in 1.1.2:
 
