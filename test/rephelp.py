@@ -145,10 +145,11 @@ class ChildRepository(RepositoryServer):
                   % (self.serverDir, self.reposDir))
 
 class ApacheServer(ChildRepository):
-    def __init__(self, name, server, serverDir, reposDir, conaryPath, mintPath, repMap,
-                 useCache = False):
+    def __init__(self, name, server, serverDir, reposDir, conaryPath, mintPath,
+                 repMap, useCache = False, multiThreaded=False):
         ChildRepository.__init__(self, name, server, serverDir, reposDir,
                                  conaryPath)
+        self.multiThreaded = multiThreaded
         self.mintPath = mintPath
         self.serverpid = -1
 
@@ -228,11 +229,17 @@ class ApacheServer(ChildRepository):
         self.serverpid = os.fork()
         if self.serverpid == 0:
             #print "starting server in %s" % self.serverRoot
-	    args = ("/usr/sbin/httpd", 
-		    "-X",
-		    "-d", self.serverRoot,
-		    "-f", "httpd.conf",
-		    "-C", 'DocumentRoot "%s"' % self.serverRoot)
+            if self.multiThreaded:
+                args = ("/usr/sbin/httpd", 
+                        "-d", self.serverRoot,
+                        "-f", "httpd.conf",
+                        "-C", 'DocumentRoot "%s"' % self.serverRoot)
+            else:
+                args = ("/usr/sbin/httpd", 
+                        "-X",
+                        "-d", self.serverRoot,
+                        "-f", "httpd.conf",
+                        "-C", 'DocumentRoot "%s"' % self.serverRoot)
 	    os.execv(args[0], args)
         else:
             pass
@@ -526,6 +533,7 @@ class RepositoryHelper(testsuite.TestCase):
 	self.cfg.repositoryMap = {}
         self.cfg.useDir = None
         self.cfg.quiet = True
+        self.cfg.profiling = True
 
         global _servers
         self.servers = _servers

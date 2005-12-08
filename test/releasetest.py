@@ -296,5 +296,21 @@ class ReleaseTest(MintRepositoryHelper):
         if len(rel) != 1:
             self.fail("getReleasesForProject did not return hidden releases for admin")
 
+    def testGetReleasesForProjectOrder(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        projectId = client.newProject("Foo", "foo", "rpath.org")
+        release = client.newRelease(projectId, 'release 1')
+        release.setTrove("group-trove",
+                         "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
+        release.setPublished(True)
+        release = client.newRelease(projectId, 'release 2')
+        release.setTrove("group-trove",
+                         "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
+        release.setPublished(True)
+        relIdList = [x.id for x in \
+                     client.server.getReleasesForProject(projectId)]
+        if relIdList != [2, 1]:
+            self.fail('getReleasesForProject has the wrong order')
+
 if __name__ == "__main__":
     testsuite.main()
