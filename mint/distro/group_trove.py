@@ -49,7 +49,7 @@ class GroupTroveCook(ImageGenerator):
 
             project = self.client.getProject(projectId)
 
-            cfg = project.getConaryConfig()
+            cfg = project.getConaryConfig(overrideSSL=True, useSSL=True)
             cfg.name = "rBuilder Online"
             cfg.contact = "http://www.rpath.org"
             cfg.quiet = True
