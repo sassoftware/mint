@@ -13,6 +13,7 @@ import sys
 import os
 import time
 import threading
+import traceback
 
 from xmlrpclib import ProtocolError
 from optparse import OptionParser
@@ -77,6 +78,8 @@ class JobRunner(threading.Thread):
                 log.info("%s job for %s started (id %d)" % (generator.__name__, project.getHostname(), jobId))
                 imageFilenames = generator(self.client, self.cfg, self.job, releaseId).write()
             except Exception, e:
+                traceback.print_exc()
+                sys.stdout.flush()
                 error = e
                 self.job.setStatus(jobstatus.ERROR, str(e))
             else:
@@ -88,6 +91,8 @@ class JobRunner(threading.Thread):
                 log.info("GroupTroveCook job started (id %d)" % (jobId))
                 ret = GroupTroveCook(self.client, self.cfg, self.job, None).write()
             except Exception, e:
+                traceback.print_exc()
+                sys.stdout.flush()
                 error = e
                 self.job.setStatus(jobstatus.ERROR, str(e))
             else:
