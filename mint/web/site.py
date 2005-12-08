@@ -26,7 +26,7 @@ from mint import projectlisting
 from mint import database
 from mint.session import SqlSession
 
-from webhandler import WebHandler, normPath, HttpNotFound
+from webhandler import WebHandler, normPath, HttpNotFound, HttpPartialContent
 from decorators import requiresAdmin, requiresAuth, requiresHttps, redirectHttps, redirectHttp
 from decorators import mailList
 from cache import cache
