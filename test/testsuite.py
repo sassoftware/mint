@@ -4,6 +4,8 @@
 # Copyright (c) 2004 rpath, Inc.
 #
 
+import bdb
+import cPickle
 import grp
 import sys
 import os
@@ -11,6 +13,7 @@ import os.path
 import pwd
 import re
 import tempfile
+import time
 import types
 import unittest
 
@@ -143,8 +146,11 @@ def setup():
     if parent not in sys.path:
 	sys.path.append(parent)
 
-    from conary.lib import util
     sys.excepthook = util.genExcepthook(True)
+
+    # import debugger now that we have the path for it
+    global debugger
+    from conary.lib import debugger
 
     return path
 
@@ -305,6 +311,238 @@ class TestCase(unittest.TestCase):
 	os.utime = self.oldutime
 	self.chownLog = []
 
+class TestTimer(object):
+    def __init__(self, file, testSuite):
+        self.startAll = time.time()
+        if os.path.exists(file):
+            try:
+                self.times = cPickle.load(open(file))
+            except Exception, msg:
+                print "error loading test times:", msg
+                self.times = {}
+        else:
+            self.times = {}
+        self.file = file
+
+        self.toRun = set()
+        testSuites = [testSuite]
+        while testSuites:
+            testSuite = testSuites.pop()
+            if not isinstance(testSuite, unittest.TestCase):
+                testSuites.extend(x for x in testSuite) 
+            else:
+                self.toRun.add(testSuite.id())
+                
+    def startTest(self, test):
+        self.testStart = time.time()
+        self.testId = test.id()
+
+    def stopTest(self, test):
+        id = self.testId
+        self.toRun.discard(id)
+
+    def testPassed(self):
+        id = self.testId
+        thisTime = time.time() - self.testStart
+        avg, times = self.times.get(id, [0, 0])
+        avg = ((avg * times) + thisTime) / (times + 1.0)
+        times = min(times+1, 3)
+        self.times[id] = [avg, times]
+        self.store(self.file)
+
+    def estimate(self):
+        left =  sum(self.times.get(x, [1])[0] for x in self.toRun)
+        passed = time.time() - self.startAll
+        return  passed, passed + left
+
+    def store(self, file):
+        cPickle.dump(self.times, open(file, 'w'))
+
+
+class SkipTestException(Exception):
+    pass
+
+class SkipTestResultMixin:
+    def __init__(self):
+        self.skipped = []
+
+    def checkForSkipException(self, test, err):
+        # because of the reloading of modules that occurs when
+        # running multiple tests, no guarantee about the relation of
+        # this SkipTestException class to the one run in the 
+        # actual test can be made, so just check names
+        if err[0].__name__ == 'SkipTestException':
+            self.addSkipped(test, err)
+            return True
+
+    def addSkipped(self, test, err):
+        self.skipped.append(test)
+
+    def __repr__(self):
+        return ("<%s run=%i errors=%i failures=%i skipped=%i>" %
+                (unittest._strclass(self.__class__), self.testsRun,
+                 len(self.errors), len(self.failures),
+                 len(self.skipped)))
+
+
+class TestCallback:
+
+    def _message(self, msg):
+        self.out.write("\r")
+        self.out.write(msg)
+        if len(msg) < self.last:
+            i = self.last - len(msg)
+            self.out.write(" " * i + "\b" * i)
+        self.out.flush()
+        self.last = len(msg)
+
+    def __del__(self):
+        if self.last:
+            self._message("")
+            print "\r",
+            self.out.flush()
+
+    def clear(self):
+        self._message("")
+        print "\r",
+
+    def __init__(self, f = sys.stdout):
+        self.last = 0
+        self.out = f
+
+    def totals(self, run, passed, failed, errored, skipped, total, 
+                timePassed, estTotal, test=None):
+        totals = (failed +  errored, skipped, timePassed / 60, 
+                  timePassed % 60, estTotal / 60, estTotal % 60, run, total)
+        msg = 'Fail: %s Skip: %s - %0d:%02d/%0d:%02d - %s/%s' % totals
+
+        if test:
+            # append end of test to message
+            id = test.id()
+            cutoff = max((len(id) + len(msg)) - 76, 0)
+            msg = msg + ' - ' + id[cutoff:]
+
+        self._message(msg)
+
+
+class SkipTestTextResult(unittest._TextTestResult, SkipTestResultMixin):
+
+    def __init__(self, *args, **kw):
+        test = kw.pop('test')
+        self.debug = kw.pop('debug', False)
+        self.useCallback = kw.pop('useCallback', True)
+        self.passedTests = 0
+        self.failedTests = 0
+        self.erroredTests = 0
+        self.skippedTests = 0
+        self.total = test.countTestCases()
+        self.callback = TestCallback()
+        unittest._TextTestResult.__init__(self, *args, **kw)
+        SkipTestResultMixin.__init__(self)
+        self.timer = TestTimer('.times', test)
+
+    def addSkipped(self, test, err):
+        self.skippedTests += 1
+        SkipTestResultMixin.addSkipped(self, test, err)
+        if self.useCallback:
+            self.callback.clear()
+            print 'SKIPPED:', test.id()
+
+    def addError(self, test, err):
+        if isinstance(err[1], bdb.BdbQuit):
+            raise KeyboardInterrupt
+
+        if self.checkForSkipException(test, err):
+            return
+
+        if not self.useCallback:
+            unittest._TextTestResult.addError(self, test, err)
+        else:
+            unittest.TestResult.addError(self, test, err)
+            self.callback.clear()
+            desc = self._exc_info_to_string(err, test)
+            self.printErrorList('ERROR', [(test, desc)])
+
+        if self.debug:
+            debugger.post_mortem(err[2], err[1], err[0])
+
+        self.erroredTests += 1
+
+
+    def addFailure(self, test, err):
+        if not self.useCallback:
+            unittest._TextTestResult.addFailure(self, test, err)
+        else:
+            unittest.TestResult.addFailure(self, test, err)
+            self.callback.clear()
+            desc = self._exc_info_to_string(err, test)
+            self.printErrorList('FAILURE', [(test, desc)])
+
+        if self.debug:
+            debugger.post_mortem(err[2], err[1], err[0])
+
+        self.failedTests += 1
+
+    def addSuccess(self, test):
+        self.timer.testPassed()
+        self.passedTests += 1
+
+        if not self.useCallback:
+            unittest._TextTestResult.addSuccess(self, test)
+
+    def startTest(self, test):
+        unittest._TextTestResult.startTest(self, test)
+        self.timer.startTest(test)
+        self.printTotals(test)
+
+    def stopTest(self, test):
+        unittest._TextTestResult.stopTest(self, test)
+        self.timer.stopTest(test)
+        self.printTotals()
+
+
+    def printTotals(self, test=None):
+        if self.useCallback:
+            timePassed, totalTime = self.timer.estimate()
+            self.callback.totals(self.testsRun, self.passedTests,
+                                 self.failedTests,
+                                 self.erroredTests, self.skippedTests, 
+                                 self.total, timePassed, totalTime, test)
+
+
+class DebugTestRunner(unittest.TextTestRunner):
+    def __init__(self, *args, **kwargs):
+        self.debug = kwargs.pop('debug', False)
+        self.useCallback = kwargs.pop('useCallback', False)
+        unittest.TextTestRunner.__init__(self, *args, **kwargs)
+
+    def run(self, test):
+        self.test = test
+        result = self._makeResult()
+        startTime = time.time()
+        test(result)
+        stopTime = time.time()
+        timeTaken = stopTime - startTime
+        self.stream.writeln('\n' + result.separator2)
+        run = result.testsRun
+        self.stream.writeln("Ran %d test%s in %.3fs" %
+                            (run, run != 1 and "s" or "", timeTaken))
+        return result
+
+    def _makeResult(self):
+        return SkipTestTextResult(self.stream, self.descriptions,
+                                  self.verbosity, test=self.test, 
+                                  debug=self.debug,
+                                  useCallback=self.useCallback)
+
+
+_individual = False
+
+def isIndividual():
+    global _individual
+    return _individual
+
+
 def main(*args, **keywords):
     sys.excepthook = util.genExcepthook(True)
 
@@ -313,34 +551,29 @@ def main(*args, **keywords):
     loader = Loader()
 
     verbosity=1
+    dots = False
+
     if '-v' in sys.argv:
         verbosity=2
         sys.argv.remove('-v')
+        dots = True
+
+    if '--dots' in sys.argv:
+        sys.argv.remove('--dots')
+        dots = True
+
         
     if '--debug' in sys.argv:
+        debug = True
         sys.argv.remove('--debug')
-        runner = DebugTestRunner(verbosity=verbosity)
     else:
-        runner = unittest.TextTestRunner(verbosity=verbosity)
+        debug=False
+
+    runner = DebugTestRunner(verbosity=verbosity, debug=debug, 
+                             useCallback=not dots)
         
     unittest.main(testRunner=runner, testLoader=loader, *args, **keywords)
 
-class DebugTextResult(unittest._TextTestResult):
-    def addError(self, test, err):
-        raise err[0], err[1], err[2]
-
-    def addFailure(self, test, err):
-        raise err[0], err[1], err[2]
-
-class DebugTestRunner(unittest.TextTestRunner):
-    def _makeResult(self):
-        return DebugTextResult(self.stream, self.descriptions, self.verbosity)
-
-_individual = False
-
-def isIndividual():
-    global _individual
-    return _individual
 
 if __name__ == '__main__':
     tests = []
@@ -352,9 +585,11 @@ if __name__ == '__main__':
         sys.path.append(cwd)
     setup()
 
+    from conary.lib import debugger
     sys.excepthook = util.genExcepthook(True)
 
     debug = False
+    dots = False
     if '--debug' in sys.argv:
 	debug = True
 	sys.argv.remove('--debug')
@@ -363,6 +598,11 @@ if __name__ == '__main__':
     if '-v' in sys.argv:
         verbosity = 2
         sys.argv.remove('-v')
+        dots = True
+
+    if '--dots' in sys.argv:
+        dots = True
+        sys.argv.remove('--dots')
 
     profiling = False
     if '--profile' in sys.argv:
@@ -400,12 +640,8 @@ if __name__ == '__main__':
         testcase = loader.loadTestsFromName(test)
         suite.addTest(testcase)
 
-    if debug:
-        cls = DebugTestRunner
-    else:
-        cls = unittest.TextTestRunner
-
-    runner = cls(verbosity=verbosity)
+    runner = DebugTestRunner(verbosity=verbosity, debug=debug, 
+                             useCallback=not dots)
     runner.run(suite)
 
     if profiling:
