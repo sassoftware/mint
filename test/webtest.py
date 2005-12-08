@@ -115,23 +115,25 @@ class MintTest(mint_rephelp.WebRepositoryHelper):
         page = self.fetch('/project/foo/mailingLists',
                                   ok_codes = [200])
 
-# FIXME: implement skipped tests.
-# FIXME: these tests can't be run until mint shims pages in the /repos stack.
-#    def testPgpAdminPage(self):
-#        raise SkipTestException
-#        client, userId = self.quickMintUser('foouser','foopass')
-#        projectId = client.newProject('Foo', 'foo', 'rpath.local')
-#
-#        page = self.fetch('/repos/foo/pgpAdminForm',
-#                                  ok_codes = [200])
+    # FIXME: test can't be run until mint shims pages in the /repos stack.
+    def testPgpAdminPage(self):
+        raise testsuite.SkipTestException
+        raise SkipTestException
+        client, userId = self.quickMintUser('foouser','foopass')
+        projectId = client.newProject('Foo', 'foo', 'rpath.local')
 
-#    def testRepoBrowserPage(self):
-#        client, userId = self.quickMintUser('foouser','foopass')
-#        projectId = client.newProject('Foo', 'foo', 'rpath.local')
-#
-#        page = self.assertContent('/repos/foo/browse',
-#                                  ok_codes = [200],
-#                                  content = 'Repository Browser')
+        page = self.fetch('/repos/foo/pgpAdminForm',
+                                  ok_codes = [200])
+
+    # FIXME: test can't be run until mint shims pages in the /repos stack.
+    def testRepoBrowserPage(self):
+        raise testsuite.SkipTestException
+        client, userId = self.quickMintUser('foouser','foopass')
+        projectId = client.newProject('Foo', 'foo', 'rpath.local')
+
+        page = self.assertContent('/repos/foo/browse',
+                                  ok_codes = [200],
+                                  content = 'Repository Browser')
 
     def testGroupBuilderInResources(self):
         client, userId = self.quickMintUser('foouser','foopass')
