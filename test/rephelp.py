@@ -326,8 +326,6 @@ class RepositoryHelper(testsuite.TestCase):
 
     def getRepositoryClient(self, user = 'mintauth', password = 'mintpass'):
         cfg = copy.copy(self.cfg)
-        cfg.repositoryMap = conarycfg.RepoMap()
-        cfg.user = conarycfg.UserInformation()
         for name in self.servers.getServerNames():
             cfg.user.addServerGlob(name + "*", user, password)
         cfg.repositoryMap.update(self.servers.getMap())

@@ -77,7 +77,7 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
         self.cfg.buildLabel = versions.Label("%s.%s@rpl:devel" % (hostname, domainname))
         self.cfg.repositoryMap = {"%s.%s" % (hostname, domainname):
             "http://%s.%s:%d/repos/%s/" % (hostname, domainname, self.getPort(), hostname)}
-        self.cfg.user.addServerGlob("%s.%s*" % (hostname, domainname), "testuser", "testpass")
+        self.cfg.user.addServerGlob("%s.%s" % (hostname, domainname), "testuser", "testpass")
 
         # re-open the repos to make changes to repositoryMap have any effect
         self.openRepository()
