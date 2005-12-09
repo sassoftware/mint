@@ -134,7 +134,7 @@ class InstallableIso(ImageGenerator):
         tmpRoot = tempfile.mkdtemp()
         if not self.project.external:
             cfg = self.project.getConaryConfig(overrideSSL = True, overrideAuth = True, 
-                newUser='mintauth', newPass='mintpass', useSSL = True) 
+                newUser='mintauth', newPass='mintpass', useSSL = self.cfg.SSL) 
             cfg.root = tmpRoot
             cfg.installLabelPath = [self.version.branch().label()]
             cclient = conaryclient.ConaryClient(cfg)
