@@ -329,7 +329,7 @@ class RepositoryHelper(testsuite.TestCase):
         cfg.repositoryMap = conarycfg.RepoMap()
         cfg.user = conarycfg.UserInformation()
         for name in self.servers.getServerNames():
-            cfg.user.addServerGlob(name, user, password)
+            cfg.user.addServerGlob(name + "*", user, password)
         cfg.repositoryMap.update(self.servers.getMap())
         client = conaryclient.ConaryClient(cfg)
         return client.getRepos()
@@ -344,9 +344,7 @@ class RepositoryHelper(testsuite.TestCase):
         self.cfg.repositoryMap.update(self.servers.getMap())
 
 	count = 0
-        #repos = conaryclient.ConaryClient(self.cfg).getRepos()
-        # FIXME: this is a guess. previous line is original
-        repos = self.getRepositoryClient(self.cfg)
+        repos = self.getRepositoryClient()
 
         name = "127.0.0.1"
         if serverIdx:
