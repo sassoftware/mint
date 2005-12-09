@@ -212,6 +212,7 @@ def daemon(options, cfg):
 class IsoGenConfig(ConfigFile):
     supportedArch   = CfgList(CfgString)
     serverUrl       = None
+    SSL             = CfgBool(False)
     logPath         = '/srv/mint/logs'
     imagesPath      = '/srv/mint/images/'
     finishedPath    = '/srv/mint/finished-images/'
