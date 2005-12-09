@@ -63,7 +63,7 @@ from mint.mint import upstream
                 <ul id="downloads">
                     <li py:for="i, file in enumerate(files)">
                         <a href="${cfg.basePath}downloadImage/${file['fileId']}/${file['filename']}">
-                            Download ${file['title'] and file['title'] or "Disc " + str(i+1)} </a> (${file['size']/1048576}M)
+                            Download ${file['title'] and file['title'] or "Disc " + str(i+1)}</a> (${file['size']/1048576}M)
                     </li>
                     <li py:if="not files">Release has no files.</li>
                 </ul>
