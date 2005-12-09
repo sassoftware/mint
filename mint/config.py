@@ -26,6 +26,8 @@ class MintConfig(ConfigFile):
     supportContactTXT       = 'Contact information in text.'
     staticPath              = '/conary-static/'
     authRepoMap             = CfgDict(CfgString)
+    authUser                = None
+    authPass                = None
     authDbPath              = '/srv/authrepo/repos/sqldb'
     templatePath            = os.path.join(templatePath, 'web', 'templates')
     reposPath               = '/srv/mint/repos/'
@@ -66,18 +68,8 @@ class MintConfig(ConfigFile):
     def read(self, path, exception = False):
         ConfigFile.read(self, path, exception)
 
-        repoName, repoMap = self.authRepoMap.items()[0]
-        urlparts = urlsplit(repoMap)
-        auth, hostname = urlparts[1].split("@")
-        username, password = auth.split(":")
-
-        self.setValue('authUser', username)
-        self.setValue('authPass', password)
-
-        repoUrl = '%s://%s/' % (urlparts[0], hostname)
-        repoUrl += "".join(urlparts[2:])
+        self.setValue('authRepoUrl', self.authRepoMap.items()[0][1])
         
-        self.setValue('authRepoUrl', repoUrl)
         #Make sure MailListBaseURL has a slash on the end of it
         if self.MailListBaseURL[-1:] != '/':
             self.setValue('MailListBaseURL', self.MailListBaseURL + '/')
