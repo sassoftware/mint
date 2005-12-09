@@ -208,8 +208,7 @@ class ApacheServer(ChildRepository):
 	shutil.rmtree(self.serverRoot)
 
     def getMap(self, user = 'mintauth', password = 'mintpass'):
-        return {self.name: 'http://%s:%s@127.0.0.1:%d/conary/' %
-                                        (user, password, self.port) }
+        return {self.name: 'http://127.0.0.1:%d/conary/' % self.port }
 
     def reset(self):
         self.stop()
@@ -286,13 +285,18 @@ class ServerCache:
     def getServer(self, serverIdx=0):
         return self.servers[serverIdx]
 
-    def getMap(self, user = 'mintauth', password = 'mintpass'):
+    def getMap(self):
         servers = {}
         for server in self.servers:
             if server:
-                servers.update(server.getMap(user = user, password = password))
+                servers.update(server.getMap())
         return servers
-    
+
+    def getServerNames(self):
+        for server in self.servers:
+            if server:
+                yield (server.name)
+
 _servers = ServerCache()
 
 class RepositoryHelper(testsuite.TestCase):
@@ -317,7 +321,17 @@ class RepositoryHelper(testsuite.TestCase):
         self.cfg.excludeTroves = conarycfg.RegularExpressionList()
         self.cfg.pinTroves = conarycfg.RegularExpressionList()
         self.logFilter.clear()
-        
+
+    def getRepositoryClient(self, user = 'mintauth', password = 'mintpass'):
+        cfg = copy.copy(self.cfg)
+        cfg.repositoryMap = conarycfg.RepoMap()
+        cfg.user = conarycfg.UserInformation()
+        for name in self.servers.getServerNames():
+            cfg.user.addServerGlob(name, user, password)
+        cfg.repositoryMap.update(self.servers.getMap())
+        client = conaryclient.ConaryClient(cfg)
+        return client.getRepos()
+
     def getPort(self, serverIdx = 0):
         return self.servers.getServer(serverIdx).port
 
@@ -328,7 +342,9 @@ class RepositoryHelper(testsuite.TestCase):
         self.cfg.repositoryMap.update(self.servers.getMap())
 
 	count = 0
-        repos = conaryclient.ConaryClient(self.cfg).getRepos()
+        #repos = conaryclient.ConaryClient(self.cfg).getRepos()
+        # FIXME: this is a guess. previous line is original
+        repos = self.getRepositoryClient(self.cfg)
 
         name = "127.0.0.1"
         if serverIdx:
@@ -350,7 +366,7 @@ class RepositoryHelper(testsuite.TestCase):
             raise RuntimeError, "unable to open networked repository"
 
         return repos
-   
+
     def addfile(self, file):
         cvc.sourceCommand(self.cfg, [ "add", file ], {} )
 
