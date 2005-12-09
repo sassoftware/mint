@@ -17,11 +17,25 @@ from urlparse import urlsplit
 templatePath = os.path.dirname(sys.modules['mint'].__file__)
 
 class MintConfig(ConfigFile):
-    companyName             = 'rPath Inc.'
-    productName             = 'rBuilder at rpath.org'
-    defaultRedirect         = 'http://rpath.com'
-    corpSite                = 'http://www.rpath.com/corp/'
-    defaultBranch           = 'rpl:devel'
+    companyName             = (CfgString, 'rPath Inc.',
+        "Name of your organization's rBuilder website (Used in the registration and user settings pages)")
+        
+    productName             = (CfgString, 'rBuilder at rpath.org',
+        "Name by which you refer to the rBuilder service (Used heavily throughout rBuilder)")
+        
+    defaultRedirect         = (CfgString, 'http://rpath.com',
+        "The site to which users are redirected when visiting an invalid site "\
+        "(Used when a user tries to visit a project page that does not exist, or a "\
+        "repository he does not have permissions to view)")
+        
+    corpSite                = (CfgString, 'http://www.rpath.com/corp/',
+        "A link to your corporate web site.")
+        
+    defaultBranch           = (CfgString, 'rpl:devel',
+        "<p>The Conary branch that all rBuilder projects will use by default:</p>"\
+        "<p>(Used as the default branch label when projects are created and in Conary "\
+        "configuration help text)</p>")
+
     supportContactHTML      = 'Contact information in HTML.'
     supportContactTXT       = 'Contact information in text.'
     staticPath              = '/conary-static/'
@@ -36,12 +50,17 @@ class MintConfig(ConfigFile):
     dbDriver                = 'sqlite'
     imagesPath              = '/srv/mint/images/'
     logPath                 = '/srv/mint/logs/'
-    siteDomainName          = 'rpath.com'
+    siteDomainName          = (CfgString, 'rpath.com',
+        "Domain of the rBuilder site. Eg., <tt>example.com</tt>")
     projectDomainName       = None
     externalDomainName      = None
     secureHost              = None
-    hostName                = None # optional domain name for main site
-    SSL                     = (CfgBool, False)
+    hostName                = (CfgString, None,
+        "Hostname to access the rBuilder site. Eg., <tt>rbuilder</tt>. "\
+        "The complete URL to access rBuilder is built up of "\
+        "host name and site domain name. Eg., <tt>rbuilder.example.com</tt>")
+    
+    SSL                     = (CfgBool, False, "SSL required for login and write access to rBuilder projects.")
     adminMail               = 'mint@rpath.org'
     newsRssFeed             = ''
     commitAction            = None
