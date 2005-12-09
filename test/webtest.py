@@ -251,5 +251,46 @@ class MintTest(mint_rephelp.WebRepositoryHelper):
     def testNonExistProject(self):
         self.assertCode('/project/doesnotexist', code = 404)
 
+    def testUnconfirmedAccess(self):
+        # make a project for later then forget this user
+        client, userId = self.quickMintUser('foouser','foopass')
+
+        projectId = self.newProject(client, 'Foo', 'foo')
+        cu = self.db.cursor()
+        cu.execute("INSERT INTO Confirmations VALUES (?, ?, ?)", userId, 0, 40 * "0")
+        page = self.webLogin('foouser', 'foopass')
+        if "Email Confirmation Required" not in page.body:
+            self.fail('Unconfirmed user broke out of confirm email jail'
+                      ' on front page.')
+        page = self.fetch('/project/foo/', ok_codes = [200])
+        if "Email Confirmation Required" not in page.body:
+            self.fail('Unconfirmed user broke out of confirm email jail'
+                      ' on project home page.')
+        page = self.fetch('/projects', ok_codes = [200])
+        
+        if "Email Confirmation Required" not in page.body:
+            self.fail('Unconfirmed user broke out of confirm email jail'
+                      ' on projects page.')
+
+        # this can't be tested until shim works
+        #page = self.fetch('/repos/stuff/browse', ok_codes = [200])
+        #if "Email Confirmation Required" not in page.body:
+        #    self.fail('Unconfirmed user broke out of confirm email jail'
+        #              ' on repository page.')
+
+        page = self.fetch('/editUserSettings', postdata = \
+                          {'email'    : ''})
+        if "Email Confirmation Required" in page.body:
+            self.fail('Unconfirmed user was unable to change email address.')
+
+        page = self.fetch('/logout', ok_codes = [301])
+
+        if "Email Confirmation Required" in page.body:
+            self.fail('Unconfirmed user was unable to log out.')
+
+        page = self.fetch('/confirm?id=%s' % (40*"0"), ok_codes = [200])
+        if "Your account has now been confirmed." not in page.body:
+            self.fail('Unconfirmed user was unable to confirm.')
+
 if __name__ == "__main__":
     testsuite.main()

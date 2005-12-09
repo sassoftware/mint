@@ -51,8 +51,6 @@ class SiteHandler(WebHandler):
         except AttributeError:
             raise HttpNotFound
 
-        if self.auth.stagnant and cmd not in ['editUserSettings','confirm','logout']:
-            return self.confirmEmail
         if not callable(method):
             raise HttpNotFound
 

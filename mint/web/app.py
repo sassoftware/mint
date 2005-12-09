@@ -209,6 +209,10 @@ class MintApp(WebHandler):
             'output':           self.output,
         }
 
+        if self.auth.stagnant and ''.join(pathInfo.split('/')) not in ['editUserSettings','confirm','logout']:
+            context['cmd'] = 'confirmEmail'
+            return self.siteHandler.handle(context)
+
         # match the requested url to the right url handler
         for match, urlHandler in urls:
             if re.match(match, pathInfo):
