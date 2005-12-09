@@ -37,6 +37,7 @@ from conary.repository import shimclient
 from conary.repository.netrepos import netserver
 from conary.deps import deps
 from conary import conarycfg
+from conary import conaryclient
 
 import reports
 from reports import MintReport
