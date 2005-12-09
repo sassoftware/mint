@@ -28,22 +28,23 @@ class MintReport(object):
         self.db = db
         self.available = _reportlab_present
 
-    def getData(self):
+    def getData(self, *args, **kwargs):
         raise NotImplementedError
 
-    def getReport(self):
+    def getReport(self, *args, **kwargs):
         if not self.available:
             raise NotImplementedError
         res = {}
         res['title'] = self.title
         res['headers'] = self.headers
-        res['data'] = self.getData()
+        res['data'] = self.getData(*args, **kwargs)
+        res['time'] = time.time()
         return res
 
-    def getPdf(self):
+    def getPdf(self, *args, **kwargs):
         if not self.available:
             raise NotImplementedError
-        data = [self.headers] + self.getData()
+        data = [self.headers] + self.getData(*args, **kwargs)
 
         t = Table(data, repeatRows = True)
         headerStyle = [('BACKGROUND', (0, 0), (3, 0), colors.lightsteelblue)]
@@ -54,7 +55,7 @@ class MintReport(object):
         lst = []
 
         lst.append(Paragraph("""rBuilder Online Activity Report""", styleSheet['Heading1']))
-        lst.append(Paragraph(self.title, styleSheet['Heading2']))
+        lst.append(Paragraph(self.title + " as of " + time.ctime(time.time()), styleSheet['Heading2']))
         lst.append(Spacer(18,18))
         lst.append(t)
 

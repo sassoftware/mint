@@ -6,6 +6,7 @@
 import testsuite
 testsuite.setup()
 
+import time
 from mint_rephelp import MintRepositoryHelper
 from mint.mint_server import PermissionDenied
 
@@ -22,6 +23,10 @@ class ReportTest(MintRepositoryHelper):
         reportPdf = client.server.getReportPdf('new_users')
         if not reportPdf.startswith('%PDF-'):
             self.fail('resulting data format was not a PDF.')
+        time.sleep(1)
+        newReportPdf = client.server.getReportPdf('new_users')
+        if reportPdf == newReportPdf:
+            self.fail("Reports were not timestamped")
 
     def testNewUsersReport(self):
         client, userId = self.quickMintAdmin('adminuser', 'adminpass')
