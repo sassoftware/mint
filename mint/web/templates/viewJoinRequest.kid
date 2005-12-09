@@ -33,7 +33,7 @@ from mint import userlevels
         </td>
         <td id="main">
 	<div class="pad">
-            <h3>${username} requests to join: ${project.getName()}</h3>
+            <h3><a href="http://$SITE/userInfo?id=${userId}">${username}</a> requests to join: ${project.getName()}</h3>
             <form method="post" action="acceptJoinRequest">
             <table>
                 <tr><th>Comments:</th></tr>
