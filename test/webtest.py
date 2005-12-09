@@ -68,6 +68,24 @@ class MintTest(mint_rephelp.WebRepositoryHelper):
 
         project = client.getProject(projectId)
         assert(project.name == 'Bar')
+        assert(project.getLabel() == 'foo.rpath.local@foo:bar')
+
+    def testEditProjectBranch(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        projectId = client.newProject('Foo', 'foo', 'rpath.local')
+        page = self.webLogin('foouser', 'foopass')
+
+        # edit the project label to something not related to project fqdn
+        cu = self.db.cursor()
+        cu.execute("UPDATE Labels SET label='bar.rpath.com@rpl:devel' WHERE projectId=?", projectId)
+
+        page = page.fetch('/project/foo/processEditProject', postdata =
+                          {'name'   : 'foo',
+                           'branch' : 'foo:bar'},
+                           ok_codes = [301])
+
+        project = client.getProject(projectId)
+        assert(project.getLabel() == 'bar.rpath.com@foo:bar')
 
     def testBrowseProjects(self):
         client, userId = self.quickMintUser('foouser','foopass')

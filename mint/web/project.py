@@ -515,7 +515,8 @@ class ProjectHandler(WebHandler):
         if not name:
             errors.append("You must supply a project title")
         try:
-            label = self.project.getFQDN() + '@' + branch
+            host = versions.Label(self.project.getLabel()).getHost()
+            label = host + '@' + branch
             versions.Label(label)
         except versions.ParseError:
             errors.append("Invalid branch name.")
