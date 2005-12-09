@@ -473,69 +473,71 @@ def _getDescriptions(client, cs, name, version, flavor):
     sources = dict(sources)
     return sources, metadataToName, metadata
 
-oldTrove = trove.Trove
-class Trove(oldTrove):
-    def __init__(self, *args, **kw):
-        oldTrove.__init__(self, *args, **kw)
-
-    def applyChangeSet(self, *args, **kw):
-        # apply a troveCs to this Trove, but always skip integrity checks
-        kw['skipIntegrityChecks'] = True
-        rc = oldTrove.applyChangeSet(self, *args, **kw)
-        # then remove the signatures
-        self.troveInfo.sigs.reset()
-        return rc
-trove.Trove = Trove
-
 def writeSqldb(cs, path, cfgFile = None):
-    tmpdir = tempfile.mkdtemp()
+    oldTrove = trove.Trove
+    class Trove(oldTrove):
+        def __init__(self, *args, **kw):
+            oldTrove.__init__(self, *args, **kw)
 
-    if len(cs.primaryTroveList) != 1:
-        raise RuntimeError, 'more than one top-level group is not supported'
-    name, version, flavor = cs.primaryTroveList[0]
-    # grab the server name from the version of the changeset
-    for v in reversed(version.versions):
-        if isinstance(v, versions.Label):
-            serverName = v.getHost()
-    assert(serverName is not None)
-    # set up a local repository where we can commit the changeset
-    localRepos = LocalRepository(serverName, tmpdir)
-    localRepos.commitChangeSet(cs)
+        def applyChangeSet(self, *args, **kw):
+            # apply a troveCs to this Trove, but always skip integrity checks
+            kw['skipIntegrityChecks'] = True
+            rc = oldTrove.applyChangeSet(self, *args, **kw)
+            # then remove the signatures
+            self.troveInfo.sigs.reset()
+            return rc
+    trove.Trove = Trove
+    try:
+        tmpdir = tempfile.mkdtemp()
 
-    # FIXME: the description code isn't working properly.  skip it for now
-    # to re-enable, delete
-    # ---8<--- from HERE 
-    shutil.copyfile(tmpdir + '/sqldb', path)
-    shutil.rmtree(tmpdir)
+        if len(cs.primaryTroveList) != 1:
+            raise RuntimeError, 'more than one top-level group is not supported'
+        name, version, flavor = cs.primaryTroveList[0]
+        # grab the server name from the version of the changeset
+        for v in reversed(version.versions):
+            if isinstance(v, versions.Label):
+                serverName = v.getHost()
+        assert(serverName is not None)
+        # set up a local repository where we can commit the changeset
+        localRepos = LocalRepository(serverName, tmpdir)
+        localRepos.commitChangeSet(cs)
 
-    return
-    # ---8<--- to HERE
+        # FIXME: the description code isn't working properly.  skip it for now
+        # to re-enable, delete
+        # ---8<--- from HERE 
+        shutil.copyfile(tmpdir + '/sqldb', path)
+        shutil.rmtree(tmpdir)
 
-    # set up a conaryclient to get descriptions
-    cfg = conarycfg.ConaryConfiguration()
-    if cfgFile and os.path.exists(cfgFile):
-        cfg.read(cfgFile)
-    cfg.dbPath = ':memory:'
-    cfg.root = ':memory:'
-    cfg.initializeFlavors()
-    client = conaryclient.ConaryClient(cfg)
+        return
+        # ---8<--- to HERE
 
-    sources, metadataToName, metadata = _getDescriptions(client, cs, name, version, flavor)
+        # set up a conaryclient to get descriptions
+        cfg = conarycfg.ConaryConfiguration()
+        if cfgFile and os.path.exists(cfgFile):
+            cfg.read(cfgFile)
+        cfg.dbPath = ':memory:'
+        cfg.root = ':memory:'
+        cfg.initializeFlavors()
+        client = conaryclient.ConaryClient(cfg)
 
-    # set up a local net client to commit the descriptions
-    repos = LocalNetClient(tmpdir)
-    client.repos = repos
+        sources, metadataToName, metadata = _getDescriptions(client, cs, name, version, flavor)
 
-    for srcname, data in metadata.iteritems():
-        branch = sources[srcname]
-        name = metadataToName[(srcname, branch)]
-        repos.updateMetadata(name, branch,
-                             data.shortDesc, '', [], [], [],
-                             data.source, data.language)
+        # set up a local net client to commit the descriptions
+        repos = LocalNetClient(tmpdir)
+        client.repos = repos
 
-    # copy the file to the final location
-    shutil.copyfile(tmpdir + '/sqldb', path)
-    shutil.rmtree(tmpdir)
+        for srcname, data in metadata.iteritems():
+            branch = sources[srcname]
+            name = metadataToName[(srcname, branch)]
+            repos.updateMetadata(name, branch,
+                                 data.shortDesc, '', [], [], [],
+                                 data.source, data.language)
+
+        # copy the file to the final location
+        shutil.copyfile(tmpdir + '/sqldb', path)
+        shutil.rmtree(tmpdir)
+    finally:
+        trove.Trove = oldTrove
 
 def usage():
     print "usage: %s group /path/to/changesets/ [sqldb]" %sys.argv[0]
