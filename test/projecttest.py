@@ -338,7 +338,7 @@ class ProjectTest(MintRepositoryHelper):
 
     def testExternalProject(self):
         client, userId = self.quickMintUser("testuser", "testpass")
-        projectId = adminClient.newProject("External Project", "external", "localhost")
+        projectId = client.newProject("External Project", "external", "localhost")
         
         cu = self.db.cursor()
         cu.execute("UPDATE Projects SET external=1 WHERE projectId=?", projectId)
