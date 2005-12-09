@@ -12,7 +12,7 @@
       <form action="pgpChangeOwner" method="post">
         <input type="hidden" name="key" value="${fingerprint}"/>
         <select name="owner">
-            <option py:for="userId, userName in users.items()" value="${userName}"
+            <option py:for="userId, userName in [x for x in users.items() if x[1] != 'anonymous' and x[1] != 'mintauth']" value="${userName}"
                     py:attrs="{'selected': (userId==userid) and 'selected' or None}"
                     py:content="userName" />
         </select>
