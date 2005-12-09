@@ -9,7 +9,8 @@ kid_files =			\
 	notify.kid		\
 	project.kid		\
 	report.kid		\
-	user.kid
+	user.kid                \
+        newUser.kid
 
 python_files =
 

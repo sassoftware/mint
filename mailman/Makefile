@@ -8,7 +8,9 @@ SUBDIRS =
 
 python_files =			\
 	fixowners.py		\
-	fixownersconfig.py
+	fixownersconfig.py      \
+        mm_cfg.py               \
+        mmsettingspolicy.py
 
 cron_files = fixowners
 
