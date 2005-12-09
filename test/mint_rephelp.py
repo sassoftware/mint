@@ -76,7 +76,8 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
 
         self.cfg.buildLabel = versions.Label("%s.%s@rpl:devel" % (hostname, domainname))
         self.cfg.repositoryMap = {"%s.%s" % (hostname, domainname):
-            "http://%s:%d/repos/%s/" % (domainname, self.getPort(), hostname)}
+            "http://%s.%s:%d/repos/%s/" % (hostname, domainname, self.getPort(), hostname)}
+        self.cfg.user.addServerGlob("%s.%s:%d" % (hostname, domainname, self.getPort()), "testuser", "testpass")
 
         return projectId
         

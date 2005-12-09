@@ -209,7 +209,7 @@ class ApacheServer(ChildRepository):
 	self.stop()
 	shutil.rmtree(self.serverRoot)
 
-    def getMap(self, user = 'mintauth', password = 'mintpass'):
+    def getMap(self):
         return {self.name: 'http://127.0.0.1:%d/conary/' % self.port }
 
     def reset(self):
