@@ -34,8 +34,6 @@ from mint import config
 from mint import mint_server
 from mint import users
 from webhandler import normPath, HttpError
-
-import setup
 import app
 import cookie_http
 
@@ -339,17 +337,11 @@ def mintHandler(req, cfg, pathInfo):
     webfe = app.MintApp(req, cfg)
     return webfe._handle(pathInfo)
 
-def setupHandler(req, cfg, pathInfo):
-    webfe = setup.SetupHandler(req, cfg)
-    return webfe._handle(pathInfo)
-
-
 urls = (
     (r'^/conary/',           conaryHandler),
     (r'^/xmlrpc/',           xmlrpcHandler),
     (r'^/xmlrpc-private/',   xmlrpcHandler),
     (r'^/repos/',            conaryHandler),
-    (r'^/setup/',            setupHandler),
     (r'^/',                  mintHandler),
 )
 
