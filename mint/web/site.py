@@ -26,7 +26,7 @@ from mint import projectlisting
 from mint import database
 from mint.session import SqlSession
 
-from webhandler import WebHandler, normPath, HttpNotFound, HttpPartialContent
+from webhandler import WebHandler, normPath, HttpNotFound, HttpPartialContent, HttpOK
 from decorators import requiresAdmin, requiresAuth, requiresHttps, redirectHttps, redirectHttp
 from decorators import mailList
 from cache import cache
@@ -468,6 +468,7 @@ class SiteHandler(WebHandler):
             #        raise HttpPartialContent
                     
             self.req.sendfile(filename)
+            raise HttpOK
         except OSError, e:
             return self._write("error", shortError = "File error",
                 error = "An error has occurred opening the image file: %s" % e)

@@ -170,7 +170,7 @@ class MintApp(WebHandler):
         # mapping of url regexps to handlers
         urls = (
             (r'^/project/',     self.projectHandler),
-            (r'^/administer',   self.adminHandler),
+            (r'^/administer/',  self.adminHandler),
             (r'^/repos/',       self.conaryHandler),
             (r'^/unknownError', self.errorHandler),
             (r'^/',             self.siteHandler),
@@ -219,7 +219,6 @@ class MintApp(WebHandler):
                 urlHandler.content_type=self.content_type
                 urlHandler.output = self.output
                 context['cmd'] = pathInfo[len(match)-1:]
-                
                 ret = urlHandler.handle(context)
                 return ret
 
