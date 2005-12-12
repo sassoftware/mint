@@ -77,7 +77,7 @@ class MintTest(mint_rephelp.WebRepositoryHelper):
 
         # edit the project label to something not related to project fqdn
         cu = self.db.cursor()
-        cu.execute("UPDATE Labels SET label='bar.rpath.com@rpl:devel' WHERE projectId=?", projectId)
+        cu.execute("UPDATE Labels SET label=? WHERE projectId=?", "bar.rpath.com@rpl:devel", projectId)
 
         page = page.fetch('/project/foo/processEditProject', postdata =
                           {'name'   : 'foo',
