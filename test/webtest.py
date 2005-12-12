@@ -292,5 +292,38 @@ class MintTest(mint_rephelp.WebRepositoryHelper):
         if "Your account has now been confirmed." not in page.body:
             self.fail('Unconfirmed user was unable to confirm.')
 
+    def testSessionStability(self):
+        newSid = '1234567890ABCDEF1234567890ABCDEF'
+        client, userId = self.quickMintUser('foouser','foopass')
+        # session not in table and not cached
+        page = self.webLogin('foouser', 'foopass')
+
+        # session in table and cached
+        page = self.fetch('/', ok_codes = [200])
+
+        self.failIf('Login' in page.body,
+                    'Cached session appears to be logged out')
+
+        # now move the session--effectively kill it, but we'll need it again
+        cu = self.db.cursor()
+        cu.execute("UPDATE Sessions SET sessIdx=sessIdx + 1, sid=?",
+                   newSid)
+
+        #session not in table but is cached
+        page = self.fetch('/projects?sortOrder=9', ok_codes = [200])
+
+        # session not in table and not in cache
+        self.failIf('Login' not in page.body,
+                    'Unchached session not logged out')
+
+        # HACK alter cookie to match what we moved session to earlier
+        self.cookies['.rpath.local']['/']['pysid'].coded_value = newSid
+        # session in db but not in cache
+        cookie = 'pysid'
+        self.registerExpectedCookie(cookie)
+        page = self.fetch('/', ok_codes = [200])
+        self.failIf('Login' in page.body,
+                    'Uncached session appears to be logged out')
+
 if __name__ == "__main__":
     testsuite.main()

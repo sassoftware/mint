@@ -116,7 +116,6 @@ class JoinRequestTest(MintRepositoryHelper):
             #if (len(req) != 2)  or (type(req[1]) != str):
             if (len(req) != 2) or (req[0] not in range(2,7)) or (type(req[1]) != str):
                 self.fail("join Request returned improper format")
-            
 
 if __name__ == "__main__":
     testsuite.main()
