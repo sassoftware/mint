@@ -77,7 +77,8 @@ class MintTest(mint_rephelp.WebRepositoryHelper):
 
         # edit the project label to something not related to project fqdn
         cu = self.db.cursor()
-        cu.execute("UPDATE Labels SET label=? WHERE projectId=?", "bar.rpath.com@rpl:devel", projectId)
+        cu.execute("UPDATE Labels SET label=? WHERE projectId=?",
+                   'bar.rpath.com@rpl:devel', projectId)
 
         page = page.fetch('/project/foo/processEditProject', postdata =
                           {'name'   : 'foo',
@@ -136,7 +137,6 @@ class MintTest(mint_rephelp.WebRepositoryHelper):
     # FIXME: test can't be run until mint shims pages in the /repos stack.
     def testPgpAdminPage(self):
         raise testsuite.SkipTestException
-        raise SkipTestException
         client, userId = self.quickMintUser('foouser','foopass')
         projectId = client.newProject('Foo', 'foo', 'rpath.local')
 
