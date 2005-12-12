@@ -178,7 +178,7 @@ class InstallableIso(ImageGenerator):
             if os.path.exists(tmpPath + '/pixmaps/splash.lss'):
                 print >> sys.stderr, "found splash.lss; moving to isolinux directory"
                 splashTarget = os.path.join(self.topdir, 'isolinux')
-                call('cp', '-v', tmpPath + '/pixmaps/splash.lss', splashTarget)
+                call('cp', '--remove-destination', '-v', tmpPath + '/pixmaps/splash.lss', splashTarget)
                 # FIXME: regenerate boot.iso here
 
         # write the conaryrc file
