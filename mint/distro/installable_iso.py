@@ -334,6 +334,7 @@ class InstallableIso(ImageGenerator):
 
         # write .discinfo
         discInfoPath = os.path.join(topdir, ".discinfo")
+        os.unlink(discInfoPath)
         discInfoFile = open(discInfoPath, "w")
         print >> discInfoFile, time.time()
         print >> discInfoFile, project.getName()
