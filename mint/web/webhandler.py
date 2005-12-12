@@ -169,7 +169,7 @@ class WebHandler(object):
         if nexthop:
             #Save the session
             self.session.save()
-            self._redirect("%s://%s.%s%sblank?sid=%s" % (self._protocol(), self.cfg.hostName, nexthop, self.cfg.basePath, self.session.id()))
+            self._redirect("http://%s.%s%sblank?sid=%s" % (self.cfg.hostName, nexthop, self.cfg.basePath, self.session.id()))
         else:
             if sid:
                 #Clear the sid from the request by redirecting to the first page.
