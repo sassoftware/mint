@@ -85,6 +85,9 @@ def post(port, isSecure, repos, cfg, req):
         protocol = "http"
 
     if req.headers_in['Content-Type'] == "text/xml":
+        if not repos:
+            return apache.HTTP_NOT_FOUND
+
         encoding = req.headers_in.get('Content-Encoding', None)
         data = req.read()
         if encoding == 'deflate':

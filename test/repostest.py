@@ -10,7 +10,9 @@ testsuite.setup()
 from mint_rephelp import MintRepositoryHelper
 import recipes
 
+from conary.conarycfg import ConaryConfiguration
 from conary.conaryclient import ConaryClient
+from conary import repository
 from conary import versions
 
 testRecipe = """
@@ -69,6 +71,22 @@ class RepositoryTest(MintRepositoryHelper):
                 self.fail("commits didn't show up")
                 
         assert(project.getCommits() == [('testcase:source', '1.0-1')])
+
+    def testHooksResponse(self):
+        cfg = ConaryConfiguration()
+        cfg.installLabelPath = ['notfound.rpath.local@rpl:devel']
+        cfg.repositoryMap = {'notfound.rpath.local': 'http://test.rpath.local:%d/repos/notfound/' % self.getPort()}
+
+        repos = ConaryClient(cfg).getRepos()
+
+        try:
+            repos.troveNames('notfound.rpath.local')
+        except repository.errors.OpenError, e:
+            assert "404 Not Found" in str(e), "accessing a non-existent repository did not return a 404 Not Found error"
+            pass
+        else:
+            self.fail("accessing a non-existent repository did not return an error")
+
 
     def testCook(self):
         client, userId = self.quickMintUser("testuser", "testpass")
