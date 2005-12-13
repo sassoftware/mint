@@ -6,10 +6,17 @@
 import testsuite
 testsuite.setup()
 
+import kid
 import os
+from mint import templates
 
 from mint_rephelp import MintRepositoryHelper
 from mint.userlevels import myProjectCompare
+
+testTemplate = \
+"""<?xml version='1.0' encoding='UTF-8'?>
+<plain>This is a plain text ${myString}.</plain>
+"""
 
 class ProjectTest(MintRepositoryHelper):
     def testMyProjectCompare(self):
@@ -64,6 +71,14 @@ class ProjectTest(MintRepositoryHelper):
                     self.fail("%s is missing a Makefile" % dirPath)
             else:
                 self.compareMakefile(dirPath)
+
+    def testPlainKidTemplate(self):
+        t = kid.Template(testTemplate)
+        t.myString = "string"
+        
+        render = templates.write(t)
+        assert render == "This is a plain text string."
+
 
 if __name__ == "__main__":
     testsuite.main()
