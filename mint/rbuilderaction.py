@@ -99,7 +99,7 @@ def process(repos, cfg, commitList, srcMap, pkgMap, grpMap, argv, otherArgs):
                 if overrideHostname:
                     hostname = overrideHostname
                 else:
-                    hostname = v.branch().label().getHost()
+                    hostname = v.getHost()
 
                 rBuilderServer = ServerProxy(url)
 
