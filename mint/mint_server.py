@@ -487,6 +487,8 @@ class MintServer(object):
             owners = self.projectUsers.getOwnersByProjectName(projectName)
             for name, email in owners:
                 subject = "Project Membership Request"
+
+                import templates.joinRequest
                 message = templates.write(templates.joinRequest,
                     projectName = self.getProject(projectId)['name'],
                     comments = comments, cfg = self.cfg)

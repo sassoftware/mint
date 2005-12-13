@@ -183,6 +183,7 @@ class UsersTable(database.KeyedTable):
         user = self.get(userId)
         confirm = confirmString()
         
+        import templates.validateNewEmail
         message = templates.write(templates.validateNewEmail, username = user['username'],
             cfg = self.cfg, confirm = confirm)
 
@@ -219,6 +220,7 @@ class UsersTable(database.KeyedTable):
             raise GroupAlreadyExists
 
         if self.cfg.sendNotificationEmails and not active:
+            import templates.registerNewUser
             message = templates.write(templates.registerNewUser,
                 username = username, cfg = self.cfg, confirm = confirm)
             try:
