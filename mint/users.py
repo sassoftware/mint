@@ -3,18 +3,18 @@
 #
 # All Rights Reserved
 #
-import random
-import string
-import md5
-import re
-import sys
-import time
-import dns.resolver
 
+import dns.resolver
 import email
-from email import MIMEText
+import md5
+import os
+import random
+import re
 import smtplib
 import socket
+import string
+import sys
+import time
 
 from conary import repository
 from conary.lib import sha1helper
@@ -26,6 +26,7 @@ import database
 import userlevels
 import searcher
 import userlisting
+import templates
 from conary import sqlite3
 
 class MailError(MintError):
@@ -180,19 +181,11 @@ class UsersTable(database.KeyedTable):
 
     def validateNewEmail(self, userId, email):
         user = self.get(userId)
-
         confirm = confirmString()
+        
+        message = templates.write(templates.validateNewEmail, username = user['username'],
+            cfg = self.cfg, confirm = confirm)
 
-        message = "\n".join(["Your account %s on %s must have its new email address confirmed." % (user['username'], self.cfg.productName),
-                             "",
-                             "Please follow the link below to confirm your new address",
-                             "",
-                             "http://%s%sconfirm?id=%s" % (self.cfg.siteHost, self.cfg.basePath, confirm),
-                             "",
-                             "Note that your account cannot be used until your email address has been confirmed.",
-                             "",
-                             "Contact %s"%self.cfg.supportContactTXT,
-                             "if you need assistance."])
         sendMailWithChecks(self.cfg.adminMail, self.cfg.productName, email,
                 "Your %s account's email address must be confirmed" % self.cfg.productName, message)
         self.invalidateUser(userId, confirm)
@@ -226,16 +219,8 @@ class UsersTable(database.KeyedTable):
             raise GroupAlreadyExists
 
         if self.cfg.sendNotificationEmails and not active:
-            message = "\n".join(["Thank you for your interest in %s!" % self.cfg.productName,
-                                 "",
-                                 "Your account (%s) has been created." % username,
-                                 "",
-                                 "However, before you can use it, you must confirm your email address using this link:",
-                                 "",
-                                 "http://%s%sconfirm?id=%s" % (self.cfg.siteHost, self.cfg.basePath, confirm),
-                                 "",
-                                 "Contact %s"%self.cfg.supportContactTXT,
-                                 "if you need assistance."])
+            message = templates.write(templates.registerNewUser,
+                username = username, cfg = self.cfg, confirm = confirm)
             try:
                 sendMailWithChecks(self.cfg.adminMail, self.cfg.productName, email, "Welcome to %s!" % self.cfg.productName, message)
             except:
@@ -469,7 +454,6 @@ class ProjectUsersTable(database.DatabaseTable):
             raise database.DuplicateItem("membership")
         
         cu.execute("INSERT INTO ProjectUsers VALUES(?, ?, ?)", projectId, userId, level)
-        return 0
 
     def onlyOwner(self, projectId, userId):
         cu = self.db.cursor()
@@ -494,7 +478,6 @@ class ProjectUsersTable(database.DatabaseTable):
             raise LastOwner()
         cu = self.db.cursor()
         cu.execute("DELETE FROM ProjectUsers WHERE projectId=? AND userId=?", projectId, userId)
-        return 0
 
 
 class Authorization(object):
@@ -508,7 +491,7 @@ class Authorization(object):
     @type username: str
     @cvar email: email address of the user
     @type email: str
-    @cvar displayEmail: possibly obfuscated email address of the user
+    @cvar displayEmail: email address of user provided for public display
     @type displayEmail: str
     @cvar fullName: full name of the user
     @type fullName: str
@@ -542,12 +525,14 @@ class Authorization(object):
             d[slot] = self.__getattribute__(slot)
         return d
 
+
 def confirmString():
     """
     Generate a confirmation string
     """
     hash = sha1helper.sha1String(str(random.random()) + str(time.time()))
     return sha1helper.sha1ToString(hash)
+        
         
 def newPassword(length = 6):
     """
@@ -559,12 +544,14 @@ def newPassword(length = 6):
     pw = "".join([random.choice(choices) for x in range(length)])
     return pw
 
+
 def sendMailWithChecks(fromEmail, fromEmailName, toEmail, subject, body):
     validateEmailDomain(toEmail)
     try:
         sendMail(fromEmail, fromEmailName, toEmail, subject, body)
     except smtplib.SMTPRecipientsRefused:
         raise MailError("Email could not be sent: Recipient refused by server.")
+
 
 def validateEmailDomain(toEmail):
     toDomain = smtplib.quoteaddr(toEmail).split('@')[-1][0:-1]
@@ -577,6 +564,7 @@ def validateEmailDomain(toEmail):
             socket.gethostbyname(toDomain)
     except (socket.gaierror, dns.resolver.NXDOMAIN):
         raise MailError("Email could not be sent: Bad domain name.")
+
 
 def sendMail(fromEmail, fromEmailName, toEmail, subject, body):
     """
@@ -592,7 +580,7 @@ def sendMail(fromEmail, fromEmailName, toEmail, subject, body):
     @type body: str
     """
     
-    msg = MIMEText.MIMEText(body)
+    msg = email.MIMEText.MIMEText(body)
     msg['Subject'] = subject
     msg['From'] = '"%s" <%s>' % (fromEmailName, fromEmail)
     msg['To'] = toEmail
