@@ -4,29 +4,33 @@
 # All Rights Reserved
 #
 import hmac
-import re
-import sys
 import os
-import time
+import re
 import string
+import sys
+import time
 from urlparse import urlparse
 
+import data
 import database
+import dbversion
+import grouptrove
 import jobs
 import jobstatus
 import news
 import pkgindex
 import projects
-import requests
 import releases
+import reports
+import requests
 import sessiondb
-import users
-import userlevels
-import dbversion
 import stats
-import data
-import grouptrove
+import templates
+import userlevels
+import users
+
 from mint_error import PermissionDenied, ReleasePublished, ReleaseMissing, MintError
+from reports import MintReport
 from searcher import SearchTermsError
 
 from conary import sqlite3
@@ -39,8 +43,6 @@ from conary.deps import deps
 from conary import conarycfg
 from conary import conaryclient
 
-import reports
-from reports import MintReport
 
 validHost = re.compile('^[a-zA-Z][a-zA-Z0-9\-]*$')
 reservedHosts = ['admin', 'mail', 'mint', 'www', 'web', 'rpath', 'wiki', 'conary', 'lists']
@@ -154,7 +156,8 @@ def typeCheck(*paramTypes):
             for i in range(len(args)):
                 if (not checkParam(args[i],paramTypes[i])):
                     baseFunc = deriveBaseFunc(func)
-                    raise ParameterError('%s was passed %s of type %s when expecting %s for parameter number %d' %(baseFunc.__name__, repr(args[i]), str(type(args[i])), str(paramTypes[i]), i+1))
+                    raise ParameterError('%s was passed %s of type %s when expecting %s for parameter number %d' % \
+                        (baseFunc.__name__, repr(args[i]), str(type(args[i])), str(paramTypes[i]), i+1))
             return func(self, *args)
         trueFunc = deriveBaseFunc(func)
         trueFunc.__args_enforced__ = True
@@ -484,18 +487,9 @@ class MintServer(object):
             owners = self.projectUsers.getOwnersByProjectName(projectName)
             for name, email in owners:
                 subject = "Project Membership Request"
-                message = "A user of %s would like to join a project you own.\n\n" %self.cfg.productName
-                message += "Project: %s\n" %self.getProject(projectId)['name']
-                message += "Username: %s\n\n" %self.users.getUsername(userId)
-                if comments:
-                    message += "Comments:\n%s" %comments
-                else:
-                    message += "No comments were supplied"
-                message += "\n\nTo respond to this request:\n\n"
-                message += "  o Login to %s\n\n" % self.cfg.productName
-                message += "  o Click on the 'Requests Pending' link under the 'My Projects' sidebar\n"
-                message += "    (Note: This link will not be present if the user retracted their request or another project owner has already responded to it.)\n\n"
-                message += "  o You can find all outstanding requests under the 'Requestors' heading at the bottom of the page\n"
+                message = templates.write(templates.joinRequest,
+                    projectName = self.getProject(projectId)['name'],
+                    comments = comments, cfg = self.cfg)
                 users.sendMailWithChecks(self.cfg.adminMail, self.cfg.productName, email, subject, message)
         return self.membershipRequests.setComments(projectId, userId, comments)
 
@@ -808,7 +802,9 @@ class MintServer(object):
     @requiresAuth
     @private
     def cancelUserAccount(self, userId):
-        """ Checks to see if the the user to be deleted is leaving in a lurch developers of projects that would be left ownerless.  Then deletes the user.
+        """ Checks to see if the the user to be deleted is leaving in a
+            lurch developers of projects that would be left ownerless.
+            Then deletes the user.
         """
         if (self.auth.userId != userId) and (not self.auth.admin):
             raise PermissionDenied()
@@ -1813,7 +1809,7 @@ class MintServer(object):
 
         #An explicit transaction.  Make sure you don't have any implicit
         #commits until the database version has been asserted
-        self.db.transaction(None)
+        self.db.transaction()
         try:
             #The database version object has a dummy check so that it always passes.
             #At the end of all database object creation, fix the version
