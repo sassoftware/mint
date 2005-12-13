@@ -8,6 +8,9 @@ Changes in 1.1.4:
 * Some of the plain-text emails have been rewritten to use kid 0.8's new
   PlainSerializer. This is to avoid having lots of content embedded in the
   source code.
+* Attempts to access a non-existent repository using wildcard dns or
+  /repos/broken-repo-name/ now respond with an HTTP 404 error, instead of
+  a 500 Internal Server Error.
 
 Changes in 1.1.3:
 
