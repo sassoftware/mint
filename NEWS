@@ -1,3 +1,14 @@
+Changes in 1.1.4:
+
+* Many changes to remove usernames and passwords from repository maps.
+* Config file changes: authRepoMap no longer contains username/password:
+  move them to authUser and authPass.
+* iso_gen.conf now contains an SSL flag which must match the mint configuration.
+* A bug in the downloadImage handler has been fixed.
+* Some of the plain-text emails have been rewritten to use kid 0.8's new
+  PlainSerializer. This is to avoid having lots of content embedded in the
+  source code.
+
 Changes in 1.1.3:
 
 * 1.1.2 was never launched to the live site.
