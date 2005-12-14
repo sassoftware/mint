@@ -28,12 +28,13 @@ class VersionTable(database.KeyedTable):
         """
         return True
 
-    def fixVersion(self):
-        cu = self.db.cursor()
+    def bumpVersion(self):
         version = self.getDBVersion()
+
         if version != self.schemaVersion:
-            #Push the version so that we won't try updating in the future
-            cu.execute("INSERT into DatabaseVersion (version, timestamp) VALUES(?, ?)", self.schemaVersion, time.time())
+            cu = self.db.cursor()
+            cu.execute("""INSERT into DatabaseVersion (version, timestamp)
+                              VALUES(?, ?)""", version + 1, time.time())
             return self.getDBVersion() == self.schemaVersion
         else:
             return True

@@ -82,7 +82,7 @@ class DatabaseTable:
     those indeces
     """
 
-    schemaVersion = 8
+    schemaVersion = 10
     name = "Table"
     fields = []
     createSQL = "CREATE TABLE Table ();"
@@ -116,8 +116,7 @@ class DatabaseTable:
 
         #Don't commit here.  Commits must be handled up stream to enable
         #upgrading
-        if not self.versionCheck():
-            raise UpToDateException(self.name)
+        self.upToDate = self.versionCheck()
 
         # create missing indexes, but only after upgrading.  Missing indeces
         # may be created through the regular index routines instead of being
@@ -126,7 +125,7 @@ class DatabaseTable:
         # could be raised if a new index is created referencing a new column
         # created in the upgrade procedures.
        
-        if self.db.type != "native_sqlite":
+        if self.upToDate and self.db.type != "native_sqlite":
             self.db._getSchema()
             indexes = set(self.db.tables[self.name])
             missing = set(self.indexes.keys()) - indexes
@@ -137,13 +136,13 @@ class DatabaseTable:
     def getDBVersion(self):
         cu = self.db.cursor()
         
-        cu.execute("SELECT MAX(version) FROM DatabaseVersion")
+        cu.execute("SELECT IFNULL(MAX(version), 0) FROM DatabaseVersion")
         version = cu.fetchone()[0]
 
         if not version:
-            cu.execute("INSERT INTO DatabaseVersion(version, timestamp) VALUES(?,?)", self.schemaVersion, time.time())
+            cu.execute("""INSERT INTO DatabaseVersion(version, timestamp)
+                              VALUES(?,?)""", self.schemaVersion, time.time())
             version = self.schemaVersion
-            
         return version
 
     def versionCheck(self):
@@ -154,12 +153,9 @@ class DatabaseTable:
         dbversion = self.getDBVersion()
         if dbversion != self.schemaVersion:
             if dbversion == 0:
-                #Do version specific updating in this section
-                #See the projects.ProjectsTable.versionCheck() for an example
-                try:
-                    pass
-                except:
-                    return False
+                # Do version specific updating in this section
+                # do NOT mask exceptions.
+                return (dbversion + 1) == self.schemaVersion
         return True
 
 class KeyedTable(DatabaseTable):

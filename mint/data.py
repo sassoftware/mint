@@ -90,15 +90,11 @@ class JobDataTable(GenericDataTable):
             falling = False
             if dbversion == 7:
                 cu = self.db.cursor()
-                try:
-                    #Need to drop the JobData Table.  It's not compatible
-                    #with the new genericdatatable
-                    cu.execute('DROP TABLE JobData')
-                    cu.execute(self.createSQL)
-                except:
-                    return False
-                falling = True
-            # if dbversion == 8 or falling:
+                #Need to drop the JobData Table.  It's not compatible
+                #with the new genericdatatable
+                cu.execute('DROP TABLE JobData')
+                cu.execute(self.createSQL)
+                return (dbversion + 1) == self.schemaVersion
         return True
 
 class UserDataTable(GenericDataTable):

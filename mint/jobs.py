@@ -52,10 +52,8 @@ class JobsTable(database.KeyedTable):
         if dbversion != self.schemaVersion:
             if dbversion == 5:
                 cu = self.db.cursor()
-                try:
-                    cu.execute("ALTER TABLE Jobs ADD COLUMN groupTroveId INT")
-                except:
-                    return False
+                cu.execute("ALTER TABLE Jobs ADD COLUMN groupTroveId INT")
+                return (dbversion + 1) == self.schemaVersion
         return True
 
 
@@ -120,8 +118,6 @@ class ImageFilesTable(database.KeyedTable):
             if dbversion == 1:
                 sql = """ALTER TABLE ImageFiles ADD COLUMN title STR DEFAULT ''"""
                 cu = self.db.cursor()
-                try:
-                    cu.execute(sql)
-                except:
-                    return False
+                cu.execute(sql)
+                return (dbversion + 1) == self.schemaVersion
         return True

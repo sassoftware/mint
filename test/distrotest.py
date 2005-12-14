@@ -8,6 +8,9 @@ import testsuite
 testsuite.setup()
 import rephelp
 
+import os
+import sys
+
 from conary import conarycfg, conaryclient
 from conary.lib import util
 
@@ -34,14 +37,26 @@ class DistroTest(rephelp.RepositoryHelper):
         # gencslist currently talks to stderr, so captureOuput
         # here isn't very effective. we should consider logging
         # to stdout instead.
-        (cslist, groupcs), str = self.captureOutput(
+        # nasty hack: temporarily route stderr to devnull
+        oldFd = os.dup(sys.stderr.fileno())
+        fd = os.open(os.devnull, os.W_OK)
+        os.dup2(fd, sys.stderr.fileno())
+        os.close(fd)
+        try:
+            (cslist, groupcs), str = self.captureOutput(
                 gencslist.extractChangeSets,
                 client, cfg, csdir, n, v, f,
                 oldFiles = None, cacheDir = None)
+        finally:
+            #recover old fd
+            os.dup2(oldFd, sys.stderr.fileno())
+            os.close(oldFd)
         util.rmtree(csdir)
 
-        assert(cslist == ['test-1.0-1-1-none.ccs test /127.0.0.1@rpl:linux/1.0-1-1 none 1',
-                          'group-foo-1.0-1-1-none.ccs group-foo /127.0.0.1@rpl:linux/1.0-1-1 none 1'])
+        assert(\
+            cslist == \
+            ['test-1.0-1-1-none.ccs test /127.0.0.1@rpl:linux/1.0-1-1 none 1',
+             'group-foo-1.0-1-1-none.ccs group-foo /127.0.0.1@rpl:linux/1.0-1-1 none 1'])
 
 
 if __name__ == "__main__":

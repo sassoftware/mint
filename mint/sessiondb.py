@@ -34,17 +34,16 @@ class SessionsTable(DatabaseTable):
         if dbversion != self.schemaVersion:
             if dbversion == 6:
                 cu = self.db.cursor()
-                try:
-                    # dropping and re-making is by far the best choice.
-                    cu.execute("DROP TABLE Sessions")
-                    if self.db.type == "mysql":
-                        cu.execute(self.createSQL_mysql)
-                    if self.db.type == 'sqlite':
-                        cu.execute(self.createSQL)
-                    else:
-                        raise AssertionError("INVALID DATABASE TYPE: " + self.db.type)
-                except:
-                    return False
+                # dropping and re-making is by far the best choice.
+                cu.execute("DROP TABLE Sessions")
+                if self.db.type == "mysql":
+                    cu.execute(self.createSQL_mysql)
+                if self.db.type == 'sqlite':
+                    cu.execute(self.createSQL)
+                else:
+                    raise AssertionError("INVALID DATABASE TYPE: " + \
+                                         self.db.type)
+                return (dbversion + 1) == self.schemaVersion
         return True
 
     def getSessIndex(self, sid):

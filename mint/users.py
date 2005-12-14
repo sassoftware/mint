@@ -61,7 +61,7 @@ class UserInduction(MintError):
 
 class AuthRepoError(MintError):
     def __str__(self):
-        return "The authentication repository is not available."
+        return "Authentication Token could not be manipulated."
 
 class ConfirmationsTable(database.KeyedTable):
     name = 'Confirmations'
@@ -84,34 +84,93 @@ def digMX(hostname):
 class UsersTable(database.KeyedTable):
     name = 'Users'
     key = 'userId'
+
     createSQL = """
                 CREATE TABLE Users (
                     userId          INTEGER PRIMARY KEY,
                     username        STR UNIQUE,
                     fullName        STR,
+                    salt            BINARY(4),
+                    passwd          VARCHAR(255),
                     email           STR,
                     displayEmail    STR DEFAULT "",
                     timeCreated     INT,
                     timeAccessed    INT,
                     active          INT,
                     blurb           STR DEFAULT ""
-                )"""
+                    )"""
 
     fields = ['userId', 'username', 'fullName', 'email',
               'displayEmail', 'timeCreated', 'timeAccessed',
               'active', 'blurb']
 
-    indexes = {"UsersUsernameIdx": "CREATE INDEX UsersUsernameIdx ON Users(username)",
-               "UsersActiveIdx":   "CREATE INDEX UsersActiveIdx ON Users(username, active)"}
+    indexes = {"UsersUsernameIdx": """CREATE INDEX UsersUsernameIdx
+                                          ON Users(username)""",
+               "UsersActiveIdx":   """CREATE INDEX UsersActiveIdx
+                                          ON Users(username, active)"""}
 
     def __init__(self, db, cfg):
-        database.DatabaseTable.__init__(self, db)
         self.cfg = cfg
+        if 'authDbPath' in cfg:
+            self.authDb = sqlite3.connect(cfg.authDbPath)
+        database.DatabaseTable.__init__(self, db)
         self.confirm_table = ConfirmationsTable(db)
-        # even though the mint_server re-creates one every time, we need one
-        # here and we can't pass it to init sice each KeyedTable must be the
-        # same
-        self.authDb = sqlite3.connect(cfg.authDbPath)
+
+    def versionCheck(self):
+        dbversion = self.getDBVersion()
+        if dbversion != self.schemaVersion:
+            if dbversion == 8:
+                # add the necessary columns to the Users table
+                cu = self.db.cursor() 
+                aCu = self.authDb.cursor()
+                # add the mintauth and anonymous users
+                for userName in ('mintauth', 'anonymous'):
+                    cu.execute("""INSERT INTO Users (username, active)
+                                  VALUES('%s', 1)""" % userName)
+                if self.cfg.dbDriver == 'sqlite':
+                    cu.execute("ALTER TABLE Users ADD COLUMN salt BINARY")
+                    cu.execute("ALTER TABLE Users ADD COLUMN passwd STR")
+                else:
+                    cu.execute("""ALTER TABLE Users ADD COLUMN(
+                                      salt   BINARY(4),
+                                      passwd VARCHAR(255))""")
+                # now go get each user's salt and pass from the authRepo
+                aCu.execute('SELECT user, salt, password FROM Users')
+                for username, salt, passwd in aCu.fetchall():
+                    cu.execute("""UPDATE Users SET
+                                    salt=?, passwd=?
+                                    WHERE username=?""",
+                               salt, passwd, username)
+                return (dbversion + 1) == self.schemaVersion
+        return True
+
+    def changePassword(self, username, password):
+        salt, passwd = self._mungePassword(password)
+        cu = self.db.cursor()
+        cu.execute("UPDATE Users SET salt=?, passwd=? WHERE username=?",
+                   salt, passwd, username)
+
+    # XXX XXX XXX
+    # this function is not used in rBO yet. brought it in cause I thought we'd
+    # need it with the new acl's
+    def checkUserPass(self, authToken, label = None):
+        logMe(2, authToken[0], label)
+        if label and label.getHost() != self.name:
+            raise errors.RepositoryMismatch
+
+        cu = self.db.cursor()
+
+        stmt = "SELECT salt, passwd FROM Users WHERE username=?"
+        cu.execute(stmt, authToken[0])
+
+        salt, password = cu.fetchone()
+        m = md5.new()
+        m.update(salt)
+        m.update(authToken[1])
+        if m.hexdigest() == password:
+            return True
+
+        return False
 
     def _checkPassword(self, salt, password, challenge):
         m = md5.new()
@@ -120,19 +179,27 @@ class UsersTable(database.KeyedTable):
 
         return m.hexdigest() == password
 
+    def _mungePassword(self, password):
+        m = md5.new()
+        salt = ''.join([chr(random.randint(0,255)) for x in range(4)])
+        m.update(salt)
+        m.update(password)
+        return salt, m.hexdigest()
+
     def _getUserGroups(self, authToken):
         user, challenge = authToken
 
-        cu = self.authDb.cursor()
-        cu.execute("SELECT salt, password FROM Users WHERE user=?", user)
+        cu = self.db.cursor()
+        cu.execute("SELECT salt, passwd FROM Users WHERE username=?", user)
         r = cu.fetchone()
         if r  and self._checkPassword(r[0], r[1], challenge):
             cu.execute("""SELECT UserGroups.userGroup
                           FROM UserGroups, Users, UserGroupMembers 
-                          WHERE UserGroups.userGroupId = UserGroupMembers.userGroupId AND
+                          WHERE UserGroups.userGroupId =
+                                  UserGroupMembers.userGroupId AND
                                 UserGroupMembers.userId = Users.userId AND
-                                Users.user = ?""", user)
-            return [row[0] for row in cu]
+                                Users.username = ?""", user)
+            return [row[0] for row in cu.fetchall()]
         else:
             return []
 
@@ -143,7 +210,8 @@ class UsersTable(database.KeyedTable):
         
         username, password = authToken
         cu = self.db.cursor()
-        cu.execute("""SELECT userId, email, displayEmail, fullName, blurb, timeAccessed FROM Users 
+        cu.execute("""SELECT userId, email, displayEmail, fullName, blurb,
+                        timeAccessed FROM Users 
                       WHERE username=? AND active=1""", username)
         r = cu.fetchone()
    
@@ -182,7 +250,7 @@ class UsersTable(database.KeyedTable):
     def validateNewEmail(self, userId, email):
         user = self.get(userId)
         confirm = confirmString()
-        
+
         import templates.validateNewEmail
         message = templates.write(templates.validateNewEmail, username = user['username'],
             cfg = self.cfg, confirm = confirm)
@@ -201,23 +269,31 @@ class UsersTable(database.KeyedTable):
         except database.DuplicateItem:
             self.confirm_table.update(userId, confirmation = confirm)
 
-    def registerNewUser(self, authRepo, username, password, fullName, email, displayEmail, blurb, active):
-        # XXX this should be an atomic operation if possible:
-        #     it would be nice to roll back previous operations
-        #     if one in the chain fails
+    def registerNewUser(self, username, password, fullName, email,
+                        displayEmail, blurb, active):
         if self.cfg.sendNotificationEmails and not active:
             validateEmailDomain(email)
 
         confirm = confirmString()
-        repoLabel = self.cfg.authRepoMap.keys()[0]
 
-        try: 
-            authRepo.addUser(repoLabel, username, password)
-            authRepo.addAcl(repoLabel, username, None, None, False, False, False)
-        except repository.errors.UserAlreadyExists:
-            raise UserAlreadyExists
-        except repository.errors.GroupAlreadyExists:
+        cu = self.db.cursor()
+        cu.execute("SELECT COUNT(*) FROM UserGroups WHERE UPPER(userGroup)=?",
+                   username.upper())
+        if cu.fetchone()[0]:
             raise GroupAlreadyExists
+        cu.execute("SELECT COUNT(*) FROM Users WHERE UPPER(username)=?",
+                   username.upper())
+        if cu.fetchone()[0]:
+            raise UserAlreadyExists
+        cu.execute("INSERT INTO UserGroups (userGroup) VALUES(?)",
+                   username)
+
+        cu.execute("SELECT userGroupId FROM UserGroups WHERE userGroup=?",
+                   username)
+
+        userGroupId = cu.fetchone()[0]
+
+        salt, passwd = self._mungePassword(password)
 
         if self.cfg.sendNotificationEmails and not active:
             import templates.registerNewUser
@@ -227,17 +303,23 @@ class UsersTable(database.KeyedTable):
                 sendMailWithChecks(self.cfg.adminMail, self.cfg.productName, email, "Welcome to %s!" % self.cfg.productName, message)
             except:
                 # must roll back authrepo
-                authRepo.deleteUserByName(repoLabel, username)
+                # FIXME we need to roll back our group if it didn't work.
+                #authRepo.deleteUserByName(repoLabel, username)
                 raise
         try:
             userId = self.new(username = username,
                               fullName = fullName,
+                              salt = salt,
+                              passwd = passwd,
                               email = email,
                               displayEmail = displayEmail,
                               timeCreated = time.time(),
                               timeAccessed = 0,
                               blurb = blurb,
                               active = int(active))
+            cu.execute("INSERT INTO UserGroupMembers VALUES(?,?)", userGroupId,
+                       userId)
+
         except database.DuplicateItem:
             raise UserAlreadyExists
         self.confirm_table.new(userId = userId,
@@ -363,7 +445,6 @@ class UsersTable(database.KeyedTable):
         if not username:
             raise database.ItemNotFound("UserId: %d does not exist!"% userId)
         return username[0]
-
 
 class User(database.TableObject):
     __slots__ = [UsersTable.key] + UsersTable.fields
@@ -526,6 +607,93 @@ class Authorization(object):
         for slot in self.__slots__:
             d[slot] = self.__getattribute__(slot)
         return d
+
+class UserGroupsTable(database.KeyedTable):
+    name = "UserGroups"
+    key = "userGroupId"
+
+    createSQL = """CREATE TABLE UserGroups (
+                       userGroupId     INTEGER PRIMARY KEY,
+                       userGroup       STR)"""
+
+    indexes = {"UserGroupsIndex" : """CREATE UNIQUE INDEX UserGroupsIndex
+                                         ON UserGroups(userGroupId)"""}
+
+    fields = ['userGroupId', 'userGroup']
+
+    def __init__(self, db, cfg):
+        self.cfg = cfg
+        if 'authDbPath' in cfg:
+            self.authDb = sqlite3.connect(cfg.authDbPath)
+        database.DatabaseTable.__init__(self, db)
+        self.confirm_table = ConfirmationsTable(db)
+
+    def versionCheck(self):
+        dbversion = self.getDBVersion()
+        if dbversion != self.schemaVersion:
+            if dbversion == 9:
+                # this schema version lineal is used to stock the
+                # user groups table from the authrepo
+                cu = self.db.cursor()
+                aCu = self.authDb.cursor()
+                aCu.execute('SELECT * FROM UserGroups')
+                for userId, userName in aCu.fetchall():
+                    cu.execute("INSERT INTO UserGroups VALUES(%d, '%s')" %
+                               (userId, userName))
+                return (dbversion + 1) == self.schemaVersion
+        return True
+
+class UserGroupMembersTable(database.KeyedTable):
+    name = "UserGroupMembers"
+    key = "userGroupMemberId"
+
+    createSQL = """CREATE TABLE UserGroupMembers (
+                        userGroupId     INTEGER,
+                        userId          INTEGER)"""
+    f = """CONSTRAINT UserGroupMembers_userGroupId_fk
+                        FOREIGN KEY (userGroupId) REFERENCES
+                        UserGroups(userGroupId)
+                        ON DELETE RESTRICT ON UPDATE CASCADE,
+                   CONSTRAINT UserGroupMembers_userId_fk
+                        FOREIGN KEY (userId) REFERENCES Users(userId)
+                        ON DELETE CASCADE ON UPDATE CASCADE
+            )"""
+
+    indexes = {"UserGroupMembers_userId_fk":
+                   """CREATE INDEX UserGroupMembers_userId_fk
+                          FOREIGN KEY (userId) REFERENCES Users(userId)
+                          ON DELETE CASCADE ON UPDATE CASCADE""",
+               "UserGroupMembers_userGroupId_fk":
+                   """CREATE INDEX UserGroupMembers_userGroupId_fk
+                          FOREIGN KEY (userGroupId) REFERENCES
+                          UserGroups(userGroupId)
+                          ON DELETE RESTRICT ON UPDATE CASCADE"""}
+
+    indexes = {}
+
+    fields = ['userGroupId', 'userId']
+
+    def __init__(self, db, cfg):
+        self.cfg = cfg
+        if 'authDbPath' in cfg:
+            self.authDb = sqlite3.connect(cfg.authDbPath)
+        database.DatabaseTable.__init__(self, db)
+        self.confirm_table = ConfirmationsTable(db)
+
+    def versionCheck(self):
+        dbversion = self.getDBVersion()
+        if dbversion != self.schemaVersion:
+            if dbversion == 9:
+                # this schema version lineal is used to stock the
+                # user group members table from the authrepo
+                cu = self.db.cursor()
+                aCu = self.authDb.cursor()
+                aCu.execute('SELECT * FROM UserGroupMembers')
+                for userId, userName in aCu.fetchall():
+                    cu.execute("""INSERT INTO UserGroupMembers
+                                      VALUES(%d, '%s')""" % (userId, userName))
+                return (dbversion + 1) == self.schemaVersion
+        return True
 
 
 def confirmString():

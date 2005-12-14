@@ -48,7 +48,6 @@ validHost = re.compile('^[a-zA-Z][a-zA-Z0-9\-]*$')
 reservedHosts = ['admin', 'mail', 'mint', 'www', 'web', 'rpath', 'wiki', 'conary', 'lists']
 
 dbConnection = None
-authDbConnection = None
 
 class ParameterError(MintError):
     def __str__(self):
@@ -174,6 +173,8 @@ def getTables(db, cfg):
     d['jobs'] = jobs.JobsTable(db)
     d['images'] = jobs.ImageFilesTable(db)
     d['users'] = users.UsersTable(db, cfg)
+    d['userGroups'] = users.UserGroupsTable(db, cfg)
+    d['userGroupMembers'] = users.UserGroupMembersTable(db, cfg)
     d['projectUsers'] = users.ProjectUsersTable(db)
     d['releases'] = releases.ReleasesTable(db)
     d['pkgIndex'] = pkgindex.PackageIndexTable(db)
@@ -185,6 +186,11 @@ def getTables(db, cfg):
     d['groupTroves'] = grouptrove.GroupTroveTable(db)
     d['groupTroveItems'] = grouptrove.GroupTroveItemsTable(db)
     d['jobData'] = data.JobDataTable(db)
+    if not min([x.upToDate for x in d.values()]):
+        d['version'].bumpVersion()
+        return getTables(db, cfg)
+    if d['version'].getDBVersion() != d['version'].schemaVersion:
+        d['version'].bumpVersion()
     return d
 
 class MintServer(object):
@@ -253,33 +259,6 @@ class MintServer(object):
         else:
             return (False, r)
 
-    def _getAuthRepo(self):
-        authRepoPath = os.path.dirname(self.cfg.authDbPath)
-        server = netserver.NetworkRepositoryServer(authRepoPath,
-            os.path.join(authRepoPath, "tmp"), '', self.cfg.authRepoMap.keys()[0],
-            self.cfg.authRepoMap)
-
-        repoUrl = urlparse(self.cfg.authRepoMap.values()[0])
-        # too bad urlparse doesn't split foo:bar@foo.com:80
-        if "@" in repoUrl[1]:
-            host = repoUrl[1].split("@")
-        else:
-            host = repoUrl
-        if ":" in host[0]:
-            port = host[1].split(":")
-        else:
-            port = 80
-    
-        cfg = conarycfg.ConaryConfiguration()
-        cfg.repositoryMap = self.cfg.authRepoMap
-        cfg.user.addServerGlob(repoUrl[0], self.cfg.authUser, self.cfg.authPass)
-    
-        repo = shimclient.ShimNetClient(
-            server, repoUrl[0], port,
-            (self.cfg.authUser, self.cfg.authPass, None, None),
-            cfg.repositoryMap, cfg.user)
-        return repo
-
     def _getProjectRepo(self, project):
         # use a shimclient for mint-handled repositories; netclient if not
         if project.external:
@@ -293,8 +272,11 @@ class MintServer(object):
                 protocol = "http"
                 port = 80
 
-            authUrl = "%s://%s:%s@%s/repos/%s/" % (protocol, self.cfg.authUser, self.cfg.authPass,
-                                                   self.cfg.projectSiteHost, project.getHostname())
+            authUrl = "%s://%s:%s@%s/repos/%s/" % (protocol,
+                                                   self.cfg.authUser,
+                                                   self.cfg.authPass,
+                                                   self.cfg.projectSiteHost,
+                                                   project.getHostname())
             authLabel = project.getLabel()
             authRepo = {versions.Label(authLabel).getHost(): authUrl}
 
@@ -306,13 +288,17 @@ class MintServer(object):
             if ":" in self.cfg.projectDomainName:
                 port = int(self.cfg.projectDomainName.split(":")[1])
      
-            server = netserver.NetworkRepositoryServer(reposPath, tmpPath, '', project.getFQDN(), authRepo)
+            server = netserver.NetworkRepositoryServer(reposPath, tmpPath,
+                                                       '', project.getFQDN(),
+                                                       authRepo)
             
             cfg = conarycfg.ConaryConfiguration()
             cfg.repositoryMap = authRepo
-            cfg.user.addServerGlob(versions.Label(authLabel).getHost(), self.cfg.authUser, self.cfg.authPass)
+            cfg.user.addServerGlob(versions.Label(authLabel).getHost(),
+                                   self.cfg.authUser, self.cfg.authPass)
             repo = shimclient.ShimNetClient(server, protocol, port,
-                (self.cfg.authUser, self.cfg.authPass, None, None), cfg.repositoryMap, cfg.user)
+                (self.cfg.authUser, self.cfg.authPass, None, None), cfg.repositoryMap,
+                                            cfg.user)
         return repo
 
     # unfortunately this function can't be a proper decorator because we
@@ -519,14 +505,16 @@ class MintServer(object):
 
         cu = self.db.cursor()
         if username and not userId:
-            cu.execute("SELECT userId FROM Users WHERE username=? AND active=1", username)
+            cu.execute("""SELECT userId FROM Users
+                              WHERE username=? AND active=1""", username)
             r = cu.fetchone()
             if not r:
                 raise database.ItemNotFound("username")
             else:
                 userId = r[0]
         elif userId and not username:
-            cu.execute("SELECT username FROM Users WHERE userId=? AND active=1", userId)
+            cu.execute("""SELECT username FROM Users
+                              WHERE userId=? AND active=1""", userId)
             r = cu.fetchone()
             if not r:
                 raise database.ItemNotFound("userId")
@@ -544,20 +532,22 @@ class MintServer(object):
             return True
 
         if not project.external:
-            acu = self.authDb.cursor()
             password = ''
             salt = ''
-            query = "SELECT salt, password FROM Users WHERE user=?"
-            acu.execute(query, username)
+            query = "SELECT salt, passwd FROM Users WHERE username=?"
+            cu.execute(query, username)
             try:
-                salt, password = acu.fetchone()
+                salt, password = cu.fetchone()
             except TypeError:
-                raise database.ItemNotFound("user")
+                raise database.ItemNotFound("username")
             repos = self._getProjectRepo(project)
             repos.addUserByMD5(project.getLabel(), username, salt, password)
-            repos.addAcl(project.getLabel(), username, None, None, level in userlevels.WRITERS, False, level == userlevels.OWNER)
+            repos.addAcl(project.getLabel(), username, None, None,
+                         level in userlevels.WRITERS, False,
+                         level == userlevels.OWNER)
 
-        self._notifyUser('Added', self.getUser(userId), projects.Project(self,projectId), level)
+        self._notifyUser('Added', self.getUser(userId),
+                         projects.Project(self,projectId), level)
         return True
 
     @typeCheck(int, int)
@@ -629,22 +619,26 @@ class MintServer(object):
         for user in userlist:
             #Figure out the user's full name and e-mail address
             email = "%s<%s>" % (user[1], user[2])
-            # XXX Do we want to do some substitution in the subject/body?
+            # FIXME Do we want to do some substitution in the subject/body?
             try:
-                users.sendMailWithChecks(self.cfg.adminMail, self.cfg.productName,
-                        email, subject, body)
+                users.sendMailWithChecks(self.cfg.adminMail,
+                                         self.cfg.productName,
+                                         email, subject, body)
             except users.MailError, e:
-                # Invalidate the user, so he/she must change his/her address at the next login
+                # Invalidate the user, so he/she must change his/her address at
+                # the next login
                 self.users.invalidateUser(user[0])
 
     @typeCheck(int, str, str, str)
     @requiresAuth
     @private
     def editProject(self, projectId, projecturl, desc, name):
-        if projecturl and not (projecturl.startswith('https://') or projecturl.startswith('http://')):
+        if projecturl and not (projecturl.startswith('https://') or \
+                               projecturl.startswith('http://')):
             projecturl = "http://" + projecturl
         self._filterProjectAccess(projectId)
-        return self.projects.update(projectId, projecturl=projecturl, description = desc, name = name)
+        return self.projects.update(projectId, projecturl=projecturl,
+                                    description = desc, name = name)
 
     @typeCheck(int)
     @requiresAdmin
@@ -690,7 +684,8 @@ class MintServer(object):
     def getUserLevel(self, userId, projectId):
         self._filterProjectAccess(projectId)
         cu = self.db.cursor()
-        cu.execute("SELECT level FROM ProjectUsers WHERE userId=? and projectId=?",
+        cu.execute("""SELECT level FROM ProjectUsers
+                          WHERE userId=? and projectId=?""",
                    userId, projectId)
 
         r = cu.fetchone()
@@ -706,14 +701,17 @@ class MintServer(object):
         self._filterProjectAccess(projectId)
         if (self.auth.userId != userId) and (level == userlevels.USER):
             raise users.UserInduction()
-        if self.projectUsers.onlyOwner(projectId, userId) and (level != userlevels.OWNER):
+        if self.projectUsers.onlyOwner(projectId, userId) and \
+               (level != userlevels.OWNER):
             raise users.LastOwner()
         #update the level on the project
         project = projects.Project(self, projectId)
         user = self.getUser(userId)
         if not project.external:
             repos = self._getProjectRepo(project)
-            repos.editAcl(project.getLabel(), user['username'], "ALL", None, None, None, level in userlevels.WRITERS, False, level == userlevels.OWNER)
+            repos.editAcl(project.getLabel(), user['username'], "ALL", None,
+                          None, None, level in userlevels.WRITERS, False,
+                          level == userlevels.OWNER)
 
         #Ok, now update the mint db
         if level in userlevels.WRITERS:
@@ -743,9 +741,10 @@ class MintServer(object):
 
     @typeCheck(str, str, str, str, str, str, bool)
     @private
-    def registerNewUser(self, username, password, fullName, email, displayEmail, blurb, active):
-        authRepo = self._getAuthRepo()
-        return self.users.registerNewUser(authRepo, username, password, fullName, email, displayEmail, blurb, active)
+    def registerNewUser(self, username, password, fullName, email,
+                        displayEmail, blurb, active):
+        return self.users.registerNewUser(username, password, fullName, email,
+                                          displayEmail, blurb, active)
 
     @typeCheck()
     @private
@@ -844,24 +843,30 @@ class MintServer(object):
         """
         if not self.auth.admin and userId != self.auth.userId:
             raise PermissionDenied
-        repoLabel = self.cfg.authRepoMap.keys()[0]
         username = self.users.getUsername(userId)
-        authRepo = self._getAuthRepo()
 
         #Handle projects
         projectList = self.getProjectIdsByMember(userId)
         for (projectId, level) in projectList:
             self.delMember(projectId, userId, False)
 
-        authRepo.deleteUserByName(repoLabel, username)
-
         cu = self.db.cursor()
         self.db.transaction()
         try:
-            cu.execute("UPDATE Projects SET creatorId=NULL WHERE creatorId=?", userId)
+            cu.execute("""SELECT userGroupId FROM UserGroupMembers
+                              WHERE userId=?""", userId)
+            for userGroupId in [x[0] for x in cu.fetchall()]:
+                cu.execute("""SELECT COUNT(*) FROM UserGroupMembers
+                                  WHERE userGroupId=?""", userGroupId)
+                if cu.fetchone()[0] == 1:
+                    cu.execute("DELETE FROM UserGroups WHERE userGroupId=?",
+                               userGroupId)
+            cu.execute("UPDATE Projects SET creatorId=NULL WHERE creatorId=?",
+                       userId)
             cu.execute("UPDATE Jobs SET userId=NULL WHERE userId=?", userId)
             cu.execute("DELETE FROM ProjectUsers WHERE userId=?", userId)
             cu.execute("DELETE FROM Confirmations WHERE userId=?", userId)
+            cu.execute("DELETE FROM UserGroupMembers WHERE userId=?", userId)
             cu.execute("DELETE FROM Users WHERE userId=?", userId)
         except:
             self.db.rollback()
@@ -891,9 +896,7 @@ class MintServer(object):
             authRepo = self._getProjectRepo(project)
             authRepo.changePassword(project.getLabel(), username, newPassword)
 
-        authRepo = self._getAuthRepo()
-        authLabel = self.cfg.authRepoMap.keys()[0]
-        authRepo.changePassword(authLabel, username, newPassword)
+        self.users.changePassword(username, newPassword)
 
         return True
 
@@ -1807,8 +1810,6 @@ class MintServer(object):
             self.db = dbstore.connect(cfg.dbPath, driver=cfg.dbDriver)
             dbConnection = self.db
 
-        self.authDb = sqlite3.connect(cfg.authDbPath)
-
         #An explicit transaction.  Make sure you don't have any implicit
         #commits until the database version has been asserted
         self.db.transaction()
@@ -1822,9 +1823,6 @@ class MintServer(object):
                 tables = getTables(self.db, self.cfg)
             self.__dict__.update(tables)
            
-            #now fix the version
-            self.version.fixVersion()
-
             #Now it's safe to commit
             self.db.commit()
 

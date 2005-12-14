@@ -24,6 +24,7 @@ python_files = \
                rephelp.py \
                repostest.py \
                reportstest.py \
+               schematest.py \
                searchtest.py \
                sessionstest.py \
                tablestest.py \

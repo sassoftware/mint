@@ -43,7 +43,7 @@ class MintTest(mint_rephelp.WebRepositoryHelper):
 
         page = self.fetch('/search?type=Projects&search=abcd')
         startUrl = page.url
-        
+
         page = page.postForm(0, self.post, {'username': 'foouser',
                                             'password': 'foopass'})
         assert(page.headers['Location'].endswith(startUrl))

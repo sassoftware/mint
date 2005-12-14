@@ -112,16 +112,13 @@ class ProjectTest(MintRepositoryHelper):
         client, userId = self.quickMintUser("testuser", "testpass")
         newUsername = "newuser"
         newClient, newUserId = self.quickMintUser("newuser", "testpass")
-        cu = self.mintServer.authDb.cursor()
-        cu.execute("DELETE FROM Users WHERE user=?", newUsername)
-        self.mintServer.authDb.commit()
+        cu = self.db.cursor()
+        cu.execute("DELETE FROM Users WHERE username=?", newUsername)
+        self.db.commit()
         projectId = client.newProject("Foo", "foo", "localhost")
         project = client.getProject(projectId)
-        try:
-            project.addMemberById(newUserId, userlevels.DEVELOPER)
-            self.fail("User was allowed to be added to a project without an authrepo entry!")
-        except ItemNotFound:
-            pass
+        self.assertRaises(ItemNotFound, project.addMemberById, newUserId,
+                          userlevels.DEVELOPER)
 
     def testBadHostname(self):
         client, userId = self.quickMintUser("testuser", "testpass")

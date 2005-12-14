@@ -78,17 +78,9 @@ class MintConfig(ConfigFile):
     sendNotificationEmails  = (CfgBool, True)
     profiling               = (CfgBool, False)
 
-    # don't set these yourself; they will be automatically generated 
-    # from authRepoMap:
-    authUser                = ''
-    authPass                = ''
-    authRepoUrl             = ''
-
     def read(self, path, exception = False):
         ConfigFile.read(self, path, exception)
 
-        self.setValue('authRepoUrl', self.authRepoMap.items()[0][1])
-        
         #Make sure MailListBaseURL has a slash on the end of it
         if self.MailListBaseURL[-1:] != '/':
             self.setValue('MailListBaseURL', self.MailListBaseURL + '/')

@@ -24,8 +24,9 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
         return shimclient.ShimMintClient(self.mintCfg, authToken)
 
     def quickMintUser(self, username, password):
-        """Retrieves a client, creates a user as specified by username and password,
-           and returns a connection to mint as that new user, and the user ID.:"""
+        """Retrieves a client, creates a user as specified by username and
+        password, and returns a connection to mint as that new user, and the
+        user ID.:"""
         client = self.openMintClient()
         userId = client.registerNewUser(username, password, "Test User",
                 "test@example.com", "test at example.com", "", active=True)
@@ -37,24 +38,31 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
 
     def quickMintAdmin(self, username, password):
         # manipulate the UserGroups and UserGroup
-        cu = self.mintServer.authDb.cursor()
+        cu = self.db.cursor()
 
-        r = cu.execute("SELECT COUNT(*) FROM UserGroups WHERE UserGroup = 'MintAdmin'")
-        if r.fetchone()[0] == 0:
-            r = cu.execute("SELECT IFNULL(MAX(userGroupId) + 1, 1) FROM UserGroups")
-            groupId = r.fetchone()[0]
-            cu.execute("INSERT INTO UserGroups VALUES(?, 'MintAdmin')", groupId)
-            cu.execute("INSERT INTO UserGroupMembers VALUES (?,?)", groupId, groupId)
-            self.mintServer.authDb.commit()
+        cu.execute("""SELECT COUNT(*) FROM UserGroups
+                          WHERE UserGroup = 'MintAdmin'""")
+        if cu.fetchone()[0] == 0:
+            cu.execute("""SELECT IFNULL(MAX(userGroupId) + 1, 1)
+                             FROM UserGroups""")
+            groupId = cu.fetchone()[0]
+            cu.execute("INSERT INTO UserGroups VALUES(?, 'MintAdmin')",
+                       groupId)
+            cu.execute("INSERT INTO UserGroupMembers VALUES (?,?)",
+                       groupId, groupId)
+            self.db.commit()
         else:
-            r = cu.execute("SELECT userGroupId FROM UserGroups WHERE UserGroup = 'MintAdmin'")
-            groupId = r.fetchone()[0]
+            cu.execute("""SELECT userGroupId FROM UserGroups
+                              WHERE UserGroup = 'MintAdmin'""")
+            groupId = cu.fetchone()[0]
         client, userId = self.quickMintUser(username, password)
 
-        authUserId = cu.execute("SELECT userId from users where user=?", username).fetchone()[0]
+        cu.execute("SELECT userId from users where username=?", username)
+        authUserId = cu.fetchone()[0]
 
-        cu.execute("INSERT INTO UserGroupMembers VALUES(?, ?)", groupId, authUserId)
-        self.mintServer.authDb.commit()
+        cu.execute("INSERT INTO UserGroupMembers VALUES(?, ?)",
+                   groupId, authUserId)
+        self.db.commit()
         return client, userId
 
     def newProject(self, client, name = "Test Project",
@@ -74,10 +82,13 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
         # restore the key cache
         openpgpkey.setKeyCache(keyCache)
 
-        self.cfg.buildLabel = versions.Label("%s.%s@rpl:devel" % (hostname, domainname))
+        self.cfg.buildLabel = versions.Label("%s.%s@rpl:devel" % \
+                                             (hostname, domainname))
         self.cfg.repositoryMap = {"%s.%s" % (hostname, domainname):
-            "http://%s.%s:%d/repos/%s/" % (hostname, domainname, self.getPort(), hostname)}
-        self.cfg.user.addServerGlob("%s.%s" % (hostname, domainname), "testuser", "testpass")
+            "http://%s.%s:%d/repos/%s/" % (hostname, domainname,
+                                           self.getPort(), hostname)}
+        self.cfg.user.addServerGlob("%s.%s" % (hostname, domainname),
+                                    "testuser", "testpass")
 
         # re-open the repos to make changes to repositoryMap have any effect
         self.openRepository()
@@ -89,6 +100,8 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
         try:
             if self.mintCfg.dbDriver == "sqlite":
                 os.unlink(self.servers.getServer().serverRoot + "/mintdb")
+            if self.mintCfg.dbDriver == "mysql":
+                cu.execute("DROP DATABASE minttest")
         except:
             pass
 
@@ -102,7 +115,8 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
         if self.mintCfg.dbDriver == "mysql":
             os.system("mysql --password=testpass -u testuser minttest < cleanup-mysql.sql")
 
-        self.mintServer = mint_server.MintServer(self.mintCfg, alwaysReload = True)
+        self.mintServer = mint_server.MintServer(self.mintCfg,
+                                                 alwaysReload = True)
         self.db = self.mintServer.db
         self.db.connect()
 

@@ -49,7 +49,8 @@ class ProjectTest(MintRepositoryHelper):
                              if x.strip() != ''])
         fileList = sorted(fileList)
         actualList = sorted([x for x in os.listdir(directory) \
-                             if (x.endswith('.py') or x.endswith('.kid'))])
+                             if ((x.endswith('.py') or x.endswith('.kid')) \
+                                 and not x.startswith("."))])
         missingList = [x for x in actualList if (x not in fileList) \
                        and (x not in exclusionList)]
         if missingList:
@@ -75,10 +76,9 @@ class ProjectTest(MintRepositoryHelper):
     def testPlainKidTemplate(self):
         t = kid.Template(testTemplate)
         t.myString = "string"
-        
+
         render = templates.write(t)
         assert render == "This is a plain text string."
-
 
 if __name__ == "__main__":
     testsuite.main()
