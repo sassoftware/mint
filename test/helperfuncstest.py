@@ -8,6 +8,7 @@ testsuite.setup()
 
 import kid
 import os
+import sys
 from mint import templates
 
 from mint_rephelp import MintRepositoryHelper
@@ -28,6 +29,7 @@ class ProjectTest(MintRepositoryHelper):
             self.fail("myProjectCompare did not return an int")
 
     def compareMakefile(self, directory, exclusionList = []):
+        missing = False
         makeFile = open(directory + '/Makefile')
         data = [ x.strip() for x in makeFile.read().split('\n')]
         makeFile.close()
@@ -54,10 +56,13 @@ class ProjectTest(MintRepositoryHelper):
         missingList = [x for x in actualList if (x not in fileList) \
                        and (x not in exclusionList)]
         if missingList:
-            self.fail("Makefile: %s is missing the following files: %s" %
-                      (directory + '/Makefile', str(missingList)))
+            print >> sys.stderr, "\n%s is missing: %s" % \
+                  (directory + '/Makefile', ' '.join(missingList)),
+            missing = True
+        return missing
 
     def testMakefiles(self):
+        missing = False
         skipDirs = ('test/archive/arch', 'test/archive/use',
                     'mint/web/content', '.hg')
         for dirPath, dirNames, fileNames in \
@@ -69,9 +74,13 @@ class ProjectTest(MintRepositoryHelper):
                         ignore = True
                         break
                 if not ignore:
-                    self.fail("%s is missing a Makefile" % dirPath)
+                    print >> sys.stderr, "\n%s is missing Makefile" % dirPath,
+                    missing = True
             else:
-                self.compareMakefile(dirPath)
+                missing = max(missing, self.compareMakefile(dirPath))
+        if missing:
+            print >> sys.stderr, ''
+        self.failIf(missing, "There are issues with Makefiles")
 
     def testPlainKidTemplate(self):
         t = kid.Template(testTemplate)
