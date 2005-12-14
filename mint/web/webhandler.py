@@ -121,8 +121,8 @@ class WebHandler(object):
             protocol = 'http'
         return protocol
 
-    def _session_start(self, sid = None):
-        print >> sys.stderr, "WebHandler._session_start(%s)" % sid
+    def _session_start(self):
+        sid = self.fields.get('sid', None)
         # prepare a new session
 
         sessionClient = shimclient.ShimMintClient(self.cfg, (self.cfg.authUser, self.cfg.authPass))
