@@ -11,7 +11,8 @@ import traceback
 from mod_python import apache
 
 from conary.server import http
-from conary.repository import errors 
+from conary.repository import errors
+from conary.repository.shimclient import ShimNetClient
 from conary import conaryclient
 
 from webhandler import WebHandler, normPath
@@ -64,7 +65,8 @@ class ConaryHandler(WebHandler, http.HttpHandler):
                                            newUser = self.authToken[0],
                                            newPass = self.authToken[1],
                                            useSSL = useSSL)
-        self.repos = conaryclient.ConaryClient(cfg).getRepos()
+        self.authToken = (self.authToken[0], self.authToken[1], None, None)
+        self.repos = ShimNetClient(self.repServer, 'http', 80, self.authToken, cfg.repositoryMap, cfg.user)
 
         try:
             method = self.__getattribute__(self.cmd)
