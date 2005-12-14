@@ -138,9 +138,8 @@ class UsersTable(database.KeyedTable):
                 # now go get each user's salt and pass from the authRepo
                 aCu.execute('SELECT user, salt, password FROM Users')
                 for username, salt, passwd in aCu.fetchall():
-                    cu.execute("""UPDATE Users SET
-                                    salt=?, passwd=?
-                                    WHERE username=?""",
+                    cu.execute("""UPDATE Users SET salt=?, passwd=?
+                                      WHERE username=?""",
                                salt, passwd, username)
                 return (dbversion + 1) == self.schemaVersion
         return True
@@ -151,28 +150,6 @@ class UsersTable(database.KeyedTable):
         cu.execute("UPDATE Users SET salt=?, passwd=? WHERE username=?",
                    salt, passwd, username)
 
-    # XXX XXX XXX
-    # this function is not used in rBO yet. brought it in cause I thought we'd
-    # need it with the new acl's
-    def checkUserPass(self, authToken, label = None):
-        logMe(2, authToken[0], label)
-        if label and label.getHost() != self.name:
-            raise errors.RepositoryMismatch
-
-        cu = self.db.cursor()
-
-        stmt = "SELECT salt, passwd FROM Users WHERE username=?"
-        cu.execute(stmt, authToken[0])
-
-        salt, password = cu.fetchone()
-        m = md5.new()
-        m.update(salt)
-        m.update(authToken[1])
-        if m.hexdigest() == password:
-            return True
-
-        return False
-
     def _checkPassword(self, salt, password, challenge):
         m = md5.new()
         m.update(salt)
@@ -182,7 +159,7 @@ class UsersTable(database.KeyedTable):
 
     def _mungePassword(self, password):
         m = md5.new()
-        salt = ''.join([chr(random.randint(0,255)) for x in range(4)])
+        salt = os.urandom(4)
         m.update(salt)
         m.update(password)
         return salt, m.hexdigest()
@@ -651,14 +628,6 @@ class UserGroupMembersTable(database.KeyedTable):
     createSQL = """CREATE TABLE UserGroupMembers (
                         userGroupId     INTEGER,
                         userId          INTEGER)"""
-    f = """CONSTRAINT UserGroupMembers_userGroupId_fk
-                        FOREIGN KEY (userGroupId) REFERENCES
-                        UserGroups(userGroupId)
-                        ON DELETE RESTRICT ON UPDATE CASCADE,
-                   CONSTRAINT UserGroupMembers_userId_fk
-                        FOREIGN KEY (userId) REFERENCES Users(userId)
-                        ON DELETE CASCADE ON UPDATE CASCADE
-            )"""
 
     indexes = {"UserGroupMembers_userId_fk":
                    """CREATE INDEX UserGroupMembers_userId_fk
@@ -684,15 +653,41 @@ class UserGroupMembersTable(database.KeyedTable):
     def versionCheck(self):
         dbversion = self.getDBVersion()
         if dbversion != self.schemaVersion:
-            if dbversion == 9:
+            if dbversion == 10:
                 # this schema version lineal is used to stock the
-                # user group members table from the authrepo
+                # user group members table from the authrepo. it must happen
+                # subsequent to user groups table being stocked.
                 cu = self.db.cursor()
                 aCu = self.authDb.cursor()
-                aCu.execute('SELECT * FROM UserGroupMembers')
-                for userId, userName in aCu.fetchall():
+                cu.execute("DELETE FROM UserGroupMembers")
+                aCu.execute("""SELECT Users.user, UserGroups.usergroup
+                                   FROM UserGroupMembers
+                                   LEFT JOIN Users
+                                       ON Users.userId=UserGroupMembers.userId
+                                   LEFT JOIN UserGroups
+                                   ON UserGroups.userGroupId=
+                                           UserGroupMembers.userGroupId""")
+                for username, groupname in [(x[0], x[1]) for x in \
+                                            aCu.fetchall() if x[0]]:
+
+                    cu.execute("SELECT userId from Users WHERE username=?",
+                               username)
+                    # Type errors indicate a user in authrepo that's not
+                    # in mintdb. there shouldn't be any but that's no reason
+                    # to fail horribly, so we'll just ignore them.
+                    try:
+                        userId = cu.fetchone()[0]
+                    except TypeError:
+                        continue
+                    cu.execute("""SELECT userGroupId from UserGroups
+                                      WHERE userGroup=?""", groupname)
+                    try:
+                        userGroupId = cu.fetchone()[0]
+                    except TypeError:
+                        continue
                     cu.execute("""INSERT INTO UserGroupMembers
-                                      VALUES(%d, '%s')""" % (userId, userName))
+                                      VALUES(%d, '%s')""" % (userGroupId,
+                                                             userId))
                 return (dbversion + 1) == self.schemaVersion
         return True
 

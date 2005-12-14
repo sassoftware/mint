@@ -307,13 +307,6 @@ schema8_indexes = ["""CREATE INDEX DatabaseVersionIdx
                    """CREATE INDEX PackageNameIdx
                           ON PackageIndex(name)"""]
 
-schema8_tableNames = ['Commits', 'Confirmations', 'DatabaseVersion',
-                      'GroupTroveItems', 'GroupTroves', 'ImageFiles',
-                      'JobData', 'Jobs', 'Labels', 'MembershipRequests',
-                      'NewsCache', 'NewsCacheInfo', 'PackageIndex',
-                      'ProjectUsers', 'Projects', 'ReleaseData', 'Releases',
-                      'Sessions', 'Users']
-
 class UpgradePathTest(MintRepositoryHelper):
     def testSchemaVerEight(self):
         # Create a database matching schema 8 paradigm.
@@ -336,7 +329,9 @@ class UpgradePathTest(MintRepositoryHelper):
         aCu = authDb.cursor()
 
         if cfg.dbDriver == 'sqlite':
-            for tableName in schema8_tableNames:
+            cu.execute("""SELECT name FROM sqlite_master
+                              WHERE sql NOT NULL AND type=='table'""")
+            for tableName in [x[0] for x in cu.fetchall()]:
                 cu.execute('DROP TABLE %s' % tableName)
 
             for tableSql in sqlite_schema8_tables:
@@ -355,10 +350,10 @@ class UpgradePathTest(MintRepositoryHelper):
 
         # create some users
         cu.execute("INSERT INTO Users VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                   1, 'testuser', 'Test User', 'no@email', '',
+                   1, 'adminuser', 'Admin User', 'no@email', '',
                    1131751105.57499, 1134485874.74314, 1, '' )
         cu.execute("INSERT INTO Users VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                   2, 'testuser2', 'Test User2', 'no@email', '',
+                   2, 'testuser', 'Test User', 'no@email', '',
                    1131751105.57499, 1134485874.74314, 1, '' )
         cu.execute("INSERT INTO Users VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)",
                    3, 'unconf', 'Unconfirmed', 'no@email', '',
@@ -368,18 +363,22 @@ class UpgradePathTest(MintRepositoryHelper):
                    "confirmation string")
 
         for userId, userName, salt, passwd in \
-                ((3, 'testuser', '\x03\xd5<\xfa',
+                ((3, 'adminuser', '\x03\xd5<\xfa',
                   '2c387d3c22ee7a025703cc09bcde3839'),
-                 (4, 'testuser2', '\rk4\xa4',
+                 (4, 'testuser', '\rk4\xa4',
                   '93853a6bd098ca0a1eb6d907fba591a8'),
                  (5, 'unconf', ';\x94\x19(',
-                  '083166ffdc02741c8e71d866c6bbf04c')):
+                  '083166ffdc02741c8e71d866c6bbf04c'),
+                 (7, 'missing', '', '')):
             aCu.execute('INSERT INTO Users VALUES(?, ?, ?, ?)',
                         userId, userName, salt, passwd)
             aCu.execute('INSERT INTO UserGroups VALUES(?, ?)',
                         userId, userName)
             aCu.execute('INSERT INTO UserGroupMembers VALUES(?, ?)',
                         userId, userId)
+
+        aCu.execute("INSERT INTO UserGroups VALUES(6, 'MintAdmin')")
+        aCu.execute("INSERT INTO UserGroupMembers VALUES (6,3)")
 
         # authrepo is using sqlite connection. needs explicit commit.
         authDb.commit()
@@ -419,7 +418,6 @@ class UpgradePathTest(MintRepositoryHelper):
                 self.db = dbstore.connect(cfg.dbPath, driver=cfg.dbDriver)
                 cu = self.db.cursor()
 
-
         ##### past this point: simple sanity checks that the schema upgrade
         # went as planned. fair game for future compatibilty tweaking.
         cu.execute("SELECT salt, passwd FROM Users")
@@ -429,16 +427,20 @@ class UpgradePathTest(MintRepositoryHelper):
 
         cu.execute("SELECT * FROM UserGroups")
         self.failIf([(int(x[0]), x[1]) for x in cu.fetchall()] != \
-                     [(1, 'mintauth'), (2, 'anonymous'), (3, 'testuser'),
-                      (4, 'testuser2'), (5, 'unconf')],
+                     [(1, 'mintauth'), (2, 'anonymous'), (3, 'adminuser'),
+                      (4, 'testuser'), (5, 'unconf'), (6, 'MintAdmin'),
+                      (7, 'missing')],
                     "UserGroups mangled during upgrade process")
         cu.execute("SELECT * FROM UserGroupMembers")
+
         self.failIf([(int(x[0]), int(x[1])) for x in cu.fetchall()] \
-                    != [(1, 1), (2, 2), (3, 3), (4, 4), (5, 5)],
+                    != [(1, 4), (2, 5), (3, 1), (4, 2), (5, 3), (6, 1)],
                     "UserGroupMembers mangled during upgrade process")
 
         cu.execute("SELECT IFNULL(MAX(version), 0) FROM DatabaseVersion")
-        self.failIf(cu.fetchone()[0] != 10, "Schema did not upgrade properly")
+        self.failIf(cu.fetchone()[0] != \
+                    client.server._server.version.schemaVersion,
+                    "Schema failed to follow complete upgrade path")
 
 if __name__ == "__main__":
     testsuite.main()
