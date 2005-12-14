@@ -4,8 +4,8 @@ you own.
                 
 Project: ${projectName}
 
-<p py:if="comments">Comments: ${comments}</p>
-<p py:if="not comments">No comments were supplied.</p>
+<p if="comments">Comments: ${comments}</p>
+<p if="not comments">No comments were supplied.</p>
         
 To respond to this request:
 
