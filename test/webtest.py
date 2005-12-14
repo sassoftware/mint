@@ -149,16 +149,15 @@ class MintTest(mint_rephelp.WebRepositoryHelper):
 
     # FIXME: test can't be run until mint shims pages in the /repos stack.
     def testPgpAdminPage(self):
-        raise testsuite.SkipTestException
         client, userId = self.quickMintUser('foouser','foopass')
         projectId = client.newProject('Foo', 'foo', 'rpath.local')
-
-        page = self.fetch('/repos/foo/pgpAdminForm',
+        page = self.webLogin('foouser', 'foopass')
+        
+        page = page.fetch('/repos/foo/pgpAdminForm',
                                   ok_codes = [200])
 
     # FIXME: test can't be run until mint shims pages in the /repos stack.
     def testRepoBrowserPage(self):
-        raise testsuite.SkipTestException
         client, userId = self.quickMintUser('foouser','foopass')
         projectId = client.newProject('Foo', 'foo', 'rpath.local')
 
