@@ -525,5 +525,7 @@ class SiteHandler(WebHandler):
                 item['date_822'] = email.Utils.formatdate(release.timePublished)
                 item['creator'] = "http://%s%s" % (self.siteHost, self.cfg.basePath)
                 items.append(item)
+        else:
+            raise HttpNotFound
 
         return self._writeRss(items = items, title = title, link = link, desc = desc)
