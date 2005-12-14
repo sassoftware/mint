@@ -15,6 +15,7 @@ import socket
 import string
 import sys
 import time
+from email import MIMEText
 
 from conary import repository
 from conary.lib import sha1helper
@@ -750,7 +751,7 @@ def sendMail(fromEmail, fromEmailName, toEmail, subject, body):
     @type body: str
     """
     
-    msg = email.MIMEText.MIMEText(body)
+    msg = MIMEText.MIMEText(body)
     msg['Subject'] = subject
     msg['From'] = '"%s" <%s>' % (fromEmailName, fromEmail)
     msg['To'] = toEmail
