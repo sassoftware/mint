@@ -57,6 +57,9 @@ class WebHandler(object):
                               groupProject = self.groupProject,
                               output = self.output,
                               **values)
+        if self.output == "html-strict":
+            self.output = kid.HTMLSerializer(doctype='html')
+            self.output.empty_elements = self.output.empty_elements.union(set(('script', 'link')))
         return t.serialize(encoding = "utf-8", output = self.output)
 
     def _redirectHttp(self, location):
@@ -118,9 +121,9 @@ class WebHandler(object):
             protocol = 'http'
         return protocol
 
-    def _session_start(self):
+    def _session_start(self, sid = None):
+        print >> sys.stderr, "WebHandler._session_start(%s)" % sid
         # prepare a new session
-        sid = self.fields.get('sid', None)
 
         sessionClient = shimclient.ShimMintClient(self.cfg, (self.cfg.authUser, self.cfg.authPass))
 
@@ -134,11 +137,8 @@ class WebHandler(object):
         if self.session.is_new():
             self.session['firstPage'] = "%s://%s%s" %(self._protocol(), self.req.hostname, '/')
             self.session['visited'] = { }
-            self.session['pages'] = [ ]
         #Mark the current domain as visited
         self.session['visited'][domain] = True
-        #This is just for debugging purposes
-        self.session['pages'].append(self.req.hostname + self.req.unparsed_uri)
 
         c = self.session.make_cookie()
         c.domain = '.' + domain
@@ -165,7 +165,6 @@ class WebHandler(object):
             #add it to the err_headers_out because these ALWAYS go to the browser
             self.req.err_headers_out.add('Set-Cookie', str(c))
             self.req.err_headers_out.add('Cache-Control', 'no-cache="set-cookie"')
-
         if nexthop:
             #Save the session
             self.session.save()
@@ -196,6 +195,9 @@ class HttpError(Exception):
 
 class HttpNotFound(HttpError):
     code = 404
+
+class HttpForbidden(HttpError):
+    code = 403
 
 class HttpMoved(HttpError):
     code = 301

@@ -189,6 +189,7 @@ class SiteHandler(WebHandler):
                 self._session_start()
                 self.session['authToken'] = authToken
                 self.session['firstTimer'] = firstTimer
+                self.session['firstPage'] = unquote(to)
                 self.session.save()
 
                 self._redirect_storm(self.session.id())

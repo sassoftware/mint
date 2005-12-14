@@ -36,6 +36,19 @@ class MintTest(mint_rephelp.WebRepositoryHelper):
             {'username': 'wronguser',
              'password': 'foopass'})
 
+    def testLoginRedirect(self):
+        # test to make sure that a login on one page
+        # will redirect you back to that page after login
+        self.quickMintUser('foouser', 'foopass')
+
+        page = self.fetch('/search?type=Projects&search=abcd')
+        startUrl = page.url
+        
+        page = page.postForm(0, self.post, {'username': 'foouser',
+                                            'password': 'foopass'})
+        assert(page.headers['Location'].endswith(startUrl))
+        assert(page.code == 301)
+
     def testNewProject(self):
         client, userId = self.quickMintUser('foouser','foopass')
         page = self.webLogin('foouser', 'foopass')
