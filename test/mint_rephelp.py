@@ -57,7 +57,7 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
             groupId = cu.fetchone()[0]
         client, userId = self.quickMintUser(username, password)
 
-        cu.execute("SELECT userId from users where username=?", username)
+        cu.execute("SELECT userId from Users where username=?", username)
         authUserId = cu.fetchone()[0]
 
         cu.execute("INSERT INTO UserGroupMembers VALUES(?, ?)",
