@@ -79,7 +79,7 @@ class BootableDiskImage:
         #Do the partition table
         cylinders = self.imagesize / cylindersize
         #TODO: Add a swap partition?
-        cmd = 'sfdisk -C %d -S %d -H %d -q %s > /dev/null' % (cylinders, sectors, heads, self.outfile)
+        cmd = '/sbin/sfdisk -C %d -S %d -H %d -q %s > /dev/null' % (cylinders, sectors, heads, self.outfile)
         input = "0 %d L *\n" % cylinders
         sfdisk = util.popen(cmd, 'w')
         sfdisk.write(input)
@@ -165,7 +165,7 @@ none                    /sys                    sysfs   defaults        0 0
         try:
             clock = time.clock()
             actual = time.time()
-            cmd = 'e2fsimage -f %s -d %s -s %d > /dev/null' % (file,
+            cmd = '/usr/bin/e2fsimage -f %s -d %s -s %d > /dev/null' % (file,
                     self.fakeroot, (self.imagesize - partoffset0)/1024)
             util.execute(cmd)
             print "createFileSystem Command Line: %s" % cmd
@@ -177,11 +177,7 @@ none                    /sys                    sysfs   defaults        0 0
             fd = open(file, 'rb')
             fdo = open(self.outfile, 'wb')
             fdo.seek(partoffset0)
-            while 1:
-                buf = fd.read(524288)
-                if not buf:
-                    break
-                fdo.write(buf)
+            util.copyfileobj(fd, fdo, bufSize=524288)
             fd.close()
             fdo.close()
             print "createFileSystem: read/write:", time.clock() - clock, time.time() - actual
