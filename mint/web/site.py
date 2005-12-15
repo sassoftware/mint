@@ -193,6 +193,7 @@ class SiteHandler(WebHandler):
                 self.session.save()
 
                 self._redirect_storm(self.session.id())
+                self._redirect(unquote(to)) 
         else:
             raise HttpNotFound
 

@@ -146,7 +146,7 @@ class WebHandler(object):
         self.req.err_headers_out.add('Set-Cookie', str(c))
         self.req.err_headers_out.add('Cache-Control', 'no-cache="set-cookie"')
 
-    def _redirect_storm(self, sid, final = None):
+    def _redirect_storm(self, sid):
         #Now figure out if we need to redirect
         nexthop = None
         # split is used to ensure port number doesn't affect cookie domain
@@ -166,20 +166,14 @@ class WebHandler(object):
             self.req.err_headers_out.add('Set-Cookie', str(c))
             self.req.err_headers_out.add('Cache-Control', 'no-cache="set-cookie"')
         if nexthop:
-            self.req.err_headers_out.add('rBO-Debug', 'nexthop="%s"' % nexthop)
             #Save the session
             self.session.save()
-            self._redirect("%s://%s.%s%sblank?sid=%s" % (self._protocol(), self.cfg.hostName, nexthop, self.cfg.basePath, self.session.id()))
+            self._redirect("http://%s.%s%sblank?sid=%s" % (self.cfg.hostName, nexthop, self.cfg.basePath, self.session.id()))
         else:
             if sid:
                 #Clear the sid from the request by redirecting to the first page.
                 self.session.save()
-                if not final:
-                    self.req.err_headers_out.add('rBO-Debug', 'firstPage="%s"' % self.session['firstPage'])
-                    self._redirect(self.session['firstPage'])
-                else:
-                    self.req.err_headers_out.add('rBO-Debug', 'firstPage="%s"' % unquote(to))
-                    self._redirect(unquote(to))
+                self._redirect(self.session['firstPage'])
 
 
 def normPath(path):
