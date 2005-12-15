@@ -179,7 +179,7 @@ class ProjectHandler(WebHandler):
             for troveName, troveVersion, troveFlavor in (x.split(" ") for x in initialTrove):
                 gt.addTrove(troveName, troveVersion, troveFlavor, fullGroupName, False, False, False)
             
-            return self._redirect("editGroup?id=%d" % gtId)
+            self._redirect("editGroup?id=%d" % gtId)
         else:
             kwargs = {'groupName': groupName, 'version': version}
             troves, troveDict, metadata = self._getBasicTroves()
