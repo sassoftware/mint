@@ -15,7 +15,7 @@ from conary.repository import errors
 from conary.repository.shimclient import ShimNetClient
 from conary import conaryclient
 
-from webhandler import WebHandler, normPath
+from webhandler import WebHandler, normPath, HttpForbidden
 from templates import repos
 from mint.session import SqlSession
 
@@ -87,7 +87,7 @@ class ConaryHandler(WebHandler, http.HttpHandler):
             self.authToken = ('anonymous', 'anonymous')
             return self._handle()
         else:
-            self._redirect(self.cfg.defaultRedirect)
+            raise HttpForbidden
 
     def _write(self, templateName, **values):
         return WebHandler._write(self, templateName, templatePath = self.reposTemplatePath, **values)
