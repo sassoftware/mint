@@ -4,7 +4,7 @@
 # All Rights Reserved
 #
 
-script_dist = 
+script_dist = \
 	job-server	\
 	mklivecd	\
 	reset		\
