@@ -65,7 +65,13 @@ class MintApp(WebHandler):
 
         self.req.content_type = self.content_type
         
-        self.fields = dict(FieldStorage(self.req))
+
+        try:
+            self.fields = dict(FieldStorage(self.req))
+        # failed to parse fields; must be an incorrect POST
+        # request, so fail with a better error message.
+        except apache.SERVER_RETURN:
+            raise HttpNotFound
         
         self.basePath = normPath(self.cfg.basePath)
 
