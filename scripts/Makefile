@@ -4,7 +4,15 @@
 # All Rights Reserved
 #
 
-script_dist = job-server mklivecd reset update-package-index buildinstall splitdistro buildtemplates
+script_dist = 
+	job-server	\
+	mklivecd	\
+	reset		\
+	update-package-index	\
+	buildinstall	\
+	splitdistro	\
+	buildtemplates	\
+	MakeDiskImage.py
 
 extra_dist = \
 	Makefile		\

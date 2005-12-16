@@ -30,7 +30,8 @@ python_files = \
                tablestest.py \
                testsuite.py \
                xmltest.py \
-               webtest.py
+               webtest.py \
+	       websetuptest.py 
 
 extra_dist = Makefile
 
