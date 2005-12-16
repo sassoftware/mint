@@ -112,7 +112,7 @@ class UsersTable(database.KeyedTable):
 
     def __init__(self, db, cfg):
         self.cfg = cfg
-        if 'authDbPath' in cfg:
+        if 'authDbPath' in cfg._options and cfg.authDbPath:
             self.authDb = sqlite3.connect(cfg.authDbPath)
         database.DatabaseTable.__init__(self, db)
         self.confirm_table = ConfirmationsTable(db)
@@ -601,7 +601,7 @@ class UserGroupsTable(database.KeyedTable):
 
     def __init__(self, db, cfg):
         self.cfg = cfg
-        if 'authDbPath' in cfg:
+        if 'authDbPath' in cfg._options and cfg.authDbPath:
             self.authDb = sqlite3.connect(cfg.authDbPath)
         database.DatabaseTable.__init__(self, db)
         self.confirm_table = ConfirmationsTable(db)
@@ -645,7 +645,7 @@ class UserGroupMembersTable(database.KeyedTable):
 
     def __init__(self, db, cfg):
         self.cfg = cfg
-        if 'authDbPath' in cfg:
+        if 'authDbPath' in cfg._options and cfg.authDbPath:
             self.authDb = sqlite3.connect(cfg.authDbPath)
         database.DatabaseTable.__init__(self, db)
         self.confirm_table = ConfirmationsTable(db)
