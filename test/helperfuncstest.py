@@ -28,7 +28,7 @@ class ProjectTest(MintRepositoryHelper):
                                            ('ignored', 0L)), int):
             self.fail("myProjectCompare did not return an int")
 
-    def compareMakefile(self, directory, exclusionList = []):
+    def compareMakefile(self, directory, exclusionList = set()):
         missing = False
         makeFile = open(directory + '/Makefile')
         data = [ x.strip() for x in makeFile.read().split('\n')]
@@ -42,19 +42,20 @@ class ProjectTest(MintRepositoryHelper):
             else:
                 newData.append(continuedLine + line)
                 continuedLine = ''
-        fileList = []
+                
+        fileList = set() 
         for line in newData:
-            if line.startswith('python_files') or line.startswith('kid_files'):
-                fileList.extend([''.join(x.strip().split('\\')) for x in \
+            if line.startswith('python_files') or line.startswith('kid_files') or line.startswith('script_dist'):
+                fileList |= set(''.join(x.strip().split('\\')) for x in \
                              ' '.join((line.split('=')[1] \
                                        ).split('\t')).split(' ') \
-                             if x.strip() != ''])
-        fileList = sorted(fileList)
-        actualList = sorted([x for x in os.listdir(directory) \
-                             if ((x.endswith('.py') or x.endswith('.kid')) \
-                                 and not x.startswith("."))])
-        missingList = [x for x in actualList if (x not in fileList) \
-                       and (x not in exclusionList)]
+                             if x.strip() != '')
+
+        actualList = set(x for x in os.listdir(directory) \
+                           if ((x.endswith('.py') or x.endswith('.kid')) \
+                             and not x.startswith(".")))
+        missingList = (actualList - exclusionList) - fileList
+        
         if missingList:
             print >> sys.stderr, "\n%s is missing: %s" % \
                   (directory + '/Makefile', ' '.join(missingList)),
