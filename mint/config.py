@@ -18,18 +18,13 @@ templatePath = os.path.dirname(sys.modules['mint'].__file__)
 
 class MintConfig(ConfigFile):
     companyName             = (CfgString, 'rPath Inc.',
-        "Name of your organization's rBuilder website (Used in the registration and user settings pages)")
+        "Name of your organization's rBuilder website: (Used in the registration and user settings pages)")
         
     productName             = (CfgString, 'rBuilder at rpath.org',
-        "Name by which you refer to the rBuilder service (Used heavily throughout rBuilder)")
-        
-    defaultRedirect         = (CfgString, 'http://rpath.com',
-        "The site to which users are redirected when visiting an invalid site "\
-        "(Used when a user tries to visit a project page that does not exist, or a "\
-        "repository he does not have permissions to view)")
+        "Name by which you refer to the rBuilder service: (Used heavily throughout rBuilder)")
         
     corpSite                = (CfgString, 'http://www.rpath.com/corp/',
-        "A link to your corporate web site.")
+        "A link to your corporate web site:")
         
     defaultBranch           = (CfgString, 'rpl:devel',
         "<p>The Conary branch that all rBuilder projects will use by default:</p>"\
@@ -42,14 +37,14 @@ class MintConfig(ConfigFile):
     authRepoMap             = CfgDict(CfgString)
     authUser                = None
     authPass                = None
-    authDbPath              = '/srv/authrepo/repos/sqldb'
+    authDbPath              = None
     templatePath            = os.path.join(templatePath, 'web', 'templates')
-    reposPath               = '/srv/mint/repos/'
-    reposContentsPath       = None
-    dbPath                  = '/srv/mint/data/db'
+    dataPath                = '/srv/mint/'
+    reposPath               = None
+    reposContentsPath       = (CfgString, None)
+    dbPath                  = None
     dbDriver                = 'sqlite'
-    imagesPath              = '/srv/mint/images/'
-    logPath                 = '/srv/mint/logs/'
+    imagesPath              = None
     siteDomainName          = (CfgString, 'rpath.com',
         "Domain of the rBuilder site. Eg., <tt>example.com</tt>")
     projectDomainName       = None
@@ -77,10 +72,14 @@ class MintConfig(ConfigFile):
     debugMode               = (CfgBool, False)
     sendNotificationEmails  = (CfgBool, True)
     profiling               = (CfgBool, False)
+    configured              = (CfgBool, True)
 
     def read(self, path, exception = False):
         ConfigFile.read(self, path, exception)
 
+        self.postCfg()
+
+    def postCfg(self):
         #Make sure MailListBaseURL has a slash on the end of it
         if self.MailListBaseURL[-1:] != '/':
             self.setValue('MailListBaseURL', self.MailListBaseURL + '/')
@@ -110,3 +109,8 @@ class MintConfig(ConfigFile):
 
         if not self.bugsEmail:
             self.bugsEmail = "rBuilder-tracebacks@%s" % self.siteDomainName
+
+        if not self.reposPath: self.reposPath = os.path.join(self.dataPath, 'repos')
+        if not self.reposContentsPath: self.reposContentsPath = self.reposPath
+        if not self.dbPath: self.dbPath = os.path.join(self.dataPath, 'data/db')
+        if not self.imagesPath: self.imagesPath = os.path.join(self.dataPath, 'finished-images')
