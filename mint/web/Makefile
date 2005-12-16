@@ -15,6 +15,7 @@ python_files = \
 	decorators.py	\
 	hooks.py	\
 	project.py	\
+	setup.py	\
 	site.py		\
 	webhandler.py
 

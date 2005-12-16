@@ -27,6 +27,7 @@ from admin import AdminHandler
 from project import ProjectHandler
 from site import SiteHandler
 from cookie_http import ConaryHandler
+from setup import SetupHandler
 import cache
 
 from webhandler import WebHandler, normPath, HttpNotFound 
@@ -44,8 +45,7 @@ class ErrorHandler(WebHandler):
         return self.errorPage
 
     def errorPage(self, *args, **kwargs):
-        self._write('error', error = ' An unknown error occured while handling your request. Site maintainers have been notified.')
-        return apache.OK
+        return self._write('error', error = ' An unknown error occured while handling your request. Site maintainers have been notified.')
 
 class MintApp(WebHandler):
     project = None
@@ -73,6 +73,7 @@ class MintApp(WebHandler):
         self.projectHandler = ProjectHandler()
         self.adminHandler = AdminHandler()
         self.errorHandler = ErrorHandler()
+        self.setupHandler = SetupHandler()
         self.conaryHandler = ConaryHandler(req, cfg, repServer)
 
     def _handle(self, pathInfo):
@@ -152,7 +153,7 @@ class MintApp(WebHandler):
                 project = self.client.getProjectByHostname(hostname)
             except Exception, e:
                 self.req.log_error(str(e))
-                self._redirect(self.cfg.defaultRedirect)
+                raise HttpNotFound
             else:
                 # coerce "external" projects to the externalSiteHost, or
                 # internal projects to projectSiteHost.
@@ -162,16 +163,17 @@ class MintApp(WebHandler):
                     self._redirect("%s://%s%sproject/%s/" % (protocol, self.cfg.projectSiteHost, self.cfg.basePath, hostname))
 
         self.siteHost = self.cfg.siteHost
-        
-        # eg., redirect from http://rpath.com -> <defaultRedirect>
+       
+        # redirect from domain.org to host.domain.org
         if self.cfg.hostName and fullHost == self.cfg.siteDomainName:
-            self._redirect(self.cfg.defaultRedirect)
+            self._redirect(self.cfg.hostName + "." + self.cfg.siteDomainName)
         
         # mapping of url regexps to handlers
         urls = (
             (r'^/project/',     self.projectHandler),
             (r'^/administer/',  self.adminHandler),
             (r'^/repos/',       self.conaryHandler),
+            (r'^/setup/',       self.setupHandler),
             (r'^/unknownError', self.errorHandler),
             (r'^/',             self.siteHandler),
         )
