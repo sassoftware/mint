@@ -10,6 +10,7 @@ python_files = \
                accounttest.py \
                authtest.py \
                cachetest.py \
+	       coverage.py	\
                distrotest.py \
                grouptrovetest.py \
                helperfuncstest.py \
