@@ -816,7 +816,7 @@ class MintServer(object):
         # has developers.
         cu.execute("""SELECT MAX(D.flagged)
                         FROM (SELECT A.projectId,
-                               COUNT(B.userId)*not(COUNT(C.userId)) AS flagged
+                               COUNT(B.userId) * (NOT COUNT(C.userId)) AS flagged
                                  FROM ProjectUsers AS A
                                    LEFT JOIN ProjectUsers AS B ON A.projectId=B.projectId AND B.level=1
                                    LEFT JOIN ProjectUsers AS C ON C.projectId=A.projectId AND
