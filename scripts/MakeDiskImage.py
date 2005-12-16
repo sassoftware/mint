@@ -12,7 +12,7 @@ cylindersize = 516096
 sectors = 63
 heads = 16
 
-partoffset0 = 32256
+partoffset0 = 512
 
 class Journal:
     def lchown(self, root, target, user, group):
@@ -42,6 +42,15 @@ def timeMe(func):
         actual = time.time()
         returner = func(self, *args, **kwargs)
         print "%s: %.5f %.5f" % (func.__name__, time.clock() - clock, time.time() - actual)
+        return returner
+    return wrapper
+
+def outputfilesize(func):
+    def wrapper(self, *args, **kwargs):
+        returner = func(self, *args, **kwargs)
+        st = os.stat(self.outfile)
+        print "size of %s after %s: %d bytes" % (self.outfile, func.__name__, st.st_size)
+        return returner
     return wrapper
 
 class BootableDiskImage:
@@ -49,7 +58,10 @@ class BootableDiskImage:
 
     def __init__(self, file, size, group, installLabel, repoMap=None, arch='x86'):
         self.outfile = file
-        self.imagesize = size + (size % cylindersize)
+        padding = cylindersize - (size % cylindersize)
+        if cylindersize == padding:
+            padding = 0
+        self.imagesize = size + padding
         self.basetrove, self.baseversion, self.baseflavor = parseTroveSpec(group)
         self.InstallLabel = installLabel
         if not repoMap:
@@ -62,6 +74,7 @@ class BootableDiskImage:
             #self.host = urlparse(repoMap[
         self.arch = arch
 
+    @outputfilesize
     @timeMe
     def prepareDiskImage(self):
         #erase the file if it exists
@@ -79,8 +92,8 @@ class BootableDiskImage:
         #Do the partition table
         cylinders = self.imagesize / cylindersize
         #TODO: Add a swap partition?
-        cmd = '/sbin/sfdisk -C %d -S %d -H %d -q %s > /dev/null' % (cylinders, sectors, heads, self.outfile)
-        input = "0 %d L *\n" % cylinders
+        cmd = '/sbin/sfdisk -C %d -S %d -H %d %s > /dev/null' % (cylinders, sectors, heads, self.outfile)
+        input = "0 %d L *\n" % (cylinders)
         sfdisk = util.popen(cmd, 'w')
         sfdisk.write(input)
         retval = sfdisk.close()
@@ -156,33 +169,31 @@ none                    /sys                    sysfs   defaults        0 0
     def fileSystemOddsNEnds(self):
         pass
 
+    @timeMe
+    def MakeE2FsImage(self, file):
+        cmd = '/usr/bin/e2fsimage -f %s -d %s -s %d' % (file,
+                self.fakeroot, (self.imagesize - partoffset0)/1024)
+        util.execute(cmd)
 
+    @outputfilesize
+    @timeMe
+    def WriteBack(self, file):
+        #Now write this FS image back to the original image
+        fd = open(file, 'rb')
+        fdo = open(self.outfile, 'r+b')
+        fdo.seek(partoffset0)
+        util.copyfileobj(fd, fdo, bufSize=524288)
+        fd.close()
+        fdo.close()
+ 
     @timeMe
     def createFileSystem(self, basedir = os.getcwd()):
         fd, file = tempfile.mkstemp('', 'mint-MDI-cFS-', basedir)
         os.close(fd)
         del fd
         try:
-            clock = time.clock()
-            actual = time.time()
-            cmd = '/usr/bin/e2fsimage -f %s -d %s -s %d > /dev/null' % (file,
-                    self.fakeroot, (self.imagesize - partoffset0)/1024)
-            util.execute(cmd)
-            print "createFileSystem Command Line: %s" % cmd
-            print "createFileSystem: e2fsimage:", time.clock() - clock, time.time() - actual
-            clock = time.clock()
-            actual = time.time()
-
-            #Now write this FS image back to the original image
-            fd = open(file, 'rb')
-            fdo = open(self.outfile, 'wb')
-            fdo.seek(partoffset0)
-            util.copyfileobj(fd, fdo, bufSize=524288)
-            fd.close()
-            fdo.close()
-            print "createFileSystem: read/write:", time.clock() - clock, time.time() - actual
-            clock = time.clock()
-            actual = time.time()
+            self.MakeE2FsImage(file)
+            self.WriteBack(file)
         finally:
             pass
             #os.unlink(file)
