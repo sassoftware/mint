@@ -337,5 +337,10 @@ class MintTest(mint_rephelp.WebRepositoryHelper):
         self.failIf('Login' in page.body,
                     'Uncached session appears to be logged out')
 
+    def testUnknownError(self):
+        page = self.assertContent('/unknownError', ok_codes = [200],
+            content = 'An unknown error occured')
+
+
 if __name__ == "__main__":
     testsuite.main()
