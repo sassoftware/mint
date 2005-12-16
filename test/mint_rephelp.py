@@ -113,7 +113,7 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
         self.mintCfg.postCfg()
 
         if self.mintCfg.dbDriver == "mysql":
-            os.system("mysql --password=testpass -u testuser minttest < cleanup-mysql.sql")
+            os.system("echo DROP DATABASE minttest\; CREATE DATABASE minttest | mysql --password=testpass -u testuser minttest")
 
         self.mintServer = mint_server.MintServer(self.mintCfg,
                                                  alwaysReload = True)

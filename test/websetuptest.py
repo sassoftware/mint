@@ -31,7 +31,10 @@ class MintTest(mint_rephelp.WebRepositoryHelper):
   
         page = self.assertContent('/setup/', ok_codes = [200],
             content = "rBuilder Product Setup")
-        
+ 
+        # set site back to configured
+        self.servers.getServer().mintCfg.configured = True
+       
   
 if __name__ == "__main__":
     testsuite.main()
