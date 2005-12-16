@@ -16,7 +16,6 @@ python_files =			\
 	dbversion.py		\
 	grouptrove.py		\
 	jobs.py			\
-        jobdata.py              \
 	jobstatus.py		\
 	mailinglists.py		\
 	mint_error.py		\
@@ -27,7 +26,6 @@ python_files =			\
 	projectlisting.py	\
 	projects.py		\
 	releases.py		\
-        releasedata.py          \
 	releasetypes.py		\
 	requests.py		\
 	searcher.py		\
