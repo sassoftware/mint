@@ -427,6 +427,10 @@ def handler(req):
         cfg = config.MintConfig()
         cfg.read(req.filename)
 
+    if not req.uri.startswith('/setup/') and not cfg.configured:
+        req.headers_out['Location'] = "/setup/"
+        raise apache.SERVER_RETURN, apache.HTTP_MOVED_TEMPORARILY
+
     # normalize req path and base path
     pathInfo = normPath(req.uri)
     basePath = normPath(cfg.basePath)
