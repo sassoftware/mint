@@ -3,6 +3,7 @@
 # Copyright (c) 2004-2005 rPath, Inc.
 #
 
+import tempfile
 import testsuite
 testsuite.setup()
 
@@ -10,6 +11,7 @@ from mint_rephelp import MintRepositoryHelper
 from mint import userlevels, mint_server
 from conary import dbstore
 from conary import sqlite3
+from conary.lib import util
 
 sqlite_schema8_tables = \
                       ["""CREATE TABLE DatabaseVersion (
@@ -307,6 +309,7 @@ schema8_indexes = ["""CREATE INDEX DatabaseVersionIdx
                    """CREATE INDEX PackageNameIdx
                           ON PackageIndex(name)"""]
 
+
 class UpgradePathTest(MintRepositoryHelper):
     def testSchemaVerEight(self):
         # Create a database matching schema 8 paradigm.
@@ -316,17 +319,16 @@ class UpgradePathTest(MintRepositoryHelper):
         # any time we track truly new information, we'll need a new schema
         # upgrade baseline, especially if that data is mangled during upgrade.
 
+        newAuthRepo = tempfile.mktemp()
+        util.copyfile("archive/authdb", newAuthRepo)
+       
         client = self.openMintClient()
         cfg = client.getCfg()
-        cu = self.db.cursor()
-
-        try:
-            authDb = client.server._server.authDb
-        except AttributeError:
-            # FIXME. place an authrepo DB in archive dir for future use
-            authDb = sqlite3.connect('/'.join(cfg.reposPath.split('/')[:-2]) \
-                                     + '/sqldb')
+        cfg.authDbPath = newAuthRepo
+        authDb = sqlite3.connect(newAuthRepo)
+        
         aCu = authDb.cursor()
+        cu = self.db.cursor()
 
         if cfg.dbDriver == 'sqlite':
             cu.execute("""SELECT name FROM sqlite_master
@@ -441,6 +443,7 @@ class UpgradePathTest(MintRepositoryHelper):
         self.failIf(cu.fetchone()[0] != \
                     client.server._server.version.schemaVersion,
                     "Schema failed to follow complete upgrade path")
-
+                    
+                    
 if __name__ == "__main__":
     testsuite.main()
