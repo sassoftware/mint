@@ -177,33 +177,36 @@ class ApacheServer(ChildRepository):
             print >> f, 'cacheChangeSets False'
 
         # write Mint configuration
-        f = open("%s/mint.conf" % self.serverRoot, "w")
-        print >> f, 'siteDomainName %s:%i' % (MINT_DOMAIN, self.port)
-        print >> f, 'projectDomainName %s:%i' % (MINT_DOMAIN, self.port)
-        print >> f, 'externalDomainName %s:%i' % (MINT_DOMAIN, self.port)
-        print >> f, 'hostName %s' % MINT_HOST
-        print >> f, 'secureHost %s.%s' % (MINT_HOST, MINT_DOMAIN)
+        cfg = config.MintConfig()
 
+        cfg.siteDomainName = "%s:%i" % (MINT_DOMAIN, self.port)
+        cfg.projectDomainName = "%s:%i" % (MINT_DOMAIN, self.port)
+        cfg.externalDomainName = "%s:%i" % (MINT_DOMAIN, self.port)
+        cfg.hostName = MINT_HOST
+        cfg.secureHost = "%s.%s" % (MINT_HOST, MINT_DOMAIN)
+        
         sqldriver = os.environ.get('MINT_SQL', 'sqlite')
         if sqldriver == 'sqlite':
-            print >> f, 'dbPath %s' % self.serverRoot + '/mintdb'
+            cfg.dbPath = self.serverRoot + '/mintdb'
         elif sqldriver == 'mysql':
-            print >> f, 'dbPath testuser:testpass@localhost/minttest'
+            cfg.dbPath = 'testuser:testpass@localhost.localdomain/minttest'
         else:
             assert("Invalid database type")
-        print >> f, 'dbDriver %s' % sqldriver
-        
-        print >> f, 'authDbPath %s' % self.reposDir + '/sqldb'
-        print >> f, 'reposPath %s' % self.reposDir + '/repos/'
-        print >> f, 'imagesPath %s' % self.reposDir + '/images/'
-        print >> f, 'authRepoMap %s http://127.0.0.1:%d/conary/' % (self.name, self.port)
-        print >> f, 'authUser %s' % 'mintauth'
-        print >> f, 'authPass %s' % 'mintpass'
-        print >> f, 'debugMode True'
-        print >> f, 'sendNotificationEmails False'
-        print >> f, """commitAction %s/scripts/commitaction --username mintauth --password mintadmin --repmap '%%(repMap)s' --build-label %%(buildLabel)s --module \'%s/mint/rbuilderaction.py --user %%%%(user)s --url http://%s:%d/xmlrpc-private/'""" % (conaryPath, mintPath, 'test.rpath.local', self.port)
-            
-        f.close()
+        cfg.dbDriver = sqldriver
+      
+        cfg.dataPath = self.reposDir
+        cfg.authDbPath = self.reposDir + '/sqldb'
+        cfg.imagesPath = self.reposDir + '/images/'
+        cfg.authRepoMap = {self.name: 'http://127.0.0.1:%d/conary/' % self.port}
+        cfg.authUser = 'mintauth'
+        cfg.authPass = 'mintpass'
+
+        cfg.configured = True
+        cfg.debugMode = True
+        cfg.sendNotificationEmails = False
+        cfg.commitAction = """%s/scripts/commitaction --username mintauth --password mintadmin --repmap '%%(repMap)s' --build-label %%(buildLabel)s --module \'%s/mint/rbuilderaction.py --user %%%%(user)s --url http://%s:%d/xmlrpc-private/'""" % (conaryPath, mintPath, 'test.rpath.local', self.port)
+        cfg.postCfg()
+        self.mintCfg = cfg
 
     def __del__(self):
 	self.stop()
@@ -222,6 +225,11 @@ class ApacheServer(ChildRepository):
         self.createUser()
         if self.serverpid != -1:
             return
+
+        # write mint.conf to disk
+        f = open("%s/mint.conf" % self.serverRoot, "w")
+        self.mintCfg.display(out = f)
+        f.close()
 
 	# HACK
 	os.system("ipcs  -s  | awk '/^0x/ {print $2}' | xargs -n1 -r ipcrm -s")

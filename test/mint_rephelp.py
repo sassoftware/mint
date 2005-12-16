@@ -109,8 +109,8 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
         rephelp.RepositoryHelper.setUp(self)
 
         self.openRepository()
-        self.mintCfg = config.MintConfig()
-        self.mintCfg.read("%s/mint.conf" % self.servers.getServer().serverRoot)
+        self.mintCfg = self.servers.getServer().mintCfg
+        self.mintCfg.postCfg()
 
         if self.mintCfg.dbDriver == "mysql":
             os.system("mysql --password=testpass -u testuser minttest < cleanup-mysql.sql")
