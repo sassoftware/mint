@@ -38,7 +38,6 @@ from conary import versions
 from conary.repository.errors import TroveNotFound
 from conary.repository import netclient
 from conary.repository import shimclient
-from conary.repository.netrepos import netserver
 from conary.deps import deps
 from conary import conarycfg
 from conary import conaryclient
@@ -288,7 +287,7 @@ class MintServer(object):
             if ":" in self.cfg.projectDomainName:
                 port = int(self.cfg.projectDomainName.split(":")[1])
      
-            server = netserver.NetworkRepositoryServer(reposPath, tmpPath,
+            server = shimclient.NetworkRepositoryServer(reposPath, tmpPath,
                                                        '', project.getFQDN(),
                                                        authRepo)
             

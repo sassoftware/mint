@@ -29,6 +29,7 @@ from conary.repository.netrepos import netserver
 from conary.repository.filecontainer import FileContainer
 from conary.repository import changeset
 from conary.repository import errors
+from conary.repository import shimclient
 
 from mint import config
 from mint import mint_server
@@ -79,6 +80,8 @@ def checkAuth(req, repos):
     return authToken
 
 def post(port, isSecure, repos, cfg, req):
+    repos, shimRepo = repos
+
     if isSecure:
         protocol = "https"
     else:
@@ -120,10 +123,12 @@ def post(port, isSecure, repos, cfg, req):
         req.write(resp)
         return apache.OK
     else:
-        webfe = app.MintApp(req, cfg, repServer = repos)
+        webfe = app.MintApp(req, cfg, repServer = shimRepo)
         return webfe._handle(req.uri)
 
 def get(port, isSecure, repos, cfg, req):
+    repos, shimRepo = repos
+
     def _writeNestedFile(req, name, tag, size, f, sizeCb):
         if changeset.ChangedFileTypes.refr[4:] == tag[2:]:
             path = f.read()
@@ -198,7 +203,7 @@ def get(port, isSecure, repos, cfg, req):
 
         return apache.OK
     else:
-        webfe = app.MintApp(req, cfg, repServer = repos)
+        webfe = app.MintApp(req, cfg, repServer = shimRepo)
         return webfe._handle(req.uri)
 
 def putFile(port, isSecure, repos, req):
@@ -290,17 +295,27 @@ def conaryHandler(req, cfg, pathInfo):
                                         cacheChangeSets = True,
                                         logFile = logFile
                                     )
+            shim_repositories[repHash] = shimclient.NetworkRepositoryServer(
+                                        repositoryDir,
+                                        tmpPath,
+                                        urlBase,
+                                        repName,
+                                        repMap
+                                    )
+
             repositories[repHash].forceSecure = cfg.SSL
             repositories[repHash].cfg = cfg
         else:
             repositories[repHash] = None
+            shim_repositories[repHash] = None
     
     repo = repositories[repHash]
+    shimRepo = shim_repositories[repHash]
         
     if method == "POST":
-	return post(port, secure, repo, cfg, req)
+	return post(port, secure, (repo, shimRepo), cfg, req)
     elif method == "GET":
-	return get(port, secure, repo, cfg, req)
+	return get(port, secure, (repo, shimRepo), cfg, req)
     elif method == "PUT":
 	return putFile(port, secure, repo, req)
     else:
@@ -466,6 +481,7 @@ def handler(req):
     return ret
     
 repositories = {}
+shim_repositories = {}
 
 if coverage:
     import atexit

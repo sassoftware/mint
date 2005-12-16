@@ -15,9 +15,10 @@ from conary.repository import errors
 from conary.repository.shimclient import ShimNetClient
 from conary import conaryclient
 
-from webhandler import WebHandler, normPath, HttpForbidden
+from webhandler import WebHandler, normPath, HttpForbidden, HttpNotFound
 from templates import repos
 from mint.session import SqlSession
+from mint import database
 
 class ConaryHandler(WebHandler, http.HttpHandler):
     def __init__(self, req, cfg, repServer = None):
@@ -43,11 +44,14 @@ class ConaryHandler(WebHandler, http.HttpHandler):
 
         path = self.req.path_info.split("/")
         self.cmd = path[3]
-        if path[1] == "repos":
-            self.project = self.client.getProjectByHostname(path[2])
-            self.serverName = self.project.getLabel().split("@")[0]
-        else:
-            self.project = self.client.getProjectByFQDN(self.serverName)
+        try:
+            if path[1] == "repos":
+                self.project = self.client.getProjectByHostname(path[2])
+                self.serverName = self.project.getLabel().split("@")[0]
+            else:
+                self.project = self.client.getProjectByFQDN(self.serverName)
+        except database.ItemNotFound:
+            raise HttpNotFound
 
         self.basePath += "repos/%s" % self.project.getHostname()
         self.basePath = normPath(self.basePath)
