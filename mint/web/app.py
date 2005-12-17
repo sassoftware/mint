@@ -65,8 +65,14 @@ class MintApp(WebHandler):
 
         self.req.content_type = self.content_type
         
-        self.fields = dict(FieldStorage(self.req))
-        
+        try:
+            self.fields = dict(FieldStorage(self.req))
+        # for some reason mod_python raises a 501 error
+        # when it fails to parse a POST request. raise
+        # a 404 instead.
+        except apache.SERVER_RETURN:
+            raise HttpNotFound
+       
         self.basePath = normPath(self.cfg.basePath)
 
         self.siteHandler = SiteHandler()
@@ -133,7 +139,7 @@ class MintApp(WebHandler):
             output = self._write("error", shortError = err_name, error = str(e))
         except fields.MissingParameterError, e:
             output = self._write("error", shortError = "Missing Parameter", error = str(e))
-            
+        
         self.req.write(output)
         return apache.OK
  
@@ -182,8 +188,14 @@ class MintApp(WebHandler):
         self.isOwner = self.userLevel == userlevels.OWNER or self.auth.admin
 
         if self.session.has_key('groupTroveId') and self.auth.authorized:
-            self.groupTrove = self.client.getGroupTrove(self.session['groupTroveId'])
-            self.groupProject = self.client.getProject(self.groupTrove.projectId)
+            try:
+                self.groupTrove = self.client.getGroupTrove(self.session['groupTroveId'])
+            except database.ItemNotFound:
+                del self.session['groupTroveId']
+                self.groupTrove = None
+                self.groupProject = None
+            else:
+                self.groupProject = self.client.getProject(self.groupTrove.projectId)
         else:
             self.groupTrove = None
             self.groupProject = None
