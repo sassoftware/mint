@@ -4,6 +4,7 @@
 #
 # All Rights Reserved
 #
+import cPickle
 import testsuite
 testsuite.setup()
 
@@ -13,6 +14,12 @@ from repostest import testRecipe
 from conary import versions
 
 class MintTest(mint_rephelp.WebRepositoryHelper):
+    def sessionData(self):
+        sid = self.cookies['.rpath.local']['/']['pysid'].value
+        cu = self.db.cursor()
+        cu.execute("SELECT data FROM Sessions WHERE sid=?", sid)
+        return cPickle.loads(cu.fetchone()[0])['_data']
+
     def testNoLocalRedirect(self):
         page = self.assertCode('', code = 200)
 
@@ -217,6 +224,24 @@ class MintTest(mint_rephelp.WebRepositoryHelper):
         groupTrove = client.getGroupTrove(1)
 
         assert(groupTrove.recipeName == 'group-foo')
+
+    def testDeletedGroup(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        projectId = client.newProject('Foo', 'foo', 'rpath.local')
+
+        page = self.webLogin('foouser', 'foopass')
+
+        page = self.fetch('/project/foo/createGroup', postdata =
+                          { 'groupName' : 'foo',
+                            'version'   : '1.0.0' })
+        page = page.fetch('/project/foo/editGroup?id=1')
+
+        s = self.sessionData()
+        cu = self.db.cursor()
+        cu.execute("DELETE FROM GroupTroves WHERE groupTroveId=?", s['groupTroveId'])
+        
+        page.assertContent('/project/foo/groups', ok_codes = [200],
+            content = 'You can use Group Builder to create a group')
 
     def testAddGroupTroveItem(self):
         client, userId = self.quickMintUser('testuser','testpass')
