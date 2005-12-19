@@ -56,6 +56,9 @@ onload = "javascript:;"
 
     <head py:match="item.tag == 'head'" xmlns="http://www.w3.org/1999/xhtml">
         <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=utf-8" />
+        <meta name="KEYWORDS" content="rPath, rBuilder, rBuilder Online, rManager, rPath Linux, rPl, Conary, Software Appliance, Application image, Software as a Service, SaaS, Virtualization, virtualisation, open source, Linux," />
+        <meta name="DESCRIPTION" content="rPath enables applications to be delivered as a software appliance which combines a software application and a streamlined version of system software that easily installs on industry standard hardware (typically a Linux server)." />
+
         <script type="text/javascript" src="${cfg.staticPath}apps/MochiKit/MochiKit.js"/>
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/generic.js"/>
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/library.js"/>
