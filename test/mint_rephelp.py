@@ -115,6 +115,10 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
         if self.mintCfg.dbDriver == "mysql":
             os.system("echo DROP DATABASE minttest\; CREATE DATABASE minttest | mysql --password=testpass -u testuser minttest")
 
+        # if you get permission denied on mysql server, then you need to
+        # grant privleges to testuser on minttest:
+        # GRANT ALL ON minttest.* TO testuser IDENTIFIED BY 'testpass';
+
         self.mintServer = mint_server.MintServer(self.mintCfg,
                                                  alwaysReload = True)
         self.db = self.mintServer.db
