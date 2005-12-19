@@ -54,5 +54,28 @@ class ReportTest(MintRepositoryHelper):
         self.quickMintUser('foouser', 'foopass')
         report = client.server.getReport('site_summary')
 
+    def testActiveUsersReport(self):
+        adminClient, adminId = self.quickMintAdmin('adminuser', 'adminpass')
+        projectId = adminClient.newProject('Foo Project', 'foo', 'rpath.local')
+        client, userId = self.quickMintUser('foouser', 'foopass')
+        report = adminClient.server.getReport('active_users')
+        self.failIf(report['data'] != [],
+                    "active users report should have been empty")
+
+        cu = self.db.cursor()
+        cu.execute("INSERT INTO Commits (timestamp, userId) VALUES(?,?)",
+                   time.time(), userId)
+        cu.execute("INSERT INTO Commits (timestamp, userId) VALUES(?,?)",
+                   time.time(), adminId)
+        cu.execute("INSERT INTO Commits (timestamp, userId) VALUES(?,?)",
+                   time.time(), adminId)
+
+        report = adminClient.server.getReport('active_users')
+
+        self.failIf(report['data'] != \
+                    [['adminuser', 'Test User', 'test@example.com', 2],
+                     ['foouser', 'Test User', 'test@example.com', 1]],
+                    "user activity report wasn't properly computed")
+
 if __name__ == "__main__":
     testsuite.main()
