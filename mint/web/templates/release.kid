@@ -70,6 +70,39 @@ from mint.mint import upstream
 
                 <div py:strip="True" py:if="isOwner">
                     
+                    <h4>What are These Files?</h4>
+
+                    <p>The file(s) entitled <tt>Disc <em>N</em></tt>
+                    represent the CD-ROM(s) required to install this
+                    release. These files are in ISO 9660 format, and can be
+                    burned onto CD-R (or CD-RW) media using the CD burning
+                    software of your choice. The installation process is
+                    then started by booting your system from a CD burned
+                    from the file entitled <tt>Disc 1</tt>.</p>
+
+                    <p>The last two files are used only if you want to
+                    perform a network installation.  To do so, you must
+                    first download all "Disc N" file(s) and export them
+                    (via NFS).  You can then download and use one of the
+                    following files to boot the system to be installed:</p>
+
+                    <ul>
+                        <li>Use the <tt>boot.iso</tt> file if your system
+                        can boot from CD-ROM. This file is an ISO 9660
+                        image of a bootable CD-ROM, and can be burned onto
+                        CD-R (or CD-RW) media using the CD burning software
+                        of your choice.</li>
+
+                        <li>Use the <tt>diskboot.img</tt> file if your
+                        system cannot boot from CD-ROM, but can boot from
+                        some other type of bootable device. This file is a
+                        VFAT filesystem image that can be written (using
+                        the dd command) to a USB pendrive or other bootable
+                        media larger than a diskette.  Note that your
+                        system's BIOS must support booting from USB to use
+                        this file with any USB device.</li>
+                    </ul>
+
                     <h3>Description</h3>
                     <p>${release.getDesc() or "Release has no description."}</p>
                     
