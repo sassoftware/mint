@@ -114,6 +114,8 @@ def post(port, isSecure, repos, cfg, req):
             sys.stderr.flush()
             return apache.HTTP_FORBIDDEN
 
+        # take off the usedAnonymous flag
+        result = result[1:]
         resp = xmlrpclib.dumps((result,), methodresponse=1)
         req.content_type = "text/xml"
         encoding = req.headers_in.get('Accept-encoding', '')
