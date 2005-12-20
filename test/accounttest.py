@@ -12,6 +12,8 @@ from mint.mint_error import PermissionDenied
 from mint.users import LastOwner, UserInduction, MailError
 from mint.database import DuplicateItem
 from conary.repository.netclient import UserNotFound
+from conary.conaryclient import ConaryClient
+from conary import versions
 
 class AccountTest(MintRepositoryHelper):
 
@@ -70,17 +72,6 @@ class AccountTest(MintRepositoryHelper):
             self.fail("Email address was definitely bogus")
         except MailError:
             pass
-
-    def testProjectInteraction(self):
-        client, userId = self.quickMintUser("testuser","testpass")
-        user = client.getUser(userId)
-        projectId = client.newProject("Foo","foo", "example.com")
-        project = client.getProject(projectId)
-        project.addMemberById(userId, userlevels.OWNER)
-        # these functions have a different code path if the
-        # user is a member of projects
-        user.setPassword("passtest")
-        user.cancelUserAccount()
 
     def testProjectInteraction(self):
         client, userId = self.quickMintUser("testuser","testpass")
@@ -284,6 +275,48 @@ class AccountTest(MintRepositoryHelper):
 
         if client.server.searchUsers('test', 10, 0)[1] != 3:
             self.fail("user level user search returned incorrect results.")
+
+    def testChangePassword(self):
+        def deleteMintAuth(projectId):
+            client = self.openMintClient(('mintauth', 'mintpass'))
+            project = client.getProject(projectId)
+            cfg = project.getConaryConfig()
+            repos = ConaryClient(cfg).getRepos()
+            repos.deleteUserByName(versions.Label(project.getLabel()), 'mintauth')
+    
+        client, userId = self.quickMintUser("testuser", "testpass")
+        intProjectId = self.newProject(client, "Internal Project", "internal")
+        extProjectId = self.newProject(client, "External Project", "external")
+
+        deleteMintAuth(extProjectId)
+        extProject = client.getProject(extProjectId)
+        labelId = extProject.getLabelIdMap()['external.rpath.local@rpl:devel']
+        extProject.editLabel(labelId, "external.rpath.local@rpl:devel",
+            'http://test.rpath.local:%d/repos/external/' % self.getPort(), 'anonymous', 'anonymous')
+                    
+
+        cu = self.db.cursor()
+        cu.execute("UPDATE Projects SET external=1 WHERE projectId=?", extProjectId)
+        
+        user = client.getUser(userId)
+        user.setPassword("newpass")
+
+        client = self.openMintClient(('testuser', 'newpass'))
+
+        internal = client.getProject(intProjectId)
+        external = client.getProject(extProjectId)
+        
+        intLabel = versions.Label('internal.rpath.local@rpl:devel')
+        extLabel = versions.Label('external.rpath.local@rpl:devel')
+        
+        # accessed using new password
+        cfg = internal.getConaryConfig()
+        assert(ConaryClient(cfg).getRepos().troveNames(intLabel) == [])
+
+        # external repositor will be accessed anonymously
+        cfg = external.getConaryConfig()
+        assert(ConaryClient(cfg).getRepos().troveNames(extLabel) == [])
+
 
 if __name__ == "__main__":
     testsuite.main()
