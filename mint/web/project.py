@@ -94,8 +94,8 @@ class ProjectHandler(WebHandler):
         return self._write("conaryDevelCfg")
 
     def releases(self, auth):
-        releases = self.project.getReleases(showUnpublished = True)
-        publishedReleases = [x for x in releases if x.getPublished()]
+        releases = sorted(self.project.getReleases(showUnpublished = True), key = lambda x: x.getChangedTime())
+        publishedReleases = sorted([x for x in releases if x.getPublished()], key = lambda x: x.timePublished, reverse = True)
 
         #releasesByTrove = {}
         #for release in releases:
