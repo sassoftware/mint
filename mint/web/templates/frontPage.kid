@@ -14,11 +14,11 @@ from mint import searcher
 -->
     <head>
         <title>${formatTitle('Front Page')}</title>
-        <link py:if="cfg.newsRssFeed" rel="alternate" type="application/rss+xml"
+        <link py:if="cfg.newsRssFeed" rel="alternate" type="application/rss+xml" xmlns="http://www.w3.org/1999/xhtml"
               title="${cfg.productName} Site Announcements" href="${cfg.newsRssFeed}" />
-        <link rel="alternate" type="application/rss+xml"
+        <link rel="alternate" type="application/rss+xml" xmlns="http://www.w3.org/1999/xhtml"
               title="New ${cfg.productName} Projects" href="http://${cfg.siteHost}${cfg.basePath}rss?feed=newProjects" />
-        <link rel="alternate" type="application/rss+xml"
+        <link rel="alternate" type="application/rss+xml" xmlns="http://www.w3.org/1999/xhtml"
               title="New ${cfg.productName} ISO Releases" href="http://${cfg.siteHost}${cfg.basePath}rss?feed=newReleases" />
     </head>
     <body>
