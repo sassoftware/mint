@@ -4,7 +4,7 @@
 #
 
 import testsuite
-from time import sleep
+import time
 testsuite.setup()
 
 from conary import versions
@@ -60,6 +60,12 @@ lockedRecipe = """class GroupTest(GroupRecipe):
 """
 
 class GroupTroveTest(MintRepositoryHelper):
+    def makeCookedTrove(self, branch):
+        self.makeSourceTrove("testcase", testRecipe, branch = branch)
+        self.cookFromRepository("testcase",
+            versions.Label("test.rpath.local@%s" % branch),
+            ignoreDeps = True)
+
     def addTestTrove(self, groupTrove, trvName):
         trvVersion='/test.rpath.local@rpl:devel/1.0-1-1'
         trvFlavor='1#x86|5#use:~!kernel.debug:~kernel.smp'
@@ -86,10 +92,11 @@ class GroupTroveTest(MintRepositoryHelper):
         client.createGroupTrove(projectId, 'group-test2', '1.0.1',
                                 'some sort of description', False)
         gtList = client.listGroupTrovesByProject(projectId)
-        gtList = [(int(x[0]), x[1]) for x in gtList] # normalize longs returned from mysql
+
         refGtList = [(1, 'group-test'), (2, 'group-test2')]
-        if gtList != refGtList:
-            self.fail("listGroupTrovesByProject returned the wrong results: got %s but expected %s"% (str(gtList), str(refGtList)))
+        self.failIf(gtList != refGtList,
+                    "listGroupTrovesByProject returned the wrong results:"
+                    " got %s but expected %s"% (str(gtList), str(refGtList)))
 
         groupTrove.delete()
         try:
@@ -98,25 +105,155 @@ class GroupTroveTest(MintRepositoryHelper):
         except ItemNotFound:
             pass
 
+    def testTransGrpTrvCleanup(self):
+        client = self.openMintClient()
+        groupTrove = self.createTestGroupTrove(client, 0)
+
+        cu = self.db.cursor()
+        cu.execute("UPDATE GroupTroves SET timeModified=?",
+                   time.time() - 86300)
+
+        client.server.cleanupGroupTroves()
+
+        # cleanup should not have deleted item.
+        client.getGroupTrove(groupTrove.id)
+
+        cu.execute("UPDATE GroupTroves SET timeModified=?",
+                   time.time() - 86401)
+
+        client.server.cleanupGroupTroves()
+
+        self.assertRaises(ItemNotFound, client.getGroupTrove, groupTrove.id)
+
+    def testTransGrpTrvProject(self):
+        client, userId = self.quickMintUser('foo', 'bar')
+        projectId = self.newProject(client)
+
+        # forget client
+        client = self.openMintClient()
+        groupTrove = self.createTestGroupTrove(client, 0)
+
+        # there's not actually a project, so listing can't work.
+        self.assertRaises(PermissionDenied, client.listGroupTrovesByProject, 0)
+
+    def testTransGrpTrvAdd(self):
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client)
+
+        self.makeCookedTrove('foo:bar')
+
+        # forget client
+        client = self.openMintClient()
+        groupTrove = self.createTestGroupTrove(client, 0)
+
+        groupTrove.addTroveByProject('testcase', 'test', '', '', False, False,
+                                     False)
+
+    def testTransGrpTrvList(self):
+        client = self.openMintClient()
+        groupTrove = self.createTestGroupTrove(client, 0)
+
+        self.failIf(groupTrove.listTroves() != [],
+                    "Listing items of transient group trove failed.")
+
+    def testTransGrpTrvDesc(self):
+        client = self.openMintClient()
+
+        groupTrove = self.createTestGroupTrove(client, 0)
+
+        groupTrove.setDesc('What do you mean? African or European?')
+
+    def testTransGrpTrvVersionLock(self):
+        client = self.openMintClient()
+        groupTrove = self.createTestGroupTrove(client, 0)
+
+        trvId = self.addTestTrove(groupTrove, 'testcase')
+
+        groupTrove.setTroveVersionLock(trvId, True)
+
+    def testTransGrpTrvUseLock(self):
+        client = self.openMintClient()
+        groupTrove = self.createTestGroupTrove(client, 0)
+
+        trvId = self.addTestTrove(groupTrove, 'testcase')
+
+        groupTrove.setTroveUseLock(trvId, True)
+
+    def testTransGrpTrvInstSetLock(self):
+        client = self.openMintClient()
+        groupTrove = self.createTestGroupTrove(client, 0)
+
+        trvId = self.addTestTrove(groupTrove, 'testcase')
+
+        groupTrove.setTroveInstSetLock(trvId, True)
+
+    def testTransGrpTrvVersion(self):
+        client = self.openMintClient()
+
+        groupTrove = self.createTestGroupTrove(client, 0)
+        groupTroveId = groupTrove.getId()
+
+        assert(groupTrove.upstreamVersion == '1.0.0')
+
+        groupTrove.setUpstreamVersion("1.0.1")
+        groupTrove = client.getGroupTrove(groupTroveId)
+        assert(groupTrove.upstreamVersion == '1.0.1')
+
+    def testTransGrpTrvRecipe(self):
+        client = self.openMintClient()
+        groupTrove= self.createTestGroupTrove(client, 0)
+
+        trvId = self.addTestTrove(groupTrove, "testcase")
+
+        groupTrove.getRecipe()
+
+    def testTransGrpTrvCook(self):
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client)
+
+        #forget the client
+        client = self.openMintClient()
+
+        groupTrove = self.createTestGroupTrove(client, 0)
+        groupTroveId = groupTrove.getId()
+
+        self.makeSourceTrove("testcase", testRecipe)
+        self.cookFromRepository("testcase",
+            versions.Label("test.rpath.local@rpl:devel"),
+            ignoreDeps = True)
+
+        trvId = self.addTestTrove(groupTrove, "testcase")
+        # cook once to ensure we can create a new package
+        jobId = groupTrove.startCookJob("1#x86")
+        job = client.getJob(jobId)
+
+        cookJob = group_trove.GroupTroveCook(client, client.getCfg(), job,
+                                             groupTrove.getId())
+
+        # FIXME: line currently fails with permission denied
+        # need to rework cook jobs to handle cooks without projects
+        assert(cookJob.write() is not None)
+
     def testUpstreamVersions(self):
         client, userId = self.quickMintUser('testuser', 'testpass')
         projectId = self.newProject(client)
 
-        groupTrove = self.createTestGroupTrove(client, projectId, upstreamVer = '1.0')
+        groupTrove = self.createTestGroupTrove(client, projectId,
+                                               upstreamVer = '1.0')
         assert(groupTrove.upstreamVersion == '1.0')
-        
+
         groupTrove.setUpstreamVersion('0.0')
         groupTrove.refresh()
         assert(groupTrove.upstreamVersion == '0.0')
- 
+
         groupTrove.setUpstreamVersion('0')
         groupTrove.refresh()
         assert(groupTrove.upstreamVersion == '0')
-        
+
         groupTrove.setUpstreamVersion('1')
         groupTrove.refresh()
         assert(groupTrove.upstreamVersion == '1')
- 
+
         groupTrove.setUpstreamVersion('0.1.0')
         groupTrove.refresh()
         assert(groupTrove.upstreamVersion == '0.1.0')
@@ -143,12 +280,6 @@ class GroupTroveTest(MintRepositoryHelper):
 
         assert(gTrv['trvVersion'] == '/test.rpath.local@rpl:devel/1.0-1-1')
         assert(gTrv['trvLabel'] == 'test.rpath.local@rpl:devel')
-
-    def makeCookedTrove(self, branch):
-        self.makeSourceTrove("testcase", testRecipe, branch = branch)
-        self.cookFromRepository("testcase",
-            versions.Label("test.rpath.local@%s" % branch),
-            ignoreDeps = True)
 
     def testAddByProject(self):
         client, userId = self.quickMintUser('testuser', 'testpass')
@@ -211,7 +342,6 @@ class GroupTroveTest(MintRepositoryHelper):
         else:
             self.fail('Non-member user allowed to add group trove item')
 
-
     def testAutoResolve(self):
         client, userId = self.quickMintUser('testuser', 'testpass')
         projectId = self.newProject(client)
@@ -259,7 +389,6 @@ class GroupTroveTest(MintRepositoryHelper):
         gTrv = groupTrove.getTrove(trvId)
         assert(gTrv['trvFlavor'] == 'is: x86')
 
-
     def testListGroupTroveItems(self):
         client, userId = self.quickMintUser('testuser', 'testpass')
         projectId = self.newProject(client)
@@ -284,8 +413,6 @@ class GroupTroveTest(MintRepositoryHelper):
 
         groupTrove = self.createTestGroupTrove(client, projectId)
         groupTroveId = groupTrove.getId()
-
-        trvId = self.addTestTrove(groupTrove, "testcase")
 
         desc = 'A different description'
 
@@ -317,9 +444,6 @@ class GroupTroveTest(MintRepositoryHelper):
         groupTrove = self.createTestGroupTrove(client, projectId)
         groupTroveId = groupTrove.getId()
 
-        trvId = self.addTestTrove(groupTrove, "testcase")
-
-        gTrv = groupTrove.getTrove(trvId)
         assert(groupTrove.upstreamVersion == '1.0.0')
 
         groupTrove.setUpstreamVersion("1.0.1")
@@ -360,7 +484,6 @@ class GroupTroveTest(MintRepositoryHelper):
         groupTrove = self.createTestGroupTrove(adminClient, projectId)
         groupTroveId = groupTrove.getId()
         trvId = self.addTestTrove(groupTrove, 'testtrove')
-
 
         try:
             client.server.getGroupTrove(groupTroveId)
@@ -476,7 +599,7 @@ class GroupTroveTest(MintRepositoryHelper):
     def waitForCommit(self, project, troveList):
         iters = 0
         while True:
-            sleep(0.1)
+            time.sleep(0.1)
             iters += 1
             if project.getCommits() == troveList:
                 break
@@ -514,7 +637,7 @@ class GroupTroveTest(MintRepositoryHelper):
         # give some time for the commit action to run
         self.waitForCommit(project, [('group-test:source', '1.0.0-1'),
                                      ('testcase:source', '1.0-1')])
-        
+
         job.setStatus(jobstatus.FINISHED,"Finished")
         # cook a second time to ensure we follow the checkout codepath
         # set the version lock while we're at it, to test the getRecipe path

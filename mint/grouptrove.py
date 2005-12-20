@@ -49,8 +49,9 @@ class GroupTroveTable(database.KeyedTable):
 
     def listGroupTrovesByProject(self, projectId):
         cu = self.db.cursor()
-        cu.execute("SELECT groupTroveId, recipeName FROM %s WHERE projectId=?" % self.name, projectId)
-        return cu.fetchall()
+        cu.execute("SELECT groupTroveId, recipeName FROM %s WHERE projectId=?"\
+                   % self.name, projectId)
+        return [(int(x[0]), x[1]) for x in cu.fetchall()]
 
     def setUpstreamVersion(self, groupTroveId, vers):
         try:
@@ -107,8 +108,17 @@ class GroupTroveTable(database.KeyedTable):
         ret['autoResolve'] = bool(ret['autoResolve'])
         cu = self.db.cursor()
         cu.execute("SELECT hostname from Projects where projectId=?", ret['projectId'])
-        ret['projectName'] = cu.fetchone()[0]
+        r = cu.fetchone()
+        if not r:
+            ret['projectName'] = '(none)'
+        else:
+            ret['projectName'] = r[0]
         return ret
+
+    def cleanup(self):
+        cu = self.db.cursor()
+        cu.execute("""DELETE FROM GroupTroves WHERE projectId=0
+                         AND timeModified<?""", time.time() - 86400)
 
 class GroupTroveItemsTable(database.KeyedTable):
     name = "GroupTroveItems"
