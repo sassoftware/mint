@@ -12,7 +12,7 @@ from mint import searcher
     Copyright 2005 rPath, Inc.
     All Rights Reserved
 -->
-    <head>
+    <head xmlns="http://www.w3.org/1999/xhtml">
         <title>${formatTitle('Front Page')}</title>
         <link py:if="cfg.newsRssFeed" rel="alternate" type="application/rss+xml"
               title="${cfg.productName} Site Announcements" href="${cfg.newsRssFeed}" />

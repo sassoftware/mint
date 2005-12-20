@@ -106,7 +106,7 @@ def injectVersion(version):
         </div>
     </div>
 
-    <div id="groupbuilder" class="palette" py:def="groupTroveBuilder(display='none')" py:strip="False" py:if="groupTrove">
+    <div id="groupbuilder" class="palette" py:def="groupTroveBuilder(display='none')" py:strip="False" py:if="groupTrove" xmlns="http://www.w3.org/1999/xhtml">
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/groupbuilder.js"/>
         <script type="text/javascript">
             var BaseUrl = '${cfg.basePath}';

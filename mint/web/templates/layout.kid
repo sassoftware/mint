@@ -39,16 +39,16 @@ onload = "javascript:;"
         </ul>
     </div>
 
-    <td py:def="logo()" id="logo">
+    <td py:def="logo()" id="logo" xmlns="http://www.w3.org/1999/xhtml">
         <div>
           <span id="rpath">
             <a href="http://$SITE" title="rBuilder main site">
-                <img src="${cfg.staticPath}apps/mint/images/corplogo.gif" alt="rPath Logo" height="80" width="80"/>
+                <img src="${cfg.staticPath}apps/mint/images/corplogo.gif" alt="rPath Logo" height="80" width="80" />
             </a>
           </span>
           <span id="product">
             <a href="http://$SITE" title="rBuilder main site">
-                <img src="${cfg.staticPath}apps/mint/images/prodlogo.gif" alt="rBuilder Logo" height="80" width="218"/>
+                <img src="${cfg.staticPath}apps/mint/images/prodlogo.gif" alt="rBuilder Logo" height="80" width="218" />
             </a>
           </span>
         </div>
@@ -59,17 +59,17 @@ onload = "javascript:;"
         <meta name="KEYWORDS" content="rPath, rBuilder, rBuilder Online, rManager, rPath Linux, rPl, Conary, Software Appliance, Application image, Software as a Service, SaaS, Virtualization, virtualisation, open source, Linux," />
         <meta name="DESCRIPTION" content="rPath enables applications to be delivered as a software appliance which combines a software application and a streamlined version of system software that easily installs on industry standard hardware (typically a Linux server)." />
 
-        <script type="text/javascript" src="${cfg.staticPath}apps/MochiKit/MochiKit.js"/>
-        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/generic.js"/>
-        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/library.js"/>
-        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/xmlrpc.js"/>
-        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/basic.css"/>
-        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/structure.css"/>
-        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/user.css"/>
-        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/topNav.css"/>
-        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/log.css"/>
-        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/contentTypes.css"/>
-        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/mint.css"/>
+        <script type="text/javascript" src="${cfg.staticPath}apps/MochiKit/MochiKit.js" />
+        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/generic.js" />
+        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/library.js" />
+        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/xmlrpc.js" />
+        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/basic.css" />
+        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/structure.css" />
+        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/user.css" />
+        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/topNav.css" />
+        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/log.css" />
+        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/contentTypes.css" />
+        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/mint.css" />
 
         <link rel="shortcut icon" href="http://www.rpath.com/favicon.ico" />
         <link rel="icon" href="http://www.rpath.com/favicon.ico" />

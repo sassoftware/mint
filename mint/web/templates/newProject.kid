@@ -18,7 +18,7 @@
     <head>
         <title>${formatTitle('Create a Project')}</title>
     </head>
-    <body>
+    <body xmlns="http://www.w3.org/1999/xhtml">
         <td id="main" class="spanleft" >
             <div class="pad">
                 <p py:if="errors" class="error">Project Creation Error${len(errors) > 1 and 's' or ''}</p>

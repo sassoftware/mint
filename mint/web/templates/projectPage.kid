@@ -22,7 +22,7 @@ from mint.mint import upstream
         <a href="#">${project.getName()}</a>
     </div>
 
-    <head>
+    <head xmlns="http://www.w3.org/1999/xhtml">
         <title>${formatTitle("Project Page: %s"%project.getName())}</title>
         <link py:if="releases" rel="alternate" type="application/rss+xml"
               title="${project.getName()} Releases" href="${basePath}rss" />
