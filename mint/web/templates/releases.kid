@@ -54,13 +54,13 @@
             <div class="pad">
                 <h2>${project.getName()}<br />Releases</h2>
                 <h3 py:if="isOwner">Published Releases</h3>
-                ${releasesTable(publishedReleases, isOwner)}
+                ${releasesTable(reversed(publishedReleases), isOwner)}
                 <p py:if="not releases">This project has no releases.</p>
 
                 <div py:if="isOwner">
 
                     <h3>Unpublished Releases</h3>
-                    ${releasesTable([x for x in releases if not x.getPublished()], isOwner)}
+                    ${releasesTable(reversed(x for x in releases if not x.getPublished()), isOwner)}
                     <p py:if="isOwner"><a href="newRelease">Create a new release</a></p>
                 </div>
             </div>
