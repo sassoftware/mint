@@ -892,8 +892,9 @@ class MintServer(object):
         for projectId, level in self.getProjectIdsByMember(userId):
             project = projects.Project(self, projectId)
 
-            authRepo = self._getProjectRepo(project)
-            authRepo.changePassword(project.getLabel(), username, newPassword)
+            if not project.external:
+                authRepo = self._getProjectRepo(project)
+                authRepo.changePassword(project.getLabel(), username, newPassword)
 
         self.users.changePassword(username, newPassword)
 
