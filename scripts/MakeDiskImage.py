@@ -1,6 +1,6 @@
 import os, sys, errno, tempfile, time
 from conary.lib import util
-from conary import conarycfg, conaryclient, versions
+from conary import conarycfg, conaryclient, versions, updatecmd
 from conary.repository import errors
 from conary.conaryclient.cmdline import parseTroveSpec
 from urlparse import urlparse
@@ -12,7 +12,9 @@ cylindersize = 516096
 sectors = 63
 heads = 16
 
-partoffset0 = 32256
+partoffset0 = 512
+
+datadir = os.path.join(os.path.dirname(__file__), 'DiskImageData')
 
 class Journal:
     def lchown(self, root, target, user, group):
@@ -42,6 +44,15 @@ def timeMe(func):
         actual = time.time()
         returner = func(self, *args, **kwargs)
         print "%s: %.5f %.5f" % (func.__name__, time.clock() - clock, time.time() - actual)
+        return returner
+    return wrapper
+
+def outputfilesize(func):
+    def wrapper(self, *args, **kwargs):
+        returner = func(self, *args, **kwargs)
+        st = os.stat(self.outfile)
+        print "size of %s after %s: %d bytes" % (self.outfile, func.__name__, st.st_size)
+        return returner
     return wrapper
 
 class BootableDiskImage:
@@ -49,7 +60,10 @@ class BootableDiskImage:
 
     def __init__(self, file, size, group, installLabel, repoMap=None, arch='x86'):
         self.outfile = file
-        self.imagesize = size + (size % cylindersize)
+        padding = cylindersize - (size % cylindersize)
+        if cylindersize == padding:
+            padding = 0
+        self.imagesize = size + padding
         self.basetrove, self.baseversion, self.baseflavor = parseTroveSpec(group)
         self.InstallLabel = installLabel
         if not repoMap:
@@ -62,6 +76,7 @@ class BootableDiskImage:
             #self.host = urlparse(repoMap[
         self.arch = arch
 
+    @outputfilesize
     @timeMe
     def prepareDiskImage(self):
         #erase the file if it exists
@@ -79,22 +94,15 @@ class BootableDiskImage:
         #Do the partition table
         cylinders = self.imagesize / cylindersize
         #TODO: Add a swap partition?
-        cmd = '/sbin/sfdisk -C %d -S %d -H %d -q %s > /dev/null' % (cylinders, sectors, heads, self.outfile)
-        input = "0 %d L *\n" % cylinders
+        cmd = '/sbin/sfdisk -C %d -S %d -H %d %s > /dev/null' % (cylinders, sectors, heads, self.outfile)
+        input = "0 %d L *\n" % (cylinders)
         sfdisk = util.popen(cmd, 'w')
         sfdisk.write(input)
         retval = sfdisk.close()
         #Don't worry about formatting or labeling
 
     def _writefstab(self):
-        ofile = open('etc/fstab', 'w', 0644)
-        ofile.write('''
-none                    /dev/pts                devpts  gid=5,mode=620  0 0
-none                    /dev/shm                tmpfs   defaults        0 0
-none                    /proc                   proc    defaults        0 0
-none                    /sys                    sysfs   defaults        0 0
-''')
-        ofile.close()
+        util.copyfile(os.path.join(datadir, 'fstab'), os.path.join(self.fakeroot, 'etc'))
 
     @timeMe
     def createTemporaryRoot(self, basedir = os.getcwd()):
@@ -104,8 +112,6 @@ none                    /sys                    sysfs   defaults        0 0
         cwd = os.getcwd()
         os.chdir(self.fakeroot)
         util.mkdirChain( 'etc', 'boot/grub', 'tmp', 'sys' )
-        #write the fstab
-        self._writefstab()
         os.chdir(cwd)
 
     @timeMe
@@ -125,64 +131,87 @@ none                    /sys                    sysfs   defaults        0 0
         self.cclient = conaryclient.ConaryClient(cfg)
 
     @timeMe
-    def populateTemporaryRoot(self):
+    def updateGroupChangeSet(self):
         try:
             itemList = [(self.basetrove, (None, None), (self.baseversion, self.baseflavor), True)]
             sys.stderr.flush()
             uJob, suggMap = self.cclient.updateChangeSet(itemList, resolveDeps = False)
         except errors.TroveNotFound:
             raise
+        return uJob
 
+    @timeMe
+    def applyGroupUpdate(self, uJob):
         #Capture devices, taghandlers and ownership changes
         journal = Journal()
         #Install the group
         #TODO Cache the tagScripts to run via some virtualized linux process
-        self.cclient.applyUpdate(uJob, journal=journal)
+        self.cclient.applyUpdate(uJob, journal=journal, tagScript=os.path.join(self.fakeroot, 'tmp', 'tag-scripts'))
 
     @timeMe
-    def installKernel(self):
+    def populateTemporaryRoot(self):
+        uJob = self.updateGroupChangeSet()
+        self.applyGroupUpdate(uJob)
+
+    @timeMe
+    def updateKernelChangeSet(self):
         #Install the Kernel
         try:
-            kernel, version, flavor = parseTroveSpec('kernel[is: %s]' % self.arch)
+            kernel, version, flavor = parseTroveSpec('kernel[!kernel.smp is: %s]' % self.arch)
             itemList = [(kernel, (None, None), (version, flavor), True)]
             uJob, suggMap = self.cclient.updateChangeSet(itemList, sync=True,
                                 resolveDeps=False)
         except errors.TroveNotFound:
             raise
+        return uJob
+
+    @timeMe
+    def applyKernelUpdate(self, uJob):
         journal = Journal()
-        self.cclient.applyUpdate(uJob, journal=journal, tagScript='/dev/null')
+        self.cclient.applyUpdate(uJob, journal=journal, tagScript=os.path.join(self.fakeroot, 'tmp', 'tag-scripts'))
+
+    @timeMe
+    def installKernel(self):
+        uJob = self.updateKernelChangeSet()
+        self.applyKernelUpdate(uJob)
 
     @timeMe
     def fileSystemOddsNEnds(self):
-        pass
+        #write the fstab
+        self._writefstab()
+        #make the swap file
+        #Create the init script
+        util.copyfile(os.path.join(datadir, 'init.sh'), os.path.join(self.fakeroot, 'tmp'))
+        os.chmod(os.path.join(self.fakeroot, 'tmp', 'init.sh'), 0755)
 
 
+    @timeMe
+    def MakeE2FsImage(self, file):
+        cmd = '/usr/bin/e2fsimage -f %s -d %s -s %d' % (file,
+                self.fakeroot, (self.imagesize - partoffset0)/1024)
+        util.execute(cmd)
+        cmd = '/sbin/e2label %s /' % file
+        util.execute(cmd)
+
+    @outputfilesize
+    @timeMe
+    def WriteBack(self, file):
+        #Now write this FS image back to the original image
+        fd = open(file, 'rb')
+        fdo = open(self.outfile, 'r+b')
+        fdo.seek(partoffset0)
+        util.copyfileobj(fd, fdo, bufSize=524288)
+        fd.close()
+        fdo.close()
+ 
     @timeMe
     def createFileSystem(self, basedir = os.getcwd()):
         fd, file = tempfile.mkstemp('', 'mint-MDI-cFS-', basedir)
         os.close(fd)
         del fd
         try:
-            clock = time.clock()
-            actual = time.time()
-            cmd = '/usr/bin/e2fsimage -f %s -d %s -s %d > /dev/null' % (file,
-                    self.fakeroot, (self.imagesize - partoffset0)/1024)
-            util.execute(cmd)
-            print "createFileSystem Command Line: %s" % cmd
-            print "createFileSystem: e2fsimage:", time.clock() - clock, time.time() - actual
-            clock = time.clock()
-            actual = time.time()
-
-            #Now write this FS image back to the original image
-            fd = open(file, 'rb')
-            fdo = open(self.outfile, 'wb')
-            fdo.seek(partoffset0)
-            util.copyfileobj(fd, fdo, bufSize=524288)
-            fd.close()
-            fdo.close()
-            print "createFileSystem: read/write:", time.clock() - clock, time.time() - actual
-            clock = time.clock()
-            actual = time.time()
+            self.MakeE2FsImage(file)
+            self.WriteBack(file)
         finally:
             pass
             #os.unlink(file)
