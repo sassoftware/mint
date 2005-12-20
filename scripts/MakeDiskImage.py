@@ -168,7 +168,7 @@ class BootableDiskImage:
     @timeMe
     def applyKernelUpdate(self, uJob):
         journal = Journal()
-        self.cclient.applyUpdate(uJob, journal=journal, tagScript=os.path.join(self.fakeroot, 'tmp', 'tag-scripts'))
+        self.cclient.applyUpdate(uJob, journal=journal, tagScript=os.path.join(self.fakeroot, 'tmp', 'kernel-tag-scripts'))
 
     @timeMe
     def installKernel(self):
@@ -183,7 +183,9 @@ class BootableDiskImage:
         #Create the init script
         util.copyfile(os.path.join(datadir, 'init.sh'), os.path.join(self.fakeroot, 'tmp'))
         os.chmod(os.path.join(self.fakeroot, 'tmp', 'init.sh'), 0755)
-
+        util.copyfile(os.path.join(datadir, 'pre-tag-scripts'), os.path.join(self.fakeroot, 'tmp'))
+        util.copyfile(os.path.join(datadir, 'post-tag-scripts'), os.path.join(self.fakeroot, 'tmp'))
+        util.copyfile(os.path.join(datadir, 'post-kernel-tag-scripts'), os.path.join(self.fakeroot, 'tmp'))
 
     @timeMe
     def MakeE2FsImage(self, file):

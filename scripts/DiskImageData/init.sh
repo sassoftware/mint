@@ -32,18 +32,16 @@ mount -f /dev/pts >/dev/null 2>&1
 
 [ -f /tmp/post-kernel-tag-scripts ] && /bin/sh /tmp/post-kernel-tag-scripts
 
-bash
-
 #clean up the udb devices
 rm /dev/udba1
 rm /dev/udba
 
 rm -rf /tmp/*
-umount /proc
-umount /sys
-umount /dev/pts
-
 mount -n -o remount,ro /
+umount -n /proc
+umount -n /sys
+umount -n /dev/pts
+
 
 bash
 
