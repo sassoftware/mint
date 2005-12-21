@@ -65,7 +65,7 @@ class ProjectTest(MintRepositoryHelper):
     def testMakefiles(self):
         missing = False
         skipDirs = ('test/archive/arch', 'test/archive/use',
-                    'mint/web/content', '.hg')
+                    'mint/web/content', '.hg', 'scripts/DiskImageData')
         for dirPath, dirNames, fileNames in \
                 os.walk(os.getenv('MINT_PATH')):
             if "Makefile" not in fileNames:
