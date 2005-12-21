@@ -101,7 +101,7 @@ class UsersTable(database.KeyedTable):
                     blurb           STR DEFAULT ""
                     )"""
 
-    fields = ['userId', 'username', 'fullName', 'email',
+    fields = ['userId', 'username', 'fullName', 'salt', 'passwd', 'email',
               'displayEmail', 'timeCreated', 'timeAccessed',
               'active', 'blurb']
 

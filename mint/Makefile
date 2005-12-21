@@ -4,7 +4,7 @@
 # All Rights Reserved
 #
 
-SUBDIRS = web distro reports
+SUBDIRS = web distro reports templates
 
 python_files =			\
 	__init__.py		\
