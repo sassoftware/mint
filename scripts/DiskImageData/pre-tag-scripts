@@ -1,1 +1,8 @@
-bash
+# partially set up grub
+mkdir -p /boot/grub
+cp /usr/share/grub/i386-pc/* /boot/grub
+touch /boot/grub/grub.conf
+chmod 600 /boot/grub/grub.conf
+ln -s grub.conf /boot/grub/menu.lst
+ln -s ../boot/grub.conf /etc/grub.conf
+

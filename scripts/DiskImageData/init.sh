@@ -9,7 +9,7 @@ state=`LC_ALL=C awk '/ \/ / && ($3 !~ /rootfs/) { print $4 }' /proc/mounts`
 
 #Make the uml devices
 mknod /dev/ubda b 98 0
-mknod /dev/udba1 b 98 1
+mknod /dev/ubda1 b 98 1
 
 # Clear mtab
 (> /etc/mtab) &> /dev/null
@@ -32,9 +32,11 @@ mount -f /dev/pts >/dev/null 2>&1
 
 [ -f /tmp/post-kernel-tag-scripts ] && /bin/sh /tmp/post-kernel-tag-scripts
 
-#clean up the udb devices
-rm /dev/udba1
-rm /dev/udba
+bash
+
+#clean up the ubd devices
+rm /dev/ubda1
+rm /dev/ubda
 
 rm -rf /tmp/*
 mount -n -o remount,ro /
