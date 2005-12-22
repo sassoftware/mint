@@ -84,7 +84,7 @@ def getJobId(parentThread = None):
         parentThread = getParentThread
     try:
         job = parentThread.job
-    except NameError:
+    except AttributeError:
         # we'll get here if current thread is not a JobRunner thread.
         return None
     return job.jobId
