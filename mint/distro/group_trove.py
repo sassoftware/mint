@@ -33,32 +33,86 @@ stockFlavors = {
 }
 
 class GroupTroveCook(ImageGenerator):
+    def _localCook(self, groupTrove):
+        curDir = os.getcwd()
+
+        ret = None
+        try:
+            path = tempfile.mkdtemp()
+            recipe = groupTrove.getRecipe()
+            sourceName = groupTrove.recipeName + ".recipe"
+            arch = deps.ThawDependencySet(self.job.getDataValue("arch"))
+
+            cfg = conarycfg.ConaryConfiguration()
+
+            cfg.name = "rBuilder Online"
+            cfg.contact = "http://www.rpath.org"
+            cfg.quiet = False
+            cfg.buildLabel = versions.Label('conary.rpath.com@non:exist')
+            cfg.buildFlavor = deps.parseFlavor(stockFlavors[arch.freeze()])
+            cfg.initializeFlavors()
+
+            for label in [x.split('@')[0] for x in groupTrove.getLabelPath()]:
+                project = self.client.getProjectByFQDN(label)
+                cfg.repositoryMap.update(\
+                    project.getConaryConfig().repositoryMap)
+
+            client = conaryclient.ConaryClient(cfg)
+            repos = client.getRepos()
+
+            os.chdir(path)
+
+            recipeFile = open(groupTrove.recipeName + '.recipe', 'w')
+            recipeFile.write(recipe)
+            recipeFile.flush()
+            recipeFile.close()
+
+            # cook recipe as local changeset
+            ret = cook.cookItem(repos, cfg, sourceName)
+            sys.stderr.flush()
+            sys.stdout.flush()
+            ret = ret[0][0]
+
+            # FIXME: feed this changeset into gencslist
+            raise NotImplementedError
+        finally:
+            os.chdir(curDir)
+
+        if ret:
+            return ret[0], ret[1], ret[2].freeze()
+        else:
+            return None
+
     def write(self):
         self.status("Cooking group")
         groupTrove = self.client.getGroupTrove(self.job.getGroupTroveId())
+        projectId = groupTrove.projectId
+        if not projectId:
+            return self._localCook(groupTrove)
 
         curDir = os.getcwd()
 
         ret = None
         try:
             path = tempfile.mkdtemp()
-            projectId = groupTrove.projectId
             recipe = groupTrove.getRecipe()
             sourceName = groupTrove.recipeName + ":source"
             arch = deps.ThawDependencySet(self.job.getDataValue("arch"))
 
             project = self.client.getProject(projectId)
 
-            cfg = project.getConaryConfig(overrideSSL = True, useSSL = self.cfg.SSL)
+            cfg = project.getConaryConfig(overrideSSL = True,
+                                          useSSL = self.cfg.SSL)
             cfg.name = "rBuilder Online"
             cfg.contact = "http://www.rpath.org"
             cfg.quiet = True
             cfg.buildLabel = versions.Label(project.getLabel())
             cfg.buildFlavor = deps.parseFlavor(stockFlavors[arch.freeze()])
             cfg.initializeFlavors()
-            
+
             repos = conaryclient.ConaryClient(cfg).getRepos()
-            trvLeaves = repos.getTroveLeavesByLabel({sourceName : {cfg.buildLabel : None} }).get(sourceName, [])
+            trvLeaves = repos.getTroveLeavesByLabel(\
+                {sourceName : {cfg.buildLabel : None} }).get(sourceName, [])
 
             os.chdir(path)
             if trvLeaves:

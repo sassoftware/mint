@@ -230,8 +230,6 @@ class GroupTroveTest(MintRepositoryHelper):
         cookJob = group_trove.GroupTroveCook(client, client.getCfg(), job,
                                              groupTrove.getId())
 
-        # FIXME: line currently fails with permission denied
-        # need to rework cook jobs to handle cooks without projects
         assert(cookJob.write() is not None)
 
     def testUpstreamVersions(self):
