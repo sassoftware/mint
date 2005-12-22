@@ -241,7 +241,7 @@ class InstallableIso(ImageGenerator):
         
         revision = version.trailingRevision().asString()
         topdir = os.path.join(self.cfg.imagesPath, project.getHostname(),
-            release.getArch(), revision, str(self.job.getId()), "unified") 
+            release.getArch(), str(release.getId()), "unified") 
         self.topdir = topdir
         util.mkdirChain(topdir)
         # subdir = string.capwords(project.getHostname())
