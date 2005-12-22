@@ -253,6 +253,8 @@ class MintServer(object):
             return (True, ("SearchTermsError", str(e)))
         except users.AuthRepoError, e:
             return (True, ("AuthRepoError", str(e)))
+        except jobs.DuplicateJob, e:
+            return (True, ("DuplicateJob", str(e)))
         #except Exception, error:
         #    exc_name = sys.exc_info()[0].__name__
         #    return (True, (exc_name, error, str(error)))
