@@ -240,7 +240,8 @@ class InstallableIso(ImageGenerator):
         client = conaryclient.ConaryClient(cfg)
         
         revision = version.trailingRevision().asString()
-        topdir = os.path.join(self.cfg.imagesPath, project.getHostname(), release.getArch(), revision, "unified") 
+        topdir = os.path.join(self.cfg.imagesPath, project.getHostname(),
+            release.getArch(), revision, str(self.job.getId()), "unified") 
         self.topdir = topdir
         util.mkdirChain(topdir)
         # subdir = string.capwords(project.getHostname())
