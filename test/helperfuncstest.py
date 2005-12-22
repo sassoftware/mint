@@ -90,5 +90,15 @@ class ProjectTest(MintRepositoryHelper):
         render = templates.write(t)
         assert render == "This is a plain text string."
 
+    def testExplicitTransactions(self):
+        if self.mintCfg.dbDriver != 'sqlite':
+            raise testsuite.SkipTestException
+        cu = self.db.cursor()
+
+        # dbstore explicit transaction method
+        self.db.transaction()
+        assert(self.db.dbh.inTransaction)
+        self.db.rollback()
+
 if __name__ == "__main__":
     testsuite.main()

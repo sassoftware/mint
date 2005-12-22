@@ -317,6 +317,25 @@ class AccountTest(MintRepositoryHelper):
         cfg = external.getConaryConfig()
         assert(ConaryClient(cfg).getRepos().troveNames(extLabel) == [])
 
+    def testHangingGroupMembership(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        client.removeUserAccount(userId)
+
+        cu = self.db.cursor()
+        cu.execute("SELECT * FROM UserGroupMembers WHERE userId=?", userId)
+
+        self.failIf(cu.fetchall(),
+                    "Leftover UserGroupMembers after account was canceled")
+
+    def testHangingGroups(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        client.removeUserAccount(userId)
+
+        cu = self.db.cursor()
+        cu.execute("SELECT * FROM UserGroups WHERE userGroup=?", 'testuser')
+
+        self.failIf(cu.fetchall(),
+                    "Leftover UserGroup after account was canceled")
 
 if __name__ == "__main__":
     testsuite.main()

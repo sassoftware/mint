@@ -124,8 +124,8 @@ class UsersTable(database.KeyedTable):
                 # add the necessary columns to the Users table
                 cu = self.db.cursor() 
                 aCu = self.authDb.cursor()
-                # add the mintauth and anonymous users
-                for userName in ('mintauth', 'anonymous'):
+                # add the mintauth user
+                for userName in ('mintauth',):
                     cu.execute("""INSERT INTO Users (username, active)
                                   VALUES('%s', 1)""" % userName)
                 if self.cfg.dbDriver == 'sqlite':
@@ -185,14 +185,14 @@ class UsersTable(database.KeyedTable):
         noAuth = {'authorized': False, 'userId': -1}
         if authToken == ('anonymous', 'anonymous'):
             return noAuth
-        
+
         username, password = authToken
         cu = self.db.cursor()
         cu.execute("""SELECT userId, email, displayEmail, fullName, blurb,
                         timeAccessed FROM Users 
                       WHERE username=? AND active=1""", username)
         r = cu.fetchone()
-   
+        
         if r:
             groups = cachedGroups
             if checkRepo:
@@ -268,7 +268,6 @@ class UsersTable(database.KeyedTable):
 
         cu.execute("SELECT userGroupId FROM UserGroups WHERE userGroup=?",
                    username)
-
         userGroupId = cu.fetchone()[0]
 
         salt, passwd = self._mungePassword(password)
@@ -278,7 +277,9 @@ class UsersTable(database.KeyedTable):
             message = templates.write(templates.registerNewUser,
                 username = username, cfg = self.cfg, confirm = confirm)
             try:
-                sendMailWithChecks(self.cfg.adminMail, self.cfg.productName, email, "Welcome to %s!" % self.cfg.productName, message)
+                sendMailWithChecks(self.cfg.adminMail, self.cfg.productName,
+                                   email, "Welcome to %s!" % \
+                                   self.cfg.productName, message)
             except:
                 # must roll back authrepo
                 # FIXME we need to roll back our group if it didn't work.
@@ -295,7 +296,17 @@ class UsersTable(database.KeyedTable):
                               timeAccessed = 0,
                               blurb = blurb,
                               active = int(active))
+
             cu.execute("INSERT INTO UserGroupMembers VALUES(?,?)", userGroupId,
+                       userId)
+            cu.execute("""SELECT userGroupId FROM UserGroups
+                              WHERE userGroup='public'""")
+            # FIXME, just skip the public group if it's not there.
+            try:
+                pubGroupId = cu.fetchone()[0]
+            except:
+                raise AssertionError("There's no public group!")
+            cu.execute("INSERT INTO UserGroupMembers VALUES(?,?)", pubGroupId,
                        userId)
 
         except database.DuplicateItem:
@@ -343,12 +354,14 @@ class UsersTable(database.KeyedTable):
                         the display e-mail
                         the user's blurb
         """
-        columns = ['userId', 'userName', 'fullName', 'displayEmail', 'blurb', 'timeAccessed']
+        columns = ['userId', 'userName', 'fullName', 'displayEmail', 'blurb',
+                   'timeAccessed']
         searchcols = ['userName', 'fullName', 'displayEmail', 'blurb']
 
-        ids, count =  database.KeyedTable.search(self, columns, 'Users',
-                                                 searcher.Searcher.where(terms, searchcols, "AND active=1"),
-                                                 "userName", None, limit, offset)
+        ids, count =  database.KeyedTable.search( \
+            self, columns, 'Users',
+            searcher.Searcher.where(terms, searchcols, "AND active=1"),
+            "userName", None, limit, offset)
         for i, x in enumerate(ids[:]):
             ids[i] = list(x)
             ids[i][4] = searcher.Searcher.truncate(x[4], terms)
@@ -487,7 +500,8 @@ class ProjectUsersTable(database.DatabaseTable):
                       FROM Projects pr, ProjectUsers p, Users u
                       WHERE pr.projectId=p.projectId AND p.userId=u.userId
                       AND pr.hostname=?
-                      AND p.level=? AND pr.disabled=0""", projectname, userlevels.OWNER)
+                      AND p.level=? AND pr.disabled=0""", projectname,
+                   userlevels.OWNER)
         data = []
         for r in cu.fetchall():
             data.append(list(r))
@@ -514,7 +528,8 @@ class ProjectUsersTable(database.DatabaseTable):
         if cu.fetchall():
             raise database.DuplicateItem("membership")
         
-        cu.execute("INSERT INTO ProjectUsers VALUES(?, ?, ?)", projectId, userId, level)
+        cu.execute("INSERT INTO ProjectUsers VALUES(?, ?, ?)", projectId,
+                   userId, level)
 
     def onlyOwner(self, projectId, userId):
         cu = self.db.cursor()
@@ -604,7 +619,11 @@ class UserGroupsTable(database.KeyedTable):
         if 'authDbPath' in cfg._options and cfg.authDbPath:
             self.authDb = sqlite3.connect(cfg.authDbPath)
         database.DatabaseTable.__init__(self, db)
-        self.confirm_table = ConfirmationsTable(db)
+        cu = self.db.cursor()
+        cu.execute("""SELECT userGroupId FROM UserGroups
+                          WHERE userGroup='public'""")
+        if not cu.fetchall():
+            cu.execute("INSERT INTO UserGroups (userGroup) VALUES('public')")
 
     def versionCheck(self):
         dbversion = self.getDBVersion()
@@ -616,8 +635,8 @@ class UserGroupsTable(database.KeyedTable):
                 aCu = self.authDb.cursor()
                 aCu.execute('SELECT * FROM UserGroups')
                 for userId, userName in aCu.fetchall():
-                    cu.execute("INSERT INTO UserGroups VALUES(%d, '%s')" %
-                               (userId, userName))
+                    cu.execute("""INSERT INTO UserGroups (userGroup)
+                                      VALUES('%s')""" % userName)
                 return (dbversion + 1) == self.schemaVersion
         return True
 
@@ -648,7 +667,6 @@ class UserGroupMembersTable(database.KeyedTable):
         if 'authDbPath' in cfg._options and cfg.authDbPath:
             self.authDb = sqlite3.connect(cfg.authDbPath)
         database.DatabaseTable.__init__(self, db)
-        self.confirm_table = ConfirmationsTable(db)
 
     def versionCheck(self):
         dbversion = self.getDBVersion()
@@ -688,9 +706,21 @@ class UserGroupMembersTable(database.KeyedTable):
                     cu.execute("""INSERT INTO UserGroupMembers
                                       VALUES(%d, '%s')""" % (userGroupId,
                                                              userId))
+                cu.execute("""SELECT userGroupId FROM UserGroups
+                                  WHERE userGroup='public'""")
+                groupId = cu.fetchone()[0]
+                cu.execute("SELECT userId from Users")
+                for userId in [x[0] for x in cu.fetchall()]:
+                    cu.execute("INSERT INTO UserGroupMembers VALUES(?, ?)",
+                               groupId, userId)
                 return (dbversion + 1) == self.schemaVersion
         return True
 
+    def getGroupsForUser(self, userId):
+        cu = self.db.cursor()
+        cu.execute("SELECT userGroupId FROM UserGroupMembers WHERE userId=?",
+                   userId)
+        return [x[0] for x in cu.fetchall()]
 
 def confirmString():
     """

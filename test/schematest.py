@@ -427,17 +427,24 @@ class UpgradePathTest(MintRepositoryHelper):
         self.failIf((None, None) in cu.fetchall(),
                     "Some passwords failed to transfer from the authrepo")
 
-        cu.execute("SELECT * FROM UserGroups")
+        cu.execute("SELECT * FROM UserGroups ORDER BY userGroupId")
         self.failIf([(int(x[0]), x[1]) for x in cu.fetchall()] != \
-                     [(1, 'mintauth'), (2, 'anonymous'), (3, 'adminuser'),
-                      (4, 'testuser'), (5, 'unconf'), (6, 'MintAdmin'),
-                      (7, 'missing')],
+                    [(1, 'public'), (2, 'mintauth'), (3, 'anonymous'),
+                     (4, 'adminuser'), (5, 'testuser'), (6, 'unconf'),
+                     (7, 'MintAdmin'), (8, 'missing')],
                     "UserGroups mangled during upgrade process")
-        cu.execute("SELECT * FROM UserGroupMembers")
 
+        cu.execute("""SELECT * FROM UserGroupMembers
+                          ORDER BY userGroupId, userId""")
         self.failIf([(int(x[0]), int(x[1])) for x in cu.fetchall()] \
-                    != [(1, 4), (2, 5), (3, 1), (4, 2), (5, 3), (6, 1)],
+                    != [(1, 1), (1, 2), (1, 3), (1, 4), (2, 4), (4, 1), (5, 2),
+                        (6, 3), (7, 1)],
                     "UserGroupMembers mangled during upgrade process")
+
+        cu.execute("SELECT userId FROM Users WHERE username='public'")
+        self.failIf(cu.fetchall(),
+                    "Upgrade process introduced a 'public' user account"
+                    " (as opposed to a user group only)")
 
         cu.execute("SELECT IFNULL(MAX(version), 0) FROM DatabaseVersion")
         self.failIf(cu.fetchone()[0] != \

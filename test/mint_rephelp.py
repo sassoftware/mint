@@ -48,8 +48,6 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
             groupId = cu.fetchone()[0]
             cu.execute("INSERT INTO UserGroups VALUES(?, 'MintAdmin')",
                        groupId)
-            cu.execute("INSERT INTO UserGroupMembers VALUES (?,?)",
-                       groupId, groupId)
             self.db.commit()
         else:
             cu.execute("""SELECT userGroupId FROM UserGroups
