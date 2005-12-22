@@ -7,7 +7,7 @@ from mint import searcher
 <html
       xmlns:py="http://purl.org/kid/ns#"
       xmlns:html="http://www.w3.org/1999/xhtml"
-      py:extends="'library.kid', 'layout.kid', 'project.kid'">
+      py:extends="'layout.kid'">
 <!--
     Copyright 2005 rPath, Inc.
     All Rights Reserved
