@@ -36,13 +36,13 @@ class SessionsTable(DatabaseTable):
                 cu = self.db.cursor()
                 # dropping and re-making is by far the best choice.
                 cu.execute("DROP TABLE Sessions")
-                if self.db.type == "mysql":
+                if self.db.driver== "mysql":
                     cu.execute(self.createSQL_mysql)
-                if self.db.type == 'sqlite':
+                if self.db.driver == 'sqlite':
                     cu.execute(self.createSQL)
                 else:
                     raise AssertionError("INVALID DATABASE TYPE: " + \
-                                         self.db.type)
+                                         self.db.driver)
                 return (dbversion + 1) == self.schemaVersion
         return True
 

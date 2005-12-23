@@ -4,7 +4,7 @@
 # All Rights Reserved
 #
 import sys, time
-from conary.dbstore import sql_error
+from conary.dbstore import sqlerrors 
 
 from mint_error import MintError
 
@@ -30,9 +30,9 @@ class UpToDateException(MintError):
             return "The table '%s' is not up to date" % self.table
 
 def concat(db, *items):
-    if db.type == "mysql":
+    if db.driver == "mysql":
         return "CONCAT(%s)" % ", ".join(items)
-    elif db.type in ("native_sqlite", "sqlite"):
+    elif db.driver == "sqlite":
         return " || ".join(items)
     raise Exception("Unsupported database")
 
@@ -98,7 +98,7 @@ class DatabaseTable:
         
         # create missing tables
         if self.name not in self.db.tables:
-            if self.db.type == "mysql":
+            if self.db.driver in("mysql", "postgresql"):
                 if not self.createSQL_mysql:
                     s = self.createSQL.replace("STR", "VARCHAR(255)")
                     s = s.replace("INTEGER PRIMARY KEY", "INT PRIMARY KEY AUTO_INCREMENT")
@@ -108,11 +108,17 @@ class DatabaseTable:
                             lines[i] = l.replace('INT', 'DOUBLE')
                     s = "\n".join(lines)
                     self.createSQL_mysql = s
-                cu.execute(self.createSQL_mysql)
-            elif self.db.type in ("native_sqlite", "sqlite"):
+
+                if self.db.driver == "postgresql":
+                    s = self.createSQL_mysql.replace("INT PRIMARY KEY AUTO_INCREMENT", "INT")
+                    s = s.replace("DOUBLE", "FLOAT(5)")
+                    cu.execute(s)
+                else:
+                    cu.execute(self.createSQL_mysql)
+            elif self.db.driver in ("native_sqlite", "sqlite"):
                 cu.execute(self.createSQL)
             else:
-                assert("INVALID DATABASE TYPE: " + self.db.type)
+                assert 0, "INVALID DATABASE TYPE: " + self.db.driver
 
         #Don't commit here.  Commits must be handled up stream to enable
         #upgrading
@@ -125,8 +131,8 @@ class DatabaseTable:
         # could be raised if a new index is created referencing a new column
         # created in the upgrade procedures.
        
-        if self.upToDate and self.db.type != "native_sqlite":
-            self.db._getSchema()
+        if self.upToDate:
+            self.db.loadSchema()
             indexes = set(self.db.tables[self.name])
             missing = set(self.indexes.keys()) - indexes
             
@@ -136,7 +142,7 @@ class DatabaseTable:
     def getDBVersion(self):
         cu = self.db.cursor()
         
-        cu.execute("SELECT IFNULL(MAX(version), 0) FROM DatabaseVersion")
+        cu.execute("SELECT COALESCE(MAX(version), 0) FROM DatabaseVersion")
         version = cu.fetchone()[0]
 
         if not version:
@@ -222,8 +228,13 @@ class KeyedTable(DatabaseTable):
 
         try:
             cu.execute(*[stmt] + values)
-        except sql_error.ColumnNotUnique:
+            self.db.commit()
+        except sqlerrors.ColumnNotUnique:
+            self.db.rollback()
             raise DuplicateItem(self.name)
+        except:
+            self.db.rollback()
+            raise
 
         return cu._cursor.lastrowid
 
@@ -244,8 +255,13 @@ class KeyedTable(DatabaseTable):
         cu = self.db.cursor()
         try:
             cu.execute(*[stmt] + values + [id])
-        except sql_error.ColumnNotUnique:
+            self.db.commit()
+        except sqlerrors.ColumnNotUnique:
+            self.db.rollback()
             raise DuplicateItem(self.name)
+        except:
+            self.db.rollback()
+            raise
 
         return True
 

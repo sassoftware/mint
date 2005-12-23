@@ -114,6 +114,7 @@ class ReleasesTable(database.KeyedTable):
         projectId = kwargs['projectId']
         cu = self.db.cursor()
         cu.execute("DELETE FROM Releases WHERE projectId=? AND troveLastChanged IS NULL", projectId)
+        self.db.commit()
         return database.KeyedTable.new(self, **kwargs)
 
     def iterReleasesForProject(self, projectId, showUnpublished = False):
@@ -145,6 +146,7 @@ class ReleasesTable(database.KeyedTable):
                    troveName, troveVersion,
                    troveFlavor, time.time(),
                    releaseId)
+        self.db.commit()
         return 0
 
     def getTrove(self, releaseId):

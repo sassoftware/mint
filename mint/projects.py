@@ -11,7 +11,7 @@ import time
 
 from conary import versions
 from conary.lib import util
-from conary.repository.netrepos.netserver import NetworkRepositoryServer
+from conary.repository.netrepos import netserver
 from conary.conarycfg import ConaryConfiguration
 
 import database
@@ -125,6 +125,9 @@ class Project(database.TableObject):
         labelPath, repoMap, userMap = self.server.getLabelsForProject(self.id, overrideSSL, overrideAuth, newUser, newPass, useSSL)
 
         cfg = ConaryConfiguration(readConfigFiles=False)
+        cfg.root = ":memory:"
+        cfg.dbPath = ":memory:"
+
         cfg.initializeFlavors()
 
         installLabelPath = " ".join(x for x in labelPath.keys())
@@ -548,10 +551,18 @@ class LabelsTable(database.KeyedTable):
         return False
     
 # XXX sort of stolen from conary/server/server.py
-class EmptyNetworkRepositoryServer(NetworkRepositoryServer):
+class EmptyNetworkRepositoryServer(netserver.NetworkRepositoryServer):
     def __init__(self, dbPath, contentsPath, tmpPath, basicUrl, name,
                  repositoryMap, commitAction = None, cacheChangeSets = False,
                  logFile = None):
+
+        cfg = netserver.ServerConfig()
+        cfg.repositoryDB = ("sqlite", dbPath + "/sqldb")
+        cfg.tmpDir = tmpPath
+        cfg.serverName = name
+        cfg.repositoryMap = repositoryMap
+        cfg.contentsDir = contentsPath
+       
         if dbPath != contentsPath:
             #Create the links as appropriate.  dbPath will be the ultimate path sent
             # up to NetworkRepositoryServer.
@@ -559,7 +570,7 @@ class EmptyNetworkRepositoryServer(NetworkRepositoryServer):
             contentsSrc = os.path.join(contentsPath, 'contents')
             util.mkdirChain(contentsSrc)
             os.symlink(contentsSrc, contentsTarget)
-        NetworkRepositoryServer.__init__(self, dbPath, tmpPath, basicUrl, name, repositoryMap, commitAction, cacheChangeSets, logFile)
+        netserver.NetworkRepositoryServer.__init__(self, cfg, basicUrl)
 
     def reset(self, authToken, clientVersion):
         import shutil

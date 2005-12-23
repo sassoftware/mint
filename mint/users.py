@@ -91,14 +91,14 @@ class UsersTable(database.KeyedTable):
                     userId          INTEGER PRIMARY KEY,
                     username        STR UNIQUE,
                     fullName        STR,
-                    salt            BINARY(4),
+                    salt            CHAR(4),
                     passwd          VARCHAR(255),
                     email           STR,
-                    displayEmail    STR DEFAULT "",
+                    displayEmail    STR DEFAULT '',
                     timeCreated     INT,
                     timeAccessed    INT,
                     active          INT,
-                    blurb           STR DEFAULT ""
+                    blurb           STR DEFAULT ''
                     )"""
 
     fields = ['userId', 'username', 'fullName', 'salt', 'passwd', 'email',
@@ -526,10 +526,12 @@ class ProjectUsersTable(database.DatabaseTable):
         cu.execute("SELECT * FROM ProjectUsers WHERE projectId=? AND userId = ?",
                    projectId, userId)
         if cu.fetchall():
+            self.db.rollback()
             raise database.DuplicateItem("membership")
         
         cu.execute("INSERT INTO ProjectUsers VALUES(?, ?, ?)", projectId,
                    userId, level)
+        self.db.commit()
 
     def onlyOwner(self, projectId, userId):
         cu = self.db.cursor()
@@ -554,6 +556,7 @@ class ProjectUsersTable(database.DatabaseTable):
             raise LastOwner()
         cu = self.db.cursor()
         cu.execute("DELETE FROM ProjectUsers WHERE projectId=? AND userId=?", projectId, userId)
+        self.db.commit()
 
 
 class Authorization(object):

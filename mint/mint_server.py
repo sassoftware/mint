@@ -39,6 +39,7 @@ from conary import versions
 from conary.repository.errors import TroveNotFound
 from conary.repository import netclient
 from conary.repository import shimclient
+from conary.repository.netrepos import netserver
 from conary.deps import deps
 from conary import conarycfg
 from conary import conaryclient
@@ -289,10 +290,14 @@ class MintServer(object):
             # most likely just used by the test suite
             if ":" in self.cfg.projectDomainName:
                 port = int(self.cfg.projectDomainName.split(":")[1])
-     
-            server = shimclient.NetworkRepositoryServer(reposPath, tmpPath,
-                                                       '', project.getFQDN(),
-                                                       authRepo)
+    
+            cfg = netserver.ServerConfig()
+            cfg.repositoryDB = ('sqlite', reposPath + '/sqldb')
+            cfg.tmpDir = tmpPath
+            cfg.serverName = project.getFQDN()
+            cfg.contentsDir = reposPath + '/contents/'
+            
+            server = shimclient.NetworkRepositoryServer(cfg, '')
             
             cfg = conarycfg.ConaryConfiguration()
             cfg.repositoryMap = authRepo
@@ -721,6 +726,7 @@ class MintServer(object):
         cu = self.db.cursor()
         cu.execute("""UPDATE ProjectUsers SET level=? WHERE userId=? and 
             projectId=?""", level, userId, projectId)
+        self.db.commit()
 
         self._notifyUser('Changed', user, project, level)
 
@@ -1174,6 +1180,7 @@ class MintServer(object):
         cu = self.db.cursor()
         cu.execute("UPDATE Releases SET downloads = downloads + 1 WHERE releaseId=?",
             releaseId)
+        self.db.commit()
         return True
 
     @typeCheck(int, bool)
@@ -1374,7 +1381,6 @@ class MintServer(object):
             raise ReleasePublished()
 
         cu = self.db.cursor()
-        self.db.transaction()
         try:
             cu.execute("DELETE FROM ImageFiles WHERE releaseId=?", releaseId)
             for idx, file in enumerate(filenames):
@@ -1855,7 +1861,7 @@ class MintServer(object):
 
     def __init__(self, cfg, allowPrivate = False, alwaysReload = False):
         self.cfg = cfg
-     
+
         # all methods are private (not callable via XMLRPC)
         # except the ones specifically decorated with @public.
         self._allowPrivate = allowPrivate
@@ -1870,14 +1876,14 @@ class MintServer(object):
 
         #An explicit transaction.  Make sure you don't have any implicit
         #commits until the database version has been asserted
-        self.db.transaction()
+        #self.db.transaction()
         try:
             #The database version object has a dummy check so that it always passes.
             #At the end of all database object creation, fix the version
 
             global tables           
             if not tables or alwaysReload:
-                self.db._getSchema()
+                self.db.loadSchema()
                 tables = getTables(self.db, self.cfg)
             self.__dict__.update(tables)
            
@@ -1890,3 +1896,10 @@ class MintServer(object):
             raise
 
         self.newsCache.refresh()
+
+    def __del__(self):
+        try:
+            self.db.dbh.close()
+        except:
+            pass
+

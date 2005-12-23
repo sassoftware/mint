@@ -98,20 +98,22 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
         try:
             if self.mintCfg.dbDriver == "sqlite":
                 os.unlink(self.servers.getServer().serverRoot + "/mintdb")
-            if self.mintCfg.dbDriver == "mysql":
-                cu.execute("DROP DATABASE minttest")
+            elif self.mintCfg.dbDriver == "mysql":
+                self.db.cursor().execute("DROP DATABASE minttest")
         except:
-            pass
+            import traceback
+            traceback.print_exc()
 
     def setUp(self):
         rephelp.RepositoryHelper.setUp(self)
-
         self.openRepository()
         self.mintCfg = self.servers.getServer().mintCfg
         self.mintCfg.postCfg()
 
         if self.mintCfg.dbDriver == "mysql":
             os.system("echo DROP DATABASE minttest\; CREATE DATABASE minttest | mysql --password=testpass -u testuser minttest")
+        elif self.mintCfg.dbDriver == "postgresql":
+            os.system("dropdb -U testuser minttest; createdb -U testuser minttest") 
 
         # if you get permission denied on mysql server, then you need to
         # grant privleges to testuser on minttest:
