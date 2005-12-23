@@ -16,6 +16,11 @@ partoffset0 = 512
 
 datadir = os.path.join(os.path.dirname(__file__), 'DiskImageData')
 
+def debugme(type, value, tb):
+    from conary.lib import epdb
+    epdb.post_mortem(tb,type,value)
+
+
 class Journal:
     def lchown(self, root, target, user, group):
         # get rid of the root
@@ -59,15 +64,13 @@ class BootableDiskImage:
     fakeroot = None
 
     def __init__(self, file, size, group, installLabel, repoMap=None, arch='x86'):
+        sys.excepthook = debugme
         self.outfile = file
-        padding = cylindersize - (size % cylindersize)
-        if cylindersize == padding:
-            padding = 0
-        self.imagesize = size + padding
+        self.freespace = size
         self.basetrove, self.baseversion, self.baseflavor = parseTroveSpec(group)
-        self.InstallLabel = installLabel
+        self.InstallLabel = installLabel.split()
         if not repoMap:
-            key = self.InstallLabel.split()[0]
+            key = self.InstallLabel[0]
             host, label = key.split('@')
             self.repoMap = {key: 'http://' + host + '/conary/'}
             #self.host = host
@@ -243,7 +246,16 @@ title %(name)s (%(kversion)s)
         os.close(fd)
         del fd
         try:
+            #How much space do we need?
+            fd = os.popen('/usr/bin/du -B1 --max-depth=0 %s' % self.fakeroot, 'r')
+            size = int(fd.read().strip().split()[0])
+            size += self.freespace + partoffset0
+            padding = cylindersize - (size % cylindersize)
+            if cylindersize == padding:
+                padding = 0
+            self.imagesize = size + padding
             self.MakeE2FsImage(file)
+            self.prepareDiskImage()
             self.WriteBack(file)
         finally:
             pass
@@ -259,18 +271,17 @@ title %(name)s (%(kversion)s)
         #install boot manager
         cmd = '%s --device-map=/dev/null --batch > grub-install.log' % os.path.join(self.fakeroot, 'sbin', 'grub')
 	input = """
-device	(hd0)	/dev/ubda
-root	(hd0,0)
+device  (hd0)   %s
+root    (hd0,0)
 setup   (hd0)
 quit
-"""
+""" % self.outfile
         uml = util.popen(cmd, 'w')
         uml.write(input)
         retval = uml.close()
 
     @timeMe
     def makeBootableDiskImage(self, basedir = os.getcwd()):
-        self.prepareDiskImage()
         self.createTemporaryRoot(basedir)
         self.setupConaryClient()
         self.populateTemporaryRoot()
@@ -287,7 +298,13 @@ quit
             #util.rmtree(self.fakeroot)
 
 def main():
-    di = BootableDiskImage('foo.img', 2000000000, 'group-dist=foobar.org.rpath@rpl:devel', 'foobar.org.rpath@rpl:devel conary.rpath.com@rpl:1 contrib.rpath.org@rpl:devel')
+    #di = BootableDiskImage('foo.img', 250000000, 
+        #'group-dist=/conary.rpath.com@rpl:devel//1/0.99.3-0.2-5[X,~!alternatives,~!bootstrap,~!builddocs,~buildtests,desktop,dietlibc,emacs,gcj,~glibc.tls,gnome,~!grub.static,gtk,ipv6,kde,~!kernel.debug,~!kernel.debugdata,~!kernel.numa,krb,ldap,nptl,~!openssh.smartcard,~!openssh.static_libcrypto,pam,pcre,perl,~!pie,~!postfix.mysql,python,qt,readline,sasl,~!selinux,~sqlite.threadsafe,ssl,tcl,tcpwrappers,tk,~!xorg-x11.xprint is: x86(cmov,i486,i586,i686,~!mmx,~!sse2)]',
+        #'conary.rpath.com@rpl:1 contrib.rpath.org@rpl:devel', repoMap = {'conary.rpath.com': 'http://conary-commits.rpath.com/conary/'})
+    #di = BootableDiskImage('foo.img', 250*1024*1024, 'group-dist=foobar.org.rpath@rpl:devel', 'foobar.org.rpath@rpl:devel conary.rpath.com@rpl:1 contrib.rpath.org@rpl:devel')
+    di = BootableDiskImage('foo.img', 250*1024*1024,
+        'group-system=/systemimages.org.rpath@rpl:devel/0.0.1-1-1[X,~!alternatives,~!bootstrap,~!builddocs,~buildtests,desktop,dietlibc,emacs,gcj,~glibc.tls,gnome,~!grub.static,gtk,ipv6,kde,~!kernel.debug,~!kernel.debugdata,~!kernel.numa,krb,ldap,nptl,~!openssh.smartcard,~!openssh.static_libcrypto,pam,pcre,perl,~!pie,~!postfix.mysql,python,qt,readline,sasl,~!selinux,~sqlite.threadsafe,ssl,tcl,tcpwrappers,tk,~!xorg-x11.xprint   is: x86(cmov,i486,i586,i686,~!mmx,~!sse2)]',
+        'rbuilder.org.rpath@rpl:devel conary.rpath.com@rpl:1 contrib.rpath.org@rpl:devel')
     di.makeBootableDiskImage()
 
 main()

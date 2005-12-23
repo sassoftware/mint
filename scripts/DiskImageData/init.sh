@@ -4,6 +4,8 @@ mount -n -t proc /proc /proc
 mount -n -t sysfs /sys /sys
 
 #/bin/dmesg -n level
+[ -x /sbin/start_udev ] && /sbin/start_udev
+
 state=`LC_ALL=C awk '/ \/ / && ($3 !~ /rootfs/) { print $4 }' /proc/mounts`
 [ "$state" != "rw" -a "$READONLY" != "yes" ] && mount -n -o remount,rw /
 
