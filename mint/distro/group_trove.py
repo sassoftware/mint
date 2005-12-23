@@ -83,13 +83,7 @@ class GroupTroveCook(ImageGenerator):
         else:
             return None
 
-    def write(self):
-        self.status("Cooking group")
-        groupTrove = self.client.getGroupTrove(self.job.getGroupTroveId())
-        projectId = groupTrove.projectId
-        if not projectId:
-            return self._localCook(groupTrove)
-
+    def _projectCook(self, groupTrove):
         curDir = os.getcwd()
 
         ret = None
@@ -144,3 +138,12 @@ class GroupTroveCook(ImageGenerator):
             return ret[0], ret[1], ret[2].freeze()
         else:
             return None
+
+    def write(self):
+        self.status("Cooking group")
+        groupTrove = self.client.getGroupTrove(self.job.getGroupTroveId())
+        projectId = groupTrove.projectId
+        if not projectId:
+            return self._localCook(groupTrove)
+        else:
+            return self._projectCook(groupTrove)
