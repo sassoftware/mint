@@ -255,20 +255,17 @@ class UsersTable(database.KeyedTable):
         confirm = confirmString()
 
         cu = self.db.cursor()
-        cu.execute("SELECT COUNT(*) FROM UserGroups WHERE UPPER(userGroup)=?",
+
+        cu.execute("""SELECT COUNT(*) FROM UserGroups
+                          WHERE UPPER(userGroup)=?""",
                    username.upper())
         if cu.fetchone()[0]:
             raise GroupAlreadyExists
+
         cu.execute("SELECT COUNT(*) FROM Users WHERE UPPER(username)=?",
                    username.upper())
         if cu.fetchone()[0]:
             raise UserAlreadyExists
-        cu.execute("INSERT INTO UserGroups (userGroup) VALUES(?)",
-                   username)
-
-        cu.execute("SELECT userGroupId FROM UserGroups WHERE userGroup=?",
-                   username)
-        userGroupId = cu.fetchone()[0]
 
         salt, passwd = self._mungePassword(password)
 
@@ -286,6 +283,13 @@ class UsersTable(database.KeyedTable):
                 #authRepo.deleteUserByName(repoLabel, username)
                 raise
         try:
+            cu.execute("INSERT INTO UserGroups (userGroup) VALUES(?)",
+                       username)
+
+            cu.execute("SELECT userGroupId FROM UserGroups WHERE userGroup=?",
+                       username)
+            userGroupId = cu.fetchone()[0]
+
             userId = self.new(username = username,
                               fullName = fullName,
                               salt = salt,
