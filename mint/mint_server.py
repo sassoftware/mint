@@ -239,7 +239,9 @@ class MintServer(object):
             if self.auth.authorized:
                 self._checkRepo = False
 
+            allowPrivate = self._allowPrivate
             r = method(*args)
+            self._allowPrivate = allowPrivate
             if self.cfg.profiling:
                 print >> sys.stderr, "Ending XMLRPC request:\t\t%-25s\t%.2f" % (methodName, (time.time() - startTime) * 1000)
                 sys.stderr.flush()
