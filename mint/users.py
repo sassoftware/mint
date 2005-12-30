@@ -257,13 +257,13 @@ class UsersTable(database.KeyedTable):
         cu = self.db.cursor()
 
         cu.execute("""SELECT COUNT(*) FROM UserGroups
-                          WHERE UPPER(userGroup)=?""",
-                   username.upper())
+                          WHERE UPPER(userGroup)=UPPER(?)""",
+                   username)
         if cu.fetchone()[0]:
             raise GroupAlreadyExists
 
-        cu.execute("SELECT COUNT(*) FROM Users WHERE UPPER(username)=?",
-                   username.upper())
+        cu.execute("SELECT COUNT(*) FROM Users WHERE UPPER(username)=UPPER(?)",
+                   username)
         if cu.fetchone()[0]:
             raise UserAlreadyExists
 
