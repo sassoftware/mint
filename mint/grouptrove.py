@@ -85,8 +85,7 @@ class GroupTroveTable(database.KeyedTable):
         return groupTroveId
 
     def delGroupTrove(self, groupTroveId):
-        cu = self.db.cursor()
-        self.db.transaction()
+        cu = self.db.transaction()
         try:
             cu.execute("DELETE FROM GroupTroveItems WHERE groupTroveId=?", groupTroveId)
             cu.execute("DELETE FROM GroupTroves WHERE groupTroveId=?", groupTroveId)

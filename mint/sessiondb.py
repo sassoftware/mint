@@ -94,11 +94,11 @@ class SessionsTable(DatabaseTable):
             # UPDATE was chosen because empirical data suggests it is
             # up to 100 times faster than delete->insert.
             cu.execute("UPDATE Sessions SET sid=?, data=? WHERE sessidx=?",
-                       sid, cPickle.dumps(data), sessIdx)            
+                       sid, cPickle.dumps(data), sessIdx)
         else:
             cu.execute("INSERT INTO Sessions (sid, data) VALUES(?, ?)",
                        sid, cPickle.dumps(data))
-                       
+
     def delete(self, sid):
         cu = self.db.cursor()
         sessIdx = self.getSessIndex(sid)
@@ -112,9 +112,7 @@ class SessionsTable(DatabaseTable):
                 self.delSessIndex(sid)
         # this is inefficient because we don't store accessed/timeout in
         # separate table fields, but instead encoded as a pickle object.
-        cu  = self.db.cursor()
-
-        self.db.transaction(None)
+        cu  = self.db.transaction()
         try:
             cu.execute("SELECT sessIdx, data FROM Sessions")
             for r in cu.fetchall():

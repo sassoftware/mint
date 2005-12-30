@@ -173,9 +173,7 @@ class ReleasesTable(database.KeyedTable):
         return cu.fetchone()[0]
 
     def deleteRelease(self, releaseId):
-        cu = self.db.cursor()
-
-        self.db.transaction(None)
+        cu = self.db.transaction()
         try:
             r = cu.execute("DELETE FROM Releases WHERE releaseId=?", releaseId)
             r = cu.execute("DELETE FROM ReleaseData WHERE releaseId=?", releaseId)

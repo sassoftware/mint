@@ -194,7 +194,7 @@ def getTables(db, cfg):
     return d
 
 class MintServer(object):
-    _checkRepo = True 
+    _checkRepo = True
     _cachedGroups = []
 
     def callWrapper(self, methodName, authToken, args):
@@ -214,7 +214,7 @@ class MintServer(object):
             if type(authToken) == str:
                 if len(authToken) == 64: # signed cookie
                     sig, val = authToken[:32], authToken[32:]
-                
+
                     mac = hmac.new(self.cfg.cookieSecretKey, 'pysid')
                     mac.update(val)
                     if mac.hexdigest() != sig:
@@ -228,14 +228,14 @@ class MintServer(object):
 
                 d = self.sessions.load(sid)
                 authToken = d['_data']['authToken']
-            
+
             auth = self.users.checkAuth(authToken,
                 checkRepo = self._checkRepo,
                 cachedGroups = self._cachedGroups)
             self.authToken = authToken
             self.auth = users.Authorization(**auth)
             self._cachedGroups = self.auth.groups
-            
+
             if self.auth.authorized:
                 self._checkRepo = False
 
@@ -286,16 +286,16 @@ class MintServer(object):
 
             reposPath = os.path.join(self.cfg.reposPath, project.getFQDN())
             tmpPath = os.path.join(reposPath, "tmp")
-            
+
             # handle non-standard ports specified on cfg.projectDomainName,
             # most likely just used by the test suite
             if ":" in self.cfg.projectDomainName:
                 port = int(self.cfg.projectDomainName.split(":")[1])
-     
+
             server = shimclient.NetworkRepositoryServer(reposPath, tmpPath,
                                                        '', project.getFQDN(),
                                                        authRepo)
-            
+
             cfg = conarycfg.ConaryConfiguration()
             cfg.repositoryMap = authRepo
             cfg.user.addServerGlob(versions.Label(authLabel).getHost(),
@@ -392,10 +392,10 @@ class MintServer(object):
         self.projectUsers.new(userId = self.auth.userId,
                               projectId = projectId,
                               level = userlevels.OWNER)
-        
+
         project = projects.Project(self, projectId)
-        
-        
+
+
         project.addLabel(fqdn.split(':')[0] + "@%s" % self.cfg.defaultBranch,
             "http://%s%srepos/%s/" % (self.cfg.projectSiteHost, self.cfg.basePath, hostname),
             self.cfg.authUser, self.cfg.authPass)
@@ -721,7 +721,7 @@ class MintServer(object):
         if level in userlevels.WRITERS:
             self.deleteJoinRequest(projectId, userId)
         cu = self.db.cursor()
-        cu.execute("""UPDATE ProjectUsers SET level=? WHERE userId=? and 
+        cu.execute("""UPDATE ProjectUsers SET level=? WHERE userId=? and
             projectId=?""", level, userId, projectId)
 
         self._notifyUser('Changed', user, project, level)
@@ -730,7 +730,7 @@ class MintServer(object):
     @private
     def getProjectsByUser(self, userId):
         cu = self.db.cursor()
-       
+
         fqdnConcat = database.concat(self.db, "hostname", "'.'", "domainname")
         cu.execute("""SELECT %s, name, level
                       FROM Projects, ProjectUsers
@@ -754,7 +754,7 @@ class MintServer(object):
     @private
     def checkAuth(self):
         return self.auth.getDict()
-        
+
     @typeCheck(int)
     @requiresAuth
     @private
@@ -854,8 +854,7 @@ class MintServer(object):
         for (projectId, level) in projectList:
             self.delMember(projectId, userId, False)
 
-        cu = self.db.cursor()
-        self.db.transaction()
+        cu = self.db.transaction()
         try:
             cu.execute("""SELECT userGroupId FROM UserGroupMembers
                               WHERE userId=?""", userId)
@@ -1050,9 +1049,9 @@ class MintServer(object):
     @private
     def getReleaseList(self, limit, offset):
         cu = self.db.cursor()
-        cu.execute("""SELECT Projects.name, Projects.hostname, releaseId 
-                         FROM Releases LEFT JOIN Projects ON Projects.projectId = Releases.projectId 
-                         WHERE Projects.hidden=0 AND Projects.disabled=0 and published=1 
+        cu.execute("""SELECT Projects.name, Projects.hostname, releaseId
+                         FROM Releases LEFT JOIN Projects ON Projects.projectId = Releases.projectId
+                         WHERE Projects.hidden=0 AND Projects.disabled=0 and published=1
                          ORDER BY timePublished DESC LIMIT ? OFFSET ?""", limit, offset)
         return [(x[0], x[1], releases.Release(self, x[2])) for x in cu.fetchall()]
 
@@ -1188,7 +1187,7 @@ class MintServer(object):
         if self.releases.getPublished(releaseId):
             raise ReleasePublished()
         timeStamp = time.time()
-        self.releases.update(releaseId, published = int(published), timePublished = timeStamp) 
+        self.releases.update(releaseId, published = int(published), timePublished = timeStamp)
         return True
 
     @typeCheck(int, int)
@@ -1212,7 +1211,7 @@ class MintServer(object):
             raise ReleaseMissing()
         if self.releases.getPublished(releaseId):
             raise ReleasePublished()
-            
+
         cu = self.db.cursor()
         cu.execute("SELECT jobId, status FROM Jobs WHERE releaseId=? AND groupTroveId IS NULL",
                    releaseId)
@@ -1344,7 +1343,7 @@ class MintServer(object):
         projectId = self.groupTroves.getProjectId(groupTroveId)
         self._filterProjectAccess(projectId)
         self._requireProjectOwner(projectId)
-                        
+
         cu = self.db.cursor()
 
         cu.execute("SELECT jobId FROM Jobs WHERE groupTroveId=?", groupTroveId)
@@ -1375,8 +1374,7 @@ class MintServer(object):
         if self.releases.getPublished(releaseId):
             raise ReleasePublished()
 
-        cu = self.db.cursor()
-        self.db.transaction()
+        cu = self.db.transaction()
         try:
             cu.execute("DELETE FROM ImageFiles WHERE releaseId=?", releaseId)
             for idx, file in enumerate(filenames):
@@ -1414,7 +1412,7 @@ class MintServer(object):
                     }
                 l.append(d)
             return l
-   
+
     @typeCheck(int)
     @private
     def getFileInfo(self, fileId):
@@ -1432,7 +1430,7 @@ class MintServer(object):
     @requiresAuth
     def getGroupTroves(self, projectId):
         self._filterProjectAccess(projectId)
-        # enable internal methods so that public methods can make 
+        # enable internal methods so that public methods can make
         # private calls; this is safe because only one instance
         # of MintServer is instantiated per call.
         self._allowPrivate = True
@@ -1544,12 +1542,12 @@ class MintServer(object):
                 ver = trv['trvVersion']
             else:
                 ver = trv['trvLabel']
-                
+
             # XXX HACK to use the "fancy-flavored" group troves from conary.rpath.com
             if trv['trvName'].startswith('group-') and trv['trvLabel'].startswith('conary.rpath.com@'):
                 recipe += indent + "if Arch.x86_64:\n"
                 recipe += (12 * " ") + "r.add('" + trv['trvName'] + "', '" + ver + "', 'is:x86(i486,i586,i686) x86_64', groupName = '" +trv['subGroup'] +"')\n"
-                recipe += indent + "else:\n" + (4 * " ") 
+                recipe += indent + "else:\n" + (4 * " ")
             recipe += indent + "r.add('" + trv['trvName'] + "', '" + ver + "', '" + trv['trvFlavor'] + "', groupName = '" +trv['subGroup'] +"')\n"
         return recipe
 
@@ -1857,7 +1855,7 @@ class MintServer(object):
 
     def __init__(self, cfg, allowPrivate = False, alwaysReload = False):
         self.cfg = cfg
-     
+
         # all methods are private (not callable via XMLRPC)
         # except the ones specifically decorated with @public.
         self._allowPrivate = allowPrivate
@@ -1873,16 +1871,19 @@ class MintServer(object):
         #An explicit transaction.  Make sure you don't have any implicit
         #commits until the database version has been asserted
         self.db.transaction()
+        # FIXME: Please be aware that any schema modifying statements
+        # issue an implicit COMMIT, so holding this transaction lock
+        # here is a sqlite-ism
         try:
             #The database version object has a dummy check so that it always passes.
             #At the end of all database object creation, fix the version
 
-            global tables           
+            global tables
             if not tables or alwaysReload:
                 self.db._getSchema()
                 tables = getTables(self.db, self.cfg)
             self.__dict__.update(tables)
-           
+
             #Now it's safe to commit
             self.db.commit()
 
