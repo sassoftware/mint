@@ -1,6 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<html xmlns:html="http://www.w3.org/1999/xhtml"
+<html
       xmlns:py="http://purl.org/kid/ns#"
+      xmlns:html="http://www.w3.org/1999/xhtml"
       py:extends="'layout.kid'">
 <!--
     Copyright 2005 rPath, Inc.
@@ -18,7 +19,7 @@
     <head>
         <title>${formatTitle('Create a Project')}</title>
     </head>
-    <body xmlns="http://www.w3.org/1999/xhtml">
+    <body>
         <td id="main" class="spanleft" >
             <div class="pad">
                 <p py:if="errors" class="error">Project Creation Error${len(errors) > 1 and 's' or ''}</p>
