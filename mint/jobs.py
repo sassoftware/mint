@@ -47,6 +47,12 @@ class JobsTable(database.KeyedTable):
     fields = ['jobId', 'releaseId', 'groupTroveId', 'userId', 'status',
               'statusMessage', 'timeStarted', 'timeFinished']
 
+    indexes = {"JobsReleaseIdx": """CREATE INDEX JobsReleaseIdx
+                                        ON Jobs(releaseId)""",
+               "JobsGroupTroveIdx": """CREATE INDEX JobsGroupTroveIdx
+                                           ON Jobs(groupTroveId)""",
+               "JobsUserIdx": "CREATE INDEX JobsUserIdx ON Jobs(userId)"}
+
     def versionCheck(self):
         dbversion = self.getDBVersion()
         if dbversion != self.schemaVersion:
@@ -111,6 +117,9 @@ class ImageFilesTable(database.KeyedTable):
                     title       STR DEFAULT ''
                 );"""
     fields = ['fileId', 'releaseId', 'idx', 'filename']
+
+    indexes = {"ImageFilesReleaseIdx": """CREATE INDEX ImageFilesReleaseIdx
+                                              ON ImageFiles(releaseId)"""}
 
     def versionCheck(self):
         dbversion = self.getDBVersion()

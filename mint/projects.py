@@ -448,6 +448,9 @@ class LabelsTable(database.KeyedTable):
 
     fields = ['labelId', 'projectId', 'label', 'url', 'username', 'password']
 
+    indexes = {"LabelsPackageIdx": """CREATE INDEX LabelsPackageIdx
+                                          ON Labels(projectId)"""}
+
     def getDefaultProjectLabel(self, projectId):
         cu = self.db.cursor()
 

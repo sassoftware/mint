@@ -47,6 +47,11 @@ class GroupTroveTable(database.KeyedTable):
               'upstreamVersion', 'description', 'timeCreated', 'timeModified',
               'autoResolve']
 
+    indexes = {"GroupTrovesProjectIdx": """CREATE INDEX GroupTrovesProjectIdx
+                                               ON GroupTroves(projectId)""",
+               "GroupTrovesUserIdx": """CREATE INDEX GroupTrovesUserIdx
+                                            ON GroupTroves(creatorId)"""}
+
     def listGroupTrovesByProject(self, projectId):
         cu = self.db.cursor()
         cu.execute("SELECT groupTroveId, recipeName FROM %s WHERE projectId=?"\
@@ -142,6 +147,9 @@ class GroupTroveItemsTable(database.KeyedTable):
     fields = [ 'groupTroveItemId', 'groupTroveId', 'creatorId', 'trvName',
                'trvVersion', 'trvFlavor', 'subGroup', 'versionLock', 'useLock',
                'instSetLock' ]
+
+    indexes = {"GroupTroveItemsUserIdx": """CREATE INDEX GroupTroveItemsUserIdx
+                                              ON GroupTroveItems(creatorId)"""}
 
     def updateModifiedTime(self, groupTroveItemId):
         cu = self.db.cursor()

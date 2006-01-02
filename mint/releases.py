@@ -93,7 +93,8 @@ class ReleasesTable(database.KeyedTable):
     fields = ['releaseId', 'projectId', 'name', 'description', 'imageType',
               'troveName', 'troveVersion', 'troveFlavor',
               'troveLastChanged', 'published', 'downloads', 'timePublished']
-    indexes = {"ReleaseProjectIdIdx": "CREATE INDEX ReleaseProjectIdIdx ON Releases(projectId)"}
+    indexes = {"ReleaseProjectIdIdx": """CREATE INDEX ReleaseProjectIdIdx
+                                             ON Releases(projectId)"""}
 
     def versionCheck(self):
         dbversion = self.getDBVersion()

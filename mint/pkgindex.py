@@ -20,7 +20,10 @@ class PackageIndexTable(database.KeyedTable):
 
     fields = ['pkgId', 'name', 'version']
 
-    indexes = {"PackageNameIdx": "CREATE INDEX PackageNameIdx ON PackageIndex(name)"}
+    indexes = {"PackageNameIdx": """CREATE INDEX PackageNameIdx
+                                        ON PackageIndex(name)""",
+               "PackageIndexProjectIdx": """CREATE INDEX PackageIndexProjectIdx
+                                                ON PackageIndex(projectId)"""}
 
     def search(self, terms, limit, offset):
         columns = ['name', 'version', 'projectId']

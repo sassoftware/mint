@@ -35,6 +35,9 @@ class GenericDataTable(database.DatabaseTable):
                                  );
         """ % (self.name, self.front, self.front)
         self.fields = ['%sId' % self.front, 'name', 'value', 'dataType']
+        self.indexes = {self.name + "Idx" : "CREATE INDEX %s ON %s(%sId)" \
+                                % (self.name + "Idx", self.name, self.front)}
+
         return database.DatabaseTable.__init__(self, db)
     
 
