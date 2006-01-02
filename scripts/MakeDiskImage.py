@@ -222,11 +222,13 @@ title %(name)s (%(kversion)s)
         util.copyfile(os.path.join(datadir, 'post-kernel-tag-scripts'), os.path.join(self.fakeroot, 'tmp'))
 
     @timeMe
-    def MakeE2FsImage(self, file):
+    def MakeE3FsImage(self, file):
         cmd = '/usr/bin/e2fsimage -f %s -d %s -s %d' % (file,
                 self.fakeroot, (self.imagesize - partoffset0)/1024)
         util.execute(cmd)
         cmd = '/sbin/e2label %s /' % file
+        util.execute(cmd)
+        cmd = '/sbin/tune2fs -i 0 -c 0 -j %s' % file
         util.execute(cmd)
 
     @outputfilesize
@@ -254,7 +256,7 @@ title %(name)s (%(kversion)s)
             if cylindersize == padding:
                 padding = 0
             self.imagesize = size + padding
-            self.MakeE2FsImage(file)
+            self.MakeE3FsImage(file)
             self.prepareDiskImage()
             self.WriteBack(file)
         finally:
