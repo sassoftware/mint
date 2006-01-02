@@ -94,7 +94,7 @@ def _removeInvalidTroves(changeSetList, valid):
 
             if entry in valid and not entry in handled:
                 finalCsList.append(entry)
-                handled.add(pkgentry)
+                handled.add(entry)
 
     return finalCsList
 
@@ -210,7 +210,8 @@ def _linkOrCopyFile(src, dest):
         break
 
 def extractChangeSets(client, cfg, csdir, groupName, groupVer, groupFlavor,
-                      oldFiles = None, cacheDir = None, callback = None):
+                      oldFiles = None, cacheDir = None, callback = None,
+                      group = None):
     """
     extractChangesets extracts changesets from a group and creates
     cslist entries as it does so.
@@ -250,8 +251,10 @@ def extractChangeSets(client, cfg, csdir, groupName, groupVer, groupFlavor,
 
     cl = [ (groupName, (None, None), (groupVer, groupFlavor), 0) ]
     print >> sys.stderr, 'requesting changeset', groupName, groupVer
-    group = client.createChangeSet(cl, withFiles=False, withFileContents=False,
-                                   skipNotByDefault = False)
+    if not group:
+        group = client.createChangeSet(cl, withFiles=False,
+                                       withFileContents=False,
+                                       skipNotByDefault = False)
     print >> sys.stderr, 'done!'
     # find the order that we should install things in
     jobSet = group.getJobSet()

@@ -117,6 +117,11 @@ class ReleasesTable(database.KeyedTable):
         cu.execute("DELETE FROM Releases WHERE projectId=? AND troveLastChanged IS NULL", projectId)
         return database.KeyedTable.new(self, **kwargs)
 
+    def get(self, id):
+        res = database.KeyedTable.get(self, id)
+        res['published'] = bool(res['published'])
+        return res
+
     def iterReleasesForProject(self, projectId, showUnpublished = False):
         cu = self.db.cursor()
         
@@ -171,7 +176,7 @@ class ReleasesTable(database.KeyedTable):
         cu = self.db.cursor()
 
         cu.execute("SELECT IFNULL((SELECT published FROM Releases WHERE releaseId=?), 0)", releaseId)
-        return cu.fetchone()[0]
+        return bool(cu.fetchone()[0])
 
     def deleteRelease(self, releaseId):
         cu = self.db.transaction()

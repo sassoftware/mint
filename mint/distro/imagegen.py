@@ -73,7 +73,7 @@ def getParentThread():
     # can abort if it's not...
     try:
         r = currentThread().parentThread
-    except NameError:
+    except (NameError, AttributeError):
         # we'll get here if getParentThread was used outside of a
         # JobRunner thread. oh well, we won't be able to abort cleanly.
         r = currentThread()

@@ -4,8 +4,10 @@
 #
 
 import testsuite
-import time
 testsuite.setup()
+
+import time
+import os
 
 from mint_rephelp import MintRepositoryHelper
 from mint.data import RDT_STRING, RDT_BOOL, RDT_INT
@@ -14,6 +16,9 @@ from mint.mint_error import ReleasePublished, ReleaseMissing
 from mint import releasetypes
 from mint.database import ItemNotFound
 from mint.mint_server import deriveBaseFunc
+from mint.distro import installable_iso
+
+from conary.repository.errors import TroveNotFound
 
 class ReleaseTest(MintRepositoryHelper):
     def testBasicAttributes(self):
@@ -22,18 +27,24 @@ class ReleaseTest(MintRepositoryHelper):
 
         release = client.newRelease(projectId, "Test Release")
         assert(release.getName() == "Test Release")
-        release.setTrove("group-trove", "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
+        release.setTrove("group-trove",
+                         "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
         assert(release.getTrove() ==\
-            ('group-trove', '/conary.rpath.com@rpl:devel/0.0:1.0-1-1', '1#x86'))
+            ('group-trove',
+             '/conary.rpath.com@rpl:devel/0.0:1.0-1-1', '1#x86'))
         assert(release.getTroveName() == 'group-trove')
-        assert(release.getTroveVersion().asString() == '/conary.rpath.com@rpl:devel/1.0-1-1')
+        assert(release.getTroveVersion().asString() == \
+               '/conary.rpath.com@rpl:devel/1.0-1-1')
         assert(release.getTroveFlavor().freeze() == '1#x86')
         assert(release.getArch() == "x86")
 
-        release.setFiles([["file1", "File Title 1"], ["file2", "File Title 2"]])
+        release.setFiles([["file1", "File Title 1"],
+                          ["file2", "File Title 2"]])
         assert(release.getFiles() ==\
-            [{'fileId': 1, 'filename': 'file1', 'title': 'File Title 1', 'size': 0,},
-             {'fileId': 2, 'filename': 'file2', 'title': 'File Title 2', 'size': 0,}]
+            [{'fileId': 1, 'filename': 'file1',
+              'title': 'File Title 1', 'size': 0,},
+             {'fileId': 2, 'filename': 'file2',
+              'title': 'File Title 2', 'size': 0,}]
         )
 
         desc = 'Just some random words'
@@ -101,53 +112,32 @@ class ReleaseTest(MintRepositoryHelper):
         release.setImageType(releasetypes.STUB_IMAGE)
         release.setPublished(True)
 
-        try:
-            release.setDataValue('stringArg', 'bar')
-            self.fail("Release allowed setting of release data after publish")
-        except ReleasePublished:
-            pass
+        # refresh
+        release = client.getRelease(release.id)
 
-        try:
-            release.setImageType(releasetypes.STUB_IMAGE)
-            self.fail("Release allowed setting of image type after publish")
-        except ReleasePublished:
-            pass
+        self.assertRaises(ReleasePublished, release.setDataValue,
+                          'stringArg', 'bar')
 
-        try:
-            release.setFiles(list())
-            self.fail("Release allowed setting of files after publish")
-        except ReleasePublished:
-            pass
+        self.assertRaises(ReleasePublished, release.setImageType,
+                          releasetypes.STUB_IMAGE)
 
-        try:
-            release.setTrove('Some','Dummy','Args')
-            self.fail("Release allowed setting of troves after publish")
-        except ReleasePublished:
-            pass
+        self.assertRaises(ReleasePublished, release.setFiles, list())
 
-        try:
-            release.setDesc('Not allowed')
-            self.fail("Release allowed setting of troves after publish")
-        except ReleasePublished:
-            pass
 
-        try:
-            release.setPublished(True)
-            self.fail("Release allowed altering published state after publish")
-        except ReleasePublished:
-            pass
+        self.assertRaises(ReleasePublished, release.setTrove,
+                          'Some','Dummy','Args')
 
-        try:
-            release.setPublished(False)
-            self.fail("Release allowed altering published state after publish")
-        except ReleasePublished:
-            pass
+        self.assertRaises(ReleasePublished, release.setDesc, 'Not allowed')
 
-        try:
-            client.startImageJob(release.getId())
-            self.fail("Allowed to start a job after release was published")
-        except ReleasePublished:
-            pass
+        self.assertRaises(ReleasePublished, release.setPublished, True)
+
+        self.assertRaises(ReleasePublished, release.setPublished, False)
+
+        self.assertRaises(ReleasePublished, client.startImageJob,
+                          release.getId())
+
+        self.failIf(release.getPublished() is not True,
+                    "Result of getPublished is not boolean")
 
     def testDeleteRelease(self):
         client, userId = self.quickMintUser("testuser", "testpass")
@@ -311,6 +301,55 @@ class ReleaseTest(MintRepositoryHelper):
                      client.server.getReleasesForProject(projectId)]
         if relIdList != [2, 1]:
             self.fail('getReleasesForProject has the wrong order')
+
+    def makeIsoGenCfg(self):
+        cfg = installable_iso.IsoConfig()
+        cfg.configPath = self.tmpDir
+        os.mkdir("%s/changesets" % self.tmpDir)
+        cfgFile = open(cfg.configPath + "/installable_iso.conf", 'w')
+        cfgFile.write("scriptPath %s/scripts/" % self.mintDir)
+        cfgFile.write("cachePath %s/changesets/" % self.tmpDir)
+        #cfgFile.write("templatePath %s/templates/" %self.tmpDir)
+        cfgFile.write("anacondaImagesPath /dev/null")
+
+        cfg.imagesPath = ""
+        cfg.scriptPath = self.mintDir + "/scripts/"
+        cfg.cachePath = self.tmpDir + "/changesets/"
+        cfg.anacondaImagesPath = '/dev/null'
+
+        cfgFile.flush()
+        cfgFile.close()
+        return cfg
+
+    def testHiddenIsoGen(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        projectId = self.newProject(client)
+        project = client.getProject(projectId)
+
+        adminClient, adminId = self.quickMintAdmin("adminuser", "adminpass")
+        adminClient.hideProject(projectId)
+
+        release = client.newRelease(projectId, 'release 1')
+        release.setImageType(releasetypes.INSTALLABLE_ISO)
+        release.setTrove("group-core",
+                         "/test.rpath.local@rpl:devel/0.0:1.0-1-1", "1#x86")
+
+        job = client.startImageJob(release.id)
+
+        cfg = self.makeIsoGenCfg()
+
+        imageJob = installable_iso.InstallableIso(client, cfg, job, release.id)
+
+        # getting a trove not found from a trove that's really not there isn't
+        # terribly exciting. historically this call generated a Permission
+        # Denied exception for hidden projects, triggered by the great
+        # repoMap/user split.
+        cwd = os.getcwd()
+        os.chdir(self.tmpDir + "/images")
+        try:
+            self.assertRaises(TroveNotFound, imageJob.write)
+        finally:
+            os.chdir(cwd)
 
 if __name__ == "__main__":
     testsuite.main()

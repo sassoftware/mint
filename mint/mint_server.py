@@ -1354,7 +1354,6 @@ class MintServer(object):
             return 0
 
     @typeCheck(int, int, str)
-    @requiresAuth
     @private
     def setJobStatus(self, jobId, newStatus, statusMessage):
         self._filterJobAccess(jobId)

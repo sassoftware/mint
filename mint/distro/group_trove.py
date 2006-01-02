@@ -13,9 +13,13 @@ from conary import versions
 from conary.build import cook
 from conary.deps import deps
 from conary import conaryclient
+from conary.repository import changeset
+from conary.lib import util
 
 from imagegen import ImageGenerator
 from mint import projects
+
+import gencslist
 
 stockFlavors = {
     "1#x86":    "~X,~!alternatives,!bootstrap,~builddocs,~buildtests,"
@@ -71,10 +75,14 @@ class GroupTroveCook(ImageGenerator):
             ret = cook.cookItem(repos, cfg, sourceName)
             sys.stderr.flush()
             sys.stdout.flush()
-            ret = ret[0][0]
+            grpName, grpVer, grpFlavor = ret[0][0]
 
-            # FIXME: feed this changeset into gencslist
-            raise NotImplementedError
+            cs = changeset.ChangeSetFromFile(\
+                [x for x in os.listdir(path) if x.endswith('.ccs')][0])
+            gencslist.extractChangeSets(client, cfg, path, grpName,
+                                        versions.VersionFromString(grpVer),
+                                        grpFlavor, group = cs)
+
         finally:
             os.chdir(curDir)
 
@@ -84,6 +92,7 @@ class GroupTroveCook(ImageGenerator):
             return None
 
     def _projectCook(self, groupTrove):
+        projectId = groupTrove.projectId
         curDir = os.getcwd()
 
         ret = None
@@ -133,6 +142,7 @@ class GroupTroveCook(ImageGenerator):
             ret = ret[0][0]
         finally:
             os.chdir(curDir)
+            util.rmtree(path)
 
         if ret:
             return ret[0], ret[1], ret[2].freeze()

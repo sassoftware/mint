@@ -450,7 +450,6 @@ class UpgradePathTest(MintRepositoryHelper):
         self.failIf(cu.fetchone()[0] != \
                     client.server._server.version.schemaVersion,
                     "Schema failed to follow complete upgrade path")
-                    
-                    
+
 if __name__ == "__main__":
     testsuite.main()

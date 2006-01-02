@@ -229,6 +229,11 @@ class InstallableIso(ImageGenerator):
         skipMediaCheck = release.getDataValue('skipMediaCheck')
 
         cfg = conarycfg.ConaryConfiguration()
+
+        # add a repositoryMap and user entry to cfg
+        projCfg = project.getConaryConfig()
+        cfg.repositoryMap.update(projCfg.repositoryMap)
+        cfg.user = projCfg.user
         conarycfgFile = os.path.join(self.cfg.configPath, 'conaryrc')
         if os.path.exists(conarycfgFile):
             cfg.read(conarycfgFile)
