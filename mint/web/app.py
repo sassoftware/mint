@@ -47,6 +47,8 @@ class ErrorHandler(WebHandler):
     def errorPage(self, *args, **kwargs):
         return self._write('error', error = ' An unknown error occured while handling your request. Site maintainers have been notified.')
 
+shimClients = {}
+
 class MintApp(WebHandler):
     project = None
     projectList = []
@@ -111,7 +113,9 @@ class MintApp(WebHandler):
         self.authToken = self.session.get('authToken', anonToken)
     
         # open up a new client with the retrieved authToken
-        self.client = shimclient.ShimMintClient(self.cfg, self.authToken)
+        if self.authToken not in self.cachedShimClients:
+            self.shimClients[self.authToken]= shimclient.ShimMintClient(self.cfg, self.authToken)
+        client = self.shimClients[self.authToken]
 
         self.auth = self.client.checkAuth()
         if self.auth.authorized:
