@@ -287,23 +287,18 @@ def conaryHandler(req, cfg, pathInfo):
             commitAction = '/usr/lib64/python2.4/site-packages/conary/commitaction --module "/usr/lib/python2.4/site-packages/mint/rbuilderaction.py --user %%(user)s --url http://www.rpath.org/xmlrpc-private/" --module "/usr/lib64/python2.4/site-packages/conary/changemail.py --user %(user)s --email desktop-commits@bizrace.com"'
                                 
         if os.access(repositoryDir, os.F_OK):
-            repositories[repHash] = netserver.NetworkRepositoryServer(
-                                        repositoryDir,
-                                        tmpPath,
-                                        urlBase, 
-                                        repName,
-                                        repMap,
-                                        commitAction = commitAction,
-                                        cacheChangeSets = True,
-                                        logFile = logFile
-                                    )
-            shim_repositories[repHash] = shimclient.NetworkRepositoryServer(
-                                        repositoryDir,
-                                        tmpPath,
-                                        urlBase,
-                                        repName,
-                                        repMap
-                                    )
+            nscfg = netserver.ServerConfig()
+            nscfg.repositoryDB = ('sqlite', repositoryDir + '/sqldb')
+            nscfg.contentsDir = repositoryDir + '/contents/'
+            nscfg.tmpDir = tmpPath
+            nscfg.serverName = repName
+            nscfg.repositoryMap = repMap
+            nscfg.commitAction = commitAction
+            nscfg.cacheDB = ('sqlite', repositoryDir + '/cache.sql')
+            nscfg.logFile = logFile
+        
+            repositories[repHash] = netserver.NetworkRepositoryServer(nscfg, urlBase)
+            shim_repositories[repHash] = shimclient.NetworkRepositoryServer(nscfg, urlBase)
 
             repositories[repHash].forceSecure = cfg.SSL
             repositories[repHash].cfg = cfg

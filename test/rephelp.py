@@ -166,15 +166,17 @@ class ApacheServer(ChildRepository):
 		    % (self.serverDir, conaryPath, str(self.port),
 		       self.serverRoot, mintPath, testDir, self.serverRoot))
 	f = open("%s/test.cnr" % self.serverRoot, "w")
-	print >> f, 'repositoryDir %s' % self.reposDir
+#	print >> f, 'repositoryDir %s' % self.reposDir
+        print >> f, 'contentsDir %s/contents/' % self.reposDir
 	print >> f, 'tmpDir %s/tmp' % self.serverRoot
 	print >> f, 'serverName %s' %self.name
+        print >> f, 'repositoryDb sqlite %s/sqldb' % self.reposDir
         for repname, reppath in repMap.iteritems():
             print >> f, 'repositoryMap %s %s' %(repname, reppath)
-        if useCache:
-            print >> f, 'cacheChangeSets True'
-        else:
-            print >> f, 'cacheChangeSets False'
+#        if useCache:
+#            print >> f, 'cacheChangeSets True'
+#        else:
+#            print >> f, 'cacheChangeSets False'
 
         # write Mint configuration
         cfg = config.MintConfig()
@@ -190,6 +192,8 @@ class ApacheServer(ChildRepository):
             cfg.dbPath = self.serverRoot + '/mintdb'
         elif sqldriver == 'mysql':
             cfg.dbPath = 'testuser:testpass@localhost.localdomain/minttest'
+        elif sqldriver == 'postgresql':
+            cfg.dbPath = 'testuser:testpass@localhost.localdomain/minttest'
         else:
             assert("Invalid database type")
         cfg.dbDriver = sqldriver
@@ -204,7 +208,7 @@ class ApacheServer(ChildRepository):
         cfg.configured = True
         cfg.debugMode = True
         cfg.sendNotificationEmails = False
-        cfg.commitAction = """%s/scripts/commitaction --username mintauth --password mintadmin --repmap '%%(repMap)s' --build-label %%(buildLabel)s --module \'%s/mint/rbuilderaction.py --user %%%%(user)s --url http://%s:%d/xmlrpc-private/'""" % (conaryPath, mintPath, 'test.rpath.local', self.port)
+        cfg.commitAction = """%s/scripts/commitaction --username mintauth --password mintadmin --repmap '%%(repMap)s' --build-label %%(buildLabel)s --module \'%s/mint/rbuilderaction.py --user %%%%(user)s --url http://mintauth:mintpass@%s:%d/xmlrpc-private/'""" % (conaryPath, mintPath, 'test.rpath.local', self.port)
         cfg.postCfg()
         self.mintCfg = cfg
 

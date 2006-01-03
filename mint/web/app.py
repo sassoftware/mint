@@ -116,7 +116,7 @@ class MintApp(WebHandler):
         if self.authToken not in shimClients:
             shimClients[self.authToken] = shimclient.ShimMintClient(self.cfg, self.authToken)
         self.client = shimClients[self.authToken]
-
+        
         self.auth = self.client.checkAuth()
         if self.auth.authorized:
             self.user = self.client.getUser(self.auth.userId)

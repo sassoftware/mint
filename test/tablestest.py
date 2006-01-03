@@ -9,7 +9,7 @@ testsuite.setup()
 from mint import releases
 from mint_rephelp import MintRepositoryHelper
 
-from conary.dbstore import sql_error
+from conary.dbstore import sqlerrors 
 
 class TablesTest(MintRepositoryHelper):
     def testReleasesTable(self):
@@ -30,7 +30,7 @@ class TablesTest(MintRepositoryHelper):
 
         try:
             cu.execute("INSERT INTO TestTable VALUES(1)")
-        except sql_error.ColumnNotUnique:
+        except sqlerrors.CursorError:
             pass
         else:
             self.fail("expected sql_error.ColumNotUnique exception but insert succeeded")

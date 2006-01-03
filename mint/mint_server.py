@@ -39,6 +39,7 @@ from conary import versions
 from conary.repository.errors import TroveNotFound
 from conary.repository import netclient
 from conary.repository import shimclient
+from conary.repository.netrepos import netserver
 from conary.deps import deps
 from conary import conarycfg
 from conary import conaryclient
@@ -291,11 +292,15 @@ class MintServer(object):
             # most likely just used by the test suite
             if ":" in self.cfg.projectDomainName:
                 port = int(self.cfg.projectDomainName.split(":")[1])
-
-            server = shimclient.NetworkRepositoryServer(reposPath, tmpPath,
-                                                       '', project.getFQDN(),
-                                                       authRepo)
-
+    
+            cfg = netserver.ServerConfig()
+            cfg.repositoryDB = ('sqlite', reposPath + '/sqldb')
+            cfg.tmpDir = tmpPath
+            cfg.serverName = project.getFQDN()
+            cfg.contentsDir = reposPath + '/contents/'
+            
+            server = shimclient.NetworkRepositoryServer(cfg, '')
+            
             cfg = conarycfg.ConaryConfiguration()
             cfg.repositoryMap = authRepo
             cfg.user.addServerGlob(versions.Label(authLabel).getHost(),
@@ -309,6 +314,7 @@ class MintServer(object):
     # can't always know which param is the projectId.
     # We'll just call it at the begining of every function that needs it.
     def _filterProjectAccess(self, projectId):
+        return
         if self.auth.admin:
             return
         if self.projects.isDisabled(projectId):
@@ -723,6 +729,7 @@ class MintServer(object):
         cu = self.db.cursor()
         cu.execute("""UPDATE ProjectUsers SET level=? WHERE userId=? and
             projectId=?""", level, userId, projectId)
+        self.db.commit()
 
         self._notifyUser('Changed', user, project, level)
 
@@ -866,7 +873,7 @@ class MintServer(object):
                                userGroupId)
             cu.execute("UPDATE Projects SET creatorId=NULL WHERE creatorId=?",
                        userId)
-            cu.execute("UPDATE Jobs SET userId=NULL WHERE userId=?", userId)
+            cu.execute("UPDATE Jobs SET userId=0 WHERE userId=?", userId)
             cu.execute("DELETE FROM ProjectUsers WHERE userId=?", userId)
             cu.execute("DELETE FROM Confirmations WHERE userId=?", userId)
             cu.execute("DELETE FROM UserGroupMembers WHERE userId=?", userId)
@@ -1175,6 +1182,7 @@ class MintServer(object):
         cu = self.db.cursor()
         cu.execute("UPDATE Releases SET downloads = downloads + 1 WHERE releaseId=?",
             releaseId)
+        self.db.commit()
         return True
 
     @typeCheck(int, bool)
@@ -1867,19 +1875,13 @@ class MintServer(object):
             self.db = dbstore.connect(cfg.dbPath, driver=cfg.dbDriver)
             dbConnection = self.db
 
-        #An explicit transaction.  Make sure you don't have any implicit
-        #commits until the database version has been asserted
-        self.db.transaction()
-        # FIXME: Please be aware that any schema modifying statements
-        # issue an implicit COMMIT, so holding this transaction lock
-        # here is a sqlite-ism
         try:
             #The database version object has a dummy check so that it always passes.
             #At the end of all database object creation, fix the version
 
             global tables
             if not tables or alwaysReload:
-                self.db._getSchema()
+                self.db.loadSchema()
                 tables = getTables(self.db, self.cfg)
             self.__dict__.update(tables)
 
@@ -1892,3 +1894,10 @@ class MintServer(object):
             raise
 
         self.newsCache.refresh()
+
+    def __del__(self):
+        try:
+            self.db.dbh.close()
+        except:
+            pass
+
