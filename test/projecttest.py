@@ -99,6 +99,19 @@ class ProjectTest(MintRepositoryHelper):
         assert(project.getMembers() == [[userId, 'testuser', userlevels.OWNER],
                                         [otherUserId, 'member', userlevels.DEVELOPER]])
 
+    def testWatcher(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        otherClient, otherUserId = self.quickMintUser("another", "testpass")
+
+        projectId = client.newProject("Test", "test", "rpath.local")
+        project = otherClient.getProject(projectId)
+        project.addMemberByName("another", userlevels.USER)
+
+        assert(project.getMembers() == [[userId, 'testuser', userlevels.OWNER],
+                                        [otherUserId, 'another', userlevels.USER]])
+
+        assert([x[0].id for x in otherClient.getProjectsByMember(otherUserId)] == [projectId])
+
     def testDuplicateMembers(self):
         client, userId = self.quickMintUser("testuser", "testpass")
         newClient, newUserId = self.quickMintUser("newuser", "testpass")
