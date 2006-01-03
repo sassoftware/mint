@@ -18,7 +18,7 @@ from urllib import quote
         <a href="#">Edit Group</a>
     </div>
 
-    <body>
+    <body xmlns="http://www.w3.org/1999/xhtml">
         <td id="left" class="side">
             <div class="pad">
                 ${projectResourcesMenu()}
