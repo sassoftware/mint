@@ -314,7 +314,6 @@ class MintServer(object):
     # can't always know which param is the projectId.
     # We'll just call it at the begining of every function that needs it.
     def _filterProjectAccess(self, projectId):
-        return
         if self.auth.admin:
             return
         if self.projects.isDisabled(projectId):
@@ -329,7 +328,8 @@ class MintServer(object):
 
     def _filterReleaseAccess(self, releaseId):
         cu = self.db.cursor()
-        cu.execute("SELECT projectId FROM Releases WHERE releaseId = ?", releaseId)
+        cu.execute("SELECT projectId FROM Releases WHERE releaseId = ?",
+                   releaseId)
         res = cu.fetchall()
         if len(res):
             self._filterProjectAccess(res[0][0])
@@ -356,7 +356,10 @@ class MintServer(object):
 
     def _filterImageFileAccess(self, fileId):
         cu = self.db.cursor()
-        cu.execute("SELECT projectId FROM ImageFiles LEFT JOIN Releases ON Releases.releaseId = ImageFiles.releaseId WHERE fileId = ?", fileId)
+        cu.execute("""SELECT projectId FROM ImageFiles
+                          LEFT JOIN Releases
+                              ON Releases.releaseId = ImageFiles.releaseId
+                          WHERE fileId=?""", fileId)
         r = cu.fetchall()
         if len(r):
             self._filterProjectAccess(r[0][0])

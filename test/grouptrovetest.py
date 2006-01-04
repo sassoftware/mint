@@ -629,7 +629,8 @@ class GroupTroveTest(MintRepositoryHelper):
         except DuplicateJob:
             pass
 
-        cookJob = group_trove.GroupTroveCook(client, client.getCfg(), job, groupTrove.getId())
+        cookJob = group_trove.GroupTroveCook(client, client.getCfg(), job,
+                                             groupTrove.id)
         trvName, trvVersion, trvFlavor = cookJob.write()
 
         # give some time for the commit action to run

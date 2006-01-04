@@ -295,16 +295,16 @@ class ProjectsTable(database.KeyedTable):
     def getProjectIdsByMember(self, userId, filter = False):
         cu = self.db.cursor()
         stmt = """SELECT ProjectUsers.projectId, level FROM ProjectUsers 
-                    LEFT JOIN Projects ON Projects.projectId=ProjectUsers.projectId 
-                    WHERE ProjectUsers.userId=? AND disabled=0"""
+                    LEFT JOIN Projects
+                        ON Projects.projectId=ProjectUsers.projectId 
+                    WHERE ProjectUsers.userId=? AND disabled=0 AND
+                    NOT (hidden=1 AND level not in %s)""" % \
+            str(tuple(userlevels.WRITERS))
         if filter:
             stmt += " AND hidden=0"
         cu.execute(stmt, userId)
 
-        ids = []
-        for r in cu.fetchall():
-            ids.append((r[0], r[1]))
-        return ids
+        return [tuple(x) for x in cu.fetchall()]
 
     def getNumProjects(self):
         cu = self.db.cursor()

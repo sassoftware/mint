@@ -77,8 +77,10 @@ class ProjectTest(MintRepositoryHelper):
    
     def testMembers(self):
         client = self.openMintClient(("test", "foo"))
-        otherUserId = client.registerNewUser("member", "memberpass", "Test Member",
-                        "test@example.com", "test at example.com", "", active=True)
+        otherUserId = client.registerNewUser("member", "memberpass",
+                                             "Test Member",
+                        "test@example.com", "test at example.com", "",
+                                             active=True)
  
         client, userId = self.quickMintUser("testuser", "testpass")
 
@@ -87,17 +89,23 @@ class ProjectTest(MintRepositoryHelper):
 
         project.addMemberById(otherUserId, userlevels.DEVELOPER)
         assert(project.getMembers() == [[userId, 'testuser', userlevels.OWNER],
-                                        [otherUserId, 'member', userlevels.DEVELOPER]])
+                                        [otherUserId, 'member',
+                                         userlevels.DEVELOPER]])
 
         project.delMemberById(otherUserId)
-        assert(project.getMembers() == [[userId, 'testuser', userlevels.OWNER]])
+        assert(project.getMembers() == [[userId, 'testuser',
+                                         userlevels.OWNER]])
 
         project.addMemberByName('member', userlevels.OWNER)
-        assert(project.getMembers() == [[otherUserId, 'member', userlevels.OWNER], [userId, 'testuser', userlevels.OWNER]])
+        assert(project.getMembers() == [[otherUserId, 'member',
+                                         userlevels.OWNER],
+                                        [userId, 'testuser',
+                                         userlevels.OWNER]])
 
         project.updateUserLevel(otherUserId, userlevels.DEVELOPER)
         assert(project.getMembers() == [[userId, 'testuser', userlevels.OWNER],
-                                        [otherUserId, 'member', userlevels.DEVELOPER]])
+                                        [otherUserId, 'member',
+                                         userlevels.DEVELOPER]])
 
     def testWatcher(self):
         client, userId = self.quickMintUser("testuser", "testpass")
@@ -108,9 +116,11 @@ class ProjectTest(MintRepositoryHelper):
         project.addMemberByName("another", userlevels.USER)
 
         assert(project.getMembers() == [[userId, 'testuser', userlevels.OWNER],
-                                        [otherUserId, 'another', userlevels.USER]])
+                                        [otherUserId, 'another',
+                                         userlevels.USER]])
 
-        assert([x[0].id for x in otherClient.getProjectsByMember(otherUserId)] == [projectId])
+        assert([x[0].id for x in otherClient.getProjectsByMember(otherUserId)]\
+               == [projectId])
 
     def testDuplicateMembers(self):
         client, userId = self.quickMintUser("testuser", "testpass")
@@ -148,10 +158,17 @@ class ProjectTest(MintRepositoryHelper):
 
     def testUnconfirmedMembers(self):
         client = self.openMintClient(("test", "foo"))
-        otherUserId = client.registerNewUser("member", "memberpass", "Test Member",
-                        "test@example.com", "test at example.com", "", active=True)
-        unconfirmedUserId = client.registerNewUser("unconfirmed", "memberpass", "Unconfirmed Member",
-                        "test@example.com", "test at example.com", "", active=False)
+        otherUserId = client.registerNewUser("member", "memberpass",
+                                             "Test Member",
+                                             "test@example.com",
+                                             "test at example.com", "",
+                                             active=True)
+        unconfirmedUserId = client.registerNewUser("unconfirmed",
+                                                   "memberpass",
+                                                   "Unconfirmed Member",
+                                                   "test@example.com",
+                                                   "test at example.com",
+                                                   "", active=False)
  
         client, userId = self.quickMintUser("testuser", "testpass")
         
@@ -182,7 +199,8 @@ class ProjectTest(MintRepositoryHelper):
         assert(projects[0][0].getId() == projectId)
         assert(projects[0][1] == userlevels.OWNER)
 
-        if client.server.getProjectsByUser(userId) !=  [['test.localhost', 'Test Project', 0]]:
+        if client.server.getProjectsByUser(userId) !=  [['test.localhost',
+                                                         'Test Project', 0]]:
             self.fail("getProjectsByUser returned incorrect results")
 
     def testHideProject(self):
@@ -203,103 +221,53 @@ class ProjectTest(MintRepositoryHelper):
         memberClient.getProject(projectId)
         adminClient.getProject(projectId)
 
-        try:
-            client.getProject(projectId)
-            self.fail("getProject: Project should appear to not exist to non-members")
-        except ItemNotFound:
-            pass
+        self.assertRaises(ItemNotFound, client.getProject, projectId)
+        self.assertRaises(ItemNotFound, watcherClient.getProject, projectId)
 
-        try:
-            watcherClient.getProject(projectId)
-            self.fail("getProject: Project should appear to not exist to user-members")
-        except ItemNotFound:
-            pass
+        self.assertRaises(ItemNotFound, client.server.getProjectIdByFQDN,
+                          "test.localhost")
+        self.assertRaises(ItemNotFound, client.server.getProjectIdByHostname,
+                          "test")
 
-        try:
-            client.server.getProjectIdByFQDN("test.localhost")
-            self.fail("getProjectIdByFQDN: Project should appear to not exist to non-members")
-        except ItemNotFound:
-            pass
+        self.failIf(client.server.getProjectIdsByMember(watcherId),
+                    "Nonmember found hidden project (getProjectIdsByMember)")
 
-        try:
-            client.server.getProjectIdByHostname("test")
-            self.fail("getProjectIdByHostname: Project should appear to not exist to non-members")
-        except ItemNotFound:
-            pass
+        self.failIf(not adminClient.server.getProjectIdsByMember(adminUserId),
+                    "Admin missed hidden project (getProjectIdsByMember)")
 
-        if client.server.getProjectIdsByMember(watcherId):
-            self.fail("getProjectIdsByMember returned a hidden project for a nonmember")
+        self.failIf(not memberClient.server.getProjectIdsByMember(memberId),
+                    "Owner missed hidden project (getProjectIdsByMember)")
 
-        if not adminClient.server.getProjectIdsByMember(adminUserId):
-            self.fail("getProjectIdsByMember didn't return hidden project for admin")
+        self.failIf(watcherClient.server.getProjectIdsByMember(watcherId),
+                    "Watcher saw hidden project (getProjectIdsByMember)")
 
-        if not memberClient.server.getProjectIdsByMember(memberId):
-            self.fail("getProjectIdsByMember didn't return hidden project for an owner")
-
-        if watcherClient.server.getProjectIdsByMember(watcherId):
-            self.fail("getProjectIdsByMember returned a hidden project for a user")
-
-        try:
-            client.server.getMembersByProjectId(projectId)
-            self.fail("getMembersByProjectId: Project should appear to not exist to non-members")
-        except ItemNotFound:
-            pass
+        self.assertRaises(ItemNotFound, client.server.getMembersByProjectId,
+                          projectId)
 
         adminClient.server.getOwnersByProjectName(project.getName())
 
-        try:
-            client.userHasRequested(projectId, userId)
-            self.fail("userHasRequested: did not result in error for non-member")
-        except ItemNotFound:
-            pass
+        self.assertRaises(ItemNotFound, client.userHasRequested, projectId,
+                          userId)
 
-        try:
-            client.setJoinReqComments(projectId, "foo")
-            self.fail("non-member was allowed to set join request")
-        except ItemNotFound:
-            pass
+        self.assertRaises(ItemNotFound, client.setJoinReqComments,
+                          projectId, "foo")
+        self.assertRaises(ItemNotFound, client.getJoinReqComments,
+                          projectId, userId)
+        self.assertRaises(ItemNotFound, client.deleteJoinRequest,
+                          projectId, userId)
+        self.assertRaises(ItemNotFound, client.listJoinRequests, projectId)
 
-        try:
-            client.getJoinReqComments(projectId, userId)
-            self.fail("non-member was allowed to get join request")
-        except ItemNotFound:
-            pass
 
-        try:
-            client.deleteJoinRequest(projectId, userId)
-            self.fail("non-member was allowed to delete join request")
-        except ItemNotFound:
-            pass
+        self.assertRaises(ItemNotFound, project.addMemberById,
+                         userId, userlevels.USER)
 
-        try:
-            client.listJoinRequests(projectId)
-            self.fail("non-member was allowed to set join request")
-        except ItemNotFound:
-            pass
-
-        try:
-            project.addMemberById(userId, userlevels.USER)
-            self.fail("user was allowed to watch a hidden project")
-        except ItemNotFound:
-            pass
-
-        try:
-            client.server.lastOwner(projectId, adminUserId)
-            self.fail("lastOwner should have failed")
-        except ItemNotFound:
-            pass
-
-        try:
-            client.server.onlyOwner(projectId, adminUserId)
-            self.fail("onlyOwner should have failed")
-        except ItemNotFound:
-            pass
-
-        try:
-            watcherClient.server.delMember(projectId, watcherId, False)
-            self.fail("delMember should not have worked")
-        except ItemNotFound:
-            pass
+        self.assertRaises(ItemNotFound, client.server.lastOwner,
+                          projectId, adminUserId)
+        self.assertRaises(ItemNotFound, client.server.onlyOwner,
+                          projectId, adminUserId)
+        self.assertRaises(ItemNotFound,
+                          watcherClient.server.delMember, projectId, watcherId,
+                                                         False)
 
         memberClient.server.getUserLevel(watcherId, projectId)
 
