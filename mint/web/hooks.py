@@ -241,7 +241,10 @@ def conaryHandler(req, cfg, pathInfo):
     secure = (req.subprocess_env.get('HTTPS', 'off') == 'on')
 
     repHash = repName + req.hostname
-    if not repositories.has_key(repHash):
+    print >> sys.stderr, "REPOSITORY CACHE:", repositories
+    sys.stderr.flush()
+    
+    if not repositories.has_key(repHash) or 1:
         repositoryDir = os.path.join(cfg.reposPath, repName)
         tmpPath = os.path.join(cfg.reposPath, repName, "tmp")
         logFile = os.path.join(repositoryDir, "contents.log")
