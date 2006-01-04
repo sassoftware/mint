@@ -83,26 +83,33 @@ class SessionsTable(DatabaseTable):
     def save(self, sid, data):
         cu = self.db.cursor()
         sessIdx = self.getSessIndex(sid)
-        if sessIdx:
-            # beware of this UPDATE statement. There exists one extremely
-            # unlikely corner case which is probably an error condition
-            # anyway... you could get here if the session was deleted and
-            # then the same sid was re-saved in a different thread.
-            # under these conditions, your session WON'T get saved--
-            # however the only realisticly imaginible time that could
-            # happen is if someone hijacked a session anyway.
-            # UPDATE was chosen because empirical data suggests it is
-            # up to 100 times faster than delete->insert.
-            cu.execute("UPDATE Sessions SET sid=?, data=? WHERE sessidx=?",
-                       sid, cPickle.dumps(data), sessIdx)
+        try:
+            if sessIdx:
+                # beware of this UPDATE statement. There exists one extremely
+                # unlikely corner case which is probably an error condition
+                # anyway... you could get here if the session was deleted and
+                # then the same sid was re-saved in a different thread.
+                # under these conditions, your session WON'T get saved--
+                # however the only realisticly imaginible time that could
+                # happen is if someone hijacked a session anyway.
+                # UPDATE was chosen because empirical data suggests it is
+                # up to 100 times faster than delete->insert.
+                cu.execute("UPDATE Sessions SET sid=?, data=? WHERE sessidx=?",
+                           sid, cPickle.dumps(data), sessIdx)
+            else:
+                cu.execute("INSERT INTO Sessions (sid, data) VALUES(?, ?)",
+                           sid, cPickle.dumps(data))
+        except:
+            self.db.rollback()
+            raise
         else:
-            cu.execute("INSERT INTO Sessions (sid, data) VALUES(?, ?)",
-                       sid, cPickle.dumps(data))
+            self.db.commit()
 
     def delete(self, sid):
         cu = self.db.cursor()
         sessIdx = self.getSessIndex(sid)
         cu.execute("DELETE FROM Sessions WHERE sessIdx=?", sessIdx)
+        self.db.commit()
         self.delSessIndex(sid)
 
     def cleanup(self):
