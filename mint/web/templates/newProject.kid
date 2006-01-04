@@ -26,7 +26,7 @@
                 <p py:for="error in errors" class="errormessage" py:content="error"/>
                 <h2>Create a Project</h2>
                 <p>Fields labeled with a <em class="required">red arrow</em> are required.</p>
-                <form method="post" action="createProject">
+                <form method="post" action="createProject" xmlns="http://www.w3.org/1999/xhtml">
 
                     <table border="0" cellspacing="0" cellpadding="0" class="mainformhorizontal">
                         <tr>

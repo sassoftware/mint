@@ -25,7 +25,7 @@
                 ${searchMenu(display='none')}
             </div>
         </td>
-        <td id="main">
+        <td id="main" xmlns="http://www.w3.org/1999/xhtml">
             <div class="pad">
                 <h1>Group Builder</h1>
 

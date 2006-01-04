@@ -26,7 +26,7 @@ from urllib import quote
                 ${searchMenu(display='none')}
             </div>
         </td>
-        <td id="main">
+        <td id="main" xmlns="http://www.w3.org/1999/xhtml">
             <p py:if="message" class="message" py:content="message"/>
             <div class="pad">
                 <h1>Edit Group</h1>
@@ -55,7 +55,7 @@ from urllib import quote
                         <tr><td colspan="4">
                             <div style="float:left">${curGroupTrove.recipeName} version ${curGroupTrove.upstreamVersion}</div>
                             <div style="float:right"><a onclick="javascript:dropdown();" href="#">Edit 
-                                <img id="version_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" /></a></div>
+                                <img xmlns="http://www.w3.org/1999/xhtml" id="version_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" /></a></div>
                         </td></tr>
                         <tr id="editGTDropdown" style="display:none;">
                             <td colspan="4">
