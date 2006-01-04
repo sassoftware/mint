@@ -373,7 +373,22 @@ class ProjectsTable(database.KeyedTable):
         tmpPath = os.path.join(dbPath, 'tmp')
         util.mkdirChain(tmpPath)
 
-        repos = EmptyNetworkRepositoryServer(dbPath, contentsPath, None, None, None, {})
+        cfg = netserver.ServerConfig()
+        cfg.repositoryDB = ("sqlite", dbPath + "/sqldb")
+        cfg.tmpDir = tmpPath
+        cfg.serverName = hostname + "." + domainname
+        cfg.repositoryMap = {}
+        cfg.contentsDir = contentsPath
+       
+        if dbPath != contentsPath:
+            #Create the links as appropriate.  dbPath will be the ultimate path sent
+            # up to NetworkRepositoryServer.
+            contentsTarget = os.path.join(dbPath, 'contents')
+            contentsSrc = os.path.join(contentsPath, 'contents')
+            util.mkdirChain(contentsSrc)
+            os.symlink(contentsSrc, contentsTarget)
+        repos = netserver.NetworkRepositoryServer(cfg, '')
+
         repos.auth.addUser(username, password)
         repos.auth.addAcl(username, None, None, True, False, True)
 
@@ -559,38 +574,3 @@ class LabelsTable(database.KeyedTable):
 
         cu.execute("""DELETE FROM Labels WHERE projectId=? AND labelId=?""", projectId, labelId)
         return False
-    
-# XXX sort of stolen from conary/server/server.py
-class EmptyNetworkRepositoryServer(netserver.NetworkRepositoryServer):
-    def __init__(self, dbPath, contentsPath, tmpPath, basicUrl, name,
-                 repositoryMap, commitAction = None, cacheChangeSets = False,
-                 logFile = None):
-
-        cfg = netserver.ServerConfig()
-        cfg.repositoryDB = ("sqlite", dbPath + "/sqldb")
-        cfg.tmpDir = tmpPath
-        cfg.serverName = name
-        cfg.repositoryMap = repositoryMap
-        cfg.contentsDir = contentsPath
-       
-        if dbPath != contentsPath:
-            #Create the links as appropriate.  dbPath will be the ultimate path sent
-            # up to NetworkRepositoryServer.
-            contentsTarget = os.path.join(dbPath, 'contents')
-            contentsSrc = os.path.join(contentsPath, 'contents')
-            util.mkdirChain(contentsSrc)
-            os.symlink(contentsSrc, contentsTarget)
-        netserver.NetworkRepositoryServer.__init__(self, cfg, basicUrl)
-
-    def reset(self, authToken, clientVersion):
-        import shutil
-        shutil.rmtree(self.repPath + '/contents')
-        os.mkdir(self.repPath + '/contents')
-
-        # cheap trick. sqlite3 doesn't mind zero byte files; just replace
-        # the file with a zero byte one (to change the inode) and reopen
-        open(self.repPath + '/sqldb.new', "w")
-        os.rename(self.repPath + '/sqldb.new', self.repPath + '/sqldb')
-        self.reopen()
-
-        return 0
