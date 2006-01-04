@@ -15,6 +15,7 @@ python_files =			\
 	database.py		\
 	dbversion.py		\
 	grouptrove.py		\
+	helperfuncs.py \
 	jobs.py			\
 	jobstatus.py		\
 	mailinglists.py		\

@@ -10,7 +10,7 @@ import kid
 import os
 import sys
 from mint import templates
-
+from mint.helperfuncs import truncateForDisplay
 from mint_rephelp import MintRepositoryHelper
 from mint.userlevels import myProjectCompare
 
@@ -99,6 +99,63 @@ class ProjectTest(MintRepositoryHelper):
         self.db.transaction()
         assert(self.db.dbh.inTransaction)
         self.db.rollback()
+
+    # Test strings with the default values
+    def testTruncateKnownGoodValues(self):
+        # Test values (assumes maxWords=10 and maxWordLen=15)
+        knownGoodValues = ( 
+              # empty test
+              ( "", "" ),
+
+              # a single long word
+              ( "Supercalifragilisticexpialidocious!", "Supercalifragil..." ),
+
+              # the raison d'etre
+              ( "Woooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo"
+                "oooooooooooooooooooooooooooooooot", "Woooooooooooooo..." ),
+
+              # a simple phrase
+              ( "I like pork!", "I like pork!" ),
+
+              # a sample block of text
+              ( "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. "
+                "Pellentesque ullamcorper tincidunt sem. Pellentesque ultricies"
+                "lacinia ante. Proin molestie ligula ut.", 
+                "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. "
+                "Pellentesque ullamcorper ....")
+        )
+
+        for input, expectedOutput in knownGoodValues:
+            actualOutput = truncateForDisplay(input)
+            self.assertEqual(actualOutput, expectedOutput)
+
+    # Test different values for maxWordsLen
+    def testTruncateDifferentMaxWordLengths(self):
+        s = "012345678901234567890123456789"
+        self.assertEqual(truncateForDisplay(s, 10, 20), s[0:20]+'...')
+        self.assertEqual(truncateForDisplay(s, 10, 10), s[0:10]+'...')
+        self.assertEqual(truncateForDisplay(s, 10, 5), s[0:5]+'...')
+        self.assertEqual(truncateForDisplay(s, 10, 1), s[0:1]+'...')
+        self.assertEqual(truncateForDisplay(s, 10, 400), s)
+        
+    # Test different values for maxWords
+    def testTruncateDifferentMaxWords(self):
+        s = "I am a string of some words. Fear me!"
+        self.assertEqual(truncateForDisplay(s, 1), "I ....")
+        self.assertEqual(truncateForDisplay(s, 2), "I am ....")
+        self.assertEqual(truncateForDisplay(s, 400), s) 
+
+    # Test a weird sentence of mostly punctuation
+    def testTruncatePathologicalSentences(self):
+        s = "#*$)(#*$)@Q$)@*$)%*#! #$)#*$)( $# $#*(!!!!"
+        self.assertEqual(truncateForDisplay(s), s[0:15]+'...')
+
+    # Make sure we raise appropriately if we are called with bad args
+    def testTruncateBadCalls(self):
+        self.failUnlessRaises(ValueError, truncateForDisplay, "Foo", -1)
+        self.failUnlessRaises(ValueError, truncateForDisplay, "Foo",  0)
+        self.failUnlessRaises(ValueError, truncateForDisplay, "Foo", -1, -1)
+        self.failUnlessRaises(ValueError, truncateForDisplay, "Foo", -1, 0)
 
 if __name__ == "__main__":
     testsuite.main()

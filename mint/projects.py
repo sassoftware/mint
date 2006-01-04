@@ -13,6 +13,7 @@ from conary import versions
 from conary.lib import util
 from conary.repository.netrepos import netserver
 from conary.conarycfg import ConaryConfiguration
+from helperfuncs import truncateForDisplay
 
 import database
 import userlevels
@@ -44,6 +45,9 @@ class Project(database.TableObject):
                  'hidden', 'external', 'disabled',
                  'timeCreated', 'timeModified')
 
+    displayName = ''
+    displayDesc = ''
+
     def getItem(self, id):
         return self.server.getProject(id)
 
@@ -52,6 +56,11 @@ class Project(database.TableObject):
 
     def getName(self):
         return self.name
+
+    def getNameForDisplay(self):
+        if not self.displayName:
+            self.displayName = truncateForDisplay(self.name)
+        return self.displayName
 
     def getDomainname(self):
         return self.domainname
@@ -70,6 +79,11 @@ class Project(database.TableObject):
 
     def getDesc(self):
         return self.description
+
+    def getDescForDisplay(self):
+        if not self.displayDesc:
+            self.displayDesc = truncateForDisplay(self.desc)
+        return self.displayDesc
 
     def getTimeCreated(self):
         return self.timeCreated
