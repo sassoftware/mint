@@ -43,12 +43,11 @@ class Project(database.TableObject):
     __slots__ = ('creatorId', 'name',
                  'description', 'hostname', 'domainname', 'projecturl', 
                  'hidden', 'external', 'disabled',
-                 'timeCreated', 'timeModified')
-
-    displayName = ''
-    displayDesc = ''
+                 'timeCreated', 'timeModified', 'displayName', 'displayDesc')
 
     def getItem(self, id):
+        self.displayName = ''
+        self.displayDesc = ''
         return self.server.getProject(id)
 
     def getCreatorId(self):
@@ -82,7 +81,7 @@ class Project(database.TableObject):
 
     def getDescForDisplay(self):
         if not self.displayDesc:
-            self.displayDesc = truncateForDisplay(self.desc)
+            self.displayDesc = truncateForDisplay(self.description)
         return self.displayDesc
 
     def getTimeCreated(self):

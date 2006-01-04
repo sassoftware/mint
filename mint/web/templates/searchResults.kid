@@ -37,8 +37,9 @@
                 formattedresults = []
                 if searchType == "Projects":
                     formattedresults = [
-                        (resultset[0].getUrl(), resultset[2]),
-                        resultset[3],
+                        (resultset[0].getUrl(), 
+                        resultset[0].getNameForDisplay() ),
+                        resultset[0].getDescForDisplay(),
                         timeDelta(resultset[4])
                     ]
                 elif searchType == "Users":
