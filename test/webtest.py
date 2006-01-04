@@ -239,6 +239,7 @@ class MintTest(mint_rephelp.WebRepositoryHelper):
         s = self.sessionData()
         cu = self.db.cursor()
         cu.execute("DELETE FROM GroupTroves WHERE groupTroveId=?", s['groupTroveId'])
+        self.db.commit()
         
         page.assertContent('/project/foo/groups', ok_codes = [200],
             content = 'You can use Group Builder to create a group')
