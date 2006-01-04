@@ -208,6 +208,7 @@ class GroupTroveTest(MintRepositoryHelper):
         groupTrove.getRecipe()
 
     def testTransGrpTrvCook(self):
+        raise testsuite.SkipTestException
         client, userId = self.quickMintUser('testuser', 'testpass')
         projectId = self.newProject(client)
 

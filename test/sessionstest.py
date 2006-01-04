@@ -48,6 +48,7 @@ class SessionTest(MintRepositoryHelper):
         client.loadSession(sid)
         cu = self.db.cursor()
         cu.execute("DELETE FROM Sessions")
+        self.db.commit()
 
         d = client.loadSession(sid)
         assert not d

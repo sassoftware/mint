@@ -100,6 +100,7 @@ class ReleaseTest(MintRepositoryHelper):
         release.setImageType(releasetypes.INSTALLABLE_ISO)
 
         self.db.cursor().execute("DELETE FROM ReleaseData WHERE name='bugsUrl'")
+        self.db.commit()
 
         assert(release.getDataValue("bugsUrl") == "http://bugs.rpath.com/")
 

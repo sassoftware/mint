@@ -99,6 +99,7 @@ class MintTest(mint_rephelp.WebRepositoryHelper):
         cu = self.db.cursor()
         cu.execute("UPDATE Labels SET label=? WHERE projectId=?",
                    'bar.rpath.com@rpl:devel', projectId)
+        self.db.commit()
 
         page = page.fetch('/project/foo/processEditProject', postdata =
                           {'name'   : 'foo',
@@ -296,6 +297,7 @@ class MintTest(mint_rephelp.WebRepositoryHelper):
         projectId = self.newProject(client, 'Foo', 'foo')
         cu = self.db.cursor()
         cu.execute("INSERT INTO Confirmations VALUES (?, ?, ?)", userId, 0, 40 * "0")
+        self.db.commit()
         page = self.webLogin('foouser', 'foopass')
         if "Email Confirmation Required" not in page.body:
             self.fail('Unconfirmed user broke out of confirm email jail'
@@ -346,6 +348,7 @@ class MintTest(mint_rephelp.WebRepositoryHelper):
         cu = self.db.cursor()
         cu.execute("UPDATE Sessions SET sessIdx=sessIdx + 1, sid=?",
                    newSid)
+        self.db.commit()
 
         #session not in table but is cached
         page = self.fetch('/projects?sortOrder=9', ok_codes = [200])

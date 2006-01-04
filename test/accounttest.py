@@ -297,6 +297,7 @@ class AccountTest(MintRepositoryHelper):
 
         cu = self.db.cursor()
         cu.execute("UPDATE Projects SET external=1 WHERE projectId=?", extProjectId)
+        self.db.commit()
         
         user = client.getUser(userId)
         user.setPassword("newpass")
