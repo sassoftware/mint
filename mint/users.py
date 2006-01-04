@@ -272,15 +272,9 @@ class UsersTable(database.KeyedTable):
             import templates.registerNewUser
             message = templates.write(templates.registerNewUser,
                 username = username, cfg = self.cfg, confirm = confirm)
-            try:
-                sendMailWithChecks(self.cfg.adminMail, self.cfg.productName,
-                                   email, "Welcome to %s!" % \
-                                   self.cfg.productName, message)
-            except:
-                # must roll back authrepo
-                # FIXME we need to roll back our group if it didn't work.
-                #authRepo.deleteUserByName(repoLabel, username)
-                raise
+            sendMailWithChecks(self.cfg.adminMail, self.cfg.productName,
+                               email, "Welcome to %s!" % \
+                               self.cfg.productName, message)
         try:
             cu.execute("INSERT INTO UserGroups (userGroup) VALUES(?)",
                        username)
@@ -313,7 +307,13 @@ class UsersTable(database.KeyedTable):
                        userId)
 
         except database.DuplicateItem:
+            self.db.rollback()
             raise UserAlreadyExists
+        except:
+            self.db.rollback()
+            raise
+        else:
+            self.db.commit()
         self.confirm_table.new(userId = userId,
                                timeRequested = time.time(),
                                confirmation = confirm)

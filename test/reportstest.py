@@ -70,6 +70,8 @@ class ReportTest(MintRepositoryHelper):
         cu.execute("INSERT INTO Commits (timestamp, userId) VALUES(?,?)",
                    time.time(), adminId)
 
+        self.db.commit()
+
         report = adminClient.server.getReport('active_users')
 
         self.failIf(report['data'] != \
