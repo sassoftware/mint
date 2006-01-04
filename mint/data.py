@@ -53,6 +53,7 @@ class GenericDataTable(database.DatabaseTable):
         cu.execute("DELETE FROM %s WHERE %sId=? AND name=?" % (self.name, self.front), id, name)
         cu.execute("INSERT INTO %s (%sId, name, value, dataType) VALUES(?, ?, ?, ?)" % (self.name, self.front),
                    (id, name, value, dataType))
+        self.db.commit()
         return True
 
     def getDataValue(self, id, name):
