@@ -17,8 +17,6 @@ import time
 import types
 import unittest
 
-from conary.lib import util, log
-
 archivePath = None
 testPath = None
 
@@ -30,11 +28,13 @@ class LogFilter:
         self.ignorelist = []
 
     def clear(self):
+        from conary.lib import log
         self.records = []
         self.ignorelist = []
         log.logger.removeFilter(self)
 
     def filter(self, record):
+        from conary.lib import log
         text = log.formatter.format(record)
         for regex in self.ignorelist:
             if regex.match(text):
@@ -46,9 +46,11 @@ class LogFilter:
         self.ignorelist.append(re.compile(regexp))
 
     def add(self):
+        from conary.lib import log
         log.logger.addFilter(self)
 
     def remove(self):
+        from conary.lib import log
         log.logger.removeFilter(self)
 
     def compareWithOrder(self, records):
@@ -146,6 +148,7 @@ def setup():
     if parent not in sys.path:
 	sys.path.append(parent)
 
+    from conary.lib import util
     sys.excepthook = util.genExcepthook(True)
 
     # import debugger now that we have the path for it
@@ -204,9 +207,11 @@ class Loader(unittest.TestLoader):
 
 class TestCase(unittest.TestCase):
     def setUp(self):
+        from conary.lib import log
         self._logLevel = log.getVerbosity()
 
     def tearDown(self):
+        from conary.lib import log
         log.setVerbosity(self._logLevel)
 
     def captureOutput(self, fn, *args, **namedArgs):
@@ -544,6 +549,7 @@ def isIndividual():
 
 
 def main(*args, **keywords):
+    from conary.lib import util
     sys.excepthook = util.genExcepthook(True)
 
     global _individual
@@ -585,6 +591,7 @@ if __name__ == '__main__':
         sys.path.append(cwd)
     setup()
 
+    from conary.lib import util
     from conary.lib import debugger
     sys.excepthook = util.genExcepthook(True)
 
