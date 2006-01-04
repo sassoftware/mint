@@ -63,7 +63,8 @@ class GroupTroveTable(database.KeyedTable):
             versions.Revision(vers + "-1-1")
         except versions.ParseError:
             raise GroupTroveVersionError
-        self.update(groupTroveId, upstreamVersion = vers, timeModified = time.time())
+        self.update(groupTroveId, upstreamVersion = vers,
+                    timeModified = time.time())
 
     def createGroupTrove(self, projectId, creatorId, recipeName,
                          upstreamVersion, description, autoResolve):
@@ -92,8 +93,10 @@ class GroupTroveTable(database.KeyedTable):
     def delGroupTrove(self, groupTroveId):
         cu = self.db.transaction()
         try:
-            cu.execute("DELETE FROM GroupTroveItems WHERE groupTroveId=?", groupTroveId)
-            cu.execute("DELETE FROM GroupTroves WHERE groupTroveId=?", groupTroveId)
+            cu.execute("DELETE FROM GroupTroveItems WHERE groupTroveId=?",
+                       groupTroveId)
+            cu.execute("DELETE FROM GroupTroves WHERE groupTroveId=?",
+                       groupTroveId)
         except:
             self.db.rollback()
             raise
@@ -105,13 +108,15 @@ class GroupTroveTable(database.KeyedTable):
         return self.get(groupTroveId)['projectId']
 
     def setAutoResolve(self, groupTroveId, resolve):
-        self.update(groupTroveId, autoResolve = int(resolve), timeModified = (time.time()))
+        self.update(groupTroveId, autoResolve = int(resolve),
+                    timeModified = (time.time()))
 
     def get(self, groupTroveId):
         ret = database.KeyedTable.get(self, groupTroveId)
         ret['autoResolve'] = bool(ret['autoResolve'])
         cu = self.db.cursor()
-        cu.execute("SELECT hostname from Projects where projectId=?", ret['projectId'])
+        cu.execute("SELECT hostname from Projects where projectId=?",
+                   ret['projectId'])
         r = cu.fetchone()
         if not r:
             ret['projectName'] = '(none)'
@@ -123,6 +128,7 @@ class GroupTroveTable(database.KeyedTable):
         cu = self.db.cursor()
         cu.execute("""DELETE FROM GroupTroves WHERE projectId=0
                          AND timeModified<?""", time.time() - 86400)
+        self.db.commit()
 
 class GroupTroveItemsTable(database.KeyedTable):
     name = "GroupTroveItems"
@@ -155,6 +161,7 @@ class GroupTroveItemsTable(database.KeyedTable):
         cu = self.db.cursor()
         cu.execute("SELECT groupTroveId FROM GroupTroveItems WHERE groupTroveItemId=?", groupTroveItemId)
         cu.execute("UPDATE GroupTroves SET timeModified=? WHERE groupTroveId=?", time.time(), cu.fetchone()[0])
+        self.db.commit()
 
     def setVersionLock(self, groupTroveItemId, lock):
         self.update(groupTroveItemId, versionLock = lock)
@@ -197,6 +204,7 @@ class GroupTroveItemsTable(database.KeyedTable):
         cu = self.db.cursor()
         self.updateModifiedTime(groupTroveItemId)
         cu.execute("DELETE FROM GroupTroveItems WHERE groupTroveItemId=?", groupTroveItemId)
+        self.db.commit()
         return groupTroveItemId
 
     def listByGroupTroveId(self, groupTroveId):
@@ -236,7 +244,9 @@ class GroupTroveItemsTable(database.KeyedTable):
             cu = self.db.cursor()
             cu.execute("""SELECT recipeName from GroupTroveItems, GroupTroves 
                             WHERE GroupTroveItems.groupTroveItemId=? AND
-                                  GroupTroveItems.groupTroveId=GroupTroves.groupTroveId""", groupTroveItemId)
+                                  GroupTroveItems.groupTroveId=
+                                          GroupTroves.groupTroveId""",
+                       groupTroveItemId)
             ret['subGroup'] = cu.fetchone()[0]
         return ret
 
@@ -244,7 +254,9 @@ class GroupTroveItemsTable(database.KeyedTable):
         cu = self.db.cursor()
         cu.execute("""SELECT projectId from GroupTroveItems, GroupTroves
                         WHERE GroupTroveItems.groupTroveItemId=? AND 
-                              GroupTroveItems.groupTroveId=GroupTroves.groupTroveId""", groupTroveItemId)
+                              GroupTroveItems.groupTroveId=
+                                      GroupTroves.groupTroveId""",
+                   groupTroveItemId)
         return cu.fetchone()[0]
 
 ############ Client Side ##############
