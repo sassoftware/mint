@@ -411,12 +411,15 @@ class UpgradePathTest(MintRepositoryHelper):
         # set version
         cu.execute("INSERT INTO DatabaseVersion VALUES(8, 0)")
 
+        self.db.commit()
+
         # now create a server object (which will perform the upgrade)
         try:
             mint_server.MintServer(cfg, alwaysReload = True)
         finally:
             # sqlite: since the schema changed we need to reconnect.
             if cfg.dbDriver == "sqlite":
+                self.db.dbh.close()
                 self.db = dbstore.connect(cfg.dbPath, driver=cfg.dbDriver)
                 cu = self.db.cursor()
 
