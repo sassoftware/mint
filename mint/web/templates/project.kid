@@ -121,7 +121,7 @@
             <ul>
                 <li py:for="project, level in sorted(projectList, cmp = userlevels.myProjectCompare)">
                     <a href="${project.getUrl()}">
-                        ${project.getName()}</a><br/>
+                        ${project.getNameForDisplay()}</a><br/>
                         ${userlevels.names[level]}
                         <span py:if="not level and project.listJoinRequests()">
                             <a href="${project.getUrl()}members"><b style="color: red;">Requests Pending</b></a>

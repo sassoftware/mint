@@ -19,11 +19,11 @@ from mint.mint import upstream
     ?>
 
     <div py:def="breadcrumb()" py:strip="True">
-        <a href="#">${project.getName()}</a>
+        <a href="#">${project.getNameForDisplay()}</a>
     </div>
 
     <head>
-        <title>${formatTitle("Project Page: %s"%project.getName())}</title>
+        <title>${formatTitle("Project Page: %s"%project.getNameForDisplay())}</title>
         <link py:if="releases" rel="alternate" type="application/rss+xml" xmlns="http://www.w3.org/1999/xhtml"
               title="${project.getName()} Releases" href="${basePath}rss" />
 
@@ -45,7 +45,7 @@ from mint.mint import upstream
                         <div class="pad">
 
 
-                            <h2>${project.getName()}</h2>
+                            <h2>${project.getNameForDisplay(maxWordLen = 50)}</h2>
 
                             <p class="help" py:if="not commits">
                                 This is a fledgling project. The developers of this project

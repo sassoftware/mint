@@ -22,8 +22,8 @@ from mint.mint import timeDelta
         <div py:def="formatResults(resultset = [])" py:strip="True">
             <?python
                 formattedresults = [
-                    (resultset[0].getUrl(), resultset[2]),
-                    resultset[3],
+                    (resultset[0].getUrl(), resultset[0].getNameForDisplay()),
+                    resultset[0].getDescForDisplay(),
                     timeDelta(resultset[4]),
                 ]
             ?>

@@ -43,11 +43,9 @@ class Project(database.TableObject):
     __slots__ = ('creatorId', 'name',
                  'description', 'hostname', 'domainname', 'projecturl', 
                  'hidden', 'external', 'disabled',
-                 'timeCreated', 'timeModified', 'displayName', 'displayDesc')
+                 'timeCreated', 'timeModified')
 
     def getItem(self, id):
-        self.displayName = ''
-        self.displayDesc = ''
         return self.server.getProject(id)
 
     def getCreatorId(self):
@@ -56,10 +54,8 @@ class Project(database.TableObject):
     def getName(self):
         return self.name
 
-    def getNameForDisplay(self):
-        if not self.displayName:
-            self.displayName = truncateForDisplay(self.name)
-        return self.displayName
+    def getNameForDisplay(self, maxWordLen = 15):
+        return truncateForDisplay(self.name, maxWordLen = maxWordLen)
 
     def getDomainname(self):
         return self.domainname
@@ -80,9 +76,7 @@ class Project(database.TableObject):
         return self.description
 
     def getDescForDisplay(self):
-        if not self.displayDesc:
-            self.displayDesc = truncateForDisplay(self.description)
-        return self.displayDesc
+        return truncateForDisplay(self.description)
 
     def getTimeCreated(self):
         return self.timeCreated
