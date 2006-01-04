@@ -314,7 +314,7 @@ class MintServer(object):
     # can't always know which param is the projectId.
     # We'll just call it at the begining of every function that needs it.
     def _filterProjectAccess(self, projectId):
-        if self.auth.admin:
+        if self.authToken == [self.cfg.authUser, self.cfg.authPass] or self.auth.admin:
             return
         if self.projects.isDisabled(projectId):
             raise database.ItemNotFound()
@@ -1897,10 +1897,3 @@ class MintServer(object):
             raise
 
         self.newsCache.refresh()
-
-    def __del__(self):
-        try:
-            self.db.dbh.close()
-        except:
-            pass
-
