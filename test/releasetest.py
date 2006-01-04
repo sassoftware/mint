@@ -317,6 +317,7 @@ class ReleaseTest(MintRepositoryHelper):
         cfg.scriptPath = self.mintDir + "/scripts/"
         cfg.cachePath = self.tmpDir + "/changesets/"
         cfg.anacondaImagesPath = '/dev/null'
+        cfg.SSL = False
 
         cfgFile.flush()
         cfgFile.close()
