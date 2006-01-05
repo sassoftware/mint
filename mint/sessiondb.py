@@ -12,19 +12,13 @@ class SessionsTable(DatabaseTable):
     name = "Sessions"
     createSQL = """
         CREATE TABLE Sessions (
-            sessIdx     INTEGER PRIMARY KEY,
-            sid         STR,
-            data        STR
+            sessIdx     %(PRIMARYKEY)s,
+            sid         CHAR(64),
+            data        TEXT 
         );
     """
-    createSQL_mysql = """
-        CREATE TABLE Sessions (
-            sessIdx    INT PRIMARY KEY AUTO_INCREMENT,
-            sid        VARCHAR(64),
-            data       TEXT
-        );
-    """
-    fields = ['sid', 'data']
+    
+    fields = ['sessIdx', 'sid', 'data']
 
     # objects specific to SessionsTable follow
     indexCache = {}

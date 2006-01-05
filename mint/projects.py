@@ -185,8 +185,8 @@ class Project(database.TableObject):
 class ProjectsTable(database.KeyedTable):
     name = 'Projects'
     key = 'projectId'
-    createSQL_mysql = """CREATE TABLE Projects (
-                    projectId       INT PRIMARY KEY AUTO_INCREMENT,
+    createSQL= """CREATE TABLE Projects (
+                    projectId       %(PRIMARYKEY)s,
                     creatorId       INT,
                     name            varchar(128) UNIQUE,
                     hostname        varchar(128) UNIQUE,
@@ -200,20 +200,6 @@ class ProjectsTable(database.KeyedTable):
                     timeModified    INT DEFAULT 0
                 )"""
 
-    createSQL = """CREATE TABLE Projects (
-                    projectId       INTEGER PRIMARY KEY,
-                    creatorId       INT,
-                    name            STR UNIQUE,
-                    hostname        STR UNIQUE,
-                    domainname      STR DEFAULT '' NOT NULL,
-                    projecturl      STR DEFAULT '' NOT NULL,
-                    description     STR NOT NULL DEFAULT '',
-                    disabled        INT DEFAULT 0,
-                    hidden          INT DEFAULT 0,
-                    external        INT DEFAULT 0,
-                    timeCreated     INT,
-                    timeModified    INT DEFAULT 0
-                )"""
     fields = ['creatorId', 'name', 'hostname', 'domainname', 'projecturl', 
               'description', 'disabled', 'hidden', 'external', 'timeCreated', 'timeModified']
     indexes = { "ProjectsHostnameIdx": "CREATE INDEX ProjectsHostnameIdx ON Projects(hostname)",
@@ -460,22 +446,13 @@ class LabelsTable(database.KeyedTable):
     key = 'labelId'
 
     createSQL = """CREATE TABLE Labels (
-                    labelId         INTEGER PRIMARY KEY,
+                    labelId         %(PRIMARYKEY)s,
                     projectId       INT,
-                    label           STR,
-                    url             STR,
-                    username        STR,
-                    password        STR
+                    label           VARCHAR(255),
+                    url             VARCHAR(255),
+                    username        VARCHAR(255),
+                    password        VARCHAR(255)
                 )"""
-    createSQL_mysql = """CREATE TABLE Labels (
-                    labelId         INT PRIMARY KEY AUTO_INCREMENT,
-                    projectId       INT,
-                    label           VARCHAR(128),
-                    url             VARCHAR(128),
-                    username        VARCHAR(128),
-                    password        VARCHAR(128)
-                )"""
-
 
     fields = ['labelId', 'projectId', 'label', 'url', 'username', 'password']
 

@@ -61,25 +61,10 @@ class ReleasesTable(database.KeyedTable):
 
     createSQL = """
                 CREATE TABLE Releases (
-                    releaseId            INTEGER PRIMARY KEY,
-                    projectId            INT,
-                    name                 STR,
-                    description          STR,
-                    imageType            INT,
-                    troveName            STR,
-                    troveVersion         STR,
-                    troveFlavor	         STR,
-                    troveLastChanged     INT,
-                    published            INT DEFAULT 0,
-                    downloads            INT DEFAULT 0,
-                    timePublished        INT
-                )"""
-    createSQL_mysql = """
-                CREATE TABLE Releases (
-                    releaseId            INT PRIMARY KEY AUTO_INCREMENT,
+                    releaseId            %(PRIMARYKEY)s,
                     projectId            INT,
                     name                 VARCHAR(128),
-                    description          VARCHAR(255),
+                    description          TEXT,
                     imageType            INT,
                     troveName            VARCHAR(128),
                     troveVersion         VARCHAR(255),

@@ -30,7 +30,7 @@ class GroupTroveTable(database.KeyedTable):
 
     createSQL = """
         CREATE TABLE GroupTroves(
-                                 groupTroveId INTEGER,
+                                 groupTroveId %(PRIMARYKEY)s,
                                  projectId INT,
                                  creatorId INT,
                                  recipeName CHAR(32),
@@ -38,9 +38,8 @@ class GroupTroveTable(database.KeyedTable):
                                  description TEXT,
                                  timeCreated INT,
                                  timeModified INT,
-                                 autoResolve INT,
-                                 PRIMARY KEY (groupTroveId)
-                                 );
+                                 autoResolve INT
+                                 )
     """
     
     fields = ['groupTroveId', 'projectId', 'creatorId', 'recipeName',
@@ -136,19 +135,17 @@ class GroupTroveItemsTable(database.KeyedTable):
 
     createSQL = """
         CREATE TABLE GroupTroveItems(
-                                 groupTroveItemId INTEGER,
-                                 groupTroveId INT,
-                                 creatorId INT,
-                                 trvName CHAR(128),
-                                 trvVersion TEXT,
-                                 trvFlavor TEXT,
-                                 subGroup CHAR(128),
-                                 versionLock INT,
-                                 useLock INT,
-                                 instSetLock INT,
-                                 PRIMARY KEY (groupTroveItemId)
-                                 );
-    """
+             groupTroveItemId %(PRIMARYKEY)s,
+             groupTroveId INT,
+             creatorId INT,
+             trvName CHAR(128),
+             trvVersion TEXT,
+             trvFlavor TEXT,
+             subGroup CHAR(128),
+             versionLock INT,
+             useLock INT,
+             instSetLock INT
+         )"""
 
     fields = [ 'groupTroveItemId', 'groupTroveId', 'creatorId', 'trvName',
                'trvVersion', 'trvFlavor', 'subGroup', 'versionLock', 'useLock',

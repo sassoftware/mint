@@ -23,25 +23,14 @@ class JobsTable(database.KeyedTable):
     key = 'jobId'
     createSQL = """
                 CREATE TABLE Jobs (
-                    jobId           INTEGER PRIMARY KEY,
+                    jobId           %(PRIMARYKEY)s,
                     releaseId       INT,
                     groupTroveId    INT,
                     userId          INT,
                     status          INT,
-                    statusMessage   STR,
-                    timeStarted     INT,
-                    timeFinished    INT
-                )"""
-    createSQL_mysql = """
-                CREATE TABLE Jobs (
-                    jobId           INT PRIMARY KEY AUTO_INCREMENT,
-                    releaseId       INT,
-                    groupTroveId    INT,
-                    userId          INT,
-                    status          INT,
-                    statusMessage   VARCHAR(128),
+                    statusMessage   CHAR(255),
                     timeStarted     DOUBLE,
-                    timeFinished    DOUBLE 
+                    timeFinished    DOUBLE
                 )"""
 
     fields = ['jobId', 'releaseId', 'groupTroveId', 'userId', 'status',
@@ -110,11 +99,11 @@ class ImageFilesTable(database.KeyedTable):
     key = 'fileId'
     createSQL = """
                 CREATE TABLE ImageFiles (
-                    fileId      INTEGER PRIMARY KEY,
+                    fileId      %(PRIMARYKEY)s,
                     releaseId   INT,
                     idx         INT,
-                    filename    STR,
-                    title       STR DEFAULT ''
+                    filename    CHAR(255),
+                    title       CHAR(255) DEFAULT ''
                 );"""
     fields = ['fileId', 'releaseId', 'idx', 'filename']
 

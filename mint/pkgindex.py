@@ -12,10 +12,10 @@ class PackageIndexTable(database.KeyedTable):
 
     createSQL = """
         CREATE TABLE PackageIndex (
-            pkgId       INTEGER PRIMARY KEY,
+            pkgId       %(PRIMARYKEY)s,
             projectId   INT,
-            name        STR,
-            version     STR
+            name        CHAR(255),
+            version     CHAR(255)
         )"""
 
     fields = ['pkgId', 'name', 'version']

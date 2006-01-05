@@ -85,6 +85,8 @@ class GroupTroveCook(ImageGenerator):
             # prepare a changeset to feed to anaconda
             cs = changeset.ChangeSetFromFile(\
                 [x for x in os.listdir(path) if x.endswith('.ccs')][0])
+            import epdb
+            epdb.st()
             rc = gencslist.extractChangeSets( \
                 client, cfg, path, grpName, versions.VersionFromString(grpVer),
                 grpFlavor, group = cs, fn = fn)
@@ -149,6 +151,9 @@ class GroupTroveCook(ImageGenerator):
             sys.stderr.flush()
             sys.stdout.flush()
             ret = ret[0][0]
+            import epdb
+            epdb.st()
+
         finally:
             os.chdir(curDir)
             util.rmtree(path)

@@ -14,8 +14,8 @@ class CommitsTable(database.DatabaseTable):
         CREATE TABLE Commits (
             projectId   INT,
             timestamp   INT,
-            troveName   STR,
-            version     STR,
+            troveName   CHAR(255),
+            version     TEXT,
             userId      INT
         );"""
 

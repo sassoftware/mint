@@ -98,27 +98,7 @@ class DatabaseTable:
         
         # create missing tables
         if self.name not in self.db.tables:
-            if self.db.driver in("mysql", "postgresql"):
-                if not self.createSQL_mysql:
-                    s = self.createSQL.replace("STR", "VARCHAR(255)")
-                    s = s.replace("INTEGER PRIMARY KEY", "INT PRIMARY KEY AUTO_INCREMENT")
-                    lines = s.split("\n")
-                    for i, l in enumerate(lines[:]):
-                        if 'time' in l and 'INT' in l:
-                            lines[i] = l.replace('INT', 'DOUBLE')
-                    s = "\n".join(lines)
-                    self.createSQL_mysql = s
-
-                if self.db.driver == "postgresql":
-                    s = self.createSQL_mysql.replace("INT PRIMARY KEY AUTO_INCREMENT", "INT")
-                    s = s.replace("DOUBLE", "FLOAT(5)")
-                    cu.execute(s)
-                else:
-                    cu.execute(self.createSQL_mysql % self.db.keywords)
-            elif self.db.driver in ("native_sqlite", "sqlite"):
-                cu.execute(self.createSQL % self.db.keywords)
-            else:
-                assert 0, "INVALID DATABASE TYPE: " + self.db.driver
+            cu.execute(self.createSQL % self.db.keywords)
 
         #Don't commit here.  Commits must be handled up stream to enable
         #upgrading

@@ -69,9 +69,9 @@ class ConfirmationsTable(database.KeyedTable):
     key = 'userid'
     createSQL = """
                 CREATE TABLE Confirmations (
-                    userId          INTEGER PRIMARY KEY,
+                    userId          %(PRIMARYKEY)s,
                     timeRequested   INT,
-                    confirmation    STR
+                    confirmation    CHAR(255)
                 )"""
     fields = ['userId', 'timeRequested', 'confirmation']
 
@@ -88,17 +88,17 @@ class UsersTable(database.KeyedTable):
 
     createSQL = """
                 CREATE TABLE Users (
-                    userId          INTEGER PRIMARY KEY,
-                    username        STR UNIQUE,
-                    fullName        STR,
+                    userId          %(PRIMARYKEY)s,
+                    username        CHAR(128) UNIQUE,
+                    fullName        CHAR(128),
                     salt            %(BINARY4)s NOT NULL,
                     passwd          %(BINARY254)s NOT NULL,
-                    email           STR,
-                    displayEmail    STR DEFAULT '',
-                    timeCreated     INT,
-                    timeAccessed    INT,
+                    email           CHAR(128),
+                    displayEmail    TEXT DEFAULT '',
+                    timeCreated     DOUBLE,
+                    timeAccessed    DOUBLE,
                     active          INT,
-                    blurb           STR DEFAULT ''
+                    blurb           TEXT DEFAULT ''
                     )"""
 
     fields = ['userId', 'username', 'fullName', 'salt', 'passwd', 'email',
@@ -612,8 +612,8 @@ class UserGroupsTable(database.KeyedTable):
     key = "userGroupId"
 
     createSQL = """CREATE TABLE UserGroups (
-                       userGroupId     INTEGER PRIMARY KEY,
-                       userGroup       STR)"""
+                       userGroupId     %(PRIMARYKEY)s,
+                       userGroup       CHAR(128) UNIQUE)"""
 
     indexes = {"UserGroupsIndex" : """CREATE UNIQUE INDEX UserGroupsIndex
                                          ON UserGroups(userGroupId)"""}
