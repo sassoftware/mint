@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-from config import MintConfig
+from mint.config import MintConfig
 from conary import dbstore
 from conary.lib import util
 import sys
@@ -16,6 +16,19 @@ destDb = dbstore.connect("mintauth:mintpass@localhost.localdomain/mint", "mysql"
 cfg = MintConfig()
 cfg.read('/srv/mint/mint.conf')
 
+fieldExceptions = {}
+
+def checkFields(found, want, tab):
+    found = found[:]
+    if tab in fieldExceptions:
+        for field in fieldExceptions[tab]:
+            found.remove(field)
+    for field in want:
+        found.remove(field)
+    if found:
+        raise AssertionError("Extra fields: %s\nIn table: %s" \
+                             %(str(fields), tab))
+
 def cvt(Table, srcDb, destDb, cfg):
     try:
         srcTable = Table(srcDb)
@@ -29,34 +42,37 @@ def cvt(Table, srcDb, destDb, cfg):
     dest = destDb.cursor()
 
     fields = ", ".join(srcTable.fields)
-    src.execute("SELECT %s FROM %s" % (fields, srcTable.name))
+    cu = src.execute("SELECT %s FROM %s" % (fields, srcTable.name))
+    dest.execute("DELETE FROM %s" % destTable.name)
+
+    checkFields(cu.fields(), srcTable.fields, srcTable.name)
 
     for x in src.fetchall():
         values = []
         for key, val in zip(srcTable.fields, x):
             values.append(val)
-                
+
         subs = ", ".join(['?'] * len(values))
         dest.execute("INSERT INTO %s (%s) VALUES (%s)" % (srcTable.name, fields, subs), *values)
 
-from dbversion import VersionTable
-from grouptrove import GroupTroveTable, GroupTroveItemsTable
-from jobs import JobsTable, ImageFilesTable
-from news import NewsCacheTable, NewsCacheInfoTable
-from pkgindex import PackageIndexTable
-from projects import ProjectsTable, LabelsTable
-from users import UsersTable, ProjectUsersTable, UserGroupsTable, UserGroupMembersTable, ConfirmationsTable
-from stats import CommitsTable
-from requests import MembershipRequestTable
-from releases import ReleasesTable
-from sessiondb import SessionsTable
-from data import JobDataTable, ReleaseDataTable
+from mint.dbversion import VersionTable
+from mint.grouptrove import GroupTroveTable, GroupTroveItemsTable
+from mint.jobs import JobsTable, ImageFilesTable
+from mint.news import NewsCacheTable, NewsCacheInfoTable
+from mint.pkgindex import PackageIndexTable
+from mint.projects import ProjectsTable, LabelsTable
+from mint.users import UsersTable, ProjectUsersTable, UserGroupsTable, UserGroupMembersTable, ConfirmationsTable
+from mint.stats import CommitsTable
+from mint.requests import MembershipRequestTable
+from mint.releases import ReleasesTable
+from mint.sessiondb import SessionsTable
+from mint.data import JobDataTable, ReleaseDataTable
 
 for t in VersionTable, GroupTroveTable, GroupTroveItemsTable, JobsTable, ImageFilesTable, NewsCacheTable, PackageIndexTable,\
     ProjectsTable, LabelsTable, ReleasesTable, ConfirmationsTable, UsersTable, UserGroupsTable, UserGroupMembersTable, CommitsTable,\
     NewsCacheInfoTable, MembershipRequestTable, SessionsTable, ProjectUsersTable, JobDataTable, ReleaseDataTable:
     cvt(t, srcDb, destDb, cfg)
-    
+
 
 #Commits             JobData             PackageIndex        Test
 #Confirmations       Jobs                ProjectUsers        UserGroupMembers
