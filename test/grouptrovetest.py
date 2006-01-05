@@ -4,11 +4,13 @@
 #
 
 import testsuite
-import time
 testsuite.setup()
+import os
+import sys
+import time
 
 from conary import versions
-from conary.conaryclient import ConaryClient 
+from conary.conaryclient import ConaryClient
 
 from repostest import testRecipe
 from mint_rephelp import MintRepositoryHelper
@@ -74,7 +76,7 @@ class GroupTroveTest(MintRepositoryHelper):
         return groupTrove.addTrove(trvName, trvVersion, trvFlavor,
                                    subGroup, False, False, False)
 
-    def createTestGroupTrove(self, client, projectId, 
+    def createTestGroupTrove(self, client, projectId,
         name = 'group-test', upstreamVer = '1.0.0',
         description = 'No Description'):
         return client.createGroupTrove(projectId, name, upstreamVer, description, False)
@@ -208,7 +210,6 @@ class GroupTroveTest(MintRepositoryHelper):
         groupTrove.getRecipe()
 
     def testTransGrpTrvCook(self):
-        raise testsuite.SkipTestException
         client, userId = self.quickMintUser('testuser', 'testpass')
         projectId = self.newProject(client)
 
@@ -231,7 +232,18 @@ class GroupTroveTest(MintRepositoryHelper):
         cookJob = group_trove.GroupTroveCook(client, client.getCfg(), job,
                                              groupTrove.getId())
 
-        assert(cookJob.write() is not None)
+        # nasty hack. gencslist currently dumps to stderr...
+        # fd's routed to /dev/null to clean up output
+        oldFd = os.dup(sys.stderr.fileno())
+        fd = os.open(os.devnull, os.W_OK)
+        os.dup2(fd, sys.stderr.fileno())
+        os.close(fd)
+        try:
+            assert(cookJob.write() is not None)
+        finally:
+            #recover old fd
+            os.dup2(oldFd, sys.stderr.fileno())
+            os.close(oldFd)
 
     def testUpstreamVersions(self):
         client, userId = self.quickMintUser('testuser', 'testpass')
@@ -329,7 +341,7 @@ class GroupTroveTest(MintRepositoryHelper):
             pass
         else:
             self.fail('Anonymous user allowed to add group trove item')
-        
+
         newClient, garbage = self.quickMintUser('anotherGuy','testpass')
         try:
             newClient.server.addGroupTroveItemByProject(groupTroveId,
@@ -525,7 +537,7 @@ class GroupTroveTest(MintRepositoryHelper):
         assert(groupTrove.getRecipe() == refRecipe)
 
         groupTrove.setTroveVersionLock(trvId, True)
-        assert(groupTrove.getRecipe() == lockedRecipe)   
+        assert(groupTrove.getRecipe() == lockedRecipe)
         groupTrove.setTroveVersionLock(trvId, False)
 
         # test the "fancy-flavored" group-core hack:
@@ -537,7 +549,7 @@ class GroupTroveTest(MintRepositoryHelper):
             '~!pie:~!postfix.mysql:python:qt:readline:sasl:~!selinux:~sqlite.threadsafe:'
             'ssl:tcl:tcpwrappers:tk:~!xorg-x11.xprint', 'group-test', False, False, False)
         assert(groupTrove.getRecipe() == groupsRecipe)
-        
+
 
     def testMultipleAdditions(self):
         client, userId = self.quickMintUser('testuser', 'testpass')
@@ -552,7 +564,9 @@ class GroupTroveTest(MintRepositoryHelper):
         except DuplicateItem:
             pass
         else:
-            self.fail("GroupTrove.addTrove allowed a duplicate entry. addTrove relies on a unique index, please check that it's operative.")
+            self.fail("GroupTrove.addTrove allowed a duplicate entry."
+                      "addTrove relies on a unique index,"
+                      "please check that it's operative.")
 
     def testDuplicateLabels(self):
         client, userId = self.quickMintUser('testuser', 'testpass')
@@ -603,7 +617,7 @@ class GroupTroveTest(MintRepositoryHelper):
             if project.getCommits() == troveList:
                 break
             if iters > 50:
-                self.fail("commits didn't show up") 
+                self.fail("commits didn't show up")
 
     def testCookOnServer(self):
         client, userId = self.quickMintUser('testuser', 'testpass')
@@ -646,7 +660,8 @@ class GroupTroveTest(MintRepositoryHelper):
         job = client.getJob(jobId)
         assert(job.getDataValue("arch") == "1#x86")
 
-        cookJob = group_trove.GroupTroveCook(client, client.getCfg(), job, groupTrove.getId())
+        cookJob = group_trove.GroupTroveCook(client, client.getCfg(), job,
+                                             groupTrove.getId())
         trvName, trvVersion, trvFlavor = cookJob.write()
 
         # give some time for the commit action to run
@@ -661,7 +676,8 @@ class GroupTroveTest(MintRepositoryHelper):
         cfg = project.getConaryConfig()
         nc = ConaryClient(cfg).getRepos()
 
-        troveNames = nc.troveNames(versions.Label("test.rpath.local@rpl:devel"))
+        troveNames = nc.troveNames(versions.Label(
+            "test.rpath.local@rpl:devel"))
         assert(troveNames == ['testcase', 'testcase:runtime', 'group-test',
                               'group-test:source', 'testcase:source'])
 
@@ -679,8 +695,7 @@ class GroupTroveTest(MintRepositoryHelper):
 
         self.makeSourceTrove("testcase", testRecipe)
         self.cookFromRepository("testcase",
-            versions.Label("test.rpath.local@rpl:devel"),
-            ignoreDeps = True)
+            versions.Label("test.rpath.local@rpl:devel"), ignoreDeps = True)
 
         assert(len(groupTrove.listTroves()) == 0)
 
@@ -690,7 +705,7 @@ class GroupTroveTest(MintRepositoryHelper):
             pass
         else:
             self.fail("allowed to start an empty cook job")
-            
+
         trvId = self.addTestTrove(groupTrove, "testcase")
 
         assert(len(groupTrove.listTroves()) == 1)
