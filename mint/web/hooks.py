@@ -241,13 +241,17 @@ def conaryHandler(req, cfg, pathInfo):
     secure = (req.subprocess_env.get('HTTPS', 'off') == 'on')
 
     repHash = repName + req.hostname
-    print >> sys.stderr, "REPOSITORY CACHE:", repositories
-    sys.stderr.flush()
-    
     if not repositories.has_key(repHash) or 1:
+        nscfg = netserver.ServerConfig()
+        
         repositoryDir = os.path.join(cfg.reposPath, repName)
-        tmpPath = os.path.join(cfg.reposPath, repName, "tmp")
-        logFile = os.path.join(repositoryDir, "contents.log")
+        nscfg.repositoryDB = ('sqlite', repositoryDir + '/sqldb')
+        nscfg.cacheDB = ('sqlite', repositoryDir + '/cache.sql')
+        nscfg.contentsDir = repositoryDir + '/contents/'
+        
+        nscfg.serverName = repName
+        nscfg.tmpDir = os.path.join(cfg.reposPath, repName, "tmp")
+        nscfg.logFile = os.path.join(repositoryDir, "contents.log")
 
         if os.path.basename(req.uri) == "changeset":
            rest = os.path.dirname(req.uri) + "/"
@@ -273,33 +277,25 @@ def conaryHandler(req, cfg, pathInfo):
 
         repMapStr = "%s://%s/repos/%s/" % (protocol, host, projectName)
            
-        repMap = {buildLabel: repMapStr,
-                  'conary.rpath.com': 'http://conary-commits.rpath.com/conary/'}
         if cfg.commitAction:
-            commitAction = cfg.commitAction % {'repMap': repName + " " + repMapStr,
+            nscfg.commitAction = cfg.commitAction % {'repMap': repName + " " + repMapStr,
                                                'buildLabel': buildLabel,
                                                'projectName': projectName,
                                                'commitEmail': cfg.commitEmail,
                                                'basePath' : cfg.basePath}
         else:
-            commitAction = None
+            nscfg.commitAction = None
 
         # XXX hack to override commitAction for foresight until foresight
         # switches to our mailing lists.
         if req.hostname == "foresight.rpath.org":
-            commitAction = '/usr/lib64/python2.4/site-packages/conary/commitaction --module "/usr/lib/python2.4/site-packages/mint/rbuilderaction.py --user %%(user)s --url http://www.rpath.org/xmlrpc-private/" --module "/usr/lib64/python2.4/site-packages/conary/changemail.py --user %(user)s --email desktop-commits@bizrace.com"'
+            nscfg.commitAction = '''/usr/lib64/python2.4/site-packages/conary/commitaction 
+                --module "/usr/lib/python2.4/site-packages/mint/rbuilderaction.py 
+                  --user %%(user)s --url http://www.rpath.org/xmlrpc-private/" 
+                --module "/usr/lib64/python2.4/site-packages/conary/changemail.py 
+                  --user %(user)s --email desktop-commits@bizrace.com"'''
                                 
         if os.access(repositoryDir, os.F_OK):
-            nscfg = netserver.ServerConfig()
-            nscfg.repositoryDB = ('sqlite', repositoryDir + '/sqldb')
-            nscfg.contentsDir = repositoryDir + '/contents/'
-            nscfg.tmpDir = tmpPath
-            nscfg.serverName = repName
-            nscfg.repositoryMap = repMap
-            nscfg.commitAction = commitAction
-            nscfg.cacheDB = ('sqlite', repositoryDir + '/cache.sql')
-            nscfg.logFile = logFile
-        
             repositories[repHash] = netserver.NetworkRepositoryServer(nscfg, urlBase)
             shim_repositories[repHash] = shimclient.NetworkRepositoryServer(nscfg, urlBase)
 
