@@ -18,12 +18,12 @@ from mint import userlevels
             protocol = 'https'
     ?>
     <div py:def="breadcrumb()" py:strip="True">
-        <a href="$basePath">${project.getName()}</a>
+        <a href="$basePath">${project.getNameForDisplay()}</a>
         <a href="#">Conary Development Environment</a>
     </div>
 
     <head>
-        <title>${formatTitle('Conary Development Environment: %s'%project.getName())}</title>
+        <title>${formatTitle('Conary Development Environment: %s'%project.getNameForDisplay())}</title>
     </head>
     <body>
         <td id="left" class="side">
@@ -38,7 +38,7 @@ from mint import userlevels
         </td>
         <td id="main">
             <div class="pad">
-                <h2>${project.getName()}<br />Setting up Your Conary Development Environment</h2>
+                <h2>${project.getNameForDisplay(maxWordLen = 50)}<br />Setting up Your Conary Development Environment</h2>
 
                     <p>NOTE: You will need the following pieces of
                     information in order to start building packages for

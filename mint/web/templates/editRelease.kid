@@ -22,7 +22,7 @@ def generateJs(archMap):
       py:extends="'layout.kid'">
 
     <div py:def="breadcrumb()" py:strip="True">
-        <a href="$basePath">${project.getName()}</a>
+        <a href="$basePath">${project.getNameForDisplay()}</a>
         <a href="${basePath}releases">Releases</a>
         <a href="#">Edit Release</a>
     </div>

@@ -15,12 +15,12 @@ from mint import userlevels
     ?>
 
     <div py:def="breadcrumb()" py:strip="True">
-        <a href="$basePath">${project.getName()}</a>
+        <a href="$basePath">${project.getNameForDisplay()}</a>
         <a href="#">Membership Request</a>
     </div>
 
     <head>
-        <title>${formatTitle("Membership Request: %s"%project.getName())}</title>
+        <title>${formatTitle("Membership Request: %s"%project.getNameForDisplay())}</title>
     </head>
     <body>
         <td id="content">
@@ -30,7 +30,7 @@ from mint import userlevels
                         <div class="pad">
 			<form method="POST" action="processJoinRequest">
 			<table border="0">
-                            <tr><td><h2>Request membership in ${project.getName()}</h2></td></tr>
+                            <tr><td><h2>Request membership in ${project.getNameForDisplay(maxWordLen = 50)}</h2></td></tr>
                             <tr><td>Please edit any additional comments you wish to make</td></tr>
 			    <tr><td><textarea name="comments" rows="10" cols="40">$comments</textarea></td></tr>
                             <tr>

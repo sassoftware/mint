@@ -15,12 +15,12 @@ from mint import userlevels
         commits = project.getCommits()
     ?>
     <div py:def="breadcrumb()" py:strip="True">
-        <a href="$basePath">${project.getName()}</a>
+        <a href="$basePath">${project.getNameForDisplay()}</a>
         <a href="#">Installing Software</a>
     </div>
 
     <head>
-        <title>${formatTitle('Installing Software: %s'%project.getName())}</title>
+        <title>${formatTitle('Installing Software: %s'%project.getNameForDisplay())}</title>
     </head>
     <body>
         <td id="left" class="side">
@@ -35,7 +35,7 @@ from mint import userlevels
         </td>
         <td id="main">
             <div class="pad">
-                <h2>${project.getName()}<br />Installing Software</h2>
+                <h2>${project.getNameForDisplay(maxWordLen = 50)}<br />Installing Software</h2>
 
                 <p>You have the following options available to you if you
                 want to install this project's software on your

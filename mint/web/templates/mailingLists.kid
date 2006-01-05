@@ -12,11 +12,11 @@
     isOwner = userLevel == userlevels.OWNER or auth.admin
 ?>
     <head>
-        <title>${formatTitle('Mailing Lists: %s'%project.getName())}</title>
+        <title>${formatTitle('Mailing Lists: %s'%project.getNameForDisplay())}</title>
     </head>
 
     <div py:def="breadcrumb()" py:strip="True">
-        <a href="$basePath">${project.getName()}</a>
+        <a href="$basePath">${project.getNameForDisplay()}</a>
         <a href="#">Mailing Lists</a>
     </div>
 
@@ -33,7 +33,7 @@
         <td id="main">
             <div class="pad">
                 <p class="message" py:for='msg in messages' py:content="msg"/>
-                <h2>${project.getName()}<br />Mailing Lists</h2>
+                <h2>${project.getNameForDisplay(maxWordLen = 50)}<br />Mailing Lists</h2>
                 <div py:for="list in lists">
                     <h3><a href="${mailhost + 'listinfo/' + list.name}" target="_NEW">${list.name}</a></h3>
                     <p>${list.description}</p>

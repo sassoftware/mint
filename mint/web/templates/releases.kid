@@ -7,7 +7,7 @@
     All Rights Reserved
 -->
     <head>
-        <title>${formatTitle('Releases: %s' % project.getName())}</title>
+        <title>${formatTitle('Releases: %s' % project.getNameForDisplay())}</title>
         <link py:if="releases" rel="alternate" type="application/rss+xml"
               title="${project.getName()} Releases" href="${basePath}rss" />
     </head>
@@ -18,7 +18,7 @@
     ?>
 
     <div py:def="breadcrumb()" py:strip="True">
-        <a href="$basePath">${project.getName()}</a>
+        <a href="$basePath">${project.getNameForDisplay()}</a>
         <a href="#">Releases</a>
     </div>
 
@@ -52,7 +52,7 @@
         </td>
         <td id="main">
             <div class="pad">
-                <h2>${project.getName()}<br />Releases</h2>
+                <h2>${project.getNameForDisplay(maxWordLen = 50)}<br />Releases</h2>
                 <h3 py:if="isOwner">Published Releases</h3>
                 ${releasesTable(publishedReleases, isOwner)}
                 <p py:if="not releases">This project has no releases.</p>

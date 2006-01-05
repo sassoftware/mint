@@ -10,11 +10,11 @@ from urllib import quote
     All Rights Reserved
 -->
     <head>
-        <title>${formatTitle('Edit Group: %s' % project.getName())}</title>
+        <title>${formatTitle('Edit Group: %s' % project.getNameForDisplay())}</title>
     </head>
 
     <div py:def="breadcrumb()" py:strip="True">
-        <a href="$basePath">${project.getName()}</a>
+        <a href="$basePath">${project.getNameForDisplay()}</a>
         <a href="#">Edit Group</a>
     </div>
 

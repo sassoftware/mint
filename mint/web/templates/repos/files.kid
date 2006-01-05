@@ -11,7 +11,8 @@
 ?>
     <div py:def="breadcrumb" py:strip="True">
 
-        <a href="${cfg.basePath}project/${project.getHostname()}/">${project.getName()}</a>
+        <a
+            href="${cfg.basePath}project/${project.getHostname()}/">${project.getNameForDisplay()}</a>
         <a href="${basePath}browse">Repository Browser</a>
         <a href="${basePath}troveInfo?t=${troveName}">${troveName}</a>
         <a href="#">Files</a>

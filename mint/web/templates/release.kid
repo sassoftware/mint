@@ -40,7 +40,7 @@ from mint.mint import upstream
             files = release.getFiles()
         ?>
         <div py:def="breadcrumb()" py:strip="True">
-            <a href="$basePath">${project.getName()}</a>
+            <a href="$basePath">${project.getNameForDisplay()}</a>
             <a href="${basePath}releases">Releases</a>
             <a href="#">Release: ${name}</a>
         </div>
@@ -56,7 +56,7 @@ from mint.mint import upstream
         </td>
         <td id="main">
             <div class="pad">
-                <h2>${project.getName()}<br/>Release: ${name} <span py:if="release.getPublished()">(published)</span></h2>
+                <h2>${project.getNameForDisplay()}<br/>Release: ${name} <span py:if="release.getPublished()">(published)</span></h2>
 
                 <h3>Version ${upstream(version)} of ${trove} for ${release.getArch()}</h3>
 

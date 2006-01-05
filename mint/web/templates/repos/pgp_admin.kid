@@ -4,7 +4,7 @@
       py:extends="'../layout.kid'">
 
     <div py:def="breadcrumb" py:strip="True">
-        <a href="${cfg.basePath}project/${project.getHostname()}/">${project.getName()}</a>
+        <a href="${cfg.basePath}project/${project.getHostname()}/">${project.getNameForDisplay()}</a>
         <a href="#">PGP Key Browser</a>
     </div>
 
@@ -42,7 +42,7 @@
 
     <!-- table of pgp keys -->
     <head>
-        <title>${formatTitle('PGP Keys: %s' % project.getName())}</title>
+        <title>${formatTitle('PGP Keys: %s' % project.getNameForDisplay())}</title>
     </head>
     <body>
         <td id="main" class="spanall">

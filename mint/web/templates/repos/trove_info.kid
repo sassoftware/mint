@@ -18,7 +18,8 @@ isOwner = (userLevel == userlevels.OWNER or auth.admin)
 ?>
 
     <div py:def="breadcrumb" py:strip="True">
-        <a href="${cfg.basePath}project/${project.getHostname()}/">${project.getName()}</a>
+        <a
+            href="${cfg.basePath}project/${project.getHostname()}/">${project.getNameForDisplay()}</a>
         <a href="${basePath}browse">Repository Browser</a>
         <a href="#">${troveName}</a>
     </div>
@@ -115,7 +116,7 @@ isOwner = (userLevel == userlevels.OWNER or auth.admin)
         </td>
         <td id="main">
             <div class="pad">
-                <h2>${project.getName()}<br />repository browser<br />trove information for ${troveName}</h2>
+                <h2>${project.getNameForDisplay(maxWordLen = 50)}<br />repository browser<br />trove information for ${troveName}</h2>
 
                 <div py:strip="True" py:if="troves[0].getName().endswith(':source')">
                     ${sourceTroveInfo(troves[0])}

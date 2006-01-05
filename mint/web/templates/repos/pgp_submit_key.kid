@@ -5,7 +5,7 @@
 
     <!-- table of pgp keys -->
     <head>
-      <title>${formatTitle('Upload PGP Key: %s' % project.getName())}</title>
+      <title>${formatTitle('Upload PGP Key: %s' % project.getNameForDisplay())}</title>
     </head>
     <body>
         <td id="left" class="side">

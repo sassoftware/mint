@@ -16,12 +16,12 @@ from mint import userlevels
     ?>
 
     <div py:def="breadcrumb()" py:strip="True">
-        <a href="$basePath">${project.getName()}</a>
+        <a href="$basePath">${project.getNameForDisplay()}</a>
         <a href="#">Members</a>
     </div>
 
     <head>
-        <title>${formatTitle('Members: %s'%project.getName())}</title>
+        <title>${formatTitle('Members: %s'%project.getNameForDisplay())}</title>
     </head>
     <body>
         <td id="left" class="side">
@@ -61,7 +61,7 @@ from mint import userlevels
         </td>
         <td id="main">
             <div class="pad">
-                <h2>${project.getName()}<br />Members</h2>
+                <h2>${project.getNameForDisplay(maxWordLen = 50)}<br />Members</h2>
                 <?python
                 users = {
                           userlevels.OWNER: [], 

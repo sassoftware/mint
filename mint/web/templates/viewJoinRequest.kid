@@ -16,13 +16,13 @@ from mint import userlevels
     ?>
 
     <div py:def="breadcrumb()" py:strip="True">
-        <a href="$basePath">${project.getName()}</a>
+        <a href="$basePath">${project.getNameForDisplay()}</a>
         <a href="${basePath}members">Members</a>
 	<a href="#">View Join Request</a>
     </div>
 
     <head>
-        <title>${formatTitle('Member Settings: %s'%project.getName())}</title>
+        <title>${formatTitle('Member Settings: %s'%project.getNameForDisplay())}</title>
     </head>
     <body>
         <td id="left" class="side">
@@ -33,7 +33,8 @@ from mint import userlevels
         </td>
         <td id="main">
 	<div class="pad">
-            <h3><a href="http://$SITE/userInfo?id=${userId}">${username}</a> requests to join: ${project.getName()}</h3>
+            <h3><a href="http://$SITE/userInfo?id=${userId}">${username}</a>
+                requests to join: ${project.getNameForDisplay(maxWordLen = 50)}</h3>
             <form method="post" action="acceptJoinRequest">
             <table>
                 <tr><th>Comments:</th></tr>

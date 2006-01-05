@@ -20,7 +20,8 @@ def pluralTroves(c):
 
 
     <div py:def="breadcrumb" py:strip="True">
-        <a href="${cfg.basePath}project/${project.getHostname()}/">${project.getName()}</a>
+        <a
+            href="${cfg.basePath}project/${project.getHostname()}/">${project.getNameForDisplay()}</a>
         <a href="#">Repository Browser</a>
     </div>
 
@@ -35,7 +36,7 @@ def pluralTroves(c):
     </span>
 
     <head>
-        <title>${formatTitle('Repository Browser: %s'% project.getName())}</title>
+        <title>${formatTitle('Repository Browser: %s'% project.getNameForDisplay(maxWordLen = 50))}</title>
     </head>
     <body>
 
@@ -51,7 +52,7 @@ def pluralTroves(c):
         </td>
         <td id="main">
             <div class="pad">
-                <h2>${project.getName()}<br />Repository Browser</h2>
+                <h2>${project.getNameForDisplay(maxWordLen = 50)}<br />Repository Browser</h2>
 
                 <span py:for="l in string.uppercase" py:strip="True">
                     <span py:if="totals[l]"><a href="browse?char=${l}" title="${totals[l]} ${pluralTroves(totals[l])}">${l}</a> |</span>

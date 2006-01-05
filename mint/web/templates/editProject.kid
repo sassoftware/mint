@@ -7,11 +7,11 @@
     All Rights Reserved
 -->
     <div py:def="breadcrumb" py:strip="True">
-        <a href="$basePath">${project.getName()}</a>
+        <a href="$basePath">${project.getNameForDisplay()}</a>
         <a href="#">Edit Project</a>
     </div>
     <head>
-        <title>${formatTitle('Project Settings: %s'%project.getName())}</title>
+        <title>${formatTitle('Project Settings: %s'%project.getNameForDisplay())}</title>
     </head>
     <body>
         <td id="main" class="spanleft">
