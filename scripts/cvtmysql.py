@@ -34,10 +34,7 @@ def cvt(Table, srcDb, destDb, cfg):
     for x in src.fetchall():
         values = []
         for key, val in zip(srcTable.fields, x):
-            if key == 'salt':
-                values.append(val)
-            else:
-                values.append(unicode(str(val), 'utf-8'))
+            values.append(val)
                 
         subs = ", ".join(['?'] * len(values))
         dest.execute("INSERT INTO %s (%s) VALUES (%s)" % (srcTable.name, fields, subs), *values)
