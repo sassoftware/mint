@@ -139,6 +139,8 @@ class ChildRepository(RepositoryServer):
     def createUser(self):
         # using echo to send the password isn't secure, but the password
         # is foo, so who cares?
+        os.system("cd %s; echo mintpass | ./server.py --add-user mintauth %s"
+                  % (self.serverDir, self.reposDir))
         os.system("cd %s; echo anonymous | ./server.py --add-user anonymous %s"
                   % (self.serverDir, self.reposDir))
 
