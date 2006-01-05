@@ -48,7 +48,8 @@ class GroupTroveCook(ImageGenerator):
             arch = deps.ThawDependencySet(self.job.getDataValue("arch"))
 
             cfg = conarycfg.ConaryConfiguration()
-
+            
+            cfg.dbPath = cfg.root = ":memory:"
             cfg.name = "rBuilder Online"
             cfg.contact = "http://www.rpath.org"
             cfg.quiet = False
