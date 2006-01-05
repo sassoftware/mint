@@ -18,8 +18,6 @@ cfg = MintConfig()
 cfg.read('/srv/mint/mint.conf')
 
 def cvt(Table, srcDb, destDb, cfg):
-    import epdb
-    epdb.st()
     try:
         srcTable = Table(srcDb)
         destTable = Table(destDb)
