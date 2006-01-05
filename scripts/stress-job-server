@@ -1,0 +1,17 @@
+#!/usr/bin/python
+from mint import mint
+from mint import jobs
+
+# a very specialized simple script to stress test the job server
+# on ribeye.
+releaseIds = [54, 58, 59, 60, 61, 62, 63, 64, 65, 66]
+
+mc = mint.MintClient("http://mintauth:mintpass@www.com.rpath/xmlrpc-private/")
+
+for id in releaseIds:
+    try:
+        mc.startImageJob(id)
+        print "Job for %d restarted" % id
+    except jobs.DuplicateJob:
+        print "Job for %d already running; not restarting" % id
+
