@@ -11,11 +11,23 @@ sys.setdefaultencoding("utf-8")
 sys.excepthook = util.genExcepthook()
 
 srcDb = dbstore.connect("/srv/mint/data/db", "sqlite")
-destDb = dbstore.connect("/home/smg/tmp/db", "sqlite")
-#destDb = dbstore.connect("mintauth:mintpass@localhost.localdomain/mint", "mysql")
+destDb = dbstore.connect("mintauth:mintpass@localhost.localdomain/mint", "mysql")
 
 cfg = MintConfig()
 cfg.read('/srv/mint/mint.conf')
+
+fieldExceptions = {}
+
+def checkFields(found, want, tab):
+    found = found[:]
+    if tab in fieldExceptions:
+        for field in fieldExceptions[tab]:
+            found.remove(field)
+    for field in want:
+        found.remove(field)
+    if found:
+        raise AssertionError("Extra fields: %s\nIn table: %s" \
+                             %(str(fields), tab))
 
 def cvt(Table, srcDb, destDb, cfg):
     try:
@@ -30,13 +42,16 @@ def cvt(Table, srcDb, destDb, cfg):
     dest = destDb.cursor()
 
     fields = ", ".join(srcTable.fields)
-    src.execute("SELECT %s FROM %s" % (fields, srcTable.name))
+    cu = src.execute("SELECT %s FROM %s" % (fields, srcTable.name))
+    dest.execute("DELETE FROM %s" % destTable.name)
+
+    checkFields(cu.fields(), srcTable.fields, srcTable.name)
 
     for x in src.fetchall():
         values = []
         for key, val in zip(srcTable.fields, x):
             values.append(val)
-                
+
         subs = ", ".join(['?'] * len(values))
         dest.execute("INSERT INTO %s (%s) VALUES (%s)" % (srcTable.name, fields, subs), *values)
 
