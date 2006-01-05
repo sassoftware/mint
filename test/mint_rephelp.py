@@ -99,8 +99,6 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
         try:
             if self.mintCfg.dbDriver == "sqlite":
                 os.unlink(self.servers.getServer().serverRoot + "/mintdb")
-            elif self.mintCfg.dbDriver == "mysql":
-                self.db.cursor().execute("DROP DATABASE minttest")
         except:
             import traceback
             traceback.print_exc()
@@ -112,7 +110,9 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
         self.mintCfg.postCfg()
 
         if self.mintCfg.dbDriver == "mysql":
-            os.system("echo DROP DATABASE minttest\; CREATE DATABASE minttest | mysql --password=testpass -u testuser minttest")
+            os.system("echo DROP DATABASE minttest\; | mysql --password=testpass -u testuser minttest")
+            os.system("echo CREATE DATABASE minttest\; | mysql --password=testpass -u testuser")
+
         elif self.mintCfg.dbDriver == "postgresql":
             os.system("dropdb -U testuser minttest; createdb -U testuser minttest") 
 

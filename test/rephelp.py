@@ -139,8 +139,6 @@ class ChildRepository(RepositoryServer):
     def createUser(self):
         # using echo to send the password isn't secure, but the password
         # is foo, so who cares?
-        os.system("cd %s; echo mintpass | ./server.py --add-user mintauth %s"
-                  % (self.serverDir, self.reposDir))
         os.system("cd %s; echo anonymous | ./server.py --add-user anonymous %s"
                   % (self.serverDir, self.reposDir))
 
@@ -190,7 +188,7 @@ class ApacheServer(ChildRepository):
         elif sqldriver == 'postgresql':
             cfg.dbPath = 'testuser:testpass@localhost.localdomain/minttest'
         else:
-            assert("Invalid database type")
+            assert 0, "Invalid database type"
         cfg.dbDriver = sqldriver
       
         cfg.dataPath = self.reposDir
