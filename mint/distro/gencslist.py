@@ -267,9 +267,6 @@ def extractChangeSets(client, cfg, csdir, groupName, groupVer, groupFlavor,
         #TODO display this to the user
         print >> sys.stderr, 'WARNING: unresolved dependencies:', failedList
 
-    import epdb
-    epdb.st()
-
     # instantiate all the trove objects in the group, make a set
     # of the changesets we should extract
     valid = _findValidTroves(group, groupName, groupVer, groupFlavor)
