@@ -9,6 +9,7 @@ import rephelp
 
 from webunit import webunittest
 
+from conary import dbstore
 from conary import sqlite3
 from conary import versions
 from conary.lib import openpgpkey
@@ -106,13 +107,16 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
     def setUp(self):
         rephelp.RepositoryHelper.setUp(self)
         self.openRepository()
+
         self.mintCfg = self.servers.getServer().mintCfg
         self.mintCfg.postCfg()
 
         if self.mintCfg.dbDriver == "mysql":
-            os.system("echo DROP DATABASE minttest\; | mysql --password=testpass -u testuser minttest")
-            os.system("echo CREATE DATABASE minttest\; | mysql --password=testpass -u testuser")
-
+            db = dbstore.connect(self.mintCfg.dbPath, driver=self.mintCfg.dbDriver)
+            cu = db.cursor()
+            cu.execute("DROP DATABASE minttest")
+            cu.execute("CREATE DATABASE minttest")
+            db.close() 
         elif self.mintCfg.dbDriver == "postgresql":
             os.system("dropdb -U testuser minttest; createdb -U testuser minttest") 
 
@@ -124,6 +128,7 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
                                                  alwaysReload = True)
         self.db = self.mintServer.db
         self.db.connect()
+
 
 class WebRepositoryHelper(MintRepositoryHelper, webunittest.WebTestCase):
     def __init__(self, methodName):

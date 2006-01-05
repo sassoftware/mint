@@ -363,7 +363,7 @@ class RepositoryHelper(testsuite.TestCase):
                 ready = True
                 break
 	    except:
-		pass
+                pass
 
 	    time.sleep(0.01)
 	    count += 1
@@ -421,13 +421,11 @@ class RepositoryHelper(testsuite.TestCase):
 
     def resetAllRepositories(self):
         self.servers.resetAllServers()
-	self.openRepository()
 
     def resetRepository(self, serverIdx=0):
         server = self.servers.getServer(serverIdx)
         if server is not None:
             server.reset()
-            self.openRepository()
 
     def resetWork(self):
 	util.rmtree(self.workDir)
