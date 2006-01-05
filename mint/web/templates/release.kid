@@ -68,8 +68,7 @@ from mint.mint import upstream
                     <li py:if="not files">Release has no files.</li>
                 </ul>
 
-                <div py:strip="True" py:if="isOwner">
-                    
+                <div>    
                     <h4>What are These Files?</h4>
 
                     <p>The file(s) entitled <tt>Disc <em>N</em></tt>
@@ -105,7 +104,9 @@ from mint.mint import upstream
 
                     <h3>Description</h3>
                     <p>${release.getDesc() or "Release has no description."}</p>
-                    
+                </div>                    
+
+                <div py:strip="True" py:if="isOwner">
                     <h3>Image Generation Status:</h3>
 
                     <p id="jobStatus">Retrieving job status...</p>
