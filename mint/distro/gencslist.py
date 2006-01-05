@@ -211,7 +211,7 @@ def _linkOrCopyFile(src, dest):
 
 def extractChangeSets(client, cfg, csdir, groupName, groupVer, groupFlavor,
                       oldFiles = None, cacheDir = None, callback = None,
-                      group = None):
+                      group = None, fn = None):
     """
     extractChangesets extracts changesets from a group and creates
     cslist entries as it does so.
@@ -267,11 +267,18 @@ def extractChangeSets(client, cfg, csdir, groupName, groupVer, groupFlavor,
         #TODO display this to the user
         print >> sys.stderr, 'WARNING: unresolved dependencies:', failedList
 
+    import epdb
+    epdb.st()
+
     # instantiate all the trove objects in the group, make a set
     # of the changesets we should extract
     valid = _findValidTroves(group, groupName, groupVer, groupFlavor)
     # filter the change set list given by the dep solver
     finalList = _removeInvalidTroves(changeSetList, valid)
+
+    needsFile = False
+    if not fn:
+        needsFile = True
 
     total = len(finalList)
     # use the order to extract changesets from the repository
@@ -317,14 +324,16 @@ def extractChangeSets(client, cfg, csdir, groupName, groupVer, groupFlavor,
             # if we're extracting a group, don't recurse
             recurse = not name.startswith('group-')
 
-            # create the cs to a temp file
-            fd, fn = tempfile.mkstemp(prefix=csfile, dir=csdir)
-            os.close(fd)
-            if callback:
-                callback.setPrefix('changeset %d of %d: ' %(num, total))
-                callback.setChangeSet(name)
-            client.createChangeSetFile(fn, csRequest, recurse = recurse,
-                                       callback = callback)
+            if needsFile:
+                # create the cs to a temp file
+                fd, fn = tempfile.mkstemp(prefix=csfile, dir=csdir)
+                os.close(fd)
+                if callback:
+                    callback.setPrefix('changeset %d of %d: ' %(num, total))
+                    callback.setChangeSet(name)
+                client.createChangeSetFile(fn, csRequest, recurse = recurse,
+                                           callback = callback)
+
             # rename to final path and change permissions
             os.rename(fn, path)
             os.chmod(path, 0644)

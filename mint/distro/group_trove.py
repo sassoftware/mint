@@ -54,6 +54,7 @@ class GroupTroveCook(ImageGenerator):
             cfg.contact = "http://www.rpath.org"
             cfg.quiet = False
             cfg.buildLabel = versions.Label('conary.rpath.com@non:exist')
+            cfg.dbPath=":memory:"
             cfg.buildFlavor = deps.parseFlavor(stockFlavors[arch.freeze()])
             cfg.initializeFlavors()
 
@@ -78,17 +79,23 @@ class GroupTroveCook(ImageGenerator):
             sys.stdout.flush()
             grpName, grpVer, grpFlavor = ret[0][0]
 
+            fn = path + "/%s-%s.ccs" % (groupTrove.recipeName,
+                                groupTrove.upstreamVersion)
+
+            # prepare a changeset to feed to anaconda
             cs = changeset.ChangeSetFromFile(\
                 [x for x in os.listdir(path) if x.endswith('.ccs')][0])
-            gencslist.extractChangeSets(client, cfg, path, grpName,
-                                        versions.VersionFromString(grpVer),
-                                        grpFlavor, group = cs)
+            rc = gencslist.extractChangeSets( \
+                client, cfg, path, grpName, versions.VersionFromString(grpVer),
+                grpFlavor, group = cs, fn = fn)
+
+            # FIXME: feed changeset List to anaconda.
 
         finally:
             os.chdir(curDir)
 
         if ret:
-            return ret[0], ret[1], ret[2].freeze()
+            return grpName, grpVer, grpFlavor.freeze()
         else:
             return None
 
@@ -133,7 +140,8 @@ class GroupTroveCook(ImageGenerator):
                 checkin.addFiles([groupTrove.recipeName + '.recipe'])
 
             # commit recipe as changeset
-            message = "Auto generated commit from %s.\n%s" % (cfg.name, groupTrove.description)
+            message = "Auto generated commit from %s.\n%s" % \
+                      (cfg.name, groupTrove.description)
             checkin.commit(repos, cfg, message)
 
             troveSpec = "%s[%s]" % (groupTrove.recipeName, str(arch))
