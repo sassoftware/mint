@@ -149,15 +149,14 @@ def typeCheck(*paramTypes):
     for all xmlrpc calls made to ensure extraneous calls won't be allowed."""
     def deco(func):
         def wrapper(self, *args):
-            # FIXME: enable this test in production mode once we are certain
-            # that the web api honors all typeCheck conventions
-            if not self.cfg.debugMode:
-                return func(self, *args)
             for i in range(len(args)):
                 if (not checkParam(args[i],paramTypes[i])):
                     baseFunc = deriveBaseFunc(func)
-                    raise ParameterError('%s was passed %s of type %s when expecting %s for parameter number %d' % \
-                        (baseFunc.__name__, repr(args[i]), str(type(args[i])), str(paramTypes[i]), i+1))
+                    raise ParameterError('%s was passed %s of type %s when '
+                                         'expecting %s for parameter number '
+                                         '%d' % \
+                        (baseFunc.__name__, repr(args[i]), str(type(args[i])),
+                         str(paramTypes[i]), i+1))
             return func(self, *args)
         trueFunc = deriveBaseFunc(func)
         trueFunc.__args_enforced__ = True
