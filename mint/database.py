@@ -114,9 +114,9 @@ class DatabaseTable:
                     s = s.replace("DOUBLE", "FLOAT(5)")
                     cu.execute(s)
                 else:
-                    cu.execute(self.createSQL_mysql)
+                    cu.execute(self.createSQL_mysql % self.db.keywords)
             elif self.db.driver in ("native_sqlite", "sqlite"):
-                cu.execute(self.createSQL)
+                cu.execute(self.createSQL % self.db.keywords)
             else:
                 assert 0, "INVALID DATABASE TYPE: " + self.db.driver
 
