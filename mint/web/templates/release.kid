@@ -107,6 +107,8 @@ from mint.mint import upstream
                 </div>                    
 
                 <div py:strip="True" py:if="isOwner">
+
+                    <h3>Image Generation Status:</h3>
                     <p id="jobStatus">Retrieving job status...</p>
 
                     <h3>Options</h3>
