@@ -138,7 +138,7 @@ class Project(database.TableObject):
         cfg.initializeFlavors()
 
         installLabelPath = " ".join(x for x in labelPath.keys())
-        cfg.setValue("installLabelPath", installLabelPath)
+        cfg.configLine("installLabelPath %s" % installLabelPath)
 
         for server, auth in userMap.items():
             cfg.user.addServerGlob(server, auth[0], auth[1])
