@@ -22,6 +22,16 @@ testPath = None
 
 #from pychecker import checker
 
+def context(*contexts):
+    def deco(func):
+        # no wrapper is needed, nor usable.
+        if '_contexts' in func.__dict__:
+            func._contexts.extend(contexts)
+        else:
+            func._contexts = list(contexts)
+        return func
+    return deco
+
 class LogFilter:
     def __init__(self):
         self.records = []
@@ -67,7 +77,7 @@ class LogFilter:
 
 	if len(records) != len(self.records):
 	    raise AssertionError, "expected log message count does not match"
-	    
+
         for num, record in enumerate(records):
             if self.records[num] != record:
                 raise AssertionError, "expected log messages do not match: '%s' != '%s'" %(self.records[num], record)
@@ -87,7 +97,7 @@ class LogFilter:
 
 	if len(records) != len(self.records):
 	    raise AssertionError, "expected log message count does not match"
-	    
+
         for record in records:
             if not record in self.records:
                 raise AssertionError, "expected log message not found: '%s'" %record
@@ -160,6 +170,19 @@ def setup():
 class Loader(unittest.TestLoader):
     suiteClass = unittest.TestSuite
 
+    def _filterTests(self, tests):
+        if not self.context:
+            return
+        for testCase in tests._tests[:]:
+            try:
+                method = testCase.__getattribute__( \
+                    testCase._TestCase__testMethodName)
+                contexts = method._contexts
+                if self.context not in contexts:
+                    tests._tests.remove(testCase)
+            except AttributeError:
+                tests._tests.remove(testCase)
+
     def loadTestsFromModule(self, module):
         """Return a suite of all tests cases contained in the given module"""
         tests = []
@@ -167,7 +190,9 @@ class Loader(unittest.TestLoader):
             obj = getattr(module, name)
             if (isinstance(obj, (type, types.ClassType)) and
                 issubclass(obj, unittest.TestCase)):
-                tests.append(self.loadTestsFromTestCase(obj))
+                loadedTests = self.loadTestsFromTestCase(obj)
+                self._filterTests(loadedTests)
+                tests.append(loadedTests)
             if (isinstance(obj, unittest.TestSuite)):
                 tests.append(obj)
         return self.suiteClass(tests)
@@ -193,6 +218,7 @@ class Loader(unittest.TestLoader):
             for objname in dir(module):
                 try:
                     newname = '.'.join((objname, name))
+                    # context shouldn't apply. test cases were named directly
                     return unittest.TestLoader.loadTestsFromName(self, newname,
                                                                  module=module)
                 except AttributeError:
@@ -204,6 +230,10 @@ class Loader(unittest.TestLoader):
             print 'unable to import tests from %s: %s' %(name, e)
             raise
         raise AttributeError
+
+    def __init__(self, context = None):
+        unittest.TestLoader.__init__(self)
+        self.context = context
 
 class TestCase(unittest.TestCase):
     def setUp(self):
@@ -334,10 +364,10 @@ class TestTimer(object):
         while testSuites:
             testSuite = testSuites.pop()
             if not isinstance(testSuite, unittest.TestCase):
-                testSuites.extend(x for x in testSuite) 
+                testSuites.extend(x for x in testSuite)
             else:
                 self.toRun.add(testSuite.id())
-                
+
     def startTest(self, test):
         self.testStart = time.time()
         self.testId = test.id()
@@ -374,7 +404,7 @@ class SkipTestResultMixin:
     def checkForSkipException(self, test, err):
         # because of the reloading of modules that occurs when
         # running multiple tests, no guarantee about the relation of
-        # this SkipTestException class to the one run in the 
+        # this SkipTestException class to the one run in the
         # actual test can be made, so just check names
         if err[0].__name__ == 'SkipTestException':
             self.addSkipped(test, err)
@@ -415,9 +445,9 @@ class TestCallback:
         self.last = 0
         self.out = f
 
-    def totals(self, run, passed, failed, errored, skipped, total, 
+    def totals(self, run, passed, failed, errored, skipped, total,
                 timePassed, estTotal, test=None):
-        totals = (failed +  errored, skipped, timePassed / 60, 
+        totals = (failed +  errored, skipped, timePassed / 60,
                   timePassed % 60, estTotal / 60, estTotal % 60, run, total)
         msg = 'Fail: %s Skip: %s - %0d:%02d/%0d:%02d - %s/%s' % totals
 
@@ -511,7 +541,7 @@ class SkipTestTextResult(unittest._TextTestResult, SkipTestResultMixin):
             timePassed, totalTime = self.timer.estimate()
             self.callback.totals(self.testsRun, self.passedTests,
                                  self.failedTests,
-                                 self.erroredTests, self.skippedTests, 
+                                 self.erroredTests, self.skippedTests,
                                  self.total, timePassed, totalTime, test)
 
 
@@ -536,7 +566,7 @@ class DebugTestRunner(unittest.TextTestRunner):
 
     def _makeResult(self):
         return SkipTestTextResult(self.stream, self.descriptions,
-                                  self.verbosity, test=self.test, 
+                                  self.verbosity, test=self.test,
                                   debug=self.debug,
                                   useCallback=self.useCallback)
 
@@ -554,7 +584,15 @@ def main(*args, **keywords):
 
     global _individual
     _individual = True
-    loader = Loader()
+
+    context = None
+    if '--context' in sys.argv:
+        argLoc = sys.argv.index('--context')
+        context = sys.argv[argLoc + 1]
+        sys.argv.remove('--context')
+        sys.argv.pop(argLoc)
+
+    loader = Loader(context = context)
 
     verbosity=1
     dots = False
@@ -568,16 +606,15 @@ def main(*args, **keywords):
         sys.argv.remove('--dots')
         dots = True
 
-        
     if '--debug' in sys.argv:
         debug = True
         sys.argv.remove('--debug')
     else:
         debug=False
 
-    runner = DebugTestRunner(verbosity=verbosity, debug=debug, 
+    runner = DebugTestRunner(verbosity=verbosity, debug=debug,
                              useCallback=not dots)
-        
+
     unittest.main(testRunner=runner, testLoader=loader, *args, **keywords)
 
 
@@ -619,6 +656,13 @@ if __name__ == '__main__':
         profiling = True
 	sys.argv.remove('--profile')
 
+    context = None
+    if '--context' in sys.argv:
+        argLoc = sys.argv.index('--context')
+        context = sys.argv[argLoc + 1]
+        sys.argv.remove('--context')
+        sys.argv.pop(argLoc)
+
     if sys.argv[1:]:
 	tests = []
 	for s in sys.argv[1:]:
@@ -640,14 +684,14 @@ if __name__ == '__main__':
 		    # strip off .py
 		    tests.append(d + f[:-3])
 
-    loader = Loader()
+    loader = Loader(context = context)
     suite = unittest.TestSuite()
 
     for test in tests:
         testcase = loader.loadTestsFromName(test)
         suite.addTest(testcase)
 
-    runner = DebugTestRunner(verbosity=verbosity, debug=debug, 
+    runner = DebugTestRunner(verbosity=verbosity, debug=debug,
                              useCallback=not dots)
     runner.run(suite)
 
