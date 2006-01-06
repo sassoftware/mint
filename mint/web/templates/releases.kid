@@ -24,7 +24,7 @@
 
     <table border="0" cellspacing="0" cellpadding="0"
            class="releasestable" py:def="releasesTable(releaseList, isOwner)">
-        <tr py:for="release in reversed(releaseList)">
+        <tr py:for="release in releaseList">
 
             <th>
                 <a href="release?id=${release.getId()}">
@@ -55,14 +55,15 @@
                 <h2>${project.getNameForDisplay(maxWordLen = 50)}<br />Releases</h2>
                 <h3 py:if="isOwner">Published Releases</h3>
                 ${releasesTable(publishedReleases, isOwner)}
-                <p py:if="not releases">This project has no releases.</p>
+                <p py:if="not publishedReleases">This project has no published releases.</p>
 
-                <div py:if="isOwner">
-
+                <?python unpublishedReleases = list(set(releases) - set(publishedReleases)) ?>
+                <div py:if="isOwner and unpublishedReleases">
                     <h3>Unpublished Releases</h3>
-                    ${releasesTable([x for x in releases if not x.getPublished()], isOwner)}
-                    <p py:if="isOwner"><a href="newRelease">Create a new release</a></p>
+                    ${releasesTable(unpublishedReleases, isOwner)}
                 </div>
+
+                <p py:if="isOwner"><a href="newRelease">Create a new release</a></p>
             </div>
         </td>
         <td id="right" class="projects">

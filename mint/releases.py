@@ -154,7 +154,7 @@ class ReleasesTable(database.KeyedTable):
                             troveVersion IS NOT NULL AND
                             troveFlavor IS NOT NULL AND
                             troveLastChanged IS NOT NULL
-                            """ + published + " ORDER BY releaseId DESC",
+                            """ + published ,
                    projectId)
         for results in cu.fetchall():
             yield results[0]
