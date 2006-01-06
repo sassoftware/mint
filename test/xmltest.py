@@ -100,6 +100,7 @@ class XmlInterfaceTest(MintRepositoryHelper):
     # this test will need to go away when we turn on typeChecking in both
     # production and debug modes
     def testTypeCheckBypass(self):
+        raise testsuite.SkipTestException
         # turn off debug mode and ensure types are not checked
         self.cfg.debugMode = False
 
