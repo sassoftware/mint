@@ -129,7 +129,7 @@ class ProjectHandler(WebHandler):
         trove = repos.getTroves([('group-dist', version, flavor[0])])[0]
 
         # mash the trove list into something usable
-        troves = [(x[0], (x[1], x[2])) for x in trove.iterTroveList()]
+        troves = [(x[0], (x[1], x[2])) for x in trove.iterTroveList(strongRefs = True)]
 
         # pop group-core out of the list and stick it on the top
         troveNames = [x[0] for x in sorted(troves)]
