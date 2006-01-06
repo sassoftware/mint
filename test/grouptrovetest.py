@@ -107,6 +107,7 @@ class GroupTroveTest(MintRepositoryHelper):
         except ItemNotFound:
             pass
 
+    @testsuite.context('loginless')
     def testTransGrpTrvCleanup(self):
         client = self.openMintClient()
         groupTrove = self.createTestGroupTrove(client, 0)
@@ -127,6 +128,7 @@ class GroupTroveTest(MintRepositoryHelper):
 
         self.assertRaises(ItemNotFound, client.getGroupTrove, groupTrove.id)
 
+    @testsuite.context('loginless')
     def testTransGrpTrvProject(self):
         client, userId = self.quickMintUser('foo', 'bar')
         projectId = self.newProject(client)
@@ -138,6 +140,7 @@ class GroupTroveTest(MintRepositoryHelper):
         # there's not actually a project, so listing can't work.
         self.assertRaises(PermissionDenied, client.listGroupTrovesByProject, 0)
 
+    @testsuite.context('loginless')
     def testTransGrpTrvAdd(self):
         client, userId = self.quickMintUser('testuser', 'testpass')
         projectId = self.newProject(client)
@@ -151,6 +154,7 @@ class GroupTroveTest(MintRepositoryHelper):
         groupTrove.addTroveByProject('testcase', 'test', '', '', False, False,
                                      False)
 
+    @testsuite.context('loginless')
     def testTransGrpTrvList(self):
         client = self.openMintClient()
         groupTrove = self.createTestGroupTrove(client, 0)
@@ -158,6 +162,7 @@ class GroupTroveTest(MintRepositoryHelper):
         self.failIf(groupTrove.listTroves() != [],
                     "Listing items of transient group trove failed.")
 
+    @testsuite.context('loginless')
     def testTransGrpTrvDesc(self):
         client = self.openMintClient()
 
@@ -165,6 +170,7 @@ class GroupTroveTest(MintRepositoryHelper):
 
         groupTrove.setDesc('What do you mean? African or European?')
 
+    @testsuite.context('loginless')
     def testTransGrpTrvVersionLock(self):
         client = self.openMintClient()
         groupTrove = self.createTestGroupTrove(client, 0)
@@ -173,6 +179,7 @@ class GroupTroveTest(MintRepositoryHelper):
 
         groupTrove.setTroveVersionLock(trvId, True)
 
+    @testsuite.context('loginless')
     def testTransGrpTrvUseLock(self):
         client = self.openMintClient()
         groupTrove = self.createTestGroupTrove(client, 0)
@@ -181,6 +188,7 @@ class GroupTroveTest(MintRepositoryHelper):
 
         groupTrove.setTroveUseLock(trvId, True)
 
+    @testsuite.context('loginless')
     def testTransGrpTrvInstSetLock(self):
         client = self.openMintClient()
         groupTrove = self.createTestGroupTrove(client, 0)
@@ -189,6 +197,7 @@ class GroupTroveTest(MintRepositoryHelper):
 
         groupTrove.setTroveInstSetLock(trvId, True)
 
+    @testsuite.context('loginless')
     def testTransGrpTrvVersion(self):
         client = self.openMintClient()
 
@@ -201,6 +210,7 @@ class GroupTroveTest(MintRepositoryHelper):
         groupTrove = client.getGroupTrove(groupTroveId)
         assert(groupTrove.upstreamVersion == '1.0.1')
 
+    @testsuite.context('loginless')
     def testTransGrpTrvRecipe(self):
         client = self.openMintClient()
         groupTrove= self.createTestGroupTrove(client, 0)
@@ -209,6 +219,7 @@ class GroupTroveTest(MintRepositoryHelper):
 
         groupTrove.getRecipe()
 
+    @testsuite.context('loginless')
     def testTransGrpTrvCook(self):
         client, userId = self.quickMintUser('testuser', 'testpass')
         projectId = self.newProject(client)
