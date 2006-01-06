@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005 rPath, Inc.
+# Copyright (c) 2005-2006 rPath, Inc.
 #
 # All rights reserved
 #
@@ -290,12 +290,12 @@ class ProjectHandler(WebHandler):
         return self._write("newRelease", errors = [], kwargs = {})
 
     @ownerOnly
-    @intFields(releaseId = -1, imageType = releasetypes.INSTALLABLE_ISO)
+    @intFields(releaseId = -1)
+    @listFields(int, imageTypes = [releasetypes.INSTALLABLE_ISO])
     @strFields(trove = "", releaseName = "")
-    def editRelease(self, auth, releaseId, imageType, trove, releaseName):
+    def editRelease(self, auth, releaseId, imageTypes, trove, releaseName):
         errors = []
-        if imageType not in releasetypes.TYPES:
-            errors.append("Invalid image type selected.")
+        #the check for valid imageTypes is made in mint_server
 
         projectId = self.project.getId()
         if releaseId == -1:
@@ -307,7 +307,7 @@ class ProjectHandler(WebHandler):
                 release = self.client.newRelease(projectId, releaseName)
 
                 ilp = "%s conary.rpath.com@rpl:devel contrib.rpath.org@rpl:devel" % self.project.getLabel()
-                release.setImageType(imageType)
+                release.setImageTypes(imageTypes)
                 release.setDataValue("installLabelPath", ilp)
                 trove, label = trove.split("=")
                 label = versions.Label(label)
@@ -315,7 +315,6 @@ class ProjectHandler(WebHandler):
                 flavor = None
             else:
                 kwargs = {'releaseId':      releaseId,
-                          'imageType':      imageType,
                           'trove':          trove,
                           'releaseName':    releaseName}
                 return self._write("newRelease", errors = errors, kwargs = kwargs)
@@ -360,15 +359,17 @@ class ProjectHandler(WebHandler):
         return self._write("editRelease", trove = trove, version = version,
             flavor = deps.ThawDependencySet(flavor),
             label = label.asString(), release = release,
+            imageTypes = release.getImageTypes(),
             archMap = archMap)
         
     @requiresAuth
     @intFields(releaseId = None)
     @strFields(trove = None, version = None,
                desc = "", mediaSize = "640")
+    @listFields(int, imageTypes = [releasetypes.INSTALLABLE_ISO])
     def editRelease2(self, auth, releaseId,
                      trove, version,
-                     desc, mediaSize, **kwargs):
+                     desc, mediaSize, imageTypes, **kwargs):
         release = self.client.getRelease(releaseId)
 
         version, flavor = version.split(" ")
@@ -389,12 +390,16 @@ class ProjectHandler(WebHandler):
                     val = True
                 if template[name][0] == RDT_STRING:
                     val = str(val)
+                if template[name][0] == RDT_INT:
+                    val = int(val)
             except KeyError:
                 if template[name][0] == RDT_BOOL:
                     val = False
                 else:
                     val = template[name][1]
             release.setDataValue(name, val)
+
+        release.setImageTypes(imageTypes)
 
         try:
             job = self.client.startImageJob(releaseId)

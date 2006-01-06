@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005 rPath, Inc.
+# Copyright (c) 2005-2006 rPath, Inc.
 #
 # All rights reserved
 #
@@ -33,14 +33,17 @@ class WebHandler(object):
         if not templatePath:
             templatePath = self.cfg.templatePath
 
-        global kidCache
-        #if self.cfg.debugMode:
-        #    kidCache={}
-        if template not in kidCache:
+        if not self.cfg.debugMode:
+            global kidCache
+            #TODO Refresh if it's changed
+            if template not in kidCache:
+                path = os.path.join(templatePath, template + ".kid")
+                kidCache[template] = kid.load_template(path)
+            
+            template = kidCache[template]
+        else:
             path = os.path.join(templatePath, template + ".kid")
-            kidCache[template] = kid.load_template(path)
-        
-        template = kidCache[template]
+            template = kid.load_template(path)
         t = template.Template(cfg = self.cfg,
                               auth = self.auth,
                               project = self.project,

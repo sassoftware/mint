@@ -1,6 +1,6 @@
 #!/usr/bin/python2.4
 #
-# Copyright (c) 2004-2005 rPath, Inc.
+# Copyright (c) 2004-2006 rPath, Inc.
 #
 
 import testsuite
@@ -57,7 +57,7 @@ class ReleaseTest(MintRepositoryHelper):
         projectId = client.newProject("Foo", "foo", "rpath.org")
         release = client.newRelease(projectId, "Test Release")
 
-        release.setImageType(releasetypes.INSTALLABLE_ISO)
+        release.setImageTypes([releasetypes.INSTALLABLE_ISO, releasetypes.QEMU_IMAGE])
 
         rDict = release.getDataDict()
         tDict = release.getDataTemplate()
@@ -76,7 +76,7 @@ class ReleaseTest(MintRepositoryHelper):
         except ReleaseDataNameError:
             pass
 
-        release.setImageType(releasetypes.STUB_IMAGE)
+        release.setImageTypes([releasetypes.STUB_IMAGE])
 
         # test string behavior
         release.setDataValue('stringArg', 'foo')
@@ -97,7 +97,7 @@ class ReleaseTest(MintRepositoryHelper):
         client, userId = self.quickMintUser("testuser", "testpass")
         projectId = client.newProject("Foo", "foo", "rpath.org")
         release = client.newRelease(projectId, "Test Release")
-        release.setImageType(releasetypes.INSTALLABLE_ISO)
+        release.setImageTypes([releasetypes.INSTALLABLE_ISO])
 
         self.db.cursor().execute("DELETE FROM ReleaseData WHERE name='bugsUrl'")
         self.db.commit()
@@ -110,7 +110,7 @@ class ReleaseTest(MintRepositoryHelper):
 
         release = client.newRelease(projectId, "Test Release")
 
-        release.setImageType(releasetypes.STUB_IMAGE)
+        release.setImageTypes([releasetypes.STUB_IMAGE])
         release.setPublished(True)
 
         # refresh
@@ -119,7 +119,7 @@ class ReleaseTest(MintRepositoryHelper):
         self.assertRaises(ReleasePublished, release.setDataValue,
                           'stringArg', 'bar')
 
-        self.assertRaises(ReleasePublished, release.setImageType,
+        self.assertRaises(ReleasePublished, release.setImageTypes,
                           releasetypes.STUB_IMAGE)
 
         self.assertRaises(ReleasePublished, release.setFiles, list())
@@ -146,7 +146,7 @@ class ReleaseTest(MintRepositoryHelper):
 
         release = client.newRelease(projectId, "Test Release")
 
-        release.setImageType(releasetypes.STUB_IMAGE)
+        release.setImageTypes([releasetypes.STUB_IMAGE])
         release.setPublished(True)
 
         try:
@@ -168,7 +168,7 @@ class ReleaseTest(MintRepositoryHelper):
         # messing with that same release should now fail in a controlled
         # manner. no UnknownErrors allowed!
         try:
-            release.setImageType(releasetypes.STUB_IMAGE)
+            release.setImageTypes([releasetypes.STUB_IMAGE])
             self.fail("Allowed to set imgage type of a deleted release")
         except ReleaseMissing:
             pass
@@ -332,7 +332,7 @@ class ReleaseTest(MintRepositoryHelper):
         adminClient.hideProject(projectId)
 
         release = client.newRelease(projectId, 'release 1')
-        release.setImageType(releasetypes.INSTALLABLE_ISO)
+        release.setImageTypes([releasetypes.INSTALLABLE_ISO])
         release.setTrove("group-core",
                          "/test.rpath.local@rpl:devel/0.0:1.0-1-1", "1#x86")
 

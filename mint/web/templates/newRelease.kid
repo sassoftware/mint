@@ -14,7 +14,7 @@ title = "Create New Release"
         <a href="#">Create a Release</a>
     </div>
     <?python
-        for var in ['releaseId', 'imageType', 'trove', 'releaseName']:
+        for var in ['releaseId', 'trove', 'releaseName']:
             kwargs[var] = kwargs.get(var, '')
     ?>
 
@@ -49,21 +49,9 @@ title = "Create New Release"
                                 </select>
                             </td>
                         </tr>
-                        <tr py:if="False">
-                            <th>Release Type:</th>
-                            <td>
-                                <select name="imageType">
-                                    <option py:for="releaseType, releaseName in releasetypes.typeNames.items()"
-                                            py:content="releaseName"
-                                            py:attrs="{'value': releaseType}"/>
-                                </select>
-                            </td>
-                            
-                        </tr>
                     </table>
                     <p>
                         <button id="submitButton" type="submit">Submit</button>
-                        <input py:if="True" type="hidden" name="imageType" value="${releasetypes.INSTALLABLE_ISO}" />
                         <input type="hidden" name="releaseName" value="${project.getName()}" />
                         <input type="hidden" name="releaseId" value="-1" />
                     </p>

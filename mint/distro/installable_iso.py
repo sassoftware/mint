@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2004-2005 rPath, Inc.
+# Copyright (c) 2004-2006 rPath, Inc.
 #
 # All Rights Reserved
 #
@@ -30,7 +30,7 @@ class IsoConfig(ConfigFile):
     filename = 'installable_iso.conf'
     
     imagesPath          = None
-    scriptPath          = '/srv/mint/code/scripts/'
+    scriptPath          = '/usr/share/mint/scripts/'
     cachePath           = '/srv/mint/changesets/'
     templatePath        = '/srv/mint/templates/'
     implantIsoMd5       = '/usr/lib/anaconda-runtime/implantisomd5'

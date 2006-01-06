@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2004-2005 rPath, Inc.
+# Copyright (c) 2004-2006 rPath, Inc.
 #
 # All Rights Reserved
 #
@@ -40,7 +40,8 @@ installableIsoTemplate = {
     'autoResolve':      (RDT_BOOL, False, "Add 'autoResolve True' to default /etc/conaryrc"),
     'skipMediaCheck':   (RDT_BOOL, False, 'Skip prompt for ISO media check'),
     'betaNag':          (RDT_BOOL, False, 'Show a "beta nag" screen before installation'),
-    'bugsUrl':          (RDT_STRING, 'http://bugs.rpath.com/', 'Bug report URL advertised in installer')
+    'bugsUrl':          (RDT_STRING, 'http://bugs.rpath.com/', 'Bug report URL advertised in installer'),
+    'freespace':        (RDT_INT, '250', 'Freespace available (MB) in qemu image'),
 }
 
 stubImageTemplate = {
@@ -65,7 +66,6 @@ class ReleasesTable(database.KeyedTable):
                     projectId            INT,
                     name                 VARCHAR(128),
                     description          TEXT,
-                    imageType            INT,
                     troveName            VARCHAR(128),
                     troveVersion         VARCHAR(255),
                     troveFlavor	         VARCHAR(4096),
@@ -75,7 +75,7 @@ class ReleasesTable(database.KeyedTable):
                     timePublished        INT
                 )"""
 
-    fields = ['releaseId', 'projectId', 'name', 'description', 'imageType',
+    fields = ['releaseId', 'projectId', 'name', 'description',
               'troveName', 'troveVersion', 'troveFlavor',
               'troveLastChanged', 'published', 'downloads', 'timePublished']
     indexes = {"ReleaseProjectIdIdx": """CREATE INDEX ReleaseProjectIdIdx
@@ -104,8 +104,40 @@ class ReleasesTable(database.KeyedTable):
         return database.KeyedTable.new(self, **kwargs)
 
     def get(self, id):
-        res = database.KeyedTable.get(self, id)
+        cu = self.db.cursor()
+        fields = [ self.name + "." + x for x in self.fields ]
+        stmt = """
+            SELECT %s, ReleaseImageTypes.imageType
+            FROM %s LEFT OUTER JOIN ReleaseImageTypes ON Releases.%s=ReleaseImageTypes.%s
+            WHERE Releases.%s=?
+            """ % (", ".join(fields), self.name, self.key, self.key, self.key)
+        cu.execute(stmt, id)
+
+        #The above query returns something like
+        # | FOO | BAR | 0 |
+        # | FOO | BAR | 1 |
+        # | FOO | BAR | 2 |
+        # | FOO | BAR | 3 |
+        #The following code converts that to
+        # [ FOO, BAR, [0, 1, 2, 3]]
+        rows = cu.fetchall()
+        if not rows:
+            raise ItemNotFound
+        imageTypes = []
+        for row in rows:
+            if row[-1] is not None:
+                imageTypes.append(row[-1])
+
+        row = rows[-1]
+        res = {}
+        for i, key in enumerate(self.fields):
+            if row[i] is not None:
+                res[key] = row[i]
+            else:
+                res[key] = ''
+
         res['published'] = bool(res['published'])
+        res['imageTypes'] = imageTypes
         return res
 
     def iterReleasesForProject(self, projectId, showUnpublished = False):
@@ -184,7 +216,7 @@ class ReleasesTable(database.KeyedTable):
         return cu.fetchone()[0]
 
 class Release(database.TableObject):
-    __slots__ = [ReleasesTable.key] + ReleasesTable.fields
+    __slots__ = [ReleasesTable.key] + ReleasesTable.fields + ['imageTypes']
 
     def getItem(self, id):
         return self.server.getRelease(id)
@@ -227,16 +259,24 @@ class Release(database.TableObject):
             troveName, troveVersion, troveFlavor)
         self.refresh()
 
-    def setImageType(self, imageType):
-        assert(imageType in releasetypes.TYPES)
-        
-        return self.server.setImageType(self.releaseId, imageType)
+    def setImageTypes(self, imageTypes):
+        for imageType in imageTypes:
+            assert(imageType in releasetypes.TYPES)
+        oldimagetypes = self.imageTypes
+        try:
+            return self.server.setImageTypes(self.releaseId, imageTypes)
+        except:
+            self.imageTypes = oldimagetypes
+            raise
 
-    def getImageType(self):
-        return self.imageType
+    def getImageTypes(self):
+        if not self.imageTypes:
+            self.imageTypes = self.server.getImageTypes(self.releaseId)
+        return self.imageTypes
 
-    def getImageTypeName(self):
-        return releasetypes.typeNames[self.getImageType()]
+    #This function is not used
+    #def getImageTypeName(self, type):
+    #    return releasetypes.typeNames[type]
 
     def getJob(self):
         jobId = self.server.getJobIdsForRelease(self.id)
@@ -273,7 +313,11 @@ class Release(database.TableObject):
     def getDataTemplate(self):
         self.refresh()
         try:
-            return dataTemplates[self.getImageType()]
+            #TODO Fix this to return something smarter
+            #     Ideally, it will return the union of the settings
+            #     provided by all the self.getImageTypes(), but for
+            #     now the InstallableIsoTemplate is the union.
+            return dataTemplates[releasetypes.INSTALLABLE_ISO]
         except KeyError:
             return {}
 
@@ -304,3 +348,17 @@ class Release(database.TableObject):
 
     def deleteRelease(self):
         return self.server.deleteRelease(self.getId())
+
+class ReleaseImageTypesTable(database.DatabaseTable):
+    name = "ReleaseImageTypes"
+    createSQL = """
+        CREATE TABLE ReleaseImageTypes (
+            releaseId   INT,
+            imageType   INT,
+            PRIMARY KEY (releaseId, imageType)
+        )"""
+
+    indexes = {'ReleaseImageTypesIdx': 'CREATE INDEX ReleaseImageTypesIdx ON ReleaseImageTypes (releaseId, imageType)'
+              }
+
+    fields = ['releaseId, imageType']

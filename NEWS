@@ -11,6 +11,9 @@ Changes in 1.1.4:
 * Attempts to access a non-existent repository using wildcard dns or
   /repos/broken-repo-name/ now respond with an HTTP 404 error, instead of
   a 500 Internal Server Error.
+* Add support for creating Bootable Qemu Images
+* Refactor the job server to generate multiple image types from a single
+  Release.
 
 Changes in 1.1.3:
 

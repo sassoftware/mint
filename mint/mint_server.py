@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005 rPath, Inc.
+# Copyright (c) 2005-2006 rPath, Inc.
 #
 # All Rights Reserved
 #
@@ -186,6 +186,7 @@ def getTables(db, cfg):
     d['groupTroves'] = grouptrove.GroupTroveTable(db)
     d['groupTroveItems'] = grouptrove.GroupTroveItemsTable(db)
     d['jobData'] = data.JobDataTable(db)
+    d['releaseImageTypes'] = releases.ReleaseImageTypesTable(db)
     if not min([x.upToDate for x in d.values()]):
         d['version'].bumpVersion()
         return getTables(db, cfg)
@@ -1200,16 +1201,34 @@ class MintServer(object):
         self.releases.update(releaseId, published = int(published), timePublished = timeStamp)
         return True
 
-    @typeCheck(int, int)
+    @typeCheck(int)
     @requiresAuth
     @private
-    def setImageType(self, releaseId, imageType):
+    def getImageTypes(self, releaseId):
+        self._filterReleaseAccess(releaseId)
+        if not self.releases.releaseExists(releaseId):
+            raise ReleaseMissing()
+        cu = self.db.cursor()
+        cu.execute('SELECT imageType from ReleaseImageTypes WHERE releaseId=?', releaseId)
+        return [x[0] for x in cu.fetchall()]
+
+    @typeCheck(int, list)
+    @requiresAuth
+    @private
+    def setImageTypes(self, releaseId, imageTypes):
         self._filterReleaseAccess(releaseId)
         if not self.releases.releaseExists(releaseId):
             raise ReleaseMissing()
         if self.releases.getPublished(releaseId):
             raise ReleasePublished()
-        self.releases.update(releaseId, imageType = imageType)
+        cu = self.db.cursor()
+        cu.execute("DELETE FROM ReleaseImageTypes WHERE releaseId=?", releaseId)
+        for i in imageTypes:
+            cu.execute("INSERT INTO ReleaseImageTypes (releaseId, imageType)"
+                    "VALUES (?, ?)", releaseId, i)
+        self.db.commit()
+            
+        #self.releases.update(releaseId, imageType = imageType)
         return True
 
     @typeCheck(int)

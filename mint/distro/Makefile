@@ -11,10 +11,12 @@ python_files = \
 	imagegen.py		\
 	__init__.py		\
 	installable_iso.py	\
+	bootable_image.py	\
 	live_cf_image.py	\
 	live_iso.py		\
 	netboot_image.py	\
-	stub_image.py
+	stub_image.py		\
+	CreateDiskImage.py
 
 extra_dist = Makefile
 

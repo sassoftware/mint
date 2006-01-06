@@ -3,6 +3,7 @@
 import re
 from mint.mint import extractIs
 from mint.data import RDT_STRING, RDT_BOOL, RDT_INT
+from mint.releasetypes import visibleImageTypes, typeNames
 title = "Edit Release"
 
 def generateJs(archMap):
@@ -66,6 +67,14 @@ def generateJs(archMap):
             <h2>Release</h2>
             <form method="post" action="editRelease2">
                 <table cellpadding="6">
+                    <tr><td>Release Type:</td>
+                        <td>
+                            <select id="imageTypes" name="imageTypes" multiple="multiple" py:attrs="{'size': len(visibleImageTypes) > 4 and 4 or len(visibleImageTypes)}">
+                                <option py:for="key in visibleImageTypes" value="$key" py:content="typeNames[key]" py:attrs="{'selected': key in imageTypes and 'selected' or None}"/>
+                            </select><br/>
+                            <i>Hold down ctrl to select multple items.</i>
+                        </td>
+                    </tr>
                     <tr><td>Trove:</td><td>${trove}=${label}</td></tr>
                     <tr>
                         <td>Architecture:</td>
@@ -110,7 +119,6 @@ def generateJs(archMap):
                         <td py:if="(dataRow[0] == RDT_INT) or (dataRow[0] == RDT_STRING)">
                             <input class="text" type="text" name="${name}" value="${dataDict[name]}"/>
                         </td>
-
                     </tr>
                 </table>
 
