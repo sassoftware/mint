@@ -334,6 +334,8 @@ class UpgradePathTest(MintRepositoryHelper):
             cu.execute("""SELECT name FROM sqlite_master
                               WHERE sql NOT NULL AND type=='table'""")
             for tableName in [x[0] for x in cu.fetchall()]:
+                if tableName.startswith('sqlite_'):
+                    continue
                 cu.execute('DROP TABLE %s' % tableName)
 
             for tableSql in sqlite_schema8_tables:
