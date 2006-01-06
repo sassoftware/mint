@@ -247,21 +247,31 @@ class MintServer(object):
                 print >> sys.stderr, "Ending XMLRPC request:\t\t%-25s\t%.2f" % (methodName, (time.time() - startTime) * 1000)
                 sys.stderr.flush()
         except users.UserAlreadyExists, e:
+            self.db.rollback()
             return (True, ("UserAlreadyExists", str(e)))
         except database.DuplicateItem, e:
+            self.db.rollback()
             return (True, ("DuplicateItem", e.item))
         except database.ItemNotFound, e:
+            self.db.rollback()
             return (True, ("ItemNotFound", e.item))
         except SearchTermsError, e:
+            self.db.rollback()
             return (True, ("SearchTermsError", str(e)))
         except users.AuthRepoError, e:
+            self.db.rollback()
             return (True, ("AuthRepoError", str(e)))
         except jobs.DuplicateJob, e:
+            self.db.rollback()
             return (True, ("DuplicateJob", str(e)))
+        except:
+            self.db.rollback()
+            raise
         #except Exception, error:
         #    exc_name = sys.exc_info()[0].__name__
         #    return (True, (exc_name, error, str(error)))
         else:
+            self.db.commit()
             return (False, r)
 
     def _getProjectRepo(self, project):
