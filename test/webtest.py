@@ -44,7 +44,7 @@ class MintTest(mint_rephelp.WebRepositoryHelper):
              'password': 'foopass'})
 
     def testRegistration(self):
-        cu =self.db.cursor()
+        cu = self.db.cursor()
         cu.execute("SELECT confirmation FROM Confirmations")
         assert(not cu.fetchall())
 
@@ -169,7 +169,7 @@ class MintTest(mint_rephelp.WebRepositoryHelper):
 
         page = self.assertContent('/project/foo/releases/',
                                   ok_codes = [200],
-                                  content = 'This project has no releases.')
+                                  content = 'This project has no published releases.')
 
     def testMailListsPage(self):
         client, userId = self.quickMintUser('foouser','foopass')
