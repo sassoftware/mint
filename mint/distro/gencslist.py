@@ -61,7 +61,7 @@ def _findValidTroves(cs, groupName, groupVersion, groupFlavor,
     # iterate through the trove, recording all troves refrerenced by
     # it with byDetault=True
     t = _getTrove(cs, groupName, groupVersion, groupFlavor)
-    for name, version, flavor in t.iterTroveList():
+    for name, version, flavor in t.iterTroveList(strongRefs = True):
         if not skipNotByDefault or t.includeTroveByDefault(name, version, flavor):
             valid.add((name, version, flavor))
             if name.startswith('group-'):
