@@ -76,22 +76,30 @@ class NewsCacheTable(database.KeyedTable):
         except urllib2.URLError:
             return False
 
-        cu = self.db.cursor()
         if purge:
+            cu = self.db.cursor()
             cu.execute("DELETE FROM NewsCache")
+            self.db.commit()
 
-        tree = ElementTree.XML(data)
-        feedLink = tree.find("channel/link").text
-        for item in tree.findall("channel/item")[:items]:
-            link = item.find("link").text
-            title = item.find("title").text
-            category = item.find("category").text
-            content = item.find("{http://purl.org/rss/1.0/modules/content/}encoded").text
-            pubDate = toUnixTime(item.find("pubDate").text)
-        
-            query = "INSERT INTO NewsCache VALUES (NULL, ?, ?, ?, ?, ?)"
-            cu.execute(query, title, pubDate, content, link, category)
-        
+        try:
+            cu = self.db.transaction()
+            tree = ElementTree.XML(data)
+            feedLink = tree.find("channel/link").text
+            for item in tree.findall("channel/item")[:items]:
+                link = item.find("link").text
+                title = item.find("title").text
+                category = item.find("category").text
+                content = item.find("{http://purl.org/rss/1.0/modules/content/}encoded").text
+                pubDate = toUnixTime(item.find("pubDate").text)
+            
+                query = "INSERT INTO NewsCache VALUES (NULL, ?, ?, ?, ?, ?)"
+                cu.execute(query, title, pubDate, content, link, category)
+        except:
+            self.db.rollback()
+            raise
+        else:
+            self.db.commit()
+            
         self.ageTable.set(t = time.time(), link = feedLink)
         return True
 
