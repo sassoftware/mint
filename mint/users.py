@@ -339,6 +339,7 @@ class UsersTable(database.KeyedTable):
 
             cu.execute("UPDATE Users SET active=1 WHERE userId=?", r[0])
             cu.execute("DELETE FROM Confirmations WHERE userId=?", r[0])
+            self.db.commit()
 
             return r[0]
 
