@@ -43,6 +43,29 @@ class MintTest(mint_rephelp.WebRepositoryHelper):
             {'username': 'wronguser',
              'password': 'foopass'})
 
+    def testRegistration(self):
+        cu =self.db.cursor()
+        cu.execute("SELECT confirmation FROM Confirmations")
+        assert(not cu.fetchall())
+
+        page = self.assertCode('/register', code = 200)
+
+        page = page.postForm(1, self.post, {'username':  'foouser',
+                                            'password':  'foopass',
+                                            'password2': 'foopass',
+                                            'email':     'foo@localhost',
+                                            'tos':       'True',
+                                            'privacy':   'True'})
+
+
+        cu.execute("SELECT confirmation FROM Confirmations")
+        conf = cu.fetchall()[0][0]
+
+        page = self.assertCode("/confirm?id=%s" % conf, code = 200)
+
+        self.failIf("Your account has now been confirmed." not in page.body,
+                    "Confirmation Failed")
+
     def testLoginRedirect(self):
         # test to make sure that a login on one page
         # will redirect you back to that page after login
@@ -160,7 +183,7 @@ class MintTest(mint_rephelp.WebRepositoryHelper):
         client, userId = self.quickMintUser('foouser','foopass')
         projectId = client.newProject('Foo', 'foo', 'rpath.local')
         page = self.webLogin('foouser', 'foopass')
-        
+
         page = page.fetch('/repos/foo/pgpAdminForm',
                                   ok_codes = [200])
 
@@ -241,7 +264,7 @@ class MintTest(mint_rephelp.WebRepositoryHelper):
         cu = self.db.cursor()
         cu.execute("DELETE FROM GroupTroves WHERE groupTroveId=?", s['groupTroveId'])
         self.db.commit()
-        
+
         page.assertContent('/project/foo/groups', ok_codes = [200],
             content = 'You can use Group Builder to create a group')
 
@@ -307,7 +330,7 @@ class MintTest(mint_rephelp.WebRepositoryHelper):
             self.fail('Unconfirmed user broke out of confirm email jail'
                       ' on project home page.')
         page = self.fetch('/projects', ok_codes = [200])
-        
+
         if "Email Confirmation Required" not in page.body:
             self.fail('Unconfirmed user broke out of confirm email jail'
                       ' on projects page.')

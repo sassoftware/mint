@@ -17,7 +17,7 @@
         <title>${formatTitle('Create an Account')}</title>
     </head>
     <body>
-       <td id="main" class="spanleft">
+       <td id="main" class="spanleft" xmlns="http://www.w3.org/1999/xhtml">
             <div class="pad">
                 <p py:if="errors" class="error">Account Creation Error${len(errors) > 1 and 's' or ''}</p>
                 <p py:for="error in errors" class="errormessage" py:content="error"/>
