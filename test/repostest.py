@@ -46,6 +46,7 @@ class RepositoryTest(MintRepositoryHelper):
         client.server.registerCommit('test.rpath.local', 'nonexistentuser', 'mytrove:source', '/test.rpath.local@rpl:devel/1.0-1')
 
     def testBasicRepository(self):
+        self.openRepository()
         client, userId = self.quickMintUser("testuser", "testpass")
         projectId = self.newProject(client)
        
