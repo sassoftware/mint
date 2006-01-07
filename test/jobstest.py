@@ -52,7 +52,7 @@ class JobsTest(MintRepositoryHelper):
         projectId = client.newProject("Foo", "foo", "rpath.org")
 
         release = client.newRelease(projectId, "Test Release")
-        release.setImageType(releasetypes.STUB_IMAGE)
+        release.setImageTypes([releasetypes.STUB_IMAGE])
         release.setDataValue('stringArg', 'Hello World!')
 
         job = client.startImageJob(release.getId())
@@ -82,7 +82,7 @@ class JobsTest(MintRepositoryHelper):
         projectId = client.newProject("Foo", "foo", "rpath.org")
 
         release = client.newRelease(projectId, "Test Release")
-        release.setImageType(releasetypes.STUB_IMAGE)
+        release.setImageTypes([releasetypes.STUB_IMAGE])
         
         # make sure that the incoming ordering of files is preserved
         release.setFiles([['zaaa.iso', 'Zaaa'], ['aaaa.iso', 'Aaaa']])
@@ -94,7 +94,7 @@ class JobsTest(MintRepositoryHelper):
         projectId = client.newProject("Foo", "foo", "rpath.org")
 
         release = client.newRelease(projectId, "Test Release")
-        release.setImageType(releasetypes.STUB_IMAGE)
+        release.setImageTypes([releasetypes.STUB_IMAGE])
         release.setDataValue('stringArg', 'Hello World!')
 
         job = client.startImageJob(release.getId())
