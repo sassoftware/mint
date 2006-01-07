@@ -300,7 +300,6 @@ def conaryHandler(req, cfg, pathInfo):
             shim_repositories[repHash] = shimclient.NetworkRepositoryServer(nscfg, urlBase)
 
             repositories[repHash].forceSecure = cfg.SSL
-            repositories[repHash].cfg = cfg
         else:
             repositories[repHash] = None
             shim_repositories[repHash] = None

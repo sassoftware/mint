@@ -315,6 +315,7 @@ class ProjectTest(MintRepositoryHelper):
         watcherClient.getProject(projectId)
 
     def testExternalProject(self):
+        self.openRepository()
         client, userId = self.quickMintUser("testuser", "testpass")
         projectId = self.newProject(client, "External Project", "external")
         

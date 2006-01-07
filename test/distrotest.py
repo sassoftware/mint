@@ -55,8 +55,8 @@ class DistroTest(rephelp.RepositoryHelper):
 
         assert(\
             cslist == \
-            ['test-1.0-1-1-none.ccs test /127.0.0.1@rpl:linux/1.0-1-1 none 1',
-             'group-foo-1.0-1-1-none.ccs group-foo /127.0.0.1@rpl:linux/1.0-1-1 none 1'])
+            ['test-1.0-1-1-none.ccs test /localhost@rpl:linux/1.0-1-1 none 1',
+             'group-foo-1.0-1-1-none.ccs group-foo /localhost@rpl:linux/1.0-1-1 none 1'])
 
 
 if __name__ == "__main__":

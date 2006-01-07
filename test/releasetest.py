@@ -303,7 +303,7 @@ class ReleaseTest(MintRepositoryHelper):
         release.setPublished(True)
         relIdList = [x.id for x in \
                      client.server.getReleasesForProject(projectId)]
-        if relIdList != [2, 1]:
+        if relIdList != [1, 2]:
             self.fail('getReleasesForProject has the wrong order')
 
     def makeIsoGenCfg(self):
@@ -327,6 +327,7 @@ class ReleaseTest(MintRepositoryHelper):
         return cfg
 
     def testHiddenIsoGen(self):
+        self.openRepository()
         client, userId = self.quickMintUser("testuser", "testpass")
         projectId = self.newProject(client)
         project = client.getProject(projectId)

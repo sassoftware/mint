@@ -14,7 +14,7 @@ from conary import versions
 
 class MintTest(mint_rephelp.WebRepositoryHelper):
     def testFirstTimeSetupRedirect(self):
-        self.servers.getServer().mintCfg.configured = False
+        self.mintCfg.configured = False
         self.resetRepository() 
 
         page = self.assertCode('/', code = 302)
@@ -24,7 +24,7 @@ class MintTest(mint_rephelp.WebRepositoryHelper):
             content = "Please create a file called")
         
         sid = self.cookies.items()[0][1]['/']['pysid'].value
-        secureFile = self.servers.getServer().mintCfg.dataPath + "/" + sid + ".txt"
+        secureFile = self.mintCfg.dataPath + "/" + sid + ".txt"
 
         f = file(secureFile, 'w')
         f.close()
@@ -33,7 +33,7 @@ class MintTest(mint_rephelp.WebRepositoryHelper):
             content = "rBuilder Product Setup")
  
         # set site back to configured
-        self.servers.getServer().mintCfg.configured = True
+        self.mintCfg.configured = True
        
   
 if __name__ == "__main__":

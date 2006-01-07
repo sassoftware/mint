@@ -284,6 +284,7 @@ class AccountTest(MintRepositoryHelper):
             repos = ConaryClient(cfg).getRepos()
             repos.deleteUserByName(versions.Label(project.getLabel()), 'mintauth')
     
+        self.openRepository()
         client, userId = self.quickMintUser("testuser", "testpass")
         intProjectId = self.newProject(client, "Internal Project", "internal")
         extProjectId = self.newProject(client, "External Project", "external")
@@ -292,9 +293,8 @@ class AccountTest(MintRepositoryHelper):
         extProject = client.getProject(extProjectId)
         labelId = extProject.getLabelIdMap()['external.rpath.local@rpl:devel']
         extProject.editLabel(labelId, "external.rpath.local@rpl:devel",
-            'http://test.rpath.local:%d/repos/external/' % self.getPort(), 'anonymous', 'anonymous')
+            'http://test.rpath.local:%d/repos/external/' % self.port, 'anonymous', 'anonymous')
                     
-
         cu = self.db.cursor()
         cu.execute("UPDATE Projects SET external=1 WHERE projectId=?", extProjectId)
         self.db.commit()

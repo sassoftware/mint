@@ -52,6 +52,25 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
         page = page.assertContent('/repos/test/browse', ok_codes = [200],
             content = 'troveInfo?t=testcase:runtime')
 
+    def testBrowseExternalProject(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        extProjectId = self.newProject(client, "External Project", "external")
+
+        extProject = client.getProject(extProjectId)
+        labelId = extProject.getLabelIdMap()['external.rpath.local@rpl:devel']
+        extProject.editLabel(labelId, "external.rpath.local@rpl:devel",
+            'http://127.0.0.1:%d/conary/' % self.port, 'anonymous', 'anonymous')
+
+        # XXX remove this hack later
+        oldBuildLabel = self.cfg.buildLabel
+        self.cfg.buildLabel = versions.Label("localhost@rpl:linux")
+        self.makeSourceTrove("testcase", testRecipe)
+        self.cfg.buildLabel = oldBuildLabel
+
+        page = self.assertCode('/repos/test/browse', code = 200)
+        import epdb
+        epdb.st()
+
 
 if __name__ == "__main__":
     testsuite.main()

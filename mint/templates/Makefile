@@ -15,7 +15,8 @@ extra_dist = Makefile
 
 dist_files = $(extra_dist) $(kid_files) $(python_files)
 
-all: default-all
+all: $(kid_files)
+	kidc $(kid_files)
 
 install: kidfiles-install pyfiles-install
 

@@ -73,9 +73,10 @@ class RepositoryTest(MintRepositoryHelper):
         assert(project.getCommits() == [('testcase:source', '1.0-1')])
 
     def testHooksResponse(self):
+        self.openRepository()
         cfg = ConaryConfiguration(readConfigFiles = False)
         cfg.installLabelPath = ['notfound.rpath.local@rpl:devel']
-        cfg.repositoryMap = {'notfound.rpath.local': 'http://test.rpath.local:%d/repos/notfound/' % self.getPort()}
+        cfg.repositoryMap = {'notfound.rpath.local': 'http://test.rpath.local:%d/repos/notfound/' % self.port}
         cfg.root = ':memory:'
         cfg.dbPath = ':memory:'
 
@@ -91,6 +92,7 @@ class RepositoryTest(MintRepositoryHelper):
 
 
     def testCook(self):
+        self.openRepository()
         client, userId = self.quickMintUser("testuser", "testpass")
         projectId = self.newProject(client)
        
