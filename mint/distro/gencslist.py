@@ -171,7 +171,7 @@ def _validateChangeSet(path, cs, name, version, flavor):
 
     # then iterate over any included troves (if any)
     topTrove = _getTrove(cs, name, version, flavor)
-    for name, version, flavor in topTrove.iterTroveList():
+    for name, version, flavor in topTrove.iterTroveList(strongRefs = True):
         # skip not byDefault troves
         try:
             if not topTrove.includeTroveByDefault(name, version, flavor):
@@ -453,7 +453,7 @@ def _getSourceBranches(cs, name, version, flavor):
     key = (col.getSourceName(), col.getVersion().branch())
     rc.add(key)
     metadataToName[key] = name
-    for (n, v, f) in col.iterTroveList():
+    for (n, v, f) in col.iterTroveList(strongRefs = True):
         t = _getTrove(cs, n, v, f)
         key = (t.getSourceName(), t.getVersion().branch())
         rc.add(key)
