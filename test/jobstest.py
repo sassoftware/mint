@@ -90,6 +90,7 @@ class JobsTest(MintRepositoryHelper):
                                       {'size': 0, 'title': 'Aaaa', 'filename': 'aaaa.iso', 'fileId': 2}])
 
     def testJobQueue(self):
+        self.openRepository()
         client, userId = self.quickMintUser("testuser", "testpass")
         projectId = client.newProject("Foo", "foo", "rpath.org")
 
