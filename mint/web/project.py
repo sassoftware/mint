@@ -287,7 +287,7 @@ class ProjectHandler(WebHandler):
     
     @ownerOnly
     def newRelease(self, auth):
-        return self._write("newRelease", errors = [], kwargs = {})
+        return self._write("newRelease", imageTypes = [releasetypes.INSTALLABLE_ISO], errors = [], kwargs = {})
 
     @ownerOnly
     @intFields(releaseId = -1)
@@ -366,10 +366,9 @@ class ProjectHandler(WebHandler):
     @intFields(releaseId = None)
     @strFields(trove = None, version = None,
                desc = "", mediaSize = "640")
-    @listFields(int, imageTypes = [releasetypes.INSTALLABLE_ISO])
     def editRelease2(self, auth, releaseId,
                      trove, version,
-                     desc, mediaSize, imageTypes, **kwargs):
+                     desc, mediaSize, **kwargs):
         release = self.client.getRelease(releaseId)
 
         version, flavor = version.split(" ")
@@ -398,8 +397,6 @@ class ProjectHandler(WebHandler):
                 else:
                     val = template[name][1]
             release.setDataValue(name, val)
-
-        release.setImageTypes(imageTypes)
 
         try:
             job = self.client.startImageJob(releaseId)

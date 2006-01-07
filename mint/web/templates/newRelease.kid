@@ -2,6 +2,7 @@
 
 <?python
 from mint import releasetypes
+from mint.releasetypes import visibleImageTypes, typeNames
 title = "Create New Release"
 ?>
 
@@ -47,6 +48,14 @@ title = "Create New Release"
                                 <select name="trove" size="15" id="trove" >
                                     <option value="" id="pleaseWait">Loading group list, please wait</option>
                                 </select>
+                            </td>
+                        </tr>
+                        <tr><td>Release Type:</td>
+                            <td>
+                                <select id="imageTypes" name="imageTypes" multiple="multiple" py:attrs="{'size': len(visibleImageTypes) > 4 and 4 or len(visibleImageTypes)}">
+                                    <option py:for="key in visibleImageTypes" value="$key" py:content="typeNames[key]" py:attrs="{'selected': key in imageTypes and 'selected' or None}"/>
+                                </select><br/>
+                                <i>Hold down ctrl to select multple items.</i>
                             </td>
                         </tr>
                     </table>
