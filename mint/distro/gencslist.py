@@ -383,11 +383,15 @@ class LocalRepository(netserver.NetworkRepositoryServer):
         self.repos.commitChangeSet(cs, self.name)
 
     def __init__(self, serverName, dbpath):
+        cfg = netserver.ServerConfig()
+        cfg.repositoryDB = ('sqlite', dbpath + '/sqldb')
+        cfg.tmpDir = '/tmp'
+        cfg.serverName = serverName
+        cfg.contentsDir = dbpath + '/contents/'
         util.mkdirChain(dbpath)
         self.serverName = serverName
-        netserver.NetworkRepositoryServer.__init__(self, dbpath, '/tmp',
-                                                   '/tmp', serverName,
-                                                   {})
+        netserver.NetworkRepositoryServer.__init__(self, cfg, '')
+
         user = 'anonymous'
         try:
             self.auth.addUser(user, user)
