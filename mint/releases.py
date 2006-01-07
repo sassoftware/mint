@@ -41,6 +41,9 @@ installableIsoTemplate = {
     'skipMediaCheck':   (RDT_BOOL, False, 'Skip prompt for ISO media check'),
     'betaNag':          (RDT_BOOL, False, 'Show a "beta nag" screen before installation'),
     'bugsUrl':          (RDT_STRING, 'http://bugs.rpath.com/', 'Bug report URL advertised in installer'),
+}
+
+bootableImageTemplate = {
     'freespace':        (RDT_INT, '250', 'Freespace available (MB) in qemu image'),
 }
 
@@ -50,10 +53,18 @@ stubImageTemplate = {
     'intArg'    : (RDT_INT, 0, 'Garbage Integer'),
 }
 
+dataHeadings = {
+    releasetypes.INSTALLABLE_ISO  : 'Advanced Installable ISO Settings',
+    releasetypes.QEMU_IMAGE       : 'Advanced Bootable Image Settings',
+    releasetypes.STUB_IMAGE       : 'Stub Image Advanced Settings',
+}
+
+
 # It is not necessary to define templates for image types with no settings
 dataTemplates = {
-    releasetypes.INSTALLABLE_ISO : installableIsoTemplate,
-    releasetypes.STUB_IMAGE      : stubImageTemplate,
+    releasetypes.INSTALLABLE_ISO  : installableIsoTemplate,
+    releasetypes.QEMU_IMAGE       : bootableImageTemplate,
+    releasetypes.STUB_IMAGE       : stubImageTemplate,
 }
 
 class ReleasesTable(database.KeyedTable):
@@ -263,6 +274,7 @@ class Release(database.TableObject):
         for imageType in imageTypes:
             assert(imageType in releasetypes.TYPES)
         oldimagetypes = self.imageTypes
+        self.imageTypes = imageTypes
         try:
             return self.server.setImageTypes(self.releaseId, imageTypes)
         except:
@@ -311,15 +323,24 @@ class Release(database.TableObject):
         return self.server.setReleasePublished(self.releaseId, published)
 
     def getDataTemplate(self):
+        returner = {}
+        for i in self.imageTypes:
+            returner.update(dataTemplates[i])
+        return returner
+
+    def getDisplayTemplates(self):
         self.refresh()
+        returner = []
         try:
             #TODO Fix this to return something smarter
             #     Ideally, it will return the union of the settings
             #     provided by all the self.getImageTypes(), but for
             #     now the InstallableIsoTemplate is the union.
-            return dataTemplates[releasetypes.INSTALLABLE_ISO]
+            for i in self.imageTypes:
+                returner.append((dataHeadings[i], dataTemplates[i]))
         except KeyError:
-            return {}
+            pass
+        return returner
 
     def setDataValue(self, name, value, dataType = None):
         template = self.getDataTemplate()

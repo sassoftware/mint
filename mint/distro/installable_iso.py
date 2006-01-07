@@ -268,7 +268,7 @@ class InstallableIso(ImageGenerator):
         csdir = os.path.join(topdir, subdir, 'changesets')
         util.mkdirChain(csdir)
         assertParentAlive()
-        
+
         # build a set of the things we already have extracted.
         self.status("Extracting changesets")
         existingChangesets = set()

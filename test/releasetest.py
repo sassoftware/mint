@@ -57,7 +57,9 @@ class ReleaseTest(MintRepositoryHelper):
         projectId = client.newProject("Foo", "foo", "rpath.org")
         release = client.newRelease(projectId, "Test Release")
 
+        imageTypes = [releasetypes.INSTALLABLE_ISO, releasetypes.QEMU_IMAGE]
         release.setImageTypes([releasetypes.INSTALLABLE_ISO, releasetypes.QEMU_IMAGE])
+        assert(imageTypes == release.imageTypes)
 
         rDict = release.getDataDict()
         tDict = release.getDataTemplate()
@@ -98,6 +100,7 @@ class ReleaseTest(MintRepositoryHelper):
         projectId = client.newProject("Foo", "foo", "rpath.org")
         release = client.newRelease(projectId, "Test Release")
         release.setImageTypes([releasetypes.INSTALLABLE_ISO])
+        assert(release.getImageTypes() == [releasetypes.INSTALLABLE_ISO])
 
         self.db.cursor().execute("DELETE FROM ReleaseData WHERE name='bugsUrl'")
         self.db.commit()
@@ -120,7 +123,7 @@ class ReleaseTest(MintRepositoryHelper):
                           'stringArg', 'bar')
 
         self.assertRaises(ReleasePublished, release.setImageTypes,
-                          releasetypes.STUB_IMAGE)
+                          [releasetypes.STUB_IMAGE])
 
         self.assertRaises(ReleasePublished, release.setFiles, list())
 
