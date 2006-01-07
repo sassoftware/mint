@@ -4,6 +4,7 @@
 #
 
 import testsuite
+import unittest
 testsuite.setup()
 
 import kid
@@ -11,7 +12,6 @@ import os
 import sys
 from mint import templates
 from mint.helperfuncs import truncateForDisplay
-from mint_rephelp import MintRepositoryHelper
 from mint.userlevels import myProjectCompare
 
 testTemplate = \
@@ -19,7 +19,7 @@ testTemplate = \
 <plain>This is a plain text ${myString}.</plain>
 """
 
-class ProjectTest(MintRepositoryHelper):
+class ProjectTest(unittest.TestCase):
     def testMyProjectCompare(self):
         if not isinstance(myProjectCompare(('not tested', 1),
                                            ('ignored', 0)), int):
@@ -91,14 +91,14 @@ class ProjectTest(MintRepositoryHelper):
         assert render == "This is a plain text string."
 
     def testExplicitTransactions(self):
-        if self.mintCfg.dbDriver != 'sqlite':
-            raise testsuite.SkipTestException
-        cu = self.db.cursor()
+        from conary import dbstore
+        db = dbstore.connect(":memory:", "sqlite")
+        cu = db.cursor()
 
         # dbstore explicit transaction method
-        self.db.transaction()
-        assert(self.db.dbh.inTransaction)
-        self.db.rollback()
+        db.transaction()
+        assert(db.dbh.inTransaction)
+        db.rollback()
 
     # Test strings with the default values
     def testTruncateKnownGoodValues(self):

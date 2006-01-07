@@ -4,9 +4,9 @@
 #
 
 import testsuite
+import unittest
 testsuite.setup()
 
-from mint_rephelp import MintRepositoryHelper
 from mint.checkhtml import checkHTML, HtmlTagNotAllowed, HtmlParseError
 
 xml = '<?xml version="1.0"?>\n'
@@ -20,8 +20,7 @@ bad1 = "I'm a nasty <script />!"
 bad2 = "I'm broken.<hr"
 bad3 = "<iframe>Hello world!</iframe>"
 
-class HtmlTest(MintRepositoryHelper):
-
+class HtmlTest(unittest.TestCase):
     def excepts(self, call, args, exception, errStr):
         try:
             call(*args)
