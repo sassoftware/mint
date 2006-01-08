@@ -57,7 +57,8 @@ class MintTest(mint_rephelp.WebRepositoryHelper):
                                             'tos':       'True',
                                             'privacy':   'True'})
 
-
+        self.db.commit()
+        cu = self.db.cursor()
         cu.execute("SELECT confirmation FROM Confirmations")
         conf = cu.fetchall()[0][0]
 
