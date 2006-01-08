@@ -11,6 +11,7 @@ import sys
 import os
 import os.path
 import pwd
+import socket
 import re
 import tempfile
 import time
@@ -21,6 +22,28 @@ archivePath = None
 testPath = None
 
 #from pychecker import checker
+
+portstart = 60000
+def findPorts(num = 1):
+    foundport = False
+    global portstart 
+    ports = []
+    for port in xrange(portstart, portstart + 100):
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        try:
+            s.bind(('localhost', port))
+            s.close()
+        except:
+            pass
+        else:
+            ports.append(port)
+            if len(ports) == num:
+                portstart = max(ports) + 1
+                return ports
+
+    if not foundport:
+        raise socket.error, "Cannot find open port to run server on"
 
 def context(*contexts):
     def deco(func):
@@ -77,7 +100,7 @@ class LogFilter:
 
 	if len(records) != len(self.records):
 	    raise AssertionError, "expected log message count does not match"
-
+	    
         for num, record in enumerate(records):
             if self.records[num] != record:
                 raise AssertionError, "expected log messages do not match: '%s' != '%s'" %(self.records[num], record)
@@ -97,7 +120,7 @@ class LogFilter:
 
 	if len(records) != len(self.records):
 	    raise AssertionError, "expected log message count does not match"
-
+	    
         for record in records:
             if not record in self.records:
                 raise AssertionError, "expected log message not found: '%s'" %record
@@ -117,12 +140,7 @@ def setup():
     if not os.environ.has_key('CONARY_PATH'):
 	print "please set CONARY_PATH"
 	sys.exit(1)
-    if not os.environ.has_key('MINT_PATH'):
-        print "please set MINT_PATH"
-        sys.exit(1)
     sys.path.insert(0, os.environ['CONARY_PATH'])
-    sys.path.insert(0, os.environ['MINT_PATH'])
-    sys.path.insert(1, os.path.join(os.environ['CONARY_PATH'], 'conary/server'))
     if 'PYTHONPATH' in os.environ:
         os.environ['PYTHONPATH'] = os.pathsep.join((os.environ['CONARY_PATH'],
                                                     os.environ['PYTHONPATH']))
@@ -152,11 +170,8 @@ def setup():
     archivePath = testPath + '/' + "archive"
     parent = os.path.dirname(testPath)
 
-    global conaryDir, mintDir
+    global conaryDir
     conaryDir = os.environ['CONARY_PATH']
-    mintDir = os.environ['MINT_PATH']
-    if parent not in sys.path:
-	sys.path.append(parent)
 
     from conary.lib import util
     sys.excepthook = util.genExcepthook(True)
@@ -236,6 +251,7 @@ class Loader(unittest.TestLoader):
         self.context = context
 
 class TestCase(unittest.TestCase):
+
     def setUp(self):
         from conary.lib import log
         self._logLevel = log.getVerbosity()
@@ -286,9 +302,8 @@ class TestCase(unittest.TestCase):
         self.owner = pwd.getpwuid(os.getuid())[0]
         self.group = grp.getgrgid(os.getgid())[0]
 
-	global conaryDir, mintDir
+	global conaryDir
 	self.conaryDir = conaryDir
-        self.mintDir = mintDir
 
     def mimicRoot(self):
 	self.oldgetuid = os.getuid
@@ -364,10 +379,10 @@ class TestTimer(object):
         while testSuites:
             testSuite = testSuites.pop()
             if not isinstance(testSuite, unittest.TestCase):
-                testSuites.extend(x for x in testSuite)
+                testSuites.extend(x for x in testSuite) 
             else:
                 self.toRun.add(testSuite.id())
-
+                
     def startTest(self, test):
         self.testStart = time.time()
         self.testId = test.id()
@@ -404,7 +419,7 @@ class SkipTestResultMixin:
     def checkForSkipException(self, test, err):
         # because of the reloading of modules that occurs when
         # running multiple tests, no guarantee about the relation of
-        # this SkipTestException class to the one run in the
+        # this SkipTestException class to the one run in the 
         # actual test can be made, so just check names
         if err[0].__name__ == 'SkipTestException':
             self.addSkipped(test, err)
@@ -445,9 +460,9 @@ class TestCallback:
         self.last = 0
         self.out = f
 
-    def totals(self, run, passed, failed, errored, skipped, total,
+    def totals(self, run, passed, failed, errored, skipped, total, 
                 timePassed, estTotal, test=None):
-        totals = (failed +  errored, skipped, timePassed / 60,
+        totals = (failed +  errored, skipped, timePassed / 60, 
                   timePassed % 60, estTotal / 60, estTotal % 60, run, total)
         msg = 'Fail: %s Skip: %s - %0d:%02d/%0d:%02d - %s/%s' % totals
 
@@ -541,7 +556,7 @@ class SkipTestTextResult(unittest._TextTestResult, SkipTestResultMixin):
             timePassed, totalTime = self.timer.estimate()
             self.callback.totals(self.testsRun, self.passedTests,
                                  self.failedTests,
-                                 self.erroredTests, self.skippedTests,
+                                 self.erroredTests, self.skippedTests, 
                                  self.total, timePassed, totalTime, test)
 
 
@@ -566,7 +581,7 @@ class DebugTestRunner(unittest.TextTestRunner):
 
     def _makeResult(self):
         return SkipTestTextResult(self.stream, self.descriptions,
-                                  self.verbosity, test=self.test,
+                                  self.verbosity, test=self.test, 
                                   debug=self.debug,
                                   useCallback=self.useCallback)
 
@@ -606,15 +621,16 @@ def main(*args, **keywords):
         sys.argv.remove('--dots')
         dots = True
 
+        
     if '--debug' in sys.argv:
         debug = True
         sys.argv.remove('--debug')
     else:
         debug=False
 
-    runner = DebugTestRunner(verbosity=verbosity, debug=debug,
+    runner = DebugTestRunner(verbosity=verbosity, debug=debug, 
                              useCallback=not dots)
-
+        
     unittest.main(testRunner=runner, testLoader=loader, *args, **keywords)
 
 
@@ -691,7 +707,7 @@ if __name__ == '__main__':
         testcase = loader.loadTestsFromName(test)
         suite.addTest(testcase)
 
-    runner = DebugTestRunner(verbosity=verbosity, debug=debug,
+    runner = DebugTestRunner(verbosity=verbosity, debug=debug, 
                              useCallback=not dots)
     runner.run(suite)
 
