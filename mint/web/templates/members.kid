@@ -25,7 +25,7 @@ from mint import userlevels
     </head>
     <body>
         <td id="left" class="side">
-            <div class="pad">
+            <div class="pad" xmlns="http://www.w3.org/1999/xhtml">
                 ${projectResourcesMenu()}
                 <div class="palette" id="addmember" py:if="isOwner">
 
@@ -60,11 +60,11 @@ from mint import userlevels
 
         </td>
         <td id="main">
-            <div class="pad">
-                <h2>${project.getNameForDisplay(maxWordLen = 50)}<br />Members</h2>
+            <div class="pad" xmlns="http://www.w3.org/1999/xhtml">
+                <h2>${project.getNameForDisplay(maxWordLen = 50)}<br/>Members</h2>
                 <?python
                 users = {
-                          userlevels.OWNER: [], 
+                          userlevels.OWNER: [],
                           userlevels.DEVELOPER: [],
                           userlevels.USER: [],
                         }
@@ -115,7 +115,7 @@ from mint import userlevels
                             <td>
                                 <a href="viewJoinRequest?userId=${userId}"
                                    class="option" style="position:relative;"
-                                   id="Edit${userId}">View Request</a>	
+                                   id="Edit${userId}">View Request</a>
                             </td>
                         </tr>
                     </table>
@@ -144,6 +144,6 @@ from mint import userlevels
             <div class="pad">
                 ${groupTroveBuilder()}
             </div>
-        </td> 
+        </td>
     </body>
 </html>
