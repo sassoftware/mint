@@ -307,17 +307,18 @@ class ReleaseTest(MintRepositoryHelper):
             self.fail('getReleasesForProject has the wrong order')
 
     def makeIsoGenCfg(self):
+        mintDir = os.environ['MINT_PATH']
         cfg = installable_iso.IsoConfig()
         cfg.configPath = self.tmpDir
         os.mkdir("%s/changesets" % self.tmpDir)
         cfgFile = open(cfg.configPath + "/installable_iso.conf", 'w')
-        cfgFile.write("scriptPath %s/scripts/" % self.mintDir)
+        cfgFile.write("scriptPath %s/scripts/" % mintDir)
         cfgFile.write("cachePath %s/changesets/" % self.tmpDir)
         #cfgFile.write("templatePath %s/templates/" %self.tmpDir)
         cfgFile.write("anacondaImagesPath /dev/null")
 
         cfg.imagesPath = ""
-        cfg.scriptPath = self.mintDir + "/scripts/"
+        cfg.scriptPath = mintDir + "/scripts/"
         cfg.cachePath = self.tmpDir + "/changesets/"
         cfg.anacondaImagesPath = '/dev/null'
         cfg.SSL = False
