@@ -199,6 +199,9 @@ class MintServer(object):
     _cachedGroups = []
 
     def callWrapper(self, methodName, authToken, args):
+        # reopen the database if it's changed
+        self.db.reopen()
+        
         try:
             if methodName.startswith('_'):
                 raise AttributeError
