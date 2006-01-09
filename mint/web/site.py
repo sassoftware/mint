@@ -466,7 +466,7 @@ class SiteHandler(WebHandler):
             #        raise HttpPartialContent
                     
             self.req.sendfile(filename)
-            raise HttpOK
+            return '' 
         except OSError, e:
             return self._write("error", shortError = "File error",
                 error = "An error has occurred opening the image file: %s" % e)
