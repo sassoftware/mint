@@ -13,10 +13,9 @@
         <td id="main" class="spanall">
             <div class="pad">
                 <p class="error">Error:</p>
-                
                 <p class="errormessage">${error}</p>
                 <p>
-                    Please go back and try again or contact 
+                    Please go back and try again or contact
                     ${XML(cfg.supportContactHTML)}
                     for assistance.
                 </p>
