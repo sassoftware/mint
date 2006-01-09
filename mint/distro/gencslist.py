@@ -335,11 +335,6 @@ def extractChangeSets(client, cfg, csdir, groupName, groupVer, groupFlavor,
             os.rename(fn, path)
             os.chmod(path, 0644)
 
-            # link this into the cache dir if we need to
-            if cacheDir:
-                # cachedPath is calculated above
-                _linkOrCopyFile(path, cachedPath)
-
         cslist.append(entry)
 
     return cslist, group
@@ -351,7 +346,7 @@ class LocalRepository(netserver.NetworkRepositoryServer):
     and provides a modified getChangeSet() method that works over local
     storage
     """
-    def getChangeSet(self, authToken, clientVersin, chgSetList, recurse,
+    def getChangeSet(self, authToken, clientVersion, chgSetList, recurse,
                      withFiles, withFileContents, excludeAutoSource):
         paths = []
         csList = []
@@ -374,7 +369,8 @@ class LocalRepository(netserver.NetworkRepositoryServer):
                                 excludeAutoSource = excludeAutoSource)
 
         (cs, trovesNeeded, filesNeeded) = ret
-        tmpFile = tempfile.mktemp(suffix = '.ccs')
+        fd, tmpFile = tempfile.mkstemp(suffix = '.ccs')
+        os.close(fd)
         cs.writeToFile(tmpFile)
         size = os.stat(tmpFile).st_size
         return (tmpFile, [size], [], [])
