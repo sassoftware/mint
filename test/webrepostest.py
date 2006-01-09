@@ -62,15 +62,9 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
         extProject.editLabel(labelId, "external.rpath.local@rpl:devel",
             'http://localhost:%d/conary/' % self.getPort(), 'anonymous', 'anonymous')
 
-        # XXX remove this hack later
-        oldbuildLabel = self.cfg.buildLabel
-        self.cfg.buildLabel = versions.Label("localhost@rpl:linux")
-        self.makeSourceTrove("testcase", testRecipe)
-        self.cfg.buildLabel = oldBuildLabel
+        self.makeSourceTrove("testcase", testRecipe, label = versions.Label('localhost@rpl:linux'))
 
         page = self.assertCode('/repos/test/browse', code = 200)
-        import epdb
-        epdb.st()
                                             
                                             
 if __name__ == "__main__":
