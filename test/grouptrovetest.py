@@ -669,6 +669,7 @@ class GroupTroveTest(MintRepositoryHelper):
         trvName, trvVersion, trvFlavor = cookJob.write()
 
         # give some time for the commit action to run
+
         self.waitForCommit(project, [('group-test:source', '1.0.0-1'),
                                      ('testcase:source', '1.0-1')])
 

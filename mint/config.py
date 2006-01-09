@@ -74,6 +74,9 @@ class MintConfig(ConfigFile):
     profiling               = (CfgBool, False)
     configured              = (CfgBool, True)
 
+    reposDBDriver           = 'sqlite'
+    reposDBPath             = '/srv/mint/repos/%s/sqldb'
+
     def read(self, path, exception = False):
         ConfigFile.read(self, path, exception)
 

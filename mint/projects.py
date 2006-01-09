@@ -371,7 +371,8 @@ class ProjectsTable(database.KeyedTable):
         util.mkdirChain(tmpPath)
 
         cfg = netserver.ServerConfig()
-        cfg.repositoryDB = ("sqlite", dbPath + "/sqldb")
+        dbName = ("%s.%s" % (hostname, domainname)).replace(".", "_")
+        cfg.repositoryDB = (self.cfg.reposDBDriver, self.cfg.reposDBPath % dbName)
         cfg.tmpDir = tmpPath
         cfg.serverName = hostname + "." + domainname
         cfg.repositoryMap = {}

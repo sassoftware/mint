@@ -241,12 +241,13 @@ def conaryHandler(req, cfg, pathInfo):
     secure = (req.subprocess_env.get('HTTPS', 'off') == 'on')
 
     repHash = repName + req.hostname
-    if not repositories.has_key(repHash) or 1:
+    if not repositories.has_key(repHash):
         nscfg = netserver.ServerConfig()
         
         repositoryDir = os.path.join(cfg.reposPath, repName)
-        nscfg.repositoryDB = ('sqlite', repositoryDir + '/sqldb')
-        nscfg.cacheDB = ('sqlite', repositoryDir + '/cache.sql')
+        nscfg.repositoryDB = (cfg.reposDBDriver, cfg.reposDBPath % repName.replace(".", "_"))
+        #nscfg.cacheDB = ('sqlite', repositoryDir + '/cache.sql')
+        nscfg.cacheDB = None
         nscfg.contentsDir = repositoryDir + '/contents/'
         
         nscfg.serverName = repName

@@ -4,6 +4,7 @@
 # All Rights Reserved
 #
 import os
+import mysqlharness
 import testsuite
 import rephelp
 import sys
@@ -51,6 +52,30 @@ class MintServerCache(rephelp.ServerCache):
 rephelp._servers = MintServerCache()
 rephelp.SERVER_HOSTNAME = "mint.rpath.local@rpl:devel"
 
+mysql = mysqlharness.MySqlHarness()
+mysql.start()
+
+class MintRepositoryDatabase(rephelp.RepositoryDatabase):
+    def reset(self):
+        db = self.connect()
+        # start a transaction to avoid a race where there is no testdb
+        cu = db.transaction()
+        cu.execute("drop database %s " % self.name)
+        cu.execute("create database %s character set latin1" % self.name)
+        self.createSchema()
+        self.createUsers()
+        db.commit()
+
+    def __init__(self, name = 'testdb'):
+        self.name = name
+        rephelp.RepositoryDatabase.__init__(self, 'mysql',
+                                    'root@localhost.localdomain:%d/%s' % (mysql.port, name))
+
+        db = self.connect()
+        cu = db.transaction()
+        cu.execute("create database %s character set latin1;\n" % name)
+        db.close()
+
 
 class MintRepositoryHelper(rephelp.RepositoryHelper):
     port = 59999
@@ -91,12 +116,19 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
         if sqldriver == 'sqlite':
             cfg.dbPath = self.tmpDir + '/mintdb'
         elif sqldriver == 'mysql':
-            cfg.dbPath = 'testuser:testpass@localhost.localdomain/minttest'
+            cfg.dbPath = 'root@localhost.localdomain:%d/minttest' % mysql.port
         elif sqldriver == 'postgresql':
-            cfg.dbPath = 'testuser:testpass@localhost.localdomain/minttest'
+            cfg.dbPath = 'root@localhost.localdomain:%d/minttest' % mysql.port
         else:
             assert 0, "Invalid database type"
         cfg.dbDriver = sqldriver
+
+        reposdriver = os.environ.get('CONARY_REPOS_DB', 'sqlite')
+        if reposdriver == 'sqlite':
+            cfg.reposDBPath = self.reposDir + "/repos/%s/sqldb"
+        elif reposdriver == 'mysql':
+            cfg.reposDBPath = 'root@localhost.localdomain:%d/%%s' % mysql.port
+        cfg.reposDBDriver = reposdriver
 
         cfg.dataPath = self.reposDir
         cfg.authDbPath = None
@@ -163,6 +195,10 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
         """Create a new mint project and return that project ID."""
         # save the current openpgpkey cache
         keyCache = openpgpkey.getKeyCache()
+
+        dbName = ("%s.%s" % (hostname, domainname)).replace(".", "_")
+        repos = MintRepositoryDatabase(name = dbName)
+
         projectId = client.newProject(name, hostname, domainname)
 
         # set a default signature key
@@ -183,6 +219,8 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
 
         # re-open the repos to make changes to repositoryMap have any effect
         self.openRepository()
+        
+                                                                                
 
         return projectId
     
@@ -198,9 +236,12 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
         rephelp.RepositoryHelper.setUp(self)
 
         if self.mintCfg.dbDriver == "mysql":
-            db = dbstore.connect(self.mintCfg.dbPath, driver=self.mintCfg.dbDriver)
+            db = dbstore.connect("root@localhost.localdomain:%d/mysql" % mysql.port, driver=self.mintCfg.dbDriver)
             cu = db.cursor()
-            cu.execute("DROP DATABASE minttest")
+            try:
+                cu.execute("DROP DATABASE minttest")
+            except:
+                pass
             cu.execute("CREATE DATABASE minttest")
             db.commit()
             db.close() 

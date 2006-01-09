@@ -902,6 +902,7 @@ class MintServer(object):
             self.db.commit()
 
     @typeCheck(str)
+    @private
     def getConfirmation(self, username):
         # this function exists solely for server testing scripts and should
         # not be used for any other purpose. Never enable in production mode.
@@ -1921,7 +1922,7 @@ class MintServer(object):
 
         from conary import dbstore
         global dbConnection
-        if cfg.dbDriver in ["mysql", "postgresql"] and dbConnection:
+        if cfg.dbDriver in ["mysql", "postgresql"] and dbConnection and (not alwaysReload):
             self.db = dbConnection
         else:
             self.db = dbstore.connect(cfg.dbPath, driver=cfg.dbDriver)
