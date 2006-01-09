@@ -89,29 +89,28 @@ def generateJs(archMap):
                 <p>Please provide notes for this release:</p>
                 <textarea style="background-color: #eee; width: 80%; margin-left: 10px;"
                           rows="6" name="desc">${release.getDesc()}</textarea>
-                
-                <h2>Settings</h2>
-                <table cellpadding="6" id="releaseData">
-                    <?python
-                        template = release.getDataTemplate()
-                        dataDict = release.getDataDict()
-                        
-                    ?>
-                    <tr py:for="name, dataRow in sorted(template.items(), key = lambda x: x[1][0])">
-                        <td py:if="(dataRow[0] == RDT_BOOL) and dataDict[name]" colspan="2">
-                            <input type="checkbox" name="${name}" value="1" checked="checked"/> ${dataRow[2]}
-                        </td>
-                        <td py:if="(dataRow[0] == RDT_BOOL) and not dataDict[name]" colspan="2">
-                            <input type="checkbox" name="${name}" value="1"/> ${dataRow[2]}
-                        </td>
-                        <td py:if="(dataRow[0] == RDT_INT) or (dataRow[0] == RDT_STRING)" style="width: 40%;">
-                            ${dataRow[2]}
-                        </td>
-                        <td py:if="(dataRow[0] == RDT_INT) or (dataRow[0] == RDT_STRING)">
-                            <input class="text" type="text" name="${name}" value="${dataDict[name]}"/>
-                        </td>
-                    </tr>
-                </table>
+
+                      <h2 onclick="javascript:toggle_display('advanced_settings');" style="cursor: pointer;">Advanced Settings&nbsp; <img id="advanced_settings_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" /></h2>
+                <?python
+                    templates = release.getDisplayTemplates()
+                    dataDict = release.getDataDict()
+                ?>
+                <div id="advanced_settings" style="display: none;">
+                    <div py:for="heading, template in templates">
+                        <h3>${heading}</h3>
+                        <table cellpadding="6" id="releaseData">
+                            <tr py:for="name, dataRow in sorted(template.items(), key = lambda x: x[1][0])">
+                                <td py:if="(dataRow[0] == RDT_BOOL)" colspan="2">
+                                    <input py:attr="{'checked': 'checked' and dataDict[name] or None}" type="checkbox" name="${name}" value="1" /> ${dataRow[2]}
+                                </td>
+                                <div py:if="(dataRow[0] == RDT_INT) or (dataRow[0] == RDT_STRING)">
+                                    <td style="width: 40%;">${dataRow[2]}</td>
+                                    <td><input class="text" type="text" name="${name}" value="${dataDict[name]}"/></td>
+                                </div>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
 
                 <p><input type="submit" value="Save" /></p>
                 <input type="hidden" name="releaseId" value="${release.getId()}"/>
