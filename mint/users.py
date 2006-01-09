@@ -66,7 +66,7 @@ class AuthRepoError(MintError):
 
 class ConfirmationsTable(database.KeyedTable):
     name = 'Confirmations'
-    key = 'userid'
+    key = 'userId'
     createSQL = """
                 CREATE TABLE Confirmations (
                     userId          %(PRIMARYKEY)s,
@@ -608,7 +608,7 @@ class Authorization(object):
             d[slot] = self.__getattribute__(slot)
         return d
 
-class UserGroupsTable(database.KeyedTable):
+class UserGroupsTable(database.DatabaseTable):
     name = "UserGroups"
     key = "userGroupId"
 
@@ -649,7 +649,6 @@ class UserGroupsTable(database.KeyedTable):
 
 class UserGroupMembersTable(database.KeyedTable):
     name = "UserGroupMembers"
-    key = "userGroupMemberId"
 
     createSQL = """CREATE TABLE UserGroupMembers (
                         userGroupId     INTEGER,

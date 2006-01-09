@@ -7,6 +7,7 @@ import database
 import time
 
 class VersionTable(database.KeyedTable):
+    key = "version"
     name = "DatabaseVersion"
     createSQL = """
                 CREATE TABLE DatabaseVersion (
