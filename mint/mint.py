@@ -148,6 +148,9 @@ class MintClient:
         """
         return self.server.registerNewUser(username, password, fullName, email, displayEmail, blurb, active)
 
+    def getConfirmation(self, username):
+        return self.server.getConfirmation(username)
+
     def confirmUser(self, confirmId):
         """
         Check a provided confirmation code against the database of pending new users.
