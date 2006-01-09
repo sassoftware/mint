@@ -308,7 +308,9 @@ class ProjectHandler(WebHandler):
 
                 ilp = "%s conary.rpath.com@rpl:devel contrib.rpath.org@rpl:devel" % self.project.getLabel()
                 release.setImageTypes(imageTypes)
-                release.setDataValue("installLabelPath", ilp)
+                template = release.getDataTemplate()
+                if 'installLabelPath' in template.keys():
+                    release.setDataValue("installLabelPath", ilp)
                 trove, label = trove.split("=")
                 label = versions.Label(label)
                 version = None
@@ -320,9 +322,11 @@ class ProjectHandler(WebHandler):
                 return self._write("newRelease", errors = errors, kwargs = kwargs)
         else:
             release = self.client.getRelease(releaseId)
-            if not release.getDataValue("installLabelPath"):
-                ilp = "%s conary.rpath.com@rpl:devel contrib.rpath.org@rpl:devel" % self.project.getLabel()
-                release.setDataValue("installLabelPath", ilp)
+            template = release.getDataTemplate()
+            if 'installLabelPath' in template.keys():
+                if not release.getDataValue("installLabelPath"):
+                    ilp = "%s conary.rpath.com@rpl:devel contrib.rpath.org@rpl:devel" % self.project.getLabel()
+                    release.setDataValue("installLabelPath", ilp)
                 
             trove, versionStr, flavor = release.getTrove()
             version = versions.ThawVersion(versionStr)
