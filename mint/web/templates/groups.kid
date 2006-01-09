@@ -71,10 +71,8 @@
                     <li py:for="gt in groupTrovesInProject">
                         <a href="${basePath}editGroup?id=${gt[0]}">${gt[1]} <span py:if="groupTrove and groupTrove.id == gt[0]">(currently selected)</span></a>
                     </li>
-                    <li>
-                        <a href="${basePath}newGroup"><b>Create a new group.</b></a>
-                    </li>
                 </ul>
+                <a href="${basePath}newGroup"><b>Create a new group</b></a>
             </div>
         </td>
         <td id="right" class="projects">
