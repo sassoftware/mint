@@ -163,8 +163,8 @@ class MintTest(mint_rephelp.WebRepositoryHelper):
         client, userId = self.quickMintUser('foouser','foopass')
         projectId = client.newProject('Foo', 'foo', 'rpath.local')
 
+        self.webLogin('foouser', 'foopass')
         page = self.fetch('/project/foo/members/', ok_codes = [200])
-
         page = page.postForm(1, self.post, {'username' : 'testuser',
                                             'level' : 0})
 
