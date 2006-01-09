@@ -19,6 +19,7 @@ import projects
 import releases
 import users
 import grouptrove
+import base64
 from mint_error import MintError, UnknownException, PermissionDenied, ReleasePublished, ReleaseMissing
 from searcher import SearchTermsError
 
@@ -382,7 +383,7 @@ class MintClient:
         return self.server.listAvailableReports()
 
     def getReportPdf(self, name):
-        return self.server.getReportPdf(name)
+        return base64.b64decode(self.server.getReportPdf(name))
 
 class ServerProxy(xmlrpclib.ServerProxy):
     def __getattr__(self, name):

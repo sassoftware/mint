@@ -11,6 +11,7 @@ import sys
 import time
 from urlparse import urlparse
 
+import base64
 import data
 import database
 import dbversion
@@ -1909,7 +1910,7 @@ class MintServer(object):
     def getReportPdf(self, name):
         if name not in reports.getAvailableReports():
             raise PermissionDenied
-        return self._getReportObject(name).getPdf()
+        return base64.b64encode(self._getReportObject(name).getPdf())
 
     def __init__(self, cfg, allowPrivate = False, alwaysReload = False):
         self.cfg = cfg
