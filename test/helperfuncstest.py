@@ -64,8 +64,9 @@ class ProjectTest(unittest.TestCase):
 
     def testMakefiles(self):
         missing = False
-        skipDirs = ('test/archive/arch', 'test/archive/use',
-                    'mint/web/content', '.hg', 'scripts/DiskImageData')
+        skipDirs = ('test/archive/arch', 'test/archive/use', '.hg',
+                    'mint/web/content', 'scripts/DiskImageData',
+                    'scripts/servertest')
         for dirPath, dirNames, fileNames in \
                 os.walk(os.getenv('MINT_PATH')):
             if "Makefile" not in fileNames:

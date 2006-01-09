@@ -8,6 +8,7 @@ SUBDIRS = web distro reports templates
 
 python_files =			\
 	__init__.py		\
+        accesscontrol.py        \
 	checkhtml.py		\
 	config.py		\
 	constants.py		\
