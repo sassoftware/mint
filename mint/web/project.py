@@ -554,7 +554,7 @@ class ProjectHandler(WebHandler):
 
     @requiresAuth
     def adopt(self, auth):
-        self.project.adopt(auth, self.cfg.MailListBaseURL, self.cfg.MailListPass)
+        self.project.adopt(auth, self.cfg.EnableMailLists, self.cfg.MailListBaseURL, self.cfg.MailListPass)
         self._redirect(self.basePath + "members")
 
     @strFields(username = None)
@@ -675,7 +675,7 @@ class ProjectHandler(WebHandler):
     def delMember(self, auth, id):
         self.project.delMemberById(id)
         if self.project.getMembers() == []:
-            self.project.orphan(self.cfg.MailListBaseURL, self.cfg.MailListPass)
+            self.project.orphan(self.cfg.EnableMailLists, self.cfg.MailListBaseURL, self.cfg.MailListPass)
         self._redirect(self.basePath + "members")
 
     @requiresAuth
