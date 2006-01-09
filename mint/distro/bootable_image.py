@@ -200,6 +200,7 @@ title %(name)s (%(kversion)s)
             #TODO Add the user if anonymous access is not available
 
         self.conarycfg.installLabelPath = None
+        self.conarycfg.dbPath = '/var/lib/conarydb/'
 
         self.cclient = conaryclient.ConaryClient(self.conarycfg)
 
