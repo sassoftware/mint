@@ -11,7 +11,7 @@
 #
 RBO_SERVER = 'mint.rpath.local'
 RBO_PORT = 80
-CLIENT_THREADS = 100
+CLIENT_THREADS = 10
 ######
 
 import os, sys
@@ -298,7 +298,7 @@ stateActions = {
                             WebStateMachine.initial,
                             WebStateMachine.member,
                             WebStateMachine.uploadKey,
-                            WebStateMachine.orphan)
+                            WebStateMachine.orphan),
     }
 
 
@@ -312,7 +312,7 @@ class HammerThread(threading.Thread):
         t.setUp()
 
         while t.clock():
-            time.sleep(random.uniform(5, 15))
+            time.sleep(random.uniform(.1, 1))
 
         t.tearDown()
 

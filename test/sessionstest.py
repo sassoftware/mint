@@ -18,7 +18,8 @@ class SessionTest(MintRepositoryHelper):
         client, userId = self.quickMintUser('testuser', 'testpass')
         sid = "dae86825ca6c4681c68e173a18417f91"
 
-        sessionData = {'_data':      500*sid,
+        sessionData = {'_created':   0,
+                       '_data':      500*sid,
                        '_accessed':  time.time() - 20,
                        '_timeout':   10}
         client.saveSession(sid, sessionData)
@@ -33,17 +34,15 @@ class SessionTest(MintRepositoryHelper):
         client.cleanupSessions()
 
         d = client.loadSession(sid)
-        assert not d
+        self.failIf(d, "Stale session data not deleted")
 
         client.saveSession(sid, sessionData)
         client.deleteSession(sid)
 
         d = client.loadSession(sid)
-        assert not d
+        self.failIf(d, "Session data not explicitly deleted")
 
-        # now emulate a thread race condition... this is different than a
-        # deleteSession call because the session table's internal index
-        # caching is guaranteed to be out of sync
+        # now emulate a thread race condition...
         client.saveSession(sid, sessionData)
         client.loadSession(sid)
         cu = self.db.cursor()
@@ -51,7 +50,7 @@ class SessionTest(MintRepositoryHelper):
         self.db.commit()
 
         d = client.loadSession(sid)
-        assert not d
+        self.failIf(d, "Session data improperly survived race condition")
 
 if __name__ == "__main__":
     testsuite.main()
