@@ -36,7 +36,6 @@ class MintApacheServer(rephelp.ApacheServer):
 
     def getMap(self):
         return { self.name: 'http://localhost:%d/conary/' %self.port }
-                    
 
 
 class MintServerCache(rephelp.ServerCache):
@@ -49,9 +48,9 @@ class MintServerCache(rephelp.ServerCache):
         return server, serverClass, serverDir
 
 
-
 rephelp._servers = MintServerCache()
 rephelp.SERVER_HOSTNAME = "mint.rpath.local@rpl:devel"
+
 
 class MintRepositoryHelper(rephelp.RepositoryHelper):
     port = 59999
@@ -191,23 +190,12 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
         rephelp.RepositoryHelper.tearDown(self)
         try:
             util.rmtree(self.reposDir + "/repos/")
+            os.unlink(self.tmpDir + "/mintdb")
         except:
             pass
 
-        try:
-            if self.mintCfg.dbDriver == "sqlite":
-                os.unlink(self.tmpDir + "/mintdb")
-        except:
-            import traceback
-            traceback.print_exc()
-    
     def setUp(self):
         rephelp.RepositoryHelper.setUp(self)
-        #self.openRepository()
-        
-
-        #self.mintCfg = self.servers.getServer().mintCfg
-        #self.mintCfg.postCfg()
 
         if self.mintCfg.dbDriver == "mysql":
             db = dbstore.connect(self.mintCfg.dbPath, driver=self.mintCfg.dbDriver)
@@ -220,7 +208,7 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
             os.system("dropdb -U testuser minttest; createdb -U testuser minttest") 
         elif self.mintCfg.dbDriver == "sqlite":
             try:
-                os.unlink(self.servers.getServer().serverRoot + "/mintdb")
+                os.unlink(self.tmpDir + "/mintdb")
             except:
                 pass
 
@@ -231,6 +219,7 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
         self.mintServer = mint_server.MintServer(self.mintCfg,
                                                  alwaysReload = True)
         self.db = self.mintServer.db
+        self.db.connect()
 
 
 class WebRepositoryHelper(MintRepositoryHelper, webunittest.WebTestCase):
@@ -250,8 +239,8 @@ class WebRepositoryHelper(MintRepositoryHelper, webunittest.WebTestCase):
 
     def setUp(self):
         webunittest.WebTestCase.setUp(self)
-        self.openRepository()
         MintRepositoryHelper.setUp(self)
+        self.openRepository()
         self.setAcceptCookies(True)
         self.server, self.port = self.getServerData()
         self.URL = self.getMintUrl()
