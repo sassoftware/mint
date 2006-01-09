@@ -20,11 +20,11 @@ class ReportTest(MintRepositoryHelper):
 
     def testReportPdf(self):
         client, userId = self.quickMintAdmin('adminuser', 'adminpass')
-        reportPdf = client.server.getReportPdf('new_users')
+        reportPdf = client.getReportPdf('new_users')
         if not reportPdf.startswith('%PDF-'):
             self.fail('resulting data format was not a PDF.')
         time.sleep(1)
-        newReportPdf = client.server.getReportPdf('new_users')
+        newReportPdf = client.getReportPdf('new_users')
         if reportPdf == newReportPdf:
             self.fail("Reports were not timestamped")
 
