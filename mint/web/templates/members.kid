@@ -81,11 +81,10 @@ from mint import userlevels
                     <tr py:for="userId, username in sorted(users[userlevels.OWNER], key=lambda x: x[1])">
                         <th><a py:strip="not auth.authorized" href="http://${SITE}userInfo?id=${userId}">${username}</a></th>
                         <td py:if="isOwner and not onlyOwner">
-                            <a href="demoteMember?userId=${userId}" class="option">Demote</a>
+                            <a href="demoteMember?userId=${userId}" class="option">Demote to Developer</a>
                         </td>
                         <td py:if="isOwner and not lastOwner">
-                            <a href="delMember?id=${userId}" class="option">Delete</a>
-                        </td>
+                            <a href="delMember?id=${userId}" class="option">Remove From Project</a> </td>
                     </tr>
                     <tr><td py:if="not users[userlevels.OWNER]">No owners.</td></tr>
                 </table>
@@ -101,9 +100,9 @@ from mint import userlevels
                     <tr py:for="userId, username in sorted(users[userlevels.DEVELOPER], key=lambda x: x[1])">
                         <th><a py:strip="not auth.authorized" href="http://${SITE}userInfo?id=${userId}">${username}</a></th>
                         <td py:if="isOwner">
-                            <a href="promoteMember?userId=${userId}" class="option">Promote</a>
+                            <a href="promoteMember?userId=${userId}" class="option">Promote to Owner</a>
                         </td>
-                        <td py:if="isOwner"><a href="delMember?id=${userId}" class="option">Delete</a></td>
+                        <td py:if="isOwner"><a href="delMember?id=${userId}" class="option">Remove From Project</a></td>
                     </tr>
                     <tr><td py:if="not users[userlevels.DEVELOPER]">No developers.</td></tr>
                 </table>
@@ -126,7 +125,7 @@ from mint import userlevels
                     <tr py:for="userId, username in sorted(users[userlevels.USER], key=lambda x: x[1])">
                         <th><a py:strip="not auth.authorized" href="${cfg.basePath}userInfo?id=${userId}">${username}</a></th>
                         <td py:if="isOwner">
-                            <a href="promoteMember?userId=${userId}" class="option">Promote</a>
+                            <a href="promoteMember?userId=${userId}" class="option">Promote to Developer</a>
                         </td>
                     </tr>
                     <tr><td py:if="not users[userlevels.USER]">No users are watching this project</td></tr>
