@@ -4,15 +4,16 @@
 # All Rights Reserved
 #
 
-script_dist = \
-	job-server	\
-	mklivecd	\
-	reset		\
-	update-package-index	\
-	buildinstall	\
-	splitdistro	\
-	buildtemplates	\
-	MakeDiskImage.py
+script_dist =			\
+	buildinstall		\
+	buildtemplates		\
+	cvtmysql.py		\
+	job-server		\
+	MakeDiskImage.py	\
+	mklivecd		\
+	reset			\
+	splitdistro		\
+	update-package-index
 
 extra_dist = \
 	Makefile		\
