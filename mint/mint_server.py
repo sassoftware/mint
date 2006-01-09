@@ -898,6 +898,23 @@ class MintServer(object):
             self.db.commit()
 
     @typeCheck(str)
+    def getConfirmation(self, username):
+        # this function exists solely for server testing scripts and should
+        # not be used for any other purpose. Never enable in production mode.
+        if not self.cfg.debugMode:
+            raise PermissionDenied
+        cu = self.db.cursor()
+        cu.execute("SELECT userId FROM Users WHERE username=?", username)
+        r = cu.fetchall()
+        if not r:
+            raise database.ItemNotFound
+        cu.execute("SELECT confirmation FROM Confirmations WHERE userId=?",
+                   r[0][0])
+        if not r:
+            raise database.ItemNotFound
+        return cu.fetchall()[0][0]
+
+    @typeCheck(str)
     @private
     def confirmUser(self, confirmation):
         userId = self.users.confirm(confirmation)
