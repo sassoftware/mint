@@ -56,8 +56,11 @@ mysql = mysqlharness.MySqlHarness()
 mysql.start()
 
 class MintRepositoryDatabase(rephelp.RepositoryDatabase):
+    def getDb(self):
+        return dbstore.connect('root@localhost.localdomain:%d/mysql' % mysql.port, 'mysql')
+
     def reset(self):
-        db = self.connect()
+        db = self.getDb()
         # start a transaction to avoid a race where there is no testdb
         cu = db.transaction()
         cu.execute("drop database %s " % self.name)
@@ -71,7 +74,7 @@ class MintRepositoryDatabase(rephelp.RepositoryDatabase):
         rephelp.RepositoryDatabase.__init__(self, 'mysql',
                                     'root@localhost.localdomain:%d/%s' % (mysql.port, name))
 
-        db = self.connect()
+        db = self.getDb()
         cu = db.transaction()
         cu.execute("create database %s character set latin1;\n" % name)
         db.close()
