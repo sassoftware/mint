@@ -28,6 +28,8 @@ import userlevels
 import searcher
 import userlisting
 import templates
+import templates.registerNewUser
+import templates.validateNewEmail
 from conary import sqlite3
 
 class MailError(MintError):
@@ -229,7 +231,6 @@ class UsersTable(database.KeyedTable):
         user = self.get(userId)
         confirm = confirmString()
 
-        import templates.validateNewEmail
         message = templates.write(templates.validateNewEmail, username = user['username'],
             cfg = self.cfg, confirm = confirm)
 
@@ -260,7 +261,7 @@ class UsersTable(database.KeyedTable):
                    username)
         if cu.fetchone()[0]:
             raise GroupAlreadyExists
-            
+
         cu.execute("SELECT COUNT(*) FROM Users WHERE UPPER(username)=UPPER(?)",
                    username)
         if cu.fetchone()[0]:
@@ -269,7 +270,6 @@ class UsersTable(database.KeyedTable):
         salt, passwd = self._mungePassword(password)
 
         if self.cfg.sendNotificationEmails and not active:
-            import templates.registerNewUser
             message = templates.write(templates.registerNewUser,
                 username = username, cfg = self.cfg, confirm = confirm)
             sendMailWithChecks(self.cfg.adminMail, self.cfg.productName,
@@ -770,7 +770,7 @@ def validateEmailDomain(toEmail):
 
 def sendMail(fromEmail, fromEmailName, toEmail, subject, body):
     """
-    @param fromEmail: email address for the From: header 
+    @param fromEmail: email address for the From: header
     @type fromEmail: str
     @param fromEmailName: name for the From: header
     @type fromEmailName: str
@@ -781,7 +781,7 @@ def sendMail(fromEmail, fromEmailName, toEmail, subject, body):
     @param body: Email body text
     @type body: str
     """
-    
+
     msg = MIMEText.MIMEText(body)
     msg['Subject'] = subject
     msg['From'] = '"%s" <%s>' % (fromEmailName, fromEmail)
