@@ -11,7 +11,7 @@ sys.setdefaultencoding("utf-8")
 sys.excepthook = util.genExcepthook()
 
 srcDb = dbstore.connect("/srv/mint/data/db", "sqlite")
-destDb = dbstore.connect("mintauth:mintpass@localhost.localdomain/mint", "mysql")
+destDb = dbstore.connect("mintdb:mintdbpass@localhost.localdomain/mint", "mysql")
 
 cfg = MintConfig()
 cfg.read('/srv/mint/mint.conf')
@@ -41,15 +41,20 @@ def cvt(Table, srcDb, destDb, cfg):
     src = srcDb.cursor()
     dest = destDb.cursor()
 
-    fields = ", ".join(srcTable.fields)
+    if 'key' in srcTable.__dict__ and srcTable.key:
+        tableFields = list(set(srcTable.fields) | set([srcTable.key]))
+    else:
+        tableFields = srcTable.fields
+    
+    fields = ", ".join(tableFields)
     cu = src.execute("SELECT %s FROM %s" % (fields, srcTable.name))
     dest.execute("DELETE FROM %s" % destTable.name)
 
-    checkFields(cu.fields(), srcTable.fields, srcTable.name)
+    checkFields(cu.fields(), tableFields, srcTable.name)
 
     for x in src.fetchall():
         values = []
-        for key, val in zip(srcTable.fields, x):
+        for key, val in zip(tableFields, x):
             values.append(val)
 
         subs = ", ".join(['?'] * len(values))
