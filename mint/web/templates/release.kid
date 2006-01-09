@@ -68,7 +68,7 @@ from mint.mint import upstream
                     <li py:if="not files">Release has no files.</li>
                 </ul>
 
-                <div>    
+                <div py:if="files">    
                     <h4>What are These Files?</h4>
 
                     <p>The file(s) entitled <tt>Disc <em>N</em></tt>
@@ -101,14 +101,14 @@ from mint.mint import upstream
                         system's BIOS must support booting from USB to use
                         this file with any USB device.</li>
                     </ul>
+                </div>
 
-                    <h3>Description</h3>
-                    <p>${release.getDesc() or "Release has no description."}</p>
-                </div>                    
+                <h3>Description</h3>
+                <p>${release.getDesc() or "Release has no description."}</p>
 
-                <div py:strip="True" py:if="isOwner">
+                <div py:strip="True" py:if="isOwner and not release.getPublished()">
 
-                    <h3>Image Generation Status:</h3>
+                    <h3>Image Generation Status</h3>
                     <p id="jobStatus">Retrieving job status...</p>
 
                     <h3>Options</h3>
