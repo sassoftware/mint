@@ -79,6 +79,7 @@ class JobRunner(threading.Thread):
                     generator = generators[releasetypes.INSTALLABLE_ISO]
                     log.info("%s job for %s started (id %d)" % (generator.__name__, project.getHostname(), jobId))
                     imageFilenames.extend(generator(self.client, self.cfg, self.job, releaseId).write())
+                    os.chdir(cwd)
                 #Now for the bootable images
                 imagegen = BootableImage(self.client, self.cfg, self.job, releaseId)
                 imagegen.setImageTypes(imageTypes)
