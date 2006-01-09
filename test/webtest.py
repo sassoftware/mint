@@ -399,6 +399,25 @@ class MintTest(mint_rephelp.WebRepositoryHelper):
         page = self.assertContent('/unknownError', ok_codes = [200],
             content = 'An unknown error occured')
 
+    def testDownloadISO(self):
+        filename = self.tmpDir + "/test.iso"
+        data = "Hello World"
+        f = file(filename, "w")
+        f.write(data)
+        f.close()
+   
+        client, userId = self.quickMintUser("testuser", "testpass")
+        projectId = client.newProject("Foo", "foo", "rpath.org")
+        release = client.newRelease(projectId, "Test Release")
+        release.setPublished(True)
+   
+        cu = self.db.cursor()
+        cu.execute("INSERT INTO ImageFiles VALUES (1, ?, 0, ?, 'Test Image')", release.id, filename)
+        self.db.commit()
+
+        page = self.fetch('/downloadImage/1/test.iso')
+        assert(page.body == data)
+        
 
 if __name__ == "__main__":
     testsuite.main()
