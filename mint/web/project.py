@@ -120,7 +120,7 @@ class ProjectHandler(WebHandler):
         # into a config file somewhere, or something.
         cfg = conarycfg.ConaryConfiguration()
         cfg.dbPath = cfg.root = ":memory:"
-        cfg.repositoryMap = {'conary.rpath.com': 'http://conary-commits.rpath.com/conary/'}
+        #cfg.repositoryMap = {'conary.rpath.com': 'http://conary-commits.rpath.com/conary/'}
         label = versions.Label('conary.rpath.com@rpl:1')
         repos = conaryclient.ConaryClient(cfg).getRepos()
         troves = repos.getTroveLeavesByLabel({'group-dist': {label: None}})
