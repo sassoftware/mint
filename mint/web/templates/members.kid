@@ -34,7 +34,7 @@ from mint import userlevels
                         Add New Member
                     </h3>
                     <div id="addmember_items" style="display: block">
-                      <form method="post" action="addMember">
+                      <form method="post" action="${basePath}addMember">
                         <p>
                             <label>Username:</label><br/>
                             <input type="text" name="username" value="" />
