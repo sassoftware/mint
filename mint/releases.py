@@ -54,9 +54,9 @@ stubImageTemplate = {
 }
 
 dataHeadings = {
-    releasetypes.INSTALLABLE_ISO  : 'Advanced Installable ISO Settings',
-    releasetypes.QEMU_IMAGE       : 'Advanced Bootable Image Settings',
-    releasetypes.STUB_IMAGE       : 'Stub Image Advanced Settings',
+    releasetypes.INSTALLABLE_ISO  : 'Installable ISO Settings',
+    releasetypes.QEMU_IMAGE       : 'Bootable Image Settings',
+    releasetypes.STUB_IMAGE       : 'Stub Image Settings',
 }
 
 
