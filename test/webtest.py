@@ -184,7 +184,6 @@ class MintTest(mint_rephelp.WebRepositoryHelper):
         page = self.fetch('/project/foo/mailingLists',
                                   ok_codes = [200])
 
-    # FIXME: test can't be run until mint shims pages in the /repos stack.
     def testPgpAdminPage(self):
         client, userId = self.quickMintUser('foouser','foopass')
         projectId = client.newProject('Foo', 'foo', 'rpath.local')
@@ -193,7 +192,6 @@ class MintTest(mint_rephelp.WebRepositoryHelper):
         page = page.fetch('/repos/foo/pgpAdminForm',
                                   ok_codes = [200])
 
-    # FIXME: test can't be run until mint shims pages in the /repos stack.
     def testRepoBrowserPage(self):
         client, userId = self.quickMintUser('foouser','foopass')
         projectId = client.newProject('Foo', 'foo', 'rpath.local')
@@ -325,41 +323,41 @@ class MintTest(mint_rephelp.WebRepositoryHelper):
 
         projectId = self.newProject(client, 'Foo', 'foo')
         cu = self.db.cursor()
-        cu.execute("INSERT INTO Confirmations VALUES (?, ?, ?)", userId, 0, 40 * "0")
+        cu.execute("INSERT INTO Confirmations VALUES (?, ?, ?)", userId, 0,
+                   40 * "0")
         self.db.commit()
         page = self.webLogin('foouser', 'foopass')
-        if "Email Confirmation Required" not in page.body:
-            self.fail('Unconfirmed user broke out of confirm email jail'
-                      ' on front page.')
+        self.failIf("Email Confirmation Required" not in page.body,
+                    'Unconfirmed user broke out of confirm email jail'
+                    ' on front page.')
         page = self.fetch('/project/foo/', ok_codes = [200])
-        if "Email Confirmation Required" not in page.body:
-            self.fail('Unconfirmed user broke out of confirm email jail'
-                      ' on project home page.')
+        self.failIf("Email Confirmation Required" not in page.body,
+                    'Unconfirmed user broke out of confirm email jail'
+                    ' on project home page.')
         page = self.fetch('/projects', ok_codes = [200])
 
-        if "Email Confirmation Required" not in page.body:
-            self.fail('Unconfirmed user broke out of confirm email jail'
-                      ' on projects page.')
+        self.failIf("Email Confirmation Required" not in page.body,
+                    'Unconfirmed user broke out of confirm email jail on'
+                    ' projects page.')
 
-        # this can't be tested until shim works
-        #page = self.fetch('/repos/stuff/browse', ok_codes = [200])
-        #if "Email Confirmation Required" not in page.body:
-        #    self.fail('Unconfirmed user broke out of confirm email jail'
-        #              ' on repository page.')
+        page = self.fetch('/repos/stuff/browse', ok_codes = [200])
+        self.failIf("Email Confirmation Required" not in page.body,
+                    'Unconfirmed user broke out of confirm email jail on'
+                    ' repository page.')
 
         page = self.fetch('/editUserSettings', postdata = \
                           {'email'    : ''})
-        if "Email Confirmation Required" in page.body:
-            self.fail('Unconfirmed user was unable to change email address.')
+        self.failIf("Email Confirmation Required" in page.body,
+                    'Unconfirmed user was unable to change email address.')
 
         page = self.fetch('/logout', ok_codes = [301])
 
-        if "Email Confirmation Required" in page.body:
-            self.fail('Unconfirmed user was unable to log out.')
+        self.failIf("Email Confirmation Required" in page.body,
+                    'Unconfirmed user was unable to log out.')
 
         page = self.fetch('/confirm?id=%s' % (40*"0"), ok_codes = [200])
-        if "Your account has now been confirmed." not in page.body:
-            self.fail('Unconfirmed user was unable to confirm.')
+        self.failIf("Your account has now been confirmed." not in page.body,
+                    'Unconfirmed user was unable to confirm.')
 
     def testSessionStability(self):
         newSid = '1234567890ABCDEF1234567890ABCDEF'
