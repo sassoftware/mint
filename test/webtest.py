@@ -254,6 +254,34 @@ class MintTest(mint_rephelp.WebRepositoryHelper):
 
         assert(groupTrove.recipeName == 'group-foo')
 
+
+    def testCreateGroup2(self):
+        # this test fails due to a logical error in web unit.
+        # the basic issue is a mixing of hidden and checkbox fields on the page
+        raise testsuite.SkipTestException
+        client, userId = self.quickMintUser('foouser','foopass')
+        projectId = client.newProject('Foo', 'foo', 'rpath.local')
+
+        page = self.webLogin('foouser', 'foopass')
+
+        page = self.fetch('/project/foo/newGroup')
+
+        page.postForm(1, self.post, {'groupName' : 'bar', 'version' : '1.1'})
+
+    def testPickArch(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        projectId = client.newProject('Foo', 'foo', 'rpath.local')
+
+        group = client.createGroupTrove(projectId, 'group-foo', '1.0.0',
+                                        'no desc', False)
+
+        page = self.webLogin('foouser', 'foopass')
+
+        page = self.fetch('/project/foo/pickArch?id=1')
+
+        # this line would trigger a group cook if a job server were running
+        page.postForm(2, self.post, {'arch' : "1#x86", 'id' : '1'})
+
     def testDeletedGroup(self):
         client, userId = self.quickMintUser('foouser','foopass')
         projectId = client.newProject('Foo', 'foo', 'rpath.local')
@@ -404,19 +432,19 @@ class MintTest(mint_rephelp.WebRepositoryHelper):
         f = file(filename, "w")
         f.write(data)
         f.close()
-   
+
         client, userId = self.quickMintUser("testuser", "testpass")
         projectId = client.newProject("Foo", "foo", "rpath.org")
         release = client.newRelease(projectId, "Test Release")
         release.setPublished(True)
-   
+
         cu = self.db.cursor()
         cu.execute("INSERT INTO ImageFiles VALUES (1, ?, 0, ?, 'Test Image')", release.id, filename)
         self.db.commit()
 
         page = self.fetch('/downloadImage/1/test.iso')
         assert(page.body == data)
-        
+
 
 if __name__ == "__main__":
     testsuite.main()
