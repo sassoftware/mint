@@ -12,7 +12,7 @@ function toggle_display(tid) {
     }
 }
 
-// appends a new item to a select element 
+// appends a new item to a select element
 function appendToSelect(select, value, content, className) {
     var o = document.createElement("option");
     o.value = value;
@@ -39,6 +39,7 @@ function getCookieValue (cookie) {
         return false;
 }
 
+
 var STATUS_WAITING = 0;
 var STATUS_RUNNING = 1;
 var STATUS_FINISHED = 2;
@@ -47,6 +48,9 @@ var STATUS_ERROR = 4;
 var STATUS_NOJOB = 5;
 var refreshed = false;
 var oldStatus = -1;
+var tickerRefreshTime        = 200;  /* 1/5 second */
+var cookStatusRefreshTime    = 500;  /* 1/2 second */
+var releaseStatusRefreshTime = 5000; /* 5 seconds */
 var releaseStatusId;
 
 function processGetReleaseStatus(xml) {
@@ -78,13 +82,15 @@ function processGetReleaseStatus(xml) {
         statusText = statusText.firstChild.nodeValue;
     }
     if(status == STATUS_FINISHED)
-        clearTimeout(releaseStatusId);        
+        clearTimeout(releaseStatusId);
 
     replaceChildNodes(el, statusText);
 }
 
+
 var tickerId;
 var statusId;
+
 function processGetCookStatus(xml) {
     el = $("jobStatus");
     var status = getElementsByTagAndClassName("int", null, xml)[0].firstChild.data;
@@ -124,14 +130,16 @@ function processGetTroveList(xml) {
     document.getElementById("submitButton").disabled = false;
 }
 
+
 function getReleaseStatus(releaseId) {
     var req = new XmlRpcRequest("/xmlrpc", "getReleaseStatus");
     req.setAuth(getCookieValue("pysid"));
     req.setHandler(processGetReleaseStatus, {});
     req.send(releaseId);
 
-    releaseStatusId = setTimeout("getReleaseStatus(" + releaseId + ")", 500);
+    releaseStatusId = setTimeout("getReleaseStatus(" + releaseId + ")", releaseStatusRefreshTime);
 }
+
 
 function getCookStatus(jobId) {
     var req = new XmlRpcRequest("/xmlrpc", "getJobStatus");
@@ -139,9 +147,10 @@ function getCookStatus(jobId) {
     req.setHandler(processGetCookStatus, {});
     req.send(jobId);
 
-    statusId = setTimeout("getCookStatus(" + jobId + ")", 500);
-    tickerId = setTimeout("ticker()", 200);
+    statusId = setTimeout("getCookStatus(" + jobId + ")", cookStatusRefreshTime);
+    tickerId = setTimeout("ticker()", tickerRefreshTime);
 }
+
 
 function getTroveList(projectId) {
     var req = new XmlRpcRequest("/xmlrpc", "getGroupTroves");
@@ -149,8 +158,9 @@ function getTroveList(projectId) {
     req.setHandler(processGetTroveList, {});
     req.send(projectId);
 
-    setTimeout("ticker()", 200);
+    setTimeout("ticker()", tickerRefreshTime);
 }
+
 
 var ticks = 0;
 var direction = 1;
@@ -172,6 +182,6 @@ function ticker() {
             if(ticks == 0)
                 direction = 1;
         }
-        setTimeout("ticker()", 200);
+        setTimeout("ticker()", tickerRefreshTime);
     }
 }
