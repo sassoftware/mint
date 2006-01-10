@@ -11,7 +11,7 @@
 #
 RBO_SERVER = 'mint.rpath.local'
 RBO_PORT = 80
-CLIENT_THREADS = 10
+CLIENT_THREADS = 1
 ######
 
 import os, sys
@@ -83,6 +83,7 @@ class WebStateMachine(webunittest.WebTestCase):
         self.userName = None
         self.loggedIn = False
         self.projectName = None
+        self.groupId = None
 
     def _randomString(self):
         return hex(random.randint(0, 2**64))[1:]
@@ -121,8 +122,8 @@ class WebStateMachine(webunittest.WebTestCase):
                                      (stopTime - startTime)))
 
             # give browser a small chance to just quit
-            if not random.randint(0, 1000):
-                return False
+            #if not random.randint(0, 1000):
+            #    return False
 
             return True
 
@@ -134,13 +135,14 @@ class WebStateMachine(webunittest.WebTestCase):
         return STATE_ANON_INITIAL
 
     def register(self):
-        self.userName = self._randomString()
+        self.userName = self._randomString()[:16]
 
         page = self.fetch('/register')
         page.postForm(1, self.post, {'username':  self.userName,
                                      'password':  'foopass',
                                      'password2': 'foopass',
                                      'email':     'foo@localhost',
+                                     'email2':     'foo@localhost',
                                      'tos':       'True',
                                      'privacy':   'True'})
 
@@ -202,6 +204,26 @@ class WebStateMachine(webunittest.WebTestCase):
                                                     userId))
         return STATE_ORPHANED
 
+    def newGroup(self):
+        page = self.fetch('/project/%s/createGroup' % self.projectName.lower(),
+                          postdata = { 'groupName' : self._randomString(),
+                                       'version'   : '1.0.0',
+                                       'initialTrove' : "group-base /conary.rpath.com@rpl:devel//1/0.99.3-0.7-8 1#x86:cmov:i486:i586:i686:~!mmx:~!sse2|5#use:X:~!alternatives:~!bootstrap:~!builddocs:~buildtests:desktop:dietlibc:emacs:gcj:~glibc.tls:gnome:~!grub.static:gtk:ipv6:kde:~!kernel.debug:~!kernel.debugdata:~!kernel.numa:krb:ldap:nptl:~!openssh.smartcard:~!openssh.static_libcrypto:pam:pcre:perl:~!pie:~!postfix.mysql:python:qt:readline:sasl:~!selinux:~sqlite.threadsafe:ssl:tcl:tcpwrappers:tk:~!xorg-x11.xprint"})
+
+        self.groupId = int(page.body.split('id=')[1].split('"')[0])
+
+        return STATE_NEW_GROUP
+
+    def cookGroup(self):
+        page = self.fetch('/project/%s/pickArch?id=%d' % \
+                          (self.projectName.lower(), self.groupId))
+
+        page.postForm(1, self.post, { \
+            'arch' : (random.randint(0, 1) and "1#x86" or "1#x86_64"),
+            'id' : str(self.groupId)})
+
+        return STATE_COOK_GROUP
+
     def uploadKey(self):
         if random.randint(0, 1):
             page = self.fetch('/repos/%s/pgpNewKeyForm' % \
@@ -229,8 +251,10 @@ class WebStateMachine(webunittest.WebTestCase):
  STATE_ORPHANED, \
  STATE_COMMITTED, \
  STATE_LOADED_KEY, \
+ STATE_NEW_GROUP, \
+ STATE_COOK_GROUP, \
  STATE_BROWSE, \
- STATE_SEARCH) = range(13)
+ STATE_SEARCH) = range(15)
 
 
 actionNames = {
@@ -245,6 +269,8 @@ actionNames = {
     STATE_MEMBER:              'added member',
     STATE_ORPHANED:            'orphaned',
     STATE_COMMITTED:           'commited',
+    STATE_NEW_GROUP:           'new group',
+    STATE_COOK_GROUP:          'cooked group',
     STATE_LOADED_KEY:          'uploaded pgp key',
     STATE_LOGGED_OUT:          'logged out'
     }
@@ -278,13 +304,15 @@ stateActions = {
                             WebStateMachine.commit,
                             WebStateMachine.initial,
                             WebStateMachine.member,
-                            WebStateMachine.orphan),
+                            WebStateMachine.orphan,
+                            WebStateMachine.newGroup),
 
     STATE_MEMBER:          (WebStateMachine.initial,
                             WebStateMachine.commit,
                             WebStateMachine.uploadKey,
                             WebStateMachine.initial,
-                            WebStateMachine.orphan),
+                            WebStateMachine.orphan,
+                            WebStateMachine.newGroup),
 
     STATE_ORPHANED:        (WebStateMachine.initial,),
 
@@ -292,13 +320,24 @@ stateActions = {
                             WebStateMachine.initial,
                             WebStateMachine.member,
                             WebStateMachine.uploadKey,
-                            WebStateMachine.orphan),
+                            WebStateMachine.orphan,
+                            WebStateMachine.newGroup),
 
     STATE_COMMITTED:       (WebStateMachine.commit,
                             WebStateMachine.initial,
                             WebStateMachine.member,
                             WebStateMachine.uploadKey,
-                            WebStateMachine.orphan),
+                            WebStateMachine.orphan,
+                            WebStateMachine.newGroup),
+
+    STATE_NEW_GROUP:       (WebStateMachine.cookGroup,),
+
+    STATE_COOK_GROUP:      (WebStateMachine.commit,
+                            WebStateMachine.initial,
+                            WebStateMachine.member,
+                            WebStateMachine.uploadKey,
+                            WebStateMachine.orphan,
+                            WebStateMachine.newGroup),
     }
 
 
@@ -312,7 +351,8 @@ class HammerThread(threading.Thread):
         t.setUp()
 
         while t.clock():
-            time.sleep(random.uniform(.1, 1))
+            pass
+            #time.sleep(random.uniform(.1, 1))
 
         t.tearDown()
 
