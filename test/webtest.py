@@ -54,6 +54,7 @@ class MintTest(mint_rephelp.WebRepositoryHelper):
                                             'password':  'foopass',
                                             'password2': 'foopass',
                                             'email':     'foo@localhost',
+                                            'email2':     'foo@localhost',
                                             'tos':       'True',
                                             'privacy':   'True'})
 
