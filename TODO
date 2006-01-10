@@ -17,3 +17,6 @@ ADMIN INTERFACE
 * Method for deleting a project completely
 * Mailing list handling for disabled projects.
 * Method for going in and changing user settings
+* Redo project users (use the list of projectUsers in the mint database to
+  recreate the credentials in the project repository database
+* Clear out unconfirmed users
