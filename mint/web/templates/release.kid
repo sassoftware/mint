@@ -108,8 +108,8 @@ from mint.mint import upstream
 
                 <div py:strip="True" py:if="isOwner and not release.getPublished()">
 
-                    <h3>Image Generation Status</h3>
-                    <p id="jobStatus">Retrieving job status...</p>
+                    <h3>Release Generation Status</h3>
+                    <p id="jobStatus">Retrieving status...</p>
 
                     <h3>Options</h3>
                     <ul id="editOptions" py:attrs="{'style': editOptionsStyle}">
