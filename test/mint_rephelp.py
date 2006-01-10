@@ -229,7 +229,7 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
         rephelp.RepositoryHelper.tearDown(self)
         try:
             util.rmtree(self.reposDir + "/repos/")
-            os.unlink(self.server.getServer().mintDb.path)
+            os.unlink(self.servers.getServer().reposDir + "/mintdb")
         except:
             pass
 
@@ -250,7 +250,7 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
             os.system("dropdb -U testuser minttest; createdb -U testuser minttest") 
         elif self.mintCfg.dbDriver == "sqlite":
             try:
-                os.unlink(self.server.getServer().mintDb.path)
+                os.unlink(self.servers.getServer().reposDir + "/mintdb")
             except:
                 pass
 
