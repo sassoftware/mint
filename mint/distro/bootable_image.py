@@ -101,13 +101,36 @@ class InstallCallback(UpdateCallback, ChangesetCallback):
     def requestingChangeSet(self):
         self.update('requesting changeset')
 
-    def setUpdateHunk(self, num, total):
-        self.restored = 0
-
     def downloadingChangeSet(self, got, need):
         if need != 0:
-            self.update('downloading from repository (%d%% of %dk)' %
+            self.update('downloading changeset from repository (%d%% of %dk)' %
                         ((got * 100) / need, need / 1024))
+
+    def requestingFileContents(self):
+        self.update('requesting file contents')
+
+    def downloadingFileContents(self, got, need):
+        if need != 0:
+            self.update('downloading file contents from repository (%d%% of %dk)' %
+                        ((got * 100) / need, need / 1024))
+
+    def preparingChangeSet(self):
+        self.update('preparing changeset')
+
+    def resolvingDependencies(self):
+        self.update('resolving dependencies')
+
+    def creatingRollback(self):
+        self.update('creating rollback')
+
+    def creatingDatabaseTransaction(self, troveNum, troveCount):
+        self.update('creating database transaction (%d of %d)' % (troveNum, troveCount))
+
+    def committingTransaction(self):
+        self.update('committing transaction')
+
+    def setUpdateHunk(self, num, total):
+        self.restored = 0
 
     def update(self, msg):
         # only push an update into the database if it differs from the
@@ -351,7 +374,7 @@ quit
     def moveToFinal(self, filelist, finaldir):
         returnlist = []
         for file, name in filelist:
-            base, ext = os.path.basename(file).split(os.path.extsep, 2)
+            base, ext = os.path.basename(file).split(os.path.extsep, 1)
             newfile = os.path.join(finaldir, self.basefilename + "." + ext)
             os.rename(file, newfile)
             returnlist.append((newfile, name,))
@@ -527,6 +550,7 @@ class BootableImage(ImageGenerator):
 
             #This has to be done after everything else as we need the qemu
             #image to generate vmware, etc.
+            zipfn = None
             if releasetypes.QEMU_IMAGE in self.imageTypes:
                 self.status('Compressing Qemu image')
                 zipfn = image.compressImage(fn)
@@ -537,8 +561,6 @@ class BootableImage(ImageGenerator):
             if not imgcfg.shortCircuit:
                 util.rmtree(tmpDir)
                 os.unlink(fn)
-                if vmfn:
-                    os.unlink(vmfn)
 
-        return image.moveToFinal(imagesList, self.cfg.finishedPath)
+        return image.moveToFinal(imagesList, os.path.join(self.cfg.finishedPath, project.getHostname(), str(release.getId())))
 
