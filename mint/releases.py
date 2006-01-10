@@ -44,7 +44,13 @@ installableIsoTemplate = {
 }
 
 bootableImageTemplate = {
-    'freespace':        (RDT_INT, '250', 'Freespace available (MB) in qemu image'),
+    'freespace':        (RDT_INT, '250', 'How many megabytes of free space should be allocated in the image?'),
+}
+
+bootableImageTemplateDependents = [releasetypes.VMWARE_IMAGE, releasetypes.LIVE_ISO]
+
+vmwareImageTemplate = {
+    'vmMemory':         (RDT_INT, '256', 'How much memory should VMWare use when running this image?')
 }
 
 stubImageTemplate = {
@@ -56,6 +62,7 @@ stubImageTemplate = {
 dataHeadings = {
     releasetypes.INSTALLABLE_ISO  : 'Installable ISO Settings',
     releasetypes.QEMU_IMAGE       : 'Bootable Image Settings',
+    releasetypes.VMWARE_IMAGE     : 'VMWare Image Settings',
     releasetypes.STUB_IMAGE       : 'Stub Image Settings',
 }
 
@@ -64,6 +71,7 @@ dataHeadings = {
 dataTemplates = {
     releasetypes.INSTALLABLE_ISO  : installableIsoTemplate,
     releasetypes.QEMU_IMAGE       : bootableImageTemplate,
+    releasetypes.VMWARE_IMAGE     : vmwareImageTemplate,
     releasetypes.STUB_IMAGE       : stubImageTemplate,
 }
 
@@ -322,9 +330,17 @@ class Release(database.TableObject):
     def setPublished(self, published):
         return self.server.setReleasePublished(self.releaseId, published)
 
+    def _TemplateCompatibleImageTypes(self):
+        returner = self.imageTypes[:]
+        if releasetypes.QEMU_IMAGE not in returner:
+            if set(bootableImageTemplateDependents) & set(returner):
+                returner.append(releasetypes.QEMU_IMAGE)
+        return returner
+
+        
     def getDataTemplate(self):
         returner = {}
-        for i in self.imageTypes:
+        for i in self._TemplateCompatibleImageTypes():
             returner.update(dataTemplates[i])
         return returner
 
@@ -332,11 +348,7 @@ class Release(database.TableObject):
         self.refresh()
         returner = []
         try:
-            #TODO Fix this to return something smarter
-            #     Ideally, it will return the union of the settings
-            #     provided by all the self.getImageTypes(), but for
-            #     now the InstallableIsoTemplate is the union.
-            for i in self.imageTypes:
+            for i in self._TemplateCompatibleImageTypes():
                 returner.append((dataHeadings[i], dataTemplates[i]))
         except KeyError:
             pass
