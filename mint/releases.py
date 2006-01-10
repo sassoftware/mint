@@ -10,7 +10,7 @@ import sys
 import database
 import jobs
 import releasetypes
-from mint_error import MintError 
+from mint_error import MintError
 from data import RDT_STRING, RDT_BOOL, RDT_INT
 
 from conary import versions
@@ -37,9 +37,9 @@ class ReleaseDataNameError(MintError):
 
 installableIsoTemplate = {
     'installLabelPath': (RDT_STRING, '',  'Default Conary installLabelPath setting'),
-    'autoResolve':      (RDT_BOOL, False, "Add 'autoResolve True' to default /etc/conaryrc"),
-    'skipMediaCheck':   (RDT_BOOL, False, 'Skip prompt for ISO media check'),
-    'betaNag':          (RDT_BOOL, False, 'Show a "beta nag" screen before installation'),
+    'autoResolve':      (RDT_BOOL, False, 'Automatically install required dependencies during updates.'),
+    'skipMediaCheck':   (RDT_BOOL, False, 'Prompt to verify CD images during install'),
+    'betaNag':          (RDT_BOOL, False, 'This release is considered a beta'),
     'bugsUrl':          (RDT_STRING, 'http://bugs.rpath.com/', 'Bug report URL advertised in installer'),
 }
 
@@ -114,7 +114,7 @@ class ReleasesTable(database.KeyedTable):
                 cu.execute("UPDATE Releases SET description=desc")
                 return (dbversion + 1) == self.schemaVersion
         return True
-    
+
     def new(self, **kwargs):
         projectId = kwargs['projectId']
         cu = self.db.cursor()
@@ -161,13 +161,13 @@ class ReleasesTable(database.KeyedTable):
 
     def iterReleasesForProject(self, projectId, showUnpublished = False):
         cu = self.db.cursor()
-        
+
         if showUnpublished:
             published = ""
         else:
             published = " AND published=1"
-            
-        cu.execute("""SELECT releaseId FROM Releases 
+
+        cu.execute("""SELECT releaseId FROM Releases
                       WHERE projectId=? AND
                             troveName IS NOT NULL AND
                             troveVersion IS NOT NULL AND
@@ -201,7 +201,7 @@ class ReleasesTable(database.KeyedTable):
                       WHERE releaseId=?""",
                    releaseId)
         r = cu.fetchone()
-        
+
         name, version, flavor = r[0], r[1], r[2]
         if not flavor:
             flavor = "none"
@@ -311,13 +311,13 @@ class Release(database.TableObject):
 
     def setFiles(self, filenames):
         return self.server.setImageFilenames(self.releaseId, filenames)
-        
+
     def getArch(self):
         flavor = deps.ThawDependencySet(self.getTrove()[2])
         if flavor.members:
             return flavor.members[deps.DEP_CLASS_IS].members.keys()[0]
         else:
-            return "none" 
+            return "none"
 
     def getDownloads(self):
         return self.downloads
@@ -338,7 +338,7 @@ class Release(database.TableObject):
                 returner.append(releasetypes.QEMU_IMAGE)
         return returner
 
-        
+
     def getDataTemplate(self):
         returner = {}
         for i in self._TemplateCompatibleImageTypes():
