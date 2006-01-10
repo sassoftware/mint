@@ -306,15 +306,16 @@ class MintServer(object):
             # most likely just used by the test suite
             if ":" in self.cfg.projectDomainName:
                 port = int(self.cfg.projectDomainName.split(":")[1])
-    
+
+            name = project.getFQDN()
             cfg = netserver.ServerConfig()
-            cfg.repositoryDB = ('sqlite', reposPath + '/sqldb')
+            cfg.repositoryDB = self.projects.reposDB.getRepositoryDB(name)
             cfg.tmpDir = tmpPath
             cfg.serverName = project.getFQDN()
             cfg.contentsDir = reposPath + '/contents/'
-            
+
             server = shimclient.NetworkRepositoryServer(cfg, '')
-            
+
             cfg = conarycfg.ConaryConfiguration()
             cfg.repositoryMap = authRepo
             cfg.user.addServerGlob(versions.Label(authLabel).getHost(),

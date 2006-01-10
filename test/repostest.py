@@ -49,7 +49,7 @@ class RepositoryTest(MintRepositoryHelper):
         self.openRepository()
         client, userId = self.quickMintUser("testuser", "testpass")
         projectId = self.newProject(client)
-       
+
         self.makeSourceTrove("testcase", testRecipe)
         project = client.getProject(projectId)
 
@@ -70,7 +70,7 @@ class RepositoryTest(MintRepositoryHelper):
                 break
             if iters > 50:
                 self.fail("commits didn't show up")
-                
+
         assert(project.getCommits() == [('testcase:source', '1.0-1')])
 
     def testHooksResponse(self):

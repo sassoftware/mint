@@ -5,6 +5,7 @@
 #
 
 try:
+    import something_broken
     import coverage
     coverage.use_cache(True)
     coverage.start()
@@ -245,7 +246,13 @@ def conaryHandler(req, cfg, pathInfo):
         nscfg = netserver.ServerConfig()
         
         repositoryDir = os.path.join(cfg.reposPath, repName)
-        nscfg.repositoryDB = (cfg.reposDBDriver, cfg.reposDBPath % repName.replace(".", "_"))
+
+        dbName = repName
+        if cfg.reposDBDriver != "sqlite":
+            dbName = dbName.replace(".", "_")
+        nscfg.repositoryDB = (cfg.reposDBDriver, cfg.reposDBPath % dbName)
+
+        
         #nscfg.cacheDB = ('sqlite', repositoryDir + '/cache.sql')
         nscfg.cacheDB = None
         nscfg.contentsDir = repositoryDir + '/contents/'

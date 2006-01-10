@@ -9,6 +9,7 @@ import sys
 import urlparse
 import time
 
+from conary import dbstore
 from conary import versions
 from conary.lib import util
 from conary.repository.netrepos import netserver
@@ -184,7 +185,7 @@ class Project(database.TableObject):
             return "http://%s%sproject/%s/" % (self.server._cfg.externalSiteHost, self.server._cfg.basePath, self.hostname)
         else:
             return "http://%s%sproject/%s/" % (self.server._cfg.projectSiteHost, self.server._cfg.basePath, self.hostname)
-            
+
 
 class ProjectsTable(database.KeyedTable):
     name = 'Projects'
@@ -214,6 +215,11 @@ class ProjectsTable(database.KeyedTable):
     def __init__(self, db, cfg):
         database.DatabaseTable.__init__(self, db)
         self.cfg = cfg
+
+        # poor excuse for a switch statement
+        self.reposDB = {'sqlite': SqliteRepositoryDatabase,
+                        'mysql':  MySqlRepositoryDatabase,
+                       }[self.cfg.reposDBDriver](cfg)
 
     def versionCheck(self):
         dbversion = self.getDBVersion()
@@ -371,13 +377,16 @@ class ProjectsTable(database.KeyedTable):
         util.mkdirChain(tmpPath)
 
         cfg = netserver.ServerConfig()
-        dbName = ("%s.%s" % (hostname, domainname)).replace(".", "_")
-        cfg.repositoryDB = (self.cfg.reposDBDriver, self.cfg.reposDBPath % dbName)
+
+        name = "%s.%s" % (hostname, domainname)
+        self.reposDB.create(name)
+
+        cfg.repositoryDB = self.reposDB.getRepositoryDB(name)
         cfg.tmpDir = tmpPath
         cfg.serverName = hostname + "." + domainname
         cfg.repositoryMap = {}
         cfg.contentsDir = contentsPath
-       
+
         if dbPath != contentsPath:
             #Create the links as appropriate.  dbPath will be the ultimate path sent
             # up to NetworkRepositoryServer.
@@ -563,3 +572,38 @@ class LabelsTable(database.KeyedTable):
 
         cu.execute("""DELETE FROM Labels WHERE projectId=? AND labelId=?""", projectId, labelId)
         return False
+
+class RepositoryDatabase:
+    def __init__(self, cfg):
+        self.cfg = cfg
+
+    def create(self, name):
+        pass
+
+    def getRepositoryDB(self, name):
+        raise NotImplementedError
+
+class SqliteRepositoryDatabase(RepositoryDatabase):
+    def getRepositoryDB(self, name):
+        return ('sqlite', self.cfg.reposDBPath % name)
+
+class MySqlRepositoryDatabase(RepositoryDatabase):
+    def create(self, name):
+        path = self.cfg.reposDBPath % 'mysql'
+        db = dbstore.connect(path, 'mysql')
+
+        dbName = name.replace(".", "_")
+
+        cu = db.cursor()
+        # this check should never be required outside of the test suite,
+        # and it could be kind of dangerous being called in production.
+        # FIXME: parameterize?
+        cu.execute("SHOW DATABASES")
+        if dbName in [x[0] for x in cu.fetchall()]:
+            cu.execute("DROP DATABASE %s" % dbName)
+        cu.execute("CREATE DATABASE %s" % dbName)
+        db.close()
+
+    def getRepositoryDB(self, name):
+        dbName = name.replace(".", "_")
+        return ('mysql', self.cfg.reposDBPath % dbName)

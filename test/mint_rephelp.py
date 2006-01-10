@@ -24,19 +24,100 @@ from mint import mint_server
 MINT_DOMAIN = 'rpath.local'
 MINT_HOST = 'test'
 
+class MintDatabase:
+    def __init__(self, path):
+        self.path = path
+
+    def newProjectDb(self, projectName):
+        pass # not implemented
+
+class SqliteMintDatabase(MintDatabase):
+    pass
+    
+class MySqlMintDatabase(MintDatabase):
+    def connect(self):
+        return dbstore.connect(self.path, "mysql")
+
+    def newProjectDb(self, projectName):
+        dbName = projectName.replace(".", "_")
+
+        db = self.connect()
+        cu = db.cursor()
+        cu.execute("SHOW DATABASES")
+        if dbName in cu.fetchall():
+            cu.execute("DROP DATABASE %s" % dbName)
+        db.close()
+
 
 class MintApacheServer(rephelp.ApacheServer):
     def __init__(self, name, reposDB, contents, server, serverDir, reposDir,
                  conaryPath, repMap, useCache = False, requireSigs = False):
         self.mintPath = os.environ.get("MINT_PATH", "")
+
         rephelp.ApacheServer.__init__(self, name, reposDB, contents, server, serverDir, reposDir,
              conaryPath, repMap, useCache, requireSigs)
+        self.getMintCfg()
+        f = file(self.serverRoot + "/mint.conf", "w")
+        self.mintCfg.display(f)
+        f.close()
+
+        mintDb = os.environ.get("MINT_REPOS_DB", "sqlite")
+        if mintDb == "sqlite":
+            self.mintDb = SqliteMintDatabase(self.reposDir + "/sqlite/sqldb")
+        elif mintDb == "mysql":
+            self.mintDb = MySqlMintDatabase(reposDB.path)
+
 
     def getTestDir(self):
         return os.environ.get("MINT_PATH", "")  + "/test/"
 
     def getMap(self):
         return { self.name: 'http://localhost:%d/conary/' %self.port }
+
+    def getMintCfg(self):
+        # write Mint configuration
+        conaryPath = os.environ.get("CONARY_PATH", "")
+        mintPath = os.environ.get("MINT_PATH", "")
+
+        cfg = config.MintConfig()
+
+        cfg.siteDomainName = "%s:%i" % (MINT_DOMAIN, self.port)
+        cfg.projectDomainName = "%s:%i" % (MINT_DOMAIN, self.port)
+        cfg.externalDomainName = "%s:%i" % (MINT_DOMAIN, self.port)
+        cfg.hostName = MINT_HOST
+        cfg.secureHost = "%s.%s" % (MINT_HOST, MINT_DOMAIN)
+
+        sqldriver = os.environ.get('MINT_REPOS_DB', 'sqlite')
+        if sqldriver == 'sqlite':
+            cfg.dbPath = self.reposDir + '/mintdb'
+        elif sqldriver == 'mysql':
+            cfg.dbPath = 'root@localhost.localdomain:%d/minttest' % self.reposDB.port
+        elif sqldriver == 'postgresql':
+            cfg.dbPath = 'root@localhost.localdomain:%d/minttest' % self.reposDB.port
+        else:
+            assert 0, "Invalid database type"
+        cfg.dbDriver = sqldriver
+
+        reposdriver = os.environ.get('CONARY_REPOS_DB', 'sqlite')
+        if reposdriver == 'sqlite':
+            cfg.reposDBPath = self.reposDir + "/repos/%s/sqldb"
+        elif reposdriver == 'mysql':
+            cfg.reposDBPath = 'root@localhost.localdomain:%d/%%s' % self.reposDB.port
+        cfg.reposDBDriver = reposdriver
+
+        cfg.dataPath = self.reposDir
+        cfg.authDbPath = None
+        cfg.imagesPath = self.reposDir + '/images/'
+        cfg.authUser = 'mintauth'
+        cfg.authPass = 'mintpass'
+
+        cfg.configured = True
+        cfg.debugMode = True
+        cfg.sendNotificationEmails = False
+        cfg.commitAction = """%s/scripts/commitaction --username mintauth --password mintadmin --repmap '%%(repMap)s' --build-label %%(buildLabel)s --module \'%s/mint/rbuilderaction.py --user %%%%(user)s --url http://mintauth:mintpass@%s:%d/xmlrpc-private/'""" % (conaryPath, mintPath, 'test.rpath.local', self.port)
+        cfg.postCfg()
+        self.mintCfg = cfg
+
 
 
 class MintServerCache(rephelp.ServerCache):
@@ -52,99 +133,19 @@ class MintServerCache(rephelp.ServerCache):
 rephelp._servers = MintServerCache()
 rephelp.SERVER_HOSTNAME = "mint.rpath.local@rpl:devel"
 
-mysql = mysqlharness.MySqlHarness()
-mysql.start()
-
-class MintRepositoryDatabase(rephelp.RepositoryDatabase):
-    def getDb(self):
-        return dbstore.connect('root@localhost.localdomain:%d/mysql' % mysql.port, 'mysql')
-
-    def reset(self):
-        db = self.getDb()
-        # start a transaction to avoid a race where there is no testdb
-        cu = db.transaction()
-        cu.execute("drop database %s " % self.name)
-        cu.execute("create database %s character set latin1" % self.name)
-        self.createSchema()
-        self.createUsers()
-        db.commit()
-
-    def __init__(self, name = 'testdb'):
-        self.name = name
-        rephelp.RepositoryDatabase.__init__(self, 'mysql',
-                                    'root@localhost.localdomain:%d/%s' % (mysql.port, name))
-
-        db = self.getDb()
-        cu = db.transaction()
-        cu.execute("create database %s character set latin1;\n" % name)
-        db.close()
-
 
 class MintRepositoryHelper(rephelp.RepositoryHelper):
-    port = 59999
-
     def openRepository(self, serverIdx = 0, requireSigs = False):
         ret = rephelp.RepositoryHelper.openRepository(self, serverIdx, requireSigs)
         self.port = self.servers.getServer().port
-        self.getMintCfg()
-
-        # write mint.conf to disk
-        f = open("%s/mint.conf" % self.servers.getServer().serverRoot, "w")
-        self.mintCfg.display(out = f)
-        f.close()
+        self.mintCfg = self.servers.getServer().mintCfg
 
         return ret
 
     def __init__(self, methodName):
         rephelp.RepositoryHelper.__init__(self, methodName)
-        self.getMintCfg()
         self.imagePath = self.tmpDir + "/images"
         os.mkdir(self.imagePath)
-
-    def getMintCfg(self):
-        # write Mint configuration
-        
-        conaryPath = os.environ.get("CONARY_PATH", "")
-        mintPath = os.environ.get("MINT_PATH", "")
-
-        cfg = config.MintConfig()
-
-        cfg.siteDomainName = "%s:%i" % (MINT_DOMAIN, self.port)
-        cfg.projectDomainName = "%s:%i" % (MINT_DOMAIN, self.port)
-        cfg.externalDomainName = "%s:%i" % (MINT_DOMAIN, self.port)
-        cfg.hostName = MINT_HOST
-        cfg.secureHost = "%s.%s" % (MINT_HOST, MINT_DOMAIN)
-
-        sqldriver = os.environ.get('MINT_SQL', 'sqlite')
-        if sqldriver == 'sqlite':
-            cfg.dbPath = self.tmpDir + '/mintdb'
-        elif sqldriver == 'mysql':
-            cfg.dbPath = 'root@localhost.localdomain:%d/minttest' % mysql.port
-        elif sqldriver == 'postgresql':
-            cfg.dbPath = 'root@localhost.localdomain:%d/minttest' % mysql.port
-        else:
-            assert 0, "Invalid database type"
-        cfg.dbDriver = sqldriver
-
-        reposdriver = os.environ.get('CONARY_REPOS_DB', 'sqlite')
-        if reposdriver == 'sqlite':
-            cfg.reposDBPath = self.reposDir + "/repos/%s/sqldb"
-        elif reposdriver == 'mysql':
-            cfg.reposDBPath = 'root@localhost.localdomain:%d/%%s' % mysql.port
-        cfg.reposDBDriver = reposdriver
-
-        cfg.dataPath = self.reposDir
-        cfg.authDbPath = None
-        cfg.imagesPath = self.reposDir + '/images/'
-        cfg.authUser = 'mintauth'
-        cfg.authPass = 'mintpass'
-
-        cfg.configured = True
-        cfg.debugMode = True
-        cfg.sendNotificationEmails = False
-        cfg.commitAction = """%s/scripts/commitaction --username mintauth --password mintadmin --repmap '%%(repMap)s' --build-label %%(buildLabel)s --module \'%s/mint/rbuilderaction.py --user %%%%(user)s --url http://mintauth:mintpass@%s:%d/xmlrpc-private/'""" % (conaryPath, mintPath, 'test.rpath.local', self.port)
-        cfg.postCfg()
-        self.mintCfg = cfg
 
     def openMintClient(self, authToken=('mintauth', 'mintpass')):
         """Return a mint client authenticated via authToken, defaults to 'mintauth', 'mintpass'"""
@@ -199,8 +200,7 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
         # save the current openpgpkey cache
         keyCache = openpgpkey.getKeyCache()
 
-        dbName = ("%s.%s" % (hostname, domainname)).replace(".", "_")
-        repos = MintRepositoryDatabase(name = dbName)
+        self.servers.getServer().mintDb.newProjectDb(hostname + "." + domainname) 
 
         projectId = client.newProject(name, hostname, domainname)
 
@@ -222,24 +222,22 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
 
         # re-open the repos to make changes to repositoryMap have any effect
         self.openRepository()
-        
-                                                                                
 
         return projectId
-    
+        
     def tearDown(self):
         rephelp.RepositoryHelper.tearDown(self)
         try:
             util.rmtree(self.reposDir + "/repos/")
-            os.unlink(self.tmpDir + "/mintdb")
+            os.unlink(self.server.getServer().mintDb.path)
         except:
             pass
 
     def setUp(self):
         rephelp.RepositoryHelper.setUp(self)
-
+        self.openRepository()
         if self.mintCfg.dbDriver == "mysql":
-            db = dbstore.connect("root@localhost.localdomain:%d/mysql" % mysql.port, driver=self.mintCfg.dbDriver)
+            db = self.servers.getServer().mintDb.connect()
             cu = db.cursor()
             try:
                 cu.execute("DROP DATABASE minttest")
@@ -252,7 +250,7 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
             os.system("dropdb -U testuser minttest; createdb -U testuser minttest") 
         elif self.mintCfg.dbDriver == "sqlite":
             try:
-                os.unlink(self.tmpDir + "/mintdb")
+                os.unlink(self.server.getServer().mintDb.path)
             except:
                 pass
 
