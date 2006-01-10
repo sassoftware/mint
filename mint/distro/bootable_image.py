@@ -10,10 +10,13 @@ import sys
 import errno
 import time
 import tempfile
+import zipfile
 
 # mint imports
 from imagegen import ImageGenerator
+import gencslist
 from mint import releasetypes
+from mint.mint import upstream
 
 # conary imports
 from conary import conaryclient
@@ -41,7 +44,7 @@ class BootableImageConfig(ConfigFile):
     #directory containing the uml init script as well as fstab and other hooks
     dataDir         = os.path.join(os.path.dirname(__file__), 'DiskImageData')
     umlKernel       = '/usr/bin/uml-vmlinux'
-    shortCircuit    = 0 #1: Use a static name for the root dir and the qemu image.
+    shortCircuit    = 1 #1: Use a static name for the root dir and the qemu image.
                         #Change this to false to use securely named temp files.
 
 def debugme(type, value, tb):
@@ -122,10 +125,11 @@ class InstallCallback(UpdateCallback, ChangesetCallback):
         self.prefix = 'BDI:'
 
 class BootableDiskImage:
-    def __init__(self, outfile, fakeroot, trove, versionstr, flavorstr, freespace, arch, cfg, conarycfg):
+    def __init__(self, outfile, fakeroot, basefilename, trove, versionstr, flavorstr, freespace, arch, cfg, conarycfg):
         sys.excepthook = debugme
         self.outfile = outfile
         self.fakeroot = fakeroot
+        self.basefilename = basefilename
         self.basetrove = trove
         self.baseversion = versionstr
         self.baseflavor = flavorstr
@@ -196,9 +200,10 @@ title %(name)s (%(kversion)s)
             self.conarycfg = conarycfg.ConaryConfiguration(readConfigFiles=False)
             self.conarycfg.repositoryMap = self.repoMap
             self.conarycfg.flavor = None
-            self.conarycfg.root = self.fakeroot
             #TODO Add the user if anonymous access is not available
 
+        self.conarycfg.threaded = False
+        self.conarycfg.setValue('root', self.fakeroot)
         self.conarycfg.installLabelPath = None
         self.conarycfg.dbPath = '/var/lib/conarydb/'
 
@@ -335,8 +340,80 @@ quit
         uml.write(input)
         retval = uml.close()
 
+    @timeMe
+    def compressImage(self, filename):
+        outfile = filename + '.gz'
+        cmd = '/bin/gzip -c %s > %s' % (filename, outfile)
+        util.execute(cmd)
+        return outfile
+
+    @timeMe
+    def moveToFinal(self, filelist, finaldir):
+        returnlist = []
+        for file, name in filelist:
+            base, ext = os.path.basename(file).split(os.path.extsep, 2)
+            newfile = os.path.join(finaldir, self.basefilename + "." + ext)
+            os.rename(file, newfile)
+            returnlist.append((newfile, name,))
+        return returnlist
+
+    @timeMe
+    def createVMDK(self, outfile):
+        cmd = '/usr/bin/qemu-img convert -f raw %s -O vmdk %s' % (self.outfile, outfile)
+        util.execute(cmd)
+
+    @timeMe
+    def copyVMBios(self, outfile):
+        gencslist._linkOrCopyFile(os.path.join(self.cfg.dataDir, 'vmwareplayer.nvram'), outfile)
+
+    @timeMe
+    def createVMX(self, outfile, displayName, memsize):
+        #Read in the stub file
+        infile = open(os.path.join(self.cfg.dataDir, 'vmwareplayer.vmx'), 'rb')
+        #Replace the @DELIMITED@ text with the appropriate values
+        filecontents = infile.read()
+        infile.close()
+        #@NAME@ @MEM@ @FILENAME@
+        displayName.replace('"', '')
+        filecontents = filecontents.replace('@NAME@', displayName)
+        filecontents = filecontents.replace('@MEM@', str(memsize))
+        filecontents = filecontents.replace('@FILENAME@', self.basefilename)
+        #write the file to the proper location
+        ofile = open(outfile, 'wb')
+        ofile.write(filecontents)
+        ofile.close()
+
+    @timeMe
+    def zipVMWarePlayerFiles(self, dir, outfile):
+        zip = zipfile.ZipFile(outfile, 'w')
+        for f in ('.vmdk', '.nvram', '.vmx'):
+            zip.write(os.path.join(dir, self.basefilename + f), os.path.join(self.basefilename, self.basefilename + f))
+        zip.close()
+
+    @timeMe
+    def createVMWarePlayerImage(self, outfile, displayName, mem, basedir=os.getcwd()):
+        #Create a temporary directory
+        vmbasedir = tempfile.mkdtemp('', 'mint-MDI-cvmpi-', basedir)
+        try:
+            filebase = os.path.join(vmbasedir, self.basefilename)
+            #run qemu-img to convert to vmdk
+            self.createVMDK(filebase + '.vmdk')
+            #copy the bios image
+            self.copyVMBios(filebase + '.nvram')
+            #Populate the vmx file
+            self.createVMX(filebase + '.vmx', displayName, mem)
+            #zip the resultant files
+            self.zipVMWarePlayerFiles(vmbasedir, outfile)
+        finally:
+            util.rmtree(vmbasedir)
+        return (outfile, 'VMWare Player Image')
+
 class BootableImage(ImageGenerator):
-    supportedImageTypes = [ releasetypes.QEMU_IMAGE, releasetypes.LIVE_ISO ]
+    supportedImageTypes = [
+        releasetypes.QEMU_IMAGE,
+        releasetypes.LIVE_ISO,
+        releasetypes.VMWARE_IMAGE,
+        ]
 
     def status(self, value):
         value = 'BootableImage: ' + value
@@ -381,58 +458,87 @@ class BootableImage(ImageGenerator):
                 if e.errno != errno.EEXIST:
                     raise
 
-        #Figure out what group trove to use
-        release = self.client.getRelease(self.job.getReleaseId())
-        trove, versionStr, flavorStr = release.getTrove()
-        log.info('release.getTrove returned (%s, %s, %s)' % (trove, versionStr, flavorStr))
+        try:
+            #Figure out what group trove to use
+            release = self.client.getRelease(self.job.getReleaseId())
+            trove, versionStr, flavorStr = release.getTrove()
+            log.info('release.getTrove returned (%s, %s, %s)' % (trove, versionStr, flavorStr))
 
-        #Thaw the version string
-        versionStr = versions.ThawVersion(versionStr).asString()
+            #Thaw the version string
+            version = versions.ThawVersion(versionStr)
+            versionStr = version.asString()
 
-        #Thaw the flavor string
-        flavorStr = deps.deps.ThawDependencySet(flavorStr)
+            #Thaw the flavor string
+            flavorStr = deps.deps.ThawDependencySet(flavorStr)
 
-        #The project object
-        project = self.client.getProject(release.getProjectId())
+            #The project object
+            project = self.client.getProject(release.getProjectId())
 
-        # set up configuration
-        cfg = project.getConaryConfig(overrideSSL=True, useSSL=self.cfg.SSL)
-        # turn off threading
-        cfg.threaded = False
-        cfg.setValue('root', tmpDir)
+            # set up configuration
+            cfg = project.getConaryConfig(overrideSSL=True, useSSL=self.cfg.SSL)
+            # turn off threading
 
-        arch = release.getArch()
-        #TODO This needs to be configured in the interface
-        freespace = release.getDataValue("freespace")
+            arch = release.getArch()
+            freespace = release.getDataValue("freespace")
+            basefilename = "%(name)s-%(version)s-%(arch)s" % {
+                    'name': project.getHostname(),
+                    'version': upstream(version),
+                    'arch': arch,
+                }
 
-        image = BootableDiskImage(fn, tmpDir, trove, versionStr, flavorStr, freespace * 1024 * 1024, arch, imgcfg, cfg)
+            image = BootableDiskImage(fn, tmpDir, basefilename, trove, versionStr, flavorStr, freespace * 1024 * 1024, arch, imgcfg, cfg)
 
-        callback = InstallCallback(self.status)
+            callback = InstallCallback(self.status)
+            imagesList = []
 
-        if not imgcfg.shortCircuit:
-            pass
-        self.status('Creating temporary root')
-        image.createTemporaryRoot()
+            if not imgcfg.shortCircuit:
+                pass
 
-        #Don't need status here.  It's very fast
-        image.setupConaryClient()
+            self.status('Creating temporary root')
+            image.createTemporaryRoot()
 
-        self.status('Installing software')
-        image.populateTemporaryRoot(callback)
+            #Don't need status here.  It's very fast
+            image.setupConaryClient()
 
-        self.status('Installing %s kernel' % arch)
-        image.installKernel(callback)
+            self.status('Installing software')
+            image.populateTemporaryRoot(callback)
 
-        self.status('Adding filesystem bits')
-        image.fileSystemOddsNEnds()
+            self.status('Installing %s kernel' % arch)
+            image.installKernel(callback)
 
-        self.status('Creating root file system')
-        image.createFileSystem()
+            self.status('Adding filesystem bits')
+            image.fileSystemOddsNEnds()
 
-        self.status('Running tag-scripts')
-        image.runTagScripts()
+            self.status('Creating root file system')
+            image.createFileSystem()
 
-        self.status('Making image bootable')
-        image.makeBootable()
+            self.status('Running tag-scripts')
+            image.runTagScripts()
 
-        return [(fn, 'Bootable Qemu Image')]
+            self.status('Making image bootable')
+            image.makeBootable()
+
+            if releasetypes.VMWARE_IMAGE in self.imageTypes:
+                self.status('Creating VMWare Player Image')
+                fd, vmfn = tempfile.mkstemp('.zip', 'mint-MDI-cvmpi-', self.cfg.imagesPath)
+                os.close(fd)
+                del fd
+                imagesList.append(image.createVMWarePlayerImage(vmfn, project.getName(), release.getDataValue('vmMemory')))
+
+            #This has to be done after everything else as we need the qemu
+            #image to generate vmware, etc.
+            if releasetypes.QEMU_IMAGE in self.imageTypes:
+                self.status('Compressing Qemu image')
+                zipfn = image.compressImage(fn)
+                imagesList.append((zipfn, 'Bootable Qemu Image',))
+                pass
+
+        finally:
+            if not imgcfg.shortCircuit:
+                util.rmtree(tmpDir)
+                os.unlink(fn)
+                if vmfn:
+                    os.unlink(vmfn)
+
+        return image.moveToFinal(imagesList, self.cfg.finishedPath)
+
