@@ -250,7 +250,8 @@ class Release(database.TableObject):
         return self.description
 
     def setDesc(self, desc):
-        return self.server.setReleaseDesc(self.releaseId, desc)
+        # NOTE: .strip done pre-insert for Kid's sake
+        return self.server.setReleaseDesc(self.releaseId, desc.strip())
 
     def getProjectId(self):
         return self.projectId

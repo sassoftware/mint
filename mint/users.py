@@ -469,13 +469,15 @@ class User(database.TableObject):
         return self.server.validateNewEmail(self.id,newEmail)
 
     def setDisplayEmail(self, newEmail):
-        return self.server.setUserDisplayEmail(self.id, newEmail)
+        # NOTE: .strip done pre-insert for Kid's sake
+        return self.server.setUserDisplayEmail(self.id, newEmail.strip())
 
     def setPassword(self, newPassword):
         self.server.setPassword(self.id, newPassword)
 
     def setBlurb(self, blurb):
-        self.server.setUserBlurb(self.id, blurb)
+        # NOTE: .strip done pre-insert for Kid's sake
+        self.server.setUserBlurb(self.id, blurb.strip())
 
     def setFullName(self, fullName):
         self.server.setUserFullName(self.id, fullName)
