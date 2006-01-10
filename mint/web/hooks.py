@@ -39,7 +39,7 @@ from webhandler import normPath, HttpError
 import app
 import cookie_http
 
-profiling = False 
+profiling = False
 BUFFER=1024 * 256
 
 def getHttpAuth(req):
@@ -47,10 +47,10 @@ def getHttpAuth(req):
     # instead of a real http authorization token
     if 'X-Session-Id' in req.headers_in:
         return req.headers_in['X-Session-Id']
- 
+
     if not 'Authorization' in req.headers_in:
         return ('anonymous', 'anonymous')
-    
+
     info = req.headers_in['Authorization'].split()
     if len(info) != 2 or info[0] != "Basic":
         return apache.HTTP_BAD_REQUEST
@@ -77,7 +77,7 @@ def checkAuth(req, repos):
 
         if not repos.auth.checkUserPass(authToken):
             return None
-            
+
     return authToken
 
 def post(port, isSecure, repos, cfg, req):
@@ -100,7 +100,7 @@ def post(port, isSecure, repos, cfg, req):
         authToken = getHttpAuth(req)
         if type(authToken) is int:
             return authToken
-        
+
         if authToken[0] != "anonymous" and not isSecure and repos.forceSecure:
             return apache.HTTP_FORBIDDEN
 
@@ -153,7 +153,7 @@ def get(port, isSecure, repos, cfg, req):
         uri = uri[:-1]
     cmd = os.path.basename(uri)
     fields = util.FieldStorage(req)
- 
+
     if cmd == "changeset":
         authToken = getHttpAuth(req)
         if type(authToken) is int:
@@ -191,15 +191,15 @@ def get(port, isSecure, repos, cfg, req):
         for (path, size) in items:
             if path.endswith('.ccs-out'):
                 cs = FileContainer(open(path))
-                cs.dump(req.write, 
-                        lambda name, tag, size, f, sizeCb: 
+                cs.dump(req.write,
+                        lambda name, tag, size, f, sizeCb:
                             _writeNestedFile(req, name, tag, size, f,
                                              sizeCb))
 
                 del cs
             else:
                 req.sendfile(path)
-                
+
             if path.startswith(repos.tmpPath) and \
                     not(os.path.basename(path)[0:6].startswith('cache-')):
                 os.unlink(path)
@@ -236,7 +236,7 @@ def conaryHandler(req, cfg, pathInfo):
         repName = paths[2] + "." + domainName
     else:
         repName = req.hostname
-                        
+
     method = req.method.upper()
     port = req.connection.local_addr[1]
     secure = (req.subprocess_env.get('HTTPS', 'off') == 'on')
@@ -244,7 +244,7 @@ def conaryHandler(req, cfg, pathInfo):
     repHash = repName + req.hostname
     if not repositories.has_key(repHash):
         nscfg = netserver.ServerConfig()
-        
+
         repositoryDir = os.path.join(cfg.reposPath, repName)
 
         dbName = repName
@@ -256,7 +256,7 @@ def conaryHandler(req, cfg, pathInfo):
         #nscfg.cacheDB = ('sqlite', repositoryDir + '/cache.sql')
         nscfg.cacheDB = None
         nscfg.contentsDir = repositoryDir + '/contents/'
-        
+
         nscfg.serverName = repName
         nscfg.tmpDir = os.path.join(cfg.reposPath, repName, "tmp")
         nscfg.logFile = os.path.join(repositoryDir, "contents.log")
@@ -264,7 +264,7 @@ def conaryHandler(req, cfg, pathInfo):
         if os.path.basename(req.uri) == "changeset":
            rest = os.path.dirname(req.uri) + "/"
         else:
-           rest = req.uri 
+           rest = req.uri
 
         # pull out any queryargs
         if '?' in rest:
@@ -272,7 +272,7 @@ def conaryHandler(req, cfg, pathInfo):
 
         urlBase = "%%(protocol)s://%s:%%(port)d" % \
                         (req.hostname) + rest
-        
+
         # set up the commitAction
         buildLabel = repName + "@" + cfg.defaultBranch
         projectName = repName.split(".")[0]
@@ -284,7 +284,7 @@ def conaryHandler(req, cfg, pathInfo):
             host = req.hostname
 
         repMapStr = "%s://%s/repos/%s/" % (protocol, host, projectName)
-           
+
         if cfg.commitAction:
             nscfg.commitAction = cfg.commitAction % {'repMap': repName + " " + repMapStr,
                                                'buildLabel': buildLabel,
