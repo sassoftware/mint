@@ -1336,7 +1336,7 @@ class MintServer(object):
     @typeCheck(int)
     def getJobWaitMessage(self, jobId):
         queueLen = self._getJobQueueLength(jobId)
-        msg = "Waiting for job server"
+        msg = "Waiting for currently-active job to complete"
         if queueLen:
             if queueLen == 1:
                 suffix = ''
