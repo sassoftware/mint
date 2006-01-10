@@ -24,7 +24,7 @@
             </div>
         </td>
         <td id="main">
-            <div class="pad">
+            <div class="pad" xmlns="http://www.w3.org/1999/xhtml">
                 <h1 id="pleaseWait">Cooking Group: Choose An Architecture</h1>
 
                 <p>You can choose an architecture to cook this group for. If you want your application image to support
