@@ -25,7 +25,7 @@
             </div>
         </td>
         <td id="main" class="main" >
-            <div class="pad">
+            <div class="pad" xmlns="http://www.w3.org/1999/xhtml">
                 <p py:if="errors" class="error">Group Creation Error${len(errors) > 1 and 's' or ''}</p>
                 <p py:for="error in errors" class="errormessage" py:content="error"/>
                 <h2>Create a Group</h2>
@@ -40,8 +40,8 @@
                             <td>group-</td>
                             <td>
                                 <input type="text" name="groupName" value="${kwargs['groupName']}" size="16" maxlength="16"/>
-                                <p class="help">Please choose a name for your group. "group-" is required and will be 
-                                    automatically prepended to the name you enter. 
+                                <p class="help">Please choose a name for your group. "group-" is required and will be
+                                    automatically prepended to the name you enter.
                                 </p>
                             </td>
                         </tr>
@@ -81,7 +81,6 @@
                                 </ul>
                             </td>
                         </tr>
-                        
                     </table>
                     <p><button type="submit">Create</button></p>
                 </form>
