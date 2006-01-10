@@ -137,12 +137,16 @@ def setup():
     global testPath
     global archivePath
 
-    if not os.environ.has_key('CONARY_PATH'):
-	print "please set CONARY_PATH"
+    if not os.environ.has_key('CONARY_PATH') and os.environ.has_key('MINT_PATH'):
+	print "please set CONARY_PATH and MINT_PATH"
 	sys.exit(1)
     sys.path.insert(0, os.environ['CONARY_PATH'])
+    sys.path.insert(0, os.environ['MINT_PATH'])
+    from conary.lib import util
+    sys.path.insert(0, util.normpath(os.environ['CONARY_PATH'] + "/../conary-test/"))
     if 'PYTHONPATH' in os.environ:
         os.environ['PYTHONPATH'] = os.pathsep.join((os.environ['CONARY_PATH'],
+                                                    os.environ['MINT_PATH'],
                                                     os.environ['PYTHONPATH']))
     else:
         os.environ['PYTHONPATH'] = os.environ['CONARY_PATH']

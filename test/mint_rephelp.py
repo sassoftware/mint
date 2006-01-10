@@ -31,9 +31,22 @@ class MintDatabase:
     def newProjectDb(self, projectName):
         pass # not implemented
 
+    def start(self):
+        pass
+
+    def reset(self):
+        pass
+
 class SqliteMintDatabase(MintDatabase):
-    pass
-    
+    def reset(self):
+        os.unlink(self.path)
+
+    def start(self):
+        if os.path.exists(self.path):
+            os.unlink(self.path)
+
+                        
+
 class MySqlMintDatabase(MintDatabase):
     def connect(self):
         return dbstore.connect(self.path, "mysql")
@@ -61,12 +74,19 @@ class MintApacheServer(rephelp.ApacheServer):
         self.mintCfg.display(f)
         f.close()
 
-        mintDb = os.environ.get("MINT_REPOS_DB", "sqlite")
+        mintDb = os.environ.get('CONARY_REPOS_DB', 'sqlite')
         if mintDb == "sqlite":
-            self.mintDb = SqliteMintDatabase(self.reposDir + "/sqlite/sqldb")
+            self.mintDb = SqliteMintDatabase(self.reposDir + "/mintdb")
         elif mintDb == "mysql":
             self.mintDb = MySqlMintDatabase(reposDB.path)
 
+    def start(self):
+        rephelp.ApacheServer.start(self)
+        self.mintDb.start()
+
+    def reset(self):
+        rephelp.ApacheServer.reset(self)
+        self.mintDb.reset()
 
     def getTestDir(self):
         return os.environ.get("MINT_PATH", "")  + "/test/"
@@ -87,7 +107,7 @@ class MintApacheServer(rephelp.ApacheServer):
         cfg.hostName = MINT_HOST
         cfg.secureHost = "%s.%s" % (MINT_HOST, MINT_DOMAIN)
 
-        sqldriver = os.environ.get('MINT_REPOS_DB', 'sqlite')
+        sqldriver = os.environ.get('CONARY_REPOS_DB', 'sqlite')
         if sqldriver == 'sqlite':
             cfg.dbPath = self.reposDir + '/mintdb'
         elif sqldriver == 'mysql':
