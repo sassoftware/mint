@@ -1338,11 +1338,7 @@ class MintServer(object):
         queueLen = self._getJobQueueLength(jobId)
         msg = "Waiting for next available release generator"
         if queueLen:
-            if queueLen == 1:
-                suffix = ''
-            else:
-                suffix = 's'
-            msg = "%d release%s ahead of you waiting for next available release generator" % (queueLen, suffix)
+            msg = "Number %d in line for next available release generator" % queueLen
         return msg
 
     @typeCheck(int)
