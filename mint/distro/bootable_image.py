@@ -44,7 +44,7 @@ class BootableImageConfig(ConfigFile):
     #directory containing the uml init script as well as fstab and other hooks
     dataDir         = os.path.join(os.path.dirname(__file__), 'DiskImageData')
     umlKernel       = '/usr/bin/uml-vmlinux'
-    shortCircuit    = 1 #1: Use a static name for the root dir and the qemu image.
+    shortCircuit    = 0 #1: Use a static name for the root dir and the qemu image.
                         #Change this to false to use securely named temp files.
 
 def debugme(type, value, tb):
