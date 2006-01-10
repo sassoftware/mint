@@ -1336,13 +1336,13 @@ class MintServer(object):
     @typeCheck(int)
     def getJobWaitMessage(self, jobId):
         queueLen = self._getJobQueueLength(jobId)
-        msg = "Waiting for currently-active job to complete"
+        msg = "Waiting for next available release generator"
         if queueLen:
             if queueLen == 1:
                 suffix = ''
             else:
                 suffix = 's'
-            msg = "Waiting for %d job%s to complete" % (queueLen, suffix)
+            msg = "%d release%s ahead of you waiting for next available release generator" % (queueLen, suffix)
         return msg
 
     @typeCheck(int)
