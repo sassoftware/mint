@@ -10,7 +10,7 @@
         <a href="#">Create an Account</a>
     </div>
     <?python
-        for var in ['username', 'email', 'fullName', 'displayEmail', 'blurb', 'tos', 'privacy']:
+        for var in ['username', 'email', 'email2', 'fullName', 'displayEmail', 'blurb', 'tos', 'privacy']:
             kwargs[var] = kwargs.get(var, '')
     ?>
     <head>
@@ -65,6 +65,12 @@
 
                                 <p class="help">This email address will not be displayed on the ${cfg.productName} website and will
                                 never be shared or sold. More information can be found in our ${legal('%slegal?page=privacy' % cfg.basePath, 'Privacy Policy')}.</p>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><em class="required">Confirm Email:</em></th>
+                            <td>
+                                <input type="text" name="email2" value="${kwargs['email2']}"/>
                             </td>
                         </tr>
                     </table>

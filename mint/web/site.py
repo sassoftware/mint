@@ -74,13 +74,13 @@ class SiteHandler(WebHandler):
         self.toUrl = self.cfg.basePath
         return self._write("register", errors=[], kwargs={})
 
-    @strFields(username = '', email = '',
+    @strFields(username = '', email = '', email2 = '',
                password = '', password2 = '',
                fullName = '', displayEmail = '',
                blurb = '', tos='', privacy='')
     @requiresHttps
     def processRegister(self, auth, username, 
-                        fullName, email, password,
+                        fullName, email, email2, password,
                         password2, displayEmail,
                         blurb, tos, privacy):
         self.toUrl = self.cfg.basePath
@@ -88,8 +88,10 @@ class SiteHandler(WebHandler):
         errors = []
         if not username:
             errors.append("You must supply a username.")
-        if not email:
+        if not email or not email2:
             errors.append("You must supply a valid e-mail address.  This will be used to confirm your account.")
+        if email != email2:
+            errors.append("Email fields do not match.")
         if not password or not password2:
             errors.append("Password field left blank.")
         if password != password2:
@@ -115,6 +117,7 @@ class SiteHandler(WebHandler):
         else:
             kwargs = {'username': username,
                       'email': email,
+                      'email2': email2,
                       'fullName': fullName,
                       'displayEmail': displayEmail,
                       'blurb': blurb,
