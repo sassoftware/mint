@@ -20,14 +20,14 @@ from optparse import OptionParser
 
 from conary import conaryclient
 from conary.conarycfg import ConfigFile, ConaryConfiguration
-from conary.conarycfg import CfgList, CfgString, CfgBool
+from conary.conarycfg import CfgList, CfgString, CfgBool, CfgInt
 from conary.deps import deps
 from conary.lib import log, util
 
 # to run from CVS
 sys.path.append('..')
 
-from mint.mint import MintClient 
+from mint.mint import MintClient
 from mint import jobs
 from mint import jobstatus
 from mint import releasetypes
@@ -67,8 +67,8 @@ class JobRunner(threading.Thread):
             releaseId = self.job.getReleaseId()
             release = self.client.getRelease(releaseId)
             project = self.client.getProject(release.getProjectId())
-           
-            # save the current working directory in case the generator 
+
+            # save the current working directory in case the generator
             # (or scripts that change the wd)
             cwd = os.getcwd()
             try:
@@ -77,18 +77,27 @@ class JobRunner(threading.Thread):
                 imageFilenames = []
                 if releasetypes.INSTALLABLE_ISO in imageTypes:
                     generator = generators[releasetypes.INSTALLABLE_ISO]
-                    log.info("%s job for %s started (id %d)" % (generator.__name__, project.getHostname(), jobId))
-                    imageFilenames.extend(generator(self.client, self.cfg, self.job, releaseId).write())
+                    log.info("%s job for %s started (id %d)" % \
+                             (generator.__name__,
+                              project.getHostname(), jobId))
+                    imageFilenames.extend(generator(self.client,
+                                                    self.cfg, self.job,
+                                                    releaseId).write())
                     os.chdir(cwd)
                 #Now for the bootable images
-                imagegen = BootableImage(self.client, self.cfg, self.job, releaseId)
+                imagegen = BootableImage(self.client, self.cfg, self.job,
+                                         releaseId)
                 imagegen.setImageTypes(imageTypes)
                 if imagegen.workToDo():
-                    log.info("%s job for %s started (id %d)" %(BootableImage.__name__, project.getHostname(), jobId))
+                    log.info("%s job for %s started (id %d)" % \
+                             (BootableImage.__name__,
+                              project.getHostname(), jobId))
 
                     imageFilenames.extend(imagegen.write())
                 else:
-                    log.info("job %s:%d did not have a bootable image generation request" % (project.getHostname, jobId))
+                    log.info("job %s:%d did not have a bootable image"
+                             " generation request" % (project.getHostname,
+                                                      jobId))
 
             except Exception, e:
                 traceback.print_exc()
@@ -102,7 +111,8 @@ class JobRunner(threading.Thread):
         elif self.job.getGroupTroveId():
             try:
                 log.info("GroupTroveCook job started (id %d)" % (jobId))
-                ret = GroupTroveCook(self.client, self.cfg, self.job, None).write()
+                ret = GroupTroveCook(self.client, self.cfg, self.job,
+                                     None).write()
             except Exception, e:
                 traceback.print_exc()
                 sys.stdout.flush()
@@ -120,7 +130,8 @@ def updateWaitStatus(client):
     joblist = client.getJobs()
     for job in joblist:
         if job.getStatus() == jobstatus.WAITING:
-            job.setStatus(jobstatus.WAITING, client.server.getJobWaitMessage(job.getId()))
+            job.setStatus(jobstatus.WAITING,
+                          client.server.getJobWaitMessage(job.getId()))
 
 class JobDaemon:
     def __init__(self, cfg):
@@ -133,18 +144,33 @@ class JobDaemon:
         except OSError, e:
             if e.errno != errno.EEXIST:
                 raise
-     
+
         # normalize the job daemon machine's architecture
         # right now we only handle x86 and x86_64 images
         log.info("handling jobs of architecture: %s", cfg.supportedArch)
-        
+
+        runningJobs = []
+
         while(True):
-            try:
-                joblist = client.getJobs()
-                confirmedAlive = True
-                for job in joblist:
-                    if job.getStatus() != jobstatus.WAITING:
+            for jobThread in runningJobs[:]:
+                if not jobThread.isAlive():
+                    jobThread.join()
+                    runningJobs.remove(jobThread)
+
+            if len(runningJobs) < cfg.maxThreads:
+                try:
+                    joblist = client.getJobs()
+                    confirmedAlive = True
+
+                    while joblist and \
+                              joblist[0].getStatus() != jobstatus.WAITING:
+                        joblist.pop(0)
+
+                    if not joblist:
+                        time.sleep(5)
                         continue
+
+                    job = joblist[0]
 
                     if job.releaseId:
                         release = client.getRelease(job.getReleaseId())
@@ -155,22 +181,18 @@ class JobDaemon:
                     th = JobRunner(cfg, client, job)
                     th.start()
                     updateWaitStatus(client)
-                    # wait for this one to finish before starting more
-                    th.join()
 
-                    
-            # We can't assume the mint server will stay up forever.
-            # We'd like to ignore exceptions raised if/when the mint server
-            # dies, and just wait for it to come back up.
-            # Sometimes we get socket.error and sometimes we get
-            # a ProtocolError...
-            # it all depends on what the xmlrpc lib was trying to do when
-            # the server went byebye.
-            except (ProtocolError, socket.error), e:
-                if not confirmedAlive:
-                    log.error("rBuilder Server Unreachable; exiting")
-                    return
-                log.warning("Error retrieving job list:" + str(e))
+                    # queue this thread and move on
+                    runningJobs.append(th)
+
+                # if the rBuilder Online server is down, we will get either a
+                # ProtocolError or a socket error depending on what xmlrpc lib
+                # was doing when the server went down. simply wait for it.
+                except (ProtocolError, socket.error), e:
+                    if not confirmedAlive:
+                        log.error("rBuilder Server Unreachable; exiting")
+                        return
+                    log.warning("Error retrieving job list:" + str(e))
             time.sleep(5)
 
 def kill(lockFile):
@@ -185,7 +207,8 @@ def kill(lockFile):
         procName = pipeFD.readline().strip()
         pipeFD.close()
         if procName not in sys.argv[0]:
-            log.error("pid: %d does not seem to be an rBuilder ISO generation server.")
+            log.error("pid: %d does not seem to be an rBuilder"
+            " ISO generation server.")
             sys.exit(1)
         log.info("killing rBuilder ISO generation server pid %d" % pid)
         try:
@@ -230,6 +253,7 @@ class IsoGenConfig(ConfigFile):
     imagesPath      = '/srv/mint/images/'
     finishedPath    = '/srv/mint/finished-images/'
     lockFile        = '/var/run/mint-jobdaemon.pid'
+    maxThreads      = (CfgInt, 5)
 
     def read(self, path, exception = False):
         ConfigFile.read(self, path, exception)
@@ -238,8 +262,10 @@ class IsoGenConfig(ConfigFile):
                 log.error("unsupported architecture: %s", arch)
                 sys.exit(1)
         if self.serverUrl is None:
-            log.error("a server URL must be specified in the config file, for example:")
-            log.error("serverUrl http://username:userpass@www.example.com/xmlrpc-private/")
+            log.error("a server URL must be specified in the config file,"
+            " for example:")
+            log.error("serverUrl http://username:userpass@"
+                      "www.example.com/xmlrpc-private/")
             sys.exit(1)
 
 if __name__ == "__main__":
@@ -255,11 +281,11 @@ if __name__ == "__main__":
                       action = "store_true", default = False,
                       help = "Do not run as a daemon")
     (options, args) = parser.parse_args()
-    
+
     if options.debug:
         sys.excepthook = util.genExcepthook()
         log.setVerbosity(log.DEBUG)
-    else: 
+    else:
         log.setVerbosity(log.INFO)
 
     # use sys.argv[1] as config file if provided
@@ -273,8 +299,9 @@ if __name__ == "__main__":
                 if os.access(cfgFile, os.R_OK) and os.path.isfile(cfgFile):
                     break
     if not cfgFile:
-        log.error("unable to open iso_gen.conf configuration file. Please use --config=<path>.")
-        sys.exit(1) 
+        log.error("unable to open iso_gen.conf configuration file."
+                  " Please use --config=<path>.")
+        sys.exit(1)
 
     cfg = IsoGenConfig()
     cfg.read(cfgFile)
@@ -297,17 +324,19 @@ if __name__ == "__main__":
         pipeFD.close()
 
         if pid in pidLine:
-            log.error("rBuilder ISO generation server already running as pid %s", pid)
+            log.error("rBuilder ISO generation server already"
+                      " running as pid %s", pid)
             sys.exit(1)
         else:
             log.info("Old job daemon pid seems to be invalid. killing.")
             kill(cfg.lockFile)
 
     log.debug("loading configuration file: %s", cfgFile)
-    log.info("using Conary in %s", os.path.dirname(sys.modules['conary'].__file__))
+    log.info("using Conary in %s",
+             os.path.dirname(sys.modules['conary'].__file__))
 
     if options.noDaemon:
-        sys.excepthook = util.genExcepthook() 
+        sys.excepthook = util.genExcepthook()
         daemon(options, cfg)
     else:
         pid = os.fork()
@@ -321,16 +350,15 @@ if __name__ == "__main__":
             os.dup2(logfd, sys.stderr.fileno())
             os.dup2(nullf.fileno(), sys.stdin.fileno())
             nullf.close()
-        
+
             pid = os.fork()
             if pid == 0:
-                # abandon the controlling tty totally by placing this thread in a
-                # new session
+                # abandon the controlling tty by resetting session id
                 os.setsid()
 
                 sys.stdout.flush()
                 sys.stderr.flush()
-                
+
                 daemon(options, cfg)
         else:
             log.info("rBuilder ISO generation server started")
