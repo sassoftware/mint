@@ -58,6 +58,13 @@ class JobRunner(threading.Thread):
         self.parentThread = threading.currentThread()
 
     def run(self):
+        # ensure each job thread has it's own process space
+        pid = os.fork()
+        if not pid:
+            self.doWork()
+        os.waitpid(pid, 0)
+
+    def doWork(self):
         ret = None
         error = None
         jobId = self.job.getId()
@@ -193,7 +200,10 @@ class JobDaemon:
                         log.error("rBuilder Server Unreachable; exiting")
                         return
                     log.warning("Error retrieving job list:" + str(e))
-            time.sleep(5)
+                    time.sleep(5)
+            else:
+                # we get here if we already have (maxThreads) jobs running
+                time.sleep(5)
 
 def kill(lockFile):
     try:
