@@ -1260,8 +1260,6 @@ class MintServer(object):
             cu.execute("INSERT INTO ReleaseImageTypes (releaseId, imageType)"
                     "VALUES (?, ?)", releaseId, i)
         self.db.commit()
-            
-        #self.releases.update(releaseId, imageType = imageType)
         return True
 
     @typeCheck(int)
@@ -1940,8 +1938,11 @@ class MintServer(object):
             global tables
             if not tables or alwaysReload:
                 self.db.loadSchema()
-                tables = getTables(self.db, self.cfg)
-            self.__dict__.update(tables)
+            tables = getTables(self.db, self.cfg)
+
+            for table in tables:
+                tables[table].db = self.db
+                self.__dict__[table] = tables[table]
 
             #Now it's safe to commit
             self.db.commit()
