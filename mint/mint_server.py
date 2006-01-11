@@ -1336,9 +1336,9 @@ class MintServer(object):
     @typeCheck(int)
     def getJobWaitMessage(self, jobId):
         queueLen = self._getJobQueueLength(jobId)
-        msg = "Waiting for next available release generator"
+        msg = "Next in line for processing"
         if queueLen:
-            msg = "Number %d in line for next available release generator" % queueLen
+            msg = "Number %d in line for processing" % (queueLen+1)
         return msg
 
     @typeCheck(int)
