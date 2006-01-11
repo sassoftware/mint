@@ -18,6 +18,7 @@ from conary.repository import changeset, trovesource, netclient, shimclient
 from conary.repository.netrepos import netserver
 from conary import conarycfg
 from conary import conaryclient
+from conary import dbstore
 from conary import files
 from conary import trove
 from conary import updatecmd
