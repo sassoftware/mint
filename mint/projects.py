@@ -394,6 +394,14 @@ class ProjectsTable(database.KeyedTable):
             contentsSrc = os.path.join(contentsPath, 'contents')
             util.mkdirChain(contentsSrc)
             os.symlink(contentsSrc, contentsTarget)
+
+        # hack to create the initial schema (0 -> n)
+        db = dbstore.connect(cfg.repositoryDB[1], cfg.repositoryDB[0])
+        from conary.server import schema
+        schema.loadSchema(db)
+        db.commit()
+        db.close()
+
         repos = netserver.NetworkRepositoryServer(cfg, '')
 
         repos.auth.addUser(username, password)
@@ -592,7 +600,7 @@ class MySqlRepositoryDatabase(RepositoryDatabase):
         path = self.cfg.reposDBPath % 'mysql'
         db = dbstore.connect(path, 'mysql')
 
-        dbName = name.replace(".", "_")
+        dbName = name.replace(".", "_").replace(":", "_")
 
         cu = db.cursor()
         # this check should never be required outside of the test suite,
@@ -605,5 +613,5 @@ class MySqlRepositoryDatabase(RepositoryDatabase):
         db.close()
 
     def getRepositoryDB(self, name):
-        dbName = name.replace(".", "_")
+        dbName = name.replace(".", "_").replace(":", "_")
         return ('mysql', self.cfg.reposDBPath % dbName)
