@@ -405,7 +405,7 @@ class InstallableIso(ImageGenerator):
             else:
                 os.chdir(os.path.join(discdir, d))
                 call("mkisofs", "-o", "%(isodir)s/%(iso)s" % infoMap,
-                     "-R", "-J", "-V", "\"%(discname)s\"" % infoMap, "-T", ".")
+                     "-R", "-J", "-V", "%(discname)s" % infoMap, "-T", ".")
                 # Abort if parent thread has died
                 assertParentAlive()
 
