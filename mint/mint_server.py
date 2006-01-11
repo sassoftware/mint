@@ -500,12 +500,12 @@ class MintServer(object):
             projectName = self.getProject(projectId)['hostname']
             owners = self.projectUsers.getOwnersByProjectName(projectName)
             for name, email in owners:
-                subject = "Project Membership Request"
+                projectName = self.getProject(projectId)['name']
+                subject = projectName + " Membership Request"
 
                 import templates.joinRequest
                 message = templates.write(templates.joinRequest,
-                    projectName = self.getProject(projectId)['name'],
-                    comments = comments, cfg = self.cfg)
+                    projectName = projectName, comments = comments, cfg = self.cfg)
                 users.sendMailWithChecks(self.cfg.adminMail, self.cfg.productName, email, subject, message)
         return self.membershipRequests.setComments(projectId, userId, comments)
 
@@ -1938,11 +1938,8 @@ class MintServer(object):
             global tables
             if not tables or alwaysReload:
                 self.db.loadSchema()
-            tables = getTables(self.db, self.cfg)
-
-            for table in tables:
-                tables[table].db = self.db
-                self.__dict__[table] = tables[table]
+                tables = getTables(self.db, self.cfg)
+            self.__dict__.update(tables)
 
             #Now it's safe to commit
             self.db.commit()
