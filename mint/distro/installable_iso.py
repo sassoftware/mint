@@ -22,6 +22,7 @@ from conary.build import use
 from conary.conarycfg import ConfigFile
 from conary.lib import util
 
+from group_trove import stockFlavors
 from mint.mint import upstream
 from imagegen import ImageGenerator, assertParentAlive
 import gencslist
@@ -118,7 +119,7 @@ class InstallableIso(ImageGenerator):
         trv = repos.getTroves([trove])
         return " ".join(trv[0].getTroveInfo().labelPath)
 
-    def writeProductImage(self):
+    def writeProductImage(self, arch):
         # write the product.img cramfs
         productPath = os.path.join(self.baseDir, "product.img")
         tmpPath = tempfile.mkdtemp()
@@ -143,6 +144,8 @@ class InstallableIso(ImageGenerator):
             cfg.root = tmpRoot
             cfg.dbPath = tmpRoot + "/var/lib/conarydb/conarydb"
             cfg.installLabelPath = [self.version.branch().label()]
+            cfg.buildFlavor = deps.deps.parseFlavor(stockFlavors[arch])
+
             cclient = conaryclient.ConaryClient(cfg)
 
             uJob = None
@@ -365,7 +368,7 @@ class InstallableIso(ImageGenerator):
             print >> discInfoFile, "%s/%s" % (subdir, x)
         discInfoFile.close()
 
-        self.writeProductImage()
+        self.writeProductImage('1#' + arch)
 
         call(isocfg.scriptPath + "/splitdistro", topdir)
 
