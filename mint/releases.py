@@ -35,8 +35,8 @@ class ReleaseDataNameError(MintError):
         else:
             self.str = reason
 
-installableIsoTemplate = {
-    'installLabelPath': (RDT_STRING, '',  'Default Conary installLabelPath setting'),
+installableIsoTemplate = {                # XXX this is kind of a lousy description; a toggleable "override ILP option would be nicer
+    'installLabelPath': (RDT_STRING, '',  'Custom Conary installLabelPath setting (leave blank for default)'),
     'autoResolve':      (RDT_BOOL, False, 'Automatically install required dependencies during updates.'),
     'skipMediaCheck':   (RDT_BOOL, False, 'Prompt to verify CD images during install'),
     'betaNag':          (RDT_BOOL, False, 'This release is considered a beta'),

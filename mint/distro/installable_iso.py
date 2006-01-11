@@ -113,6 +113,11 @@ class InstallableIso(ImageGenerator):
             return None
         return uJob
 
+    def _getLabelPath(self, cclient, trove):
+        repos = cclient.getRepos()
+        trv = repos.getTroves([trove])
+        return " ".join(trv[0].getTroveInfo().labelPath)
+
     def writeProductImage(self):
         # write the product.img cramfs
         productPath = os.path.join(self.baseDir, "product.img")
@@ -136,6 +141,7 @@ class InstallableIso(ImageGenerator):
             cfg = self.project.getConaryConfig(overrideSSL = True, overrideAuth = True, 
                 newUser='mintauth', newPass='mintpass', useSSL = self.cfg.SSL) 
             cfg.root = tmpRoot
+            cfg.dbPath = tmpRoot + "/var/lib/conarydb/conarydb"
             cfg.installLabelPath = [self.version.branch().label()]
             cclient = conaryclient.ConaryClient(cfg)
 
@@ -151,7 +157,7 @@ class InstallableIso(ImageGenerator):
                 cclient.applyUpdate(uJob, callback = self.callback)
                 print >> sys.stderr, "success."
                 sys.stderr.flush()
-            
+
                 # copy pixmaps and scripts into cramfs root
                 tmpTar = tempfile.mktemp(suffix = '.tar')
                 call('tar', 'cf', tmpTar, '-C', tmpRoot + '/usr/share/anaconda/', './')
@@ -163,7 +169,7 @@ class InstallableIso(ImageGenerator):
                         outdir = tmpPath + '/pixmaps',
                         fontfile = '/usr/share/fonts/bitstream-vera/Vera.ttf')
                 ai.processImages()
-                    
+
             # convert syslinux-splash.png to splash.lss, if exists
             if os.path.exists(tmpPath + '/pixmaps/syslinux-splash.png'):
                 print >> sys.stderr, "found syslinux-splash.png, converting to splash.lss"
@@ -173,7 +179,7 @@ class InstallableIso(ImageGenerator):
                 pngtopnm = subprocess.Popen(['pngtopnm', tmpPath + '/pixmaps/syslinux-splash.png'], stdout = subprocess.PIPE)
                 ppmtolss16 = subprocess.Popen(['ppmtolss16'] + palette, stdin = pngtopnm.stdout, stdout = splash)
                 ppmtolss16.communicate()
-                
+
             # copy the splash.lss files to the appropriate place
             if os.path.exists(tmpPath + '/pixmaps/splash.lss'):
                 print >> sys.stderr, "found splash.lss; moving to isolinux directory"
@@ -184,7 +190,12 @@ class InstallableIso(ImageGenerator):
         # write the conaryrc file
         # TODO move this up to ImageGenerator
         conaryrcFile = open(os.path.join(tmpPath, "conaryrc"), "w")
-        print >> conaryrcFile, "installLabelPath " + self.release.getDataValue("installLabelPath")
+        ilp = self.release.getDataValue("installLabelPath")
+        if not ilp: # allow a ReleaseData ILP to override the group label path
+            ilp = self._getLabelPath(cclient, (self.release.getTroveName(),
+                                               self.release.getTroveVersion(),
+                                               self.release.getTroveFlavor()))
+        print >> conaryrcFile, "installLabelPath " + ilp
         print >> conaryrcFile, "pinTroves kernel.*"
         if self.release.getDataValue("autoResolve"):
             print >> conaryrcFile, "autoResolve True"

@@ -323,11 +323,7 @@ class ProjectHandler(WebHandler):
         else:
             release = self.client.getRelease(releaseId)
             template = release.getDataTemplate()
-            if 'installLabelPath' in template.keys():
-                if not release.getDataValue("installLabelPath"):
-                    ilp = "%s conary.rpath.com@rpl:devel contrib.rpath.org@rpl:devel" % self.project.getLabel()
-                    release.setDataValue("installLabelPath", ilp)
-                
+               
             trove, versionStr, flavor = release.getTrove()
             version = versions.ThawVersion(versionStr)
             label = version.branch().label()
