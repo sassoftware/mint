@@ -195,6 +195,10 @@ class InstallableIso(ImageGenerator):
             ilp = self._getLabelPath(cclient, (self.release.getTroveName(),
                                                self.release.getTroveVersion(),
                                                self.release.getTroveFlavor()))
+        if not ilp: # fall back to a reasonable default if group trove was
+                    # cooked before conary0.90 and releasedata is blank
+            ilp = self.project.getLabel() + " conary.rpath.com@rpl:1 contrib.rpath.com@rpl:devel"
+
         print >> conaryrcFile, "installLabelPath " + ilp
         print >> conaryrcFile, "pinTroves kernel.*"
         if self.release.getDataValue("autoResolve"):
@@ -209,14 +213,14 @@ class InstallableIso(ImageGenerator):
         betaNag = self.release.getDataValue('betaNag')
         call('sed', '-i', 's/BETANAG = 1/BETANAG = %d/' % int(betaNag), tmpPath + '/constants.py')
         util.rmtree(stage2Path)
-            
+
         # create cramfs
         call('mkcramfs', tmpPath, productPath)
-        
+
         # clean up
         util.rmtree(tmpPath)
         util.rmtree(tmpRoot)
-        
+
         assertParentAlive()
 
     def write(self):
@@ -225,7 +229,7 @@ class InstallableIso(ImageGenerator):
         if isocfg.imagesPath != None:
             print >> sys.stderr, "WARNING: The imagesPath configuration entry has moved from installable_iso.conf to iso_gen.conf."
             sys.stderr.flush()
-        
+
         releaseId = self.job.getReleaseId()
 
         release = self.client.getRelease(releaseId)
