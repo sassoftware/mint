@@ -141,7 +141,7 @@ class ReleasesTable(database.KeyedTable):
         # [ FOO, BAR, [0, 1, 2, 3]]
         rows = cu.fetchall()
         if not rows:
-            raise ItemNotFound
+            raise database.ItemNotFound
         imageTypes = []
         for row in rows:
             if row[-1] is not None:
