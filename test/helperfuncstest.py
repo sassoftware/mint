@@ -42,8 +42,8 @@ class ProjectTest(unittest.TestCase):
             else:
                 newData.append(continuedLine + line)
                 continuedLine = ''
-                
-        fileList = set() 
+
+        fileList = set()
         for line in newData:
             if line.startswith('python_files') or line.startswith('kid_files') or line.startswith('script_dist'):
                 fileList |= set(''.join(x.strip().split('\\')) for x in \
@@ -55,7 +55,7 @@ class ProjectTest(unittest.TestCase):
                            if ((x.endswith('.py') or x.endswith('.kid')) \
                              and not x.startswith(".")))
         missingList = (actualList - exclusionList) - fileList
-        
+
         if missingList:
             print >> sys.stderr, "\n%s is missing: %s" % \
                   (directory + '/Makefile', ' '.join(missingList)),
@@ -64,15 +64,18 @@ class ProjectTest(unittest.TestCase):
 
     def testMakefiles(self):
         missing = False
-        skipDirs = ('test/archive/arch', 'test/archive/use', '.hg',
+        skipDirs = ('.hg', 'test/archive/arch', 'test/archive/use',
                     'mint/web/content', 'scripts/DiskImageData',
-                    'scripts/servertest')
-        for dirPath, dirNames, fileNames in \
-                os.walk(os.getenv('MINT_PATH')):
+                    'scripts/servertest', 'test/templates')
+        mint_path = os.getenv('MINT_PATH')
+        if not mint_path:
+            print >> sys.stderr, "MINT_PATH is missing from your environment"
+            raise testsuite.SkipTestException()
+        for dirPath, dirNames, fileNames in os.walk(mint_path):
             if "Makefile" not in fileNames:
                 ignore = False
                 for skipDir in skipDirs:
-                    if dirPath.startswith(os.getenv('MINT_PATH') + skipDir):
+                    if dirPath.startswith(os.path.join(mint_path, skipDir)):
                         ignore = True
                         break
                 if not ignore:
@@ -87,9 +90,15 @@ class ProjectTest(unittest.TestCase):
     def testPlainKidTemplate(self):
         t = kid.Template(testTemplate)
         t.myString = "string"
-
         render = templates.write(t)
         assert render == "This is a plain text string."
+
+    def testPlainKidTemplateWithImport(self):
+        import kid
+        kid.enable_import()
+        from templates import plainTextTemplate
+        render = templates.write(plainTextTemplate, myString = "dubious text")
+        self.assertEqual(render, "This is a string containing dubious text.")
 
     def testExplicitTransactions(self):
         from conary import dbstore
@@ -104,7 +113,7 @@ class ProjectTest(unittest.TestCase):
     # Test strings with the default values
     def testTruncateKnownGoodValues(self):
         # Test values (assumes maxWords=10 and maxWordLen=15)
-        knownGoodValues = ( 
+        knownGoodValues = (
               # empty test
               ( "", "" ),
 
@@ -121,7 +130,7 @@ class ProjectTest(unittest.TestCase):
               # a sample block of text
               ( "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. "
                 "Pellentesque ullamcorper tincidunt sem. Pellentesque ultricies"
-                "lacinia ante. Proin molestie ligula ut.", 
+                "lacinia ante. Proin molestie ligula ut.",
                 "Lorem ipsum dolor sit amet, consectetuer adipiscing elit. "
                 "Pellentesque ullamcorper ....")
         )
@@ -138,13 +147,13 @@ class ProjectTest(unittest.TestCase):
         self.assertEqual(truncateForDisplay(s, 10, 5), s[0:5]+'...')
         self.assertEqual(truncateForDisplay(s, 10, 1), s[0:1]+'...')
         self.assertEqual(truncateForDisplay(s, 10, 400), s)
-        
+
     # Test different values for maxWords
     def testTruncateDifferentMaxWords(self):
         s = "I am a string of some words. Fear me!"
         self.assertEqual(truncateForDisplay(s, 1), "I ....")
         self.assertEqual(truncateForDisplay(s, 2), "I am ....")
-        self.assertEqual(truncateForDisplay(s, 400), s) 
+        self.assertEqual(truncateForDisplay(s, 400), s)
 
     # Test a weird sentence of mostly punctuation
     def testTruncatePathologicalSentences(self):
