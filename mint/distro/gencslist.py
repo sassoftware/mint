@@ -334,6 +334,11 @@ def extractChangeSets(client, cfg, csdir, groupName, groupVer, groupFlavor,
             # rename to final path and change permissions
             os.rename(fn, path)
             os.chmod(path, 0644)
+ 
+            # link this into the cache dir if we need to
+            if cacheDir:
+                # cachedPath is calculated above
+                _linkOrCopyFile(path, cachedPath)
 
         cslist.append(entry)
 
