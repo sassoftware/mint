@@ -202,7 +202,7 @@ class MintServer(object):
     def callWrapper(self, methodName, authToken, args):
         # reopen the database if it's changed
         self.db.reopen()
-        
+
         try:
             if methodName.startswith('_'):
                 raise AttributeError
@@ -210,7 +210,8 @@ class MintServer(object):
         except AttributeError:
             return (True, ("MethodNotSupported", methodName, ""))
         try:
-            startTime = time.time()
+            if self.cfg.profiling:
+                self.profile.startXml(methodName)
             # check authorization
 
             # grab authToken from a session id if passed a session id
@@ -248,8 +249,7 @@ class MintServer(object):
             r = method(*args)
             self._allowPrivate = allowPrivate
             if self.cfg.profiling:
-                print >> sys.stderr, "Ending XMLRPC request:\t\t%-25s\t%.2f" % (methodName, (time.time() - startTime) * 1000)
-                sys.stderr.flush()
+                self.profile.stopXml(methodName)
         except users.UserAlreadyExists, e:
             self.db.rollback()
             return (True, ("UserAlreadyExists", str(e)))
@@ -1912,6 +1912,14 @@ class MintServer(object):
 
     def __init__(self, cfg, allowPrivate = False, alwaysReload = False):
         self.cfg = cfg
+
+        # create the profiling log if self.cfg.profiling exists
+        if self.cfg.profiling:
+            import profile
+            if 'logs' not in os.listdir(self.cfg.dataPath):
+                os.mkdir(self.cfg.dataPath + '/logs')
+            self.profile = profile.Profile(self.cfg.dataPath + \
+                                           '/logs/profiling')
 
         # all methods are private (not callable via XMLRPC)
         # except the ones specifically decorated with @public.
