@@ -592,6 +592,10 @@ class RepositoryDatabase:
         raise NotImplementedError
 
 class SqliteRepositoryDatabase(RepositoryDatabase):
+    def create(self, name):
+        if os.path.exists(self.cfg.reposDBPath % name):
+            os.unlink(self.cfg.reposDBPath % name)
+
     def getRepositoryDB(self, name):
         return ('sqlite', self.cfg.reposDBPath % name)
 
