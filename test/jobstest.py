@@ -56,14 +56,14 @@ class JobsTest(MintRepositoryHelper):
         release.setDataValue('stringArg', 'Hello World!')
 
         job = client.startImageJob(release.getId())
-       
+
         client.getCfg().imagesPath = self.imagePath
         imagegen = stub_image.StubImage(client, client.getCfg(), job, release.getId())
         imagegen.write()
         release.setFiles([[self.imagePath + "/stub.iso", "Stub"]])
-        
+
         self.verifyFile(self.imagePath + "/stub.iso", "Hello World!\n")
-        
+
         release.refresh()
         files = release.getFiles()
         assert(files == [{'fileId': 1, 'filename': 'stub.iso', 'title': 'Stub', 'size': 13}])
@@ -83,7 +83,7 @@ class JobsTest(MintRepositoryHelper):
 
         release = client.newRelease(projectId, "Test Release")
         release.setImageTypes([releasetypes.STUB_IMAGE])
-        
+
         # make sure that the incoming ordering of files is preserved
         release.setFiles([['zaaa.iso', 'Zaaa'], ['aaaa.iso', 'Aaaa']])
         assert(release.getFiles() == [{'size': 0, 'title': 'Zaaa', 'filename': 'zaaa.iso', 'fileId': 1},
@@ -102,7 +102,8 @@ class JobsTest(MintRepositoryHelper):
 
         assert(client.server.getJobStatus(job.getId())['queueLen'] == 0)
         assert(client.server.getReleaseStatus(release.getId())['queueLen'] == 0)
-        assert(client.server.getJobWaitMessage(job.getId()) == 'Waiting for job server')
+        assert(client.server.getJobWaitMessage(job.getId()) == \
+               'Next in line for processing')
 
         projectId = self.newProject(client)
 
@@ -126,11 +127,13 @@ class JobsTest(MintRepositoryHelper):
                                     subGroup, False, False, False)
         cookJobId = groupTrove.startCookJob("1#x86")
         assert(client.server.getJobStatus(cookJobId)['queueLen'] == 1)
-        assert(client.server.getJobWaitMessage(cookJobId) == 'Waiting for 1 job to complete')
+        assert(client.server.getJobWaitMessage(cookJobId) == \
+               'Number 2 in line for processing')
 
         job.setStatus(jobstatus.FINISHED, 'Finished')
         assert(client.server.getJobStatus(cookJobId)['queueLen'] == 0)
-        assert(client.server.getJobWaitMessage(cookJobId) == 'Waiting for job server')
+        assert(client.server.getJobWaitMessage(cookJobId) == \
+               'Next in line for processing')
 
         job = client.startImageJob(release.getId())
         assert(client.server.getJobStatus(cookJobId)['queueLen'] == 0)
