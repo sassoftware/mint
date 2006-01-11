@@ -34,12 +34,12 @@ from conary.repository import shimclient
 
 from mint import config
 from mint import mint_server
+from mint import profile
 from mint import users
 from webhandler import normPath, HttpError
 import app
 import cookie_http
 
-profiling = False
 BUFFER=1024 * 256
 
 def getHttpAuth(req):
@@ -252,7 +252,7 @@ def conaryHandler(req, cfg, pathInfo):
             dbName = dbName.replace(".", "_")
         nscfg.repositoryDB = (cfg.reposDBDriver, cfg.reposDBPath % dbName)
 
-        
+
         #nscfg.cacheDB = ('sqlite', repositoryDir + '/cache.sql')
         nscfg.cacheDB = None
         nscfg.contentsDir = repositoryDir + '/contents/'
@@ -297,12 +297,12 @@ def conaryHandler(req, cfg, pathInfo):
         # XXX hack to override commitAction for foresight until foresight
         # switches to our mailing lists.
         if req.hostname == "foresight.rpath.org":
-            nscfg.commitAction = '''/usr/lib64/python2.4/site-packages/conary/commitaction 
-                --module "/usr/lib/python2.4/site-packages/mint/rbuilderaction.py 
-                  --user %%(user)s --url http://www.rpath.org/xmlrpc-private/" 
-                --module "/usr/lib64/python2.4/site-packages/conary/changemail.py 
+            nscfg.commitAction = '''/usr/lib64/python2.4/site-packages/conary/commitaction
+                --module "/usr/lib/python2.4/site-packages/mint/rbuilderaction.py
+                  --user %%(user)s --url http://www.rpath.org/xmlrpc-private/"
+                --module "/usr/lib64/python2.4/site-packages/conary/changemail.py
                   --user %(user)s --email desktop-commits@bizrace.com"'''
-                                
+
         if os.access(repositoryDir, os.F_OK):
             repositories[repHash] = netserver.NetworkRepositoryServer(nscfg, urlBase)
             shim_repositories[repHash] = shimclient.NetworkRepositoryServer(nscfg, urlBase)
@@ -311,10 +311,10 @@ def conaryHandler(req, cfg, pathInfo):
         else:
             repositories[repHash] = None
             shim_repositories[repHash] = None
-    
+
     repo = repositories[repHash]
     shimRepo = shim_repositories[repHash]
-        
+
     if method == "POST":
 	return post(port, secure, (repo, shimRepo), cfg, req)
     elif method == "GET":
@@ -333,10 +333,10 @@ def xmlrpcHandler(req, cfg, pathInfo):
     authToken = getHttpAuth(req)
     if type(authToken) is int:
         return authToken
-        
+
     (params, method) = xmlrpclib.loads(req.read())
     params = [method, authToken, params]
-    
+
     if req.uri.startswith("/xmlrpc-private"):
         server = mint_server.MintServer(cfg, allowPrivate = True)
     elif req.uri.startswith("/xmlrpc"):
@@ -409,7 +409,7 @@ def logErrorAndEmail(req, cfg, exception, e, bt):
         'uri'            : req.uri,
         'request_time'   : time.ctime(req.request_time),
     }
-        
+
     timeStamp = time.ctime(time.time())
     # log error
     log.error('[%s] Unhandled exception from mint web interface: %s: %s', timeStamp, exception.__name__, e)
@@ -425,18 +425,33 @@ def logErrorAndEmail(req, cfg, exception, e, bt):
     body_small = 'Mint Exception: %s: %s' % (exception.__name__, e)
     for key, val in sorted(info_dict_small.items()):
         body_small += '\n' + key + ': ' + str(val)
-    
+
     if cfg.bugsEmail:
         users.sendMailWithChecks(cfg.bugsEmail, cfg.bugsEmailName,
                                  cfg.bugsEmail, cfg.bugsEmailSubject, body)
     if cfg.smallBugsEmail:
         users.sendMailWithChecks(cfg.bugsEmail, cfg.bugsEmailName,
                                  cfg.smallBugsEmail, cfg.bugsEmailSubject, body_small)
-                             
+
+
+global _profile
+_profile = None
+
+def getProfile():
+    global _profile
+    return _profile
+
+def setProfile(prof):
+    global _profile
+    _profile = prof
+
+def makeProfile(cfg):
+    if 'logs' not in os.listdir(cfg.dataPath):
+        os.mkdir(cfg.dataPath + '/logs')
+    return profile.Profile(cfg.dataPath + '/logs/profiling')
 
 cfg = None
 def handler(req):
-    startTime = time.time()
     if not req.hostname:
         return apache.HTTP_BAD_REQUEST
 
@@ -444,6 +459,13 @@ def handler(req):
     if not cfg:
         cfg = config.MintConfig()
         cfg.read(req.filename)
+
+    if cfg.profiling:
+        prof = getProfile()
+        if not prof:
+            prof = makeProfile(cfg)
+            setProfile(prof)
+        prof.startHtml(req.uri)
 
     if not req.uri.startswith('/setup/') and not cfg.configured:
         req.headers_out['Location'] = "/setup/"
@@ -477,12 +499,11 @@ def handler(req):
                 ret = urlHandler(req, cfg, '/unknownError')
             break
     if cfg.profiling:
-        print >> sys.stderr, "WEB HIT: %.2fms" % ((time.time() - startTime) * 1000)
-        sys.stderr.flush()
+        prof.stopHtml(req.uri)
     if coverage:
         coverage.the_coverage.save()
     return ret
-    
+
 repositories = {}
 shim_repositories = {}
 
