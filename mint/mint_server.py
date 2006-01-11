@@ -500,12 +500,12 @@ class MintServer(object):
             projectName = self.getProject(projectId)['hostname']
             owners = self.projectUsers.getOwnersByProjectName(projectName)
             for name, email in owners:
-                subject = "Project Membership Request"
+                projectName = self.getProject(projectId)['name']
+                subject = projectName + " Membership Request"
 
                 import templates.joinRequest
                 message = templates.write(templates.joinRequest,
-                    projectName = self.getProject(projectId)['name'],
-                    comments = comments, cfg = self.cfg)
+                    projectName = projectName, comments = comments, cfg = self.cfg)
                 users.sendMailWithChecks(self.cfg.adminMail, self.cfg.productName, email, subject, message)
         return self.membershipRequests.setComments(projectId, userId, comments)
 
@@ -1260,7 +1260,7 @@ class MintServer(object):
             cu.execute("INSERT INTO ReleaseImageTypes (releaseId, imageType)"
                     "VALUES (?, ?)", releaseId, i)
         self.db.commit()
-            
+
         #self.releases.update(releaseId, imageType = imageType)
         return True
 
