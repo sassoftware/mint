@@ -436,6 +436,7 @@ class MintTest(mint_rephelp.WebRepositoryHelper):
         client, userId = self.quickMintUser("testuser", "testpass")
         projectId = client.newProject("Foo", "foo", "rpath.org")
         release = client.newRelease(projectId, "Test Release")
+        release.setImageTypes([0])
         release.setPublished(True)
 
         cu = self.db.cursor()
