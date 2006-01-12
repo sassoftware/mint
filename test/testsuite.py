@@ -100,7 +100,7 @@ class LogFilter:
 
 	if len(records) != len(self.records):
 	    raise AssertionError, "expected log message count does not match"
-	    
+
         for num, record in enumerate(records):
             if self.records[num] != record:
                 raise AssertionError, "expected log messages do not match: '%s' != '%s'" %(self.records[num], record)
@@ -143,18 +143,22 @@ def setup():
     if not os.environ.has_key('CONARY_PATH') or not os.environ.has_key('MINT_PATH'):
 	print "please set CONARY_PATH and MINT_PATH"
 	sys.exit(1)
-    from conary.lib import util
-    paths = (os.environ['CONARY_PATH'], os.environ['MINT_PATH'], util.normpath(os.environ['CONARY_PATH'] + "/../conary-test/"))
+    paths = (os.environ['MINT_PATH'], os.environ['MINT_PATH'] + '/test',
+             os.environ['CONARY_PATH'],
+             '/'.join(os.environ['CONARY_PATH'].split('/')[:-1]) \
+             + '/conary-test')
+    pythonPath = os.getenv('PYTHONPATH') or ""
+    for p in reversed(paths):
+        if p in sys.path:
+            sys.path.remove(p)
+        sys.path.insert(0, p)
     for p in paths:
-        if p not in sys.path:
-            sys.path.insert(0, p)
-    if 'PYTHONPATH' in os.environ:
-        os.environ['PYTHONPATH'] = os.pathsep.join((os.environ['MINT_PATH'],
-                                                    os.environ['CONARY_PATH'],
-                                                    os.environ['PYTHONPATH']))
-    else:
-        os.environ['PYTHONPATH'] = os.pathsep.join( \
-            (os.environ['MINT_PATH'], os.environ['CONARY_PATH']))
+        if p not in pythonPath:
+            pythonPath = os.pathsep.join((pythonPath, p))
+    os.environ['PYTHONPATH'] = pythonPath
+
+    print "sys.path is now set to: %s" % sys.path
+    print "PYTHONPATH is now set to: %s" % os.environ['PYTHONPATH']
 
     if isIndividual():
         serverDir = '/tmp/conary-server'
