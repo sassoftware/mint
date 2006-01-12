@@ -93,4 +93,4 @@ def assertParentAlive():
     parentThread = getParentThread()
     if not parentThread.isAlive():
         jobId = getJobId(parentThread)
-        raise RuntimeError("Job %d aborted." %jobId)
+        raise RuntimeError("Job aborted.")
