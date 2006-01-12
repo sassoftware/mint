@@ -8,7 +8,7 @@ from mint import jobstatus
 from mint import userlevels
 from mint.mint import upstream
 ?>
-<html xmlns:html="http://www.w3.org/1999/xhtml"
+<html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'layout.kid'">
     <?python

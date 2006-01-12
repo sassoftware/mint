@@ -10,7 +10,7 @@
         else:
             return up
 ?>
-<html xmlns:html="http://www.w3.org/1999/xhtml"
+<html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#">
 
     <div py:def="projectResourcesMenu" id="project" class="palette">
@@ -86,7 +86,7 @@
     </div>
 
 
-    <td py:def="projectsPane()" id="right" class="projects" py:strip="True" xmlns="http://www.w3.org/1999/xhtml">
+    <td py:def="projectsPane()" id="right" class="projects" py:strip="True" >
         <div py:if="not auth.authorized" class="pad">
             <h3>Sign up for ${cfg.productName} Today</h3>
 

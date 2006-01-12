@@ -1,13 +1,14 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <?python
 from mint import userlevels
-from mint.mint import upstream 
+from mint.mint import upstream
 ?>
-<html xmlns:py="http://purl.org/kid/ns#"
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://purl.org/kid/ns#"
       py:extends="'layout.kid'">
 <!--
     Copyright 2005 rPath, Inc.
-    All Rights Reserved 
+    All Rights Reserved
 -->
     <?python
         isOwner = (userLevel == userlevels.OWNER or auth.admin)
@@ -24,7 +25,7 @@ from mint.mint import upstream
 
     <head>
         <title>${formatTitle("Project Page: %s"%project.getNameForDisplay())}</title>
-        <link py:if="releases" rel="alternate" type="application/rss+xml" xmlns="http://www.w3.org/1999/xhtml"
+        <link py:if="releases" rel="alternate" type="application/rss+xml"
               title="${project.getName()} Releases" href="${basePath}rss" />
 
     </head>
@@ -48,8 +49,8 @@ from mint.mint import upstream
                     have not yet committed software into the project's repository.
                     To give the project's developers time to get started before
                     becoming fully visible to the rest of the rBuilder Online
-                    community, fledgling projects do not appear on "Browse Projects" 
-                    pages (but will appear in search results). When software has been 
+                    community, fledgling projects do not appear on "Browse Projects"
+                    pages (but will appear in search results). When software has been
                     committed into this project's repository, it will no longer be
                     considered fledgling, and will appear on "Browse Projects" pages.
                 </p>
@@ -71,7 +72,7 @@ from mint.mint import upstream
                     </li>
                     <li py:if="releases">
                         <a href="${basePath}rss">
-                            Subscribe to release news 
+                            Subscribe to release news
                                 <img style="border: none; vertical-align: middle;"
                                      src="${cfg.staticPath}apps/mint/images/xml.gif" />
                         </a>

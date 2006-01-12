@@ -4,7 +4,7 @@
 # Copyright (c) 2005 rPath, Inc.
 #
 ?>
-<html xmlns:html="http://www.w3.org/1999/xhtml"
+<html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'../layout.kid'">
     <div id="fileList" py:def="troveList(troves)">

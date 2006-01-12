@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<html xmlns:html="http://www.w3.org/1999/xhtml"
+<html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'layout.kid'">
 <!--
@@ -25,7 +25,7 @@
                 ${searchMenu(display='none')}
             </div>
         </td>
-        <td id="main" xmlns="http://www.w3.org/1999/xhtml">
+        <td id="main" >
             <div class="pad">
                 <h1>Group Builder</h1>
 

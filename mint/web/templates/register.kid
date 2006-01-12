@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<html xmlns:html="http://www.w3.org/1999/xhtml"
+<html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'layout.kid'">
 <!--
@@ -17,7 +17,7 @@
         <title>${formatTitle('Create an Account')}</title>
     </head>
     <body>
-       <td id="main" class="spanleft" xmlns="http://www.w3.org/1999/xhtml">
+       <td id="main" class="spanleft" >
             <div class="pad">
                 <p py:if="errors" class="error">Account Creation Error${len(errors) > 1 and 's' or ''}</p>
                 <p py:for="error in errors" class="errormessage" py:content="error"/>

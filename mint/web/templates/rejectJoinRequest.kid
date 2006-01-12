@@ -2,11 +2,12 @@
 <?python
 from mint import userlevels
 ?>
-<html xmlns:py="http://purl.org/kid/ns#"
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://purl.org/kid/ns#"
       py:extends="'layout.kid'">
 <!--
     Copyright 2005 rPath, Inc.
-    All Rights Reserved 
+    All Rights Reserved
 -->
     <?python
         isOwner = (userLevel == userlevels.OWNER or auth.admin)
@@ -48,7 +49,7 @@ from mint import userlevels
                     </td>
                 </tr>
             </table>
-            
+
         </td>
     </body>
 </html>

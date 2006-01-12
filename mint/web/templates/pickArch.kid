@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<html xmlns:html="http://www.w3.org/1999/xhtml"
+<html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'layout.kid'">
 <!--
@@ -24,7 +24,7 @@
             </div>
         </td>
         <td id="main">
-            <div class="pad" xmlns="http://www.w3.org/1999/xhtml">
+            <div class="pad" >
                 <h1 id="pleaseWait">Cooking Group: Choose An Architecture</h1>
 
                 <p>You can choose an architecture to cook this group for. If you want your application image to support

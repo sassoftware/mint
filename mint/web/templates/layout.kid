@@ -10,15 +10,17 @@ from urllib import quote
 onload = "javascript:;"
 ?>
 
-<html xmlns:py="http://purl.org/kid/ns#"
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://purl.org/kid/ns#"
       py:extends="'project.kid', 'library.kid'">
+
     <div py:def="breadcrumb()" class="pad" py:strip="True">
     </div>
 
     <div py:def="topnav()" py:strip="True">
         <td id="topnav">
             <div class="pad">
-                <a href="http://$SITE">rBuilder Online</a> | 
+                <a href="http://$SITE">rBuilder Online</a> |
                 <a href="${cfg.corpSite}sales/">Information</a> |
                 <a href="${cfg.corpSite}about/contact/">About Us</a> |
                 <a href="http://${SITE}help?page=feedback"><b style="color: red;">Need Help/Have Feedback?</b></a>
@@ -39,7 +41,7 @@ onload = "javascript:;"
         </ul>
     </div>
 
-    <td py:def="logo()" id="logo" xmlns="http://www.w3.org/1999/xhtml">
+    <td py:def="logo()" id="logo" >
         <div>
           <span id="rpath">
             <a href="http://$SITE" title="rBuilder main site">
@@ -54,7 +56,7 @@ onload = "javascript:;"
         </div>
     </td>
 
-    <head py:match="item.tag == 'head'" xmlns="http://www.w3.org/1999/xhtml">
+    <head py:match="item.tag == '{http://www.w3.org/1999/xhtml}head'" >
         <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=utf-8" />
         <meta name="KEYWORDS" content="rPath, rBuilder, rBuilder Online, rManager, rPath Linux, rPl, Conary, Software Appliance, Application image, Software as a Service, SaaS, Virtualization, virtualisation, open source, Linux," />
         <meta name="DESCRIPTION" content="rPath enables applications to be delivered as a software appliance which combines a software application and a streamlined version of system software that easily installs on industry standard hardware (typically a Linux server)." />
@@ -75,9 +77,8 @@ onload = "javascript:;"
         <link rel="icon" href="http://www.rpath.com/favicon.ico" />
         <div py:replace="item[:]"/>
     </head>
-    <body xmlns="http://www.w3.org/1999/xhtml"
-          py:match="item.tag == 'body'"
-          py:attrs="item.attrib"> 
+    <body py:match="item.tag == '{http://www.w3.org/1999/xhtml}body'"
+          py:attrs="item.attrib">
 
         <div id="top" align="center">
             <div class="shadowLeft"><div class="shadowRight">
@@ -115,7 +116,7 @@ onload = "javascript:;"
                     <span style="float: left;">Copyright &#169; 2005 rPath, Inc. </span>
 
                     <span>version ${constants.mintVersion}</span>
-                </div> 
+                </div>
             </div>
         </div>
     </body>

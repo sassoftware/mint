@@ -1,6 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<html
-      xmlns:html="http://www.w3.org/1999/xhtml"
+<html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'layout.kid'">
 <!--
@@ -26,7 +25,7 @@
                 <p py:for="error in errors" class="errormessage" py:content="error"/>
                 <h2>Create a Project</h2>
                 <p>Fields labeled with a <em class="required">red arrow</em> are required.</p>
-                <form method="post" action="createProject" xmlns="http://www.w3.org/1999/xhtml">
+                <form method="post" action="createProject" >
 
                     <table border="0" cellspacing="0" cellpadding="0" class="mainformhorizontal">
                         <tr>

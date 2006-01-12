@@ -6,7 +6,7 @@ from mint.releasetypes import visibleImageTypes, typeNames
 title = "Create New Release"
 ?>
 
-<html xmlns:html="http://www.w3.org/1999/xhtml"
+<html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'layout.kid'">
     <div py:def="breadcrumb()" py:strip="True">

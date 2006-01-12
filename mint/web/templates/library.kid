@@ -106,7 +106,7 @@ def injectVersion(version):
         </div>
     </div>
 
-    <div id="groupbuilder" class="palette" py:def="groupTroveBuilder(display='none')" py:strip="False" py:if="groupTrove" xmlns="http://www.w3.org/1999/xhtml">
+    <div id="groupbuilder" class="palette" py:def="groupTroveBuilder(display='none')" py:strip="False" py:if="groupTrove" >
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/groupbuilder.js"/>
         <script type="text/javascript">
             var BaseUrl = '${cfg.basePath}';
@@ -116,7 +116,7 @@ def injectVersion(version):
         <h3>
             <a href="${groupProject.getUrl()}closeCurrentGroup?referer=${quote(req.unparsed_uri)}" title="Close"><img id="groupbuilder_items_close" src="${cfg.staticPath}/apps/mint/images/BUTTON_close.gif" class="noborder" /></a>
             <a href="javascript:toggle_display('groupbuilder_items');" title="Minimize/Maximize"><img id="groupbuilder_items_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_${display == 'block' and 'collapse' or 'expand'}.gif" class="noborder" /></a>
-            Group Builder 
+            Group Builder
         </h3>
         <div id="groupbuilder_items" style="display: $display">
             <h4><a href="${groupProject.getUrl()}editGroup?id=${groupTrove.id}">Current Group: ${groupTrove.recipeName}</a></h4>
@@ -276,7 +276,7 @@ if auth.authorized:
 
     <a py:def="legal(page, text)" py:strip="False" href="#"
         onclick="javascript:{window.open('${page}', 'legal',
-         'height=500,width=500,menubar=no,scrollbars,status=no,toolbar=no', true); return false;}" 
+         'height=500,width=500,menubar=no,scrollbars,status=no,toolbar=no', true); return false;}"
         py:content="text"/>
 
 </html>

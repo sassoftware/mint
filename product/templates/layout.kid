@@ -10,7 +10,8 @@ from urllib import quote
 onload = "javascript:;"
 ?>
 
-<html xmlns:py="http://purl.org/kid/ns#"
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://purl.org/kid/ns#"
       py:extends="'project.kid', 'library.kid'">
     <div py:def="breadcrumb()" class="pad" py:strip="True">
     </div>
@@ -43,7 +44,7 @@ onload = "javascript:;"
         </div>
     </td>
 
-    <head py:match="item.tag == 'head'" xmlns="http://www.w3.org/1999/xhtml">
+    <head py:match="item.tag == 'head'" >
         <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=utf-8" />
         <script type="text/javascript" src="${cfg.staticPath}/apps/MochiKit/MochiKit.js"/>
         <script type="text/javascript" src="${cfg.staticPath}/apps/mint/javascript/generic.js"/>
@@ -62,9 +63,9 @@ onload = "javascript:;"
         <link rel="icon" href="http://www.rpath.com/favicon.ico" />
         <div py:replace="item[:]"/>
     </head>
-    <body xmlns="http://www.w3.org/1999/xhtml"
+    <body
           py:match="item.tag == 'body'"
-          py:attrs="item.attrib"> 
+          py:attrs="item.attrib">
         <?python
             secureProtocol = 'http'
             if auth.authorized:
@@ -110,7 +111,7 @@ onload = "javascript:;"
                     <span style="float: left;">Copyright &#169; 2005 rPath, Inc. </span>
 
                     <span>version ${constants.mintVersion}</span>
-                </div> 
+                </div>
             </div>
         </div>
     </body>

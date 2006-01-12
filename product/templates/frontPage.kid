@@ -4,9 +4,8 @@ from mint import userlevels
 import time
 from mint import searcher
 ?>
-<html
+<html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
-      xmlns:html="http://www.w3.org/1999/xhtml"
       py:extends="'layout.kid'">
 <!--
     Copyright 2005 rPath, Inc.
