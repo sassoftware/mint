@@ -132,18 +132,22 @@ class LogFilter:
         self.records = []
 
 conaryDir = None
-
+_setupPath = None
 def setup():
+    global _setupPath
+    if _setupPath:
+        return _setupPath
     global testPath
     global archivePath
 
-    if not os.environ.has_key('CONARY_PATH') and os.environ.has_key('MINT_PATH'):
+    if not os.environ.has_key('CONARY_PATH') or not os.environ.has_key('MINT_PATH'):
 	print "please set CONARY_PATH and MINT_PATH"
 	sys.exit(1)
-    sys.path.insert(0, os.environ['CONARY_PATH'])
-    sys.path.insert(0, os.environ['MINT_PATH'])
     from conary.lib import util
-    sys.path.insert(0, util.normpath(os.environ['CONARY_PATH'] + "/../conary-test/"))
+    paths = (os.environ['CONARY_PATH'], os.environ['MINT_PATH'], util.normpath(os.environ['CONARY_PATH'] + "/../conary-test/"))
+    for p in paths:
+        if p not in sys.path:
+            sys.path.insert(0, p)
     if 'PYTHONPATH' in os.environ:
         os.environ['PYTHONPATH'] = os.pathsep.join((os.environ['CONARY_PATH'],
                                                     os.environ['MINT_PATH'],
@@ -184,6 +188,7 @@ def setup():
     global debugger
     from conary.lib import debugger
 
+    _setupPath = path
     return path
 
 class Loader(unittest.TestLoader):
@@ -643,9 +648,10 @@ if __name__ == '__main__':
     topdir = os.path.join(os.getcwd(), os.path.dirname(sys.argv[0]))
     topdir = os.path.normpath(topdir)
     cwd = os.getcwd()
-    sys.path.append(topdir)
-    if cwd != topdir:
-        sys.path.append(cwd)
+    if topdir not in sys.path:
+        sys.path.insert(0, topdir)
+    if cwd != topdir and cwd not in sys.path:
+        sys.path.insert(0, cwd)
     setup()
 
     from conary.lib import util

@@ -37,29 +37,52 @@ class MintDatabase:
     def reset(self):
         pass
 
+
 class SqliteMintDatabase(MintDatabase):
     def reset(self):
-        os.unlink(self.path)
+        if os.path.exists(self.path):
+            os.unlink(self.path)
 
     def start(self):
         if os.path.exists(self.path):
             os.unlink(self.path)
 
-                        
+    def newProjectDb(self, projectName):
+        p = util.normpath(self.path + "/../repos/" + projectName)
+        if os.path.exists(p):
+            util.rmtree(p)
+
 
 class MySqlMintDatabase(MintDatabase):
+    keepDbs = ['mysql', 'test', 'information_schema', 'testdb']
+    
     def connect(self):
         return dbstore.connect(self.path, "mysql")
 
-    def newProjectDb(self, projectName):
-        dbName = projectName.replace(".", "_")
-
+    def dropAndCreate(self, dbName, create = True):
         db = self.connect()
         cu = db.cursor()
         cu.execute("SHOW DATABASES")
-        if dbName in cu.fetchall():
+        if dbName in [x[0] for x in cu.fetchall()]:
             cu.execute("DROP DATABASE %s" % dbName)
+        if create:
+            cu.execute("CREATE DATABASE %s" % dbName)
         db.close()
+
+    def start(self):
+        self.dropAndCreate("minttest")
+
+    def reset(self):
+        db = self.connect()
+        cu = db.cursor()
+        cu.execute("SHOW DATABASES")
+        for dbName in [x[0] for x in cu.fetchall() if x[0] not in self.keepDbs]:
+            cu.execute("DROP DATABASE %s" % dbName)
+        self.dropAndCreate("minttest")
+
+    def newProjectDb(self, projectName):
+        dbName = projectName.replace(".", "_").replace(":", "_")
+        self.dropAndCreate(dbName, create = False)
 
 
 class MintApacheServer(rephelp.ApacheServer):
@@ -244,35 +267,10 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
         self.openRepository()
 
         return projectId
-        
-    def tearDown(self):
-        rephelp.RepositoryHelper.tearDown(self)
-        try:
-            util.rmtree(self.reposDir + "/repos/")
-            os.unlink(self.servers.getServer().reposDir + "/mintdb")
-        except:
-            pass
 
     def setUp(self):
         rephelp.RepositoryHelper.setUp(self)
         self.openRepository()
-        if self.mintCfg.dbDriver == "mysql":
-            db = self.servers.getServer().mintDb.connect()
-            cu = db.cursor()
-            try:
-                cu.execute("DROP DATABASE minttest")
-            except:
-                pass
-            cu.execute("CREATE DATABASE minttest")
-            db.commit()
-            db.close() 
-        elif self.mintCfg.dbDriver == "postgresql":
-            os.system("dropdb -U testuser minttest; createdb -U testuser minttest") 
-        elif self.mintCfg.dbDriver == "sqlite":
-            try:
-                os.unlink(self.servers.getServer().reposDir + "/mintdb")
-            except:
-                pass
 
         # if you get permission denied on mysql server, then you need to
         # grant privleges to testuser on minttest:

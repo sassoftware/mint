@@ -60,7 +60,6 @@ LoadModule alias_module modules/mod_alias.so
 
 DocumentRoot "@DOCROOT@"
 
-PythonPath "['@MINTPATH@', '@CONARYPATH@'] + sys.path"
 Alias /conary/ "@DOCROOT@/test.cnr/"
 Alias / "@DOCROOT@/mint.conf/"
 <Location />

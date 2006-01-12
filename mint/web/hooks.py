@@ -249,9 +249,8 @@ def conaryHandler(req, cfg, pathInfo):
 
         dbName = repName
         if cfg.reposDBDriver != "sqlite":
-            dbName = dbName.replace(".", "_")
+            dbName = dbName.replace(".", "_").replace(":", "_")
         nscfg.repositoryDB = (cfg.reposDBDriver, cfg.reposDBPath % dbName)
-
 
         #nscfg.cacheDB = ('sqlite', repositoryDir + '/cache.sql')
         nscfg.cacheDB = None
@@ -314,7 +313,7 @@ def conaryHandler(req, cfg, pathInfo):
 
     repo = repositories[repHash]
     shimRepo = shim_repositories[repHash]
-
+    
     if method == "POST":
 	return post(port, secure, (repo, shimRepo), cfg, req)
     elif method == "GET":

@@ -328,7 +328,6 @@ class ReleaseTest(MintRepositoryHelper):
         return cfg
 
     def testHiddenIsoGen(self):
-        self.openRepository()
         client, userId = self.quickMintUser("testuser", "testpass")
         projectId = self.newProject(client)
         project = client.getProject(projectId)
