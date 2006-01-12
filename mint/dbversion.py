@@ -11,7 +11,7 @@ class VersionTable(database.KeyedTable):
     name = "DatabaseVersion"
     createSQL = """
                 CREATE TABLE DatabaseVersion (
-                    version %(PRIMARYKEY)s, 
+                    version INT,
                     timestamp DOUBLE
                 )"""
     fields = ['version']
