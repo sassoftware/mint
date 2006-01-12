@@ -169,20 +169,20 @@ table#tasks td p {
     padding: 0.5em;
 }
 
-td#tasksBlock:hover {
+td.tasksBlock:hover {
     background: #dfdfdf;
     cursor: pointer;
 }
 
-td#tasksBlock{
+td.tasksBlock{
     background: #efefef;
     padding-left: 1em;
 }
 
-td#tasksBlock h3 {
+td.tasksBlock h3 {
     font-size: 150%;
     padding: 0.25em;
-    
+
     color: #FF930B;
 }
 

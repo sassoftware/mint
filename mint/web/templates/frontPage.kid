@@ -47,7 +47,7 @@ from mint import searcher
                     <h3 style="color:#FF7001;">Start using rBuilder Online. Select an option below:</h3>
                     <table id="tasks">
                         <tr>
-                            <td id="tasksBlock" style="margin-right: 1em;"
+                            <td class="tasksBlock" style="margin-right: 1em;"
                                 onclick="javascript:window.location='${cfg.basePath}help?page=dev-tutorial';">
                                 <h3><a href="${cfg.basePath}help?page=dev-tutorial">Create</a></h3>
 
@@ -57,7 +57,7 @@ from mint import searcher
                                   distributions.</p>
                             </td>
                             <td id="spacer"></td>
-                            <td id="tasksBlock"
+                            <td class="tasksBlock"
                                 onclick="javascript:window.location='${cfg.basePath}help?page=user-tutorial';">
                                 <h3><a href="${cfg.basePath}help?page=user-tutorial">Find</a></h3>
 
