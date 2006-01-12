@@ -171,18 +171,13 @@ class JobDaemon:
 
             if len(runningJobs) < cfg.maxThreads:
                 try:
-                    joblist = client.getJobs()
+                    job = client.startNextJob(["1#" + x for x in \
+                                               cfg.supportedArch])
                     confirmedAlive = True
 
-                    while joblist and \
-                              joblist[0].getStatus() != jobstatus.WAITING:
-                        joblist.pop(0)
-
-                    if not joblist:
+                    if not job:
                         time.sleep(5)
                         continue
-
-                    job = joblist[0]
 
                     if job.releaseId:
                         release = client.getRelease(job.getReleaseId())
