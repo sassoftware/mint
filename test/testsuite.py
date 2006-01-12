@@ -157,9 +157,6 @@ def setup():
             pythonPath = os.pathsep.join((pythonPath, p))
     os.environ['PYTHONPATH'] = pythonPath
 
-    print "sys.path is now set to: %s" % sys.path
-    print "PYTHONPATH is now set to: %s" % os.environ['PYTHONPATH']
-
     if isIndividual():
         serverDir = '/tmp/conary-server'
         if os.path.exists(serverDir) and not os.path.access(serverDir, os.W_OK):
