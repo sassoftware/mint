@@ -69,7 +69,7 @@ class ProjectHandler(WebHandler):
         #Take care of hidden projects
         if self.project.hidden and self.userLevel == userlevels.NONMEMBER:
             raise HttpNotFound
-      
+
         # add the project name to the base path
         self.basePath += "project/%s" % (cmds[0])
         self.basePath = normPath(self.basePath)
@@ -111,7 +111,7 @@ class ProjectHandler(WebHandler):
         releases = self.project.getReleases(showUnpublished = True)
         publishedReleases = [x for x in releases if x.getPublished()]
         groupTrovesInProject = self.client.listGroupTrovesByProject(self.project.id)
-            
+
         return self._write("groups", publishedReleases = publishedReleases,
             groupTrovesInProject = groupTrovesInProject)
 
@@ -150,7 +150,7 @@ class ProjectHandler(WebHandler):
     @ownerOnly
     def newGroup(self, auth):
         troves, troveDict, metadata = self._getBasicTroves()
-        
+
         return self._write("newGroup", errors = [], kwargs = {}, troves = troves,
             troveDict = troveDict, metadata = metadata)
 
@@ -179,15 +179,15 @@ class ProjectHandler(WebHandler):
 
             for troveName, troveVersion, troveFlavor in (x.split(" ") for x in initialTrove):
                 gt.addTrove(troveName, troveVersion, troveFlavor, fullGroupName, False, False, False)
-            
+
             self._redirect("editGroup?id=%d" % gtId)
         else:
             kwargs = {'groupName': groupName, 'version': version}
             troves, troveDict, metadata = self._getBasicTroves()
-                    
+
             return self._write("newGroup", errors = errors, kwargs = kwargs,
                 troves = troves, troveDict = troveDict, metadata = metadata)
-    
+
     @ownerOnly
     @intFields(id = None)
     def editGroup(self, auth, id):
@@ -275,7 +275,7 @@ class ProjectHandler(WebHandler):
     @strFields(arch = "1#x86")
     def cookGroup(self, auth, id, arch):
         curGroupTrove = self.client.getGroupTrove(id)
-        
+
         recipe = curGroupTrove.getRecipe()
         job = curGroupTrove.getJob()
         if not job or (job and job.status not in (jobstatus.WAITING, jobstatus.RUNNING)):
@@ -284,7 +284,7 @@ class ProjectHandler(WebHandler):
             jobId = job.id
 
         return self._write("cookGroup", jobId = jobId, recipe = recipe)
-    
+
     @ownerOnly
     def newRelease(self, auth):
         return self._write("newRelease", imageTypes = [releasetypes.INSTALLABLE_ISO], errors = [], kwargs = {})
@@ -323,7 +323,7 @@ class ProjectHandler(WebHandler):
         else:
             release = self.client.getRelease(releaseId)
             template = release.getDataTemplate()
-               
+
             trove, versionStr, flavor = release.getTrove()
             version = versions.ThawVersion(versionStr)
             label = version.branch().label()
@@ -361,7 +361,7 @@ class ProjectHandler(WebHandler):
             label = label.asString(), release = release,
             imageTypes = release.getImageTypes(),
             archMap = archMap)
-        
+
     @requiresAuth
     @intFields(releaseId = None)
     @strFields(trove = None, version = None,
@@ -451,7 +451,7 @@ class ProjectHandler(WebHandler):
         lists = mlists.list_lists(hostname)
         return self._write("mailingLists", lists=lists, mailhost=self.cfg.MailListBaseURL, hostname=hostname, messages=messages)
 
-        
+
     @mailList
     def mailingLists(self, auth, mlists, messages=[]):
         return self._mailingLists(auth, mlists, messages)
@@ -537,7 +537,7 @@ class ProjectHandler(WebHandler):
                     self.project.editLabel(labelId, label, oldUrl, oldUser, oldPass)
             except database.DuplicateItem:
                 errors.append("Project title conflicts with another project.")
-                
+
         if errors:
             kwargs = {'projecturl': projecturl, 'desc': desc, 'name': name,
                 'branch': self.project.getLabel().split('@')[1]}
@@ -693,7 +693,7 @@ class ProjectHandler(WebHandler):
         if feed == "releases":
             title = "%s releases" % self.project.getName()
             link = "%sproject/%s/releases" % \
-                (self.cfg.basePath, self.project.getHostname())
+                (self.cfg.siteHost, self.project.getHostname())
             desc = "Current releases from %s" % self.project.getName()
 
             releases = self.project.getReleases()
@@ -703,7 +703,7 @@ class ProjectHandler(WebHandler):
                 item['title'] = "%s=%s" % (release.getTroveName(),
                     release.getTroveVersion().trailingRevision().asString())
                 item['link'] = "%sproject/%s/release?id=%d" % \
-                    (self.cfg.basePath, self.project.getHostname(), release.getId())
+                    (self.cfg.siteHost, self.project.getHostname(), release.getId())
                 item['content'] = "A new version of %s has been released: %s version %s." % \
                     (release.getName(), release.getTroveName(),
                      release.getTroveVersion().trailingRevision().asString())
