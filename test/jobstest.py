@@ -23,6 +23,8 @@ class JobsTest(MintRepositoryHelper):
 
         release = client.newRelease(projectId, "Test Release")
 
+        self.stockReleaseFlavor(release.getId())
+
         job = client.startImageJob(release.getId())
         job = release.getJob()
         assert(job.getReleaseId() == release.getId())
@@ -54,6 +56,8 @@ class JobsTest(MintRepositoryHelper):
         release = client.newRelease(projectId, "Test Release")
         release.setImageTypes([releasetypes.STUB_IMAGE])
         release.setDataValue('stringArg', 'Hello World!')
+
+        self.stockReleaseFlavor(release.getId())
 
         job = client.startImageJob(release.getId())
 
@@ -98,6 +102,7 @@ class JobsTest(MintRepositoryHelper):
         release.setImageTypes([releasetypes.STUB_IMAGE])
         release.setDataValue('stringArg', 'Hello World!')
 
+        self.stockReleaseFlavor(release.getId())
         job = client.startImageJob(release.getId())
 
         assert(client.server.getJobStatus(job.getId())['queueLen'] == 0)
@@ -145,6 +150,8 @@ class JobsTest(MintRepositoryHelper):
 
         release = client.newRelease(projectId, "Test Release")
 
+        self.stockReleaseFlavor(release.getId())
+
         job = client.startImageJob(release.getId())
         job.setDataValue("mystring", "testing", RDT_STRING)
         job.setDataValue("myint", 123, RDT_INT)
@@ -152,6 +159,58 @@ class JobsTest(MintRepositoryHelper):
         assert(job.getDataValue("mystring") == "testing")
         assert(int(job.getDataValue("myint")) == 123)
 
+
+    def testStartCookJob(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        projectId = client.newProject("Foo", "foo", "rpath.org")
+
+        groupTrove = client.createGroupTrove(projectId, 'group-test', '1.0.0',
+                                             'No Description', False)
+
+        groupTroveId = groupTrove.getId()
+
+        trvName = 'testtrove'
+        trvVersion = '/test.rpath.local@rpl:devel/1.0-1-1'
+        trvFlavor = '1#x86|5#use:~!kernel.debug:~kernel.smp'
+        subGroup = ''
+
+        trvid = groupTrove.addTrove(trvName, trvVersion, trvFlavor,
+                                    subGroup, False, False, False)
+
+        cookJobId = groupTrove.startCookJob("1#x86")
+
+        # normally called from job-server
+        job = client.startNextJob(["1#x86_64"])
+
+        self.failIf(job, "startNextJob returned the wrong architecture")
+
+        job = client.startNextJob(["1#x86"])
+
+        self.failIf(job.status != jobstatus.RUNNING,
+                    "job-server is not multi-instance safe")
+
+    def testStartReleaseJob(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        projectId = client.newProject("Foo", "foo", "rpath.org")
+
+        release = client.newRelease(projectId, "Test Release")
+        release.setImageTypes([releasetypes.STUB_IMAGE])
+
+        self.stockReleaseFlavor(release.getId())
+
+        relJob = client.startImageJob(release.getId())
+
+        # normally called from job-server
+        job = client.startNextJob(["1#x86"])
+
+        self.failIf(job, "startNextJob returned the wrong architecture")
+
+        job = client.startNextJob(["1#x86", "1#x86_64"])
+
+        self.failIf(not job, "startNextJob ignored a release job")
+
+        self.failIf(job.status != jobstatus.RUNNING,
+                    "job-server is not multi-instance safe")
 
 if __name__ == "__main__":
     testsuite.main()

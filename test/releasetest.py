@@ -137,6 +137,8 @@ class ReleaseTest(MintRepositoryHelper):
 
         self.assertRaises(ReleasePublished, release.setPublished, False)
 
+        self.stockReleaseFlavor(release.getId())
+
         self.assertRaises(ReleasePublished, client.startImageJob,
                           release.getId())
 
@@ -197,6 +199,8 @@ class ReleaseTest(MintRepositoryHelper):
             self.fail("Allowed to set description for a deleted release")
         except ReleaseMissing:
             pass
+
+        self.stockReleaseFlavor(release.getId())
 
         try:
             client.startImageJob(releaseId)
@@ -339,6 +343,8 @@ class ReleaseTest(MintRepositoryHelper):
         release.setImageTypes([releasetypes.INSTALLABLE_ISO])
         release.setTrove("group-core",
                          "/test.rpath.local@rpl:devel/0.0:1.0-1-1", "1#x86")
+
+        self.stockReleaseFlavor(release.getId())
 
         job = client.startImageJob(release.id)
 

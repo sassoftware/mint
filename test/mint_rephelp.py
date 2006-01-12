@@ -280,6 +280,11 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
         self.db = self.mintServer.db
         self.db.connect()
 
+    def stockReleaseFlavor(self, releaseId):
+        cu = self.db.cursor()
+        cu.execute("UPDATE Releases set troveFlavor=? WHERE releaseId=?",
+                   "1#x86:i486:i586:i686:~!sse2|1#x86_64|5#use:X:~!alternatives:~!bootstrap:~!builddocs:~buildtests:desktop:~!dietlibc:emacs:gcj:~glibc.tls:gnome:~grub.static:gtk:ipv6:kde:~!kernel.debug:~!kernel.debugdata:~!kernel.numa:krb:ldap:nptl:~!openssh.smartcard:~!openssh.static_libcrypto:pam:pcre:perl:~!pie:~!postfix.mysql:python:qt:readline:sasl:~!selinux:~sqlite.threadsafe:ssl:tcl:tcpwrappers:tk:~!xorg-x11.xprint", releaseId)
+        self.db.commit()
 
 class WebRepositoryHelper(MintRepositoryHelper, webunittest.WebTestCase):
     def __init__(self, methodName):
