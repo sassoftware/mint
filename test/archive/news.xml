@@ -1,0 +1,119 @@
+<?xml version="1.0"?><!-- generator="b2evolution/0.9.0.11" -->
+<rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:admin="http://webns.net/mvcb/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+	<channel>
+		<title>rpath.com News</title>
+		<link>http://blogs.conary.com/index.php/rpathcom</link>
+		<description></description>
+		<language>en-US</language>
+		<docs>http://backend.userland.com/rss</docs>
+		<admin:generatorAgent rdf:resource="http://b2evolution.net/?v=0.9.0.11"/>
+		<ttl>60</ttl>
+				<item>
+			<title>rBuilder Online Updated!</title>
+			<link>http://blogs.conary.com/index.php/rpathcom/2005/12/08/rbuilder_online_updated_5</link>
+			<pubDate>Thu, 08 Dec 2005 22:48:20 +0000</pubDate>
+						<category domain="main">News</category>			<guid isPermaLink="false">244@http://blogs.conary.com</guid>
+			<description>We have updated the rBuilder Online code to version 1.1.3. There are not many user-visible changes in this version, but we have made numerous improvements to increase performance and stability. As always, please send us your comments and let us know of any problems you may have.</description>
+			<content:encoded><![CDATA[	<p>We have updated the rBuilder Online code to version 1.1.3. There are not many user-visible changes in this version, but we have made numerous improvements to increase performance and stability. As always, please send us your comments and let us know of any problems you may have.
+</p>
+]]></content:encoded>
+			<comments>http://blogs.conary.com/index.php/rpathcom?p=244&amp;c=1&amp;tb=1&amp;pb=1#comments</comments>
+		</item>
+				<item>
+			<title>rBuilder Online Updated!</title>
+			<link>http://blogs.conary.com/index.php/rpathcom/2005/11/28/rbuilder_online_updated_4</link>
+			<pubDate>Mon, 28 Nov 2005 19:44:56 +0000</pubDate>
+						<category domain="main">News</category>			<guid isPermaLink="false">233@http://blogs.conary.com</guid>
+			<description>We have updated the rBuilder Online code to version 1.1.1, which includes the following new features:
+
+
+Customized Anaconda images are now automatically generated if anaconda-custom does not exist on the project repository:
+
+
+Group Builder groups can be cooked to x86 and x86_64 targets.
+We have improved cross-browser compatibility by porting many of the Javascript operations to the MochiKit Javascript library.
+
+
+Enjoy!</description>
+			<content:encoded><![CDATA[	<p>We have updated the rBuilder Online code to version 1.1.1, which includes the following new features:</p>
+	<ul>
+	<li>Customized Anaconda images are now automatically generated if anaconda-custom does not exist on the project repository:<br />
+<br /><a href="http://static.flickr.com/29/67998074_937f4c1a1c_o.png"><img border="0" src="http://static.flickr.com/29/67998074_937f4c1a1c_m.jpg" /></a>
+</li>
+	<li>Group Builder groups can be cooked to x86 and x86_64 targets.</li>
+	<li>We have improved cross-browser compatibility by porting many of the Javascript operations to the <a href="http://www.mochikit.com/">MochiKit</a> Javascript library.</li>
+	</ul>
+	<p>Enjoy!
+</p>
+]]></content:encoded>
+			<comments>http://blogs.conary.com/index.php/rpathcom?p=233&amp;c=1&amp;tb=1&amp;pb=1#comments</comments>
+		</item>
+				<item>
+			<title>We're back!</title>
+			<link>http://blogs.conary.com/index.php/rpathcom/2005/11/17/we_re_back</link>
+			<pubDate>Thu, 17 Nov 2005 22:24:03 +0000</pubDate>
+						<category domain="main">News</category>			<guid isPermaLink="false">223@http://blogs.conary.com</guid>
+			<description>If you've been unable to access rBuilder Online earlier today, blame it on that unknown force that causes two inherently-incompatible things to be attracted to each other:
+
+
+  Freshly-washed motor vehicles and rain
+
+  The buttered side of toast and the floor
+
+  Fiber optic cable and backhoes
+
+
+Yes, rBuilder Online fell victim to not one, but two errant backhoes backhoe-ing where they shouldn't have.  This caused a network outage on Cogent's backbone that blacked out customers from Tampa to Washington DC.
+
+But now we're back, so be sure to try out our nifty Group Builder, and make the distribution that you want!</description>
+			<content:encoded><![CDATA[	<p>If you've been unable to access rBuilder Online earlier today, blame it on that unknown force that causes two inherently-incompatible things to be attracted to each other:</p>
+	<ul>
+	<li>Freshly-washed motor vehicles and rain</li>
+	<li>The buttered side of toast and the floor</li>
+	<li>Fiber optic cable and backhoes</li>
+	</ul>
+	<p>Yes, rBuilder Online fell victim to not one, but <a href="http://www.merit.edu/mail.archives/nanog/2005-11/msg00523.html"><em>two</em> errant backhoes</a> backhoe-ing where they shouldn't have.  This caused a network outage on <a href="http://status.cogentco.com">Cogent</a>'s backbone that blacked out customers from Tampa to Washington DC.</p>
+	<p>But now we're back, so be sure to try out our nifty Group Builder, and make the distribution that <em>you</em> want!
+</p>
+]]></content:encoded>
+			<comments>http://blogs.conary.com/index.php/rpathcom?p=223&amp;c=1&amp;tb=1&amp;pb=1#comments</comments>
+		</item>
+				<item>
+			<title>Group Builder Launched!</title>
+			<link>http://blogs.conary.com/index.php/rpathcom/2005/11/16/group_builder_launched</link>
+			<pubDate>Wed, 16 Nov 2005 21:07:33 +0000</pubDate>
+						<category domain="main">News</category>			<guid isPermaLink="false">218@http://blogs.conary.com</guid>
+			<description>We have updated the rBuilder Online code to version 1.1.0:
+
+
+A group builder has been implemented. See this blog post for more information.
+Many performance improvements to the site and database backend have been made.
+Group troves in the repository browser now show contained troves instead of files.
+The installable ISO generator now copies everything from /usr/share/anaconda/ in the anaconda-custom trove to the product.img overlay. This makes it possible for experienced anaconda hackers to perform more comprehensive customization of the installation process.
+
+
+To get started with the new group builder, pick one of your projects, click on Group Builder from the menu on the left, and follow the instructions! As always, we eagerly await your feedback and thoughts!</description>
+			<content:encoded><![CDATA[	<p>We have updated the rBuilder Online code to version 1.1.0:</p>
+	<ul>
+	<li>A group builder has been implemented. See <a href="http://blogs.conary.com/index.php/tgerla/2005/11/10/graphical_group_builder">this blog post</a> for more information.</li>
+	<li>Many performance improvements to the site and database backend have been made.</li>
+	<li>Group troves in the repository browser now show contained troves instead of files.</li>
+	<li>The installable ISO generator now copies everything from /usr/share/anaconda/ in the anaconda-custom trove to the product.img overlay. This makes it possible for experienced anaconda hackers to perform more comprehensive customization of the installation process.</li>
+	</ul>
+	<p>To get started with the new group builder, pick one of your projects, click on <b>Group Builder</b> from the menu on the left, and follow the instructions! As always, we eagerly await your feedback and thoughts!</p>
+]]></content:encoded>
+			<comments>http://blogs.conary.com/index.php/rpathcom?p=218&amp;c=1&amp;tb=1&amp;pb=1#comments</comments>
+		</item>
+				<item>
+			<title>ISO Generation Back Online</title>
+			<link>http://blogs.conary.com/index.php/rpathcom/2005/11/10/iso_generation_back_online</link>
+			<pubDate>Thu, 10 Nov 2005 18:34:00 +0000</pubDate>
+						<category domain="main">News</category>			<guid isPermaLink="false">209@http://blogs.conary.com</guid>
+			<description>We have resolved the namespace problems with Conary and Anaconda, and we have turned ISO generation back on. Enjoy!</description>
+			<content:encoded><![CDATA[	<p>We have resolved the namespace problems with Conary and Anaconda, and we have turned ISO generation back on. Enjoy!
+</p>
+]]></content:encoded>
+			<comments>http://blogs.conary.com/index.php/rpathcom?p=209&amp;c=1&amp;tb=1&amp;pb=1#comments</comments>
+		</item>
+			</channel>
+</rss>
