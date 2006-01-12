@@ -373,9 +373,11 @@ quit
     @timeMe
     def moveToFinal(self, filelist, finaldir):
         returnlist = []
+        util.mkdirChain( finaldir )
         for file, name in filelist:
             base, ext = os.path.basename(file).split(os.path.extsep, 1)
             newfile = os.path.join(finaldir, self.basefilename + "." + ext)
+            print "Move %s to %s" % (file, newfile)
             os.rename(file, newfile)
             returnlist.append((newfile, name,))
         return returnlist
@@ -408,7 +410,7 @@ quit
 
     @timeMe
     def zipVMWarePlayerFiles(self, dir, outfile):
-        zip = zipfile.ZipFile(outfile, 'w')
+        zip = zipfile.ZipFile(outfile, 'w', zipfile.ZIP_DEFLATED)
         for f in ('.vmdk', '.nvram', '.vmx'):
             zip.write(os.path.join(dir, self.basefilename + f), os.path.join(self.basefilename, self.basefilename + f))
         zip.close()
