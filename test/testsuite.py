@@ -26,7 +26,7 @@ testPath = None
 portstart = 60000
 def findPorts(num = 1):
     foundport = False
-    global portstart 
+    global portstart
     ports = []
     for port in xrange(portstart, portstart + 100):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -120,7 +120,7 @@ class LogFilter:
 
 	if len(records) != len(self.records):
 	    raise AssertionError, "expected log message count does not match"
-	    
+
         for record in records:
             if not record in self.records:
                 raise AssertionError, "expected log message not found: '%s'" %record
@@ -149,11 +149,12 @@ def setup():
         if p not in sys.path:
             sys.path.insert(0, p)
     if 'PYTHONPATH' in os.environ:
-        os.environ['PYTHONPATH'] = os.pathsep.join((os.environ['CONARY_PATH'],
-                                                    os.environ['MINT_PATH'],
+        os.environ['PYTHONPATH'] = os.pathsep.join((os.environ['MINT_PATH'],
+                                                    os.environ['CONARY_PATH'],
                                                     os.environ['PYTHONPATH']))
     else:
-        os.environ['PYTHONPATH'] = os.environ['CONARY_PATH']
+        os.environ['PYTHONPATH'] = os.pathsep.join( \
+            (os.environ['MINT_PATH'], os.environ['CONARY_PATH']))
 
     if isIndividual():
         serverDir = '/tmp/conary-server'

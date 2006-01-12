@@ -162,7 +162,6 @@ class MintApacheServer(rephelp.ApacheServer):
         self.mintCfg = cfg
 
 
-
 class MintServerCache(rephelp.ServerCache):
     def getServerClass(self, envname):
         name = "mint.rpath.local"

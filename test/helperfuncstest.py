@@ -19,7 +19,7 @@ testTemplate = \
 <plain>This is a plain text ${myString}.</plain>
 """
 
-class ProjectTest(unittest.TestCase):
+class HelperFunctionsTest(unittest.TestCase):
     def testMyProjectCompare(self):
         if not isinstance(myProjectCompare(('not tested', 1),
                                            ('ignored', 0)), int):

@@ -4,7 +4,7 @@
 #
 # All Rights Reserved
 #
-import cPickle
+
 import testsuite
 testsuite.setup()
 
@@ -12,8 +12,9 @@ import mint_rephelp
 
 from repostest import testRecipe
 from conary import versions
+import cPickle
 
-class MintTest(mint_rephelp.WebRepositoryHelper):
+class WebPageTest(mint_rephelp.WebRepositoryHelper):
     def sessionData(self):
         sid = self.cookies['.rpath.local']['/']['pysid'].value
         cu = self.db.cursor()
