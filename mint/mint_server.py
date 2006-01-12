@@ -1273,6 +1273,7 @@ class MintServer(object):
             raise ReleasePublished()
 
         cu = self.db.cursor()
+
         cu.execute("SELECT jobId, status FROM Jobs WHERE releaseId=? AND groupTroveId IS NULL",
                    releaseId)
         r = cu.fetchall()
@@ -1280,6 +1281,13 @@ class MintServer(object):
             retval = self.jobs.new(releaseId = releaseId, userId = self.auth.userId,
                 status = jobstatus.WAITING, statusMessage = self.getJobWaitMessage(0),
                 timeStarted = time.time(), timeFinished = 0)
+            cu.execute('SELECT troveFlavor FROM Releases WHERE releaseId=?',
+                       releaseId)
+            flavorString = cu.fetchone()[0]
+            flavor = deps.ThawDependencySet(flavorString)
+            arch = "1#" + flavor.members[deps.DEP_CLASS_IS].members.keys()[0]
+            cu.execute("INSERT INTO JobData VALUES(?, 'arch', ?, 0)", retval,
+                       arch)
         else:
             jobId, status = r[0]
             if status in (jobstatus.WAITING, jobstatus.RUNNING):
@@ -1377,6 +1385,42 @@ class MintServer(object):
         cu.execute("SELECT jobId FROM Jobs ORDER BY timeStarted")
 
         return [x[0] for x in cu.fetchall()]
+
+    @typeCheck((list, str))
+    @requiresAuth
+    @private
+    def startNextJob(self, archTypes):
+        # scrub archTypes and jobTypes so we know it's safe to inject these
+        # params into an SQL call.
+        for arch in archTypes:
+            if arch not in ("1#x86", "1#x86_64"):
+                raise PermissionDenied("Not a legal architecture")
+
+        self.db.transaction()
+        cu = self.db.cursor()
+        try:
+            cu.execute("""SELECT Jobs.jobId FROM Jobs
+                              LEFT JOIN JobData
+                                  ON Jobs.jobId=JobData.jobId
+                              WHERE status=0 AND JobData.name='arch'
+                                  AND JobData.value IN %s
+                              ORDER BY timeStarted
+                              LIMIT 1""" % str(tuple(archTypes)))
+            res = cu.fetchone()
+
+            if not res:
+                return 0
+
+            jobId = res[0]
+            cu.execute("""UPDATE Jobs SET status=?, statusMessage=?
+                              WHERE jobId=?""",
+                       jobstatus.RUNNING, 'Starting', jobId)
+        except:
+            self.db.rollback()
+        else:
+            self.db.commit()
+
+        return jobId
 
     @typeCheck(int)
     @requiresAuth
