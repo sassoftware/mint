@@ -41,7 +41,7 @@ class LabelMissing(MintError):
         return "Project label does not exist"
 
 class Project(database.TableObject):
-    __slots__ = ('creatorId', 'name',
+    __slots__ = ('projectId', 'creatorId', 'name',
                  'description', 'hostname', 'domainname', 'projecturl', 
                  'hidden', 'external', 'disabled',
                  'timeCreated', 'timeModified')
@@ -205,7 +205,7 @@ class ProjectsTable(database.KeyedTable):
                     timeModified    INT DEFAULT 0
                 )"""
 
-    fields = ['creatorId', 'name', 'hostname', 'domainname', 'projecturl', 
+    fields = ['projectId', 'creatorId', 'name', 'hostname', 'domainname', 'projecturl', 
               'description', 'disabled', 'hidden', 'external', 'timeCreated', 'timeModified']
     indexes = { "ProjectsHostnameIdx": "CREATE INDEX ProjectsHostnameIdx ON Projects(hostname)",
                 "ProjectsDisabledIdx": "CREATE INDEX ProjectsDisabledIdx ON Projects(disabled)",
