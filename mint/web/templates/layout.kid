@@ -80,14 +80,14 @@ onload = "javascript:;"
     <body py:match="item.tag == '{http://www.w3.org/1999/xhtml}body'"
           py:attrs="item.attrib">
 
-        <div id="top" align="center">
+        <div id="top" style="align: center;">
             <div class="shadowLeft"><div class="shadowRight">
-                <div class="surfaceLeft" align="left"><div class="surfaceRight">
+                <div class="surfaceLeft" style="align: left;"><div class="surfaceRight">
                     ${userActions()}
                 </div></div>
             </div></div>
         </div>
-        <div id="middle" align="center">
+        <div id="middle" style="align: center;">
             <div id="crumb">
                 <div class="pad">
                     You are here: <a href="http://$SITE">rBuilder Online</a>
@@ -95,9 +95,9 @@ onload = "javascript:;"
                 </div>
             </div>
         </div>
-        <div id="bottom" align="center">
+        <div id="bottom" style="align: center;">
             <div class="shadowLeft"><div class="shadowRight">
-                <div class="surfaceLeft" align="left"><div class="surfaceRight">
+                <div class="surfaceLeft" style="align: left;"><div class="surfaceRight">
                     <table border="0" cellspacing="0" cellpadding="0" summary="layout" width="100%">
                         <tr>
                             <td id="main" class="spanleft" py:replace="item[:]" />
@@ -106,7 +106,7 @@ onload = "javascript:;"
                 </div></div>
             </div></div>
         </div>
-        <div id="foot" align="center">
+        <div id="foot" style="align: center;">
             <div id="copy">
                 <div class="pad" style="text-align: center;">
                     <span id="botnav">

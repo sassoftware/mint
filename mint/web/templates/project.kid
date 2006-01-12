@@ -56,10 +56,10 @@
             <li class="release" py:if="not releaseList">
                 No Releases
             </li>
-            <div class="release" py:if="isOwner" align="right" style="padding-right:8px;">
+            <div class="release" py:if="isOwner" style="align: right; padding-right:8px;">
                 <a href="${basePath}newRelease"><strong>Create a new release...</strong></a>
             </div>
-            <div class="release" py:if="not isOwner and len(releaseList) > 6" align="right" style="padding-right:8px;">
+            <div class="release" py:if="not isOwner and len(releaseList) > 6" style="align: right; padding-right:8px;">
                 <a href="${basePath}releases"><strong>More...</strong></a>
             </div>
           </ul>
