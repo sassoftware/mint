@@ -1,4 +1,4 @@
-Changes in 1.1.4:
+Changes in 1.2.0:
 
 * Many changes to remove usernames and passwords from repository maps.
 * Config file changes: authRepoMap no longer contains username/password:
@@ -14,7 +14,6 @@ Changes in 1.1.4:
 * Add support for creating Bootable Qemu Images
 * Add support for creating bootable VMWare Images
 * Refactor the job server to generate multiple image types from a single
-  Release.
 
 Changes in 1.1.3:
 
