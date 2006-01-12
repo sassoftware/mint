@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2004 rpath, Inc.
+# Copyright (c) 2004-2006 rPath, Inc.
 #
 
 testRecipe1 = """\

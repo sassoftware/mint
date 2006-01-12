@@ -13,7 +13,7 @@ def injectVersion(version):
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#">
 <!--
-    Copyright 2005 rPath, Inc.
+    Copyright (c) 2005-2006 rPath, Inc.
     All Rights Reserved
 -->
     <div py:def="formatTitle(str)" py:strip="True" py:content="'%s - %s'%(str, cfg.productName)"/>

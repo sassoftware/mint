@@ -1,5 +1,5 @@
 #
-# Copyright (c) 2005 rPath, Inc.
+# Copyright (c) 2005-2006 rPath, Inc.
 #
 # All rights reserved
 #
@@ -17,7 +17,7 @@ from urlparse import urlsplit
 templatePath = os.path.dirname(sys.modules['mint'].__file__)
 
 class MintConfig(ConfigFile):
-    companyName             = (CfgString, 'rPath Inc.',
+    companyName             = (CfgString, 'rPath, Inc.',
         "Name of your organization's rBuilder website: (Used in the registration and user settings pages)")
         
     productName             = (CfgString, 'rBuilder at rpath.org',

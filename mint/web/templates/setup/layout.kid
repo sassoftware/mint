@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <?python
 #
-# Copyright 2005 rPath, Inc.
+# Copyright (c) 2005-2006 rPath, Inc.
 # All Rights Reserved
 #
 from mint import userlevels
@@ -81,7 +81,7 @@ onload = "javascript:;"
         <div id="foot" align="center">
             <div id="copy">
                 <div class="pad" style="text-align: center;">
-                    <span style="float: left;">Copyright &#169; 2005 rPath, Inc. </span>
+                    <span style="float: left;">Copyright &#169; 2005-2006 rPath, Inc. </span>
                     <span>version ${constants.mintVersion}</span>
                 </div>
             </div>
