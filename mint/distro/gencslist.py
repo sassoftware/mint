@@ -391,6 +391,14 @@ class LocalRepository(netserver.NetworkRepositoryServer):
         cfg.contentsDir = dbpath + '/contents/'
         util.mkdirChain(dbpath)
         self.serverName = serverName
+
+        # create initial schema
+        from conary.server import schema
+        db = dbstore.connect(cfg.repositoryDB[1], cfg.repositoryDB[0])
+        schema.loadSchema(db)
+        db.commit()
+        db.close()
+    
         netserver.NetworkRepositoryServer.__init__(self, cfg, '')
 
         user = 'anonymous'
