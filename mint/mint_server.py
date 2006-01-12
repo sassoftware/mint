@@ -1417,6 +1417,7 @@ class MintServer(object):
                        jobstatus.RUNNING, 'Starting', jobId)
         except:
             self.db.rollback()
+            raise
         else:
             self.db.commit()
 
