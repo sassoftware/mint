@@ -692,8 +692,8 @@ class ProjectHandler(WebHandler):
     def rss(self, auth, feed):
         if feed == "releases":
             title = "%s releases" % self.project.getName()
-            link = "%sproject/%s/releases" % \
-                (self.cfg.siteHost, self.project.getHostname())
+            link = "http://%s%sproject/%s/releases" % \
+                (self.cfg.siteHost, self.cfg.basePath, self.project.getHostname())
             desc = "Current releases from %s" % self.project.getName()
 
             releases = self.project.getReleases()
@@ -702,8 +702,8 @@ class ProjectHandler(WebHandler):
                 item = {}
                 item['title'] = "%s=%s" % (release.getTroveName(),
                     release.getTroveVersion().trailingRevision().asString())
-                item['link'] = "%sproject/%s/release?id=%d" % \
-                    (self.cfg.siteHost, self.project.getHostname(), release.getId())
+                item['link'] = "http://%s%sproject/%s/release?id=%d" % \
+                    (self.cfg.siteHost, self.cfg.basePath, self.project.getHostname(), release.getId())
                 item['content'] = "A new version of %s has been released: %s version %s." % \
                     (release.getName(), release.getTroveName(),
                      release.getTroveVersion().trailingRevision().asString())
