@@ -134,9 +134,10 @@ class UsersTable(database.KeyedTable):
                     cu.execute("ALTER TABLE Users ADD COLUMN salt BINARY")
                     cu.execute("ALTER TABLE Users ADD COLUMN passwd STR")
                 else:
-                    cu.execute("""ALTER TABLE Users ADD COLUMN(
-                                      salt   BINARY(4),
-                                      passwd VARCHAR(255))""")
+                    cu.execute("""ALTER TABLE Users ADD COLUMN salt BINARY(4)""")
+                    cu.execute("""ALTER TABLE Users ADD COLUMN passwd VARCHAR(255)""")
+
+                cu = self.db.cursor()
                 # now go get each user's salt and pass from the authRepo
                 aCu.execute('SELECT user, salt, password FROM Users')
                 for username, salt, passwd in aCu.fetchall():

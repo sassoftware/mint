@@ -1,4 +1,4 @@
-<html>
+<html xmlns="http://www.w3c.org/1999/xhtml">
     <head>
         <title>Legal Information - ${cfg.productName}</title>
         <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/basic.css"/>
