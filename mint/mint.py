@@ -315,7 +315,13 @@ class MintClient:
         @rtype: L{jobs.Job}
         """
         return jobs.Job(self.server, jobId)
-        
+
+    def startNextJob(self, archTypes):
+        jobId = self.server.startNextJob(archTypes)
+        if jobId:
+            return self.getJob(jobId)
+        return None
+
     def getJobs(self):
         """
         Iterates through all jobs.
