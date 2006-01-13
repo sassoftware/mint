@@ -18,6 +18,7 @@ from mint.database import ItemNotFound
 from mint.mint_server import deriveBaseFunc
 from mint.distro import installable_iso
 
+from conary.lib import util
 from conary.repository.errors import TroveNotFound
 
 class ReleaseTest(MintRepositoryHelper):
@@ -310,28 +311,36 @@ class ReleaseTest(MintRepositoryHelper):
         if relIdList != [1, 2]:
             self.fail('getReleasesForProject has the wrong order')
 
-    def makeIsoGenCfg(self):
+    def makeInstallableIsoCfg(self):
         mintDir = os.environ['MINT_PATH']
+        os.mkdir("%s/changesets" % self.tmpDir)
+        util.mkdirChain("%s/templates/x86/PRODUCTNAME" % self.tmpDir)
+        util.mkdirChain("%s/templates/x86_64/PRODUCTNAME" % self.tmpDir)
+
         cfg = installable_iso.IsoConfig()
         cfg.configPath = self.tmpDir
-        os.mkdir("%s/changesets" % self.tmpDir)
-        cfgFile = open(cfg.configPath + "/installable_iso.conf", 'w')
-        cfgFile.write("scriptPath %s/scripts/" % mintDir)
-        cfgFile.write("cachePath %s/changesets/" % self.tmpDir)
-        #cfgFile.write("templatePath %s/templates/" %self.tmpDir)
-        cfgFile.write("anacondaImagesPath /dev/null")
-
-        cfg.imagesPath = ""
         cfg.scriptPath = mintDir + "/scripts/"
         cfg.cachePath = self.tmpDir + "/changesets/"
-        cfg.anacondaImagesPath = '/dev/null'
+        cfg.anacondaImagesPath = "/dev/null"
+        cfg.templatePath = self.tmpDir + "/templates/"
         cfg.SSL = False
 
-        cfgFile.flush()
+        cfgFile = open(cfg.configPath + "/installable_iso.conf", 'w')
+        cfg.display(cfgFile)
         cfgFile.close()
+
         return cfg
 
     def testHiddenIsoGen(self):
+
+        # set up a dummy isogen cfg to avoid importing from
+        # job-server (the job-server code should be put elsewhere someday...)
+        from conary.conarycfg import ConfigFile
+        class IsoGenCfg(ConfigFile):
+            imagesPath = self.tmpDir
+            configPath = self.tmpDir
+            SSL = False
+
         client, userId = self.quickMintUser("testuser", "testpass")
         projectId = self.newProject(client)
         project = client.getProject(projectId)
@@ -348,9 +357,9 @@ class ReleaseTest(MintRepositoryHelper):
 
         job = client.startImageJob(release.id)
 
-        cfg = self.makeIsoGenCfg()
-
-        imageJob = installable_iso.InstallableIso(client, cfg, job, release.id)
+        cfg = self.makeInstallableIsoCfg()
+        imageJob = installable_iso.InstallableIso(client, IsoGenCfg(), job, release.id)
+        imageJob.isocfg = cfg
 
         # getting a trove not found from a trove that's really not there isn't
         # terribly exciting. historically this call generated a Permission
