@@ -2003,6 +2003,8 @@ class MintServer(object):
                 tables[table].db = self.db
                 self.__dict__[table] = tables[table]
 
+            self.users.confirm_table.db = self.db
+
             #Now it's safe to commit
             self.db.commit()
 
