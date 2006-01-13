@@ -330,13 +330,15 @@ class ProjectTest(MintRepositoryHelper):
         self.openRepository()
         client, userId = self.quickMintUser("testuser", "testpass")
         projectId = self.newProject(client, "External Project", "external")
-        
+
         cu = self.db.cursor()
-        cu.execute("UPDATE Projects SET external=1 WHERE projectId=?", projectId)
+        cu.execute("UPDATE Projects SET external=1 WHERE projectId=?",
+                   projectId)
+        self.db.commit()
 
         project = client.getProject(projectId)
         assert(client.server._server.getGroupTroves(projectId) == {'external.rpath.local@rpl:devel': []})
-        
+
 
 if __name__ == "__main__":
     testsuite.main()

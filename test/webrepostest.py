@@ -21,7 +21,7 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
         self.cookFromRepository("testcase",
             versions.Label("test.rpath.local@rpl:devel"),
             ignoreDeps = True)
-        
+
         # first try anonymous browsing
         page = self.assertContent('/repos/test/browse', ok_codes = [200],
             content = 'troveInfo?t=testcase:runtime')
@@ -30,7 +30,7 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
         page = self.webLogin('testuser', 'testpass')
         page = page.assertContent('/repos/test/browse', ok_codes = [200],
             content = 'troveInfo?t=testcase:runtime')
-        
+
     def testBrowseHiddenProject(self):
         adminClient, adminUserId = self.quickMintAdmin("adminuser", "testpass")
 
@@ -43,7 +43,7 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
         self.cookFromRepository("testcase",
             versions.Label("test.rpath.local@rpl:devel"),
             ignoreDeps = True)
- 
+
         # anonymous user should see a 404
         page = self.assertCode('/repos/test/browse', code = 404)
 
@@ -56,7 +56,7 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
         raise testsuite.SkipTestException
         client, userId = self.quickMintUser("testuser", "testpass")
         extProjectId = self.newProject(client, "External Project", "external")
-        
+
         extProject = client.getProject(extProjectId)
         labelId = extProject.getLabelIdMap()['external.rpath.local@rpl:devel']
         extProject.editLabel(labelId, "external.rpath.local@rpl:devel",
@@ -65,7 +65,7 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
         self.makeSourceTrove("testcase", testRecipe, label = versions.Label('localhost@rpl:linux'))
 
         page = self.assertCode('/repos/test/browse', code = 200)
-                                            
-                                            
+
+
 if __name__ == "__main__":
     testsuite.main()
