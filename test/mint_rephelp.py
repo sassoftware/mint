@@ -56,7 +56,7 @@ class SqliteMintDatabase(MintDatabase):
 
 class MySqlMintDatabase(MintDatabase):
     keepDbs = ['mysql', 'test', 'information_schema', 'testdb']
-    
+
     def connect(self):
         return dbstore.connect(self.path, "mysql")
 
@@ -156,6 +156,7 @@ class MintApacheServer(rephelp.ApacheServer):
         cfg.authUser = 'mintauth'
         cfg.authPass = 'mintpass'
 
+        cfg.newsRssFeed = 'file://' +mintPath + '/test/archive/news.xml'
         cfg.configured = True
         cfg.debugMode = True
         cfg.sendNotificationEmails = False
@@ -244,7 +245,7 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
         # save the current openpgpkey cache
         keyCache = openpgpkey.getKeyCache()
 
-        self.servers.getServer().mintDb.newProjectDb(hostname + "." + domainname) 
+        self.servers.getServer().mintDb.newProjectDb(hostname + "." + domainname)
 
         projectId = client.newProject(name, hostname, domainname)
 
