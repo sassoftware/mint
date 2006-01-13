@@ -36,6 +36,7 @@ from mint import config
 from mint import mint_server
 from mint import profile
 from mint import users
+from mint.projects import mysqlTransTable
 from webhandler import normPath, HttpError
 import app
 import cookie_http
@@ -249,7 +250,8 @@ def conaryHandler(req, cfg, pathInfo):
 
         dbName = repName
         if cfg.reposDBDriver != "sqlite":
-            dbName = dbName.replace(".", "_").replace(":", "_")
+            dbName = dbName.replace(mysqlTransTable)
+
         nscfg.repositoryDB = (cfg.reposDBDriver, cfg.reposDBPath % dbName)
 
         #nscfg.cacheDB = ('sqlite', repositoryDir + '/cache.sql')
@@ -313,15 +315,15 @@ def conaryHandler(req, cfg, pathInfo):
 
     repo = repositories[repHash]
     shimRepo = shim_repositories[repHash]
-    
+
     if method == "POST":
-	return post(port, secure, (repo, shimRepo), cfg, req)
+        return post(port, secure, (repo, shimRepo), cfg, req)
     elif method == "GET":
-	return get(port, secure, (repo, shimRepo), cfg, req)
+        return get(port, secure, (repo, shimRepo), cfg, req)
     elif method == "PUT":
-	return putFile(port, secure, repo, req)
+        return putFile(port, secure, repo, req)
     else:
-	return apache.HTTP_METHOD_NOT_ALLOWED
+        return apache.HTTP_METHOD_NOT_ALLOWED
 
 def xmlrpcHandler(req, cfg, pathInfo):
     if req.method.upper() != "POST":

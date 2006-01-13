@@ -5,6 +5,7 @@
 #
 import os
 from conary import sqlite3
+import string
 import sys
 import urlparse
 import time
@@ -39,6 +40,8 @@ class DuplicateName(MintError):
 class LabelMissing(MintError):
     def __str__(self):
         return "Project label does not exist"
+
+mysqlTransTable = string.maketrans("-.", "__")
 
 class Project(database.TableObject):
     __slots__ = ('projectId', 'creatorId', 'name',
@@ -600,11 +603,14 @@ class SqliteRepositoryDatabase(RepositoryDatabase):
         return ('sqlite', self.cfg.reposDBPath % name)
 
 class MySqlRepositoryDatabase(RepositoryDatabase):
+    def translate(self, x):
+        return x.translate(mysqlTransTable)
+
     def create(self, name):
         path = self.cfg.reposDBPath % 'mysql'
         db = dbstore.connect(path, 'mysql')
 
-        dbName = name.replace(".", "_").replace(":", "_")
+        dbName = self.translate(name)
 
         cu = db.cursor()
         # this check should never be required outside of the test suite,
@@ -617,5 +623,5 @@ class MySqlRepositoryDatabase(RepositoryDatabase):
         db.close()
 
     def getRepositoryDB(self, name):
-        dbName = name.replace(".", "_").replace(":", "_")
+        dbName = self.translate(name)
         return ('mysql', self.cfg.reposDBPath % dbName)
