@@ -256,6 +256,12 @@ def conaryHandler(req, cfg, pathInfo):
         repositoryDir = os.path.join(cfg.reposPath, repName)
 
         dbName = repName
+        dbNameMap = {'conary.digium.com': 'digium.digium.com',
+                     'digium.rpath.net': 'digium.digium.com'}
+        if dbName in dbNameMap:
+            dbName = dbNameMap[dbName]
+            print >> sys.stderr, "REMAPPING DATABASE NAME: ", repName
+
         if cfg.reposDBDriver != "sqlite":
             dbName = dbName.translate(mysqlTransTable)
 
