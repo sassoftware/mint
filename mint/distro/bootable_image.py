@@ -58,8 +58,7 @@ class Journal:
         dirname = os.path.dirname(target)
         filename = os.path.basename(target)
         f = open(os.sep.join((root, dirname, '.UIDGID')), 'a')
-        # XXX e2fsimage does not handle group lookups yet
-        f.write('%s %s\n' %(filename, user))
+        f.write('%s %s %s\n' %(filename, user, group))
         f.close()
 
     def mknod(self, root, target, devtype, major, minor, mode,
@@ -70,6 +69,7 @@ class Journal:
         filename = os.path.basename(target)
         f = open(os.sep.join((root, dirname, '.DEVICES')), 'a')
         # XXX e2fsimage does not handle symbolic users/groups for .DEVICES
+        # But this doesn't matter as .UIDGID is processed after .DEVICES
         f.write('%s %s %d %d 0%o\n' %(filename, devtype, major, minor, mode))
         f.close()
 
@@ -388,10 +388,6 @@ quit
         util.execute(cmd)
 
     @timeMe
-    def copyVMBios(self, outfile):
-        gencslist._linkOrCopyFile(os.path.join(self.cfg.dataDir, 'vmwareplayer.nvram'), outfile)
-
-    @timeMe
     def createVMX(self, outfile, displayName, memsize):
         #Read in the stub file
         infile = open(os.path.join(self.cfg.dataDir, 'vmwareplayer.vmx'), 'rb')
@@ -411,7 +407,7 @@ quit
     @timeMe
     def zipVMWarePlayerFiles(self, dir, outfile):
         zip = zipfile.ZipFile(outfile, 'w', zipfile.ZIP_DEFLATED)
-        for f in ('.vmdk', '.nvram', '.vmx'):
+        for f in ('.vmdk', '.vmx'):
             zip.write(os.path.join(dir, self.basefilename + f), os.path.join(self.basefilename, self.basefilename + f))
         zip.close()
 
@@ -423,8 +419,6 @@ quit
             filebase = os.path.join(vmbasedir, self.basefilename)
             #run qemu-img to convert to vmdk
             self.createVMDK(filebase + '.vmdk')
-            #copy the bios image
-            self.copyVMBios(filebase + '.nvram')
             #Populate the vmx file
             self.createVMX(filebase + '.vmx', displayName, mem)
             #zip the resultant files

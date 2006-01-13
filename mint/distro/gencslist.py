@@ -18,6 +18,7 @@ from conary.repository import changeset, trovesource, netclient, shimclient
 from conary.repository.netrepos import netserver
 from conary import conarycfg
 from conary import conaryclient
+from conary import dbstore
 from conary import files
 from conary import trove
 from conary import updatecmd
@@ -391,6 +392,14 @@ class LocalRepository(netserver.NetworkRepositoryServer):
         cfg.contentsDir = dbpath + '/contents/'
         util.mkdirChain(dbpath)
         self.serverName = serverName
+
+        # create initial schema
+        from conary.server import schema
+        db = dbstore.connect(cfg.repositoryDB[1], cfg.repositoryDB[0])
+        schema.loadSchema(db)
+        db.commit()
+        db.close()
+    
         netserver.NetworkRepositoryServer.__init__(self, cfg, '')
 
         user = 'anonymous'
