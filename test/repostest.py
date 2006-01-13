@@ -40,7 +40,7 @@ class RepositoryTest(MintRepositoryHelper):
 
         client.server.registerCommit('test.rpath.local', 'testuser', 'mytrove:source', '/test.rpath.local@rpl:devel/1.0-1')
         project = client.getProject(projectId)
-        assert(project.getCommits() == [('mytrove:source', '1.0-1')])
+        assert([x[:2] for x in project.getCommits()] == [('mytrove:source', '1.0-1')])
 
         # using a bogus username should not fail
         client.server.registerCommit('test.rpath.local', 'nonexistentuser', 'mytrove:source', '/test.rpath.local@rpl:devel/1.0-1')
@@ -71,7 +71,7 @@ class RepositoryTest(MintRepositoryHelper):
             if iters > 50:
                 self.fail("commits didn't show up")
 
-        assert(project.getCommits() == [('testcase:source', '1.0-1')])
+        assert([x[:2] for x in project.getCommits()] == [('testcase:source', '1.0-1')])
 
     def testHooksResponse(self):
         self.openRepository()

@@ -632,7 +632,7 @@ class GroupTroveTest(MintRepositoryHelper):
         while True:
             time.sleep(0.1)
             iters += 1
-            if project.getCommits() == troveList:
+            if [x[:2] for x in project.getCommits()] == troveList:
                 break
             if iters > 50:
                 self.fail("commits didn't show up")
