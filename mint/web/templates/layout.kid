@@ -20,7 +20,7 @@ onload = "javascript:;"
     <div py:def="topnav()" py:strip="True">
         <td id="topnav">
             <div class="pad">
-                <a href="http://$SITE">rBuilder Online</a> |
+                <a href="http://$SITE">${cfg.productName}</a> |
                 <a href="${cfg.corpSite}sales/">Information</a> |
                 <a href="${cfg.corpSite}about/contact/">About Us</a> |
                 <a href="http://${SITE}help?page=feedback"><b style="color: red;">Need Help/Have Feedback?</b></a>
@@ -90,7 +90,7 @@ onload = "javascript:;"
         <div id="middle" style="align: center;">
             <div id="crumb">
                 <div class="pad">
-                    You are here: <a href="http://$SITE">rBuilder Online</a>
+                    You are here: <a href="http://$SITE">${cfg.productName}</a>
                     ${breadcrumb()}
                 </div>
             </div>

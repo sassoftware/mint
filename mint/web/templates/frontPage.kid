@@ -44,7 +44,7 @@ from mint import searcher
                       needs, or to find an existing distribution
                       that is just right for you.</p>
 
-                    <h3 style="color:#FF7001;">Start using rBuilder Online. Select an option below:</h3>
+                  <h3 style="color:#FF7001;">Start using ${cfg.productName}. Select an option below:</h3>
                     <table id="tasks">
                         <tr>
                             <td class="tasksBlock" style="margin-right: 1em;"
