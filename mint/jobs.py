@@ -26,6 +26,7 @@ class JobsTable(database.KeyedTable):
                     jobId           %(PRIMARYKEY)s,
                     releaseId       INT,
                     groupTroveId    INT,
+                    owner           BIGINT,
                     userId          INT,
                     status          INT,
                     statusMessage   CHAR(255),
@@ -49,15 +50,22 @@ class JobsTable(database.KeyedTable):
                 cu = self.db.cursor()
                 cu.execute("ALTER TABLE Jobs ADD COLUMN groupTroveId INT")
                 return (dbversion + 1) == self.schemaVersion
+            if dbversion == 11:
+                cu = self.db.cursor()
+                cu.execute("ALTER TABLE Jobs ADD COLUMN owner INT")
+                return (dbversion + 1) == self.schemaVersion
         return True
 
+    def get(self, id):
+        res = database.get(self, id)
+        del(res['owner'])
 
 class Job(database.TableObject):
     __slots__ = [JobsTable.key] + JobsTable.fields
-    
+
     def getItem(self, id):
         return self.server.getJob(id)
-    
+
     def getId(self):
         return self.id
 

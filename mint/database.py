@@ -4,7 +4,7 @@
 # All Rights Reserved
 #
 import sys, time
-from conary.dbstore import sqlerrors 
+from conary.dbstore import sqlerrors
 
 from mint_error import MintError
 
@@ -82,12 +82,12 @@ class DatabaseTable:
     those indeces
     """
 
-    schemaVersion = 11
+    schemaVersion = 12
     name = "Table"
     fields = []
     createSQL = "CREATE TABLE Table ();"
     createSQL_mysql = None
-    indexes = {} 
+    indexes = {}
 
     def __init__(self, db):
         """@param db: database connection object"""
@@ -95,7 +95,7 @@ class DatabaseTable:
         self.db = db
 
         cu = self.db.cursor()
-        
+
         # create missing tables
         if self.name not in self.db.tables:
             cu.execute(self.createSQL % self.db.keywords)
@@ -110,18 +110,18 @@ class DatabaseTable:
         # before the upgrade check is done, a column not found exception
         # could be raised if a new index is created referencing a new column
         # created in the upgrade procedures.
-       
+
         if self.upToDate:
             self.db.loadSchema()
             indexes = set(self.db.tables[self.name])
             missing = set(self.indexes.keys()) - indexes
-            
+
             for index in missing:
                 cu.execute(self.indexes[index])
 
     def getDBVersion(self):
         cu = self.db.cursor()
-        
+
         cu.execute("SELECT COALESCE(MAX(version), 0) FROM DatabaseVersion")
         version = cu.fetchone()[0]
 
@@ -173,7 +173,7 @@ class KeyedTable(DatabaseTable):
                 data[key] = r[i]
             else:
                 data[key] = ''
-            
+
         return data
 
     def getIdByColumn(self, column, value):
