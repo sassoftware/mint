@@ -20,6 +20,7 @@
             isOwner = userLevel == userlevels.OWNER or auth.admin
         ?>
         <h3>Project Resources</h3>
+        <p py:content="'isOwner %s, userLevel %s' % (isOwner, userLevel)">Replace me</p>
         <ul>
             <li><a href="$projectUrl"><strong py:strip="lastchunk != ''">Project Home</strong></a></li>
             <li><a href="${projectUrl}releases"><strong py:strip="lastchunk not in ('release', 'releases', 'newRelease', 'editRelease')">Releases</strong></a></li>
@@ -76,9 +77,8 @@
         <div id="commit_items" style="display: $display">
           <ul>
             <li class="release" py:for="commit in commits">
-                <a href="${cfg.basePath}repos/${project.getHostname()}/troveInfo?t=${commit[0]}">
-                    ${commit[0]}=${commit[1]}
-                </a>
+                <a
+                    href="${cfg.basePath}repos/${project.getHostname()}/troveInfo?t=${commit[0]};v=${commit[2]}">${commit[0]}=${commit[1]}</a>
             </li>
           </ul>
         </div>
