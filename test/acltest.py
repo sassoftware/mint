@@ -36,7 +36,6 @@ class AclTest(mint_rephelp.MintRepositoryHelper):
                           self.objects.createObject, 1, OBJ_TYPE_SITE)
 
     def testDirectPermission(self):
-        cu = self.db.cursor()
         client, userId = self.quickMintUser('foouser', 'foopass')
         projectId = self.newProject(client, 'foo', 'Foo')
         self.objects.createObject(projectId, OBJ_TYPE_PROJECT)
@@ -56,7 +55,6 @@ class AclTest(mint_rephelp.MintRepositoryHelper):
         self.failIf(perm, "Revoke didn't revoke permission")
 
     def testSitePermission(self):
-        cu = self.db.cursor()
         client, userId = self.quickMintUser('foouser', 'foopass')
 
         projectId = self.newProject(client, 'foo', 'Foo')
@@ -80,7 +78,6 @@ class AclTest(mint_rephelp.MintRepositoryHelper):
         self.failIf(perm, "Revoke didn't revoke permission")
 
     def testMissingSiteObject(self):
-        cu = self.db.cursor()
         client, userId = self.quickMintUser('foouser', 'foopass')
 
         projectId = self.newProject(client, 'foo', 'Foo')

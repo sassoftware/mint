@@ -20,6 +20,7 @@ from mint import config
 from mint import shimclient
 from mint import dbversion
 from mint import mint_server
+from mint.projects import mysqlTransTable
 
 MINT_DOMAIN = 'rpath.local'
 MINT_HOST = 'test'
@@ -79,9 +80,10 @@ class MySqlMintDatabase(MintDatabase):
         for dbName in [x[0] for x in cu.fetchall() if x[0] not in self.keepDbs]:
             cu.execute("DROP DATABASE %s" % dbName)
         self.dropAndCreate("minttest")
+        db.close()
 
     def newProjectDb(self, projectName):
-        dbName = projectName.replace(".", "_").replace(":", "_")
+        dbName = projectName.translate(mysqlTransTable)
         self.dropAndCreate(dbName, create = False)
 
 
@@ -279,6 +281,10 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
                                                  alwaysReload = True)
         self.db = self.mintServer.db
         self.db.connect()
+
+    def tearDown(self):
+        self.db.close()
+        rephelp.RepositoryHelper.tearDown(self)
 
     def stockReleaseFlavor(self, releaseId):
         cu = self.db.cursor()

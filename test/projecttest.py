@@ -8,6 +8,8 @@ testsuite.setup()
 
 import sys
 
+from conary.conaryclient import ConaryClient
+
 from mint_rephelp import MintRepositoryHelper
 from mint import userlevels
 from mint.database import DuplicateItem, ItemNotFound
@@ -145,7 +147,7 @@ class ProjectTest(MintRepositoryHelper):
 
     def testBadHostname(self):
         client, userId = self.quickMintUser("testuser", "testpass")
-        for hostname in ('admin', 'a bad name', ''):
+        for hostname in ('admin', 'a bad name', '', 'a_bad_name', 'a.bad.name'):
             try:
                 projectId = client.newProject("Foo", hostname, 'localhost')
                 self.fail("allowed to create a project with a bad name")
@@ -155,6 +157,16 @@ class ProjectTest(MintRepositoryHelper):
                 exc_type, exc_value, exc_traceback = sys.exc_info()
                 if str(exc_value).split(' ')[0] != 'ParameterError':
                     raise
+
+    def testTranslatedProjectName(self):
+        # make sure we can properly translate a hostname with a dash in it
+        # all the way to the conary handler.
+        client, userId = self.quickMintUser("testuser", "testpass")
+        projectId = client.newProject("Foo", "test-project", "rpath.local")
+
+        project = client.getProject(projectId)
+        cfg = project.getConaryConfig()
+        assert(ConaryClient(cfg).getRepos().troveNamesOnServer("test-project.rpath.local") == [])
 
     def testUnconfirmedMembers(self):
         client = self.openMintClient(("test", "foo"))
