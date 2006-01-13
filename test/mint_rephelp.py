@@ -273,6 +273,9 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
         return projectId
 
     def setUp(self):
+        if self.servers.getServer():
+            self.servers.getServer().start()
+
         rephelp.RepositoryHelper.setUp(self)
         self.openRepository()
 
@@ -287,6 +290,7 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
 
     def tearDown(self):
         self.db.close()
+        self.servers.getServer().stop()
         rephelp.RepositoryHelper.tearDown(self)
 
     def stockReleaseFlavor(self, releaseId):
