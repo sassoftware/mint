@@ -17,6 +17,8 @@ class AclTest(mint_rephelp.MintRepositoryHelper):
         self.permissions = accesscontrol.PermissionsTable(self.db)
         self.objects = accesscontrol.ObjectsTable(self.db)
 
+        self.db.commit()
+
     def testDoubleGrant(self):
         # just want to be sure this doesn't trigger spurious errors
         self.permissions.grant(1, 1, 1)

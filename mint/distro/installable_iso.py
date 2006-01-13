@@ -189,8 +189,6 @@ class InstallableIso(ImageGenerator):
                 splashTarget = os.path.join(self.topdir, 'isolinux')
                 call('cp', '--remove-destination', '-v', tmpPath + '/pixmaps/splash.lss', splashTarget)
                 # FIXME: regenerate boot.iso here
-        else:
-            cclient = conaryclient.ConaryClient()
 
         # write the conaryrc file
         # TODO move this up to ImageGenerator

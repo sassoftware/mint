@@ -306,8 +306,11 @@ class ProjectHandler(WebHandler):
             if not errors:
                 release = self.client.newRelease(projectId, releaseName)
 
+                ilp = "%s conary.rpath.com@rpl:devel contrib.rpath.org@rpl:devel" % self.project.getLabel()
                 release.setImageTypes(imageTypes)
                 template = release.getDataTemplate()
+                if 'installLabelPath' in template.keys():
+                    release.setDataValue("installLabelPath", ilp)
                 trove, label = trove.split("=")
                 label = versions.Label(label)
                 version = None

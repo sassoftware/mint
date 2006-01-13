@@ -21,6 +21,7 @@ import jobstatus
 import news
 import pkgindex
 import projects
+import random
 import releases
 import reports
 import requests
@@ -1396,32 +1397,46 @@ class MintServer(object):
             if arch not in ("1#x86", "1#x86_64"):
                 raise PermissionDenied("Not a legal architecture")
 
-        self.db.transaction()
-        cu = self.db.cursor()
-        try:
-            cu.execute("""SELECT Jobs.jobId FROM Jobs
-                              LEFT JOIN JobData
-                                  ON Jobs.jobId=JobData.jobId
-                              WHERE status=0 AND JobData.name='arch'
-                                  AND JobData.value IN %s
-                              ORDER BY timeStarted
-                              LIMIT 1""" % str(tuple(archTypes)))
-            res = cu.fetchone()
+        # the pid would suffice, except that fails to be good enough
+        # if multiple web servers use one database backend.
+        ownerId = (os.getpid() << 47) + random.randint(0, (2 << 47) - 1)
 
-            if not res:
-                return 0
+        cu = self.db.transaction()
 
-            jobId = res[0]
-            cu.execute("""UPDATE Jobs SET status=?, statusMessage=?
-                              WHERE jobId=?""",
-                       jobstatus.RUNNING, 'Starting', jobId)
-        except:
-            self.db.rollback()
-            raise
-        else:
-            self.db.commit()
+        cu.execute("""UPDATE Jobs SET owner=?
+                          WHERE owner IS NULL AND status=?""",
+                   ownerId, jobstatus.WAITING)
+
+        self.db.commit()
+
+        cu.execute("""SELECT Jobs.jobId FROM Jobs
+                          LEFT JOIN JobData
+                              ON Jobs.jobId=JobData.jobId
+                          WHERE status=? AND JobData.name='arch'
+                              AND owner=?
+                              AND JobData.value IN %s
+                          ORDER BY timeStarted
+                          LIMIT 1""" % \
+                   ((len(archTypes) == 1) and ("('%s')" % archTypes[0]) \
+                    or str(tuple(archTypes))), jobstatus.WAITING, ownerId)
+        res = cu.fetchone()
+
+        if not res:
+            # there CAN be locks in the table if we asked for a specific
+            # architecture type, but only other types were available
+            cu.execute("UPDATE Jobs SET owner=NULL WHERE owner=? AND status=?",
+                   ownerId, jobstatus.WAITING)
+            return 0
+
+        jobId = res[0]
+        cu.execute("""UPDATE Jobs SET status=?, statusMessage=?
+                          WHERE jobId=?""",
+                   jobstatus.RUNNING, 'Starting', jobId)
+        cu.execute("UPDATE Jobs SET owner=NULL WHERE owner=? AND status=?",
+                   ownerId, jobstatus.WAITING)
 
         return jobId
+
 
     @typeCheck(int)
     @requiresAuth
