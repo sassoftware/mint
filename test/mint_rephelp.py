@@ -110,6 +110,8 @@ class MintApacheServer(rephelp.ApacheServer):
         self.mintDb.start()
 
     def reset(self):
+        if os.path.exists(self.reposDir + "/repos/"):
+            util.rmtree(self.reposDir + "/repos/")
         rephelp.ApacheServer.reset(self)
         self.mintDb.reset()
 
@@ -156,7 +158,7 @@ class MintApacheServer(rephelp.ApacheServer):
         cfg.authUser = 'mintauth'
         cfg.authPass = 'mintpass'
 
-        cfg.newsRssFeed = 'file://' +mintPath + '/test/archive/news.xml'
+#        cfg.newsRssFeed = 'file://' +mintPath + '/test/archive/news.xml'
         cfg.configured = True
         cfg.debugMode = True
         cfg.sendNotificationEmails = False

@@ -595,7 +595,6 @@ class GroupTroveTest(MintRepositoryHelper):
         self.addTestTrove(groupTrove, "testcase2")
         assert (groupTrove.getLabelPath() == ['test.rpath.local@rpl:devel'])
 
-    @testsuite.context('broken')
     def testCookAutoRecipe(self):
         self.openRepository()
         client, userId = self.quickMintUser('testuser', 'testpass')
@@ -637,7 +636,6 @@ class GroupTroveTest(MintRepositoryHelper):
             if iters > 50:
                 self.fail("commits didn't show up")
 
-    @testsuite.context('broken')
     def testCookOnServer(self):
         self.openRepository()
         client, userId = self.quickMintUser('testuser', 'testpass')
