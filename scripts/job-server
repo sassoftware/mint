@@ -11,6 +11,7 @@ import signal
 import socket
 import sys
 import os
+import random
 import time
 import threading
 import traceback
@@ -176,7 +177,10 @@ class JobDaemon:
                     confirmedAlive = True
 
                     if not job:
-                        time.sleep(5)
+                        # sleeping for a random interval helps prevent
+                        # concurrency issues with multiple instances of
+                        # this code
+                        time.sleep(random.uniform(3, 5))
                         continue
 
                     if job.releaseId:
