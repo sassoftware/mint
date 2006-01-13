@@ -190,7 +190,11 @@ class InstallableIso(ImageGenerator):
                 call('cp', '--remove-destination', '-v', tmpPath + '/pixmaps/splash.lss', splashTarget)
                 # FIXME: regenerate boot.iso here
         else:
-            cclient = conaryclient.ConaryClient()
+            cfg = conarycfg.ConaryConfiguration()
+            cfg.read(self.cfg.configPath + "/conaryrc")
+            cfg.root = cfg.dbPath = ":memory:"
+            cfg.installLabelPath = [versions.Label(self.project.getLabel())]
+            cclient = conaryclient.ConaryClient(cfg)
 
         # write the conaryrc file
         # TODO move this up to ImageGenerator
