@@ -1297,7 +1297,7 @@ class MintServer(object):
                 msg = self.getJobWaitMessage(jobId)
                 self.jobs.update(jobId, status = jobstatus.WAITING,
                     statusMessage = msg,
-                    timeStarted = time.time(), timeFinished = 0)
+                    timeStarted = time.time(), timeFinished = 0, owner = None)
                 retval = jobId
 
         return retval
@@ -1334,7 +1334,7 @@ class MintServer(object):
                 msg = self.getJobWaitMessage(jobId)
                 self.jobs.update(jobId, status = jobstatus.WAITING,
                     statusMessage = msg,
-                    timeStarted = time.time(), timeFinished = 0)
+                    timeStarted = time.time(), timeFinished = 0, owner = None)
                 retval = jobId
         self.jobData.setDataValue(retval, "arch", arch, data.RDT_STRING)
         return retval
@@ -1422,18 +1422,17 @@ class MintServer(object):
         res = cu.fetchone()
 
         if not res:
-            # there CAN be locks in the table if we asked for a specific
-            # architecture type, but only other types were available
-            cu.execute("UPDATE Jobs SET owner=NULL WHERE owner=? AND status=?",
-                   ownerId, jobstatus.WAITING)
-            return 0
+            jobId = 0
+        else:
+            jobId = res[0]
+            cu.execute("""UPDATE Jobs SET status=?, statusMessage=?
+                              WHERE jobId=?""",
+                       jobstatus.RUNNING, 'Starting', jobId)
 
-        jobId = res[0]
-        cu.execute("""UPDATE Jobs SET status=?, statusMessage=?
-                          WHERE jobId=?""",
-                   jobstatus.RUNNING, 'Starting', jobId)
         cu.execute("UPDATE Jobs SET owner=NULL WHERE owner=? AND status=?",
                    ownerId, jobstatus.WAITING)
+
+        self.db.commit()
 
         return jobId
 
