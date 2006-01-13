@@ -159,7 +159,6 @@ class JobsTest(MintRepositoryHelper):
         assert(job.getDataValue("mystring") == "testing")
         assert(int(job.getDataValue("myint")) == 123)
 
-
     def testStartCookJob(self):
         client, userId = self.quickMintUser("testuser", "testpass")
         projectId = client.newProject("Foo", "foo", "rpath.org")
@@ -179,12 +178,13 @@ class JobsTest(MintRepositoryHelper):
 
         cookJobId = groupTrove.startCookJob("1#x86")
 
-        # normally called from job-server
         job = client.startNextJob(["1#x86_64"])
 
         self.failIf(job, "startNextJob returned the wrong architecture")
 
         job = client.startNextJob(["1#x86"])
+
+        self.failIf(not job, "startNextJob ignored a valid cook job")
 
         self.failIf(job.status != jobstatus.RUNNING,
                     "job-server is not multi-instance safe")
@@ -207,10 +207,110 @@ class JobsTest(MintRepositoryHelper):
 
         job = client.startNextJob(["1#x86", "1#x86_64"])
 
-        self.failIf(not job, "startNextJob ignored a release job")
+        self.failIf(not job, "startNextJob ignored a valid release job")
 
         self.failIf(job.status != jobstatus.RUNNING,
                     "job-server is not multi-instance safe")
+
+    def testJobRaceCondition(self):
+        cu = self.db.cursor()
+
+        client, userId = self.quickMintUser("testuser", "testpass")
+        projectId = client.newProject("Foo", "foo", "rpath.org")
+
+        groupTrove = client.createGroupTrove(projectId, 'group-test', '1.0.0',
+                                             'No Description', False)
+
+        groupTroveId = groupTrove.getId()
+
+        trvName = 'testtrove'
+        trvVersion = '/test.rpath.local@rpl:devel/1.0-1-1'
+        trvFlavor = '1#x86|5#use:~!kernel.debug:~kernel.smp'
+        subGroup = ''
+
+        trvid = groupTrove.addTrove(trvName, trvVersion, trvFlavor,
+                                    subGroup, False, False, False)
+
+        cookJobId = groupTrove.startCookJob("1#x86")
+
+        cu.execute("UPDATE Jobs set owner=1")
+        self.db.commit()
+
+        job = client.startNextJob(["1#x86", "1#x86_64"])
+
+        self.failIf(job is not None, "job-server is not multi-instance safe")
+
+        cu.execute("UPDATE Jobs set owner=NULL")
+        self.db.commit()
+
+        job = client.startNextJob(["1#x86", "1#x86_64"])
+
+    def testStartJobLocking(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        projectId = client.newProject("Foo", "foo", "rpath.org")
+
+        cu = self.db.cursor()
+
+        for i in range(5):
+            groupTrove = client.createGroupTrove(projectId, 'group-test',
+                                                 '1.0.0', '', False)
+
+            groupTroveId = groupTrove.getId()
+            trvName = 'testtrove'
+            trvVersion = '/test.rpath.local@rpl:devel/1.0-1-1'
+            trvFlavor = '1#x86|5#use:~!kernel.debug:~kernel.smp'
+            subGroup = ''
+
+            trvid = groupTrove.addTrove(trvName, trvVersion, trvFlavor,
+                                        subGroup, False, False, False)
+
+            cookJobId = groupTrove.startCookJob("1#x86")
+
+        # make a job unavailable
+        cu.execute("UPDATE Jobs SET status=4 WHERE jobId=2")
+        # make a job taken
+        cu.execute("UPDATE Jobs SET owner=4 WHERE jobId=4")
+
+        self.db.commit()
+
+        job = client.startNextJob(["1#x86"])
+
+        self.failIf(job.id != 1, "Jobs retreived out of order")
+
+        job = client.startNextJob(["1#x86"])
+
+        self.failIf(job.id != 3, "Non-waiting job was selected")
+
+        job = client.startNextJob(["1#x86"])
+
+        self.failIf(job.id != 5, "owned job was selected")
+
+    def testStartJobLockRelease(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        projectId = client.newProject("Foo", "foo", "rpath.org")
+
+        cu = self.db.cursor()
+
+        groupTrove = client.createGroupTrove(projectId, 'group-test',
+                                             '1.0.0', '', False)
+
+        groupTroveId = groupTrove.getId()
+        trvName = 'testtrove'
+        trvVersion = '/test.rpath.local@rpl:devel/1.0-1-1'
+        trvFlavor = '1#x86|5#use:~!kernel.debug:~kernel.smp'
+        subGroup = ''
+
+        trvid = groupTrove.addTrove(trvName, trvVersion, trvFlavor,
+                                    subGroup, False, False, False)
+
+        cookJobId = groupTrove.startCookJob("1#x86_64")
+
+        cu = self.db.cursor()
+
+        cu.execute("SELECT owner FROM Jobs")
+
+        self.failIf(cu.fetchall()[0] != (None,),
+                    "Lock on job of incompatible type was not released")
 
 if __name__ == "__main__":
     testsuite.main()
