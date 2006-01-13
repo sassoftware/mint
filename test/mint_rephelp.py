@@ -156,7 +156,7 @@ class MintApacheServer(rephelp.ApacheServer):
         cfg.authUser = 'mintauth'
         cfg.authPass = 'mintpass'
 
-        cfg.newsRssFeed = 'file://' +mintPath + '/test/archive/news.xml'
+        #cfg.newsRssFeed = 'file://' +mintPath + '/test/archive/news.xml'
         cfg.configured = True
         cfg.debugMode = True
         cfg.sendNotificationEmails = False
