@@ -62,7 +62,8 @@ class JobsTest(MintRepositoryHelper):
         job = client.startImageJob(release.getId())
 
         client.getCfg().imagesPath = self.imagePath
-        imagegen = stub_image.StubImage(client, client.getCfg(), job, release.getId())
+        imagegen = stub_image.StubImage(client, client.getCfg(), job,
+                                        release.getId())
         imagegen.write()
         release.setFiles([[self.imagePath + "/stub.iso", "Stub"]])
 
@@ -70,10 +71,12 @@ class JobsTest(MintRepositoryHelper):
 
         release.refresh()
         files = release.getFiles()
-        assert(files == [{'fileId': 1, 'filename': 'stub.iso', 'title': 'Stub', 'size': 13}])
+        assert(files == [{'fileId': 1, 'filename': 'stub.iso',
+                          'title': 'Stub', 'size': 13}])
 
         fileInfo = client.getFileInfo(files[0]['fileId'])
-        assert(fileInfo == (release.getId(), 0, self.imagePath + '/stub.iso', 'Stub'))
+        assert(fileInfo == (release.getId(), 0, self.imagePath + '/stub.iso',
+                            'Stub'))
 
         try:
             fileInfo = client.getFileInfo(99999)
@@ -90,8 +93,10 @@ class JobsTest(MintRepositoryHelper):
 
         # make sure that the incoming ordering of files is preserved
         release.setFiles([['zaaa.iso', 'Zaaa'], ['aaaa.iso', 'Aaaa']])
-        assert(release.getFiles() == [{'size': 0, 'title': 'Zaaa', 'filename': 'zaaa.iso', 'fileId': 1},
-                                      {'size': 0, 'title': 'Aaaa', 'filename': 'aaaa.iso', 'fileId': 2}])
+        assert(release.getFiles() == [{'size': 0, 'title': 'Zaaa',
+                                       'filename': 'zaaa.iso', 'fileId': 1},
+                                      {'size': 0, 'title': 'Aaaa',
+                                       'filename': 'aaaa.iso', 'fileId': 2}])
 
     def testJobQueue(self):
         self.openRepository()
@@ -311,6 +316,73 @@ class JobsTest(MintRepositoryHelper):
 
         self.failIf(cu.fetchall()[0] != (None,),
                     "Lock on job of incompatible type was not released")
+
+    def testRegenerateRelease(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        projectId = client.newProject("Foo", "foo", "rpath.org")
+
+        release = client.newRelease(projectId, "Test Release")
+        release.setImageTypes([releasetypes.STUB_IMAGE])
+
+        self.stockReleaseFlavor(release.getId())
+
+        relJob = client.startImageJob(release.getId())
+
+        cu = self.db.cursor()
+
+        cu.execute("SELECT name, value FROM JobData")
+
+        self.failIf(cu.fetchone() != ('arch', '1#x86_64'),
+                    "architecture information missing for release")
+
+        cu.execute("UPDATE Jobs SET status=?, owner=1", jobstatus.FINISHED)
+
+        self.db.commit()
+
+        relJob = client.startImageJob(release.getId())
+
+        cu.execute("SELECT status, owner FROM Jobs")
+
+        self.failIf(cu.fetchone() != (jobstatus.WAITING, None),
+                    "Job not regenerated properly. will never run")
+
+    def testRegenerateCook(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        projectId = client.newProject("Foo", "foo", "rpath.org")
+
+        groupTrove = client.createGroupTrove(projectId, 'group-test', '1.0.0',
+                                             'No Description', False)
+
+        groupTroveId = groupTrove.getId()
+
+        trvName = 'testtrove'
+        trvVersion = '/test.rpath.local@rpl:devel/1.0-1-1'
+        trvFlavor = '1#x86|5#use:~!kernel.debug:~kernel.smp'
+        subGroup = ''
+
+        trvid = groupTrove.addTrove(trvName, trvVersion, trvFlavor,
+                                    subGroup, False, False, False)
+
+        cookJobId = groupTrove.startCookJob("1#x86")
+
+        cu = self.db.cursor()
+
+        cu.execute("SELECT name, value FROM JobData")
+
+        self.failIf(cu.fetchone() != ('arch', '1#x86'),
+                    "architecture information missing for cook")
+
+        cu.execute("UPDATE Jobs SET status=?, owner=1", jobstatus.FINISHED)
+
+        self.db.commit()
+
+        cookJob = groupTrove.startCookJob("1#x86")
+
+        cu.execute("SELECT status, owner FROM Jobs")
+
+        self.failIf(cu.fetchone() != (jobstatus.WAITING, None),
+                    "Job not regenerated properly. will never run")
+
 
 if __name__ == "__main__":
     testsuite.main()
