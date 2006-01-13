@@ -97,31 +97,19 @@ class XmlInterfaceTest(MintRepositoryHelper):
         if checkParam(param, paramType):
             self.fail("False positive for checkparam choice of container mode")
 
-    # this test will need to go away when we turn on typeChecking in both
-    # production and debug modes
     def testTypeCheckBypass(self):
-        raise testsuite.SkipTestException
-        # turn off debug mode and ensure types are not checked
-        self.cfg.debugMode = False
-
-        @typeCheck(int)
-        def foo(self, int):
+        class dummy:
             pass
 
-        foo(self, 'string')
+        obj = dummy()
+        obj.cfg = dummy()
+        for obj.cfg.debugMode in (False, True):
+            @typeCheck(int)
+            def foo(obj, int):
+                pass
 
-        # turn on debug mode and ensure types are checked
-        self.cfg.debugMode = True
-
-        @typeCheck(int)
-        def foo(self, int):
-            pass
-
-        try:
-            foo(self, 'string')
-            self.fail("Illegal parameter should have failed.")
-        except ParameterError:
-            pass
+            self.assertRaises(ParameterError, foo, self,
+                              'This is not an int')
 
     def testPrivate(self):
         client, userId = self.quickMintUser("testuser", "testpass")
