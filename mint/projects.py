@@ -41,7 +41,7 @@ class LabelMissing(MintError):
     def __str__(self):
         return "Project label does not exist"
 
-mysqlTransTable = string.maketrans("-.", "__")
+mysqlTransTable = string.maketrans("-.:", "___")
 
 class Project(database.TableObject):
     __slots__ = ('projectId', 'creatorId', 'name',
