@@ -8,6 +8,7 @@ script_dist =			\
 	buildinstall		\
 	buildtemplates		\
 	cvtmysql.py		\
+	deleteproject.py	\
 	job-server		\
 	MakeDiskImage.py	\
 	mklivecd		\
