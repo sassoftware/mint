@@ -250,7 +250,7 @@ def conaryHandler(req, cfg, pathInfo):
 
         dbName = repName
         if cfg.reposDBDriver != "sqlite":
-            dbName = dbName.replace(mysqlTransTable)
+            dbName = dbName.translate(mysqlTransTable)
 
         nscfg.repositoryDB = (cfg.reposDBDriver, cfg.reposDBPath % dbName)
 
