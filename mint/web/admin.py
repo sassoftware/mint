@@ -162,7 +162,7 @@ class AdminHandler(WebHandler):
     def _admin_report_view(self, *args, **kwargs):
         pdfData = self.client.getReportPdf(kwargs['reportName'])
         self.req.content_type = "application/x-pdf"
-        return self.req.write(pdfData)
+        return pdfData
 
     def _administer(self, *args, **kwargs):
         return self._write('admin/administer', kwargs=kwargs)

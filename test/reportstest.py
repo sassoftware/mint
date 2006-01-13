@@ -21,7 +21,7 @@ class ReportTest(MintRepositoryHelper):
     def testReportPdf(self):
         client, userId = self.quickMintAdmin('adminuser', 'adminpass')
         reportPdf = client.getReportPdf('new_users')
-        if not reportPdf.startswith('%PDF-'):
+        if not reportPdf.startswith('%PDF-') or not reportPdf.endswith('%%EOF\r\n'):
             self.fail('resulting data format was not a PDF.')
         time.sleep(1)
         newReportPdf = client.getReportPdf('new_users')
