@@ -33,7 +33,7 @@ class GroupTroveCook(ImageGenerator):
             sourceName = groupTrove.recipeName + ".recipe"
             arch = deps.ThawDependencySet(self.job.getDataValue("arch"))
 
-            cfg = conarycfg.ConaryConfiguration(overrideSSL=True, useSSL=self.cfg.SSL)
+            cfg = conarycfg.ConaryConfiguration()
             
             cfg.dbPath = cfg.root = ":memory:"
             cfg.name = "rBuilder Online"
