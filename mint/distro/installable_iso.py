@@ -22,7 +22,7 @@ from conary.build import use
 from conary.conarycfg import ConfigFile
 from conary.lib import util
 
-from group_trove import stockFlavors
+from flavors import stockFlavors
 from mint.mint import upstream
 from imagegen import ImageGenerator, assertParentAlive
 import gencslist

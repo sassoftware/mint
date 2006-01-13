@@ -19,22 +19,8 @@ from conary.lib import util
 from imagegen import ImageGenerator
 from mint import projects
 
+from flavors import stockFlavors
 import gencslist
-
-stockFlavors = {
-    "1#x86":    "~X,~!alternatives,!bootstrap,~builddocs,~buildtests,"
-                "~desktop,~dietlibc,~emacs,~gcj,~gnome,~gtk,~ipv6,~kde,"
-                "!kernel.smp,~krb,~ldap,~nptl,pam,~pcre,~perl,~!pie,"
-                "~python,~qt,~readline,~!sasl,~!selinux,ssl,~tcl,"
-                "tcpwrappers,~tk,~!xfce is: x86(~cmov,~i486,~i586,~i686,~mmx,~sse,~sse2)",
-
-    "1#x86_64": "~X,~!alternatives,!bootstrap,~builddocs,"
-                "~buildtests,~desktop,!dietlibc,~emacs,"
-                "~gcj,~gnome,~gtk,~ipv6,~kde,~krb,~ldap,"
-                "~nptl,pam,~pcre,~perl,~!pie,~python,~qt,"
-                "~readline,~!sasl,~!selinux,ssl,~tcl,"
-                "tcpwrappers,~tk,~!xfce is: x86_64(~3dnow,~3dnowext,~nx)",
-}
 
 class GroupTroveCook(ImageGenerator):
     def _localCook(self, groupTrove):
@@ -47,7 +33,7 @@ class GroupTroveCook(ImageGenerator):
             sourceName = groupTrove.recipeName + ".recipe"
             arch = deps.ThawDependencySet(self.job.getDataValue("arch"))
 
-            cfg = conarycfg.ConaryConfiguration()
+            cfg = conarycfg.ConaryConfiguration(overrideSSL=True, useSSL=self.cfg.SSL)
             
             cfg.dbPath = cfg.root = ":memory:"
             cfg.name = "rBuilder Online"
