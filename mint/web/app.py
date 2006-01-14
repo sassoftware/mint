@@ -176,7 +176,7 @@ class MintApp(WebHandler):
        
         # redirect from domain.org to host.domain.org
         if self.cfg.hostName and fullHost == self.cfg.siteDomainName:
-            self._redirect(self.cfg.hostName + "." + self.cfg.siteDomainName)
+            self._redirect('http://' + self.cfg.hostName + "." + self.cfg.siteDomainName)
         
         # mapping of url regexps to handlers
         urls = (

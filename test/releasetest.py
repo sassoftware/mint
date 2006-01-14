@@ -59,7 +59,8 @@ class ReleaseTest(MintRepositoryHelper):
         release = client.newRelease(projectId, "Test Release")
 
         imageTypes = [releasetypes.INSTALLABLE_ISO, releasetypes.QEMU_IMAGE]
-        release.setImageTypes([releasetypes.INSTALLABLE_ISO, releasetypes.QEMU_IMAGE])
+        release.setImageTypes([releasetypes.INSTALLABLE_ISO,
+                               releasetypes.QEMU_IMAGE])
         assert(imageTypes == release.imageTypes)
 
         rDict = release.getDataDict()
@@ -73,11 +74,8 @@ class ReleaseTest(MintRepositoryHelper):
             assert (mediaCheck == release.getDataValue('skipMediaCheck'))
 
         # test bad name lockdown
-        try:
-            release.getDataValue('undefinedName')
-            self.fail("release allowed releaseData name not in template to be set: undefinedName")
-        except ReleaseDataNameError:
-            pass
+        self.assertRaises(ReleaseDataNameError,
+                          release.getDataValue, 'undefinedName')
 
         release.setImageTypes([releasetypes.STUB_IMAGE])
 
@@ -170,7 +168,7 @@ class ReleaseTest(MintRepositoryHelper):
         release = client.newRelease(projectId, "Test Release")
         releaseId = release.getId()
         release.deleteRelease()
-        
+
         # messing with that same release should now fail in a controlled
         # manner. no UnknownErrors allowed!
         try:
@@ -236,6 +234,15 @@ class ReleaseTest(MintRepositoryHelper):
         if cu.fetchone()[0] != 1:
             self.fail("Previous unfinished releases should be removed")
 
+        cu.execute("UPDATE Releases SET troveLastChanged=1")
+        self.db.commit()
+
+        release = client.newRelease(projectId, "Test Release")
+
+        cu.execute("SELECT COUNT(*) FROM Releases")
+        if cu.fetchone()[0] != 2:
+            self.fail("Finished release was deleted")
+
     def testReleaseStatus(self):
         client, userId = self.quickMintUser("testuser", "testpass")
         projectId = client.newProject("Foo", "foo", "rpath.org")
@@ -243,7 +250,9 @@ class ReleaseTest(MintRepositoryHelper):
         release = client.newRelease(projectId, "Test Release")
         releaseId = release.getId()
 
-        if client.server.getReleaseStatus(releaseId) != {'status': 5, 'message': 'No Job', 'queueLen': 0}:
+        if client.server.getReleaseStatus(releaseId) != {'status': 5,
+                                                         'message': 'No Job',
+                                                         'queueLen': 0}:
             self.fail("getReleaseStatus returned unknown values")
 
     def testReleaseList(self):
@@ -268,7 +277,7 @@ class ReleaseTest(MintRepositoryHelper):
             release.setTrove("group-trove", "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
             if "Unpublished" not in relName:
                 release.setPublished(True)
-            time.sleep(1) # hack: let the timestamp increment since mysql doesn't do sub-second resolution 
+            time.sleep(1) # hack: let the timestamp increment since mysql doesn't do sub-second resolution
         releaseList = client.server.getReleaseList(20, 0)
         releasesToMake.reverse()
         hostnames = [x[1] for x in releasesToMake]
@@ -332,7 +341,6 @@ class ReleaseTest(MintRepositoryHelper):
         return cfg
 
     def testHiddenIsoGen(self):
-
         # set up a dummy isogen cfg to avoid importing from
         # job-server (the job-server code should be put elsewhere someday...)
         from conary.conarycfg import ConfigFile
@@ -358,7 +366,8 @@ class ReleaseTest(MintRepositoryHelper):
         job = client.startImageJob(release.id)
 
         cfg = self.makeInstallableIsoCfg()
-        imageJob = installable_iso.InstallableIso(client, IsoGenCfg(), job, release.id)
+        imageJob = installable_iso.InstallableIso(client, IsoGenCfg(),
+                                                  job, release.id)
         imageJob.isocfg = cfg
 
         # getting a trove not found from a trove that's really not there isn't
