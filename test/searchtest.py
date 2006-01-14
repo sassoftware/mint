@@ -141,8 +141,11 @@ class BrowseTest(MintRepositoryHelper):
         self._fakePackage(projectId, "foomatic")
         self._fakePackage(projectId, "barmatic")
         self._fakePackage(projectId, "foobar")
+        self._fakePackage(projectId, "BarBotIcs")
         assert(client.getPackageSearchResults('broken') == ([['brokenPackage', 'whoCares', 1]], 1))
-        assert(client.getPackageSearchResults('foo')[1] == 2)
+        assert client.getPackageSearchResults('foo')[1] == 2, "substring match failed"
+        assert client.getPackageSearchResults('barbot')[1] == 1, "case-insensitive match failed"
+
 
 if __name__ == "__main__":
     testsuite.main()
