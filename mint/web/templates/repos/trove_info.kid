@@ -93,7 +93,7 @@ isOwner = (userLevel == userlevels.OWNER or auth.admin)
                                     </div>
                                 </td>
                             </tr>
-                            <tr><td colspan="2"><a href="files?t=${quote(troveName)};v=${quote(trove.getVersion().freeze())};f=${quote(trove.getFlavor().freeze())}">Show Files</a></td></tr>
+                            <tr><td colspan="2"><a href="files?t=${quote(troveName)};v=${quote(trove.getVersion().freeze())};f=${quote(trove.getFlavor().freeze())}">Show Troves</a></td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -120,7 +120,7 @@ isOwner = (userLevel == userlevels.OWNER or auth.admin)
 
                 <div py:strip="True" py:if="troves[0].getName().endswith(':source')">
                     ${sourceTroveInfo(troves[0])}
-                    <p><a href="files?t=${quote(troveName)};v=${quote(troves[0].getVersion().freeze())};f=${quote(troves[0].getFlavor().freeze())}">Show Troves</a></p>
+                    <p><a href="files?t=${quote(troveName)};v=${quote(troves[0].getVersion().freeze())};f=${quote(troves[0].getFlavor().freeze())}">Show Files</a></p>
                 </div>
                 <div py:strip="True" py:if="not troves[0].getName().endswith(':source')">
                     ${binaryTroveInfo(troves)}
