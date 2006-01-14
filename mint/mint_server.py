@@ -1275,13 +1275,16 @@ class MintServer(object):
 
         cu = self.db.cursor()
 
-        cu.execute("SELECT jobId, status FROM Jobs WHERE releaseId=? AND groupTroveId IS NULL",
+        cu.execute("""SELECT jobId, status FROM Jobs
+                          WHERE releaseId=? AND groupTroveId IS NULL""",
                    releaseId)
         r = cu.fetchall()
         if len(r) == 0:
-            retval = self.jobs.new(releaseId = releaseId, userId = self.auth.userId,
-                status = jobstatus.WAITING, statusMessage = self.getJobWaitMessage(0),
-                timeStarted = time.time(), timeFinished = 0)
+            retval = self.jobs.new(releaseId = releaseId,
+                                   userId = self.auth.userId,
+                                   status = jobstatus.WAITING,
+                                   statusMessage = self.getJobWaitMessage(0),
+                                   timeStarted = time.time(), timeFinished = 0)
             cu.execute('SELECT troveFlavor FROM Releases WHERE releaseId=?',
                        releaseId)
             flavorString = cu.fetchone()[0]
@@ -1294,10 +1297,13 @@ class MintServer(object):
             if status in (jobstatus.WAITING, jobstatus.RUNNING):
                 raise jobs.DuplicateJob
             else:
-                msg = self.getJobWaitMessage(jobId)
+                # getJobWaitMessage orders by timeStarted, so update must
+                # occur in two steps
                 self.jobs.update(jobId, status = jobstatus.WAITING,
-                    statusMessage = msg,
-                    timeStarted = time.time(), timeFinished = 0, owner = None)
+                                 timeStarted = time.time(), timeFinished = 0,
+                                 owner = None)
+                msg = self.getJobWaitMessage(jobId)
+                self.jobs.update(jobId, statusMessage = msg)
                 retval = jobId
 
         return retval
@@ -1331,11 +1337,15 @@ class MintServer(object):
             if status in (jobstatus.WAITING, jobstatus.RUNNING):
                 raise jobs.DuplicateJob
             else:
-                msg = self.getJobWaitMessage(jobId)
+                # getJobWaitMessage orders by timeStarted, so update must
+                # occur in two steps
                 self.jobs.update(jobId, status = jobstatus.WAITING,
-                    statusMessage = msg,
-                    timeStarted = time.time(), timeFinished = 0, owner = None)
+                                 timeStarted = time.time(), timeFinished = 0,
+                                 owner = None)
+                msg = self.getJobWaitMessage(jobId)
+                self.jobs.update(jobId, statusMessage = msg)
                 retval = jobId
+
         self.jobData.setDataValue(retval, "arch", arch, data.RDT_STRING)
         return retval
 
@@ -1604,9 +1614,14 @@ class MintServer(object):
         self._allowPrivate = True
         cu = self.db.cursor()
         if jobId:
-            cu.execute("SELECT COUNT(*) FROM Jobs WHERE timeStarted < (SELECT timeStarted FROM Jobs WHERE jobId = ?) AND status = 0", jobId)
+            cu.execute("""SELECT COUNT(*) FROM Jobs
+                              WHERE timeStarted <
+                                  (SELECT timeStarted FROM Jobs
+                                      WHERE jobId = ?)
+                              AND status = ?""", jobId, jobstatus.WAITING)
         else:
-            cu.execute("SELECT COUNT(*) FROM Jobs WHERE status = 0")
+            cu.execute("SELECT COUNT(*) FROM Jobs WHERE status = ?",
+                       jobstatus.WAITING)
         return cu.fetchone()[0]
 
 

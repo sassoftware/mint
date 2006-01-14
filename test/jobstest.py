@@ -149,6 +149,91 @@ class JobsTest(MintRepositoryHelper):
         assert(client.server.getJobStatus(cookJobId)['queueLen'] == 0)
         assert(client.server.getJobStatus(job.getId())['queueLen'] == 1)
 
+    def testJobQueueOrder(self):
+        cu = self.db.cursor()
+        self.openRepository()
+        client, userId = self.quickMintUser("testuser", "testpass")
+        projectId = client.newProject("Foo", "foo", "rpath.org")
+
+        release = client.newRelease(projectId, "Test Release")
+        release.setImageTypes([releasetypes.STUB_IMAGE])
+        release.setDataValue('stringArg', 'Hello World!')
+
+        self.stockReleaseFlavor(release.getId())
+        job1 = client.startImageJob(release.getId())
+
+        # protect this release from being auto-deleted
+        cu.execute("UPDATE Releases SET troveLastChanged=1")
+        self.db.commit()
+
+        release2 = client.newRelease(projectId, "Test Release")
+        release2.setImageTypes([releasetypes.STUB_IMAGE])
+        release2.setDataValue('stringArg', 'Hello World!')
+
+        self.stockReleaseFlavor(release2.getId())
+        job2 = client.startImageJob(release2.getId())
+
+        # protect this release from being auto-deleted
+        cu.execute("UPDATE Releases SET troveLastChanged=1")
+        self.db.commit()
+
+        self.failIf(job2.statusMessage == 'Next in line for processing',
+                    "Consecutive releases both show up as next.")
+
+        groupTrove = client.createGroupTrove(projectId, 'group-test', '1.0.0',
+                                             'No Description', False)
+
+        groupTroveId = groupTrove.getId()
+
+        trvName = 'testtrove'
+        trvVersion = '/test.rpath.local@rpl:devel/1.0-1-1'
+        trvFlavor = '1#x86|5#use:~!kernel.debug:~kernel.smp'
+        subGroup = ''
+
+        trvid = groupTrove.addTrove(trvName, trvVersion, trvFlavor,
+                                    subGroup, False, False, False)
+
+        cookJobId = groupTrove.startCookJob("1#x86")
+
+        job3 = client.getJob(3)
+
+        self.failIf(job3.statusMessage != 'Number 3 in line for processing',
+                    "Release before cook caused wrong queue count")
+
+        release3 = client.newRelease(projectId, "Test Release")
+        release3.setImageTypes([releasetypes.STUB_IMAGE])
+        release3.setDataValue('stringArg', 'Hello World!')
+
+        self.stockReleaseFlavor(release3.getId())
+        job4 = client.startImageJob(release3.getId())
+
+        # protect this release from being auto-deleted
+        cu.execute("UPDATE Releases SET troveLastChanged=1")
+        self.db.commit()
+
+        self.failIf(job4.statusMessage != 'Number 4 in line for processing',
+                    "Cook before release caused wrong queue count")
+
+        allJobs = (job1, job2, job3, job4)
+
+        for job in allJobs:
+            cu.execute("UPDATE Jobs SET status=?, owner=1", jobstatus.FINISHED)
+
+        self.db.commit()
+
+        # regenerate jobs
+        job1 = client.startImageJob(release.getId())
+        job2 = client.startImageJob(release2.getId())
+        job3 = client.getJob(groupTrove.startCookJob("1#x86"))
+        job4 = client.startImageJob(release3.getId())
+
+        self.failIf(job1.statusMessage != 'Next in line for processing',
+                    "Didn't properly report status of next job")
+
+        for job in (job2, job3, job4):
+            self.failIf(job.statusMessage == 'Next in line for processing',
+                        "Improperly reported status of job as next-in-line")
+
     def testJobData(self):
         client, userId = self.quickMintUser("testuser", "testpass")
         projectId = client.newProject("Foo", "foo", "rpath.org")
@@ -218,8 +303,6 @@ class JobsTest(MintRepositoryHelper):
                     "job-server is not multi-instance safe")
 
     def testJobRaceCondition(self):
-        cu = self.db.cursor()
-
         client, userId = self.quickMintUser("testuser", "testpass")
         projectId = client.newProject("Foo", "foo", "rpath.org")
 
@@ -238,6 +321,7 @@ class JobsTest(MintRepositoryHelper):
 
         cookJobId = groupTrove.startCookJob("1#x86")
 
+        cu = self.db.cursor()
         cu.execute("UPDATE Jobs set owner=1")
         self.db.commit()
 
@@ -254,8 +338,6 @@ class JobsTest(MintRepositoryHelper):
         client, userId = self.quickMintUser("testuser", "testpass")
         projectId = client.newProject("Foo", "foo", "rpath.org")
 
-        cu = self.db.cursor()
-
         for i in range(5):
             groupTrove = client.createGroupTrove(projectId, 'group-test',
                                                  '1.0.0', '', False)
@@ -271,11 +353,11 @@ class JobsTest(MintRepositoryHelper):
 
             cookJobId = groupTrove.startCookJob("1#x86")
 
+        cu = self.db.cursor()
         # make a job unavailable
         cu.execute("UPDATE Jobs SET status=4 WHERE jobId=2")
         # make a job taken
         cu.execute("UPDATE Jobs SET owner=4 WHERE jobId=4")
-
         self.db.commit()
 
         job = client.startNextJob(["1#x86"])
@@ -293,8 +375,6 @@ class JobsTest(MintRepositoryHelper):
     def testStartJobLockRelease(self):
         client, userId = self.quickMintUser("testuser", "testpass")
         projectId = client.newProject("Foo", "foo", "rpath.org")
-
-        cu = self.db.cursor()
 
         groupTrove = client.createGroupTrove(projectId, 'group-test',
                                              '1.0.0', '', False)
