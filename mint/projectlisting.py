@@ -48,7 +48,7 @@ sqlbase = """
                      FROM
                          Projects
                      LEFT JOIN Commits ON
-                     Projects.projectId=Commits.projectId AND Projects.disabled=0 AND Projects.hidden=0
+                     Projects.projectId=Commits.projectId WHERE Projects.disabled=0 AND Projects.hidden=0
                      GROUP BY Projects.projectId) as P
     WHERE fledgeling = 0
     ORDER BY %s
