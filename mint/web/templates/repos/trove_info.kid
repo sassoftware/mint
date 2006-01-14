@@ -43,7 +43,7 @@ isOwner = (userLevel == userlevels.OWNER or auth.admin)
             Add this exact version to ${groupTrove.recipeName} <img style="border: none;" src="${cfg.staticPath}apps/mint/images/group.png" />
         </a>
     </span>
-    
+
     <span py:def="adder(trove)" style="float: right;" py:if="groupTrove and groupTrove.recipeName != trove.getName()">
         <a href="${groupProject.getUrl()}addGroupTrove?id=${groupTrove.id};trove=${quote(trove.getName())};version=${quote(trove.getVersion().asString())};referer=${quote(req.unparsed_uri)}">
             Add to ${groupTrove.recipeName} <img style="border: none;" src="${cfg.staticPath}apps/mint/images/group.png" />
@@ -93,7 +93,7 @@ isOwner = (userLevel == userlevels.OWNER or auth.admin)
                                     </div>
                                 </td>
                             </tr>
-                            <tr><td colspan="2"><a href="files?t=${quote(troveName)};v=${quote(trove.getVersion().freeze())};f=${quote(trove.getFlavor().freeze())}">Show Files</a></td></tr>
+                            <tr><td colspan="2"><a href="files?t=${quote(troveName)};v=${quote(trove.getVersion().freeze())};f=${quote(trove.getFlavor().freeze())}">Show Troves</a></td></tr>
                         </tbody>
                     </table>
                 </div>
