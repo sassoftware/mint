@@ -18,7 +18,7 @@ class PackageIndexTable(database.KeyedTable):
             version     CHAR(255)
         )"""
 
-    fields = ['pkgId', 'name', 'version']
+    fields = ['pkgId', 'projectId', 'name', 'version']
 
     indexes = {"PackageNameIdx": """CREATE INDEX PackageNameIdx
                                         ON PackageIndex(name)""",

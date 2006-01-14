@@ -113,7 +113,7 @@ class ImageFilesTable(database.KeyedTable):
                     filename    CHAR(255),
                     title       CHAR(255) DEFAULT ''
                 );"""
-    fields = ['fileId', 'releaseId', 'idx', 'filename']
+    fields = ['fileId', 'releaseId', 'idx', 'filename', 'title']
 
     indexes = {"ImageFilesReleaseIdx": """CREATE INDEX ImageFilesReleaseIdx
                                               ON ImageFiles(releaseId)"""}
