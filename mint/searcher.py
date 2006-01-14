@@ -155,7 +155,7 @@ class Searcher :
         for i, column in enumerate(searchcols):
             if i > 0:
                 where += "OR "
-            where += "%s LIKE ? " % column
+            where += "UPPER(%s) LIKE UPPER(?) " % column
             subs.append ( '%' + term + '%' )
         where += ') '
         return where, subs
