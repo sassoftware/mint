@@ -9,6 +9,7 @@
             return version.trailingRevision().asString()
         else:
             return up
+
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#">
@@ -34,6 +35,9 @@
     </div>
 
     <div py:def="releasesMenu(releaseList, isOwner=False, display='block')" py:strip="True">
+        <?python
+            projectUrl = project.getUrl()
+        ?>
       <div py:if="isOwner or releaseList" class="palette" id="releases">
         <h3 onclick="javascript:toggle_display('release_items');">
             <img id="release_items_expander"
@@ -49,7 +53,7 @@
             ?>
             <li class="release"
                 py:if="releaseList" py:for="release in sorted(releaseList[:6], key=lambda x: x.getTroveVersion(), reverse=True)">
-                <a href="${basePath}release?id=${release.getId()}">
+                <a href="${projectUrl}release?id=${release.getId()}">
                     Version ${condUpstream(counts, release.getTroveVersion())} for ${release.getArch()}
                 </a>
             </li>

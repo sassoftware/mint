@@ -24,7 +24,7 @@ class ConaryHandler(WebHandler, http.HttpHandler):
     def __init__(self, req, cfg, repServer = None):
         protocol = 'http'
         port = 80
-        
+
         #If the browser can support it, give it what it wants.
         if 'application/xhtml+xml' in req.headers_in.get('Accept', ''):
             self.content_type = 'application/xhtml+xml'
@@ -35,7 +35,7 @@ class ConaryHandler(WebHandler, http.HttpHandler):
             self.troveStore = self.repServer.troveStore
         if 'mint.web.templates.repos' in sys.modules:
             self.reposTemplatePath = os.path.dirname(sys.modules['mint.web.templates.repos'].__file__) + "/repos/"
-    
+
     def handle(self, context):
         self.__dict__.update(**context)
 
@@ -56,11 +56,14 @@ class ConaryHandler(WebHandler, http.HttpHandler):
         self.basePath += "repos/%s" % self.project.getHostname()
         self.basePath = normPath(self.basePath)
 
+        if self.auth:
+            self.userLevel = self.project.getUserLevel(self.auth.userId)
+
         return self._handle
 
     def _handle(self, *args, **kwargs):
         """Handle either an HTTP POST or GET command."""
-        
+
         if self.project.external:
             useSSL = None # use the label as-is for external projects
         else:
