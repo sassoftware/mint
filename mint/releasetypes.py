@@ -9,7 +9,7 @@ BOOTABLE_IMAGE, INSTALLABLE_ISO, STUB_IMAGE, LIVE_CF_IMAGE, NETBOOT_IMAGE, GROUP
 
 
 #This array contains the imageTypes that are to be displayed on the release creation page
-visibleImageTypes = ( INSTALLABLE_ISO, QEMU_IMAGE, VMWARE_IMAGE )
+visibleImageTypes = ( INSTALLABLE_ISO, ) # , QEMU_IMAGE, VMWARE_IMAGE )
 
 #BOOTABLE_IMAGE Should never get stored in the DB and therefore doesn't need a name
 typeNames = {
