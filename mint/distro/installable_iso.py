@@ -191,7 +191,7 @@ class InstallableIso(ImageGenerator):
                 # FIXME: regenerate boot.iso here
         else:
             cfg = conarycfg.ConaryConfiguration()
-            cfg.read(self.cfg.configPath + "/conaryrc")
+            cfg.read(self.conarycfgFile)
             cfg.root = cfg.dbPath = ":memory:"
             cfg.installLabelPath = [versions.Label(self.project.getLabel())]
             cclient = conaryclient.ConaryClient(cfg)
@@ -259,9 +259,9 @@ class InstallableIso(ImageGenerator):
         cfg.installLabelPath = [versions.Label(project.getLabel())]
         cfg.repositoryMap.update(projCfg.repositoryMap)
         cfg.user = projCfg.user
-        conarycfgFile = os.path.join(self.cfg.configPath, 'conaryrc')
-        if os.path.exists(conarycfgFile):
-            cfg.read(conarycfgFile)
+        self.conarycfgFile = os.path.join(self.cfg.configPath, 'conaryrc')
+        if os.path.exists(self.conarycfgFile):
+            cfg.read(self.conarycfgFile)
 
         cfg.dbPath = ':memory:'
         cfg.root = ':memory:'
@@ -290,6 +290,10 @@ class InstallableIso(ImageGenerator):
             # reinit template if exists
             util.rmtree(productDir)
         os.rename(os.path.join(topdir, 'PRODUCTNAME'), productDir)
+        # replace isolinux.bin with a real copy, since it's modified
+        call('cp', '--remove-destination', '-a',
+            templateDir + '/isolinux/isolinux.bin', topdir + '/isolinux/isolinux.bin')
+
         csdir = os.path.join(topdir, subdir, 'changesets')
         util.mkdirChain(csdir)
         assertParentAlive()
@@ -340,7 +344,7 @@ class InstallableIso(ImageGenerator):
         baseDir = os.path.join(topdir, subdir, 'base')
         self.baseDir = baseDir
         sqldbPath = os.path.join(baseDir, 'sqldb')
-        gencslist.writeSqldb(groupcs, sqldbPath, cfgFile = conarycfgFile)
+        gencslist.writeSqldb(groupcs, sqldbPath, cfgFile = self.conarycfgFile)
 
         # write the cslist
         cslistPath = os.path.join(baseDir, 'cslist')
