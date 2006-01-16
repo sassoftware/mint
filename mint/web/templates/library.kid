@@ -139,12 +139,17 @@ def injectVersion(version):
                         host = versions.VersionFromString(item['trvVersion']).branch().label().getHost()
                         shorthost = host.split('.')[0]
 
+                        # FIXME: We should not hotlink rPath group troves (if
+                        # shorthost == 'conary') until a better solution is
+                        # found for aliasing repos names to projects (see below)
+                        # [This is the workaround for bugs.rpath.com #575]
+
                     ?>
                     <td><img py:if="item['trvName'].startswith('group-')" src="${cfg.staticPath}apps/mint/images/group.png" class="noborder" /></td>
                     <td py:if="item['versionLock']"><img class="lockicon" id="groupbuilder-item-lockicon-${item['groupTroveItemId']}" src="${cfg.staticPath}apps/mint/images/locked.gif" title="Version is locked" /></td>
                     <td py:if="not item['versionLock']"><img class="lockicon" id="groupbuilder-item-lockicon-${item['groupTroveItemId']}" src="${cfg.staticPath}apps/mint/images/unlocked.gif" title="Version is unlocked"/></td>
-                    <td><a href="${cfg.basePath}repos/${shorthost}/troveInfo?t=${quote(item['trvName'])};v=${quote(injectVersion(item['trvVersion']))}" title="Name: ${item['trvName']}; Version: ${item['trvVersion']}">${item['trvName']}</a></td>
-                    <td><a href="${cfg.basePath}repos/${shorthost}/browse">${shorthost}</a></td>
+                    <td><a py:strip="shorthost == 'conary'" href="${cfg.basePath}repos/${shorthost}/troveInfo?t=${quote(item['trvName'])};v=${quote(injectVersion(item['trvVersion']))}" title="Name: ${item['trvName']}; Version: ${item['trvVersion']}">${item['trvName']}</a></td>
+                    <td><a py:strip="shorthost == 'conary'" href="${cfg.basePath}repos/${shorthost}/browse">${shorthost}</a></td>
                     <td><a href="${groupProject.getUrl()}deleteGroupTrove?id=${groupTrove.id};troveId=${item['groupTroveItemId']};referer=${quote(req.unparsed_uri)}">X</a></td>
                 </tr>
                 <tr id="groupbuilder-example" style="display:none">
@@ -158,7 +163,7 @@ def injectVersion(version):
               <tfoot>
                 <tr class="groupcook">
                     <td colspan="4" style="text-align: center; padding: 1em;">
-                        <a class="option" style="display: inline;" href="${groupProject.getUrl()}pickArch?id=${groupTrove.id}">Cook This Group</a>
+                        <a class="option" style="display: inline;" href="${groupProject.getUrl()}pickArch?id=${groupTrove.id}">Cook&nbsp;This&nbsp;Group</a>
                     </td>
                 </tr>
               </tfoot>
