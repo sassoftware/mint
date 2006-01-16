@@ -44,7 +44,7 @@ onload = "javascript:;"
         </div>
     </td>
 
-    <head py:match="item.tag == 'head'" >
+    <head py:match="item.tag == '{http://www.w3.org/1999/xhtml}head'" >
         <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=utf-8" />
         <script type="text/javascript" src="${cfg.staticPath}/apps/MochiKit/MochiKit.js"/>
         <script type="text/javascript" src="${cfg.staticPath}/apps/mint/javascript/generic.js"/>
@@ -63,8 +63,7 @@ onload = "javascript:;"
         <link rel="icon" href="http://www.rpath.com/favicon.ico" />
         <div py:replace="item[:]"/>
     </head>
-    <body
-          py:match="item.tag == 'body'"
+    <body py:match="item.tag == '{http://www.w3.org/1999/xhtml}body'"
           py:attrs="item.attrib">
         <?python
             secureProtocol = 'http'
