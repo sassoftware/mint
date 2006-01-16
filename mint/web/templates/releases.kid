@@ -56,13 +56,10 @@
                 <h3 py:if="isOwner">Published Releases</h3>
                 ${releasesTable(publishedReleases, isOwner)}
                 <p py:if="not publishedReleases">This project has no published releases.</p>
-
-                <?python unpublishedReleases = list(set(releases) - set(publishedReleases)) ?>
                 <div py:if="isOwner and unpublishedReleases">
                     <h3>Unpublished Releases</h3>
                     ${releasesTable(unpublishedReleases, isOwner)}
                 </div>
-
                 <p py:if="isOwner"><a href="newRelease">Create a new release</a></p>
             </div>
         </td>

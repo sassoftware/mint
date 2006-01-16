@@ -322,8 +322,8 @@ class MintServer(object):
             cfg.user.addServerGlob(versions.Label(authLabel).getHost(),
                                    self.cfg.authUser, self.cfg.authPass)
             repo = shimclient.ShimNetClient(server, protocol, port,
-                (self.cfg.authUser, self.cfg.authPass, None, None), cfg.repositoryMap,
-                                            cfg.user)
+                (self.cfg.authUser, self.cfg.authPass, None, None),
+                                            cfg.repositoryMap, cfg.user, 0)
         return repo
 
     # unfortunately this function can't be a proper decorator because we

@@ -160,6 +160,12 @@ class ReleasesTable(database.KeyedTable):
         return res
 
     def iterReleasesForProject(self, projectId, showUnpublished = False):
+        """ Returns an iterator over the all of the releaseIds in a given
+            project with ID projectId. Optionally screens out unpublished
+            releases (by default). The iterator is ordered by the date
+            the associated group grove last changed in descending order
+            (most to lease recent)."""
+
         cu = self.db.cursor()
 
         if showUnpublished:
@@ -173,7 +179,7 @@ class ReleasesTable(database.KeyedTable):
                             troveVersion IS NOT NULL AND
                             troveFlavor IS NOT NULL AND
                             troveLastChanged IS NOT NULL
-                            """ + published ,
+                            """ + published + """ ORDER BY troveLastChanged DESC""",
                    projectId)
         for results in cu.fetchall():
             yield results[0]
