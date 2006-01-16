@@ -380,9 +380,10 @@ class UsersTable(database.KeyedTable):
         """
         cu = self.db.cursor()
 
-        SQL = """SELECT userId, username || ' - ' || fullName, active
+        userConcat = database.concat(self.db, 'username', '" - "', 'fullName')
+        SQL = """SELECT userId, %s, active
                 FROM Users
-                ORDER BY username"""
+                ORDER BY username""" % userConcat
 
         cu.execute(SQL)
 
