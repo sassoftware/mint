@@ -67,11 +67,10 @@ class GroupTroveTest(MintRepositoryHelper):
         self.makeSourceTrove("testcase", testRecipe, l)
         self.cookFromRepository("testcase", l, ignoreDeps = True)
 
-    def addTestTrove(self, groupTrove, trvName):
-        trvVersion='/test.rpath.local@rpl:devel/1.0-1-1'
-        trvFlavor='1#x86|5#use:~!kernel.debug:~kernel.smp'
-        subGroup = ''
-
+    def addTestTrove(self, groupTrove, trvName,
+            trvVersion = '/test.rpath.local@rpl:devel/1.0-1-1',
+            trvFlavor='1#x86|5#use:~!kernel.debug:~kernel.smp',
+            subGroup = ''):
         return groupTrove.addTrove(trvName, trvVersion, trvFlavor,
                                    subGroup, False, False, False)
 
@@ -704,6 +703,40 @@ class GroupTroveTest(MintRepositoryHelper):
 
         groupTroves = client.server.getGroupTroves(projectId)
         assert(groupTroves == {'test.rpath.local@rpl:devel': ['group-test']})
+
+    def testGroupTrovePathConflicts(self):
+        self.openRepository()
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client)
+
+        project = client.getProject(projectId)
+
+        groupTrove = self.createTestGroupTrove(client, projectId)
+        groupTroveId = groupTrove.getId()
+
+        v = versions.ThawVersion("/test.rpath.local@rpl:devel/123.0:1.0-1-1")
+        v2 = versions.ThawVersion("/test.rpath.local@rpl:mumble/123.0:1.0-1-1")
+
+        self.addComponent("test:runtime", v2)
+        self.addCollection("group-foo", v2,
+            [ ("test:runtime", v2) ])
+        self.addComponent("test:runtime", v)
+
+        trvId = self.addTestTrove(groupTrove, "group-foo", v2.asString())
+        trvId = self.addTestTrove(groupTrove, "test:runtime", v.asString())
+        # cook once to ensure we can create a new package
+        jobId = groupTrove.startCookJob("1#x86")
+
+        job = client.getJob(jobId)
+        cookJob = group_trove.GroupTroveCook(client, client.getCfg(), job,
+                                             groupTrove.id)
+        trvName, trvVersion, trvFlavor = cookJob.write()
+
+        # give some time for the commit action to run
+        self.waitForCommit(project, [('group-test:source', '1.0.0-2'),
+                                     ('group-test:source', '1.0.0-1')])
+
+        job.setStatus(jobstatus.FINISHED,"Finished")
 
     def testEmptyCook(self):
         self.openRepository()
