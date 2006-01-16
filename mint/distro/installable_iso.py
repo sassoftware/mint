@@ -255,7 +255,7 @@ class InstallableIso(ImageGenerator):
         cfg = conarycfg.ConaryConfiguration()
 
         # add a repositoryMap and user entry to cfg
-        projCfg = project.getConaryConfig(overrideSSL = True, useSSL = self.cfg.SSL)
+        projCfg = project.getConaryConfig(overrideSSL = not project.external, useSSL = self.cfg.SSL)
         cfg.installLabelPath = [versions.Label(project.getLabel())]
         cfg.repositoryMap.update(projCfg.repositoryMap)
         cfg.user = projCfg.user
