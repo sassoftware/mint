@@ -109,7 +109,7 @@ class JobRunner(threading.Thread):
                     imageFilenames.extend(imagegen.write())
                 else:
                     log.info("job %s:%d did not have a bootable image"
-                             " generation request" % (project.getHostname,
+                             " generation request" % (project.getHostname(),
                                                       jobId))
 
             except Exception, e:
