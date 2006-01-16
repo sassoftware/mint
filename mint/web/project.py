@@ -316,7 +316,7 @@ class ProjectHandler(WebHandler):
                 kwargs = {'releaseId':      releaseId,
                           'trove':          trove,
                           'releaseName':    releaseName}
-                return self._write("newRelease", errors = errors, kwargs = kwargs)
+                return self._write("newRelease", errors = errors, kwargs = kwargs, imageTypes = imageTypes)
         else:
             release = self.client.getRelease(releaseId)
             template = release.getDataTemplate()
