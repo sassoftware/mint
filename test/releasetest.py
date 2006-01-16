@@ -316,10 +316,10 @@ class ReleaseTest(MintRepositoryHelper):
         release.setTrove("group-trove",
                          "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
         release.setPublished(True)
-        relIdList = [x.id for x in \
-                     client.server.getReleasesForProject(projectId)]
-        if relIdList != [1, 2]:
-            self.fail('getReleasesForProject has the wrong order')
+        self.failIf([x.id for x in \
+                     client.server.getReleasesForProject(projectId)] != [2, 1],
+                    "getReleasesForProject is not ordered by "
+                    "'most recent first'")
 
     def makeInstallableIsoCfg(self):
         mintDir = os.environ['MINT_PATH']
