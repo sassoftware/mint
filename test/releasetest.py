@@ -8,6 +8,7 @@ testsuite.setup()
 
 import time
 import os
+import sys
 
 from mint_rephelp import MintRepositoryHelper
 from mint.data import RDT_STRING, RDT_BOOL, RDT_INT
@@ -376,9 +377,18 @@ class ReleaseTest(MintRepositoryHelper):
         # repoMap/user split.
         cwd = os.getcwd()
         os.chdir(self.tmpDir + "/images")
+
+        # unforutanatel imageJob.write call can be noisy on stderr
+        oldFd = os.dup(sys.stderr.fileno())
+        fd = os.open(os.devnull, os.W_OK)
+        os.dup2(fd, sys.stderr.fileno())
+        os.close(fd)
+
         try:
             self.assertRaises(TroveNotFound, imageJob.write)
         finally:
+            os.dup2(oldFd, sys.stderr.fileno())
+            os.close(oldFd)
             os.chdir(cwd)
 
 if __name__ == "__main__":
