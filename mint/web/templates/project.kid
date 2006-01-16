@@ -47,12 +47,12 @@
         <div id="release_items" style="display: $display">
             <ul>
             <?python
-                upstreamList = [upstream(x.getTroveVersion()) for x in releaseList[:6]]
+                upstreamList = [upstream(x.getTroveVersion()) for x in releaseList[:5]]
                 # create a dictionary with counts of duplicate upstream versions
                 counts = dict(zip(set(upstreamList), [upstreamList.count(x) for x in set(upstreamList)]))
             ?>
             <li class="release"
-                py:if="releaseList" py:for="release in sorted(releaseList[:6], key=lambda x: x.getTroveVersion(), reverse=True)">
+                py:if="releaseList" py:for="release in sorted(releaseList[:5], key=lambda x: x.getTroveVersion(), reverse=True)">
                 <a href="${projectUrl}release?id=${release.getId()}">
                     Version ${condUpstream(counts, release.getTroveVersion())} for ${release.getArch()}
                 </a>
@@ -63,7 +63,7 @@
             <div class="release" py:if="isOwner" style="text-align: right; padding-right:8px;">
                 <a href="${basePath}newRelease"><strong>Create a new release...</strong></a>
             </div>
-            <div class="release" py:if="not isOwner and len(releaseList) > 6" style="text-align: right; padding-right:8px;">
+            <div class="release" py:if="not isOwner and len(releaseList) > 5" style="text-align: right; padding-right:8px;">
                 <a href="${basePath}releases"><strong>More...</strong></a>
             </div>
           </ul>
