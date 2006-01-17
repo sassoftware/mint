@@ -40,6 +40,8 @@ def cookGroupObject(repos, db, cfg, recipeClass, sourceVersion, macros={},
     recipeObj = recipeClass(repos, cfg, sourceVersion.branch().label(),
                             cfg.buildFlavor, macros)
 
+    cfg.initializeFlavors()
+    use.setBuildFlagsFromFlavor(recipeClass.name, cfg.buildFlavor)
     try:
         use.track(True)
         recipeObj.setup()
