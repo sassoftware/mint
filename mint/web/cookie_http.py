@@ -96,7 +96,7 @@ class ConaryHandler(WebHandler, http.HttpHandler):
 
     def _requestAuth(self):
         # try to fall back to anonymous and rerun the handler
-        if self.authToken != ('anonymous', 'anonymous'):
+        if self.authToken[0] != 'anonymous':
             self.authToken = ('anonymous', 'anonymous')
             return self._handle()
         else:
