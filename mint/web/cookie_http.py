@@ -79,7 +79,7 @@ class ConaryHandler(WebHandler, http.HttpHandler):
         else:
             self.repos = ShimNetClient(self.repServer, 'http', 80,
                                        self.authToken, cfg.repositoryMap,
-                                       cfg.user, 0)
+                                       cfg.user)
 
         try:
             method = self.__getattribute__(self.cmd)
