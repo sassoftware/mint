@@ -4,17 +4,7 @@
 #
 # All rights reserved
 #
-import traceback
-
-from conary import sqlite3
-from conary import versions
-
 from mint import config
-from mint import pkgindex
-from mint import projects
-from conary import conaryclient
-from conary import conarycfg
-from conary.repository import repository
 from conary import dbstore
 
 cfgPath = "/srv/mint/mint.conf"
@@ -26,52 +16,41 @@ db = dbstore.connect(cfg.dbPath, driver = cfg.dbDriver)
 db.connect()
 cu = db.cursor()
 
-pkgIdx = pkgindex.PackageIndexTable(db)
-labelsTable = projects.LabelsTable(db)
+try:
+    # get a list of the latest version of each package
+    # comparing version strings isn't technically reliable, so we must use the
+    # latest timestamp to verify
+    cu.execute("""SELECT projectId, troveName, max(timestamp)
+                      FROM Commits
+                      WHERE troveName NOT LIKE '%:%'
+                      GROUP BY projectId, troveName""")
 
-cu = db.cursor()
-cu.execute("SELECT projectId, hostname || '.' || domainname FROM Projects WHERE hidden=0 AND disabled=0")
+    for projectId, troveName, maxTime in cu.fetchall():
+        cu.execute("""SELECT version from Commits
+                          WHERE projectId=? AND troveName=? and timestamp=?""",
+                   projectId, troveName, maxTime)
 
-labels = {}
-projectIds = {}
-netclients = {}
-for r in cu.fetchall():
-    projectId, hostname = r
+        # at least one result will always exist. there should be only one.
+        version = cu.fetchone()[0]
 
-    l, repMap, userMap = labelsTable.getLabelsForProject(projectId,
-        overrideAuth = True, newUser = 'anonymous', newPass = 'anonymous')
-    
-    hostname = repMap.keys()[0]
-    labels[hostname] = versions.Label(l.keys()[0])
-    projectIds[hostname] = projectId
+        cu.execute("""SELECT pkgId FROM PackageIndex
+                          WHERE projectId=? AND name=?""",
+                   projectId, troveName)
+        res = cu.fetchone()
+        if not res:
+            cu.execute("""INSERT INTO PackageIndex (projectId, name, version)
+                              VALUES (?, ?, ?)""",
+                       projectId, troveName, version)
+            pass
+        else:
+            pkgId = res[0]
+            cu.execute("""UPDATE PackageIndex SET
+                                  projectId=?, name=?, version=?
+                                  WHERE pkgId=?""",
+                       projectId, troveName, version, pkgId)
 
-    ccfg = conarycfg.ConaryConfiguration()
-    ccfg.repositoryMap = repMap
-    repos = conaryclient.ConaryClient(ccfg).getRepos()
-    netclients[hostname] = repos
-
-rows = []
-for host in netclients.keys():
-    try:
-        troves = netclients[host].getAllTroveLeaves(host, {None: {None: None}})
-
-    except repository.OpenError, e:
-        print "warning: unable to access %s" % host
-        traceback.print_exc()
-        continue
-        
-    pkgs = [x for x in troves.keys() if ':' not in x]
-    
-    for pkg in pkgs:
-        latestVer = sorted(troves[pkg].keys(), reverse = True)[0]
-        row = (projectIds[host], pkg, latestVer.asString())
-        rows.append(row)
-
-for row in rows:
-    cu.execute("SELECT pkgId FROM PackageIndex WHERE projectId=? AND name=? AND version=?", *row)
-    r = cu.fetchone()
-    if r:
-        pkgId = r[0]
-        cu.execute("UPDATE PackageIndex SET projectId=?, name=?, version=? WHERE pkgId=?", row[0], row[1], row[2], pkgId)
-    else:
-        cu.execute("INSERT INTO PackageIndex VALUES (NULL, ?, ?, ?)", *row)
+except:
+    db.rollback()
+    raise
+else:
+    db.commit()
