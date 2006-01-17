@@ -323,7 +323,7 @@ class MintServer(object):
                                    self.cfg.authUser, self.cfg.authPass)
             repo = shimclient.ShimNetClient(server, protocol, port,
                 (self.cfg.authUser, self.cfg.authPass, None, None),
-                                            cfg.repositoryMap, cfg.user, 0)
+                cfg.repositoryMap, cfg.user)
         return repo
 
     # unfortunately this function can't be a proper decorator because we
