@@ -1,3 +1,31 @@
+Changes in 1.2.2:
+
+* The users admin interface now displays properly on a MySQL install.
+* ShimNetClient uses the default rate limit instead of explicitly 
+  using 0.
+
+Changes in 1.2.1:
+
+* Fix redirect from rpath.com to www.rpath.com (for example)
+* Fix bugzilla #552 (Group Builder didn't show up in Project Resources in
+  repository browser.
+* Fixed an incorrect path to recent releases in repository browser.
+* The repository browser now says "Show Troves" and "Show Files" where
+  appropriate, instead of Show Files everywhere.
+* Hidden and disabled projects no longer try to appear in the project
+  browser, triggering a permission denied error.
+* Searches are now case-insensitive.
+* ISO generation copies isolinux.bin into the target dir instead of just
+  linking, since it is changed.
+* Fixed NameError: name 'imageTypes' is not defined traceback on new release
+  error.
+* SSL setting in the job server is only overridden for internal projects.
+* Group trove cooking now handles path conflict errors and attempts to pick
+  the right trove to use automatically.
+* Release list ordering is now consistent.
+* Anaconda-installed ISOs now have an initial conaryrc which reads all config
+  files from /etc/conary/conf.d/
+
 Changes in 1.2.0:
 
 * Many changes to remove usernames and passwords from repository maps.
