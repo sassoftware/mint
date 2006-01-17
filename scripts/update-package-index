@@ -54,3 +54,5 @@ except:
     raise
 else:
     db.commit()
+
+db.close()
