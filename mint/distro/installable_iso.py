@@ -210,7 +210,7 @@ class InstallableIso(ImageGenerator):
 
         print >> conaryrcFile, "installLabelPath " + ilp
         print >> conaryrcFile, "pinTroves kernel.*"
-        print >> conaryrcFile, "include /etc/conary/conf.d/*"
+        print >> conaryrcFile, "includeConfigFile /etc/conary/conf.d/*"
         if self.release.getDataValue("autoResolve"):
             print >> conaryrcFile, "autoResolve True"
         conaryrcFile.close()
