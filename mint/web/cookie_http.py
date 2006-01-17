@@ -91,7 +91,7 @@ class ConaryHandler(WebHandler, http.HttpHandler):
         try:
             output = method(**d)
             return output
-        except errors.OpenError:
+        except (http.InvalidPassword, errors.OpenError):
             return self._requestAuth()
 
     def _requestAuth(self):
