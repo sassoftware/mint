@@ -272,6 +272,8 @@ class GroupTroveCook(ImageGenerator):
 
             sys.stderr.flush()
             sys.stdout.flush()
+            repos.commitChangeSet(troves[0], callback = None)
+            
             ret = troves[1][0]
 
         finally:
