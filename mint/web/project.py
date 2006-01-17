@@ -67,7 +67,7 @@ class ProjectHandler(WebHandler):
         self.userLevel = self.project.getUserLevel(self.auth.userId)
 
         #Take care of hidden projects
-        if self.project.hidden and self.userLevel == userlevels.NONMEMBER:
+        if self.project.hidden and self.userLevel == userlevels.NONMEMBER and not self.auth.admin:
             raise HttpNotFound
 
         # add the project name to the base path
