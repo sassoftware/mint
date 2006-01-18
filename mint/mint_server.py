@@ -1080,6 +1080,36 @@ class MintServer(object):
         self._filterProjectAccess(projectId)
         return self.labels.removeLabel(projectId, labelId)
 
+    @typeCheck(str)
+    @private
+    def versionIsExternal(self, versionStr):
+        cu = self.db.cursor()
+
+        labelStr = '/' + versionStr.split('/')[1]
+
+        cu.execute("SELECT projectId FROM Labels WHERE label=?", labelStr)
+
+        res = cu.fetchone()
+
+        if not res:
+            raise database.ItemNotFound
+
+        projectId = res[0]
+
+        # remember to filter access to hidden and disabled projects
+        # we couldn't do it right away because we didn't have the projectId
+        self._filterProjectAccess(projectId)
+
+        cu.execute("SELECT external FROM Projects WHERE projectId=?",
+                   projectId)
+
+        res = cu.fetchone()
+
+        if not res:
+            raise database.ItemNotFound
+
+        return bool(res[0])
+
     #
     # RELEASE STUFF
     #

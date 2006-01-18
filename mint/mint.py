@@ -391,6 +391,10 @@ class MintClient:
     def getReportPdf(self, name):
         return base64.b64decode(self.server.getReportPdf(name))
 
+    # label functions
+    def versionIsExternal(self, versionStr):
+        return self.server.versionIsExternal(versionStr)
+
 class ServerProxy(xmlrpclib.ServerProxy):
     def __getattr__(self, name):
         return _Method(self.__request, name)

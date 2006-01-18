@@ -39,7 +39,6 @@ from mint import users
 from mint.projects import mysqlTransTable
 from webhandler import normPath, HttpError
 import app
-import cookie_http
 
 BUFFER=1024 * 256
 

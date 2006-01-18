@@ -74,7 +74,31 @@ class ConaryHandler(WebHandler, http.HttpHandler):
                                            useSSL = useSSL)
         self.authToken = (self.authToken[0], self.authToken[1], None, None)
 
-        if self.project.external:
+        # FIXME: hack
+        # if we are looking at a trove, and the trove points to an external
+        # repository, we need to instantiate a netclient vice shimclient
+
+        # for now the troveInfo page itself must be loaded with netClient
+        # because we do not have a version available.
+
+        repos = None
+        needsExternal = False
+        extURIs = ('/files', '/troveInfo', '/getFile')
+        if True in [self.req.uri.endswith(x) for x in extURIs]:
+            versionStr = ''
+            if self.req.uri.endswith('files'):
+                versionStr = str(kwargs['v'])
+            elif self.req.uri.endswith('getFile'):
+                versionStr = str(kwargs['fileV'])
+
+            if versionStr:
+                needsExternal = self.client.versionIsExternal(versionStr)
+            else:
+                needsExternal = True
+
+        ### end hack. ###
+
+        if self.project.external or needsExternal:
             self.repos = conaryclient.ConaryClient(cfg).getRepos()
         else:
             self.repos = ShimNetClient(self.repServer, 'http', 80,
