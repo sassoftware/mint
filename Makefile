@@ -17,7 +17,6 @@ export confdir = $(servicedir)/mint/
 export datadir = $(prefix)/share
 export contentdir = $(datadir)/conary/web-common/apps/mint/
 export libdir = $(prefix)/lib
-export bindir = $(prefix)/bin
 export mintdir = $(libdir)/python$(PYVERSION)/site-packages/
 export httpddir = $(sysconfdir)/httpd/conf.d/
 export maillistdir = /var/mailman

@@ -23,19 +23,13 @@ extra_dist = \
 	live_iso.conf		\
 	buildiso		\
 	buildtemplates		\
-	raw2vmdk.c		\
 	job-server.init.in
 
 SUBDIRS = data
 
-CFLAGS=-Wall -O2
-
 dist_files = $(script_dist) $(extra_dist)
 
-all: default-all bin
-
-bin: raw2vmdk.c
-	gcc $(CFLAGS) -lm -o raw2vmdk raw2vmdk.c
+all: default-all
 
 install: install-subdirs
 	mkdir -p $(DESTDIR)/$(datadir)/mint/scripts/
@@ -50,8 +44,6 @@ install: install-subdirs
 	mkdir -p $(DESTDIR)/$(sysconfdir)/init.d/
 	install -m 755 job-server.init.in $(DESTDIR)/$(sysconfdir)/init.d/rbuilder-isogen
 	sed -i "s,@DESTDIR@,$(installdir),g" $(DESTDIR)/$(sysconfdir)/init.d/rbuilder-isogen
-	mkdir -p $(DESTDIR)/$(bindir)/
-	install -m 755 raw2vmdk	$(DESTDIR)/$(bindir)/
 
 
 dist: default-dist
