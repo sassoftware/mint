@@ -171,9 +171,9 @@ class BootableDiskImage:
         ofile.close()
 
         #Do the partition table
-        cylinders = self.imagesize / self.cfg.cylindersize
-        cmd = '/sbin/sfdisk -C %d -S %d -H %d %s > /dev/null' % (cylinders, self.cfg.sectors, self.cfg.heads, self.outfile)
-        input = "0 %d L *\n" % (cylinders)
+        self.cylinders = self.imagesize / self.cfg.cylindersize
+        cmd = '/sbin/sfdisk -C %d -S %d -H %d %s > /dev/null' % (self.cylinders, self.cfg.sectors, self.cfg.heads, self.outfile)
+        input = "0 %d L *\n" % (self.cylinders)
         sfdisk = util.popen(cmd, 'w')
         sfdisk.write(input)
         retval = sfdisk.close()
@@ -384,7 +384,8 @@ quit
 
     @timeMe
     def createVMDK(self, outfile):
-        cmd = '/usr/bin/qemu-img convert -f raw %s -O vmdk %s' % (self.outfile, outfile)
+        cmd = 'raw2vmdk -C %d %s %s' % (self.cylinders, self.outfile, outfile)
+        print "Running", cmd
         util.execute(cmd)
 
     @timeMe
