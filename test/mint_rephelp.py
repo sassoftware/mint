@@ -26,7 +26,8 @@ MINT_DOMAIN = 'rpath.local'
 MINT_HOST = 'test'
 
 class MintDatabase:
-    def __init__(self, path):
+    def __init__(self, driver, path):
+        self.driver = driver
         self.path = path
 
     def newProjectDb(self, projectName):
@@ -35,9 +36,20 @@ class MintDatabase:
     def start(self):
         pass
 
+    def stop(self):
+        pass
+
     def reset(self):
         pass
 
+    def connect(self):
+        db = dbstore.connect(self.path, driver = self.driver)
+        assert(db)
+        return db
+
+    def __init__(self, driver, path):
+        self.driver = driver
+        self.path = path
 
 class SqliteMintDatabase(MintDatabase):
     def reset(self):
@@ -53,12 +65,12 @@ class SqliteMintDatabase(MintDatabase):
         if os.path.exists(p):
             util.rmtree(p)
 
+    def __init__(self, path):
+        MintDatabase.__init__(self, 'sqlite', path)
 
-class MySqlMintDatabase(MintDatabase):
+
+class MySqlMintDatabase(mysqlharness.MySqlHarness, MintDatabase):
     keepDbs = ['mysql', 'test', 'information_schema', 'testdb']
-
-    def connect(self):
-        return dbstore.connect(self.path, "mysql")
 
     def dropAndCreate(self, dbName, create = True):
         db = self.connect()
@@ -71,7 +83,11 @@ class MySqlMintDatabase(MintDatabase):
         db.close()
 
     def start(self):
-        self.dropAndCreate("minttest")
+        self.dropAndCreate(self.dbName, create = True)
+
+    def stop(self):
+        # we need to retain the server pid so we can kill it
+        raise NotImplementedError
 
     def reset(self):
         db = self.connect()
@@ -79,21 +95,36 @@ class MySqlMintDatabase(MintDatabase):
         cu.execute("SHOW DATABASES")
         for dbName in [x[0] for x in cu.fetchall() if x[0] not in self.keepDbs]:
             cu.execute("DROP DATABASE %s" % dbName)
-        self.dropAndCreate("minttest")
+        self.dropAndCreate(self.dbName, create = True)
         db.close()
 
     def newProjectDb(self, projectName):
         dbName = projectName.translate(mysqlTransTable)
         self.dropAndCreate(dbName, create = False)
 
+    def __init__(self, dir, dbName = "minttest"):
+        self.dbName = dbName
+
+        init = "create database %s character set latin1 collate latin1_bin" \
+               % self.dbName
+        mysqlharness.MySqlHarness.__init__(self, dir=dir, init=init)
+
+        MintDatabase.__init__(self, 'mysql',
+                              'root@localhost.localdomain:%d/%s' % \
+                              (self.port, self.dbName))
+
+        import epdb
+        epdb.st()
 
 class MintApacheServer(rephelp.ApacheServer):
     def __init__(self, name, reposDB, contents, server, serverDir, reposDir,
                  conaryPath, repMap, useCache = False, requireSigs = False):
         self.mintPath = os.environ.get("MINT_PATH", "")
 
-        rephelp.ApacheServer.__init__(self, name, reposDB, contents, server, serverDir, reposDir,
-             conaryPath, repMap, useCache, requireSigs)
+        rephelp.ApacheServer.__init__(self, name, reposDB, contents, server,
+                                      serverDir, reposDir,
+                                      conaryPath, repMap, useCache,
+                                      requireSigs)
         self.getMintCfg()
         f = file(self.serverRoot + "/mint.conf", "w")
         self.mintCfg.display(f)
@@ -103,7 +134,7 @@ class MintApacheServer(rephelp.ApacheServer):
         if mintDb == "sqlite":
             self.mintDb = SqliteMintDatabase(self.reposDir + "/mintdb")
         elif mintDb == "mysql":
-            self.mintDb = MySqlMintDatabase(reposDB.path)
+            self.mintDb = MySqlMintDatabase(reposDir + '/mysql')
 
     def start(self):
         rephelp.ApacheServer.start(self)
@@ -163,6 +194,7 @@ class MintApacheServer(rephelp.ApacheServer):
         cfg.debugMode = True
         cfg.sendNotificationEmails = False
         cfg.commitAction = """%s/scripts/commitaction --username mintauth --password mintadmin --repmap '%%(repMap)s' --build-label %%(buildLabel)s --module \'%s/mint/rbuilderaction.py --user %%%%(user)s --url http://mintauth:mintpass@%s:%d/xmlrpc-private/'""" % (conaryPath, mintPath, 'test.rpath.local', self.port)
+        cfg.commitAction = None
         cfg.postCfg()
         self.mintCfg = cfg
 
@@ -183,7 +215,8 @@ rephelp.SERVER_HOSTNAME = "mint.rpath.local@rpl:devel"
 
 class MintRepositoryHelper(rephelp.RepositoryHelper):
     def openRepository(self, serverIdx = 0, requireSigs = False):
-        ret = rephelp.RepositoryHelper.openRepository(self, serverIdx, requireSigs)
+        ret = rephelp.RepositoryHelper.openRepository(self, serverIdx,
+                                                      requireSigs)
         self.port = self.servers.getServer().port
         self.mintCfg = self.servers.getServer().mintCfg
 
@@ -290,7 +323,9 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
 
     def tearDown(self):
         self.db.close()
-        self.servers.getServer().stop()
+        srv = self.servers.getServer()
+        if srv:
+            srv.stop()
         rephelp.RepositoryHelper.tearDown(self)
 
     def stockReleaseFlavor(self, releaseId):
