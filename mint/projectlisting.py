@@ -34,23 +34,32 @@ desctrunclength = 300
 #        OFFSET %d
 #"""
 
-sqlbase = """        
+sqlbase = """
     SELECT projectId, hostname, name, description, timeModified
         FROM (SELECT Projects.projectId AS projectId,
                      Projects.hostname AS hostname,
                      Projects.name AS name,
                      Projects.description AS description,
-                     Projects.projectId NOT IN (select DISTINCT projectId FROM Commits) AS fledgeling,
-                     IFNULL(MAX(Commits.timestamp), Projects.timeCreated) AS timeModified,
-                     (SELECT count(*) FROM Commits WHERE Commits.projectId=Projects.projectId AND Commits.timestamp > (SELECT IFNULL(MAX(timestamp)-604800, 0) FROM Commits)) AS recentCommits,
+                     Projects.projectId NOT IN
+                         (select DISTINCT projectId FROM Commits) AS fledgling,
+                     IFNULL(MAX(Commits.timestamp),
+                            Projects.timeCreated) AS timeModified,
+                     (SELECT count(*) FROM Commits
+                          WHERE Commits.projectId=Projects.projectId
+                          AND Commits.timestamp > (
+                              SELECT IFNULL(MAX(timestamp)-604800, 0)
+                          FROM Commits)) AS recentCommits,
                      timeCreated,
-                     (SELECT COUNT(userId) AS numDevs FROM ProjectUsers WHERE ProjectUsers.projectId=Projects.projectId) AS numDevs
+                     (SELECT COUNT(userId) AS numDevs FROM ProjectUsers
+                          WHERE ProjectUsers.projectId=Projects.projectId)
+                     AS numDevs
                      FROM
                          Projects
                      LEFT JOIN Commits ON
-                     Projects.projectId=Commits.projectId WHERE Projects.disabled=0 AND Projects.hidden=0
+                         Projects.projectId=Commits.projectId
+                     WHERE Projects.disabled=0 AND Projects.hidden=0
                      GROUP BY Projects.projectId) as P
-    WHERE fledgeling = 0
+    %s
     ORDER BY %s
     LIMIT %d
     OFFSET %d

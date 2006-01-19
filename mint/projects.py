@@ -326,8 +326,9 @@ class ProjectsTable(database.KeyedTable):
         """
         cu = self.db.cursor()
 
-        SQL = projectlisting.sqlbase % (projectlisting.ordersql[sortOrder],
-            limit, offset)
+        SQL = projectlisting.sqlbase % (\
+            self.cfg.hideFledgling and "WHERE fledgling=0" or "",
+            projectlisting.ordersql[sortOrder], limit, offset)
         cu.execute(SQL)
 
         ids = []

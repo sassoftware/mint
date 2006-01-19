@@ -73,6 +73,7 @@ class MintConfig(ConfigFile):
     sendNotificationEmails  = (CfgBool, True)
     profiling               = (CfgBool, False)
     configured              = (CfgBool, True)
+    hideFledgling          = (CfgBool, True)
 
     reposDBDriver           = 'sqlite'
     reposDBPath             = '/srv/mint/repos/%s/sqldb'

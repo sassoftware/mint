@@ -44,7 +44,7 @@ from mint.mint import upstream
 
                 <h2>${project.getNameForDisplay(maxWordLen = 50)}</h2>
 
-                <p class="help" py:if="not commits">
+                <p class="help" py:if="not commits and cfg.hideFledgling">
                     This is a fledgling project. The developers of this project
                     have not yet committed software into the project's repository.
                     To give the project's developers time to get started before
