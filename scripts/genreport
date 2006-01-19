@@ -1,0 +1,69 @@
+#!/usr/bin/python
+#
+# Copyright (c) 2006 rPath, Inc.
+#
+# All rights reserved
+#
+
+######
+#
+# Set these values as needed
+#
+RBO_SERVER = 'www.rpath.com'
+RBO_PORT = 80
+DEST_DIR = '/tmp/rbo_reports'
+######
+import os, socket, sys, time
+
+# override defaults with command line args
+if len(sys.argv) > 1:
+    RBO_SERVER = sys.argv[1]
+if len(sys.argv) > 2:
+    RBO_PORT = sys.argv[2]
+if len(sys.argv) > 3:
+    DEST_DIR = sys.argv[3]
+
+# set up import resolution environment
+parDir = '/'.join(os.path.realpath(__file__).split('/')[:-2])
+mintPath = os.getenv('MINT_PATH', parDir)
+
+if mintPath not in sys.path:
+    sys.path.insert(0, mintPath)
+# end set up import resolution environment
+
+
+from mint.mint import MintClient
+
+
+def touchDir(dirPath):
+    # a rudimentary function to ensure a directory exists. it will not
+    # walk up the dir chain because presumably the script won't have
+    # permissions on higher level directories
+    try:
+        os.stat(dirPath)
+    except OSError, e:
+        if e.errno != 2:
+            raise
+        os.mkdir(dirPath)
+
+
+try:
+    mc = MintClient("http://mintauth:mintpass@%s:%s/xmlrpc-private" % \
+                    (RBO_SERVER, RBO_PORT))
+
+    dateStr = ''.join(["%02d" % x for x in time.localtime(time.time())[:3]])
+
+    reports = {}
+    for report, title in mc.listAvailableReports().items():
+        touchDir(DEST_DIR + '/' + report)
+        destFile = open(DEST_DIR + '/' + report + '/' + \
+                        report + '_' + dateStr + '.pdf', 'w')
+        try:
+            destFile.write(mc.getReportPdf(report))
+        finally:
+            destFile.close()
+
+except socket.error:
+    print >> sys.stderr, \
+          "Cannot connect to http:%s:%s, please check your settings" % \
+          (RBO_SERVER, RBO_PORT)

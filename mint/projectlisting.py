@@ -50,7 +50,7 @@ sqlbase = """
                      LEFT JOIN Commits ON
                      Projects.projectId=Commits.projectId WHERE Projects.disabled=0 AND Projects.hidden=0
                      GROUP BY Projects.projectId) as P
-    WHERE fledgeling = 0
+    %s
     ORDER BY %s
     LIMIT %d
     OFFSET %d
