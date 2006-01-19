@@ -140,6 +140,9 @@ def setup():
     global testPath
     global archivePath
 
+    conaryPolicy = os.getenv('CONARY_POLICY_PATH', '/usr/lib/conary/policy')
+    os.environ['CONARY_POLICY_PATH'] = conaryPolicy
+
     if not os.environ.has_key('CONARY_PATH') or not os.environ.has_key('MINT_PATH'):
 	print "please set CONARY_PATH and MINT_PATH"
 	sys.exit(1)
