@@ -327,7 +327,7 @@ class ProjectsTable(database.KeyedTable):
         cu = self.db.cursor()
 
         SQL = projectlisting.sqlbase % (projectlisting.ordersql[sortOrder],
-            limit, offset, self.cfg.hideFledgeling and "fledgeling=0" or "")
+            limit, offset)
         cu.execute(SQL)
 
         ids = []
