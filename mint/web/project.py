@@ -102,7 +102,6 @@ class ProjectHandler(WebHandler):
                 publishedReleases = publishedReleases,
                 unpublishedReleases = unpublishedReleases)
 
-    @ownerOnly
     def groups(self, auth):
         releases = self.project.getReleases(showUnpublished = True)
         publishedReleases = [x for x in releases if x.getPublished()]
@@ -144,7 +143,6 @@ class ProjectHandler(WebHandler):
                     'group-compat32':       '32 bit compatibility packages. (for 64 bit systems)'}
         return troveNames, troveDict, metadata
 
-    @ownerOnly
     def newGroup(self, auth):
         troves, troveDict, metadata = self._getBasicTroves()
 
@@ -152,7 +150,6 @@ class ProjectHandler(WebHandler):
                            troves = troves, troveDict = troveDict,
                            metadata = metadata)
 
-    @ownerOnly
     @strFields(groupName = "", version = "", description = "")
     @listFields(str, initialTrove = [])
     def createGroup(self, auth, groupName, version, description, initialTrove):
@@ -186,7 +183,6 @@ class ProjectHandler(WebHandler):
             return self._write("newGroup", errors = errors, kwargs = kwargs,
                 troves = troves, troveDict = troveDict, metadata = metadata)
 
-    @ownerOnly
     @intFields(id = None)
     def editGroup(self, auth, id):
         curGroupTrove = self.client.getGroupTrove(id)
@@ -194,7 +190,6 @@ class ProjectHandler(WebHandler):
 
         return self._write("editGroup", message = None, curGroupTrove = curGroupTrove)
 
-    @ownerOnly
     @intFields(id = None)
     @strFields(version = None, description = '')
     def editGroup2(self, auth, id, version, description, **kwargs):
@@ -216,14 +211,12 @@ class ProjectHandler(WebHandler):
         curGroupTrove.refresh()
         return self._write("editGroup", message='Changes saved successfully', curGroupTrove = curGroupTrove)
 
-    @ownerOnly
     @strFields(referer = None)
     def closeCurrentGroup(self, auth, referer):
         if 'groupTroveId' in self.session:
             del self.session['groupTroveId']
         self._redirect(referer)
 
-    @ownerOnly
     @intFields(id = None)
     @boolFields(confirmed=False)
     def deleteGroup(self, auth, id, confirmed):
@@ -237,7 +230,6 @@ class ProjectHandler(WebHandler):
             return self._write('confirm', message = "Are you sure you want to delete this group trove?",
                 yesLink = "deleteGroup?id=%d;confirmed=1" % id, noLink = "groups")
 
-    @ownerOnly
     @intFields(id=None)
     @strFields(trove=None, version='', flavor='', referer='', projectName = '')
     @boolFields(versionLock=False)
@@ -252,7 +244,6 @@ class ProjectHandler(WebHandler):
             referer = project.getUrl()
         self._redirect(referer)
 
-    @ownerOnly
     @intFields(id=None, troveId=None)
     @strFields(referer='')
     def deleteGroupTrove(self, auth, id, troveId, referer):
@@ -263,12 +254,10 @@ class ProjectHandler(WebHandler):
             referer = project.getUrl()
         self._redirect(referer)
 
-    @ownerOnly
     @intFields(id = None)
     def pickArch(self, auth, id):
         return self._write("pickArch", groupTroveId = id)
 
-    @ownerOnly
     @intFields(id = None)
     @strFields(arch = "1#x86")
     def cookGroup(self, auth, id, arch):

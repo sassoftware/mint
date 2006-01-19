@@ -380,12 +380,13 @@ class MintServer(object):
         if len(r):
             self._filterProjectAccess(r[0][0])
 
-    def _requireProjectOwner(self, projectId):
+    def _requireProjectDeveloper(self, projectId):
         if self.auth.admin:
             return
         members = self.projectUsers.getMembersByProjectId(projectId)
         for userId, username, level in members:
-            if (userId == self.auth.userId) and (level != userlevels.OWNER):
+            if (userId == self.auth.userId) and \
+                   (level not in userlevels.WRITERS):
                 raise PermissionDenied
         if self.auth.userId not in [x[0] for x in members]:
             raise PermissionDenied
@@ -1346,7 +1347,7 @@ class MintServer(object):
             if not self.auth.authorized:
                 raise PermissionDenied
             self._filterProjectAccess(projectId)
-            self._requireProjectOwner(projectId)
+            self._requireProjectDeveloper(projectId)
 
         if not self.listGroupTroveItemsByGroupTrove(groupTroveId):
             raise GroupTroveEmpty
@@ -1497,7 +1498,7 @@ class MintServer(object):
     def getJobIdForCook(self, groupTroveId):
         projectId = self.groupTroves.getProjectId(groupTroveId)
         self._filterProjectAccess(projectId)
-        self._requireProjectOwner(projectId)
+        self._requireProjectDeveloper(projectId)
 
         cu = self.db.cursor()
 
@@ -1718,7 +1719,7 @@ class MintServer(object):
             if not self.auth.authorized:
                 raise PermissionDenied
             self._filterProjectAccess(projectId)
-            self._requireProjectOwner(projectId)
+            self._requireProjectDeveloper(projectId)
 
         groupTrove = self.groupTroves.get(groupTroveId)
         groupTroveItems = self.groupTroveItems.listByGroupTroveId(groupTroveId)
@@ -1749,7 +1750,7 @@ class MintServer(object):
             if not self.auth.authorized:
                 raise PermissionDenied
             self._filterProjectAccess(projectId)
-            self._requireProjectOwner(projectId)
+            self._requireProjectDeveloper(projectId)
         return self._getRecipe(groupTroveId)
 
     @private
@@ -1760,7 +1761,7 @@ class MintServer(object):
             if not self.auth.authorized:
                 raise PermissionDenied
             self._filterProjectAccess(projectId)
-            self._requireProjectOwner(projectId)
+            self._requireProjectDeveloper(projectId)
         self.groupTroves.setAutoResolve(groupTroveId, resolve)
 
     @private
@@ -1768,7 +1769,7 @@ class MintServer(object):
     @typeCheck(int)
     def listGroupTrovesByProject(self, projectId):
         self._filterProjectAccess(projectId)
-        self._requireProjectOwner(projectId)
+        self._requireProjectDeveloper(projectId)
         return self.groupTroves.listGroupTrovesByProject(projectId)
 
     @private
@@ -1780,7 +1781,7 @@ class MintServer(object):
             if not self.auth.authorized:
                 raise PermissionDenied
             self._filterProjectAccess(projectId)
-            self._requireProjectOwner(projectId)
+            self._requireProjectDeveloper(projectId)
             creatorId = self.users.getIdByColumn("username", self.authToken[0])
         else:
             creatorId = 0
@@ -1797,7 +1798,7 @@ class MintServer(object):
             if not self.auth.authorized:
                 raise PermissionDenied
             self._filterProjectAccess(projectId)
-            self._requireProjectOwner(projectId)
+            self._requireProjectDeveloper(projectId)
         return self.groupTroves.get(groupTroveId)
 
     @private
@@ -1808,7 +1809,7 @@ class MintServer(object):
             if not self.auth.authorized:
                 raise PermissionDenied
             self._filterProjectAccess(projectId)
-            self._requireProjectOwner(projectId)
+            self._requireProjectDeveloper(projectId)
         return self.groupTroves.delGroupTrove(groupTroveId)
 
     @private
@@ -1819,7 +1820,7 @@ class MintServer(object):
             if not self.auth.authorized:
                 raise PermissionDenied
             self._filterProjectAccess(projectId)
-            self._requireProjectOwner(projectId)
+            self._requireProjectDeveloper(projectId)
         self.groupTroves.update(groupTroveId, description = description,
                                 timeModified = time.time())
 
@@ -1831,7 +1832,7 @@ class MintServer(object):
             if not self.auth.authorized:
                 raise PermissionDenied
             self._filterProjectAccess(projectId)
-            self._requireProjectOwner(projectId)
+            self._requireProjectDeveloper(projectId)
         self.groupTroves.setUpstreamVersion(groupTroveId, vers)
 
     #group trove item specific functions
@@ -1844,7 +1845,7 @@ class MintServer(object):
             if not self.auth.authorized:
                 raise PermissionDenied
             self._filterProjectAccess(projectId)
-            self._requireProjectOwner(projectId)
+            self._requireProjectDeveloper(projectId)
         return self.groupTroveItems.listByGroupTroveId(groupTroveId)
 
     @typeCheck(int, bool)
@@ -1854,7 +1855,7 @@ class MintServer(object):
             if not self.auth.authorized:
                 raise PermissionDenied
             self._filterProjectAccess(projectId)
-            self._requireProjectOwner(projectId)
+            self._requireProjectDeveloper(projectId)
         self.groupTroveItems.setVersionLock(groupTroveItemId, lock)
         return lock
 
@@ -1866,7 +1867,7 @@ class MintServer(object):
             if not self.auth.authorized:
                 raise PermissionDenied
             self._filterProjectAccess(projectId)
-            self._requireProjectOwner(projectId)
+            self._requireProjectDeveloper(projectId)
         self.groupTroveItems.setUseLock(groupTroveItemId, lock)
         return lock
 
@@ -1878,7 +1879,7 @@ class MintServer(object):
             if not self.auth.authorized:
                 raise PermissionDenied
             self._filterProjectAccess(projectId)
-            self._requireProjectOwner(projectId)
+            self._requireProjectDeveloper(projectId)
         self.groupTroveItems.setInstSetLock(groupTroveItemId, lock)
         return lock
 
@@ -1890,7 +1891,7 @@ class MintServer(object):
             if not self.auth.authorized:
                 raise PermissionDenied
             self._filterProjectAccess(projectId)
-            self._requireProjectOwner(projectId)
+            self._requireProjectDeveloper(projectId)
             creatorId = self.users.getIdByColumn("username", self.authToken[0])
         else:
             creatorId = 0
@@ -1947,7 +1948,7 @@ class MintServer(object):
             if not self.auth.authorized:
                 raise PermissionDenied
             self._filterProjectAccess(projectId)
-            self._requireProjectOwner(projectId)
+            self._requireProjectDeveloper(projectId)
         return self.groupTroveItems.delGroupTroveItem(groupTroveItemId)
 
     @private
@@ -1958,7 +1959,7 @@ class MintServer(object):
             if not self.auth.authorized:
                 raise PermissionDenied
             self._filterProjectAccess(projectId)
-            self._requireProjectOwner(projectId)
+            self._requireProjectDeveloper(projectId)
         return self.groupTroveItems.get(groupTroveItemId)
 
     @private
@@ -1969,7 +1970,7 @@ class MintServer(object):
             if not self.auth.authorized:
                 raise PermissionDenied
             self._filterProjectAccess(projectId)
-            self._requireProjectOwner(projectId)
+            self._requireProjectDeveloper(projectId)
         self.groupTroveItems.update(groupTroveItemId, subGroup = subGroup)
 
     ### Site reports ###

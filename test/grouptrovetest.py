@@ -343,30 +343,50 @@ class GroupTroveTest(MintRepositoryHelper):
     def testAddPermissions(self):
         client, userId = self.quickMintUser('testuser', 'testpass')
         projectId = self.newProject(client)
+        project = client.getProject(projectId)
 
         groupTrove = self.createTestGroupTrove(client, projectId)
         groupTroveId = groupTrove.getId()
-        newClient = self.openMintClient(('anonymous', 'anonymous'))
-        try:
-            newClient.server.addGroupTroveItemByProject(groupTroveId,
-                                                        'testcase', 'test', '',
-                                                        '', False, False,
-                                                        False)
-        except PermissionDenied:
-            pass
-        else:
-            self.fail('Anonymous user allowed to add group trove item')
 
-        newClient, garbage = self.quickMintUser('anotherGuy','testpass')
-        try:
-            newClient.server.addGroupTroveItemByProject(groupTroveId,
-                                                        'testcase', 'test', '',
-                                                        '', False, False,
-                                                        False)
-        except PermissionDenied:
-            pass
-        else:
-            self.fail('Non-member user allowed to add group trove item')
+        self.makeCookedTrove('rpl:devel')
+
+        newClient = self.openMintClient(('anonymous', 'anonymous'))
+        # try with anonymous user
+        self.assertRaises(PermissionDenied,
+                          newClient.server.addGroupTroveItemByProject,
+                          groupTroveId, 'testcase', 'test', '', '', False,
+                          False, False)
+
+        newClient, newUserId = self.quickMintUser('anotherGuy','testpass')
+
+        # try with non-member
+        self.assertRaises(PermissionDenied,
+                          newClient.server.addGroupTroveItemByProject,
+                          groupTroveId, 'testcase', 'test', '', '', False,
+                          False, False)
+
+        # try with watcher
+        userProject = newClient.getProject(projectId)
+        userProject.addMemberById(newUserId, userlevels.USER)
+        self.assertRaises(PermissionDenied,
+                          newClient.server.addGroupTroveItemByProject,
+                          groupTroveId, 'testcase', 'test', '', '', False,
+                          False, False)
+
+        # try with developer
+        project.addMemberById(newUserId, userlevels.DEVELOPER)
+        res = newClient.server.addGroupTroveItemByProject(groupTroveId,
+                                                          'testcase', 'test',
+                                                          '', '', False, False,
+                                                          False)
+
+        groupTrove.delTrove(res[0])
+
+        # try with owner
+        # we don't care about the output, just that there's no exception
+        client.server.addGroupTroveItemByProject(groupTroveId, 'testcase',
+                                                 'test', '', '', False,
+                                                 False, False)
 
     def testAutoResolve(self):
         client, userId = self.quickMintUser('testuser', 'testpass')
@@ -524,19 +544,14 @@ class GroupTroveTest(MintRepositoryHelper):
             pass
 
 
+        # manipulate items as developer
         project.addMemberById(userId, userlevels.DEVELOPER)
-        try:
-            client.server.getGroupTrove(groupTroveId)
-            self.fail("non-owner allowed to manipuate group trove")
-        except PermissionDenied:
-            pass
+        client.server.getGroupTrove(groupTroveId)
+        client.server.delGroupTroveItem(trvId)
 
-        try:
-            client.server.delGroupTroveItem(trvId)
-            self.fail("non-owner allowed to maniplaute group trove item")
-        except PermissionDenied:
-            pass
+        trvId = self.addTestTrove(groupTrove, 'testtrove')
 
+        # manipulate items as owner
         project.addMemberById(userId, userlevels.OWNER)
         client.server.getGroupTrove(groupTroveId)
         client.server.delGroupTroveItem(trvId)
