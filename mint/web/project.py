@@ -140,15 +140,17 @@ class ProjectHandler(WebHandler):
                     'group-gnome':          'The GNOME desktop environment.',
                     'group-kde':            'The KDE desktop environment.',
                     'group-netserver':      'Network servers, tools, and support.',
-                    'group-xorg':           'The X.org windowing system.'}
+                    'group-xorg':           'The X.org windowing system.',
+                    'group-compat32':       '32 bit compatibility packages. (for 64 bit systems)'}
         return troveNames, troveDict, metadata
 
     @ownerOnly
     def newGroup(self, auth):
         troves, troveDict, metadata = self._getBasicTroves()
 
-        return self._write("newGroup", errors = [], kwargs = {}, troves = troves,
-            troveDict = troveDict, metadata = metadata)
+        return self._write("newGroup", errors = [], kwargs = {},
+                           troves = troves, troveDict = troveDict,
+                           metadata = metadata)
 
     @ownerOnly
     @strFields(groupName = "", version = "", description = "")
