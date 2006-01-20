@@ -102,7 +102,7 @@ class MintConfig(ConfigFile):
             self.projectSiteHost = self.projectDomainName
             self.externalSiteHost = self.externalDomainName
 
-        if not self.SSL:
+        if not self.secureHost:
             self.secureHost = self.siteHost
 
         if not self.reposContentsPath:
