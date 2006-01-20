@@ -31,6 +31,9 @@ for i in pre-tag-scripts tag-scripts post-tag-scripts kernel-tag-scripts post-ke
     [ -f /tmp/$i ] && /bin/sh /tmp/$i && rm /tmp/$i
 done
 
+#Setup /etc/nsswitch and system-auth
+/usr/bin/authconfig --kickstart --enablemd5 --enableshadow --disablecache
+
 #clean up the ubd devices
 rm /dev/ubda1
 rm /dev/ubda
