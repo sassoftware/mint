@@ -59,10 +59,13 @@ class ReleaseTest(MintRepositoryHelper):
         projectId = client.newProject("Foo", "foo", "rpath.org")
         release = client.newRelease(projectId, "Test Release")
 
-        imageTypes = [releasetypes.INSTALLABLE_ISO, releasetypes.QEMU_IMAGE]
-        release.setImageTypes([releasetypes.INSTALLABLE_ISO,
-                               releasetypes.QEMU_IMAGE])
+        imageTypes = [releasetypes.INSTALLABLE_ISO, releasetypes.VMWARE_IMAGE]
+        release.setImageTypes(imageTypes)
         assert(imageTypes == release.imageTypes)
+        assert(release.getDataTemplate()['skipMediaCheck'])
+        assert(release.getDataTemplate()['autoResolve'])
+        assert(release.getDataTemplate()['freespace'])
+        assert(release.getDataTemplate()['vmMemory'])
 
         rDict = release.getDataDict()
         tDict = release.getDataTemplate()
@@ -101,6 +104,15 @@ class ReleaseTest(MintRepositoryHelper):
         release = client.newRelease(projectId, "Test Release")
         release.setImageTypes([releasetypes.INSTALLABLE_ISO])
         assert(release.getImageTypes() == [releasetypes.INSTALLABLE_ISO])
+        assert(release.getDataTemplate()['skipMediaCheck'])
+        assert(release.getDataTemplate()['autoResolve'])
+        try:
+            release.getDataTemplate()['freespace']
+        except KeyError, e:
+            pass
+        else:
+            self.fail("getDataTemplate returned bogus template data")
+            
 
         self.db.cursor().execute("DELETE FROM ReleaseData WHERE name='bugsUrl'")
         self.db.commit()
