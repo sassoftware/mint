@@ -40,8 +40,10 @@ class SiteHandler(WebHandler):
 
         # if someone attempts to access the SITE from something other than
         # the site host and SSL is not requested, redirect.
-        if self.req.hostname != self.cfg.siteHost.split(':')[0] and self.req.subprocess_env.get('HTTPS', 'off') == 'off':
-            self._redirect("http://" + self.cfg.siteHost + self.req.unparsed_uri)
+        if self.req.hostname != self.cfg.siteHost.split(':')[0] and \
+               self.req.subprocess_env.get('HTTPS', 'off') == 'off':
+            self._redirect("http://" + self.cfg.siteHost + \
+                           self.req.unparsed_uri)
         if not cmd:
             return self._frontPage
         try:
@@ -59,8 +61,28 @@ class SiteHandler(WebHandler):
     def _frontPage(self, auth):
         news = self.client.getNews()
         releases = self.client.getReleaseList()
-        return self._write("frontPage", news = news, newsLink = self.client.getNewsLink(), firstTime=self.session.get('firstTimer', False), releases=releases)
-        
+
+        ###########################
+        # FIXME: Corporate launch redirect hack.
+        # take these lines out to remove corporate page redirect.
+        #
+        if not (self.req.headers_in.get('referer', '').\
+                startswith(self.cfg.corpSite) or \
+                self.session.get('corpRedir')):
+            self.session.update({'corpRedir': 'True'})
+            self._redirect(self.cfg.corpSite)
+        # it's possible to visit the corp pages before crossing this point in
+        # code, setting corpRedir prevents corner cases.
+        self.session.update({'corpRedir': 'True'})
+        #
+        # end corporate launch redirect hack
+        ###########################
+
+        return self._write("frontPage", news = news,
+                           newsLink = self.client.getNewsLink(),
+                           firstTime=self.session.get('firstTimer', False),
+                           releases=releases)
+
     def blank(self, auth, sid, hostname):
         self.req.content_type = "image/gif"
 
@@ -68,7 +90,7 @@ class SiteHandler(WebHandler):
         return 'GIF89a\x01\x00\x01\x00\x80\x00\x00\xff\xff\xff\xff\xff\xff!'\
                '\xf9\x04\x01\n\x00\x01\x00,\x00\x00\x00\x00\x01\x00\x01\x00'\
                '\x00\x02\x02L\x01\x00;'
-        
+
     @redirectHttps
     def register(self, auth):
         self.toUrl = self.cfg.basePath
@@ -79,7 +101,7 @@ class SiteHandler(WebHandler):
                fullName = '', displayEmail = '',
                blurb = '', tos='', privacy='')
     @requiresHttps
-    def processRegister(self, auth, username, 
+    def processRegister(self, auth, username,
                         fullName, email, email2, password,
                         password2, displayEmail,
                         blurb, tos, privacy):
@@ -169,7 +191,7 @@ class SiteHandler(WebHandler):
         userId = self.client.getUserIdByName(username)
         user = self.client.getUser(userId)
         self._resetPasswordById(userId)
-        
+
         return self._write("passwordReset", email = user.getEmail())
 
     @requiresHttps
@@ -201,7 +223,7 @@ class SiteHandler(WebHandler):
 
     @strFields(id = None)
     def confirm(self, auth, id):
-        self.toUrl = self.cfg.basePath 
+        self.toUrl = self.cfg.basePath
         try:
             self.client.confirmUser(id)
         except users.ConfirmError:
@@ -234,7 +256,7 @@ class SiteHandler(WebHandler):
             sortOrder = self.session.get('usersSortOrder', 0)
         self.session['usersSortOrder'] = sortOrder
         results, count = self.client.getUsers(sortOrder, limit, offset)
-        
+
         return self._write("users", sortOrder=sortOrder, limit=limit, offset=offset, results=results, count=count)
 
     @requiresAuth
@@ -296,10 +318,10 @@ class SiteHandler(WebHandler):
                 try:
                     project.addUserKey(auth.username, keydata)
                 except Exception, e:
-                    return self._write("uploadKey", errors = ['Error uploading key: %s' % str(e)], 
+                    return self._write("uploadKey", errors = ['Error uploading key: %s' % str(e)],
                             kwargs={'projects': projects, 'keydata': keydata})
         self._redirect(self.cfg.basePath)
-        
+
     @requiresAuth
     def newProject(self, auth):
         return self._write("newProject", errors=[], kwargs={})
@@ -339,11 +361,11 @@ class SiteHandler(WebHandler):
         if not errors:
             try:
                 # attempt to create the project
-                projectId = self.client.newProject(title, hostname, 
+                projectId = self.client.newProject(title, hostname,
                     self.cfg.projectDomainName, projecturl, blurb)
                 # now create the mailing lists
                 if self.cfg.EnableMailLists and not errors:
-                    if not self._createProjectLists(auth=auth, 
+                    if not self._createProjectLists(auth=auth,
                                                     projectName=hostname,
                                                     optlists=optlists):
                         raise mailinglists.MailingListException("Could not create the mailing lists, check the mailing list page to set up your desired lists.")
@@ -364,10 +386,10 @@ class SiteHandler(WebHandler):
     @intFields(userId = None, projectId = None, level = None)
     def addMemberById(self, auth, userId, projectId, level):
         project = self.client.getProject(projectId)
-   
+
         if project.getUserLevel(auth.userId) != userlevels.OWNER:
             raise mint_error.PermissionDenied
-    
+
         project.addMemberById(userId, level)
         self._redirect("%sproject/%s" % (self.cfg.basePath, project.getHostname()))
 
@@ -422,10 +444,10 @@ class SiteHandler(WebHandler):
             reposUrl = '/project/%s/' % host
             packageUrl = '/repos/%s/troveInfo?t=%s' % (host, quote_plus(x[0]))
             searchResults.append( (x[0], x[1], packageUrl, p.getName(), reposUrl) )
-            
+
         return self._write("searchResults", searchType = "Packages", terms = terms, results = searchResults,
                                             count = count, limit = limit, offset = offset, modified = 0)
-    
+
     def _projectSearch(self, terms, modified, limit, offset):
         results, count = self.client.getProjectSearchResults(terms, modified, limit, offset)
         for i, x in enumerate(results[:]):
@@ -467,9 +489,9 @@ class SiteHandler(WebHandler):
             #        startByte = int(m.groups()[0])
             #        self.req.sendfile(filename, startByte)
             #        raise HttpPartialContent
-                    
+
             self.req.sendfile(filename)
-            return '' 
+            return ''
         except OSError, e:
             return self._write("error", shortError = "File error",
                 error = "An error has occurred opening the image file: %s" % e)
@@ -490,7 +512,7 @@ class SiteHandler(WebHandler):
     def rss(self, auth, feed):
         if feed == "newProjects":
             results, count = self.client.getProjects(projectlisting.CREATED_DES, 10, 0)
-            
+
             title = "New %s Projects" % self.cfg.productName
             link = "http://%s%srss?feed=newProjects" % (self.cfg.siteHost, self.cfg.basePath)
             desc = "New projects created on %s" % self.cfg.productName
@@ -499,7 +521,7 @@ class SiteHandler(WebHandler):
             for p in results:
                 item = {}
                 project = self.client.getProject(p[0])
-                
+
                 item['title'] = project.getName()
                 item['link'] = project.getUrl()
                 item['content'] = "<p>A new project named <a href=\"%s\">%s</a> has been created.</p>" % \
