@@ -372,7 +372,7 @@ class ProjectsTable(database.KeyedTable):
             ids[i] = list(x)
             ids[i][2] = searcher.Searcher.truncate(x[2], terms)
 
-        return ids, count
+        return [x[1] for x in sorted([(x[2].lower(),x) for x in ids])], count
 
     def createRepos(self, reposPath, contentsPath, hostname, domainname, username, password):
         dbPath = os.path.join(reposPath, hostname + "." + domainname)

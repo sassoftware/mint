@@ -125,6 +125,26 @@ class BrowseTest(MintRepositoryHelper):
         assert(client.getProjectSearchResults('Camp Town Racers sing this song... doo dah... doo dah...') == ([], 0) )
         assert(client.getProjectSearchResults('snooze OR Boo')[1] == 2)
 
+    def testSearchProjectOrder(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+
+        zId = client.newProject("Zarumba Project", "zarumba", "rpath.org")
+        self._changeTimestamps(zId, 1128540046, 1128540046)
+        bId = client.newProject("Banjo Project", "banjo", "rpath.org")
+        self._changeTimestamps(bId, 1124540046, 1124540046)
+        aId = client.newProject("Animal Project", "animal", "rpath.org")
+        self._changeTimestamps(aId, 1124540046, 1124540046)
+
+        rId = client.newProject("rPath Project", "rpath1", "rpath.org")
+        self._changeTimestamps(rId, 1124540046, 1124540046)
+
+        projectList, len= client.getProjectSearchResults('Project')
+
+        self.failIf([x[1] for x in projectList] != \
+                    ['animal', 'banjo', 'rpath1','zarumba'],
+                    "search results not in alphabetical order")
+
+
     def testSearchUsers(self):
         client, userId = self.quickMintUser("testuser", "testpass")
         client2, userId2 = self.quickMintUser("testuser2", "testpass")
