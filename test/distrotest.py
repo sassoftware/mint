@@ -12,17 +12,47 @@ import os
 import sys
 
 from conary import conarycfg, conaryclient
+from conary.repository import changeset
 from conary.lib import util
 
 from mint.distro import gencslist
 
 class DistroTest(rephelp.RepositoryHelper):
     def testGencslist(self):
-        self.addQuickTestComponent("test:runtime", "1.0-1-1")
-        self.addQuickTestCollection("test", "1.0-1-1",
-                                    [ "test:runtime" ])
-        t = self.addQuickTestCollection("group-foo", "1.0-1-1",
-                                    [ ("test", "1.0-1-1") ])
+        self.addComponent("test:runtime", "1.0")
+        self.addComponent("test:devel", "1.0")
+        self.addCollection("test", "1.0", [ ":runtime", ":devel" ])
+        self.addComponent("foo:runtime", "1.0")
+        self.addComponent("bar:runtime", '1.0')
+        self.addComponent("bar:debuginfo", '1.0')
+        self.addComponent("baz:runtime", "1.0")
+        self.addCollection("bar", "1.0", [ (":runtime", True),
+                                           (":debuginfo", False)])
+
+        # test:devel is not byDefault in test, so that changeset
+        # should not include test:devel.
+        # foo:runtime is also not-by-default and should not be included.
+        # bar:runtime is not-by-default in group-foo, but by default
+        # in group-dist-extras
+
+        self.addCollection('group-dist-extras', '1.0', ['bar', 'baz:runtime'])
+
+        self.addCollection("group-core", "1.0",
+                                [ ("test", True),
+                                  ('foo:runtime', False),
+                                  ('bar', False)],
+                               weakRefList=[('test:runtime', True),
+                                            ('test:devel', False), # changed
+                                                                   # from trove
+                                            ('bar:runtime', False),
+                                            ('bar:debuginfo', False)])
+                                     
+        t = self.addCollection('group-dist', '1.0', 
+                            # include group-core by default true,
+                            # but not group-dist-extras
+                            [('group-dist-extras', False),
+                             ('group-core', True)])
+
         
         n, v, f = t.getName(), t.getVersion(), t.getFlavor()
 
@@ -33,7 +63,7 @@ class DistroTest(rephelp.RepositoryHelper):
         cfg.initializeFlavors()
         client = conaryclient.ConaryClient(cfg)
 
-        csdir = tempfile.mkdtemp()
+        csdir = tempfile.mkdtemp(dir=self.workDir)
         # gencslist currently talks to stderr, so captureOuput
         # here isn't very effective. we should consider logging
         # to stdout instead.
@@ -51,13 +81,30 @@ class DistroTest(rephelp.RepositoryHelper):
             #recover old fd
             os.dup2(oldFd, sys.stderr.fileno())
             os.close(oldFd)
+
+        assert(set(cslist) == set(
+            ['test-1.0-1-1-none.ccs test /localhost@rpl:linux/1.0-1-1 none 1', 
+             'group-dist-1.0-1-1-none.ccs group-dist /localhost@rpl:linux/1.0-1-1 none 1', 
+             'group-core-1.0-1-1-none.ccs group-core /localhost@rpl:linux/1.0-1-1 none 1', 
+             'group-dist-extras-1.0-1-1-none.ccs group-dist-extras /localhost@rpl:linux/1.0-1-1 none 1', 
+             'bar-1.0-1-1-none.ccs bar /localhost@rpl:linux/1.0-1-1 none 1',
+             'baz:runtime-1.0-1-1-none.ccs baz:runtime /localhost@rpl:linux/1.0-1-1 none 1',
+             ]))
+
+        expected = {'test'              : ['test', 'test:runtime'],
+                    'group-dist'        : ['group-dist'],
+                    'group-core'        : ['group-core'],
+                    'group-dist-extras' : ['group-dist-extras'],
+                    'bar'               : ['bar', 'bar:runtime'],
+                    'baz:runtime'       : ['baz:runtime']}
+
+        for csName, expectedTroves in expected.iteritems():
+            csPath = '%s/%s-1.0-1-1-none.ccs' % (csdir, csName)
+            cs = changeset.ChangeSetFromFile(csPath)
+            troveNames = set(x.getName() for x in cs.iterNewTroveList())
+            assert(troveNames == set(expectedTroves))
+
         util.rmtree(csdir)
-
-        assert(\
-            cslist == \
-            ['test-1.0-1-1-none.ccs test /localhost@rpl:linux/1.0-1-1 none 1',
-             'group-foo-1.0-1-1-none.ccs group-foo /localhost@rpl:linux/1.0-1-1 none 1'])
-
 
 if __name__ == "__main__":
     testsuite.main()
