@@ -22,7 +22,7 @@ from conary.repository import changeset
 from conary.lib import util
 from conary.local import database
 
-from imagegen import ImageGenerator
+from imagegen import Generator
 from mint import projects
 
 from flavors import stockFlavors
@@ -111,7 +111,7 @@ def cookGroupObject(repos, db, cfg, recipeClass, sourceVersion, macros={},
     return (changeSet, built, None)
 
 
-class GroupTroveCook(ImageGenerator):
+class GroupTroveCook(Generator):
     def cookObject(self, repos, cfg, item):
         (name, versionStr, flavor) = cook.parseTroveSpec(item)
         if flavor:

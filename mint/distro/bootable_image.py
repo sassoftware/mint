@@ -147,20 +147,7 @@ class InstallCallback(UpdateCallback, ChangesetCallback):
         self.changeset = ''
         self.prefix = 'BDI:'
 
-class BootableDiskImage:
-    def __init__(self, outfile, fakeroot, basefilename, trove, versionstr, flavorstr, freespace, arch, cfg, conarycfg):
-        sys.excepthook = debugme
-        self.outfile = outfile
-        self.fakeroot = fakeroot
-        self.basefilename = basefilename
-        self.basetrove = trove
-        self.baseversion = versionstr
-        self.baseflavor = flavorstr
-        self.freespace = freespace
-        self.arch = arch
-        self.cfg = cfg
-        self.conarycfg = conarycfg
-
+class BootableImage(ImageGenerator):
     @outputfilesize
     @timeMe
     def prepareDiskImage(self):
@@ -171,15 +158,15 @@ class BootableDiskImage:
         ofile.close()
 
         #Do the partition table
-        self.cylinders = self.imagesize / self.cfg.cylindersize
-        cmd = '/sbin/sfdisk -C %d -S %d -H %d %s > /dev/null' % (self.cylinders, self.cfg.sectors, self.cfg.heads, self.outfile)
+        self.cylinders = self.imagesize / self.imgcfg.cylindersize
+        cmd = '/sbin/sfdisk -C %d -S %d -H %d %s > /dev/null' % (self.cylinders, self.imgcfg.sectors, self.imgcfg.heads, self.outfile)
         input = "0 %d L *\n" % (self.cylinders)
         sfdisk = util.popen(cmd, 'w')
         sfdisk.write(input)
         retval = sfdisk.close()
 
     def _writefstab(self):
-        util.copyfile(os.path.join(self.cfg.dataDir, 'fstab'), os.path.join(self.fakeroot, 'etc'))
+        util.copyfile(os.path.join(self.imgcfg.dataDir, 'fstab'), os.path.join(self.fakeroot, 'etc'))
 
     def _setupGrub(self):
         util.copytree(os.path.join(self.fakeroot, 'usr', 'share', 'grub', '*', '*'), os.path.join(self.fakeroot, 'boot', 'grub'))
@@ -199,11 +186,12 @@ title %(name)s (%(kversion)s)
     initrd /boot/initrd-%(kversion)s.img
 
 """ % {'name': name, 'kversion': 'somesillyversion'})
-        os.chmod(os.path.join(self.fakeroot, 'boot/grub/grub.conf'), 0600)
         fd.close()
+        os.chmod(os.path.join(self.fakeroot, 'boot/grub/grub.conf'), 0600)
         #create the appropriate links
-        os.symlink('grub.conf', os.path.join(self.fakeroot, 'boot', 'grub', 'menu.lst'))
-        os.symlink('../boot/grub/grub.conf', os.path.join(self.fakeroot, 'etc', 'grub.conf'))
+        if not self.imgcfg.shortCircuit:
+            os.symlink('grub.conf', os.path.join(self.fakeroot, 'boot', 'grub', 'menu.lst'))
+            os.symlink('../boot/grub/grub.conf', os.path.join(self.fakeroot, 'etc', 'grub.conf'))
 
     @timeMe
     def createTemporaryRoot(self, basedir = os.getcwd()):
@@ -213,7 +201,7 @@ title %(name)s (%(kversion)s)
         #Create some structure
         cwd = os.getcwd()
         os.chdir(self.fakeroot)
-        util.mkdirChain( 'etc', 'boot/grub', 'tmp', 'sys' )
+        util.mkdirChain( 'etc', 'etc/sysconfig', 'etc/sysconfig/network-scripts', 'boot/grub', 'tmp', 'sys' )
         os.chdir(cwd)
 
     @timeMe
@@ -296,16 +284,22 @@ title %(name)s (%(kversion)s)
         #copy the files needed by grub and set up the links
         self._setupGrub()
         #Create the init script
-        util.copyfile(os.path.join(self.cfg.dataDir, 'init.sh'), os.path.join(self.fakeroot, 'tmp'))
+        util.copyfile(os.path.join(self.imgcfg.dataDir, 'init.sh'), os.path.join(self.fakeroot, 'tmp'))
         os.chmod(os.path.join(self.fakeroot, 'tmp', 'init.sh'), 0755)
-        util.copyfile(os.path.join(self.cfg.dataDir, 'pre-tag-scripts'), os.path.join(self.fakeroot, 'tmp'))
-        util.copyfile(os.path.join(self.cfg.dataDir, 'post-tag-scripts'), os.path.join(self.fakeroot, 'tmp'))
-        util.copyfile(os.path.join(self.cfg.dataDir, 'post-kernel-tag-scripts'), os.path.join(self.fakeroot, 'tmp'))
+        util.copyfile(os.path.join(self.imgcfg.dataDir, 'pre-tag-scripts'), os.path.join(self.fakeroot, 'tmp'))
+        util.copyfile(os.path.join(self.imgcfg.dataDir, 'post-tag-scripts'), os.path.join(self.fakeroot, 'tmp'))
+        util.copyfile(os.path.join(self.imgcfg.dataDir, 'post-kernel-tag-scripts'), os.path.join(self.fakeroot, 'tmp'))
+        #Write the conaryrc file
+        self.writeConaryRc(self.fakeroot, self.cclient)
+        #Add the other miscellaneous files needed
+        util.copyfile(os.path.join(self.imgcfg.dataDir, 'hosts'), os.path.join(self.fakeroot, 'etc'))
+        util.copyfile(os.path.join(self.imgcfg.dataDir, 'network'), os.path.join(self.fakeroot, 'etc', 'sysconfig'))
+        util.copyfile(os.path.join(self.imgcfg.dataDir, 'ifcfg-eth0'), os.path.join(self.fakeroot, 'etc', 'sysconfig', 'network-scripts'))
 
     @timeMe
     def MakeE3FsImage(self, file):
         cmd = '/usr/bin/e2fsimage -f %s -d %s -s %d' % (file,
-                self.fakeroot, (self.imagesize - self.cfg.partoffset0)/1024)
+                self.fakeroot, (self.imagesize - self.imgcfg.partoffset0)/1024)
         util.execute(cmd)
         cmd = '/sbin/e2label %s /' % file
         util.execute(cmd)
@@ -318,7 +312,7 @@ title %(name)s (%(kversion)s)
         #Now write this FS image back to the original image
         fd = open(file, 'rb')
         fdo = open(self.outfile, 'r+b')
-        fdo.seek(self.cfg.partoffset0)
+        fdo.seek(self.imgcfg.partoffset0)
         util.copyfileobj(fd, fdo, bufSize=524288)
         fd.close()
         fdo.close()
@@ -333,9 +327,9 @@ title %(name)s (%(kversion)s)
             #How much space do we need?
             fd = os.popen('/usr/bin/du -B1 --max-depth=0 %s' % self.fakeroot, 'r')
             size = int(fd.read().strip().split()[0])
-            size += self.freespace + self.cfg.partoffset0
-            padding = self.cfg.cylindersize - (size % self.cfg.cylindersize)
-            if self.cfg.cylindersize == padding:
+            size += self.freespace + self.imgcfg.partoffset0
+            padding = self.imgcfg.cylindersize - (size % self.imgcfg.cylindersize)
+            if self.imgcfg.cylindersize == padding:
                 padding = 0
             self.imagesize = size + padding
             self.MakeE3FsImage(file)
@@ -346,7 +340,7 @@ title %(name)s (%(kversion)s)
 
     @timeMe
     def runTagScripts(self):
-        cmd = '%s root=/dev/ubda1 init=/tmp/init.sh mem=128M ubd0=%s > uml-vmlinux.log' % (self.cfg.umlKernel, self.outfile)
+        cmd = '%s root=/dev/ubda1 init=/tmp/init.sh mem=128M ubd0=%s > uml-vmlinux.log' % (self.imgcfg.umlKernel, self.outfile)
         util.execute(cmd)
 
     @timeMe
@@ -391,7 +385,7 @@ quit
     @timeMe
     def createVMX(self, outfile, displayName, memsize):
         #Read in the stub file
-        infile = open(os.path.join(self.cfg.dataDir, 'vmwareplayer.vmx'), 'rb')
+        infile = open(os.path.join(self.imgcfg.dataDir, 'vmwareplayer.vmx'), 'rb')
         #Replace the @DELIMITED@ text with the appropriate values
         filecontents = infile.read()
         infile.close()
@@ -428,7 +422,6 @@ quit
             util.rmtree(vmbasedir)
         return (outfile, 'VMWare Player Image')
 
-class BootableImage(ImageGenerator):
     supportedImageTypes = [
         releasetypes.QEMU_IMAGE,
         releasetypes.LIVE_ISO,
@@ -456,108 +449,112 @@ class BootableImage(ImageGenerator):
         return returner
 
     def write(self):
-        imgcfg = self.getConfig()
+        self.imgcfg = self.getConfig()
 
         #Create the output file:
-        if not imgcfg.shortCircuit:
-            fd, fn = tempfile.mkstemp('.img', 'qemuimg', self.cfg.imagesPath)
+        if not self.imgcfg.shortCircuit:
+            fd, self.outfile = tempfile.mkstemp('.img', 'qemuimg', self.cfg.imagesPath)
             os.close(fd)
-            os.chmod(fn, 0644)
+            os.chmod(self.outfile, 0644)
         else:
-            fn = os.path.join(self.cfg.imagesPath, 'qemu.img')
+            self.outfile = os.path.join(self.cfg.imagesPath, 'qemu.img')
 
         #Create the directory to use as the root for the conary commands
-        if not imgcfg.shortCircuit:
-            tmpDir = tempfile.mkdtemp("", "imagetool", self.cfg.imagesPath)
-            log.info('generating qemu image with tmpdir %s', tmpDir)
+        if not self.imgcfg.shortCircuit:
+            self.fakeroot = tempfile.mkdtemp("", "imagetool", self.cfg.imagesPath)
+            log.info('generating qemu image with tmpdir %s', self.fakeroot)
         else:
-            tmpDir = os.path.join(self.cfg.imagesPath, 'shortcircuit_qemud')
+            self.fakeroot = os.path.join(self.cfg.imagesPath, 'shortcircuit_qemud')
             try:
-                os.makedirs(tmpDir)
+                os.makedirs(self.fakeroot)
             except OSError, e:
                 if e.errno != errno.EEXIST:
                     raise
 
         try:
             #Figure out what group trove to use
-            release = self.client.getRelease(self.job.getReleaseId())
-            trove, versionStr, flavorStr = release.getTrove()
-            log.info('release.getTrove returned (%s, %s, %s)' % (trove, versionStr, flavorStr))
+            self.basetrove, versionStr, flavorStr = self.release.getTrove()
+            log.info('self.release.getTrove returned (%s, %s, %s)' % (self.basetrove, versionStr, flavorStr))
 
             #Thaw the version string
             version = versions.ThawVersion(versionStr)
-            versionStr = version.asString()
+            self.baseversion = version.asString()
 
             #Thaw the flavor string
-            flavorStr = deps.deps.ThawDependencySet(flavorStr)
-
-            #The project object
-            project = self.client.getProject(release.getProjectId())
+            self.baseflavor = deps.deps.ThawDependencySet(flavorStr)
 
             # set up configuration
-            cfg = project.getConaryConfig(overrideSSL=True, useSSL=self.cfg.SSL)
+            self.conarycfg = self.project.getConaryConfig(overrideSSL=True, useSSL=self.cfg.SSL)
             # turn off threading
 
-            arch = release.getArch()
-            freespace = release.getDataValue("freespace")
+            self.arch = self.release.getArch()
+            freespace = self.release.getDataValue("freespace")
             basefilename = "%(name)s-%(version)s-%(arch)s" % {
-                    'name': project.getHostname(),
+                    'name': self.project.getHostname(),
                     'version': upstream(version),
-                    'arch': arch,
+                    'arch': self.arch,
                 }
 
-            image = BootableDiskImage(fn, tmpDir, basefilename, trove, versionStr, flavorStr, freespace * 1024 * 1024, arch, imgcfg, cfg)
+            #initialize some stuff
+            #TODO clean this stuff up
+            self.basefilename = basefilename
+            self.freespace = freespace * 1024 * 1024
+
 
             callback = InstallCallback(self.status)
             imagesList = []
 
-            if not imgcfg.shortCircuit:
+            self.setupConaryClient()
+            if not self.imgcfg.shortCircuit:
                 pass
 
             self.status('Creating temporary root')
-            image.createTemporaryRoot()
+            self.createTemporaryRoot()
 
             #Don't need status here.  It's very fast
-            image.setupConaryClient()
+            self.setupConaryClient()
 
             self.status('Installing software')
-            image.populateTemporaryRoot(callback)
+            self.populateTemporaryRoot(callback)
 
-            self.status('Installing %s kernel' % arch)
-            image.installKernel(callback)
+            self.status('Installing %s kernel' % self.arch)
+            self.installKernel(callback)
 
             self.status('Adding filesystem bits')
-            image.fileSystemOddsNEnds()
+            self.fileSystemOddsNEnds()
 
+            self.status('Creating /etc/conaryrc')
+            #cclient is set during setupConaryClient()
+            self.writeConaryRc(os.path.join(self.fakeroot, 'etc'), self.cclient)
             self.status('Creating root file system')
-            image.createFileSystem()
+            self.createFileSystem()
 
             self.status('Running tag-scripts')
-            image.runTagScripts()
+            self.runTagScripts()
 
             self.status('Making image bootable')
-            image.makeBootable()
+            self.makeBootable()
 
             if releasetypes.VMWARE_IMAGE in self.imageTypes:
                 self.status('Creating VMWare Player Image')
                 fd, vmfn = tempfile.mkstemp('.zip', 'mint-MDI-cvmpi-', self.cfg.imagesPath)
                 os.close(fd)
                 del fd
-                imagesList.append(image.createVMWarePlayerImage(vmfn, project.getName(), release.getDataValue('vmMemory')))
+                imagesList.append(self.createVMWarePlayerImage(vmfn, self.project.getName(), self.release.getDataValue('vmMemory')))
 
             #This has to be done after everything else as we need the qemu
             #image to generate vmware, etc.
             zipfn = None
             if releasetypes.QEMU_IMAGE in self.imageTypes:
                 self.status('Compressing Qemu image')
-                zipfn = image.compressImage(fn)
+                zipfn = self.compressImage(self.outfile)
                 imagesList.append((zipfn, 'Bootable Qemu Image',))
                 pass
 
         finally:
-            if not imgcfg.shortCircuit:
-                util.rmtree(tmpDir)
-                os.unlink(fn)
+            if not self.imgcfg.shortCircuit:
+                util.rmtree(self.fakeroot)
+                os.unlink(self.outfile)
 
-        return image.moveToFinal(imagesList, os.path.join(self.cfg.finishedPath, project.getHostname(), str(release.getId())))
+        return self.moveToFinal(imagesList, os.path.join(self.cfg.finishedPath, self.project.getHostname(), str(self.release.getId())))
 

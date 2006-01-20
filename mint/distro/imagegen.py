@@ -18,14 +18,13 @@ class NoConfigFile(Exception):
     def __str__(self):
         return "Unable to access configuration file: %s" % self._path
 
-class ImageGenerator:
+class Generator:
     configObject = None
 
-    def __init__(self, client, cfg, job, profileId):
+    def __init__(self, client, cfg, job):
         self.client = client
         self.cfg = cfg
         self.job = job
-        self.profileId = profileId
 
     def getConfig(self):
         assert(self.configObject)
@@ -66,6 +65,38 @@ class ImageGenerator:
         os.close(self.stderr)
 
         os.close(self.logfd)
+
+
+class ImageGenerator(Generator):
+    def __init__(self, client, cfg, job, release, project):
+        Generator.__init__(self, client, cfg, job)
+        self.release = release
+        self.project = project
+
+    def _getLabelPath(self, cclient, trove):
+        repos = cclient.getRepos()
+        trv = repos.getTroves([trove])
+        return " ".join(trv[0].getTroveInfo().labelPath)
+
+    def writeConaryRc(self, tmpPath, cclient):
+        # write the conaryrc file
+        conaryrcFile = open(os.path.join(tmpPath, "conaryrc"), "w")
+        ilp = self.release.getDataValue("installLabelPath")
+        if not ilp: # allow a ReleaseData ILP to override the group label path
+            ilp = self._getLabelPath(cclient, (self.release.getTroveName(),
+                                               self.release.getTroveVersion(),
+                                               self.release.getTroveFlavor()))
+        if not ilp: # fall back to a reasonable default if group trove was
+                    # cooked before conary0.90 and releasedata is blank
+            ilp = self.project.getLabel() + " conary.rpath.com@rpl:1 contrib.rpath.com@rpl:devel"
+
+        print >> conaryrcFile, "installLabelPath " + ilp
+        print >> conaryrcFile, "pinTroves kernel.*"
+        print >> conaryrcFile, "includeConfigFile /etc/conary/conf.d/*"
+        if self.release.getDataValue("autoResolve"):
+            print >> conaryrcFile, "autoResolve True"
+        conaryrcFile.close()
+
 
 def getParentThread():
     # parentThread is defined in the JobRunner class

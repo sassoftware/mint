@@ -35,9 +35,13 @@ class ReleaseDataNameError(MintError):
         else:
             self.str = reason
 
-installableIsoTemplate = {                # XXX this is kind of a lousy description; a toggleable "override ILP option would be nicer
+imageGenTemplate = {
+    # XXX this is kind of a lousy description; a toggleable "override ILP option would be nicer
     'installLabelPath': (RDT_STRING, '',  'Custom Conary installLabelPath setting (leave blank for default)'),
     'autoResolve':      (RDT_BOOL, False, 'Automatically install required dependencies during updates.'),
+}
+
+installableIsoTemplate = {
     'skipMediaCheck':   (RDT_BOOL, False, 'Prompt to verify CD images during install'),
     'betaNag':          (RDT_BOOL, False, 'This release is considered a beta'),
     'bugsUrl':          (RDT_STRING, 'http://bugs.rpath.com/', 'Bug report URL advertised in installer'),
@@ -60,6 +64,7 @@ stubImageTemplate = {
 }
 
 dataHeadings = {
+    releasetypes.BOOTABLE_IMAGE   : 'Image Settings',
     releasetypes.INSTALLABLE_ISO  : 'Installable ISO Settings',
     releasetypes.QEMU_IMAGE       : 'Bootable Image Settings',
     releasetypes.VMWARE_IMAGE     : 'VMWare Image Settings',
@@ -69,6 +74,7 @@ dataHeadings = {
 
 # It is not necessary to define templates for image types with no settings
 dataTemplates = {
+    releasetypes.BOOTABLE_IMAGE   : imageGenTemplate,
     releasetypes.INSTALLABLE_ISO  : installableIsoTemplate,
     releasetypes.QEMU_IMAGE       : bootableImageTemplate,
     releasetypes.VMWARE_IMAGE     : vmwareImageTemplate,
@@ -338,12 +344,13 @@ class Release(database.TableObject):
         return self.server.setReleasePublished(self.releaseId, published)
 
     def _TemplateCompatibleImageTypes(self):
-        returner = self.imageTypes[:]
+        #This needs to be added to all release lists
+        returner = [releasetypes.BOOTABLE_IMAGE]
+        returner.extend(self.imageTypes)
         if releasetypes.QEMU_IMAGE not in returner:
             if set(bootableImageTemplateDependents) & set(returner):
                 returner.append(releasetypes.QEMU_IMAGE)
         return returner
-
 
     def getDataTemplate(self):
         returner = {}

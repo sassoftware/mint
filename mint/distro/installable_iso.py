@@ -114,11 +114,6 @@ class InstallableIso(ImageGenerator):
             return None
         return uJob
 
-    def _getLabelPath(self, cclient, trove):
-        repos = cclient.getRepos()
-        trv = repos.getTroves([trove])
-        return " ".join(trv[0].getTroveInfo().labelPath)
-
     def writeProductImage(self, arch):
         # write the product.img cramfs
         productPath = os.path.join(self.baseDir, "product.img")
@@ -196,25 +191,6 @@ class InstallableIso(ImageGenerator):
             cfg.installLabelPath = [versions.Label(self.project.getLabel())]
             cclient = conaryclient.ConaryClient(cfg)
 
-        # write the conaryrc file
-        # TODO move this up to ImageGenerator
-        conaryrcFile = open(os.path.join(tmpPath, "conaryrc"), "w")
-        ilp = self.release.getDataValue("installLabelPath")
-        if not ilp: # allow a ReleaseData ILP to override the group label path
-            ilp = self._getLabelPath(cclient, (self.release.getTroveName(),
-                                               self.release.getTroveVersion(),
-                                               self.release.getTroveFlavor()))
-        if not ilp: # fall back to a reasonable default if group trove was
-                    # cooked before conary0.90 and releasedata is blank
-            ilp = self.project.getLabel() + " conary.rpath.com@rpl:1 contrib.rpath.com@rpl:devel"
-
-        print >> conaryrcFile, "installLabelPath " + ilp
-        print >> conaryrcFile, "pinTroves kernel.*"
-        print >> conaryrcFile, "includeConfigFile /etc/conary/conf.d/*"
-        if self.release.getDataValue("autoResolve"):
-            print >> conaryrcFile, "autoResolve True"
-        conaryrcFile.close()
-
         # extract constants.py from the stage2.img template and override the BETANAG flag
         # this would be better if constants.py could load a secondary constants.py
         stage2Path = tempfile.mkdtemp()
@@ -240,24 +216,18 @@ class InstallableIso(ImageGenerator):
             print >> sys.stderr, "WARNING: The imagesPath configuration entry has moved from installable_iso.conf to iso_gen.conf."
             sys.stderr.flush()
 
-        releaseId = self.job.getReleaseId()
-
-        release = self.client.getRelease(releaseId)
-        self.release = release
-        troveName, versionStr, flavorStr = release.getTrove()
+        troveName, versionStr, flavorStr = self.release.getTrove()
         version = versions.ThawVersion(versionStr)
         flavor = deps.deps.ThawDependencySet(flavorStr)
-        project = self.client.getProject(release.getProjectId())
-        self.project = project
         self.version = version
 
-        skipMediaCheck = release.getDataValue('skipMediaCheck')
+        skipMediaCheck = self.release.getDataValue('skipMediaCheck')
 
         cfg = conarycfg.ConaryConfiguration()
 
         # add a repositoryMap and user entry to cfg
-        projCfg = project.getConaryConfig(overrideSSL = not project.external, useSSL = self.cfg.SSL)
-        cfg.installLabelPath = [versions.Label(project.getLabel())]
+        projCfg = self.project.getConaryConfig(overrideSSL = not self.project.external, useSSL = self.cfg.SSL)
+        cfg.installLabelPath = [versions.Label(self.project.getLabel())]
         cfg.repositoryMap.update(projCfg.repositoryMap)
         cfg.user = projCfg.user
         self.conarycfgFile = os.path.join(self.cfg.configPath, 'conaryrc')
@@ -271,18 +241,18 @@ class InstallableIso(ImageGenerator):
         client = conaryclient.ConaryClient(cfg)
         
         revision = version.trailingRevision().asString()
-        topdir = os.path.join(self.cfg.imagesPath, project.getHostname(),
-            release.getArch(), str(release.getId()), "unified") 
+        topdir = os.path.join(self.cfg.imagesPath, self.project.getHostname(),
+            self.release.getArch(), str(self.release.getId()), "unified") 
         self.topdir = topdir
         util.mkdirChain(topdir)
-        # subdir = string.capwords(project.getHostname())
+        # subdir = string.capwords(self.project.getHostname())
         subdir = 'rPath'
         self.subdir = subdir
        
         # hardlink template files to topdir
-        templateDir = os.path.join(isocfg.templatePath, release.getArch())
+        templateDir = os.path.join(isocfg.templatePath, self.release.getArch())
         if not os.path.exists(os.path.join(templateDir, 'PRODUCTNAME')):
-            raise AnacondaTemplateMissing(release.getArch())
+            raise AnacondaTemplateMissing(self.release.getArch())
 
         self.status("Preparing ISO template")
         _linkRecurse(templateDir, topdir)
@@ -334,7 +304,7 @@ class InstallableIso(ImageGenerator):
 
         releaseVer = upstream(version)
         releasePhase = "ALPHA"
-        arch = release.getArch()
+        arch = self.release.getArch()
         assert(arch in ('x86', 'x86_64'))
         if arch == 'x86':
             anacondaArch = 'i386'
@@ -354,11 +324,11 @@ class InstallableIso(ImageGenerator):
         cslistFile.close()
 
         infoMap = {
-            "isodir":       os.path.normpath(os.path.join(self.cfg.finishedPath, project.getHostname(), str(release.getId()))),
+            "isodir":       os.path.normpath(os.path.join(self.cfg.finishedPath, self.project.getHostname(), str(self.release.getId()))),
             "topdir":       topdir,
             "subdir":       subdir,
-            "name":         project.getName(),
-            "safeName":     project.getHostname(),
+            "name":         self.project.getName(),
+            "safeName":     self.project.getHostname(),
             "version":      releaseVer,
             "arch":         anacondaArch,
             "scriptsdir":   isocfg.scriptPath,
@@ -373,7 +343,7 @@ class InstallableIso(ImageGenerator):
         os.unlink(discInfoPath)
         discInfoFile = open(discInfoPath, "w")
         print >> discInfoFile, time.time()
-        print >> discInfoFile, project.getName()
+        print >> discInfoFile, self.project.getName()
         print >> discInfoFile, anacondaArch
         print >> discInfoFile, "1"
         for x in ["base", "changesets", "pixmaps"]:

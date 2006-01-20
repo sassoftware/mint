@@ -77,8 +77,7 @@ class JobRunner(threading.Thread):
         self.job.setStatus(jobstatus.RUNNING, 'Running')
 
         if self.job.releaseId:
-            releaseId = self.job.getReleaseId()
-            release = self.client.getRelease(releaseId)
+            release = self.client.getRelease(self.job.releaseId)
             project = self.client.getProject(release.getProjectId())
 
             # save the current working directory in case the generator
@@ -95,11 +94,10 @@ class JobRunner(threading.Thread):
                               project.getHostname(), jobId))
                     imageFilenames.extend(generator(self.client,
                                                     self.cfg, self.job,
-                                                    releaseId).write())
+                                                    release, project).write())
                     os.chdir(cwd)
                 #Now for the bootable images
-                imagegen = BootableImage(self.client, self.cfg, self.job,
-                                         releaseId)
+                imagegen = BootableImage(self.client, self.cfg, self.job, release, project)
                 imagegen.setImageTypes(imageTypes)
                 if imagegen.workToDo():
                     log.info("%s job for %s started (id %d)" % \
@@ -184,7 +182,7 @@ class JobDaemon:
                         continue
 
                     if job.releaseId:
-                        release = client.getRelease(job.getReleaseId())
+                        release = client.getRelease(job.releaseId)
                         if release.getArch() not in cfg.supportedArch:
                             continue
 
