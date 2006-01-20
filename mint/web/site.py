@@ -66,14 +66,9 @@ class SiteHandler(WebHandler):
         # FIXME: Corporate launch redirect hack.
         # take these lines out to remove corporate page redirect.
         #
-        if not (self.req.headers_in.get('referer', '').\
-                startswith(self.cfg.corpSite) or \
-                self.session.get('corpRedir')):
-            self.session.update({'corpRedir': 'True'})
+        if not self.req.headers_in.get('referer', '').\
+               startswith(self.cfg.corpSite):
             self._redirect(self.cfg.corpSite)
-        # it's possible to visit the corp pages before crossing this point in
-        # code, setting corpRedir prevents corner cases.
-        self.session.update({'corpRedir': 'True'})
         #
         # end corporate launch redirect hack
         ###########################
