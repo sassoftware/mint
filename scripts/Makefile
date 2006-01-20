@@ -26,7 +26,7 @@ extra_dist = \
 	raw2vmdk.c		\
 	job-server.init.in
 
-SUBDIRS = data
+SUBDIRS = data DiskImageData
 
 CFLAGS=-Wall -O2
 LDFLAGS=
