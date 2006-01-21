@@ -46,17 +46,20 @@
                 isFirst = True
                 lastReleaseName = ""
             ?>
-            <tr>
-                <th>Name</th>
-                <th>Architecture</th>
-                <th colspan="3" py:if="isOwner and not wantPublished">Options</th>
-            </tr>
             <div py:strip="True" py:if="filteredReleasesForVersion" rowspan="${len(filteredReleasesForVersion)}">
+                <tr>
+                    <th>Name</th>
+                    <th>Architecture</th>
+                    <th colspan="3" py:if="isOwner and not wantPublished">Options</th>
+                </tr>
                 <div py:strip="True" py:for="release in filteredReleasesForVersion">
                     ${releaseTableRow(releaseName, release, isOwner, (lastReleaseName != releaseName), len(filteredReleasesForVersion))}
                     <?python lastReleaseName = releaseName ?>
                 </div>
             </div>
+            <p py:if="not filteredReleasesForVersion">This project
+                has no ${wantPublished and "published" or "unpublished"}
+                releases.</p>
         </div>
         <tr py:if="isOwner and wantPublished">
             <th colspan="4"><a href="newRelease">Create a new release</a></th>
@@ -78,10 +81,9 @@
                 <h2>${project.getNameForDisplay(maxWordLen = 50)}<br />Releases</h2>
                 <h3 py:if="isOwner">Published Releases</h3>
                 ${releasesTable(releaseVersions, isOwner, True)}
-                <p py:if="not publishedReleases">This project has no published releases.</p>
             </div>
             <div class="pad">
-                <div py:if="isOwner and unpublishedReleases">
+                <div py:if="isOwner">
                     <h3>Unpublished Releases</h3>
                     ${releasesTable(releaseVersions, isOwner, False)}
                 </div>
