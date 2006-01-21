@@ -96,11 +96,25 @@ class ProjectHandler(WebHandler):
     def releases(self, auth):
         releases = self.project.getReleases(showUnpublished = True)
         publishedReleases = [x for x in releases if x.getPublished()]
-        unpublishedReleases = [x for x in releases if not x.getPublished()]
+
+        # Group versions by name or default name (based on group trove).
+        # FIXME: this is a hack until we get a better way to do release
+        # management.
+        releaseVersions = {}
+        for r in releases:
+            if r.getName().strip() and (r.getName() != self.project.getName()):
+                k = r.getName()
+            else:
+                k = r.getDefaultName()
+
+            releasesForVersion = releaseVersions.has_key(k) and releaseVersions[k] or []
+            releasesForVersion.append(r)
+            releasesForVersion.sort(key = lambda x: x.getArch())
+            releaseVersions[k] = releasesForVersion
 
         return self._write("releases", releases = releases,
                 publishedReleases = publishedReleases,
-                unpublishedReleases = unpublishedReleases)
+                releaseVersions = releaseVersions)
 
     def groups(self, auth):
         releases = self.project.getReleases(showUnpublished = True)
@@ -409,6 +423,7 @@ class ProjectHandler(WebHandler):
         else:
             return self._write("release", release = release,
                 name = release.getName(),
+                isPublished = release.getPublished(),
                 trove = trove, version = versions.ThawVersion(version),
                 flavor = deps.ThawDependencySet(flavor),
                 releaseId = id, projectId = self.project.getId(),

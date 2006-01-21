@@ -258,6 +258,13 @@ class Release(database.TableObject):
     def getName(self):
         return self.name
 
+    def getDefaultName(self):
+        """ Returns a generated release name based on the group trove
+            the release is based upon and its version. This should be
+            as a default name if the user doesn't supply one in the UI."""
+        return "%s=%s" % (self.getTroveName(),
+                self.getTroveVersion().trailingRevision().asString())
+
     def getDesc(self):
         return self.description
 
