@@ -10,16 +10,14 @@
         <title>${formatTitle('Error')}</title>
     </head>
     <body>
-        <td id="main" class="spanall">
-            <div class="pad">
-                <p class="error">Error:</p>
-                <p class="errormessage">${error}</p>
-                <p>
-                    Please go back and try again or contact
-                    ${XML(cfg.supportContactHTML)}
-                    for assistance.
-                </p>
-            </div>
-        </td>
+        <div class="layout">
+            <p class="error">Error:</p>
+            <p class="errormessage">${error}</p>
+            <p>
+                Please go back and try again or contact
+                ${XML(cfg.supportContactHTML)}
+                for assistance.
+            </p>
+        </div>
     </body>
 </html>
