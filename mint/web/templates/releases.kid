@@ -39,8 +39,13 @@
         </div>
     </tr>
 
-    <div py:strip="True" py:def="releasesTable(releaseVersions, isOwner, wantPublished)">
+    <div py:strip="True" py:def="releasesTable(releases, releaseVersions, isOwner, wantPublished)">
         <table border="0" cellspacing="0" cellpadding="0" class="releasestable">
+            <tr py:if="[x for x in releases if x.getPublished() == wantPublished]">
+                <th>Name</th>
+                <th>Architecture</th>
+                <th colspan="3" py:if="isOwner and not wantPublished">Options</th>
+            </tr>
         <div py:strip="True" py:for="releaseName, releasesForVersion in releaseVersions.items()">
             <?python
                 filteredReleasesForVersion = [ x for x in releasesForVersion if x.getPublished() == wantPublished ]
@@ -48,11 +53,6 @@
                 lastReleaseName = ""
             ?>
             <div py:strip="True" py:if="filteredReleasesForVersion" rowspan="${len(filteredReleasesForVersion)}">
-                <tr>
-                    <th>Name</th>
-                    <th>Architecture</th>
-                    <th colspan="3" py:if="isOwner and not wantPublished">Options</th>
-                </tr>
                 <div py:strip="True" py:for="release in filteredReleasesForVersion">
                     ${releaseTableRow(releaseName, release, isOwner, (lastReleaseName != releaseName), len(filteredReleasesForVersion))}
                     <?python lastReleaseName = releaseName ?>
@@ -80,12 +80,12 @@
             <div class="pad">
                 <h2>${project.getNameForDisplay(maxWordLen = 50)}<br />Releases</h2>
                 <h3 py:if="isOwner">Published Releases</h3>
-                ${releasesTable(releaseVersions, isOwner, True)}
+                ${releasesTable(releases, releaseVersions, isOwner, True)}
             </div>
             <div class="pad">
                 <div py:if="isOwner">
                     <h3>Unpublished Releases</h3>
-                    ${releasesTable(releaseVersions, isOwner, False)}
+                    ${releasesTable(releases, releaseVersions, isOwner, False)}
                 </div>
             </div>
 
