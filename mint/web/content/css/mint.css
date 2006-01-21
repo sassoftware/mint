@@ -25,6 +25,12 @@ div.layout {
     padding-right: 10px;
 }
 
+div.layout#help {
+    width: 600px;
+    margin-right: 25%;
+    margin-left: 15%;
+}
+
 p.error {
         font-size: 125%;
         font-weight: bold;
@@ -32,6 +38,14 @@ p.error {
 p.errormessage {
         color: red;
         margin-left: 1em;
+}
+
+div.side#left {
+    float: left;
+}
+
+div.side#right {
+    float: right;
 }
 
 /* COMMON LAYOUT ITEMS */

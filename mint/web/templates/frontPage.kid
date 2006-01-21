@@ -64,14 +64,14 @@ from mint import searcher
                     <td><img src="${cfg.staticPath}apps/mint/images/rss.png" /><span class="topten_header">Most Popular</span>
                         <ol>
                             <li py:for="project in popularProjects">
-                                <a href="${project[0]}">${project[1]}</a>
+                                <a href="http://${cfg.projectSiteHost}${cfg.basePath}/project/${project[1]}/">${project[2]}</a>
                             </li>
                         </ol>
                     </td>
                     <td><img src="${cfg.staticPath}apps/mint/images/rss.png" /><span class="topten_header">Most Active</span>
                         <ol>
                             <li py:for="project in activeProjects">
-                                <a href="${project[0]}">${project[1]}</a>
+                                <a href="http://${cfg.projectSiteHost}${cfg.basePath}/project/${project[1]}/">${project[2]}</a>
                             </li>
                         </ol>
                     </td>

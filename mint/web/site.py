@@ -63,19 +63,8 @@ class SiteHandler(WebHandler):
         popularProjects, _ = self.client.getProjects(projectlisting.NUMDEVELOPERS_DES, 10, 0)
         activeProjects, _  = self.client.getProjects(projectlisting.ACTIVITY_DES, 10, 0)
 
-        ###########################
-        # FIXME: Corporate launch redirect hack.
-        # take these lines out to remove corporate page redirect.
-        #
-        if not self.req.headers_in.get('referer', '').\
-               startswith(self.cfg.corpSite):
-            self._redirect(self.cfg.corpSite)
-        #
-        # end corporate launch redirect hack
-        ###########################
         return self._write("frontPage", firstTime=self.session.get('firstTimer', False),
             releases=releases, popularProjects = popularProjects, activeProjects = activeProjects)
-
 
     def blank(self, auth, sid, hostname):
         self.req.content_type = "image/gif"

@@ -35,6 +35,7 @@ onload = "javascript:;"
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/xmlrpc.js" />
         <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/mint.css" />
         <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/search.css" />
+        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/contentTypes.css" />
 
         <link rel="shortcut icon" href="http://www.rpath.com/favicon.ico" />
         <link rel="icon" href="http://www.rpath.com/favicon.ico" />
