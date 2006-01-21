@@ -79,9 +79,13 @@ class WebHandler(object):
             location = 'http://%s%s%s' % (self.req.hostname, self.cfg.basePath, location)
         self._redirect(location)
 
-    def _redirect(self, location):
+    def _redirect(self, location, temporary = False):
         self.req.headers_out['Location'] = location
-        raise HttpMoved
+
+        if temporary:
+            raise HttpMovedTemporarily
+        else:
+            raise HttpMoved
 
     def _clearAuth(self):
         self.auth = users.Authorization()
@@ -207,6 +211,9 @@ class HttpForbidden(HttpError):
 
 class HttpMoved(HttpError):
     code = 301
+
+class HttpMovedTemporarily(HttpError):
+    code = 302
 
 class HttpOK(HttpError):
     code = 200
