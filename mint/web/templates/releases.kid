@@ -57,10 +57,10 @@
                     <?python lastReleaseName = releaseName ?>
                 </div>
             </div>
-            <p py:if="not filteredReleasesForVersion">This project
-                has no ${wantPublished and "published" or "unpublished"}
-                releases.</p>
         </div>
+        <p py:if="not filteredReleasesForVersion">This project
+            has no ${wantPublished and "published" or "unpublished"}
+            releases.</p>
         <tr py:if="isOwner and wantPublished">
             <th colspan="4"><a href="newRelease">Create a new release</a></th>
         </tr>
