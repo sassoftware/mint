@@ -59,8 +59,9 @@ class SiteHandler(WebHandler):
     @cache
     @redirectHttp
     def _frontPage(self, auth):
-        news = self.client.getNews()
         releases = self.client.getReleaseList()
+        popularProjects, _ = self.client.getProjects(projectlisting.NUMDEVELOPERS_DES, 10, 0)
+        activeProjects, _  = self.client.getProjects(projectlisting.ACTIVITY_DES, 10, 0)
 
         ###########################
         # FIXME: Corporate launch redirect hack.
@@ -68,15 +69,13 @@ class SiteHandler(WebHandler):
         #
         if not self.req.headers_in.get('referer', '').\
                startswith(self.cfg.corpSite):
-            self._redirect(self.cfg.corpSite, temporary = True)
+            self._redirect(self.cfg.corpSite)
         #
         # end corporate launch redirect hack
         ###########################
+        return self._write("frontPage", firstTime=self.session.get('firstTimer', False),
+            releases=releases, popularProjects = popularProjects, activeProjects = activeProjects)
 
-        return self._write("frontPage", news = news,
-                           newsLink = self.client.getNewsLink(),
-                           firstTime=self.session.get('firstTimer', False),
-                           releases=releases)
 
     def blank(self, auth, sid, hostname):
         self.req.content_type = "image/gif"
@@ -191,7 +190,9 @@ class SiteHandler(WebHandler):
 
     @requiresHttps
     @strFields(username = None, password = '', action = 'login', to = '/')
-    def processLogin(self, auth, username, password, action, to):
+    @boolFields(remember_me = False)
+    @intFields(x = 0, y = 0)
+    def processLogin(self, auth, username, password, action, to, remember_me, x, y):
         if action == 'login':
             authToken = (username, password)
             client = shimclient.ShimMintClient(self.cfg, authToken)
