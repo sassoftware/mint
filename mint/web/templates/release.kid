@@ -93,7 +93,7 @@ import time
 
                 <h3>Description</h3>
 
-                <p>${release.getDesc() or "Release has no description."}</p>
+                <p>${release.getDesc().strip() or "Release has no description."}</p>
 
                 <h3>Downloads</h3>
                 <div py:strip="True" py:if="files">
@@ -105,7 +105,7 @@ import time
                 </ul>
 
                 <h4 onclick="javascript:toggle_display('file_help');"
-                    style="cursor: pointer;">What are These Files?&nbsp;<img id="file_help_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" /></h4>
+                    style="cursor: pointer;">What are these files?&nbsp;<img id="file_help_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" /></h4>
 
                     <div id="file_help" style="display: none;">
                         <p>The file(s) entitled <tt>Disc <em>N</em></tt>
