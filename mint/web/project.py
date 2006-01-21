@@ -102,11 +102,7 @@ class ProjectHandler(WebHandler):
         # management.
         releaseVersions = {}
         for r in releases:
-            if r.getName().strip() and (r.getName() != self.project.getName()):
-                k = r.getName()
-            else:
-                k = r.getDefaultName()
-
+            k = r.getDefaultName()
             releasesForVersion = releaseVersions.has_key(k) and releaseVersions[k] or []
             releasesForVersion.append(r)
             releasesForVersion.sort(key = lambda x: x.getArch())

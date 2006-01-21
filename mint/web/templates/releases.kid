@@ -39,7 +39,8 @@
         </div>
     </tr>
 
-    <table border="0" cellspacing="0" cellpadding="0" class="releasestable" py:def="releasesTable(releaseVersions, isOwner, wantPublished)">
+    <div py:strip="True" py:def="releasesTable(releaseVersions, isOwner, wantPublished)">
+        <table border="0" cellspacing="0" cellpadding="0" class="releasestable">
         <div py:strip="True" py:for="releaseName, releasesForVersion in releaseVersions.items()">
             <?python
                 filteredReleasesForVersion = [ x for x in releasesForVersion if x.getPublished() == wantPublished ]
@@ -58,13 +59,12 @@
                 </div>
             </div>
         </div>
+        </table>
         <p py:if="not filteredReleasesForVersion">This project
             has no ${wantPublished and "published" or "unpublished"}
             releases.</p>
-        <tr py:if="isOwner and wantPublished">
-            <th colspan="4"><a href="newRelease">Create a new release</a></th>
-        </tr>
-    </table>
+        <p py:if="isOwner and wantPublished"><strong><a href="newRelease">Create a new release</a></strong></p>
+    </div>
 
     <body>
         <td id="left" class="side">
