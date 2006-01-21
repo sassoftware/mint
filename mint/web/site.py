@@ -68,7 +68,7 @@ class SiteHandler(WebHandler):
         #
         if not self.req.headers_in.get('referer', '').\
                startswith(self.cfg.corpSite):
-            self._redirect(self.cfg.corpSite)
+            self._redirect(self.cfg.corpSite, temporary = True)
         #
         # end corporate launch redirect hack
         ###########################
