@@ -138,12 +138,5 @@
                 </li>
             </ul>
         </div>
-        <div class="pad" py:if="output != 'xhtml'">
-            <p class="help">
-                <span style="color: red;">PLEASE NOTE:</span>
-                Your browser is not fully supported by ${cfg.productName}.
-                Please use Firefox or Mozilla for a fully-functional experience.
-            </p>
-        </div>
     </td>
 </html>
