@@ -81,6 +81,7 @@ class WebHandler(object):
 
     def _redirect(self, location, temporary = False):
         self.req.headers_out['Location'] = location
+        self.req.headers_out['X-RBO-Redirect'] = '1'
 
         if temporary:
             raise HttpMovedTemporarily
