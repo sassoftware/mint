@@ -14,43 +14,11 @@ onload = "javascript:;"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'project.kid', 'library.kid'">
 
-    <div py:def="breadcrumb()" class="pad" py:strip="True">
-    </div>
-
-    <div py:def="topnav()" py:strip="True">
-        <td id="topnav">
-            <div class="pad">
-                <a href="http://$SITE">${cfg.productName}</a> |
-                <a href="${cfg.corpSite}sales/">Information</a> |
-                <a href="${cfg.corpSite}about/contact/">About Us</a> |
-                <a href="http://${SITE}help?page=feedback"><b style="color: red;">Need Help/Have Feedback?</b></a>
-                <span py:if="cfg.debugMode">
-                    | <span style="color:red;">DEBUG MODE</span>
-                </span>
-            </div>
-        </td>
-    </div>
-
-
-    <div py:def="rPathProductsMenu" id="products" class="palette" py:if="False">
-        <h3>rPath products</h3>
-        <ul>
-            <li><a href="#">Product 1</a></li>
-            <li><a href="#">Product 2</a></li>
-            <li>Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Cras erat. Curabitur tempus nulla sit amet justo. Morbi quis tellus sed turpis bibendum egestas. Phasellus nonummy!</li>
-        </ul>
-    </div>
-
     <td py:def="logo()" id="logo" >
         <div>
           <span id="rpath">
             <a href="http://$SITE" title="rBuilder main site">
                 <img src="${cfg.staticPath}apps/mint/images/corplogo.gif" alt="rPath Logo" height="80" width="80" />
-            </a>
-          </span>
-          <span id="product">
-            <a href="http://$SITE" title="rBuilder main site">
-                <img src="${cfg.staticPath}apps/mint/images/prodlogo.gif" alt="rBuilder Logo" height="80" width="226" />
             </a>
           </span>
         </div>
@@ -65,58 +33,62 @@ onload = "javascript:;"
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/generic.js" />
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/library.js" />
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/xmlrpc.js" />
-        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/basic.css" />
-        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/structure.css" />
-        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/user.css" />
-        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/topNav.css" />
-        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/log.css" />
-        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/contentTypes.css" />
         <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/mint.css" />
+        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/search.css" />
+        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/contentTypes.css" />
 
         <link rel="shortcut icon" href="http://www.rpath.com/favicon.ico" />
         <link rel="icon" href="http://www.rpath.com/favicon.ico" />
         <div py:replace="item[:]"/>
     </head>
+
     <body py:match="item.tag == '{http://www.w3.org/1999/xhtml}body'"
           py:attrs="item.attrib">
-
-        <div id="top" style="text-align: center;">
-            <div class="shadowLeft"><div class="shadowRight">
-                <div class="surfaceLeft" style="text-align: left;"><div class="surfaceRight">
-                    ${userActions()}
-                </div></div>
-            </div></div>
+        <a name="top" />
+        <div id="top">
+            <img id="topgradleft" src="${cfg.staticPath}/apps/mint/images/topgrad_left.png" />
+            <img id="topgradright" src="${cfg.staticPath}/apps/mint/images/topgrad_right.png" />
+            <table style="width: 95%;">
+                <tr>
+                    <td style="width: 50%;">
+                        <img id="rpathLogo" src="http://www.rpath.com/conary-static/apps/mint/images/corplogo.gif" />
+                        <img id="logo" src="http://www.rpath.com/conary-static/apps/mint/images/prodlogo.gif" />
+                    </td>
+                    <td id="topRight">
+                        <div class="about">About rPath</div>
+                        <table style="width: 100%;" class="search">
+                            <tr>
+                                <td>I'm looking for a...</td>
+                                <td><input style="width: 100%;" type="text" /></td>
+                                <td style="text-align: right;"><img src="${cfg.staticPath}/apps/mint/images/search.png" /></td>
+                            </tr>
+                            <tr>
+                                <td></td>
+                                <td style="vertical-align: middle;"><input type="radio" /> Project <input type="radio" /> Package</td>
+                                <td style="text-align: right;">Or you can <a href="projects">browse</a>.</td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
         </div>
-        <div id="middle" style="text-align: center;">
-            <div id="crumb">
-                <div class="pad">
-                    You are here: <a href="http://$SITE">${cfg.productName}</a>
-                    ${breadcrumb()}
-                </div>
+
+        <div class="layout" py:replace="item[:]" />
+
+        <div id="footer">
+            <div>
+                <span style="float: right"><a href="#top">Top of Page</a></span>
+                <ul class="footerLinks">
+                    <li>About rPath</li>
+                    <li>Site Announcements</li>
+                    <li>Legal</li>
+                    <li>Contact Us</li>
+                    <li>Help</li>
+                </ul>
             </div>
-        </div>
-        <div id="bottom" style="text-align: center;">
-            <div class="shadowLeft"><div class="shadowRight">
-                <div class="surfaceLeft" style="text-align: left;"><div class="surfaceRight">
-                    <table border="0" cellspacing="0" cellpadding="0" summary="layout" width="100%">
-                        <tr>
-                            <td id="main" class="spanleft" py:replace="item[:]" />
-                        </tr>
-                    </table>
-                </div></div>
-            </div></div>
-        </div>
-        <div id="foot" style="text-align: center;">
-            <div id="copy">
-                <div class="pad" style="text-align: center;">
-                    <span id="botnav">
-                        ${legal('http://%slegal?page=legal' % SITE, 'Legal')}
-                    </span>
-
-                    <span style="float: left;">Copyright &#169; 2005-2006 rPath, Inc. </span>
-
-                    <span>version ${constants.mintVersion}</span>
-                </div>
+            <div style="border-top: 1px solid #c4c4c4; padding: 6px;">
+                <span id="copyright">Copyright &copy; 2005-2006 rPath. All Rights Reserved.</span>
+                <span id="tagline">rPath. The Software Appliance Company.</span>
             </div>
         </div>
     </body>

@@ -21,81 +21,70 @@ from mint import searcher
               title="New ${cfg.productName} ISO Releases" href="http://${cfg.siteHost}${cfg.basePath}rss?feed=newReleases" />
     </head>
     <body>
-        <td id="left" class="side">
-            <div class="pad">
-                ${browseMenu()}
-                ${searchMenu()}
-                ${recentReleasesMenu(releases, display="block")}
-                ${rPathProductsMenu()}
-            </div>
-        </td>
-        <td id="main">
-            <div class="pad">
-                <h2 class="header">Welcome to ${cfg.productName}<sup class="tm">TM</sup></h2>
+        <div id="steps">
+            <span id="signin" py:if="not auth.authorized">
+                <?python
+                    from urllib import quote
+                    secureProtocol = 'http'
+                    if auth.authorized:
+                        loginAction = "logout"
+                    else:
+                        loginAction = "processLogin"
+                    if cfg.SSL:
+                        secureProtocol = "https"
+                ?>
+                <form method="post" action="${secureProtocol}://${cfg.secureHost}${cfg.basePath}processLogin">
+                    <input type="hidden" name="to" value="${quote(toUrl)}" />
 
-
-                <div>
-
-                    <p py:if="firstTime">Congratulations!  Your new ${cfg.productName}
-                      account is active!</p>
-
-                    <p>You can use ${cfg.productName} to create a
-                      Linux distribution that meets your specific
-                      needs, or to find an existing distribution
-                      that is just right for you.</p>
-
-                  <h3 style="color:#FF7001;">Start using ${cfg.productName}. Select an option below:</h3>
-                    <table id="tasks">
-                        <tr>
-                            <td class="tasksBlock" style="margin-right: 1em;"
-                                onclick="javascript:window.location='${cfg.basePath}help?page=dev-tutorial';">
-                                <h3><a href="${cfg.basePath}help?page=dev-tutorial">Create</a></h3>
-
-                                  <p>Use ${cfg.productName}'s collaborative
-                                  development environment to package open
-                                  source software and produce complete
-                                  distributions.</p>
-                            </td>
-                            <td id="spacer"></td>
-                            <td class="tasksBlock"
-                                onclick="javascript:window.location='${cfg.basePath}help?page=user-tutorial';">
-                                <h3><a href="${cfg.basePath}help?page=user-tutorial">Find</a></h3>
-
-                                  <p>Locate and download the distribution that
-                                  suits you, or find a package to add to your
-                                  system&#8212;${cfg.productName} makes it
-                                  easy.</p>
-
-                            </td>
-                        </tr>
-                    </table>
-
-                </div>
-
-                <div py:strip="True" py:if="news">
-                    <h3 class="header">
-                        <a href="${cfg.newsRssFeed}">
-                            <img style="border: none; vertical-align: middle; float: right;"
-                                 src="${cfg.staticPath}apps/mint/images/rss-inline.gif" />
-                        </a>
-                        Site Announcements
-                    </h3>
-                    <div py:for="item in news" class="newsItem">
-                        <h3>
-                            <span class="date" style="float: right;">${time.strftime("%A, %B %d, %Y", time.localtime(item['pubDate']))}</span>
-                            <span class="newsTitle">${item['title']}</span>
-                        </h3>
-                        <p>${XML(item['content'])} <a class="newsContinued" href="${item['link']}">read more</a></p>
+                    <div>Username:</div>
+                    <div><input type="text" name="username" /></div>
+                    <div style="padding-top: 8px;">Password:</div>
+                    <div><input type="password" name="password" /></div>
+                    <div style="padding-top: 8px;">
+                        <input type="checkbox" name="remember_me" />
+                        <u>Remember me</u> on this computer
                     </div>
-                    <p><a href="${newsLink}">More Announcements</a></p>
-                </div>
-            </div>
-        </td>
-        <td id="right" class="projects">
-            ${projectsPane()}
-            <div class="pad">
-                ${groupTroveBuilder()}
-            </div>
-        </td>
+                    <input type="image" id="sign_in_button" src="${cfg.staticPath}apps/mint/images/sign_in_button.png" width="94" height="31" />
+
+                    <div style="border-top: 2px dotted gray;">
+                        <p>Don't have an account?</p>
+                        <p><a href="register">Set one up.</a></p>
+                    </div>
+                </form>
+            </span>
+            <span id="buildit">Find the stuff you need to make your own software appliance in three easy steps.</span>
+            <span id="findit">Check out all the amazing software applications others have made.</span>
+
+            <img style="clear: left;" src="${cfg.staticPath}apps/mint/images/steps.png" />
+        </div>
+
+        <div id="topten">
+            <table style="width: 100%;">
+                <tr>
+                    <td><img src="${cfg.staticPath}apps/mint/images/rss.png" /><span class="topten_header">Most Popular</span>
+                        <ol>
+                            <li py:for="project in popularProjects">
+                                <a href="http://${cfg.projectSiteHost}${cfg.basePath}/project/${project[1]}/">${project[2]}</a>
+                            </li>
+                        </ol>
+                    </td>
+                    <td><img src="${cfg.staticPath}apps/mint/images/rss.png" /><span class="topten_header">Most Active</span>
+                        <ol>
+                            <li py:for="project in activeProjects">
+                                <a href="http://${cfg.projectSiteHost}${cfg.basePath}/project/${project[1]}/">${project[2]}</a>
+                            </li>
+                        </ol>
+                    </td>
+                    <td><img src="${cfg.staticPath}apps/mint/images/rss.png" /><span class="topten_header">Recent Updates</span>
+                        <ol>
+
+                            <li py:for="release in releases">
+                                <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${release[1]}/release?id=${release[2].getId()}">${release[2].getTroveName()}=${release[2].getTroveVersion().trailingRevision().asString()} (${release[2].getArch()})</a>
+                            </li>
+                        </ol>
+                    </td>
+                </tr>
+            </table>
+        </div>
     </body>
 </html>
