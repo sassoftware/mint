@@ -66,9 +66,7 @@ class SiteHandler(WebHandler):
         # FIXME: Corporate launch redirect hack.
         # take these lines out to remove corporate page redirect.
         #
-        if not self.req.headers_in.get('referer', '').\
-               startswith(self.cfg.corpSite) and\
-            'X-RBO-Redirect' not in self.req.headers_in:
+        if not self.cfg.siteHost in self.req.headers_in.get('referer', ''):
             self._redirect(self.cfg.corpSite, temporary = True)
         #
         # end corporate launch redirect hack
