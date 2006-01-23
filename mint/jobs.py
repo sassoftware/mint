@@ -29,7 +29,7 @@ class JobsTable(database.KeyedTable):
                     owner           BIGINT,
                     userId          INT,
                     status          INT,
-                    statusMessage   CHAR(255),
+                    statusMessage   TEXT,
                     timeStarted     DOUBLE,
                     timeFinished    DOUBLE
                 )"""
