@@ -44,51 +44,53 @@ onload = "javascript:;"
 
     <body py:match="item.tag == '{http://www.w3.org/1999/xhtml}body'"
           py:attrs="item.attrib">
-        <a name="top" />
-        <div id="top">
-            <img id="topgradleft" src="${cfg.staticPath}/apps/mint/images/topgrad_left.png" />
-            <img id="topgradright" src="${cfg.staticPath}/apps/mint/images/topgrad_right.png" />
-            <table style="width: 95%;">
-                <tr>
-                    <td style="width: 50%;">
-                        <img id="rpathLogo" src="http://www.rpath.com/conary-static/apps/mint/images/corplogo.gif" />
-                        <img id="logo" src="http://www.rpath.com/conary-static/apps/mint/images/prodlogo.gif" />
-                    </td>
-                    <td id="topRight">
-                        <div class="about">About rPath</div>
-                        <table style="width: 100%;" class="search">
-                            <tr>
-                                <td>I'm looking for a...</td>
-                                <td><input style="width: 100%;" type="text" /></td>
-                                <td style="text-align: right;"><img src="${cfg.staticPath}/apps/mint/images/search.png" /></td>
-                            </tr>
-                            <tr>
-                                <td></td>
-                                <td style="vertical-align: middle;"><input type="radio" /> Project <input type="radio" /> Package</td>
-                                <td style="text-align: right;">Or you can <a href="projects">browse</a>.</td>
-                            </tr>
-                        </table>
-                    </td>
-                </tr>
-            </table>
-        </div>
-
-        <div class="layout" py:replace="item[:]" />
-
-        <div id="footer">
-            <div>
-                <span style="float: right"><a href="#top">Top of Page</a></span>
-                <ul class="footerLinks">
-                    <li>About rPath</li>
-                    <li>Site Announcements</li>
-                    <li>Legal</li>
-                    <li>Contact Us</li>
-                    <li>Help</li>
-                </ul>
+        <div id="main">
+            <a name="top" />
+            <div id="top">
+                <img id="topgradleft" src="${cfg.staticPath}/apps/mint/images/topgrad_left.png" />
+                <img id="topgradright" src="${cfg.staticPath}/apps/mint/images/topgrad_right.png" />
+                <table style="width: 95%;">
+                    <tr>
+                        <td style="width: 50%;">
+                            <img id="rpathLogo" src="http://www.rpath.com/conary-static/apps/mint/images/corplogo.gif" />
+                            <img id="logo" src="http://www.rpath.com/conary-static/apps/mint/images/prodlogo.gif" />
+                        </td>
+                        <td id="topRight">
+                            <div class="about">About rPath</div>
+                            <table style="width: 100%;" class="search">
+                                <tr>
+                                    <td>I'm looking for a...</td>
+                                    <td><input style="width: 100%;" type="text" /></td>
+                                    <td style="text-align: right;"><img src="${cfg.staticPath}/apps/mint/images/search.png" /></td>
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                    <td style="vertical-align: middle;"><input type="radio" /> Project <input type="radio" /> Package</td>
+                                    <td style="text-align: right;">Or you can <a href="projects">browse</a>.</td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
             </div>
-            <div style="border-top: 1px solid #c4c4c4; padding: 6px;">
-                <span id="copyright">Copyright &copy; 2005-2006 rPath. All Rights Reserved.</span>
-                <span id="tagline">rPath. The Software Appliance Company.</span>
+
+            <div class="layout" py:replace="item[:]" />
+
+            <div id="footer">
+                <div>
+                    <span style="float: right"><a href="#top">Top of Page</a></span>
+                    <ul class="footerLinks">
+                        <li>About rPath</li>
+                        <li>Site Announcements</li>
+                        <li>Legal</li>
+                        <li>Contact Us</li>
+                        <li>Help</li>
+                    </ul>
+                </div>
+                <div style="border-top: 1px solid #c4c4c4; padding: 6px;">
+                    <span id="copyright">Copyright &copy; 2005-2006 rPath. All Rights Reserved.</span>
+                    <span id="tagline">rPath. The Software Appliance Company.</span>
+                </div>
             </div>
         </div>
     </body>

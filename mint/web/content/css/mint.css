@@ -4,6 +4,12 @@ body {
     font-family: sans-serif;
 }
 
+div#main {
+    margin-left: auto;
+    margin-right: auto;
+    width: 955px;
+}
+
 table {
     font-size:105%;
     width:100%;
@@ -19,8 +25,6 @@ th {
 div.layout {
     width: 930px;
     float: left;
-    margin-left: 10%;
-    margin-right: 10%;
     padding-left: 10px;
     padding-right: 10px;
 }
@@ -36,8 +40,8 @@ p.error {
         font-weight: bold;
 }
 p.errormessage {
-        color: red;
-        margin-left: 1em;
+    color: red;
+    margin-left: 1em;
 }
 
 div.side#left {
@@ -57,8 +61,6 @@ div#top {
     padding-top: 0px;
     margin-top: -8px; 
     margin-bottom: 20px;
-    margin-left: 10%;
-    margin-right: 10%;
     height: 112px;
     width: 955px;
     background: url(../images/topgrad.png);
@@ -101,8 +103,6 @@ div#top td#topRight table.search {
 
 div#steps {
     top: 130px;
-    margin-left: 10%;
-    margin-right: 10%;
     width: 955px;
 }
 
@@ -157,8 +157,6 @@ div#footer {
     width: 938px;
     height: 67px;
     bottom: 10px;
-    margin-left: 10%;
-    margin-right: 10%;
     padding: 8px;
     font-size: 10pt;
     float: left;
@@ -185,8 +183,6 @@ span#copyright {
 
 div#topten {
     float: left;
-    margin-left: 10%;
-    margin-right: 10%;
 
     background: url(../images/top_ten_bg.png);
     width: 851px;
