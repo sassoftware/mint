@@ -67,7 +67,7 @@ class SiteHandler(WebHandler):
         # take these lines out to remove corporate page redirect.
         #
         if not self.req.headers_in.get('referer', '').\
-               startswith(self.cfg.corpSite) and
+               startswith(self.cfg.corpSite) and\
             'X-RBO-Redirect' not in self.req.headers_in:
             self._redirect(self.cfg.corpSite, temporary = True)
         #
