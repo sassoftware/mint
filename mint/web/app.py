@@ -26,7 +26,7 @@ from mint import users, userlevels
 from admin import AdminHandler
 from project import ProjectHandler
 from site import SiteHandler
-from cookie_http import ConaryHandler
+from repos import ConaryHandler
 from setup import SetupHandler
 import cache
 

@@ -11,7 +11,7 @@ python_files = \
 	admin.py	\
 	app.py		\
 	cache.py	\
-	cookie_http.py	\
+	repos.py	\
 	decorators.py	\
 	hooks.py	\
 	project.py	\
