@@ -46,8 +46,8 @@ from mint import searcher
                     </div>
                     <input alt="Sign In" type="image" id="sign_in_button" src="${cfg.staticPath}apps/mint/images/sign_in_button.png" />
 
-                    <div style="border-top: 2px dotted gray;">
-                        <p>Don't have an account?</p>
+                    <div id="noAccount">
+                        <p><strong>Don't have an account?</strong></p>
                         <p><a href="register">Set one up.</a></p>
                     </div>
                 </div>
@@ -55,7 +55,14 @@ from mint import searcher
             <span id="buildit">Find the stuff you need to make your own software appliance in three easy steps.</span>
             <span id="findit">Check out all the amazing software applications others have made.</span>
 
-            <img style="clear: left;" src="${cfg.staticPath}apps/mint/images/steps.png" alt="three steps to use rBuilder Online" />
+            <div id="threeEasySteps">
+                <a href="/help?page=dev-tutorial">
+                    <img id="getStarted" src="${cfg.staticPath}apps/mint/images/getting_started.png" width="147" height="37" alt="Get Started" />
+                </a>
+                <img src="${cfg.staticPath}apps/mint/images/three_easy_steps.png" width="239" height="23" alt="It's Just 3 Easy Steps" />
+                <div id="stepsText">There's nothing to download. All you need is your web browser.</div>
+                <img style="clear: left;" src="${cfg.staticPath}apps/mint/images/steps.png" alt="three steps to use rBuilder Online" />
+            </div>
         </div>
 
         <div id="topten">

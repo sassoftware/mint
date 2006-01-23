@@ -13,7 +13,6 @@ onload = "javascript:;"
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'project.kid', 'library.kid'">
-
     <head py:match="item.tag == '{http://www.w3.org/1999/xhtml}head'" >
         <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=utf-8" />
         <meta name="KEYWORDS" content="rPath, rBuilder, rBuilder Online, rManager, rPath Linux, rPl, Conary, Software Appliance, Application image, Software as a Service, SaaS, Virtualization, virtualisation, open source, Linux," />
@@ -42,23 +41,29 @@ onload = "javascript:;"
                 <table style="width: 95%;">
                     <tr>
                         <td style="width: 50%;">
-                            <img id="rpathLogo" src="http://www.rpath.com/conary-static/apps/mint/images/corplogo.gif" alt="rPath Logo" />
-                            <img id="logo" src="http://www.rpath.com/conary-static/apps/mint/images/prodlogo.gif" alt="rBuilder Online Logo" />
+                            <img id="rpathLogo" src="${cfg.staticPath}/apps/mint/images/corplogo.png" width="78" height="94" alt="rPath Logo" />
+                            <img id="logo" src="${cfg.staticPath}/apps/mint/images/prodlogo.gif" alt="rBuilder Online Logo" />
                         </td>
                         <td id="topRight">
-                            <div class="about">About rPath</div>
-                            <table style="width: 100%;" class="search">
-                                <tr>
-                                    <td>I'm looking for a...</td>
-                                    <td><input style="width: 100%;" type="text" /></td>
-                                    <td style="text-align: right;"><img src="${cfg.staticPath}/apps/mint/images/search.png" alt="Search" /></td>
-                                </tr>
-                                <tr>
-                                    <td></td>
-                                    <td style="vertical-align: middle;"><input type="radio" /> Project <input type="radio" /> Package</td>
-                                    <td style="text-align: right;">Or you can <a href="projects">browse</a>.</td>
-                                </tr>
-                            </table>
+                            <div class="about"><a href="http://www.rpath.com/corp/about/">About rPath</a></div>
+                            <form action="http://${cfg.siteHost}${cfg.basePath}search" method="get" id="searchForm">
+                                <table style="width: 100%;" class="search">
+                                    <tr>
+                                        <td>I'm looking for a...</td>
+                                        <td><input style="width: 100%;" type="text" /></td>
+                                        <td style="text-align: right;">
+                                            <button id="searchSubmit" type="submit"><img src="${cfg.staticPath}/apps/mint/images/search.png" alt="Search" /></button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td></td>
+                                        <td style="vertical-align: middle;">
+                                            <input type="radio" name="type" value="Projects" checked="checked" /> Project
+                                            <input type="radio" name="type" value="Packages" /> Package</td>
+                                        <td style="text-align: right;">Or you can <a href="projects">browse</a>.</td>
+                                    </tr>
+                                </table>
+                            </form>
                         </td>
                     </tr>
                 </table>
@@ -68,16 +73,16 @@ onload = "javascript:;"
 
             <div id="footer">
                 <div>
-                    <span style="float: right"><a href="#top">Top of Page</a></span>
+                    <span id="topOfPage"><a href="#top">Top of Page</a></span>
                     <ul class="footerLinks">
-                        <li>About rPath</li>
-                        <li>Site Announcements</li>
-                        <li>Legal</li>
-                        <li>Contact Us</li>
-                        <li>Help</li>
+                        <li><a href="/corp/about/">About rPath</a></li>
+                        <li><a href="/news/">Site Announcements</a></li>
+                        <li><a href="/legal/">Legal</a></li>
+                        <li><a href="/contact/">Contact Us</a></li>
+                        <li><a href="/help/">Help</a></li>
                     </ul>
                 </div>
-                <div style="border-top: 1px solid #c4c4c4; padding: 6px;">
+                <div id="bottomText">
                     <span id="copyright">Copyright &copy; 2005-2006 rPath. All Rights Reserved.</span>
                     <span id="tagline">rPath. The Software Appliance Company.</span>
                 </div>

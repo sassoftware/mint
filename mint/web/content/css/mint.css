@@ -4,6 +4,10 @@ body {
     font-family: sans-serif;
 }
 
+a img {
+    border: none;
+}
+
 div#main {
     margin-left: auto;
     margin-right: auto;
@@ -59,7 +63,7 @@ div#top {
     text-align: left;
     top: 0px;
     padding-top: 0px;
-    margin-top: -8px; 
+    margin-top: -8px;
     margin-bottom: 20px;
     height: 112px;
     width: 955px;
@@ -69,6 +73,9 @@ div#top {
 div#top img#logo {
     margin-top: 6px;
     vertical-align: top;
+    padding-left: 16px;
+    margin-left: 12px;
+    border-left: 2px dotted #aaaaaa;
 }
 
 div#top img#topgradleft {
@@ -95,15 +102,49 @@ div#top td#topRight div.about {
     font-size: 10pt;
 }
 
+div#top td#topRight div.about a {
+    font-weight: bold;
+}
+
+div#top td#topRight div.about a:link {
+    color: #aaaaaa;
+}
+
+div#top td#topRight div.about a:visited {
+    color: #bbbbbb;
+}
+
 div#top td#topRight table.search {
     margin-top: 8px;
     font-size: 10pt;
     color: black;
 }
 
+button#searchSubmit {
+    width: 104px;
+    height: 31px;
+    border: none;
+    background: inherit;
+    padding: 0;
+}
+
 div#steps {
     top: 130px;
     width: 955px;
+}
+
+div#threeEasySteps {
+    clear: left;
+    padding-top: 12px;
+}
+
+img#getStarted {
+    float: right;
+    margin-right: 46px;
+}
+
+div#stepsText {
+    padding: 8px 0px 24px 0px;
 }
 
 span#buildit {
@@ -148,25 +189,41 @@ img#sign_in_button {
     padding: 10px 0px 10px 0px;
 }
 
+div#signin div#noAccount {
+    border-top: 2px dotted gray;
+    margin-top: 10px;
+}
+
 /* footer */
 
 div#footer {
     background: #909090 url(../images/footer_bg.png);
     color: white;
     text-align: left;
-    width: 938px;
+    width: 942px;
     height: 67px;
     bottom: 10px;
-    padding: 8px;
+    padding: 4px 8px 12px 4px;
     font-size: 10pt;
     float: left;
+}
+
+div#footer a {
+    text-decoration: none;
+    font-weight: bold;
 }
 
 div#footer a:link {
     color: white;
 }
 
+div#footer a:visited {
+    color: #dddddd;
+}
+
 ul.footerLinks {
+    padding-left: 0;
+    margin-left: 0;
 }
 
 ul.footerLinks li {
@@ -175,8 +232,25 @@ ul.footerLinks li {
     padding: 8px 10px 8px 10px;
 }
 
+span#topOfPage {
+    padding-right: 6px;
+    float: right;
+}
+
+/* very bottom of the page */
+
+div#bottomText {
+    border-top: 1px solid #c4c4c4; padding: 6px;
+}
+
 span#copyright {
     float: right;
+    font-size: 90%;
+}
+
+span#tagline {
+    padding-left: 4px;
+    font-size: 90%;
 }
 
 /* top ten list */
@@ -198,6 +272,11 @@ div#topten table td {
 
 div#topten ol {
     padding-left: 33px;
+}
+
+div#topten ol li {
+    padding-bottom: 2px;
+    font-size: 90%;
 }
 
 span.topten_header {

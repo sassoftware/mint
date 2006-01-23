@@ -3,6 +3,8 @@ Changes in 1.2.2:
 * The users admin interface now displays properly on a MySQL install.
 * ShimNetClient uses the default rate limit instead of explicitly 
   using 0.
+* The releases page has been redesigned.
+* Many bug fixes and updates.
 
 Changes in 1.2.1:
 

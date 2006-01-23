@@ -23,15 +23,21 @@
     </div>
 
     <tr py:def="releaseTableRow(releaseName, release, isOwner, isFirst, numReleasesInVersion)">
+        <?python files = release.getFiles() ?>
         <td py:if="isFirst" rowspan="${numReleasesInVersion}">
-                ${releaseName}
+            ${release.getName()}<br />
+            <span style="color: #999">${releaseName}</span>
         </td>
-        <td class="relname">
+        <td>
                 <a href="release?id=${release.getId()}">${release.getArch()}</a>
         </td>
-        <div py:strip="True" py:if="isOwner and not release.getPublished()">
-        <td><a href="editRelease?releaseId=${release.getId()}" id="${release.getId()}Edit" class="option">Edit</a>
+        <td py:if="release.getPublished()">
+            <div py:strip="True" py:for="i, file in enumerate(files)">
+                <a href="${cfg.basePath}downloadImage/${file['fileId']}/${file['filename']}">${file['title'] and file['title'] or "Disc " + str(i+1)}</a> (${file['size']/1048576}&nbsp;MB)<br />
+            </div>
+            <span py:if="not files">N/A</span>
         </td>
+        <div py:strip="True" py:if="isOwner and not release.getPublished()">
         <td><a href="deleteRelease?releaseId=${release.getId()}" id="${release.getId()}Delete" class="option">Delete</a>
         </td>
         <td><a href="publish?releaseId=${release.getId()}" id="${release.getId()}Publish" class="option">Publish</a>
@@ -44,8 +50,11 @@
         <?python filteredReleases = [x for x in releases if x.getPublished() == wantPublished]?>
         <table border="0" cellspacing="0" cellpadding="0" class="releasestable">            <tr py:if="filteredReleases">
                 <th>Name</th>
-                <th>Architecture</th>
-                <th colspan="3" py:if="isOwner and not wantPublished">Options</th>
+                <th>Built For</th>
+                <th colspan="2" py:if="isOwner and not wantPublished">&nbsp;</th>
+                <div py:strip="True" py:if="wantPublished">
+                    <th>Downloads</th>
+                </div>
             </tr>
         <div py:strip="True" py:for="releaseName, releasesForVersion in releaseVersions.items()">
             <?python

@@ -38,7 +38,6 @@ import time
                 editOptionsStyle = "display: none;"
                 editOptionsDisabledStyle = "color: gray; font-style: italic;"
 
-            files = release.getFiles()
         ?>
         <div py:def="breadcrumb()" py:strip="True">
             <a href="$basePath">${project.getNameForDisplay()}</a>
@@ -99,8 +98,7 @@ import time
                 <div py:strip="True" py:if="files">
                 <ul id="downloads">
                     <li py:for="i, file in enumerate(files)">
-                        <a href="${cfg.basePath}downloadImage/${file['fileId']}/${file['filename']}">
-                            Download ${file['title'] and file['title'] or "Disc " + str(i+1)}</a> (${file['size']/1048576}M)
+                        <a href="${cfg.basePath}downloadImage/${file['fileId']}/${file['filename']}"> Download ${file['title'] and file['title'] or "Disc " + str(i+1)}</a> (${file['size']/1048576}&nbsp;MB)
                     </li>
                 </ul>
 

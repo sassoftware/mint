@@ -414,6 +414,7 @@ class ProjectHandler(WebHandler):
 
         try:
             trove, version, flavor = release.getTrove()
+            files = release.getFiles()
         except releases.TroveNotSet:
             self._redirect(self.basePath + "editRelease?releaseId=%d" % release.getId())
         else:
@@ -423,7 +424,8 @@ class ProjectHandler(WebHandler):
                 trove = trove, version = versions.ThawVersion(version),
                 flavor = deps.ThawDependencySet(flavor),
                 releaseId = id, projectId = self.project.getId(),
-                publishedReleases = publishedReleases)
+                publishedReleases = publishedReleases,
+                files = files)
 
     @ownerOnly
     @intFields(releaseId = None)
