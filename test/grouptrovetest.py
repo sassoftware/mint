@@ -242,8 +242,7 @@ class GroupTroveTest(MintRepositoryHelper):
         jobId = groupTrove.startCookJob("1#x86")
         job = client.getJob(jobId)
 
-        cookJob = group_trove.GroupTroveCook(client, client.getCfg(), job,
-                                             groupTrove.getId())
+        cookJob = group_trove.GroupTroveCook(client, client.getCfg(), job)
 
         # nasty hack. gencslist currently dumps to stderr...
         # fd's routed to /dev/null to clean up output
@@ -678,8 +677,7 @@ class GroupTroveTest(MintRepositoryHelper):
         except DuplicateJob:
             pass
 
-        cookJob = group_trove.GroupTroveCook(client, client.getCfg(), job,
-                                             groupTrove.id)
+        cookJob = group_trove.GroupTroveCook(client, client.getCfg(), job)
         trvName, trvVersion, trvFlavor = cookJob.write()
 
         # give some time for the commit action to run
@@ -695,8 +693,7 @@ class GroupTroveTest(MintRepositoryHelper):
         job = client.getJob(jobId)
         assert(job.getDataValue("arch") == "1#x86")
 
-        cookJob = group_trove.GroupTroveCook(client, client.getCfg(), job,
-                                             groupTrove.getId())
+        cookJob = group_trove.GroupTroveCook(client, client.getCfg(), job)
         trvName, trvVersion, trvFlavor = cookJob.write()
 
         # give some time for the commit action to run
@@ -743,8 +740,9 @@ class GroupTroveTest(MintRepositoryHelper):
         jobId = groupTrove.startCookJob("1#x86")
 
         job = client.getJob(jobId)
-        cookJob = group_trove.GroupTroveCook(client, client.getCfg(), job,
-                                             groupTrove.id)
+        cookJob = group_trove.GroupTroveCook(client, client.getCfg(), job)
+        import epdb
+        epdb.st()
         trvName, trvVersion, trvFlavor = cookJob.write()
 
         # give some time for the commit action to run
