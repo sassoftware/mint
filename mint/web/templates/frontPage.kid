@@ -22,18 +22,18 @@ from mint import searcher
     </head>
     <body>
         <div id="steps">
-            <span id="signin" py:if="not auth.authorized">
-                <?python
-                    from urllib import quote
-                    secureProtocol = 'http'
-                    if auth.authorized:
-                        loginAction = "logout"
-                    else:
-                        loginAction = "processLogin"
-                    if cfg.SSL:
-                        secureProtocol = "https"
-                ?>
-                <form method="post" action="${secureProtocol}://${cfg.secureHost}${cfg.basePath}processLogin">
+            <?python
+                from urllib import quote
+                secureProtocol = 'http'
+                if auth.authorized:
+                    loginAction = "logout"
+                else:
+                    loginAction = "processLogin"
+                if cfg.SSL:
+                    secureProtocol = "https"
+            ?>
+            <form method="post" action="${secureProtocol}://${cfg.secureHost}${cfg.basePath}processLogin">
+                <div id="signin" py:if="not auth.authorized">
                     <input type="hidden" name="to" value="${quote(toUrl)}" />
 
                     <div>Username:</div>
@@ -44,39 +44,39 @@ from mint import searcher
                         <input type="checkbox" name="remember_me" />
                         <u>Remember me</u> on this computer
                     </div>
-                    <input type="image" id="sign_in_button" src="${cfg.staticPath}apps/mint/images/sign_in_button.png" width="94" height="31" />
+                    <input alt="Sign In" type="image" id="sign_in_button" src="${cfg.staticPath}apps/mint/images/sign_in_button.png" />
 
                     <div style="border-top: 2px dotted gray;">
                         <p>Don't have an account?</p>
                         <p><a href="register">Set one up.</a></p>
                     </div>
-                </form>
-            </span>
+                </div>
+            </form>
             <span id="buildit">Find the stuff you need to make your own software appliance in three easy steps.</span>
             <span id="findit">Check out all the amazing software applications others have made.</span>
 
-            <img style="clear: left;" src="${cfg.staticPath}apps/mint/images/steps.png" />
+            <img style="clear: left;" src="${cfg.staticPath}apps/mint/images/steps.png" alt="three steps to use rBuilder Online" />
         </div>
 
         <div id="topten">
             <table style="width: 100%;">
                 <tr>
-                    <td><img src="${cfg.staticPath}apps/mint/images/rss.png" /><span class="topten_header">Most Popular</span>
+                    <td><img src="${cfg.staticPath}apps/mint/images/rss.png" alt="RSS" /><span class="topten_header">Most Popular</span>
                         <ol>
                             <li py:for="project in popularProjects">
                                 <a href="http://${cfg.projectSiteHost}${cfg.basePath}/project/${project[1]}/">${project[2]}</a>
                             </li>
                         </ol>
                     </td>
-                    <td><img src="${cfg.staticPath}apps/mint/images/rss.png" /><span class="topten_header">Most Active</span>
+                    <td><img src="${cfg.staticPath}apps/mint/images/rss.png" alt="RSS" /><span class="topten_header">Most Active</span>
                         <ol>
                             <li py:for="project in activeProjects">
                                 <a href="http://${cfg.projectSiteHost}${cfg.basePath}/project/${project[1]}/">${project[2]}</a>
                             </li>
                         </ol>
                     </td>
-                    <td><img src="${cfg.staticPath}apps/mint/images/rss.png" /><span class="topten_header">Recent Updates</span>
-                        <ol>
+                    <td><img src="${cfg.staticPath}apps/mint/images/rss.png" alt="RSS" /><span class="topten_header">Recent Updates</span>
+                        <ol py:if="releases">
 
                             <li py:for="release in releases">
                                 <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${release[1]}/release?id=${release[2].getId()}">${release[2].getTroveName()}=${release[2].getTroveVersion().trailingRevision().asString()} (${release[2].getArch()})</a>

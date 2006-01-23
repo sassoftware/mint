@@ -14,16 +14,6 @@ onload = "javascript:;"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'project.kid', 'library.kid'">
 
-    <td py:def="logo()" id="logo" >
-        <div>
-          <span id="rpath">
-            <a href="http://$SITE" title="rBuilder main site">
-                <img src="${cfg.staticPath}apps/mint/images/corplogo.gif" alt="rPath Logo" height="80" width="80" />
-            </a>
-          </span>
-        </div>
-    </td>
-
     <head py:match="item.tag == '{http://www.w3.org/1999/xhtml}head'" >
         <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=utf-8" />
         <meta name="KEYWORDS" content="rPath, rBuilder, rBuilder Online, rManager, rPath Linux, rPl, Conary, Software Appliance, Application image, Software as a Service, SaaS, Virtualization, virtualisation, open source, Linux," />
@@ -47,13 +37,13 @@ onload = "javascript:;"
         <div id="main">
             <a name="top" />
             <div id="top">
-                <img id="topgradleft" src="${cfg.staticPath}/apps/mint/images/topgrad_left.png" />
-                <img id="topgradright" src="${cfg.staticPath}/apps/mint/images/topgrad_right.png" />
+                <img id="topgradleft" src="${cfg.staticPath}/apps/mint/images/topgrad_left.png" alt="" />
+                <img id="topgradright" src="${cfg.staticPath}/apps/mint/images/topgrad_right.png" alt="" />
                 <table style="width: 95%;">
                     <tr>
                         <td style="width: 50%;">
-                            <img id="rpathLogo" src="http://www.rpath.com/conary-static/apps/mint/images/corplogo.gif" />
-                            <img id="logo" src="http://www.rpath.com/conary-static/apps/mint/images/prodlogo.gif" />
+                            <img id="rpathLogo" src="http://www.rpath.com/conary-static/apps/mint/images/corplogo.gif" alt="rPath Logo" />
+                            <img id="logo" src="http://www.rpath.com/conary-static/apps/mint/images/prodlogo.gif" alt="rBuilder Online Logo" />
                         </td>
                         <td id="topRight">
                             <div class="about">About rPath</div>
@@ -61,7 +51,7 @@ onload = "javascript:;"
                                 <tr>
                                     <td>I'm looking for a...</td>
                                     <td><input style="width: 100%;" type="text" /></td>
-                                    <td style="text-align: right;"><img src="${cfg.staticPath}/apps/mint/images/search.png" /></td>
+                                    <td style="text-align: right;"><img src="${cfg.staticPath}/apps/mint/images/search.png" alt="Search" /></td>
                                 </tr>
                                 <tr>
                                     <td></td>

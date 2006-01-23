@@ -125,14 +125,7 @@ div.releases_release {
 .date {
 	font-size:0.9091em; color:#99660A; font-weight:normal;
 }
-.edit {
-	font-size:0.9091em; font-weight:normal; padding-left:13px;
-	background:url(../images/A.gif) no-repeat left 60%;
-}
-.edit a:link, .edit a:active, .edit a:visited, .edit a:hover {
-	background-image:none;
-	padding-left:0px;
-}
+
 .help {
 	color:#666; font-size:100%; font-style:italic;
 }

@@ -129,7 +129,7 @@ span#findit {
     margin-right: 6px;
 }
 
-span#signin {
+div#signin {
     float: right;
     background: url(../images/sign_in.png);
     text-align: left;
@@ -196,6 +196,10 @@ div#topten table td {
     width: 33%;
 }
 
+div#topten ol {
+    padding-left: 33px;
+}
+
 span.topten_header {
     font-size: 14pt;
     color: #0c2577;
@@ -203,5 +207,3 @@ span.topten_header {
     padding-left: 4px;
     vertical-align: top;
 }
-
-
