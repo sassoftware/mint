@@ -254,7 +254,7 @@ def daemon(options, cfg):
 
     try:
         os.unlink(cfg.lockFile)
-    except IOError, OSError:
+    except (IOError, OSError):
         log.warning("unable to remove lockfile: %s", cfg.lockFile)
 
 class IsoGenConfig(ConfigFile):
