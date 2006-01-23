@@ -17,13 +17,16 @@ db.connect()
 cu = db.cursor()
 
 try:
-    # get a list of the latest version of each package
-    # comparing version strings isn't technically reliable, so we must use the
-    # latest timestamp to verify
-    cu.execute("""SELECT projectId, troveName, max(timestamp)
+    # get a list of the latest version of each package, excluding hidden and
+    # disabled projects. comparing version strings isn't technically reliable,
+    # so we must use the latest timestamp to verify
+    cu.execute("""SELECT Projects.projectId, troveName, max(timestamp)
                       FROM Commits
+                      LEFT JOIN Projects
+                          ON Commits.projectId=Projects.projectId
                       WHERE troveName NOT LIKE '%:%'
-                      GROUP BY projectId, troveName""")
+                      AND hidden=0 AND disabled=0
+                      GROUP BY Projects.projectId, troveName""")
 
     for projectId, troveName, maxTime in cu.fetchall():
         cu.execute("""SELECT version from Commits
