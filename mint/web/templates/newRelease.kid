@@ -2,7 +2,7 @@
 
 <?python
 from mint import releasetypes
-from mint.releasetypes import visibleImageTypes, typeNames
+from mint.releasetypes import typeNames
 title = "Create New Release"
 ?>
 
@@ -52,8 +52,8 @@ title = "Create New Release"
                         </tr>
                         <tr><td>Release Type:</td>
                             <td>
-                                <select id="imageTypes" name="imageTypes" multiple="multiple" py:attrs="{'size': len(visibleImageTypes) > 4 and 4 or len(visibleImageTypes)}">
-                                    <option py:for="key in visibleImageTypes" value="$key" py:content="typeNames[key]" py:attrs="{'selected': key in imageTypes and 'selected' or None}"/>
+                                <select id="imageTypes" name="imageTypes" multiple="multiple" py:attrs="{'size': len(self.cfg.visibleImageTypes) > 4 and 4 or len(self.cfg.visibleImageTypes)}">
+                                    <option py:for="key in self.cfg.visibleImageTypes" value="$key" py:content="typeNames[key]" py:attrs="{'selected': key in imageTypes and 'selected' or None}"/>
                                 </select><br/>
                                 <i>Hold down ctrl to select multple items.</i>
                             </td>

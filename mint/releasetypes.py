@@ -4,12 +4,25 @@
 # All Rights Reserved
 #
 
-TYPES = range(0, 9)
-BOOTABLE_IMAGE, INSTALLABLE_ISO, STUB_IMAGE, LIVE_CF_IMAGE, NETBOOT_IMAGE, GROUP_TROVE_COOK, LIVE_ISO, QEMU_IMAGE, VMWARE_IMAGE = TYPES
+import sys
 
+validImageTypes = {
+    'BOOTABLE_IMAGE'   : 0,
+    'INSTALLABLE_ISO'  : 1,
+    'STUB_IMAGE'       : 2,
+    'LIVE_CF_IMAGE'    : 3,
+    'NETBOOT_IMAGE'    : 4,
+    'GROUP_TROVE_COOK' : 5,
+    'LIVE_ISO'         : 6,
+    'QEMU_IMAGE'       : 7,
+    'VMWARE_IMAGE'     : 8
+    }
 
-#This array contains the imageTypes that are to be displayed on the release creation page
-visibleImageTypes = ( INSTALLABLE_ISO, ) # , QEMU_IMAGE, VMWARE_IMAGE )
+TYPES = validImageTypes.values()
+
+# add all the defined image types directly to the module so that the standard
+# approach of "releasetypes.IMAGE_TYPE" will result in the expected enum
+sys.modules[__name__].__dict__.update(validImageTypes)
 
 #BOOTABLE_IMAGE Should never get stored in the DB and therefore doesn't need a name
 typeNames = {
