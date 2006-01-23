@@ -76,7 +76,7 @@ from mint import searcher
                     <h3 class="header">
                         <a href="${cfg.newsRssFeed}">
                             <img style="border: none; vertical-align: middle; float: right;"
-                                 src="${cfg.staticPath}apps/mint/images/xml.gif" />
+                                 src="${cfg.staticPath}apps/mint/images/rss-inline.gif" />
                         </a>
                         Site Announcements
                     </h3>

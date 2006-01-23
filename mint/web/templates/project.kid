@@ -40,11 +40,11 @@
             projectUrl = project.getUrl()
         ?>
       <div py:if="isOwner or releaseList" class="palette" id="releases">
-        <h3 onclick="javascript:toggle_display('release_items');">
-            <img id="release_items_expander"
-                 src="${cfg.staticPath}/apps/mint/images/BUTTON_${display == 'block' and 'collapse' or 'expand'}.gif" class="noborder" />
-            Recent Releases
-        </h3>
+          <h3 onclick="javascript:toggle_display('release_items');">
+                  <img id="release_items_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_${display == 'block' and 'collapse' or 'expand'}.gif" class="noborder" />
+                  <a href="${basePath}rss"><img class="noborder" style="margin-right:10px; vertical-align: middle;" src="${cfg.staticPath}apps/mint/images/rss-inline.gif" /></a>
+                  Recent Releases
+          </h3>
         <div id="release_items" style="display: $display">
             <ul>
             <?python

@@ -62,20 +62,13 @@ from mint.mint import upstream
                 <p py:for="line in project.getDesc().splitlines()">
                     ${line}
                 </p>
-                <p py:if="not project.getDesc()">The project owner has not entered a description</p>
+                <p py:if="not project.getDesc()">The project owner has not entered a description.</p>
 
                 <hr />
                 <h4>What can I do with this project?</h4>
                 <ul>
                     <li py:if="isOwner">
                         <a href="${basePath}editProject">Edit project details</a>
-                    </li>
-                    <li py:if="releases">
-                        <a href="${basePath}rss">
-                            Subscribe to release news
-                                <img style="border: none; vertical-align: middle;"
-                                     src="${cfg.staticPath}apps/mint/images/xml.gif" />
-                        </a>
                     </li>
                     <li>
                         <a
