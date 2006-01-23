@@ -66,7 +66,8 @@ class SiteHandler(WebHandler):
         # FIXME: Corporate launch redirect hack.
         # take these lines out to remove corporate page redirect.
         #
-        if not self.cfg.siteHost in self.req.headers_in.get('referer', ''):
+        if not self.cfg.siteHost in self.req.headers_in.get('referer', '') and\
+           not self.cfg.projectSiteHost in self.req.headers_in.get('referer', ''):
             self._redirect(self.cfg.corpSite, temporary = True)
         #
         # end corporate launch redirect hack
