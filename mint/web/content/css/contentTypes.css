@@ -313,7 +313,7 @@ table.memberstable {
 	padding:0em 0em 0.5em 0.5em; margin:0em;
 }
 a.option {
-	border:1px #ccc solid; background-image:none;
+	border:1px #ccc solid; background-image:none; text-align: center;
 	display:block; padding:0.1em 0.25em; margin:-2px 0px 0px 0px;
 	font-size:0.9091em; text-transform:uppercase; font-weight:bold;
 }
@@ -335,10 +335,6 @@ table.releasestable {
         font-weight:normal;
         vertical-align:top; padding:6px 12px 6px 0px;
         border-top:1px #e6e6e6 solid;
-}
-
-.releasestable td.relname {
-        width: 100%;
 }
 
 /* DARBY DIFF LOGS TABLE */
