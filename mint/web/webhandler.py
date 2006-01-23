@@ -62,10 +62,6 @@ class WebHandler(object):
                               **values)
         if self.output == "html-strict":
             self.output = kid.HTMLSerializer(doctype='html')
-            self.output.empty_elements = self.output.empty_elements.union(set(('script', 'link')))
-        #elif self.output == "xhtml":
-            #self.output = kid.XHTMLSerializer()
-            #self.output.strip_whitespace = True
         return t.serialize(encoding = "utf-8", output = self.output)
 
     def _redirectHttp(self, location):
