@@ -50,7 +50,7 @@ onload = "javascript:;"
           </span>
           <span id="product">
             <a href="http://$SITE" title="rBuilder main site">
-                <img src="${cfg.staticPath}apps/mint/images/prodlogo.gif" alt="rBuilder Logo" height="80" width="218" />
+                <img src="${cfg.staticPath}apps/mint/images/prodlogo.gif" alt="rBuilder Logo" height="80" width="226" />
             </a>
           </span>
         </div>
