@@ -25,7 +25,8 @@
     <tr py:def="releaseTableRow(releaseName, release, isOwner, isFirst, numReleasesInVersion)">
         <?python files = release.getFiles() ?>
         <td py:if="isFirst" rowspan="${numReleasesInVersion}">
-                ${releaseName}
+            ${release.getName()}<br />
+            <span style="color: #999">${releaseName}</span>
         </td>
         <td>
                 <a href="release?id=${release.getId()}">${release.getArch()}</a>
