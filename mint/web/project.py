@@ -100,13 +100,19 @@ class ProjectHandler(WebHandler):
         # Group versions by name or default name (based on group trove).
         # FIXME: this is a hack until we get a better way to do release
         # management.
-        releaseVersions = {}
+        releasesByGroupTrove = {}
         for r in releases:
             k = r.getDefaultName()
-            releasesForVersion = releaseVersions.has_key(k) and releaseVersions[k] or []
-            releasesForVersion.append(r)
-            releasesForVersion.sort(key = lambda x: x.getArch())
-            releaseVersions[k] = releasesForVersion
+            releasesByVersion = releasesByGroupTrove.has_key(k) and releasesByGroupTrove[k] or []
+            releasesByVersion.append(r)
+            releasesByVersion.sort(key = lambda x: x.getArch())
+            releasesByGroupTrove[k] = releasesByVersion
+
+        # return a list of items in releasesByGroupTrove for web display
+        releaseVersions = sorted(releasesByGroupTrove.items(),\
+            key = lambda x: x[1],\
+            cmp = lambda x1, x2: cmp(x1.getChangedTime(), x2.getChangedTime()),\
+            reverse = True)
 
         return self._write("releases", releases = releases,
                 publishedReleases = publishedReleases,
