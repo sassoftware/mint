@@ -22,33 +22,42 @@
         <a href="#">Releases</a>
     </div>
 
-    <tr py:def="releaseTableRow(releaseName, release, isOwner, isFirst, numReleasesInVersion)">
-        <?python files = release.getFiles() ?>
-        <td py:if="isFirst" rowspan="${numReleasesInVersion}">
-            ${release.getName()}<br />
-            <span style="color: #999">${releaseName}</span>
-        </td>
-        <td>
-                <a href="release?id=${release.getId()}">${release.getArch()}</a>
-        </td>
-        <td py:if="release.getPublished()">
-            <div py:strip="True" py:for="i, file in enumerate(files)">
-                <a href="${cfg.basePath}downloadImage/${file['fileId']}/${file['filename']}">${file['title'] and file['title'] or "Disc " + str(i+1)}</a> (${file['size']/1048576}&nbsp;MB)<br />
+    <div py:strip="True" py:def="releaseTableRow(releaseName, release, isOwner, isFirst, numReleasesInVersion, defaultHidden, hiddenName)">
+        <?python
+            files = release.getFiles()
+            rowAttrs = defaultHidden and { 'name': hiddenName, 'style': 'display: none;' } or {}
+        ?>
+        <tr py:attrs="rowAttrs">
+            <td py:if="isFirst" rowspan="${numReleasesInVersion}">
+                ${release.getName()}<br />
+                <span style="color: #999">${releaseName}</span>
+            </td>
+            <td>
+                    <a href="release?id=${release.getId()}">${release.getArch()}</a>
+            </td>
+            <td py:if="release.getPublished()">
+                <div py:strip="True" py:for="i, file in enumerate(files)">
+                    <a href="${cfg.basePath}downloadImage/${file['fileId']}/${file['filename']}">${file['title'] and file['title'] or "Disc " + str(i+1)}</a> (${file['size']/1048576}&nbsp;MB)<br />
+                </div>
+                <span py:if="not files">N/A</span>
+            </td>
+            <div py:strip="True" py:if="isOwner and not release.getPublished()">
+            <td><a href="deleteRelease?releaseId=${release.getId()}" id="${release.getId()}Delete" class="option">Delete</a>
+            </td>
+            <td><a href="publish?releaseId=${release.getId()}" id="${release.getId()}Publish" class="option">Publish</a>
+            </td>
             </div>
-            <span py:if="not files">N/A</span>
-        </td>
-        <div py:strip="True" py:if="isOwner and not release.getPublished()">
-        <td><a href="deleteRelease?releaseId=${release.getId()}" id="${release.getId()}Delete" class="option">Delete</a>
-        </td>
-        <td><a href="publish?releaseId=${release.getId()}" id="${release.getId()}Publish" class="option">Publish</a>
-        </td>
-        </div>
-    </tr>
+        </tr>
+    </div>
 
-
-     <div py:strip="True" py:def="releasesTable(releases, releaseVersions, isOwner, wantPublished)">
-        <?python filteredReleases = [x for x in releases if x.getPublished() == wantPublished]?>
-        <table border="0" cellspacing="0" cellpadding="0" class="releasestable">            <tr py:if="filteredReleases">
+     <div py:strip="True" py:def="releasesTable(releases, releaseVersions, isOwner, wantPublished, numShowByDefault)">
+        <?python
+            ithRelease = 0
+            filteredReleases = [x for x in releases if x.getPublished() == wantPublished]
+            hiddenName = 'older_release_' + (wantPublished and 'p' or 'u')
+        ?>
+        <table border="0" cellspacing="0" cellpadding="0" class="releasestable">
+            <tr py:if="filteredReleases">
                 <th>Name</th>
                 <th>Built For</th>
                 <th colspan="2" py:if="isOwner and not wantPublished">&nbsp;</th>
@@ -61,18 +70,22 @@
                 filteredReleasesForVersion = [ x for x in releasesForVersion if x.getPublished() == wantPublished ]
                 isFirst = True
                 lastReleaseName = ""
+                hideByDefault = (ithRelease >= numShowByDefault)
             ?>
             <div py:strip="True" py:if="filteredReleasesForVersion" rowspan="${len(filteredReleasesForVersion)}">
                 <div py:strip="True" py:for="release in filteredReleasesForVersion">
-                    ${releaseTableRow(releaseName, release, isOwner, (lastReleaseName != releaseName), len(filteredReleasesForVersion))}
+                    ${releaseTableRow(releaseName, release, isOwner, (lastReleaseName != releaseName), len(filteredReleasesForVersion), hideByDefault, hiddenName)}
                     <?python lastReleaseName = releaseName ?>
                 </div>
             </div>
+            <?python
+                if filteredReleasesForVersion:
+                    ithRelease += 1
+            ?>
         </div>
         </table>
-        <p py:if="not filteredReleases">This project
-            has no ${wantPublished and "published" or "unpublished"}
-            releases.</p>
+        <p py:if="not filteredReleases">This project has no ${wantPublished and "published" or "unpublished"} releases.</p>
+        <p py:if="ithRelease > numShowByDefault"><a name="${hiddenName}" onclick="javascript:toggle_display_by_name('${hiddenName}');" href="#">(show all ${wantPublished and "published" or "unpublished"} releases)</a></p>
         <p py:if="isOwner and wantPublished"><strong><a href="newRelease">Create a new release</a></strong></p>
     </div>
 
@@ -90,12 +103,12 @@
             <div class="pad">
                 <h2>${project.getNameForDisplay(maxWordLen = 50)}<br />Releases</h2>
                 <h3 py:if="isOwner">Published Releases</h3>
-                ${releasesTable(releases, releaseVersions, isOwner, True)}
+                ${releasesTable(releases, releaseVersions, isOwner, True, 5)}
             </div>
             <div class="pad">
                 <div py:if="isOwner">
                     <h3>Unpublished Releases</h3>
-                    ${releasesTable(releases, releaseVersions, isOwner, False)}
+                    ${releasesTable(releases, releaseVersions, isOwner, False, 5)}
                 </div>
             </div>
 
