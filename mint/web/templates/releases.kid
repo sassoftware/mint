@@ -56,7 +56,7 @@
                     <th>Downloads</th>
                 </div>
             </tr>
-        <div py:strip="True" py:for="releaseName, releasesForVersion in releaseVersions.items()">
+        <div py:strip="True" py:for="releaseName, releasesForVersion in releaseVersions">
             <?python
                 filteredReleasesForVersion = [ x for x in releasesForVersion if x.getPublished() == wantPublished ]
                 isFirst = True
