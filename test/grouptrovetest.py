@@ -741,8 +741,6 @@ class GroupTroveTest(MintRepositoryHelper):
 
         job = client.getJob(jobId)
         cookJob = group_trove.GroupTroveCook(client, client.getCfg(), job)
-        import epdb
-        epdb.st()
         trvName, trvVersion, trvFlavor = cookJob.write()
 
         # give some time for the commit action to run
