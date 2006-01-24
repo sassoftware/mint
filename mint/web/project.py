@@ -109,9 +109,9 @@ class ProjectHandler(WebHandler):
             releasesByGroupTrove[k] = releasesByVersion
 
         # return a list of items in releasesByGroupTrove for web display
-        releaseVersions = sorted(releasesByGroupTrove.items(),\
-            key = lambda x: x[1],\
-            cmp = lambda x1, x2: cmp(x1.getChangedTime(), x2.getChangedTime()),\
+        releaseVersions = sorted(releasesByGroupTrove.items(),
+            key = lambda x: x[1][0], # first item in the releasesByVersion
+            cmp = lambda x, y: cmp(x.getChangedTime(), y.getChangedTime()),
             reverse = True)
 
         return self._write("releases", releases = releases,
