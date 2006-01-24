@@ -107,7 +107,7 @@ def _makeEntry(groupCs, name, version, flavor, components):
     kernelSpec = "none"
     if name == 'kernel' or name == 'kernel:runtime':
         base, kernelVer = _handleKernelPackage(groupCs, name, version,
-                                               flavor, components)
+                                               flavor)
         kernelSpec = '='.join((base, kernelVer))
 
     if deps.DEP_CLASS_IS in flavor.members:
