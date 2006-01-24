@@ -80,10 +80,8 @@
         <td id="left" class="side">
             <div class="pad">
                 ${projectResourcesMenu()}
-                ${releasesMenu(publishedReleases, isOwner, display="none")}
-                ${commitsMenu(project.getCommits(), display="none")}
-                ${browseMenu(display='none')}
-                ${searchMenu(display='none')}
+                ${releasesMenu(publishedReleases, isOwner)}
+                ${commitsMenu(project.getCommits())}
             </div>
         </td>
         <td id="main">
@@ -101,7 +99,6 @@
 
         </td>
         <td id="right" class="projects">
-            ${projectsPane()}
             <div class="pad">
                 ${groupTroveBuilder()}
             </div>

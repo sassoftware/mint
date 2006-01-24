@@ -65,7 +65,7 @@ onload = "javascript:;"
                                         <td style="vertical-align: middle;">
                                             <input type="radio" name="type" value="Projects" checked="checked" /> Project
                                             <input type="radio" name="type" value="Packages" /> Package</td>
-                                        <td style="text-align: right;">Or you can <a href="projects">browse</a>.</td>
+                                        <td style="text-align: right;">Or you can <a href="http://${cfg.siteHost}${cfg.basePath}projects">browse</a>.</td>
                                     </tr>
                                 </table>
                             </form>

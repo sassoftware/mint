@@ -77,14 +77,14 @@ from mint import searcher
                     <td><img src="${cfg.staticPath}apps/mint/images/rss.png" alt="RSS" /><span class="topten_header">Most Popular</span>
                         <ol>
                             <li py:for="project in popularProjects">
-                                <a href="http://${cfg.projectSiteHost}${cfg.basePath}/project/${project[1]}/">${project[2]}</a>
+                                <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${project[1]}/">${project[2]}</a>
                             </li>
                         </ol>
                     </td>
                     <td><img src="${cfg.staticPath}apps/mint/images/rss.png" alt="RSS" /><span class="topten_header">Most Active</span>
                         <ol>
                             <li py:for="project in activeProjects">
-                                <a href="http://${cfg.projectSiteHost}${cfg.basePath}/project/${project[1]}/">${project[2]}</a>
+                                <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${project[1]}/">${project[2]}</a>
                             </li>
                         </ol>
                     </td>

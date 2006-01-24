@@ -52,10 +52,8 @@ from mint import userlevels
                       </form>
                     </div>
                 </div>
-                ${releasesMenu(project.getReleases(), isOwner, display="none")}
-                ${commitsMenu(project.getCommits(), display="none")}
-                ${browseMenu(display='none')}
-                ${searchMenu(display='none')}
+                ${releasesMenu(project.getReleases(), isOwner)}
+                ${commitsMenu(project.getCommits())}
             </div>
 
         </td>
@@ -139,7 +137,6 @@ from mint import userlevels
             </div>
         </td>
         <td id="right" class="projects">
-            ${projectsPane()}
             <div class="pad">
                 ${groupTroveBuilder()}
             </div>
