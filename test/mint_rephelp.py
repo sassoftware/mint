@@ -162,7 +162,7 @@ class MintApacheServer(rephelp.ApacheServer):
         cfg.configured = True
         cfg.debugMode = True
         cfg.sendNotificationEmails = False
-        cfg.commitAction = """%s/scripts/commitaction --username mintauth --password mintadmin --repmap '%%(repMap)s' --build-label %%(buildLabel)s --module \'%s/mint/rbuilderaction.py --user %%%%(user)s --url http://mintauth:mintpass@%s:%d/xmlrpc-private/'""" % (conaryPath, mintPath, 'test.rpath.local', self.port)
+        cfg.commitAction = """%s/scripts/commitaction --username mintauth --password mintpass --repmap '%%(repMap)s' --build-label %%(buildLabel)s --module \'%s/mint/rbuilderaction.py --user %%%%(user)s --url http://mintauth:mintpass@%s:%d/xmlrpc-private/'""" % (conaryPath, mintPath, 'test.rpath.local', self.port)
         cfg.postCfg()
         self.mintCfg = cfg
 
