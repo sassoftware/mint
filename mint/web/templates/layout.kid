@@ -41,8 +41,12 @@ onload = "javascript:;"
                 <table style="width: 95%;">
                     <tr>
                         <td style="width: 50%;">
-                            <img id="rpathLogo" src="${cfg.staticPath}/apps/mint/images/corplogo.png" width="78" height="94" alt="rPath Logo" />
-                            <img id="logo" src="${cfg.staticPath}/apps/mint/images/prodlogo.gif" alt="rBuilder Online Logo" />
+                            <div id="corpLogo">
+                                <img src="${cfg.staticPath}/apps/mint/images/corplogo.png" width="78" height="94" alt="rPath Logo" />
+                            </div>
+                            <div id="prodLogo">
+                                <img src="${cfg.staticPath}/apps/mint/images/prodlogo.gif" alt="rBuilder Online Logo" />
+                            </div>
                         </td>
                         <td id="topRight">
                             <div class="about"><a href="http://www.rpath.com/corp/about/">About rPath</a></div>
