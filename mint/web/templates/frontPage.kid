@@ -32,7 +32,7 @@ from mint import searcher
                 if cfg.SSL:
                     secureProtocol = "https"
             ?>
-            <form method="post" action="${secureProtocol}://${cfg.secureHost}${cfg.basePath}processLogin">
+            <form py:if="not auth.authorized" method="post" action="${secureProtocol}://${cfg.secureHost}${cfg.basePath}processLogin">
                 <div id="signin" py:if="not auth.authorized">
                     <input type="hidden" name="to" value="${quote(toUrl)}" />
 
@@ -54,6 +54,10 @@ from mint import searcher
                     </div>
                 </div>
             </form>
+            <div id="signedIn" py:if="auth.authorized">
+                You are signed in as ${auth.username}.
+                <p><a href="${cfg.siteHost}${cfg.basePath}logout">Sign Out</a></p>
+            </div>
             <span id="buildit">Find the stuff you need to make your own software appliance in three easy steps.</span>
             <span id="findit">Check out all the amazing software applications others have made.</span>
 

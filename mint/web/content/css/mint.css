@@ -204,6 +204,14 @@ div#signin div#noAccount {
     margin-top: 10px;
 }
 
+div#signedIn {
+    float: right;
+    width: 179px;
+    left: 726px;
+    height: 281px;
+    font-weight: bold;
+}
+
 /* footer */
 
 div#footer {
