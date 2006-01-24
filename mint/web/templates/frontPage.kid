@@ -44,7 +44,9 @@ from mint import searcher
                         <input type="checkbox" name="remember_me" value="1" />
                         <u>Remember me</u> on this computer
                     </div>
-                    <input alt="Sign In" type="image" id="sign_in_button" src="${cfg.staticPath}apps/mint/images/sign_in_button.png" />
+                    <button id="signInSubmit" type="submit">
+                        <img alt="Sign In" src="${cfg.staticPath}apps/mint/images/sign_in_button.png" />
+                    </button>
 
                     <div id="noAccount">
                         <p><strong>Don't have an account?</strong></p>

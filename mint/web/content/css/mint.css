@@ -123,9 +123,13 @@ div#top td#topRight table.search {
 button#searchSubmit {
     width: 104px;
     height: 31px;
+}
+
+button {
     border: none;
-    background: inherit;
+    background: none;
     padding: 0;
+    cursor: pointer;
 }
 
 div#steps {
@@ -185,7 +189,7 @@ div#signin {
     margin-bottom: 17px;
 }
 
-img#sign_in_button {
+button#signInSubmit {
     padding: 10px 0px 10px 0px;
 }
 
