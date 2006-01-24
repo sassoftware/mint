@@ -50,7 +50,7 @@ onload = "javascript:;"
                                 <table style="width: 100%;" class="search">
                                     <tr>
                                         <td>I'm looking for a...</td>
-                                        <td><input style="width: 100%;" type="text" /></td>
+                                        <td><input style="width: 100%;" type="text" name="search" /></td>
                                         <td style="text-align: right;">
                                             <button id="searchSubmit" type="submit"><img src="${cfg.staticPath}/apps/mint/images/search.png" alt="Search" /></button>
                                         </td>

@@ -24,9 +24,6 @@
             else:
                 columns = ('Package Name', 'Version', 'Project')
     ?>
-    <div py:def="breadcrumb()" py:strip="True">
-        <a href="#">Search Results</a>
-    </div>
 
     <head>
         <title>${formatTitle('Search Results')}</title>
@@ -61,29 +58,14 @@
             ?>
             ${resultRow(formattedresults)}
         </div>
-
-        <td id="left" class="side">
-            <div class="pad">
-                ${browseMenu()}
-                ${searchMenu(searchType)}
-            </div>
-        </td>
-        <td id="main">
-            <div class="pad">
-                <h2>search results: ${searchType}</h2>
-                ${navigation("search?type=%s;search=%s;modified=%d"%(searchType, terms, modified), terms, count, limit, offset)}
-                <table cellspacing="0" cellpadding="0" class="results">
-                    ${columnTitles(columns)}
-                    ${searchResults(results)}
-                </table>
-                ${navigation("search?type=%s;search=%s;modified=%d"%(searchType, terms, modified), terms, count, limit, offset, True)}
-            </div>
-        </td>
-        <td id="right" class="projects">
-            ${projectsPane()}
-            <div class="pad">
-                ${groupTroveBuilder(searchType=='Packages' and 'block' or 'none')}
-            </div>
-        </td>
+        <div id="layout">
+            <h2>Search Results: ${searchType}</h2>
+            ${navigation("search?type=%s;search=%s;modified=%d"%(searchType, terms, modified), terms, count, limit, offset)}
+            <table cellspacing="0" cellpadding="0" class="results">
+                ${columnTitles(columns)}
+                ${searchResults(results)}
+            </table>
+            ${navigation("search?type=%s;search=%s;modified=%d"%(searchType, terms, modified), terms, count, limit, offset, True)}
+        </div>
     </body>
 </html>

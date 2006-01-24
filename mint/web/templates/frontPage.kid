@@ -41,7 +41,7 @@ from mint import searcher
                     <div style="padding-top: 8px;">Password:</div>
                     <div><input type="password" name="password" /></div>
                     <div style="padding-top: 8px;">
-                        <input type="checkbox" name="remember_me" />
+                        <input type="checkbox" name="remember_me" value="1" />
                         <u>Remember me</u> on this computer
                     </div>
                     <input alt="Sign In" type="image" id="sign_in_button" src="${cfg.staticPath}apps/mint/images/sign_in_button.png" />
