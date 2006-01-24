@@ -13,48 +13,6 @@ onload = "javascript:;"
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'project.kid', 'library.kid'">
-
-    <div py:def="breadcrumb()" class="pad" py:strip="True">
-    </div>
-
-    <div py:def="topnav()" py:strip="True">
-        <td id="topnav">
-            <div class="pad">
-                <a href="http://$SITE">${cfg.productName}</a> |
-                <a href="${cfg.corpSite}">About rPath</a> |
-                <a href="http://${SITE}help?page=feedback"><b style="color: red;">Need Help/Have Feedback?</b></a>
-                <span py:if="cfg.debugMode">
-                    | <span style="color:red;">DEBUG MODE</span>
-                </span>
-            </div>
-        </td>
-    </div>
-
-
-    <div py:def="rPathProductsMenu" id="products" class="palette" py:if="False">
-        <h3>rPath products</h3>
-        <ul>
-            <li><a href="#">Product 1</a></li>
-            <li><a href="#">Product 2</a></li>
-            <li>Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Cras erat. Curabitur tempus nulla sit amet justo. Morbi quis tellus sed turpis bibendum egestas. Phasellus nonummy!</li>
-        </ul>
-    </div>
-
-    <td py:def="logo()" id="logo" >
-        <div>
-          <span id="rpath">
-            <a href="http://$SITE" title="rBuilder main site">
-                <img src="${cfg.staticPath}apps/mint/images/corplogo.gif" alt="rPath Logo" height="80" width="80" />
-            </a>
-          </span>
-          <span id="product">
-            <a href="http://$SITE" title="rBuilder main site">
-                <img src="${cfg.staticPath}apps/mint/images/prodlogo.gif" alt="rBuilder Logo" height="80" width="226" />
-            </a>
-          </span>
-        </div>
-    </td>
-
     <head py:match="item.tag == '{http://www.w3.org/1999/xhtml}head'" >
         <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=utf-8" />
         <meta name="KEYWORDS" content="rPath, rBuilder, rBuilder Online, rManager, rPath Linux, rPl, Conary, Software Appliance, Application image, Software as a Service, SaaS, Virtualization, virtualisation, open source, Linux," />
@@ -64,57 +22,69 @@ onload = "javascript:;"
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/generic.js" />
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/library.js" />
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/xmlrpc.js" />
-        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/basic.css" />
-        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/structure.css" />
-        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/user.css" />
-        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/topNav.css" />
-        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/log.css" />
-        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/contentTypes.css" />
         <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/mint.css" />
+        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/search.css" />
+        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/contentTypes.css" />
 
         <link rel="shortcut icon" href="http://www.rpath.com/favicon.ico" />
         <link rel="icon" href="http://www.rpath.com/favicon.ico" />
         <div py:replace="item[:]"/>
     </head>
+
     <body py:match="item.tag == '{http://www.w3.org/1999/xhtml}body'"
           py:attrs="item.attrib">
-
-        <div id="top" style="text-align: center;">
-            <div class="shadowLeft"><div class="shadowRight">
-                <div class="surfaceLeft" style="text-align: left;"><div class="surfaceRight">
-                    ${userActions()}
-                </div></div>
-            </div></div>
-        </div>
-        <div id="middle" style="text-align: center;">
-            <div id="crumb">
-                <div class="pad">
-                    You are here: <a href="http://$SITE">${cfg.productName}</a>
-                    ${breadcrumb()}
-                </div>
+        <div id="main">
+            <a name="top" />
+            <div id="top">
+                <img id="topgradleft" src="${cfg.staticPath}/apps/mint/images/topgrad_left.png" alt="" />
+                <img id="topgradright" src="${cfg.staticPath}/apps/mint/images/topgrad_right.png" alt="" />
+                <table style="width: 95%;">
+                    <tr>
+                        <td style="width: 50%;">
+                            <img id="rpathLogo" src="${cfg.staticPath}/apps/mint/images/corplogo.png" width="78" height="94" alt="rPath Logo" />
+                            <img id="logo" src="${cfg.staticPath}/apps/mint/images/prodlogo.gif" alt="rBuilder Online Logo" />
+                        </td>
+                        <td id="topRight">
+                            <div class="about"><a href="http://www.rpath.com/corp/about/">About rPath</a></div>
+                            <form action="http://${cfg.siteHost}${cfg.basePath}search" method="get" id="searchForm">
+                                <table style="width: 100%;" class="search">
+                                    <tr>
+                                        <td>I'm looking for a...</td>
+                                        <td><input style="width: 100%;" type="text" /></td>
+                                        <td style="text-align: right;">
+                                            <button id="searchSubmit" type="submit"><img src="${cfg.staticPath}/apps/mint/images/search.png" alt="Search" /></button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td></td>
+                                        <td style="vertical-align: middle;">
+                                            <input type="radio" name="type" value="Projects" checked="checked" /> Project
+                                            <input type="radio" name="type" value="Packages" /> Package</td>
+                                        <td style="text-align: right;">Or you can <a href="projects">browse</a>.</td>
+                                    </tr>
+                                </table>
+                            </form>
+                        </td>
+                    </tr>
+                </table>
             </div>
-        </div>
-        <div id="bottom" style="text-align: center;">
-            <div class="shadowLeft"><div class="shadowRight">
-                <div class="surfaceLeft" style="text-align: left;"><div class="surfaceRight">
-                    <table border="0" cellspacing="0" cellpadding="0" summary="layout" width="100%">
-                        <tr>
-                            <td id="main" class="spanleft" py:replace="item[:]" />
-                        </tr>
-                    </table>
-                </div></div>
-            </div></div>
-        </div>
-        <div id="foot" style="text-align: center;">
-            <div id="copy">
-                <div class="pad" style="text-align: center;">
-                    <span id="botnav">
-                        ${legal('http://%slegal?page=legal' % SITE, 'Legal')}
-                    </span>
 
-                    <span style="float: left;">Copyright &#169; 2005-2006 rPath, Inc. </span>
+            <div class="layout" py:replace="item[:]" />
 
-                    <span>version ${constants.mintVersion}</span>
+            <div id="footer">
+                <div>
+                    <span id="topOfPage"><a href="#top">Top of Page</a></span>
+                    <ul class="footerLinks">
+                        <li><a href="/corp/about/">About rPath</a></li>
+                        <li><a href="/news/">Site Announcements</a></li>
+                        <li><a href="/legal/">Legal</a></li>
+                        <li><a href="/contact/">Contact Us</a></li>
+                        <li><a href="/help/">Help</a></li>
+                    </ul>
+                </div>
+                <div id="bottomText">
+                    <span id="copyright">Copyright &copy; 2005-2006 rPath. All Rights Reserved.</span>
+                    <span id="tagline">rPath. The Software Appliance Company.</span>
                 </div>
             </div>
         </div>

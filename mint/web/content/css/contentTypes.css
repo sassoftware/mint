@@ -1,56 +1,34 @@
-/* COLUMN STYLES */
-.plain {
-	font-size:0.6967em;
-}
-.plain h2, .plain h3, .plain h4 {
-	color:#000;
-}
-.plain button {
-	font-size:0.9091em;
-}
-.plain .palette button {
-	font-size:1em;
-}
-
 .side {
-	font-size:0.6333em;
-}
-
-.projects {
-	color:#666; font-size:0.6967em;
-	background:url(../images/projects_border.gif) repeat-y;
-}
-.projects h2, .projects h3, .projects h4 {
-	color:#FF7001;
-}
-.projects ul li {
-	padding:0em 0em 0.75em 0.75em;
+    font-size: 10pt;
+    padding-right: 10px;
 }
 
 /* SIDE COLUMN CONTENT STYLES */
 .palette {
-	border-bottom:1px #ddd solid;
-	margin-bottom:12px;
+    border-bottom:1px #ddd solid;
+    margin-bottom:12px;
+    background: url(../images/box_bg.png);
+    width: 225px;
 }
-.plain .palette {
-	font-size:0.9091em;
-}
-.palette h3 {
-	color:#fff; background-color:#999;
-	border:2px solid;
-        border-color: #b0b0b0 #808080 #808080 #b0b0b0;
+.palette div.boxHeader {
+	color: white;
+        background: url(../images/box_head_blue.png);
         padding:4px 11px 6px 11px;
+        margin-bottom: 0px;
+        font-size: 120%;
+        font-weight: bold;
+        height: 21px;
+        width: 203px;
 }
-div.palette h3 img {
-        float: right;
-}
+
 .palette ul {
-	border:1px #dadada solid;
-	background-color:#e6e6e6; border-width:0px 1px 0px 1px;
-	padding:0px 0px 4px 0px; font-size:110%;
+    border:1px #dadada solid;
+    border-width:0px 1px 0px 1px;
+    padding:0px 0px 4px 0px; font-size:110%;
+    margin: 0px;
+    list-style-type: none;
 }
 .palette li {
-	border-top:1px #dadada solid; background-position:0 0.85em;
 	padding:4px 0px 4px 11px; margin:0px 11px 0px 11px;
 }
 .palette ul li:first-child {
@@ -147,14 +125,7 @@ div.releases_release {
 .date {
 	font-size:0.9091em; color:#99660A; font-weight:normal;
 }
-.edit {
-	font-size:0.9091em; font-weight:normal; padding-left:13px;
-	background:url(../images/A.gif) no-repeat left 60%;
-}
-.edit a:link, .edit a:active, .edit a:visited, .edit a:hover {
-	background-image:none;
-	padding-left:0px;
-}
+
 .help {
 	color:#666; font-size:100%; font-style:italic;
 }
@@ -313,7 +284,7 @@ table.memberstable {
 	padding:0em 0em 0.5em 0.5em; margin:0em;
 }
 a.option {
-	border:1px #ccc solid; background-image:none; text-align: center;
+	border:1px #ccc solid; background-image:none;
 	display:block; padding:0.1em 0.25em; margin:-2px 0px 0px 0px;
 	font-size:0.9091em; text-transform:uppercase; font-weight:bold;
 }
@@ -337,56 +308,24 @@ table.releasestable {
         border-top:1px #e6e6e6 solid;
 }
 
-/* DARBY DIFF LOGS TABLE */
-
-.diffs td {
-	padding:4px;
-	border-bottom:1px #e6e6e6 solid;
-}
-.diffs tr {
-	vertical-align:top;
-}
-td.diffNavClass {
-	white-space:nowrap;
-}
-.diffUnchangedLineNum {
-	background-color:#E6E6E6;
-}
-.diffUnchangedContent {
-	background:#EEEEEE;
-}
-.diffOldLineNum {
-	background-color:#ffc;
-	color:#c00;
-}
-.diffNewLineNum {
-	background-color:#efe;
-	color:#090;
-}
-.diffOldEditedContent {
-	background-color:#ffc;
-}
-.diffNewEditedContent {
-	background-color:#efe;
-}
-.diffOldContents {
-	color:#c00;
-}
-.diffNewContents {
-	color:#090;
-}
-.diffOldChgContents {
-	color:#c00;
-}
-.diffNewChgContents {
-	color:#090;
+.releasestable td.relname {
+        width: 100%;
 }
 
-/* DARBY HELP */
+table.releasestable {
+        padding:0px; margin:0px; margin-bottom:8px; width:100%;
+}
 
-a.helpbutton {
-	background:none;
-	position:relative;
-	bottom:-1px;
-	padding:3px 15px 4px 3px;
+.releasestable th {
+        font-weight:bold; color:#333; white-space:normal;
+        padding:1em 2em 0.5em 0.0em; margin:0em 0em 0em 0em;
+}
+.releasestable td {
+        font-weight:normal;
+        vertical-align:top; padding:6px 12px 6px 0px;
+        border-top:1px #e6e6e6 solid;
+}
+
+.releasestable td.relname {
+        width: 100%;
 }

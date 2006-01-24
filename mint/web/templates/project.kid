@@ -21,7 +21,7 @@
             isOwner = userLevel == userlevels.OWNER or auth.admin
             isDeveloper = userLevel in userlevels.WRITERS or auth.admin
         ?>
-        <h3>Project Resources</h3>
+        <div class="boxHeader">Project Resources</div>
         <ul>
             <li><a href="$projectUrl"><strong py:strip="lastchunk != ''">Project Home</strong></a></li>
             <li><a href="${projectUrl}releases"><strong py:strip="lastchunk not in ('release', 'releases', 'newRelease', 'editRelease')">Releases</strong></a></li>
@@ -74,10 +74,10 @@
 
     <div py:def="commitsMenu(commits, display='block')" py:strip="True">
       <div py:if="commits" class="palette" id="commits">
-        <h3 onclick="javascript:toggle_display('commit_items');">
+        <div class="boxHeader" onclick="javascript:toggle_display('commit_items');">
             <img id="commit_items_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_${display == 'block' and 'collapse' or 'expand'}.gif" class="noborder" />
             Recent Commits
-        </h3>
+        </div>
         <div id="commit_items" style="display: $display">
           <ul>
             <li class="release" py:for="commit in commits">

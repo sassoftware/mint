@@ -1,87 +1,42 @@
-/* Mint-specific rules */
+/* BASIC STYLES */
 
-/* TOP */
-#top .shadowRight {
-    margin:0px; padding:1px 0px 1px 0px;
-    background:url(../images/top_right_shadow.gif) top right no-repeat;
+body {
+    font-family: sans-serif;
 }
-#top .surfaceLeft {
-    margin:0px 1px 0px 1px; padding:0px;
-    background:#e6e6e6 url(../images/top_left.jpg) top left no-repeat;
+
+a img {
+    border: none;
 }
-td#user {
-    width:24%; min-width:180px; font-size:0.6333em;
-    background:url(../images/user_border.gif) no-repeat;
+
+div#main {
+    margin-left: auto;
+    margin-right: auto;
+    width: 955px;
 }
-#crumb {
-    position:relative; min-width:744px; /* width:85%; */
-    color:#fff; font-size:0.6333em;
+
+table {
+    font-size:105%;
+    width:100%;
+}
+td, th {
+    vertical-align:top;
     text-align:left;
 }
-#crumb .pad {
-    padding:8px 12px 8px 12px; margin:0px;
-}
-#crumb a {
-    color:#fff; font-size:120%; font-weight:bold;
-    padding:0px 0px 0px 6px;
-    background:url(../images/A_crumb.gif) no-repeat left 50%;
-}
-#main .pad {
-    margin:0px; padding:0px 18px 12px 18px;
+th {
+    white-space:nowrap;
 }
 
-
-/* BODY */
-
-body#legal {
-    margin: 0em 2em 0em 2em;
+div.layout {
+    width: 930px;
+    float: left;
+    padding-left: 10px;
+    padding-right: 10px;
 }
 
-body#legal p, body#legal li {
-    font-size: 80%;
-    color: rgb(217, 221, 232);
-    text-align: justify;
-}
-
-body#legal li {
-    list-style-type: circle;
-    margin-left: 2em;
-}
-
-body#legal a {
-    color: white;
-    background-image: none;
-    padding-right: 0px;
-}
-
-body#legal h2, body#legal h3 {
-    color: white;
-}
-
-.disabledInput {
-    color: gray;
-}
-
-.disabledOption {
-    color: gray;
-    text-decoration: line-through;
-}
-
-.hiddenOption {
-    color: #FF930B;
-    background-color: #6D7CAD;
-    text-decoration: line-through;
-}
-
-/* rss button */
-a.rssButton {
-    background-image: none;
-    padding-left: 5px;
-}
-
-a.rssButton img {
-    vertical-align: middle;
-    border: none;
+div.layout#help {
+    width: 600px;
+    margin-right: 25%;
+    margin-left: 15%;
 }
 
 p.error {
@@ -89,147 +44,245 @@ p.error {
         font-weight: bold;
 }
 p.errormessage {
-        color: red;
-        margin-left: 1em;
+    color: red;
+    margin-left: 1em;
 }
 
-p.message {
-        color: blue;
-        margin-left: 1em;
+div.side#left {
+    float: left;
 }
 
-div.newsItem {
-    border-bottom: 1px solid #dddddd;
-    padding-bottom: 0.5em;
-    margin-bottom: 0.5em;
-}
-
-a.newsContinued {
-    float: right;
-}
-span.newsTitle {
-    color:#99660A;
-    font-weight: normal;
-}
-em.resign {
-    color: #99660A;
-}
-
-code {
-        margin-left: 1em;
-}
-
-.troveallversions li {
-        background: none;
-}
-
-#search input {
-        background-color: white;
-}
-
-#botnav {
+div.side#right {
     float: right;
 }
 
-#botnav a {
-    color: #d9dde8;
-    margin-right: 12px;
+/* COMMON LAYOUT ITEMS */
+
+/* top header */
+div#top {
+    text-align: left;
+    top: 0px;
+    padding-top: 0px;
+    margin-top: -8px;
+    margin-bottom: 20px;
+    height: 112px;
+    width: 955px;
+    background: url(../images/topgrad.png);
 }
 
-#top .surfaceLeft {
-    background: #e6e6e6 url(../images/top_left.gif) top left no-repeat;
+div#top img#logo {
+    margin-top: 6px;
+    vertical-align: top;
+    padding-left: 16px;
+    margin-left: 12px;
+    border-left: 2px dotted #aaaaaa;
 }
 
-#crumb {
-    background: none;
-    color: white;
-    border: none;
+div#top img#topgradleft {
+    float: left;
 }
 
-table.mainformhorizontal select {
-    width: 80%;
+div#top img#topgradright {
+    float: right;
 }
 
-table#tasks {
-    padding: 0.25em;
-    margin-bottom: 1em;
+div#top td#topRight {
+    width: 50%;
+    text-align: right;
+    vertical-align: top;
+    color: gray;
 }
 
-table#tasks td {
-    padding: 0em;
-    margin: 0.1em;
-    width: 48%;
+div#top td#topRight div {
+    padding: 6px;
 }
 
-table#tasks td#spacer {
-    width: 4%;
+div#top td#topRight div.about {
+    border-bottom: 2px dotted #aaaaaa;
+    font-size: 10pt;
 }
 
-table#tasks td p {
-    padding: 0.5em;
-}
-
-td.tasksBlock:hover {
-    background: #dfdfdf;
-    cursor: pointer;
-}
-
-td.tasksBlock{
-    background: #efefef;
-    padding-left: 1em;
-}
-
-td.tasksBlock h3 {
-    font-size: 150%;
-    padding: 0.25em;
-
-    color: #FF930B;
-}
-
-table#releaseData {
-    width: 100%;
-}
-
-table#releaseData td:first-child {
-    width: 25%;
-}
-
-table#releaseData input.text {
-    width: 100%;
-    background-color:#eee;
-}
-
-#main h4.helpHeader {
-    color: #bf6e08;
+div#top td#topRight div.about a {
     font-weight: bold;
 }
 
-div.helpBlock {
-    border: 2px solid #eeeeee;
-    background: #efefef;
-    padding: 0.5em;
+div#top td#topRight div.about a:link {
+    color: #aaaaaa;
 }
 
-div.helpBlock pre, div.helpBlock.tt {
-    color: #000055;
+div#top td#topRight div.about a:visited {
+    color: #bbbbbb;
 }
 
-div.helpBlock pre {
-    margin-left: 2em;
-}
-
-div.palette#groupbuilder table tr:first-child {
+div#top td#topRight table.search {
+    margin-top: 8px;
+    font-size: 10pt;
     color: black;
-    font-weight: bold;
 }
 
-table#groupTroveItems > tr:first-child {
-    font-size: 110%;
-    font-weight: bold;
+button#searchSubmit {
+    width: 104px;
+    height: 31px;
+    border: none;
+    background: inherit;
+    padding: 0;
+}
+
+div#steps {
+    top: 130px;
+    width: 955px;
+}
+
+div#threeEasySteps {
+    clear: left;
+    padding-top: 12px;
+}
+
+img#getStarted {
+    float: right;
+    margin-right: 46px;
+}
+
+div#stepsText {
+    padding: 8px 0px 24px 0px;
+}
+
+span#buildit {
+    background: url(../images/build_it.png);
+    text-align: left;
+    width: 328px;
+    height: 81px;
+    float: left;
+    padding-top: 48px;
+    padding-left: 24px;
+    margin-right: 6px;
+}
+
+span#findit {
+    float: left;
+    background: url(../images/find_it.png);
+    text-align: left;
+    width: 326px;
+    height: 59px;
+    padding-top: 48px;
+    padding-left: 24px;
+    margin-left: 6px;
+    margin-right: 6px;
+}
+
+div#signin {
+    float: right;
+    background: url(../images/sign_in.png);
+    text-align: left;
+    left: 726px;
+    width: 179px;
+    height: 281px;
+    padding-top: 64px;
+    padding-left: 24px;
+    padding-right: 24px;
+    font-size: 10pt;
+    margin-left: 3px;
+    margin-bottom: 17px;
+}
+
+img#sign_in_button {
+    padding: 10px 0px 10px 0px;
+}
+
+div#signin div#noAccount {
+    border-top: 2px dotted gray;
+    margin-top: 10px;
+}
+
+/* footer */
+
+div#footer {
+    background: #909090 url(../images/footer_bg.png);
     color: white;
-    background-color: rgb(153, 153, 153);
+    text-align: left;
+    width: 942px;
+    height: 67px;
+    bottom: 10px;
+    padding: 4px 8px 12px 4px;
+    font-size: 10pt;
+    float: left;
 }
 
-table#groupTroveItems > tr:first-child td {
-    padding: 0.5em;
+div#footer a {
+    text-decoration: none;
+    font-weight: bold;
+}
+
+div#footer a:link {
+    color: white;
+}
+
+div#footer a:visited {
+    color: #dddddd;
+}
+
+ul.footerLinks {
+    padding-left: 0;
+    margin-left: 0;
+}
+
+ul.footerLinks li {
+    border-right: 2px dotted #c4c4c4;
+    display: inline;
+    padding: 8px 10px 8px 10px;
+}
+
+span#topOfPage {
+    padding-right: 6px;
+    float: right;
+}
+
+/* very bottom of the page */
+
+div#bottomText {
+    border-top: 1px solid #c4c4c4; padding: 6px;
+}
+
+span#copyright {
+    float: right;
+    font-size: 90%;
+}
+
+span#tagline {
+    padding-left: 4px;
+    font-size: 90%;
+}
+
+/* top ten list */
+
+div#topten {
+    float: left;
+
+    background: url(../images/top_ten_bg.png);
+    width: 851px;
+    height: 221px;
+
+    padding: 30px 52px 30px 52px;
+    margin-bottom: 17px;
+}
+
+div#topten table td {
+    width: 33%;
+}
+
+div#topten ol {
+    padding-left: 33px;
+}
+
+div#topten ol li {
+    padding-bottom: 2px;
+    font-size: 90%;
+}
+
+span.topten_header {
+    font-size: 14pt;
+    color: #0c2577;
+    font-weight: bold;
+    padding-left: 4px;
+    vertical-align: top;
 }
