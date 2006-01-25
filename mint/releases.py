@@ -44,7 +44,7 @@ imageGenTemplate = {
 installableIsoTemplate = {
     'skipMediaCheck':   (RDT_BOOL, False, 'Prompt to verify CD images during install'),
     'betaNag':          (RDT_BOOL, False, 'This release is considered a beta'),
-    'bugsUrl':          (RDT_STRING, 'http://bugs.rpath.com/', 'Bug report URL advertised in installer'),
+    'bugsUrl':          (RDT_STRING, 'http://bugs.rpath.com/', 'Bug report URL'),
 }
 
 bootableImageTemplate = {
