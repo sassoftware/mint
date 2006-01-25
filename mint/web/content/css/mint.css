@@ -282,6 +282,25 @@ div#topten {
 
     padding: 30px 52px 30px 52px;
     margin-bottom: 17px;
+
+}
+
+div#topten,
+div#topten a,
+div#topten a:visited,
+div#topten a:active,
+div#topten a:hover {
+    color: #0c2577;
+}
+
+div#topten a,
+div#topten a:visited,
+div#topten a:active {
+    text-decoration: none;
+}
+
+div#topten a:hover {
+    text-decoration: underline;
 }
 
 div#topten table td {
@@ -299,8 +318,8 @@ div#topten ol li {
 
 span.topten_header {
     font-size: 14pt;
-    color: #0c2577;
     font-weight: bold;
     padding-left: 4px;
     vertical-align: top;
 }
+
