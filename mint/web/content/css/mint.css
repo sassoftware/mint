@@ -354,6 +354,7 @@ div.palette img.right {
     padding:0px 0px 4px 0px; font-size:110%;
     margin: 0px;
     list-style-type: none;
+    font-size: 95%;
 }
 .palette li {
     padding:4px 0px 4px 11px; margin:0px 11px 0px 11px;

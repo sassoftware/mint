@@ -160,8 +160,6 @@ class WebHandler(object):
             if not self.session['visited'].get(dom, None):
                 #Yeah we need to redirect
                 nexthop = dom
-                print >> sys.stderr, "hopping to", nexthop
-                sys.stderr.flush()
                 break
         # if we were passed a sid, specifically set a cookie
         # for the requested domain with that sid.

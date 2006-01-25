@@ -54,7 +54,9 @@ onload = "javascript:;"
                             </div>
                         </td>
                         <td id="topRight">
-                            <div class="about"><a href="http://www.rpath.com/corp/about/">About rPath</a></div>
+                            <div class="about"><a href="http://www.rpath.com/corp/about/">About rPath</a>
+                                <span py:omit="True" py:if="not auth.authorized and req.uri != cfg.basePath"> | <a href="http://${SITE}">Sign In</a></span>
+                            </div>
                             <form action="http://${cfg.siteHost}${cfg.basePath}search" method="get" id="searchForm">
                                 <table style="width: 100%;" class="search">
                                     <tr>
