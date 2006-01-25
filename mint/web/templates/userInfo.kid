@@ -25,34 +25,25 @@
     </head>
 
     <body>
-        <td id="left" class="side">
-            <div class="pad">
-                ${browseMenu()}
-                ${searchMenu()}
-            </div>
-        </td>
-
-        <td id="main">
-          <span style="float:left;">
-            <div class="pad">
-                <h3>${user.getFullName()} (${user.getUsername()})</h3>
-                <div py:for="line in user.getDisplayEmail().splitlines()" py:strip="True">
-                    ${line}<br/>
+        <div id="layout">
+            <span style="float:left;">
+                <div class="pad">
+                    <h3>${user.getFullName()} (${user.getUsername()})</h3>
+                    <div py:for="line in user.getDisplayEmail().splitlines()" py:strip="True">
+                        ${line}<br/>
+                    </div>
+                    <div py:if="not user.getDisplayEmail()">User has not entered any contact information.</div>
                 </div>
-                <div py:if="not user.getDisplayEmail()">User has not entered any contact information.</div>
-            </div>
-          </span>
-          <span syle="float:right">
-            <div class="pad">
-                <p py:for="line in user.getBlurb().splitlines()">
-                    ${line}
-                </p>
-                <p py:if="not user.getBlurb()">User has not entered any about text.</p>
-            </div>
-          </span>
-        </td>
-        <td id="right" class="projects">
-            <div class="pad">
+            </span>
+            <span syle="float:right">
+                <div class="pad">
+                    <p py:for="line in user.getBlurb().splitlines()">
+                        ${line}
+                    </p>
+                    <p py:if="not user.getBlurb()">User has not entered any about text.</p>
+                </div>
+            </span>
+            <div style="float: right;" class="projects">
                 <h3>${user.getUsername()}'s projects:</h3>
                 <ul py:if="userProjects">
                     <li py:for="project, level in userProjects">
@@ -88,6 +79,6 @@
                     </form>
                 </div>
             </div>
-        </td>
+        </div>
     </body>
 </html>
