@@ -146,11 +146,14 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         page = self.fetch('/search?type=Projects&search=foo',
                           ok_codes = [200])
-        assert('match found for') in page.body
+
+        assert('Search Results:') in page.body
 
     def testSearchPackages(self):
         page = self.fetch('/search?type=Packages&search=%25%25%25',
                           ok_codes = [200])
+
+        assert('Search Results:') in page.body
 
     def testProjectsPage(self):
         client, userId = self.quickMintUser('foouser','foopass')
