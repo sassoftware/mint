@@ -306,7 +306,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         self.makeSourceTrove("testcase", testRecipe)
         self.cookFromRepository("testcase",
-            versions.Label("test.rpath.local@rpl:devel"),
+            versions.Label("testproject.rpath.local@rpl:devel"),
             ignoreDeps = True)
 
         page = self.webLogin('testuser', 'testpass')
@@ -314,10 +314,10 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         groupTrove = client.createGroupTrove(projectId, 'group-foo',
                                              '1.0.0', '', False)
 
-        page = self.fetch('/project/test/editGroup?id=%d' % groupTrove.id,
+        page = self.fetch('/project/testproject/editGroup?id=%d' % groupTrove.id,
                           ok_codes = [200])
 
-        page = self.fetch('/project/test/addGroupTrove?id=%d&trove=testcase&projectName=test&referer=/' %
+        page = self.fetch('/project/testproject/addGroupTrove?id=%d&trove=testcase&projectName=testproject&referer=/' %
                           groupTrove.id)
 
         assert groupTrove.listTroves != []
@@ -396,7 +396,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         # session in table and cached
         page = self.fetch('/', ok_codes = [200])
 
-        self.failIf('Login' in page.body,
+        self.failIf('You are signed in' not in page.body,
                     'Cached session appears to be logged out')
 
         # now move the session--effectively kill it, but we'll need it again
@@ -409,7 +409,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         page = self.fetch('/projects?sortOrder=9', ok_codes = [200])
 
         # session not in table and not in cache
-        self.failIf('Login' not in page.body,
+        self.failIf('You are signed in' in page.body,
                     'Unchached session not logged out')
 
         # HACK alter cookie to match what we moved session to earlier
@@ -418,7 +418,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         cookie = 'pysid'
         self.registerExpectedCookie(cookie)
         page = self.fetch('/', ok_codes = [200])
-        self.failIf('Login' in page.body,
+        self.failIf('You are signed in' not in page.body,
                     'Uncached session appears to be logged out')
 
     def testUnknownError(self):
