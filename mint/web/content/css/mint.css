@@ -323,6 +323,10 @@ span.topten_header {
     vertical-align: top;
 }
 
+span.topten_header a:hover {
+    text-decoration: none;
+}
+
 /* Palette styles */
 div.palette img.left{
     float: left;

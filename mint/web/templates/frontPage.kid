@@ -88,7 +88,7 @@ from mint import searcher
                             </li>
                         </ol>
                     </td>
-                    <td><span class="topten_header">Recent Updates</span>&nbsp;<img src="${cfg.staticPath}apps/mint/images/rss-inline.gif" alt="RSS" />
+                    <td><span class="topten_header">Recent Releases&nbsp;<a href="${basePath}rss?feed=newReleases"><img src="${cfg.staticPath}apps/mint/images/rss-inline.gif" alt="RSS" /></a></span>
                         <ol py:if="releases">
 
                             <li py:for="release in releases">
