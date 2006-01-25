@@ -81,7 +81,7 @@ class ObjectsTable(database.KeyedTable):
     key = "objectId"
 
     createSQL = """CREATE TABLE Objects (
-                objectId    INTEGER PRIMARY KEY,
+                objectId    %(PRIMARKEY),
                 objectType  INTEGER,
                 object      INTEGER)"""
 
