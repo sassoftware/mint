@@ -1086,13 +1086,20 @@ class MintServer(object):
     def versionIsExternal(self, versionStr):
         cu = self.db.cursor()
 
-        labelStr = '/' + versionStr.split('/')[1]
+        try:
+            hostname = ('/' + versionStr.split('/')[1]).split('@')[0]
+        except:
+            # All exceptions at this point will be string parsing errors.
+            raise ItemNotFound
 
-        cu.execute("SELECT projectId FROM Labels WHERE label=?", labelStr)
+        cu.execute("SELECT projectId FROM Labels WHERE label LIKE ?",
+                   "%s%%" % hostname)
 
         res = cu.fetchone()
 
         if not res:
+            # FIXME: this needs to be an exception condition to prevent
+            # rBO making non-hosted content appear as part of the site.
             return True
 
         projectId = res[0]
@@ -1901,6 +1908,7 @@ class MintServer(object):
                                                  versionLock, useLock,
                                                  instSetLock)
 
+    @requiresAuth
     @typeCheck(int, str, str, str, str, bool, bool, bool)
     def addGroupTroveItemByProject(self, groupTroveId, trvName, projectName,
                                    trvFlavor, subGroup, versionLock, useLock,
@@ -1915,7 +1923,6 @@ class MintServer(object):
         if groupTrove.projectId:
             if not self.auth.authorized:
                 raise PermissionDenied
-            self._filterProjectAccess(groupTrove.projectId)
             groupProject = projects.Project(self, groupTrove.projectId)
             affineLabel = project.getLabel().split('@')[0] + '@' + \
                           groupProject.getLabel().split('@')[1]
