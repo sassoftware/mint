@@ -116,6 +116,7 @@ def post(port, isSecure, repos, cfg, req):
             return apache.HTTP_FORBIDDEN
 
         # take off the usedAnonymous flag
+        usedAnonymous = result[0]
         result = result[1:]
         resp = xmlrpclib.dumps((result,), methodresponse=1)
         req.content_type = "text/xml"
@@ -123,6 +124,8 @@ def post(port, isSecure, repos, cfg, req):
         if len(resp) > 200 and 'deflate' in encoding:
             req.headers_out['Content-encoding'] = 'deflate'
             resp = zlib.compress(resp, 5)
+        if usedAnonymous:
+            req.headers_out["X-Conary-UsedAnonymous"] = "1"
         req.write(resp)
         return apache.OK
     else:
