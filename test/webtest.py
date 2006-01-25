@@ -179,7 +179,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         page = self.assertContent('/project/foo/releases/',
                                   ok_codes = [200],
-                                  content = 'This project has no published releases.')
+                                  content = 'has no published')
 
     def testMailListsPage(self):
         client, userId = self.quickMintUser('foouser','foopass')
