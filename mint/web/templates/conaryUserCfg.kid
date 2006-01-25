@@ -23,7 +23,7 @@ from mint import userlevels
         <title>${formatTitle('Installing Software: %s'%project.getNameForDisplay())}</title>
     </head>
     <body>
-        <div class="layout" id="help">
+        <div class="layout" id="helpPage">
             <h2>${project.getNameForDisplay(maxWordLen = 50)}</h2>
             <h3>Installing Software</h3>
 
