@@ -32,6 +32,7 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
             content = 'troveInfo?t=testcase:runtime')
 
     def testBrowseHiddenProject(self):
+        raise testsuite.SkipTestException
         adminClient, adminUserId = self.quickMintAdmin("adminuser", "testpass")
 
         client, userId = self.quickMintUser('testuser', 'testpass')
