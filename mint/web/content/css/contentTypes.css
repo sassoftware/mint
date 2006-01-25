@@ -4,47 +4,6 @@
 }
 
 /* SIDE COLUMN CONTENT STYLES */
-.palette {
-    border-bottom:1px #ddd solid;
-    margin-bottom:12px;
-    background: url(../images/box_bg.png);
-    width: 225px;
-}
-.palette div.boxHeader {
-	color: white;
-        background: url(../images/box_head_blue.png);
-        padding:4px 11px 6px 11px;
-        margin-bottom: 0px;
-        font-size: 120%;
-        font-weight: bold;
-        height: 21px;
-        width: 203px;
-}
-
-.palette ul {
-    border:1px #dadada solid;
-    border-width:0px 1px 0px 1px;
-    padding:0px 0px 4px 0px; font-size:110%;
-    margin: 0px;
-    list-style-type: none;
-}
-.palette li {
-	padding:4px 0px 4px 11px; margin:0px 11px 0px 11px;
-}
-.palette ul li:first-child {
-	border:0px;
-}
-.palette form {
-	border:1px #dadada solid; border-width:0px 1px 0px 1px;
-	background-color:#e6e6e6; padding:10px 11px 0px 11px;
-}
-.palette form p {
-	padding-bottom:0.8em; margin-bottom:0px;
-}
-.palette input, .palette select {
-	width:95%;
-}
-
 #browse h3 {
 	background: #3D5192;
         border-color: #607fe6 #202a4c #202a4c #607fe6;

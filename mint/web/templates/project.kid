@@ -21,6 +21,8 @@
             isOwner = userLevel == userlevels.OWNER or auth.admin
             isDeveloper = userLevel in userlevels.WRITERS or auth.admin
         ?>
+        <img class="left" src="${cfg.staticPath}apps/mint/images/header_blue_left.png" />
+        <img class="right" src="${cfg.staticPath}apps/mint/images/header_blue_right.png" />
         <div class="boxHeader">Project Resources</div>
         <ul>
             <li><a href="$projectUrl"><strong py:strip="lastchunk != ''">Project Home</strong></a></li>
@@ -39,45 +41,45 @@
         <?python
             projectUrl = project.getUrl()
         ?>
-      <div py:if="isOwner or releaseList" class="palette" id="releases">
-          <h3 onclick="javascript:toggle_display('release_items');">
-                  <img id="release_items_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_${display == 'block' and 'collapse' or 'expand'}.gif" class="noborder" />
-                  <a href="${basePath}rss"><img class="noborder" style="margin-right:10px; vertical-align: middle;" src="${cfg.staticPath}apps/mint/images/rss-inline.gif" /></a>
-                  Recent Releases
-          </h3>
-        <div id="release_items" style="display: $display">
-            <ul>
-            <?python
-                upstreamList = [upstream(x.getTroveVersion()) for x in releaseList[:5]]
-                # create a dictionary with counts of duplicate upstream versions
-                counts = dict(zip(set(upstreamList), [upstreamList.count(x) for x in set(upstreamList)]))
-            ?>
-            <li class="release"
-                py:if="releaseList" py:for="release in sorted(releaseList[:5], key=lambda x: x.getTroveVersion(), reverse=True)">
-                <a href="${projectUrl}release?id=${release.getId()}">
-                    Version ${condUpstream(counts, release.getTroveVersion())} for ${release.getArch()}
-                </a>
-            </li>
-            <li class="release" py:if="not releaseList">
-                No Releases
-            </li>
-            <div class="release" py:if="isOwner" style="text-align: right; padding-right:8px;">
-                <a href="${basePath}newRelease"><strong>Create a new release...</strong></a>
+        <div py:if="isOwner or releaseList" class="palette" id="releases">
+            <img class="left" src="${cfg.staticPath}apps/mint/images/header_blue_left.png" />
+            <img class="right" src="${cfg.staticPath}apps/mint/images/header_blue_right.png" />
+
+            <div class="boxHeader">Recent Releases</div>
+            <div id="release_items" style="display: $display">
+                <ul>
+                <?python
+                    upstreamList = [upstream(x.getTroveVersion()) for x in releaseList[:5]]
+                    # create a dictionary with counts of duplicate upstream versions
+                    counts = dict(zip(set(upstreamList), [upstreamList.count(x) for x in set(upstreamList)]))
+                ?>
+                <li class="release"
+                    py:if="releaseList" py:for="release in sorted(releaseList[:5], key=lambda x: x.getTroveVersion(), reverse=True)">
+                    <a href="${projectUrl}release?id=${release.getId()}">
+                        Version ${condUpstream(counts, release.getTroveVersion())} for ${release.getArch()}
+                    </a>
+                </li>
+                <li class="release" py:if="not releaseList">
+                    No Releases
+                </li>
+                <div class="release" py:if="isOwner" style="text-align: right; padding-right:8px;">
+                    <a href="${basePath}newRelease"><strong>Create a new release...</strong></a>
+                </div>
+                <div class="release" py:if="not isOwner and len(releaseList) > 5" style="text-align: right; padding-right:8px;">
+                    <a href="${basePath}releases"><strong>More...</strong></a>
+                </div>
+              </ul>
             </div>
-            <div class="release" py:if="not isOwner and len(releaseList) > 5" style="text-align: right; padding-right:8px;">
-                <a href="${basePath}releases"><strong>More...</strong></a>
-            </div>
-          </ul>
-        </div>
       </div>
     </div>
 
     <div py:def="commitsMenu(commits, display='block')" py:strip="True">
       <div py:if="commits" class="palette" id="commits">
-        <div class="boxHeader" onclick="javascript:toggle_display('commit_items');">
-            <img id="commit_items_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_${display == 'block' and 'collapse' or 'expand'}.gif" class="noborder" />
-            Recent Commits
-        </div>
+        <img class="left" src="${cfg.staticPath}apps/mint/images/header_blue_left.png" />
+        <img class="right" src="${cfg.staticPath}apps/mint/images/header_blue_right.png" />
+
+
+        <div class="boxHeader">Recent Commits</div>
         <div id="commit_items" style="display: $display">
           <ul>
             <li class="release" py:for="commit in commits">
