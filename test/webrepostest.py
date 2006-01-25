@@ -52,9 +52,6 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
         page = page.assertContent('/repos/test/browse', ok_codes = [200],
             content = 'troveInfo?t=testcase:runtime')
 
-        import epdb
-        epdb.st()
-
     def testBrowseExternalProject(self):
         raise testsuite.SkipTestException
         client, userId = self.quickMintUser("testuser", "testpass")
