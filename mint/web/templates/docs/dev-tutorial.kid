@@ -128,7 +128,7 @@
 
                 <div class="helpBlock">
                     <p>If you want to create your own project, follow the
-                       <a href="http://www.rpath.com/newProject">New Project</a> link
+                       <a href="http://${cfg.siteHost}/newProject">New Project</a> link
                         and you will be taken to a form where you will be asked to provide:
                     </p>
                     
