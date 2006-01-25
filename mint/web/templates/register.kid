@@ -108,13 +108,9 @@
                     </table>
 
 
-                            <p><input type="checkbox" class="check" name="tos" py:attrs="{'checked': kwargs['tos'] and 'checked' or None}"/> <em class="required">I have read and accept the ${legal('%slegal?page=tos' % cfg.basePath, 'Terms of Service')}</em></p>
-
-
-                            <p><input type="checkbox" class="check" name="privacy"  py:attrs="{'checked': kwargs['privacy'] and 'checked' or None}"/> <em class="required">I have read and accept the ${legal('%slegal?page=privacy' % cfg.basePath, 'Privacy Policy')}</em></p>
-
-
-                    <p><button type="submit">Create</button></p>
+                    <p><input type="checkbox" class="check" name="tos" py:attrs="{'checked': kwargs['tos'] and 'checked' or None}"/> <em class="required">I have read and accept the ${legal('%slegal?page=tos' % cfg.basePath, 'Terms of Service')}</em></p>
+                    <p><input type="checkbox" class="check" name="privacy"  py:attrs="{'checked': kwargs['privacy'] and 'checked' or None}"/> <em class="required">I have read and accept the ${legal('%slegal?page=privacy' % cfg.basePath, 'Privacy Policy')}</em></p>
+                    <p><button type="submit"><img src="${cfg.staticPath}/apps/mint/images/create_button.png" alt="Create" /></button></p>
                 </form>
             </div>
         </td>

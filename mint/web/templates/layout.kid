@@ -43,10 +43,14 @@ onload = "javascript:;"
                     <tr>
                         <td style="width: 50%;">
                             <div id="corpLogo">
-                                <img src="${cfg.staticPath}/apps/mint/images/corplogo.png" width="78" height="94" alt="rPath Logo" />
+                                <a href="http://${SITE}">
+                                    <img src="${cfg.staticPath}/apps/mint/images/corplogo.png" width="78" height="94" alt="rPath Logo" />
+                                </a>
                             </div>
                             <div id="prodLogo">
-                                <img src="${cfg.staticPath}/apps/mint/images/prodlogo.gif" alt="rBuilder Online Logo" />
+                                <a href="http://${SITE}">
+                                    <img src="${cfg.staticPath}/apps/mint/images/prodlogo.gif" alt="rBuilder Online Logo" />
+                                </a>
                             </div>
                         </td>
                         <td id="topRight">
