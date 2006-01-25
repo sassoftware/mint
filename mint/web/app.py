@@ -113,7 +113,7 @@ class MintApp(WebHandler):
         self.authToken = self.session.get('authToken', anonToken)
     
         # open up a new client with the retrieved authToken
-        if self.authToken not in shimClients:
+        if True or self.authToken not in shimClients:
             shimClients[self.authToken] = shimclient.ShimMintClient(self.cfg, self.authToken)
         self.client = shimClients[self.authToken]
         
