@@ -8,7 +8,7 @@ title = "Edit Release"
 def generateJs(archMap):
     arches = sorted(archMap.keys())
     js = "versionFlavors = Array(%d);\n" % len(arches)
-    
+
     for i, arch in enumerate(arches):
         js += "versionFlavors[%d] = Array(" % i
         js += ", ".join("Array('%s', '%s', '%s')" % (x[0].asString(),
@@ -49,7 +49,7 @@ def generateJs(archMap):
                     sel.selectedIndex = i
         }
 
-        function pickVersion() 
+        function pickVersion()
         {
             arch = document.getElementById("arch").selectedIndex;
             sel = document.getElementById("versions").selectedIndex;
@@ -66,7 +66,7 @@ def generateJs(archMap):
             <h2>Release</h2>
             <form method="post" action="editRelease2">
                 <table cellpadding="6">
-                    <tr><td>Trove:</td><td>${trove}=${label}</td></tr>
+                    <tr><td>Group Name:</td><td>${trove}=${label}</td></tr>
                     <tr>
                         <td>Architecture:</td>
                         <td><select onchange="javascript:pickArch();" id="arch">
