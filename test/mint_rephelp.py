@@ -164,10 +164,10 @@ class MintApacheServer(rephelp.ApacheServer):
         cfg.sendNotificationEmails = False
         cfg.commitAction = """%s/scripts/commitaction --username mintauth --password mintpass --repmap '%%(repMap)s' --build-label %%(buildLabel)s --module \'%s/mint/rbuilderaction.py --user %%%%(user)s --url http://mintauth:mintpass@%s:%d/xmlrpc-private/'""" % (conaryPath, mintPath, 'test.rpath.local', self.port)
         cfg.postCfg()
-                                    
-        cfg.commitAction = None     
-        cfg.SSL = False             
-                                    
+
+        cfg.hideFledgeling = True
+        cfg.SSL = False
+
         self.mintCfg = cfg
 
 
