@@ -1086,7 +1086,7 @@ class MintServer(object):
     def versionIsExternal(self, versionStr):
         cu = self.db.cursor()
 
-        labelStr = versions.ThawVersion(versionStr).branch().label().asString()
+        labelStr = '/' + versionStr.split('/')[1]
 
         cu.execute("SELECT projectId FROM Labels WHERE label=?", labelStr)
 
