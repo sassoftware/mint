@@ -16,7 +16,7 @@ StartServers       8
 MinSpareServers    5
 MaxSpareServers   20
 MaxClients       150
-MaxRequestsPerChild  1000
+MaxRequestsPerChild  0
 </IfModule>
 
 # worker MPM
