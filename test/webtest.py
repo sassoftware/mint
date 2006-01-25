@@ -71,6 +71,13 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
     def testLoginRedirect(self):
         # test to make sure that a login on one page
         # will redirect you back to that page after login
+
+
+        # this test cannot be run at the moment. it depends on the existence of
+        # the login form on all pages, but the login box is currently only on
+        # front page during transition period
+        raise testsuite.SkipTestException
+
         self.quickMintUser('foouser', 'foopass')
 
         page = self.fetch('/search?type=Projects&search=abcd')
@@ -443,7 +450,8 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         release.setPublished(True)
 
         cu = self.db.cursor()
-        cu.execute("INSERT INTO ImageFiles VALUES (1, ?, 0, ?, 'Test Image')", release.id, filename)
+        cu.execute("INSERT INTO ImageFiles VALUES (1, ?, 0, ?, 'Test Image')",
+                   release.id, filename)
         self.db.commit()
 
         page = self.fetch('/downloadImage/1/test.iso')
