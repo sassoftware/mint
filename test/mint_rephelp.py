@@ -165,7 +165,7 @@ class MintApacheServer(rephelp.ApacheServer):
         cfg.commitAction = """%s/scripts/commitaction --username mintauth --password mintpass --repmap '%%(repMap)s' --build-label %%(buildLabel)s --module \'%s/mint/rbuilderaction.py --user %%%%(user)s --url http://mintauth:mintpass@%s:%d/xmlrpc-private/'""" % (conaryPath, mintPath, 'test.rpath.local', self.port)
         cfg.postCfg()
 
-        cfg.hideFledgeling = True
+        cfg.hideFledgling = True
         cfg.SSL = False
 
         self.mintCfg = cfg
@@ -331,7 +331,6 @@ class WebRepositoryHelper(MintRepositoryHelper, webunittest.WebTestCase):
     def setUp(self):
         webunittest.WebTestCase.setUp(self)
         MintRepositoryHelper.setUp(self)
-        self.openRepository()
         self.setAcceptCookies(True)
         self.server, self.port = self.getServerData()
         self.URL = self.getMintUrl()
