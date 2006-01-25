@@ -372,15 +372,16 @@ class ReleaseTest(MintRepositoryHelper):
         release = client.newRelease(projectId, 'release 1')
         release.setImageTypes([releasetypes.INSTALLABLE_ISO])
         release.setTrove("group-core",
-                         "/test.rpath.local@rpl:devel/0.0:1.0-1-1", "1#x86")
+                         "/testproject.rpath.local@rpl:devel/0.0:1.0-1-1",
+                         "1#x86")
 
         self.stockReleaseFlavor(release.getId())
 
         job = client.startImageJob(release.id)
 
         cfg = self.makeInstallableIsoCfg()
-        imageJob = installable_iso.InstallableIso(client, IsoGenCfg(),
-                                                  job, release.id)
+        imageJob = installable_iso.InstallableIso(client, IsoGenCfg(), job,
+                                                  release, project)
         imageJob.isocfg = cfg
 
         # getting a trove not found from a trove that's really not there isn't

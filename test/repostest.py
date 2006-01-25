@@ -38,12 +38,17 @@ class RepositoryTest(MintRepositoryHelper):
         client, userId = self.quickMintUser("testuser", "testpass")
         projectId = self.newProject(client)
 
-        client.server.registerCommit('test.rpath.local', 'testuser', 'mytrove:source', '/test.rpath.local@rpl:devel/1.0-1')
+        client.server.registerCommit('testproject.rpath.local', 'testuser',
+                                     'mytrove:source',
+                                     '/testproject.rpath.local@rpl:devel/1.0-1')
         project = client.getProject(projectId)
-        assert([x[:2] for x in project.getCommits()] == [('mytrove:source', '1.0-1')])
+        assert([x[:2] for x in project.getCommits()] == [('mytrove:source',
+                                                          '1.0-1')])
 
         # using a bogus username should not fail
-        client.server.registerCommit('test.rpath.local', 'nonexistentuser', 'mytrove:source', '/test.rpath.local@rpl:devel/1.0-1')
+        client.server.registerCommit('testproject.rpath.local',
+                                     'nonexistentuser', 'mytrove:source',
+                                     '/testproject.rpath.local@rpl:devel/1.0-1')
 
     def testBasicRepository(self):
         self.openRepository()
@@ -57,7 +62,7 @@ class RepositoryTest(MintRepositoryHelper):
         nc = ConaryClient(cfg).getRepos()
 
         # test that the source trove landed properly
-        troveNames = nc.troveNames(versions.Label("test.rpath.local@rpl:devel"))
+        troveNames = nc.troveNames(versions.Label("testproject.rpath.local@rpl:devel"))
         assert(troveNames == ["testcase:source"])
 
         # test that the commits table was updated
@@ -86,10 +91,13 @@ class RepositoryTest(MintRepositoryHelper):
         try:
             repos.troveNames('notfound.rpath.local')
         except repository.errors.OpenError, e:
-            assert "404 Not Found" in str(e), "accessing a non-existent repository did not return a 404 Not Found error"
+            assert "404 Not Found" in str(e), \
+            "accessing a non-existent repository did not return a "
+            "404 Not Found error"
             pass
         else:
-            self.fail("accessing a non-existent repository did not return an error")
+            self.fail("accessing a non-existent repository did not return "
+                      "an error")
 
 
     def testCook(self):
@@ -100,22 +108,22 @@ class RepositoryTest(MintRepositoryHelper):
         project = client.getProject(projectId)
         self.makeSourceTrove("testcase", testRecipe)
         self.cookFromRepository("testcase",
-            versions.Label("test.rpath.local@rpl:devel"),
+            versions.Label("testproject.rpath.local@rpl:devel"),
             ignoreDeps = True)
 
         self.makeSourceTrove("group-test", testGroup)
         self.cookFromRepository("group-test",
-            versions.Label("test.rpath.local@rpl:devel"))
+            versions.Label("testproject.rpath.local@rpl:devel"))
 
         cfg = project.getConaryConfig()
         nc = ConaryClient(cfg).getRepos()
 
-        troveNames = nc.troveNames(versions.Label("test.rpath.local@rpl:devel"))
+        troveNames = nc.troveNames(versions.Label("testproject.rpath.local@rpl:devel"))
         assert(troveNames == ['testcase', 'testcase:runtime', 'group-test',
                               'group-test:source', 'testcase:source'])
 
         groupTroves = client.server.getGroupTroves(projectId)
-        assert(groupTroves == {'test.rpath.local@rpl:devel': ['group-test']})
+        assert(groupTroves == {'testproject.rpath.local@rpl:devel': ['group-test']})
 
 
 if __name__ == "__main__":
