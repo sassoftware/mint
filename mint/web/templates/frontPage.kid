@@ -74,14 +74,14 @@ from mint import searcher
         <div id="topten">
             <table style="width: 100%;">
                 <tr>
-                    <td><span class="topten_header">Most Popular</span>&nbsp;<img src="${cfg.staticPath}apps/mint/images/rss-inline.gif" alt="RSS" />
+                    <td><span class="topten_header">Most Popular</span>
                         <ol>
                             <li py:for="project in popularProjects">
                                 <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${project[1]}/">${project[2]}</a>
                             </li>
                         </ol>
                     </td>
-                    <td><span class="topten_header">Most Active</span>&nbsp;<img src="${cfg.staticPath}apps/mint/images/rss-inline.gif" alt="RSS" />
+                    <td><span class="topten_header">Most Active</span>
                         <ol>
                             <li py:for="project in activeProjects">
                                 <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${project[1]}/">${project[2]}</a>
