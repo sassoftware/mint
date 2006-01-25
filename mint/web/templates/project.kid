@@ -61,7 +61,7 @@
                     No Releases
                 </li>
                 <div class="release" py:if="isOwner" style="text-align: right; padding-right:8px;">
-                    <a href="${basePath}newRelease"><strong>Create a new release...</strong></a>
+                    <a href="${basePath}newRelease"><strong>Create a new release</strong></a>
                 </div>
                 <div class="release" py:if="not isOwner and len(releaseList) > 5" style="text-align: right; padding-right:8px;">
                     <a href="${basePath}releases"><strong>More...</strong></a>
@@ -121,7 +121,9 @@
             link to submit your request to the project's owners.</p>
         </div>
         <div py:if="auth.authorized and projectList" strip="True">
-            <h3>My Projects</h3>
+            <img class="left" src="${cfg.staticPath}apps/mint/images/header_orange_left.png" />
+            <img class="right" src="${cfg.staticPath}apps/mint/images/header_orange_right.png" />
+            <div class="boxHeader">My Projects</div>
             <ul>
                 <li py:for="project, level in sorted(projectList, cmp = userlevels.myProjectCompare)">
                     <a href="${project.getUrl()}">

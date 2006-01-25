@@ -383,3 +383,22 @@ div#projectsPane {
     float: right;
     max-width: 25%;
 }
+
+div#projectsPane img.left {
+    float: left;
+}
+
+div#projectsPane img.right {
+    float: right;
+}
+
+div#projectsPane div.boxHeader {
+    color: black;
+    background: url(../images/header_orange_bg.png);
+    padding: 4px 11px 6px 11px;
+    margin-bottom: 0px;
+    font-size: 120%;
+    font-weight: bold;
+    height: 22px;
+    
+}

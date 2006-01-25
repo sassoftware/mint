@@ -383,6 +383,8 @@ class SiteHandler(WebHandler):
     @requiresAuth
     def userInfo(self, auth, id):
         user = self.client.getUser(id)
+        print >> sys.stderr, repr(user.blurb), repr(user.fullName), repr(user.displayEmail)
+        sys.stderr.flush()
         if user.active or auth.admin:
             userProjects = []
             if auth.userId == id:
