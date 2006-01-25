@@ -29,9 +29,7 @@
             <li><a href="${projectUrl}releases"><strong py:strip="lastchunk not in ('release', 'releases', 'newRelease', 'editRelease')">Releases</strong></a></li>
             <li><a href="${projectUrl}../../repos/${project.getHostname()}/browse"><strong py:strip="lastchunk not in ('browse', 'troveInfo')">Repository</strong></a></li>
             <li py:if="isDeveloper"><a href="${projectUrl}groups"><strong py:strip="lastchunk not in ('groups', 'editGroup', 'editGroup2', 'newGroup', 'pickArch', 'cookGroup')">Group Builder</strong></a></li>
-            <li py:if="not project.external"><a href="${projectUrl}members"><strong py:strip="lastchunk != 'members'">Members</strong></a>
-                <ul><li py:if="isOwner"><a href="${projectUrl}../../repos/${project.getHostname()}/pgpAdminForm">Manage Signing Keys</a></li></ul>
-            </li>
+            <li py:if="not project.external"><a href="${projectUrl}members"><strong py:strip="lastchunk != 'members'">Members</strong></a></li>
             <li py:if="not project.external"><a href="${projectUrl}mailingLists"><strong py:strip="lastchunk != 'mailingLists'">Mailing Lists</strong></a></li>
             <li py:if="0"><a href="#"><strong py:strip="lastchunk != 'bugs'">Bug Tracking</strong></a></li>
         </ul>
@@ -92,18 +90,18 @@
     </div>
 
 
-    <td py:def="projectsPane()" id="right" class="projects" py:strip="True" >
-        <div py:if="not auth.authorized" class="pad">
+    <div py:def="projectsPane()" id="projectsPane" >
+        <div py:if="not auth.authorized" strip="True">
             <h3>Sign up for ${cfg.productName} Today</h3>
 
-            <p>If you are new to ${cfg.productName}, create
-            your new account by using the
-            <a href="http://${SITE}register"><strong>new account</strong></a>
-            link above.</p>
+            <p>If you are new to ${cfg.productName}, 
+                <a href="http://${SITE}register"><strong>create
+                        your new account now</strong></a>.
+            </p>
 
-            <p>If you already have an account, use the above form to login.</p>
+            <p>If you already have an account, <a href="http://${SITE}"><strong>sign in</strong></a>.</p>
         </div>
-        <div py:if="auth.authorized and not projectList" class="pad">
+        <div py:if="auth.authorized and not projectList" strip="True">
             <h3>Get Involved</h3>
 
             <p>Now's the time to get involved with the ${cfg.productName}
@@ -122,7 +120,7 @@
             Then, click on the project name, and click on the "Request to join"
             link to submit your request to the project's owners.</p>
         </div>
-        <div py:if="auth.authorized and projectList" class="pad">
+        <div py:if="auth.authorized and projectList" strip="True">
             <h3>My Projects</h3>
             <ul>
                 <li py:for="project, level in sorted(projectList, cmp = userlevels.myProjectCompare)">
@@ -140,5 +138,5 @@
                 </li>
             </ul>
         </div>
-    </td>
+    </div>
 </html>

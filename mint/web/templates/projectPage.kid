@@ -36,6 +36,7 @@ from mint.mint import upstream
                 ${releasesMenu(releases, isOwner)}
                 ${commitsMenu(commits)}
             </div>
+            ${projectsPane()}
             <div id="main">
                 <h2>${project.getNameForDisplay(maxWordLen = 50)}</h2>
 
@@ -59,11 +60,14 @@ from mint.mint import upstream
                 </p>
                 <p py:if="not project.getDesc()">The project owner has not entered a description.</p>
 
-                <div style="clear: left; border-top: 2px dotted #aaaaaa;">
+                <div style="clear: left;">
                     <h4>What can I do with this project?</h4>
                     <ul>
                         <li py:if="isOwner">
                             <a href="${basePath}editProject">Edit project details</a>
+                        </li>
+                        <li py:if="isOwner">
+                            <a href="${project.getUrl()}../../repos/${project.getHostname()}/pgpAdminForm">Manage Signing Keys</a>
                         </li>
                         <li py:if="releases">
                             <a href="${basePath}rss">

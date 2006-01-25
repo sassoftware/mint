@@ -376,3 +376,10 @@ div.palette img.right {
 .palette input, .palette select {
     width:95%;
 }
+
+/* Projects Pane */
+
+div#projectsPane {
+    float: right;
+    max-width: 25%;
+}
