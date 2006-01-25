@@ -1,3 +1,9 @@
+Changes in 1.2.3:
+
+* Move to the proposed official mailman XMLRPC patch
+* Add a link on the mailing list page to allow project owners to reset
+  list passwords
+
 Changes in 1.2.2:
 
 * The users admin interface now displays properly on a MySQL install.

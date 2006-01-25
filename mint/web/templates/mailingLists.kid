@@ -64,6 +64,12 @@
                             <a href="$basePath/deleteList?list=${list.name}" class="option">Delete List</a>
                         </span>
                     </div>
+
+                    <div style="float:left; margin-right:5px;">
+                        <span py:if="auth.admin">
+                            <a href="$basePath/resetPassword?list=${list.name}" class="option">Request Password</a>
+                        </span>
+                    </div>
                     &#160;
                     <br clear="all"/>
                     &#160;

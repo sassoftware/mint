@@ -172,16 +172,16 @@ class Project(database.TableObject):
         if mlenabled:
             #Take care of mailing lists
             # FIXME: mailing lists should be handled elsewhere
-            mlists = mailinglists.MailingListClient(mlbaseurl + 'xmlrpc/')
-            mlists.orphan_lists(mlpasswd, self.getName())
+            mlists = mailinglists.MailingListClient(mlbaseurl + 'RPC2')
+            mlists.orphan_lists(mlpasswd, self.getHostname())
 
     def adopt(self, auth, mlenabled, mlbaseurl, mlpasswd):
         self.addMemberByName(auth.username, userlevels.OWNER)
         if mlenabled:
             # Take care of mailing lists
             # FIXME: mailing lists should be handled elsewhere
-            mlists = mailinglists.MailingListClient(mlbaseurl + 'xmlrpc/')
-            mlists.adopt_lists(auth, mlpasswd, self.getName())
+            mlists = mailinglists.MailingListClient(mlbaseurl + 'RPC2')
+            mlists.adopt_lists(auth, mlpasswd, self.getHostname())
 
     def getUrl(self):
         if self.external: # we control all external projects, so use externalSiteHost

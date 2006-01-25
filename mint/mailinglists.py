@@ -60,7 +60,7 @@ class MailingListClient:
         self.server = xmlrpclib.ServerProxy(server)
 
     def list_all_lists(self):
-        lists = self._servercall(self.server.list_lists())
+        lists = self.server.Mailman.listAdvertisedLists()
         lists.remove('mailman')
         return lists
 
@@ -72,30 +72,33 @@ class MailingListClient:
         """
         class listobj: pass
         pcre = "^%s$|^%s-" % (projectName, projectName)
-        lists = self._servercall(self.server.list_lists(pcre))
+        lists = self.server.Mailman.listAdvertisedLists(pcre)
         returner = []
-        for listname in lists:
+        for listname, description in lists:
             list = listobj()
             list.name = listname
-            list.description = self._servercall(self.server.description(listname))
+            list.description = description
             returner.append(list)
         return returner
 
-    def add_list(self, adminpw, listname, listpw, description, owners, notify=True, moderate=False):
-        listpw = self._servercall(self.server.add_list(adminpw, listname, owners, listpw, notify, moderate))
+    def add_list(self, adminpw, listname, listpw, description, owners, notify=True, moderate=False, domain=''):
+        listpw = self.server.Mailman.createList(adminpw, listname,
+            domain, moderate, owners, listpw, notify, ['en'])
         if not listpw:
             return False
         else:
-            return self._servercall(self.server.set_list_settings(listname, listpw, {'description': description}))
-            
+            return self.server.Mailman.setOptions(listname, listpw, {'description': description})
 
-    def delete_list(self, password, listname, delarchives = True):
-        return self._servercall(self.server.delete_list(password, listname, delarchives))
+    def delete_list(self, adminpw, listname, delarchives = True):
+        return self.server.Mailman.deleteList(adminpw, listname, delarchives)
 
     def set_owners(self, listname, listpw, owners=[]):
-        return self._servercall(self.server.set_owners(listname, listpw, {'owner' :owners}))
+        return self.server.Mailman.setOptions(listname, listpw, {'owner' :owners})
 
-    def orphan_lists(self, password, projectname):
+    def get_owners(self, listname, listpw):
+        return self.server.Mailman.getOptions(listname, listpw, ['owner'])['owner']
+
+    def orphan_lists(self, adminpw, projectname):
         lists = self.list_lists(projectname)
         settings = {
             ### XXX Come up with orphanage settings
@@ -105,12 +108,12 @@ class MailingListClient:
                 'member_moderation_notice': "This list has been disabled because the project to which it belongs has been orphaned.  Please visit the project's web page if you wish to adopt this project and take control of its mailing lists."
             }
         for list in lists:
-            if not self._servercall(self.server.get_owner(list.name,password)):
-                self._servercall(self.server.set_list_settings(list.name, password, settings))
-                self.reset_list_password(list.name, password)
+            if not self.get_owners(list.name, adminpw):
+                self.server.Mailman.setOptions(list.name, adminpw, settings)
+                self.server.Mailman.resetListPassword(list.name, adminpw, '')
         return True
 
-    def adopt_lists(self, auth, password, projectname):
+    def adopt_lists(self, auth, adminpw, projectname):
         lists = self.list_lists(projectname)
         settings = {
                 'emergency': 0,
@@ -120,15 +123,9 @@ class MailingListClient:
                 'owner': [auth.email]
             }
         for list in lists:
-            self._servercall(self.server.set_list_settings(list.name, password, settings))
-            self.reset_list_password(list.name, password)
+            self.server.Mailman.setOptions(list.name, adminpw, settings)
+            self.server.Mailman.resetListPassword(list.name, adminpw, '')
 
-    def reset_list_password(self, list, password, newpasswd=''):
-        return self._servercall(self.server.reset_password(list, password, newpasswd))
-
-    def _servercall(self, returnvalue):
-        if returnvalue[0]:
-            raise Exception(returnvalue[1])
-        else:
-            return returnvalue[1]
+    def reset_list_password(self, listname, adminpw):
+        return self.server.Mailman.resetListPassword(listname, adminpw, '')
 

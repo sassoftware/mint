@@ -480,6 +480,21 @@ class ProjectHandler(WebHandler):
             raise mailinglists.MailingListException("Passwords do not match")
 
     @ownerOnly
+    @boolFields(confirmed = False)
+    @strFields(list = None)
+    @mailList
+    def resetPassword(self, auth, mlists, list, confirmed):
+        if confirmed:
+            if mlists.reset_list_password(list, self.cfg.MailListPass):
+                return self._mailingLists(auth, mlists, ['Mailing list password reset for %s' % list])
+            else:
+                return self._mailingLists(auth, mlists, ['Mailing list password for %s was not reset' % list])
+        else:
+            return self._write("confirm", message = "Reset the administrator password for the %s mailing list and send a reminder to the list owners?" %list,
+                yesLink = "resetPassword?list=%s;confirmed=1" % list, noLink = "mailingLists")
+
+
+    @ownerOnly
     @strFields(list=None)
     @mailList
     def deleteList(self, auth, mlists, list):
@@ -500,7 +515,7 @@ class ProjectHandler(WebHandler):
     def subscribe(self, auth, mlists, list):
         if not self.cfg.EnableMailLists:
             raise mailinglists.MailingListException("Mail Lists Disabled")
-        mlists.server.subscribe(list, self.cfg.MailListPass, [auth.email], False, True)
+        mlists.server.addMember(list, self.cfg.MailListPass, auth.email, auth.fullName, '', False, True)
         return self._mailingLists(auth, mlists, ['You have been subscribed to %s' % list])
 
     @requiresAuth

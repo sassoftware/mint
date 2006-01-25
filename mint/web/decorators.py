@@ -73,7 +73,7 @@ def mailList(func):
     properly formatted and ready to use inside an error handler.
     """
     def wrapper(self, **kwargs):
-        mlists = mailinglists.MailingListClient(self.cfg.MailListBaseURL + 'xmlrpc')
+        mlists = mailinglists.MailingListClient(self.cfg.MailListBaseURL + 'RPC2')
         try:
             return func(self, mlists=mlists, **kwargs)
         except mailinglists.MailingListException, e:
