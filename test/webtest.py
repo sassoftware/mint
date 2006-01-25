@@ -28,17 +28,18 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.quickMintUser('foouser','foopass')
 
         page = self.fetch('')
-        if 'not logged in' not in page.body:
+
+        if '/processLogin' not in page.body:
             self.fail("Login form did not appear on page")
         page = page.fetch('/processLogin', postdata = \
             {'username': 'foouser',
              'password': 'foopass'})
-        if 'not logged in' in page.body:
+        if '/processLogin' in page.body:
             self.fail("Login form appeared on page for logged in user")
 
         page = page.assertCode('/logout', code = 301)
         page = self.fetch('')
-        if 'not logged in' not in page.body:
+        if '/processLogin' not in page.body:
             self.fail("Login form did not appear on page")
         page = page.fetch('/processLogin', postdata = \
             {'username': 'wronguser',
