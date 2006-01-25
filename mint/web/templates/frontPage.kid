@@ -56,7 +56,7 @@ from mint import searcher
             </form>
             <div id="signedIn" py:if="auth.authorized">
                 You are signed in as ${auth.username}.
-                <p><a href="${cfg.siteHost}${cfg.basePath}logout">Sign Out</a></p>
+                <p><a href="http://${cfg.siteHost}${cfg.basePath}logout">Sign Out</a></p>
             </div>
             <span id="buildit">Find the stuff you need to make your own software appliance in three easy steps.</span>
             <span id="findit">Check out all the amazing software applications others have made.</span>
