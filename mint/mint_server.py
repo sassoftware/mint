@@ -1086,14 +1086,14 @@ class MintServer(object):
     def versionIsExternal(self, versionStr):
         cu = self.db.cursor()
 
-        labelStr = '/' + versionStr.split('/')[1]
+        labelStr = versions.ThawVersion(versionStr).branch().label().asString()
 
         cu.execute("SELECT projectId FROM Labels WHERE label=?", labelStr)
 
         res = cu.fetchone()
 
         if not res:
-            raise database.ItemNotFound
+            return True
 
         projectId = res[0]
 
@@ -1107,7 +1107,7 @@ class MintServer(object):
         res = cu.fetchone()
 
         if not res:
-            raise database.ItemNotFound
+            return True
 
         return bool(res[0])
 
