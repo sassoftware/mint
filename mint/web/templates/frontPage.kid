@@ -74,21 +74,21 @@ from mint import searcher
         <div id="topten">
             <table style="width: 100%;">
                 <tr>
-                    <td><img src="${cfg.staticPath}apps/mint/images/rss.png" alt="RSS" /><span class="topten_header">Most Popular</span>
+                    <td><span class="topten_header">Most Popular</span>&nbsp;<img src="${cfg.staticPath}apps/mint/images/rss-inline.gif" alt="RSS" />
                         <ol>
                             <li py:for="project in popularProjects">
                                 <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${project[1]}/">${project[2]}</a>
                             </li>
                         </ol>
                     </td>
-                    <td><img src="${cfg.staticPath}apps/mint/images/rss.png" alt="RSS" /><span class="topten_header">Most Active</span>
+                    <td><span class="topten_header">Most Active</span>&nbsp;<img src="${cfg.staticPath}apps/mint/images/rss-inline.gif" alt="RSS" />
                         <ol>
                             <li py:for="project in activeProjects">
                                 <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${project[1]}/">${project[2]}</a>
                             </li>
                         </ol>
                     </td>
-                    <td><img src="${cfg.staticPath}apps/mint/images/rss.png" alt="RSS" /><span class="topten_header">Recent Updates</span>
+                    <td><span class="topten_header">Recent Updates</span>&nbsp;<img src="${cfg.staticPath}apps/mint/images/rss-inline.gif" alt="RSS" />
                         <ol py:if="releases">
 
                             <li py:for="release in releases">
