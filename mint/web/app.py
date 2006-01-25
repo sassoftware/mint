@@ -69,8 +69,6 @@ class MintApp(WebHandler):
         
         try:
             self.fields = dict(FieldStorage(self.req))
-            print >> sys.stderr, self.fields
-            sys.stderr.flush()
         # for some reason mod_python raises a 501 error
         # when it fails to parse a POST request. raise
         # a 404 instead.
