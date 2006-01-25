@@ -52,6 +52,7 @@ class JobsTest(MintRepositoryHelper):
     def testStubImage(self):
         client, userId = self.quickMintUser("testuser", "testpass")
         projectId = client.newProject("Foo", "foo", "rpath.org")
+        project = client.getProject(projectId)
 
         release = client.newRelease(projectId, "Test Release")
         release.setImageTypes([releasetypes.STUB_IMAGE])
@@ -63,7 +64,7 @@ class JobsTest(MintRepositoryHelper):
 
         client.getCfg().imagesPath = self.imagePath
         imagegen = stub_image.StubImage(client, client.getCfg(), job,
-                                        release.getId())
+                                        release, project)
         imagegen.write()
         release.setFiles([[self.imagePath + "/stub.iso", "Stub"]])
 
@@ -125,11 +126,11 @@ class JobsTest(MintRepositoryHelper):
 
         self.makeSourceTrove("testcase", testRecipe)
         self.cookFromRepository("testcase",
-            versions.Label("test.rpath.local@rpl:devel"),
+            versions.Label("testproject.rpath.local@rpl:devel"),
             ignoreDeps = True)
 
         trvName = 'testtrove'
-        trvVersion = '/test.rpath.local@rpl:devel/1.0-1-1'
+        trvVersion = '/testproject.rpath.local@rpl:devel/1.0-1-1'
         trvFlavor = '1#x86|5#use:~!kernel.debug:~kernel.smp'
         subGroup = ''
 
@@ -186,7 +187,7 @@ class JobsTest(MintRepositoryHelper):
         groupTroveId = groupTrove.getId()
 
         trvName = 'testtrove'
-        trvVersion = '/test.rpath.local@rpl:devel/1.0-1-1'
+        trvVersion = '/testproject.rpath.local@rpl:devel/1.0-1-1'
         trvFlavor = '1#x86|5#use:~!kernel.debug:~kernel.smp'
         subGroup = ''
 
@@ -259,7 +260,7 @@ class JobsTest(MintRepositoryHelper):
         groupTroveId = groupTrove.getId()
 
         trvName = 'testtrove'
-        trvVersion = '/test.rpath.local@rpl:devel/1.0-1-1'
+        trvVersion = '/testproject.rpath.local@rpl:devel/1.0-1-1'
         trvFlavor = '1#x86|5#use:~!kernel.debug:~kernel.smp'
         subGroup = ''
 
@@ -312,7 +313,7 @@ class JobsTest(MintRepositoryHelper):
         groupTroveId = groupTrove.getId()
 
         trvName = 'testtrove'
-        trvVersion = '/test.rpath.local@rpl:devel/1.0-1-1'
+        trvVersion = '/testproject.rpath.local@rpl:devel/1.0-1-1'
         trvFlavor = '1#x86|5#use:~!kernel.debug:~kernel.smp'
         subGroup = ''
 
@@ -344,7 +345,7 @@ class JobsTest(MintRepositoryHelper):
 
             groupTroveId = groupTrove.getId()
             trvName = 'testtrove'
-            trvVersion = '/test.rpath.local@rpl:devel/1.0-1-1'
+            trvVersion = '/testproject.rpath.local@rpl:devel/1.0-1-1'
             trvFlavor = '1#x86|5#use:~!kernel.debug:~kernel.smp'
             subGroup = ''
 
@@ -381,7 +382,7 @@ class JobsTest(MintRepositoryHelper):
 
         groupTroveId = groupTrove.getId()
         trvName = 'testtrove'
-        trvVersion = '/test.rpath.local@rpl:devel/1.0-1-1'
+        trvVersion = '/testproject.rpath.local@rpl:devel/1.0-1-1'
         trvFlavor = '1#x86|5#use:~!kernel.debug:~kernel.smp'
         subGroup = ''
 
@@ -436,7 +437,7 @@ class JobsTest(MintRepositoryHelper):
         groupTroveId = groupTrove.getId()
 
         trvName = 'testtrove'
-        trvVersion = '/test.rpath.local@rpl:devel/1.0-1-1'
+        trvVersion = '/testproject.rpath.local@rpl:devel/1.0-1-1'
         trvFlavor = '1#x86|5#use:~!kernel.debug:~kernel.smp'
         subGroup = ''
 

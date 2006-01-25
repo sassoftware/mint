@@ -164,6 +164,10 @@ class MintApacheServer(rephelp.ApacheServer):
         cfg.sendNotificationEmails = False
         cfg.commitAction = """%s/scripts/commitaction --username mintauth --password mintpass --repmap '%%(repMap)s' --build-label %%(buildLabel)s --module \'%s/mint/rbuilderaction.py --user %%%%(user)s --url http://mintauth:mintpass@%s:%d/xmlrpc-private/'""" % (conaryPath, mintPath, 'test.rpath.local', self.port)
         cfg.postCfg()
+                                    
+        cfg.commitAction = None     
+        cfg.SSL = False             
+                                    
         self.mintCfg = cfg
 
 
@@ -210,6 +214,10 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
         cu.execute("DELETE FROM Confirmations WHERE userId=?", userId)
         self.db.commit()
 
+        # add this user info to client config object
+        if ('*', username, password) not in self.cfg.user:
+            self.cfg.user.append(('*', username, password))
+
         return self.openMintClient((username, password)), userId
 
     def quickMintAdmin(self, username, password):
@@ -237,12 +245,16 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
         cu.execute("INSERT INTO UserGroupMembers VALUES(?, ?)",
                    groupId, authUserId)
         self.db.commit()
+
+        # add this user info to client config object
+        if ('*', username, password) not in self.cfg.user:
+            self.cfg.user.append(('*', username, password))
+
         return client, userId
 
     def newProject(self, client, name = "Test Project",
-                         hostname = "test",
-                         domainname = "rpath.local",
-                         username = "mintauth"):
+                   hostname = "testproject",
+                   domainname = "rpath.local"):
         """Create a new mint project and return that project ID."""
         # save the current openpgpkey cache
         keyCache = openpgpkey.getKeyCache()
@@ -254,7 +266,7 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
         # set a default signature key
         project = client.getProject(projectId)
         ascKey = open(testsuite.archivePath + '/key.asc', 'r').read()
-        project.addUserKey(username, ascKey)
+        project.addUserKey(client.server._server.authToken[0], ascKey)
 
         # restore the key cache
         openpgpkey.setKeyCache(keyCache)
@@ -262,10 +274,12 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
         self.cfg.buildLabel = versions.Label("%s.%s@rpl:devel" % \
                                              (hostname, domainname))
         self.cfg.repositoryMap = {"%s.%s" % (hostname, domainname):
-            "http://%s.%s:%d/repos/%s/" % (hostname, domainname,
+            "http://%s.%s:%d/repos/%s/" % (MINT_HOST, MINT_DOMAIN,
                                            self.port, hostname)}
+
         self.cfg.user.insert(0, ("%s.%s" % (hostname, domainname),
-                                    "testuser", "testpass"))
+                              client.server._server.authToken[0],
+                              client.server._server.authToken[1]))
 
         # re-open the repos to make changes to repositoryMap have any effect
         self.openRepository()
