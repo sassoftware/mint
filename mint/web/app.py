@@ -113,6 +113,9 @@ class MintApp(WebHandler):
         self.authToken = self.session.get('authToken', anonToken)
     
         # open up a new client with the retrieved authToken
+
+        # XXX short-circuit this cache until we can determine if it's completely
+        # safe in production:
         if True or self.authToken not in shimClients:
             shimClients[self.authToken] = shimclient.ShimMintClient(self.cfg, self.authToken)
         self.client = shimClients[self.authToken]
