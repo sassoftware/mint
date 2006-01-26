@@ -77,7 +77,7 @@ from mint import userlevels
 
                 ?>
                 <h3>Project Owners</h3>
-                <table border="0" cellspacing="0" cellpadding="0" class="memberstable">
+                <table py:if="users[userlevels.OWNER]" border="0" cellspacing="0" cellpadding="0" class="memberstable">
                     <tr py:for="userId, username in sorted(users[userlevels.OWNER], key=lambda x: x[1])">
                         <th><a py:strip="not auth.authorized" href="http://${SITE}userInfo?id=${userId}">${username}</a></th>
                         <td py:if="isOwner and not onlyOwner">
@@ -86,8 +86,8 @@ from mint import userlevels
                         <td py:if="isOwner and not lastOwner">
                             <a href="delMember?id=${userId}" class="option">Remove From Project</a> </td>
                     </tr>
-                    <tr><td py:if="not users[userlevels.OWNER]">No owners.</td></tr>
                 </table>
+                <p py:if="not users[userlevels.OWNER]">This project has been orphaned.</p>
                 <p class="help" py:if="isOwner and lastOwner and not auth.admin">
                     Because a project cannot have developers with no owner, you cannot change your
                     ownership status at this time. To remove yourself from this project, promote
@@ -96,7 +96,7 @@ from mint import userlevels
                 </p>
                 <h3>Developers</h3>
 
-                <table border="0" cellspacing="0" cellpadding="0" class="memberstable">
+                <table py:if="users[userlevels.DEVELOPER]" border="0" cellspacing="0" cellpadding="0" class="memberstable">
                     <tr py:for="userId, username in sorted(users[userlevels.DEVELOPER], key=lambda x: x[1])">
                         <th><a py:strip="not auth.authorized" href="http://${SITE}userInfo?id=${userId}">${username}</a></th>
                         <td py:if="isOwner">
@@ -104,8 +104,8 @@ from mint import userlevels
                         </td>
                         <td py:if="isOwner"><a href="delMember?id=${userId}" class="option">Remove From Project</a></td>
                     </tr>
-                    <tr><td py:if="not users[userlevels.DEVELOPER]">No developers.</td></tr>
                 </table>
+                <p py:if="not users[userlevels.DEVELOPER]">This project currently has no developers.</p>
 		<div py:if="reqList">
                     <h3>Requestors</h3>
                     <table border="0" cellspacing="0" cellpadding="0" class="memberstable">
@@ -119,8 +119,8 @@ from mint import userlevels
                         </tr>
                     </table>
 		</div>
-                <div py:if="isOwner" py:strip="True">
                 <h3>Users watching this project</h3>
+                <div py:if="isOwner" py:strip="True">
                 <table border="0" cellspacing="0" cellpadding="0" class="memberstable">
                     <tr py:for="userId, username in sorted(users[userlevels.USER], key=lambda x: x[1])">
                         <th><a py:strip="not auth.authorized" href="${cfg.basePath}userInfo?id=${userId}">${username}</a></th>
@@ -131,11 +131,11 @@ from mint import userlevels
                     <tr><td py:if="not users[userlevels.USER]">No users are watching this project</td></tr>
                 </table>
                 </div>
-                <h3 py:if="not isOwner">
-                    <div py:if="not users[userlevels.USER]" py:strip="True">There are no users watching this project</div>
-                    <div py:if="len(users[userlevels.USER]) == 1" py:strip="True">There is one user watching this project</div>
-                    <div py:if="len(users[userlevels.USER]) > 1" py:strip="True">There are ${len(users[userlevels.USER])} users watching this project</div>
-                </h3>
+                <div py:if="not isOwner" py:strip="True">
+                    <p py:if="not users[userlevels.USER]">There are no users watching this project.</p>
+                    <p py:if="len(users[userlevels.USER]) == 1">There is one user watching this project.</p>
+                    <p py:if="len(users[userlevels.USER]) > 1">There are ${len(users[userlevels.USER])} users watching this project.</p>
+                </div>
             </div>
         </td>
         <td id="right" class="projects">
