@@ -142,7 +142,7 @@ class MintApacheServer(rephelp.ApacheServer):
         elif sqldriver == 'postgresql':
             cfg.dbPath = 'root@localhost.localdomain:%d/minttest' % self.reposDB.port
         else:
-            assert 0, "Invalid database type"
+            raise AssertionError("Invalid database type")
         cfg.dbDriver = sqldriver
 
         reposdriver = os.environ.get('CONARY_REPOS_DB', 'sqlite')
