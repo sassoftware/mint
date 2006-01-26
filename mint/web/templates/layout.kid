@@ -39,45 +39,31 @@ onload = "javascript:;"
             <div id="top">
                 <img id="topgradleft" src="${cfg.staticPath}/apps/mint/images/topgrad_left.png" alt="" />
                 <img id="topgradright" src="${cfg.staticPath}/apps/mint/images/topgrad_right.png" alt="" />
-                <table style="width: 95%;">
-                    <tr>
-                        <td style="width: 50%;">
-                            <div id="corpLogo">
-                                <a href="http://${SITE}">
-                                    <img src="${cfg.staticPath}/apps/mint/images/corplogo.png" width="78" height="94" alt="rPath Logo" />
-                                </a>
-                            </div>
-                            <div id="prodLogo">
-                                <a href="http://${SITE}">
-                                    <img src="${cfg.staticPath}/apps/mint/images/prodlogo.gif" alt="rBuilder Online Logo" />
-                                </a>
-                            </div>
-                        </td>
-                        <td id="topRight">
-                            <div class="about"><a href="http://www.rpath.com/corp/about/">About rPath</a>
-                                <span py:omit="True" py:if="not auth.authorized and req.uri != cfg.basePath"> | <a href="http://${SITE}">Sign In</a></span>
-                            </div>
-                            <form action="http://${cfg.siteHost}${cfg.basePath}search" method="get" id="searchForm">
-                                <table style="width: 100%;" class="search">
-                                    <tr>
-                                        <td>I'm looking for a...</td>
-                                        <td><input style="width: 100%;" type="text" name="search" /></td>
-                                        <td style="text-align: right;">
-                                            <button id="searchSubmit" type="submit"><img src="${cfg.staticPath}/apps/mint/images/search.png" alt="Search" /></button>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td></td>
-                                        <td style="vertical-align: middle;">
-                                            <input type="radio" name="type" value="Projects" checked="checked" /> Project
-                                            <input type="radio" name="type" value="Packages" /> Package</td>
-                                        <td style="text-align: right;">Or you can <a href="http://${cfg.siteHost}${cfg.basePath}projects">browse</a>.</td>
-                                    </tr>
-                                </table>
-                            </form>
-                        </td>
-                    </tr>
-                </table>
+                <div id="corpLogo">
+                    <a href="http://${SITE}">
+                        <img src="${cfg.staticPath}/apps/mint/images/corplogo.png" width="78" height="94" alt="rPath Logo" />
+                    </a>
+                </div>
+                <div id="prodLogo">
+                    <a href="http://${SITE}">
+                        <img src="${cfg.staticPath}/apps/mint/images/prodlogo.gif" alt="rBuilder Online Logo" />
+                    </a>
+                </div>
+                <div id="topRight">
+                    <div class="about"><a href="http://www.rpath.com/corp/about/">About rPath</a>
+                        <span py:omit="True" py:if="not auth.authorized and req.uri != cfg.basePath"> | <a href="http://${SITE}">Sign In</a></span>
+                    </div>
+                    <form action="http://${cfg.siteHost}${cfg.basePath}search" method="get" id="searchForm">
+                        <label class="search" for="search">I'm looking for a...</label>
+                        <input class="search" name="search" type="text" />
+                        <button id="searchSubmit" type="submit"><img src="${cfg.staticPath}/apps/mint/images/search.png" alt="Search" /></button><br />
+                        <input id="typeProject" type="radio" name="type" value="Projects" checked="checked" />
+                        <label for="typeProject">Project</label>
+                        <input id="typePackage" type="radio" name="type" value="Packages" />
+                        <label for="typePackage">Package</label>
+                        <span id="browseText">&nbsp;&nbsp;&nbsp;Or you can <a href="http://${cfg.siteHost}${cfg.basePath}projects">browse</a>.</span>
+                    </form>
+                </div>
             </div>
 
             <div class="layout" py:replace="item[:]" />
