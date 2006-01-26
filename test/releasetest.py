@@ -324,10 +324,15 @@ class ReleaseTest(MintRepositoryHelper):
         release.setTrove("group-trove",
                          "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
         release.setPublished(True)
+
+        # ugly hack. mysql does not distinguish sub-second time resolution
+        time.sleep(1)
+
         release = client.newRelease(projectId, 'release 2')
         release.setTrove("group-trove",
                          "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
         release.setPublished(True)
+
         self.failIf([x.id for x in \
                      client.server.getReleasesForProject(projectId)] != [2, 1],
                     "getReleasesForProject is not ordered by "
