@@ -37,7 +37,7 @@
                             <option value="1#x86_64">x86_64 (64-bit)</option>
                         </select>
                     </p>
-                    <p><button type="submit">Cook Group</button></p>
+                    <p><button type="submit"><img src="${cfg.staticPath}/apps/mint/images/cook_button.png" alt="Cook Group" /></button></p>
                     <input type="hidden" name="id" value="${groupTroveId}" />
                 </form> 
             </div>

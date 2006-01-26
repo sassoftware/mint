@@ -19,20 +19,19 @@
         <title>${formatTitle('Create a Group')}</title>
     </head>
     <body>
-        <td id="left" class="side">
-            <div class="pad">
+        <div id="layout">
+            <div id="left" class="side">
                 ${projectResourcesMenu()}
             </div>
-        </td>
-        <td id="main" class="main" >
-            <div class="pad" >
+
+            <div id="main" style="width: 600px;">
                 <p py:if="errors" class="error">Group Creation Error${len(errors) > 1 and 's' or ''}</p>
                 <p py:for="error in errors" class="errormessage" py:content="error"/>
                 <h2>Create a Group</h2>
                 <p>Fields labeled with a <em class="required">red arrow</em> are required.</p>
                 <form method="post" action="createGroup">
 
-                    <table border="0" cellspacing="0" cellpadding="0" class="mainformhorizontal">
+                    <table>
                         <tr>
                             <th>
                                 <em class="required">Group Name:</em>
@@ -82,12 +81,9 @@
                             </td>
                         </tr>
                     </table>
-                    <p><button type="submit">Create</button></p>
+                    <p><button type="submit"><img src="${cfg.staticPath}/apps/mint/images/create_button.png" alt="Create" /></button></p>
                 </form>
             </div>
-        </td>
-        <td id="right" class="projects">
-            ${projectsPane()}
-        </td>
+        </div>
     </body>
 </html>
