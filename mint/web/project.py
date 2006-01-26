@@ -4,7 +4,6 @@
 # All rights reserved
 #
 import email
-import kid
 import os
 import re
 import sys
