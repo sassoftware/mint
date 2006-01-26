@@ -140,11 +140,21 @@ def setup():
     global testPath
     global archivePath
 
+    # set default CONARY_POLICY_PATH is it was not set.
     conaryPolicy = os.getenv('CONARY_POLICY_PATH', '/usr/lib/conary/policy')
     os.environ['CONARY_POLICY_PATH'] = conaryPolicy
 
-    if not os.environ.has_key('CONARY_PATH') or not os.environ.has_key('MINT_PATH'):
-	print "please set CONARY_PATH and MINT_PATH"
+    # set default MINT_PATH, if it was not set.
+    parDir = '/'.join(os.path.realpath(__file__).split('/')[:-2])
+    mintPath = os.getenv('MINT_PATH', parDir)
+    os.environ['MINT_PATH'] = mintPath
+
+    if mintPath not in sys.path:
+        sys.path.insert(0, mintPath)
+    # end setting default MINT_PATH/CONARY_POLICY_PATH
+
+    if not os.environ.has_key('CONARY_PATH'):
+	print "please set CONARY_PATH"
 	sys.exit(1)
     paths = (os.environ['MINT_PATH'], os.environ['MINT_PATH'] + '/test',
              os.environ['CONARY_PATH'],
