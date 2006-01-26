@@ -329,8 +329,8 @@ def extractChangeSets(client, cfg, csdir, groupName, groupVer, groupFlavor,
                 pass
         else:
             print >> sys.stderr, "creating", path
-            csRequest = [(name, (None, None), (version, flavor), False)]
-            csRequest += ((x[0], (None, None), (x[1], x[2]), False) \
+            csRequest = [(name, (None, None), (version, flavor), True)]
+            csRequest += ((x[0], (None, None), (x[1], x[2]), True) \
                                                       for x in components)
 
             if needsFile:
