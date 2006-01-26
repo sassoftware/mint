@@ -290,7 +290,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         page = self.fetch('/project/foo/pickArch?id=1')
 
         # this line would trigger a group cook if a job server were running
-        page.postForm(2, self.post, {'arch' : "1#x86", 'id' : '1'})
+        page.postForm(1, self.post, {'arch' : "1#x86", 'id' : '1'})
 
     def testDeletedGroup(self):
         client, userId = self.quickMintUser('foouser','foopass')
