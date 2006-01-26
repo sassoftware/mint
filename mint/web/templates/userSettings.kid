@@ -83,7 +83,7 @@
                    a member or owner.
                 </p>
                 <p><form method="get" action="cancelAccount">
-			<button class="warn" name="cancel" type="submit">Cancel my account</button>
+			<button class="warn" type="submit">Cancel my account</button>
 		</form></p>
             </div>
         </td>

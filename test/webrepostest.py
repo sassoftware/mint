@@ -54,15 +54,17 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
             content = 'troveInfo?t=testcase:runtime')
 
     def testBrowseExternalProject(self):
-        raise testsuite.SkipTestException
         client, userId = self.quickMintUser("testuser", "testpass")
         extProjectId = self.newProject(client, "External Project", "external")
 
         extProject = client.getProject(extProjectId)
         labelId = extProject.getLabelIdMap()['external.rpath.local@rpl:devel']
 
+        self.openRepository(0)
         self.openRepository(1)
-        self.makeSourceTrove("testcase", testRecipe, buildLabel = versions.Label('localhost1@rpl:linux'))
+        import epdb
+        epdb.st()
+        self.makeSourceTrove("testcase", testRecipe, buildLabel = versions.Label('localhost1@rpl:linux'), serverIdx = 1)
 
         extProject.editLabel(labelId, "localhost1@rpl:devel",
             'http://localhost1:%d/conary/' % self.servers.getServer(1).port, 'anonymous', 'anonymous')
@@ -70,6 +72,7 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
         page = self.assertCode('/repos/external/browse', code = 200)
 
         page = page.assertCode('/repos/external/troveInfo?t=testcase:source', code = 200)
+
 
 if __name__ == "__main__":
     testsuite.main()

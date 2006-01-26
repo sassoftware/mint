@@ -28,7 +28,7 @@
                         </tr>
                     </table>
                     <p>
-                        <button type="submit" name="submit">Forgot Password</button>
+                        <button type="submit">Forgot Password</button>
                     </p>
                 </form>
             </div>
