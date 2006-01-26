@@ -70,14 +70,17 @@ def _findValidTroves(cs, groupName, groupVersion, groupFlavor,
         
     for name, version, flavor in t.iterTroveList(strongRefs = True):
         if not topTrove.hasTrove(name, version, flavor):
-            topTrove = t
-        if not name.startswith('group-'):
-            if (skipNotByDefault 
-                and not topTrove.includeTroveByDefault(name, version, flavor)):
-                continue
+            childTopTrove = t
         else:
-            if not topTrove.includeTroveByDefault(name, version, flavor):
-                topTrove = None
+            childTopTrove = topTrove
+
+        if not name.startswith('group-'):
+            if (skipNotByDefault and 
+                not childTopTrove.includeTroveByDefault(name, version, flavor)):
+                continue
+        elif not childTopTrove.includeTroveByDefault(name, version, flavor):
+            # a not by default group
+            childTopTrove = None
 
         if ':' in name:
             package = name.split(':')[0]
@@ -91,7 +94,7 @@ def _findValidTroves(cs, groupName, groupVersion, groupFlavor,
         if trove.troveIsCollection(name):
             # recurse into included groups
             _findValidTroves(cs, name, version, flavor, 
-                             skipNotByDefault, topTrove, valid)
+                             skipNotByDefault, childTopTrove, valid)
     return valid
 
 def _makeEntry(groupCs, name, version, flavor, components):
@@ -600,7 +603,8 @@ if __name__ == '__main__':
 
     util.mkdirChain(csdir)
 
-    cfg = conarycfg.ConaryConfiguration()
+    cfg = conarycfg.ConaryConfiguration(True)
+    cfg.setContext(cfg.context)
     cfg.dbPath = ':memory:'
     cfg.root = ':memory:'
     cfg.initializeFlavors()
