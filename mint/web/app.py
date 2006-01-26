@@ -33,11 +33,6 @@ import cache
 from webhandler import WebHandler, normPath, HttpNotFound 
 from cache import pageCache, reqHash
 
-# hack to set the default encoding to utf-8
-# to overcome a kid bug.
-reload(sys)
-sys.setdefaultencoding("utf-8")
-
 #called from hooks.py if an exception was not caught
 class ErrorHandler(WebHandler):
     def handle(self, context):

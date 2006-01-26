@@ -458,13 +458,13 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         assert(page.body == data)
 
     def testUtf8ProjectName(self):
-        raise testsuite.SkipTestException, "need to figure out how to exactly emulate someone entering utf-8 into a web form"
         client, userId = self.quickMintUser('foouser','foopass')
         projectId = client.newProject('Foo', 'foo', 'rpath.local')
         project = client.getProject(projectId)
 
         project.editProject("http://example.com/",
-            "This project has \u266a extended characters in its description!", "Foo Title")
+            "This project has \xe2\x99\xaa \xe2\x99\xac extended characters in its description!",
+            "Test Title")
         project.refresh()
 
         page = self.assertContent('/project/foo/', ok_codes = [200],
