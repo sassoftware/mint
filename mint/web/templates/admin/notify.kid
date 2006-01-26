@@ -21,12 +21,6 @@
         <title>${formatTitle('Notify All Users')}</title>
     </head>
     <body>
-        <td id="left" class="side">
-            <div class="pad">
-                ${browseMenu()}
-                ${searchMenu()}
-            </div>
-        </td>
         <td id="main" class="spanall">
             <div class="pad">
               <p py:if="kwargs['extraMsg'] and not errors" class="message" py:content="kwargs['extraMsg']"/>

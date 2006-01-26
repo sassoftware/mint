@@ -19,13 +19,6 @@
         <title>${formatTitle('Create an Account')}</title>
     </head>
     <body>
-        <td id="left" class="plain">
-            <div class="pad">
-                ${browseMenu()}
-                ${searchMenu()}
-            </div>
-        </td>
-
        <td id="main" class="spanright">
             <div class="pad">
                 <p py:if="errors" class="error">Account Creation Error${len(errors) > 1 and 's' or ''}</p>

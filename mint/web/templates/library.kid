@@ -91,21 +91,6 @@ def injectVersion(version):
         </td>
     </div>
 
-    <div id="browse" class="palette" py:def="browseMenu(display='block')" py:strip="False">
-        <h3 onclick="javascript:toggle_display('browse_items');">
-            <img id="browse_items_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_${display == 'block' and 'collapse' or 'expand'}.gif" class="noborder" />
-            Browse
-        </h3>
-        <div id="browse_items" style="display: $display">
-          <ul>
-            <li><a href="http://${SITE}projects">All Projects</a></li>
-            <li><a href="http://${SITE}projects?sortOrder=9">Most Active Projects</a></li>
-            <li><a href="http://${SITE}projects?sortOrder=7">Most Popular Projects</a></li>
-            <li py:if="auth.admin"><a href="http://${SITE}users">All Users</a></li>
-          </ul>
-        </div>
-    </div>
-
     <div id="groupbuilder" class="palette" py:def="groupTroveBuilder(display='none')" py:strip="False" py:if="groupTrove" >
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/groupbuilder.js"/>
         <script type="text/javascript">
@@ -171,45 +156,6 @@ def injectVersion(version):
         </div>
     </div>
 
-
-
-    <div id="search" class="palette" py:def="searchMenu(selectType=None, display='block')" py:strip="False">
-        <?python
-if not selectType:
-    selectType = session.get('searchType', 'Projects')
-searchTypes = ['Projects', 'Packages']
-if auth.authorized:
-    searchTypes.append('Users')
-        ?>
-        <h3 onclick="javascript:toggle_display('search_items');">
-            <img id="search_items_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_${display == 'block' and 'collapse' or 'expand'}.gif" class="noborder" />
-            Search
-        </h3>
-          <div style="display: $display" id="search_items">
-            <form action="http://${SITE}search" method="get">
-            <p>
-                <label>search type:</label><br/>
-                <select name="type">
-                    <option py:for="searchType in searchTypes"
-                            py:attrs="{'value': searchType, 'selected': (selectType == searchType) and 'selected' or None}"
-                            py:content="searchType"/>
-                </select>
-            </p>
-            <p>
-                <label>keyword(s):</label><br/>
-                <input type="text" name="search" size="10" />
-            </p>
-            <p py:if="0">
-                <label>last modified:</label>
-                <br/>
-                <select name="modified" id="searchModified">
-                    <option py:for="i, option in enumerate(searcher.datehtml)" value="${i}">${option}</option>
-                </select>
-            </p>
-            <p><button>Submit</button><br /><a py:if="0" href="#">Advanced Search</a></p>
-            </form>
-          </div>
-    </div>
 
     <div py:def="recentReleasesMenu(releases, display='none')" py:strip="True">
       <div id="releases" class="palette" py:if="releases">

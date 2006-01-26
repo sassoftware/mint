@@ -26,13 +26,6 @@
     </head>
 
     <body>
-        <td id="left" class="side">
-            <div class="pad">
-                ${browseMenu()}
-                ${searchMenu()}
-            </div>
-        </td>
-
         <td id="main">
             <div class="pad">
                 <h3>An Overview of ${cfg.productName}</h3>

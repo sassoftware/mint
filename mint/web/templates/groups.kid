@@ -21,8 +21,6 @@
                 ${projectResourcesMenu()}
                 ${releasesMenu(publishedReleases, isOwner, display="none")}
                 ${commitsMenu(project.getCommits(), display="none")}
-                ${browseMenu(display='none')}
-                ${searchMenu(display='none')}
             </div>
         </td>
         <td id="main" >

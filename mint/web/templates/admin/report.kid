@@ -15,12 +15,6 @@
         <title>${formatTitle('View Reports')}</title>
     </head>
     <body>
-        <td id="left" class="side">
-            <div class="pad">
-                ${browseMenu()}
-                ${searchMenu()}
-            </div>
-        </td>
         <td id="main" class="spanall">
             <div class="pad">
               <form action="administer" method="post">

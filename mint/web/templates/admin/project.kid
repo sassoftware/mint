@@ -15,12 +15,6 @@
         <title>${formatTitle('Administer Projects')}</title>
     </head>
     <body>
-        <td id="left" class="side">
-            <div class="pad">
-                ${browseMenu()}
-                ${searchMenu()}
-            </div>
-        </td>
         <td id="main" class="spanall">
             <div class="pad">
               <p py:if="kwargs.get('extraMsg', None)" class="message" py:content="kwargs['extraMsg']"/>
