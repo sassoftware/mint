@@ -191,6 +191,8 @@ class InstallableIso(ImageGenerator):
             cfg.installLabelPath = [versions.Label(self.project.getLabel())]
             cclient = conaryclient.ConaryClient(cfg)
 
+        self.writeConaryRc(tmpPath, cclient)
+
         # extract constants.py from the stage2.img template and override the BETANAG flag
         # this would be better if constants.py could load a secondary constants.py
         stage2Path = tempfile.mkdtemp()
