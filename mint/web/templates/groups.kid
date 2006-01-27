@@ -19,8 +19,8 @@
         <td id="left" class="side">
             <div class="pad">
                 ${projectResourcesMenu()}
-                ${releasesMenu(publishedReleases, isOwner, display="none")}
-                ${commitsMenu(project.getCommits(), display="none")}
+                ${releasesMenu(publishedReleases, isOwner)}
+                ${commitsMenu(project.getCommits())}
             </div>
         </td>
         <td id="main" >
@@ -39,7 +39,7 @@
                 release based on the group.</p>
 
                 <h2>Current Group</h2>
-                
+
                 <ul>
                     <li py:if="not groupTrove">
                         You are not currently building a group.

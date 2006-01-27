@@ -37,6 +37,7 @@ from mint.mint import upstream
                 ${commitsMenu(commits)}
             </div>
             ${resourcePane()}
+            ${groupTroveBuilder()}
             <div id="main">
                 <h2>${project.getNameForDisplay(maxWordLen = 50)}</h2>
 

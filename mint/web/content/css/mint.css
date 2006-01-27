@@ -455,3 +455,51 @@ div#projectsPane div.boxHeader {
     font-weight: bold;
     height: 22px;
 }
+
+/* Group Builder */
+
+div#groupBuilder {
+    clear: right;
+    float: right;
+    max-width: 25%;
+}
+
+div#groupBuilder img.left {
+    float: left;
+}
+
+div#groupBuilder img.right {
+    float: right;
+}
+
+div#groupBuilder div.boxHeader {
+    color: black;
+    background: url(../images/header_orange_bg.png);
+    padding: 4px 11px 6px 11px;
+    margin-bottom: 0px;
+    font-size: 120%;
+    font-weight: bold;
+    height: 22px;
+}
+
+div#groupBuilderItems {
+    border: 1px solid #eeeeee;
+    padding: 0;
+}
+
+div#groupBuilder table tr:first-child {
+    color: black;
+    font-weight: bold;
+}
+
+table#groupTroveItems > tr:first-child {
+    font-size: 110%;
+    font-weight: bold;
+    color: white;
+    background-color: rgb(153, 153, 153);
+}
+
+table#groupTroveItems > tr:first-child td {
+    padding: 0.5em;
+}
+

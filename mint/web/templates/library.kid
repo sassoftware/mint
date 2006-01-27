@@ -91,20 +91,22 @@ def injectVersion(version):
         </td>
     </div>
 
-    <div id="groupbuilder" class="palette" py:def="groupTroveBuilder(display='none')" py:strip="False" py:if="groupTrove" >
+    <div id="groupBuilder" py:def="groupTroveBuilder" py:if="groupTrove" >
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/groupbuilder.js"/>
         <script type="text/javascript">
             var BaseUrl = '${cfg.basePath}';
             addLoadEvent(initLinkManager);
             addLoadEvent(initGroupTroveManager);
         </script>
-        <h3>
+        <img class="left" src="${cfg.staticPath}apps/mint/images/header_orange_left.png" />
+        <img class="right" src="${cfg.staticPath}apps/mint/images/header_orange_right.png" />
+        <div class="boxHeader">
             <a href="${groupProject.getUrl()}closeCurrentGroup?referer=${quote(req.unparsed_uri)}" title="Close"><img id="groupbuilder_items_close" src="${cfg.staticPath}/apps/mint/images/BUTTON_close.gif" class="noborder" /></a>
-            <a href="javascript:toggle_display('groupbuilder_items');" title="Minimize/Maximize"><img id="groupbuilder_items_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_${display == 'block' and 'collapse' or 'expand'}.gif" class="noborder" /></a>
             Group Builder
-        </h3>
-        <div id="groupbuilder_items" style="display: $display">
-            <h4><a href="${groupProject.getUrl()}editGroup?id=${groupTrove.id}">Current Group: ${groupTrove.recipeName}</a></h4>
+        </div>
+
+        <div id="groupBuilderItems">
+            <div><a href="${groupProject.getUrl()}editGroup?id=${groupTrove.id}">Current Group: ${groupTrove.recipeName}</a></div>
             <table>
               <thead>
                 <tr>
@@ -147,7 +149,7 @@ def injectVersion(version):
               </tbody>
               <tfoot>
                 <tr class="groupcook">
-                    <td colspan="4" style="text-align: center; padding: 1em;">
+                    <td colspan="5" style="text-align: center; padding: 1em;">
                         <a class="option" style="display: inline;" href="${groupProject.getUrl()}pickArch?id=${groupTrove.id}">Cook&nbsp;This&nbsp;Group</a>
                     </td>
                 </tr>
