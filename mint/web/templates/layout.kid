@@ -65,7 +65,6 @@ onload = "javascript:;"
                     </form>
                 </div>
             </div>
-
             <div class="layout" py:replace="item[:]" />
 
             <div id="footer">

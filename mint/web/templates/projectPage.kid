@@ -36,7 +36,7 @@ from mint.mint import upstream
                 ${releasesMenu(releases, isOwner)}
                 ${commitsMenu(commits)}
             </div>
-            ${projectsPane()}
+            ${resourcePane()}
             <div id="main">
                 <h2>${project.getNameForDisplay(maxWordLen = 50)}</h2>
 

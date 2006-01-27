@@ -22,42 +22,7 @@ from mint import searcher
     </head>
     <body>
         <div id="steps">
-            <?python
-                from urllib import quote
-                secureProtocol = 'http'
-                if auth.authorized:
-                    loginAction = "logout"
-                else:
-                    loginAction = "processLogin"
-                if cfg.SSL:
-                    secureProtocol = "https"
-            ?>
-            <form py:if="not auth.authorized" method="post" action="${secureProtocol}://${cfg.secureHost}${cfg.basePath}processLogin">
-                <div id="signin" py:if="not auth.authorized">
-                    <input type="hidden" name="to" value="${quote(toUrl)}" />
-
-                    <div>Username:</div>
-                    <div><input type="text" name="username" /></div>
-                    <div style="padding-top: 8px;">Password:</div>
-                    <div><input type="password" name="password" /></div>
-                    <div style="padding-top: 8px;">
-                        <input type="checkbox" name="remember_me" value="1" />
-                        <u>Remember me</u> on this computer
-                    </div>
-                    <button id="signInSubmit" type="submit">
-                        <img alt="Sign In" src="${cfg.staticPath}apps/mint/images/sign_in_button.png" />
-                    </button>
-
-                    <div id="noAccount">
-                        <p><strong>Don't have an account?</strong></p>
-                        <p><a href="register">Set one up.</a></p>
-                    </div>
-                </div>
-            </form>
-            <div id="signedIn" py:if="auth.authorized">
-                You are signed in as ${auth.username}.
-                <p><a href="http://${cfg.siteHost}${cfg.basePath}logout">Sign Out</a></p>
-            </div>
+            ${resourcePane()}
             <span id="buildit">Find the stuff you need to make your own software appliance in three easy steps.</span>
             <span id="findit">Check out all the amazing software applications others have made.</span>
 

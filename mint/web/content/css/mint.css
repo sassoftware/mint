@@ -431,7 +431,11 @@ div.palette img.right {
 
 div#projectsPane {
     float: right;
-    max-width: 25%;
+    width: 227px;
+    height: 281px;
+    border: 1px solid red
+    margin-left: 3px;
+    background: #eeeeee
 }
 
 div#projectsPane img.left {
@@ -445,10 +449,9 @@ div#projectsPane img.right {
 div#projectsPane div.boxHeader {
     color: black;
     background: url(../images/header_orange_bg.png);
-    padding: 4px 11px 6px 11px;
+    padding: 4px 37px 6px 11px;
     margin-bottom: 0px;
     font-size: 120%;
     font-weight: bold;
     height: 22px;
-
 }

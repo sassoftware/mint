@@ -230,4 +230,51 @@ def injectVersion(version):
          'height=500,width=500,menubar=no,scrollbars,status=no,toolbar=no', true); return false;}"
         py:content="text"/>
 
+    <div py:def="loginPane()">
+        <?python
+                from urllib import quote
+                secureProtocol = 'http'
+                if auth.authorized:
+                    loginAction = "logout"
+                else:
+                    loginAction = "processLogin"
+                if cfg.SSL:
+                    secureProtocol = "https"
+            ?>
+        <form py:if="not auth.authorized" method="post" action="${secureProtocol}://${cfg.secureHost}${cfg.basePath}processLogin">
+            <div id="signin">
+                <input type="hidden" name="to" value="${quote(toUrl)}" />
+
+                <div>Username:</div>
+                <div><input type="text" name="username" /></div>
+                <div style="padding-top: 8px;">Password:</div>
+                <div><input type="password" name="password" /></div>
+                <div style="padding-top: 8px;">
+                    <input type="checkbox" name="remember_me" value="1" />
+                    <u>Remember me</u> on this computer
+                </div>
+                <button id="signInSubmit" type="submit">
+                    <img alt="Sign In" src="${cfg.staticPath}apps/mint/images/sign_in_button.png" />
+                </button>
+
+                <div id="noAccount">
+                    <p><strong>Don't have an account?</strong></p>
+                    <p><a href="register">Set one up.</a></p>
+                </div>
+            </div>
+        </form>
+        <div py:if="auth.authorized">
+            Silly web programmer. logins are for anonymous users.
+        </div>
+    </div>
+
+    <div py:def="resourcePane()">
+        <div py:if="not auth.authorized">
+            ${loginPane()}
+        </div>
+        <div py:if="auth.authorized">
+            ${projectsPane()}
+        </div>
+    </div>
+
 </html>

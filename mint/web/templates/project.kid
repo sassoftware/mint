@@ -89,19 +89,11 @@
       </div>
     </div>
 
-
     <div py:def="projectsPane()" id="projectsPane" >
         <div py:if="not auth.authorized" strip="True">
-            <h3>Sign up for ${cfg.productName} Today</h3>
-
-            <p>If you are new to ${cfg.productName}, 
-                <a href="http://${SITE}register"><strong>create
-                        your new account now</strong></a>.
-            </p>
-
-            <p>If you already have an account, <a href="http://${SITE}"><strong>sign in</strong></a>.</p>
+            Silly web programmer. projects pane is for logged in users.
         </div>
-        <div py:if="auth.authorized and not projectList" strip="True">
+        <div py:if="not projectList" strip="True">
             <h3>Get Involved</h3>
 
             <p>Now's the time to get involved with the ${cfg.productName}
@@ -120,10 +112,10 @@
             Then, click on the project name, and click on the "Request to join"
             link to submit your request to the project's owners.</p>
         </div>
-        <div py:if="auth.authorized and projectList" strip="True">
+        <div py:if="projectList" strip="True">
             <img class="left" src="${cfg.staticPath}apps/mint/images/header_orange_left.png" />
             <img class="right" src="${cfg.staticPath}apps/mint/images/header_orange_right.png" />
-            <div class="boxHeader">My Projects</div>
+            <div class="boxHeader">Welcome ${auth.username}</div>
             <ul>
                 <li py:for="project, level in sorted(projectList, cmp = userlevels.myProjectCompare)">
                     <a href="${project.getUrl()}">
@@ -140,5 +132,6 @@
                 </li>
             </ul>
         </div>
+        <p><a href="http://${cfg.siteHost}${cfg.basePath}logout">Sign Out</a></p>
     </div>
 </html>
