@@ -74,7 +74,7 @@ def _findValidTroves(cs, groupName, groupVersion, groupFlavor,
         else:
             childTopTrove = topTrove
 
-        if not name.startswith('group-'):
+        if not name.startswith('group-') and name not in ('kernel', 'kernel:runtime'):
             if (skipNotByDefault and 
                 not childTopTrove.includeTroveByDefault(name, version, flavor)):
                 continue
