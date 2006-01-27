@@ -115,23 +115,31 @@
         <div py:if="projectList" strip="True">
             <img class="left" src="${cfg.staticPath}apps/mint/images/header_orange_left.png" />
             <img class="right" src="${cfg.staticPath}apps/mint/images/header_orange_right.png" />
-            <div class="boxHeader">Welcome ${auth.username}</div>
-            <ul>
-                <li py:for="project, level in sorted(projectList, cmp = userlevels.myProjectCompare)">
-                    <a href="${project.getUrl()}">
-                        ${project.getNameForDisplay()}</a><br/>
-                        ${userlevels.names[level]}
-                        <span py:if="not level and project.listJoinRequests()">
-                            <a href="${project.getUrl()}members"><b style="color: red;">Requests Pending</b></a>
-                        </span>
-                </li>
-            </ul>
-            <ul py:if="auth.authorized">
-                <li>
-                    <a href="http://${SITE}newProject"><strong>Create a new project</strong></a>
-                </li>
-            </ul>
+            <div class="boxHeader">
+                <span style="float: left;">${auth.username}</span>
+                <span style="float: right;">
+                    <a href="http://${cfg.siteHost}${cfg.basePath}logout">
+                        Sign Out
+                    </a>
+                </span>
+            </div>
+            <div class="boxBody">
+                <ul>
+                    <li py:for="project, level in sorted(projectList, cmp = userlevels.myProjectCompare)">
+                        <a href="${project.getUrl()}">
+                            ${project.getNameForDisplay()}</a><br/>
+                            ${userlevels.names[level]}
+                            <span py:if="not level and project.listJoinRequests()">
+                                <a href="${project.getUrl()}members"><b style="color: red;">Requests Pending</b></a>
+                            </span>
+                    </li>
+                </ul>
+                <ul>
+                    <li>
+                        <a href="http://${SITE}newProject"><strong>Create a new project</strong></a>
+                    </li>
+                </ul>
+            </div>
         </div>
-        <p><a href="http://${cfg.siteHost}${cfg.basePath}logout">Sign Out</a></p>
     </div>
 </html>
