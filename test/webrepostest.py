@@ -72,6 +72,21 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
 
         page = page.assertCode('/repos/external/troveInfo?t=testcase:source', code = 200)
 
+    def testTroveInfoPage(self):
+        raise testsuite.SkipTestException("This test needs networked repostiory client workaround")
+        client, userId = self.quickMintUser('foouser','foopass')
+        projectId = self.newProject(client)
+
+        # test that missing troves are a 404 not found error
+        page = self.fetch('/repos/foo/troveInfo?t=group-foo', ok_codes = [404])
+
+        self.addQuickTestComponent('foo:source',
+                                   '/testproject.rpath.local@rpl:devel/1.0-1')
+
+        # test that trove info page renders without error
+        page = self.assertContent('/repos/testproject/troveInfo?t=foo:source',
+                                  content = "Trove information for")
+
 
 if __name__ == "__main__":
     testsuite.main()

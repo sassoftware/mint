@@ -110,7 +110,7 @@ def pluralTroves(c):
         <td id="right" class="projects">
             ${projectsPane()}
             <div class="pad">
-                ${groupTroveBuilder('block')}
+                ${groupTroveBuilder()}
             </div>
         </td>
     </body>
