@@ -89,36 +89,11 @@ from mint.mint import upstream
 
                 <p>For detailed information on building or installing software
                         for ${isOwner and "your" or "this"} project, check out:
-                        <ul>
-                                <li py:if="isOwner or isDeveloper"><a href="${basePath}conaryDevelCfg">Setting up ${isOwner and "your" or "the"} project build environment</a></li>
-                                <li><a href="${basePath}conaryUserCfg">Installing packages from ${isOwner and "your" or "this"} project</a></li>
-                        </ul>
-                    </p>
-
-        <!-- XXX: get rid of this when it's been moved elsewhere ... -->
-        <!--            <li py:if="auth.authorized and userLevel == userlevels.NONMEMBER">
-                        <a href="${basePath}watch">Watch this project</a>
-                    </li>
-                    <li py:if="userLevel == userlevels.USER">
-                        <a href="${basePath}unwatch">Stop watching this project</a>
-                    </li>
-                    <div py:strip="True" py:if="not project.external">
-                        <li py:if="isDeveloper"><a href="${basePath}resign">Resign from this project</a></li>
-                        <li py:if="auth.authorized and not isOwner and not isDeveloper and True in [ x[2] not in userlevels.READERS for x in memberList]">
-                            <a py:if="not userHasReq" href="${basePath}joinRequest">Request to join this project</a>
-                            <a py:if="userHasReq" href="${basePath}joinRequest">Modify your comments to a pending join request</a>
-                        </li>
-                        <li py:if="True not in [ x[2] not in userlevels.READERS for x in memberList]">
-                            <a py:if="auth.authorized" href="${basePath}adopt">Adopt this project</a>
-                            <span py:strip="True" py:if="not auth.authorized">Log in to adopt this project</span>
-                        </li>
-                        <li py:if="not auth.authorized">
-                            Log in to:
-                                <li>Watch this project</li>
-                                <li>Request to join this project</li>
-                        </li>
-                    </div>
-                </ul> -->
+                    <ul>
+                            <li py:if="isOwner or isDeveloper"><a href="${basePath}conaryDevelCfg">Setting up ${isOwner and "your" or "the"} project build environment</a></li>
+                            <li><a href="${basePath}conaryUserCfg">Installing packages from ${isOwner and "your" or "this"} project</a></li>
+                    </ul>
+                </p>
             </div>
         </td>
         <td id="right" class="projects">
