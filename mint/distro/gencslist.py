@@ -167,7 +167,7 @@ def _validateTrove(newCs, cachedCs, name, version, flavor):
         return False
     return True
 
-def _validateChangeSet(path, cs, name, version, flavor):
+def _validateChangeSet(path, cs, name, version, flavor, compNames):
     # check to make sure that a cached change set matches the version
     # from the repository
     cachedCs = changeset.ChangeSetFromFile(path)
@@ -184,13 +184,10 @@ def _validateChangeSet(path, cs, name, version, flavor):
     # then iterate over any included troves (if any)
     topTrove = _getTrove(cs, name, version, flavor)
     for name, version, flavor in topTrove.iterTroveList(strongRefs = True):
-        # skip not byDefault troves
-        try:
-            if not topTrove.includeTroveByDefault(name, version, flavor):
-                continue
-        except KeyError:
-            # missing byDefault infor for this trove, so it's bad
-            return False
+        if name not in compNames:
+            if cachedCs.hasNewTrove(name, version, flavor):
+                return False
+            continue
         if not _validateTrove(cs, cachedCs, name, version, flavor):
             return False
 
@@ -314,7 +311,7 @@ def extractChangeSets(client, cfg, csdir, groupName, groupVer, groupFlavor,
 
         # make sure that the existing changeset is not stale
         if keep:
-            if not _validateChangeSet(path, group, name, version, flavor):
+            if not _validateChangeSet(path, group, name, version, flavor, compNames):
                 # the existing changeset does not check out, toss it.
                 keep = False
 

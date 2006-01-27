@@ -16,6 +16,7 @@ from conary.repository import changeset
 from conary.lib import util
 
 from mint.distro import gencslist
+from mint.distro.gencslist import _validateChangeSet
 
 class DistroTest(rephelp.RepositoryHelper):
     def testGencslist(self):
@@ -105,6 +106,61 @@ class DistroTest(rephelp.RepositoryHelper):
             assert(troveNames == set(expectedTroves))
 
         util.rmtree(csdir)
+
+    def testCache(self):
+        self.addComponent("test:runtime", "1.0")
+        self.addComponent("test:devel", "1.0", filePrimer=1)
+        self.addComponent("test:debuginfo", '1.0', filePrimer=2)
+        trv = self.addCollection("test", "1.0", [ ":runtime", ":devel",
+                                                 (':debuginfo', False)])
+
+        client = conaryclient.ConaryClient(self.cfg)
+        
+        name, version, flavor = (trv.getName(), trv.getVersion(), trv.getFlavor())
+        compNames = ['test:runtime']
+
+        cacheName = gencslist._getCacheFilename(name, version, flavor, compNames)
+        cachePath = self.workDir + '/' + cacheName
+
+
+        repos = self.openRepository()
+        csRequest = [(name, (None, None), (version, flavor), True)]
+        csRequest += [ (x, (None, None), (version, flavor), True) for x in compNames ]
+
+        repos.createChangeSetFile(csRequest, cachePath,
+                                  recurse = False,
+                                  primaryTroveList = [(name, version, flavor)])
+
+
+        groupTrv = self.addCollection("group-dist", "1.0", [ "test" ] )
+        groupChg = ('group-dist', (None, None), (groupTrv.getVersion(), groupTrv.getFlavor()), 0)
+        group = client.createChangeSet([groupChg], withFiles=False,
+                                       withFileContents=False,
+                                       skipNotByDefault = False)
+        assert(_validateChangeSet(cachePath, group, name, version, flavor, compNames))
+
+        os.remove(cachePath)
+        # test to make sure too large fails to validate
+        tooLarge = csRequest + [('test:devel', (None, None), (version, flavor), True)]
+        repos.createChangeSetFile(tooLarge,
+                                  cachePath,
+                                  recurse = False,
+                                  primaryTroveList = [(name, version, flavor)])
+        assert(not _validateChangeSet(cachePath, group, name, version, flavor, 
+                                      compNames))
+
+        tooSmall = list(csRequest)
+        tooSmall.remove(('test:runtime', (None, None), (version, flavor), True))
+
+        # test to make sure too small also fails to validate
+        os.remove(cachePath)
+        repos.createChangeSetFile(tooSmall,
+                                  cachePath,
+                                  recurse = False,
+                                  primaryTroveList = [(name, version, flavor)])
+        assert(not _validateChangeSet(cachePath, group, name, version, flavor, 
+                                      compNames))
+
 
 if __name__ == "__main__":
     testsuite.main()
