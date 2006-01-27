@@ -233,3 +233,9 @@ table#groupTroveItems > tr:first-child {
 table#groupTroveItems > tr:first-child td {
     padding: 0.5em;
 }
+
+span#editProject {
+    margin-left: 1em;
+    font-weight: normal;
+    font-size: x-small;
+}
