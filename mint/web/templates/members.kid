@@ -12,6 +12,7 @@ from mint import userlevels
 
     <?python
         isOwner = userLevel == userlevels.OWNER or auth.admin
+        isDeveloper = userLevel == userlevels.DEVELOPER
         memberList = project.getMembers()
     ?>
 
@@ -28,7 +29,6 @@ from mint import userlevels
             <div class="pad" >
                 ${projectResourcesMenu()}
                 <div class="palette" id="addmember" py:if="isOwner">
-
                     <h3 onclick="javascript:toggle_display('addmember_items');">
                         <img id="addmember_items_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_collapse.gif" class="noborder" />
                         Add New Member
@@ -61,21 +61,59 @@ from mint import userlevels
         </td>
         <td id="main">
             <div class="pad" >
-                <h2>${project.getNameForDisplay(maxWordLen = 50)}<br/>Members</h2>
                 <?python
-                users = {
-                          userlevels.OWNER: [],
-                          userlevels.DEVELOPER: [],
-                          userlevels.USER: [],
-                        }
+                    users = {
+                              userlevels.OWNER: [],
+                              userlevels.DEVELOPER: [],
+                              userlevels.USER: [],
+                            }
 
-                for userId, username, level in project.getMembers():
-                    users[level].append((userId, username,))
+                    for userId, username, level in project.getMembers():
+                        users[level].append((userId, username,))
 
-                lastOwner = project.lastOwner(auth.userId)
-                onlyOwner = project.onlyOwner(auth.userId)
-
+                    lastOwner = project.lastOwner(auth.userId)
+                    onlyOwner = project.onlyOwner(auth.userId)
                 ?>
+                <h2>${project.getNameForDisplay(maxWordLen = 50)}<br/>
+                    Members</h2>
+
+                <div id="yourStatus" py:if="auth.authorized">
+                    <h3>Your Status</h3>
+                    <p py:if="userLevel == userlevels.NONMEMBER">
+                        You are currently not involved in this project.
+                    </p>
+                    <p py:if="userLevel == userlevels.USER">
+                        You are currently watching this project.
+                    </p>
+                    <p py:if="userLevel == userlevels.DEVELOPER">
+                        You are currently a developer of this project.
+                    </p>
+                    <p py:if="userLevel == userlevels.OWNER">
+                        You are currently ${onlyOwner and "the owner" or "an owner"} of this project.
+                    </p>
+                    <p py:if="not isOwner">Actions:
+                        <ul>
+                            <li py:if="auth.authorized and userLevel == userlevels.NONMEMBER">
+                            <a href="${basePath}watch">Watch this project</a>
+                            </li>
+                            <li py:if="userLevel == userlevels.USER">
+                                <a href="${basePath}unwatch">Stop watching this project</a>
+                            </li>
+                            <div py:strip="True" py:if="not project.external">
+                                <li py:if="isDeveloper"><a href="${basePath}resign">Resign from this project</a></li>
+                                <li py:if="auth.authorized and not isOwner and not isDeveloper and True in [ x[2] not in userlevels.READERS for x in memberList]">
+                                    <a py:if="not userHasReq" href="${basePath}joinRequest">Request to join this project</a>
+                                    <a py:if="userHasReq" href="${basePath}joinRequest">Modify your comments to a pending join request</a>
+                                </li>
+                                <li py:if="True not in [ x[2] not in userlevels.READERS for x in memberList]">
+                                    <a py:if="auth.authorized" href="${basePath}adopt">Adopt this project</a>
+                                    <span py:strip="True" py:if="not auth.authorized">Log in to adopt this project</span>
+                                </li>
+                            </div>
+                        </ul>
+                    </p>
+                </div>
+
                 <h3>Project Owners</h3>
                 <table py:if="users[userlevels.OWNER]" border="0" cellspacing="0" cellpadding="0" class="memberstable">
                     <tr py:for="userId, username in sorted(users[userlevels.OWNER], key=lambda x: x[1])">
@@ -119,7 +157,7 @@ from mint import userlevels
                         </tr>
                     </table>
 		</div>
-                <h3>Users watching this project</h3>
+                <h3>Users</h3>
                 <div py:if="isOwner" py:strip="True">
                 <table border="0" cellspacing="0" cellpadding="0" class="memberstable">
                     <tr py:for="userId, username in sorted(users[userlevels.USER], key=lambda x: x[1])">

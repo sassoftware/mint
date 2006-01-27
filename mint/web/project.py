@@ -85,7 +85,7 @@ class ProjectHandler(WebHandler):
 
     @redirectHttp
     def projectPage(self, auth):
-        return self._write("projectPage", userHasReq = self.client.userHasRequested(self.project.getId(), auth.userId))
+        return self._write("projectPage")
 
     def conaryUserCfg(self, auth):
         return self._write("conaryUserCfg")
@@ -553,7 +553,10 @@ class ProjectHandler(WebHandler):
             reqList = self.client.listJoinRequests(self.project.getId())
         else:
             reqList = []
-        return self._write("members", reqList = reqList)
+        return self._write("members",
+                userHasReq = self.client.userHasRequested(self.project.getId(),
+                    auth.userId),
+                reqList = reqList)
 
     @requiresAuth
     def adopt(self, auth):
