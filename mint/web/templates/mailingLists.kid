@@ -10,6 +10,8 @@
     from mint import userlevels
 
     isOwner = userLevel == userlevels.OWNER or auth.admin
+
+    isRPL = project.external and project.getName() == 'rPath Linux'
 ?>
     <head>
         <title>${formatTitle('Mailing Lists: %s'%project.getNameForDisplay())}</title>
@@ -34,7 +36,39 @@
             <div class="pad">
                 <p class="message" py:for='msg in messages' py:content="msg"/>
                 <h2>${project.getNameForDisplay(maxWordLen = 50)}<br />Mailing Lists</h2>
-                <div py:for="list in lists">
+                <div py:strip="True" py:if="isRPL">
+                    <h3>
+                    <a href="http://lists.rpath.com/mailman/listinfo/distro-commits" target="_NEW">distro-commits</a></h3>
+                    <p>Commits to the rPath Linux distribution repository.</p>
+                    <div style="float:left; margin-right:5px;">
+                        <span>
+                        <a href="http://lists.rpath.com/pipermail/distro-commits/" class="option" target="_NEW">Archives</a>
+                        </span>
+                    </div>
+
+                    <br clear="all" />
+
+                    <h3>
+                    <a href="http://lists.rpath.com/mailman/listinfo/distro-list" target="_NEW">distro-list</a></h3>
+                    <p>rPath Linux Distribution Discussion.</p>
+                    <div style="float:left; margin-right:5px;">
+                        <span>
+                        <a href="http://lists.rpath.com/pipermail/distro-list/" class="option" target="_NEW">Archives</a>
+                        </span>
+                    </div>
+
+                    <br clear="all" />
+
+                    <div class="help" style="margin-top: 1em;">
+                        <p>Click on the mailing list's name to receive more
+                           more information about the mailing list,
+                           including directions on how to subscribe or
+                           unsubscribe.</p>
+                    </div>
+
+                </div>
+
+                <div py:if="not isRPL" py:for="list in lists">
                     <h3><a href="${mailhost + 'listinfo/' + list.name}" target="_NEW">${list.name}</a></h3>
                     <p>${list.description}</p>
                     <div style="float:left; margin-right:5px;">
@@ -68,8 +102,7 @@
                     <br clear="all"/>
                     &#160;
                 </div>
-                <div py:if="not lists">This project has no lists.</div>
-                
+                <div py:if="not (lists or isRPL)">This project has no lists.</div>
                 <h2 py:if="isOwner">Create a New Mailing List</h2>
 
                 <form py:if="isOwner" name="createList" action="$basePath/createList" method="POST">

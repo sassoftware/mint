@@ -30,7 +30,7 @@
             <li><a href="${projectUrl}members"><strong py:strip="lastchunk != 'members'">Members</strong></a>
                 <ul><li py:if="isOwner"><a href="${projectUrl}../../repos/${project.getHostname()}/pgpAdminForm">Manage Signing Keys</a></li></ul>
             </li>
-            <li py:if="not project.external"><a href="${projectUrl}mailingLists"><strong py:strip="lastchunk != 'mailingLists'">Mailing Lists</strong></a></li>
+            <li><a href="${projectUrl}mailingLists"><strong py:strip="lastchunk != 'mailingLists'">Mailing Lists</strong></a></li>
             <li py:if="0"><a href="#"><strong py:strip="lastchunk != 'bugs'">Bug Tracking</strong></a></li>
         </ul>
     </div>
