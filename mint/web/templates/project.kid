@@ -122,6 +122,11 @@
         </div>
         <div py:if="auth.authorized and projectList" class="pad">
             <h3>My Projects</h3>
+            <ul py:if="auth.authorized">
+                <li>
+                    <a href="http://${SITE}newProject"><strong>Create a new project</strong></a>
+                </li>
+            </ul>
             <ul>
                 <li py:for="project, level in sorted(projectList, cmp = userlevels.myProjectCompare)">
                     <a href="${project.getUrl()}">
@@ -130,11 +135,6 @@
                         <span py:if="not level and project.listJoinRequests()">
                             <a href="${project.getUrl()}members"><b style="color: red;">Requests Pending</b></a>
                         </span>
-                </li>
-            </ul>
-            <ul py:if="auth.authorized">
-                <li>
-                    <a href="http://${SITE}newProject"><strong>Create a new project</strong></a>
                 </li>
             </ul>
         </div>
