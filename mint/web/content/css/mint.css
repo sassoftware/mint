@@ -461,7 +461,8 @@ div#projectsPane div.boxHeader {
 div#groupBuilder {
     clear: right;
     float: right;
-    max-width: 25%;
+    max-width: 227px;
+    margin-top: 8px;
 }
 
 div#groupBuilder img.left {
@@ -492,14 +493,19 @@ div#groupBuilder table tr:first-child {
     font-weight: bold;
 }
 
-table#groupTroveItems > tr:first-child {
+table.groupTroveItems {
+    clear: left;
+    width: 700px;
+}
+
+table.groupTroveItems > tr:first-child {
     font-size: 110%;
     font-weight: bold;
     color: white;
     background-color: rgb(153, 153, 153);
 }
 
-table#groupTroveItems > tr:first-child td {
+table.groupTroveItems > tr:first-child td {
     padding: 0.5em;
 }
 
