@@ -150,9 +150,9 @@ class GroupTroveCook(Generator):
                             # loop through each conflicting trove for each label in the path,
                             # and pick the first conflicting trove that matches.
                             for conflict in conflicts:
-                                matches = [x for x in conflict if x[1].branch().label().asString() == l]
+                                matches = [x for x in conflict[0] if x[1].branch().label().asString() == l]
                                 if matches:
-                                    con = list(conflict)
+                                    con = list(conflict[0])
                                     con.remove(matches[0])
                                     removeTroves.extend([x for x in con])
                                     break
