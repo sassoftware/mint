@@ -90,10 +90,18 @@
     </div>
 
     <div py:def="projectsPane()" id="projectsPane" >
-        <div py:if="not auth.authorized" strip="True">
-            Silly web programmer. projects pane is for logged in users.
+        <img class="left" src="${cfg.staticPath}apps/mint/images/header_orange_left.png" />
+        <img class="right" src="${cfg.staticPath}apps/mint/images/header_orange_right.png" />
+        <div class="boxHeader">
+            <span style="float: left;">${auth.username}</span>
+            <span style="float: right;">
+                <a href="http://${cfg.siteHost}${cfg.basePath}logout">
+                    Sign Out
+                </a>
+            </span>
         </div>
-        <div py:if="not projectList" strip="True">
+
+        <div class="boxBody" py:if="not projectList" strip="True">
             <h3>Get Involved</h3>
 
             <p>Now's the time to get involved with the ${cfg.productName}
@@ -112,34 +120,22 @@
             Then, click on the project name, and click on the "Request to join"
             link to submit your request to the project's owners.</p>
         </div>
-        <div py:if="projectList" strip="True">
-            <img class="left" src="${cfg.staticPath}apps/mint/images/header_orange_left.png" />
-            <img class="right" src="${cfg.staticPath}apps/mint/images/header_orange_right.png" />
-            <div class="boxHeader">
-                <span style="float: left;">${auth.username}</span>
-                <span style="float: right;">
-                    <a href="http://${cfg.siteHost}${cfg.basePath}logout">
-                        Sign Out
-                    </a>
-                </span>
-            </div>
-            <div class="boxBody">
-                <ul>
-                    <li py:for="project, level in sorted(projectList, cmp = userlevels.myProjectCompare)">
-                        <a href="${project.getUrl()}">
-                            ${project.getNameForDisplay()}</a><br/>
-                            ${userlevels.names[level]}
-                            <span py:if="not level and project.listJoinRequests()">
-                                <a href="${project.getUrl()}members"><b style="color: red;">Requests Pending</b></a>
-                            </span>
-                    </li>
-                </ul>
-                <ul>
-                    <li>
-                        <a href="http://${SITE}newProject"><strong>Create a new project</strong></a>
-                    </li>
-                </ul>
-            </div>
+        <div class="boxBody" py:if="projectList" strip="True">
+            <ul>
+                <li py:for="project, level in sorted(projectList, cmp = userlevels.myProjectCompare)">
+                    <a href="${project.getUrl()}">
+                        ${project.getNameForDisplay()}</a><br/>
+                        ${userlevels.names[level]}
+                        <span py:if="not level and project.listJoinRequests()">
+                            <a href="${project.getUrl()}members"><b style="color: red;">Requests Pending</b></a>
+                        </span>
+                </li>
+            </ul>
+            <ul>
+                <li>
+                    <a href="http://${SITE}newProject"><strong>Create a new project</strong></a>
+                </li>
+            </ul>
         </div>
     </div>
 </html>

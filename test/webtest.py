@@ -400,14 +400,15 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
     def testSessionStability(self):
         newSid = '1234567890ABCDEF1234567890ABCDEF'
-        client, userId = self.quickMintUser('foouser','foopass')
+        username = 'foouser'
+        client, userId = self.quickMintUser(username, 'foopass')
         # session not in table and not cached
-        page = self.webLogin('foouser', 'foopass')
+        page = self.webLogin(username, 'foopass')
 
         # session in table and cached
         page = self.fetch('/', ok_codes = [200])
 
-        self.failIf('You are signed in' not in page.body,
+        self.failIf(username not in page.body,
                     'Cached session appears to be logged out')
 
         # now move the session--effectively kill it, but we'll need it again
@@ -420,7 +421,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         page = self.fetch('/projects?sortOrder=9', ok_codes = [200])
 
         # session not in table and not in cache
-        self.failIf('You are signed in' in page.body,
+        self.failIf(username in page.body,
                     'Unchached session not logged out')
 
         # HACK alter cookie to match what we moved session to earlier
@@ -429,7 +430,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         cookie = 'pysid'
         self.registerExpectedCookie(cookie)
         page = self.fetch('/', ok_codes = [200])
-        self.failIf('You are signed in' not in page.body,
+        self.failIf(username not in page.body,
                     'Uncached session appears to be logged out')
 
     def testUnknownError(self):
