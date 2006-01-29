@@ -18,6 +18,12 @@ testTemplate = \
 """<?xml version='1.0' encoding='UTF-8'?>
 <plain>This is a plain text ${myString}.</plain>
 """
+testTemplateWithConditional = \
+"""<?xml version='1.0' encoding='UTF-8'?>
+<plain><p if="isChunky">${myString}</p>
+<p if="not isChunky">Not ${myString}</p>
+</plain>
+"""
 
 class HelperFunctionsTest(unittest.TestCase):
     def testMyProjectCompare(self):
@@ -92,6 +98,14 @@ class HelperFunctionsTest(unittest.TestCase):
         t.myString = "string"
         render = templates.write(t)
         assert render == "This is a plain text string."
+
+    def testPlainKidTemplateWithConditional(self):
+        t = kid.Template(testTemplateWithConditional)
+        t.myString = "Chunky bacon"
+        t.isChunky = True
+        render = templates.write(t)
+        print render
+        assert render == "Chunky bacon"
 
     def testPlainKidTemplateWithImport(self):
         import kid
