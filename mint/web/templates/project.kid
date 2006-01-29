@@ -42,7 +42,7 @@
       <div py:if="isOwner or releaseList" class="palette" id="releases">
           <h3 onclick="javascript:toggle_display('release_items');">
                   <img id="release_items_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_${display == 'block' and 'collapse' or 'expand'}.gif" class="noborder" />
-                  <a href="${basePath}rss"><img class="noborder" style="margin-right:10px; vertical-align: middle;" src="${cfg.staticPath}apps/mint/images/rss-inline.gif" /></a>
+                  <a href="${projectUrl}rss"><img class="noborder" style="margin-right:10px; vertical-align: middle;" src="${cfg.staticPath}apps/mint/images/rss-inline.gif" /></a>
                   Recent Releases
           </h3>
         <div id="release_items" style="display: $display">
@@ -62,10 +62,10 @@
                 No Releases
             </li>
             <div class="release" py:if="isOwner" style="text-align: right; padding-right:8px;">
-                <a href="${basePath}newRelease"><strong>Create a new release...</strong></a>
+                <a href="${projectUrl}newRelease"><strong>Create a new release...</strong></a>
             </div>
             <div class="release" py:if="not isOwner and len(releaseList) > 5" style="text-align: right; padding-right:8px;">
-                <a href="${basePath}releases"><strong>More...</strong></a>
+                <a href="${projectUrl}releases"><strong>More...</strong></a>
             </div>
           </ul>
         </div>
