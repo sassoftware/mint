@@ -530,7 +530,25 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         projectId = self.newProject(client)
 
         # link historically brought up a spurious "my projects" pane
-        page = self.assertNotContent('/repos/testproject/browse',
+        page = self.assertContent('/repos/testproject/browse',
+                                     '/processLogin')
+
+        page = self.webLogin('foouser', 'foopass')
+
+        page = self.assertContent('/repos/testproject/browse',
+                                     '/newProject')
+
+    def testMailSignin(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        projectId = self.newProject(client)
+
+        # link historically brought up a spurious "my projects" pane
+        page = self.assertContent('/project/testproject/mailingLists',
+                                     '/processLogin')
+
+        page = self.webLogin('foouser', 'foopass')
+
+        page = self.assertContent('/project/testproject/mailingLists',
                                      '/newProject')
 
 if __name__ == "__main__":

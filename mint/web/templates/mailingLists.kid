@@ -73,7 +73,7 @@
                     &#160;
                 </div>
                 <div py:if="not lists">This project has no lists.</div>
-                
+
                 <h2 py:if="isOwner">Create a New Mailing List</h2>
 
                 <form py:if="isOwner" name="createList" action="$basePath/createList" method="POST">
@@ -108,10 +108,8 @@
             </div>
         </td>
         <td id="right" class="projects">
-            ${projectsPane()}
-            <div class="pad">
-                ${groupTroveBuilder()}
-            </div>
+            ${resourcePane()}
+            ${groupTroveBuilder()}
         </td>
     </body>
 </html>
