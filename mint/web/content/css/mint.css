@@ -388,7 +388,7 @@ div.palette img.right {
 }
 
 .palette {
-    border-bottom:1px #ddd solid;
+    border-bottom:1px #eee solid;
     margin-bottom:12px;
     background: url(../images/box_bg.png);
     width: 225px;
@@ -419,7 +419,7 @@ div.palette img.right {
 }
 .palette form {
     border:1px #dadada solid; border-width:0px 1px 0px 1px;
-    background-color:#e6e6e6; padding:10px 11px 0px 11px;
+    padding:10px 11px 0px 11px;
 }
 .palette form p {
     padding-bottom:0.8em; margin-bottom:0px;
@@ -436,7 +436,9 @@ div#projectsPane {
     height: 345px;
     margin-left: 3px;
     margin-right: 3px;
-    background: #eeeeee;
+    background: url(../images/box_bg.png);
+    background-repeat: repeat-y;
+    border-bottom: 1px solid #eeeeee;
 }
 
 div#projectsPane img.left {
@@ -515,4 +517,3 @@ table.groupTroveItems > tr:first-child {
 table.groupTroveItems > tr:first-child td {
     padding: 0.5em;
 }
-
