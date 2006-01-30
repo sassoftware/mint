@@ -230,6 +230,7 @@ class ProjectHandler(WebHandler):
     def closeCurrentGroup(self, auth, referer):
         if 'groupTroveId' in self.session:
             del self.session['groupTroveId']
+            self.session.save()
         self._redirect(referer)
 
     @intFields(id = None)
