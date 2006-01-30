@@ -472,5 +472,26 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
             content = project.getDesc())
 
 
+    def testGroupBuilderCloseBox(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        projectId = self.newProject(client)
+        project = client.getProject(projectId)
+
+        groupTrove = self.createTestGroupTrove(client, projectId)
+
+        page = self.webLogin('foouser', 'foopass')
+
+        page = self.fetch('/project/testproject/editGroup?id=%d' % \
+                          groupTrove.id)
+
+        # go to a different page that so that the group box can show up
+        page = self.assertContent('/project/testproject/releases',
+                                  content = 'closeCurrentGroup')
+
+        # then simulate clicking the close box to prove it closes properly
+        page = self.assertNotContent("/project/testproject/closeCurrentGroup",
+                                     content = 'closeCurrentGroup')
+
+
 if __name__ == "__main__":
     testsuite.main()
