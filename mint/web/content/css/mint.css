@@ -205,11 +205,12 @@ div#stepsText {
 span#buildit {
     background: url(../images/build_it.png);
     text-align: left;
-    width: 328px;
+    width: 322px;
     height: 81px;
     float: left;
     padding-top: 48px;
     padding-left: 24px;
+    padding-right: 6px;
     margin-right: 6px;
 }
 
