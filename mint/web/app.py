@@ -58,7 +58,7 @@ class MintApp(WebHandler):
         #If the browser can support it, give it what it wants.
         if 'application/xhtml+xml' in self.req.headers_in.get('Accept', ''):
             self.content_type = 'application/xhtml+xml'
-            self.output = 'xhtml'
+            self.output = 'xhtml-strict'
 
         self.req.content_type = self.content_type
         
