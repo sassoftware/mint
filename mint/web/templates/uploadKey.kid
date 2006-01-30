@@ -51,7 +51,7 @@ from mint import userlevels
                             </td>
                         </tr>
                     </table>
-                    <p><button type="submit">Upload</button></p>
+                    <p><button type="submit"><img src="${cfg.staticPath}apps/mint/images/submit_button.png" alt="Submit" /></button></p>
                 </form>
             </div>
         </td>
