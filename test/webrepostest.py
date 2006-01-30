@@ -15,20 +15,20 @@ from conary import versions
 class WebReposTest(mint_rephelp.WebRepositoryHelper):
     def testRepositoryBrowser(self):
         client, userId = self.quickMintUser('testuser', 'testpass')
-        projectId = self.newProject(client, 'Foo', 'test')
+        projectId = self.newProject(client, 'Foo', 'testproject')
 
         self.makeSourceTrove("testcase", testRecipe)
         self.cookFromRepository("testcase",
-            versions.Label("test.rpath.local@rpl:devel"),
+            versions.Label("testproject.rpath.local@rpl:devel"),
             ignoreDeps = True)
 
         # first try anonymous browsing
-        page = self.assertContent('/repos/test/browse', ok_codes = [200],
+        page = self.assertContent('/repos/testproject/browse', ok_codes = [200],
             content = 'troveInfo?t=testcase:runtime')
 
         # now try logged-in
         page = self.webLogin('testuser', 'testpass')
-        page = page.assertContent('/repos/test/browse', ok_codes = [200],
+        page = page.assertContent('/repos/testproject/browse', ok_codes = [200],
             content = 'troveInfo?t=testcase:runtime')
 
     def testBrowseHiddenProject(self):
