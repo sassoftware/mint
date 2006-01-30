@@ -51,15 +51,6 @@
 	background-image:none; padding:4px 0px 4px 0px;
 }
 
-#addmember h3 {
-	background:#5DB285;
-        border-color: #78e6ab #3c7356 #3c7356 #78e6ab;
-	cursor:pointer;
-        border-width: 2px;
-}
-#addmember li {
-	background-image:none; padding:4px 0px 4px 0px;
-}
 #products h3 {     background-color: green !important;
         border-color: #080 !important;
 }
