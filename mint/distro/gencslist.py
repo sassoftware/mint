@@ -220,6 +220,34 @@ def _linkOrCopyFile(src, dest):
             os.chmod(dest, 0644)
         break
 
+def _orderValidTroves(changeSetList, valid):
+    finalCsList = []
+    handled = set()
+    for chunk in changeSetList:
+        for csInfo in chunk:
+            (name, (oldVersion, oldFlavor),
+                   (newVersion, newFlavor), absolute) = csInfo
+            entry = (name, newVersion, newFlavor)
+            if ':' in name:
+                # see if the package is included too.  If it is
+                # go ahead and handle it now.
+                pkgname = name.split(':')[0]
+                pkgentry = (pkgname, entry[1], entry[2])
+                if pkgentry in valid:
+                    if not pkgentry in handled:
+                        finalCsList.append((pkgentry, valid[pkgentry]))
+                        # mark the package as handled so we don't do it
+                        # again later.
+                        handled.add(pkgentry)
+                    # already (or just) handled, carry on
+                    continue
+
+            if entry in valid and not entry in handled:
+                finalCsList.append((entry, []))
+                handled.add(entry)
+
+    return finalCsList
+
 def extractChangeSets(client, cfg, csdir, groupName, groupVer, groupFlavor,
                       oldFiles = None, cacheDir = None, callback = None,
                       group = None, fn = None):
@@ -281,15 +309,16 @@ def extractChangeSets(client, cfg, csdir, groupName, groupVer, groupFlavor,
     # instantiate all the trove objects in the group, make a set
     # of the changesets we should extract
     finalList = _findValidTroves(group, groupName, groupVer, groupFlavor,
-                             skipNotByDefault=True)
+                                 skipNotByDefault=True)
+    orderedList = _orderValidTroves(changeSetList, finalList)
+
     needsFile = False
     if not fn:
         needsFile = True
 
-    total = len(finalList)
+    total = len(orderedList)
     # use the order to extract changesets from the repository
-    for num, ((name, version, flavor), compNames) \
-                                         in enumerate(finalList.iteritems()):
+    for num, ((name, version, flavor), compNames) in enumerate(orderedList):
         components = [ (x, version, flavor) for x in compNames ]
         csfile, entry = _makeEntry(group, name, version, flavor, components)
         path = '%s/%s' % (csdir, csfile)
