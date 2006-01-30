@@ -493,6 +493,30 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                                      content = 'closeCurrentGroup')
 
 
+    def testGroupTroveItem(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        projectId = self.newProject(client)
+
+        groupTrove = self.createTestGroupTrove(client, projectId)
+
+        repos = self.openRepository()
+
+        self.addQuickTestComponent('foo:data',
+                                   '/testproject.rpath.local@rpl:devel/1.0-1',
+                                   repos = repos)
+
+        page = self.webLogin('foouser', 'foopass')
+
+        page = self.fetch('/project/testproject/editGroup?id=%d' % \
+                          groupTrove.id)
+
+        page = self.fetch('/project/testproject/addGroupTrove?id=%d;' + \
+                          'trove=foo:data;projectName=testproject&referer=/' \
+                          % groupTrove.id)
+
+        # ensure the trove was added to the group builder box
+        page = self.assertContent('/project/testproject', 'foo:data')
+
     def testProjectReg(self):
         client, userId = self.quickMintUser('foouser','foopass')
         projectId = self.newProject(client)
