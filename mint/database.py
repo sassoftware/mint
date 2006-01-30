@@ -4,6 +4,7 @@
 # All Rights Reserved
 #
 import sys, time
+import weakref
 from conary.dbstore import sqlerrors
 
 from mint_error import MintError
@@ -73,7 +74,7 @@ class TableObject(object):
         """@return: database primary key of the item represented by this object"""
         return self.id
 
-class DatabaseTable:
+class DatabaseTable(object):
     """
     @cvar name: The name of the table as created by the createSQL string.
     @cvar fields: List of SQL fields as created by the createSQL string.
@@ -90,7 +91,10 @@ class DatabaseTable:
     indexes = {}
 
     def __init__(self, db):
-        """@param db: database connection object"""
+        """@param db: database connection object. database object will be
+        stored by weak reference only. an instance of it must exist outside
+        of DatabaseTable objects at all times. This is normally not an issue,
+        since MintServer object holds the db and all DatabaseTables objects."""
         assert(self.name and self.fields and self.createSQL)
         self.db = db
 
@@ -118,6 +122,16 @@ class DatabaseTable:
 
             for index in missing:
                 cu.execute(self.indexes[index])
+
+    def __getattribute__(self, name):
+        if name == 'db':
+            return object.__getattribute__(self, name)()
+        return object.__getattribute__(self, name)
+
+    def __setattr__(self, name, val):
+        if name == 'db' and not isinstance(val, weakref.ref):
+            return object.__setattr__(self, name, weakref.ref(val))
+        return object.__setattr__(self, name, val)
 
     def getDBVersion(self):
         cu = self.db.cursor()
