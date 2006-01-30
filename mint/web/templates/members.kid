@@ -138,6 +138,7 @@ from mint import userlevels
         </td>
         <td id="right" class="projects">
             <div class="pad">
+                ${resourcePane()}
                 ${groupTroveBuilder()}
             </div>
         </td>
