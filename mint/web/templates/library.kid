@@ -261,7 +261,7 @@ def injectVersion(version):
 
                 <div id="noAccount">
                     <p><strong>Don't have an account?</strong></p>
-                    <p><a href="register">Set one up.</a></p>
+                    <p><a href="/register">Set one up.</a></p>
                 </div>
             </div>
         </form>
