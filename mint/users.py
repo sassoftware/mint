@@ -205,7 +205,7 @@ class UsersTable(database.KeyedTable):
             if type(groups) != list:
                 raise AuthRepoError
 
-            if username in groups or not checkRepo:
+            if username in groups:
                 auth = {'authorized':   True,
                         'userId':       r[0],
                         'username':     username,
