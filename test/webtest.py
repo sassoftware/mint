@@ -493,5 +493,21 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                                      content = 'closeCurrentGroup')
 
 
+    def testProjectReg(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        projectId = self.newProject(client)
+
+        # link historically showed up wrong by not pre-pending a /
+        page = self.assertNotContent('/project/testproject/',
+                                     'a href="register"')
+
+    def testReposSignin(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        projectId = self.newProject(client)
+
+        # link historically brought up a spurious "my projects" pane
+        page = self.assertNotContent('/repos/testproject/browse',
+                                     '/newProject')
+
 if __name__ == "__main__":
     testsuite.main()
