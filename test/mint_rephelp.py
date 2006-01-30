@@ -286,6 +286,12 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
 
         return projectId
 
+    def createTestGroupTrove(self, client, projectId,
+                             name = 'group-test', upstreamVer = '1.0.0',
+                             description = 'No Description'):
+        return client.createGroupTrove(projectId, name, upstreamVer,
+                                       description, False)
+
     def setUp(self):
         #if self.servers.getServer():
         #    self.servers.getServer().start()

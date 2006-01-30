@@ -74,11 +74,6 @@ class GroupTroveTest(MintRepositoryHelper):
         return groupTrove.addTrove(trvName, trvVersion, trvFlavor,
                                    subGroup, False, False, False)
 
-    def createTestGroupTrove(self, client, projectId,
-        name = 'group-test', upstreamVer = '1.0.0',
-        description = 'No Description'):
-        return client.createGroupTrove(projectId, name, upstreamVer, description, False)
-
     def testBasicAttributes(self):
         client, userId = self.quickMintUser('testuser', 'testpass')
         projectId = self.newProject(client)
