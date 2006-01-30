@@ -433,10 +433,11 @@ div#projectsPane {
     float: right;
     width: 227px;
     height: 345px;
-    border: 1px solid red
+    border: 1px solid red;
     margin-left: 3px;
     margin-right: 3px;
-    background: #eeeeee
+    background: #eeeeee;
+    overflow: scroll;
 }
 
 div#projectsPane img.left {
