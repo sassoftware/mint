@@ -197,9 +197,6 @@ def getTables(db, cfg):
     return d
 
 class MintServer(object):
-    _checkRepo = True
-    _cachedGroups = []
-
     def callWrapper(self, methodName, authToken, args):
         # reopen the database if it's changed
         self.db.reopen()
@@ -236,15 +233,9 @@ class MintServer(object):
                 d = self.sessions.load(sid)
                 authToken = d['_data']['authToken']
 
-            auth = self.users.checkAuth(authToken,
-                checkRepo = self._checkRepo,
-                cachedGroups = self._cachedGroups)
+            auth = self.users.checkAuth(authToken)
             self.authToken = authToken
             self.auth = users.Authorization(**auth)
-            self._cachedGroups = self.auth.groups
-
-            if self.auth.authorized:
-                self._checkRepo = False
 
             allowPrivate = self._allowPrivate
             r = method(*args)
