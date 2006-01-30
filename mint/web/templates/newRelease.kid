@@ -30,38 +30,57 @@ title = "Create New Release"
         </td>
         <td id="main">
             <div class="pad">
-                <h2>New Distribution Release</h2>
-                <p>Fields labeled with a <em class="required">red arrow</em> are required.</p>
+                <h2>${isNewRelease and "Create" or "Edit"} Release</h2>
+
+                <div py:if="errors" class="error">
+                    <p>Release Creation Error${len(errors) > 1 and 's' or ''}</p>
+                    <p py:for="error in errors" class="errormessage" py:content="error"/>
+                </div>
+
                 <form method="post" action="editRelease" id="mainForm">
 
-                    <table cellspacing="0" cellpadding="0" border="0" class="mainformhorizontal">
-                        <tr py:if="errors"><td colspan="2">
-                            <p py:if="errors" class="error">Release Creation Error${len(errors) > 1 and 's' or ''}</p>
-                            <p py:for="error in errors" class="errormessage" py:content="error"/>
-                        </td></tr>
+                    <div class="formgroup">
+                        <div class="formgroupTitle">Distribution Information</div>
+                        <label for="relname">Name</label>
+                        <!-- XXX: fix for edit pass -->
+                        <input id="relname" name="relname" type="text" value="${isNewRelease and project.getName() or None}" /><br />
 
-                        <tr>
-                            <th><em class="required">Distribution Group:</em></th>
-                            <td>
+                        <!-- XXX: fix for edit pass -->
+                        <label for="reldesc">Description (optional)</label>
+                        <textarea id="reldesc" name="relname" type="text" py:content="isNewRelease and project.getName() + ' description here.' or None" /><br />
 
-                                <p class="help">Please select the group that defines your distribution</p>
-                                <select name="trove" size="15" id="trove" >
-                                    <option value="" id="pleaseWait">Loading group list, please wait</option>
-                                </select>
-                            </td>
-                        </tr>
-                        <tr><td>Release Type:</td>
-                            <td>
-                                <select id="imageTypes" name="imageTypes" multiple="multiple" py:attrs="{'size': len(visibleImageTypes) > 4 and 4 or len(visibleImageTypes)}">
-                                    <option py:for="key in visibleImageTypes" value="$key" py:content="typeNames[key]" py:attrs="{'selected': key in imageTypes and 'selected' or None}"/>
-                                </select><br/>
-                                <i>Hold down ctrl to select multple items.</i>
-                            </td>
-                        </tr>
-                    </table>
+                    </div>
+
+                    <div class="formgroup">
+                    <div class="formgroupTitle">Choose your distribution group</div>
+                        <label for="trove">Distribution Group</label>
+                        <select id="trove" name="trove">
+                            <option value="" id="pleaseWait">Please wait, loading troves...</option>
+                        </select><br />
+
+                        <label for="arch">Target Architecture</label>
+                        <select id="arch" name="arch">
+                            <option>TBD</option>
+                        </select><br />
+
+                        <label for="version">Group Version</label>
+                        <select id="version" name="version">
+                            <option>TBD</option>
+                        </select><br />
+                    </div>
+
+                    <div class="formgroup">
+                        <div class="formgroupTitle">Image Types</div>
+                        <div py:strip="True" py:for="key in visibleImageTypes">
+                            <input class="reversed" id="imagetype_${key}" name="imagetype_1" value="${key}" type="checkbox" py:attrs="{'checked': key in imageTypes and 'checked' or None}" />
+                            <label class="reversed" for="imagetype_${key}">${typeNames[key]}</label><br />
+                        </div>
+                    </div>
+
                     <p>
-                        <button id="submitButton" type="submit">Submit</button>
+                        <button id="submitButton" type="submit">${isNewRelease and "Create" or "Recreate"} Release</button>
                         <input type="hidden" name="releaseName" value="${project.getName()}" />
+                        <!-- XXX: this needs to be different for edit pass -->
                         <input type="hidden" name="releaseId" value="-1" />
                     </p>
                 </form>

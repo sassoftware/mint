@@ -1,12 +1,12 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<plain>A user of ${cfg.productName} would like to join a project
-you own.
+<plain xmlns:py="http://purl.org/kid/ns#">
+A user of ${cfg.productName} would like to join a project you own.
 
 Project: ${projectName}
 
-<p if="comments">Comments: ${comments}</p>
-<p if="not comments">No comments were supplied.</p>
-        
+<p py:if="comments">Comments: ${comments}</p>
+<p py:if="not comments">No comments were supplied.</p>
+
 To respond to this request:
 
  o Login to ${cfg.productName}.

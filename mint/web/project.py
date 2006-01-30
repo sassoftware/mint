@@ -290,7 +290,8 @@ class ProjectHandler(WebHandler):
 
     @ownerOnly
     def newRelease(self, auth):
-        return self._write("newRelease", imageTypes = [releasetypes.INSTALLABLE_ISO], errors = [], kwargs = {})
+        # XXX: this will probably be changed to "editRelease"
+        return self._write("newRelease", isNewRelease = True, imageTypes = [releasetypes.INSTALLABLE_ISO], errors = [], kwargs = {})
 
     @ownerOnly
     @intFields(releaseId = -1)

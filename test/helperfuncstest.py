@@ -20,8 +20,9 @@ testTemplate = \
 """
 testTemplateWithConditional = \
 """<?xml version='1.0' encoding='UTF-8'?>
-<plain><p if="isChunky">${myString}</p>
-<p if="not isChunky">Not ${myString}</p>
+<plain xmlns:py="http://purl.org/kid/ns#">
+<div py:if="isChunky">${myString}</div>
+<div py:if="not isChunky">Not ${myString}</div>
 </plain>
 """
 
@@ -105,7 +106,7 @@ class HelperFunctionsTest(unittest.TestCase):
         t.isChunky = True
         render = templates.write(t)
         print render
-        assert render == "Chunky bacon"
+        self.assertEqual(render.find("Not"), -1)
 
     def testPlainKidTemplateWithImport(self):
         import kid
