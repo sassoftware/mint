@@ -63,8 +63,8 @@
                             <td>
                                 <input type="text" name="email" value="${kwargs['email']}"/>
 
-                                <p class="help">This email address will not be displayed on the ${cfg.productName} website and will
-                                never be shared or sold. More information can be found in our ${legal('%slegal?page=privacy' % cfg.basePath, 'Privacy Policy')}.</p>
+                                <p class="help">A confirmation message will be sent to this address for verification.  You may need to enable email from ${cfg.adminMail} in your spam filtering software.  You will not be able to access your account until you have confirmed your e-mail address. </p>
+                                <p class="help">This email address will not be displayed on the ${cfg.productName} website and will never be shared or sold. More information can be found in our ${legal('%slegal?page=privacy' % cfg.basePath, 'Privacy Policy')}.</p>
                             </td>
                         </tr>
                         <tr>
