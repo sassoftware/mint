@@ -89,7 +89,7 @@ class RepositoryTest(MintRepositoryHelper):
         repos = ConaryClient(cfg).getRepos()
 
         try:
-            repos.troveNames('notfound.rpath.local')
+            repos.troveNamesOnServer('notfound.rpath.local')
         except repository.errors.OpenError, e:
             assert "404 Not Found" in str(e), \
             "accessing a non-existent repository did not return a "
