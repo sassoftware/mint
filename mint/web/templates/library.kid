@@ -253,7 +253,7 @@ def injectVersion(version):
                 <div><input type="password" name="password" /></div>
                 <div style="padding-top: 8px;">
                     <input type="checkbox" name="remember_me" value="1" />
-                    <u>Remember me</u> on this computer
+                    <span style="text-decoration: underline;">Remember me</span> on this computer
                 </div>
                 <button id="signInSubmit" type="submit">
                     <img alt="Sign In" src="${cfg.staticPath}apps/mint/images/sign_in_button.png" />

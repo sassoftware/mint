@@ -54,14 +54,16 @@ onload = "javascript:;"
                         <span py:omit="True" py:if="not auth.authorized and req.uri != cfg.basePath"> | <a href="http://${SITE}">Sign In</a></span>
                     </div>
                     <form action="http://${cfg.siteHost}${cfg.basePath}search" method="get" id="searchForm">
-                        <label class="search" for="search">I'm looking for a...</label>
-                        <input class="search" name="search" type="text" />
-                        <button id="searchSubmit" type="submit"><img src="${cfg.staticPath}/apps/mint/images/search.png" alt="Search" /></button><br />
-                        <input id="typeProject" type="radio" name="type" value="Projects" checked="checked" />
-                        <label for="typeProject">Project</label>
-                        <input id="typePackage" type="radio" name="type" value="Packages" />
-                        <label for="typePackage">Package</label>
-                        <span id="browseText">&nbsp;&nbsp;&nbsp;Or you can <a href="http://${cfg.siteHost}${cfg.basePath}projects">browse</a>.</span>
+                        <div>
+                            <label class="search" for="searchLabel">I'm looking for a...</label>
+                            <input class="search" name="search" id="searchLabel" type="text" />
+                            <button id="searchSubmit" type="submit"><img src="${cfg.staticPath}/apps/mint/images/search.png" alt="Search" /></button><br />
+                            <input id="typeProject" type="radio" name="type" value="Projects" checked="checked" />
+                            <label for="typeProject">Project</label>
+                            <input id="typePackage" type="radio" name="type" value="Packages" />
+                            <label for="typePackage">Package</label>
+                            <span id="browseText">&nbsp;&nbsp;&nbsp;Or you can <a href="http://${cfg.siteHost}${cfg.basePath}projects">browse</a>.</span>
+                        </div>
                     </form>
                 </div>
             </div>
