@@ -74,10 +74,8 @@
             </div>
         </td>
         <td id="right" class="projects">
-            ${projectsPane()}
-            <td class="pad">
-                ${groupTroveBuilder()}
-            </td>
+            ${resourcePane()}
+            ${groupTroveBuilder()}
         </td>
     </body>
 </html>
