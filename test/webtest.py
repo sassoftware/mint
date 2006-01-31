@@ -27,7 +27,8 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
     def testLogin(self):
         self.quickMintUser('foouser','foopass')
 
-        page = self.fetch('')
+        # historically, port was missing from login form action
+        page = self.assertContent('/', '%d/processLogin' % self.port)
 
         if '/processLogin' not in page.body:
             self.fail("Login form did not appear on page")
@@ -540,6 +541,29 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         page = self.assertContent('/repos/testproject/browse',
                                      '/newProject')
 
+    def testTroveInfoLogin(self):
+        raise testsuite.SkipTestException( \
+            "Test uses netclient--needs multithreaded apache")
+        client, userId = self.quickMintUser('foouser','foopass')
+        projectId = self.newProject(client)
+
+        repos = self.openRepository()
+
+        self.addQuickTestComponent('foo:data',
+                                   '/testproject.rpath.local@rpl:devel/1.0-1',
+                                   repos = repos)
+
+        # link historically brought up a spurious "my projects" pane
+        page = self.assertContent( \
+            '/repos/testproject/troveInfo?t=foo:data',
+            '/processLogin')
+
+        page = self.webLogin('foouser', 'foopass')
+
+        page = self.assertContent( \
+            '/repos/testproject/troveInfo?t=foo:data',
+            '/newProject')
+
     def testMailSignin(self):
         client, userId = self.quickMintUser('foouser','foopass')
         projectId = self.newProject(client)
@@ -568,6 +592,48 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         # and test clicking subscribe a second time.
         page = self.assertNotContent( \
             '/project/testproject/subscribe?list=testproject', 'error')
+
+    def testGrpTrvSource(self):
+        client, userId = self. quickMintUser('foouser', 'foopass')
+        projectId = self.newProject(client)
+
+        repos = self.openRepository()
+
+        self.addQuickTestComponent('foo:source',
+                                   '/testproject.rpath.local@rpl:devel/1.0-1',
+                                   repos = repos)
+
+        groupTrove = client.createGroupTrove(projectId, 'group-foo', '1.0.0',
+                                             'no desc', False)
+
+        page = self.webLogin('foouser', 'foopass')
+
+        # activate the group trove builder
+        page = self.fetch('/project/testproject/editGroup?id=%d' % \
+                          groupTrove.id)
+
+        # source troves can show up on browse page if there's no binary with it
+        page = self.assertNotContent("/repos/testproject/browse?char=F",
+                                     "Add to group-foo")
+
+
+        # now add a trove that should show up for troveInfo. this couldn't
+        # be added sooner or it would confuse browsing check
+        self.addQuickTestComponent('foo:data',
+                                   '/testproject.rpath.local@rpl:devel/1.0-1',
+                                   repos = repos)
+
+        raise testsuite.SkipTestException( \
+            "requires multithreaded apache past this point")
+
+        # check troveinfo page for proper source component rules
+        page = self.assertNotContent( \
+            '/repos/testproject/troveInfo?t=foo:source',
+            'Add to group-foo')
+
+        page = self.assertContent( \
+            '/repos/testproject/troveInfo?t=foo:data',
+            'Add to group-foo')
 
 if __name__ == "__main__":
     testsuite.main()
