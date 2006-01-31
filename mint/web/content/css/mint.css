@@ -30,6 +30,7 @@ div#main {
 div#middle {
     margin-left: 240px;
     margin-right: 255px;
+    margin-bottom: 24px;
 }
 
 div#spanleft {
