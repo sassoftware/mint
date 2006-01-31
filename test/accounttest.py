@@ -51,6 +51,15 @@ class AccountTest(MintRepositoryHelper):
         user.setEmail(eMail)
         user.setPassword("passtest")
 
+        try:
+            client.server.updateAccessedTime(userId)
+        except PermissionDenied:
+            pass
+        else:
+            self.fail("password change did not take effect")
+
+        client = self.openMintClient(("testuser", "passtest"))
+
         # refresh the user
         user = client.getUser(userId)
 
@@ -82,6 +91,9 @@ class AccountTest(MintRepositoryHelper):
         # these functions have a different code path if the
         # user is a member of projects
         user.setPassword("passtest")
+
+        client = self.openMintClient(("testuser", "passtest"))
+        user = client.getUser(userId)
         user.cancelUserAccount()
 
     def testAccountConfirmation(self):
