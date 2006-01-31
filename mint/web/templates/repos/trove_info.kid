@@ -38,7 +38,7 @@ isOwner = (userLevel == userlevels.OWNER or auth.admin)
     </span>
 
     <span py:def="adder(trove)" style="float: right;"
-        py:if="groupTrove and groupTrove.recipeName != trove.getName() and not trove.endswith(':source')">
+        py:if="groupTrove and groupTrove.recipeName != trove.getName()">
         <a href="${groupProject.getUrl()}addGroupTrove?id=${groupTrove.id};trove=${quote(trove.getName())};version=${quote(trove.getVersion().asString())};referer=${quote(req.unparsed_uri)}">
             Add to ${groupTrove.recipeName} <img style="border: none;" src="${cfg.staticPath}apps/mint/images/group.png" />
         </a>
