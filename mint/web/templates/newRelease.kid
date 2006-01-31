@@ -23,13 +23,16 @@ title = "Create New Release"
         <title>${formatTitle('Create a Release')}</title>
     </head>
     <body onload="javascript:getTroveList(${project.getId()});">
-        <td id="left" class="side">
-            <div class="pad">
+        <div id="layout">
+            <div id="left" class="side">
                 ${projectResourcesMenu()}
             </div>
-        </td>
-        <td id="main">
-            <div class="pad">
+            <div id="right" class="side">
+                ${resourcePane()}
+                ${groupTroveBuilder()}
+            </div>
+
+            <div id="middle">
                 <h2>New Distribution Release</h2>
                 <p>Fields labeled with a <em class="required">red arrow</em> are required.</p>
                 <form method="post" action="editRelease" id="mainForm">
@@ -60,18 +63,12 @@ title = "Create New Release"
                         </tr>
                     </table>
                     <p>
-                        <button id="submitButton" type="submit">Submit</button>
+                        <button id="submitButton" type="submit"><img src="${cfg.staticPath}apps/mint/images/submit_button.png" img="Submit" /></button>
                         <input type="hidden" name="releaseName" value="${project.getName()}" />
                         <input type="hidden" name="releaseId" value="-1" />
                     </p>
                 </form>
             </div>
-        </td>
-        <td id="right" class="projects">
-            ${projectsPane()}
-            <div class="pad">
-                ${groupTroveBuilder()}
-            </div>
-        </td>
+        </div>
     </body>
 </html>
