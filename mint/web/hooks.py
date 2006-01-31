@@ -18,6 +18,8 @@ import traceback
 
 from conary.lib import util as conaryutil
 from conary.lib import epdb, log
+from conary import dbstore
+from conary.dbstore import sqlerrors
 from conary.repository.netrepos import netserver
 from conary.repository.filecontainer import FileContainer
 from conary.repository import changeset
@@ -244,20 +246,31 @@ def conaryHandler(req, cfg, pathInfo):
         repName = repNameMap[repName]
         print >> sys.stderr, "REMAPPING REPOSITORY NAME: ", repName
 
+    repNameMap = {'conary.digium.com': 'digium.digium.com',
+                 'digium.rpath.net': 'digium.digium.com'}
+    if repName in repNameMap:
+        repName = repNameMap[repName]
+        print >> sys.stderr, "REMAPPING REPOSITORY NAME: ", repName
+
+    global db
+    if not db:
+        db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
+
+    if cfg.reposDBDriver == "sqlite":
+        db = None
+        dbName = repName
+    else:
+        # XXX mysql-specific hack--this needs to be abstracted out
+        dbName = repName.translate(mysqlTransTable)
+        try:
+            db.use(dbName)
+        except sqlerrors.DatabaseError:
+            raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND
+
     if not repositories.has_key(repHash):
         nscfg = netserver.ServerConfig()
 
         repositoryDir = os.path.join(cfg.reposPath, repName)
-
-        dbName = repName
-        dbNameMap = {'conary.digium.com': 'digium.digium.com',
-                     'digium.rpath.net': 'digium.digium.com'}
-        if dbName in dbNameMap:
-            dbName = dbNameMap[dbName]
-            print >> sys.stderr, "REMAPPING DATABASE NAME: ", repName
-
-        if cfg.reposDBDriver != "sqlite":
-            dbName = dbName.translate(mysqlTransTable)
 
         nscfg.repositoryDB = (cfg.reposDBDriver, cfg.reposDBPath % dbName)
 
@@ -312,8 +325,8 @@ def conaryHandler(req, cfg, pathInfo):
 
 
         if os.access(repositoryDir, os.F_OK):
-            repositories[repHash] = netserver.NetworkRepositoryServer(nscfg, urlBase)
-            shim_repositories[repHash] = shimclient.NetworkRepositoryServer(nscfg, urlBase)
+            repositories[repHash] = netserver.NetworkRepositoryServer(nscfg, urlBase, db)
+            shim_repositories[repHash] = shimclient.NetworkRepositoryServer(nscfg, urlBase, db)
 
             repositories[repHash].forceSecure = cfg.SSL
         else:
@@ -459,6 +472,7 @@ def makeProfile(cfg):
     return profile.Profile(cfg.dataPath + '/logs/profiling')
 
 cfg = None
+db = None
 def handler(req):
     if not req.hostname:
         return apache.HTTP_BAD_REQUEST

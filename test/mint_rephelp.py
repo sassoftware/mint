@@ -29,9 +29,6 @@ class MintDatabase:
     def __init__(self, path):
         self.path = path
 
-    def newProjectDb(self, projectName):
-        pass # not implemented
-
     def start(self):
         pass
 
@@ -47,11 +44,6 @@ class SqliteMintDatabase(MintDatabase):
     def start(self):
         if os.path.exists(self.path):
             os.unlink(self.path)
-
-    def newProjectDb(self, projectName):
-        p = util.normpath(self.path + "/../repos/" + projectName)
-        if os.path.exists(p):
-            util.rmtree(p)
 
 
 class MySqlMintDatabase(MintDatabase):
@@ -81,10 +73,6 @@ class MySqlMintDatabase(MintDatabase):
             cu.execute("DROP DATABASE %s" % dbName)
         self.dropAndCreate("minttest")
         db.close()
-
-    def newProjectDb(self, projectName):
-        dbName = projectName.translate(mysqlTransTable)
-        self.dropAndCreate(dbName, create = False)
 
 
 class MintApacheServer(rephelp.ApacheServer):
@@ -259,8 +247,6 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
         # save the current openpgpkey cache
         keyCache = openpgpkey.getKeyCache()
 
-        self.servers.getServer().mintDb.newProjectDb(hostname + "." + domainname)
-
         projectId = client.newProject(name, hostname, domainname)
 
         # set a default signature key
@@ -293,20 +279,11 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
                                        description, False)
 
     def setUp(self):
-        #if self.servers.getServer():
-        #    self.servers.getServer().start()
-
         rephelp.RepositoryHelper.setUp(self)
         self.openRepository()
 
-        # if you get permission denied on mysql server, then you need to
-        # grant privleges to testuser on minttest:
-        # GRANT ALL ON minttest.* TO testuser IDENTIFIED BY 'testpass';
-
-        self.mintServer = mint_server.MintServer(self.mintCfg,
-                                                 alwaysReload = True)
+        self.mintServer = mint_server.MintServer(self.mintCfg, alwaysReload = True)
         self.db = self.mintServer.db
-        self.db.connect()
 
     def tearDown(self):
         self.db.close()
