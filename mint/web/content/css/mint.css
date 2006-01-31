@@ -32,6 +32,14 @@ div#middle {
     margin-right: 255px;
 }
 
+div#spanleft {
+    margin-right: 255px;
+}
+
+div#spanright {
+    margin-left: 240px;
+}
+
 table {
     font-size:105%;
     width:100%;
@@ -232,7 +240,6 @@ span#findit {
 }
 
 div#signin {
-    float: right;
     background: url(../images/sign_in.png);
     text-align: left;
     width: 179px;
@@ -252,19 +259,6 @@ button#signInSubmit {
 div#signin div#noAccount {
     border-top: 2px dotted gray;
     margin-top: 10px;
-}
-
-div#signedIn {
-    float: right;
-    left: 726px;
-    width: 179px;
-    height: 281px;
-    font-weight: bold;
-    padding-left: 24px;
-    padding-right: 24px;
-    font-size: 10pt;
-    margin-left: 3px;
-    margin-bottom: 17px;
 }
 
 /* footer */

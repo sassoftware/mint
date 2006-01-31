@@ -21,8 +21,10 @@ from mint import searcher
               title="New ${cfg.productName} ISO Releases" href="http://${cfg.siteHost}${cfg.basePath}rss?feed=newReleases" />
     </head>
     <body>
-        <div id="steps">
+        <div id="right" class="side">
             ${resourcePane()}
+        </div>
+        <div id="steps">
             <span id="buildit">Find the stuff you need to make your own software appliance in three easy steps.</span>
             <span id="findit">Check out all the amazing software applications others have made.</span>
 

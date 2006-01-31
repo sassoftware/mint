@@ -36,9 +36,11 @@ from mint.mint import upstream
                 ${releasesMenu(releases, isOwner)}
                 ${commitsMenu(commits)}
             </div>
-            ${resourcePane()}
-            ${groupTroveBuilder()}
-            <div id="main">
+            <div id="right" class="side">
+                ${resourcePane()}
+                ${groupTroveBuilder()}
+            </div>
+            <div id="middle">
                 <h2>${project.getNameForDisplay(maxWordLen = 50)}</h2>
 
                 <p class="help" py:if="not commits and cfg.hideFledgling">

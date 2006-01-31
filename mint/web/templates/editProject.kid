@@ -14,8 +14,13 @@
         <title>${formatTitle('Project Settings: %s'%project.getNameForDisplay())}</title>
     </head>
     <body>
-        <td id="main" class="spanleft">
-            <div class="pad">
+        <div id="layout">
+            <div id="right" class="side">
+                ${resourcePane()}
+                ${groupTroveBuilder()}
+            </div>
+
+            <div id="spanleft">
                 <p py:if="errors" class="error">Project Details Error${len(errors) > 1 and 's' or ''}</p>
                 <p py:for="error in errors" class="errormessage" py:content="error"/>
 
@@ -59,16 +64,9 @@
                         </tr>
                     </table>
 
-
-                    <p style="margin-top: 1em;"><button type="submit">Submit</button></p>
+                    <button type="submit"><img src="${cfg.staticPath}apps/mint/images/submit_button.png" alt="Submit" /></button>
                 </form>
             </div>
-        </td>
-        <td id="right" class="projects">
-            ${projectsPane()}
-            <div class="pad">
-                ${groupTroveBuilder()}
-            </div>
-        </td>
+        </div>
     </body>
 </html>
