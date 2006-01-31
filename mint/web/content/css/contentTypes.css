@@ -97,13 +97,12 @@ div.releases_release {
 	background-color:#eee;
 }
 .mainformhorizontal input.check,
-.mainformhorizontal select,
 .mainformhorizontal input.notwide,
 .mainformhorizontal input.radio {
 	width:auto;
 }
-.mainformhorizontal select.wide {
-	width:70%;
+.mainformhorizontal select {
+	width: 100%;
 }
 .mainformhorizontal div.help,
 .mainformhorizontal p.help {

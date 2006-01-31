@@ -27,6 +27,11 @@ div#main {
     width: 955px;
 }
 
+div#middle {
+    margin-left: 240px;
+    margin-right: 255px;
+}
+
 table {
     font-size:105%;
     width:100%;
@@ -230,7 +235,6 @@ div#signin {
     float: right;
     background: url(../images/sign_in.png);
     text-align: left;
-    left: 726px;
     width: 179px;
     height: 281px;
     padding-top: 64px;
