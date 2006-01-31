@@ -54,84 +54,82 @@ from mint import userlevels
             </div>
             ${resourcePane()}
             ${groupTroveBuilder()}
-            <div id="main">
-                <div class="pad" >
-                    <h2>${project.getNameForDisplay(maxWordLen = 50)}<br/>Members</h2>
-                    <?python
-                    users = {
-                              userlevels.OWNER: [],
-                              userlevels.DEVELOPER: [],
-                              userlevels.USER: [],
-                            }
+            <div id="middle">
+                <h2>${project.getNameForDisplay(maxWordLen = 50)}<br/>Members</h2>
+                <?python
+                users = {
+                          userlevels.OWNER: [],
+                          userlevels.DEVELOPER: [],
+                          userlevels.USER: [],
+                        }
 
-                    for userId, username, level in project.getMembers():
-                        users[level].append((userId, username,))
+                for userId, username, level in project.getMembers():
+                    users[level].append((userId, username,))
 
-                    lastOwner = project.lastOwner(auth.userId)
-                    onlyOwner = project.onlyOwner(auth.userId)
+                lastOwner = project.lastOwner(auth.userId)
+                onlyOwner = project.onlyOwner(auth.userId)
 
-                    ?>
-                    <h3>Project Owners</h3>
+                ?>
+                <h3>Project Owners</h3>
+                <table border="0" cellspacing="0" cellpadding="0" class="memberstable">
+                    <tr py:for="userId, username in sorted(users[userlevels.OWNER], key=lambda x: x[1])">
+                        <th><a py:strip="not auth.authorized" href="http://${SITE}userInfo?id=${userId}">${username}</a></th>
+                        <td py:if="isOwner and not onlyOwner">
+                            <a href="demoteMember?userId=${userId}" class="option">Demote to Developer</a>
+                        </td>
+                        <td py:if="isOwner and not lastOwner">
+                            <a href="delMember?id=${userId}" class="option">Remove From Project</a> </td>
+                    </tr>
+                    <tr><td py:if="not users[userlevels.OWNER]">No owners.</td></tr>
+                </table>
+                <p class="help" py:if="isOwner and lastOwner and not auth.admin">
+                    Because a project cannot have developers with no owner, you cannot change your
+                    ownership status at this time. To remove yourself from this project, promote
+                    a developer to Owner status, or orphan the project by removing all developers,
+                    followed by yourself.
+                </p>
+                <h3>Developers</h3>
+
+                <table border="0" cellspacing="0" cellpadding="0" class="memberstable">
+                    <tr py:for="userId, username in sorted(users[userlevels.DEVELOPER], key=lambda x: x[1])">
+                        <th><a py:strip="not auth.authorized" href="http://${SITE}userInfo?id=${userId}">${username}</a></th>
+                        <td py:if="isOwner">
+                            <a href="promoteMember?userId=${userId}" class="option">Promote to Owner</a>
+                        </td>
+                        <td py:if="isOwner"><a href="delMember?id=${userId}" class="option">Remove From Project</a></td>
+                    </tr>
+                    <tr><td py:if="not users[userlevels.DEVELOPER]">No developers.</td></tr>
+                </table>
+                <div py:if="reqList">
+                    <h3>Requestors</h3>
                     <table border="0" cellspacing="0" cellpadding="0" class="memberstable">
-                        <tr py:for="userId, username in sorted(users[userlevels.OWNER], key=lambda x: x[1])">
-                            <th><a py:strip="not auth.authorized" href="http://${SITE}userInfo?id=${userId}">${username}</a></th>
-                            <td py:if="isOwner and not onlyOwner">
-                                <a href="demoteMember?userId=${userId}" class="option">Demote to Developer</a>
-                            </td>
-                            <td py:if="isOwner and not lastOwner">
-                                <a href="delMember?id=${userId}" class="option">Remove From Project</a> </td>
-                        </tr>
-                        <tr><td py:if="not users[userlevels.OWNER]">No owners.</td></tr>
-                    </table>
-                    <p class="help" py:if="isOwner and lastOwner and not auth.admin">
-                        Because a project cannot have developers with no owner, you cannot change your
-                        ownership status at this time. To remove yourself from this project, promote
-                        a developer to Owner status, or orphan the project by removing all developers,
-                        followed by yourself.
-                    </p>
-                    <h3>Developers</h3>
-
-                    <table border="0" cellspacing="0" cellpadding="0" class="memberstable">
-                        <tr py:for="userId, username in sorted(users[userlevels.DEVELOPER], key=lambda x: x[1])">
-                            <th><a py:strip="not auth.authorized" href="http://${SITE}userInfo?id=${userId}">${username}</a></th>
-                            <td py:if="isOwner">
-                                <a href="promoteMember?userId=${userId}" class="option">Promote to Owner</a>
-                            </td>
-                            <td py:if="isOwner"><a href="delMember?id=${userId}" class="option">Remove From Project</a></td>
-                        </tr>
-                        <tr><td py:if="not users[userlevels.DEVELOPER]">No developers.</td></tr>
-                    </table>
-                    <div py:if="reqList">
-                        <h3>Requestors</h3>
-                        <table border="0" cellspacing="0" cellpadding="0" class="memberstable">
-                            <tr py:for="userId, username in reqList">
-                                    <th><a href="http://${SITE}userInfo?id=${userId}">${username}</a></th>
-                                <td>
-                                    <a href="viewJoinRequest?userId=${userId}"
-                                       class="option" style="position:relative;"
-                                       id="Edit${userId}">View Request</a>
-                                </td>
-                            </tr>
-                        </table>
-                    </div>
-                    <div py:if="isOwner" py:strip="True">
-                    <h3>Users watching this project</h3>
-                    <table border="0" cellspacing="0" cellpadding="0" class="memberstable">
-                        <tr py:for="userId, username in sorted(users[userlevels.USER], key=lambda x: x[1])">
-                            <th><a py:strip="not auth.authorized" href="${cfg.basePath}userInfo?id=${userId}">${username}</a></th>
-                            <td py:if="isOwner">
-                                <a href="promoteMember?userId=${userId}" class="option">Promote to Developer</a>
+                        <tr py:for="userId, username in reqList">
+                                <th><a href="http://${SITE}userInfo?id=${userId}">${username}</a></th>
+                            <td>
+                                <a href="viewJoinRequest?userId=${userId}"
+                                   class="option" style="position:relative;"
+                                   id="Edit${userId}">View Request</a>
                             </td>
                         </tr>
-                        <tr><td py:if="not users[userlevels.USER]">No users are watching this project</td></tr>
                     </table>
-                    </div>
-                    <h3 py:if="not isOwner">
-                        <div py:if="not users[userlevels.USER]" py:strip="True">There are no users watching this project</div>
-                        <div py:if="len(users[userlevels.USER]) == 1" py:strip="True">There is one user watching this project</div>
-                        <div py:if="len(users[userlevels.USER]) > 1" py:strip="True">There are ${len(users[userlevels.USER])} users watching this project</div>
-                    </h3>
                 </div>
+                <div py:if="isOwner" py:strip="True">
+                <h3>Users watching this project</h3>
+                <table border="0" cellspacing="0" cellpadding="0" class="memberstable">
+                    <tr py:for="userId, username in sorted(users[userlevels.USER], key=lambda x: x[1])">
+                        <th><a py:strip="not auth.authorized" href="${cfg.basePath}userInfo?id=${userId}">${username}</a></th>
+                        <td py:if="isOwner">
+                            <a href="promoteMember?userId=${userId}" class="option">Promote to Developer</a>
+                        </td>
+                    </tr>
+                    <tr><td py:if="not users[userlevels.USER]">No users are watching this project</td></tr>
+                </table>
+                </div>
+                <h3 py:if="not isOwner">
+                    <div py:if="not users[userlevels.USER]" py:strip="True">There are no users watching this project</div>
+                    <div py:if="len(users[userlevels.USER]) == 1" py:strip="True">There is one user watching this project</div>
+                    <div py:if="len(users[userlevels.USER]) > 1" py:strip="True">There are ${len(users[userlevels.USER])} users watching this project</div>
+                </h3>
             </div>
        </div>
     </body>
