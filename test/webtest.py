@@ -553,5 +553,21 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         page = self.assertContent('/project/testproject/mailingLists',
                                      '/newProject')
 
+    def testMailSubscribe(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        projectId = self.newProject(client)
+
+        page = self.webLogin('foouser', 'foopass')
+
+        # historically, there was an extra slash in subscribe links
+        page = self.assertNotContent('/project/testproject/mailingLists',
+                                     '/project/testproject//')
+
+        page = self.fetch('/project/testproject/subscribe?list=testproject')
+
+        # and test clicking subscribe a second time.
+        page = self.assertNotContent( \
+            '/project/testproject/subscribe?list=testproject', 'error')
+
 if __name__ == "__main__":
     testsuite.main()
