@@ -435,7 +435,6 @@ div.palette img.right {
 /* Projects Pane */
 
 div#projectsPane {
-    float: right;
     width: 227px;
     height: 345px;
     margin-left: 3px;
