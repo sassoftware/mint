@@ -232,7 +232,7 @@ span#findit {
 }
 
 div#signin {
-    /* float: right; */
+    float: right;
     background: url(../images/sign_in.png);
     text-align: left;
     width: 179px;
