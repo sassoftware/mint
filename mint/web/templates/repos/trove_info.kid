@@ -17,13 +17,6 @@ from mint import userlevels
 isOwner = (userLevel == userlevels.OWNER or auth.admin)
 ?>
 
-    <div py:def="breadcrumb" py:strip="True">
-        <a
-            href="${cfg.basePath}project/${project.getHostname()}/">${project.getNameForDisplay()}</a>
-        <a href="${basePath}browse">Repository Browser</a>
-        <a href="#">${troveName}</a>
-    </div>
-
     <table py:def="sourceTroveInfo(trove)" class="troveinfo">
         <tr><th>Trove name:</th><td>${trove.getName()}</td></tr>
         <tr><th>Change log:</th>
@@ -106,15 +99,18 @@ isOwner = (userLevel == userlevels.OWNER or auth.admin)
         <title>${formatTitle('Trove Information: %s'%troveName)}</title>
     </head>
     <body>
-        <td id="left" class="side">
-            <div class="pad">
+        <div id="layout">
+            <div id="left" class="side">
                 ${projectResourcesMenu()}
                 ${releasesMenu(project.getReleases(), isOwner, display="none")}
                 ${commitsMenu(project.getCommits(), display="none")}
             </div>
-        </td>
-        <td id="main">
-            <div class="pad">
+             <td id="right" class="side">
+                ${resourcePane()}
+                ${groupTroveBuilder()}
+            </td>
+           
+            <div id="middle">
                 <h2>${project.getNameForDisplay(maxWordLen = 50)}<br />Repository Browser<br />Trove information for ${troveName}</h2>
 
                 <div py:strip="True" py:if="troves[0].getName().endswith(':source')">
@@ -135,11 +131,6 @@ isOwner = (userLevel == userlevels.OWNER or auth.admin)
                     </li>
                 </ul>
             </div>
-        </td>
-        <td id="right" class="projects">
-            ${resourcePane()}
-            ${groupTroveBuilder()}
-        </td>
-
+        </div>
     </body>
 </html>
