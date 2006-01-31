@@ -173,6 +173,8 @@ class GroupTroveItemsTable(database.KeyedTable):
         self.updateModifiedTime(groupTroveItemId)
 
     def addTroveItem(self, groupTroveId, creatorId, trvName, trvVersion, trvFlavor, subGroup, versionLock, useLock, instSetLock):
+        if ":source" in trvName:
+            raise GroupTroveNameError("Can't add source components")
         cu = self.db.cursor()
         cu.execute("""SELECT COUNT(groupTroveId)
                         FROM GroupTroveItems 

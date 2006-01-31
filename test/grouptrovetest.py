@@ -787,5 +787,19 @@ class GroupTroveTest(MintRepositoryHelper):
 
         assert(len(groupTrove.listTroves()) == 1)
 
+    def testSourceGroups(self):
+        self.openRepository()
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client)
+
+        groupTrove = self.createTestGroupTrove(client, projectId)
+
+        v = versions.ThawVersion( \
+            "/testproject.rpath.local@rpl:devel/123.0:1.0-1-1")
+
+        # should not be allowed to add source components to groups
+        self.assertRaises(grouptrove.GroupTroveNameError, self.addTestTrove,
+                          groupTrove, "test:source", v.asString())
+
 if __name__ == "__main__":
     testsuite.main()
