@@ -16,15 +16,18 @@
     </div>
 
     <body>
-        <td id="left" class="side">
-            <div class="pad">
+        <div id="layout">
+            <div id="left" class="side">
                 ${projectResourcesMenu()}
                 ${releasesMenu(publishedReleases, isOwner)}
                 ${commitsMenu(project.getCommits())}
             </div>
-        </td>
-        <td id="main" >
-            <div class="pad">
+            <div id="right" class="side">
+                ${resourcePane()}
+                ${groupTroveBuilder()}
+            </div>
+
+            <div id="middle">
                 <h1>Group Builder</h1>
 
                 <p>You can use Group Builder to create a group that
@@ -72,10 +75,6 @@
                 </ul>
                 <a href="${basePath}newGroup"><b>Create a new group</b></a>
             </div>
-        </td>
-        <td id="right" class="projects">
-            ${resourcePane()}
-            ${groupTroveBuilder()}
-        </td>
+        </div>
     </body>
 </html>
