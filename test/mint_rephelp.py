@@ -120,7 +120,7 @@ class MintApacheServer(rephelp.ApacheServer):
         cfg.projectDomainName = "%s:%i" % (MINT_DOMAIN, self.port)
         cfg.externalDomainName = "%s:%i" % (MINT_DOMAIN, self.port)
         cfg.hostName = MINT_HOST
-        cfg.secureHost = "%s.%s" % (MINT_HOST, MINT_DOMAIN)
+        cfg.secureHost = "%s.%s:%i" % (MINT_HOST, MINT_DOMAIN, self.port)
 
         sqldriver = os.environ.get('CONARY_REPOS_DB', 'sqlite')
         if sqldriver == 'sqlite':
