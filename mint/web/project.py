@@ -515,7 +515,7 @@ class ProjectHandler(WebHandler):
     def subscribe(self, auth, mlists, list):
         if not self.cfg.EnableMailLists:
             raise mailinglists.MailingListException("Mail Lists Disabled")
-        mlists.server.addMember(list, self.cfg.MailListPass, auth.email, auth.fullName, '', False, True)
+        mlists.server.Mailman.addMember(list, self.cfg.MailListPass, auth.email, auth.fullName, '', False, True)
         return self._mailingLists(auth, mlists, ['You have been subscribed to %s' % list])
 
     @requiresAuth
