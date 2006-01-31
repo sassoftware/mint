@@ -429,13 +429,14 @@ div.palette img.right {
 /* Projects Pane */
 
 div#projectsPane {
-    width: 227px;
+    width: 224px;
     height: 345px;
     margin-left: 3px;
     margin-right: 3px;
     background: url(../images/box_bg.png);
     background-repeat: repeat-y;
     border-bottom: 1px solid #eeeeee;
+    margin-bottom: 10px;
 }
 
 div#projectsPane img.left {
