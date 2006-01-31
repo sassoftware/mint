@@ -136,10 +136,8 @@ isOwner = (userLevel == userlevels.OWNER or auth.admin)
             </div>
         </td>
         <td id="right" class="projects">
-            ${projectsPane()}
-            <div class="pad">
-                ${groupTroveBuilder()}
-            </div>
+            ${resourcePane()}
+            ${groupTroveBuilder()}
         </td>
 
     </body>
