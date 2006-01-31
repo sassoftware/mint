@@ -63,7 +63,7 @@ from mint.mint import upstream
                 </p>
                 <p py:if="not project.getDesc()">The project owner has not entered a description.</p>
 
-                <div style="clear: left;">
+                <div>
                     <h4>What can I do with this project?</h4>
                     <ul>
                         <li py:if="isOwner">
