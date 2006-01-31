@@ -25,7 +25,8 @@ def pluralTroves(c):
         <a href="#">Repository Browser</a>
     </div>
 
-    <span py:def="adder(package, component='')" style="float: right;" py:if="groupTrove and package != groupTrove.recipeName">
+    <span py:def="adder(package, component='')" style="float: right;"
+        py:if="groupTrove and package != groupTrove.recipeName and not package.endswith(':source')">
         <?python
             if component:
                 package += ":" + component
