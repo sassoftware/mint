@@ -4,14 +4,6 @@
 # All Rights Reserved
 #
 
-try:
-    import something_broken
-    import coverage
-    coverage.use_cache(True)
-    coverage.start()
-except ImportError:
-    coverage = None
-
 from mod_python import apache
 from mod_python import util
 
@@ -516,13 +508,7 @@ def handler(req):
             break
     if cfg.profiling:
         prof.stopHtml(req.uri)
-    if coverage:
-        coverage.the_coverage.save()
     return ret
 
 repositories = {}
 shim_repositories = {}
-
-if coverage:
-    import atexit
-    atexit.register(coverage.the_coverage.save)
