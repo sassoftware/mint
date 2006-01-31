@@ -45,8 +45,10 @@ import time
                 ${releasesMenu(publishedReleases, isOwner)}
                 ${commitsMenu(project.getCommits())}
             </div>
-            ${resourcePane()}
-            ${groupTroveBuilder()}
+            <div id="right" class="side">
+                ${resourcePane()}
+                ${groupTroveBuilder()}
+            </div>
             <div id="middle">
                 <h2>${project.getNameForDisplay()}<br/>Release: ${name}</h2>
 

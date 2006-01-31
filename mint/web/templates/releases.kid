@@ -83,8 +83,10 @@
                 ${releasesMenu(publishedReleases, isOwner)}
                 ${commitsMenu(project.getCommits())}
             </div>
-            ${resourcePane()}
-            ${groupTroveBuilder()}
+            <div id="right" class="side">
+                ${resourcePane()}
+                ${groupTroveBuilder()}
+            </div>
 
             <div id="middle">
                 <div class="pad">

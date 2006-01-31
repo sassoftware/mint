@@ -232,7 +232,7 @@ def injectVersion(version):
          'height=500,width=500,menubar=no,scrollbars,status=no,toolbar=no', true); return false;}"
         py:content="text"/>
 
-    <div py:def="loginPane()">
+    <div py:def="loginPane()" id="signin">
         <?python
                 from urllib import quote
                 secureProtocol = 'http'
@@ -244,25 +244,23 @@ def injectVersion(version):
                     secureProtocol = "https"
             ?>
         <form py:if="not auth.authorized" method="post" action="${secureProtocol}://${cfg.secureHost}${cfg.basePath}processLogin">
-            <div id="signin">
-                <input type="hidden" name="to" value="${quote(toUrl)}" />
+            <input type="hidden" name="to" value="${quote(toUrl)}" />
 
-                <div>Username:</div>
-                <div><input type="text" name="username" /></div>
-                <div style="padding-top: 8px;">Password:</div>
-                <div><input type="password" name="password" /></div>
-                <div style="padding-top: 8px;">
-                    <input type="checkbox" name="remember_me" value="1" />
-                    <span style="text-decoration: underline;">Remember me</span> on this computer
-                </div>
-                <button id="signInSubmit" type="submit">
-                    <img alt="Sign In" src="${cfg.staticPath}apps/mint/images/sign_in_button.png" />
-                </button>
+            <div>Username:</div>
+            <div><input type="text" name="username" /></div>
+            <div style="padding-top: 8px;">Password:</div>
+            <div><input type="password" name="password" /></div>
+            <div style="padding-top: 8px;">
+                <input type="checkbox" name="remember_me" value="1" />
+                <span style="text-decoration: underline;">Remember me</span> on this computer
+            </div>
+            <button id="signInSubmit" type="submit">
+                <img alt="Sign In" src="${cfg.staticPath}apps/mint/images/sign_in_button.png" />
+            </button>
 
-                <div id="noAccount">
-                    <p><strong>Don't have an account?</strong></p>
-                    <p><a href="/register">Set one up.</a></p>
-                </div>
+            <div id="noAccount">
+                <p><strong>Don't have an account?</strong></p>
+                <p><a href="/register">Set one up.</a></p>
             </div>
         </form>
         <div py:if="auth.authorized">
@@ -270,11 +268,11 @@ def injectVersion(version):
         </div>
     </div>
 
-    <div py:def="resourcePane()">
-        <div py:if="not auth.authorized">
+    <div py:def="resourcePane()" py:strip="True">
+        <div py:if="not auth.authorized" py:strip="True">
             ${loginPane()}
         </div>
-        <div py:if="auth.authorized">
+        <div py:if="auth.authorized" py:strip="True">
             ${projectsPane()}
         </div>
     </div>

@@ -52,8 +52,10 @@ from mint import userlevels
                 ${releasesMenu(project.getReleases(), isOwner)}
                 ${commitsMenu(project.getCommits())}
             </div>
-            ${resourcePane()}
-            ${groupTroveBuilder()}
+            <div id="right" class="side">
+                ${resourcePane()}
+                ${groupTroveBuilder()}
+            </div>
             <div id="middle">
                 <h2>${project.getNameForDisplay(maxWordLen = 50)}<br/>Members</h2>
                 <?python

@@ -18,8 +18,10 @@ from urllib import quote
             <div id="left" class="side">
                 ${projectResourcesMenu()}
             </div>
-            ${resourcePane()}
-            ${groupTroveBuilder()}
+            <div id="right" class="side">
+                ${resourcePane()}
+                ${groupTroveBuilder()}
+            </div>
 
             <p py:if="message" class="message" py:content="message"/>
             <h1>Edit Group</h1>
