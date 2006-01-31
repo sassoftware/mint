@@ -61,7 +61,10 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                                             'privacy':   'True'})
 
         cu.execute("SELECT confirmation FROM Confirmations")
-        conf = cu.fetchall()[0][0]
+
+        res = cu.fetchall()
+        self.failIf(not res, "Registration didn't add confirmation entry")
+        conf = res[0][0]
 
         page = self.assertCode("/confirm?id=%s" % conf, code = 200)
 
@@ -492,7 +495,6 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         page = self.assertNotContent("/project/testproject/closeCurrentGroup",
                                      content = 'closeCurrentGroup')
 
-
     def testGroupTroveItem(self):
         client, userId = self.quickMintUser('foouser','foopass')
         projectId = self.newProject(client)
@@ -510,9 +512,9 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         page = self.fetch('/project/testproject/editGroup?id=%d' % \
                           groupTrove.id)
 
-        page = self.fetch('/project/testproject/addGroupTrove?id=%d;' + \
-                          'trove=foo:data;projectName=testproject&referer=/' \
-                          % groupTrove.id)
+        page = self.fetch('/project/testproject/addGroupTrove?id=%d;' % \
+                          groupTrove.id + \
+                          'trove=foo:data;projectName=testproject&referer=/')
 
         # ensure the trove was added to the group builder box
         page = self.assertContent('/project/testproject', 'foo:data')
