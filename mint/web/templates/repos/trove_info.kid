@@ -105,10 +105,10 @@ isOwner = (userLevel == userlevels.OWNER or auth.admin)
                 ${releasesMenu(project.getReleases(), isOwner, display="none")}
                 ${commitsMenu(project.getCommits(), display="none")}
             </div>
-             <td id="right" class="side">
+            <div id="right" class="side">
                 ${resourcePane()}
                 ${groupTroveBuilder()}
-            </td>
+            </div>
            
             <div id="middle">
                 <h2>${project.getNameForDisplay(maxWordLen = 50)}<br />Repository Browser<br />Trove information for ${troveName}</h2>
