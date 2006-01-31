@@ -46,6 +46,27 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
             {'username': 'wronguser',
              'password': 'foopass'})
 
+    def testNonvolatileSession(self):
+        self.quickMintUser('foouser','foopass')
+
+        page = self.fetch('/')
+        page = page.postForm(1, self.post, {'username': 'foouser',
+                                            'password': 'foopass'})
+
+        self.failIf(self.cookies.values()[0]['/']['pysid']['expires'],
+                    "Session cookie has unexpected expiration")
+
+        page = self.fetch('/logout')
+
+        page = self.fetch('/')
+
+        page = page.postForm(1, self.post, {'username'   : 'foouser',
+                                            'password'   : 'foopass',
+                                            'rememberMe' : '1'})
+
+        self.failIf(not self.cookies.values()[0]['/']['pysid']['expires'],
+                    "Two-week cookie is missing expiration")
+
     def testRegistration(self):
         cu = self.db.cursor()
         cu.execute("SELECT confirmation FROM Confirmations")

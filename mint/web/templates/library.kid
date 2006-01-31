@@ -251,7 +251,7 @@ def injectVersion(version):
             <div style="padding-top: 8px;">Password:</div>
             <div><input type="password" name="password" /></div>
             <div style="padding-top: 8px;">
-                <input type="checkbox" name="remember_me" value="1" />
+                <input type="checkbox" name="rememberMe" value="1" />
                 <span style="text-decoration: underline;">Remember me</span> on this computer
             </div>
             <button id="signInSubmit" type="submit">

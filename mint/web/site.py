@@ -179,9 +179,10 @@ class SiteHandler(WebHandler):
 
     @requiresHttps
     @strFields(username = None, password = '', action = 'login', to = '/')
-    @boolFields(remember_me = False)
+    @boolFields(rememberMe = False)
     @intFields(x = 0, y = 0)
-    def processLogin(self, auth, username, password, action, to, remember_me, x, y):
+    def processLogin(self, auth, username, password, action, to, rememberMe,
+                     x, y):
         if action == 'login':
             authToken = (username, password)
             client = shimclient.ShimMintClient(self.cfg, authToken)
@@ -200,6 +201,7 @@ class SiteHandler(WebHandler):
                 self.session['authToken'] = authToken
                 self.session['firstTimer'] = firstTimer
                 self.session['firstPage'] = unquote(to)
+                self.session['rememberMe'] = rememberMe
                 self.session.save()
 
                 self._redirect_storm(self.session.id())

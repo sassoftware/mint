@@ -90,10 +90,14 @@ class MintApp(WebHandler):
             cookies = Cookie.get_cookies(self.req, Cookie.SignedCookie, secret = self.cfg.cookieSecretKey)
         else:
             cookies = Cookie.get_cookies(self.req, Cookie.Cookie)
-            
+
         sid = self.fields.get('sid', None)
+        rememberMe = self.fields.get('rememberMe', False)
         if sid:
             self._session_start()
+            if rememberMe != self.session.get('rememberMe', False):
+                self.session['rememberMe'] = rememberMe
+                self.session.save()
             self._redirect_storm(sid)
 
         if 'pysid' not in cookies:

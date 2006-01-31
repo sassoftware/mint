@@ -149,6 +149,10 @@ class WebHandler(object):
         self.session['visited'][domain] = True
 
         c = self.session.make_cookie()
+
+        if self.session.get('rememberMe', False):
+            c.expires = 1209600 + time.time()
+
         c.domain = '.' + domain
         #add it to the err_headers_out because these ALWAYS go to the browser
         self.req.err_headers_out.add('Set-Cookie', str(c))
@@ -158,7 +162,8 @@ class WebHandler(object):
         #Now figure out if we need to redirect
         nexthop = None
         # split is used to ensure port number doesn't affect cookie domain
-        for dom in (self.cfg.siteDomainName.split(':')[0], self.cfg.projectDomainName.split(':')[0]):
+        for dom in (self.cfg.siteDomainName.split(':')[0],
+                    self.cfg.projectDomainName.split(':')[0]):
             if not self.session['visited'].get(dom, None):
                 #Yeah we need to redirect
                 nexthop = dom
@@ -167,6 +172,10 @@ class WebHandler(object):
         # for the requested domain with that sid.
         if sid or nexthop:
             c = self.session.make_cookie()
+
+            if self.session.get('rememberMe', False):
+                c.expires = 1209600 + time.time()
+
             c.domain = '.' + ".".join(self.req.hostname.split(".")[1:])
             #add it to the err_headers_out because these ALWAYS go to the browser
             self.req.err_headers_out.add('Set-Cookie', str(c))
