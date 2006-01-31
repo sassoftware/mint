@@ -87,6 +87,14 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
         page = self.assertContent('/repos/testproject/troveInfo?t=foo:source',
                                   content = "Trove information for")
 
+    def testReposRSS(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        projectId = self.newProject(client)
+
+        page = self.fetch('/repos/testproject/browse')
+
+        self.failIf('/repos/testproject/rss' in page.body,
+                    "Malformed base path for rss feed on repos page")
 
 if __name__ == "__main__":
     testsuite.main()
