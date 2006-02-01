@@ -93,12 +93,10 @@
         <img class="left" src="${cfg.staticPath}apps/mint/images/header_orange_left.png" />
         <img class="right" src="${cfg.staticPath}apps/mint/images/header_orange_right.png" />
         <div class="boxHeader">
-            <span style="float: left;">${auth.username}</span>
-            <span style="float: right;">
-                <a href="http://${cfg.siteHost}${cfg.basePath}logout">
-                    Sign Out
-                </a>
-            </span>
+            <span>${auth.username}</span>
+            <a href="http://${cfg.siteHost}${cfg.basePath}logout">
+                Sign Out
+            </a>
         </div>
 
         <div class="boxBody" py:if="not projectList" strip="True">

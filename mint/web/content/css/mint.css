@@ -464,6 +464,15 @@ div#projectsPane div.boxBody {
     overflow: auto;
 }
 
+div#projectsPane div.boxHeader span {
+    float: left;
+}
+
+div#projectsPane div.boxHeader span + a {
+    float: right;
+    font-size: 50%;
+}
+
 /* Group Builder */
 
 div#groupBuilder {
