@@ -73,10 +73,10 @@ onload = "javascript:;"
                 <div>
                     <span id="topOfPage"><a href="#top">Top of Page</a></span>
                     <ul class="footerLinks">
-                        <li><a href="/corp/about/">About rPath</a></li>
-                        <li><a href="/news/">Site Announcements</a></li>
+                        <li><a href="/corp/company.html">About rPath</a></li>
+                        <li><a href="/corp/news-events.html">Site Announcements</a></li>
                         <li><a href="/legal/">Legal</a></li>
-                        <li><a href="/contact/">Contact Us</a></li>
+                        <li><a href="/corp/company-contact-rpath.html">Contact Us</a></li>
                         <li><a href="/help/">Help</a></li>
                     </ul>
                 </div>
