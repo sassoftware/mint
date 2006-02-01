@@ -289,77 +289,36 @@ class ProjectHandler(WebHandler):
         return self._write("cookGroup", jobId = jobId, recipe = recipe)
 
     @ownerOnly
-    def newRelease(self, auth):
-        # XXX: this will probably be changed to "editRelease"
-        return self._write("newRelease", isNewRelease = True, imageTypes = [releasetypes.INSTALLABLE_ISO], errors = [], kwargs = {})
+    @listFields(int, imageTypes = [releasetypes.INSTALLABLE_ISO])
+    def newRelease(self, auth, imageTypes):
+        release = self.client.newRelease(self.project.getId(), self.project.getName())
+        release.setImageTypes(imageTypes)
+        template = release.getDataTemplate()
+
+        return self._write("editRelease", isNewRelease = True,
+            release = release,
+            imageTypes = imageTypes,
+            kwargs = {})
 
     @ownerOnly
     @intFields(releaseId = -1)
     @listFields(int, imageTypes = [releasetypes.INSTALLABLE_ISO])
     @strFields(trove = "", releaseName = "")
     def editRelease(self, auth, releaseId, imageTypes, trove, releaseName):
-        errors = []
-        #the check for valid imageTypes is made in mint_server
 
-        projectId = self.project.getId()
-        if releaseId == -1:
-            assert(projectId != -1)
-            if '=' not in trove:
-                errors.append("You must select a group trove.")
+        release = self.client.getRelease(releaseId)
+        template = release.getDataTemplate()
 
-            if not errors:
-                release = self.client.newRelease(projectId, releaseName)
+        trove, versionStr, flavor = release.getTrove()
+        version = versions.ThawVersion(versionStr)
+        label = version.branch().label()
 
-                release.setImageTypes(imageTypes)
-                template = release.getDataTemplate()
-                trove, label = trove.split("=")
-                label = versions.Label(label)
-                version = None
-                flavor = None
-            else:
-                kwargs = {'releaseId':      releaseId,
-                          'trove':          trove,
-                          'releaseName':    releaseName}
-                return self._write("newRelease", errors = errors, kwargs = kwargs, imageTypes = imageTypes)
-        else:
-            release = self.client.getRelease(releaseId)
-            template = release.getDataTemplate()
-
-            trove, versionStr, flavor = release.getTrove()
-            version = versions.ThawVersion(versionStr)
-            label = version.branch().label()
-
-        if self.project.external:
-            cfg = self.project.getConaryConfig()
-        else:
-            cfg = self.project.getConaryConfig(overrideSSL = True, useSSL = self.cfg.SSL)
-        nc = conaryclient.ConaryClient(cfg).getRepos()
-        leaves = nc.getAllTroveLeaves(cfg.repositoryMap.keys()[0], {trove: {None: None}})
-
-        # group troves by major architecture
-        def dictByArch(leaves, troveName):
-            archMap = {}
-            for v, flavors in reversed(sorted(leaves[troveName].items())):
-                for f in flavors:
-                    # skip broken groups that don't have an instruction set
-                    if deps.DEP_CLASS_IS not in f.members:
-                        continue
-                    arch = f.members[deps.DEP_CLASS_IS].members.keys()[0]
-
-                    l = archMap.setdefault(arch, [])
-                    l.append((v, f, ))
-            return archMap
-
-        archMap = dictByArch(leaves, trove)
-        versionFlavors = []
-        for arch, vfList in archMap.items():
-            for vf in vfList:
-                versionFlavors.append(vf)
-        versionFlavors.sort(key=lambda x: x[0], reverse=True)
-
-        return self._write("editRelease", trove = trove, version = version,
+        return self._write("editRelease", isNewRelease = False,
+            release = release,
+            trove = trove,
+            version = version,
             flavor = deps.ThawDependencySet(flavor),
-            label = label.asString(), release = release,
+            label = label.asString(),
             imageTypes = release.getImageTypes(),
             archMap = archMap)
 

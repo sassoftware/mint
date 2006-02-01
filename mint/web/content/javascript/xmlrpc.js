@@ -1,11 +1,11 @@
-/* 
+/*
     Copyright (C) 2005 rpath, Inc.
 
     All Rights Reserved
 */
 
 /* An XMLRPC client class.
-   
+
    Example:
 
     function processRequest(xml) {

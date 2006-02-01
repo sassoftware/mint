@@ -130,6 +130,9 @@ function processGetTroveList(xml) {
     var response = getElementsByTagAndClassName("struct", null, xml);
     var members = getElementsByTagAndClassName("member", null, response[0]);
 
+    /* make an empty selection, forcing user to pick */
+    appendToSelect(sel, "", document.createTextNode("---"), "trove");
+
     for(var i = 0; i < members.length; i++) {
         var nameNode = members[i].getElementsByTagName("name")[0];
         var label = nameNode.firstChild.nodeValue;
@@ -140,7 +143,35 @@ function processGetTroveList(xml) {
             appendToSelect(sel, troveName + "=" + label, document.createTextNode(troveName), "trove");
         }
     }
-    document.getElementById("submitButton").disabled = false;
+
+}
+
+function processGetTroveVersions(xml) {
+    archSel = document.getElementById("arch");
+    vSel = document.getElementById("version");
+    clearSelection(archSel);
+    clearSelection(vSel);
+    appendToSelect(archSel, "", document.createTextNode("---"), "arch");
+    appendToSelect(vSel, "", document.createTextNode("---"), "version");
+
+    var response = getElementsByTagAndClassName("struct", null, xml);
+    var members = getElementsByTagAndClassName("member", null, response[0]);
+
+    for(var i = 0; i < members.length; i++) {
+        var nameNode = members[i].getElementsByTagName("name")[0];
+        var label = nameNode.firstChild.nodeValue;
+
+        var troves = members[i].getElementsByTagName("string");
+        for(var j = 0; j < troves.length; j++) {
+            var troveName = troves[j].firstChild.nodeValue;
+            alert("troveName: " + troveName + ", label: " + label);
+            //appendToSelect(sel, troveName + "=" + label, document.createTextNode(troveName), "trove");
+        }
+    }
+
+    vSel.disabled = false;
+    archSel.disabled = false;
+
 }
 
 
@@ -174,6 +205,36 @@ function getTroveList(projectId) {
     setTimeout("ticker()", tickerRefreshTime);
 }
 
+function onTroveChange(projectId) {
+    var sel = document.getElementById("trove");
+    var vSel = document.getElementById("version");
+    var archSel = document.getElementById("arch");
+    var i = sel.selectedIndex;
+
+    // bail out if selector is changed to a non-trove header selection
+    if (i < 1) {
+        clearSelection(vSel);
+        vSel.disabled = true;
+        clearSelection(archSel);
+        archSel.disabled = true;
+        return;
+    }
+
+    var troveNameWithLabel = sel.options[sel.selectedIndex].value;
+    alert(projectId + ", " + troveNameWithLabel);
+    getTroveVersions(projectId, troveNameWithLabel);
+}
+
+function getTroveVersions(projectId, troveNameWithLabel) {
+
+    var req = new XmlRpcRequest("/xmlrpc", "getTroveVersions");
+    req.setAuth(getCookieValue("pysid"));
+    req.setHandler(processGetTroveVersions, {});
+    req.send(projectId, troveNameWithLabel);
+
+    /* TICKER TBD */
+
+}
 
 var ticks = 0;
 var direction = 1;

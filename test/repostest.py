@@ -19,10 +19,10 @@ testRecipe = """
 class TestCase(PackageRecipe):
     name = "testcase"
     version = "1.0"
-    
+
     def setup(r):
         r.Create("/temp/foo")
-""" 
+"""
 
 testGroup = """
 class GroupTest(GroupRecipe):
@@ -96,7 +96,7 @@ class RepositoryTest(MintRepositoryHelper):
         self.openRepository()
         client, userId = self.quickMintUser("testuser", "testpass")
         projectId = self.newProject(client)
-       
+
         project = client.getProject(projectId)
         self.makeSourceTrove("testcase", testRecipe)
         self.cookFromRepository("testcase",
@@ -117,6 +117,26 @@ class RepositoryTest(MintRepositoryHelper):
         groupTroves = client.server.getGroupTroves(projectId)
         assert(groupTroves == {'test.rpath.local@rpl:devel': ['group-test']})
 
+    def testGetTroveVersions(self):
+        expected = "{'x86_64': [(VFS('/test.rpath.local@rpl:devel/1.0-1-1'), "\
+                   "Flavor('is: x86_64'))], 'x86': "\
+                   "[(VFS('/test.rpath.local@rpl:devel/1.0-1-1'), "\
+                   "Flavor('is: x86'))]}"
+
+        repos = self.openRepository()
+        client, userId = self.quickMintUser("testuser", "testpass")
+        projectId = self.newProject(client)
+
+        flavors = ("is:x86", "is:x86_64")
+        for f in flavors:
+            self.addComponent("test:runtime", "1.0", flavor=f)
+            self.addCollection("test", "1.0", [(":runtime", "1.0", f) ])
+            self.addCollection("group-core", "1.0", [("test", "1.0" , f)])
+
+        # XXX: merge issue - should be testproject.rpath.local
+        troveVersions = client.server.getTroveVersions(projectId, "group-core=test.rpath.local@rpl:devel")
+
+        self.failUnlessEqual(str(troveVersions), expected)
 
 if __name__ == "__main__":
     testsuite.main()

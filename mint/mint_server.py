@@ -1581,6 +1581,47 @@ class MintServer(object):
         else:
             raise jobs.FileMissing
 
+    @requiresAuth
+    def getTroveVersions(self, projectId, troveNameWithLabel):
+
+        self._filterProjectAccess(projectId)
+        # XXX: should this be a decorator?
+        # enable internal methods so that public methods can make
+        # private calls; this is safe because only one instance
+        # of MintServer is instantiated per call.
+        self._allowPrivate = True
+
+        def dictByArch(leaves, trove):
+            archMap = {}
+            for v, flavors in reversed(sorted(leaves[trove].items())):
+                for f in flavors:
+                    # skip broken groups that don't have an instruction set
+                    if deps.DEP_CLASS_IS not in f.members:
+                        continue
+                    arch = f.members[deps.DEP_CLASS_IS].members.keys()[0]
+
+                    l = archMap.setdefault(arch, [])
+                    l.append((str(v), f.freeze(), ))
+            return archMap
+
+        project = projects.Project(self, projectId)
+        trove, label = troveNameWithLabel.split('=')
+        label = versions.Label(label)
+        version = None
+        flavor = None
+
+        if project.external:
+            cfg = project.getConaryConfig()
+        else:
+            cfg = project.getConaryConfig(overrideSSL = True, useSSL = self.cfg.SSL)
+        nc = conaryclient.ConaryClient(cfg).getRepos()
+        leaves = nc.getAllTroveLeaves(cfg.repositoryMap.keys()[0], {trove: {None: None}})
+
+        # group trove by major architecture
+        archMap = dictByArch(leaves, trove)
+
+        return archMap
+
     @typeCheck(int)
     @requiresAuth
     def getGroupTroves(self, projectId):
