@@ -56,7 +56,7 @@ def injectVersion(version):
                 <tr>
                     <th colspan="3">Trove</th>
                     <th>Project</th>
-                    <th>Delete</th>
+                    <th>Del</th>
                 </tr>
               </thead>
               <tbody class="group-builder" id="groupbuilder-tbody">

@@ -473,13 +473,18 @@ div#projectsPane div.boxHeader span + a {
     font-size: 50%;
 }
 
+div#projectsPane div#newProject {
+    text-align: center;
+}
+
 /* Group Builder */
 
 div#groupBuilder {
     clear: right;
-    max-width: 227px;
-    margin-top: 8px;
-    margin-bottom: 12px;
+    max-width: 224px;
+    margin: 8px 3px 12px 3px;
+    background: url(../images/box_bg.png);
+    background-repeat: repeat-y;
 }
 
 div#groupBuilder img.left {
@@ -502,7 +507,7 @@ div#groupBuilder div.boxHeader {
 
 div#groupBuilderItems {
     border: 1px solid #eeeeee;
-    padding: 0;
+    padding: 4px;
 }
 
 div#groupBuilder table tr:first-child {

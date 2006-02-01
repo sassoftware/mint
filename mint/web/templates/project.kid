@@ -98,7 +98,6 @@
                 Sign Out
             </a>
         </div>
-
         <div class="boxBody" py:if="not projectList" strip="True">
             <h3>Get Involved</h3>
 
@@ -129,11 +128,7 @@
                         </span>
                 </li>
             </ul>
-            <ul>
-                <li>
-                    <a href="http://${SITE}newProject"><strong>Create a new project</strong></a>
-                </li>
-            </ul>
+            <div id="newProject"><a href="http://${SITE}newProject"><strong>Create a new project</strong></a></div>
         </div>
     </div>
 </html>
