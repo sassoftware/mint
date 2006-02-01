@@ -116,13 +116,13 @@ class ConaryHandler(WebHandler, http.HttpHandler):
             output = method(**d)
             return output
         except (http.InvalidPassword, errors.OpenError):
-            return self._requestAuth()
+            return self._requestAuth(d)
 
-    def _requestAuth(self):
+    def _requestAuth(self, d):
         # try to fall back to anonymous and rerun the handler
         if self.authToken[0] != 'anonymous':
             self.authToken = ('anonymous', 'anonymous')
-            return self._handle()
+            return self._handle(**d)
         else:
             raise HttpForbidden
 
