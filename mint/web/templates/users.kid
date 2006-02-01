@@ -32,13 +32,6 @@ from mint.mint import timeDelta
             ?>
             ${resultRow(formattedresults)}
         </div>
-        <td id="left" class="side">
-            <div class="pad">
-                ${browseMenu()}
-                ${searchMenu()}
-            </div>
-        </td>
-
         <div py:def="sortOrderForm(sortOrder = 0)" py:strip="True">
             <form method="get" action="users">
                 <select name="sortOrder">

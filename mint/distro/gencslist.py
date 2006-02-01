@@ -67,17 +67,22 @@ def _findValidTroves(cs, groupName, groupVersion, groupFlavor,
 
     if not topTrove:
         topTrove = t
-        
+
     for name, version, flavor in t.iterTroveList(strongRefs = True):
         if not topTrove.hasTrove(name, version, flavor):
-            topTrove = t
-        if not name.startswith('group-'):
-            if (skipNotByDefault 
-                and not topTrove.includeTroveByDefault(name, version, flavor)):
-                continue
+            childTopTrove = t
         else:
-            if not topTrove.includeTroveByDefault(name, version, flavor):
-                topTrove = None
+            childTopTrove = topTrove
+
+        if name in ('kernel', 'kernel:runtime'):
+            pass
+        elif not name.startswith('group-'):
+            if (skipNotByDefault and 
+                not childTopTrove.includeTroveByDefault(name, version, flavor)):
+                continue
+        elif not childTopTrove.includeTroveByDefault(name, version, flavor):
+            # a not by default group
+            childTopTrove = None
 
         if ':' in name:
             package = name.split(':')[0]
@@ -91,7 +96,7 @@ def _findValidTroves(cs, groupName, groupVersion, groupFlavor,
         if trove.troveIsCollection(name):
             # recurse into included groups
             _findValidTroves(cs, name, version, flavor, 
-                             skipNotByDefault, topTrove, valid)
+                             skipNotByDefault, childTopTrove, valid)
     return valid
 
 def _makeEntry(groupCs, name, version, flavor, components):
@@ -107,7 +112,7 @@ def _makeEntry(groupCs, name, version, flavor, components):
     kernelSpec = "none"
     if name == 'kernel' or name == 'kernel:runtime':
         base, kernelVer = _handleKernelPackage(groupCs, name, version,
-                                               flavor, components)
+                                               flavor)
         kernelSpec = '='.join((base, kernelVer))
 
     if deps.DEP_CLASS_IS in flavor.members:
@@ -164,7 +169,7 @@ def _validateTrove(newCs, cachedCs, name, version, flavor):
         return False
     return True
 
-def _validateChangeSet(path, cs, name, version, flavor):
+def _validateChangeSet(path, cs, name, version, flavor, compNames):
     # check to make sure that a cached change set matches the version
     # from the repository
     cachedCs = changeset.ChangeSetFromFile(path)
@@ -181,13 +186,10 @@ def _validateChangeSet(path, cs, name, version, flavor):
     # then iterate over any included troves (if any)
     topTrove = _getTrove(cs, name, version, flavor)
     for name, version, flavor in topTrove.iterTroveList(strongRefs = True):
-        # skip not byDefault troves
-        try:
-            if not topTrove.includeTroveByDefault(name, version, flavor):
-                continue
-        except KeyError:
-            # missing byDefault infor for this trove, so it's bad
-            return False
+        if name not in compNames:
+            if cachedCs.hasNewTrove(name, version, flavor):
+                return False
+            continue
         if not _validateTrove(cs, cachedCs, name, version, flavor):
             return False
 
@@ -217,6 +219,34 @@ def _linkOrCopyFile(src, dest):
             os.rename(fn, dest)
             os.chmod(dest, 0644)
         break
+
+def _orderValidTroves(changeSetList, valid):
+    finalCsList = []
+    handled = set()
+    for chunk in changeSetList:
+        for csInfo in chunk:
+            (name, (oldVersion, oldFlavor),
+                   (newVersion, newFlavor), absolute) = csInfo
+            entry = (name, newVersion, newFlavor)
+            if ':' in name:
+                # see if the package is included too.  If it is
+                # go ahead and handle it now.
+                pkgname = name.split(':')[0]
+                pkgentry = (pkgname, entry[1], entry[2])
+                if pkgentry in valid:
+                    if not pkgentry in handled:
+                        finalCsList.append((pkgentry, valid[pkgentry]))
+                        # mark the package as handled so we don't do it
+                        # again later.
+                        handled.add(pkgentry)
+                    # already (or just) handled, carry on
+                    continue
+
+            if entry in valid and not entry in handled:
+                finalCsList.append((entry, []))
+                handled.add(entry)
+
+    return finalCsList
 
 def extractChangeSets(client, cfg, csdir, groupName, groupVer, groupFlavor,
                       oldFiles = None, cacheDir = None, callback = None,
@@ -279,15 +309,16 @@ def extractChangeSets(client, cfg, csdir, groupName, groupVer, groupFlavor,
     # instantiate all the trove objects in the group, make a set
     # of the changesets we should extract
     finalList = _findValidTroves(group, groupName, groupVer, groupFlavor,
-                             skipNotByDefault=True)
+                                 skipNotByDefault=True)
+    orderedList = _orderValidTroves(changeSetList, finalList)
+
     needsFile = False
     if not fn:
         needsFile = True
 
-    total = len(finalList)
+    total = len(orderedList)
     # use the order to extract changesets from the repository
-    for num, ((name, version, flavor), compNames) \
-                                         in enumerate(finalList.iteritems()):
+    for num, ((name, version, flavor), compNames) in enumerate(orderedList):
         components = [ (x, version, flavor) for x in compNames ]
         csfile, entry = _makeEntry(group, name, version, flavor, components)
         path = '%s/%s' % (csdir, csfile)
@@ -311,7 +342,7 @@ def extractChangeSets(client, cfg, csdir, groupName, groupVer, groupFlavor,
 
         # make sure that the existing changeset is not stale
         if keep:
-            if not _validateChangeSet(path, group, name, version, flavor):
+            if not _validateChangeSet(path, group, name, version, flavor, compNames):
                 # the existing changeset does not check out, toss it.
                 keep = False
 
@@ -326,8 +357,8 @@ def extractChangeSets(client, cfg, csdir, groupName, groupVer, groupFlavor,
                 pass
         else:
             print >> sys.stderr, "creating", path
-            csRequest = [(name, (None, None), (version, flavor), False)]
-            csRequest += ((x[0], (None, None), (x[1], x[2]), False) \
+            csRequest = [(name, (None, None), (version, flavor), True)]
+            csRequest += ((x[0], (None, None), (x[1], x[2]), True) \
                                                       for x in components)
 
             if needsFile:
@@ -600,7 +631,8 @@ if __name__ == '__main__':
 
     util.mkdirChain(csdir)
 
-    cfg = conarycfg.ConaryConfiguration()
+    cfg = conarycfg.ConaryConfiguration(True)
+    cfg.setContext(cfg.context)
     cfg.dbPath = ':memory:'
     cfg.root = ':memory:'
     cfg.initializeFlavors()

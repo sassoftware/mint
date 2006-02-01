@@ -15,23 +15,24 @@ from conary import versions
 class WebReposTest(mint_rephelp.WebRepositoryHelper):
     def testRepositoryBrowser(self):
         client, userId = self.quickMintUser('testuser', 'testpass')
-        projectId = self.newProject(client, 'Foo', 'test')
+        projectId = self.newProject(client, 'Foo', 'testproject')
 
         self.makeSourceTrove("testcase", testRecipe)
         self.cookFromRepository("testcase",
-            versions.Label("test.rpath.local@rpl:devel"),
+            versions.Label("testproject.rpath.local@rpl:devel"),
             ignoreDeps = True)
 
         # first try anonymous browsing
-        page = self.assertContent('/repos/test/browse', ok_codes = [200],
+        page = self.assertContent('/repos/testproject/browse', ok_codes = [200],
             content = 'troveInfo?t=testcase:runtime')
 
         # now try logged-in
         page = self.webLogin('testuser', 'testpass')
-        page = page.assertContent('/repos/test/browse', ok_codes = [200],
+        page = page.assertContent('/repos/testproject/browse', ok_codes = [200],
             content = 'troveInfo?t=testcase:runtime')
 
     def testBrowseHiddenProject(self):
+        raise testsuite.SkipTestException
         adminClient, adminUserId = self.quickMintAdmin("adminuser", "testpass")
 
         client, userId = self.quickMintUser('testuser', 'testpass')
@@ -53,19 +54,47 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
             content = 'troveInfo?t=testcase:runtime')
 
     def testBrowseExternalProject(self):
-        raise testsuite.SkipTestException
+        raise testsuite.SkipTestException, "our multirepos support is broken"
         client, userId = self.quickMintUser("testuser", "testpass")
         extProjectId = self.newProject(client, "External Project", "external")
 
         extProject = client.getProject(extProjectId)
         labelId = extProject.getLabelIdMap()['external.rpath.local@rpl:devel']
-        extProject.editLabel(labelId, "external.rpath.local@rpl:devel",
-            'http://localhost:%d/conary/' % self.getPort(), 'anonymous', 'anonymous')
 
-        self.makeSourceTrove("testcase", testRecipe, label = versions.Label('localhost@rpl:linux'))
+        self.openRepository(0)
+        self.openRepository(1)
+        self.makeSourceTrove("testcase", testRecipe, buildLabel = versions.Label('localhost1@rpl:linux'), serverIdx = 1)
 
-        page = self.assertCode('/repos/test/browse', code = 200)
+        extProject.editLabel(labelId, "localhost1@rpl:devel",
+            'http://localhost1:%d/conary/' % self.servers.getServer(1).port, 'anonymous', 'anonymous')
 
+        page = self.assertCode('/repos/external/browse', code = 200)
+
+        page = page.assertCode('/repos/external/troveInfo?t=testcase:source', code = 200)
+
+    def testTroveInfoPage(self):
+        raise testsuite.SkipTestException("This test needs networked repostiory client workaround")
+        client, userId = self.quickMintUser('foouser','foopass')
+        projectId = self.newProject(client)
+
+        # test that missing troves are a 404 not found error
+        page = self.fetch('/repos/foo/troveInfo?t=group-foo', ok_codes = [404])
+
+        self.addQuickTestComponent('foo:source',
+                                   '/testproject.rpath.local@rpl:devel/1.0-1')
+
+        # test that trove info page renders without error
+        page = self.assertContent('/repos/testproject/troveInfo?t=foo:source',
+                                  content = "Trove information for")
+
+    def testReposRSS(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        projectId = self.newProject(client)
+
+        page = self.fetch('/repos/testproject/browse')
+
+        self.failIf('/repos/testproject/rss' in page.body,
+                    "Malformed base path for rss feed on repos page")
 
 if __name__ == "__main__":
     testsuite.main()

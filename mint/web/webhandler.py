@@ -3,11 +3,12 @@
 #
 # All rights reserved
 #
-import kid
 import os
 import textwrap
 import time
 import sys
+
+import kid
 
 from mod_python import apache
 from mod_python import Cookie
@@ -62,6 +63,7 @@ class WebHandler(object):
                               **values)
         if self.output == "html-strict":
             self.output = kid.HTMLSerializer(doctype='html')
+        t.assume_encoding = 'utf-8' # tell kid to assume that all input is utf-8
         return t.serialize(encoding = "utf-8", output = self.output)
 
     def _redirectHttp(self, location):
@@ -147,6 +149,14 @@ class WebHandler(object):
         self.session['visited'][domain] = True
 
         c = self.session.make_cookie()
+
+        if self.session.get('rememberMe', False):
+            c.expires = 1209600 + time.time()
+            # ensure timeout is 2 weeks for remembered sessions
+            if self.session.timeout() != 1209600:
+                self.session.set_timeout(1209600)
+                self.session.save()
+
         c.domain = '.' + domain
         #add it to the err_headers_out because these ALWAYS go to the browser
         self.req.err_headers_out.add('Set-Cookie', str(c))
@@ -156,17 +166,24 @@ class WebHandler(object):
         #Now figure out if we need to redirect
         nexthop = None
         # split is used to ensure port number doesn't affect cookie domain
-        for dom in (self.cfg.siteDomainName.split(':')[0], self.cfg.projectDomainName.split(':')[0]):
+        for dom in (self.cfg.siteDomainName.split(':')[0],
+                    self.cfg.projectDomainName.split(':')[0]):
             if not self.session['visited'].get(dom, None):
                 #Yeah we need to redirect
                 nexthop = dom
-                print >> sys.stderr, "hopping to", nexthop
-                sys.stderr.flush()
                 break
         # if we were passed a sid, specifically set a cookie
         # for the requested domain with that sid.
         if sid or nexthop:
             c = self.session.make_cookie()
+
+            if self.session.get('rememberMe', False):
+                c.expires = 1209600 + time.time()
+                # ensure timeout is 2 weeks for remembered sessions
+                if self.session.timeout() != 1209600:
+                    self.session.set_timeout(1209600)
+                    self.session.save()
+
             c.domain = '.' + ".".join(self.req.hostname.split(".")[1:])
             #add it to the err_headers_out because these ALWAYS go to the browser
             self.req.err_headers_out.add('Set-Cookie', str(c))

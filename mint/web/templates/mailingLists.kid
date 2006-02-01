@@ -28,8 +28,6 @@
                 ${projectResourcesMenu()}
                 ${releasesMenu(project.getReleases(), isOwner, display="none")}
                 ${commitsMenu(project.getCommits(), display="none")}
-                ${browseMenu(display='none')}
-                ${searchMenu(display='none')}
             </div>
         </td>
         <td id="main">
@@ -98,6 +96,12 @@
                             <a href="$basePath/deleteList?list=${list.name}" class="option">Delete List</a>
                         </span>
                     </div>
+
+                    <div style="float:left; margin-right:5px;">
+                        <span py:if="auth.admin">
+                            <a href="$basePath/resetPassword?list=${list.name}" class="option">Request Password</a>
+                        </span>
+                    </div>
                     &#160;
                     <br clear="all"/>
                     &#160;
@@ -137,10 +141,8 @@
             </div>
         </td>
         <td id="right" class="projects">
-            ${projectsPane()}
-            <div class="pad">
-                ${groupTroveBuilder()}
-            </div>
+            ${resourcePane()}
+            ${groupTroveBuilder()}
         </td>
     </body>
 </html>

@@ -108,7 +108,7 @@ class ConaryHandler(WebHandler, http.HttpHandler):
         try:
             method = self.__getattribute__(self.cmd)
         except AttributeError:
-            return apache.HTTP_NOT_FOUND
+            raise HttpNotFound
 
         d = self.fields
         d['auth'] = self.authToken

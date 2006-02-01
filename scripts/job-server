@@ -122,8 +122,7 @@ class JobRunner(threading.Thread):
         elif self.job.getGroupTroveId():
             try:
                 log.info("GroupTroveCook job started (id %d)" % (jobId))
-                ret = GroupTroveCook(self.client, self.cfg, self.job,
-                                     None).write()
+                ret = GroupTroveCook(self.client, self.cfg, self.job).write()
             except Exception, e:
                 traceback.print_exc()
                 sys.stdout.flush()
@@ -357,7 +356,7 @@ if __name__ == "__main__":
             # redirect stdout and stderr to job-server.log
             logFile = os.path.join(cfg.logPath, "job-server.log")
             nullf = file("/dev/null", "r+")
-            logfd = os.open(logFile, os.O_APPEND | os.O_WRONLY | os.O_CREAT)
+            logfd = os.open(logFile, os.O_APPEND | os.O_WRONLY | os.O_CREAT, 0666)
             os.dup2(logfd, sys.stdout.fileno())
             os.dup2(logfd, sys.stderr.fileno())
             os.dup2(nullf.fileno(), sys.stdin.fileno())

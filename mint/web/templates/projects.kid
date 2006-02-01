@@ -40,13 +40,7 @@ from mint.mint import timeDelta
             </form>
         </p>
 
-        <td id="left" class="side">
-            <div class="pad">
-                ${browseMenu()}
-                ${searchMenu()}
-            </div>
-        </td>
-        <td id="main">
+        <div class="layout">
             <div class="pad">
                 <h2>Browse Projects</h2>
                 ${sortOrderForm(sortOrder)}
@@ -57,12 +51,6 @@ from mint.mint import timeDelta
                 </table>
                 ${navigation("projects?sortOrder=%d"%(sortOrder), "all projects", count, limit, offset, True)}
             </div>
-        </td>
-        <td id="right" class="projects">
-            ${projectsPane()}
-            <div class="pad">
-                ${groupTroveBuilder()}
-            </div>
-        </td>
+        </div>
     </body>
 </html>

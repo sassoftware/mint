@@ -29,9 +29,6 @@ class MintDatabase:
     def __init__(self, path):
         self.path = path
 
-    def newProjectDb(self, projectName):
-        pass # not implemented
-
     def start(self):
         pass
 
@@ -47,11 +44,6 @@ class SqliteMintDatabase(MintDatabase):
     def start(self):
         if os.path.exists(self.path):
             os.unlink(self.path)
-
-    def newProjectDb(self, projectName):
-        p = util.normpath(self.path + "/../repos/" + projectName)
-        if os.path.exists(p):
-            util.rmtree(p)
 
 
 class MySqlMintDatabase(MintDatabase):
@@ -81,10 +73,6 @@ class MySqlMintDatabase(MintDatabase):
             cu.execute("DROP DATABASE %s" % dbName)
         self.dropAndCreate("minttest")
         db.close()
-
-    def newProjectDb(self, projectName):
-        dbName = projectName.translate(mysqlTransTable)
-        self.dropAndCreate(dbName, create = False)
 
 
 class MintApacheServer(rephelp.ApacheServer):
@@ -132,7 +120,7 @@ class MintApacheServer(rephelp.ApacheServer):
         cfg.projectDomainName = "%s:%i" % (MINT_DOMAIN, self.port)
         cfg.externalDomainName = "%s:%i" % (MINT_DOMAIN, self.port)
         cfg.hostName = MINT_HOST
-        cfg.secureHost = "%s.%s" % (MINT_HOST, MINT_DOMAIN)
+        cfg.secureHost = "%s.%s:%i" % (MINT_HOST, MINT_DOMAIN, self.port)
 
         sqldriver = os.environ.get('CONARY_REPOS_DB', 'sqlite')
         if sqldriver == 'sqlite':
@@ -142,7 +130,7 @@ class MintApacheServer(rephelp.ApacheServer):
         elif sqldriver == 'postgresql':
             cfg.dbPath = 'root@localhost.localdomain:%d/minttest' % self.reposDB.port
         else:
-            assert 0, "Invalid database type"
+            raise AssertionError("Invalid database type")
         cfg.dbDriver = sqldriver
 
         reposdriver = os.environ.get('CONARY_REPOS_DB', 'sqlite')
@@ -151,6 +139,7 @@ class MintApacheServer(rephelp.ApacheServer):
         elif reposdriver == 'mysql':
             cfg.reposDBPath = 'root@localhost.localdomain:%d/%%s' % self.reposDB.port
         cfg.reposDBDriver = reposdriver
+        cfg.reposContentsDir = [self.reposDir + "/contents1/%s/", self.reposDir + "/contents2/%s/"]
 
         cfg.dataPath = self.reposDir
         cfg.authDbPath = None
@@ -162,8 +151,12 @@ class MintApacheServer(rephelp.ApacheServer):
         cfg.configured = True
         cfg.debugMode = True
         cfg.sendNotificationEmails = False
-        cfg.commitAction = """%s/scripts/commitaction --username mintauth --password mintadmin --repmap '%%(repMap)s' --build-label %%(buildLabel)s --module \'%s/mint/rbuilderaction.py --user %%%%(user)s --url http://mintauth:mintpass@%s:%d/xmlrpc-private/'""" % (conaryPath, mintPath, 'test.rpath.local', self.port)
+        cfg.commitAction = """%s/scripts/commitaction --username mintauth --password mintpass --repmap '%%(repMap)s' --build-label %%(buildLabel)s --module \'%s/mint/rbuilderaction.py --user %%%%(user)s --url http://mintauth:mintpass@%s:%d/xmlrpc-private/'""" % (conaryPath, mintPath, 'test.rpath.local', self.port)
         cfg.postCfg()
+
+        cfg.hideFledgling = True
+        cfg.SSL = False
+
         self.mintCfg = cfg
 
 
@@ -184,8 +177,8 @@ rephelp.SERVER_HOSTNAME = "mint.rpath.local@rpl:devel"
 class MintRepositoryHelper(rephelp.RepositoryHelper):
     def openRepository(self, serverIdx = 0, requireSigs = False):
         ret = rephelp.RepositoryHelper.openRepository(self, serverIdx, requireSigs)
-        self.port = self.servers.getServer().port
-        self.mintCfg = self.servers.getServer().mintCfg
+        self.port = self.servers.getServer(serverIdx).port
+        self.mintCfg = self.servers.getServer(serverIdx).mintCfg
 
         return ret
 
@@ -209,6 +202,10 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
         cu = self.db.cursor()
         cu.execute("DELETE FROM Confirmations WHERE userId=?", userId)
         self.db.commit()
+
+        # add this user info to client config object
+        if ('*', username, password) not in self.cfg.user:
+            self.cfg.user.append(('*', username, password))
 
         return self.openMintClient((username, password)), userId
 
@@ -237,24 +234,26 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
         cu.execute("INSERT INTO UserGroupMembers VALUES(?, ?)",
                    groupId, authUserId)
         self.db.commit()
+
+        # add this user info to client config object
+        if ('*', username, password) not in self.cfg.user:
+            self.cfg.user.append(('*', username, password))
+
         return client, userId
 
     def newProject(self, client, name = "Test Project",
-                         hostname = "test",
-                         domainname = "rpath.local",
-                         username = "mintauth"):
+                   hostname = "testproject",
+                   domainname = "rpath.local"):
         """Create a new mint project and return that project ID."""
         # save the current openpgpkey cache
         keyCache = openpgpkey.getKeyCache()
-
-        self.servers.getServer().mintDb.newProjectDb(hostname + "." + domainname)
 
         projectId = client.newProject(name, hostname, domainname)
 
         # set a default signature key
         project = client.getProject(projectId)
         ascKey = open(testsuite.archivePath + '/key.asc', 'r').read()
-        project.addUserKey(username, ascKey)
+        project.addUserKey(client.server._server.authToken[0], ascKey)
 
         # restore the key cache
         openpgpkey.setKeyCache(keyCache)
@@ -262,31 +261,30 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
         self.cfg.buildLabel = versions.Label("%s.%s@rpl:devel" % \
                                              (hostname, domainname))
         self.cfg.repositoryMap = {"%s.%s" % (hostname, domainname):
-            "http://%s.%s:%d/repos/%s/" % (hostname, domainname,
+            "http://%s.%s:%d/repos/%s/" % (MINT_HOST, MINT_DOMAIN,
                                            self.port, hostname)}
+
         self.cfg.user.insert(0, ("%s.%s" % (hostname, domainname),
-                                    "testuser", "testpass"))
+                              client.server._server.authToken[0],
+                              client.server._server.authToken[1]))
 
         # re-open the repos to make changes to repositoryMap have any effect
         self.openRepository()
 
         return projectId
 
-    def setUp(self):
-        #if self.servers.getServer():
-        #    self.servers.getServer().start()
+    def createTestGroupTrove(self, client, projectId,
+                             name = 'group-test', upstreamVer = '1.0.0',
+                             description = 'No Description'):
+        return client.createGroupTrove(projectId, name, upstreamVer,
+                                       description, False)
 
+    def setUp(self):
         rephelp.RepositoryHelper.setUp(self)
         self.openRepository()
 
-        # if you get permission denied on mysql server, then you need to
-        # grant privleges to testuser on minttest:
-        # GRANT ALL ON minttest.* TO testuser IDENTIFIED BY 'testpass';
-
-        self.mintServer = mint_server.MintServer(self.mintCfg,
-                                                 alwaysReload = True)
+        self.mintServer = mint_server.MintServer(self.mintCfg, alwaysReload = True)
         self.db = self.mintServer.db
-        self.db.connect()
 
     def tearDown(self):
         self.db.close()
@@ -317,7 +315,6 @@ class WebRepositoryHelper(MintRepositoryHelper, webunittest.WebTestCase):
     def setUp(self):
         webunittest.WebTestCase.setUp(self)
         MintRepositoryHelper.setUp(self)
-        self.openRepository()
         self.setAcceptCookies(True)
         self.server, self.port = self.getServerData()
         self.URL = self.getMintUrl()

@@ -197,9 +197,6 @@ def getTables(db, cfg):
     return d
 
 class MintServer(object):
-    _checkRepo = True
-    _cachedGroups = []
-
     def callWrapper(self, methodName, authToken, args):
         # reopen the database if it's changed
         self.db.reopen()
@@ -236,15 +233,9 @@ class MintServer(object):
                 d = self.sessions.load(sid)
                 authToken = d['_data']['authToken']
 
-            auth = self.users.checkAuth(authToken,
-                checkRepo = self._checkRepo,
-                cachedGroups = self._cachedGroups)
+            auth = self.users.checkAuth(authToken)
             self.authToken = authToken
             self.auth = users.Authorization(**auth)
-            self._cachedGroups = self.auth.groups
-
-            if self.auth.authorized:
-                self._checkRepo = False
 
             allowPrivate = self._allowPrivate
             r = method(*args)
@@ -426,7 +417,7 @@ class MintServer(object):
             "http://%s%srepos/%s/" % (self.cfg.projectSiteHost, self.cfg.basePath, hostname),
             self.cfg.authUser, self.cfg.authPass)
 
-        self.projects.createRepos(self.cfg.reposPath, self.cfg.reposContentsPath,
+        self.projects.createRepos(self.cfg.reposPath, self.cfg.reposContentsDir,
                                   hostname, domainname, self.authToken[0],
                                   self.authToken[1])
 
@@ -759,6 +750,7 @@ class MintServer(object):
         cu = self.db.cursor()
 
         fqdnConcat = database.concat(self.db, "hostname", "'.'", "domainname")
+        # audited for SQL injection.
         cu.execute("""SELECT %s, name, level
                       FROM Projects, ProjectUsers
                       WHERE Projects.projectId=ProjectUsers.projectId AND
@@ -1086,14 +1078,21 @@ class MintServer(object):
     def versionIsExternal(self, versionStr):
         cu = self.db.cursor()
 
-        labelStr = '/' + versionStr.split('/')[1]
+        try:
+            hostname = ('/' + versionStr.split('/')[1]).split('@')[0]
+        except:
+            # All exceptions at this point will be string parsing errors.
+            raise ItemNotFound
 
-        cu.execute("SELECT projectId FROM Labels WHERE label=?", labelStr)
+        cu.execute("SELECT projectId FROM Labels WHERE label LIKE ?",
+                   "%s%%" % hostname)
 
         res = cu.fetchone()
 
         if not res:
-            raise database.ItemNotFound
+            # FIXME: this needs to be an exception condition to prevent
+            # rBO making non-hosted content appear as part of the site.
+            return True
 
         projectId = res[0]
 
@@ -1107,7 +1106,7 @@ class MintServer(object):
         res = cu.fetchone()
 
         if not res:
-            raise database.ItemNotFound
+            return True
 
         return bool(res[0])
 
@@ -1942,6 +1941,7 @@ class MintServer(object):
                                                  versionLock, useLock,
                                                  instSetLock)
 
+    @requiresAuth
     @typeCheck(int, str, str, str, str, bool, bool, bool)
     def addGroupTroveItemByProject(self, groupTroveId, trvName, projectName,
                                    trvFlavor, subGroup, versionLock, useLock,
@@ -1956,7 +1956,6 @@ class MintServer(object):
         if groupTrove.projectId:
             if not self.auth.authorized:
                 raise PermissionDenied
-            self._filterProjectAccess(groupTrove.projectId)
             groupProject = projects.Project(self, groupTrove.projectId)
             affineLabel = project.getLabel().split('@')[0] + '@' + \
                           groupProject.getLabel().split('@')[1]
@@ -2054,7 +2053,7 @@ class MintServer(object):
             raise PermissionDenied
         return base64.b64encode(self._getReportObject(name).getPdf())
 
-    def __init__(self, cfg, allowPrivate = False, alwaysReload = False):
+    def __init__(self, cfg, allowPrivate = False, alwaysReload = False, db = None):
         self.cfg = cfg
 
         # create the profiling log if self.cfg.profiling exists
@@ -2071,6 +2070,9 @@ class MintServer(object):
 
         from conary import dbstore
         global dbConnection
+        if db:
+            dbConnection = db
+
         if cfg.dbDriver in ["mysql", "postgresql"] and dbConnection and (not alwaysReload):
             self.db = dbConnection
         else:

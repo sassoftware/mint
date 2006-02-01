@@ -324,10 +324,15 @@ class ReleaseTest(MintRepositoryHelper):
         release.setTrove("group-trove",
                          "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
         release.setPublished(True)
+
+        # ugly hack. mysql does not distinguish sub-second time resolution
+        time.sleep(1)
+
         release = client.newRelease(projectId, 'release 2')
         release.setTrove("group-trove",
                          "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
         release.setPublished(True)
+
         self.failIf([x.id for x in \
                      client.server.getReleasesForProject(projectId)] != [2, 1],
                     "getReleasesForProject is not ordered by "
@@ -372,15 +377,16 @@ class ReleaseTest(MintRepositoryHelper):
         release = client.newRelease(projectId, 'release 1')
         release.setImageTypes([releasetypes.INSTALLABLE_ISO])
         release.setTrove("group-core",
-                         "/test.rpath.local@rpl:devel/0.0:1.0-1-1", "1#x86")
+                         "/testproject.rpath.local@rpl:devel/0.0:1.0-1-1",
+                         "1#x86")
 
         self.stockReleaseFlavor(release.getId())
 
         job = client.startImageJob(release.id)
 
         cfg = self.makeInstallableIsoCfg()
-        imageJob = installable_iso.InstallableIso(client, IsoGenCfg(),
-                                                  job, release.id)
+        imageJob = installable_iso.InstallableIso(client, IsoGenCfg(), job,
+                                                  release, project)
         imageJob.isocfg = cfg
 
         # getting a trove not found from a trove that's really not there isn't

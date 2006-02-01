@@ -50,7 +50,9 @@ class GenericDataTable(database.DatabaseTable):
 
         cu = self.db.cursor()
 
+        # audited for SQL injection
         cu.execute("DELETE FROM %s WHERE %sId=? AND name=?" % (self.name, self.front), id, name)
+        # audited for SQL injection
         cu.execute("INSERT INTO %s (%sId, name, value, dataType) VALUES(?, ?, ?, ?)" % (self.name, self.front),
                    (id, name, value, dataType))
         self.db.commit()
@@ -61,6 +63,7 @@ class GenericDataTable(database.DatabaseTable):
         # passing None to indicate that no value is set, since we don't
         # allow our XMLRPC server to pass None values.
         cu = self.db.cursor()
+        # audited for SQL injection
         cu.execute("SELECT value, dataType FROM %s WHERE %sId=? AND name=?" % (self.name, self.front), (id, name))
         res = cu.fetchall()
         if len(res) != 1:
@@ -74,6 +77,7 @@ class GenericDataTable(database.DatabaseTable):
 
     def getDataDict(self, id):
         cu = self.db.cursor()
+        # audited for SQL injection
         cu.execute("SELECT name, value, dataType FROM %s WHERE %sId=?" % (self.name, self.front), id)
         dataDict = {}
         for name, value, dataType in cu.fetchall():

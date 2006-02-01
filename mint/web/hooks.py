@@ -4,14 +4,6 @@
 # All Rights Reserved
 #
 
-try:
-    import something_broken
-    import coverage
-    coverage.use_cache(True)
-    coverage.start()
-except ImportError:
-    coverage = None
-
 from mod_python import apache
 from mod_python import util
 
@@ -26,6 +18,8 @@ import traceback
 
 from conary.lib import util as conaryutil
 from conary.lib import epdb, log
+from conary import dbstore
+from conary.dbstore import sqlerrors
 from conary.repository.netrepos import netserver
 from conary.repository.filecontainer import FileContainer
 from conary.repository import changeset
@@ -116,6 +110,7 @@ def post(port, isSecure, repos, cfg, req):
             return apache.HTTP_FORBIDDEN
 
         # take off the usedAnonymous flag
+        usedAnonymous = result[0]
         result = result[1:]
         resp = xmlrpclib.dumps((result,), methodresponse=1)
         req.content_type = "text/xml"
@@ -123,6 +118,8 @@ def post(port, isSecure, repos, cfg, req):
         if len(resp) > 200 and 'deflate' in encoding:
             req.headers_out['Content-encoding'] = 'deflate'
             resp = zlib.compress(resp, 5)
+        if usedAnonymous:
+            req.headers_out["X-Conary-UsedAnonymous"] = "1"
         req.write(resp)
         return apache.OK
     else:
@@ -249,30 +246,39 @@ def conaryHandler(req, cfg, pathInfo):
         repName = repNameMap[repName]
         print >> sys.stderr, "REMAPPING REPOSITORY NAME: ", repName
 
+    repNameMap = {'conary.digium.com': 'digium.digium.com',
+                 'digium.rpath.net': 'digium.digium.com'}
+    if repName in repNameMap:
+        repName = repNameMap[repName]
+        print >> sys.stderr, "REMAPPING REPOSITORY NAME: ", repName
+
+    global db
+    if cfg.reposDBDriver == "sqlite":
+        db = None
+        dbName = repName
+    else:
+        # XXX mysql-specific hack--this needs to be abstracted out
+        dbName = repName.translate(mysqlTransTable)
+        try:
+            db.use(dbName)
+        except sqlerrors.DatabaseError:
+            raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND
+
     if not repositories.has_key(repHash):
         nscfg = netserver.ServerConfig()
 
         repositoryDir = os.path.join(cfg.reposPath, repName)
 
-        dbName = repName
-        dbNameMap = {'conary.digium.com': 'digium.digium.com',
-                     'digium.rpath.net': 'digium.digium.com'}
-        if dbName in dbNameMap:
-            dbName = dbNameMap[dbName]
-            print >> sys.stderr, "REMAPPING DATABASE NAME: ", repName
-
-        if cfg.reposDBDriver != "sqlite":
-            dbName = dbName.translate(mysqlTransTable)
-
         nscfg.repositoryDB = (cfg.reposDBDriver, cfg.reposDBPath % dbName)
 
         #nscfg.cacheDB = ('sqlite', repositoryDir + '/cache.sql')
         nscfg.cacheDB = None
-        nscfg.contentsDir = repositoryDir + '/contents/'
+        
+        nscfg.contentsDir = " ".join(x % repName for x in cfg.reposContentsDir)
+        print >> sys.stderr, "debug: nscfg.contentsDir:", nscfg.contentsDir
 
         nscfg.serverName = repName
         nscfg.tmpDir = os.path.join(cfg.reposPath, repName, "tmp")
-        nscfg.logFile = os.path.join(repositoryDir, "contents.log")
 
         if os.path.basename(req.uri) == "changeset":
            rest = os.path.dirname(req.uri) + "/"
@@ -317,8 +323,8 @@ def conaryHandler(req, cfg, pathInfo):
 
 
         if os.access(repositoryDir, os.F_OK):
-            repositories[repHash] = netserver.NetworkRepositoryServer(nscfg, urlBase)
-            shim_repositories[repHash] = shimclient.NetworkRepositoryServer(nscfg, urlBase)
+            repositories[repHash] = netserver.NetworkRepositoryServer(nscfg, urlBase, db)
+            shim_repositories[repHash] = shimclient.NetworkRepositoryServer(nscfg, urlBase, db)
 
             repositories[repHash].forceSecure = cfg.SSL
         else:
@@ -386,34 +392,15 @@ def logErrorAndEmail(req, cfg, exception, e, bt):
     req.add_common_vars()
     info_dict = {
         'local_addr'     : c.local_ip + ':' + str(c.local_addr[1]),
-        'remote_addr'    : c.remote_ip + ':' + str(c.remote_addr[1]),
-        'remote_host'    : c.remote_host,
-        'remote_logname' : c.remote_logname,
-        'aborted'        : c.aborted,
-        'keepalive'      : c.keepalive,
-        'double_reverse' : c.double_reverse,
-        'keepalives'     : c.keepalives,
         'local_host'     : c.local_host,
-        'connection_id'  : c.id,
-        'notes'          : c.notes,
-        'the_request'    : req.the_request,
-        'proxyreq'       : req.proxyreq,
-        'header_only'    : req.header_only,
         'protocol'       : req.protocol,
-        'proto_num'      : req.proto_num,
         'hostname'       : req.hostname,
         'request_time'   : time.ctime(req.request_time),
-        'status_line'    : req.status_line,
         'status'         : req.status,
         'method'         : req.method,
-        'allowed'        : req.allowed,
         'headers_in'     : req.headers_in,
         'headers_out'    : req.headers_out,
         'uri'            : req.uri,
-        'unparsed_uri'   : req.unparsed_uri,
-        'args'           : req.args,
-        'parsed_uri'     : req.parsed_uri,
-        'filename'       : req.filename,
         'subprocess_env' : req.subprocess_env,
         'referer'        : req.headers_in.get('referer', 'N/A')
     }
@@ -464,6 +451,7 @@ def makeProfile(cfg):
     return profile.Profile(cfg.dataPath + '/logs/profiling')
 
 cfg = None
+db = None
 def handler(req):
     if not req.hostname:
         return apache.HTTP_BAD_REQUEST
@@ -472,6 +460,10 @@ def handler(req):
     if not cfg:
         cfg = config.MintConfig()
         cfg.read(req.filename)
+
+    global db
+    if not db:
+        db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
 
     if cfg.profiling:
         prof = getProfile()
@@ -513,13 +505,7 @@ def handler(req):
             break
     if cfg.profiling:
         prof.stopHtml(req.uri)
-    if coverage:
-        coverage.the_coverage.save()
     return ret
 
 repositories = {}
 shim_repositories = {}
-
-if coverage:
-    import atexit
-    atexit.register(coverage.the_coverage.save)

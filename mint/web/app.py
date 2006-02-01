@@ -33,11 +33,6 @@ import cache
 from webhandler import WebHandler, normPath, HttpNotFound 
 from cache import pageCache, reqHash
 
-# hack to set the default encoding to utf-8
-# to overcome a kid bug.
-reload(sys)
-sys.setdefaultencoding("utf-8")
-
 #called from hooks.py if an exception was not caught
 class ErrorHandler(WebHandler):
     def handle(self, context):
@@ -63,7 +58,7 @@ class MintApp(WebHandler):
         #If the browser can support it, give it what it wants.
         if 'application/xhtml+xml' in self.req.headers_in.get('Accept', ''):
             self.content_type = 'application/xhtml+xml'
-            self.output = 'xhtml'
+            self.output = 'xhtml-strict'
 
         self.req.content_type = self.content_type
         
@@ -95,10 +90,14 @@ class MintApp(WebHandler):
             cookies = Cookie.get_cookies(self.req, Cookie.SignedCookie, secret = self.cfg.cookieSecretKey)
         else:
             cookies = Cookie.get_cookies(self.req, Cookie.Cookie)
-            
+
         sid = self.fields.get('sid', None)
+        rememberMe = self.fields.get('rememberMe', False)
         if sid:
             self._session_start()
+            if rememberMe != self.session.get('rememberMe', False):
+                self.session['rememberMe'] = rememberMe
+                self.session.save()
             self._redirect_storm(sid)
 
         if 'pysid' not in cookies:
@@ -113,7 +112,10 @@ class MintApp(WebHandler):
         self.authToken = self.session.get('authToken', anonToken)
     
         # open up a new client with the retrieved authToken
-        if self.authToken not in shimClients:
+
+        # XXX short-circuit this cache until we can determine if it's completely
+        # safe in production:
+        if True or self.authToken not in shimClients:
             shimClients[self.authToken] = shimclient.ShimMintClient(self.cfg, self.authToken)
         self.client = shimClients[self.authToken]
         

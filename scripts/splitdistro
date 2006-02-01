@@ -120,7 +120,7 @@ if __name__ == '__main__':
             current = join(os.path.dirname(unified), 'disc%d' %discnum)
             preparedir(unified, current, csdir)
             writediscinfo(current, discnum, discinfo)
-            used = spaceused(current)
+            used = spaceused(current) + spaceused(src)
         dest = join(current, csdir, csfile)
         os.link(src, dest)
         # cut off disc number, record the disc location

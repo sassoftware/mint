@@ -11,11 +11,13 @@ python_files = \
                acltest.py \
                authtest.py \
                cachetest.py \
-	       coverage.py	\
+               configtest.py \
+               coverage.py \
                distrotest.py \
                grouptrovetest.py \
                helperfuncstest.py \
                htmltest.py \
+               injectiontest.py \
                jobstest.py \
                joinrequesttest.py \
                labelstest.py \

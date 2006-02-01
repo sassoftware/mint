@@ -21,81 +21,50 @@ from mint import searcher
               title="New ${cfg.productName} ISO Releases" href="http://${cfg.siteHost}${cfg.basePath}rss?feed=newReleases" />
     </head>
     <body>
-        <td id="left" class="side">
-            <div class="pad">
-                ${browseMenu()}
-                ${searchMenu()}
-                ${recentReleasesMenu(releases, display="block")}
-                ${rPathProductsMenu()}
+        <div id="right" class="side">
+            ${resourcePane()}
+        </div>
+        <div id="steps">
+            <span id="buildit">Find the stuff you need to make your own software appliance in three easy steps.</span>
+            <span id="findit">Check out all the amazing software applications others have made.</span>
+
+            <div id="threeEasySteps">
+                <a href="/help?page=dev-tutorial">
+                    <img id="getStarted" src="${cfg.staticPath}apps/mint/images/getting_started.png" width="147" height="37" alt="Get Started" />
+                </a>
+                <img src="${cfg.staticPath}apps/mint/images/three_easy_steps.png" width="239" height="23" alt="It's Just 3 Easy Steps" />
+                <div id="stepsText">There's nothing to download. All you need is your web browser.</div>
+                <img style="clear: left;" src="${cfg.staticPath}apps/mint/images/steps.png" alt="three steps to use rBuilder Online" />
             </div>
-        </td>
-        <td id="main">
-            <div class="pad">
-                <h2 class="header">Welcome to ${cfg.productName}<sup class="tm">TM</sup></h2>
+        </div>
 
+        <div id="topten">
+            <table style="width: 100%;">
+                <tr>
+                    <td><span class="topten_header">Most Popular</span>
+                        <ol>
+                            <li py:for="project in popularProjects">
+                                <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${project[1]}/">${project[2]}</a>
+                            </li>
+                        </ol>
+                    </td>
+                    <td><span class="topten_header">Most Active</span>
+                        <ol>
+                            <li py:for="project in activeProjects">
+                                <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${project[1]}/">${project[2]}</a>
+                            </li>
+                        </ol>
+                    </td>
+                    <td><span class="topten_header">Recent Releases&nbsp;<a href="${basePath}rss?feed=newReleases"><img src="${cfg.staticPath}apps/mint/images/rss-inline.gif" alt="RSS" /></a></span>
+                        <ol py:if="releases">
 
-                <div>
-
-                    <p py:if="firstTime">Congratulations!  Your new ${cfg.productName}
-                      account is active!</p>
-
-                    <p>You can use ${cfg.productName} to create a
-                      Linux distribution that meets your specific
-                      needs, or to find an existing distribution
-                      that is just right for you.</p>
-
-                  <h3 style="color:#FF7001;">Start using ${cfg.productName}. Select an option below:</h3>
-                    <table id="tasks">
-                        <tr>
-                            <td class="tasksBlock" style="margin-right: 1em;"
-                                onclick="javascript:window.location='${cfg.basePath}help?page=dev-tutorial';">
-                                <h3><a href="${cfg.basePath}help?page=dev-tutorial">Create</a></h3>
-
-                                  <p>Use ${cfg.productName}'s collaborative
-                                  development environment to package open
-                                  source software and produce complete
-                                  distributions.</p>
-                            </td>
-                            <td id="spacer"></td>
-                            <td class="tasksBlock"
-                                onclick="javascript:window.location='${cfg.basePath}help?page=user-tutorial';">
-                                <h3><a href="${cfg.basePath}help?page=user-tutorial">Find</a></h3>
-
-                                  <p>Locate and download the distribution that
-                                  suits you, or find a package to add to your
-                                  system&#8212;${cfg.productName} makes it
-                                  easy.</p>
-
-                            </td>
-                        </tr>
-                    </table>
-
-                </div>
-
-                <div py:strip="True" py:if="news">
-                    <h3 class="header">
-                        <a href="${cfg.newsRssFeed}">
-                            <img style="border: none; vertical-align: middle; float: right;"
-                                 src="${cfg.staticPath}apps/mint/images/rss-inline.gif" />
-                        </a>
-                        Site Announcements
-                    </h3>
-                    <div py:for="item in news" class="newsItem">
-                        <h3>
-                            <span class="date" style="float: right;">${time.strftime("%A, %B %d, %Y", time.localtime(item['pubDate']))}</span>
-                            <span class="newsTitle">${item['title']}</span>
-                        </h3>
-                        <p>${XML(item['content'])} <a class="newsContinued" href="${item['link']}">read more</a></p>
-                    </div>
-                    <p><a href="${newsLink}">More Announcements</a></p>
-                </div>
-            </div>
-        </td>
-        <td id="right" class="projects">
-            ${projectsPane()}
-            <div class="pad">
-                ${groupTroveBuilder()}
-            </div>
-        </td>
+                            <li py:for="release in releases">
+                                <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${release[1]}/release?id=${release[2].getId()}">${release[2].getTroveName()}=${release[2].getTroveVersion().trailingRevision().asString()} (${release[2].getArch()})</a>
+                            </li>
+                        </ol>
+                    </td>
+                </tr>
+            </table>
+        </div>
     </body>
 </html>

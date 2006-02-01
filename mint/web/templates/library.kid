@@ -18,62 +18,6 @@ def injectVersion(version):
 -->
     <div py:def="formatTitle(str)" py:strip="True" py:content="'%s - %s'%(str, cfg.productName)"/>
 
-    <div py:def="userActions()" py:strip="True">
-        <?python
-            isOwner = (userLevel == userlevels.OWNER or auth.admin)
-            isDeveloper = userLevel == userlevels.DEVELOPER
-
-            secureProtocol = 'http'
-            if auth.authorized:
-                loginAction = "logout"
-            else:
-                loginAction = "processLogin"
-                if cfg.SSL:
-                    secureProtocol = "https"
-        ?>
-
-        <form method="post" action="${secureProtocol}://${cfg.secureHost}${cfg.basePath}$loginAction">
-            <input py:if="loginAction == 'processLogin'" type="hidden" name="to" value="${quote(toUrl)}" />
-            <table class="noborder" cellspacing="0" cellpadding="0" summary="layout">
-                <tr>
-                    ${logo()}
-                    <td id="user" py:if="not auth.authorized">
-                        <div class="pad">
-                            <h4>not logged in | <a href="${secureProtocol}://${cfg.secureHost}${cfg.basePath}forgotPassword">Forgot Password</a></h4>
-                            <div>
-                                <input type="text" name="username" size="16" tabindex="1" /> <label>username</label><br />
-                                <input type="password" name="password" size="16" tabindex="2" /> <label>password</label>
-                            </div>
-                        </div>
-                    </td>
-                    <td id="user" py:if="auth.authorized">
-                        <div class="pad">
-                            <h3>${auth.fullName}</h3>
-                            <h4>${auth.username}</h4>
-                            <div><a href="${secureProtocol}://${cfg.secureHost}${cfg.basePath}userSettings" class="arrows">View &#38; Edit My Account</a></div>
-                            <div><a py:if="bool([True for x in projectList if x[1] in userlevels.WRITERS])" href="http://${SITE}uploadKey" class="arrows">Upload a Package Signing Key</a></div>
-                            <div py:if='auth.admin'><a href="http://${SITE}administer" class="arrows">Administer</a></div>
-
-                        </div>
-                    </td>
-                </tr>
-                <tr>
-                    ${topnav()}
-                    <td id="log">
-                        <div class="pad" py:if="not auth.authorized">
-                            <button type="submit" tabindex="3">Login</button> |
-                            <a href="http://${SITE}register" class="arrows">New Account</a>
-                        </div>
-                        <div class="pad" py:if="auth.authorized">
-                            <button type="submit">Logout</button>
-                        </div>
-                    </td>
-                </tr>
-            </table>
-        </form>
-    </div>
-
-
     <thead py:def="columnTitles(columns = [])" py:strip="False">
         <tr>
             <th py:for="columnName in columns">${columnName}</th>
@@ -91,41 +35,28 @@ def injectVersion(version):
         </td>
     </div>
 
-    <div id="browse" class="palette" py:def="browseMenu(display='block')" py:strip="False">
-        <h3 onclick="javascript:toggle_display('browse_items');">
-            <img id="browse_items_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_${display == 'block' and 'collapse' or 'expand'}.gif" class="noborder" />
-            Browse
-        </h3>
-        <div id="browse_items" style="display: $display">
-          <ul>
-            <li><a href="http://${SITE}projects">All Projects</a></li>
-            <li><a href="http://${SITE}projects?sortOrder=9">Most Active Projects</a></li>
-            <li><a href="http://${SITE}projects?sortOrder=7">Most Popular Projects</a></li>
-            <li py:if="auth.admin"><a href="http://${SITE}users">All Users</a></li>
-          </ul>
-        </div>
-    </div>
-
-    <div id="groupbuilder" class="palette" py:def="groupTroveBuilder(display='none')" py:strip="False" py:if="groupTrove" >
+    <div id="groupBuilder" py:def="groupTroveBuilder" py:if="groupTrove" >
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/groupbuilder.js"/>
         <script type="text/javascript">
             var BaseUrl = '${cfg.basePath}';
             addLoadEvent(initLinkManager);
             addLoadEvent(initGroupTroveManager);
         </script>
-        <h3>
+        <img class="left" src="${cfg.staticPath}apps/mint/images/header_orange_left.png" />
+        <img class="right" src="${cfg.staticPath}apps/mint/images/header_orange_right.png" />
+        <div class="boxHeader">
             <a href="${groupProject.getUrl()}closeCurrentGroup?referer=${quote(req.unparsed_uri)}" title="Close"><img id="groupbuilder_items_close" src="${cfg.staticPath}/apps/mint/images/BUTTON_close.gif" class="noborder" /></a>
-            <a href="javascript:toggle_display('groupbuilder_items');" title="Minimize/Maximize"><img id="groupbuilder_items_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_${display == 'block' and 'collapse' or 'expand'}.gif" class="noborder" /></a>
             Group Builder
-        </h3>
-        <div id="groupbuilder_items" style="display: $display">
-            <h4><a href="${groupProject.getUrl()}editGroup?id=${groupTrove.id}">Current Group: ${groupTrove.recipeName}</a></h4>
+        </div>
+
+        <div id="groupBuilderItems">
+            <div><a href="${groupProject.getUrl()}editGroup?id=${groupTrove.id}">Current Group: ${groupTrove.recipeName}</a></div>
             <table>
               <thead>
                 <tr>
                     <th colspan="3">Trove</th>
                     <th>Project</th>
-                    <th>Delete</th>
+                    <th>Del</th>
                 </tr>
               </thead>
               <tbody class="group-builder" id="groupbuilder-tbody">
@@ -162,7 +93,7 @@ def injectVersion(version):
               </tbody>
               <tfoot>
                 <tr class="groupcook">
-                    <td colspan="4" style="text-align: center; padding: 1em;">
+                    <td colspan="5" style="text-align: center; padding: 1em;">
                         <a class="option" style="display: inline;" href="${groupProject.getUrl()}pickArch?id=${groupTrove.id}">Cook&nbsp;This&nbsp;Group</a>
                     </td>
                 </tr>
@@ -171,45 +102,6 @@ def injectVersion(version):
         </div>
     </div>
 
-
-
-    <div id="search" class="palette" py:def="searchMenu(selectType=None, display='block')" py:strip="False">
-        <?python
-if not selectType:
-    selectType = session.get('searchType', 'Projects')
-searchTypes = ['Projects', 'Packages']
-if auth.authorized:
-    searchTypes.append('Users')
-        ?>
-        <h3 onclick="javascript:toggle_display('search_items');">
-            <img id="search_items_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_${display == 'block' and 'collapse' or 'expand'}.gif" class="noborder" />
-            Search
-        </h3>
-          <div style="display: $display" id="search_items">
-            <form action="http://${SITE}search" method="get">
-            <p>
-                <label>search type:</label><br/>
-                <select name="type">
-                    <option py:for="searchType in searchTypes"
-                            py:attrs="{'value': searchType, 'selected': (selectType == searchType) and 'selected' or None}"
-                            py:content="searchType"/>
-                </select>
-            </p>
-            <p>
-                <label>keyword(s):</label><br/>
-                <input type="text" name="search" size="10" />
-            </p>
-            <p py:if="0">
-                <label>last modified:</label>
-                <br/>
-                <select name="modified" id="searchModified">
-                    <option py:for="i, option in enumerate(searcher.datehtml)" value="${i}">${option}</option>
-                </select>
-            </p>
-            <p><button>Submit</button><br /><a py:if="0" href="#">Advanced Search</a></p>
-            </form>
-          </div>
-    </div>
 
     <div py:def="recentReleasesMenu(releases, display='none')" py:strip="True">
       <div id="releases" class="palette" py:if="releases">
@@ -279,9 +171,52 @@ if auth.authorized:
         </tr>
     </tbody>
 
-    <a py:def="legal(page, text)" py:strip="False" href="#"
-        onclick="javascript:{window.open('${page}', 'legal',
-         'height=500,width=500,menubar=no,scrollbars,status=no,toolbar=no', true); return false;}"
-        py:content="text"/>
+    <a py:def="legal(page, text)" py:strip="False" href="${page}"
+        py:content="text" target="_blank"/>
+
+    <div py:def="loginPane()" id="signin">
+        <?python
+                from urllib import quote
+                secureProtocol = 'http'
+                if auth.authorized:
+                    loginAction = "logout"
+                else:
+                    loginAction = "processLogin"
+                if cfg.SSL:
+                    secureProtocol = "https"
+            ?>
+        <form py:if="not auth.authorized" method="post" action="${secureProtocol}://${cfg.secureHost}${cfg.basePath}processLogin">
+            <input type="hidden" name="to" value="${quote(toUrl)}" />
+
+            <div>Username:</div>
+            <div><input type="text" name="username" /></div>
+            <div style="padding-top: 8px;">Password:</div>
+            <div><input type="password" name="password" /></div>
+            <div style="padding-top: 8px;">
+                <input type="checkbox" name="rememberMe" value="1" />
+                <span style="text-decoration: underline;">Remember me</span> on this computer
+            </div>
+            <button id="signInSubmit" type="submit" class="img">
+                <img alt="Sign In" src="${cfg.staticPath}apps/mint/images/sign_in_button.png" />
+            </button>
+
+            <div id="noAccount">
+                <p><strong>Don't have an account?</strong></p>
+                <p><a href="/register">Set one up.</a></p>
+            </div>
+        </form>
+        <div py:if="auth.authorized">
+            Silly web programmer. logins are for anonymous users.
+        </div>
+    </div>
+
+    <div py:def="resourcePane()" py:strip="True">
+        <div py:if="not auth.authorized" py:strip="True">
+            ${loginPane()}
+        </div>
+        <div py:if="auth.authorized" py:strip="True">
+            ${projectsPane()}
+        </div>
+    </div>
 
 </html>

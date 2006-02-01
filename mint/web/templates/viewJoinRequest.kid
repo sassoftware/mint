@@ -15,45 +15,32 @@ from mint import userlevels
         memberList = project.getMembers()
     ?>
 
-    <div py:def="breadcrumb()" py:strip="True">
-        <a href="$basePath">${project.getNameForDisplay()}</a>
-        <a href="${basePath}members">Members</a>
-	<a href="#">View Join Request</a>
-    </div>
-
     <head>
         <title>${formatTitle('Member Settings: %s'%project.getNameForDisplay())}</title>
     </head>
     <body>
-        <td id="left" class="side">
-            <div class="pad">
+        <div id="layout">
+            <div id="left" class="side">
                 ${projectResourcesMenu()}
             </div>
-
-        </td>
-        <td id="main">
-	<div class="pad">
-            <h3><a href="http://$SITE/userInfo?id=${userId}">${username}</a>
-                requests to join: ${project.getNameForDisplay(maxWordLen = 50)}</h3>
-            <form method="post" action="acceptJoinRequest">
-            <table>
-                <tr><th>Comments:</th></tr>
-                <tr><td>${comments}</td></tr>
-                <tr><td>
-                    <button type="submit" name="makeOwner" value="1" onclick="window.parent.hide_popup('joinReqBox', true);">Owner</button>
-                    <button type="submit" name="makeDevel" value="1" onclick="window.parent.hide_popup('joinReqBox', true);">Developer</button>
-                    <input type="hidden" name="userId" value="${userId}"/>
-                    <button type="submit" name="reject" value="1" onclick="window.parent.hide_popup('joinReqBox', false);">Reject</button>
-                </td></tr>
-            </table>
-            </form>
-        </div>
-        </td>
-        <td id="right" class="projects">
-            ${projectsPane()}
-            <div class="pad">
+            <div id="right" class="side">
+                ${resourcePane()}
                 ${groupTroveBuilder()}
             </div>
-        </td>
+            <div id="middle">
+                <h3><a href="http://$SITE/userInfo?id=${userId}">${username}</a>
+                    requests to join: ${project.getNameForDisplay(maxWordLen = 50)}</h3>
+                <form method="post" action="acceptJoinRequest">
+                    <h4>Comments:</h4>
+                    <blockquote>${comments}</blockquote>
+                    <p>
+                        <button type="submit" name="makeOwner" value="1" onclick="window.parent.hide_popup('joinReqBox', true);">Make Owner</button>
+                        <button type="submit" name="makeDevel" value="1" onclick="window.parent.hide_popup('joinReqBox', true);">Make Developer</button>
+                        <input type="hidden" name="userId" value="${userId}"/>
+                        <button type="submit" name="reject" value="1" onclick="window.parent.hide_popup('joinReqBox', false);">Reject Request</button>
+                    </p>
+                </form>
+            </div>
+        </div>
     </body>
 </html>

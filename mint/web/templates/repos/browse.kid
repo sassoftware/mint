@@ -18,14 +18,8 @@ def pluralTroves(c):
     return c == 1 and "trove" or "troves"
 ?>
 
-
-    <div py:def="breadcrumb" py:strip="True">
-        <a
-            href="${cfg.basePath}project/${project.getHostname()}/">${project.getNameForDisplay()}</a>
-        <a href="#">Repository Browser</a>
-    </div>
-
-    <span py:def="adder(package, component='')" style="float: right;" py:if="groupTrove and package != groupTrove.recipeName">
+    <span py:def="adder(package, component='')" style="float: right;"
+        py:if="groupTrove and package != groupTrove.recipeName and not package.endswith(':source')">
         <?python
             if component:
                 package += ":" + component
@@ -39,19 +33,18 @@ def pluralTroves(c):
         <title>${formatTitle('Repository Browser: %s'% project.getNameForDisplay(maxWordLen = 50))}</title>
     </head>
     <body>
-
-        <td id="left" class="side">
-            <div class="pad">
+        <div id="layout">
+            <div id="left" class="side">
                 ${projectResourcesMenu()} 
-                ${releasesMenu(project.getReleases(), isOwner, display="none")}
-                ${commitsMenu(project.getCommits(), display="none")}
-                ${browseMenu(display='none')}
-                ${searchMenu(display='none')}
+                ${releasesMenu(project.getReleases(), isOwner)}
+                ${commitsMenu(project.getCommits())}
+            </div>
+            <div id="right" class="side">
+                ${resourcePane()}
+                ${groupTroveBuilder()}
             </div>
 
-        </td>
-        <td id="main">
-            <div class="pad">
+            <div id="middle">
                 <h2>${project.getNameForDisplay(maxWordLen = 50)}<br />Repository Browser</h2>
 
                 <span py:for="l in string.uppercase" py:strip="True">
@@ -108,12 +101,6 @@ def pluralTroves(c):
                     </tr>
                 </table>
             </div>
-        </td>
-        <td id="right" class="projects">
-            ${projectsPane()}
-            <div class="pad">
-                ${groupTroveBuilder('block')}
-            </div>
-        </td>
+        </div>
     </body>
 </html>

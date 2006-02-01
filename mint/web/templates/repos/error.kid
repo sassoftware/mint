@@ -14,8 +14,6 @@
         <td id="left" class="side">
             <div class="pad">
                 ${projectResourcesMenu()} 
-                ${browseMenu(display='none')}
-                ${searchMenu(display='none')}
             </div>
         </td>
         <td id="main">

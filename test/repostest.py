@@ -3,6 +3,7 @@
 # Copyright (c) 2004-2006 rPath, Inc.
 #
 
+import os
 from time import sleep
 import testsuite
 testsuite.setup()
@@ -10,7 +11,7 @@ testsuite.setup()
 from mint_rephelp import MintRepositoryHelper
 import recipes
 
-from conary.conarycfg import ConaryConfiguration
+from conary.conarycfg import ConaryConfiguration, UserInformation
 from conary.conaryclient import ConaryClient
 from conary import repository
 from conary import versions
@@ -38,12 +39,17 @@ class RepositoryTest(MintRepositoryHelper):
         client, userId = self.quickMintUser("testuser", "testpass")
         projectId = self.newProject(client)
 
-        client.server.registerCommit('test.rpath.local', 'testuser', 'mytrove:source', '/test.rpath.local@rpl:devel/1.0-1')
+        client.server.registerCommit('testproject.rpath.local', 'testuser',
+                                     'mytrove:source',
+                                     '/testproject.rpath.local@rpl:devel/1.0-1')
         project = client.getProject(projectId)
-        assert([x[:2] for x in project.getCommits()] == [('mytrove:source', '1.0-1')])
+        assert([x[:2] for x in project.getCommits()] == [('mytrove:source',
+                                                          '1.0-1')])
 
         # using a bogus username should not fail
-        client.server.registerCommit('test.rpath.local', 'nonexistentuser', 'mytrove:source', '/test.rpath.local@rpl:devel/1.0-1')
+        client.server.registerCommit('testproject.rpath.local',
+                                     'nonexistentuser', 'mytrove:source',
+                                     '/testproject.rpath.local@rpl:devel/1.0-1')
 
     def testBasicRepository(self):
         self.openRepository()
@@ -57,7 +63,7 @@ class RepositoryTest(MintRepositoryHelper):
         nc = ConaryClient(cfg).getRepos()
 
         # test that the source trove landed properly
-        troveNames = nc.troveNames(versions.Label("test.rpath.local@rpl:devel"))
+        troveNames = nc.troveNames(versions.Label("testproject.rpath.local@rpl:devel"))
         assert(troveNames == ["testcase:source"])
 
         # test that the commits table was updated
@@ -84,12 +90,15 @@ class RepositoryTest(MintRepositoryHelper):
         repos = ConaryClient(cfg).getRepos()
 
         try:
-            repos.troveNames('notfound.rpath.local')
+            repos.troveNamesOnServer('notfound.rpath.local')
         except repository.errors.OpenError, e:
-            assert "404 Not Found" in str(e), "accessing a non-existent repository did not return a 404 Not Found error"
+            assert "404 Not Found" in str(e), \
+            "accessing a non-existent repository did not return a "
+            "404 Not Found error"
             pass
         else:
-            self.fail("accessing a non-existent repository did not return an error")
+            self.fail("accessing a non-existent repository did not return "
+                      "an error")
 
 
     def testCook(self):
@@ -100,27 +109,49 @@ class RepositoryTest(MintRepositoryHelper):
         project = client.getProject(projectId)
         self.makeSourceTrove("testcase", testRecipe)
         self.cookFromRepository("testcase",
-            versions.Label("test.rpath.local@rpl:devel"),
+            versions.Label("testproject.rpath.local@rpl:devel"),
             ignoreDeps = True)
 
         self.makeSourceTrove("group-test", testGroup)
         self.cookFromRepository("group-test",
-            versions.Label("test.rpath.local@rpl:devel"))
+            versions.Label("testproject.rpath.local@rpl:devel"))
 
         cfg = project.getConaryConfig()
         nc = ConaryClient(cfg).getRepos()
 
-        troveNames = nc.troveNames(versions.Label("test.rpath.local@rpl:devel"))
+        troveNames = nc.troveNames(versions.Label("testproject.rpath.local@rpl:devel"))
         assert(troveNames == ['testcase', 'testcase:runtime', 'group-test',
                               'group-test:source', 'testcase:source'])
 
         groupTroves = client.server.getGroupTroves(projectId)
-        assert(groupTroves == {'test.rpath.local@rpl:devel': ['group-test']})
+        assert(groupTroves == {'testproject.rpath.local@rpl:devel': ['group-test']})
+
+    def testMultipleContentsDirs(self):
+        self.openRepository()
+        client, userId = self.quickMintUser("testuser", "testpass")
+        projectId = self.newProject(client)
+
+        project = client.getProject(projectId)
+        self.makeSourceTrove("testcase", testRecipe)
+        self.cookFromRepository("testcase",
+            versions.Label("testproject.rpath.local@rpl:devel"),
+            ignoreDeps = True)
+
+        # compare two contents directories:
+        d1 = [x[1:] for x in os.walk(self.reposDir + "/contents1/")]
+        d2 = [x[1:] for x in os.walk(self.reposDir + "/contents2/")]
+        assert(d1 and d2 and d1 == d2)
+
+        cfg = project.getConaryConfig()
+        nc = ConaryClient(cfg).getRepos()
+
+        troveNames = nc.troveNames(versions.Label("testproject.rpath.local@rpl:devel"))
+        assert(troveNames == ['testcase', 'testcase:runtime', 'testcase:source'])
 
     def testGetTroveVersions(self):
-        expected = "{'x86_64': [(VFS('/test.rpath.local@rpl:devel/1.0-1-1'), "\
+        expected = "{'x86_64': [(VFS('/testproject.rpath.local@rpl:devel/1.0-1-1'), "\
                    "Flavor('is: x86_64'))], 'x86': "\
-                   "[(VFS('/test.rpath.local@rpl:devel/1.0-1-1'), "\
+                   "[(VFS('/testproject.rpath.local@rpl:devel/1.0-1-1'), "\
                    "Flavor('is: x86'))]}"
 
         repos = self.openRepository()
@@ -133,8 +164,7 @@ class RepositoryTest(MintRepositoryHelper):
             self.addCollection("test", "1.0", [(":runtime", "1.0", f) ])
             self.addCollection("group-core", "1.0", [("test", "1.0" , f)])
 
-        # XXX: merge issue - should be testproject.rpath.local
-        troveVersions = client.server.getTroveVersions(projectId, "group-core=test.rpath.local@rpl:devel")
+        troveVersions = client.server.getTroveVersions(projectId, "group-core=testproject.rpath.local@rpl:devel")
 
         self.failUnlessEqual(str(troveVersions), expected)
 

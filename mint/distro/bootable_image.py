@@ -527,7 +527,7 @@ quit
             #cclient is set during setupConaryClient()
             self.writeConaryRc(os.path.join(self.fakeroot, 'etc'), self.cclient)
             self.status('Creating root file system')
-            self.createFileSystem()
+            self.createFileSystem(self.cfg.imagesPath)
 
             self.status('Running tag-scripts')
             self.runTagScripts()

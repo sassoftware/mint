@@ -184,7 +184,7 @@ class UsersTable(database.KeyedTable):
         else:
             return []
 
-    def checkAuth(self, authToken, checkRepo = True, cachedGroups = []):
+    def checkAuth(self, authToken):
         noAuth = {'authorized': False, 'userId': -1}
         if authToken == ('anonymous', 'anonymous'):
             return noAuth
@@ -195,19 +195,17 @@ class UsersTable(database.KeyedTable):
                         timeAccessed FROM Users 
                       WHERE username=? AND active=1""", username)
         r = cu.fetchone()
-        
+
         if r:
-            groups = cachedGroups
-            if checkRepo:
-                try:
-                    groups = self._getUserGroups(authToken)
-                except repository.errors.OpenError:
-                    auth = noAuth
+            try:
+                groups = self._getUserGroups(authToken)
+            except repository.errors.OpenError:
+                auth = noAuth
 
-                if type(groups) != list:
-                    raise AuthRepoError
+            if type(groups) != list:
+                raise AuthRepoError
 
-            if username in groups or not checkRepo:
+            if username in groups:
                 auth = {'authorized':   True,
                         'userId':       r[0],
                         'username':     username,

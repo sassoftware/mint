@@ -161,6 +161,8 @@ class ReleasesTable(database.KeyedTable):
             else:
                 res[key] = ''
 
+        res['projectId'] = int(res['projectId'])
+        res['releaseId'] = int(res['releaseId'])
         res['published'] = bool(res['published'])
         res['imageTypes'] = imageTypes
         return res
@@ -185,10 +187,12 @@ class ReleasesTable(database.KeyedTable):
                             troveVersion IS NOT NULL AND
                             troveFlavor IS NOT NULL AND
                             troveLastChanged IS NOT NULL
-                            """ + published + """ ORDER BY troveLastChanged DESC""",
+                            """ + published + """ ORDER BY
+                                troveLastChanged DESC, releaseId""",
                    projectId)
+
         for results in cu.fetchall():
-            yield results[0]
+            yield int(results[0])
 
     def setTrove(self, releaseId, troveName, troveVersion, troveFlavor):
         cu = self.db.cursor()

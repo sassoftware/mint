@@ -27,22 +27,74 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
     def testLogin(self):
         self.quickMintUser('foouser','foopass')
 
-        page = self.fetch('')
-        if 'not logged in' not in page.body:
+        # historically, port was missing from login form action
+        page = self.assertContent('/', '%d/processLogin' % self.port)
+
+        if '/processLogin' not in page.body:
             self.fail("Login form did not appear on page")
         page = page.fetch('/processLogin', postdata = \
             {'username': 'foouser',
              'password': 'foopass'})
-        if 'not logged in' in page.body:
+        if '/processLogin' in page.body:
             self.fail("Login form appeared on page for logged in user")
 
         page = page.assertCode('/logout', code = 301)
         page = self.fetch('')
-        if 'not logged in' not in page.body:
+        if '/processLogin' not in page.body:
             self.fail("Login form did not appear on page")
         page = page.fetch('/processLogin', postdata = \
             {'username': 'wronguser',
              'password': 'foopass'})
+
+    def testNonvolatileSession(self):
+        self.quickMintUser('foouser','foopass')
+
+        page = self.fetch('/')
+        page = page.postForm(1, self.post, {'username': 'foouser',
+                                            'password': 'foopass'})
+
+        self.failIf(self.cookies.values()[0]['/']['pysid']['expires'],
+                    "Session cookie has unexpected expiration")
+
+        page = self.fetch('/logout')
+
+        page = self.fetch('/')
+
+        page = page.postForm(1, self.post, {'username'   : 'foouser',
+                                            'password'   : 'foopass',
+                                            'rememberMe' : '1'})
+
+        self.failIf(not self.cookies.values()[0]['/']['pysid']['expires'],
+                    "Two-week cookie is missing expiration")
+
+    def testSessionCleanup(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+
+        page = self.fetch('/')
+        page = page.postForm(1, self.post, {'username'   : 'foouser',
+                                            'password'   : 'foopass',
+                                            'rememberMe' : '1'})
+
+        sid = self.cookies.values()[0]['/']['pysid'].value
+
+        cu = self.db.cursor()
+        cu.execute("SELECT data FROM Sessions WHERE sid=?", sid)
+        data = cPickle.loads(cu.fetchall()[0][0])
+
+        # make session 2 days older than it was. this bypasses the need
+        # to load the time module.
+        data['_accessed'] = data['_accessed'] - 172800
+
+        cu.execute("UPDATE Sessions SET data=? WHERE sid=?",
+                   cPickle.dumps(data), sid)
+        self.db.commit()
+
+        client.server._server.cleanupSessions()
+
+        cu.execute("SELECT data FROM Sessions WHERE sid=?", sid)
+
+        self.failIf(not cu.fetchall(),
+                    "A remembered session was destroyed during cleanup")
 
     def testRegistration(self):
         cu = self.db.cursor()
@@ -60,7 +112,10 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                                             'privacy':   'True'})
 
         cu.execute("SELECT confirmation FROM Confirmations")
-        conf = cu.fetchall()[0][0]
+
+        res = cu.fetchall()
+        self.failIf(not res, "Registration didn't add confirmation entry")
+        conf = res[0][0]
 
         page = self.assertCode("/confirm?id=%s" % conf, code = 200)
 
@@ -70,6 +125,13 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
     def testLoginRedirect(self):
         # test to make sure that a login on one page
         # will redirect you back to that page after login
+
+
+        # this test cannot be run at the moment. it depends on the existence of
+        # the login form on all pages, but the login box is currently only on
+        # front page during transition period
+        raise testsuite.SkipTestException
+
         self.quickMintUser('foouser', 'foopass')
 
         page = self.fetch('/search?type=Projects&search=abcd')
@@ -146,11 +208,14 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         page = self.fetch('/search?type=Projects&search=foo',
                           ok_codes = [200])
-        assert('match found for') in page.body
+
+        assert('Search Results:') in page.body
 
     def testSearchPackages(self):
         page = self.fetch('/search?type=Packages&search=%25%25%25',
                           ok_codes = [200])
+
+        assert('Search Results:') in page.body
 
     def testProjectsPage(self):
         client, userId = self.quickMintUser('foouser','foopass')
@@ -175,7 +240,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         page = self.assertContent('/project/foo/releases/',
                                   ok_codes = [200],
-                                  content = 'This project has no published releases.')
+                                  content = 'has no published')
 
     def testMailListsPage(self):
         client, userId = self.quickMintUser('foouser','foopass')
@@ -279,7 +344,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         page = self.fetch('/project/foo/pickArch?id=1')
 
         # this line would trigger a group cook if a job server were running
-        page.postForm(2, self.post, {'arch' : "1#x86", 'id' : '1'})
+        page.postForm(1, self.post, {'arch' : "1#x86", 'id' : '1'})
 
     def testDeletedGroup(self):
         client, userId = self.quickMintUser('foouser','foopass')
@@ -306,7 +371,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         self.makeSourceTrove("testcase", testRecipe)
         self.cookFromRepository("testcase",
-            versions.Label("test.rpath.local@rpl:devel"),
+            versions.Label("testproject.rpath.local@rpl:devel"),
             ignoreDeps = True)
 
         page = self.webLogin('testuser', 'testpass')
@@ -314,10 +379,10 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         groupTrove = client.createGroupTrove(projectId, 'group-foo',
                                              '1.0.0', '', False)
 
-        page = self.fetch('/project/test/editGroup?id=%d' % groupTrove.id,
+        page = self.fetch('/project/testproject/editGroup?id=%d' % groupTrove.id,
                           ok_codes = [200])
 
-        page = self.fetch('/project/test/addGroupTrove?id=%d&trove=testcase&projectName=test&referer=/' %
+        page = self.fetch('/project/testproject/addGroupTrove?id=%d&trove=testcase&projectName=testproject&referer=/' %
                           groupTrove.id)
 
         assert groupTrove.listTroves != []
@@ -389,14 +454,15 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
     def testSessionStability(self):
         newSid = '1234567890ABCDEF1234567890ABCDEF'
-        client, userId = self.quickMintUser('foouser','foopass')
+        username = 'foouser'
+        client, userId = self.quickMintUser(username, 'foopass')
         # session not in table and not cached
-        page = self.webLogin('foouser', 'foopass')
+        page = self.webLogin(username, 'foopass')
 
         # session in table and cached
         page = self.fetch('/', ok_codes = [200])
 
-        self.failIf('Login' in page.body,
+        self.failIf(username not in page.body,
                     'Cached session appears to be logged out')
 
         # now move the session--effectively kill it, but we'll need it again
@@ -409,7 +475,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         page = self.fetch('/projects?sortOrder=9', ok_codes = [200])
 
         # session not in table and not in cache
-        self.failIf('Login' not in page.body,
+        self.failIf(username in page.body,
                     'Unchached session not logged out')
 
         # HACK alter cookie to match what we moved session to earlier
@@ -418,7 +484,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         cookie = 'pysid'
         self.registerExpectedCookie(cookie)
         page = self.fetch('/', ok_codes = [200])
-        self.failIf('Login' in page.body,
+        self.failIf(username not in page.body,
                     'Uncached session appears to be logged out')
 
     def testUnknownError(self):
@@ -439,25 +505,196 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         release.setPublished(True)
 
         cu = self.db.cursor()
-        cu.execute("INSERT INTO ImageFiles VALUES (1, ?, 0, ?, 'Test Image')", release.id, filename)
+        cu.execute("INSERT INTO ImageFiles VALUES (1, ?, 0, ?, 'Test Image')",
+                   release.id, filename)
         self.db.commit()
 
         page = self.fetch('/downloadImage/1/test.iso')
         assert(page.body == data)
 
     def testUtf8ProjectName(self):
-        raise testsuite.SkipTestException, "need to figure out how to exactly emulate someone entering utf-8 into a web form"
         client, userId = self.quickMintUser('foouser','foopass')
         projectId = client.newProject('Foo', 'foo', 'rpath.local')
         project = client.getProject(projectId)
 
         project.editProject("http://example.com/",
-            "This project has \u266a extended characters in its description!", "Foo Title")
+            "This project has \xe2\x99\xaa \xe2\x99\xac extended characters in its description!",
+            "Test Title")
         project.refresh()
 
         page = self.assertContent('/project/foo/', ok_codes = [200],
             content = project.getDesc())
 
+
+    def testGroupBuilderCloseBox(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        projectId = self.newProject(client)
+        project = client.getProject(projectId)
+
+        groupTrove = self.createTestGroupTrove(client, projectId)
+
+        page = self.webLogin('foouser', 'foopass')
+
+        page = self.fetch('/project/testproject/editGroup?id=%d' % \
+                          groupTrove.id)
+
+        # go to a different page that so that the group box can show up
+        page = self.assertContent('/project/testproject/releases',
+                                  content = 'closeCurrentGroup')
+
+        # then simulate clicking the close box to prove it closes properly
+        page = self.assertNotContent("/project/testproject/closeCurrentGroup",
+                                     content = 'closeCurrentGroup')
+
+    def testGroupTroveItem(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        projectId = self.newProject(client)
+
+        groupTrove = self.createTestGroupTrove(client, projectId)
+
+        repos = self.openRepository()
+
+        self.addQuickTestComponent('foo:data',
+                                   '/testproject.rpath.local@rpl:devel/1.0-1',
+                                   repos = repos)
+
+        page = self.webLogin('foouser', 'foopass')
+
+        page = self.fetch('/project/testproject/editGroup?id=%d' % \
+                          groupTrove.id)
+
+        page = self.fetch('/project/testproject/addGroupTrove?id=%d;' % \
+                          groupTrove.id + \
+                          'trove=foo:data;projectName=testproject&referer=/')
+
+        # ensure the trove was added to the group builder box
+        page = self.assertContent('/project/testproject', 'foo:data')
+
+    def testProjectReg(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        projectId = self.newProject(client)
+
+        # link historically showed up wrong by not pre-pending a /
+        page = self.assertNotContent('/project/testproject/',
+                                     'a href="register"')
+
+    def testReposSignin(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        projectId = self.newProject(client)
+
+        # link historically brought up a spurious "my projects" pane
+        page = self.assertContent('/repos/testproject/browse',
+                                     '/processLogin')
+
+        page = self.webLogin('foouser', 'foopass')
+
+        page = self.assertContent('/repos/testproject/browse',
+                                     '/newProject')
+
+    def testTroveInfoLogin(self):
+        raise testsuite.SkipTestException( \
+            "Test uses netclient--needs multithreaded apache")
+        client, userId = self.quickMintUser('foouser','foopass')
+        projectId = self.newProject(client)
+
+        repos = self.openRepository()
+
+        self.addQuickTestComponent('foo:data',
+                                   '/testproject.rpath.local@rpl:devel/1.0-1',
+                                   repos = repos)
+
+        # link historically brought up a spurious "my projects" pane
+        page = self.assertContent( \
+            '/repos/testproject/troveInfo?t=foo:data',
+            '/processLogin')
+
+        page = self.webLogin('foouser', 'foopass')
+
+        page = self.assertContent( \
+            '/repos/testproject/troveInfo?t=foo:data',
+            '/newProject')
+
+    def testMailSignin(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        projectId = self.newProject(client)
+
+        # link historically brought up a spurious "my projects" pane
+        page = self.assertContent('/project/testproject/mailingLists',
+                                     '/processLogin')
+
+        page = self.webLogin('foouser', 'foopass')
+
+        page = self.assertContent('/project/testproject/mailingLists',
+                                     '/newProject')
+
+    def testMailSubscribe(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        projectId = self.newProject(client)
+
+        page = self.webLogin('foouser', 'foopass')
+
+        # historically, there was an extra slash in subscribe links
+        page = self.assertNotContent('/project/testproject/mailingLists',
+                                     '/project/testproject//')
+
+        page = self.fetch('/project/testproject/subscribe?list=testproject')
+
+        # and test clicking subscribe a second time.
+        page = self.assertNotContent( \
+            '/project/testproject/subscribe?list=testproject', 'error')
+
+    def testGrpTrvSource(self):
+        client, userId = self. quickMintUser('foouser', 'foopass')
+        projectId = self.newProject(client)
+
+        repos = self.openRepository()
+
+        self.addQuickTestComponent('foo:source',
+                                   '/testproject.rpath.local@rpl:devel/1.0-1',
+                                   repos = repos)
+
+        groupTrove = client.createGroupTrove(projectId, 'group-foo', '1.0.0',
+                                             'no desc', False)
+
+        page = self.webLogin('foouser', 'foopass')
+
+        # activate the group trove builder
+        page = self.fetch('/project/testproject/editGroup?id=%d' % \
+                          groupTrove.id)
+
+        # source troves can show up on browse page if there's no binary with it
+        page = self.assertNotContent("/repos/testproject/browse?char=F",
+                                     "Add to group-foo")
+
+
+        # now add a trove that should show up for troveInfo. this couldn't
+        # be added sooner or it would confuse browsing check
+        self.addQuickTestComponent('foo:data',
+                                   '/testproject.rpath.local@rpl:devel/1.0-1',
+                                   repos = repos)
+
+        raise testsuite.SkipTestException( \
+            "requires multithreaded apache past this point")
+
+        # check troveinfo page for proper source component rules
+        page = self.assertNotContent( \
+            '/repos/testproject/troveInfo?t=foo:source',
+            'Add to group-foo')
+
+        page = self.assertContent( \
+            '/repos/testproject/troveInfo?t=foo:data',
+            'Add to group-foo')
+
+    def testDocJail(self):
+        # ensure the legal pages implement a jail for documents. 404 on error
+        page = self.fetch("/legal?page=SOMETHING_NOT_THERE", ok_codes = [404])
+
+        # ensure help pages implement a jail for documents. redir to overview.
+        page = self.fetch('/help?page=../frontPage')
+        page2 = self.fetch('/help?page=overview')
+
+        self.failIf(page.body != page2.body,
+                    "Illegal page reference was not contained.")
 
 if __name__ == "__main__":
     testsuite.main()

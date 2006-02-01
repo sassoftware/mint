@@ -90,34 +90,27 @@
     </div>
 
     <body>
-        <td id="left" class="side">
-            <div class="pad">
+        <div id="layout">
+            <div id="left" class="side">
                 ${projectResourcesMenu()}
-                ${releasesMenu(publishedReleases, isOwner, display="none")}
-                ${commitsMenu(project.getCommits(), display="none")}
-                ${browseMenu(display='none')}
-                ${searchMenu(display='none')}
+                ${releasesMenu(publishedReleases, isOwner)}
+                ${commitsMenu(project.getCommits())}
             </div>
-        </td>
-        <td id="main">
-            <div class="pad">
-                <h2>${project.getNameForDisplay(maxWordLen = 50)}<br />Releases</h2>
-                <h3 py:if="isOwner">Published Releases</h3>
-                ${releasesTable(releases, releaseVersions, isOwner, True, 5)}
+            <div id="right" class="side">
+                ${resourcePane()}
+                ${groupTroveBuilder()}
             </div>
-            <div class="pad">
+            <div id="middle">
+                <div class="pad">
+                    <h2>${project.getNameForDisplay(maxWordLen = 50)}<br />Releases</h2>
+                    <h3 py:if="isOwner">Published Releases</h3>
+                    ${releasesTable(releases, releaseVersions, isOwner, True, 5)}
+                </div>
                 <div py:if="isOwner">
                     <h3>Unpublished Releases</h3>
                     ${releasesTable(releases, releaseVersions, isOwner, False, 5)}
                 </div>
             </div>
-
-        </td>
-        <td id="right" class="projects">
-            ${projectsPane()}
-            <div class="pad">
-                ${groupTroveBuilder()}
-            </div>
-        </td>
+        </div>
     </body>
 </html>

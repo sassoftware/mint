@@ -16,51 +16,49 @@ from mint import userlevels
         memberList = project.getMembers()
     ?>
 
-    <div py:def="breadcrumb()" py:strip="True">
-        <a href="$basePath">${project.getNameForDisplay()}</a>
-        <a href="#">Members</a>
-    </div>
-
     <head>
         <title>${formatTitle('Members: %s'%project.getNameForDisplay())}</title>
     </head>
     <body>
-        <td id="left" class="side">
-            <div class="pad" >
+        <div class="layout">
+            <div id="left" class="side">
                 ${projectResourcesMenu()}
-                <div class="palette" id="addmember" py:if="isOwner">
-                    <h3 onclick="javascript:toggle_display('addmember_items');">
-                        <img id="addmember_items_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_collapse.gif" class="noborder" />
-                        Add New Member
-                    </h3>
-                    <div id="addmember_items" style="display: block">
-                      <form method="post" action="${basePath}addMember">
-                        <p>
-                            <label>Username:</label><br/>
-                            <input type="text" name="username" value="" />
-                        </p>
-                        <p>
-                            <label>Membership Type:</label><br/>
+                <div class="palette" id="members" py:if="isOwner">
+                    <img class="left" src="${cfg.staticPath}apps/mint/images/header_blue_left.png" />
+                    <img class="right" src="${cfg.staticPath}apps/mint/images/header_blue_right.png" />
 
-                            <select name="level">
-                                <option py:for="level in reversed(userlevels.WRITERS)"
-                                        py:content="userlevels.names[level]"
-                                        value="${level}" />
-                            </select>
-                        </p>
-                        <p><button type="submit">Submit</button></p>
+                    <div class="boxHeader">Add New Member</div>
+                    <div>
+                        <form method="post" action="${basePath}addMember">
+                        <div>
+                            <label>
+                                Username:
+                                <input type="text" name="username" value="" />
+                            </label>
+                        </div>
+                        <div>
+                            <label for="level">
+                                Membership Type:
+                                <select name="level">
+                                    <option py:for="level in reversed(userlevels.WRITERS)"
+                                            py:content="userlevels.names[level]"
+                                            value="${level}" />
+                                </select>
+                            </label>
+                        </div>
+                        <div><p><input type="submit" value="Add" /></p></div>
                       </form>
                     </div>
                 </div>
-                ${releasesMenu(project.getReleases(), isOwner, display="none")}
-                ${commitsMenu(project.getCommits(), display="none")}
-                ${browseMenu(display='none')}
-                ${searchMenu(display='none')}
+                ${releasesMenu(project.getReleases(), isOwner)}
+                ${commitsMenu(project.getCommits())}
             </div>
-
-        </td>
-        <td id="main">
-            <div class="pad" >
+            <div id="right" class="side">
+                ${resourcePane()}
+                ${groupTroveBuilder()}
+            </div>
+            <div id="middle">
+                <h2>${project.getNameForDisplay(maxWordLen = 50)}<br/>Members</h2>
                 <?python
                     users = {
                               userlevels.OWNER: [],
@@ -148,7 +146,7 @@ from mint import userlevels
                     <h3>Requestors</h3>
                     <table border="0" cellspacing="0" cellpadding="0" class="memberstable">
                         <tr py:for="userId, username in reqList">
-				<th><a href="http://${SITE}userInfo?id=${userId}">${username}</a></th>
+                                <th><a href="http://${SITE}userInfo?id=${userId}">${username}</a></th>
                             <td>
                                 <a href="viewJoinRequest?userId=${userId}"
                                    class="option" style="position:relative;"
@@ -175,12 +173,6 @@ from mint import userlevels
                     <p py:if="len(users[userlevels.USER]) > 1">There are ${len(users[userlevels.USER])} users watching this project.</p>
                 </div>
             </div>
-        </td>
-        <td id="right" class="projects">
-            ${projectsPane()}
-            <div class="pad">
-                ${groupTroveBuilder()}
-            </div>
-        </td>
+       </div>
     </body>
 </html>

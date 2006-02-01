@@ -59,24 +59,12 @@ class SiteHandler(WebHandler):
     @cache
     @redirectHttp
     def _frontPage(self, auth):
-        news = self.client.getNews()
         releases = self.client.getReleaseList()
+        popularProjects, _ = self.client.getProjects(projectlisting.NUMDEVELOPERS_DES, 10, 0)
+        activeProjects, _  = self.client.getProjects(projectlisting.ACTIVITY_DES, 10, 0)
 
-        ###########################
-        # FIXME: Corporate launch redirect hack.
-        # take these lines out to remove corporate page redirect.
-        #
-        if not self.cfg.siteHost in self.req.headers_in.get('referer', '') and\
-           not self.cfg.projectSiteHost in self.req.headers_in.get('referer', ''):
-            self._redirect(self.cfg.corpSite, temporary = True)
-        #
-        # end corporate launch redirect hack
-        ###########################
-
-        return self._write("frontPage", news = news,
-                           newsLink = self.client.getNewsLink(),
-                           firstTime=self.session.get('firstTimer', False),
-                           releases=releases)
+        return self._write("frontPage", firstTime=self.session.get('firstTimer', False),
+            releases=releases, popularProjects = popularProjects, activeProjects = activeProjects)
 
     def blank(self, auth, sid, hostname):
         self.req.content_type = "image/gif"
@@ -152,10 +140,9 @@ class SiteHandler(WebHandler):
 
     @strFields(page = None)
     def legal(self, auth, page):
-        try:
-            return self._write("docs/" + page)
-        except IOError:
+        if not legalDocument(page):
             raise HttpNotFound
+        return self._write("docs/" + page)
 
     @strFields(message = "")
     @redirectHttps
@@ -167,13 +154,9 @@ class SiteHandler(WebHandler):
     @strFields(page = "")
     @intFields(step = 1)
     def help(self, auth, page, step):
-        if page:
-            try:
-                return self._write("docs/" + page, step = step)
-            except IOError:
-                return self._write("docs/overview")
-        else:
+        if not legalDocument(page):
             return self._write("docs/overview")
+        return self._write("docs/" + page, step = step)
 
     def logout(self, auth):
         self._clearAuth()
@@ -191,7 +174,10 @@ class SiteHandler(WebHandler):
 
     @requiresHttps
     @strFields(username = None, password = '', action = 'login', to = '/')
-    def processLogin(self, auth, username, password, action, to):
+    @boolFields(rememberMe = False)
+    @intFields(x = 0, y = 0)
+    def processLogin(self, auth, username, password, action, to, rememberMe,
+                     x, y):
         if action == 'login':
             authToken = (username, password)
             client = shimclient.ShimMintClient(self.cfg, authToken)
@@ -210,6 +196,7 @@ class SiteHandler(WebHandler):
                 self.session['authToken'] = authToken
                 self.session['firstTimer'] = firstTimer
                 self.session['firstPage'] = unquote(to)
+                self.session['rememberMe'] = rememberMe
                 self.session.save()
 
                 self._redirect_storm(self.session.id())
@@ -335,13 +322,11 @@ class SiteHandler(WebHandler):
             success = mlists.add_list(self.cfg.MailListPass, name, '', values['description'], auth.email, True, values['moderate'])
             if not success: error = False
         #add the commits sender address
-        mlists._servercall(
-            mlists.server.set_list_settings(
+        mlists.server.Mailman.setOptions(
                 mailinglists.listnames[mailinglists.PROJECT_COMMITS]%projectName,
                 self.cfg.MailListPass,
                 {'accept_these_nonmembers': self.cfg.commitEmail }
             )
-        )
         return not error
 
     @strFields(title = '', hostname = '', projecturl = '', blurb = '')
@@ -393,6 +378,8 @@ class SiteHandler(WebHandler):
     @requiresAuth
     def userInfo(self, auth, id):
         user = self.client.getUser(id)
+        print >> sys.stderr, repr(user.blurb), repr(user.fullName), repr(user.displayEmail)
+        sys.stderr.flush()
         if user.active or auth.admin:
             userProjects = []
             if auth.userId == id:
@@ -549,3 +536,8 @@ class SiteHandler(WebHandler):
             raise HttpNotFound
 
         return self._writeRss(items = items, title = title, link = link, desc = desc)
+
+def legalDocument(page):
+    templatePath = os.path.join(os.path.split(__file__)[0], 'templates/docs')
+    return page in [x.split('.kid')[0] for x in os.listdir(templatePath) \
+                    if x.endswith('.kid')]

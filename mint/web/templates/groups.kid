@@ -16,17 +16,18 @@
     </div>
 
     <body>
-        <td id="left" class="side">
-            <div class="pad">
+        <div id="layout">
+            <div id="left" class="side">
                 ${projectResourcesMenu()}
-                ${releasesMenu(publishedReleases, isOwner, display="none")}
-                ${commitsMenu(project.getCommits(), display="none")}
-                ${browseMenu(display='none')}
-                ${searchMenu(display='none')}
+                ${releasesMenu(publishedReleases, isOwner)}
+                ${commitsMenu(project.getCommits())}
             </div>
-        </td>
-        <td id="main" >
-            <div class="pad">
+            <div id="right" class="side">
+                ${resourcePane()}
+                ${groupTroveBuilder()}
+            </div>
+
+            <div id="middle">
                 <h1>Group Builder</h1>
 
                 <p>You can use Group Builder to create a group that
@@ -41,7 +42,7 @@
                 release based on the group.</p>
 
                 <h2>Current Group</h2>
-                
+
                 <ul>
                     <li py:if="not groupTrove">
                         You are not currently building a group.
@@ -74,12 +75,6 @@
                 </ul>
                 <a href="${basePath}newGroup"><b>Create a new group</b></a>
             </div>
-        </td>
-        <td id="right" class="projects">
-            ${projectsPane()}
-            <td class="pad">
-                ${groupTroveBuilder()}
-            </td>
-        </td>
+        </div>
     </body>
 </html>

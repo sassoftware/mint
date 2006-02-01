@@ -39,23 +39,17 @@ import time
                 editOptionsDisabledStyle = "color: gray; font-style: italic;"
 
         ?>
-        <div py:def="breadcrumb()" py:strip="True">
-            <a href="$basePath">${project.getNameForDisplay()}</a>
-            <a href="${basePath}releases">Releases</a>
-            <a href="#">${name}</a>
-        </div>
-
-        <td id="left" class="side">
-            <div class="pad">
+        <div id="layout">
+            <div id="left" class="side">
                 ${projectResourcesMenu()}
-                ${releasesMenu(publishedReleases, isOwner, display="none")}
-                ${commitsMenu(project.getCommits(), display="none")}
-                ${browseMenu(display='none')}
-                ${searchMenu(display='none')}
+                ${releasesMenu(publishedReleases, isOwner)}
+                ${commitsMenu(project.getCommits())}
             </div>
-        </td>
-        <td id="main">
-            <div class="pad">
+            <div id="right" class="side">
+                ${resourcePane()}
+                ${groupTroveBuilder()}
+            </div>
+            <div id="middle">
                 <h2>${project.getNameForDisplay()}<br/>Release: ${name}</h2>
 
                 <h3>Release Information</h3>
@@ -142,12 +136,6 @@ import time
                 <p py:if="not files">Release has no downloadable files.</p>
 
             </div>
-        </td>
-        <td id="right" class="projects">
-            ${projectsPane()}
-            <div class="pad">
-                ${groupTroveBuilder()}
-            </div>
-        </td>
+        </div>
     </body>
 </html>

@@ -30,18 +30,17 @@ from mint.mint import upstream
 
     </head>
     <body>
-        <td id="left" class="side">
-            <div class="pad">
+        <div class="layout">
+            <div id="left" class="side">
                 ${projectResourcesMenu()}
                 ${releasesMenu(releases, isOwner)}
                 ${commitsMenu(commits)}
-                ${browseMenu(display='none')}
-                ${searchMenu(display='none')}
             </div>
-        </td>
-        <td id="main">
-            <div class="pad">
-
+            <div id="right" class="side">
+                ${resourcePane()}
+                ${groupTroveBuilder()}
+            </div>
+            <div id="middle">
                 <h2>${project.getNameForDisplay(maxWordLen = 50)} <span id="editProject" py:if="isOwner"><a href="${basePath}editProject">edit project</a></span></h2>
 
                 <p class="help" py:if="not commits and cfg.hideFledgling">
@@ -75,6 +74,51 @@ from mint.mint import upstream
                         description or goal for this project.</span>
                 </p>
 
+                <div>
+                    <ul>
+                        <li py:if="isOwner">
+                            <a href="${basePath}editProject">Edit project details</a>
+                        </li>
+                        <li py:if="isOwner">
+                            <a href="${project.getUrl()}../../repos/${project.getHostname()}/pgpAdminForm">Manage Signing Keys</a>
+                        </li>
+                        <li py:if="releases">
+                            <a href="${basePath}rss">
+                                Subscribe to release news
+                                    <img style="border: none; vertical-align: middle;"
+                                         src="${cfg.staticPath}apps/mint/images/xml.gif" />
+                            </a>
+                        </li>
+                        <li>
+                            <a href="${basePath}conaryUserCfg">Install software on my Conary-based system</a>
+                        </li>
+                        <li py:if="isOwner or isDeveloper">
+                            <a href="${basePath}conaryDevelCfg">Set up my Conary development environment</a>
+                        </li>
+                        <li py:if="auth.authorized and userLevel == userlevels.NONMEMBER">
+                            <a href="${basePath}watch">Watch this project</a>
+                        </li>
+                        <li py:if="userLevel == userlevels.USER">
+                            <a href="${basePath}unwatch">Stop watching this project</a>
+                        </li>
+                        <div py:strip="True" py:if="not project.external">
+                            <li py:if="isDeveloper"><a href="${basePath}resign">Resign from this project</a></li>
+                            <li py:if="auth.authorized and not isOwner and not isDeveloper and True in [ x[2] not in userlevels.READERS for x in memberList]">
+                                <a py:if="not userHasReq" href="${basePath}joinRequest">Request to join this project</a>
+                                <a py:if="userHasReq" href="${basePath}joinRequest">Modify your comments to a pending join request</a>
+                            </li>
+                            <li py:if="True not in [ x[2] not in userlevels.READERS for x in memberList]">
+                                <a py:if="auth.authorized" href="${basePath}adopt">Adopt this project</a>
+                                <span py:strip="True" py:if="not auth.authorized">Log in to adopt this project</span>
+                            </li>
+                            <li py:if="not auth.authorized">
+                                Log in to:
+                                    <li>Watch this project</li>
+                                    <li>Request to join this project</li>
+                            </li>
+                        </div>
+                    </ul>
+                </div>
                 <p>From here you can use the left-hand tabs to:
                         <ul>
                                 <li py:if="isOwner">Create, edit, and publish a project release</li>
@@ -95,12 +139,6 @@ from mint.mint import upstream
                     </ul>
                 </p>
             </div>
-        </td>
-        <td id="right" class="projects">
-            ${projectsPane()}
-            <div class="pad">
-                ${groupTroveBuilder()}
-            </div>
-        </td>
+        </div>
     </body>
 </html>
