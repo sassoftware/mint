@@ -31,16 +31,14 @@ from mint import userlevels
                 <h3><a href="http://$SITE/userInfo?id=${userId}">${username}</a>
                     requests to join: ${project.getNameForDisplay(maxWordLen = 50)}</h3>
                 <form method="post" action="acceptJoinRequest">
-                <table>
-                    <tr><th>Comments:</th></tr>
-                    <tr><td>${comments}</td></tr>
-                    <tr><td>
-                        <button type="submit" name="makeOwner" value="1" onclick="window.parent.hide_popup('joinReqBox', true);">Owner</button>
-                        <button type="submit" name="makeDevel" value="1" onclick="window.parent.hide_popup('joinReqBox', true);">Developer</button>
+                    <h4>Comments:</h4>
+                    <blockquote>${comments}</blockquote>
+                    <p>
+                        <button type="submit" name="makeOwner" value="1" onclick="window.parent.hide_popup('joinReqBox', true);">Make Owner</button>
+                        <button type="submit" name="makeDevel" value="1" onclick="window.parent.hide_popup('joinReqBox', true);">Make Developer</button>
                         <input type="hidden" name="userId" value="${userId}"/>
-                        <button type="submit" name="reject" value="1" onclick="window.parent.hide_popup('joinReqBox', false);">Reject</button>
-                    </td></tr>
-                </table>
+                        <button type="submit" name="reject" value="1" onclick="window.parent.hide_popup('joinReqBox', false);">Reject Request</button>
+                    </p>
                 </form>
             </div>
         </div>
