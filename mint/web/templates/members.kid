@@ -58,7 +58,6 @@ from mint import userlevels
                 ${groupTroveBuilder()}
             </div>
             <div id="middle">
-                <h2>${project.getNameForDisplay(maxWordLen = 50)}<br/>Members</h2>
                 <?python
                     users = {
                               userlevels.OWNER: [],
