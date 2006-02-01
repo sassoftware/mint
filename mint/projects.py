@@ -227,20 +227,17 @@ class ProjectsTable(database.KeyedTable):
     def versionCheck(self):
         dbversion = self.getDBVersion()
         if dbversion != self.schemaVersion:
+            cu = self.db.cursor()
             if dbversion == 0:
-                sql = """ALTER TABLE Projects
-                             ADD COLUMN hidden INT DEFAULT 0"""
-                cu = self.db.cursor()
-                cu.execute(sql)
+                cu.execute("""ALTER TABLE Projects
+                             ADD COLUMN hidden INT DEFAULT 0""")
                 return (dbversion + 1) == self.schemaVersion
             if dbversion == 2:
-                cu = self.db.cursor()
                 cu.execute("""ALTER TABLE Projects
                                 ADD COLUMN external INT DEFAULT 0""")
                 cu.execute("UPDATE Projects SET external=0")
                 return (dbversion + 1) == self.schemaVersion
             if dbversion == 4:
-                cu = self.db.cursor()
                 cu.execute("ALTER TABLE Projects ADD COLUMN description STR")
                 cu.execute("UPDATE Projects SET description=desc")
                 return (dbversion + 1) == self.schemaVersion
@@ -264,6 +261,7 @@ class ProjectsTable(database.KeyedTable):
     def getProjectsList(self):
         cu = self.db.cursor()
 
+        # audited for SQL injection.
         sql = """
             SELECT projectId, disabled, hidden, %s
             FROM Projects
@@ -277,8 +275,9 @@ class ProjectsTable(database.KeyedTable):
     def getProjectIdByFQDN(self, fqdn):
         cu = self.db.cursor()
 
+        # audited for SQL injection.
         fqdnConcat = database.concat(self.db, "hostname", "'.'", "domainname")
-        cu.execute("""SELECT projectId FROM Projects 
+        cu.execute("""SELECT projectId FROM Projects
                       WHERE %s=? AND disabled=0""" % fqdnConcat, fqdn)
 
         r = cu.fetchone()
@@ -300,9 +299,10 @@ class ProjectsTable(database.KeyedTable):
 
     def getProjectIdsByMember(self, userId, filter = False):
         cu = self.db.cursor()
-        stmt = """SELECT ProjectUsers.projectId, level FROM ProjectUsers 
+        # audited for sql injection. check sat.
+        stmt = """SELECT ProjectUsers.projectId, level FROM ProjectUsers
                     LEFT JOIN Projects
-                        ON Projects.projectId=ProjectUsers.projectId 
+                        ON Projects.projectId=ProjectUsers.projectId
                     WHERE ProjectUsers.userId=? AND disabled=0 AND
                     NOT (hidden=1 AND level not in %s)""" % \
             str(tuple(userlevels.WRITERS))
@@ -326,6 +326,8 @@ class ProjectsTable(database.KeyedTable):
         """
         cu = self.db.cursor()
 
+        # audited for sql injection. this is safe only because the params to
+        # this function are ensured to be ints by mintServer typeChecking.
         SQL = projectlisting.sqlbase % (\
             self.cfg.hideFledgling and "WHERE fledgling=0" or "",
             projectlisting.ordersql[sortOrder], limit, offset)
@@ -607,10 +609,16 @@ class MySqlRepositoryDatabase(RepositoryDatabase):
         cu = db.cursor()
         # this check should never be required outside of the test suite,
         # and it could be kind of dangerous being called in production.
-        # FIXME: parameterize?
+        # audited for SQL injection
         cu.execute("SHOW DATABASES")
         if dbName in [x[0] for x in cu.fetchall()]:
-            cu.execute("DROP DATABASE %s" % dbName)
+            if self.cfg.debugMode:
+                cu.execute("DROP DATABASE %s" % dbName)
+            else:
+                # raise an error that alomst certainly won't be trapped,
+                # so that a traceback will be generated.
+                raise AssertionError( \
+                    "Attempted to delete an existing project database.")
         cu.execute("CREATE DATABASE %s" % dbName)
         db.close()
 
