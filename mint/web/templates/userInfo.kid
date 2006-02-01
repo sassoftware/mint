@@ -16,34 +16,28 @@
                     break
     ?>
 
-    <div py:def="breadcrumb()" py:strip="True">
-        <a href="#">${user.getFullName()}</a>
-    </div>
-
     <head>
-        <title>${formatTitle('User Information: %s'%user.getFullName())}</title>
+        <title>${formatTitle('User Information: %s' % user.username)}</title>
     </head>
 
     <body>
         <div id="layout">
-            <span style="float:left;">
-                <div class="pad">
-                    <h3>${user.getFullName()} (${user.getUsername()})</h3>
-                    <div py:for="line in user.getDisplayEmail().splitlines()" py:strip="True">
-                        ${line}<br/>
-                    </div>
-                    <div py:if="not user.getDisplayEmail()">User has not entered any contact information.</div>
+            <div id="spanleft">
+                <h2 py:if="user.fullName">${user.fullName} (${user.username})</h2>
+                <h2 py:if="not user.fullName">${user.username}</h2>
+
+                <h3>About ${user.username}:</h3>
+                <div py:for="line in user.getBlurb().splitlines()">
+                    ${line}
                 </div>
-            </span>
-            <span syle="float:right">
-                <div class="pad">
-                    <p py:for="line in user.getBlurb().splitlines()">
-                        ${line}
-                    </p>
-                    <p py:if="not user.getBlurb()">User has not entered any about text.</p>
+                <div py:if="not user.getBlurb()">User has not entered any about text.</div>
+
+                <h3>Contact Information:</h3>
+                <div py:for="line in user.getDisplayEmail().splitlines()" py:strip="True">
+                    ${line}<br/>
                 </div>
-            </span>
-            <div style="float: right;" class="projects">
+                <div py:if="not user.getDisplayEmail()">User has not entered any contact information.</div>
+
                 <h3>${user.getUsername()}'s projects:</h3>
                 <ul py:if="userProjects">
                     <li py:for="project, level in userProjects">
@@ -53,8 +47,15 @@
                     </li>
                 </ul>
                 <p py:if="not userProjects">This user is not a member of any projects.</p>
+
+            </div>
+            <div id="right" class="side">
+                ${resourcePane()}
                 <div class="palette" py:if="ownsProjects and user.id != auth.userId">
-                    <h3>add ${user.getUsername()} to your project</h3>
+                    <img class="left" src="${cfg.staticPath}apps/mint/images/header_blue_left.png" />
+                    <img class="right" src="${cfg.staticPath}apps/mint/images/header_blue_right.png" />
+
+                    <div class="boxHeader">Add to Project</div>
                     <form method="post" action="addMemberById">
                         <p>
                             <label>Select a project:</label><br/>
@@ -75,9 +76,9 @@
                             </select>
                         </p>
                         <input type="hidden" name="userId" value="${user.getId()}" />
-                        <p><button type="submit">Submit</button></p>
-                    </form>
-                </div>
+                        <p><button type="submit">Add ${user.username}</button></p>
+                        </form>
+                    </div>
             </div>
         </div>
     </body>
