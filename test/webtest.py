@@ -67,6 +67,35 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.failIf(not self.cookies.values()[0]['/']['pysid']['expires'],
                     "Two-week cookie is missing expiration")
 
+    def testSessionCleanup(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+
+        page = self.fetch('/')
+        page = page.postForm(1, self.post, {'username'   : 'foouser',
+                                            'password'   : 'foopass',
+                                            'rememberMe' : '1'})
+
+        sid = self.cookies.values()[0]['/']['pysid'].value
+
+        cu = self.db.cursor()
+        cu.execute("SELECT data FROM Sessions WHERE sid=?", sid)
+        data = cPickle.loads(cu.fetchall()[0][0])
+
+        # make session 2 days older than it was. this bypasses the need
+        # to load the time module.
+        data['_accessed'] = data['_accessed'] - 172800
+
+        cu.execute("UPDATE Sessions SET data=? WHERE sid=?",
+                   cPickle.dumps(data), sid)
+        self.db.commit()
+
+        client.server._server.cleanupSessions()
+
+        cu.execute("SELECT data FROM Sessions WHERE sid=?", sid)
+
+        self.failIf(not cu.fetchall(),
+                    "A remembered session was destroyed during cleanup")
+
     def testRegistration(self):
         cu = self.db.cursor()
         cu.execute("SELECT confirmation FROM Confirmations")
