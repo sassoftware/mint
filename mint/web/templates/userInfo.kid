@@ -77,8 +77,8 @@
                         </p>
                         <input type="hidden" name="userId" value="${user.getId()}" />
                         <p><button type="submit">Add ${user.username}</button></p>
-                        </form>
-                    </div>
+                    </form>
+                </div>
             </div>
         </div>
     </body>

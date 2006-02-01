@@ -6,19 +6,15 @@
     Copyright (c) 2005-2006 rPath, Inc.
     All Rights Reserved
 -->
-    <div py:def="breadcrumb()" py:strip="True">
-        <a href="#">Edit Account Information</a>
-    </div>
-
     <head>
         <title>${formatTitle('Edit Account Information: %s'%auth.fullName)}</title>
     </head>
     <body>
-        <td id="main" class="spanleft">
-            <form method="post" action="editUserSettings">
-                <div class="pad">
+        <div id="layout">
+            <div id="spanleft" style="margin-right: 0px;">
+                <form method="post" action="editUserSettings">
                     <h2>Edit Account Information</h2>
-                    <table border="0" cellspacing="0" cellpadding="0" class="mainformhorizontal">
+                    <table class="mainformhorizontal" style="width: 600px;">
                         <tr>
                             <th>Username:</th>
                             <td>${auth.username}</td>
@@ -70,22 +66,24 @@
                             <td><input type="password" name="password2" value="" /></td>
                         </tr>
                     </table>
-
                     <p><button type="submit">Submit</button></p>
-                </div>
-            </form>
-        </td>
-        <td id="right" class="plain">
-            <div class="pad">
-                <h3>Close My Account</h3>
-                <p>If you wish to cancel your account, click the &quot;cancel account&quot; button below.
-                   If you cancel your account, you will be removed from any project for which you are
-                   a member or owner.
-                </p>
-                <p><form method="get" action="cancelAccount">
-			<button class="warn" type="submit">Cancel my account</button>
-		</form></p>
+                </form>
             </div>
-        </td>
+            <div id="right" class="side">
+                ${resourcePane()}
+                <div style="width: 180px;">
+                    <h3>Close My Account</h3>
+                    <p>If you wish to cancel your account, click the &quot;cancel account&quot; button below.
+                       If you cancel your account, you will be removed from any project for which you are
+                       a member or owner.
+                    </p>
+                    <p>
+                        <form method="get" action="cancelAccount">
+                            <button class="warn" type="submit">Cancel my account</button>
+                        </form>
+                    </p>
+                </div>
+            </div>
+        </div>
     </body>
 </html>
