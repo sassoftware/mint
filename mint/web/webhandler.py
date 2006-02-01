@@ -152,6 +152,10 @@ class WebHandler(object):
 
         if self.session.get('rememberMe', False):
             c.expires = 1209600 + time.time()
+            # ensure timeout is 2 weeks for remembered sessions
+            if self.session.timeout() != 1209600:
+                self.session.set_timeout(1209600)
+                self.session.save()
 
         c.domain = '.' + domain
         #add it to the err_headers_out because these ALWAYS go to the browser
@@ -175,6 +179,10 @@ class WebHandler(object):
 
             if self.session.get('rememberMe', False):
                 c.expires = 1209600 + time.time()
+                # ensure timeout is 2 weeks for remembered sessions
+                if self.session.timeout() != 1209600:
+                    self.session.set_timeout(1209600)
+                    self.session.save()
 
             c.domain = '.' + ".".join(self.req.hostname.split(".")[1:])
             #add it to the err_headers_out because these ALWAYS go to the browser
