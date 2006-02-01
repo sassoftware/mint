@@ -656,5 +656,16 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
             '/repos/testproject/troveInfo?t=foo:data',
             'Add to group-foo')
 
+    def testDocJail(self):
+        # ensure the legal pages implement a jail for documents. 404 on error
+        page = self.fetch("/legal?page=SOMETHING_NOT_THERE", ok_codes = [404])
+
+        # ensure help pages implement a jail for documents. redir to overview.
+        page = self.fetch('/help?page=../frontPage')
+        page2 = self.fetch('/help?page=overview')
+
+        self.failIf(page.body != page2.body,
+                    "Illegal page reference was not contained.")
+
 if __name__ == "__main__":
     testsuite.main()

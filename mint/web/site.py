@@ -140,10 +140,9 @@ class SiteHandler(WebHandler):
 
     @strFields(page = None)
     def legal(self, auth, page):
-        try:
-            return self._write("docs/" + page)
-        except IOError:
+        if not legalDocument(page):
             raise HttpNotFound
+        return self._write("docs/" + page)
 
     @strFields(message = "")
     @redirectHttps
@@ -155,13 +154,9 @@ class SiteHandler(WebHandler):
     @strFields(page = "")
     @intFields(step = 1)
     def help(self, auth, page, step):
-        if page:
-            try:
-                return self._write("docs/" + page, step = step)
-            except IOError:
-                return self._write("docs/overview")
-        else:
+        if not legalDocument(page):
             return self._write("docs/overview")
+        return self._write("docs/" + page, step = step)
 
     def logout(self, auth):
         self._clearAuth()
@@ -541,3 +536,8 @@ class SiteHandler(WebHandler):
             raise HttpNotFound
 
         return self._writeRss(items = items, title = title, link = link, desc = desc)
+
+def legalDocument(page):
+    templatePath = os.path.join(os.path.split(__file__)[0], 'templates/docs')
+    return page in [x.split('.kid')[0] for x in os.listdir(templatePath) \
+                    if x.endswith('.kid')]

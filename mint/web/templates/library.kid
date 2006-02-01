@@ -171,10 +171,8 @@ def injectVersion(version):
         </tr>
     </tbody>
 
-    <a py:def="legal(page, text)" py:strip="False" href="#"
-        onclick="javascript:{window.open('${page}', 'legal',
-         'height=500,width=500,menubar=no,scrollbars,status=no,toolbar=no', true); return false;}"
-        py:content="text"/>
+    <a py:def="legal(page, text)" py:strip="False" href="${page}"
+        py:content="text" target="_blank"/>
 
     <div py:def="loginPane()" id="signin">
         <?python
