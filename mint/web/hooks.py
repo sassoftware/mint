@@ -253,9 +253,6 @@ def conaryHandler(req, cfg, pathInfo):
         print >> sys.stderr, "REMAPPING REPOSITORY NAME: ", repName
 
     global db
-    if not db:
-        db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
-
     if cfg.reposDBDriver == "sqlite":
         db = None
         dbName = repName
@@ -276,11 +273,12 @@ def conaryHandler(req, cfg, pathInfo):
 
         #nscfg.cacheDB = ('sqlite', repositoryDir + '/cache.sql')
         nscfg.cacheDB = None
-        nscfg.contentsDir = repositoryDir + '/contents/'
+        
+        nscfg.contentsDir = " ".join(x % repName for x in cfg.reposContentsDir)
+        print >> sys.stderr, "debug: nscfg.contentsDir:", nscfg.contentsDir
 
         nscfg.serverName = repName
         nscfg.tmpDir = os.path.join(cfg.reposPath, repName, "tmp")
-        nscfg.logFile = os.path.join(repositoryDir, "contents.log")
 
         if os.path.basename(req.uri) == "changeset":
            rest = os.path.dirname(req.uri) + "/"
@@ -462,6 +460,10 @@ def handler(req):
     if not cfg:
         cfg = config.MintConfig()
         cfg.read(req.filename)
+
+    global db
+    if not db:
+        db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
 
     if cfg.profiling:
         prof = getProfile()

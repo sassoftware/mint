@@ -374,9 +374,8 @@ class ProjectsTable(database.KeyedTable):
 
         return [x[1] for x in sorted([(x[2].lower(),x) for x in ids])], count
 
-    def createRepos(self, reposPath, contentsPath, hostname, domainname, username, password):
+    def createRepos(self, reposPath, contentsDirs, hostname, domainname, username, password):
         dbPath = os.path.join(reposPath, hostname + "." + domainname)
-        contentsPath = os.path.join(contentsPath, hostname + "." + domainname)
         tmpPath = os.path.join(dbPath, 'tmp')
         util.mkdirChain(tmpPath)
 
@@ -389,17 +388,9 @@ class ProjectsTable(database.KeyedTable):
         cfg.tmpDir = tmpPath
         cfg.serverName = hostname + "." + domainname
         cfg.repositoryMap = {}
-        cfg.contentsDir = contentsPath
+        cfg.contentsDir = " ".join(x % name for x in contentsDirs)
 
-        if dbPath != contentsPath:
-            #Create the links as appropriate.  dbPath will be the ultimate path sent
-            # up to NetworkRepositoryServer.
-            contentsTarget = os.path.join(dbPath, 'contents')
-            contentsSrc = os.path.join(contentsPath, 'contents')
-            util.mkdirChain(contentsSrc)
-            os.symlink(contentsSrc, contentsTarget)
-
-        # hack to create the initial schema (0 -> n)
+        # create the initial repository schema
         db = dbstore.connect(cfg.repositoryDB[1], cfg.repositoryDB[0])
         from conary.server import schema
         schema.loadSchema(db)

@@ -417,7 +417,7 @@ class MintServer(object):
             "http://%s%srepos/%s/" % (self.cfg.projectSiteHost, self.cfg.basePath, hostname),
             self.cfg.authUser, self.cfg.authPass)
 
-        self.projects.createRepos(self.cfg.reposPath, self.cfg.reposContentsPath,
+        self.projects.createRepos(self.cfg.reposPath, self.cfg.reposContentsDir,
                                   hostname, domainname, self.authToken[0],
                                   self.authToken[1])
 
@@ -2011,7 +2011,7 @@ class MintServer(object):
             raise PermissionDenied
         return base64.b64encode(self._getReportObject(name).getPdf())
 
-    def __init__(self, cfg, allowPrivate = False, alwaysReload = False):
+    def __init__(self, cfg, allowPrivate = False, alwaysReload = False, db = None):
         self.cfg = cfg
 
         # create the profiling log if self.cfg.profiling exists
@@ -2028,6 +2028,9 @@ class MintServer(object):
 
         from conary import dbstore
         global dbConnection
+        if db:
+            dbConnection = db
+
         if cfg.dbDriver in ["mysql", "postgresql"] and dbConnection and (not alwaysReload):
             self.db = dbConnection
         else:

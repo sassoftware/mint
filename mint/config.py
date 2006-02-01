@@ -48,7 +48,7 @@ class MintConfig(ConfigFile):
     templatePath            = os.path.join(templatePath, 'web', 'templates')
     dataPath                = '/srv/mint/'
     reposPath               = None
-    reposContentsPath       = (cfgtypes.CfgString, None)
+    reposContentsDir        = (cfgtypes.CfgPathList, ["/srv/mint/repos/%s/contents/"])
     dbPath                  = None
     dbDriver                = 'sqlite'
     imagesPath              = None
@@ -113,9 +113,6 @@ class MintConfig(ConfigFile):
         if not self.secureHost:
             self.secureHost = self.siteHost
 
-        if not self.reposContentsPath:
-            self.reposContentsPath = self.reposPath
-
         if not self.commitEmail:
             self.commitEmail = "rBuilder@%s" % self.siteDomainName
 
@@ -123,6 +120,5 @@ class MintConfig(ConfigFile):
             self.bugsEmail = "rBuilder-tracebacks@%s" % self.siteDomainName
 
         if not self.reposPath: self.reposPath = os.path.join(self.dataPath, 'repos')
-        if not self.reposContentsPath: self.reposContentsPath = self.reposPath
         if not self.dbPath: self.dbPath = os.path.join(self.dataPath, 'data/db')
         if not self.imagesPath: self.imagesPath = os.path.join(self.dataPath, 'finished-images')

@@ -3,6 +3,7 @@
 # Copyright (c) 2004-2006 rPath, Inc.
 #
 
+import os
 from time import sleep
 import testsuite
 testsuite.setup()
@@ -104,7 +105,7 @@ class RepositoryTest(MintRepositoryHelper):
         self.openRepository()
         client, userId = self.quickMintUser("testuser", "testpass")
         projectId = self.newProject(client)
-       
+
         project = client.getProject(projectId)
         self.makeSourceTrove("testcase", testRecipe)
         self.cookFromRepository("testcase",
@@ -125,6 +126,27 @@ class RepositoryTest(MintRepositoryHelper):
         groupTroves = client.server.getGroupTroves(projectId)
         assert(groupTroves == {'testproject.rpath.local@rpl:devel': ['group-test']})
 
+    def testMultipleContentsDirs(self):
+        self.openRepository()
+        client, userId = self.quickMintUser("testuser", "testpass")
+        projectId = self.newProject(client)
+
+        project = client.getProject(projectId)
+        self.makeSourceTrove("testcase", testRecipe)
+        self.cookFromRepository("testcase",
+            versions.Label("testproject.rpath.local@rpl:devel"),
+            ignoreDeps = True)
+
+        # compare two contents directories:
+        d1 = [x[1:] for x in os.walk(self.reposDir + "/contents1/")]
+        d2 = [x[1:] for x in os.walk(self.reposDir + "/contents2/")]
+        assert(d1 and d2 and d1 == d2)
+
+        cfg = project.getConaryConfig()
+        nc = ConaryClient(cfg).getRepos()
+
+        troveNames = nc.troveNames(versions.Label("testproject.rpath.local@rpl:devel"))
+        assert(troveNames == ['testcase', 'testcase:runtime', 'testcase:source'])
 
 if __name__ == "__main__":
     testsuite.main()
