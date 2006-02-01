@@ -41,7 +41,7 @@ class GroupTroveTable(database.KeyedTable):
                                  autoResolve INT
                                  )
     """
-    
+
     fields = ['groupTroveId', 'projectId', 'creatorId', 'recipeName',
               'upstreamVersion', 'description', 'timeCreated', 'timeModified',
               'autoResolve']
@@ -53,8 +53,8 @@ class GroupTroveTable(database.KeyedTable):
 
     def listGroupTrovesByProject(self, projectId):
         cu = self.db.cursor()
-        cu.execute("SELECT groupTroveId, recipeName FROM %s WHERE projectId=?"\
-                   % self.name, projectId)
+        cu.execute("""SELECT groupTroveId, recipeName
+                          FROM GroupTroves WHERE projectId=?""", projectId)
         return [(int(x[0]), x[1]) for x in cu.fetchall()]
 
     def setUpstreamVersion(self, groupTroveId, vers):
