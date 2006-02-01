@@ -17,6 +17,7 @@ python_files = \
                grouptrovetest.py \
                helperfuncstest.py \
                htmltest.py \
+               injectiontest.py \
                jobstest.py \
                joinrequesttest.py \
                labelstest.py \
