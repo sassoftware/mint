@@ -161,7 +161,7 @@ class GroupTroveCook(Generator):
                 else:
                     break
                 for rm in removeTroves:
-                    recipe += "        r.remove('%s', '%s', '%s')\n" % (rm[0], rm[1].asString(), rm[2].freeze())
+                    recipe += "        r.remove('%s', '%s', '%s')\n" % (rm[0], rm[1].asString(), str(rm[2]))
                 recipe += "\n"
                 tries += 1
 
