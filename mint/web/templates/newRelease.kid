@@ -63,7 +63,9 @@ title = "Create New Release"
                         </tr>
                     </table>
                     <p>
-                        <button id="submitButton" type="submit"><img src="${cfg.staticPath}apps/mint/images/submit_button.png" img="Submit" /></button>
+                        <button class="img" type="submit">
+                            <img src="${cfg.staticPath}apps/mint/images/submit_button.png" img="Submit" />
+                        </button>
                         <input type="hidden" name="releaseName" value="${project.getName()}" />
                         <input type="hidden" name="releaseId" value="-1" />
                     </p>

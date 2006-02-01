@@ -98,18 +98,18 @@
                 Sign Out
             </a>
         </div>
-        <div class="boxBody" py:if="not projectList" strip="True">
+        <div class="boxBody" py:if="not projectList">
             <h3>Get Involved</h3>
 
             <p>Now's the time to get involved with the ${cfg.productName}
             community. There are several ways you can do this:</p>
 
             <ul>
-                <p>You can <a
+                <li>You can <a
                 href="http://${SITE}newProject"><strong>create a new
-                project</strong></a>.</p>
+                project</strong></a>.</li>
 
-                <p>You can join an existing project.</p>
+                <li>You can join an existing project.</li>
             </ul>
 
             <p>To join an existing project, use the browse or search boxes

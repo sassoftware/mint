@@ -83,7 +83,7 @@ from urllib import quote
                 <br/>
                 <button type="submit">Apply Changes</button>
             </form>
-            <p><button onclick="javascript:window.location='pickArch?id=${curGroupTrove.getId()}';">
+            <p><button class="img" onclick="javascript:window.location='pickArch?id=${curGroupTrove.getId()}';">
                 <img src="${cfg.staticPath}/apps/mint/images/cook_button.png" alt="Cook This Group" /></button><br/>
             <button onclick="javascript:window.location='deleteGroup?id=${curGroupTrove.getId()}';">Delete This Group</button></p>
 

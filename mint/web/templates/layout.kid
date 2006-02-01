@@ -57,7 +57,7 @@ onload = "javascript:;"
                         <div>
                             <label class="search" for="searchLabel">I'm looking for a...</label>
                             <input class="search" name="search" id="searchLabel" type="text" />
-                            <button id="searchSubmit" type="submit"><img src="${cfg.staticPath}/apps/mint/images/search.png" alt="Search" /></button><br />
+                            <button class="img" id="searchSubmit" type="submit"><img src="${cfg.staticPath}/apps/mint/images/search.png" alt="Search" /></button><br />
                             <input id="typeProject" type="radio" name="type" value="Projects" checked="checked" />
                             <label for="typeProject">Project</label>
                             <input id="typePackage" type="radio" name="type" value="Packages" />

@@ -188,7 +188,7 @@ button#searchSubmit {
     height: 31px;
 }
 
-button {
+button.img {
     border: none;
     background: none;
     padding: 0;
@@ -462,6 +462,14 @@ div#projectsPane div.boxHeader {
 div#projectsPane div.boxBody {
     height: 313px;
     overflow: auto;
+}
+
+div#projectsPane div.boxBody p, div#projectsPane div.boxBody h3 {
+    padding: 0px 6px 0px 12px;
+}
+
+div#projectsPane div.boxBody ul {
+    padding-left: 20px;
 }
 
 div#projectsPane div.boxHeader span {

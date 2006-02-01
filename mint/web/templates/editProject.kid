@@ -64,7 +64,7 @@
                         </tr>
                     </table>
 
-                    <button type="submit"><img src="${cfg.staticPath}apps/mint/images/submit_button.png" alt="Submit" /></button>
+                    <button class="img" type="submit"><img src="${cfg.staticPath}apps/mint/images/submit_button.png" alt="Submit" /></button>
                 </form>
             </div>
         </div>
