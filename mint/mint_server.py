@@ -750,6 +750,7 @@ class MintServer(object):
         cu = self.db.cursor()
 
         fqdnConcat = database.concat(self.db, "hostname", "'.'", "domainname")
+        # audited for SQL injection.
         cu.execute("""SELECT %s, name, level
                       FROM Projects, ProjectUsers
                       WHERE Projects.projectId=ProjectUsers.projectId AND
