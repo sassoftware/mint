@@ -22,33 +22,6 @@
 
     <body>
         <div id="layout">
-            <div id="spanleft">
-                <h2 py:if="user.fullName">${user.fullName} (${user.username})</h2>
-                <h2 py:if="not user.fullName">${user.username}</h2>
-
-                <h3>About ${user.username}:</h3>
-                <div py:for="line in user.getBlurb().splitlines()">
-                    ${line}
-                </div>
-                <div py:if="not user.getBlurb()">User has not entered any about text.</div>
-
-                <h3>Contact Information:</h3>
-                <div py:for="line in user.getDisplayEmail().splitlines()" py:strip="True">
-                    ${line}<br/>
-                </div>
-                <div py:if="not user.getDisplayEmail()">User has not entered any contact information.</div>
-
-                <h3>${user.getUsername()}'s projects:</h3>
-                <ul py:if="userProjects">
-                    <li py:for="project, level in userProjects">
-                        <a
-                            href="${project.getUrl()}">${project.getNameForDisplay()}</a>
-                        (${userlevels. names[level]})
-                    </li>
-                </ul>
-                <p py:if="not userProjects">This user is not a member of any projects.</p>
-
-            </div>
             <div id="right" class="side">
                 ${resourcePane()}
                 <div class="palette" py:if="ownsProjects and user.id != auth.userId">
@@ -79,6 +52,33 @@
                         <p><button type="submit">Add ${user.username}</button></p>
                     </form>
                 </div>
+            </div>
+            <div id="spanleft">
+                <h2 py:if="user.fullName">${user.fullName} (${user.username})</h2>
+                <h2 py:if="not user.fullName">${user.username}</h2>
+
+                <h3>About ${user.username}:</h3>
+                <p py:for="line in user.getBlurb().splitlines()">
+                    ${line}
+                </p>
+                <div py:if="not user.getBlurb()">User has not entered any about text.</div>
+
+                <h3>Contact Information:</h3>
+                <p py:for="line in user.getDisplayEmail().splitlines()" py:strip="True">
+                    ${line}
+                </p>
+                <div py:if="not user.getDisplayEmail()">User has not entered any contact information.</div>
+
+                <h3>${user.getUsername()}'s projects:</h3>
+                <ul py:if="userProjects">
+                    <li py:for="project, level in userProjects">
+                        <a
+                            href="${project.getUrl()}">${project.getNameForDisplay()}</a>
+                        (${userlevels. names[level]})
+                    </li>
+                </ul>
+                <p py:if="not userProjects">This user is not a member of any projects.</p>
+
             </div>
         </div>
     </body>

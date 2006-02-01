@@ -11,10 +11,26 @@
     </head>
     <body>
         <div id="layout">
-            <div id="spanleft" style="margin-right: 0px;">
+            <div id="right" class="side">
+                ${resourcePane()}
+                <div style="width: 180px;">
+                    <h3>Close My Account</h3>
+                    <p>If you wish to cancel your account, click the &quot;cancel account&quot; button below.
+                       If you cancel your account, you will be removed from any project for which you are
+                       a member or owner.
+                    </p>
+                    <p>
+                        <form method="get" action="cancelAccount">
+                            <button class="warn" type="submit">Cancel my account</button>
+                        </form>
+                    </p>
+                </div>
+            </div>
+
+            <div id="spanleft">
                 <form method="post" action="editUserSettings">
                     <h2>Edit Account Information</h2>
-                    <table class="mainformhorizontal" style="width: 600px;">
+                    <table class="mainformhorizontal">
                         <tr>
                             <th>Username:</th>
                             <td>${auth.username}</td>
@@ -68,21 +84,6 @@
                     </table>
                     <p><button type="submit">Submit</button></p>
                 </form>
-            </div>
-            <div id="right" class="side">
-                ${resourcePane()}
-                <div style="width: 180px;">
-                    <h3>Close My Account</h3>
-                    <p>If you wish to cancel your account, click the &quot;cancel account&quot; button below.
-                       If you cancel your account, you will be removed from any project for which you are
-                       a member or owner.
-                    </p>
-                    <p>
-                        <form method="get" action="cancelAccount">
-                            <button class="warn" type="submit">Cancel my account</button>
-                        </form>
-                    </p>
-                </div>
             </div>
         </div>
     </body>
