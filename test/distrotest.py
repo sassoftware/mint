@@ -12,6 +12,8 @@ import os
 import sys
 
 from conary import conarycfg, conaryclient
+from conary import versions
+from conary.deps import deps
 from conary.repository import changeset
 from conary.lib import util
 
@@ -160,6 +162,24 @@ class DistroTest(rephelp.RepositoryHelper):
                                   primaryTroveList = [(name, version, flavor)])
         assert(not _validateChangeSet(cachePath, group, name, version, flavor, 
                                       compNames))
+
+    def testUpdatedStockFlavors(self):
+        from mint.distro.flavors import stockFlavors
+
+        cfg = conarycfg.ConaryConfiguration()
+        cfg.dbPath = cfg.root = ":memory:"
+        label = versions.Label('conary.rpath.com@rpl:1')
+
+        repos = conaryclient.ConaryClient(cfg).getRepos()
+        versionDict = repos.getTroveLeavesByLabel({'group-dist': {label: None}})['group-dist']
+        latestVersion = None
+        for version, flavorList in versionDict.iteritems():
+            if latestVersion is None or version > latestVersion:
+                latestVersion = version
+
+        flavors = versionDict[latestVersion]
+        assert(deps.parseFlavor(stockFlavors['1#x86']) in flavors)
+        assert(deps.parseFlavor(stockFlavors['1#x86_64']) in flavors)
 
 
 if __name__ == "__main__":
