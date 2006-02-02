@@ -1,3 +1,6 @@
+// user interface helpers ---------------------------------------------------
+
+// toggles visiblity of a single element based on the element's id
 function toggle_display(tid) {
     el = $(tid);
     if(document.getElementById(tid).style.display == "none") {
@@ -52,6 +55,7 @@ function getCookieValue (cookie) {
         return false;
 }
 
+// RPC callbacks ------------------------------------------------------------
 
 var STATUS_WAITING = 0;
 var STATUS_RUNNING = 1;
@@ -65,6 +69,7 @@ var tickerRefreshTime        = 200;  /* 1/5 second */
 var cookStatusRefreshTime    = 500;  /* 1/2 second */
 var releaseStatusRefreshTime = 5000; /* 5 seconds */
 var releaseStatusId;
+
 
 function processGetReleaseStatus(xml) {
     el = $("jobStatus");
@@ -104,7 +109,9 @@ function processGetReleaseStatus(xml) {
 var tickerId;
 var statusId;
 
-function processGetCookStatus(xml) {
+
+function processGetCookStatus(aReq) {
+    var xml = aReq.responseXML;
     el = $("jobStatus");
     var status = getElementsByTagAndClassName("int", null, xml)[0].firstChild.data;
     var statusText = getElementsByTagAndClassName("string", null, xml)[0];
@@ -123,7 +130,9 @@ function processGetCookStatus(xml) {
 }
 
 
-function processGetTroveList(xml) {
+function processGetTroveList(aReq) {
+    var xml = aReq.responseXML;
+
     sel = document.getElementById("trove");
 
     clearSelection(sel);
@@ -146,34 +155,22 @@ function processGetTroveList(xml) {
 
 }
 
-function processGetTroveVersions(xml) {
+function processGetTroveVersionsByArch(aReq) {
+    logDebug("[JSON] response: ", aReq.responseText);
+    archDict = evalJSONRequest(aReq);
+
     archSel = document.getElementById("arch");
     vSel = document.getElementById("version");
     clearSelection(archSel);
     clearSelection(vSel);
     appendToSelect(archSel, "", document.createTextNode("---"), "arch");
     appendToSelect(vSel, "", document.createTextNode("---"), "version");
-
-    var response = getElementsByTagAndClassName("struct", null, xml);
-    var members = getElementsByTagAndClassName("member", null, response[0]);
-
-    for(var i = 0; i < members.length; i++) {
-        var nameNode = members[i].getElementsByTagName("name")[0];
-        var label = nameNode.firstChild.nodeValue;
-
-        var troves = members[i].getElementsByTagName("string");
-        for(var j = 0; j < troves.length; j++) {
-            var troveName = troves[j].firstChild.nodeValue;
-            alert("troveName: " + troveName + ", label: " + label);
-            //appendToSelect(sel, troveName + "=" + label, document.createTextNode(troveName), "trove");
-        }
-    }
-
     vSel.disabled = false;
     archSel.disabled = false;
 
 }
 
+// RPC calls ----------------------------------------------------------------
 
 function getReleaseStatus(releaseId) {
     var req = new XmlRpcRequest("/xmlrpc", "getReleaseStatus");
@@ -183,7 +180,6 @@ function getReleaseStatus(releaseId) {
 
     releaseStatusId = setTimeout("getReleaseStatus(" + releaseId + ")", releaseStatusRefreshTime);
 }
-
 
 function getCookStatus(jobId) {
     var req = new XmlRpcRequest("/xmlrpc", "getJobStatus");
@@ -195,46 +191,26 @@ function getCookStatus(jobId) {
     tickerId = setTimeout("ticker()", tickerRefreshTime);
 }
 
-
 function getTroveList(projectId) {
     var req = new XmlRpcRequest("/xmlrpc", "getGroupTroves");
     req.setAuth(getCookieValue("pysid"));
-    req.setHandler(processGetTroveList, {});
+    req.setCallback(processGetTroveList);
     req.send(projectId);
 
     setTimeout("ticker()", tickerRefreshTime);
 }
 
-function onTroveChange(projectId) {
-    var sel = document.getElementById("trove");
-    var vSel = document.getElementById("version");
-    var archSel = document.getElementById("arch");
-    var i = sel.selectedIndex;
+function getTroveVersionsByArch(projectId, troveNameWithLabel) {
 
-    // bail out if selector is changed to a non-trove header selection
-    if (i < 1) {
-        clearSelection(vSel);
-        vSel.disabled = true;
-        clearSelection(archSel);
-        archSel.disabled = true;
-        return;
-    }
-
-    var troveNameWithLabel = sel.options[sel.selectedIndex].value;
-    alert(projectId + ", " + troveNameWithLabel);
-    getTroveVersions(projectId, troveNameWithLabel);
-}
-
-function getTroveVersions(projectId, troveNameWithLabel) {
-
-    var req = new XmlRpcRequest("/xmlrpc", "getTroveVersions");
+    var req = new JsonRpcRequest("/jsonrpc", "getTroveVersionsByArch");
     req.setAuth(getCookieValue("pysid"));
-    req.setHandler(processGetTroveVersions, {});
+    req.setCallback(processGetTroveVersionsByArch);
     req.send(projectId, troveNameWithLabel);
 
-    /* TICKER TBD */
-
 }
+
+// ticker
+// XXX: this could be made mo betta; later?
 
 var ticks = 0;
 var direction = 1;
@@ -259,3 +235,26 @@ function ticker() {
         setTimeout("ticker()", tickerRefreshTime);
     }
 }
+
+// event handlers -----------------------------------------------------------
+
+// called when a user selects a trove in the new/edit releases page
+function onTroveChange(projectId) {
+    var sel = document.getElementById("trove");
+    var vSel = document.getElementById("version");
+    var archSel = document.getElementById("arch");
+    var i = sel.selectedIndex;
+
+    // bail out if selector is changed to a non-trove header selection
+    if (i < 1) {
+        clearSelection(vSel);
+        vSel.disabled = true;
+        clearSelection(archSel);
+        archSel.disabled = true;
+        return;
+    }
+
+    var troveNameWithLabel = sel.options[sel.selectedIndex].value;
+    getTroveVersionsByArch(projectId, troveNameWithLabel);
+}
+

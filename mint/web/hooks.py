@@ -15,6 +15,7 @@ import re
 import sys
 import time
 import traceback
+import simplejson
 
 from conary.lib import util as conaryutil
 from conary.lib import epdb, log
@@ -276,7 +277,7 @@ def conaryHandler(req, cfg, pathInfo):
 
         #nscfg.cacheDB = ('sqlite', repositoryDir + '/cache.sql')
         nscfg.cacheDB = None
-        
+
         nscfg.contentsDir = " ".join(x % repName for x in cfg.reposContentsDir)
         print >> sys.stderr, "debug: nscfg.contentsDir:", nscfg.contentsDir
 
@@ -346,37 +347,72 @@ def conaryHandler(req, cfg, pathInfo):
     else:
         return apache.HTTP_METHOD_NOT_ALLOWED
 
-def xmlrpcHandler(req, cfg, pathInfo):
-    if req.method.upper() != "POST":
+def rpcHandler(req, cfg, pathInfo):
+
+    isJSONrpc = isXMLrpc = allowPrivate = False
+
+    print >> sys.stderr, "req: %s, cfg: %s, pi: %s\n" % (req, cfg, pathInfo)
+    print >> sys.stderr, "method: %s, headers_in: %s\n" % (req.method, req.headers_in)
+    sys.stderr.flush()
+
+    # only handle POSTs
+    if req.method.upper() != 'POST':
         return apache.HTTP_METHOD_NOT_ALLOWED
-    if req.headers_in['Content-Type'] != "text/xml":
+
+    if req.headers_in['Content-Type'] == 'text/xml'\
+            and req.uri.startswith('/xmlrpc'):
+        isXMLrpc = True
+        if req.uri.startswith('/xmlrpc-private'):
+            allowPrivate = True
+    elif req.headers_in['Content-Type'] == 'application/x-json'\
+            and req.uri.startswith('/jsonrpc'):
+        isJSONrpc = True
+    else:
         return apache.HTTP_NOT_FOUND
 
+    # handle auth; bail if it's not what we were expecting
     authToken = getHttpAuth(req)
     if type(authToken) is int:
         return authToken
 
-    (params, method) = xmlrpclib.loads(req.read())
-    params = [method, authToken, params]
+    # instantiate a MintServer
+    server = mint_server.MintServer(cfg, allowPrivate = allowPrivate)
 
-    if req.uri.startswith("/xmlrpc-private"):
-        server = mint_server.MintServer(cfg, allowPrivate = True)
-    elif req.uri.startswith("/xmlrpc"):
-        server = mint_server.MintServer(cfg, allowPrivate = False)
+    # switch on XML/JSON here
+    if isXMLrpc:
+        (paramList, method) = xmlrpclib.loads(req.read())
+    if isJSONrpc:
+        (method, paramList) = simplejson.loads(req.read())
+
+    # coax parameters into something MintServer likes
+    params = [method, authToken, paramList]
+
+    # go for it; return 403 if permission is denied
     try:
         result = server.callWrapper(*params)
     except (errors.InsufficientPermission, mint_server.PermissionDenied):
         return apache.HTTP_FORBIDDEN
 
-    resp = xmlrpclib.dumps((result,), methodresponse=1)
-    req.content_type = "text/xml"
+    # create a response
+    if isXMLrpc:
+        resp = xmlrpclib.dumps((result,), methodresponse=1)
+        req.content_type = "text/xml"
+    if isJSONrpc:
+        resp = simplejson.dumps(result)
+        req.content_type = "application/x-json"
+
+    # handle compression
+    # XXX: fix MSIE!
     encoding = req.headers_in.get('Accept-encoding', '')
     useragent = req.headers_in.get('User-Agent', '')
     if len(resp) > 200 and 'deflate' in encoding and 'MSIE' not in useragent:
         req.headers_out['Content-encoding'] = 'deflate'
         resp = zlib.compress(resp, 5)
+
+    # write repsonse
     req.write(resp)
-    return apache.OK
+
+    return apache.OK # computer
 
 def mintHandler(req, cfg, pathInfo):
     webfe = app.MintApp(req, cfg)
@@ -384,8 +420,9 @@ def mintHandler(req, cfg, pathInfo):
 
 urls = (
     (r'^/conary/',           conaryHandler),
-    (r'^/xmlrpc/',           xmlrpcHandler),
-    (r'^/xmlrpc-private/',   xmlrpcHandler),
+    (r'^/jsonrpc/',          rpcHandler),
+    (r'^/xmlrpc/',           rpcHandler),
+    (r'^/xmlrpc-private/',   rpcHandler),
     (r'^/repos/',            conaryHandler),
     (r'^/',                  mintHandler),
 )

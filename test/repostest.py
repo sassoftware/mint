@@ -148,11 +148,11 @@ class RepositoryTest(MintRepositoryHelper):
         troveNames = nc.troveNames(versions.Label("testproject.rpath.local@rpl:devel"))
         assert(troveNames == ['testcase', 'testcase:runtime', 'testcase:source'])
 
-    def testGetTroveVersions(self):
-        expected = "{'x86_64': [(VFS('/testproject.rpath.local@rpl:devel/1.0-1-1'), "\
-                   "Flavor('is: x86_64'))], 'x86': "\
-                   "[(VFS('/testproject.rpath.local@rpl:devel/1.0-1-1'), "\
-                   "Flavor('is: x86'))]}"
+    def testGetTroveVersionsByArch(self):
+        expected = "{'x86_64': [('/testproject.rpath.local@rpl:devel/1.0-1-1', "\
+                   "'1#x86_64')], 'x86': "\
+                   "[('/testproject.rpath.local@rpl:devel/1.0-1-1', "\
+                   "'1#x86')]}"
 
         repos = self.openRepository()
         client, userId = self.quickMintUser("testuser", "testpass")
@@ -164,7 +164,7 @@ class RepositoryTest(MintRepositoryHelper):
             self.addCollection("test", "1.0", [(":runtime", "1.0", f) ])
             self.addCollection("group-core", "1.0", [("test", "1.0" , f)])
 
-        troveVersions = client.server.getTroveVersions(projectId, "group-core=testproject.rpath.local@rpl:devel")
+        troveVersions = client.server.getTroveVersionsByArch(projectId, "group-core=testproject.rpath.local@rpl:devel")
 
         self.failUnlessEqual(str(troveVersions), expected)
 

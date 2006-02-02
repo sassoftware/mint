@@ -21,7 +21,7 @@ onload = "javascript:;"
         <script type="text/javascript" src="${cfg.staticPath}apps/MochiKit/MochiKit.js" />
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/generic.js" />
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/library.js" />
-        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/xmlrpc.js" />
+        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/rpc.js" />
         <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/mint.css" />
         <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/search.css" />
         <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/help.css" />

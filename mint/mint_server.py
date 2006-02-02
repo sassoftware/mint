@@ -30,6 +30,7 @@ import stats
 import templates
 import userlevels
 import users
+import simplejson
 
 from mint_error import PermissionDenied, ReleasePublished, ReleaseMissing, \
      MintError
@@ -264,7 +265,7 @@ class MintServer(object):
             self.db.rollback()
             raise
         #except Exception, error:
-        #    exc_name = sys.exc_info()[0].__name__
+        #   exc_name = sys.exc_info()[0].__name__
         #    return (True, (exc_name, error, str(error)))
         else:
             self.db.commit()
@@ -1587,7 +1588,7 @@ class MintServer(object):
             raise jobs.FileMissing
 
     @requiresAuth
-    def getTroveVersions(self, projectId, troveNameWithLabel):
+    def getTroveVersionsByArch(self, projectId, troveNameWithLabel):
 
         self._filterProjectAccess(projectId)
         # XXX: should this be a decorator?
@@ -1623,9 +1624,7 @@ class MintServer(object):
         leaves = nc.getAllTroveLeaves(cfg.repositoryMap.keys()[0], {trove: {None: None}})
 
         # group trove by major architecture
-        archMap = dictByArch(leaves, trove)
-
-        return archMap
+        return dictByArch(leaves, trove)
 
     @typeCheck(int)
     @requiresAuth

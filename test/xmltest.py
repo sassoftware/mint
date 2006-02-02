@@ -14,7 +14,8 @@ SKIP_TYPE_CHECK = ('callWrapper', 'loadSession', 'saveSession', 'deleteSession',
 
 SKIP_PRIVATE = ('callWrapper', 'getReleaseStatus', 'getGroupTroves',
                 'getJobStatus', 'addGroupTroveItem', 'delGroupTroveItem',
-                'addGroupTroveItemByProject', 'setGroupTroveItemVersionLock')
+                'addGroupTroveItemByProject', 'setGroupTroveItemVersionLock',
+                'getTroveVersionsByArch')
 
 class XmlInterfaceTest(MintRepositoryHelper):
     def _getMethods(self, skipSet):
