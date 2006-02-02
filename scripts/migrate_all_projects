@@ -53,10 +53,9 @@ for dbName, count in zip(dbNames, range(len(dbNames))):
         schema.loadSchema(reposDb)
     except:
         e = sys.exc_info()[1]
-        if 'args' in e.__dict__ and \
-               e.args[0] in 'unable to open database file':
-            continue
         if str(e).startswith('Unknown database'):
+            continue
+        if str(e) == 'unable to open database file':
             continue
         print "error in database: %s\n %s" % (dbName, str(e))
 
