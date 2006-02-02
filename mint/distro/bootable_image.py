@@ -27,7 +27,7 @@ from conary.conaryclient.cmdline import parseTroveSpec
 from conary.repository import errors
 from conary.callbacks import UpdateCallback
 from conary.callbacks import ChangesetCallback
-from conary.conarycfg import ConfigFile
+from conary.conarycfg import ConfigFile, CfgDict, CfgString
 from conary.lib import log
 from conary.lib import util
 
@@ -42,8 +42,8 @@ class BootableImageConfig(ConfigFile):
     partoffset0     = 512
 
     #directory containing the uml init script as well as fstab and other hooks
-    dataDir         = os.path.join(os.path.dirname(__file__), 'DiskImageData')
-    umlKernel       = '/usr/bin/uml-vmlinux'
+    dataDir         = os.path.join(os.path.dirname(__file__), '..', '..', 'scripts', 'DiskImageData')
+    umlKernel       = CfgDict(CfgString)
     shortCircuit    = 0 #1: Use a static name for the root dir and the qemu image.
                         #Change this to false to use securely named temp files.
 
@@ -342,7 +342,7 @@ title %(name)s (%(kversion)s)
 
     @timeMe
     def runTagScripts(self):
-        cmd = '%s root=/dev/ubda1 init=/tmp/init.sh mem=128M ubd0=%s > uml-vmlinux.log' % (self.imgcfg.umlKernel, self.outfile)
+        cmd = '%s root=/dev/ubda1 init=/tmp/init.sh mem=128M ubd0=%s > uml-vmlinux.log' % (self.imgcfg.umlKernel[self.arch], self.outfile)
         util.execute(cmd)
 
     @timeMe
