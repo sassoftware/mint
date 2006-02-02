@@ -105,7 +105,6 @@ class HelperFunctionsTest(unittest.TestCase):
         t.myString = "Chunky bacon"
         t.isChunky = True
         render = templates.write(t)
-        print render
         self.assertEqual(render.find("Not"), -1)
 
     def testPlainKidTemplateWithImport(self):
