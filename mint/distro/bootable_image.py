@@ -226,7 +226,9 @@ title %(name)s (%(kversion)s)
             itemList = [(self.basetrove, (None, None), (self.baseversion, self.baseflavor), True)]
             log.info("itemList: %s" % str(itemList))
             sys.stderr.flush()
-            uJob, suggMap = self.cclient.updateChangeSet(itemList, resolveDeps = False,
+            uJob, suggMap = self.cclient.updateChangeSet(itemList,
+                                    resolveDeps = False,
+                                    split = True,
                                     callback = callback)
         except errors.TroveNotFound:
             raise
@@ -252,7 +254,7 @@ title %(name)s (%(kversion)s)
             kernel, version, flavor = parseTroveSpec('kernel[!kernel.smp is: %s]' % self.arch)
             itemList = [(kernel, (None, None), (version, flavor), True)]
             uJob, suggMap = self.cclient.updateChangeSet(itemList, sync=True,
-                                callback = callback,
+                                callback = callback, split=True,
                                 resolveDeps=False)
         except errors.TroveNotFound:
             raise
