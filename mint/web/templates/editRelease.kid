@@ -2,7 +2,7 @@
 
 <?python
 from mint import releasetypes
-from mint.releasetypes import visibleImageTypes, typeNames
+from mint.releasetypes import typeNames
 from mint.data import RDT_STRING, RDT_BOOL, RDT_INT
 ?>
 
@@ -70,7 +70,7 @@ from mint.data import RDT_STRING, RDT_BOOL, RDT_INT
 
                     <div class="formgroupTitle">Image Types</div>
                     <div class="formgroup">
-                        <div py:strip="True" py:for="key in visibleImageTypes">
+                        <div py:strip="True" py:for="key in self.cfg.visibleImageTypes">
                             <input class="reversed" id="imagetype_${key}" name="imagetype_${key}" value="${key}" type="checkbox" py:attrs="{'checked': key in imageTypes and 'checked' or None}" />
                             <label class="reversed" for="imagetype_${key}">${typeNames[key]}</label><br />
                         </div>
