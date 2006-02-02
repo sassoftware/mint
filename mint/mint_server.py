@@ -2099,6 +2099,7 @@ class MintServer(object):
                 self.__dict__[table] = tables[table]
 
             self.users.confirm_table.db = self.db
+            self.newsCache.ageTable.db = self.db
 
             #Now it's safe to commit
             self.db.commit()
