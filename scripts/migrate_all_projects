@@ -9,11 +9,6 @@ import os, sys
 
 cfgPath = "/srv/mint/mint.conf"
 
-if os.getuid():
-    print >> sys.stderr, "Please run this script as root."
-    print >> sys.stderr, "This script uses %s" % cfgPath
-    sys.exit(1)
-
 # set up import resolution environment
 conaryPath = os.getenv('CONARY_PATH')
 if conaryPath and conaryPath not in sys.path:
@@ -30,49 +25,40 @@ from mint import config
 from conary import dbstore
 from conary.server import schema
 
-# phase one. place site in maintenanceMode by adding config flag.
-cfgFile = open(cfgPath)
-cfgContents = cfgFile.read()
-cfgFile.close()
-cfgFile = open(cfgPath, 'w')
-cfgFile.write(cfgContents)
-cfgFile.write('\nmaintenanceMode True\n')
-cfgFile.close()
-os.system('sudo killall -USR1 httpd')
+cfg = config.MintConfig()
+cfg.read(cfgPath)
 
-try:
-    # phase two: migrate each project repository
-    cfg = config.MintConfig()
-    cfg.read(cfgPath)
+if not cfg.maintenanceMode:
+    print >> sys.stderr, "rBO repositories are not locked."
+    print >> sys.stderr, "please ensure the following line is in %s:" % cfgPath
+    print >> sys.stderr, "maintenanceMode True"
+    sys.exit(1)
 
-    db = dbstore.connect(cfg.dbPath, driver = cfg.dbDriver)
-    db.connect()
-    cu = db.cursor()
+db = dbstore.connect(cfg.dbPath, driver = cfg.dbDriver)
+cu = db.cursor()
 
-    cu.execute("SELECT hostname, domainname FROM Projects")
-    if cfg.reposDBDriver == 'sqlite':
-        dbNames = [x[0] + "." + x[1] for x in cu.fetchall()]
-    else:
-        dbNames = [x[0] + "_" + x[1].replace('.', '_') for x in cu.fetchall()]
+cu.execute("SELECT hostname, domainname FROM Projects")
 
-    for dbName, count in zip(dbNames, range(len(dbNames))):
-        print "completed %d of %d" % (count, len(dbNames)), chr(13),
-        sys.stdout.flush()
-        try:
-            reposDb = dbstore.connect(cfg.reposDBPath % dbName,
-                                      driver = cfg.reposDBDriver)
-            schema.loadSchema(reposDb)
-        except:
-            e = sys.exc_info()[1]
-            if 'args' in e.__dict__ and \
-                   e.args[0] != 'unable to open database file':
-                print "error in database: %s\n %s" % (dbName, str(e))
+if cfg.reposDBDriver == 'sqlite':
+    dbNames = [x[0] + "." + x[1] for x in cu.fetchall()]
+else:
+    dbNames = [x[0] + "_" + x[1].replace('.', '_') for x in cu.fetchall()]
 
-    # clear any remaining garbage on the status line
-    print 79 * ' ', chr(13),
-finally:
-    # phase three. return site to normal operation
-    cfgFile = open(cfgPath, 'w')
-    cfgFile.write(cfgContents)
-    cfgFile.close()
-    os.system('sudo killall -USR1 httpd')
+for dbName, count in zip(dbNames, range(len(dbNames))):
+    print "completed %d of %d" % (count, len(dbNames)), chr(13),
+    sys.stdout.flush()
+    try:
+        reposDb = dbstore.connect(cfg.reposDBPath % dbName,
+                                  driver = cfg.reposDBDriver)
+        schema.loadSchema(reposDb)
+    except:
+        e = sys.exc_info()[1]
+        if 'args' in e.__dict__ and \
+               e.args[0] in 'unable to open database file':
+            continue
+        if str(e).startswith('Unknown database'):
+            continue
+        print "error in database: %s\n %s" % (dbName, str(e))
+
+print 79 * ' ', chr(13),
+print "Migration complete"
