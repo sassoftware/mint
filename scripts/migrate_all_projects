@@ -58,9 +58,15 @@ try:
     for dbName, count in zip(dbNames, range(len(dbNames))):
         print "completed %d of %d" % (count, len(dbNames)), chr(13),
         sys.stdout.flush()
-        reposDb = db = dbstore.connect(cfg.reposDBPath % dbName,
-                                       driver = cfg.reposDBDriver)
-        schema.loadSchema(reposDb)
+        try:
+            reposDb = dbstore.connect(cfg.reposDBPath % dbName,
+                                      driver = cfg.reposDBDriver)
+            schema.loadSchema(reposDb)
+        except:
+            e = sys.exc_info()[1]
+            if 'args' in e.__dict__ and \
+                   e.args[0] != 'unable to open database file':
+                print "error in database: %s\n %s" % (dbName, str(e))
 
     # clear any remaining garbage on the status line
     print 79 * ' ', chr(13),
