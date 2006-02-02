@@ -130,13 +130,17 @@ class ProjectHandler(WebHandler):
         # into a config file somewhere, or something.
         cfg = conarycfg.ConaryConfiguration()
         cfg.dbPath = cfg.root = ":memory:"
-        #cfg.repositoryMap = {'conary.rpath.com': 'http://conary-commits.rpath.com/conary/'}
         label = versions.Label('conary.rpath.com@rpl:1')
-        repos = conaryclient.ConaryClient(cfg).getRepos()
-        troves = repos.getTroveLeavesByLabel({'group-dist': {label: None}})
 
-        version, flavor = troves['group-dist'].items()[0]
-        trove = repos.getTroves([('group-dist', version, flavor[0])])[0]
+        repos = conaryclient.ConaryClient(cfg).getRepos()
+        versionDict = repos.getTroveLeavesByLabel({'group-dist': {label: None}})['group-dist']
+        latestVersion = None
+        for version, flavorList in versionDict.iteritems():
+            if latestVersion is None or version > latestVersion:
+                latestVersion = version
+                latestFlavor = flavorList[0]
+
+        trove = repos.getTroves([('group-dist', latestVersion, latestFlavor)])[0]
 
         # mash the trove list into something usable
         troves = [(x[0], (x[1], x[2])) for x in trove.iterTroveList(strongRefs = True)]
