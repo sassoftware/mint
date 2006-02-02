@@ -85,6 +85,7 @@ class MintConfig(ConfigFile):
     reposDBDriver           = 'sqlite'
     reposDBPath             = '/srv/mint/repos/%s/sqldb'
     visibleImageTypes       = (cfgtypes.CfgList(CfgImageEnum))
+    maintenanceMode         = (cfgtypes.CfgBool, False)
 
     def read(self, path, exception = False):
         ConfigFile.read(self, path, exception)

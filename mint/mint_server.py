@@ -271,6 +271,8 @@ class MintServer(object):
             return (False, r)
 
     def _getProjectRepo(self, project):
+        if self.cfg.maintenanceMode:
+            raise PermissionDenied("Repositories are currently offline.")
         # use a shimclient for mint-handled repositories; netclient if not
         if project.external:
             cfg = project.getConaryConfig()
@@ -387,6 +389,8 @@ class MintServer(object):
     @requiresAuth
     @private
     def newProject(self, projectName, hostname, domainname, projecturl, desc):
+        if self.cfg.maintenanceMode:
+            raise PermissionDenied("Repositories are currenly offline.")
         if not hostname:
             raise projects.InvalidHostname
         if validHost.match(hostname) == None:
@@ -1433,6 +1437,8 @@ class MintServer(object):
     def startNextJob(self, archTypes):
         # scrub archTypes and jobTypes so we know it's safe to inject these
         # params into an SQL call.
+        if self.cfg.maintenanceMode:
+            raise PermissionDenied("Repositories are currently offline.")
         for arch in archTypes:
             if arch not in ("1#x86", "1#x86_64"):
                 raise PermissionDenied("Not a legal architecture")

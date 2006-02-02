@@ -226,6 +226,9 @@ def putFile(port, isSecure, repos, req):
     return apache.OK
 
 def conaryHandler(req, cfg, pathInfo):
+    if cfg.maintenanceMode:
+        return apache.HTTP_FORBIDDEN
+
     paths = normPath(req.uri).split("/")
     if paths[1] == "repos":
         # test suite hook: lop off any port specified in cfg file
