@@ -1,0 +1,72 @@
+#!/usr/bin/python
+#
+# Copyright (c) 2006 rPath, Inc.
+#
+# All rights reserved
+#
+
+import os, sys
+
+cfgPath = "/srv/mint/mint.conf"
+
+if os.getuid():
+    print >> sys.stderr, "Please run this script as root."
+    print >> sys.stderr, "This script uses %s" % cfgPath
+    sys.exit(1)
+
+# set up import resolution environment
+conaryPath = os.getenv('CONARY_PATH')
+if conaryPath and conaryPath not in sys.path:
+    sys.path.insert(0, conaryPath)
+
+parDir = '/'.join(os.path.realpath(__file__).split('/')[:-2])
+mintPath = os.getenv('MINT_PATH', parDir)
+
+if mintPath not in sys.path:
+    sys.path.insert(0, mintPath)
+# end set up import resolution environment
+
+from mint import config
+from conary import dbstore
+from conary.server import schema
+
+# phase one. place site in maintenanceMode by adding config flag.
+cfgFile = open(cfgPath)
+cfgContents = cfgFile.read()
+cfgFile.close()
+cfgFile = open(cfgPath, 'w')
+cfgFile.write(cfgContents)
+cfgFile.write('\nmaintenanceMode True\n')
+cfgFile.close()
+os.system('sudo killall -USR1 httpd')
+
+try:
+    # phase two: migrate each project repository
+    cfg = config.MintConfig()
+    cfg.read(cfgPath)
+
+    db = dbstore.connect(cfg.dbPath, driver = cfg.dbDriver)
+    db.connect()
+    cu = db.cursor()
+
+    cu.execute("SELECT hostname, domainname FROM Projects")
+    if cfg.reposDBDriver == 'sqlite':
+        dbNames = [x[0] + "." + x[1] for x in cu.fetchall()]
+    else:
+        dbNames = [x[0] + "_" + x[1].replace('.', '_') for x in cu.fetchall()]
+
+    for dbName, count in zip(dbNames, range(len(dbNames))):
+        print "completed %d of %d" % (count, len(dbNames)), chr(13),
+        sys.stdout.flush()
+        reposDb = db = dbstore.connect(cfg.reposDBPath % dbName,
+                                       driver = cfg.reposDBDriver)
+        schema.loadSchema(reposDb)
+
+    # clear any remaining garbage on the status line
+    print 79 * ' ', chr(13),
+finally:
+    # phase three. return site to normal operation
+    cfgFile = open(cfgPath, 'w')
+    cfgFile.write(cfgContents)
+    cfgFile.close()
+    os.system('sudo killall -USR1 httpd')
