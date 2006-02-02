@@ -93,6 +93,7 @@ class GroupTroveCook(Generator):
         curDir = os.getcwd()
 
         ret = None
+        e = None
         try:
             path = tempfile.mkdtemp()
             recipe = groupTrove.getRecipe()
@@ -155,7 +156,6 @@ class GroupTroveCook(Generator):
                                     con = list(conflict[0])
                                     con.remove(matches[0])
                                     removeTroves.extend([x for x in con])
-                                    break
                             if matches:
                                 break
                 else:
@@ -167,6 +167,10 @@ class GroupTroveCook(Generator):
 
             sys.stderr.flush()
             sys.stdout.flush()
+
+            if not ret:
+                raise build.errors.GroupPathConflicts(e)
+
             ret = ret[0][0]
         finally:
             os.chdir(curDir)
