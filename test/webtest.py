@@ -692,12 +692,17 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
     def testDocJail(self):
         # ensure the legal pages implement a jail for documents. 404 on error
         page = self.fetch("/legal?page=SOMETHING_NOT_THERE", ok_codes = [404])
+        page = self.fetch('/legal')
+        refPage = self.fetch('/legal?page=legal')
+
+        self.failIf(page.body != refPage.body,
+                    "Withholding page argument did not redirect to legal page")
 
         # ensure help pages implement a jail for documents. redir to overview.
         page = self.fetch('/help?page=../frontPage')
-        page2 = self.fetch('/help?page=overview')
+        refPage = self.fetch('/help?page=overview')
 
-        self.failIf(page.body != page2.body,
+        self.failIf(page.body != refPage.body,
                     "Illegal page reference was not contained.")
 
     def testMaintenanceMode(self):
