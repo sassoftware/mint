@@ -86,6 +86,7 @@ class MintConfig(ConfigFile):
     reposDBPath             = '/srv/mint/repos/%s/sqldb'
     visibleImageTypes       = (cfgtypes.CfgList(CfgImageEnum))
     maintenanceMode         = (cfgtypes.CfgBool, False)
+    announceLink            = ''
 
     def read(self, path, exception = False):
         ConfigFile.read(self, path, exception)
