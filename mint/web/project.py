@@ -351,6 +351,7 @@ class ProjectHandler(WebHandler):
 
         release = self.client.getRelease(releaseId)
 
+        trove, label = trove.split("=")
         version, flavor = version.split(" ")
         release.setTrove(trove, version, flavor)
         release.setName(name)
