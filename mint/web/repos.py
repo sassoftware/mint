@@ -129,12 +129,6 @@ class ConaryHandler(WebHandler, http.HttpHandler):
     def _write(self, templateName, **values):
         return WebHandler._write(self, templateName, templatePath = self.reposTemplatePath, **values)
 
-    # XXX: I'm wondering if this is the best approach.
-    # maybe it would be better to override _getHandler and
-    # provide a list of explicitly-allowed methods. opt-in
-    # instead of opt-out.
-    #
-    # remove some disallowed methods for mint:
     del http.HttpHandler.main
     del http.HttpHandler.metadata
     del http.HttpHandler.chooseBranch
@@ -153,3 +147,18 @@ class ConaryHandler(WebHandler, http.HttpHandler):
     del http.HttpHandler.addUser
     del http.HttpHandler.chPassForm
     del http.HttpHandler.chPass
+    del http.HttpHandler.editPermForm
+    del http.HttpHandler.addUserForm
+    del http.HttpHandler.pgpNewKeyForm
+    del http.HttpHandler.editPerm
+    del http.HttpHandler.pgpChangeOwner
+    del http.HttpHandler.submitPGPKey
+
+    allowedMethods = ('getOpenPGPKey', 'pgpAdminForm', 'files', 'troveInfo',
+                      'browse', 'getFile')
+
+    for method in http.HttpHandler.__dict__.keys():
+        if not (method.startswith('_') or method in allowedMethods):
+            if callable(http.HttpHandler.__dict__[method]):
+                print >> sys.stderr, "Warning: conary handler method is not explicitly allowed: %s\n please updte repos.py" % method
+
