@@ -629,3 +629,16 @@ div#mailingListButtons div {
     margin-right:5px;
 }
 
+/* dev tutorial styles */
+div#devTutorial {
+
+}
+
+div.devTutorial h2 {
+    clear: left;
+}
+
+div.devTutorial p img {
+    float: left;
+    padding: 0px 24px 36px 12px;
+}
