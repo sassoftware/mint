@@ -201,8 +201,8 @@ def injectVersion(version):
             </button>
 
             <div id="noAccount">
-                <p><strong>Don't have an account?</strong></p>
-                <p><a href="/register">Set one up.</a></p>
+                <p><strong>Don't have an account?</strong> <a href="${cfg.basePath}register">Set one up.</a></p>
+                <p><strong><a href="${cfg.basePath}forgotPassword">Forgot your password?</a></strong></p>
             </div>
         </form>
         <div py:if="auth.authorized">

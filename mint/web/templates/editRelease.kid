@@ -24,13 +24,16 @@ from mint.data import RDT_STRING, RDT_BOOL, RDT_INT
     </head>
     <?python jsonload = "javascript:getTroveList(" + str(project.getId()) + ")" ?>
     <body py:attrs="{'onload': isNewRelease and jsonload or None}">
-        <td id="left" class="side">
-            <div class="pad">
+        <div class="layout">
+            <div id="left" class="side">
                 ${projectResourcesMenu()}
             </div>
-        </td>
-        <td id="main">
-            <div class="pad">
+            <div id="right" class="side">
+                ${projectsPane()}
+                ${groupTroveBuilder()}
+            </div>
+
+            <div id="middle">
                 <h2>${isNewRelease and "Create" or "Edit"} Release</h2>
 
                 <form method="post" action="saveRelease" id="mainForm">
@@ -126,12 +129,6 @@ from mint.data import RDT_STRING, RDT_BOOL, RDT_INT
                     <input type="hidden" name="releaseId" value="${release.getId()}" />
                 </form>
             </div>
-        </td>
-        <td id="right" class="projects">
-            ${projectsPane()}
-            <div class="pad">
-                ${groupTroveBuilder()}
-            </div>
-        </td>
+        </div>
     </body>
 </html>
