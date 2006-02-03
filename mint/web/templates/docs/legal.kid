@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<html xmlns="http://www.w3c.org/1999/xhtml"
+<html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#">
 <!--
     Copyright (c) 2005-2006 rPath, Inc.
@@ -7,8 +7,7 @@
 -->
     <head>
         <title>Legal Information - ${cfg.productName}</title>
-        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/mint.css"/>
-        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/mint.css"/>
+        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/legal.css"/>
     </head>
     <body id="legal">
         <h2>Legal Information</h2>

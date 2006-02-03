@@ -1,0 +1,28 @@
+html {
+    background:#6D7CAD;
+}
+
+body#legal {
+    margin: 0em 2em 0em 2em;
+}
+
+body#legal p, body#legal li {
+    font-size: 80%;
+    color: rgb(217, 221, 232);
+    text-align: justify;
+}
+
+body#legal li {
+    list-style-type: circle;
+    margin-left: 2em;
+}
+
+body#legal a {
+    color: white;
+    background-image: none;
+    padding-right: 0px;
+}
+
+body#legal h2, body#legal h3 {
+    color: white;
+}
