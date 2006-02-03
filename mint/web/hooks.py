@@ -264,6 +264,7 @@ def conaryHandler(req, cfg, pathInfo):
         # XXX mysql-specific hack--this needs to be abstracted out
         dbName = repName.translate(mysqlTransTable)
         try:
+            db.rollback() # roll back any hanging transactions
             db.use(dbName)
         except sqlerrors.DatabaseError:
             raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND
