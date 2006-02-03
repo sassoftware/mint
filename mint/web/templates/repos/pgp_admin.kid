@@ -36,7 +36,7 @@
         <div py:for="id in keyEntry['uids']"> uid: &#160; &#160; ${id}</div>
         <div py:for="subKey in keyEntry['subKeys']">sub: ${breakKey(subKey)}</div>
       </td>
-      <td py:if="admin" style="text-align: right;">${generateOwnerListForm(keyEntry['fingerprint'], users, userId)}</td>
+      <td py:if="auth.admin" style="text-align: right;">${generateOwnerListForm(keyEntry['fingerprint'], users, userId)}</td>
      </tr>
     </div>
 
@@ -54,7 +54,7 @@
                 <thead>
                     <tr>
                         <td>Key</td>
-                        <td py:if="admin" style="text-align: right;">Owner</td>
+                        <td py:if="auth.admin" style="text-align: right;">Owner</td>
                     </tr>
                 </thead>
                 <tbody>

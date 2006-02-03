@@ -75,7 +75,7 @@ from mint.mint import upstream
                             <a href="${basePath}editProject">Edit project details</a>
                         </li>
                         <li py:if="isOwner">
-                            <a href="${project.getUrl()}../../repos/${project.getHostname()}/pgpAdminForm">Manage Signing Keys</a>
+                            <a href="${project.getUrl()}../../repos/${project.getHostname()}/pgpAdminForm">${auth.admin and 'Manage' or 'View'} Signing Keys</a>
                         </li>
                         <li py:if="releases">
                             <a href="${basePath}rss">
