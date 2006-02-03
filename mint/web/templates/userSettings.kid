@@ -81,6 +81,12 @@
                             <th>Confirm Password:</th>
                             <td><input type="password" name="password2" value="" /></td>
                         </tr>
+                        <tr>
+                            <td colspan="2">
+                                <p><strong>Package Signing Keys:</strong>
+                                <a href="/uploadKey">Upload a package signing key</a></p>
+                            </td>
+                        </tr>
                     </table>
                     <p><button type="submit">Submit</button></p>
                 </form>
