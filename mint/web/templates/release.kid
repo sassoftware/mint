@@ -39,7 +39,7 @@ import time
                 editOptionsDisabledStyle = "color: gray; font-style: italic;"
 
         ?>
-        <div id="layout">
+        <div class="layout">
             <div id="left" class="side">
                 ${projectResourcesMenu()}
                 ${releasesMenu(publishedReleases, isOwner)}

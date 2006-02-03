@@ -21,7 +21,7 @@
     </head>
 
     <body>
-        <div id="layout">
+        <div class="layout">
             <div id="right" class="side">
                 ${resourcePane()}
                 <div class="palette" py:if="ownsProjects and user.id != auth.userId">

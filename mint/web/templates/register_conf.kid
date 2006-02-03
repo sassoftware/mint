@@ -11,7 +11,7 @@
         <title>${formatTitle('Thank You for Registering')}</title>
     </head>
     <body>
-        <div id="layout">
+        <div class="layout">
             <h2>Thank you for registering</h2>
             <p>An email confirming your request has been sent to the email address you provided.</p>
             <p>Please follow the directions in your confirmation email to complete the registration process.</p>

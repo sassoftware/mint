@@ -49,13 +49,11 @@
         <title>${formatTitle('Files: %s'% troveName)}</title>
     </head>
     <body>
-        <td id="main" class="spanall">
-            <div class="pad">
-                <h2>Files in <a href="troveInfo?t=${troveName}">${troveName}</a></h2>
+        <div id="layout">
+            <h2>Files in <a href="troveInfo?t=${troveName}">${troveName}</a></h2>
 
-                ${fileList(fileIters)}
-                <hr/>
-            </div>
-        </td>
+            ${fileList(fileIters)}
+            <hr/>
+        </div>
     </body>
 </html>

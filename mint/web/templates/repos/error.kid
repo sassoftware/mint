@@ -11,17 +11,15 @@
         <title>${formatTitle('Repository Error')}</title>
     </head>
     <body>
-        <td id="left" class="side">
-            <div class="pad">
+        <div id="layout">
+            <div id="left" class="side">
                 ${projectResourcesMenu()} 
             </div>
-        </td>
-        <td id="main">
-          <div id="content">
-            <h2>Error</h2>
-            <pre class="error">${error}</pre>
-            <p>Please go back and try again.</p>
-          </div>
-        </td>
+            <div id="middle">
+                <h2>Error</h2>
+                <pre class="error">${error}</pre>
+                <p>Please go back and try again.</p>
+            </div>
+        </div>
     </body>
 </html>

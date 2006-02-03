@@ -24,12 +24,10 @@
 
     <head/>
     <body>
-        <td id="main" class="spanall">
-            <div class="pad">
-                <h2>Troves in <a href="troveInfo?t=${troveName}">${troveName}</a></h2>
+        <div id="layout">
+            <h2>Troves in <a href="troveInfo?t=${troveName}">${troveName}</a></h2>
 
-                ${troveList(troves)}
-            </div>
-        </td>
+            ${troveList(troves)}
+        </div>
     </body>
 </html>

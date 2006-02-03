@@ -10,7 +10,7 @@
         <title>${formatTitle('Please Confirm')}</title>
     </head>
     <body>
-        <div id="layout">
+        <div class="layout">
             <p class="error">Confirm:</p>
 
             <p class="errormessage">${message}</p>

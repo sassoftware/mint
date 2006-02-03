@@ -11,7 +11,7 @@
         <title>${formatTitle('Account Confirmed')}</title>
     </head>
     <body>
-        <div id="layout">
+        <div class="layout">
             <h2>Thank you for confirming</h2>
             <p>Your account has now been confirmed.</p>
             <p>Please use the "Sign In" link above to login.</p>

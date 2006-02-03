@@ -75,7 +75,7 @@
             attrs = dict([(i, {'style': i == step and "display: block;" or "display: none;"}) for i in range(1, 9)])
         ?>
 
-        <div id="layout" class="helpPage">
+        <div class="layout" class="helpPage">
             <a href="http://wiki.conary.com/DerivativeDistroTutorial?action=AttachFile;do=get;target=rBuilderOnlineTutorial.pdf" style="float: right;">PDF of this document
                 <img style="border: none;" src="${cfg.staticPath}/apps/mint/images/pdficon_small.gif" />
             </a>

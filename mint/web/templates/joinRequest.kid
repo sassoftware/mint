@@ -19,7 +19,7 @@ from mint import userlevels
         <title>${formatTitle("Membership Request: %s"%project.getNameForDisplay())}</title>
     </head>
     <body>
-        <div id="layout">
+        <div class="layout">
             <form method="POST" action="processJoinRequest">
                 <table>
                     <tr><td><h2>Request membership in ${project.getNameForDisplay(maxWordLen = 50)}</h2></td></tr>
