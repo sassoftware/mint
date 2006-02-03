@@ -18,7 +18,7 @@ from mint import userlevels
         <title>${formatTitle("Membership Request Rejection: %s"%project.getNameForDisplay())}</title>
     </head>
     <body>
-        <div id="layout">
+        <div class="layout">
             <form method="POST" action="processJoinRejection">
                 <table>
                     <tr><td><h2>Reject membership application for

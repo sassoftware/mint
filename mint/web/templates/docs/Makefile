@@ -5,13 +5,11 @@
 #
 
 kid_files =			\
-        dev-help.kid            \
 	dev-tutorial.kid	\
         feedback.kid            \
         overview.kid            \
         privacy.kid             \
         tos.kid                 \
-        user-help.kid		\
 	user-tutorial.kid	\
 	legal.kid
 

@@ -18,7 +18,7 @@ from mint import userlevels
         <title>${formatTitle('Upload a Key')}</title>
     </head>
     <body>
-        <div id="layout">
+        <div class="layout">
             <p py:if="errors" class="error">Key Upload Error${len(errors) > 1 and 's' or ''}</p>
             <p py:for="error in errors" class="errormessage" py:content="error"/>
             <h2>Upload a Package Signing Key</h2>

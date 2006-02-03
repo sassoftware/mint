@@ -11,7 +11,7 @@
         <title>${formatTitle('Confirmation Required')}</title>
     </head>
     <body>
-        <div id="layout">
+        <div class="layout">
             <h2>Thank you for updating your email address</h2>
             <p>An email confirming your request has been sent to <b>${email}</b>.</p>
             <p>Please follow the directions in your confirmation email to complete the update process.</p>

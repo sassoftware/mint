@@ -10,7 +10,7 @@
         <title>${formatTitle('Lost Password')}</title>
     </head>
     <body>
-        <div id="layout">
+        <div class="layout">
             <h2>Lost Password:</h2>
             <form method="post" action="resetPassword">
                 <p class="help">

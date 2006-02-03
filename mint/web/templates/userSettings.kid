@@ -10,7 +10,7 @@
         <title>${formatTitle('Edit Account Information: %s'%auth.fullName)}</title>
     </head>
     <body>
-        <div id="layout">
+        <div class="layout">
             <div id="right" class="side">
                 ${resourcePane()}
                 <div style="width: 180px;">
