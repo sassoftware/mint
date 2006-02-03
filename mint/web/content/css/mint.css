@@ -327,10 +327,10 @@ span#tagline {
 div#topten {
     background: url(../images/top_ten_bg.png);
     width: 851px;
-    height: 221px;
+    height: 251px;
 
-    padding: 30px 52px 30px 52px;
-    margin-bottom: 0px;
+    padding: 30px 52px 0px 52px;
+    margin-bottom: 20px;
 }
 
 div#topten,
