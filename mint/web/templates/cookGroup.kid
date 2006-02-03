@@ -17,7 +17,7 @@
             </div>
             <div id="right" class="side">
                 ${resourcePane()}
-            </td>
+            </div>
 
             <div id="main">
                 <h1 id="pleaseWait">Cooking Your Group</h1>

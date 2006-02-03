@@ -26,6 +26,6 @@
                     </p>
                 </td><td width="50%"/></tr>
             </table>
-        </td>
+        </div>
     </body>
 </html>
