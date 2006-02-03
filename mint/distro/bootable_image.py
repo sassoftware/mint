@@ -542,7 +542,7 @@ quit
                 fd, vmfn = tempfile.mkstemp('.zip', 'mint-MDI-cvmpi-', self.cfg.imagesPath)
                 os.close(fd)
                 del fd
-                imagesList.append(self.createVMWarePlayerImage(vmfn, self.project.getName(), self.release.getDataValue('vmMemory')))
+                imagesList.append(self.createVMWarePlayerImage(vmfn, self.project.getName(), self.release.getDataValue('vmMemory'), self.cfg.imagesPath))
 
             #This has to be done after everything else as we need the qemu
             #image to generate vmware, etc.
