@@ -31,6 +31,9 @@ for i in pre-tag-scripts tag-scripts post-tag-scripts kernel-tag-scripts post-ke
     [ -f /tmp/$i ] && /bin/sh /tmp/$i && rm /tmp/$i
 done
 
+#Reset the root password to blank
+/usr/sbin/usermod -p '' root
+
 #Setup /etc/nsswitch and system-auth
 /usr/bin/authconfig --kickstart --enablemd5 --enableshadow --disablecache
 
