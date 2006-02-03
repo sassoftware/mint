@@ -407,6 +407,7 @@ quit
         for f in ('.vmdk', '.vmx'):
             zip.write(os.path.join(dir, self.basefilename + f), os.path.join(self.basefilename, self.basefilename + f))
         zip.close()
+        os.chmod(outfile, 0644)
 
     @timeMe
     def createVMWarePlayerImage(self, outfile, displayName, mem, basedir=os.getcwd()):
