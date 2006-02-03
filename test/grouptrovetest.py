@@ -727,6 +727,15 @@ class GroupTroveTest(MintRepositoryHelper):
         groupTroves = client.server.getGroupTroves(projectId)
         assert(groupTroves == {'testproject.rpath.local@rpl:devel': ['group-test']})
 
+    def addPackage(self, pkgName, v,
+            components = ['devel', 'runtime'],
+            filePrimers = {'devel': 0, 'runtime': 1}):
+        l = []
+        for c in components:
+            self.addComponent(pkgName + ":" + c, v, filePrimer = filePrimers[c])
+            l.append((pkgName + ":" + c, v))
+        self.addCollection(pkgName, v, l)
+
     def testGroupTrovePathConflicts(self):
         self.openRepository()
         client, userId = self.quickMintUser('testuser', 'testpass')
@@ -740,13 +749,13 @@ class GroupTroveTest(MintRepositoryHelper):
         v = versions.ThawVersion("/testproject.rpath.local@rpl:devel/123.0:1.0-1-1")
         v2 = versions.ThawVersion("/testproject.rpath.local@rpl:mumble/123.0:1.0-1-1")
 
-        self.addComponent("test:runtime", v2)
-        self.addCollection("group-foo", v2,
-            [ ("test:runtime", v2) ])
-        self.addComponent("test:runtime", v)
+        # trove1 on both v and v2, trove2 only on v2
+        self.addPackage("trove1", v)
+        self.addPackage("trove1", v2, filePrimers = {'devel': 2, 'runtime': 3})
+        self.addPackage("trove2", v2)
 
-        trvId = self.addTestTrove(groupTrove, "group-foo", v2.asString())
-        trvId = self.addTestTrove(groupTrove, "test:runtime", v.asString())
+        trvId = self.addTestTrove(groupTrove, "trove1", v.asString())
+        trvId = self.addTestTrove(groupTrove, "trove2", v2.asString())
         # cook once to ensure we can create a new package
         jobId = groupTrove.startCookJob("1#x86")
 
