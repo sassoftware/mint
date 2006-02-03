@@ -199,7 +199,6 @@ button.img {
 div#steps {
     top: 130px;
     width: 720px;
-    border: 1px solid green;
 }
 
 div#threeEasySteps {
@@ -243,7 +242,6 @@ span#findit {
 }
 
 div#signin {
-    border: 1px solid red;
     background: url(../images/sign_in.png) no-repeat;
     text-align: left;
     width: 179px;
@@ -387,9 +385,8 @@ div.palette img.right {
 }
 
 .palette {
-    border-bottom:1px #eee solid;
     margin-bottom:12px;
-    background: url(../images/box_bg.png);
+    background: url(../images/box_body_r.png) no-repeat bottom left;
     width: 225px;
 }
 .palette div.boxHeader {
@@ -403,7 +400,6 @@ div.palette img.right {
 }
 
 .palette ul {
-    border:1px #dadada solid;
     border-width:0px 1px 0px 1px;
     padding:0px 0px 4px 0px; font-size:110%;
     margin: 0px;
@@ -434,9 +430,7 @@ div#projectsPane {
     height: 345px;
     margin-left: 3px;
     margin-right: 3px;
-    background: url(../images/box_bg.png);
-    background-repeat: repeat-y;
-    border-bottom: 1px solid #eeeeee;
+    background: url(../images/box_body_r.png) no-repeat bottom left;
     margin-bottom: 10px;
 }
 
@@ -448,15 +442,18 @@ div#projectsPane img.right {
     float: right;
 }
 
-div#projectsPane div.boxHeader {
+div#projectsPane div.boxHeaderText {
     color: black;
-    background: url(../images/header_orange_bg.png);
     padding-top: 4px;
     padding-bottom: 6px;
     margin-bottom: 0px;
     font-size: 120%;
     font-weight: bold;
     height: 22px;
+}
+
+div#projectsPane div.boxHeader {
+    background: url(../images/header_orange_bg.png);
 }
 
 div#projectsPane div.boxBody {
@@ -494,8 +491,7 @@ div#groupBuilder {
     clear: right;
     max-width: 224px;
     margin: 8px 3px 12px 3px;
-    background: url(../images/box_bg.png);
-    background-repeat: repeat-y;
+    background: url(../images/box_body_r.png) no-repeat bottom left;
 }
 
 div#groupBuilder img.left {
@@ -517,7 +513,6 @@ div#groupBuilder div.boxHeader {
 }
 
 div#groupBuilderItems {
-    border: 1px solid #eeeeee;
     padding: 4px;
 }
 

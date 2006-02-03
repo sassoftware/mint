@@ -100,10 +100,12 @@
         <img class="left" src="${cfg.staticPath}apps/mint/images/header_orange_left.png" />
         <img class="right" src="${cfg.staticPath}apps/mint/images/header_orange_right.png" />
         <div class="boxHeader">
-            <span>${auth.username}</span>
-            <a href="http://${cfg.siteHost}${cfg.basePath}logout">
-                Sign Out
-            </a>
+            <div class="boxHeaderText">
+                <span>${auth.username}</span>
+                <a href="http://${cfg.siteHost}${cfg.basePath}logout">
+                    Sign Out
+                </a>
+            </div>
         </div>
         <div class="boxBody" py:if="not projectList">
             <h3>Get Involved</h3>
@@ -124,7 +126,7 @@
             Then, click on the project name, and click on the "Request to join"
             link to submit your request to the project's owners.</p>
         </div>
-        <div class="boxBody" py:if="projectList" strip="True">
+        <div class="boxBody" id="boxBody" py:if="projectList" strip="True">
             <ul>
                 <li py:for="project, level in sorted(projectList, cmp = userlevels.myProjectCompare)">
                     <a href="${project.getUrl()}">
