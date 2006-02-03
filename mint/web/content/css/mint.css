@@ -198,7 +198,7 @@ button.img {
 
 div#steps {
     top: 130px;
-    width: 724px;
+    width: 720px;
     border: 1px solid green;
 }
 
@@ -221,13 +221,13 @@ div#stepsText {
 span#buildit {
     background: url(../images/build_it.png);
     text-align: left;
-    width: 322px;
+    width: 326px;
     height: 81px;
     float: left;
     padding-top: 48px;
     padding-left: 24px;
-    padding-right: 6px;
-    margin-right: 6px;
+    padding-right: 3px;
+    margin-right: 3px;
 }
 
 span#findit {
@@ -238,8 +238,8 @@ span#findit {
     height: 59px;
     padding-top: 48px;
     padding-left: 24px;
-    margin-left: 6px;
-    margin-right: 6px;
+    margin-left: 3px;
+    margin-right: 3px;
 }
 
 div#signin {

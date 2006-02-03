@@ -25,10 +25,10 @@ from mint import searcher
             ${resourcePane()}
         </div>
         <div id="steps">
-            <div>
+            <span>
                 <span id="findit">Check out all the amazing software applications others have made.</span>
                 <span id="buildit">Find the stuff you need to make your own software appliance in three easy steps.</span>
-            </div>
+            </span>
 
             <div id="threeEasySteps">
                 <a href="/help?page=dev-tutorial">
