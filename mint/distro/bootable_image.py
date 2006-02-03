@@ -342,13 +342,13 @@ title %(name)s (%(kversion)s)
 
     @timeMe
     def runTagScripts(self):
-        cmd = '%s root=/dev/ubda1 init=/tmp/init.sh mem=128M ubd0=%s > uml-vmlinux.log' % (self.imgcfg.umlKernel, self.outfile)
+        cmd = '%s root=/dev/ubda1 init=/tmp/init.sh mem=128M ubd0=%s' % (self.imgcfg.umlKernel, self.outfile)
         util.execute(cmd)
 
     @timeMe
     def makeBootable(self):
         #install boot manager
-        cmd = '%s --device-map=/dev/null --batch > grub-install.log' % os.path.join(self.fakeroot, 'sbin', 'grub')
+        cmd = '%s --device-map=/dev/null --batch' % os.path.join(self.fakeroot, 'sbin', 'grub')
         input = """
 device  (hd0)   %s
 root    (hd0,0)
