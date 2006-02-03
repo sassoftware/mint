@@ -198,7 +198,8 @@ button.img {
 
 div#steps {
     top: 130px;
-    width: 955px;
+    width: 724px;
+    border: 1px solid green;
 }
 
 div#threeEasySteps {
@@ -230,7 +231,7 @@ span#buildit {
 }
 
 span#findit {
-    float: left;
+    float: right;
     background: url(../images/find_it.png);
     text-align: left;
     width: 326px;
@@ -242,6 +243,7 @@ span#findit {
 }
 
 div#signin {
+    border: 1px solid red;
     background: url(../images/sign_in.png);
     text-align: left;
     width: 179px;
