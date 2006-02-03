@@ -22,7 +22,8 @@ from mint.data import RDT_STRING, RDT_BOOL, RDT_INT
     <head>
         <title>${formatTitle((isNewRelease and "Create New" or "Edit") + "Release")}</title>
     </head>
-    <body onload="javascript:getTroveList(${project.getId()});">
+    <?python jsonload = "javascript:getTroveList(" + str(project.getId()) + ")" ?>
+    <body py:attrs="{'onload': isNewRelease and jsonload or None}">
         <td id="left" class="side">
             <div class="pad">
                 ${projectResourcesMenu()}
@@ -37,41 +38,56 @@ from mint.data import RDT_STRING, RDT_BOOL, RDT_INT
                     <div class="formgroupTitle">Distribution Information</div>
                     <div class="formgroup">
                         <label for="relname">Name</label>
-                        <input id="relname" name="relname" type="text" value="${release.getName()}" /><br />
+                        <input id="relname" name="name" type="text" value="${release.getName()}" /><br />
 
                         <label for="reldesc">Description (optional)</label>
-                        <textarea id="reldesc" name="relname" type="text" py:content="release.getDesc()" /><br />
+                        <textarea id="reldesc" name="desc" type="text" py:content="release.getDesc()" /><br />
 
                     </div>
 
-                    <div class="formgroupTitle">Choose your distribution group</div>
+                    <div class="formgroupTitle">Release Contents</div>
                     <div class="formgroup">
                         <label for="trove">Distribution Group</label>
                         <div py:strip="True" py:if="isNewRelease">
-                            <select onchange="javascript:onTroveChange(${project.getId()});" id="trove" name="trove">
+                            <select py:if="isNewRelease" onchange="javascript:onTroveChange(${project.getId()});" id="trove" name="trove">
                                 <option value="" id="pleaseWait">Please wait, loading troves...</option>
                             </select>
                         </div>
                         <div py:strip="True" py:if="not isNewRelease">
-                            <span>${trove}</span>
+                            <span py:if="not isNewRelease" style="font-weight: bold;" id="trove" py:content="troveName" />
+                            <input type="hidden" name="trove" value="${trove}" />
                         </div>
                         <br />
 
                         <label for="arch">Target Architecture</label>
-                        <select onchange="javascript:onArchChange();" id="arch" name="arch" disabled="disabled">
-                            <option value=""/>
-                        </select><br />
+                        <div py:strip="True" py:if="isNewRelease">
+                            <select onchange="javascript:onArchChange();" id="arch" name="arch" disabled="disabled">
+                                <option id="pleaseWaitArch" value=""/>
+                            </select>
+                        </div>
+                        <div py:strip="True" py:if="not isNewRelease">
+                            <span style="font-weight: bold;" id="arch" py:content="not isNewRelease and arch or None" />
+                            <input type="hidden" name="arch" value="${not isNewRelease and arch or None}" />
+                        </div>
+                        <br />
 
                         <label for="version">Group Version</label>
-                        <select onchange="javascript:onVersionChange();" id="version" name="version" disabled="disabled">
-                            <option value="" />
-                        </select><br />
+                        <div py:strip="True" py:if="isNewRelease">
+                            <select onchange="javascript:onVersionChange();" id="version" name="version" disabled="disabled">
+                                <option value="" />
+                            </select>
+                        </div>
+                        <div py:strip="True" py:if="not isNewRelease">
+                            <span py:if="not isNewRelease" style="font-weight: bold;" id="version" py:content="versionStr" />
+                            <input type="hidden" name="version" value="${version + ' ' + flavor}" />
+                        </div>
+                        <br />
                     </div>
 
                     <div class="formgroupTitle">Image Types</div>
                     <div class="formgroup">
                         <div py:strip="True" py:for="key in self.cfg.visibleImageTypes">
-                            <input class="reversed" id="imagetype_${key}" name="imagetype_${key}" value="${key}" type="checkbox" py:attrs="{'checked': key in imageTypes and 'checked' or None}" />
+                            <input class="reversed" id="imagetype_${key}" name="imagetype_${key}" value="${key}" type="checkbox" py:attr="{'checked': key in imageTypes and 'checked' or None}" />
                             <label class="reversed" for="imagetype_${key}">${typeNames[key]}</label><br />
                         </div>
                     </div>
@@ -103,6 +119,7 @@ from mint.data import RDT_STRING, RDT_BOOL, RDT_INT
                     <p>
                         <button id="submitButton" type="submit" py:attrs="{'disabled': isNewRelease and 'disabled' or None}">${isNewRelease and "Create" or "Recreate"} Release</button>
                     </p>
+                    <input type="hidden" name="releaseId" value="${release.getId()}" />
                 </form>
             </div>
         </td>

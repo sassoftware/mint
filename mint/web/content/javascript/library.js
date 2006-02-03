@@ -71,7 +71,8 @@ var releaseStatusRefreshTime = 5000; /* 5 seconds */
 var releaseStatusId;
 
 
-function processGetReleaseStatus(xml) {
+function processGetReleaseStatus(aReq) {
+    var xml = aReq.responseXML;
     el = $("jobStatus");
     var status = getElementsByTagAndClassName("int", null, xml)[0].firstChild.data;
 
@@ -204,7 +205,6 @@ function getTroveList(projectId) {
 }
 
 function getTroveVersionsByArch(projectId, troveNameWithLabel) {
-
     var req = new JsonRpcRequest("/jsonrpc", "getTroveVersionsByArch");
     req.setAuth(getCookieValue("pysid"));
     req.setCallback(processGetTroveVersionsByArch);
@@ -281,8 +281,7 @@ function onArchChange() {
         var versionlist = archDict[selectedArch];
         logDebug(versionlist);
         for (var i in versionlist) {
-            var versionStr = versionlist[i][0];
-            appendToSelect(vSel, versionStr, document.createTextNode(versionStr), "version");
+            appendToSelect(vSel, versionlist[i][1] + " " + versionlist[i][2], document.createTextNode(versionlist[i][0]), "version");
         }
         vSel.disabled = false;
     }

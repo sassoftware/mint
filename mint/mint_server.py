@@ -1247,6 +1247,18 @@ class MintServer(object):
         self.releases.update(releaseId, description = desc)
         return True
 
+    @typeCheck(int, str)
+    @requiresAuth
+    @private
+    def setReleaseName(self, releaseId, name):
+        self._filterReleaseAccess(releaseId)
+        if not self.releases.releaseExists(releaseId):
+            raise ReleaseMissing()
+        if self.releases.getPublished(releaseId):
+            raise ReleasePublished()
+        self.releases.update(releaseId, name = name)
+        return True
+
     @typeCheck(int)
     @private
     def incReleaseDownloads(self, releaseId):
@@ -1607,7 +1619,7 @@ class MintServer(object):
                     arch = f.members[deps.DEP_CLASS_IS].members.keys()[0]
 
                     l = archMap.setdefault(arch, [])
-                    l.append((str(v), f.freeze(), ))
+                    l.append((v.asString(), v.freeze(), f.freeze()))
             return archMap
 
         project = projects.Project(self, projectId)

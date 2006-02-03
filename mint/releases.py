@@ -262,6 +262,9 @@ class Release(database.TableObject):
     def getName(self):
         return self.name
 
+    def setName(self, name):
+        return self.server.setReleaseName(self.releaseId, name.strip())
+
     def getDefaultName(self):
         """ Returns a generated release name based on the group trove
             the release is based upon and its version. This should be
@@ -273,7 +276,6 @@ class Release(database.TableObject):
         return self.description
 
     def setDesc(self, desc):
-        # NOTE: .strip done pre-insert for Kid's sake
         return self.server.setReleaseDesc(self.releaseId, desc.strip())
 
     def getProjectId(self):

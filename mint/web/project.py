@@ -289,13 +289,12 @@ class ProjectHandler(WebHandler):
             jobId = curGroupTrove.startCookJob(arch)
         else:
             jobId = job.id
-
         return self._write("cookGroup", jobId = jobId, recipe = recipe)
 
     @ownerOnly
-    @listFields(int, imageTypes = [releasetypes.INSTALLABLE_ISO])
-    def newRelease(self, auth, imageTypes):
+    def newRelease(self, auth):
         release = self.client.newRelease(self.project.getId(), self.project.getName())
+        imageTypes = self.cfg.visibleImageTypes
         release.setImageTypes(imageTypes)
         template = release.getDataTemplate()
 
@@ -306,37 +305,48 @@ class ProjectHandler(WebHandler):
 
     @ownerOnly
     @intFields(releaseId = -1)
-    @listFields(int, imageTypes = [releasetypes.INSTALLABLE_ISO])
-    @strFields(trove = "", releaseName = "")
-    def editRelease(self, auth, releaseId, imageTypes, trove, releaseName):
+    @strFields(trove = "")
+    def editRelease(self, auth, releaseId, trove):
 
         release = self.client.getRelease(releaseId)
+        releaseName = release.getName()
         template = release.getDataTemplate()
+        imageTypes = self.cfg.visibleImageTypes
 
-        trove, versionStr, flavor = release.getTrove()
-        version = versions.ThawVersion(versionStr)
-        label = version.branch().label()
+        trove, version, flavor = release.getTrove()
+        troveName, ignored = trove.split('=')
+
+        versionStr = versions.ThawVersion(version)
+        label = versionStr.branch().label()
+
+        thawedFlavor = deps.ThawDependencySet(flavor)
+        arch = thawedFlavor.members[deps.DEP_CLASS_IS].members.keys()[0]
 
         return self._write("editRelease", isNewRelease = False,
             release = release,
             trove = trove,
+            troveName = troveName,
+            label = label,
+            versionStr = versionStr.asString(),
             version = version,
-            flavor = deps.ThawDependencySet(flavor),
-            label = label.asString(),
-            imageTypes = release.getImageTypes(),
-            archMap = archMap)
+            flavor = flavor,
+            arch = arch,
+            imageTypes = imageTypes,
+            kwargs = {})
 
     @requiresAuth
     @intFields(releaseId = None)
     @strFields(trove = None, version = None,
                desc = "", mediaSize = "640")
-    def editRelease2(self, auth, releaseId,
+    def saveRelease(self, auth, releaseId,
                      trove, version,
-                     desc, mediaSize, **kwargs):
+                     desc, mediaSize, name, **kwargs):
+
         release = self.client.getRelease(releaseId)
 
         version, flavor = version.split(" ")
         release.setTrove(trove, version, flavor)
+        release.setName(name)
         release.setDesc(desc)
 
         flavor = deps.ThawDependencySet(flavor)
