@@ -108,6 +108,7 @@ function processGetReleaseStatus(xml) {
 
 var tickerId;
 var statusId;
+var archDict = "global";
 
 
 function processGetCookStatus(aReq) {
@@ -159,13 +160,15 @@ function processGetTroveVersionsByArch(aReq) {
     logDebug("[JSON] response: ", aReq.responseText);
     archDict = evalJSONRequest(aReq);
 
-    archSel = document.getElementById("arch");
-    vSel = document.getElementById("version");
+    // handle archs
+    var archs = keys(archDict).sort();
+    var archSel = document.getElementById("arch");
     clearSelection(archSel);
-    clearSelection(vSel);
     appendToSelect(archSel, "", document.createTextNode("---"), "arch");
-    appendToSelect(vSel, "", document.createTextNode("---"), "version");
-    vSel.disabled = false;
+    for (var i in archs) {
+        var archStr = archs[i];
+        appendToSelect(archSel, archStr, document.createTextNode(archStr), "arch");
+    }
     archSel.disabled = false;
 
 }
@@ -175,7 +178,7 @@ function processGetTroveVersionsByArch(aReq) {
 function getReleaseStatus(releaseId) {
     var req = new XmlRpcRequest("/xmlrpc", "getReleaseStatus");
     req.setAuth(getCookieValue("pysid"));
-    req.setHandler(processGetReleaseStatus, {});
+    req.setCallback(processGetReleaseStatus);
     req.send(releaseId);
 
     releaseStatusId = setTimeout("getReleaseStatus(" + releaseId + ")", releaseStatusRefreshTime);
@@ -184,7 +187,7 @@ function getReleaseStatus(releaseId) {
 function getCookStatus(jobId) {
     var req = new XmlRpcRequest("/xmlrpc", "getJobStatus");
     req.setAuth(getCookieValue("pysid"));
-    req.setHandler(processGetCookStatus, {});
+    req.setCallback(processGetCookStatus);
     req.send(jobId);
 
     statusId = setTimeout("getCookStatus(" + jobId + ")", cookStatusRefreshTime);
@@ -243,6 +246,7 @@ function onTroveChange(projectId) {
     var sel = document.getElementById("trove");
     var vSel = document.getElementById("version");
     var archSel = document.getElementById("arch");
+    var sb = document.getElementById("submitButton");
     var i = sel.selectedIndex;
 
     // bail out if selector is changed to a non-trove header selection
@@ -251,10 +255,54 @@ function onTroveChange(projectId) {
         vSel.disabled = true;
         clearSelection(archSel);
         archSel.disabled = true;
+        sb.disabled = true;
         return;
     }
 
     var troveNameWithLabel = sel.options[sel.selectedIndex].value;
+    // XXX: cache values?
     getTroveVersionsByArch(projectId, troveNameWithLabel);
 }
 
+function onArchChange() {
+
+    var archSel = document.getElementById("arch");
+    var vSel = document.getElementById("version");
+    var sb = document.getElementById("submitButton");
+    var i = archSel.selectedIndex;
+
+    // handle versions
+    clearSelection(vSel);
+    appendToSelect(vSel, "", document.createTextNode("---"), "version");
+    vSel.disabled = true;
+
+    if (i > 0) {
+        selectedArch = archSel.value;
+        var versionlist = archDict[selectedArch];
+        logDebug(versionlist);
+        for (var i in versionlist) {
+            var versionStr = versionlist[i][0];
+            appendToSelect(vSel, versionStr, document.createTextNode(versionStr), "version");
+        }
+        vSel.disabled = false;
+    }
+    else {
+        sb.disabled = true;
+    }
+
+}
+
+function onVersionChange() {
+
+    var vSel = document.getElementById("version");
+    var sb = document.getElementById("submitButton");
+    var i = vSel.selectedIndex;
+
+    if (i > 0) {
+       sb.disabled = false;
+    }
+    else {
+       sb.disabled = true;
+    }
+
+}

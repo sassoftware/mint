@@ -58,12 +58,12 @@ from mint.data import RDT_STRING, RDT_BOOL, RDT_INT
                         <br />
 
                         <label for="arch">Target Architecture</label>
-                        <select id="arch" name="arch" disabled="disabled">
+                        <select onchange="javascript:onArchChange();" id="arch" name="arch" disabled="disabled">
                             <option value=""/>
                         </select><br />
 
                         <label for="version">Group Version</label>
-                        <select id="version" name="version" disabled="disabled">
+                        <select onchange="javascript:onVersionChange();" id="version" name="version" disabled="disabled">
                             <option value="" />
                         </select><br />
                     </div>

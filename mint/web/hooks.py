@@ -351,10 +351,6 @@ def rpcHandler(req, cfg, pathInfo):
 
     isJSONrpc = isXMLrpc = allowPrivate = False
 
-    print >> sys.stderr, "req: %s, cfg: %s, pi: %s\n" % (req, cfg, pathInfo)
-    print >> sys.stderr, "method: %s, headers_in: %s\n" % (req.method, req.headers_in)
-    sys.stderr.flush()
-
     # only handle POSTs
     if req.method.upper() != 'POST':
         return apache.HTTP_METHOD_NOT_ALLOWED
@@ -398,7 +394,8 @@ def rpcHandler(req, cfg, pathInfo):
         resp = xmlrpclib.dumps((result,), methodresponse=1)
         req.content_type = "text/xml"
     if isJSONrpc:
-        resp = simplejson.dumps(result)
+        # XXX: what the heck is the false in result[0]???
+        resp = simplejson.dumps(result[1])
         req.content_type = "application/x-json"
 
     # handle compression
