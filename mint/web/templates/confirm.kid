@@ -10,24 +10,22 @@
         <title>${formatTitle('Please Confirm')}</title>
     </head>
     <body>
-        <td id="main" class="spanall">
-            <div class="pad">
-                <p class="error">Confirm:</p>
-                
-                <p class="errormessage">${message}</p>
-		<table>
-		<tr><td>
-                <p style="width: 50%;">
-                    <a class="option" href="${noLink}">No</a>
-                </p>
-		</td>
-		<td>
-                <p style="width: 50%;">
-                    <a class="option" href="${yesLink}">Yes</a>
-                </p>
-		</td><td width="50%"/></tr>
-		</table>
-            </div>
+        <div id="layout">
+            <p class="error">Confirm:</p>
+
+            <p class="errormessage">${message}</p>
+            <table>
+                <tr><td>
+                    <p style="width: 50%;">
+                        <a class="option" href="${noLink}">No</a>
+                    </p>
+                </td>
+                <td>
+                    <p style="width: 50%;">
+                        <a class="option" href="${yesLink}">Yes</a>
+                    </p>
+                </td><td width="50%"/></tr>
+            </table>
         </td>
     </body>
 </html>

@@ -10,34 +10,28 @@
         <title>${formatTitle('Group Builder: %s' % project.getNameForDisplay())}</title>
     </head>
 
-    <div py:def="breadcrumb()" py:strip="True">
-        <a href="$basePath">${project.getNameForDisplay()}</a>
-        <a href="#">Group Builder</a>
-    </div>
-
     <body onload="getCookStatus(${jobId});">
-        <td id="left" class="side">
-            <div class="pad">
+        <div id="layout">
+            <div id="left" class="side">
                 ${projectResourcesMenu()}
             </div>
-        </td>
-        <td id="main">
-            <div class="pad">
+            <div id="right" class="side">
+                ${resourcePane()}
+            </td>
+
+            <div id="main">
                 <h1 id="pleaseWait">Cooking Your Group</h1>
 
                 <p>Your request to cook ${groupTrove.recipeName} has been
                 submitted.</p>
 
                 <h2>Request Status: <span id="jobStatus"> </span></h2>
- 
+
                 <p>When the request status "Finished" appears, your group
                 has finished cooking. Click on the "Releases" link in the
                 "Project Resources" sidebar, and select
                 ${groupTrove.recipeName} to create a release.</p>
             </div>
-        </td>
-        <td id="right" class="projects">
-            ${projectsPane()}
-        </td>
+        </div>
     </body>
 </html>

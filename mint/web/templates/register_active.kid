@@ -11,12 +11,10 @@
         <title>${formatTitle('Account Confirmed')}</title>
     </head>
     <body>
-        <td id="main" class="spanleft">
-            <div class="pad">
-                <h2>Thank you for confirming</h2>
-                <p>Your account has now been confirmed.</p>
-                <p>Please use the "Sign In" link above to login.</p>
-            </div>
-        </td>
+        <div id="layout">
+            <h2>Thank you for confirming</h2>
+            <p>Your account has now been confirmed.</p>
+            <p>Please use the "Sign In" link above to login.</p>
+        </div>
     </body>
 </html>

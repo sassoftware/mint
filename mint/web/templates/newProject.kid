@@ -6,10 +6,6 @@
     Copyright (c) 2005-2006 rPath, Inc.
     All Rights Reserved
 -->
-    <div py:def="breadcrumb()" py:strip="True">
-        <a href="#">Create a Project</a>
-    </div>
-
 <?python
     for var in ['title', 'hostname', 'projecturl', 'optlists', 'blurb']:
         kwargs[var] = kwargs.get(var, '')

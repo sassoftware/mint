@@ -10,19 +10,15 @@
         <title>${formatTitle('Group Builder: %s' % project.getNameForDisplay())}</title>
     </head>
 
-    <div py:def="breadcrumb()" py:strip="True">
-        <a href="$basePath">${project.getNameForDisplay()}</a>
-        <a href="#">Group Builder</a>
-    </div>
-
     <body>
-        <td id="left" class="side">
-            <div class="pad">
+        <div id="layout">
+            <div id="left" class="side">
                 ${projectResourcesMenu()}
             </div>
-        </td>
-        <td id="main">
-            <div class="pad" >
+            <div id="right" class="side">
+                ${projectsPane()}
+            </div>
+            <div id="middle">
                 <h1 id="pleaseWait">Cooking Group: Choose An Architecture</h1>
 
                 <p>You can choose an architecture to cook this group for. If you want your application image to support
@@ -39,9 +35,6 @@
                     <input type="hidden" name="id" value="${groupTroveId}" />
                 </form> 
             </div>
-        </td>
-        <td id="right" class="projects">
-            ${projectsPane()}
-        </td>
+        </div>
     </body>
 </html>

@@ -18,11 +18,6 @@ from mint.mint import upstream
         releases = project.getReleases(showUnpublished = False)
         commits = project.getCommits()
     ?>
-
-    <div py:def="breadcrumb()" py:strip="True">
-        <a href="#">${project.getNameForDisplay()}</a>
-    </div>
-
     <head>
         <title>${formatTitle("Project Page: %s"%project.getNameForDisplay())}</title>
         <link py:if="releases" rel="alternate" type="application/rss+xml"
@@ -89,34 +84,6 @@ from mint.mint import upstream
                                          src="${cfg.staticPath}apps/mint/images/xml.gif" />
                             </a>
                         </li>
-                        <li>
-                            <a href="${basePath}conaryUserCfg">Install software on my Conary-based system</a>
-                        </li>
-                        <li py:if="isOwner or isDeveloper">
-                            <a href="${basePath}conaryDevelCfg">Set up my Conary development environment</a>
-                        </li>
-                        <li py:if="auth.authorized and userLevel == userlevels.NONMEMBER">
-                            <a href="${basePath}watch">Watch this project</a>
-                        </li>
-                        <li py:if="userLevel == userlevels.USER">
-                            <a href="${basePath}unwatch">Stop watching this project</a>
-                        </li>
-                        <div py:strip="True" py:if="not project.external">
-                            <li py:if="isDeveloper"><a href="${basePath}resign">Resign from this project</a></li>
-                            <li py:if="auth.authorized and not isOwner and not isDeveloper and True in [ x[2] not in userlevels.READERS for x in memberList]">
-                                <a py:if="not userHasReq" href="${basePath}joinRequest">Request to join this project</a>
-                                <a py:if="userHasReq" href="${basePath}joinRequest">Modify your comments to a pending join request</a>
-                            </li>
-                            <li py:if="True not in [ x[2] not in userlevels.READERS for x in memberList]">
-                                <a py:if="auth.authorized" href="${basePath}adopt">Adopt this project</a>
-                                <span py:strip="True" py:if="not auth.authorized">Log in to adopt this project</span>
-                            </li>
-                            <li py:if="not auth.authorized">
-                                Log in to:
-                                    <li>Watch this project</li>
-                                    <li>Request to join this project</li>
-                            </li>
-                        </div>
                     </ul>
                 </div>
                 <p>From here you can use the left-hand tabs to:

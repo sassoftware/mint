@@ -11,10 +11,6 @@ from mint.mint import timeDelta
     Copyright (c) 2005-2006 rPath, Inc.
     All Rights Reserved
 -->
-    <div py:def="breadcrumb()" py:strip="True">
-        <a href="#">Browse Users</a>
-    </div>
-
     <head>
         <title>${formatTitle('Browse Users')}</title>
     </head>
@@ -43,17 +39,15 @@ from mint.mint import timeDelta
             </form>
         </div>
 
-        <td id="main" class="spanall">
-            <div class="pad">
-                <h2>Browse Users</h2>
-                ${sortOrderForm(sortOrder)}
-                ${navigation("users?sortOrder=%d"%(sortOrder), "all users", count, limit, offset)}
-                <table cellpadding="0" cellspacing="0" class="results">
-                    ${columnTitles(('User Name', 'Full Name', 'Contact Info', 'About', 'Created', 'Last Accessed'))}
-                    ${searchResults(results)}
-                </table>
-                ${navigation("users?sortOrder=%d"%(sortOrder), "all users", count, limit, offset, True)}
-            </div>
-        </td>
+        <div id="layout">
+            <h2>Browse Users</h2>
+            ${sortOrderForm(sortOrder)}
+            ${navigation("users?sortOrder=%d"%(sortOrder), "all users", count, limit, offset)}
+            <table class="results">
+                ${columnTitles(('User Name', 'Full Name', 'Contact Info', 'About', 'Created', 'Last Accessed'))}
+                ${searchResults(results)}
+            </table>
+            ${navigation("users?sortOrder=%d"%(sortOrder), "all users", count, limit, offset, True)}
+        </div>
     </body>
 </html>

@@ -16,12 +16,6 @@
 
         isOwner = userLevel == userlevels.OWNER or auth.admin
     ?>
-
-    <div py:def="breadcrumb()" py:strip="True">
-        <a href="$basePath">${project.getNameForDisplay()}</a>
-        <a href="#">Releases</a>
-    </div>
-
     <div py:strip="True" py:def="releaseTableRow(releaseName, release, isOwner, isFirst, numReleasesInVersion, defaultHidden, hiddenName)">
         <?python
             files = release.getFiles()

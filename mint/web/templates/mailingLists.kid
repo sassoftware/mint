@@ -6,7 +6,7 @@
     Copyright (c) 2005-2006 rPath, Inc.
     All Rights Reserved
 -->
-<?python #dummy
+<?python
     from mint import userlevels
 
     isOwner = userLevel == userlevels.OWNER or auth.admin
@@ -17,21 +17,18 @@
         <title>${formatTitle('Mailing Lists: %s'%project.getNameForDisplay())}</title>
     </head>
 
-    <div py:def="breadcrumb()" py:strip="True">
-        <a href="$basePath">${project.getNameForDisplay()}</a>
-        <a href="#">Mailing Lists</a>
-    </div>
-
     <body>
-        <td id="left" class="side">
-            <div class="pad">
+        <div id="layout">
+            <div id="left" class="side">
                 ${projectResourcesMenu()}
-                ${releasesMenu(project.getReleases(), isOwner, display="none")}
-                ${commitsMenu(project.getCommits(), display="none")}
+                ${releasesMenu(project.getReleases(), isOwner)}
+                ${commitsMenu(project.getCommits())}
             </div>
-        </td>
-        <td id="main">
-            <div class="pad">
+            <div id="right" class="side">
+                ${resourcePane()}
+                ${groupTroveBuilder()}
+            </div>
+            <div class="middle">
                 <p class="message" py:for='msg in messages' py:content="msg"/>
                 <h2>${project.getNameForDisplay(maxWordLen = 50)}<br />Mailing Lists</h2>
                 <div py:strip="True" py:if="isRPL">
@@ -66,45 +63,42 @@
 
                 </div>
 
-                <div py:if="not isRPL" py:for="list in lists">
+                <div py:if="not isRPL" py:for="list in lists" id="mailingListButtons">
                     <h3><a href="${mailhost + 'listinfo/' + list.name}" target="_NEW">${list.name}</a></h3>
                     <p>${list.description}</p>
-                    <div style="float:left; margin-right:5px;">
+                    <div>
                         <span><a href="${mailhost + '../pipermail/' + list.name}"
                                  class="option" target="_NEW">Archives</a>
                         </span>
                     </div>
-                    <div style="float:left; margin-right:5px;">
+                    <div>
                         <span py:if="auth.authorized">
                             <a class="option" href="subscribe?list=${list.name}">Subscribe</a>
                         </span>
                     </div>
-                    <div style="float:left; margin-right:5px;">
+                    <div>
                         <span py:if="not auth.authorized">
                             <a class="option" href="${mailhost + 'listinfo/' + list.name}">Subscribe</a>
                         </span>
                     </div>
 
-                    <div style="float:left; margin-right:5px;">
+                    <div>
                         <span py:if="isOwner">
                             <a href="${mailhost + 'admin/' + list.name}" class="option" target="_NEW">Admin Page</a>
                         </span>
                     </div>
 
-                    <div style="float:left; margin-right:5px;">
+                    <div>
                         <span py:if="auth.admin">
                             <a href="$basePath/deleteList?list=${list.name}" class="option">Delete List</a>
                         </span>
                     </div>
 
-                    <div style="float:left; margin-right:5px;">
+                    <div>
                         <span py:if="auth.admin">
                             <a href="$basePath/resetPassword?list=${list.name}" class="option">Request Password</a>
                         </span>
                     </div>
-                    &#160;
-                    <br clear="all"/>
-                    &#160;
                 </div>
                 <div py:if="not (lists or isRPL)">This project has no lists.</div>
                 <h2 py:if="isOwner">Create a New Mailing List</h2>
@@ -137,12 +131,7 @@
                     </table>
                     <p><button type="submit">Create List</button></p>
                 </form>
-
             </div>
-        </td>
-        <td id="right" class="projects">
-            ${resourcePane()}
-            ${groupTroveBuilder()}
-        </td>
+        </div>
     </body>
 </html>

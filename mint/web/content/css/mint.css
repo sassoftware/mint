@@ -619,3 +619,10 @@ span#editProject {
     width: 14px;
     margin-left: 10%;
 }
+
+/* mailing-list specific styles */
+div#mailingListButtons div {
+    float:left;
+    margin-right:5px;
+}
+

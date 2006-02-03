@@ -17,11 +17,6 @@ from mint import userlevels
         if cfg.SSL:
             protocol = 'https'
     ?>
-    <div py:def="breadcrumb()" py:strip="True">
-        <a href="$basePath">${project.getNameForDisplay()}</a>
-        <a href="#">Conary Development Environment</a>
-    </div>
-
     <head>
         <title>${formatTitle('Conary Development Environment: %s'%project.getNameForDisplay())}</title>
     </head>

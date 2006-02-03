@@ -6,10 +6,6 @@
     Copyright (c) 2005-2006 rPath, Inc.
     All Rights Reserved
 -->
-    <div py:def="breadcrumb" py:strip="True">
-        <a href="$basePath">${project.getNameForDisplay()}</a>
-        <a href="#">Edit Project</a>
-    </div>
     <head>
         <title>${formatTitle('Project Settings: %s'%project.getNameForDisplay())}</title>
     </head>

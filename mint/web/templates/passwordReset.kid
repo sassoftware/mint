@@ -7,18 +7,13 @@
     Copyright (c) 2005-2006 rPath, Inc.
     All Rights Reserved
 -->
-    <div py:def="breadcrumb()" py:strip="True">
-        <a href="#">Password Reset</a>
-    </div>
     <head>
         <title>${formatTitle('Password Reset')}</title>
     </head>
     <body>
-        <td id="main" class="spanleft">
-            <div class="pad">
-                <h2>Your password has been reset.</h2>
-		<p>An email with a new password has been sent to <b>${email}</b>.</p>
-            </div>
-        </td>
+        <div id="layout">
+            <h2>Your password has been reset.</h2>
+            <p>An email with a new password has been sent to <strong>${email}</strong>.</p>
+        </div>
     </body>
 </html>

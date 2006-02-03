@@ -6,9 +6,6 @@
     Copyright (c) 2005-2006 rPath, Inc.
     All Rights Reserved
 -->
-    <div py:def="breadcrumb()" py:strip="True">
-        <a href="#">Create an Account</a>
-    </div>
     <?python
         for var in ['username', 'email', 'email2', 'fullName', 'displayEmail', 'blurb', 'tos', 'privacy']:
             kwargs[var] = kwargs.get(var, '')

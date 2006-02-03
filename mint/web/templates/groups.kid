@@ -10,11 +10,6 @@
         <title>${formatTitle('Group Builder: %s' % project.getNameForDisplay())}</title>
     </head>
 
-    <div py:def="breadcrumb()" py:strip="True">
-        <a href="$basePath">${project.getNameForDisplay()}</a>
-        <a href="#">Group Builder</a>
-    </div>
-
     <body>
         <div id="layout">
             <div id="left" class="side">
