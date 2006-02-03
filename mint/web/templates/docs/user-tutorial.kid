@@ -75,7 +75,7 @@
             attrs = dict([(i, {'style': i == step and "display: block;" or "display: none;"}) for i in range(1, 9)])
         ?>
 
-        <div class="layout" class="helpPage">
+        <div class="layout">
             <h1>rBuilder Online for Users</h1>
 
             <p>If you are already using a Conary-based system, then you have come to the
