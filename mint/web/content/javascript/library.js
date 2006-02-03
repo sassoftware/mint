@@ -135,6 +135,8 @@ function processGetCookStatus(aReq) {
 function processGetTroveList(aReq) {
     var xml = aReq.responseXML;
 
+    clearTimeout(tickerId);
+
     sel = document.getElementById("trove");
 
     clearSelection(sel);
@@ -160,6 +162,7 @@ function processGetTroveList(aReq) {
 function processGetTroveVersionsByArch(aReq) {
     logDebug("[JSON] response: ", aReq.responseText);
     archDict = evalJSONRequest(aReq);
+    clearTimeout(tickerId);
 
     // handle archs
     var archs = keys(archDict).sort();
@@ -201,7 +204,7 @@ function getTroveList(projectId) {
     req.setCallback(processGetTroveList);
     req.send(projectId);
 
-    setTimeout("ticker()", tickerRefreshTime);
+    tickerId = setTimeout("ticker()", tickerRefreshTime);
 }
 
 function getTroveVersionsByArch(projectId, troveNameWithLabel) {
@@ -210,31 +213,29 @@ function getTroveVersionsByArch(projectId, troveNameWithLabel) {
     req.setCallback(processGetTroveVersionsByArch);
     req.send(projectId, troveNameWithLabel);
 
+    tickerId = setTimeout("ticker()", tickerRefreshTime);
 }
 
 // ticker
-// XXX: this could be made mo betta; later?
 
-var ticks = 0;
-var direction = 1;
+var ticks = -1;
+var baton = '|/-\\'
 
 function ticker() {
-    el = document.getElementById("pleaseWait");
+    el = document.getElementById("baton");
+    log(el);
 
-    if(el) {
-        if(direction == 1)
-        {
-            el.text += ".";
+    if (el) {
+        // first time through
+        if (ticks < 0) {
+            el.text = el.text + " ";
             ticks++;
-
-            if(ticks >= 3)
-                direction = -1;
-        } else {
-            el.text = el.text.substring(0, el.text.length-1);
-            ticks--;
-            if(ticks == 0)
-                direction = 1;
         }
+
+        el.text = el.text.substring(0, el.text.length-1);
+        el.text += baton[ticks];
+        ticks = ((ticks + 1) % baton.length);
+
         setTimeout("ticker()", tickerRefreshTime);
     }
 }

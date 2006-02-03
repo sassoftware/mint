@@ -294,7 +294,13 @@ class ProjectHandler(WebHandler):
     @ownerOnly
     def newRelease(self, auth):
         release = self.client.newRelease(self.project.getId(), self.project.getName())
+        # HACK: this is a minor hack to get all of the display templates
+        # editReleases.kid will go back and uncheck things that aren't
+        # INSTALLABLE_ISO on the first time through. Really, Release class
+        # should have a "get visible image types data templates", but that's
+        # for another day.
         imageTypes = self.cfg.visibleImageTypes
+
         release.setImageTypes(imageTypes)
         template = release.getDataTemplate()
 
@@ -311,7 +317,7 @@ class ProjectHandler(WebHandler):
         release = self.client.getRelease(releaseId)
         releaseName = release.getName()
         template = release.getDataTemplate()
-        imageTypes = self.cfg.visibleImageTypes
+        imageTypes = release.getImageTypes()
 
         trove, version, flavor = release.getTrove()
         troveName, ignored = trove.split('=')
@@ -321,6 +327,7 @@ class ProjectHandler(WebHandler):
 
         thawedFlavor = deps.ThawDependencySet(flavor)
         arch = thawedFlavor.members[deps.DEP_CLASS_IS].members.keys()[0]
+        print
 
         return self._write("editRelease", isNewRelease = False,
             release = release,
@@ -352,6 +359,15 @@ class ProjectHandler(WebHandler):
         flavor = deps.ThawDependencySet(flavor)
         jobArch = flavor.members[deps.DEP_CLASS_IS].members.keys()[0]
         assert(jobArch in ('x86', 'x86_64'))
+
+        # handle imagetype check box state changes
+        imageTypes = []
+        for imageEnum in self.cfg.visibleImageTypes:
+            name = "imagetype_%d" % (imageEnum)
+            if name in kwargs:
+                imageTypes.append(imageEnum)
+
+        release.setImageTypes(imageTypes)
 
         # get the template from the release and handle any relevant args
         # remember that checkboxes don't pass args for unchecked boxxen

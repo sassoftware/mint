@@ -45,12 +45,12 @@ from mint.data import RDT_STRING, RDT_BOOL, RDT_INT
 
                     </div>
 
-                    <div class="formgroupTitle">Release Contents</div>
+                    <div class="formgroupTitle">Release Contents<span id="baton"></span></div>
                     <div class="formgroup">
                         <label for="trove">Distribution Group</label>
                         <div py:strip="True" py:if="isNewRelease">
                             <select py:if="isNewRelease" onchange="javascript:onTroveChange(${project.getId()});" id="trove" name="trove">
-                                <option value="" id="pleaseWait">Please wait, loading troves...</option>
+                                <option value=""></option>
                             </select>
                         </div>
                         <div py:strip="True" py:if="not isNewRelease">
@@ -62,7 +62,7 @@ from mint.data import RDT_STRING, RDT_BOOL, RDT_INT
                         <label for="arch">Target Architecture</label>
                         <div py:strip="True" py:if="isNewRelease">
                             <select onchange="javascript:onArchChange();" id="arch" name="arch" disabled="disabled">
-                                <option id="pleaseWaitArch" value=""/>
+                                <option value=""/>
                             </select>
                         </div>
                         <div py:strip="True" py:if="not isNewRelease">
@@ -84,10 +84,14 @@ from mint.data import RDT_STRING, RDT_BOOL, RDT_INT
                         <br />
                     </div>
 
+                    <?python
+                        if isNewRelease:
+                            imageTypes = [ releasetypes.INSTALLABLE_ISO ]
+                    ?>
                     <div class="formgroupTitle">Image Types</div>
                     <div class="formgroup">
                         <div py:strip="True" py:for="key in self.cfg.visibleImageTypes">
-                            <input class="reversed" id="imagetype_${key}" name="imagetype_${key}" value="${key}" type="checkbox" py:attr="{'checked': key in imageTypes and 'checked' or None}" />
+                            <input class="reversed" id="imagetype_${key}" name="imagetype_${key}" value="${key}" type="checkbox" py:attrs="{'checked': key in imageTypes and 'checked' or None}" />
                             <label class="reversed" for="imagetype_${key}">${typeNames[key]}</label><br />
                         </div>
                     </div>
@@ -103,7 +107,7 @@ from mint.data import RDT_STRING, RDT_BOOL, RDT_INT
                             <div class="formsubgroup">
                                 <div py:strip="True" py:for="name, dataRow in sorted(template.items(), key = lambda x: x[1][0])">
                                     <div py:strip="True" py:if="(dataRow[0] == RDT_BOOL)">
-                                        <input class="reversed" py:attr="{'checked': 'checked' and dataDict[name] or None}" type="checkbox" id="${name}" name="${name}" value="1" />
+                                        <input class="reversed" py:attrs="{'checked': 'checked' and dataDict[name] or None}" type="checkbox" id="${name}" name="${name}" value="1" />
                                         <label class="reversed" for="${name}">${dataRow[2]}</label>
                                     </div>
                                     <div py:strip="True" py:if="(dataRow[0] == RDT_INT) or (dataRow[0] == RDT_STRING)">

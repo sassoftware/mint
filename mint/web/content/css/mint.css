@@ -629,6 +629,14 @@ div#mailingListButtons div {
     margin-right:5px;
 }
 
+/* twirlythingy */
+
+span#baton {
+    float: right;
+    color: black;
+    clear: none;
+}
+
 /* dev tutorial styles */
 div#devTutorial {
 
