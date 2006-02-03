@@ -484,6 +484,9 @@ div#projectsPane div.boxHeader span + a {
 div#projectsPane div#newProject {
     text-align: center;
 }
+div#projectsPane div#userSettings {
+    text-align: center;
+}
 
 /* Group Builder */
 
