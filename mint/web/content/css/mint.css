@@ -251,7 +251,7 @@ div#signin {
     padding-right: 24px;
     font-size: 10pt;
     margin-left: 3px;
-    margin-bottom: 17px;
+    margin-bottom: 0px;
 }
 
 button#signInSubmit {
@@ -325,15 +325,12 @@ span#tagline {
 /* top ten list */
 
 div#topten {
-    float: left;
-
     background: url(../images/top_ten_bg.png);
     width: 851px;
     height: 221px;
 
     padding: 30px 52px 30px 52px;
-    margin-bottom: 17px;
-
+    margin-bottom: 0px;
 }
 
 div#topten,
