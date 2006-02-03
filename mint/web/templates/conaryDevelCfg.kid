@@ -21,7 +21,7 @@ from mint import userlevels
         <title>${formatTitle('Conary Development Environment: %s'%project.getNameForDisplay())}</title>
     </head>
     <body>
-        <div class="layout" class="helpPage">
+        <div class="layout" id="helpPage">
             <h2>${project.getNameForDisplay(maxWordLen = 50)}</h2>
             <h3>Setting up Your Conary Development Environment</h3>
 
