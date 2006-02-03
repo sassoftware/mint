@@ -19,7 +19,7 @@
                 ${resourcePane()}
             </div>
 
-            <div id="main">
+            <div id="middle">
                 <h2>Cooking Your Group</h2>
 
                 <p>Your request to cook ${groupTrove.recipeName} has been
