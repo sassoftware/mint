@@ -17,15 +17,15 @@
             </div>
             <div id="right" class="side">
                 ${resourcePane()}
-            </td>
+            </div>
 
             <div id="main">
-                <h1 id="pleaseWait">Cooking Your Group</h1>
+                <h2>Cooking Your Group</h2>
 
                 <p>Your request to cook ${groupTrove.recipeName} has been
                 submitted.</p>
 
-                <h2>Request Status: <span id="jobStatus"> </span></h2>
+                <p>Request Status: <span id="jobStatus">Retrieving cook status</span></p>
 
                 <p>When the request status "Finished" appears, your group
                 has finished cooking. Click on the "Releases" link in the

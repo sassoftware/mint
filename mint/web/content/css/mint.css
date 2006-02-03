@@ -650,3 +650,7 @@ div.devTutorial p img {
     float: left;
     padding: 0px 24px 36px 12px;
 }
+
+#jobStatus {
+    font-weight: bold;
+}
