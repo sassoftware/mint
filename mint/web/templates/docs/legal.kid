@@ -1,8 +1,13 @@
+<?xml version='1.0' encoding='UTF-8'?>
 <html xmlns="http://www.w3c.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#">
+<!--
+    Copyright (c) 2005-2006 rPath, Inc.
+    All Rights Reserved
+-->
     <head>
         <title>Legal Information - ${cfg.productName}</title>
-        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/basic.css"/>
+        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/mint.css"/>
         <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/mint.css"/>
     </head>
     <body id="legal">
