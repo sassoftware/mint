@@ -65,7 +65,6 @@
                     </div>
                 </tbody>
             </table>
-            <p><a href="pgpNewKeyForm">Add or Update a Key</a></p>
           </div>
         </td>
     </body>
