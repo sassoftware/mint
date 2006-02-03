@@ -138,7 +138,7 @@ class SiteHandler(WebHandler):
     def confirmEmail(self, auth, **kwargs):
         return self._write("confirmEmail", email=auth.email)
 
-    @strFields(page = None)
+    @strFields(page = 'legal')
     def legal(self, auth, page):
         if not legalDocument(page):
             raise HttpNotFound
