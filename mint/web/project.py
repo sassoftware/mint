@@ -583,15 +583,10 @@ class ProjectHandler(WebHandler):
         self._redirect(self.basePath)
 
     @requiresAuth
-    @boolFields(confirmed=False)
-    def unwatch(self, auth, confirmed):
-        if confirmed:
-            if self.userLevel == userlevels.USER:
-                self.project.delMemberById(auth.userId)
-            self._redirect(self.basePath)
-        else:
-            return self._write("confirm", message = "Are you sure you want to remove this project from your watch list?",
-                yesLink = "unwatch?confirmed=1", noLink = "/")
+    def unwatch(self, auth):
+        if self.userLevel == userlevels.USER:
+            self.project.delMemberById(auth.userId)
+        self._redirect(self.basePath)
 
     @strFields(comments = '')
     @intFields(keepReq = None)
