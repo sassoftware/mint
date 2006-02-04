@@ -393,6 +393,7 @@ div.palette img.right {
 
 .palette {
     margin-bottom:12px;
+    padding-bottom: 8px;
     background: url(../images/box_body_r.png) no-repeat bottom left;
     width: 225px;
 }
@@ -420,7 +421,6 @@ div.palette img.right {
     border:0px;
 }
 .palette form {
-    border:1px #dadada solid; border-width:0px 1px 0px 1px;
     padding:10px 11px 0px 11px;
 }
 .palette form p {
