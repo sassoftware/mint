@@ -25,6 +25,15 @@ class TestCase(PackageRecipe):
         r.Create("/temp/foo")
 """
 
+testRecipe2 = """
+class TestCase2(PackageRecipe):
+    name = "testcase2"
+    version = "1.0"
+
+    def setup(r):
+        r.Create("/temp/foo")
+"""
+
 testGroup = """
 class GroupTest(GroupRecipe):
     name = "group-test"
@@ -167,6 +176,29 @@ class RepositoryTest(MintRepositoryHelper):
         troveVersions = client.server.getTroveVersionsByArch(projectId, "group-core=testproject.rpath.local@rpl:devel")
 
         self.failUnlessEqual(str(troveVersions), expected)
+
+    def testMultipleRepos(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+
+        projectId1 = self.newProject(client, "Test Project 1", "testp1")
+        projectId2 = self.newProject(client, "Test Project 2", "testp2")
+
+        self.cfg.repositoryMap.update({'testp1.rpath.local': 'http://mint.rpath.local:%d/repos/testp1/' % self.port,
+                                       'testp2.rpath.local': 'http://mint.rpath.local:%d/repos/testp2/' % self.port})
+
+        l1 = versions.Label("testp1.rpath.local@rpl:devel")
+        l2 = versions.Label("testp2.rpath.local@rpl:devel")
+
+        self.makeSourceTrove("testcase", testRecipe, l1)
+        self.cookFromRepository("testcase", l1, ignoreDeps = True)
+
+        self.makeSourceTrove("testcase", testRecipe, l2)
+        self.cookFromRepository("testcase", l2, ignoreDeps = True)
+
+        # move back to testp1
+        self.makeSourceTrove("testcase2", testRecipe2, l1)
+        self.cookFromRepository("testcase2", l1, ignoreDeps = True)
+
 
 if __name__ == "__main__":
     testsuite.main()
