@@ -78,6 +78,13 @@ p.errormessage {
     margin-left: 1em;
 }
 
+p.message {
+    background: #f5e4ae;
+    border: 2px solid #f7c86a;
+    font-weight: bold;
+    padding: 10px;
+}
+
 div.side#left {
     float: left;
 }
@@ -522,8 +529,6 @@ div#groupBuilder table tr:first-child {
 }
 
 table.groupTroveItems {
-    clear: left;
-    width: 700px;
 }
 
 table.groupTroveItems > tr:first-child {
