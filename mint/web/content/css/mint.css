@@ -225,6 +225,7 @@ div#stepsText {
 }
 
 span#buildit {
+    cursor: pointer;
     background: url(../images/build_it.png);
     text-align: left;
     width: 326px;
@@ -237,6 +238,7 @@ span#buildit {
 }
 
 span#findit {
+    cursor: pointer;
     float: right;
     background: url(../images/find_it.png);
     text-align: left;

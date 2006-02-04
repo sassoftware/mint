@@ -26,8 +26,12 @@ from mint import searcher
         </div>
         <div id="steps">
             <span>
-                <span id="findit">Check out all the amazing software applications others have made.</span>
-                <span id="buildit">Find the stuff you need to make your own software appliance in three easy steps.</span>
+                <span id="findit" onclick="javascript:window.location='help?page=user-tutorial'">
+                    Check out all the amazing software applications others have made.
+                </span>
+                <span id="buildit" onclick="javascript:window.location='help?page=dev-tutorial'">
+                    Find the stuff you need to make your own software appliance in three easy steps.
+                </span>
             </span>
 
             <div id="threeEasySteps">
