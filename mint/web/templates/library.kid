@@ -54,7 +54,7 @@ def injectVersion(version):
             <table>
               <thead>
                 <tr>
-                    <th colspan="3">Trove</th>
+                    <th colspan="2">Trove</th>
                     <th>Project</th>
                     <th>Del</th>
                 </tr>
@@ -76,7 +76,6 @@ def injectVersion(version):
                         # [This is the workaround for bugs.rpath.com #575]
 
                     ?>
-                    <td><img py:if="item['trvName'].startswith('group-')" src="${cfg.staticPath}apps/mint/images/group.png" class="noborder" /></td>
                     <td py:if="item['versionLock']"><img class="lockicon" id="groupbuilder-item-lockicon-${item['groupTroveItemId']}" src="${cfg.staticPath}apps/mint/images/locked.gif" title="Version is locked" /></td>
                     <td py:if="not item['versionLock']"><img class="lockicon" id="groupbuilder-item-lockicon-${item['groupTroveItemId']}" src="${cfg.staticPath}apps/mint/images/unlocked.gif" title="Version is unlocked"/></td>
                     <td><a py:strip="shorthost == 'conary'" href="${cfg.basePath}repos/${shorthost}/troveInfo?t=${quote(item['trvName'])};v=${quote(injectVersion(item['trvVersion']))}" title="Name: ${item['trvName']}; Version: ${item['trvVersion']}">${item['trvName']}</a></td>
@@ -84,7 +83,6 @@ def injectVersion(version):
                     <td><a href="${groupProject.getUrl()}deleteGroupTrove?id=${groupTrove.id};troveId=${item['groupTroveItemId']};referer=${quote(req.unparsed_uri)}">X</a></td>
                 </tr>
                 <tr id="groupbuilder-example" style="display:none">
-                    <td id="groupbuilder-example group"><img src="${cfg.staticPath}apps/mint/images/group.png" class="noborder" /></td>
                     <td id="groupbuilder-example versionLock"><img class="lockicon" id="groupbuilder-item-lockicon-TROVEID" src="${cfg.staticPath}apps/mint/images/locked.gif" /></td>
                     <td id="groupbuilder-example name"><a href="#">Trove</a></td>
                     <td id="groupbuilder-example projectName">Project</td>
@@ -93,7 +91,7 @@ def injectVersion(version):
               </tbody>
               <tfoot>
                 <tr class="groupcook">
-                    <td colspan="5" style="text-align: center; padding: 1em;">
+                    <td colspan="4" style="text-align: center; padding: 1em;">
                         <a class="option" style="display: inline;" href="${groupProject.getUrl()}pickArch?id=${groupTrove.id}">Cook&nbsp;This&nbsp;Group</a>
                     </td>
                 </tr>
