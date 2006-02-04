@@ -140,6 +140,8 @@ class InstallableIso(ImageGenerator):
             cfg.dbPath = tmpRoot + "/var/lib/conarydb/conarydb"
             cfg.installLabelPath = [self.version.branch().label()]
             cfg.buildFlavor = deps.deps.parseFlavor(stockFlavors[arch])
+            cfg.flavor = [cfg.buildFlavor]
+            cfg.initializeFlavors()
 
             cclient = conaryclient.ConaryClient(cfg)
 
