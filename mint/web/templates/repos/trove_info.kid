@@ -93,8 +93,8 @@ isOwner = (userLevel == userlevels.OWNER or auth.admin)
         <div id="layout">
             <div id="left" class="side">
                 ${projectResourcesMenu()}
-                ${releasesMenu(project.getReleases(), isOwner, display="none")}
-                ${commitsMenu(project.getCommits(), display="none")}
+                ${releasesMenu(project.getReleases(), isOwner)}
+                ${commitsMenu(project.getCommits())}
             </div>
             <div id="right" class="side">
                 ${resourcePane()}
