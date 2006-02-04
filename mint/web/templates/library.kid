@@ -42,10 +42,10 @@ def injectVersion(version):
             addLoadEvent(initLinkManager);
             addLoadEvent(initGroupTroveManager);
         </script>
-        <img class="left" src="${cfg.staticPath}apps/mint/images/header_orange_left.png" />
-        <img class="right" src="${cfg.staticPath}apps/mint/images/header_orange_right.png" />
+        <img class="left" src="${cfg.staticPath}apps/mint/images/header_orange_left.png" alt="" />
+        <img class="right" src="${cfg.staticPath}apps/mint/images/header_orange_right.png" alt="" />
         <div class="boxHeader">
-            <a href="${groupProject.getUrl()}closeCurrentGroup?referer=${quote(req.unparsed_uri)}" title="Close"><img id="groupbuilder_items_close" src="${cfg.staticPath}/apps/mint/images/BUTTON_close.gif" class="noborder" /></a>
+            <a href="${groupProject.getUrl()}closeCurrentGroup?referer=${quote(req.unparsed_uri)}" title="Close"><img id="groupbuilder_items_close" src="${cfg.staticPath}/apps/mint/images/BUTTON_close.gif" alt="X" class="noborder" /></a>
             Group Builder
         </div>
 
@@ -60,7 +60,7 @@ def injectVersion(version):
                 </tr>
               </thead>
               <tbody class="group-builder" id="groupbuilder-tbody">
-                <tr></tr>
+                <tr><td></td></tr>
                 <?python
                     from conary import versions
                     import time
@@ -76,26 +76,24 @@ def injectVersion(version):
                         # [This is the workaround for bugs.rpath.com #575]
 
                     ?>
-                    <td py:if="item['versionLock']"><img class="lockicon" id="groupbuilder-item-lockicon-${item['groupTroveItemId']}" src="${cfg.staticPath}apps/mint/images/locked.gif" title="Version is locked" /></td>
-                    <td py:if="not item['versionLock']"><img class="lockicon" id="groupbuilder-item-lockicon-${item['groupTroveItemId']}" src="${cfg.staticPath}apps/mint/images/unlocked.gif" title="Version is unlocked"/></td>
+                    <td py:if="item['versionLock']"><img alt="Lock" class="lockicon" id="groupbuilder-item-lockicon-${item['groupTroveItemId']}" src="${cfg.staticPath}apps/mint/images/locked.gif" title="Version is locked" /></td>
+                    <td py:if="not item['versionLock']"><img alt="Lock" class="lockicon" id="groupbuilder-item-lockicon-${item['groupTroveItemId']}" src="${cfg.staticPath}apps/mint/images/unlocked.gif" title="Version is unlocked"/></td>
                     <td><a py:strip="shorthost == 'conary'" href="${cfg.basePath}repos/${shorthost}/troveInfo?t=${quote(item['trvName'])};v=${quote(injectVersion(item['trvVersion']))}" title="Name: ${item['trvName']}; Version: ${item['trvVersion']}">${item['trvName']}</a></td>
                     <td><a py:strip="shorthost == 'conary'" href="${cfg.basePath}repos/${shorthost}/browse">${shorthost}</a></td>
                     <td><a href="${groupProject.getUrl()}deleteGroupTrove?id=${groupTrove.id};troveId=${item['groupTroveItemId']};referer=${quote(req.unparsed_uri)}">X</a></td>
                 </tr>
                 <tr id="groupbuilder-example" style="display:none">
-                    <td id="groupbuilder-example versionLock"><img class="lockicon" id="groupbuilder-item-lockicon-TROVEID" src="${cfg.staticPath}apps/mint/images/locked.gif" /></td>
+                    <td id="groupbuilder-example versionLock"><img alt="Lock" class="lockicon" id="groupbuilder-item-lockicon-TROVEID" src="${cfg.staticPath}apps/mint/images/locked.gif" /></td>
                     <td id="groupbuilder-example name"><a href="#">Trove</a></td>
                     <td id="groupbuilder-example projectName">Project</td>
                     <td id="groupbuilder-example delete"><a href="${groupProject.getUrl()}deleteGroupTrove?id=${groupTrove.id};troveId=TROVEID;referer=${quote(req.unparsed_uri)}">X</a></td>
                 </tr>
-              </tbody>
-              <tfoot>
                 <tr class="groupcook">
                     <td colspan="4" style="text-align: center; padding: 1em;">
                         <a class="option" style="display: inline;" href="${groupProject.getUrl()}pickArch?id=${groupTrove.id}">Cook&nbsp;This&nbsp;Group</a>
                     </td>
                 </tr>
-              </tfoot>
+              </tbody>
             </table>
         </div>
     </div>

@@ -25,8 +25,8 @@
             <div id="right" class="side">
                 ${resourcePane()}
                 <div class="palette" py:if="ownsProjects and user.id != auth.userId">
-                    <img class="left" src="${cfg.staticPath}apps/mint/images/header_blue_left.png" />
-                    <img class="right" src="${cfg.staticPath}apps/mint/images/header_blue_right.png" />
+                    <img class="left" src="${cfg.staticPath}apps/mint/images/header_blue_left.png" alt="" />
+                    <img class="right" src="${cfg.staticPath}apps/mint/images/header_blue_right.png" alt="" />
 
                     <div class="boxHeader">Add to Project</div>
                     <form method="post" action="addMemberById">

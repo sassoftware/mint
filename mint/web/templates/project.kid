@@ -21,8 +21,8 @@
             isOwner = userLevel == userlevels.OWNER or auth.admin
             isDeveloper = userLevel in userlevels.WRITERS or auth.admin
         ?>
-        <img class="left" src="${cfg.staticPath}apps/mint/images/header_blue_left.png" />
-        <img class="right" src="${cfg.staticPath}apps/mint/images/header_blue_right.png" />
+        <img class="left" src="${cfg.staticPath}apps/mint/images/header_blue_left.png" alt="" />
+        <img class="right" src="${cfg.staticPath}apps/mint/images/header_blue_right.png" alt="" />
         <div class="boxHeader">Project Resources</div>
         <ul>
             <li><a href="$projectUrl"><strong py:strip="lastchunk != ''">Project Home</strong></a></li>
@@ -40,13 +40,13 @@
             projectUrl = project.getUrl()
         ?>
         <div py:if="isOwner or releaseList" class="palette" id="releases">
-            <img class="left" src="${cfg.staticPath}apps/mint/images/header_blue_left.png" />
-            <img class="right" src="${cfg.staticPath}apps/mint/images/header_blue_right.png" />
+            <img class="left" src="${cfg.staticPath}apps/mint/images/header_blue_left.png" alt="" />
+            <img class="right" src="${cfg.staticPath}apps/mint/images/header_blue_right.png" alt="" />
 
             <div class="boxHeader">
                 Recent Releases
                 <a href="${projectUrl}rss">
-                    <img class="noborder" 
+                    <img class="noborder" alt="RSS"
                          style="margin-right:10px; vertical-align: middle;"
                          src="${cfg.staticPath}apps/mint/images/rss-inline.gif" />
                 </a>
@@ -67,21 +67,21 @@
                 <li class="release" py:if="not releaseList">
                     No Releases
                 </li>
-                <div class="release" py:if="isOwner" style="text-align: right; padding-right:8px;">
-                    <a href="${projectUrl}newRelease"><strong>Create a new release</strong></a>
-                </div>
-                <div class="release" py:if="not isOwner and len(releaseList) > 5" style="text-align: right; padding-right:8px;">
-                    <a href="${projectUrl}releases"><strong>More...</strong></a>
-                </div>
               </ul>
+              <div class="release" py:if="isOwner" style="text-align: right; padding-right:8px;">
+                  <a href="${projectUrl}newRelease"><strong>Create a new release</strong></a>
+              </div>
+              <div class="release" py:if="not isOwner and len(releaseList) > 5" style="text-align: right; padding-right:8px;">
+                  <a href="${projectUrl}releases"><strong>More...</strong></a>
+              </div>
             </div>
         </div>
     </div>
 
     <div py:def="commitsMenu(commits, display='block')" py:strip="True">
       <div py:if="commits" class="palette" id="commits">
-        <img class="left" src="${cfg.staticPath}apps/mint/images/header_blue_left.png" />
-        <img class="right" src="${cfg.staticPath}apps/mint/images/header_blue_right.png" />
+        <img class="left" src="${cfg.staticPath}apps/mint/images/header_blue_left.png" alt="" />
+        <img class="right" src="${cfg.staticPath}apps/mint/images/header_blue_right.png" alt="" />
 
 
         <div class="boxHeader">Recent Commits</div>
@@ -97,8 +97,8 @@
     </div>
 
     <div py:def="projectsPane()" id="projectsPane" >
-        <img class="left" src="${cfg.staticPath}apps/mint/images/header_orange_left.png" />
-        <img class="right" src="${cfg.staticPath}apps/mint/images/header_orange_right.png" />
+        <img class="left" src="${cfg.staticPath}apps/mint/images/header_orange_left.png" alt="" />
+        <img class="right" src="${cfg.staticPath}apps/mint/images/header_orange_right.png" alt="" />
         <div class="boxHeader">
             <div class="boxHeaderText">
                 <span>${auth.username}</span>
@@ -126,7 +126,7 @@
             Then, click on the project name, and click on the "Request to join"
             link to submit your request to the project's owners.</p>
         </div>
-        <div class="boxBody" id="boxBody" py:if="projectList" strip="True">
+        <div class="boxBody" id="boxBody" py:if="projectList">
             <ul>
                 <li py:for="project, level in sorted(projectList, cmp = userlevels.myProjectCompare)">
                     <a href="${project.getUrl()}">

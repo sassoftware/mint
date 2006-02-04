@@ -86,25 +86,29 @@ from mint.mint import upstream
                         </li>
                     </ul>
                 </div>
-                <p>From here you can use the left-hand tabs to:
-                        <ul>
-                                <li py:if="isOwner">Create, edit, and publish a project release</li>
-                                <li py:if="not isOwner">Download an official project release</li>
-                                <li>Browse the packages included in ${isOwner and "your" or "this"} project</li>
-                                <li py:if="isOwner">Add or remove developers working on your project</li>
-                                <li py:if="not isOwner">List the developers working on this project <span py:strip="True" py:if="not (isOwner or isDeveloper)">and request to join them</span></li>
-                                <li py:if="isOwner">Create and manage your project's mailing lists</li>
-                                <li py:if="not isOwner">Join the mailing lists for this project or browse their archives</li>
-                        </ul>
-                </p>
+                <p>From here you can use the left-hand tabs to:</p>
+                <ul>
+                        <li py:if="isOwner">Create, edit, and publish a project release</li>
+                        <li py:if="not isOwner">Download an official project release</li>
+                        <li>Browse the packages included in ${isOwner and "your" or "this"} project</li>
+                        <li py:if="isOwner">Add or remove developers working on your project</li>
+                        <li py:if="not isOwner">List the developers working on this project
+                            <span py:strip="True" py:if="not (isOwner or isDeveloper)">and request to join them</span>
+                        </li>
+                        <li py:if="isOwner">Create and manage your project's mailing lists</li>
+                        <li py:if="not isOwner">Join the mailing lists for this project or browse their archives</li>
+                </ul>
 
-                <p>For detailed information on building or installing software
-                        for ${isOwner and "your" or "this"} project, check out:
-                    <ul>
-                            <li py:if="isOwner or isDeveloper"><a href="${basePath}conaryDevelCfg">Setting up ${isOwner and "your" or "the"} project build environment</a></li>
-                            <li><a href="${basePath}conaryUserCfg">Installing packages from ${isOwner and "your" or "this"} project</a></li>
-                    </ul>
+                <p>
+                    For detailed information on building or installing software
+                    for ${isOwner and "your" or "this"} project, check out:
                 </p>
+                <ul>
+                    <li py:if="isOwner or isDeveloper">
+                        <a href="${basePath}conaryDevelCfg">Setting up ${isOwner and "your" or "the"} project build environment</a>
+                    </li>
+                    <li><a href="${basePath}conaryUserCfg">Installing packages from ${isOwner and "your" or "this"} project</a></li>
+                </ul>
             </div>
         </div>
     </body>

@@ -24,8 +24,8 @@ from mint import userlevels
             <div id="left" class="side">
                 ${projectResourcesMenu()}
                 <div class="palette" id="members" py:if="isOwner">
-                    <img class="left" src="${cfg.staticPath}apps/mint/images/header_blue_left.png" />
-                    <img class="right" src="${cfg.staticPath}apps/mint/images/header_blue_right.png" />
+                    <img class="left" src="${cfg.staticPath}apps/mint/images/header_blue_left.png" alt="" />
+                    <img class="right" src="${cfg.staticPath}apps/mint/images/header_blue_right.png" alt="" />
 
                     <div class="boxHeader">Add New Member</div>
                     <div>
