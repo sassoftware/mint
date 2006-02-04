@@ -17,12 +17,12 @@
             <table>
                 <tr><td>
                     <p style="width: 50%;">
-                        <a class="option" href="${noLink}">No</a>
+                        <a href="${noLink}"><img src="${cfg.staticPath}apps/mint/images/no_button.png" alt="No" /></a>
                     </p>
                 </td>
                 <td>
                     <p style="width: 50%;">
-                        <a class="option" href="${yesLink}">Yes</a>
+                        <a href="${yesLink}"><img src="${cfg.staticPath}apps/mint/images/yes_button.png" alt="Yes" /></a>
                     </p>
                 </td><td width="50%"/></tr>
             </table>
