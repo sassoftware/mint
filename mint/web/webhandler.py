@@ -40,7 +40,7 @@ class WebHandler(object):
             if template not in kidCache:
                 path = os.path.join(templatePath, template + ".kid")
                 kidCache[template] = kid.load_template(path)
-            
+
             template = kidCache[template]
         else:
             path = os.path.join(templatePath, template + ".kid")
@@ -61,8 +61,7 @@ class WebHandler(object):
                               groupProject = self.groupProject,
                               output = self.output,
                               **values)
-        if self.output == "html-strict":
-            self.output = kid.HTMLSerializer(doctype='html')
+
         t.assume_encoding = 'utf-8' # tell kid to assume that all input is utf-8
         return t.serialize(encoding = "utf-8", output = self.output)
 
