@@ -28,6 +28,22 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
     def testNoLocalRedirect(self):
         page = self.assertCode('', code = 200)
 
+    def testRedirect(self):
+        client, userId = self.quickMintUser('foouser', 'foopass')
+        projectId = self.newProject(client)
+
+        # pick a page to log in from
+        pageURI = '/project/testproject/releases'
+        page = self.fetch(pageURI)
+
+        page = page.postForm(1, self.post, {'username':'foouser', 'password':'foopass'})
+
+        properUrl = '/'.join([x for x in (self.URL + pageURI).split('/') if x])
+
+        self.failIf(properUrl not in page.body,
+                    "rBO explicit redirects are improper. "
+                    "Web browsers will be confused.")
+
     def testLogin(self):
         self.quickMintUser('foouser','foopass')
 
@@ -550,6 +566,37 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         page = self.assertNotContent("/project/testproject/closeCurrentGroup",
                                      content = 'closeCurrentGroup')
 
+    def testGroupBuilderCook(self):
+        # prove that the group builder box actually closes after cook
+        client, userId = self.quickMintUser('foouser','foopass')
+        projectId = self.newProject(client)
+        project = client.getProject(projectId)
+
+        groupTrove = self.createTestGroupTrove(client, projectId)
+
+        self.addComponent("test:runtime", "1.0")
+        self.addComponent("test:devel", "1.0")
+        self.addCollection("test", "1.0", [ ":runtime", ":devel" ])
+
+        groupTrove.addTrove('test', '/testproject.rpath.local@rpl:devel/1.0-1',
+                            '', '', False, False, False)
+
+        page = self.webLogin('foouser', 'foopass')
+
+
+        # editing the group makes the Pane active
+        page = self.fetch('/project/testproject/editGroup?id=%d' % \
+                          groupTrove.id)
+
+        # cook the group to make it go away
+        page = self.fetch('/project/testproject/pickArch?id=%d' % \
+                          groupTrove.id)
+
+        page.postForm(1, self.post, {"arch" : "1#x86"})
+
+        self.assertNotContent('/project/testproject/releases',
+                              content = 'closeCurrentGroup')
+
     def testGroupTroveItem(self):
         client, userId = self.quickMintUser('foouser','foopass')
         projectId = self.newProject(client)
@@ -705,6 +752,33 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.failIf(page.body != refPage.body,
                     "Illegal page reference was not contained.")
 
+    def testRelease(self):
+        client, userId = self.quickMintUser('foouser', 'foopass')
+        projectId = self.newProject(client)
+
+        self.addComponent("test:runtime", "1.0")
+        self.addComponent("test:devel", "1.0")
+        self.addCollection("test", "1.0", [ ":runtime", ":devel" ])
+
+        self.addCollection('group-test', '1.0', ['test'])
+
+        page = self.webLogin('foouser', 'foopass')
+        page = self.fetch('/project/testproject/newRelease')
+
+        page = page.postForm(1, self.post, \
+                             {'name' : 'Foo',
+                              'trove': 'group-test',
+                              'version': '/testproject.rpath.local@rpl:devel/1.0-1-1 1#x86',
+                              'imagetype_1' : '1'})
+
+        cu = self.db.cursor()
+        cu.execute("SELECT troveName FROM Releases")
+
+        res = cu.fetchall()
+        self.failIf(not res, "No release was generated from a web click.")
+        self.failIf(res[0][0] != 'group-test',
+                    "Trove name was malformed during release creation.")
+
     def testMaintenanceMode(self):
         def newMintCfg(self):
             self.getOldMintCfg()
@@ -769,6 +843,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
             f.close()
 
             rephelp.ApacheServer.start(server)
+
 
 if __name__ == "__main__":
     testsuite.main()

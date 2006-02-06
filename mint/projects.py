@@ -330,8 +330,8 @@ class ProjectsTable(database.KeyedTable):
         # this function are ensured to be ints by mintServer typeChecking.
         SQL = projectlisting.sqlbase % (\
             self.cfg.hideFledgling and "WHERE fledgling=0" or "",
-            projectlisting.ordersql[sortOrder], limit, offset)
-        cu.execute(SQL)
+            projectlisting.ordersql[sortOrder])
+        cu.execute(SQL, limit, offset)
 
         ids = []
         for x in cu.fetchall():
