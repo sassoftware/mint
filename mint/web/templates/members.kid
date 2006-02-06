@@ -46,7 +46,7 @@ from mint import userlevels
                                 </select>
                             </label>
                         </div>
-                        <div><p><input type="submit" value="Add" /></p></div>
+                        <div style="text-align: center;"><p><button class="img" id="addMemberSubmit" type="submit"><img src="${cfg.staticPath}/apps/mint/images/add_member_button.png" alt="Add Member" /></button></p></div>
                       </form>
                     </div>
                 </div>
