@@ -106,15 +106,19 @@ class Searcher :
         # This method will behave unexpectedly if you have OR within a set i
         # of double quotes.  Caveat searcher.
         orsplit = re.compile('^OR\s+|\s+OR\s+|\s+OR$')
-        for orchunk in orsplit.split(terms):
-            orchunk = orchunk.strip()
+
+        # pre-filter search terms that are too small to prevent mangled SQL
+        for orchunk in [x.strip() for x in orsplit.split(terms) \
+                        if len(x.strip()) >= self.MINLENGTH]:
             if orchunk:
                 andtoks = []
                 andsubs = []
                 # Split on double quotes.  Odd numbered splits get columnified
                 # so long as they meet length requirements
                 # Even numbered splits get further treatment
-                for j, quotechunk in enumerate(orchunk.split('"')):
+                for j, quotechunk in \
+                    enumerate([x for x in orchunk.split('"') if \
+                               len(x) >= self.MINLENGTH]):
                     if j%2:
                         if len(quotechunk) >= self.MINLENGTH:
                             toks, subs = self.columnify(quotechunk, searchcols)
@@ -125,11 +129,11 @@ class Searcher :
                         andtoks.extend(toks)
                         andsubs.extend(subs)
                 # now paste the items between the ORs together
-                ortoks.append( ' AND '.join(andtoks) )
+                ortoks.append(' AND '.join(andtoks))
                 substitutions.extend(andsubs)
 
         # Finally paste the OR blocks together
-        where += ' OR '.join(ortoks)
+        where += ' OR '.join([x for x in ortoks if x])
 
         # If nothing results, raise SearchTermsError
         if not where.strip():
@@ -141,17 +145,19 @@ class Searcher :
     def tokenize(self, searchterms, searchcols):
         tokens = []
         substitutions = []
-        for term in searchterms.split():
-            if len(term) >= self.MINLENGTH:
-                toks, subs = self.columnify(term, searchcols)
-                tokens.append(toks)
-                substitutions.extend(subs)
+
+        for term in [x for x in searchterms.split()
+                     if len(x) >= self.MINLENGTH]:
+            toks, subs = self.columnify(term, searchcols)
+            tokens.append(toks)
+            substitutions.extend(subs)
         return tokens, substitutions
 
     @classmethod
     def columnify(self, term, searchcols):
         where = '('
         subs = []
+
         for i, column in enumerate(searchcols):
             if i > 0:
                 where += "OR "
