@@ -88,7 +88,7 @@ import time
 
                 <p>${release.getDesc().strip() or "Release has no description."}</p>
 
-                <h3>Downloads</h3>
+                <h3><a py:if="release.hasVMwareImage()" title="Download VMware Player" href="http://www.vmware.com/download/player/"><img class="vmwarebutton" src="${cfg.staticPath}apps/mint/images/get_vmware_player.gif" alt="Download VMware Player" /></a>Downloads</h3>
                 <div py:strip="True" py:if="files">
                 <ul id="downloads">
                     <li py:for="i, file in enumerate(files)">
