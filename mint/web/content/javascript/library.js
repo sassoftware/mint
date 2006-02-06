@@ -66,24 +66,22 @@ var STATUS_NOJOB = 5;
 var refreshed = false;
 var oldStatus = -1;
 var tickerRefreshTime        = 200;  /* 1/5 second */
-var cookStatusRefreshTime    = 500;  /* 1/2 second */
+var tickerId;
+var cookStatusRefreshTime    = 2000; /* 2 seconds */
+var cookStatusId;
 var releaseStatusRefreshTime = 5000; /* 5 seconds */
 var releaseStatusId;
-
+var archDict = "global";
+var cookStatus = "global";
+var releaseStatus = "global";
 
 function processGetReleaseStatus(aReq) {
-    var xml = aReq.responseXML;
-    el = $("jobStatus");
-    var status = getElementsByTagAndClassName("int", null, xml)[0].firstChild.data;
+    logDebug("[JSON] response: ", aReq.responseText);
+    releaseStatus = evalJSONRequest(aReq);
 
-    if(status != oldStatus) {
-        if(oldStatus != -1) {
-            document.location = document.location;
-        }
-        oldStatus = status;
-    }
+    el = document.getElementById("jobStatus");
 
-    if(status > STATUS_RUNNING) {
+    if(releaseStatus.status > STATUS_RUNNING) {
         hideElement('editOptionsDisabled');
         showElement('editOptions');
         showElement('downloads');
@@ -93,68 +91,39 @@ function processGetReleaseStatus(aReq) {
         hideElement('downloads');
     }
 
-    var statusText = getElementsByTagAndClassName("string", null, xml)[0];
-    if(!statusText.firstChild) {
+    if(!releaseStatus.message) {
         statusText = "No status";
         status = STATUS_NOJOB;
     } else {
-        statusText = statusText.firstChild.nodeValue;
+        statusText = textWithBaton(releaseStatus.message);
     }
-    if(status == STATUS_FINISHED)
-        clearTimeout(releaseStatusId);
 
     replaceChildNodes(el, statusText);
 }
-
-
-var tickerId;
-var statusId;
-var archDict = "global";
-
 
 function processGetCookStatus(aReq) {
-    var xml = aReq.responseXML;
-    el = $("jobStatus");
-    var status = getElementsByTagAndClassName("int", null, xml)[0].firstChild.data;
-    var statusText = getElementsByTagAndClassName("string", null, xml)[0];
+    logDebug("[JSON] response: ", aReq.responseText);
+    cookStatus = evalJSONRequest(aReq);
 
-    if(!statusText.firstChild) {
-        statusText = "Finished";
-        status = STATUS_FINISHED;
-    } else {
-        statusText = statusText.firstChild.nodeValue;
-    }
-    if(status == STATUS_FINISHED) {
-        clearTimeout(tickerId);
-        clearTimeout(statusId);
-    }
-    replaceChildNodes(el, statusText);
+    el = document.getElementById("jobStatus");
+    replaceChildNodes(el, textWithBaton(cookStatus.message));
+
 }
 
-
 function processGetTroveList(aReq) {
-    var xml = aReq.responseXML;
+    logDebug("[JSON] response: ", aReq.responseText);
+    var trovelist = evalJSONRequest(aReq);
+    var sel = document.getElementById("trove");
 
     clearTimeout(tickerId);
 
-    sel = document.getElementById("trove");
-
     clearSelection(sel);
-    var response = getElementsByTagAndClassName("struct", null, xml);
-    var members = getElementsByTagAndClassName("member", null, response[0]);
-
     /* make an empty selection, forcing user to pick */
     appendToSelect(sel, "", document.createTextNode("---"), "trove");
 
-    for(var i = 0; i < members.length; i++) {
-        var nameNode = members[i].getElementsByTagName("name")[0];
-        var label = nameNode.firstChild.nodeValue;
-
-        var troves = members[i].getElementsByTagName("string");
-        for(var j = 0; j < troves.length; j++) {
-            var troveName = troves[j].firstChild.nodeValue;
-            appendToSelect(sel, troveName + "=" + label, document.createTextNode(troveName), "trove");
-        }
+    for (var label in trovelist) {
+        var troveName = trovelist[label];
+        appendToSelect(sel, troveName + "=" + label, document.createTextNode(troveName), "trove");
     }
 
 }
@@ -180,30 +149,31 @@ function processGetTroveVersionsByArch(aReq) {
 // RPC calls ----------------------------------------------------------------
 
 function getReleaseStatus(releaseId) {
-    var req = new XmlRpcRequest("/xmlrpc", "getReleaseStatus");
+    var req = new JsonRpcRequest("/jsonrpc", "getReleaseStatus");
     req.setAuth(getCookieValue("pysid"));
     req.setCallback(processGetReleaseStatus);
-    req.send(releaseId);
-
-    releaseStatusId = setTimeout("getReleaseStatus(" + releaseId + ")", releaseStatusRefreshTime);
+    req.send(false, [releaseId]);
+    if (releaseStatus != null && releaseStatus.status < STATUS_FINISHED) {
+        releaseStatusId = setTimeout("getReleaseStatus("+releaseId+")", releaseStatusRefreshTime);
+    }
 }
 
 function getCookStatus(jobId) {
-    var req = new XmlRpcRequest("/xmlrpc", "getJobStatus");
+    var req = new JsonRpcRequest("/jsonrpc", "getJobStatus");
     req.setAuth(getCookieValue("pysid"));
     req.setCallback(processGetCookStatus);
-    req.send(jobId);
-
-    statusId = setTimeout("getCookStatus(" + jobId + ")", cookStatusRefreshTime);
-    tickerId = setTimeout("ticker()", tickerRefreshTime);
+    req.send(false, [jobId]);
+    // continue calling self until we're finished
+    if (cookStatus != null && cookStatus.status < STATUS_FINISHED) {
+        cookStatusId = setTimeout("getCookStatus("+jobId+")", cookStatusRefreshTime);
+    }
 }
 
 function getTroveList(projectId) {
-    var req = new XmlRpcRequest("/xmlrpc", "getGroupTroves");
+    var req = new JsonRpcRequest("/jsonrpc", "getGroupTroves");
     req.setAuth(getCookieValue("pysid"));
     req.setCallback(processGetTroveList);
-    req.send(projectId);
-
+    req.send(true, [projectId]);
     tickerId = setTimeout("ticker()", tickerRefreshTime);
 }
 
@@ -211,20 +181,26 @@ function getTroveVersionsByArch(projectId, troveNameWithLabel) {
     var req = new JsonRpcRequest("/jsonrpc", "getTroveVersionsByArch");
     req.setAuth(getCookieValue("pysid"));
     req.setCallback(processGetTroveVersionsByArch);
-    req.send(projectId, troveNameWithLabel);
-
-    tickerId = setTimeout("ticker()", tickerRefreshTime);
+    req.send(true, [projectId, troveNameWithLabel]);
+    // TODO: ticker?
 }
 
-// ticker
+// ticker --------------------------------------------------------------------
 
-var ticks = -1;
-var baton = '|/-\\'
+var ticks = 0;
+var baton = '-\\|/'
+
+function textWithBaton(text) {
+
+    var newText = text;
+    newText += "  " + baton[ticks];
+    ticks = ((ticks + 1) % baton.length);
+    return newText;
+
+}
 
 function ticker() {
     el = document.getElementById("baton");
-    log(el);
-
     if (el) {
         // first time through
         if (ticks < 0) {
@@ -306,3 +282,5 @@ function onVersionChange() {
     }
 
 }
+
+

@@ -25,7 +25,7 @@
                 <p>Your request to cook ${groupTrove.recipeName} has been
                 submitted.</p>
 
-                <p>Request Status: <span id="jobStatus">Retrieving cook status</span></p>
+                <p>Request Status: <span id="jobStatus">Retrieving cook status...</span></p>
 
                 <p>When the request status "Finished" appears, your group
                 has finished cooking. Click on the "Releases" link in the

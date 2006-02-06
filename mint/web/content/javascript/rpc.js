@@ -20,9 +20,10 @@ function GenericRpcRequest(aUrl, aMethod) {
 // common instance varibles
 GenericRpcRequest.prototype.contentType = null;
 GenericRpcRequest.prototype.callback = null;
-GenericRpcRequest.prototype.errback = null;
-GenericRpcRequest.prototype.marshalParams = null;
 GenericRpcRequest.prototype.deferred = null;
+GenericRpcRequest.prototype.errback = null;
+GenericRpcRequest.prototype.finalizer = null;
+GenericRpcRequest.prototype.marshalParams = null;
 
 // given an auth string (e.g. pysid) set it in the request
 GenericRpcRequest.prototype.setAuth = function(aAuth) {
@@ -39,8 +40,15 @@ GenericRpcRequest.prototype.setErrback = function(aErrback) {
     this.errback = aErrback;
 };
 
+// set a call that gets run no matter what (e.g. a finalizer)
+GenericRpcRequest.prototype.setFinalizer = function(aFinalizer) {
+    this.finalizer = aFinalizer;
+};
+
 // generic send function
-GenericRpcRequest.prototype.send = function() {
+// first argument is boolean; determines if send is asynchronous or not
+// second argument is an array of arguments to marshal
+GenericRpcRequest.prototype.send = function(aIsAsync, aArgList) {
 
     // we can't operate without a valid marshalParams function
     if (!this.marshalParams) {
@@ -49,13 +57,13 @@ GenericRpcRequest.prototype.send = function() {
     }
 
     // marshal the parameters to this function
-    marshaledData = this.marshalParams(arguments);
+    var marshaledData = this.marshalParams(aArgList);
 
     // get an XMLHttpRequest object
-    req = getXMLHttpRequest();
+    var req = getXMLHttpRequest();
 
     // set up the object: we're using POST
-    req.open("POST", this.url, true);
+    req.open("POST", this.url, aIsAsync);
 
     // content type should be set if specified by the subclass
     if (this.contentType) {
@@ -68,20 +76,29 @@ GenericRpcRequest.prototype.send = function() {
     }
 
     // fire the gun here
-    this.deferred = sendXMLHttpRequest(req, marshaledData);
+    if (aIsAsync) {
+        this.deferred = sendXMLHttpRequest(req, marshaledData);
 
-    // setup callbacks/errback functions (if specified)
-    if (!this.callback) {
-        logWarn("No callback set; this might not be what you wanted");
-    }
-    else {
-        this.deferred.addCallback(this.callback);
-    }
+        // setup callbacks/errback functions (if specified)
+        if (!this.callback) {
+            logWarn("No callback set; this might not be what you wanted");
+        }
+        else {
+            this.deferred.addCallback(this.callback);
+        }
 
-    if (this.errback) {
-        this.deferred.addErrback(this.errback);
-    }
+        if (this.errback) {
+            this.deferred.addErrback(this.errback);
+        }
 
+        if (this.finalizer) {
+            this.deferred.addBoth(this.finalizer);
+        }
+    } else {
+        req.send(marshaledData);
+        // TODO: this isn't quite right w/r/t error handling
+        this.callback(req);
+    }
 };
 
 // XmlRpcRequest ------------------------------------------------------------
@@ -99,17 +116,15 @@ XmlRpcRequest.prototype = new GenericRpcRequest(null, null);
 XmlRpcRequest.prototype.contentType = "text/xml";
 
 // marshal a list of params to an XML-RPC call
-XmlRpcRequest.prototype.marshalParams = function() {
-
-    var paramList = arguments[0];
+XmlRpcRequest.prototype.marshalParams = function(aArgList) {
 
     var mStr = '<?xml version="1.0"?>';
     mStr += '<methodCall>';
     mStr += '    <methodName>' + this.method + '</methodName>';
     mStr += '    <params>';
 
-    for(var i = 0; i < paramList.length; i++) {
-        p = paramList[i];
+    for(var i = 0; i < aArgList.length; i++) {
+        p = aArgList[i];
         t = typeof(p);
 
         mStr += '<param>';
@@ -154,15 +169,14 @@ JsonRpcRequest.prototype = new GenericRpcRequest(null, null);
 JsonRpcRequest.prototype.contentType = "application/x-json";
 
 // marshal a list of params to an XML-RPC call
-JsonRpcRequest.prototype.marshalParams = function() {
+JsonRpcRequest.prototype.marshalParams = function(aArgList) {
 
     var ary = new Array();
 
     ary[0] = this.method;
-    ary[1] = arguments[0];
+    ary[1] = aArgList;
 
     mStr = serializeJSON(ary);
-
     logDebug("[JSON] request: ", mStr);
 
     return mStr;
