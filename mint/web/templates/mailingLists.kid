@@ -28,7 +28,7 @@
                 ${resourcePane()}
                 ${groupTroveBuilder()}
             </div>
-            <div class="middle">
+            <div id="middle">
                 <p class="message" py:for='msg in messages' py:content="msg"/>
                 <h1>${project.getNameForDisplay(maxWordLen = 50)}</h1>
                 <h2>Mailing Lists</h2>
@@ -67,40 +67,27 @@
                 <div py:if="not isRPL" py:for="list in lists" id="mailingListButtons">
                     <h3><a href="${mailhost + 'listinfo/' + list.name}" target="_NEW">${list.name}</a></h3>
                     <p>${list.description}</p>
-                    <div>
-                        <span><a href="${mailhost + '../pipermail/' + list.name}"
+
+                    <ul>
+                        <li><a href="${mailhost + '../pipermail/' + list.name}"
                                  class="option" target="_NEW">Archives</a>
-                        </span>
-                    </div>
-                    <div>
-                        <span py:if="auth.authorized">
+                        </li>
+                        <li py:if="auth.authorized">
                             <a class="option" href="subscribe?list=${list.name}">Subscribe</a>
-                        </span>
-                    </div>
-                    <div>
-                        <span py:if="not auth.authorized">
+                        </li>
+                        <li py:if="not auth.authorized">
                             <a class="option" href="${mailhost + 'listinfo/' + list.name}">Subscribe</a>
-                        </span>
-                    </div>
-
-                    <div>
-                        <span py:if="isOwner">
+                        </li>
+                        <li py:if="isOwner">
                             <a href="${mailhost + 'admin/' + list.name}" class="option" target="_NEW">Admin Page</a>
-                        </span>
-                    </div>
-
-                    <div>
-                        <span py:if="auth.admin">
+                        </li>
+                        <li py:if="auth.admin">
                             <a href="$basePath/deleteList?list=${list.name}" class="option">Delete List</a>
-                        </span>
-                    </div>
-
-                    <div>
-                        <span py:if="auth.admin">
+                        </li>
+                        <li py:if="auth.admin">
                             <a href="$basePath/resetPassword?list=${list.name}" class="option">Request Password</a>
-                        </span>
-                    </div>
-                    <br />
+                        </li>
+                    </ul>
                 </div>
                 <div py:if="not (lists or isRPL)">This project has no lists.</div>
                 <h3 py:if="isOwner">Create a New Mailing List</h3>

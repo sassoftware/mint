@@ -241,6 +241,22 @@ a.option:hover {
 	text-decoration:none;
 }
 
+#mailingListButtons ul li {
+    display: inline
+}
+
+#mailingListButtons ul li a.option {
+    display: inline;
+    white-space: nowrap;
+    border:1px #ccc solid; background-image:none;
+    padding:0.1em 0.25em; margin:-2px 0px 0px 0px;
+    font-size:0.9091em; text-transform:uppercase; font-weight:bold;
+}
+#mailingListButtons ul li a.option:hover {
+    background-color:#ccc; background-image:none;
+    text-decoration:none;
+}
+
 /* RELEASES TABLE */
 table.releasestable {
         padding:0px; margin:0px; margin-bottom:8px; width:100%;
