@@ -30,12 +30,14 @@ div#main {
 }
 
 div#middle {
-    margin-left: 240px;
-    margin-right: 255px;
+    width: 475px; 
+    margin-left: 235px;
+    margin-right: 235px;
     margin-bottom: 24px;
 }
 
 div#spanleft {
+    width: 700px;
     margin-right: 255px;
 }
 
