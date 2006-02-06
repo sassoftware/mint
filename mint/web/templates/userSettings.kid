@@ -88,7 +88,7 @@
                             </td>
                         </tr>
                     </table>
-                    <p><button type="submit">Submit</button></p>
+                    <button class="img" id="userSubmit" type="submit"><img src="${cfg.staticPath}/apps/mint/images/submit_button.png" alt="Submit" /></button>
                 </form>
             </div>
         </div>

@@ -30,7 +30,7 @@ div#main {
 }
 
 div#middle {
-    width: 475px; 
+    width: 475px;
     margin-left: 235px;
     margin-right: 235px;
     margin-bottom: 24px;
@@ -653,3 +653,17 @@ div.devTutorial p img {
 #jobStatus {
     font-weight: bold;
 }
+
+/* user settings page*/
+
+button#userSubmit {
+    width: 108px;
+    height: 37px;
+}
+
+/* VMware image button for release pages */
+img.vmwarebutton {
+    float: right;
+    margin: 0 0 0 20px;
+}
+

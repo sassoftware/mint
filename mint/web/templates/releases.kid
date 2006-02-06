@@ -96,7 +96,8 @@
             </div>
             <div id="middle">
                 <div class="pad">
-                    <h2>${project.getNameForDisplay(maxWordLen = 50)}<br />Releases</h2>
+                    <?python hasVMwareImage = True in [ x.hasVMwareImage() for x in releases ] ?>
+                    <h2>${project.getNameForDisplay(maxWordLen = 50)}<br />Releases<a py:if="hasVMwareImage" title="Download VMware Player" href="http://www.vmware.com/download/player/"><img class="vmwarebutton" src="${cfg.staticPath}apps/mint/images/get_vmware_player.gif" alt="Download VMware Player" /></a></h2>
                     <h3 py:if="isOwner">Published Releases</h3>
                     ${releasesTable(releases, releaseVersions, isOwner, True, 5)}
                 </div>
