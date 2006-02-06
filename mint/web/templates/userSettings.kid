@@ -15,7 +15,7 @@
                 ${resourcePane()}
                 <div style="width: 180px;">
                     <h3>Close My Account</h3>
-                    <p>If you wish to cancel your account, click the &quot;Cancel Account&quot; button below.
+                    <p>If you wish to cancel your account, click the &quot;Close My Account&quot; button below.
                        If you cancel your account, you will be removed from any project for which you are
                        a member or owner.
                     </p>
