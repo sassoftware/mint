@@ -488,7 +488,7 @@ class SiteHandler(WebHandler):
             self._clearAuth()
             self._redirect(self.cfg.basePath)
         else:
-            return self._write("confirm", message = "Are you sure you want to delete your account?",
+            return self._write("confirm", message = "Are you sure you want to close your account?",
                 yesLink = "cancelAccount?confirmed=1", noLink = self.cfg.basePath)
 
     @strFields(feed = 'newProjects')
