@@ -122,8 +122,11 @@ function processGetTroveList(aReq) {
     appendToSelect(sel, "", document.createTextNode("---"), "trove");
 
     for (var label in trovelist) {
-        var troveName = trovelist[label];
-        appendToSelect(sel, troveName + "=" + label, document.createTextNode(troveName), "trove");
+        var troveNames = trovelist[label];
+        for (var troveNameIdx in troveNames) {
+            var troveName = troveNames[troveNameIdx];
+            appendToSelect(sel, troveName + "=" + label, document.createTextNode(troveName), "trove");
+        }
     }
 
 }

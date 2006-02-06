@@ -1599,7 +1599,7 @@ class MintServer(object):
         else:
             raise jobs.FileMissing
 
-    @typeCheck(int, str)
+    @typeCheck(int, ((str, unicode),))
     @requiresAuth
     def getTroveVersionsByArch(self, projectId, troveNameWithLabel):
 
