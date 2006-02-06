@@ -102,7 +102,7 @@
         <div class="boxHeader">
             <div class="boxHeaderText">
                 <span>${auth.username}</span>
-                <a href="http://${cfg.siteHost}${cfg.basePath}logout">
+                <a style="float: right; font-size: 50%;" href="http://${cfg.siteHost}${cfg.basePath}logout">
                     Sign Out
                 </a>
             </div>
