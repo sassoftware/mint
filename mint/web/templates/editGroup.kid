@@ -63,7 +63,7 @@ from conary import versions
                                 </tr>
                                 <tr>
                                     <td>Description</td>
-                                    <td colspan="3"><textarea rows="10" cols="70" name="description" py:content="curGroupTrove.description"/></td>
+                                    <td colspan="3"><textarea rows="10" name="description" py:content="curGroupTrove.description"/></td>
                                 </tr>
                             </table>
                         </td>

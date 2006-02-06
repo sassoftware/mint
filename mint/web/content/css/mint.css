@@ -63,8 +63,7 @@ div#spanright {
 }
 
 table {
-    font-size:105%;
-    width:100%;
+    width: 100%;
 }
 
 td, th {
@@ -559,6 +558,10 @@ table.groupTroveItems > tr:first-child td {
     padding: 0.5em;
 }
 
+table.groupTroveItems textarea {
+    width: 100%;
+}
+
 span#editProject {
     margin-left: 1em;
     font-weight: normal;
@@ -671,6 +674,13 @@ div.devTutorial p img {
 
 #jobStatus {
     font-weight: bold;
+}
+
+/* user settings page*/
+
+button#userSubmit {
+    width: 108px;
+    height: 37px;
 }
 
 /* VMware image button for release pages */
