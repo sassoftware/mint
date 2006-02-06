@@ -171,9 +171,11 @@ from mint import userlevels
                     <p py:if="len(users[userlevels.USER]) == 1">There is one user watching this project.</p>
                     <p py:if="len(users[userlevels.USER]) > 1">There are ${len(users[userlevels.USER])} users watching this project.</p>
                 </div>
-                <h3>OpenPGP Signing Keys</h3>
-                <p>You can view the OpenPGP package signing keys that your developers have uploaded:</p>
-                <strong><a href="../../repos/${project.hostname}/pgpAdminForm">View OpenPGP Signing Keys</a></strong>
+                <div py:if="isOwner or isDeveloper">
+                    <h3>OpenPGP Signing Keys</h3>
+                    <p>You can view the OpenPGP package signing keys that your developers have uploaded:</p>
+                    <strong><a href="../../repos/${project.hostname}/pgpAdminForm">View OpenPGP Signing Keys</a></strong>
+                </div>
             </div>
        </div>
     </body>
