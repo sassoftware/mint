@@ -48,15 +48,15 @@ def getHttpAuth(req):
 
     info = req.headers_in['Authorization'].split()
     if len(info) != 2 or info[0] != "Basic":
-        return apache.HTTP_BAD_REQUEST
+        raise apache.SERVER_RETURN, apache.HTTP_BAD_REQUEST
 
     try:
         authString = base64.decodestring(info[1])
     except:
-        return apache.HTTP_BAD_REQUEST
+        raise apache.SERVER_RETURN, apache.HTTP_BAD_REQUEST
 
     if authString.count(":") != 1:
-        return apache.HTTP_BAD_REQUEST
+        raise apache.SERVER_RETURN, apache.HTTP_BAD_REQUEST
 
     authToken = authString.split(":")
 
@@ -367,10 +367,7 @@ def rpcHandler(req, cfg, pathInfo):
     else:
         return apache.HTTP_NOT_FOUND
 
-    # handle auth; bail if it's not what we were expecting
     authToken = getHttpAuth(req)
-    if type(authToken) is int:
-        return authToken
 
     # instantiate a MintServer
     server = mint_server.MintServer(cfg, allowPrivate = allowPrivate)
@@ -386,6 +383,7 @@ def rpcHandler(req, cfg, pathInfo):
 
     # go for it; return 403 if permission is denied
     try:
+        # result is (isError, returnValues)
         result = server.callWrapper(*params)
     except (errors.InsufficientPermission, mint_server.PermissionDenied):
         return apache.HTTP_FORBIDDEN
@@ -394,13 +392,13 @@ def rpcHandler(req, cfg, pathInfo):
     if isXMLrpc:
         resp = xmlrpclib.dumps((result,), methodresponse=1)
         req.content_type = "text/xml"
-    if isJSONrpc:
-        # XXX: what the heck is the false in result[0]???
+    elif isJSONrpc:
         resp = simplejson.dumps(result[1])
         req.content_type = "application/x-json"
 
     # handle compression
-    # XXX: fix MSIE!
+    # XXX: fix MSIE: http://support.microsoft.com/default.aspx?scid=kb;en-us;Q312496
+    # deflate support for MSIE should be safe to turn on: 6.0+service packs works
     encoding = req.headers_in.get('Accept-encoding', '')
     useragent = req.headers_in.get('User-Agent', '')
     if len(resp) > 200 and 'deflate' in encoding and 'MSIE' not in useragent:
@@ -410,7 +408,7 @@ def rpcHandler(req, cfg, pathInfo):
     # write repsonse
     req.write(resp)
 
-    return apache.OK # computer
+    return apache.OK
 
 def mintHandler(req, cfg, pathInfo):
     webfe = app.MintApp(req, cfg)
