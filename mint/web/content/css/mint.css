@@ -653,3 +653,10 @@ div.devTutorial p img {
 #jobStatus {
     font-weight: bold;
 }
+
+/* user settings page*/
+
+button#userSubmit {
+    width: 108px;
+    height: 37px;
+}
