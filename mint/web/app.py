@@ -150,7 +150,7 @@ class MintApp(WebHandler):
         return apache.OK
  
     def _getHandler(self, pathInfo):
-        fullHost = self.req.hostname
+        fullHost = self.req.headers_in.get('host', self.req.hostname)
         protocol='https'
         if self.req.subprocess_env.get('HTTPS', 'off') != 'on':
             protocol='http'
