@@ -69,23 +69,6 @@ from mint.mint import upstream
                         description or goal for this project.</span>
                 </p>
 
-                <div>
-                    <ul>
-                        <li py:if="isOwner">
-                            <a href="${basePath}editProject">Edit project details</a>
-                        </li>
-                        <li py:if="isOwner">
-                            <a href="${project.getUrl()}../../repos/${project.getHostname()}/pgpAdminForm">${auth.admin and 'Manage' or 'View'} signing keys</a>
-                        </li>
-                        <li py:if="releases">
-                            <a href="${basePath}rss">
-                                Subscribe to release news
-                                    <img style="border: none; vertical-align: middle;"
-                                         src="${cfg.staticPath}apps/mint/images/rss-inline.gif" />
-                            </a>
-                        </li>
-                    </ul>
-                </div>
                 <p>From here you can use the left-hand tabs to:</p>
                 <ul>
                         <li py:if="isOwner">Create, edit, and publish a project release</li>
@@ -97,6 +80,14 @@ from mint.mint import upstream
                         </li>
                         <li py:if="isOwner">Create and manage your project's mailing lists</li>
                         <li py:if="not isOwner">Join the mailing lists for this project or browse their archives</li>
+                        <li>
+                            Subscribe to release news
+                            <a href="${basePath}rss">
+                                <img style="border: none; vertical-align: middle;"
+                                     src="${cfg.staticPath}apps/mint/images/rss-inline.gif" />
+                            </a>
+                        </li>
+
                 </ul>
 
                 <p>
