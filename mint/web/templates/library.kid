@@ -16,7 +16,7 @@ def injectVersion(version):
     Copyright (c) 2005-2006 rPath, Inc.
     All Rights Reserved
 -->
-    <div py:def="formatTitle(str)" py:strip="True" py:content="'%s - %s'%(str, cfg.productName)"/>
+    <div py:def="formatTitle(title)" py:strip="True" py:content="'%s%s%s'%(cfg.productName, title and ' - ', title)"/>
 
     <thead py:def="columnTitles(columns = [])" py:strip="False">
         <tr>
