@@ -323,8 +323,7 @@ class ProjectHandler(WebHandler):
         template = release.getDataTemplate()
         imageTypes = release.getImageTypes()
 
-        trove, version, flavor = release.getTrove()
-        troveName, ignored = trove.split('=')
+        troveName, version, flavor = release.getTrove()
 
         versionStr = versions.ThawVersion(version)
         label = versionStr.branch().label()

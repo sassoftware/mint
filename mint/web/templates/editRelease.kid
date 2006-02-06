@@ -34,6 +34,7 @@ from mint.data import RDT_STRING, RDT_BOOL, RDT_INT
             </div>
 
             <div id="middle">
+                <h1>${project.getNameForDisplay(maxWordLen = 50)}</h1>
                 <h2>${isNewRelease and "Create" or "Edit"} Release</h2>
 
                 <form method="post" action="saveRelease" id="mainForm">
@@ -58,7 +59,7 @@ from mint.data import RDT_STRING, RDT_BOOL, RDT_INT
                         </div>
                         <div py:strip="True" py:if="not isNewRelease">
                             <span py:if="not isNewRelease" style="font-weight: bold;" id="trove" py:content="troveName" />
-                            <input type="hidden" name="trove" value="${trove}" />
+                            <input type="hidden" name="trove" value="${troveName}=${label.asString()}" />
                         </div>
                         <br />
 
