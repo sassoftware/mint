@@ -73,7 +73,7 @@ class WebHandler(object):
         else:
             while location and location[0] == '/':
                 location = location[1:]
-            location = 'http://%s%s%s' % (self.req.hostname, self.cfg.basePath, location)
+            location = 'http://%s%s%s' % (self.cfg.siteHost, self.cfg.basePath, location)
         self._redirect(location)
 
     def _redirect(self, location, temporary = False):
@@ -142,7 +142,7 @@ class WebHandler(object):
             domain = '.' + domain,
             lock = False)
         if self.session.is_new():
-            self.session['firstPage'] = "%s://%s%s" %(self._protocol(), self.req.hostname, '/')
+            self.session['firstPage'] = "%s://%s%s" %(self._protocol(), self.cfg.siteHost, '/')
             self.session['visited'] = { }
         #Mark the current domain as visited
         self.session['visited'][domain] = True
