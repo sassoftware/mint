@@ -654,13 +654,6 @@ div.devTutorial p img {
     font-weight: bold;
 }
 
-/* user settings page*/
-
-button#userSubmit {
-    width: 108px;
-    height: 37px;
-}
-
 /* VMware image button for release pages */
 img.vmwarebutton {
     float: right;
