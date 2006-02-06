@@ -31,6 +31,6 @@ typeNames = {
     LIVE_CF_IMAGE:      "Live CF Image",
     STUB_IMAGE:         "Stub Image (for testing)",
     QEMU_IMAGE:         "Bootable Qemu image",
-    VMWARE_IMAGE:         "Bootable VMWare Player image",
+    VMWARE_IMAGE:         "Bootable VMware Player image",
     LIVE_ISO:           "Live ISO",
 }

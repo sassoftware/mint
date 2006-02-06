@@ -402,7 +402,7 @@ quit
         ofile.close()
 
     @timeMe
-    def zipVMWarePlayerFiles(self, dir, outfile):
+    def zipVMwarePlayerFiles(self, dir, outfile):
         zip = zipfile.ZipFile(outfile, 'w', zipfile.ZIP_DEFLATED)
         for f in ('.vmdk', '.vmx'):
             zip.write(os.path.join(dir, self.basefilename + f), os.path.join(self.basefilename, self.basefilename + f))
@@ -410,7 +410,7 @@ quit
         os.chmod(outfile, 0644)
 
     @timeMe
-    def createVMWarePlayerImage(self, outfile, displayName, mem, basedir=os.getcwd()):
+    def createVMwarePlayerImage(self, outfile, displayName, mem, basedir=os.getcwd()):
         #Create a temporary directory
         vmbasedir = tempfile.mkdtemp('', 'mint-MDI-cvmpi-', basedir)
         try:
@@ -420,10 +420,10 @@ quit
             #Populate the vmx file
             self.createVMX(filebase + '.vmx', displayName, mem)
             #zip the resultant files
-            self.zipVMWarePlayerFiles(vmbasedir, outfile)
+            self.zipVMwarePlayerFiles(vmbasedir, outfile)
         finally:
             util.rmtree(vmbasedir)
-        return (outfile, 'VMWare Player Image')
+        return (outfile, 'VMware Player Image')
 
     supportedImageTypes = [
         releasetypes.QEMU_IMAGE,
@@ -539,11 +539,11 @@ quit
             self.makeBootable()
 
             if releasetypes.VMWARE_IMAGE in self.imageTypes:
-                self.status('Creating VMWare Player Image')
+                self.status('Creating VMware Player Image')
                 fd, vmfn = tempfile.mkstemp('.vmware.zip', 'mint-MDI-cvmpi-', self.cfg.imagesPath)
                 os.close(fd)
                 del fd
-                imagesList.append(self.createVMWarePlayerImage(vmfn, self.project.getName(), self.release.getDataValue('vmMemory'), self.cfg.imagesPath))
+                imagesList.append(self.createVMwarePlayerImage(vmfn, self.project.getName(), self.release.getDataValue('vmMemory'), self.cfg.imagesPath))
 
             #This has to be done after everything else as we need the qemu
             #image to generate vmware, etc.
