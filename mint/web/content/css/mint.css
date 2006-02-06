@@ -481,7 +481,7 @@ div#projectsPane div.boxHeader span {
 
 div#projectsPane div.boxHeader span + a {
     float: right;
-    font-size: 50%;
+    font-size: 75%;
 }
 
 div#projectsPane div#newProject {
