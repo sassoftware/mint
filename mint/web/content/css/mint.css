@@ -467,7 +467,7 @@ div#projectsPane div.boxHeader {
 }
 
 div#projectsPane div.boxBody {
-    height: 313px;
+    height: 300px;
     overflow: auto;
 }
 
