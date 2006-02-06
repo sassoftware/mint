@@ -318,7 +318,7 @@ title %(name)s (%(kversion)s)
         util.copyfileobj(fd, fdo, bufSize=524288)
         fd.close()
         fdo.close()
- 
+
     @timeMe
     def createFileSystem(self, basedir = os.getcwd()):
         #This file isn't needed outside this function, and is cleaned up when it exits
@@ -540,7 +540,7 @@ quit
 
             if releasetypes.VMWARE_IMAGE in self.imageTypes:
                 self.status('Creating VMWare Player Image')
-                fd, vmfn = tempfile.mkstemp('.zip', 'mint-MDI-cvmpi-', self.cfg.imagesPath)
+                fd, vmfn = tempfile.mkstemp('.vmware.zip', 'mint-MDI-cvmpi-', self.cfg.imagesPath)
                 os.close(fd)
                 del fd
                 imagesList.append(self.createVMWarePlayerImage(vmfn, self.project.getName(), self.release.getDataValue('vmMemory'), self.cfg.imagesPath))

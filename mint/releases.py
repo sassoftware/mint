@@ -54,7 +54,7 @@ bootableImageTemplate = {
 bootableImageTemplateDependents = [releasetypes.VMWARE_IMAGE, releasetypes.LIVE_ISO]
 
 vmwareImageTemplate = {
-    'vmMemory':         (RDT_INT, '256', 'How much memory should VMWare use when running this image?')
+    'vmMemory':         (RDT_INT, '256', 'How much memory should VMware use when running this image?')
 }
 
 stubImageTemplate = {
@@ -67,7 +67,7 @@ dataHeadings = {
     releasetypes.BOOTABLE_IMAGE   : 'Image Settings',
     releasetypes.INSTALLABLE_ISO  : 'Installable ISO Settings',
     releasetypes.QEMU_IMAGE       : 'Bootable Image Settings',
-    releasetypes.VMWARE_IMAGE     : 'VMWare Image Settings',
+    releasetypes.VMWARE_IMAGE     : 'VMware Image Settings',
     releasetypes.STUB_IMAGE       : 'Stub Image Settings',
 }
 
@@ -408,6 +408,14 @@ class Release(database.TableObject):
 
     def deleteRelease(self):
         return self.server.deleteRelease(self.getId())
+
+    def hasVMwareImage(self):
+        """ Returns True if release has a VMware player image. """
+        filelist = self.getFiles()
+        for file in filelist:
+            if file["filename"].endswith(".vmware.zip"):
+                return True
+        return False
 
 class ReleaseImageTypesTable(database.DatabaseTable):
     name = "ReleaseImageTypes"
