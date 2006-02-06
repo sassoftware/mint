@@ -41,7 +41,7 @@ onload = "javascript:;"
                 <img id="topgradright" src="${cfg.staticPath}/apps/mint/images/topgrad_right.png" alt="" />
                 <div id="corpLogo">
                     <a href="http://${SITE}">
-                        <img src="${cfg.staticPath}/apps/mint/images/corplogo.png" width="78" height="94" alt="rPath Logo" />
+                        <img src="${cfg.staticPath}/apps/mint/images/corplogo_notrans.png" width="78" height="94" alt="rPath Logo" />
                     </a>
                 </div>
                 <div id="prodLogo">
