@@ -38,7 +38,8 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         page = page.postForm(1, self.post, {'username':'foouser', 'password':'foopass'})
 
-        properUrl = '/'.join([x for x in (self.URL + pageURI).split('/') if x])
+        # strip extra slash
+        properUrl = self.URL + pageURI[1:]
 
         self.failIf(properUrl not in page.body,
                     "rBO explicit redirects are improper. "
