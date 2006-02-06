@@ -73,7 +73,7 @@ onload = "javascript:;"
                 <div>
                     <span id="topOfPage"><a href="#top">Top of Page</a></span>
                     <ul class="footerLinks">
-                        <li><a href="/corp/company.html">About rPath</a></li>
+                        <li><a href="/corp/">About rPath</a></li>
                         <li py:if="cfg.announceLink"><a href="${cfg.announceLink}">Site Announcements</a></li>
                         <li><a href="/legal/">Legal</a></li>
                         <li><a href="/corp/company-contact-rpath.html">Contact Us</a></li>
