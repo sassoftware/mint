@@ -81,7 +81,7 @@ from mint.mint import upstream
                             <a href="${basePath}rss">
                                 Subscribe to release news
                                     <img style="border: none; vertical-align: middle;"
-                                         src="${cfg.staticPath}apps/mint/images/xml.gif" />
+                                         src="${cfg.staticPath}apps/mint/images/rss-inline.gif" />
                             </a>
                         </li>
                     </ul>
