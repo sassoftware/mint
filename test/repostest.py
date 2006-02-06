@@ -6,6 +6,7 @@
 import os
 from time import sleep
 import testsuite
+import re
 testsuite.setup()
 
 from mint_rephelp import MintRepositoryHelper
@@ -158,10 +159,12 @@ class RepositoryTest(MintRepositoryHelper):
         assert(troveNames == ['testcase', 'testcase:runtime', 'testcase:source'])
 
     def testGetTroveVersionsByArch(self):
-        expected = "{'x86_64': [('/testproject.rpath.local@rpl:devel/1.0-1-1', "\
-                   "'1#x86_64')], 'x86': "\
-                   "[('/testproject.rpath.local@rpl:devel/1.0-1-1', "\
-                   "'1#x86')]}"
+        expectedRE = "\{'x86_64': \[\('/testproject.rpath.local@rpl:devel/1.0-1-1', "\
+                   "'/testproject\.rpath\.local@rpl:devel/\d+\.\d+:1.0-1-1', "\
+                   "'1#x86_64'\)\], 'x86': "\
+                   "\[\('/testproject.rpath.local@rpl:devel/1.0-1-1', "\
+                   "'/testproject.rpath.local@rpl:devel/\d+\.\d+:1.0-1-1', "\
+                   "'1#x86'\)\]\}"
 
         repos = self.openRepository()
         client, userId = self.quickMintUser("testuser", "testpass")
@@ -175,7 +178,7 @@ class RepositoryTest(MintRepositoryHelper):
 
         troveVersions = client.server.getTroveVersionsByArch(projectId, "group-core=testproject.rpath.local@rpl:devel")
 
-        self.failUnlessEqual(str(troveVersions), expected)
+        assert re.compile(expectedRE).match(str(troveVersions))
 
     def testMultipleRepos(self):
         client, userId = self.quickMintUser("testuser", "testpass")
