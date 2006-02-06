@@ -138,7 +138,7 @@
                 </li>
             </ul>
             <div id="newProject"><a href="http://${SITE}newProject"><strong>Create a new project</strong></a></div>
-            <div id="userSettings"><a href="http://${SITE}userSettings"><strong>Edit My Account</strong></a></div>
+            <div id="userSettings"><a href="http://${SITE}userSettings"><strong>Edit my account</strong></a></div>
         </div>
     </div>
 </html>

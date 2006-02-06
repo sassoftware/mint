@@ -61,8 +61,8 @@ sqlbase = """
                      GROUP BY Projects.projectId) as P
     %s
     ORDER BY %s
-    LIMIT %d
-    OFFSET %d
+    LIMIT ?
+    OFFSET ?
 """
 
 ordersql = {
