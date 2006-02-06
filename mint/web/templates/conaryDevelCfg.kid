@@ -22,7 +22,8 @@ from mint import userlevels
     </head>
     <body>
         <div class="layout" id="helpPage">
-            <h2>${project.getNameForDisplay(maxWordLen = 50)}</h2>
+            <h1>${project.getNameForDisplay(maxWordLen = 50)}</h1>
+            <h2>Using Conary</h2>
             <h3>Setting up Your Conary Development Environment</h3>
 
                 <p>NOTE: You will need the following pieces of

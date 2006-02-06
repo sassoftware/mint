@@ -50,8 +50,8 @@ import time
                 ${groupTroveBuilder()}
             </div>
             <div id="middle">
-                <h2>${project.getNameForDisplay()}<br/>Release: ${name}</h2>
-
+                <h1>${project.getNameForDisplay()}</h1>
+                <h2>Release: ${name}</h2>
                 <h3>Release Information</h3>
 
                 <p>This release was created from version ${upstream(version)}

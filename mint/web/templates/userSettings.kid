@@ -15,13 +15,13 @@
                 ${resourcePane()}
                 <div style="width: 180px;">
                     <h3>Close My Account</h3>
-                    <p>If you wish to cancel your account, click the &quot;cancel account&quot; button below.
+                    <p>If you wish to cancel your account, click the &quot;Cancel Account&quot; button below.
                        If you cancel your account, you will be removed from any project for which you are
                        a member or owner.
                     </p>
                     <p>
                         <form method="get" action="cancelAccount">
-                            <button class="warn" type="submit">Cancel my account</button>
+                            <button class="img" id="userCancel" type="submit"><img src="${cfg.staticPath}/apps/mint/images/cancel_account_button.png" alt="Cancel Account" /></button>
                         </form>
                     </p>
                 </div>
@@ -88,7 +88,7 @@
                             </td>
                         </tr>
                     </table>
-                    <p><button type="submit">Submit</button></p>
+                    <button class="img" id="userSubmit" type="submit"><img src="${cfg.staticPath}/apps/mint/images/submit_button.png" alt="Submit" /></button>
                 </form>
             </div>
         </div>

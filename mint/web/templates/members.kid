@@ -71,8 +71,8 @@ from mint import userlevels
                     lastOwner = project.lastOwner(auth.userId)
                     onlyOwner = project.onlyOwner(auth.userId)
                 ?>
-                <h2>${project.getNameForDisplay(maxWordLen = 50)}<br/>
-                    Members</h2>
+                <h1>${project.getNameForDisplay(maxWordLen = 50)}</h1>
+                <h2>Members</h2>
 
                 <div id="yourStatus" py:if="auth.authorized">
                     <h3>Your Status</h3>

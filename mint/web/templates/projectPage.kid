@@ -36,7 +36,8 @@ from mint.mint import upstream
                 ${groupTroveBuilder()}
             </div>
             <div id="middle">
-                <h2>${project.getNameForDisplay(maxWordLen = 50)} <span id="editProject" py:if="isOwner"><a href="${basePath}editProject">edit project</a></span></h2>
+                <h1>${project.getNameForDisplay(maxWordLen = 50)} <span id="editProject" py:if="isOwner"><a href="${basePath}editProject">edit project</a></span></h1>
+                <h2 py:if="project.getProjectUrl()">Project Home Page &#160;</h2>
 
                 <p class="help" py:if="not commits and cfg.hideFledgling">
                     This is a fledgling project. The developers of this project
@@ -49,7 +50,6 @@ from mint.mint import upstream
                     considered fledgling, and will appear on "Browse Projects" pages.
                 </p>
 
-                <h3 py:if="project.getProjectUrl()">Project Home Page &#160;</h3>
                 <p py:if="project.getProjectUrl()"><a href="${project.getProjectUrl()}" py:content="project.getProjectUrl()" />
                 </p>
                 <h3>Description</h3>

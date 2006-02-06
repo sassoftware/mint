@@ -20,12 +20,15 @@
             </div>
 
             <div id="middle">
-                <h2>Cooking Your Group</h2>
+                <h1>${project.getNameForDisplay(maxWordLen = 50)}</h1>
+                <h2>Group Builder: ${groupTrove.recipeName}</h2>
+                <h3>Cooking Your Group</h3>
 
                 <p>Your request to cook ${groupTrove.recipeName} has been
                 submitted.</p>
 
-                <p>Request Status: <span id="jobStatus">Retrieving cook status...</span></p>
+                <h3>Request Status</h3>
+                <p id="jobStatus">Retrieving cook status...</p>
 
                 <p>When the request status "Finished" appears, your group
                 has finished cooking. Click on the "Releases" link in the

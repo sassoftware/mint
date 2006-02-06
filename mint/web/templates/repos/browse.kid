@@ -35,7 +35,7 @@ def pluralTroves(c):
     <body>
         <div id="layout">
             <div id="left" class="side">
-                ${projectResourcesMenu()} 
+                ${projectResourcesMenu()}
                 ${releasesMenu(project.getReleases(), isOwner)}
                 ${commitsMenu(project.getCommits())}
             </div>
@@ -45,7 +45,8 @@ def pluralTroves(c):
             </div>
 
             <div id="middle">
-                <h2>${project.getNameForDisplay(maxWordLen = 50)}<br />Repository Browser</h2>
+                <h1>${project.getNameForDisplay(maxWordLen = 50)}</h1>
+                <h2>Repository Browser</h2>
 
                 <span py:for="l in string.uppercase" py:strip="True">
                     <span py:if="totals[l]"><a href="browse?char=${l}" title="${totals[l]} ${pluralTroves(totals[l])}">${l}</a> |</span>
@@ -58,7 +59,7 @@ def pluralTroves(c):
                 <span>
                     <a py:if="l not in string.digits and total" href="browse?char=0" title="${total} ${pluralTroves(total)}">0-9</a>
                 </span>
-                
+
                 <?python
                     if char in string.digits:
                         char = "a digit"

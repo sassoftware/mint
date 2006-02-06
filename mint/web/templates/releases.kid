@@ -95,12 +95,12 @@
                 ${groupTroveBuilder()}
             </div>
             <div id="middle">
-                <div class="pad">
-                    <?python hasVMwareImage = True in [ x.hasVMwareImage() for x in releases ] ?>
-                    <h2>${project.getNameForDisplay(maxWordLen = 50)}<br />Releases<a py:if="hasVMwareImage" title="Download VMware Player" href="http://www.vmware.com/download/player/"><img class="vmwarebutton" src="${cfg.staticPath}apps/mint/images/get_vmware_player.gif" alt="Download VMware Player" /></a></h2>
-                    <h3 py:if="isOwner">Published Releases</h3>
-                    ${releasesTable(releases, releaseVersions, isOwner, True, 5)}
-                </div>
+                <?python hasVMwareImage = True in [ x.hasVMwareImage() for x in releases ] ?>
+                <h1>${project.getNameForDisplay(maxWordLen = 50)}</h1>
+                <h2><a py:if="hasVMwareImage" title="Download VMware Player" href="http://www.vmware.com/download/player/"><img class="vmwarebutton" src="${cfg.staticPath}apps/mint/images/get_vmware_player.gif" alt="Download VMware Player" /></a>Releases</h2>
+                <h3 py:if="isOwner">Published Releases</h3>
+                ${releasesTable(releases, releaseVersions, isOwner, True, 5)}
+
                 <div py:if="isOwner">
                     <h3>Unpublished Releases</h3>
                     ${releasesTable(releases, releaseVersions, isOwner, False, 5)}

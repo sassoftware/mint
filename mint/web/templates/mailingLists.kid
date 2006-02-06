@@ -30,7 +30,8 @@
             </div>
             <div class="middle">
                 <p class="message" py:for='msg in messages' py:content="msg"/>
-                <h2>${project.getNameForDisplay(maxWordLen = 50)}<br />Mailing Lists</h2>
+                <h1>${project.getNameForDisplay(maxWordLen = 50)}</h1>
+                <h2>Mailing Lists</h2>
                 <div py:strip="True" py:if="isRPL">
                     <h3>
                     <a href="http://lists.rpath.com/mailman/listinfo/distro-commits" target="_NEW">distro-commits</a></h3>
@@ -99,9 +100,10 @@
                             <a href="$basePath/resetPassword?list=${list.name}" class="option">Request Password</a>
                         </span>
                     </div>
+                    <br />
                 </div>
                 <div py:if="not (lists or isRPL)">This project has no lists.</div>
-                <h2 py:if="isOwner">Create a New Mailing List</h2>
+                <h3 py:if="isOwner">Create a New Mailing List</h3>
 
                 <form py:if="isOwner" name="createList" action="$basePath/createList" method="POST">
                     <table border="0" cellspacing="0" cellpadding="0" class="mainformhorizontal">
