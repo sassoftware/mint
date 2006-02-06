@@ -95,9 +95,11 @@
                 ${groupTroveBuilder()}
             </div>
             <div id="middle">
-                <h2>${project.getNameForDisplay(maxWordLen = 50)}<br />Releases</h2>
-                <h3 py:if="isOwner">Published Releases</h3>
-                ${releasesTable(releases, releaseVersions, isOwner, True, 5)}
+                <div class="pad">
+                    <h2>${project.getNameForDisplay(maxWordLen = 50)}<br />Releases</h2>
+                    <h3 py:if="isOwner">Published Releases</h3>
+                    ${releasesTable(releases, releaseVersions, isOwner, True, 5)}
+                </div>
                 <div py:if="isOwner">
                     <h3>Unpublished Releases</h3>
                     ${releasesTable(releases, releaseVersions, isOwner, False, 5)}
