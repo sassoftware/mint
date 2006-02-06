@@ -42,22 +42,22 @@
                         </tr>
 
                         <tr>
-                            <th colspan="2"><em class="required">Group Version:</em></th>
-                            <td>
+                            <th><em class="required">Group Version:</em></th>
+                            <td colspan="2">
                                 <input type="text" name="version" size="16" value="${kwargs['version']}"/>
                                 <p class="help">Choose a version number for your group. Eg., 0.0.1</p>
                             </td>
                         </tr>
                         <tr>
-                            <th colspan="2">Description:</th>
-                            <td>
+                            <th>Description:</th>
+                            <td colspan="2">
                                 <textarea rows="10" cols="70" name="description">${kwargs['description']}</textarea>
                                 <p class="help">Please enter a description of this group.</p>
                             </td>
                         </tr>
                         <tr>
-                            <th colspan="2">Start Your Group:</th>
-                            <td>
+                            <th>Start Your Group:</th>
+                            <td colspan="2">
                                 <p class="help">You can choose some predefined groups of packages to add to your own group.
                                     If you want to choose the individual troves entirely yourself, you don't have to select
                                     any here.
