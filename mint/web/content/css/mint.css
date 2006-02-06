@@ -414,7 +414,6 @@ div.palette img.right {
 .palette ul {
     border-width:0px 1px 0px 1px;
     padding:0px 0px 4px 0px; font-size:110%;
-    margin: 0px;
     list-style-type: none;
     font-size: 95%;
 }
@@ -474,10 +473,6 @@ div#projectsPane div.boxBody {
 
 div#projectsPane div.boxBody p, div#projectsPane div.boxBody h3 {
     padding: 0px 6px 0px 12px;
-}
-
-div#projectsPane div.boxBody ul {
-    padding-left: 20px;
 }
 
 div#projectsPane div.boxHeader span {
