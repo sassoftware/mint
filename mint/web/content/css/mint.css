@@ -467,7 +467,7 @@ div#projectsPane div.boxHeader {
 }
 
 div#projectsPane div.boxBody {
-    height: 313px;
+    height: 300px;
     overflow: auto;
 }
 
@@ -481,7 +481,7 @@ div#projectsPane div.boxHeader span {
 
 div#projectsPane div.boxHeader span + a {
     float: right;
-    font-size: 50%;
+    font-size: 75%;
 }
 
 div#projectsPane div#newProject {
