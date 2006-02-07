@@ -20,6 +20,7 @@ function GenericRpcRequest(aUrl, aMethod) {
 // common instance varibles
 GenericRpcRequest.prototype.contentType = null;
 GenericRpcRequest.prototype.callback = null;
+GenericRpcRequest.prototype.callbackData = null;
 GenericRpcRequest.prototype.deferred = null;
 GenericRpcRequest.prototype.errback = null;
 GenericRpcRequest.prototype.finalizer = null;
@@ -35,14 +36,19 @@ GenericRpcRequest.prototype.setCallback = function(aCallback) {
     this.callback = aCallback;
 };
 
+// set a data object used to pass to the callback
+GenericRpcRequest.prototype.setCallbackData = function(aCallbackData) {
+    this.callbackData = aCallbackData;
+};
+
 // set an errback handler for handling an error from XmlHttpRequest
-GenericRpcRequest.prototype.setErrback = function(aErrback) {
-    this.errback = aErrback;
+GenericRpcRequest.prototype.setErrback = function() {
+    this.errback = arguments;
 };
 
 // set a call that gets run no matter what (e.g. a finalizer)
-GenericRpcRequest.prototype.setFinalizer = function(aFinalizer) {
-    this.finalizer = aFinalizer;
+GenericRpcRequest.prototype.setFinalizer = function() {
+    this.finalizer = arguments;
 };
 
 // generic send function
@@ -84,20 +90,26 @@ GenericRpcRequest.prototype.send = function(aIsAsync, aArgList) {
             logWarn("No callback set; this might not be what you wanted");
         }
         else {
-            this.deferred.addCallback(this.callback);
+            if (this.callbackData) {
+                this.deferred.addCallback(this.callback, this.callbackData);
+            } else {
+                this.deferred.addCallback(this.callback);
+            }
         }
-
         if (this.errback) {
             this.deferred.addErrback(this.errback);
         }
-
         if (this.finalizer) {
             this.deferred.addBoth(this.finalizer);
         }
     } else {
         req.send(marshaledData);
-        // TODO: this isn't quite right w/r/t error handling
-        this.callback(req);
+        // TODO: better error handling here, please
+        if (this.callbackData) {
+            this.callback(data, req);
+        } else {
+            this.callback(req);
+        }
     }
 };
 

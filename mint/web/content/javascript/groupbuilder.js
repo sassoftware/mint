@@ -8,7 +8,7 @@ On pages that allow for group manipulation do the following:
             addGroupTrove
             deleteGroupTrove
         Find the template item to use in updating, store it in a javascript object, and remove it from the display
-        
+
     On link click:
         Post the xmlrpc request to add/delete the trove
         Wait for the return value
@@ -51,20 +51,22 @@ GroupTroveManager.prototype.toggleLockState = function (url, id) {
     logDebug('creating toggleLockState XMLRPC request object');
     var req = new XmlRpcRequest(url, 'setGroupTroveItemVersionLock');
     req.setAuth(getCookieValue('pysid'));
-    req.setHandler(this.toggleVersionLock, {'id': id});
+    req.setCallback(this.toggleVersionLock);
+    req.setCallbackData({'id': id});
     logDebug("Sending the request");
-    req.send(id, Boolean(!lock));
+    req.send(true, [id, Boolean(!lock)]);
 }
 
 GroupTroveManager.prototype.addTrove = function (url, id, name, version, versionLock, referer) {
-    /* Form up the xmlrpc call and add this trove. 
+    /* Form up the xmlrpc call and add this trove.
     */
     logDebug('Creating the addTrove xmlrpc request object');
     var req = new XmlRpcRequest(url, 'addGroupTroveItem');
     req.setAuth(getCookieValue("pysid"));
-    req.setHandler(this.troveAdded, {'id': id, 'name': name, 'version': version, 'versionLock': versionLock, 'referer': referer});
+    req.setCallback(this.troveAdded);
+    req.setCallbackData({'id': id, 'name': name, 'version': version, 'versionLock': versionLock, 'referer': referer});
     logDebug("Sending the request");
-    req.send(id, name, version, '', '', Boolean(versionLock), false, false);
+    req.send(true, [id, name, version, '', '', Boolean(versionLock), false, false]);
 }
 
 GroupTroveManager.prototype.addTroveByProject = function (url, id, name, projectName, versionLock, referer) {
@@ -73,18 +75,19 @@ GroupTroveManager.prototype.addTroveByProject = function (url, id, name, project
     logDebug('Creating the addTroveByProject xmlrpc request object');
     var req = new XmlRpcRequest(url, 'addGroupTroveItemByProject');
     req.setAuth(getCookieValue("pysid"));
-    req.setHandler(this.troveAddedByProject, {'id': id, 'name': name, 'projectName': projectName, 'versionLock': versionLock, 'referer': referer});
+    req.setCallback(this.troveAddedByProject);
+    req.setCallbackData({'id': id, 'name': name, 'projectName': projectName, 'versionLock': versionLock, 'referer': referer});
     logDebug("Sending the request");
-    req.send(id, name, projectName, '', '', Boolean(versionLock), false, false);
+    req.send(true, [id, name, projectName, '', '', Boolean(versionLock), false, false]);
 }
 
 GroupTroveManager.prototype.deleteTrove = function(url, id, troveId) {
     logDebug('Creating the deleteTrove xmlrpc request object');
     var req = new XmlRpcRequest(url, 'delGroupTroveItem');
     req.setAuth(getCookieValue("pysid"));
-    req.setHandler(this.troveDeleted);
+    req.setCallback(this.troveDeleted);
     logDebug("Sending the request");
-    req.send(troveId);
+    req.send(true, [troveId]);
 }
 
 GroupTroveManager.prototype.createTroveRow = function(data) {
@@ -157,10 +160,11 @@ GroupTroveManager.prototype.createTroveRow = function(data) {
     this.tableNode.appendChild(newRow);
 }
 
-GroupTroveManager.prototype.toggleVersionLock = function(items, data) {
+GroupTroveManager.prototype.toggleVersionLock = function(data, req) {
     logDebug('toggleVersionLock');
+    var xml = req.responseXML;
     var img = getElement('groupbuilder-item-lockicon-' + data['id']);
-    var bools = items.getElementsByTagName('boolean');
+    var bools = xml.getElementsByTagName('boolean');
     var str = null;
     var title = null;
     locked = scrapeText(bools[1]) == '1'
@@ -180,19 +184,20 @@ GroupTroveManager.prototype.toggleVersionLock = function(items, data) {
     img.title = title;
 }
 
-GroupTroveManager.prototype.troveAdded = function(items, data) {
+GroupTroveManager.prototype.troveAdded = function(data, req) {
     logDebug("troveAdded");
-    var nodes = items.getElementsByTagName('int');
+    var xml = req.responseXML;
+    var nodes = xml.getElementsByTagName('int');
     data['groupTroveItemId'] = scrapeText(nodes[0]);
     //Now create the table row
     logDebug('data: ' + data);
     this.createTroveRow(data);
 }
 
-GroupTroveManager.prototype.troveAddedByProject = function(items, data) {
+GroupTroveManager.prototype.troveAddedByProject = function(data, req) {
     logDebug('troveAddedByProject');
-    logDebug('data: ' + data);
-    var array = items.getElementsByTagName('array')[0].getElementsByTagName('array')[0];
+    var xml = req.responseXML;
+    var array = xml.getElementsByTagName('array')[0].getElementsByTagName('array')[0];
     var values = array.getElementsByTagName('value');
     data['groupTroveItemId'] = scrapeText(values[0]);
     data['version'] = scrapeText(values[2]);
@@ -200,9 +205,10 @@ GroupTroveManager.prototype.troveAddedByProject = function(items, data) {
     this.createTroveRow(data);
 }
 
-GroupTroveManager.prototype.troveDeleted = function(items) {
-    logDebug("Trove deleted.  Data returned: " + items);
-    var nodes = items.getElementsByTagName('int')
+GroupTroveManager.prototype.troveDeleted = function(req) {
+    logDebug("Trove deleted.  Data returned: " + req.responseText);
+    var xml = req.responseXML;
+    var nodes = xml.getElementsByTagName('int')
     var retVal = scrapeText(nodes[0]);
     //find the table row in question and remove it.
     swapDOM('groupbuilder-item-' + retVal, null);
