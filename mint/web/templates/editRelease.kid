@@ -22,11 +22,13 @@ from mint.data import RDT_STRING, RDT_BOOL, RDT_INT
     <head>
         <title>${formatTitle((isNewRelease and "Create New" or "Edit") + " Release")}</title>
     </head>
-    <?python 
-        jsonloadNew = "javascript:getTroveList(" + str(project.getId()) + ");" 
-        jsonloadOld = "javascript:handleReleaseTypes(\""+ arch +"\");"    
+    <?python
+        if isNewRelease:
+            jsonload = "javascript:getTroveList(" + str(project.getId()) + ");"
+        else:
+            jsonload = "javascript:handleReleaseTypes(\""+ arch +"\");"
     ?>
-    <body py:attrs="{'onload': isNewRelease and jsonloadNew or jsonloadOld}">
+    <body py:attrs="{'onload': jsonload }">
         <div class="layout">
             <div id="left" class="side">
                 ${projectResourcesMenu()}
