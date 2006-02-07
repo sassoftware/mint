@@ -523,12 +523,12 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         projectId = client.newProject("Foo", "foo", "rpath.org")
         release = client.newRelease(projectId, "Test Release")
         release.setImageTypes([0])
-        release.setPublished(True)
 
         cu = self.db.cursor()
         cu.execute("INSERT INTO ImageFiles VALUES (1, ?, 0, ?, 'Test Image')",
                    release.id, filename)
         self.db.commit()
+        release.setPublished(True)
 
         page = self.fetch('/downloadImage/1/test.iso')
         assert(page.body == data)
