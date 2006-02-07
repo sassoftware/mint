@@ -21,6 +21,7 @@ from mint import shimclient
 from mint import dbversion
 from mint import mint_server
 from mint.projects import mysqlTransTable
+from mint import releasetypes
 
 MINT_DOMAIN = 'rpath.local'
 MINT_HOST = 'test'
@@ -156,6 +157,10 @@ class MintApacheServer(rephelp.ApacheServer):
 
         cfg.hideFledgling = True
         cfg.SSL = False
+
+        cfg.visibleImageTypes = [releasetypes.INSTALLABLE_ISO,
+                                 releasetypes.QEMU_IMAGE,
+                                 releasetypes.VMWARE_IMAGE]
 
         self.mintCfg = cfg
 
