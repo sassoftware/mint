@@ -366,10 +366,8 @@ class ProjectHandler(WebHandler):
 
         # handle imagetype check box state changes
         imageTypes = []
-        for imageEnum in self.cfg.visibleImageTypes:
-            name = "imagetype_%d" % (imageEnum)
-            if name in kwargs:
-                imageTypes.append(imageEnum)
+
+        imageTypes.append(int(kwargs['imagetype']))
 
         release.setImageTypes(imageTypes)
 
