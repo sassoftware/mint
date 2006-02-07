@@ -26,7 +26,7 @@ export maillistdir = /var/mailman
 
 SUBDIRS = mint test scripts mailman
 
-extra_files = Makefile Make.rules mint.conf httpd.conf authrepo.cnr
+extra_files = Makefile Make.rules mint.conf httpd.conf
 
 doc_files = NEWS TODO
 
@@ -62,9 +62,6 @@ install: all install-subdirs
 	install httpd.conf $(DESTDIR)$(httpddir)/mint.conf.dist
 	sed -i "s,@DATADIR@,$(installdir)$(datadir),g" $(DESTDIR)$(httpddir)/mint.conf.dist
 	sed -i "s,@DESTDIR@,$(installdir),g" $(DESTDIR)$(httpddir)/mint.conf.dist
-	mkdir -p $(DESTDIR)$(servicedir)/authrepo
-	install -m 644 authrepo.cnr $(DESTDIR)$(servicedir)/authrepo/authrepo.cnr.dist
-	sed -i "s,@DESTDIR@,$(installdir),g" $(DESTDIR)$(servicedir)/authrepo/authrepo.cnr.dist
 
 doc:
 	PYTHONPATH=.:../conary/: epydoc -o mintdoc mint
