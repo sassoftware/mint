@@ -160,7 +160,8 @@ class MintApacheServer(rephelp.ApacheServer):
 
         cfg.visibleImageTypes = [releasetypes.INSTALLABLE_ISO,
                                  releasetypes.QEMU_IMAGE,
-                                 releasetypes.VMWARE_IMAGE]
+                                 releasetypes.VMWARE_IMAGE,
+                                 releasetypes.STUB_IMAGE]
 
         self.mintCfg = cfg
 
