@@ -26,9 +26,7 @@ from conary import versions
 
 def _getTrove(cs, name, version, flavor):
     troveCs = cs.getNewTroveVersion(name, version, flavor)
-    t = trove.Trove(troveCs.getName(), troveCs.getOldVersion(),
-                    troveCs.getNewFlavor(), troveCs.getChangeLog())
-    t.applyChangeSet(troveCs)
+    t = trove.Trove(troveCs)
     return t
 
 def _handleKernelPackage(cs, name, version, flavor):
@@ -494,18 +492,14 @@ class LocalNetClient(netclient.NetworkRepositoryClient):
 
 def _getTrove(cs, name, version, flavor):
     pkgCs = cs.getNewTroveVersion(name, version, flavor)
-    t = trove.Trove(pkgCs.getName(), pkgCs.getOldVersion(),
-                    pkgCs.getNewFlavor(), pkgCs.getChangeLog())
-    t.applyChangeSet(pkgCs, skipIntegrityChecks = True)
+    t = trove.Trove(pkgCs, skipIntegrityChecks = True)
     return t
 
 def _getTroves(cs, troveTups):
     results = []
     for troveTup in troveTups:
         pkgCs = cs.getNewTroveVersion(*troveTup)
-        t = trove.Trove(pkgCs.getName(), pkgCs.getOldVersion(),
-                        pkgCs.getNewFlavor(), pkgCs.getChangeLog())
-        t.applyChangeSet(pkgCs, skipIntegrityChecks = True)
+        t = trove.Trove(pkgCs, skipIntegrityChecks = True)
         results.append(t)
     return results
 
