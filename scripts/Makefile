@@ -28,7 +28,7 @@ extra_dist = \
 
 SUBDIRS = data DiskImageData
 
-CFLAGS=-Wall -O2
+CFLAGS=-Wall -g -O2 -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64
 LDFLAGS=
 CC=gcc
 
@@ -58,6 +58,7 @@ install: install-subdirs
 dist: default-dist
 
 clean: default-clean
+	rm raw2vmdk
 
 raw2vmdk: raw2vmdk.c
 	$(CC) $(CFLAGS) -lm -o raw2vmdk raw2vmdk.c

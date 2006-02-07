@@ -230,9 +230,9 @@ static void usage(char * name)
             name);
 }
 
-int zeropad(size_t numbytes, FILE * file)
+int zeropad(off_t numbytes, FILE * file)
 {
-    int i;
+    off_t i;
     for( i = 0; i < numbytes; i++) {
         fputc(0, file);
     }
@@ -266,8 +266,8 @@ int main(int argc, char ** argv) {
     // Figure out how big the extent needs to be
     int ret = stat(infile, &istat);
     if (ret) return errno;
-    size_t padding = SECTORSIZE - (istat.st_size % SECTORSIZE);
-    size_t outsize = istat.st_size + (padding == SECTORSIZE ? 0: padding);
+    off_t padding = SECTORSIZE - (istat.st_size % SECTORSIZE);
+    off_t outsize = istat.st_size + (padding == SECTORSIZE ? 0: padding);
 
     SparseExtentHeader_init(&header, outsize);
 
@@ -287,8 +287,8 @@ int main(int argc, char ** argv) {
         // Write the GTs
         zeropad( BYTES(numGTs(outsize) * 4) - writeGrainTables(header.overHead, outsize, of), of);
         // Align to grain
-        long pos;
-        pos = ftell(of);
+        off_t pos;
+        pos = ftello(of);
         padding = GRAINSIZE - (pos % GRAINSIZE);
         zeropad((padding == GRAINSIZE ? 0: padding), of);
         // Write the grains

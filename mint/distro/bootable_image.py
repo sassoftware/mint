@@ -27,9 +27,8 @@ from conary.conaryclient.cmdline import parseTroveSpec
 from conary.repository import errors
 from conary.callbacks import UpdateCallback
 from conary.callbacks import ChangesetCallback
-from conary.conarycfg import ConfigFile
-from conary.lib import log
-from conary.lib import util
+from conary.conarycfg import ConfigFile, CfgDict, CfgString
+from conary.lib import log, util, epdb
 
 class BootableImageConfig(ConfigFile):
     #Different cylinder sizes.  I don't know which is better, but I've seen
@@ -42,8 +41,9 @@ class BootableImageConfig(ConfigFile):
     partoffset0     = 512
 
     #directory containing the uml init script as well as fstab and other hooks
-    dataDir         = os.path.join(os.path.dirname(__file__), 'DiskImageData')
-    umlKernel       = '/usr/bin/uml-vmlinux'
+    dataDir         = os.path.join(os.path.dirname(__file__), '..', '..', 'scripts', 'DiskImageData')
+    umlKernel       = CfgDict(CfgString)
+    debug           = 1
     shortCircuit    = 0 #1: Use a static name for the root dir and the qemu image.
                         #Change this to false to use securely named temp files.
 
@@ -58,7 +58,8 @@ class Journal:
         dirname = os.path.dirname(target)
         filename = os.path.basename(target)
         f = open(os.sep.join((root, dirname, '.UIDGID')), 'a')
-        f.write('%s %s %s\n' %(filename, user, group))
+        trfilename = filename.replace(' ', r'\ ').replace('\t', r'\t')
+        f.write('%s %s %s\n' %(trfilename, user, group))
         f.close()
 
     def mknod(self, root, target, devtype, major, minor, mode,
@@ -70,7 +71,8 @@ class Journal:
         f = open(os.sep.join((root, dirname, '.DEVICES')), 'a')
         # XXX e2fsimage does not handle symbolic users/groups for .DEVICES
         # But this doesn't matter as .UIDGID is processed after .DEVICES
-        f.write('%s %s %d %d 0%o\n' %(filename, devtype, major, minor, mode))
+        trfilename = filename.replace(' ', r'\ ').replace('\t', r'\t')
+        f.write('%s %s %d %d 0%o\n' %(trfilename, devtype, major, minor, mode))
         f.close()
 
 def timeMe(func):
@@ -300,8 +302,12 @@ title %(name)s (%(kversion)s)
 
     @timeMe
     def MakeE3FsImage(self, file):
-        cmd = '/usr/bin/e2fsimage -f %s -d %s -s %d' % (file,
-                self.fakeroot, (self.imagesize - self.imgcfg.partoffset0)/1024)
+        flags = ''
+        if self.imgcfg.debug:
+            flags += ' -v'
+        cmd = '/usr/bin/e2fsimage -f %s -d %s -s %d %s' % (file,
+                self.fakeroot, (self.imagesize - self.imgcfg.partoffset0)/1024,
+                flags)
         util.execute(cmd)
         cmd = '/sbin/e2label %s /' % file
         util.execute(cmd)
@@ -335,6 +341,9 @@ title %(name)s (%(kversion)s)
                 padding = 0
             self.imagesize = size + padding
             self.MakeE3FsImage(file)
+            #As soon as that's done, we can delete the fakeroot to free up space
+            util.rmtree(self.fakeroot)
+            self.fakeroot = None
             self.prepareDiskImage()
             self.WriteBack(file)
         finally:
@@ -342,7 +351,7 @@ title %(name)s (%(kversion)s)
 
     @timeMe
     def runTagScripts(self):
-        cmd = '%s root=/dev/ubda1 init=/tmp/init.sh mem=128M ubd0=%s' % (self.imgcfg.umlKernel, self.outfile)
+        cmd = '%s root=/dev/ubda1 init=/tmp/init.sh mem=128M ubd0=%s' % (self.imgcfg.umlKernel[self.arch], self.outfile)
         util.execute(cmd)
 
     @timeMe
@@ -499,7 +508,6 @@ quit
                 }
 
             #initialize some stuff
-            #TODO clean this stuff up
             self.basefilename = basefilename
             self.freespace = freespace * 1024 * 1024
 
@@ -511,52 +519,57 @@ quit
             if not self.imgcfg.shortCircuit:
                 pass
 
-            self.status('Creating temporary root')
-            self.createTemporaryRoot()
+            try:
+                self.status('Creating temporary root')
+                self.createTemporaryRoot()
 
-            #Don't need status here.  It's very fast
-            self.setupConaryClient()
+                #Don't need status here.  It's very fast
+                self.setupConaryClient()
 
-            self.status('Installing software')
-            self.populateTemporaryRoot(callback)
+                self.status('Installing software')
+                self.populateTemporaryRoot(callback)
 
-            self.status('Installing %s kernel' % self.arch)
-            self.installKernel(callback)
+                self.status('Installing %s kernel' % self.arch)
+                self.installKernel(callback)
 
-            self.status('Adding filesystem bits')
-            self.fileSystemOddsNEnds()
+                self.status('Adding filesystem bits')
+                self.fileSystemOddsNEnds()
 
-            self.status('Creating /etc/conaryrc')
-            #cclient is set during setupConaryClient()
-            self.writeConaryRc(os.path.join(self.fakeroot, 'etc'), self.cclient)
-            self.status('Creating root file system')
-            self.createFileSystem(self.cfg.imagesPath)
+                self.status('Creating /etc/conaryrc')
+                #cclient is set during setupConaryClient()
+                self.writeConaryRc(os.path.join(self.fakeroot, 'etc'), self.cclient)
+                self.status('Creating root file system')
+                self.createFileSystem(self.cfg.imagesPath)
 
-            self.status('Running tag-scripts')
-            self.runTagScripts()
+                self.status('Running tag-scripts')
+                self.runTagScripts()
 
-            self.status('Making image bootable')
-            self.makeBootable()
+                self.status('Making image bootable')
+                self.makeBootable()
 
-            if releasetypes.VMWARE_IMAGE in self.imageTypes:
-                self.status('Creating VMware Player Image')
-                fd, vmfn = tempfile.mkstemp('.vmware.zip', 'mint-MDI-cvmpi-', self.cfg.imagesPath)
-                os.close(fd)
-                del fd
-                imagesList.append(self.createVMwarePlayerImage(vmfn, self.project.getName(), self.release.getDataValue('vmMemory'), self.cfg.imagesPath))
+                if releasetypes.VMWARE_IMAGE in self.imageTypes:
+                    self.status('Creating VMware Player Image')
+                    fd, vmfn = tempfile.mkstemp('.zip', 'mint-MDI-cvmpi-', self.cfg.imagesPath)
+                    os.close(fd)
+                    del fd
+                    imagesList.append(self.createVMwarePlayerImage(vmfn, self.project.getName(), self.release.getDataValue('vmMemory'), self.cfg.imagesPath))
 
-            #This has to be done after everything else as we need the qemu
-            #image to generate vmware, etc.
-            zipfn = None
-            if releasetypes.QEMU_IMAGE in self.imageTypes:
-                self.status('Compressing Qemu image')
-                zipfn = self.compressImage(self.outfile)
-                imagesList.append((zipfn, 'Bootable Qemu Image',))
-                pass
+                #This has to be done after everything else as we need the qemu
+                #image to generate vmware, etc.
+                zipfn = None
+                if releasetypes.QEMU_IMAGE in self.imageTypes:
+                    self.status('Compressing Qemu image')
+                    zipfn = self.compressImage(self.outfile)
+                    imagesList.append((zipfn, 'Bootable Qemu Image',))
 
+            except:
+                if self.imgcfg.debug:
+                    epdb.post_mortem(sys.exc_info()[2])
+                raise
         finally:
             if not self.imgcfg.shortCircuit:
-                util.rmtree(self.fakeroot)
+                if self.fakeroot:
+                    util.rmtree(self.fakeroot)
                 os.unlink(self.outfile)
 
         return self.moveToFinal(imagesList, os.path.join(self.cfg.finishedPath, self.project.getHostname(), str(self.release.getId())))
