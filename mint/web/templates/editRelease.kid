@@ -12,7 +12,7 @@ from mint.data import RDT_STRING, RDT_BOOL, RDT_INT
     <div py:def="breadcrumb()" py:strip="True">
         <a href="$basePath">${project.getNameForDisplay()}</a>
         <a href="${basePath}releases">Releases</a>
-        <a href="#">${(isNewRelease and "Create New" or "Edit") + "Release"}</a>
+        <a href="#">${(isNewRelease and "Create New" or "Edit") + " Release"}</a>
     </div>
     <?python
         for var in ['releaseId', 'trove', 'releaseName']:
@@ -20,10 +20,13 @@ from mint.data import RDT_STRING, RDT_BOOL, RDT_INT
     ?>
 
     <head>
-        <title>${formatTitle((isNewRelease and "Create New" or "Edit") + "Release")}</title>
+        <title>${formatTitle((isNewRelease and "Create New" or "Edit") + " Release")}</title>
     </head>
-    <?python jsonload = "javascript:getTroveList(" + str(project.getId()) + ")" ?>
-    <body py:attrs="{'onload': isNewRelease and jsonload or None}">
+    <?python 
+        jsonloadNew = "javascript:getTroveList(" + str(project.getId()) + ");" 
+        jsonloadOld = "javascript:handleReleaseTypes(\""+ arch +"\");"    
+    ?>
+    <body py:attrs="{'onload': isNewRelease and jsonloadNew or jsonloadOld}">
         <div class="layout">
             <div id="left" class="side">
                 ${projectResourcesMenu()}

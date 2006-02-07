@@ -280,12 +280,12 @@ function handleReleaseTypes(aSelectedArch) {
     if (aSelectedArch == "x86_64") {
         isoImageSel.disabled = false;
         qemuImageSel.disabled = true;
-        vmwareImage.disabled = true;
-        isoImage.click();
+        vmwareImageSel.disabled = true;
+        isoImageSel.click();
     } else {
         isoImageSel.disabled = false;
         qemuImageSel.disabled = false;
-        vmwareImage.disabled = false;
+        vmwareImageSel.disabled = false;
     }
 
 }
