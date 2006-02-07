@@ -768,7 +768,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         page = page.postForm(1, self.post, \
                              {'name' : 'Foo',
-                              'trove': 'group-test',
+                              'trove': 'group-test=rpl:devel',
                               'version': '/testproject.rpath.local@rpl:devel/1.0-1-1 1#x86',
                               'imagetype_1' : '1'})
 
