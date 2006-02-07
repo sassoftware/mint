@@ -10,6 +10,8 @@ from mint_rephelp import MintRepositoryHelper
 from mint import jobstatus
 from mint import jobs
 from mint import releasetypes
+from mint import cooktypes
+from mint import mint_error
 from mint.data import RDT_INT, RDT_STRING, RDT_BOOL
 from mint.distro import stub_image
 
@@ -269,11 +271,13 @@ class JobsTest(MintRepositoryHelper):
 
         cookJobId = groupTrove.startCookJob("1#x86")
 
-        job = client.startNextJob(["1#x86_64"])
+        job = client.startNextJob(["1#x86_64"],
+                                  {'cookTypes' : [cooktypes.GROUP_BUILDER]})
 
         self.failIf(job, "startNextJob returned the wrong architecture")
 
-        job = client.startNextJob(["1#x86"])
+        job = client.startNextJob(["1#x86"],
+                                  {'cookTypes' : [cooktypes.GROUP_BUILDER]})
 
         self.failIf(not job, "startNextJob ignored a valid cook job")
 
@@ -292,11 +296,13 @@ class JobsTest(MintRepositoryHelper):
         relJob = client.startImageJob(release.getId())
 
         # normally called from job-server
-        job = client.startNextJob(["1#x86"])
+        job = client.startNextJob(["1#x86"],
+                                  {'imageTypes' : [releasetypes.STUB_IMAGE]})
 
         self.failIf(job, "startNextJob returned the wrong architecture")
 
-        job = client.startNextJob(["1#x86", "1#x86_64"])
+        job = client.startNextJob(["1#x86", "1#x86_64"],
+                                  {'imageTypes' : [releasetypes.STUB_IMAGE]})
 
         self.failIf(not job, "startNextJob ignored a valid release job")
 
@@ -326,14 +332,16 @@ class JobsTest(MintRepositoryHelper):
         cu.execute("UPDATE Jobs set owner=1")
         self.db.commit()
 
-        job = client.startNextJob(["1#x86", "1#x86_64"])
+        job = client.startNextJob(["1#x86", "1#x86_64"],
+                                  {'cookTypes' : [cooktypes.GROUP_BUILDER]})
 
         self.failIf(job is not None, "job-server is not multi-instance safe")
 
         cu.execute("UPDATE Jobs set owner=NULL")
         self.db.commit()
 
-        job = client.startNextJob(["1#x86", "1#x86_64"])
+        job = client.startNextJob(["1#x86", "1#x86_64"],
+                                  {'cookTypes' : [cooktypes.GROUP_BUILDER]})
 
     def testStartJobLocking(self):
         client, userId = self.quickMintUser("testuser", "testpass")
@@ -361,15 +369,18 @@ class JobsTest(MintRepositoryHelper):
         cu.execute("UPDATE Jobs SET owner=4 WHERE jobId=4")
         self.db.commit()
 
-        job = client.startNextJob(["1#x86"])
+        job = client.startNextJob(["1#x86"],
+                                  {'cookTypes' : [cooktypes.GROUP_BUILDER]})
 
         self.failIf(job.id != 1, "Jobs retreived out of order")
 
-        job = client.startNextJob(["1#x86"])
+        job = client.startNextJob(["1#x86"],
+                                  {'cookTypes' : [cooktypes.GROUP_BUILDER]})
 
         self.failIf(job.id != 3, "Non-waiting job was selected")
 
-        job = client.startNextJob(["1#x86"])
+        job = client.startNextJob(["1#x86"],
+                                  {'cookTypes' : [cooktypes.GROUP_BUILDER]})
 
         self.failIf(job.id != 5, "owned job was selected")
 
@@ -464,6 +475,435 @@ class JobsTest(MintRepositoryHelper):
         self.failIf(cu.fetchone() != (jobstatus.WAITING, None),
                     "Job not regenerated properly. will never run")
 
+    #####
+    # setup for testing startNextJob
+    #####
+
+    def setUpCookJob(self, client):
+        projectId = client.newProject("Foo", "foo", "rpath.org")
+
+        groupTrove = client.createGroupTrove(projectId, 'group-test', '1.0.0',
+                                             'No Description', False)
+
+        groupTroveId = groupTrove.getId()
+
+        trvName = 'testtrove'
+        trvVersion = '/testproject.rpath.local@rpl:devel/1.0-1-1'
+        trvFlavor = '1#x86|5#use:~!kernel.debug:~kernel.smp'
+        subGroup = ''
+
+        trvid = groupTrove.addTrove(trvName, trvVersion, trvFlavor,
+                                    subGroup, False, False, False)
+
+        cookJobId = groupTrove.startCookJob("1#x86")
+
+    def setUpImageJob(self, client):
+        projectId = client.newProject("Foo", "foo", "rpath.org")
+
+        release = client.newRelease(projectId, "Test Release")
+        release.setImageTypes([releasetypes.STUB_IMAGE])
+
+        self.stockReleaseFlavor(release.getId())
+
+        relJob = client.startImageJob(release.getId())
+
+    def setUpBothJobs(self, client):
+        projectId = client.newProject("Foo", "foo", "rpath.org")
+
+        release = client.newRelease(projectId, "Test Release")
+        release.setImageTypes([releasetypes.STUB_IMAGE])
+
+        self.stockReleaseFlavor(release.getId())
+
+        relJob = client.startImageJob(release.getId())
+
+        groupTrove = client.createGroupTrove(projectId, 'group-test', '1.0.0',
+                                             'No Description', False)
+
+        groupTroveId = groupTrove.getId()
+
+        trvName = 'testtrove'
+        trvVersion = '/testproject.rpath.local@rpl:devel/1.0-1-1'
+        trvFlavor = '1#x86|5#use:~!kernel.debug:~kernel.smp'
+        subGroup = ''
+
+        trvid = groupTrove.addTrove(trvName, trvVersion, trvFlavor,
+                                    subGroup, False, False, False)
+
+        cookJobId = groupTrove.startCookJob("1#x86")
+
+    #####
+    # test startNextJob for just images
+    #####
+
+    def testStartImageNoJobType(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        self.setUpImageJob(client)
+
+        # ask for no job types
+        job = client.startNextJob(["1#x86_64"], {})
+
+        self.failIf(job, "startNextJob returned something when nothing wanted")
+
+    def testStartImageNoType(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        self.setUpImageJob(client)
+
+        # ask for no arch type or job types
+        job = client.startNextJob([], {})
+
+        self.failIf(job, "startNextJob returned something when nothing wanted")
+
+    def testStartImageNoArch(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        self.setUpImageJob(client)
+
+        # ask for no arch
+        job = client.startNextJob([],
+                                  {'imageTypes' : [releasetypes.STUB_IMAGE]})
+
+        self.failIf(job, "startNextJob returned the wrong image type")
+
+    def testStartImageWrongType(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        self.setUpImageJob(client)
+
+        # ask for a different image type
+        job = client.startNextJob(["1#x86_64"],
+                                  {'imageTypes' : [releasetypes.QEMU_IMAGE]})
+
+        self.failIf(job, "startNextJob returned the wrong image type")
+
+    def testStartImageWrongArch(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        self.setUpImageJob(client)
+
+        # ask for a different architecture
+        job = client.startNextJob(["1#x86"],
+                                  {'imageTypes' : [releasetypes.STUB_IMAGE]})
+
+        self.failIf(job, "startNextJob matched the wrong architecture")
+
+    def testStartImageCookArch(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        self.setUpImageJob(client)
+
+        # ask for a cook job with wrong arch
+        job = client.startNextJob(["1#x86"],
+                                  {'cookTypes' : [cooktypes.GROUP_BUILDER]})
+
+        self.failIf(job, "startNextJob erroneously matched cook "
+                    "job for wrong arch")
+
+    def testStartImageCook(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        self.setUpImageJob(client)
+
+        # ask for a cook job with right arch
+        job = client.startNextJob(["1#x86"],
+                                  {'cookTypes' : [cooktypes.GROUP_BUILDER]})
+
+        self.failIf(job, "startNextJob erreneously matched cook job")
+
+    def testStartImage(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        self.setUpImageJob(client)
+
+        # ask for the right parameters
+        job = client.startNextJob(["1#x86_64"],
+                                  {'imageTypes' : [releasetypes.STUB_IMAGE]})
+
+        self.failIf(not job, "startNext job didn't match for correct values")
+
+    #####
+    # test startNextJob for just cooks
+    #####
+
+    def testStartCookWrongArch(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        self.setUpCookJob(client)
+
+        # ask for a cook job with wrong arch
+        job = client.startNextJob(["1#x86_64"],
+                                  {'cookTypes' : [cooktypes.GROUP_BUILDER]})
+
+        self.failIf(job, "startNextJob matched cook job for wrong arch")
+
+    def testStartCook(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        self.setUpCookJob(client)
+
+        # ask for a cook job with right arch
+        job = client.startNextJob(["1#x86"],
+                                  {'cookTypes' : [cooktypes.GROUP_BUILDER]})
+
+        self.failIf(not job, "startNextJob matched cook job for wrong arch")
+
+    def testStartCookImageArch(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        self.setUpCookJob(client)
+
+        # ask for a image job with wrong arch
+        job = client.startNextJob(["1#x86_64"],
+                                  {'imageTypes' : [releasetypes.STUB_IMAGE]})
+
+        self.failIf(job, "startNextJob matched cook job when asked for image")
+
+    def testStartCookImage(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        self.setUpCookJob(client)
+
+        # ask for a image job with right arch
+        job = client.startNextJob(["1#x86"],
+                                  {'imageTypes' : [releasetypes.STUB_IMAGE]})
+
+        self.failIf(job, "startNextJob matched cook job when asked for image")
+
+    def testStartCookNoJobType(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        self.setUpCookJob(client)
+
+        # ask for a no job with right arch
+        job = client.startNextJob(["1#x86"], {})
+
+        self.failIf(job, "startNextJob matched cook job but asked for nothing")
+
+    def testStartCookNoJobType2(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        self.setUpCookJob(client)
+
+        # ask for no job with wrong arch
+        job = client.startNextJob(["1#x86_64"], {})
+
+        self.failIf(job, "startNextJob matched cook job but asked for nothing")
+
+    def testStartCookNoJob(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        self.setUpCookJob(client)
+
+        # ask for no job with no arch
+        job = client.startNextJob([], {})
+
+        self.failIf(job, "startNextJob matched cook job but asked for nothing")
+
+    def testStartCookNoJobArch(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        self.setUpCookJob(client)
+
+        # ask for an image job with no arch
+        job = client.startNextJob([],
+                                  {'imageTypes' : [releasetypes.STUB_IMAGE]})
+
+        self.failIf(job, "startNextJob matched cook job but asked for nothing")
+
+    #####
+    # test startNextJob for cooks and images together
+    #####
+
+    def testStartCompImage(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        self.setUpBothJobs(client)
+
+        # ask for an image job with right arch
+        job = client.startNextJob(['1#x86_64'],
+                                  {'imageTypes' : [releasetypes.STUB_IMAGE]})
+
+        self.failIf(not job, "startNextJob ignored an image job")
+
+    def testStartCompCook(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        self.setUpBothJobs(client)
+
+        # ask for an image job with right arch
+        job = client.startNextJob(['1#x86'],
+                                  {'cookTypes' : [cooktypes.GROUP_BUILDER]})
+
+        self.failIf(not job, "startNextJob ignored a cook job")
+
+    def testStartCompImageArch(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        self.setUpBothJobs(client)
+
+        # ask for an image job with wrong arch
+        job = client.startNextJob(['1#x86'],
+                                  {'imageTypes' : [releasetypes.STUB_IMAGE]})
+
+        self.failIf(job, "startNextJob matched image job wrong arch")
+
+    def testStartCompCookArch(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        self.setUpBothJobs(client)
+
+        # ask for an image job with wrong arch
+        job = client.startNextJob(['1#x86_64'],
+                                  {'cookTypes' : [cooktypes.GROUP_BUILDER]})
+
+        self.failIf(job, "startNextJob matched cook job wrong arch")
+
+
+    def testStartCompImageNoArch(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        self.setUpBothJobs(client)
+
+        # ask for an image job with no arch
+        job = client.startNextJob([],
+                                  {'imageTypes' : [releasetypes.STUB_IMAGE]})
+
+        self.failIf(job, "startNextJob matched image job no arch")
+
+    def testStartCompCookNoArch(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        self.setUpBothJobs(client)
+
+        # ask for an image job with wrong arch
+        job = client.startNextJob([],
+                                  {'cookTypes' : [cooktypes.GROUP_BUILDER]})
+
+        self.failIf(job, "startNextJob matched cook job no arch")
+
+    def testStartCompNoArch(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        self.setUpBothJobs(client)
+
+        # ask for an image job with wrong arch
+        job = client.startNextJob([], {})
+
+        self.failIf(job, "startNextJob matched job no arch and no type")
+
+    def testStartCompArch(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        self.setUpBothJobs(client)
+
+        # ask for an image job with wrong arch
+        job = client.startNextJob(['1#x86'], {})
+
+        self.failIf(job, "startNextJob matched job no type")
+
+    def testStartCompArch2(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        self.setUpBothJobs(client)
+
+        # ask for an image job with wrong arch
+        job = client.startNextJob(['1#x86_64'], {})
+
+        self.failIf(job, "startNextJob matched job no type")
+
+    #####
+    # test both cooks and images while asking for both
+    #####
+
+    def testStartCompBothCook(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        self.setUpBothJobs(client)
+
+        # ask for all jobs with x86 arch (will match cook)
+        job = client.startNextJob(['1#x86'],
+                                  {'imageTypes' : [releasetypes.STUB_IMAGE],
+                                   'cookTypes' : [cooktypes.GROUP_BUILDER]})
+
+        self.failIf(not job.groupTroveId, "startNextJob ignored a cook job")
+
+    def testStartCompBothImage(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        self.setUpBothJobs(client)
+
+        # ask for all jobs with x86_64 arch (will match image)
+        job = client.startNextJob(['1#x86_64'],
+                                  {'imageTypes' : [releasetypes.STUB_IMAGE],
+                                   'cookTypes' : [cooktypes.GROUP_BUILDER]})
+
+        self.failIf(not job.releaseId, "startNextJob ignored an image job")
+
+    def testStartCompBothNoArch(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        self.setUpBothJobs(client)
+
+        # ask for all jobs no arch
+        job = client.startNextJob([],
+                                  {'imageTypes' : [releasetypes.STUB_IMAGE],
+                                   'cookTypes' : [cooktypes.GROUP_BUILDER]})
+
+        self.failIf(job, "startNextJob matched for no arch")
+
+    def testStartCompBothArch(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        self.setUpBothJobs(client)
+
+        # ask for all jobs
+        job = client.startNextJob(['1#x86_64', '1#x86'],
+                                  {'imageTypes' : [releasetypes.STUB_IMAGE],
+                                   'cookTypes' : [cooktypes.GROUP_BUILDER]})
+
+        self.failIf(not job.releaseId, "startNextJob didn't match image job")
+
+        # ask for all jobs
+        job = client.startNextJob(['1#x86_64', '1#x86'],
+                                  {'imageTypes' : [releasetypes.STUB_IMAGE],
+                                   'cookTypes' : [cooktypes.GROUP_BUILDER]})
+
+        self.failIf(not job.groupTroveId,
+                    "startNextJob didn't match group trove")
+
+    def testStartCompImageType(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        self.setUpBothJobs(client)
+
+        # ask for all jobs but wrong image type
+        job = client.startNextJob(['1#x86_64', '1#x86'],
+                                  {'imageTypes' : [releasetypes.QEMU_IMAGE],
+                                   'cookTypes' : [cooktypes.GROUP_BUILDER]})
+
+        self.failIf(not job.groupTroveId, "startNextJob didn't match cook")
+
+    def testStartCompCookType(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        self.setUpBothJobs(client)
+
+        # ask for all jobs but wrong image type
+        job = client.startNextJob(['1#x86_64', '1#x86'],
+                                  {'imageTypes' : [releasetypes.STUB_IMAGE],
+                                   'cookTypes' : [cooktypes.DUMMY_COOK]})
+
+        self.failIf(not job.groupTroveId, "startNextJob didn't match image")
+
+    def testStartCompBothTypes(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        self.setUpBothJobs(client)
+
+        # ask for all jobs but wrong image type
+        job = client.startNextJob(['1#x86_64', '1#x86'],
+                                  {'imageTypes' : [releasetypes.QEMU_IMAGE],
+                                   'cookTypes' : [cooktypes.DUMMY_COOK]})
+
+        self.failIf(job, "startNextJob didn't matched when it shouldn't have")
+
+        #####
+        # and just to round it out, test for bad parmaeters
+        #####
+
+    def testStartBadArch(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+
+        self.assertRaises(mint_error.PermissionDenied,
+                          client.startNextJob, ['this is not a frozen flavor'],
+                          {'imageTypes' : [releasetypes.QEMU_IMAGE],
+                           'cookTypes' : [cooktypes.GROUP_BUILDER]})
+
+    def testStartBadImage(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+
+        self.assertRaises(mint_error.PermissionDenied,
+                          client.startNextJob, ['1#x86'],
+                          {'imageTypes' : [9999],
+                           'cookTypes' : [cooktypes.GROUP_BUILDER]})
+
+    def testStartBadCook(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+
+        self.assertRaises(mint_error.PermissionDenied,
+                          client.startNextJob, ['1#x86'],
+                          {'imageTypes' : [releasetypes.QEMU_IMAGE],
+                           'cookTypes' : [9999]})
 
 if __name__ == "__main__":
     testsuite.main()
