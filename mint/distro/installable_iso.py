@@ -372,7 +372,7 @@ class InstallableIso(ImageGenerator):
             
             discNum = d.split("disc")[-1]
             infoMap['disc'] = d
-            discNumStr = "Disk %d" % int(discNum)
+            discNumStr = "Disc %d" % int(discNum)
             truncatedName = infoMap['name'][:31-len(discNumStr)]
             infoMap['discname'] = "%s %s" % (truncatedName, discNumStr)
             infoMap['iso'] =  isoname % infoMap
@@ -395,7 +395,7 @@ class InstallableIso(ImageGenerator):
                 # Abort if parent thread has died
                 assertParentAlive()
 
-            isoList.append((infoMap['iso'], "%s Disk %s" % (infoMap['name'], discNum)))
+            isoList.append((infoMap['iso'], "%s Disc %s" % (infoMap['name'], discNum)))
 
         isoList = [ (os.path.join(infoMap['isodir'], iso[0]), iso[1]) for iso in isoList ]
         for iso, name in isoList:
