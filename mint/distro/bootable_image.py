@@ -341,9 +341,6 @@ title %(name)s (%(kversion)s)
                 padding = 0
             self.imagesize = size + padding
             self.MakeE3FsImage(file)
-            #As soon as that's done, we can delete the fakeroot to free up space
-            util.rmtree(self.fakeroot)
-            self.fakeroot = None
             self.prepareDiskImage()
             self.WriteBack(file)
         finally:
@@ -389,7 +386,11 @@ quit
 
     @timeMe
     def createVMDK(self, outfile):
-        cmd = 'raw2vmdk -C %d %s %s' % (self.cylinders, self.outfile, outfile)
+        flags = ''
+        if self.imgcfg.debug:
+            flags += ' -v'
+        cmd = 'raw2vmdk -C %d %s %s %s' % (self.cylinders, self.outfile,
+                    outfile, flags)
         print "Running", cmd
         util.execute(cmd)
 
@@ -546,6 +547,10 @@ quit
 
                 self.status('Making image bootable')
                 self.makeBootable()
+
+                #As soon as that's done, we can delete the fakeroot to free up space
+                util.rmtree(self.fakeroot)
+                self.fakeroot = None
 
                 if releasetypes.VMWARE_IMAGE in self.imageTypes:
                     self.status('Creating VMware Player Image')

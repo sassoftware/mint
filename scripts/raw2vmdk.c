@@ -59,16 +59,20 @@ typedef struct SparseExtentHeader {
     u_int8_t    pad[435];
 } SparseExtentHeader;
 
-int numGTs(int outsize) {
+int verbose = 0;
+
+#define VPRINT  if(verbose) printf
+
+int numGTs(off_t outsize) {
     int numgrains = ceil((double)outsize / GRAINSIZE);
     return ceil((double)numgrains / GTEPERGT);
 }
 
-int GT0Offset(size_t numgts) {
+int GT0Offset(off_t numgts) {
     return ceil((double)(numgts * 4) / SECTORSIZE);
 }
 
-void SparseExtentHeader_init(SparseExtentHeader *hd, u_int32_t outsize) {
+void SparseExtentHeader_init(SparseExtentHeader *hd, off_t outsize) {
     memset(hd, 0, sizeof(SparseExtentHeader));
     size_t numgts = numGTs(outsize);
     size_t gt0offset = GT0Offset(numgts);
@@ -96,7 +100,7 @@ void SparseExtentHeader_init(SparseExtentHeader *hd, u_int32_t outsize) {
     hd->doubleEndLineChar2= DELC2;
 }
 
-int writeDescriptorFile(FILE * of, const u_int32_t outsize,
+int writeDescriptorFile(FILE * of, const off_t outsize,
                         const char * outfile,
                         const u_int32_t cylinders,
                         const u_int8_t heads,
@@ -113,7 +117,7 @@ int writeDescriptorFile(FILE * of, const u_int32_t outsize,
     returner += fprintf(of, "createType=\"monolithicSparse\"\n"
         "\n"
         "# Extent description\n"
-        "RW %d SPARSE \"%s\"\n", SECTORS(outsize), basename(cpoutfile));
+        "RW %lld SPARSE \"%s\"\n", SECTORS(outsize), basename(cpoutfile));
 
     returner += fprintf(of, "\n"
         "# The Disk Data Base \n"
@@ -128,7 +132,7 @@ int writeDescriptorFile(FILE * of, const u_int32_t outsize,
     return returner;
 }
 
-int writeGrainDirectory(const size_t offset, const size_t outsize, FILE * of) {
+int writeGrainDirectory(const size_t offset, const off_t outsize, FILE * of) {
     size_t returner = 0;
     size_t i;
     size_t stop = numGTs(outsize);
@@ -142,7 +146,7 @@ int writeGrainDirectory(const size_t offset, const size_t outsize, FILE * of) {
     return returner * sizeof(cur);
 }
 
-int writeGrainTables(const size_t offset, const size_t outsize, FILE * of) {
+int writeGrainTables(const size_t offset, const off_t outsize, FILE * of) {
     size_t returner = 0;
     size_t i, numGrains = outsize / GRAINSIZE;
     size_t grainSize = SECTORS(GRAINSIZE);
@@ -169,19 +173,22 @@ int writeGrainTableData(const SparseExtentHeader * header, u_int32_t * grainTabl
     return returner;
 }
 
-int copyData(const char* infile, const size_t outsize,
+off_t copyData(const char* infile, const off_t outsize,
              const SparseExtentHeader * header, FILE * of) {
     FILE * in = fopen(infile, "rb");
     /* Always have 512 entries per grain table */
     u_int32_t limit = numGTs(outsize) * 512;
     u_int32_t * grainTable = (u_int32_t*)malloc(limit * sizeof(u_int32_t));
     memset((void*)grainTable, 0, limit * sizeof(u_int32_t));
-    u_int32_t returner = 0, currentSector = header->overHead;
+    off_t returner = 0;
+    u_int32_t currentSector = header->overHead;
     u_int32_t pos = 0;
     u_int64_t zero = 0L;
     u_int8_t buf[65536];
     size_t read;
+    u_int32_t numGrains = outsize / 65536, curGrain = 0;
     while((read = fread((void*)&buf, sizeof(u_int8_t), 65536, in))) {
+        VPRINT("Copying grain %d of %d", ++curGrain, numGrains);
         /* Check to make sure it's not all zeros */
         int i, rem, stop;
         Bool blank = 1;
@@ -207,6 +214,10 @@ int copyData(const char* infile, const size_t outsize,
             grainTable[pos] = currentSector;
             currentSector += GRAINSECTORS;
             returner += fwrite((void*)&buf, sizeof(u_int8_t), read, of);
+            VPRINT(" written\n");
+        }
+        else {
+            VPRINT(" skipped\n");
         }
         pos++;
     }
@@ -214,6 +225,7 @@ int copyData(const char* infile, const size_t outsize,
     /* Write the grainTable to the two offsets */
     writeGrainTableData(header, grainTable, limit, of);
     free(grainTable);
+    VPRINT("wrote %lld bytes\n", returner);
     return returner * sizeof(u_int8_t);
 }
 
@@ -248,11 +260,12 @@ int main(int argc, char ** argv) {
 
     // Parse command line options
     do {
-        c = getopt(argc, argv, "C:H:S:");
+        c = getopt(argc, argv, "C:H:S:v");
         switch (c) {
             case 'C': cylinders = atoi(optarg); break;
             case 'H': heads = atoi(optarg); break;
             case 'S': sectors = atoi(optarg); break;
+            case 'v': verbose = 1; break;
         }
     } while (c >= 0);
 
@@ -261,30 +274,42 @@ int main(int argc, char ** argv) {
         return -1;
     }
     char * infile = argv[optind];
+    VPRINT("Reading from %s\n", infile);
     char * outfile = argv[optind+1];
+    VPRINT("Writing to %s\n", outfile);
 
     // Figure out how big the extent needs to be
     int ret = stat(infile, &istat);
     if (ret) return errno;
+    VPRINT("Source file is %lld bytes\n", istat.st_size);
     off_t padding = SECTORSIZE - (istat.st_size % SECTORSIZE);
+    VPRINT("Padding %lld bytes\n", padding);
     off_t outsize = istat.st_size + (padding == SECTORSIZE ? 0: padding);
+    VPRINT("Total size of the destination image: %lld\n", outsize);
 
+    VPRINT("Creating the sparse extent header\n");
     SparseExtentHeader_init(&header, outsize);
 
     FILE * of = fopen(outfile, "wb");
     if(of) {
         // Write the header
+        VPRINT("Writing the header\n");
         fwrite((void*)&header, sizeof(SparseExtentHeader), 1, of);
         // Write the descriptor
+        VPRINT("Padding to the first sector\n");
         zeropad(BYTES(header.descriptorSize) - writeDescriptorFile(of, outsize, outfile, cylinders, heads, sectors), of);
         // Write the rGDE
+        VPRINT("Writing the redundant Grain Directory\n");
         size_t sizeofGDE = GT0Offset(numGTs(outsize));
         zeropad( BYTES(sizeofGDE) - writeGrainDirectory(header.rgdOffset, outsize, of), of);
         // Write the rGTs
+        VPRINT("Writing the redundant Grain Tables\n");
         zeropad( BYTES(numGTs(outsize) * 4) - writeGrainTables(header.overHead, outsize, of), of);
         // Write the GDE
+        VPRINT("Writing the Grain Directory\n");
         zeropad( BYTES(sizeofGDE) - writeGrainDirectory(header.gdOffset, outsize, of), of);
         // Write the GTs
+        VPRINT("Writing the Grain Tables\n");
         zeropad( BYTES(numGTs(outsize) * 4) - writeGrainTables(header.overHead, outsize, of), of);
         // Align to grain
         off_t pos;
@@ -292,9 +317,12 @@ int main(int argc, char ** argv) {
         padding = GRAINSIZE - (pos % GRAINSIZE);
         zeropad((padding == GRAINSIZE ? 0: padding), of);
         // Write the grains
+        VPRINT("Copying the data\n");
         copyData(infile, outsize, &header, of);
     }
-    fclose(of);
+    if(of) 
+        fclose(of);
+    VPRINT("Finished\n");
     return 0;
 }
 
