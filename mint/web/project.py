@@ -330,7 +330,6 @@ class ProjectHandler(WebHandler):
 
         thawedFlavor = deps.ThawDependencySet(flavor)
         arch = thawedFlavor.members[deps.DEP_CLASS_IS].members.keys()[0]
-        print
 
         return self._write("editRelease", isNewRelease = False,
             release = release,
