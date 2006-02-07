@@ -38,7 +38,7 @@
             <div py:strip="True" py:if="isOwner and not release.getPublished()">
             <td><a href="deleteRelease?releaseId=${release.getId()}" id="${release.getId()}Delete" class="option">Delete</a>
             </td>
-            <td><a href="publish?releaseId=${release.getId()}" id="${release.getId()}Publish" class="option">Publish</a>
+            <td><a py:if="release.getFiles()" href="publish?releaseId=${release.getId()}" id="${release.getId()}Publish" class="option">Publish</a>
             </td>
             </div>
         </tr>

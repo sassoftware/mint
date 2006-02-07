@@ -845,6 +845,18 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
             rephelp.ApacheServer.start(server)
 
+    def testCantPublishReleasesWithoutFiles(self):
+        client, userId = self.quickMintUser('foouser', 'foopass')
+        projectId = self.newProject(client)
+
+        release = client.newRelease(projectId, 'Test Release')
+        release.setTrove("group-trove",
+            "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
+
+        self.webLogin('foouser', 'foopass')
+        page = self.assertNotContent('/project/testproject/releases', ok_codes = [200],
+            content = 'href="publish?releaseId')
+
 
 if __name__ == "__main__":
     testsuite.main()
