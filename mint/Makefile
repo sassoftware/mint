@@ -12,6 +12,7 @@ python_files =			\
 	checkhtml.py		\
 	config.py		\
 	constants.py		\
+        cooktypes.py            \
 	data.py			\
 	database.py		\
 	dbversion.py		\
