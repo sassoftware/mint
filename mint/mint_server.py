@@ -33,7 +33,7 @@ import users
 import simplejson
 
 from mint_error import PermissionDenied, ReleasePublished, ReleaseMissing, \
-     MintError
+     MintError, ReleaseEmpty
 from reports import MintReport
 from searcher import SearchTermsError
 
@@ -1276,9 +1276,12 @@ class MintServer(object):
         self._filterReleaseAccess(releaseId)
         if not self.releases.releaseExists(releaseId):
             raise ReleaseMissing()
+        if published and not self.getImageFilenames(releaseId):
+            raise ReleaseEmpty()
         if self.releases.getPublished(releaseId):
             raise ReleasePublished()
         timeStamp = time.time()
+        
         self.releases.update(releaseId, published = int(published), timePublished = timeStamp)
         return True
 

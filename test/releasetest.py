@@ -13,7 +13,7 @@ import sys
 from mint_rephelp import MintRepositoryHelper
 from mint.data import RDT_STRING, RDT_BOOL, RDT_INT
 from mint.releases import ReleaseDataNameError
-from mint.mint_error import ReleasePublished, ReleaseMissing
+from mint.mint_error import ReleasePublished, ReleaseMissing, ReleaseEmpty
 from mint import releasetypes
 from mint.database import ItemNotFound
 from mint.mint_server import deriveBaseFunc
@@ -126,6 +126,7 @@ class ReleaseTest(MintRepositoryHelper):
         release = client.newRelease(projectId, "Test Release")
 
         release.setImageTypes([releasetypes.STUB_IMAGE])
+        release.setFiles([["file1", "File Title 1"]])
         release.setPublished(True)
 
         # refresh
@@ -164,6 +165,7 @@ class ReleaseTest(MintRepositoryHelper):
         release = client.newRelease(projectId, "Test Release")
 
         release.setImageTypes([releasetypes.STUB_IMAGE])
+        release.setFiles([["file1", "File Title 1"]])
         release.setPublished(True)
 
         try:
@@ -289,6 +291,7 @@ class ReleaseTest(MintRepositoryHelper):
                 release = client.newRelease(projId, relName)
             release.setTrove("group-trove", "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
             if "Unpublished" not in relName:
+                release.setFiles([["file1", "File Title 1"]])
                 release.setPublished(True)
             time.sleep(1) # hack: let the timestamp increment since mysql doesn't do sub-second resolution
         releaseList = client.server.getReleaseList(20, 0)
@@ -323,6 +326,7 @@ class ReleaseTest(MintRepositoryHelper):
         release = client.newRelease(projectId, 'release 1')
         release.setTrove("group-trove",
                          "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
+        release.setFiles([["file1", "File Title 1"]])
         release.setPublished(True)
 
         # ugly hack. mysql does not distinguish sub-second time resolution
@@ -331,6 +335,7 @@ class ReleaseTest(MintRepositoryHelper):
         release = client.newRelease(projectId, 'release 2')
         release.setTrove("group-trove",
                          "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
+        release.setFiles([["file1", "File Title 1"]])
         release.setPublished(True)
 
         self.failIf([x.id for x in \
@@ -408,6 +413,23 @@ class ReleaseTest(MintRepositoryHelper):
             os.dup2(oldFd, sys.stderr.fileno())
             os.close(oldFd)
             os.chdir(cwd)
+
+    def testPublishEmptyRelease(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        projectId = client.newProject("Foo", "foo", "rpath.org")
+
+        release = client.newRelease(projectId, "Test Release")
+
+        try:
+            release.setPublished(True)
+        except ReleaseEmpty:
+            pass
+        else:
+            self.fail("mint_error.ReleaseEmpty exception expected")
+
+        release.setFiles([["file1", "File Title 1"]])
+        release.setPublished(True)
+
 
 if __name__ == "__main__":
     testsuite.main()

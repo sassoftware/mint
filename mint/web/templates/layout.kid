@@ -50,7 +50,7 @@ onload = "javascript:;"
                     </a>
                 </div>
                 <div id="topRight">
-                    <div class="about"><a href="http://www.rpath.com/corp/about/">About rPath</a>
+                    <div class="about"><a href="${cfg.corpSite}">About ${cfg.companyName}</a>
                         <span py:omit="True" py:if="not auth.authorized and req.uri != cfg.basePath"> | <a href="http://${SITE}">Sign In</a></span>
                     </div>
                     <form action="http://${cfg.siteHost}${cfg.basePath}search" method="get" id="searchForm">
@@ -73,7 +73,7 @@ onload = "javascript:;"
                 <div>
                     <span id="topOfPage"><a href="#top">Top of Page</a></span>
                     <ul class="footerLinks">
-                        <li><a href="/corp/">About rPath</a></li>
+                        <li><a href="${cfg.corpSite}">About ${cfg.companyName}</a></li>
                         <li py:if="cfg.announceLink"><a href="${cfg.announceLink}">Site Announcements</a></li>
                         <li><a href="/legal/">Legal</a></li>
                         <li><a href="/corp/company-contact-rpath.html">Contact Us</a></li>

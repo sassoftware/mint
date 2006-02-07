@@ -20,7 +20,8 @@ import releases
 import users
 import grouptrove
 import base64
-from mint_error import MintError, UnknownException, PermissionDenied, ReleasePublished, ReleaseMissing
+from mint_error import MintError, UnknownException, PermissionDenied, \
+    ReleasePublished, ReleaseMissing, ReleaseEmpty
 from searcher import SearchTermsError
 
 
@@ -457,6 +458,8 @@ class _Method(xmlrpclib._Method):
             raise ReleasePublished(exceptionArgs[0])
         elif exceptionName == "ReleaseMissing":
             raise ReleaseMissing(exceptionArgs[0])
+        elif exceptionName == "ReleaseEmpty":
+            raise ReleaseEmpty(exceptionArgs[0])
         elif exceptionName == "AuthRepoError":
             raise users.AuthRepoError(exceptionArgs[0])
         elif exceptionName == "LabelMissing":

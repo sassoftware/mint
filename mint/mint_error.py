@@ -30,3 +30,7 @@ class ReleasePublished(MintError):
 class ReleaseMissing(MintError):
     def __str__(self):
         return "The referenced release does not exist."
+
+class ReleaseEmpty(MintError):
+    def __str__(self):
+        return "The referenced release has no files and cannot be published."
