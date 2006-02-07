@@ -65,8 +65,6 @@ var STATUS_ERROR = 4;
 var STATUS_NOJOB = 5;
 var refreshed = false;
 var oldStatus = -1;
-var tickerRefreshTime        = 200;  /* 1/5 second */
-var tickerId;
 var cookStatusRefreshTime    = 2000; /* 2 seconds */
 var cookStatusId;
 var releaseStatusRefreshTime = 5000; /* 5 seconds */
@@ -76,10 +74,11 @@ var cookStatus = "global";
 var releaseStatus = "global";
 
 function processGetReleaseStatus(aReq) {
+    var el = $("jobStatus");
+    var statusText = "";
+
     logDebug("[JSON] response: ", aReq.responseText);
     releaseStatus = evalJSONRequest(aReq);
-
-    el = document.getElementById("jobStatus");
 
     if(releaseStatus.status > STATUS_RUNNING) {
         hideElement('editOptionsDisabled');
@@ -102,23 +101,22 @@ function processGetReleaseStatus(aReq) {
 }
 
 function processGetCookStatus(aReq) {
+    var el = $("jobStatus");
+
     logDebug("[JSON] response: ", aReq.responseText);
     cookStatus = evalJSONRequest(aReq);
 
-    el = document.getElementById("jobStatus");
     replaceChildNodes(el, textWithBaton(cookStatus.message));
 
 }
 
 function processGetTroveList(aReq) {
+    var sel = $("trove");
     logDebug("[JSON] response: ", aReq.responseText);
     var trovelist = evalJSONRequest(aReq);
-    var sel = document.getElementById("trove");
 
-    clearTimeout(tickerId);
-
-    clearSelection(sel);
     /* make an empty selection, forcing user to pick */
+    clearSelection(sel);
     appendToSelect(sel, "", document.createTextNode("---"), "trove");
 
     for (var label in trovelist) {
@@ -134,11 +132,10 @@ function processGetTroveList(aReq) {
 function processGetTroveVersionsByArch(aReq) {
     logDebug("[JSON] response: ", aReq.responseText);
     archDict = evalJSONRequest(aReq);
-    clearTimeout(tickerId);
 
     // handle archs
     var archs = keys(archDict).sort();
-    var archSel = document.getElementById("arch");
+    var archSel = $("arch");
     clearSelection(archSel);
     appendToSelect(archSel, "", document.createTextNode("---"), "arch");
     for (var i in archs) {
@@ -177,7 +174,6 @@ function getTroveList(projectId) {
     req.setAuth(getCookieValue("pysid"));
     req.setCallback(processGetTroveList);
     req.send(true, [projectId]);
-    tickerId = setTimeout("ticker()", tickerRefreshTime);
 }
 
 function getTroveVersionsByArch(projectId, troveNameWithLabel) {
@@ -185,13 +181,12 @@ function getTroveVersionsByArch(projectId, troveNameWithLabel) {
     req.setAuth(getCookieValue("pysid"));
     req.setCallback(processGetTroveVersionsByArch);
     req.send(true, [projectId, troveNameWithLabel]);
-    // TODO: ticker?
 }
 
-// ticker --------------------------------------------------------------------
+// baton --------------------------------------------------------------------
 
 var ticks = 0;
-var baton = '-\\|/'
+var baton = '-\\|/';
 
 function textWithBaton(text) {
 
@@ -202,22 +197,7 @@ function textWithBaton(text) {
 
 }
 
-function ticker() {
-    el = document.getElementById("baton");
-    if (el) {
-        // first time through
-        if (ticks < 0) {
-            el.text = el.text + " ";
-            ticks++;
-        }
-
-        el.text = el.text.substring(0, el.text.length-1);
-        el.text += baton[ticks];
-        ticks = ((ticks + 1) % baton.length);
-
-        setTimeout("ticker()", tickerRefreshTime);
-    }
-}
+// NOTE: ticker removed for now until we come up with something better
 
 // event handlers -----------------------------------------------------------
 
@@ -246,9 +226,9 @@ function onTroveChange(projectId) {
 
 function onArchChange() {
 
-    var archSel = document.getElementById("arch");
-    var vSel = document.getElementById("version");
-    var sb = document.getElementById("submitButton");
+    var archSel = $("arch");
+    var vSel = $("version");
+    var sb = $("submitButton");
     var i = archSel.selectedIndex;
 
     // handle versions
@@ -273,8 +253,8 @@ function onArchChange() {
 
 function onVersionChange() {
 
-    var vSel = document.getElementById("version");
-    var sb = document.getElementById("submitButton");
+    var vSel = $("version");
+    var sb = $("submitButton");
     var i = vSel.selectedIndex;
 
     if (i > 0) {
@@ -285,5 +265,3 @@ function onVersionChange() {
     }
 
 }
-
-
