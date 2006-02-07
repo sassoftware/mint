@@ -12,6 +12,7 @@ import mint_rephelp
 import rephelp
 
 from mint import mint_error
+from mint import releasetypes
 from conary.repository import errors
 
 from repostest import testRecipe
@@ -821,7 +822,9 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
             # now lock down shim clients as well
             self.mintServer.cfg.maintenanceMode = True
             self.assertRaises(mint_error.PermissionDenied,
-                              client.server._server.startNextJob, ['1#x86'])
+                              client.server._server.startNextJob,
+                              ['1#x86'],
+                               {'imageTypes' : [releasetypes.STUB_IMAGE]})
 
             self.assertRaises(mint_error.PermissionDenied,
                               self.newProject, client)
