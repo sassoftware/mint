@@ -855,31 +855,9 @@ class JobsTest(MintRepositoryHelper):
 
         self.failIf(not job.groupTroveId, "startNextJob didn't match cook")
 
-    def testStartCompCookType(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        self.setUpBothJobs(client)
-
-        # ask for all jobs but wrong image type
-        job = client.startNextJob(['1#x86_64', '1#x86'],
-                                  {'imageTypes' : [releasetypes.STUB_IMAGE],
-                                   'cookTypes' : [cooktypes.DUMMY_COOK]})
-
-        self.failIf(not job.groupTroveId, "startNextJob didn't match image")
-
-    def testStartCompBothTypes(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        self.setUpBothJobs(client)
-
-        # ask for all jobs but wrong image type
-        job = client.startNextJob(['1#x86_64', '1#x86'],
-                                  {'imageTypes' : [releasetypes.QEMU_IMAGE],
-                                   'cookTypes' : [cooktypes.DUMMY_COOK]})
-
-        self.failIf(job, "startNextJob didn't matched when it shouldn't have")
-
-        #####
-        # and just to round it out, test for bad parmaeters
-        #####
+    #####
+    # and just to round it out, test for bad parmaeters
+    #####
 
     def testStartBadArch(self):
         client, userId = self.quickMintUser("testuser", "testpass")
