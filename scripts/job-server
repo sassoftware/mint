@@ -282,19 +282,13 @@ class IsoGenConfig(ConfigFile):
             if arch not in SUPPORTED_ARCHS:
                 log.error("unsupported architecture: %s", arch)
                 sys.exit(1)
-        for cookType in cfg.cookTypes:
-            if cookType not in cooktypes.TYPES:
-                log.error("unsupported cook type: %s", arch)
-                sys.exit(1)
-        for imageType in cfg.imageTypes:
-            if cookType not in cooktypes.TYPES:
-                log.error("unsupported image type: %s", arch)
-                sys.exit(1)
         cfg.jobTypes = {}
-        cfg.jobTypes['cookTypes'] = cfg.cookTypes
-        cfg.jobTypes['imageTypes'] = cfg.imageTypes
-        del cfg.cookTypes
-        del cfg.imageTypes
+        if 'cookTypes' in cfg.__dict__:
+            cfg.jobTypes['cookTypes'] = cfg.cookTypes
+            del cfg.cookTypes
+        if 'imageTypes' in cfg.__dict__:
+            cfg.jobTypes['imageTypes'] = cfg.imageTypes
+            del cfg.imageTypes
         if self.serverUrl is None:
             log.error("a server URL must be specified in the config file,"
             " for example:")
