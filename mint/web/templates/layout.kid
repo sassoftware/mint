@@ -76,7 +76,7 @@ onload = "javascript:;"
                         <li><a href="${cfg.corpSite}">About ${cfg.companyName}</a></li>
                         <li py:if="cfg.announceLink"><a href="${cfg.announceLink}">Site Announcements</a></li>
                         <li><a href="/legal/">Legal</a></li>
-                        <li><a href="/corp/company-contact-rpath.html">Contact Us</a></li>
+                        <li><a href="${cfg.corpSite}company-contact-rpath.html">Contact Us</a></li>
                         <li><a href="/help/">Help</a></li>
                     </ul>
                 </div>
