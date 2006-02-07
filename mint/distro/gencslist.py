@@ -553,6 +553,7 @@ def writeSqldb(cs, path, cfgFile = None):
             rc = oldTrove.applyChangeSet(self, *args, **kw)
             # then remove the signatures
             self.troveInfo.sigs.reset()
+            self.computeSignatures()
             return rc
     trove.Trove = Trove
     try:
