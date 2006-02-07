@@ -244,6 +244,7 @@ function onArchChange() {
             appendToSelect(vSel, versionlist[i][1] + " " + versionlist[i][2], document.createTextNode(versionlist[i][0]), "version");
         }
         vSel.disabled = false;
+        handleReleaseTypes(selectedArch);
     }
     else {
         sb.disabled = true;
@@ -262,6 +263,29 @@ function onVersionChange() {
     }
     else {
        sb.disabled = true;
+    }
+
+}
+
+
+/* TODO: This begs for a more configurable way based on supported
+         available job server capabilities.  */
+function handleReleaseTypes(aSelectedArch) {
+
+    var arch = $('arch');
+    var isoImageSel  = $('imagetype_1');
+    var qemuImageSel = $('imagetype_7');
+    var vmwareImageSel = $('imagetype_8');
+
+    if (aSelectedArch == "x86_64") {
+        isoImageSel.disabled = false;
+        qemuImageSel.disabled = true;
+        vmwareImage.disabled = true;
+        isoImage.click();
+    } else {
+        isoImageSel.disabled = false;
+        qemuImageSel.disabled = false;
+        vmwareImage.disabled = false;
     }
 
 }
