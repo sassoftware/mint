@@ -316,8 +316,8 @@ class MintClient:
         """
         return jobs.Job(self.server, jobId)
 
-    def startNextJob(self, archTypes):
-        jobId = self.server.startNextJob(archTypes)
+    def startNextJob(self, archTypes, jobTypes):
+        jobId = self.server.startNextJob(archTypes, jobTypes)
         if jobId:
             return self.getJob(jobId)
         return None

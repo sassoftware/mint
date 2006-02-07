@@ -1444,17 +1444,37 @@ class MintServer(object):
 
         return [x[0] for x in cu.fetchall()]
 
-    @typeCheck((list, str))
+    @typeCheck((list, str), (dict, (list, int)))
     @requiresAuth
     @private
-    def startNextJob(self, archTypes):
-        # scrub archTypes and jobTypes so we know it's safe to inject these
-        # params into an SQL call.
+    def startNextJob(self, archTypes, jobTypes):
+        """Select a job to execute from the list of pending jobs
+        @param archTypes: list of frozen flavors. only specify arch flags.
+        @param jobTypes: dict. keys are the kinds of jobs.
+          values are lists of valid types for that job.
+        @return: jobId of job to execute, or 0 for no job.
+        """
+        # scrub archTypes and jobTypes.
         if self.cfg.maintenanceMode:
             raise PermissionDenied("Repositories are currently offline.")
         for arch in archTypes:
             if arch not in ("1#x86", "1#x86_64"):
                 raise PermissionDenied("Not a legal architecture")
+
+        imageTypes = jobTypes.get('imageTypes', [])
+        cookTypes = jobTypes.get('cookTypes', [])
+
+        if sum([(x not in self.cfg.visibleImageTypes) \
+                for x in imageTypes]):
+            raise PermissionDenied("Not a legal Release Type")
+
+        import cooktypes
+        if sum([(x != cooktypes.GROUP_BUILDER) for x in cookTypes]):
+            raise PermissionDenied("Not a legal Cook Type")
+
+        # client asked for nothing, client gets nothing.
+        if not (imageTypes or cookTypes) or (not archTypes):
+            return 0
 
         # the pid would suffice, except that fails to be good enough
         # if multiple web servers use one database backend.
@@ -1468,16 +1488,61 @@ class MintServer(object):
 
         self.db.commit()
 
-        cu.execute("""SELECT Jobs.jobId FROM Jobs
-                          LEFT JOIN JobData
-                              ON Jobs.jobId=JobData.jobId
-                          WHERE status=? AND JobData.name='arch'
-                              AND owner=?
-                              AND JobData.value IN %s
-                          ORDER BY timeStarted
-                          LIMIT 1""" % \
-                   ((len(archTypes) == 1) and ("('%s')" % archTypes[0]) \
-                    or str(tuple(archTypes))), jobstatus.WAITING, ownerId)
+        archTypeQuery = archTypes and "(%s)" % \
+                        ', '.join(['?' for x in archTypes]) or ''
+
+        imageTypeQuery = imageTypes and "(%s)" % \
+                        ', '.join(['?' for x in imageTypes]) or ''
+
+        # at least one of releaseTypes or cookTypes will be defined,
+        # or this code would have already bailed out.
+        if not imageTypes:
+            #client wants only cooks
+            query = """SELECT Jobs.jobId FROM Jobs
+                       LEFT JOIN JobData
+                           ON Jobs.jobId=JobData.jobId
+                       WHERE status=? AND JobData.name='arch'
+                           AND Jobs.releaseId IS NULL
+                           AND owner=?
+                           AND JobData.value IN %s
+                       ORDER BY timeStarted
+                       LIMIT 1""" % archTypeQuery
+            cu.execute(query, jobstatus.WAITING, ownerId, *archTypes)
+        elif not cookTypes:
+            # client wants only image jobs
+            query = """SELECT Jobs.jobId FROM Jobs
+                       LEFT JOIN JobData
+                           ON Jobs.jobId=JobData.jobId
+                       LEFT JOIN ReleaseImageTypes
+                           ON ReleaseImageTypes.releaseId=Jobs.releaseId
+                       WHERE status=? AND JobData.name='arch'
+                           AND Jobs.groupTroveId IS NULL
+                           AND owner=?
+                           AND JobData.value IN %s
+                           AND ReleaseImageTypes.imageType IN %s
+                       ORDER BY timeStarted
+                       LIMIT 1""" % (archTypeQuery, imageTypeQuery)
+
+            cu.execute(query, jobstatus.WAITING, ownerId,
+                       *(archTypes + imageTypes))
+        else:
+            # client wants both cook and image jobs
+            query = """SELECT Jobs.jobId FROM Jobs
+                       LEFT JOIN JobData
+                           ON Jobs.jobId=JobData.jobId
+                       LEFT JOIN ReleaseImageTypes
+                           ON ReleaseImageTypes.releaseId=Jobs.releaseId
+                       WHERE status=? AND JobData.name='arch'
+                           AND owner=?
+                           AND JobData.value IN %s
+                           AND (ReleaseImageTypes.imageType IN %s OR
+                                (groupTroveId IS NOT NULL))
+                       ORDER BY timeStarted
+                       LIMIT 1""" % (archTypeQuery, imageTypeQuery)
+
+            cu.execute(query, jobstatus.WAITING, ownerId,
+                       *(archTypes + imageTypes))
+
         res = cu.fetchone()
 
         if not res:
