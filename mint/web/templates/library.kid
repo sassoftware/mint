@@ -88,13 +88,9 @@ def injectVersion(version):
                     <td id="groupbuilder-example projectName">Project</td>
                     <td id="groupbuilder-example delete"><a href="${groupProject.getUrl()}deleteGroupTrove?id=${groupTrove.id};troveId=TROVEID;referer=${quote(req.unparsed_uri)}">X</a></td>
                 </tr>
-                <tr class="groupcook">
-                    <td colspan="4" style="text-align: center; padding: 1em;">
-                        <a class="option" style="display: inline;" href="${groupProject.getUrl()}pickArch?id=${groupTrove.id}">Cook&nbsp;This&nbsp;Group</a>
-                    </td>
-                </tr>
-              </tbody>
+                </tbody>
             </table>
+            <div class="groupcook" style="padding: 10px 0; text-align: center;"><a class="option" style="display: inline;" href="${groupProject.getUrl()}pickArch?id=${groupTrove.id}">Cook&nbsp;This&nbsp;Group</a></div>
         </div>
     </div>
 
