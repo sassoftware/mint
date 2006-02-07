@@ -21,7 +21,7 @@ from optparse import OptionParser
 
 from conary import conaryclient
 from conary.conarycfg import ConfigFile, ConaryConfiguration
-from conary.conarycfg import CfgList, CfgString, CfgBool, CfgInt
+from conary.conarycfg import CfgList, CfgString, CfgBool, CfgInt, CfgEnum, CfgDict
 from conary.deps import deps
 from conary.lib import log, util
 
@@ -32,6 +32,7 @@ from mint.mint import MintClient
 from mint import jobs
 from mint import jobstatus
 from mint import releasetypes
+from mint import cooktypes
 
 # image generators
 from mint.distro.installable_iso import InstallableIso
@@ -170,7 +171,8 @@ class JobDaemon:
             if len(runningJobs) < cfg.maxThreads:
                 try:
                     job = client.startNextJob(["1#" + x for x in \
-                                               cfg.supportedArch])
+                                               cfg.supportedArch],
+                                              cfg.jobTypes)
                     confirmedAlive = True
 
                     if not job:
@@ -256,8 +258,16 @@ def daemon(options, cfg):
     except (IOError, OSError):
         log.warning("unable to remove lockfile: %s", cfg.lockFile)
 
+class CfgCookType(CfgEnum):
+    validValues = cooktypes.validCookTypes
+
+class CfgImageType(CfgEnum):
+    validValues = releasetypes.validImageTypes
+
 class IsoGenConfig(ConfigFile):
     supportedArch   = CfgList(CfgString)
+    cookTypes       = CfgList(CfgCookType)
+    imageTypes      = CfgList(CfgImageType)
     serverUrl       = None
     SSL             = (CfgBool, False)
     logPath         = '/srv/mint/logs'
@@ -272,6 +282,19 @@ class IsoGenConfig(ConfigFile):
             if arch not in SUPPORTED_ARCHS:
                 log.error("unsupported architecture: %s", arch)
                 sys.exit(1)
+        for cookType in cfg.cookTypes:
+            if cookType not in cooktypes.TYPES:
+                log.error("unsupported cook type: %s", arch)
+                sys.exit(1)
+        for imageType in cfg.imageTypes:
+            if cookType not in cooktypes.TYPES:
+                log.error("unsupported image type: %s", arch)
+                sys.exit(1)
+        cfg.jobTypes = {}
+        cfg.jobTypes['cookTypes'] = cfg.cookTypes
+        cfg.jobTypes['imageTypes'] = cfg.imageTypes
+        del cfg.cookTypes
+        del cfg.imageTypes
         if self.serverUrl is None:
             log.error("a server URL must be specified in the config file,"
             " for example:")
