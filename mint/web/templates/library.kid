@@ -169,7 +169,7 @@ def injectVersion(version):
     <a py:def="legal(page, text)" py:strip="False" href="${page}"
         py:content="text" target="_blank"/>
 
-    <div py:def="loginPane()" id="signin">
+    <div py:def="loginPane()" id="projectsPane">
         <?python
                 from urllib import quote
                 secureProtocol = 'http'
@@ -180,26 +180,37 @@ def injectVersion(version):
                 if cfg.SSL:
                     secureProtocol = "https"
             ?>
-        <form py:if="not auth.authorized" method="post" action="${secureProtocol}://${cfg.secureHost}${cfg.basePath}processLogin">
-            <input type="hidden" name="to" value="${quote(toUrl)}" />
-
-            <div>Username:</div>
-            <div><input type="text" name="username" /></div>
-            <div style="padding-top: 4px;">Password:</div>
-            <div><input type="password" name="password" /></div>
-            <div style="padding-top: 4px;">
-                <input type="checkbox" name="rememberMe" value="1" />
-                <span style="text-decoration: underline;">Remember me</span> on this computer
+        <img class="left" src="${cfg.staticPath}apps/mint/images/header_orange_left.png" alt="" />
+        <img class="right" src="${cfg.staticPath}apps/mint/images/header_orange_right.png" alt="" />
+        <div class="boxHeader">
+            <div class="boxHeaderText" style="font-size: 120%;">
+                Sign In
             </div>
-            <button id="signInSubmit" type="submit" class="img">
-                <img alt="Sign In" src="${cfg.staticPath}apps/mint/images/sign_in_button.png" />
-            </button>
+        </div>
+        <div class="boxBody">
+            <p>
+            <form py:if="not auth.authorized" method="post" action="${secureProtocol}://${cfg.secureHost}${cfg.basePath}processLogin">
+                <input type="hidden" name="to" value="${quote(toUrl)}" />
 
-            <div id="noAccount">
-                <p><strong>Don't have an account?</strong> <a href="${cfg.basePath}register">Set one up.</a></p>
-                <p><a href="${cfg.basePath}forgotPassword">Forgot your password?</a></p>
-            </div>
-        </form>
+                <div>Username:</div>
+                <div><input type="text" name="username" /></div>
+                <div style="padding-top: 4px;">Password:</div>
+                <div><input type="password" name="password" /></div>
+                <div style="padding-top: 4px;">
+                    <input type="checkbox" name="rememberMe" value="1" />
+                    <span style="text-decoration: underline;">Remember me</span> on this computer
+                </div>
+                <button id="signInSubmit" type="submit" class="img">
+                    <img alt="Sign In" src="${cfg.staticPath}apps/mint/images/sign_in_button.png" />
+                </button>
+
+                <div id="noAccount">
+                    <p><strong>Don't have an account?</strong> <a href="${cfg.basePath}register">Set one up.</a></p>
+                    <p><a href="${cfg.basePath}forgotPassword">Forgot your password?</a></p>
+                </div>
+            </form>
+            </p>
+        </div>
         <div py:if="auth.authorized">
             Silly web programmer. logins are for anonymous users.
         </div>
