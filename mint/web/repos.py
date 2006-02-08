@@ -151,11 +151,10 @@ class ConaryHandler(WebHandler, http.HttpHandler):
     del http.HttpHandler.addUserForm
     del http.HttpHandler.pgpNewKeyForm
     del http.HttpHandler.editPerm
-    del http.HttpHandler.pgpChangeOwner
     del http.HttpHandler.submitPGPKey
 
-    allowedMethods = ('getOpenPGPKey', 'pgpAdminForm', 'files', 'troveInfo',
-                      'browse', 'getFile')
+    allowedMethods = ('getOpenPGPKey', 'pgpAdminForm', 'pgpChangeOwner',
+                      'files', 'troveInfo', 'browse', 'getFile')
 
     for method in http.HttpHandler.__dict__.keys():
         if not (method.startswith('_') or method in allowedMethods):
