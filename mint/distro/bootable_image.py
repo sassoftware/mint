@@ -31,6 +31,8 @@ from conary.conarycfg import ConfigFile, CfgDict, CfgString, CfgBool
 from conary.lib import log, util, epdb
 
 class BootableImageConfig(ConfigFile):
+    filename = 'bootable_image.conf'
+
     #Different cylinder sizes.  I don't know which is better, but I've seen
     #both: 8225280 or 516096
     cylindersize    = 516096
@@ -151,6 +153,8 @@ class InstallCallback(UpdateCallback, ChangesetCallback):
         self.prefix = 'BDI:'
 
 class BootableImage(ImageGenerator):
+    configObject = BootableImageConfig
+
     @outputfilesize
     @timeMe
     def prepareDiskImage(self):
@@ -446,7 +450,8 @@ quit
             #zip the resultant files
             self.zipVMwarePlayerFiles(vmbasedir, outfile)
         finally:
-            util.rmtree(vmbasedir)
+            if not self.imgcfg.shortCircuit:
+                util.rmtree(vmbasedir)
         return (outfile, 'VMware Player Image')
 
     supportedImageTypes = [
@@ -458,11 +463,6 @@ quit
     def status(self, value):
         value = 'BootableImage: ' + value
         ImageGenerator.status(self, value)
-
-    def getConfig(self):
-        cfg = BootableImageConfig()
-        cfg.read("bootable_image.conf")
-        return cfg
 
     def setImageTypes(self, imageTypes):
         self.imageTypes = imageTypes
@@ -530,10 +530,10 @@ quit
             imagesList = []
 
             self.setupConaryClient()
-            if not self.imgcfg.shortCircuit:
-                pass
-
             try:
+                if not self.imgcfg.shortCircuit:
+                    pass
+
                 self.status('Creating temporary root')
                 self.createTemporaryRoot()
 
