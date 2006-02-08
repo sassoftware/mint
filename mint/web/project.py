@@ -299,14 +299,13 @@ class ProjectHandler(WebHandler):
     def newRelease(self, auth):
         release = self.client.newRelease(self.project.getId(), self.project.getName())
         # HACK: this is a minor hack to get all of the display templates
-        # editReleases.kid will go back and uncheck things that aren't
+        # editRelease.kid will go back and uncheck things that aren't
         # INSTALLABLE_ISO on the first time through. Really, Release class
         # should have a "get visible image types data templates", but that's
         # for another day.
         imageTypes = self.cfg.visibleImageTypes
 
         release.setImageTypes(imageTypes)
-        template = release.getDataTemplate()
 
         return self._write("editRelease", isNewRelease = True,
             release = release,
@@ -320,7 +319,6 @@ class ProjectHandler(WebHandler):
 
         release = self.client.getRelease(releaseId)
         releaseName = release.getName()
-        template = release.getDataTemplate()
         imageTypes = release.getImageTypes()
 
         troveName, version, flavor = release.getTrove()
