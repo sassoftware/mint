@@ -27,7 +27,7 @@ from conary.conaryclient.cmdline import parseTroveSpec
 from conary.repository import errors
 from conary.callbacks import UpdateCallback
 from conary.callbacks import ChangesetCallback
-from conary.conarycfg import ConfigFile, CfgDict, CfgString
+from conary.conarycfg import ConfigFile, CfgDict, CfgString, CfgBool
 from conary.lib import log, util, epdb
 
 class BootableImageConfig(ConfigFile):
@@ -43,9 +43,10 @@ class BootableImageConfig(ConfigFile):
     #directory containing the uml init script as well as fstab and other hooks
     dataDir         = os.path.join(os.path.dirname(__file__), '..', '..', 'scripts', 'DiskImageData')
     umlKernel       = CfgDict(CfgString)
-    debug           = 0
-    shortCircuit    = 0 #1: Use a static name for the root dir and the qemu image.
-                        #Change this to false to use securely named temp files.
+    debug           = (CfgBool, 0)
+    shortCircuit    = (CfgBool, 0) #1: Use a static name for the root dir and
+                                   #the qemu image.  Change this to false to
+                                   #use securely named temp files.
 
 def debugme(type, value, tb):
     from conary.lib import epdb
@@ -204,6 +205,7 @@ title %(name)s (%(kversion)s)
         cwd = os.getcwd()
         os.chdir(self.fakeroot)
         util.mkdirChain( 'etc', 'etc/sysconfig', 'etc/sysconfig/network-scripts', 'boot/grub', 'tmp', 'sys' )
+        os.chmod('tmp', 01777)
         os.chdir(cwd)
 
     @timeMe
@@ -294,11 +296,23 @@ title %(name)s (%(kversion)s)
         util.copyfile(os.path.join(self.imgcfg.dataDir, 'post-tag-scripts'), os.path.join(self.fakeroot, 'tmp'))
         util.copyfile(os.path.join(self.imgcfg.dataDir, 'post-kernel-tag-scripts'), os.path.join(self.fakeroot, 'tmp'))
         #Write the conaryrc file
-        self.writeConaryRc(self.fakeroot, self.cclient)
+        self.writeConaryRc(os.path.join(self.fakeroot, 'etc'), self.cclient)
+
         #Add the other miscellaneous files needed
         util.copyfile(os.path.join(self.imgcfg.dataDir, 'hosts'), os.path.join(self.fakeroot, 'etc'))
         util.copyfile(os.path.join(self.imgcfg.dataDir, 'network'), os.path.join(self.fakeroot, 'etc', 'sysconfig'))
         util.copyfile(os.path.join(self.imgcfg.dataDir, 'ifcfg-eth0'), os.path.join(self.fakeroot, 'etc', 'sysconfig', 'network-scripts'))
+        util.copyfile(os.path.join(self.imgcfg.dataDir, 'keyboard'), os.path.join(self.fakeroot, 'etc', 'sysconfig'))
+        #Was X installed?
+        if os.path.isfile(os.path.join(self.fakeroot, 'usr', 'X11R6', 'bin', 'X')):
+            #copy in the xorg.conf file
+            util.copyfile(os.path.join(self.imgcfg.dataDir, 'xorg.conf'), os.path.join(self.fakeroot, 'etc', 'X11'))
+            #tweak the inittab to start at level 5
+            cmd = r"/bin/sed -e 's/^\(id\):[0-6]:\(initdefault:\)$/\1:5:\2/' -i %s" % os.path.join(self.fakeroot, 'etc', 'inittab')
+            util.execute(cmd)
+        #GPM?
+        if os.path.isfile(os.path.join(self.fakeroot, 'usr', 'sbin', 'gpm')):
+            util.copyfile(os.path.join(self.imgcfg.dataDir, 'mouse'), os.path.join(self.fakeroot, 'etc', 'sysconfig'))
 
     @timeMe
     def MakeE3FsImage(self, file):
@@ -470,14 +484,14 @@ quit
             os.close(fd)
             os.chmod(self.outfile, 0644)
         else:
-            self.outfile = os.path.join(self.cfg.imagesPath, 'qemu.img')
+            self.outfile = os.path.join(self.cfg.imagesPath, 'qemu-%d.img' % self.release.getId())
 
         #Create the directory to use as the root for the conary commands
         if not self.imgcfg.shortCircuit:
             self.fakeroot = tempfile.mkdtemp("", "imagetool", self.cfg.imagesPath)
             log.info('generating qemu image with tmpdir %s', self.fakeroot)
         else:
-            self.fakeroot = os.path.join(self.cfg.imagesPath, 'shortcircuit_qemud')
+            self.fakeroot = os.path.join(self.cfg.imagesPath, 'shortcircuit_qemud-%d' % self.release.getId())
             try:
                 os.makedirs(self.fakeroot)
             except OSError, e:
@@ -512,7 +526,6 @@ quit
             self.basefilename = basefilename
             self.freespace = freespace * 1024 * 1024
 
-
             callback = InstallCallback(self.status)
             imagesList = []
 
@@ -536,9 +549,6 @@ quit
                 self.status('Adding filesystem bits')
                 self.fileSystemOddsNEnds()
 
-                self.status('Creating /etc/conaryrc')
-                #cclient is set during setupConaryClient()
-                self.writeConaryRc(os.path.join(self.fakeroot, 'etc'), self.cclient)
                 self.status('Creating root file system')
                 self.createFileSystem(self.cfg.imagesPath)
 
