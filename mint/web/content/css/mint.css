@@ -269,19 +269,6 @@ span#findit {
     margin-right: 3px;
 }
 
-div#signin {
-    background: url(../images/sign_in.png) no-repeat;
-    text-align: left;
-    width: 179px;
-    height: 281px;
-    padding-top: 64px;
-    padding-left: 24px;
-    padding-right: 24px;
-    font-size: 10pt;
-    margin-left: 3px;
-    margin-bottom: 17px;
-}
-
 button#signInSubmit {
     padding: 10px 0px 10px 0px;
 }
