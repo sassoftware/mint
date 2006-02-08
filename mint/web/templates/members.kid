@@ -174,7 +174,7 @@ from mint import userlevels
                 <div py:if="isOwner or isDeveloper">
                     <h3>OpenPGP Signing Keys</h3>
                     <p>You can view the OpenPGP package signing keys that your developers have uploaded:</p>
-                    <strong><a href="../../repos/${project.hostname}/pgpAdminForm">View OpenPGP Signing Keys</a></strong>
+                    <strong><a href="../../repos/${project.hostname}/pgpAdminForm">${auth.admin and "Manage" or "View"} OpenPGP Signing Keys</a></strong>
                 </div>
             </div>
        </div>
