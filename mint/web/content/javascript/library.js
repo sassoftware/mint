@@ -94,7 +94,11 @@ function processGetReleaseStatus(aReq) {
         statusText = "No status";
         status = STATUS_NOJOB;
     } else {
-        statusText = textWithBaton(releaseStatus.message);
+        if (releaseStatus.status > STATUS_RUNNING) {
+            statusText = releaseStatus.message;
+        } else {
+            statusText = textWithBaton(releaseStatus.message);
+        }
     }
 
     replaceChildNodes(el, statusText);
@@ -102,11 +106,23 @@ function processGetReleaseStatus(aReq) {
 
 function processGetCookStatus(aReq) {
     var el = $("jobStatus");
+    var statusText = "";
 
     logDebug("[JSON] response: ", aReq.responseText);
     cookStatus = evalJSONRequest(aReq);
 
-    replaceChildNodes(el, textWithBaton(cookStatus.message));
+    if(!cookStatus.message) {
+        statusText = "No status";
+        status = STATUS_NOJOB;
+    } else {
+        if (cookStatus.status > STATUS_RUNNING) {
+            statusText = cookStatus.message;
+        } else {
+            statusText = textWithBaton(cookStatus.message);
+        }
+    }
+
+    replaceChildNodes(el, statusText);
 
 }
 
