@@ -9,7 +9,7 @@ testsuite.setup()
 from mint_rephelp import MintRepositoryHelper
 from mint import userlevels
 from mint.mint_error import PermissionDenied
-from mint.users import LastOwner, UserInduction, MailError
+from mint.users import LastOwner, UserInduction, MailError, GroupAlreadyExists, AlreadyConfirmed
 from mint.database import DuplicateItem
 from conary.repository.netclient import UserNotFound
 from conary.conaryclient import ConaryClient
@@ -95,6 +95,20 @@ class AccountTest(MintRepositoryHelper):
         client = self.openMintClient(("testuser", "passtest"))
         user = client.getUser(userId)
         user.cancelUserAccount()
+
+    def testDuplicateUser(self):
+	self.quickMintUser("Foo", "bar")	
+    	self.assertRaises(GroupAlreadyExists, self.quickMintUser,
+	                  "Foo", "bar")
+	
+    def testConfirmedTwice(self):
+	client = self.openMintClient(("anonymous", "anonymous"))
+	client.registerNewUser("Foo", "Bar", "Foo Bar", 
+			       "foo@localhost", "fooATlocalhost", 
+			       "blah, blah", False)
+	conf = client.server._server.getConfirmation("Foo")
+	client.confirmUser(conf)
+	self.assertRaises(AlreadyConfirmed, client.confirmUser, conf)
 
     def testAccountConfirmation(self):
         client = self.openMintClient()
