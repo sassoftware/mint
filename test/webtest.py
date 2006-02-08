@@ -278,6 +278,53 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         page = page.fetch('/repos/foo/pgpAdminForm',
                                   ok_codes = [200])
 
+    def testPgpAdminLink(self):
+        # Ideally this test will change in the future. all users of the site
+        # should be able to view public keys.
+        from mint import userlevels
+        client, userId = self.quickMintUser('foouser','foopass')
+        devClient, userId = self.quickMintUser('devuser','devpass')
+        nonClient, userId = self.quickMintUser('nonuser','nonpass')
+        watcherClient, userId = self.quickMintUser('watchuser','watchpass')
+        adminClient, userId = self.quickMintAdmin('adminuser','adminpass')
+
+        projectId = self.newProject(client)
+        project = client.getProject(projectId)
+
+        project.addMemberByName('devuser', userlevels.DEVELOPER)
+        project = watcherClient.getProject(projectId)
+        project.addMemberByName('watchuser', userlevels.USER)
+
+        # view shows up for owner
+        self.webLogin('foouser', 'foopass')
+        page = self.assertContent('/project/testproject/members',
+                                  "View OpenPGP Signing Keys")
+        self.fetch("/logout")
+
+        # view shows up for developer
+        self.webLogin('devuser', 'devpass')
+        page = self.assertContent('/project/testproject/members',
+                                  "View OpenPGP Signing Keys")
+        self.fetch("/logout")
+
+        # view doesn't show up for watcher
+        self.webLogin('watchuser', 'watchpass')
+        page = self.assertNotContent('/project/testproject/members',
+                                  "View OpenPGP Signing Keys")
+        self.fetch("/logout")
+
+        # view doesn't show up for non-member
+        self.webLogin('nonuser', 'nonpass')
+        page = self.assertNotContent('/project/testproject/members',
+                                  "View OpenPGP Signing Keys")
+        self.fetch("/logout")
+
+        # manage shows up for admin
+        self.webLogin('adminuser', 'adminpass')
+        page = self.assertContent('/project/testproject/members',
+                                  "Manage OpenPGP Signing Keys")
+        self.fetch("/logout")
+
     def testRepoBrowserPage(self):
         client, userId = self.quickMintUser('foouser','foopass')
         projectId = client.newProject('Foo', 'foo', 'rpath.local')
