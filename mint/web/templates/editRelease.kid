@@ -133,7 +133,9 @@ from mint.data import RDT_STRING, RDT_BOOL, RDT_INT
                     </div>
 
                     <p>
-                        <button id="submitButton" type="submit" py:attrs="{'disabled': isNewRelease and 'disabled' or None}">${isNewRelease and "Create" or "Recreate"} Release</button>
+                        <button id="releaseSubmit" type="submit" class="img" py:attrs="{'disabled': isNewRelease and 'disabled' or None}">
+                            <img alt="${isNewRelease and 'Create' or 'Recreate'} Release" src="${cfg.staticPath}apps/mint/images/create_button.png" />
+                        </button>
                     </p>
                     <input type="hidden" name="releaseId" value="${release.getId()}" />
                 </form>
