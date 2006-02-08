@@ -38,7 +38,7 @@ class ReleaseDataNameError(MintError):
 imageGenTemplate = {
     # XXX this is kind of a lousy description; a toggleable "override ILP option would be nicer
     'installLabelPath': (RDT_STRING, '',  'Custom Conary installLabelPath setting (leave blank for default)'),
-    'autoResolve':      (RDT_BOOL, False, 'Automatically install required dependencies during updates.'),
+    'autoResolve':      (RDT_BOOL, False, 'Automatically install required dependencies during updates'),
 }
 
 installableIsoTemplate = {
