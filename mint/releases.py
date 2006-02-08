@@ -356,10 +356,17 @@ class Release(database.TableObject):
     def setPublished(self, published):
         return self.server.setReleasePublished(self.releaseId, published)
 
-    def _TemplateCompatibleImageTypes(self):
+    def _TemplateCompatibleImageTypes(self, allAvailable = False):
+        """ Return a list of compatible image types. If allAvailable is
+            True, then will query the server for the currently
+            available image types; otherwise, will return a list
+            based upon the current image types in this release. """
         #This needs to be added to all release lists
         returner = [releasetypes.BOOTABLE_IMAGE]
-        returner.extend(self.imageTypes)
+        if allAvailable:
+            returner.extend(self.server.getAvailableImageTypes())
+        else:
+            returner.extend(self.imageTypes)
         if releasetypes.QEMU_IMAGE not in returner:
             if set(bootableImageTemplateDependents) & set(returner):
                 returner.append(releasetypes.QEMU_IMAGE)
@@ -375,7 +382,7 @@ class Release(database.TableObject):
         self.refresh()
         returner = []
         try:
-            for i in self._TemplateCompatibleImageTypes():
+            for i in self._TemplateCompatibleImageTypes(allAvailable = True):
                 returner.append((dataHeadings[i], dataTemplates[i]))
         except KeyError:
             pass

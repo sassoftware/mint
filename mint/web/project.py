@@ -298,13 +298,8 @@ class ProjectHandler(WebHandler):
     @ownerOnly
     def newRelease(self, auth):
         release = self.client.newRelease(self.project.getId(), self.project.getName())
-        # HACK: this is a minor hack to get all of the display templates
-        # editRelease.kid will go back and uncheck things that aren't
-        # INSTALLABLE_ISO on the first time through. Really, Release class
-        # should have a "get visible image types data templates", but that's
-        # for another day.
-        imageTypes = self.cfg.visibleImageTypes
-
+        # By default, Installable ISO images should be selected.
+        imageTypes = [ releasetypes.INSTALLABLE_ISO ]
         release.setImageTypes(imageTypes)
 
         return self._write("editRelease", isNewRelease = True,

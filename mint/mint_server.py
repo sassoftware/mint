@@ -1281,7 +1281,7 @@ class MintServer(object):
         if self.releases.getPublished(releaseId):
             raise ReleasePublished()
         timeStamp = time.time()
-        
+
         self.releases.update(releaseId, published = int(published), timePublished = timeStamp)
         return True
 
@@ -1312,6 +1312,13 @@ class MintServer(object):
                     "VALUES (?, ?)", releaseId, i)
         self.db.commit()
         return True
+
+    @private
+    def getAvailableImageTypes(self):
+        if self.cfg.visibleImageTypes:
+            return self.cfg.visibleImageTypes
+        else:
+            return []
 
     @typeCheck(int)
     @requiresAuth

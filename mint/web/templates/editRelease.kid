@@ -93,10 +93,6 @@ from mint.data import RDT_STRING, RDT_BOOL, RDT_INT
                         <br />
                     </div>
 
-                    <?python
-                        if isNewRelease:
-                            imageTypes = [ releasetypes.INSTALLABLE_ISO ]
-                    ?>
                     <div class="formgroupTitle">Image Types</div>
                     <div class="formgroup">
                         <div py:strip="True" py:for="key in self.cfg.visibleImageTypes">
@@ -115,13 +111,20 @@ from mint.data import RDT_STRING, RDT_BOOL, RDT_INT
                             <div class="formsubgroupTitle">${heading}</div>
                             <div class="formsubgroup">
                                 <div py:strip="True" py:for="name, dataRow in sorted(template.items(), key = lambda x: x[1][0])">
+                                    <?python
+                                        if name in dataDict:
+                                            dataValue = dataDict[name]
+                                        else:
+                                            dataValue = dataRow[1]
+                                    ?>
                                     <div py:strip="True" py:if="(dataRow[0] == RDT_BOOL)">
-                                        <input class="reversed" py:attrs="{'checked': 'checked' and dataDict[name] or None}" type="checkbox" id="${name}" name="${name}" value="1" />
+                                        <input class="reversed" py:attrs="{'checked': 'checked' and dataValue or None}" type="checkbox" id="${name}" name="${name}" value="1" />
                                         <label class="reversed" for="${name}">${dataRow[2]}</label>
                                     </div>
                                     <div py:strip="True" py:if="(dataRow[0] == RDT_INT) or (dataRow[0] == RDT_STRING)">
                                         <label for="${name}">${dataRow[2]}</label>
-                                        <input type="text" name="${name}" id="${name}" value="${dataDict[name]}"/>
+
+                                        <input type="text" name="${name}" id="${name}" value="${dataValue}"/>
                                     </div>
                                     <br />
                                 </div>
