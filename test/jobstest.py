@@ -883,5 +883,188 @@ class JobsTest(MintRepositoryHelper):
                           {'imageTypes' : [releasetypes.QEMU_IMAGE],
                            'cookTypes' : [9999]})
 
+    #####
+    # ensure jobs do not get inadverdently respwaned
+    #####
+
+    def testStartCookFinished(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        self.setUpCookJob(client)
+
+        # mark job as finished
+        cu = self.db.cursor()
+        cu.execute("UPDATE Jobs SET status=?, statusMessage='Finished'",
+                   jobstatus.FINISHED)
+        self.db.commit()
+
+        job = client.startNextJob(['1#x86'],
+                                  {'cookTypes' : [cooktypes.GROUP_BUILDER]})
+
+        self.failIf(job, "startNextJob returned a finished cook")
+
+    def testStartCookFinished2(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        self.setUpCookJob(client)
+
+        # mark job as finished
+        cu = self.db.cursor()
+        cu.execute("UPDATE Jobs SET status=?, statusMessage='Finished'",
+                   jobstatus.FINISHED)
+        self.db.commit()
+
+        job = client.startNextJob(['1#x86'],
+                                  {'cookTypes' : [cooktypes.GROUP_BUILDER],
+                                   'imageTypes': [releasetypes.QEMU_IMAGE]})
+
+        self.failIf(job, "startNextJob returned a finished cook")
+
+    def testStartCookFinished3(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        self.setUpCookJob(client)
+
+        # mark job as finished
+        cu = self.db.cursor()
+        cu.execute("UPDATE Jobs SET status=?, statusMessage='Finished'",
+                   jobstatus.FINISHED)
+        self.db.commit()
+
+        job = client.startNextJob(['1#x86'],
+                                  {'imageTypes': [releasetypes.QEMU_IMAGE]})
+
+        self.failIf(job, "startNextJob returned a finished cook")
+
+    def testStartImageFinished(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        self.setUpImageJob(client)
+
+        # mark job as finished
+        cu = self.db.cursor()
+        cu.execute("UPDATE Jobs SET status=?, statusMessage='Finished'",
+                   jobstatus.FINISHED)
+        self.db.commit()
+
+        job = client.startNextJob(['1#x86_64'],
+                                  {'cookTypes' : [cooktypes.GROUP_BUILDER]})
+
+        self.failIf(job, "startNextJob returned a finished image")
+
+    def testStartImageFinished2(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        self.setUpImageJob(client)
+
+        # mark job as finished
+        cu = self.db.cursor()
+        cu.execute("UPDATE Jobs SET status=?, statusMessage='Finished'",
+                   jobstatus.FINISHED)
+        self.db.commit()
+
+        job = client.startNextJob(['1#x86_64'],
+                                  {'cookTypes' : [cooktypes.GROUP_BUILDER],
+                                   'imageTypes': [releasetypes.QEMU_IMAGE]})
+
+        self.failIf(job, "startNextJob returned a finished image")
+
+    def testStartImageFinished3(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        self.setUpImageJob(client)
+
+        # mark job as finished
+        cu = self.db.cursor()
+        cu.execute("UPDATE Jobs SET status=?, statusMessage='Finished'",
+                   jobstatus.FINISHED)
+        self.db.commit()
+
+        job = client.startNextJob(['1#x86_64'],
+                                  {'imageTypes': [releasetypes.QEMU_IMAGE]})
+
+        self.failIf(job, "startNextJob returned a finished image")
+
+    def testStartCookOwned(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        self.setUpCookJob(client)
+
+        # mark job as finished
+        cu = self.db.cursor()
+        cu.execute("UPDATE Jobs SET owner=1")
+        self.db.commit()
+
+        job = client.startNextJob(['1#x86'],
+                                  {'cookTypes' : [cooktypes.GROUP_BUILDER]})
+
+        self.failIf(job, "startNextJob returned an owned cook")
+
+    def testStartCookOwned2(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        self.setUpCookJob(client)
+
+        # mark job as finished
+        cu = self.db.cursor()
+        cu.execute("UPDATE Jobs SET owner=1")
+        self.db.commit()
+
+        job = client.startNextJob(['1#x86'],
+                                  {'cookTypes' : [cooktypes.GROUP_BUILDER],
+                                   'imageTypes': [releasetypes.QEMU_IMAGE]})
+
+        self.failIf(job, "startNextJob returned an owned cook")
+
+    def testStartCookOwned3(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        self.setUpCookJob(client)
+
+        # mark job as finished
+        cu = self.db.cursor()
+        cu.execute("UPDATE Jobs SET owner=1")
+        self.db.commit()
+
+        job = client.startNextJob(['1#x86'],
+                                  {'imageTypes': [releasetypes.QEMU_IMAGE]})
+
+        self.failIf(job, "startNextJob returned an owned cook")
+
+    def testStartImageOwned(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        self.setUpImageJob(client)
+
+        # mark job as finished
+        cu = self.db.cursor()
+        cu.execute("UPDATE Jobs SET owner=1")
+        self.db.commit()
+
+        job = client.startNextJob(['1#x86_64'],
+                                  {'cookTypes' : [cooktypes.GROUP_BUILDER]})
+
+        self.failIf(job, "startNextJob returned an owned image")
+
+    def testStartImageOwned2(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        self.setUpImageJob(client)
+
+        # mark job as finished
+        cu = self.db.cursor()
+        cu.execute("UPDATE Jobs SET owner=1")
+        self.db.commit()
+
+        job = client.startNextJob(['1#x86_64'],
+                                  {'cookTypes' : [cooktypes.GROUP_BUILDER],
+                                   'imageTypes': [releasetypes.QEMU_IMAGE]})
+
+        self.failIf(job, "startNextJob returned an owned image")
+
+    def testStartImageOwned3(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        self.setUpImageJob(client)
+
+        # mark job as finished
+        cu = self.db.cursor()
+        cu.execute("UPDATE Jobs SET owner=1")
+        self.db.commit()
+
+        job = client.startNextJob(['1#x86_64'],
+                                  {'imageTypes': [releasetypes.QEMU_IMAGE]})
+
+        self.failIf(job, "startNextJob returned an owned image")
+
+
 if __name__ == "__main__":
     testsuite.main()
