@@ -88,52 +88,54 @@ import time
 
                 <p>${release.getDesc().strip() or "Release has no description."}</p>
 
-                <h3><a py:if="release.hasVMwareImage()" title="Download VMware Player" href="http://www.vmware.com/download/player/"><img class="vmwarebutton" src="${cfg.staticPath}apps/mint/images/get_vmware_player.gif" alt="Download VMware Player" /></a>Downloads</h3>
-                <div py:strip="True" py:if="files">
-                <ul id="downloads">
-                    <li py:for="i, file in enumerate(files)">
-                        <a href="${cfg.basePath}downloadImage/${file['fileId']}/${file['filename']}"> Download ${file['title'] and file['title'] or "Disc " + str(i+1)}</a> (${file['size']/1048576}&nbsp;MB)
-                    </li>
-                </ul>
+                <div id="downloads">
+                    <h3><a py:if="release.hasVMwareImage()" title="Download VMware Player" href="http://www.vmware.com/download/player/"><img class="vmwarebutton" src="${cfg.staticPath}apps/mint/images/get_vmware_player.gif" alt="Download VMware Player" /></a>Downloads</h3>
+                    <div py:strip="True" py:if="files">
+                    <ul>
+                        <li py:for="i, file in enumerate(files)">
+                            <a href="${cfg.basePath}downloadImage/${file['fileId']}/${file['filename']}"> Download ${file['title'] and file['title'] or "Disc " + str(i+1)}</a> (${file['size']/1048576}&nbsp;MB)
+                        </li>
+                    </ul>
 
-                <h4 onclick="javascript:toggle_display('file_help');"
-                    style="cursor: pointer;">What are these files?&nbsp;<img id="file_help_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" /></h4>
+                    <h4 onclick="javascript:toggle_display('file_help');"
+                        style="cursor: pointer;">What are these files?&nbsp;<img id="file_help_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" /></h4>
 
-                    <div id="file_help" style="display: none;">
-                        <p>The file(s) entitled <tt>Disc <em>N</em></tt>
-                        represent the CD-ROM(s) required to install this
-                        release. These files are in ISO 9660 format, and can be
-                        burned onto CD-R (or CD-RW) media using the CD burning
-                        software of your choice. The installation process is
-                        then started by booting your system from a CD burned
-                        from the file entitled <tt>Disc 1</tt>.</p>
+                        <div id="file_help" style="display: none;">
+                            <p>The file(s) entitled <tt>Disc <em>N</em></tt>
+                            represent the CD-ROM(s) required to install this
+                            release. These files are in ISO 9660 format, and can be
+                            burned onto CD-R (or CD-RW) media using the CD burning
+                            software of your choice. The installation process is
+                            then started by booting your system from a CD burned
+                            from the file entitled <tt>Disc 1</tt>.</p>
 
-                        <p>The last two files are used only if you want to
-                        perform a network installation.  To do so, you must
-                        first download all "Disc N" file(s) and export them
-                        (via NFS).  You can then download and use one of the
-                        following files to boot the system to be installed:</p>
+                            <p>The last two files are used only if you want to
+                            perform a network installation.  To do so, you must
+                            first download all "Disc N" file(s) and export them
+                            (via NFS).  You can then download and use one of the
+                            following files to boot the system to be installed:</p>
 
-                        <ul>
-                            <li>Use the <tt>boot.iso</tt> file if your system
-                            can boot from CD-ROM. This file is an ISO 9660
-                            image of a bootable CD-ROM, and can be burned onto
-                            CD-R (or CD-RW) media using the CD burning software
-                            of your choice.</li>
+                            <ul>
+                                <li>Use the <tt>boot.iso</tt> file if your system
+                                can boot from CD-ROM. This file is an ISO 9660
+                                image of a bootable CD-ROM, and can be burned onto
+                                CD-R (or CD-RW) media using the CD burning software
+                                of your choice.</li>
 
-                            <li>Use the <tt>diskboot.img</tt> file if your
-                            system cannot boot from CD-ROM, but can boot from
-                            some other type of bootable device. This file is a
-                            VFAT filesystem image that can be written (using
-                            the dd command) to a USB pendrive or other bootable
-                            media larger than a diskette.  Note that your
-                            system's BIOS must support booting from USB to use
-                            this file with any USB device.</li>
-                            </ul>
-                        </div>
+                                <li>Use the <tt>diskboot.img</tt> file if your
+                                system cannot boot from CD-ROM, but can boot from
+                                some other type of bootable device. This file is a
+                                VFAT filesystem image that can be written (using
+                                the dd command) to a USB pendrive or other bootable
+                                media larger than a diskette.  Note that your
+                                system's BIOS must support booting from USB to use
+                                this file with any USB device.</li>
+                                </ul>
+                            </div>
 
+                    </div>
+                    <p py:if="not files">Release has no downloadable files.</p>
                 </div>
-                <p py:if="not files">Release has no downloadable files.</p>
 
             </div>
         </div>

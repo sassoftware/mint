@@ -63,6 +63,7 @@ var STATUS_FINISHED = 2;
 var STATUS_DELETED = 3;
 var STATUS_ERROR = 4;
 var STATUS_NOJOB = 5;
+var STATUS_UNKNOWN = 9999;
 var refreshed = false;
 var oldStatus = -1;
 var cookStatusRefreshTime    = 2000; /* 2 seconds */
@@ -72,6 +73,7 @@ var releaseStatusId;
 var archDict = "global";
 var cookStatus = "global";
 var releaseStatus = "global";
+var oldStatus = STATUS_UNKNOWN;
 
 function processGetReleaseStatus(aReq) {
     var el = $("jobStatus");
@@ -80,25 +82,38 @@ function processGetReleaseStatus(aReq) {
     logDebug("[JSON] response: ", aReq.responseText);
     releaseStatus = evalJSONRequest(aReq);
 
-    if(releaseStatus.status > STATUS_RUNNING) {
-        hideElement('editOptionsDisabled');
-        showElement('editOptions');
-        showElement('downloads');
-    } else {
-        showElement('editOptionsDisabled');
-        hideElement('editOptions');
-        hideElement('downloads');
-    }
-
-    if(!releaseStatus.message) {
+    if (!releaseStatus) {
         statusText = "No status";
         status = STATUS_NOJOB;
     } else {
+
+        // refresh page when job successfully completes
+        // to get new download list
+        if ((oldStatus <= STATUS_RUNNING) &&
+            (releaseStatus.status == STATUS_FINISHED)) {
+            document.location = document.location;
+        }
+
+        // handle edit options; also, spin baton if we're still
+        // running
         if (releaseStatus.status > STATUS_RUNNING) {
+            hideElement('editOptionsDisabled');
+            showElement('editOptions');
             statusText = releaseStatus.message;
         } else {
+            showElement('editOptionsDisabled');
+            hideElement('editOptions');
             statusText = textWithBaton(releaseStatus.message);
         }
+
+        // show downloads only when finished
+        if (releaseStatus.status == STATUS_FINISHED) {
+            showElement('downloads');
+        } else {
+            hideElement('downloads');
+        }
+
+        oldStatus = status;
     }
 
     replaceChildNodes(el, statusText);
