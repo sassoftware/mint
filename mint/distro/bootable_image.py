@@ -83,7 +83,7 @@ def timeMe(func):
         clock = time.clock()
         actual = time.time()
         returner = func(self, *args, **kwargs)
-        print "%s: %.5f %.5f" % (func.__name__, time.clock() - clock, time.time() - actual)
+        log.info("%s: %.5f %.5f" % (func.__name__, time.clock() - clock, time.time() - actual))
         return returner
     return wrapper
 
@@ -91,7 +91,7 @@ def outputfilesize(func):
     def wrapper(self, *args, **kwargs):
         returner = func(self, *args, **kwargs)
         st = os.stat(self.outfile)
-        print "size of %s after %s: %d bytes" % (self.outfile, func.__name__, st.st_size)
+        log.debug("size of %s after %s: %d bytes" % (self.outfile, func.__name__, st.st_size))
         return returner
     return wrapper
 
@@ -397,7 +397,7 @@ quit
         for file, name in filelist:
             base, ext = os.path.basename(file).split(os.path.extsep, 1)
             newfile = os.path.join(finaldir, self.basefilename + "." + ext)
-            print "Move %s to %s" % (file, newfile)
+            log.info("Move %s to %s" % (file, newfile))
             os.rename(file, newfile)
             returnlist.append((newfile, name,))
         return returnlist
@@ -409,7 +409,7 @@ quit
             flags += ' -v'
         cmd = 'raw2vmdk -C %d %s %s %s' % (self.cylinders, self.outfile,
                     outfile, flags)
-        print "Running", cmd
+        log.debug("Running", cmd)
         util.execute(cmd)
 
     @timeMe
