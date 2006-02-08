@@ -14,8 +14,6 @@ from conary.conarycfg import ConfigFile
 from conary.lib import cfgtypes
 import releasetypes
 
-from urlparse import urlsplit
-
 templatePath = os.path.dirname(sys.modules['mint'].__file__)
 
 

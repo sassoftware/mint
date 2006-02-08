@@ -26,7 +26,6 @@ kid_files = \
 	members.kid		\
 	newGroup.kid		\
 	newProject.kid		\
-	newRelease.kid		\
 	passwordReset.kid	\
 	pickArch.kid		\
 	project.kid		\
