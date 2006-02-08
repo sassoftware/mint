@@ -554,7 +554,7 @@ quit
 
                 if releasetypes.VMWARE_IMAGE in self.imageTypes:
                     self.status('Creating VMware Player Image')
-                    fd, vmfn = tempfile.mkstemp('.zip', 'mint-MDI-cvmpi-', self.cfg.imagesPath)
+                    fd, vmfn = tempfile.mkstemp('.vmware.zip', 'mint-MDI-cvmpi-', self.cfg.imagesPath)
                     os.close(fd)
                     del fd
                     imagesList.append(self.createVMwarePlayerImage(vmfn, self.project.getName(), self.release.getDataValue('vmMemory'), self.cfg.imagesPath))
