@@ -883,6 +883,18 @@ class JobsTest(MintRepositoryHelper):
                           {'imageTypes' : [releasetypes.QEMU_IMAGE],
                            'cookTypes' : [9999]})
 
+    def testStartLegalImage(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        self.setUpImageJob(client)
+
+        # ask for an image type that's technically in the list, but not served
+        # by this server. historically this raised permission denied.
+        job = client.startNextJob(['1#x86_64', '1#x86'],
+                                  {'imageTypes' : [releasetypes.NETBOOT_IMAGE],
+                                   'cookTypes' : [cooktypes.GROUP_BUILDER]})
+
+        self.failIf(job, "startNextJob erroneously matched image")
+
     #####
     # ensure jobs do not get inadverdently respwaned
     #####

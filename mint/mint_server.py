@@ -1464,6 +1464,8 @@ class MintServer(object):
           values are lists of valid types for that job.
         @return: jobId of job to execute, or 0 for no job.
         """
+        import cooktypes
+        import releasetypes
         # scrub archTypes and jobTypes.
         if self.cfg.maintenanceMode:
             raise PermissionDenied("Repositories are currently offline.")
@@ -1474,11 +1476,10 @@ class MintServer(object):
         imageTypes = jobTypes.get('imageTypes', [])
         cookTypes = jobTypes.get('cookTypes', [])
 
-        if sum([(x not in self.cfg.visibleImageTypes) \
+        if sum([(x not in releasetypes.TYPES) \
                 for x in imageTypes]):
             raise PermissionDenied("Not a legal Release Type")
 
-        import cooktypes
         if sum([(x != cooktypes.GROUP_BUILDER) for x in cookTypes]):
             raise PermissionDenied("Not a legal Cook Type")
 
