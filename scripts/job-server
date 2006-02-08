@@ -372,12 +372,12 @@ if __name__ == "__main__":
         if pid == 0:
             # redirect stdout and stderr to job-server.log
             logFile = os.path.join(cfg.logPath, "job-server.log")
-            nullf = file("/dev/null", "r+")
+            null = os.open("/dev/null", os.O_WRONLY)
             logfd = os.open(logFile, os.O_APPEND | os.O_WRONLY | os.O_CREAT, 0666)
             os.dup2(logfd, sys.stdout.fileno())
             os.dup2(logfd, sys.stderr.fileno())
-            os.dup2(nullf.fileno(), sys.stdin.fileno())
-            nullf.close()
+            os.dup2(null, sys.stdin.fileno())
+            os.close(null)
 
             pid = os.fork()
             if pid == 0:
