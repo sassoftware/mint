@@ -396,15 +396,6 @@ def rpcHandler(req, cfg, pathInfo):
         resp = simplejson.dumps(result[1])
         req.content_type = "application/x-json"
 
-    # handle compression
-    # XXX: fix MSIE: http://support.microsoft.com/default.aspx?scid=kb;en-us;Q312496
-    # deflate support for MSIE should be safe to turn on: 6.0+service packs works
-    encoding = req.headers_in.get('Accept-encoding', '')
-    useragent = req.headers_in.get('User-Agent', '')
-    if len(resp) > 200 and 'deflate' in encoding and 'MSIE' not in useragent:
-        req.headers_out['Content-encoding'] = 'deflate'
-        resp = zlib.compress(resp, 5)
-
     # write repsonse
     req.write(resp)
 

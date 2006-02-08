@@ -15,6 +15,9 @@ mount -n /dev/pts
 mknod /dev/ubda b 98 0
 mknod /dev/ubda1 b 98 1
 
+#Link in the mouse
+ln -s psaux /dev/mouse
+
 # Clear mtab
 (> /etc/mtab) &> /dev/null
 
@@ -31,11 +34,15 @@ for i in pre-tag-scripts tag-scripts post-tag-scripts kernel-tag-scripts post-ke
     [ -f /tmp/$i ] && /bin/sh /tmp/$i && rm /tmp/$i
 done
 
+#Setup /etc/nsswitch and system-auth
+/usr/bin/authconfig --kickstart --enablemd5 --enableshadow --disablecache
+
 #Reset the root password to blank
 /usr/sbin/usermod -p '' root
 
-#Setup /etc/nsswitch and system-auth
-/usr/bin/authconfig --kickstart --enablemd5 --enableshadow --disablecache
+#Remove the blkid.tab file that causes the kernel to try to boot off of /dev/ubd0
+#when in qemu/vmware
+[ -f /etc/blkid.tab ] && rm /etc/blkid.tab
 
 #clean up the ubd devices
 rm /dev/ubda1

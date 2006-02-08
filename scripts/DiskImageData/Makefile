@@ -1,12 +1,15 @@
 bin_files = init.sh
 data_files = fstab \
-             ifcfg-eth0 \
+	     ifcfg-eth0 \
 	     post-kernel-tag-scripts \
 	     pre-tag-scripts \
 	     hosts \
 	     network \
 	     post-tag-scripts \
-	     vmwareplayer.vmx
+	     vmwareplayer.vmx \
+	     mouse \
+	     xorg.conf \
+	     keyboard
 
 datadir = /usr/share/mint
 
