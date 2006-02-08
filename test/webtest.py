@@ -133,11 +133,10 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                                             'tos':       'True',
                                             'privacy':   'True'})
 
-        cu.execute("SELECT confirmation FROM Confirmations")
+        client = self.openMintClient()
 
-        res = cu.fetchall()
-        self.failIf(not res, "Registration didn't add confirmation entry")
-        conf = res[0][0]
+        conf = client.server._server.getConfirmation('foouser')
+        self.failIf(not conf, "Registration didn't add confirmation entry")
 
         page = self.assertCode("/confirm?id=%s" % conf, code = 200)
 
@@ -455,7 +454,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                     'Unconfirmed user broke out of confirm email jail on'
                     ' projects page.')
 
-        page = self.fetch('/repos/stuff/browse', ok_codes = [200])
+        page = self.fetch('/repos/foo/browse', ok_codes = [200])
         self.failIf("Email Confirmation Required" not in page.body,
                     'Unconfirmed user broke out of confirm email jail on'
                     ' repository page.')
@@ -782,6 +781,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                     "Trove name was malformed during release creation.")
 
     def testMaintenanceMode(self):
+        from mint import mint_server
         def newMintCfg(self):
             self.getOldMintCfg()
             self.mintCfg.maintenanceMode = True
@@ -803,7 +803,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
             # that interact with project repositories
             # shimclients have cfg.maintenanceMode False--anything goes
             # this allows us to use client to set up the initial env
-            client, userId = self. quickMintUser('foouser', 'foopass')
+            client, userId = self.quickMintUser('foouser', 'foopass')
             projectId = self.newProject(client)
 
             page = self.webLogin('foouser', 'foopass')
