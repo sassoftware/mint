@@ -42,7 +42,7 @@
                 <li><a href="http://wiki.conary.com/">Conary</a>-based
                 Linux distributions</li>
 
-                <li>Software packaged with Conary</li>
+                <li>Open source software packaged with Conary</li>
             </ul>
 
             <p>Development is done in projects, which consist of:</p>
@@ -58,7 +58,7 @@
                 software specific to the project</li>
 
                 <li>A project-specific hostname
-                (&lt;project-name&gt;.${cfg.siteDomainName})</li>
+                (&lt;project-name&gt;.rpath.org)</li>
 
                 <li>Project-specific mailing lists</li>
 
