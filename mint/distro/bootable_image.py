@@ -276,8 +276,12 @@ title %(name)s (%(kversion)s)
 
     @timeMe
     def installKernel(self, callback = None):
-        uJob = self.updateKernelChangeSet(callback)
-        self.applyKernelUpdate(uJob, callback)
+        try:
+            uJob = self.updateKernelChangeSet(callback)
+            self.applyKernelUpdate(uJob, callback)
+        except errors.NoNewTrovesError:
+            log.info("kernel already installed--skipping manual kernel install step")
+
 
     @timeMe
     def fileSystemOddsNEnds(self):
