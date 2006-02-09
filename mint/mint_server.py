@@ -432,12 +432,15 @@ class MintServer(object):
     @requiresAdmin
     @private
     def newExternalProject(self, name, hostname, domainname, label, url):
+        if self.cfg.maintenanceMode:
+            raise PermissionDenied("Repositories are currenly offline.")
+
         from conary import versions
         # ensure that the label we were passed is valid
         try:
             versions.Label(label)
         except conary_errors.ParseError:
-            raise mint_error.ParameterError("Not a valid Label")
+            raise ParameterError("Not a valid Label")
 
         if not url:
             url = 'http://' + label.split('@')[0] + '/conary/'
