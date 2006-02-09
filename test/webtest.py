@@ -907,6 +907,25 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         page = self.assertNotContent('/project/testproject/releases', ok_codes = [200],
             content = 'href="publish?releaseId')
 
+    def testCreateExternalProject(self):
+        client, userId = self.quickMintAdmin('adminuser', 'adminpass')
+
+        self.webLogin('adminuser', 'adminpass')
+
+        # ensure "first time" content appears on page
+        page = self.assertContent("/administer?operation=external",
+                                  'name="hostname" value="rpath"')
+
+        page = page.postForm(1, self.post,
+                             {'hostname' : 'rpath',
+                              'name' : 'rPath Linux',
+                              'label' : 'conary.rpath.com@rpl:devel',
+                              'url' : '',
+                              'operation' : 'process_external'})
+
+        # ensure "first time" content does not appear on page
+        page = self.assertNotContent("/administer?operation=external",
+                                     'name="hostname" value="rpath"')
 
 if __name__ == "__main__":
     testsuite.main()

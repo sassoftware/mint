@@ -164,5 +164,26 @@ class AdminHandler(WebHandler):
         self.req.content_type = "application/x-pdf"
         return pdfData
 
+    @strFields(name = None, hostname = None, label = None, url = '')
+    def _admin_process_external(self, name, hostname, label, url,
+                                *args, **kwargs):
+        self.client.newExternalProject(name, hostname,
+                                       self.cfg.projectDomainName, label, url)
+
+        self._redirect(self._redirect("http://%s%sproject/%s/" % \
+                                      (self.cfg.projectSiteHost,
+                                       self.cfg.basePath, hostname)))
+
+    def _admin_external(self, *args, **kwargs):
+        from mint import database
+        try:
+            self.client.getProjectByHostname('rpath')
+        except database.ItemNotFound:
+            firstTime = True
+        else:
+            firstTime = False
+        return self._write('admin/external', kwargs = kwargs,
+                           firstTime = firstTime)
+
     def _administer(self, *args, **kwargs):
-        return self._write('admin/administer', kwargs=kwargs)
+        return self._write('admin/administer', kwargs = kwargs)
