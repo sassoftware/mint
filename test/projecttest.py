@@ -342,12 +342,12 @@ class ProjectTest(MintRepositoryHelper):
     def testCreateExternalProject(self):
         # ensure only site admins can create external projects
         client, userId = self.quickMintUser("testuser", "testpass")
-        self.assertRaises(PermissionDenied, client.newExternalProject, 'rpath',
-                          'rPath Linux', 'rpath.local',
+        self.assertRaises(PermissionDenied, client.newExternalProject,
+                          'rPath Linux', 'rpath', 'rpath.local',
                           'conary.rpath.com@rpl:devel', '')
 
         client, userId = self.quickMintAdmin("adminuser", "adminpass")
-        projectId = client.newExternalProject('rpath', 'rPath Linux',
+        projectId = client.newExternalProject('rPath Linux', 'rpath',
                                               'rpath.local',
                                               'conary.rpath.com@rpl:devel', '')
 
@@ -361,6 +361,50 @@ class ProjectTest(MintRepositoryHelper):
         # ensure labels table was populated.
         self.failIf(project.getLabel() != 'conary.rpath.com@rpl:devel',
                     "Improper labels table entry for external project")
+
+    def testBlankExtProjectUrl(self):
+        client, userId = self.quickMintAdmin("adminuser", "adminpass")
+
+        reposUrl = 'http://foo.rpath.local/conary/'
+
+        # let system set url by leaving it blank
+        projectId = client.newExternalProject('Foo', 'foo',
+                                              'rpath.local',
+                                              'foo.rpath.local@rpl:devel', '')
+
+        project = client.getProject(projectId)
+        labelId = project.getLabelIdMap()['foo.rpath.local@rpl:devel']
+
+        cu = self.db.cursor()
+        cu.execute("SELECT url FROM Labels WHERE labelId=?", labelId)
+        url = cu.fetchall()[0][0]
+
+        self.failIf(url != reposUrl,
+                    "repos url was lost in translation. expected %s, got %s" %\
+                    (reposUrl, url))
+
+    def testSetExtProjectUrl(self):
+        client, userId = self.quickMintAdmin("adminuser", "adminpass")
+
+        reposUrl = 'http://some.repos/conary'
+
+        # set url manually
+        projectId = client.newExternalProject('Foo', 'foo',
+                                              'rpath.local',
+                                              'foo.rpath.local@rpl:devel',
+                                              reposUrl)
+
+        project = client.getProject(projectId)
+        labelId = project.getLabelIdMap()['foo.rpath.local@rpl:devel']
+
+        cu = self.db.cursor()
+        cu.execute("SELECT url FROM Labels WHERE labelId=?", labelId)
+        url = cu.fetchall()[0][0]
+
+        self.failIf(url != reposUrl,
+                    "repos url was lost in translation. expected %s, got %s" %\
+                    (reposUrl, url))
+
 
 if __name__ == "__main__":
     testsuite.main()
