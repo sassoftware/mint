@@ -200,6 +200,8 @@ class JobDaemon:
                 # was doing when the server went down. simply wait for it.
                 except (ProtocolError, socket.error), e:
                     if not confirmedAlive:
+                        import traceback
+                        traceback.print_exc()
                         log.error("rBuilder Server Unreachable; exiting")
                         return
                     log.warning("Error retrieving job list:" + str(e))
