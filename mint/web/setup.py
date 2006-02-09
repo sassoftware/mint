@@ -21,7 +21,7 @@ from conary.web.fields import strFields, intFields, listFields, boolFields
 
 configGroups = {
     'Server Setup':
-        ('siteDomainName', 'hostName', 'SSL'),
+        ('siteDomainName', 'hostName'),
     'Branding':
         ('companyName', 'productName', 'corpSite'),
     'Repository Setup':
@@ -67,6 +67,7 @@ class SetupHandler(WebHandler):
         for key in keys:
             newCfg[key] = self.fields[key]
 
+        newCfg.postCfg()
         cfg = file('/srv/mint/mint.conf', 'w')
         newCfg.display(out = cfg)
         self.req.log_error("writing new configuration to /srv/mint/mint.conf")
