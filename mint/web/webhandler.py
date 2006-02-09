@@ -138,7 +138,12 @@ class WebHandler(object):
 
         sessionClient = shimclient.ShimMintClient(self.cfg, (self.cfg.authUser, self.cfg.authPass))
 
-        domain = ".".join(self.req.hostname.split(".")[1:])
+        if self.cfg.configured:
+            domain = ".".join(self.req.hostname.split(".")[1:])
+            cookieDomain = "." + domain
+        else:
+            domain = cookieDomain = self.req.hostname
+
         self.session = SqlSession(self.req, sessionClient,
             sid = sid,
             secret = self.cfg.cookieSecretKey,
@@ -162,7 +167,7 @@ class WebHandler(object):
                 self.session.set_timeout(1209600)
                 self.session.save()
 
-        c.domain = '.' + domain
+        c.domain = cookieDomain
         #add it to the err_headers_out because these ALWAYS go to the browser
         self.req.err_headers_out.add('Set-Cookie', str(c))
         self.req.err_headers_out.add('Cache-Control', 'no-cache="set-cookie"')
