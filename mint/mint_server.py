@@ -33,7 +33,7 @@ import users
 import simplejson
 
 from mint_error import PermissionDenied, ReleasePublished, ReleaseMissing, \
-     MintError, ReleaseEmpty
+     MintError, ReleaseEmpty, UserAlreadyAdmin
 from reports import MintReport
 from searcher import SearchTermsError
 
@@ -385,8 +385,8 @@ class MintServer(object):
         if self.auth.userId not in [x[0] for x in members]:
             raise PermissionDenied
 
-    @typeCheck(str, str, str, str, str)
     # project methods
+    @typeCheck(str, str, str, str, str)
     @requiresAuth
     @private
     def newProject(self, projectName, hostname, domainname, projecturl, desc):
@@ -426,6 +426,45 @@ class MintServer(object):
                                   hostname, domainname, self.authToken[0],
                                   self.authToken[1])
 
+        return projectId
+
+    @typeCheck(str, str, str, str, str)
+    @requiresAdmin
+    @private
+    def newExternalProject(self, name, hostname, domainname, label, url):
+        if self.cfg.maintenanceMode:
+            raise PermissionDenied("Repositories are currenly offline.")
+
+        from conary import versions
+        # ensure that the label we were passed is valid
+        try:
+            versions.Label(label)
+        except conary_errors.ParseError:
+            raise ParameterError("Not a valid Label")
+
+        if not url:
+            url = 'http://' + label.split('@')[0] + '/conary/'
+
+        # create the project entry
+        projectId = self.projects.new(name = name,
+                                      creatorId = self.auth.userId,
+                                      description = '',
+                                      hostname = hostname,
+                                      domainname = domainname,
+                                      projecturl = '',
+                                      external = 1,
+                                      timeModified = time.time(),
+                                      timeCreated = time.time())
+
+        # create the projectUsers entry
+        self.projectUsers.new(userId = self.auth.userId,
+                              projectId = projectId,
+                              level = userlevels.OWNER)
+
+        project = projects.Project(self, projectId)
+
+        # create the labels entry
+        project.addLabel(label, url, 'anonymous', 'anonymous')
         return projectId
 
     @typeCheck(int)
@@ -1023,6 +1062,27 @@ class MintServer(object):
         @param offset: Count at which to begin listing
         """
         return self.users.getUsers(sortOrder, limit, offset), self.users.getNumUsers()
+
+    @typeCheck(int)
+    @requiresAdmin
+    @private
+    def promoteUserToAdmin(self, userId):
+        """
+        Given a userId, will attempt to promote that user to an
+        administrator (i.e. make a member of the MintAdmin User Group).
+        @param userId: the userId to promote
+        """
+        mintAdminId = self.userGroups.getMintAdminId()
+        try:
+            if mintAdminId in self.userGroupMembers.getGroupsForUser(userId):
+                raise UserAlreadyAdmin()
+        except database.ItemNotFound:
+            pass
+
+        cu = self.db.cursor()
+        cu.execute('INSERT INTO UserGroupMembers VALUES(?, ?)',
+                mintAdminId, userId)
+        self.db.commit()
 
     @typeCheck()
     @private

@@ -28,6 +28,7 @@
                 <p>
                   <button name="operation" value="user_reset_password">Reset Password</button>
                   <button name="operation" value="user_cancel">Cancel User Account</button>
+                  <button name="operation" value="user_promote_admin">Promote To Administrator</button>
                 </p>
               </form>
               <div>

@@ -16,16 +16,16 @@ class AdminHandler(WebHandler):
         self.__dict__.update(**context)
         if not self.auth.admin:
             raise mint_error.PermissionDenied
-   
+
         return self.adminHandler
 
     def adminHandler(self, *args, **kwargs):
         operation = kwargs.get('operation', '')
         if not operation:
             return self._administer(*args, **kwargs)
-            
+
         return self.__getattribute__('_admin_%s'%operation)(*args, **kwargs)
-        
+
     def _admin_user(self, *args, **kwargs):
         #get a list of all users in a format suitable for producing a
         #dropdown or multi-select list
@@ -82,6 +82,12 @@ class AdminHandler(WebHandler):
     def _admin_user_reset_password(self, userId, *args, **kwargs):
         self._resetPasswordById(userId)
         kwargs['extraMsg'] = "User password reset"
+        return self._admin_user(*args, **kwargs)
+
+    @intFields(userId=None)
+    def _admin_user_promote_admin(self, userId, *args, **kwargs):
+        self.client.promoteUserToAdmin(userId)
+        kwargs['extraMsg'] = 'User promoted to administrator.'
         return self._admin_user(*args, **kwargs)
 
     def _admin_project(self, *args, **kwargs):
@@ -164,5 +170,26 @@ class AdminHandler(WebHandler):
         self.req.content_type = "application/x-pdf"
         return pdfData
 
+    @strFields(name = None, hostname = None, label = None, url = '')
+    def _admin_process_external(self, name, hostname, label, url,
+                                *args, **kwargs):
+        self.client.newExternalProject(name, hostname,
+                                       self.cfg.projectDomainName, label, url)
+
+        self._redirect(self._redirect("http://%s%sproject/%s/" % \
+                                      (self.cfg.projectSiteHost,
+                                       self.cfg.basePath, hostname)))
+
+    def _admin_external(self, *args, **kwargs):
+        from mint import database
+        try:
+            self.client.getProjectByHostname('rpath')
+        except database.ItemNotFound:
+            firstTime = True
+        else:
+            firstTime = False
+        return self._write('admin/external', kwargs = kwargs,
+                           firstTime = firstTime)
+
     def _administer(self, *args, **kwargs):
-        return self._write('admin/administer', kwargs=kwargs)
+        return self._write('admin/administer', kwargs = kwargs)

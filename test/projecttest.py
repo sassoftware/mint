@@ -339,6 +339,28 @@ class ProjectTest(MintRepositoryHelper):
         project = client.getProject(projectId)
         assert(client.server._server.getGroupTroves(projectId) == {'external.rpath.local@rpl:devel': []})
 
+    def testCreateExternalProject(self):
+        # ensure only site admins can create external projects
+        client, userId = self.quickMintUser("testuser", "testpass")
+        self.assertRaises(PermissionDenied, client.newExternalProject, 'rpath',
+                          'rPath Linux', 'rpath.local',
+                          'conary.rpath.com@rpl:devel', '')
+
+        client, userId = self.quickMintAdmin("adminuser", "adminpass")
+        projectId = client.newExternalProject('rpath', 'rPath Linux',
+                                              'rpath.local',
+                                              'conary.rpath.com@rpl:devel', '')
+
+        project = client.getProject(projectId)
+        self.failIf(not project.external, "created project was not external")
+
+        # ensure project users table was populated.
+        assert(project.onlyOwner(userId))
+        assert(not project.lastOwner(userId))
+
+        # ensure labels table was populated.
+        self.failIf(project.getLabel() != 'conary.rpath.com@rpl:devel',
+                    "Improper labels table entry for external project")
 
 if __name__ == "__main__":
     testsuite.main()

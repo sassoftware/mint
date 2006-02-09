@@ -8,7 +8,7 @@ testsuite.setup()
 
 from mint_rephelp import MintRepositoryHelper
 from mint import userlevels
-from mint.mint_error import PermissionDenied
+from mint.mint_error import PermissionDenied, UserAlreadyAdmin
 from mint.users import LastOwner, UserInduction, MailError, GroupAlreadyExists, AlreadyConfirmed
 from mint.database import DuplicateItem
 from conary.repository.netclient import UserNotFound
@@ -97,14 +97,14 @@ class AccountTest(MintRepositoryHelper):
         user.cancelUserAccount()
 
     def testDuplicateUser(self):
-	self.quickMintUser("Foo", "bar")	
+	self.quickMintUser("Foo", "bar")
     	self.assertRaises(GroupAlreadyExists, self.quickMintUser,
 	                  "Foo", "bar")
-	
+
     def testConfirmedTwice(self):
 	client = self.openMintClient(("anonymous", "anonymous"))
-	client.registerNewUser("Foo", "Bar", "Foo Bar", 
-			       "foo@localhost", "fooATlocalhost", 
+	client.registerNewUser("Foo", "Bar", "Foo Bar",
+			       "foo@localhost", "fooATlocalhost",
 			       "blah, blah", False)
 	conf = client.server._server.getConfirmation("Foo")
 	client.confirmUser(conf)
@@ -157,7 +157,7 @@ class AccountTest(MintRepositoryHelper):
         assert(project.getUserLevel(readerId) == userlevels.USER)
 
         project.delMemberById(readerId)
-        
+
         # add by user id
         project.addMemberById(readerId, userlevels.USER)
         assert(project.getUserLevel(readerId) == userlevels.USER)
@@ -251,7 +251,7 @@ class AccountTest(MintRepositoryHelper):
     # here so we can use the _getConfirmation shortcut...
     def testSearchUnconfUsers(self):
         client, userId = self.quickMintUser("testuser", "testpass")
-        
+
         newUserId = client.registerNewUser("newuser", "memberpass", "Test Member",
                                         "test@example.com", "test at example.com", "", active=False)
 
@@ -309,7 +309,7 @@ class AccountTest(MintRepositoryHelper):
             cfg = project.getConaryConfig()
             repos = ConaryClient(cfg).getRepos()
             repos.deleteUserByName(versions.Label(project.getLabel()), 'mintauth')
-    
+
         self.openRepository()
         client, userId = self.quickMintUser("testuser", "testpass")
         intProjectId = self.newProject(client, "Internal Project", "internal")
@@ -320,11 +320,11 @@ class AccountTest(MintRepositoryHelper):
         labelId = extProject.getLabelIdMap()['external.rpath.local@rpl:devel']
         extProject.editLabel(labelId, "external.rpath.local@rpl:devel",
             'http://test.rpath.local:%d/repos/external/' % self.port, 'anonymous', 'anonymous')
-                    
+
         cu = self.db.cursor()
         cu.execute("UPDATE Projects SET external=1 WHERE projectId=?", extProjectId)
         self.db.commit()
-        
+
         user = client.getUser(userId)
         user.setPassword("newpass")
 
@@ -332,10 +332,10 @@ class AccountTest(MintRepositoryHelper):
 
         internal = client.getProject(intProjectId)
         external = client.getProject(extProjectId)
-        
+
         intLabel = versions.Label('internal.rpath.local@rpl:devel')
         extLabel = versions.Label('external.rpath.local@rpl:devel')
-        
+
         # accessed using new password
         cfg = internal.getConaryConfig()
         assert(ConaryClient(cfg).getRepos().troveNames(intLabel) == [])
@@ -363,6 +363,33 @@ class AccountTest(MintRepositoryHelper):
 
         self.failIf(cu.fetchall(),
                     "Leftover UserGroup after account was canceled")
+
+    def testPromoteUserToAdmin(self):
+        adminClient, adminId = self.quickMintAdmin("adminuser", "testpass")
+        client, userId  = self.quickMintUser("testuser", "testpass")
+
+        # promote test user
+        adminClient.promoteUserToAdmin(userId)
+
+        mintAdminId = client.server._server.userGroups.getMintAdminId()
+        cu = self.db.cursor()
+        cu.execute("SELECT COUNT(*) FROM UserGroupMembers WHERE userGroupId=? AND userId=?", mintAdminId, userId)
+        (count, ) = cu.fetchone()
+        self.failUnlessEqual(count, 1)
+
+        # make sure we don't allow a user to be promoted twice
+        self.failUnlessRaises(UserAlreadyAdmin,
+                adminClient.promoteUserToAdmin,
+                userId)
+
+        # make sure joeblow (a non admin) cannot promote billybob
+        client2, userId2  = self.quickMintUser("joeblow", "testpass")
+        client3, userId3  = self.quickMintUser("billybob", "testpass")
+
+        self.failUnlessRaises(PermissionDenied,
+                client2.promoteUserToAdmin,
+                userId3)
+
 
 if __name__ == "__main__":
     testsuite.main()
