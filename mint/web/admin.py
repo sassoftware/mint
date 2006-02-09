@@ -16,16 +16,16 @@ class AdminHandler(WebHandler):
         self.__dict__.update(**context)
         if not self.auth.admin:
             raise mint_error.PermissionDenied
-   
+
         return self.adminHandler
 
     def adminHandler(self, *args, **kwargs):
         operation = kwargs.get('operation', '')
         if not operation:
             return self._administer(*args, **kwargs)
-            
+
         return self.__getattribute__('_admin_%s'%operation)(*args, **kwargs)
-        
+
     def _admin_user(self, *args, **kwargs):
         #get a list of all users in a format suitable for producing a
         #dropdown or multi-select list
@@ -82,6 +82,12 @@ class AdminHandler(WebHandler):
     def _admin_user_reset_password(self, userId, *args, **kwargs):
         self._resetPasswordById(userId)
         kwargs['extraMsg'] = "User password reset"
+        return self._admin_user(*args, **kwargs)
+
+    @intFields(userId=None)
+    def _admin_user_promote_admin(self, userId, *args, **kwargs):
+        self.client.promoteUserToAdmin(userId)
+        kwargs['extraMsg'] = 'User promoted to administrator.'
         return self._admin_user(*args, **kwargs)
 
     def _admin_project(self, *args, **kwargs):

@@ -33,7 +33,7 @@ import users
 import simplejson
 
 from mint_error import PermissionDenied, ReleasePublished, ReleaseMissing, \
-     MintError, ReleaseEmpty
+     MintError, ReleaseEmpty, UserAlreadyAdmin
 from reports import MintReport
 from searcher import SearchTermsError
 
@@ -1062,6 +1062,27 @@ class MintServer(object):
         @param offset: Count at which to begin listing
         """
         return self.users.getUsers(sortOrder, limit, offset), self.users.getNumUsers()
+
+    @typeCheck(int)
+    @requiresAdmin
+    @private
+    def promoteUserToAdmin(self, userId):
+        """
+        Given a userId, will attempt to promote that user to an
+        administrator (i.e. make a member of the MintAdmin User Group).
+        @param userId: the userId to promote
+        """
+        mintAdminId = self.userGroups.getMintAdminId()
+        try:
+            if mintAdminId in self.userGroupMembers.getGroupsForUser(userId):
+                raise UserAlreadyAdmin()
+        except database.ItemNotFound:
+            pass
+
+        cu = self.db.cursor()
+        cu.execute('INSERT INTO UserGroupMembers VALUES(?, ?)',
+                mintAdminId, userId)
+        self.db.commit()
 
     @typeCheck()
     @private

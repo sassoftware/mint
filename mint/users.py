@@ -124,7 +124,7 @@ class UsersTable(database.KeyedTable):
         if dbversion != self.schemaVersion:
             if dbversion == 8:
                 # add the necessary columns to the Users table
-                cu = self.db.cursor() 
+                cu = self.db.cursor()
                 aCu = self.authDb.cursor()
                 # add the mintauth user
                 for userName in ('mintauth',):
@@ -175,7 +175,7 @@ class UsersTable(database.KeyedTable):
         r = cu.fetchone()
         if r  and self._checkPassword(r[0], r[1], challenge):
             cu.execute("""SELECT UserGroups.userGroup
-                          FROM UserGroups, Users, UserGroupMembers 
+                          FROM UserGroups, Users, UserGroupMembers
                           WHERE UserGroups.userGroupId =
                                   UserGroupMembers.userGroupId AND
                                 UserGroupMembers.userId = Users.userId AND
@@ -192,7 +192,7 @@ class UsersTable(database.KeyedTable):
         username, password = authToken
         cu = self.db.cursor()
         cu.execute("""SELECT userId, email, displayEmail, fullName, blurb,
-                        timeAccessed FROM Users 
+                        timeAccessed FROM Users
                       WHERE username=? AND active=1""", username)
         r = cu.fetchone()
 
@@ -534,7 +534,7 @@ class ProjectUsersTable(database.DatabaseTable):
         if cu.fetchall():
             self.db.rollback()
             raise database.DuplicateItem("membership")
-        
+
         cu.execute("INSERT INTO ProjectUsers VALUES(?, ?, ?)", projectId,
                    userId, level)
         self.db.commit()
@@ -610,7 +610,7 @@ class Authorization(object):
             d[slot] = self.__getattribute__(slot)
         return d
 
-class UserGroupsTable(database.DatabaseTable):
+class UserGroupsTable(database.KeyedTable):
     name = "UserGroups"
     key = "userGroupId"
 
@@ -649,7 +649,14 @@ class UserGroupsTable(database.DatabaseTable):
                 return (dbversion + 1) == self.schemaVersion
         return True
 
-class UserGroupMembersTable(database.KeyedTable):
+    def getMintAdminId(self):
+        """
+        Return the id of the MintAdmin user.
+        """
+        return self.getIdByColumn('userGroup', 'MintAdmin')
+
+
+class UserGroupMembersTable(database.DatabaseTable):
     name = "UserGroupMembers"
 
     createSQL = """CREATE TABLE UserGroupMembers (
@@ -730,14 +737,15 @@ class UserGroupMembersTable(database.KeyedTable):
                    userId)
         return [x[0] for x in cu.fetchall()]
 
+
 def confirmString():
     """
     Generate a confirmation string
     """
     hash = sha1helper.sha1String(str(random.random()) + str(time.time()))
     return sha1helper.sha1ToString(hash)
-        
-        
+
+
 def newPassword(length = 6):
     """
     @param length: length of random password generated

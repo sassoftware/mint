@@ -255,7 +255,7 @@ class MintClient:
 
     def hideProject(self, projectId):
         """
-        Mark a project as hidden so that it doesn't show up in any listing, 
+        Mark a project as hidden so that it doesn't show up in any listing,
         and is not accessible except by developers and owners of the project
         """
         return self.server.hideProject(projectId)
@@ -270,7 +270,7 @@ class MintClient:
 
     def disableProject(self, projectId):
         """
-        Mark a project as disabled so that it doesn't show up in any listing, 
+        Mark a project as disabled so that it doesn't show up in any listing,
         and is not accessible via any other access method.
         """
         return self.server.disableProject(projectId)
@@ -301,7 +301,7 @@ class MintClient:
         @returns: an object representing the new release
         @rtype: L{mint.releases.Release}
         """
-        releaseId = self.server.newRelease(projectId, releaseName, published) 
+        releaseId = self.server.newRelease(projectId, releaseName, published)
         return self.getRelease(releaseId)
 
     def getReleaseList(self, limit=10, offset=0):
@@ -369,6 +369,13 @@ class MintClient:
         members using their confirmed e-mail address.
         """
         return self.server.notifyUsers(subject, body)
+
+    def promoteUserToAdmin(self, userId):
+        """
+        Promotes a user to an administrator.
+        @param userId: the userId to promote
+        """
+        return self.server.promoteUserToAdmin(userId)
 
     # session management
     def loadSession(self, sid):

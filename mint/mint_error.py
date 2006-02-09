@@ -34,3 +34,8 @@ class ReleaseMissing(MintError):
 class ReleaseEmpty(MintError):
     def __str__(self):
         return "The referenced release has no files and cannot be published."
+
+class UserAlreadyAdmin(MintError):
+    def __str__(self):
+        return "User is already an administrator."
+
