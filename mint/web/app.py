@@ -160,7 +160,9 @@ class MintApp(WebHandler):
 
         # if it looks like we're requesting a project (hostname isn't in reserved hosts
         # and doesn't match cfg.hostName, try to request the project.
-        if hostname not in mint_server.reservedHosts and hostname != self.cfg.hostName:
+        if hostname not in mint_server.reservedHosts \
+            and hostname != self.cfg.hostName \
+            and self.cfg.configured:
             try:
                 project = self.client.getProjectByHostname(hostname)
             except Exception, e:
