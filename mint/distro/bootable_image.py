@@ -323,6 +323,9 @@ title %(name)s (%(kversion)s)
         flags = ''
         if self.imgcfg.debug:
             flags += ' -v'
+        # XXX Hack to work around weird permissions that e2fsimage fails to handle:
+        util.execute("find %s -perm 0111 -exec chmod u+r {} \;" % self.fakeroot)
+
         cmd = '/usr/bin/e2fsimage -f %s -d %s -s %d %s' % (file,
                 self.fakeroot, (self.imagesize - self.imgcfg.partoffset0)/1024,
                 flags)
@@ -398,7 +401,9 @@ quit
             base, ext = os.path.basename(file).split(os.path.extsep, 1)
             newfile = os.path.join(finaldir, self.basefilename + "." + ext)
             log.info("Move %s to %s" % (file, newfile))
-            os.rename(file, newfile)
+
+            import gencslist
+            gencslist._linkOrCopyFile(file, newfile)
             returnlist.append((newfile, name,))
         return returnlist
 
