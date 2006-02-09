@@ -13,103 +13,75 @@ onload = "javascript:;"
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'project.kid', 'library.kid'">
-    <div py:def="breadcrumb()" class="pad" py:strip="True">
-    </div>
-    <div py:def="rPathProductsMenu()" py:strip="True">
-    </div>
-    <div py:def="topnav()" py:strip="True">
-        <td id="topnav">
-            <div class="pad">
-                <a href="http://$SITE">Home</a> |
-                <a href="http://${SITE}help?page=feedback"><b style="color: red;">Need Help/Have Feedback?</b></a>
-                <span py:if="cfg.debugMode">
-                    | <span style="color:red;">DEBUG MODE</span>
-                </span>
-            </div>
-        </td>
-    </div>
-
-    <td py:def="logo()" id="logo">
-        <div>
-          <span id="rpath">
-            <a href="http://$SITE" title="rBuilder main site">
-                <img src="${cfg.staticPath}apps/mint/images/corplogo.gif" alt="rPath Logo"/>
-            </a>
-          </span>
-          <span id="product">
-            <a href="http://$SITE" title="rBuilder main site">
-                <img src="${cfg.staticPath}apps/mint/images/prodlogo.gif" alt="rBuilder Logo"/>
-            </a>
-          </span>
-        </div>
-    </td>
-
     <head py:match="item.tag == '{http://www.w3.org/1999/xhtml}head'" >
         <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=utf-8" />
-        <script type="text/javascript" src="${cfg.staticPath}/apps/MochiKit/MochiKit.js"/>
-        <script type="text/javascript" src="${cfg.staticPath}/apps/mint/javascript/generic.js"/>
-        <script type="text/javascript" src="${cfg.staticPath}/apps/mint/javascript/library.js"/>
-        <script type="text/javascript" src="${cfg.staticPath}/apps/mint/javascript/xmlrpc.js"/>
-        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/basic.css"/>
-        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/structure.css"/>
-        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/user.css"/>
-        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/topNav.css"/>
-        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/log.css"/>
-        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/contentTypes.css"/>
-        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/mint.css"/>
-        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/product.css"/>
+        <meta name="KEYWORDS" content="rPath, rBuilder, rBuilder Online, rManager, rPath Linux, rPl, Conary, Software Appliance, Application image, Software as a Service, SaaS, Virtualization, virtualisation, open source, Linux," />
+        <meta name="DESCRIPTION" content="rPath enables applications to be delivered as a software appliance which combines a software application and a streamlined version of system software that easily installs on industry standard hardware (typically a Linux server)." />
+
+        <script type="text/javascript" src="${cfg.staticPath}apps/MochiKit/MochiKit.js" />
+        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/generic.js" />
+        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/library.js" />
+        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/rpc.js" />
+        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/mint.css" />
+        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/search.css" />
+        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/help.css" />
+        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/contentTypes.css" />
 
         <link rel="shortcut icon" href="http://www.rpath.com/favicon.ico" />
         <link rel="icon" href="http://www.rpath.com/favicon.ico" />
         <div py:replace="item[:]"/>
     </head>
+
     <body py:match="item.tag == '{http://www.w3.org/1999/xhtml}body'"
           py:attrs="item.attrib">
-        <?python
-            secureProtocol = 'http'
-            if auth.authorized:
-                loginAction = "logout"
-            else:
-                loginAction = "processLogin"
-                if cfg.SSL:
-                    secureProtocol = "https"
-        ?>
-        <div id="top" style="align: center;">
-            <div class="shadowLeft"><div class="shadowRight">
-                <div class="surfaceLeft" align="left"><div class="surfaceRight">
-                    ${userActions()}
-                </div></div>
-            </div></div>
-        </div>
-        <div id="middle" style="align: center;">
-            <div id="crumb">
-                <div class="pad">
-                    You are here: <a href="http://$SITE">Home</a>
-                    ${breadcrumb()}
+        <div id="main">
+            <a name="top" />
+            <div id="top">
+                <img id="topgradleft" src="${cfg.staticPath}/apps/mint/images/topgrad_left.png" alt="" />
+                <img id="topgradright" src="${cfg.staticPath}/apps/mint/images/topgrad_right.png" alt="" />
+                <div id="corpLogo">
+                    <a href="http://${SITE}">
+                        <img src="${cfg.staticPath}/apps/mint/images/corplogo_notrans.png" width="80" height="98" alt="rPath Logo" />
+                    </a>
+                </div>
+                <div id="prodLogo">
+                    <a href="http://${SITE}">
+                        <img src="${cfg.staticPath}/apps/mint/images/prodlogo.gif" alt="rBuilder Online Logo" />
+                    </a>
+                </div>
+                <div id="topRight">
+                    <div class="about"><a href="${cfg.corpSite}">About ${cfg.companyName}</a>
+                        <span py:omit="True" py:if="not auth.authorized and req.uri != cfg.basePath"> | <a href="http://${SITE}">Sign In</a></span>
+                    </div>
+                    <form action="http://${cfg.siteHost}${cfg.basePath}search" method="get" id="searchForm">
+                        <div>
+                            <label class="search" for="searchLabel">I'm looking for a...</label>
+                            <input class="search" name="search" id="searchLabel" type="text" />
+                            <button class="img" id="searchSubmit" type="submit"><img src="${cfg.staticPath}/apps/mint/images/search.png" alt="Search" /></button><br />
+                            <input id="typeProject" type="radio" name="type" value="Projects" checked="checked" />
+                            <label for="typeProject">Project</label>
+                            <input id="typePackage" type="radio" name="type" value="Packages" />
+                            <label for="typePackage">Package</label>
+                            <span id="browseText">&nbsp;&nbsp;&nbsp;Or you can <a href="http://${cfg.siteHost}${cfg.basePath}projects">browse</a>.</span>
+                        </div>
+                    </form>
                 </div>
             </div>
-        </div>
-        <div id="bottom" style="align: center;">
-            <div class="shadowLeft"><div class="shadowRight">
-                <div class="surfaceLeft" align="left"><div class="surfaceRight">
-                    <table border="0" cellspacing="0" cellpadding="0" summary="layout" width="100%">
-                        <tr>
-                            <td id="main" class="spanleft" py:replace="item[:]" />
-                        </tr>
-                    </table>
-                </div></div>
-            </div></div>
-        </div>
-        <div id="foot" style="align: center;">
-            <div id="copy">
-                <div class="pad" style="text-align: center;">
-                    <span id="botnav">
-                        ${legal('http://%slegal?page=legal' % SITE, 'Legal')}
-                    </span>
+            <div class="layout" py:replace="item[:]" />
 
-                    <span style="float: left;">Copyright &#169; 2005-2006 rPath, Inc. </span>
-
-                    <span>version ${constants.mintVersion}</span>
+            <div id="footer">
+                <div>
+                    <span id="topOfPage"><a href="#top">Top of Page</a></span>
+                    <ul class="footerLinks">
+                        <li><a href="${cfg.corpSite}">About ${cfg.companyName}</a></li>
+                        <li py:if="cfg.announceLink"><a href="${cfg.announceLink}">Site Announcements</a></li>
+			<li py:if="auth.admin"><a href="/administer">Administer rBuilder</a></li>
+                        <li><a href="/help/">Help</a></li>
+                    </ul>
+                </div>
+                <div id="bottomText">
+                    <span id="copyright">Copyright &copy; 2005-2006 rPath. All Rights Reserved.</span>
+                    <span id="tagline">rPath. The Software Appliance Company.</span>
                 </div>
             </div>
         </div>
