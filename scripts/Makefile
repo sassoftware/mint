@@ -58,7 +58,7 @@ install: install-subdirs
 dist: default-dist
 
 clean: default-clean
-	rm raw2vmdk
+	rm -f raw2vmdk
 
 raw2vmdk: raw2vmdk.c
 	$(CC) $(CFLAGS) -lm -o raw2vmdk raw2vmdk.c
