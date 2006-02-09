@@ -37,10 +37,25 @@ class MintClient:
         Create a new project.
         @param name: name of new project
         @param hostname: hostname for new project
+        @param domainname: domain name for new project
+        @param projecturl: project url for home page of new project
         @param desc: description of new project
         @return: primary key of newly created project.
         """
         return self.server.newProject(name, hostname, domainname, projecturl, desc)
+
+    def newExternalProject(self, name, hostname, domainname, label, url):
+        """
+        Create a new project.
+        @param name: name of new project
+        @param hostname: hostname for new project
+        @param domainname: domain name for new project
+        @param label: label of external repository
+        @param url: url of external repository
+        @return: primary key of newly created project.
+        """
+        return self.server.newExternalProject(name, hostname, domainname,
+                                              label, url)
 
     def checkAuth(self):
         """
