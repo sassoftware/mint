@@ -385,8 +385,8 @@ class MintServer(object):
         if self.auth.userId not in [x[0] for x in members]:
             raise PermissionDenied
 
-    @typeCheck(str, str, str, str, str)
     # project methods
+    @typeCheck(str, str, str, str, str)
     @requiresAuth
     @private
     def newProject(self, projectName, hostname, domainname, projecturl, desc):
@@ -426,6 +426,42 @@ class MintServer(object):
                                   hostname, domainname, self.authToken[0],
                                   self.authToken[1])
 
+        return projectId
+
+    @typeCheck(str, str, str, str, str)
+    @requiresAdmin
+    @private
+    def newExternalProject(self, name, hostname, domainname, label, url):
+        from conary import versions
+        # ensure that the label we were passed is valid
+        try:
+            versions.Label(label)
+        except conary_errors.ParseError:
+            raise mint_error.ParameterError("Not a valid Label")
+
+        if not url:
+            url = 'http://' + label.split('@')[0] + '/conary/'
+
+        # create the project entry
+        projectId = self.projects.new(name = name,
+                                      creatorId = self.auth.userId,
+                                      description = '',
+                                      hostname = hostname,
+                                      domainname = domainname,
+                                      projecturl = '',
+                                      external = 1,
+                                      timeModified = time.time(),
+                                      timeCreated = time.time())
+
+        # create the projectUsers entry
+        self.projectUsers.new(userId = self.auth.userId,
+                              projectId = projectId,
+                              level = userlevels.OWNER)
+
+        project = projects.Project(self, projectId)
+
+        # create the labels entry
+        project.addLabel(label, url, 'anonymous', 'anonymous')
         return projectId
 
     @typeCheck(int)
