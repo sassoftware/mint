@@ -32,34 +32,31 @@ configGroups = {
 class SetupHandler(WebHandler):
     def handle(self, context):
         self.__dict__.update(**context)
-   
+
         path = normPath(context['cmd'])
         cmd = path.split('/')[1]
-        print >> sys.stderr, context['cmd'], self.req.uri
 
         # only admins are allowed here
         if not self.auth.admin and self.cfg.configured:
             raise HttpForbidden
-        
+
         # first-time setup; check for <sid>.txt
         if not self.cfg.configured:
             if not self.session:    
-                print >> sys.stderr, "calling _session_start"
-                sys.stderr.flush()
                 self._session_start()
 
             self.session.save()
             # FIXME: parameterize /srv/mint/
             if not os.path.exists(self.cfg.dataPath + "/%s.txt" % self.session.id()):
                 return self.secure
-                
+
         if not cmd:
             return self.setup
         try:
             return self.__getattribute__(cmd)
         except AttributeError:
             raise HttpNotFound
-        
+
     def setup(self, auth):
         return self._write("setup/setup", configGroups = configGroups)
 
@@ -70,9 +67,9 @@ class SetupHandler(WebHandler):
         for key in keys:
             newCfg[key] = self.fields[key]
 
-        newCfg.configured = True
         cfg = file('/srv/mint/mint.conf', 'w')
         newCfg.display(out = cfg)
+        self.req.log_error("writing new configuration to /srv/mint/mint.conf")
         return self._write("setup/saved")
 
     def config(self, auth):
@@ -83,7 +80,13 @@ class SetupHandler(WebHandler):
         return buf.getvalue()
 
     def restart(self, auth):
-        os.system("killall -USR1 httpd")
+        self.cfg.configured = True
+        cfg = file('/srv/mint/mint.conf', 'w')
+        self.cfg.display(out = cfg)
+        self.req.log_error("writing new configuration to /srv/mint/mint.conf")
+        self.req.log_error("+ sudo killall -USR1 httpd")
+
+        os.system("sudo killall -USR1 httpd")
         time.sleep(5)
         self._redirect(self.cfg.basePath)
 
