@@ -86,7 +86,7 @@ def requiresAdmin(func):
 
 def requiresAuth(func):
     def wrapper(self, *args):
-        if not self.auth.authorized:
+        if not self.auth.authorized or self.authToken == [self.cfg.authUser, self.cfg.authPass]:
             raise PermissionDenied
         else:
             return func(self, *args)
