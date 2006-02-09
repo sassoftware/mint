@@ -44,10 +44,8 @@
                 <div py:if="ownsProjects" py:omit="True">
                     <p>
                         This tutorial steps you through the process of creating your own
-                        software appliance from packages that already exist on rBuilder
-                        Online.  If you would like to build and contribute your own packages,
-                        you should follow the <strong><a href="http://wiki.conary.com/DerivativeDistroTutorial?action=AttachFile;do=get;target=rBuilderOnlineTutorial.pdf">steps to
-                        building packages with rBuilder Online</a></strong>.
+                        software appliance from packages that already exist on 
+                        ${cfg.productName}.
                     </p>
 
                     <h2>Step 1. First, create a new group</h2>
@@ -74,7 +72,7 @@
                     <p>
                         <img src="${cfg.staticPath}apps/mint/images/pot.png" alt="Cooking Pot" />
                         The last step is to "cook" your software appliance.  Click "Cook this
-                        Group" and watch as rBuilder Online assembles the packages you chose
+                        Group" and watch as ${cfg.productName} assembles the packages you chose
                         into a complete system.  When the group is "Finished" cooking, you can
                         go to the releases page to publish and share your work.
                     </p>

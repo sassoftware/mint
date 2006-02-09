@@ -76,7 +76,7 @@
         ?>
 
         <div class="layout">
-            <h1>rBuilder Online for Users</h1>
+            <h1>${cfg.productName} for Users</h1>
 
             <p>If you are already using a Conary-based system, then you have come to the
                 right place to look for software.</p>
@@ -168,13 +168,10 @@
                 <div class="helpBlock">
 
                     <p>If you want to help in the development of a project, simply request to join a 
-                    project from the project's home page.  But you do not have to be a coder to 
-                    participate.  All projects need people to help out with testing, 
-                    documentation, design, etc.  If there is an interesting project, feel free to 
-                    create an rBuilder Online account, and offer your services.</p>
+                    project from the project's home page.</p>
 
                     <p>If you would like to start your own project, then get started here: 
-                        <a href="/help?page=dev-tutorial">rBuilder Online for Developers</a></p>
+                        <a href="/help?page=dev-tutorial">${cfg.productName} for Developers</a></p>
 
                 </div>
             </div>
