@@ -404,6 +404,31 @@ class AccountTest(MintRepositoryHelper):
                 client2.promoteUserToAdmin,
                 userId3)
 
+    def testDemoteUserFromAdmin(self):
+        adminClient, adminId = self.quickMintAdmin("adminuser", "testpass")
+        otherClient, otherUserId  = self.quickMintAdmin("testuser", "testpass")
+
+        adminClient.demoteUserFromAdmin(otherUserId)
+
+        # verify other user was demoted
+        mintAdminId = adminClient.server._server.userGroups.getMintAdminId()
+        cu = self.db.cursor()
+
+        cu.execute("SELECT COUNT(*) FROM UserGroupMembers WHERE userGroupId=? AND userId=?", mintAdminId, otherUserId)
+
+        self.failIf(cu.fetchone()[0], "Admin user was not demoted")
+
+        # ensure nothing bad happens if we click twice
+        adminClient.demoteUserFromAdmin(otherUserId)
+
+        # ensure we can't demote the last admin
+        adminClient.demoteUserFromAdmin(adminId)
+
+        cu = self.db.cursor()
+        cu.execute("SELECT COUNT(*) FROM UserGroupMembers WHERE userGroupId=? AND userId=?", mintAdminId, adminId)
+
+        self.failIf(not cu.fetchone()[0], "Last admin user was demoted")
+
 
 if __name__ == "__main__":
     testsuite.main()
