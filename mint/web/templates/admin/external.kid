@@ -19,36 +19,72 @@
             <div class="pad">
               <form action="administer" method="post">
                 <h2>Add External Project</h2>
-                <p py:if="firstTime" class="help">External projects have the same structure as local projects, except that the repository is not contained locally. Hence ${cfg.productName} will need to ask you for the same sorts of information that you'd need to provide when creating a new local project. Since nearly everyone will want rPath Linux as an external project, ${cfg.productName} has pre-populated those values.</p>
+                <p class="help">External projects appear just like the
+                projects you host on ${cfg.productName} with one exception:
+                the respository is <em>not</em> stored on
+                ${cfg.productName}.  External projects are useful for
+                integrating the contents of another organization's
+                repository into ${cfg.productName}, making it easier for
+                your users to reference that organization's work in
+                theirs.</p>
+
+                <p py:if="firstTime" class="help">Because you have not yet
+                added rPath Linux as an external project, the following
+                fields have been pre-populated to make adding rPath Linux
+                easy.  If you do not wish to add rPath Linux as an external
+                project, you can erase the contents of each field and add
+                the appropriate information for the external project you
+                wish to add.</p>
+
                 <table cellpadding="0" border="0" cellspacing="0" class="mainformhorizontal">
                   <tr>
                     <th><em class="required">Project Name:</em></th>
                     <td>
                       <input type="text" name="hostname" maxlength="16" value="${firstTime and 'rpath' or ''}"/>
-                      <p class="help">You can choose a local name for this project. This will be used as the hostname for this project's site and repository (http://&lt;project-name&gt;.${cfg.projectDomainName}/). It must start with a letter and contain only letters and numbers, and be less than or equal to 16 characters long.</p>
-                      <p class="help">To reduce confusion, it is recommended that you copy the name of the external project.</p>
+                      <p class="help">Enter a local name for this
+                      project. The local name will be used as the hostname
+                      for this project's site and repository
+                      (http://&lt;project-name&gt;.${cfg.projectDomainName}/). It
+                      must start with a letter and contain only letters and
+                      numbers, and be less than or equal to 16 characters
+                      long.  For example, <strong>mylinux</strong></p>
+
+                      <p class="help">(To reduce confusion, we recommend
+                      that you enter the external project's name.)</p>
                     </td>
                   </tr>
                   <tr>
                       <th><em class="required">Project Title:</em></th>
                       <td>
                         <input type="text" name="name" value="${firstTime and 'rPath Linux' or ''}"/>
-                        <p class="help">The title is a longer, more descriptive name for this project. For example, <strong>My Custom Linux</strong></p>
-                        <p class="help">To reduce confusion, it is recommended that you copy the title of the external project.</p>
+                        <p class="help">Enter a local title for this
+                        project.  The title is a longer, more descriptive
+                        name for the project. For example, <strong>My
+                        Custom Linux</strong></p>
+
+                       <p class="help">(To reduce confusion, we recommend
+                       that you enter the external project's title.)</p>
                       </td>
                   </tr>
                   <tr>
                     <th><em class="required">Project Label:</em></th>
                     <td>
                       <input type="text" name="label" value="${firstTime and 'conary.rpath.com@rpl:1' or ''}"/>
-                      <p class="help">Please enter the label of the external project. This is basically an installLabelPath.</p>
+                      <p class="help">Enter this project's label.  For
+                      example, <strong>conary.example.com@rpl:1</strong></p>
                     </td>
                   </tr>
                   <tr>
-                    <th>URL:</th>
+                    <th>Repository URL:</th>
                     <td>
                       <input type="text" name="url" value="${firstTime and 'http://conary.rpath.com/conary/' or ''}"/>
-                      <p class="help">If a URL is not provided it will automatically be computed from the project's label. eg; <strong>conary.rpath.com@rpl:1</strong> will translate to <strong>http://conary.rpath.com/conary/</strong></p>
+                      <p class="help">Enter the URL for this project's
+                      repository.  If a URL is not provided, the standard
+                      URL format will be derived from the project's label
+                      (eg; for label
+                      <strong>conary.example.com@rpl:1</strong> the
+                      repository URL will be
+                      <strong>http://conary.example.com/conary/</strong>)</p>
                     </td>
                   </tr>
                   </table>
