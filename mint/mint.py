@@ -377,6 +377,13 @@ class MintClient:
         """
         return self.server.promoteUserToAdmin(userId)
 
+    def demoteUserFromAdmin(self, userId):
+         """
+         Demotes a user from administrator.
+         @param userId: the userId to promote
+         """
+         return self.server.demoteUserFromAdmin(userId)
+
     # session management
     def loadSession(self, sid):
         return self.server.loadSession(sid)

@@ -18,6 +18,7 @@ script_dist =			\
 
 extra_dist = \
 	Makefile		\
+        bootable_image.conf	\
 	installable_iso.conf	\
 	iso_gen.conf		\
 	live_iso.conf		\

@@ -126,7 +126,7 @@
             Then, click on the project name, and click on the "Request to join"
             link to submit your request to the project's owners.</p>
             <div id="userSettings"><a href="http://${SITE}userSettings"><strong>Edit my account</strong></a></div>
-
+	    <div id="administer" py:if="auth.admin"><a href="/administer"><strong>Adminster ${cfg.productName}</strong></a></div>
         </div>
         <div class="boxBody" id="boxBody" py:if="projectList">
             <ul>
@@ -141,6 +141,7 @@
             </ul>
             <div id="newProject"><a href="http://${SITE}newProject"><strong>Create a new project</strong></a></div>
             <div id="userSettings"><a href="http://${SITE}userSettings"><strong>Edit my account</strong></a></div>
+	    <div id="administer" py:if="auth.admin"><a href="/administer"><strong>Adminster ${cfg.productName}</strong></a></div>
         </div>
     </div>
 </html>

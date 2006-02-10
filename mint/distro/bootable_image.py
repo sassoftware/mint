@@ -100,46 +100,48 @@ class InstallCallback(UpdateCallback, ChangesetCallback):
     def restoreFiles(self, size, totalSize):
         if totalSize != 0:
             self.restored += size
-            self.update('writing files (%d%% of %dK)'
-                        %((self.restored * 100) / totalSize, totalSize / 1024))
+            self.update('writing files')
 
     def requestingChangeSet(self):
         self.update('requesting changeset')
 
     def downloadingChangeSet(self, got, need):
         if need != 0:
-            self.update('downloading changeset from repository (%d%% of %dk)' %
-                        ((got * 100) / need, need / 1024))
+            self.update('downloading changeset')
 
     def requestingFileContents(self):
         self.update('requesting file contents')
 
     def downloadingFileContents(self, got, need):
         if need != 0:
-            self.update('downloading file contents from repository (%d%% of %dk)' %
-                        ((got * 100) / need, need / 1024))
+            self.update('downloading files')
 
     def preparingChangeSet(self):
-        self.update('preparing changeset')
+        self.update('Preparing changeset')
 
     def resolvingDependencies(self):
-        self.update('resolving dependencies')
+        self.update('Resolving dependencies')
 
     def creatingRollback(self):
-        self.update('creating rollback')
+        self.update('Creating rollback')
 
     def creatingDatabaseTransaction(self, troveNum, troveCount):
-        self.update('creating database transaction (%d of %d)' % (troveNum, troveCount))
+        self.update('creating database transaction')
 
     def committingTransaction(self):
         self.update('committing transaction')
 
     def setUpdateHunk(self, num, total):
+        self.updateHunk = (num, total)
         self.restored = 0
 
     def update(self, msg):
         # only push an update into the database if it differs from the
         # current message
+        if self.updateHunk[1] != 0:
+            percent = (self.updateHunk[0] * 100) / self.updateHunk[1]
+            msg = "Updating changesets: %d%% (%s)" % (percent, msg)
+
         if self.msg != msg:
             self.msg = msg
             self.status(msg)
@@ -148,6 +150,7 @@ class InstallCallback(UpdateCallback, ChangesetCallback):
         self.abortEvent = None
         self.status = status
         self.restored = 0
+        self.updateHunk = (0, 0)
         self.msg = ''
         self.changeset = ''
         self.prefix = 'BDI:'
@@ -408,6 +411,7 @@ quit
 
             import gencslist
             gencslist._linkOrCopyFile(file, newfile)
+            os.unlink(file)
             returnlist.append((newfile, name,))
         return returnlist
 
@@ -468,10 +472,6 @@ quit
         releasetypes.LIVE_ISO,
         releasetypes.VMWARE_IMAGE,
         ]
-
-    def status(self, value):
-        value = 'BootableImage: ' + value
-        ImageGenerator.status(self, value)
 
     def setImageTypes(self, imageTypes):
         self.imageTypes = imageTypes

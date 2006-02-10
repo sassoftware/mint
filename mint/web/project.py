@@ -290,9 +290,6 @@ class ProjectHandler(WebHandler):
         else:
             jobId = job.id
 
-        del self.session['groupTroveId']
-        self.session.save()
-
         return self._write("cookGroup", jobId = jobId, recipe = recipe)
 
     @ownerOnly

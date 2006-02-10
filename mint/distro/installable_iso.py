@@ -34,7 +34,7 @@ class IsoConfig(ConfigFile):
     scriptPath          = '/usr/share/mint/scripts/'
     cachePath           = '/srv/mint/changesets/'
     templatePath        = '/srv/mint/templates/'
-    implantIsoMd5       = '/usr/lib/anaconda-runtime/implantisomd5'
+    implantIsoMd5       = '/usr/bin/implantisomd5'
     anacondaImagesPath  = '/usr/share/mint/pixmaps'
 
 
