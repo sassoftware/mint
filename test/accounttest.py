@@ -8,7 +8,7 @@ testsuite.setup()
 
 from mint_rephelp import MintRepositoryHelper
 from mint import userlevels
-from mint.mint_error import PermissionDenied, UserAlreadyAdmin
+from mint.mint_error import PermissionDenied, UserAlreadyAdmin, AdminSelfDemotion
 from mint.users import LastOwner, UserInduction, MailError, GroupAlreadyExists, AlreadyConfirmed
 from mint.database import DuplicateItem, ItemNotFound
 from conary.repository.netclient import UserNotFound
@@ -422,12 +422,8 @@ class AccountTest(MintRepositoryHelper):
         adminClient.demoteUserFromAdmin(otherUserId)
 
         # ensure we can't demote the last admin
-        adminClient.demoteUserFromAdmin(adminId)
-
-        cu = self.db.cursor()
-        cu.execute("SELECT COUNT(*) FROM UserGroupMembers WHERE userGroupId=? AND userId=?", mintAdminId, adminId)
-
-        self.failIf(not cu.fetchone()[0], "Last admin user was demoted")
+        self.assertRaises(AdminSelfDemotion, adminClient.demoteUserFromAdmin,
+                          adminId)
 
     def testAutoGenerateMintAdminId(self):
         client, userId  = self.quickMintUser("testuser", "testpass")

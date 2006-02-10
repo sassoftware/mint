@@ -39,3 +39,6 @@ class UserAlreadyAdmin(MintError):
     def __str__(self):
         return "User is already an administrator."
 
+class AdminSelfDemotion(MintError):
+    def __str__(self):
+        return "You cannot demote yourself."

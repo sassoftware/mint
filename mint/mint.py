@@ -21,7 +21,8 @@ import users
 import grouptrove
 import base64
 from mint_error import MintError, UnknownException, PermissionDenied, \
-    ReleasePublished, ReleaseMissing, ReleaseEmpty
+    ReleasePublished, ReleaseMissing, ReleaseEmpty, UserAlreadyAdmin, \
+    AdminSelfDemotion
 from searcher import SearchTermsError
 
 
@@ -493,6 +494,10 @@ class _Method(xmlrpclib._Method):
             raise users.AuthRepoError(exceptionArgs[0])
         elif exceptionName == "LabelMissing":
             raise projects.LabelMissing(exceptionArgs[0])
+        elif exceptionName == "UserAlreadyAdmin":
+            raise UserAlreadyAdmin(exceptionArgs[0])
+        elif exceptionName == "AdminSelfDemotion":
+            raise AdminSelfDemotion(exceptionArgs[0])
         else:
             raise UnknownException(exceptionName, exceptionArgs)
 
