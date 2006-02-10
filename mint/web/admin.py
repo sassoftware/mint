@@ -102,27 +102,25 @@ class AdminHandler(WebHandler):
         return self._admin_project(*args, **kwargs)
 
     @intFields(projectId = None)
-    def _admin_project_hide(self, projectId, *args, **kwargs):
-        self.client.hideProject(projectId)
-        kwargs['extraMsg'] = "Project hidden"
+    def _admin_project_toggle_hide(self, projectId, *args, **kwargs):
+        project = self.client.getProject(projectId)
+        if project.hidden:
+            self.client.unhideProject(projectId)
+            kwargs['extraMsg'] = "Project unhidden"
+        else:
+            self.client.hideProject(projectId)
+            kwargs['extraMsg'] = "Project hidden"
         return self._admin_project(*args, **kwargs)
 
     @intFields(projectId = None)
-    def _admin_project_unhide(self, projectId, *args, **kwargs):
-        self.client.unhideProject(projectId)
-        kwargs['extraMsg'] = "Project unhidden"
-        return self._admin_project(*args, **kwargs)
-
-    @intFields(projectId = None)
-    def _admin_project_disable(self, projectId, *args, **kwargs):
-        self.client.disableProject(projectId)
-        kwargs['extraMsg'] = "Project disabled"
-        return self._admin_project(*args, **kwargs)
-
-    @intFields(projectId = None)
-    def _admin_project_enable(self, projectId, *args, **kwargs):
-        self.client.enableProject(projectId)
-        kwargs['extraMsg'] = "Project enabled"
+    def _admin_project_toggle_disable(self, projectId, *args, **kwargs):
+        project = self.client.getProject(projectId)
+        if project.disabled:
+            self.client.enableProject(projectId)
+            kwargs['extraMsg'] = "Project enabled"
+        else:
+            self.client.disableProject(projectId)
+            kwargs['extraMsg'] = "Project disabled"
         return self._admin_project(*args, **kwargs)
 
     def _admin_project_jump(self, page, **kwargs):

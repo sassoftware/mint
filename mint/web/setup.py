@@ -67,7 +67,11 @@ class SetupHandler(WebHandler):
         for key in keys:
             newCfg[key] = self.fields[key]
 
+        # hack until we support SSL-rbuilder appliance
         newCfg.postCfg()
+        print >> sys.stderr, "setting secureHost to: ", newCfg.siteHost
+        newCfg.secureHost = newCfg.siteHost
+
         cfg = file('/srv/mint/mint.conf', 'w')
         newCfg.display(out = cfg)
         self.req.log_error("writing new configuration to /srv/mint/mint.conf")
@@ -82,6 +86,7 @@ class SetupHandler(WebHandler):
 
     def restart(self, auth):
         self.cfg.configured = True
+        self.cfg.secureHost = self.cfg.siteHost
         cfg = file('/srv/mint/mint.conf', 'w')
         self.cfg.display(out = cfg)
         self.req.log_error("writing new configuration to /srv/mint/mint.conf")

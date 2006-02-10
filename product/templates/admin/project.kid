@@ -24,8 +24,8 @@
                     <ul>
                         <li>Normal Project</li>
                         <li><span style="color: #999;">Hidden Project</span></li>
-                        <li><span style="text-decoration: line-through;">Disabled Project</span></li>
-                        <li><span style="color: #999; text-decoration: line-through;">Hidden/Disabled Project</span></li>
+                        <!-- <li><span style="text-decoration: line-through;">Disabled Project</span></li>
+                        <li><span style="color: #999; text-decoration: line-through;">Hidden/Disabled Project</span></li> -->
                     </ul>
                   <select name="projectId">
                     <div py:strip="True" py:for="project in projects">
@@ -41,8 +41,8 @@
                   </select>
                 </p>
                 <p>
-                   <button name="operation" value="project_toggle_hide">Hide/Unhide Project</button>
-                   <button name="operation" value="project_toggle_disable">Enable/Disable Project</button>
+                  <button name="operation" value="project_toggle_hide">Hide/Unhide Project</button>
+                  <!-- <button name="operation" value="project_toggle_disable">Enable/Disable Project</button> -->
                   <button name="operation" value="project_change_members">Change Members</button>
                   <button name="operation" value="project_maillists">Manage Mailing Lists</button>
                   <button name="operation" value="project_edit">Edit</button>
