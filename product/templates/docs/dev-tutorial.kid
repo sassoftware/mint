@@ -24,6 +24,7 @@
         <div class="layout" id="helpPage">
             <div id="right" class="side">
                 ${resourcePane()}
+		${groupTroveBuilder()}
             </div>
 
             <div id="spanleft" class="devTutorial">

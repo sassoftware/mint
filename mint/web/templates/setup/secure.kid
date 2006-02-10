@@ -28,13 +28,13 @@ from conary.lib.cfg import *
             <ol>
                 <li>Using the password you entered during the installation
                 process, login to your rBuilder server by issuing the
-                following command:<br><br>
+                following command:<br/><br/>
 
-                <strong><tt>ssh ${req.hostname}</tt></strong><br><br></li>
+                <strong><tt>ssh ${req.hostname}</tt></strong><br/><br/></li>
 
-                <li>Once logged in, issue the following command:<br><br>
+                <li>Once logged in, issue the following command:<br/><br/>
                 <strong><tt>touch
-                ${cfg.dataPath}${sid}.txt</tt></strong><br><br></li>
+                ${cfg.dataPath}${sid}.txt</tt></strong><br/><br/></li>
 
                 <li>Reload this page by pressing your browser's reload
                 button</li>

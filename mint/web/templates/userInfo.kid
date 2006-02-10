@@ -24,6 +24,7 @@
         <div class="layout">
             <div id="right" class="side">
                 ${resourcePane()}
+		${groupTroveBuilder()}
                 <div class="palette" py:if="ownsProjects and user.id != auth.userId">
                     <img class="left" src="${cfg.staticPath}apps/mint/images/header_blue_left.png" alt="" />
                     <img class="right" src="${cfg.staticPath}apps/mint/images/header_blue_right.png" alt="" />
