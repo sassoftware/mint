@@ -1107,11 +1107,12 @@ class MintServer(object):
 
         # ensure we refuse to demote if there's only one admin.
         if len(cu.fetchall()) == 1:
-            return
+            return False
 
         cu.execute("""DELETE FROM UserGroupMembers WHERE userId=?
                           AND userGroupId=?""", userId, mintAdminId)
         self.db.commit()
+        return True
 
     @typeCheck()
     @private
