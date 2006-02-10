@@ -98,7 +98,7 @@ class SetupHandler(WebHandler):
         newCfg.postCfg()
         newCfg.secureHost = newCfg.siteHost
         newCfg.projectDomainName = newCfg.externalDomainName = newCfg.siteDomainName
-        newCfg.bugsEmail = kwargs['new_email']
+        newCfg.bugsEmail = newCfg.adminMail = kwargs['new_email']
 
         # create new user
         userId = mintClient.registerNewUser(
