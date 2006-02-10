@@ -23,7 +23,7 @@ configGroups = {
     'Server Setup':
         ('hostName', 'siteDomainName'),
     'Branding':
-        ('companyName', 'productName', 'corpSite'),
+        ('companyName', 'corpSite'),
     'Repository Setup':
         ('defaultBranch',),
 }
