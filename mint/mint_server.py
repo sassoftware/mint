@@ -33,7 +33,7 @@ import users
 import simplejson
 
 from mint_error import PermissionDenied, ReleasePublished, ReleaseMissing, \
-     MintError, ReleaseEmpty, UserAlreadyAdmin
+     MintError, ReleaseEmpty, UserAlreadyAdmin, AdminSelfDemotion
 from reports import MintReport
 from searcher import SearchTermsError
 
@@ -261,6 +261,12 @@ class MintServer(object):
         except jobs.DuplicateJob, e:
             self.db.rollback()
             return (True, ("DuplicateJob", str(e)))
+        except UserAlreadyAdmin, e:
+            self.db.rollback()
+            return (True, ("UserAlreadyAdmin", str(e)))
+        except AdminSelfDemotion, e:
+            self.db.rollback()
+            return (True, ("AdminSelfDemotion", str(e)))
         except:
             self.db.rollback()
             raise
@@ -1082,7 +1088,7 @@ class MintServer(object):
         mintAdminId = self.userGroups.getMintAdminId()
         try:
             if mintAdminId in self.userGroupMembers.getGroupsForUser(userId):
-                raise UserAlreadyAdmin()
+                raise UserAlreadyAdmin
         except database.ItemNotFound:
             pass
 
@@ -1100,19 +1106,18 @@ class MintServer(object):
         If this user is the last administrator, this function will balk.
         @param userId: the userId to promote
         """
+        # refuse to demote self. this ensures there will always be at least one
+        if userId == self.auth.userId:
+            raise AdminSelfDemotion
+
         mintAdminId = self.userGroups.getMintAdminId()
         cu = self.db.cursor()
         cu.execute("SELECT userId FROM UserGroupMembers WHERE userGroupId=?",
                    mintAdminId)
 
-        # ensure we refuse to demote if there's only one admin.
-        if len(cu.fetchall()) == 1:
-            return False
-
         cu.execute("""DELETE FROM UserGroupMembers WHERE userId=?
                           AND userGroupId=?""", userId, mintAdminId)
         self.db.commit()
-        return True
 
     @typeCheck()
     @private
