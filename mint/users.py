@@ -387,6 +387,15 @@ class UsersTable(database.KeyedTable):
         cu.execute(SQL)
 
         results = cu.fetchall()
+        for index, (userId, userName, active) in enumerate(results[:]):
+            cu.execute("""SELECT COUNT(*) FROM UserGroupMembers
+                              LEFT JOIN UserGroups
+                                  ON UserGroupMembers.userGroupId=
+                                          UserGroups.userGroupId
+                              WHERE UserGroup = 'MintAdmin'
+                              AND userId=?""", userId)
+            if cu.fetchone()[0]:
+                results[index] = userId, userName + " (admin)", active
         return results
 
     def getUsersWithEmail(self):
@@ -653,8 +662,17 @@ class UserGroupsTable(database.KeyedTable):
     def getMintAdminId(self):
         """
         Return the id of the MintAdmin user.
+
+        NOTE: This will create the MintAdmin UserGroup if it doesn't
+        already exist.
         """
-        return self.getIdByColumn('userGroup', 'MintAdmin')
+        try:
+            mintAdminId = self.getIdByColumn('userGroup', 'MintAdmin')
+        except database.ItemNotFound:
+            mintAdminId = self.new(userGroup = 'MintAdmin')
+        except:
+            raise
+        return mintAdminId
 
 
 class UserGroupMembersTable(database.DatabaseTable):

@@ -15,6 +15,7 @@
         <title>${formatTitle('View Reports')}</title>
     </head>
     <body>
+	<a href ="/administer/">Return to Administrator Page</a>
         <td id="main" class="spanall">
             <div class="pad">
               <form action="administer" method="post">

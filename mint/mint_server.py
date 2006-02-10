@@ -1073,6 +1073,10 @@ class MintServer(object):
         """
         Given a userId, will attempt to promote that user to an
         administrator (i.e. make a member of the MintAdmin User Group).
+
+        NOTE: if the MintAdmin UserGroup doesn't exist, it will be created
+        as a side effect.
+
         @param userId: the userId to promote
         """
         mintAdminId = self.userGroups.getMintAdminId()
@@ -1085,6 +1089,28 @@ class MintServer(object):
         cu = self.db.cursor()
         cu.execute('INSERT INTO UserGroupMembers VALUES(?, ?)',
                 mintAdminId, userId)
+        self.db.commit()
+
+    @typeCheck(int)
+    @requiresAdmin
+    @private
+    def demoteUserFromAdmin(self, userId):
+        """
+        Given a userId, will attempt to demote that user from administrator
+        If this user is the last administrator, this function will balk.
+        @param userId: the userId to promote
+        """
+        mintAdminId = self.userGroups.getMintAdminId()
+        cu = self.db.cursor()
+        cu.execute("SELECT userId FROM UserGroupMembers WHERE userGroupId=?",
+                   mintAdminId)
+
+        # ensure we refuse to demote if there's only one admin.
+        if len(cu.fetchall()) == 1:
+            return
+
+        cu.execute("""DELETE FROM UserGroupMembers WHERE userId=?
+                          AND userGroupId=?""", userId, mintAdminId)
         self.db.commit()
 
     @typeCheck()

@@ -496,6 +496,9 @@ div#projectsPane div#userSettings {
     text-align: center;
 }
 
+div#projectsPane div#administer {
+    text-align: center;
+}
 /* Group Builder */
 
 div#groupBuilder {
