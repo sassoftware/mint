@@ -30,6 +30,7 @@
                   <button name="operation" value="user_reset_password">Reset Password</button>
                   <button name="operation" value="user_cancel">Cancel User Account</button>
                   <button name="operation" value="user_promote_admin">Promote To Administrator</button>
+                  <button name="operation" value="user_demote_admin">Revoke Administrative Privileges</button>
                 </p>
               </form>
               <div>

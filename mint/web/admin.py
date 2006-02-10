@@ -89,7 +89,13 @@ class AdminHandler(WebHandler):
         self.client.promoteUserToAdmin(userId)
         kwargs['extraMsg'] = 'User promoted to administrator.'
         return self._admin_user(*args, **kwargs)
-
+    
+    @intFields(userId=None)
+    def _admin_user_demote_admin(self, userId, *args, **kwargs):
+	self.client.demoteUserFromAdmin(userId)
+	kwargs['extraMsg'] = 'Administrative privileges revoked'
+	return self._admin_user(*args, **kwargs)
+    
     def _admin_project(self, *args, **kwargs):
         #Get a list of all the projects in a format suitable for producing
         #a dropdown or multi-select list.
