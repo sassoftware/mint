@@ -114,6 +114,8 @@ class SetupHandler(WebHandler):
         cfg = file('/srv/mint/mint.conf', 'w')
         newCfg.display(out = cfg)
         self.req.log_error("writing new configuration to /srv/mint/mint.conf")
+        self.req.log_error("+ sudo killall -USR1 httpd")
+        os.system("sudo killall -USR1 httpd")
         return self._write("setup/saved")
 
     def config(self, auth):
@@ -125,15 +127,15 @@ class SetupHandler(WebHandler):
 
     def restart(self, auth):
         self.cfg.configured = True
-        self.cfg.secureHost = self.cfg.siteHost
-        self.cfg.projectDomainName = self.cfg.externalDomainName = self.cfg.siteDomainName
 
         cfg = file('/srv/mint/mint.conf', 'w')
         self.cfg.display(out = cfg)
         self.req.log_error("writing new configuration to /srv/mint/mint.conf")
         self.req.log_error("+ sudo killall -USR1 httpd")
+        self.req.log_error("+ sudo /sbin/service rbuilder-isogen restart")
 
         os.system("sudo killall -USR1 httpd")
+        os.system("sudo /sbin/service rbuilder-isogen restart")
         time.sleep(5)
         self._redirect(self.cfg.basePath)
 
