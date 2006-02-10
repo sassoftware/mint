@@ -82,7 +82,7 @@ from conary.lib.cfg import *
                     </tr>
                 </table>
 
-            <p><button type="submit">Save Changes</button></p>
+            <p><button type="submit" class="img"><img src="${cfg.staticPath}apps/mint/images/save_changes_button.png" alt="Save Changes" /></button></p>
           </form>
         </div>
     </body>
