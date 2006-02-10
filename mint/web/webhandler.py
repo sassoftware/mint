@@ -148,7 +148,7 @@ class WebHandler(object):
             sid = sid,
             secret = self.cfg.cookieSecretKey,
             timeout = 86400, # XXX timeout of one day; should it be configurable?
-            domain = '.' + domain,
+            domain = cookieDomain,
             lock = False)
         if self.session.is_new():
             self.session['firstPage'] = "%s://%s%s" % ( \
