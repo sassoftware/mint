@@ -77,7 +77,7 @@ def deriveBaseFunc(func):
 
 def requiresAdmin(func):
     def wrapper(self, *args):
-        if list(self.authToken) == [self.cfg.authUser, self.cfg.authPass] or self.auth.admin:
+        if self.auth.admin or list(self.authToken) == [self.cfg.authUser, self.cfg.authPass]:
             return func(self, *args)
         else:
             raise PermissionDenied
@@ -86,10 +86,10 @@ def requiresAdmin(func):
 
 def requiresAuth(func):
     def wrapper(self, *args):
-        if not (self.auth.authorized or list(self.authToken) == [self.cfg.authUser, self.cfg.authPass]):
-            raise PermissionDenied
-        else:
+        if self.auth.authorized or list(self.authToken) == [self.cfg.authUser, self.cfg.authPass]:
             return func(self, *args)
+        else:
+            raise PermissionDenied
     wrapper.__wrapped_func__ = func
     return wrapper
 
