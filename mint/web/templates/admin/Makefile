@@ -6,6 +6,7 @@
 
 kid_files =			\
 	administer.kid		\
+	external.kid		\
 	notify.kid		\
 	project.kid		\
 	report.kid		\
