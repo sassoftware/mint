@@ -201,7 +201,7 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
         """Retrieves a client, creates a user as specified by username and
         password, and returns a connection to mint as that new user, and the
         user ID.:"""
-        client = self.openMintClient()
+        client = self.openMintClient(('mintauth', 'mintpass'))
         userId = client.registerNewUser(username, password, "Test User",
                 "test@example.com", "test at example.com", "", active=True)
 
