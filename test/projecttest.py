@@ -78,7 +78,7 @@ class ProjectTest(MintRepositoryHelper):
         assert(projectId == project.getId())
    
     def testMembers(self):
-        client = self.openMintClient(("test", "foo"))
+        client = self.openMintClient()
         otherUserId = client.registerNewUser("member", "memberpass",
                                              "Test Member",
                         "test@example.com", "test at example.com", "",
@@ -169,7 +169,7 @@ class ProjectTest(MintRepositoryHelper):
         assert(ConaryClient(cfg).getRepos().troveNamesOnServer("test-project.rpath.local") == [])
 
     def testUnconfirmedMembers(self):
-        client = self.openMintClient(("test", "foo"))
+        client = self.openMintClient()
         otherUserId = client.registerNewUser("member", "memberpass",
                                              "Test Member",
                                              "test@example.com",

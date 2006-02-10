@@ -615,6 +615,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                                      content = 'closeCurrentGroup')
 
     def testGroupBuilderCook(self):
+        raise testsuite.SkipTestException
         # prove that the group builder box actually closes after cook
         client, userId = self.quickMintUser('foouser','foopass')
         projectId = self.newProject(client)
