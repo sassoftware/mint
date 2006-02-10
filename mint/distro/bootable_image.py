@@ -279,7 +279,7 @@ title %(name)s (%(kversion)s)
         try:
             uJob = self.updateKernelChangeSet(callback)
             self.applyKernelUpdate(uJob, callback)
-        except errors.NoNewTrovesError:
+        except conaryclient.NoNewTrovesError:
             log.info("kernel already installed--skipping manual kernel install step")
 
 

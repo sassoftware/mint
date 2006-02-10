@@ -19,7 +19,13 @@ from conary.lib.cfg import *
             <div class="pad">
                 <h1>rBuilder Product Setup</h1>
                 <p>Your new configuration has been saved.</p>
-                <p><a href="restart">Restart Server</a></p>
+
+                <div><img id="spinner" src="${cfg.staticPath}apps/mint/images/circle-ball-dark-antialiased.gif" /></div>
+                <p>
+                    <a href="restart" onclick="javascript:$('spinner').style.visibility = 'visible';">
+                        <img src="${cfg.staticPath}apps/mint/images/restart_server.png" alt="Restart Server" />
+                    </a>
+                </p>
             </div>
         </td>
         <td id="right" class="projects">

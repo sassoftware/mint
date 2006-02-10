@@ -15,17 +15,11 @@ from conary.lib.cfg import *
         <title>${formatTitle('rBuilder Product Setup')}</title>
     </head>
     <body>
-        <td id="main" class="spanleft">
-            <div class="pad">
-                <h1>rBuilder Product Setup</h1>
-                <p>Please run: <strong><tt>touch ${cfg.dataPath}${sid}.txt</tt></strong> on your rBuilder server to continue.</p>
-                <p>This is to ensure that you, the user of this setup tool, has physical access to the machine hosting this application.</p>
-                <p>When you have created that file, <a href="${cfg.basePath}setup/">reload</a>.</p>
-            </div>
-        </td>
-        <td id="right" class="projects">
-            <div class="pad">
-            </div>
-        </td>
+        <div class="layout">
+            <h1>rBuilder Product Setup</h1>
+            <p>Please run: <strong><tt>touch ${cfg.dataPath}${sid}.txt</tt></strong> on your rBuilder server to continue.</p>
+            <p>This is to ensure that you, the user of this setup tool, has physical access to the machine hosting this application.</p>
+            <p>When you have created that file, <strong><a href="${cfg.basePath}setup/">reload</a></strong>.</p>
+        </div>
     </body>
 </html>

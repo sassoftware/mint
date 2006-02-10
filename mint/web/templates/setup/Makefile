@@ -8,7 +8,8 @@ kid_files =			\
 	layout.kid		\
 	saved.kid		\
 	setup.kid		\
-	secure.kid
+	secure.kid		\
+	error.kid
 
 python_files =
 

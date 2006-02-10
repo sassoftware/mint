@@ -21,7 +21,7 @@ from conary.web.fields import strFields, intFields, listFields, boolFields
 
 configGroups = {
     'Server Setup':
-        ('siteDomainName', 'hostName'),
+        ('hostName', 'siteDomainName'),
     'Branding':
         ('companyName', 'productName', 'corpSite'),
     'Repository Setup':
@@ -58,19 +58,58 @@ class SetupHandler(WebHandler):
             raise HttpNotFound
 
     def setup(self, auth):
-        return self._write("setup/setup", configGroups = configGroups)
+        if '.' not in self.req.hostname:
+            return self._write("error", error = "You must access the rBuilder server as a fully-qualified domain name:"
+                                                " eg., <strong>http://rbuilder.example.com/</strong>, not just <strong>http://rbuilder/</strong>")
+
+        self.cfg.hostName = self.req.hostname.split(".")[0]
+        self.cfg.siteDomainName = ".".join(self.req.hostname.split(".")[1:])
+
+        return self._write("setup/setup", configGroups = configGroups,
+            newCfg = self.cfg, errors = [])
 
     def processSetup(self, auth, **kwargs):
+        mintClient = shimclient.ShimMintClient(self.cfg, [self.cfg.authUser, self.cfg.authPass])
+
+        errors = []
+
+        if 'new_username' not in kwargs:
+            errors.append("You must enter a username to be created")
+        if 'new_email' not in kwargs:
+            errors.append("You must enter a username to be created")
+        if 'new_password' not in kwargs or 'new_password2' not in kwargs:
+            errors.append("You must enter initial passwords")
+        elif kwargs['new_password'] != kwargs['new_password2']:
+            errors.append("Passwords must match")
+
+        # rewrite configuration file
         keys = self.fields.keys()
         newCfg = deepcopy(self.cfg)
 
         for key in keys:
-            newCfg[key] = self.fields[key]
+            if key in newCfg:
+                newCfg[key] = self.fields[key]
+
+        if errors:
+            return self._write("setup/setup", configGroups = configGroups, newCfg = newCfg,
+                errors = errors)
 
         # hack until we support SSL-rbuilder appliance
         newCfg.postCfg()
-        print >> sys.stderr, "setting secureHost to: ", newCfg.siteHost
         newCfg.secureHost = newCfg.siteHost
+        newCfg.projectDomainName = newCfg.externalDomainName = newCfg.siteDomainName
+        newCfg.bugsEmail = kwargs['new_email']
+
+        # create new user
+        userId = mintClient.registerNewUser(
+            str(kwargs['new_username']),
+            str(kwargs['new_password']),
+            "Administrator",
+            str(kwargs['new_email']),
+            "", "", active = True)
+        self.req.log_error("created initial user account %s (id %d)" % (str(kwargs['new_username']), userId))
+        mintClient.promoteUserToAdmin(userId)
+        self.req.log_error("promoted %d to admin" % userId)
 
         cfg = file('/srv/mint/mint.conf', 'w')
         newCfg.display(out = cfg)
@@ -87,6 +126,8 @@ class SetupHandler(WebHandler):
     def restart(self, auth):
         self.cfg.configured = True
         self.cfg.secureHost = self.cfg.siteHost
+        self.cfg.projectDomainName = self.cfg.externalDomainName = self.cfg.siteDomainName
+
         cfg = file('/srv/mint/mint.conf', 'w')
         self.cfg.display(out = cfg)
         self.req.log_error("writing new configuration to /srv/mint/mint.conf")
