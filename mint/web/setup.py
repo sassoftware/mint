@@ -147,5 +147,5 @@ class SetupHandler(WebHandler):
         path = os.path.join(templatePath, template + ".kid")
         template = kid.load_template(path)
 
-        t = template.Template(cfg = self.cfg, **values)
+        t = template.Template(cfg = self.cfg, req = self.req, **values)
         return t.serialize(encoding = "utf-8", output = "xhtml")
