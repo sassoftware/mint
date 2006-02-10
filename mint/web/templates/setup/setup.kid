@@ -12,11 +12,26 @@ from conary.lib.cfg import *
 -->
 
     <head>
-        <title>${formatTitle('rBuilder Product Setup')}</title>
+        <title>${formatTitle('rBuilder Configuration')}</title>
     </head>
     <body>
         <div class="layout">
-            <h1>rBuilder Product Setup</h1>
+            <h1>rBuilder Configuration</h1>
+
+            <p>Now it's time to configure your rBuilder server.  Some of
+            the following fields have been pre-populated with default
+            values; you may change them if necessary.</p>
+
+            <p><strong>Note:</strong> The hostname and domain name
+            displayed below are based on the URL you used to access your
+            rBuilder server.  You may change these values, but be aware
+            that the resulting fully-qualified domain name constructed from
+            the values you've entered must match the URL your users will
+            use to access rBuilder.</p>
+
+            <p>When you've filled in the necessary information, click on
+            the "Save Changes" button to save your rBuilder server's
+            configuration.</p>
 
             <p class="message" py:if="errors">
                 <p py:for="error in errors" py:content="error" />
@@ -39,22 +54,22 @@ from conary.lib.cfg import *
                         </tr>
                     </table>
                 </div>
-                <h2>Administrator User</h2>
+                <h2>Initial Administrator Account</h2>
                 <table class="setup">
                     <tr>
-                        <td>Please enter a username to create the initial administrator account:</td>
+                        <td>Enter a username for the initial administrator account:</td>
                         <td>
                             <input type="text" name="new_username" />
                         </td>
                     </tr>
                     <tr>
-                        <td>New Password:</td>
+                        <td>Password:</td>
                         <td>
                             <input type="password" name="new_password" />
                         </td>
                     </tr>
                     <tr>
-                        <td>New password again:</td>
+                        <td>Re-enter password:</td>
                         <td>
                             <input type="password" name="new_password2" />
                         </td>
