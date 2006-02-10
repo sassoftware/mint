@@ -4,22 +4,17 @@
 # All Rights Reserved
 #
 
-SUBDIRS = docs admin
+kid_files = project.kid
 
-kid_files = \
-	layout.kid
-
-python_files = __init__.py
+python_files =
 
 extra_dist =
 
 dist_files = $(extra_dist) $(kid_files) $(python_files)
 
-all: default-all default-subdirs
+all: default-all
 
-install: kidfiles-install install-subdirs pyfiles-install
-
-subdirs: default-subdirs
+install: kidfiles-install pyfiles-install
 
 kidfiles-install:
 	kidc --strip-dest-dir $$(pwd) $$(pwd)
@@ -32,5 +27,5 @@ dist: default-dist
 
 clean: default-clean
 
-include ../../Make.rules
+include ../../../Make.rules
 # vim: set sts=8 sw=8 noexpandtab :

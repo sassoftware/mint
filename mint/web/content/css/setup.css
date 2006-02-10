@@ -1,0 +1,11 @@
+img#spinner {
+    visibility: hidden;
+}
+
+table.setup {
+    width: 100%;
+}
+
+table.setup tr td {
+    width: 50%;
+}
