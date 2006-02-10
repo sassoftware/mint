@@ -11,7 +11,8 @@ kid_files =			\
 	project.kid		\
 	report.kid		\
 	user.kid                \
-        newUser.kid
+        newUser.kid             \
+        external.kid
 
 python_files =
 

@@ -75,7 +75,6 @@ onload = "javascript:;"
                     <ul class="footerLinks">
                         <li><a href="${cfg.corpSite}">About ${cfg.companyName}</a></li>
                         <li py:if="cfg.announceLink"><a href="${cfg.announceLink}">Site Announcements</a></li>
-			<li py:if="auth.admin"><a href="/administer">Administer rBuilder</a></li>
                         <li><a href="/help/">Help</a></li>
                     </ul>
                 </div>
