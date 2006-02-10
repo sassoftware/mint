@@ -330,7 +330,7 @@ class MintServer(object):
     # can't always know which param is the projectId.
     # We'll just call it at the begining of every function that needs it.
     def _filterProjectAccess(self, projectId):
-        if self.authToken == [self.cfg.authUser, self.cfg.authPass] or self.auth.admin:
+        if list(self.authToken) == [self.cfg.authUser, self.cfg.authPass] or self.auth.admin:
             return
         if self.projects.isDisabled(projectId):
             raise database.ItemNotFound()
@@ -381,7 +381,7 @@ class MintServer(object):
             self._filterProjectAccess(r[0][0])
 
     def _requireProjectDeveloper(self, projectId):
-        if self.authToken == [self.cfg.authUser, self.cfg.authPass] or self.auth.admin:
+        if list(self.authToken) == [self.cfg.authUser, self.cfg.authPass] or self.auth.admin:
             return
         members = self.projectUsers.getMembersByProjectId(projectId)
         for userId, username, level in members:
@@ -1463,13 +1463,11 @@ class MintServer(object):
 
     @typeCheck(int, str)
     @private
+    @requiresAuth
     def startCookJob(self, groupTroveId, arch):
         projectId = self.groupTroves.getProjectId(groupTroveId)
-        if projectId:
-            if not self.auth.authorized:
-                raise PermissionDenied
-            self._filterProjectAccess(projectId)
-            self._requireProjectDeveloper(projectId)
+        self._filterProjectAccess(projectId)
+        self._requireProjectDeveloper(projectId)
 
         if not self.listGroupTroveItemsByGroupTrove(groupTroveId):
             raise GroupTroveEmpty
@@ -1943,13 +1941,11 @@ class MintServer(object):
 
     @typeCheck(int)
     @private
+    @requiresAuth
     def getGroupTroveLabelPath(self, groupTroveId):
         projectId = self.groupTroves.getProjectId(groupTroveId)
-        if projectId:
-            if not self.auth.authorized:
-                raise PermissionDenied
-            self._filterProjectAccess(projectId)
-            self._requireProjectDeveloper(projectId)
+        self._filterProjectAccess(projectId)
+        self._requireProjectDeveloper(projectId)
 
         groupTrove = self.groupTroves.get(groupTroveId)
         groupTroveItems = self.groupTroveItems.listByGroupTroveId(groupTroveId)
@@ -1974,24 +1970,20 @@ class MintServer(object):
 
     @typeCheck(int)
     @private
+    @requiresAuth
     def getRecipe(self, groupTroveId):
         projectId = self.groupTroves.getProjectId(groupTroveId)
-        if projectId:
-            if not self.auth.authorized:
-                raise PermissionDenied
-            self._filterProjectAccess(projectId)
-            self._requireProjectDeveloper(projectId)
+        self._filterProjectAccess(projectId)
+        self._requireProjectDeveloper(projectId)
         return self._getRecipe(groupTroveId)
 
     @private
     @typeCheck(int, bool)
+    @requiresAuth
     def setGroupTroveAutoResolve(self, groupTroveId, resolve):
         projectId = self.groupTroves.getProjectId(groupTroveId)
-        if projectId:
-            if not self.auth.authorized:
-                raise PermissionDenied
-            self._filterProjectAccess(projectId)
-            self._requireProjectDeveloper(projectId)
+        self._filterProjectAccess(projectId)
+        self._requireProjectDeveloper(projectId)
         self.groupTroves.setAutoResolve(groupTroveId, resolve)
 
     @private
@@ -2004,127 +1996,103 @@ class MintServer(object):
 
     @private
     @typeCheck(int, str, str, str, bool)
+    @requiresAuth
     def createGroupTrove(self, projectId, recipeName, upstreamVersion,
                          description, autoResolve):
         # projectId 0 indicates (public) transient group trove.
-        if projectId:
-            if not self.auth.authorized:
-                raise PermissionDenied
-            self._filterProjectAccess(projectId)
-            self._requireProjectDeveloper(projectId)
-            creatorId = self.users.getIdByColumn("username", self.authToken[0])
-        else:
-            creatorId = 0
+        self._filterProjectAccess(projectId)
+        self._requireProjectDeveloper(projectId)
+        creatorId = self.users.getIdByColumn("username", self.authToken[0])
         return self.groupTroves.createGroupTrove(projectId, creatorId,
                                                  recipeName, upstreamVersion,
                                                  description, autoResolve)
 
     @private
     @typeCheck(int)
+    @requiresAuth
     def getGroupTrove(self, groupTroveId):
         projectId = self.groupTroves.getProjectId(groupTroveId)
+        self._filterProjectAccess(projectId)
+        self._requireProjectDeveloper(projectId)
         # projectId 0 indicates (public) transient group trove.
-        if projectId:
-            if not self.auth.authorized:
-                raise PermissionDenied
-            self._filterProjectAccess(projectId)
-            self._requireProjectDeveloper(projectId)
         return self.groupTroves.get(groupTroveId)
 
     @private
     @typeCheck(int)
+    @requiresAuth
     def deleteGroupTrove(self, groupTroveId):
         projectId = self.groupTroves.getProjectId(groupTroveId)
-        if projectId:
-            if not self.auth.authorized:
-                raise PermissionDenied
-            self._filterProjectAccess(projectId)
-            self._requireProjectDeveloper(projectId)
+        self._filterProjectAccess(projectId)
+        self._requireProjectDeveloper(projectId)
         return self.groupTroves.delGroupTrove(groupTroveId)
 
     @private
     @typeCheck(int, str)
+    @requiresAuth
     def setGroupTroveDesc(self, groupTroveId, description):
         projectId = self.groupTroves.getProjectId(groupTroveId)
-        if projectId:
-            if not self.auth.authorized:
-                raise PermissionDenied
-            self._filterProjectAccess(projectId)
-            self._requireProjectDeveloper(projectId)
+        self._filterProjectAccess(projectId)
+        self._requireProjectDeveloper(projectId)
         self.groupTroves.update(groupTroveId, description = description,
                                 timeModified = time.time())
 
     @private
     @typeCheck(int, str)
+    @requiresAuth
     def setGroupTroveUpstreamVersion(self, groupTroveId, vers):
         projectId = self.groupTroves.getProjectId(groupTroveId)
-        if projectId:
-            if not self.auth.authorized:
-                raise PermissionDenied
-            self._filterProjectAccess(projectId)
-            self._requireProjectDeveloper(projectId)
+        self._filterProjectAccess(projectId)
+        self._requireProjectDeveloper(projectId)
         self.groupTroves.setUpstreamVersion(groupTroveId, vers)
 
     #group trove item specific functions
 
     @private
     @typeCheck(int)
+    @requiresAuth
     def listGroupTroveItemsByGroupTrove(self, groupTroveId):
         projectId = self.groupTroves.getProjectId(groupTroveId)
-        if projectId:
-            if not self.auth.authorized:
-                raise PermissionDenied
-            self._filterProjectAccess(projectId)
-            self._requireProjectDeveloper(projectId)
+        self._filterProjectAccess(projectId)
+        self._requireProjectDeveloper(projectId)
         return self.groupTroveItems.listByGroupTroveId(groupTroveId)
 
     @typeCheck(int, bool)
+    @requiresAuth
     def setGroupTroveItemVersionLock(self, groupTroveItemId, lock):
         projectId = self.groupTroveItems.getProjectId(groupTroveItemId)
-        if projectId:
-            if not self.auth.authorized:
-                raise PermissionDenied
-            self._filterProjectAccess(projectId)
-            self._requireProjectDeveloper(projectId)
+        self._filterProjectAccess(projectId)
+        self._requireProjectDeveloper(projectId)
         self.groupTroveItems.setVersionLock(groupTroveItemId, lock)
         return lock
 
     @private
     @typeCheck(int, bool)
+    @requiresAuth
     def setGroupTroveItemUseLock(self, groupTroveItemId, lock):
         projectId = self.groupTroveItems.getProjectId(groupTroveItemId)
-        if projectId:
-            if not self.auth.authorized:
-                raise PermissionDenied
-            self._filterProjectAccess(projectId)
-            self._requireProjectDeveloper(projectId)
+        self._filterProjectAccess(projectId)
+        self._requireProjectDeveloper(projectId)
         self.groupTroveItems.setUseLock(groupTroveItemId, lock)
         return lock
 
     @private
     @typeCheck(int, bool)
+    @requiresAuth
     def setGroupTroveItemInstSetLock(self, groupTroveItemId, lock):
         projectId = self.groupTroveItems.getProjectId(groupTroveItemId)
-        if projectId:
-            if not self.auth.authorized:
-                raise PermissionDenied
-            self._filterProjectAccess(projectId)
-            self._requireProjectDeveloper(projectId)
+        self._filterProjectAccess(projectId)
+        self._requireProjectDeveloper(projectId)
         self.groupTroveItems.setInstSetLock(groupTroveItemId, lock)
         return lock
 
     @typeCheck(int, str, str, str, str, bool, bool, bool)
+    @requiresAuth
     def addGroupTroveItem(self, groupTroveId, trvName, trvVersion, trvFlavor,
                      subGroup, versionLock, useLock, instSetLock):
         projectId = self.groupTroves.getProjectId(groupTroveId)
-        if projectId:
-            if not self.auth.authorized:
-                raise PermissionDenied
-            self._filterProjectAccess(projectId)
-            self._requireProjectDeveloper(projectId)
-            creatorId = self.users.getIdByColumn("username", self.authToken[0])
-        else:
-            creatorId = 0
+        self._filterProjectAccess(projectId)
+        self._requireProjectDeveloper(projectId)
+        creatorId = self.users.getIdByColumn("username", self.authToken[0])
         return self.groupTroveItems.addTroveItem(groupTroveId, creatorId,
                                                  trvName, trvVersion,
                                                  trvFlavor, subGroup,
@@ -2133,6 +2101,7 @@ class MintServer(object):
 
     @requiresAuth
     @typeCheck(int, str, str, str, str, bool, bool, bool)
+    @requiresAuth
     def addGroupTroveItemByProject(self, groupTroveId, trvName, projectName,
                                    trvFlavor, subGroup, versionLock, useLock,
                                    instSetLock):
@@ -2143,16 +2112,13 @@ class MintServer(object):
         repos = self._getProjectRepo(project)
         groupTrove = grouptrove.GroupTrove(self, groupTroveId)
         leaves = None
-        if groupTrove.projectId:
-            if not self.auth.authorized:
-                raise PermissionDenied
-            groupProject = projects.Project(self, groupTrove.projectId)
-            affineLabel = project.getLabel().split('@')[0] + '@' + \
-                          groupProject.getLabel().split('@')[1]
-            # initial try. see if there's a trove affinite with branchName from
-            # groupTroveId's project
-            leaves = repos.getTroveVersionsByLabel(
-                {trvName:{versions.Label(affineLabel):None}})
+        groupProject = projects.Project(self, groupTrove.projectId)
+        affineLabel = project.getLabel().split('@')[0] + '@' + \
+                      groupProject.getLabel().split('@')[1]
+        # initial try. see if there's a trove affinite with branchName from
+        # groupTroveId's project
+        leaves = repos.getTroveVersionsByLabel(
+            {trvName:{versions.Label(affineLabel):None}})
         # fallback 1. pick default branchName of that project
         if not leaves:
             leaves = repos.getTroveVersionsByLabel(
@@ -2172,35 +2138,29 @@ class MintServer(object):
         return (groupTroveItemId, trvName, trvVersion)
 
     @typeCheck(int)
+    @requiresAuth
     def delGroupTroveItem(self, groupTroveItemId):
         projectId = self.groupTroveItems.getProjectId(groupTroveItemId)
-        if projectId:
-            if not self.auth.authorized:
-                raise PermissionDenied
-            self._filterProjectAccess(projectId)
-            self._requireProjectDeveloper(projectId)
+        self._filterProjectAccess(projectId)
+        self._requireProjectDeveloper(projectId)
         return self.groupTroveItems.delGroupTroveItem(groupTroveItemId)
 
     @private
     @typeCheck(int)
+    @requiresAuth
     def getGroupTroveItem(self, groupTroveItemId):
         projectId = self.groupTroveItems.getProjectId(groupTroveItemId)
-        if projectId:
-            if not self.auth.authorized:
-                raise PermissionDenied
-            self._filterProjectAccess(projectId)
-            self._requireProjectDeveloper(projectId)
+        self._filterProjectAccess(projectId)
+        self._requireProjectDeveloper(projectId)
         return self.groupTroveItems.get(groupTroveItemId)
 
     @private
     @typeCheck(int, str)
+    @requiresAuth
     def setGroupTroveItemSubGroup(self, groupTroveItemId, subGroup):
         projectId = self.groupTroveItems.getProjectId(groupTroveItemId)
-        if projectId:
-            if not self.auth.authorized:
-                raise PermissionDenied
-            self._filterProjectAccess(projectId)
-            self._requireProjectDeveloper(projectId)
+        self._filterProjectAccess(projectId)
+        self._requireProjectDeveloper(projectId)
         self.groupTroveItems.update(groupTroveItemId, subGroup = subGroup)
 
     ### Site reports ###
