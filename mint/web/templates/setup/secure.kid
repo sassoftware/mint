@@ -18,8 +18,9 @@ from conary.lib.cfg import *
         <td id="main" class="spanleft">
             <div class="pad">
                 <h1>rBuilder Product Setup</h1>
-                <p>Please create a file called <tt>${sid}.txt</tt> in <tt>${cfg.dataPath}</tt> on your rBuilder server to continue.</p>
+                <p>Please run: <strong><tt>touch ${cfg.dataPath}${sid}.txt</tt></strong> on your rBuilder server to continue.</p>
                 <p>This is to ensure that you, the user of this setup tool, has physical access to the machine hosting this application.</p>
+                <p>When you have created that file, <a href="${cfg.basePath}setup/">reload</a>.</p>
             </div>
         </td>
         <td id="right" class="projects">
