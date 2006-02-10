@@ -484,7 +484,8 @@ def handler(req):
         return apache.HTTP_BAD_REQUEST
 
     global cfg
-    if not cfg:
+    if not cfg or True: # short-circuit the cache for the appliance
+                        # to read the conf file every time
         cfg = config.MintConfig()
         cfg.read(req.filename)
 
