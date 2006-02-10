@@ -15,10 +15,10 @@ JOBSERVER_USER='isogen'
 
 case "$1" in
   start)
-	sudo -u $JOBSERVER_USER $SCRIPT_PATH/job-server --config $CONFIG_FILE
+	HOME=/home/$JOBSERVER_USER/ sudo -u $JOBSERVER_USER $SCRIPT_PATH/job-server --config $CONFIG_FILE
 	;;
   stop)
-	sudo -u $JOBSERVER_USER $SCRIPT_PATH/job-server --config $CONFIG_FILE -k
+	HOME=/home/$JOBSERVER_USER/ sudo -u $JOBSERVER_USER $SCRIPT_PATH/job-server --config $CONFIG_FILE -k
 	;;
   restart)
 	$0 stop
