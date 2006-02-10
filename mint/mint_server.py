@@ -381,7 +381,7 @@ class MintServer(object):
             self._filterProjectAccess(r[0][0])
 
     def _requireProjectDeveloper(self, projectId):
-        if self.auth.admin:
+        if self.authToken == [self.cfg.authUser, self.cfg.authPass] or self.auth.admin:
             return
         members = self.projectUsers.getMembersByProjectId(projectId)
         for userId, username, level in members:
@@ -1550,7 +1550,7 @@ class MintServer(object):
         return [x[0] for x in cu.fetchall()]
 
     @typeCheck((list, str), (dict, (list, int)))
-    @requiresAuth
+    @requiresAdmin
     @private
     def startNextJob(self, archTypes, jobTypes):
         """Select a job to execute from the list of pending jobs
