@@ -1073,6 +1073,10 @@ class MintServer(object):
         """
         Given a userId, will attempt to promote that user to an
         administrator (i.e. make a member of the MintAdmin User Group).
+
+        NOTE: if the MintAdmin UserGroup doesn't exist, it will be created
+        as a side effect.
+
         @param userId: the userId to promote
         """
         mintAdminId = self.userGroups.getMintAdminId()

@@ -653,8 +653,17 @@ class UserGroupsTable(database.KeyedTable):
     def getMintAdminId(self):
         """
         Return the id of the MintAdmin user.
+
+        NOTE: This will create the MintAdmin UserGroup if it doesn't
+        already exist.
         """
-        return self.getIdByColumn('userGroup', 'MintAdmin')
+        try:
+            mintAdminId = self.getIdByColumn('userGroup', 'MintAdmin')
+        except database.ItemNotFound:
+            mintAdminId = self.new(userGroup = 'MintAdmin')
+        except:
+            raise
+        return mintAdminId
 
 
 class UserGroupMembersTable(database.DatabaseTable):

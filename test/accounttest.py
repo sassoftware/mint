@@ -404,6 +404,15 @@ class AccountTest(MintRepositoryHelper):
                 client2.promoteUserToAdmin,
                 userId3)
 
+    def testAutoGenerateMintAdminId(self):
+        client, userId  = self.quickMintUser("testuser", "testpass")
+
+        # test auto adding the group here
+        mintAdminId = client.server._server.userGroups.getMintAdminId()
+
+        # this should return the same value twice
+        mintAdminId2 = client.server._server.userGroups.getMintAdminId()
+        self.failUnlessEqual(mintAdminId, mintAdminId2)
 
 if __name__ == "__main__":
     testsuite.main()
