@@ -29,7 +29,7 @@ class MintConfig(ConfigFile):
         "Name by which you refer to the rBuilder service: (Used heavily throughout rBuilder)")
 
     corpSite                = (cfgtypes.CfgString, 'http://www.rpath.com/corp/',
-        "A link to your corporate web site:")
+        "Your organization's intranet or public web site: (Used for the &quot;About&quot; links)")
 
     defaultBranch           = (cfgtypes.CfgString, 'rpl:devel',
         "<p>The Conary branch that all rBuilder projects will use by default:</p>"\
@@ -51,16 +51,16 @@ class MintConfig(ConfigFile):
     dbDriver                = 'sqlite'
     imagesPath              = None
     siteDomainName          = (cfgtypes.CfgString, 'rpath.com',
-        "Domain of the rBuilder site. Eg., <tt>example.com</tt>")
+        "Domain of the rBuilder site. For example, <tt>example.com</tt>")
     projectDomainName       = None
     externalDomainName      = None
     secureHost              = None
     hostName                = (cfgtypes.CfgString, None,
-        "Hostname to access the rBuilder site. Eg., <tt>rbuilder</tt>. "\
-        "The complete URL to access rBuilder is built up of "\
-        "host name and site domain name. Eg., <tt>rbuilder.example.com</tt>")
+        "Hostname to access the rBuilder site. For example, <tt>rbuilder</tt>. "\
+        "(The complete URL to access rBuilder is constructed from the "\
+        "host name and domain name. For example, <tt>rbuilder.example.com</tt>)")
 
-    SSL                     = (cfgtypes.CfgBool, False, "SSL required for login and write access to rBuilder projects.")
+    SSL                     = (cfgtypes.CfgBool, False, "SSL required for login and write access to rBuilder projects?")
     adminMail               = 'mint@rpath.org'
     newsRssFeed             = ''
     commitAction            = None
@@ -72,7 +72,7 @@ class MintConfig(ConfigFile):
     cookieSecretKey         = None
     bugsEmail               = None
     bugsEmailName           = 'rBuilder Bugs'
-    bugsEmailSubject        = 'Mint Unhandled Exception Report'
+    bugsEmailSubject        = 'rBuilder Unhandled Exception Report'
     smallBugsEmail          = None
     debugMode               = (cfgtypes.CfgBool, False)
     sendNotificationEmails  = (cfgtypes.CfgBool, True)
