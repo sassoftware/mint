@@ -26,6 +26,8 @@
               <p py:if="kwargs['extraMsg'] and not errors" class="message" py:content="kwargs['extraMsg']"/>
               <p py:if="kwargs['errors']" class="error">An Error Has Occurred</p>
               <p py:for="error in kwargs['errors']" class="errormessage" py:content="error"/>
+	      <a href ="/administer/">Return to Administrator Page</a>
+
               <h2>Notify All Users</h2>
               <p>Fields labeled with a <em class="required">red arrow</em> are required.  Note that the submission of this form may take several minutes, and will not ask for confirmation.  Be sure you are ready before hitting "Send"</p>
               <form action="administer" method="post">

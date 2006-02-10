@@ -19,10 +19,11 @@
             <div class="pad">
               <p py:if="kwargs.get('extraMsg', None)" class="message" py:content="kwargs['extraMsg']"/>
               <form action="administer" method="post">
+	        <a href ="/administer/">Return to Administrator Page</a>
                 <h2>Select a user below to modify</h2>
                 <p>
                   <select name="userId">
-                    <option py:for="user in userlist" value="${user[0]}" py:content="user[1]" py:attrs="{'class': not user[2] and 'hiddenOption' or None}"/>
+		     <option py:for="user in userlist" value="${user[0]}" py:content="user[1]" py:attrs="{'class': not user[2] and 'hiddenOption' or None}"/>
                   </select>
                 </p>
                 <p>
