@@ -13,6 +13,7 @@
         <div class="layout">
             <div id="right" class="side">
                 ${resourcePane()}
+		${groupTroveBuilder()}
                 <div style="width: 180px;">
                     <h3>Close My Account</h3>
                     <p>If you wish to cancel your account, click the &quot;Close My Account&quot; button below.

@@ -17,6 +17,7 @@
             </div>
             <div id="right" class="side">
                 ${resourcePane()}
+		${groupTroveBuilder()}
             </div>
 
             <div id="middle">

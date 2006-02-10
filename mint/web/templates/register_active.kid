@@ -14,6 +14,7 @@
         <div class="layout">
             <div id="right" class="side">
                 ${resourcePane()}
+		${groupTroveBuilder()}
             </div>
             <div id="middle">
                 <h2>Thank you for confirming</h2>
