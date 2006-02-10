@@ -12,18 +12,26 @@ from conary.lib.cfg import *
 -->
 
     <head>
-        <title>${formatTitle('rBuilder Product Setup')}</title>
+        <title>${formatTitle('rBuilder Configuration Complete')}</title>
     </head>
     <body>
         <td id="main" class="spanleft">
             <div class="pad">
-                <h1>rBuilder Product Setup</h1>
-                <p>Your new configuration has been saved.</p>
+                <h1>rBuilder Configuration Complete</h1>
+
+                <p>Your rBuilder server has now been configured.  Now it's
+                time to launch rBuilder, and make it available to your
+                users.</p>
+
+                <p>To do so, click on the "Launch" button below.  After a
+                short delay, you will be directed to the rBuilder front
+                page, where you can login and create the project(s) your
+                users require.</p>
 
                 <div><img id="spinner" src="${cfg.staticPath}apps/mint/images/circle-ball-dark-antialiased.gif" /></div>
                 <p>
                     <a href="restart" onclick="javascript:$('spinner').style.visibility = 'visible';">
-                        <img src="${cfg.staticPath}apps/mint/images/restart_server.png" alt="Restart Server" />
+                        <img src="${cfg.staticPath}apps/mint/images/launch_button.png" alt="Launch" />
                     </a>
                 </p>
             </div>
