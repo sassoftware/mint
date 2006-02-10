@@ -10,7 +10,7 @@ from mint_rephelp import MintRepositoryHelper
 from mint import userlevels
 from mint.mint_error import PermissionDenied, UserAlreadyAdmin
 from mint.users import LastOwner, UserInduction, MailError, GroupAlreadyExists, AlreadyConfirmed
-from mint.database import DuplicateItem
+from mint.database import DuplicateItem, ItemNotFound
 from conary.repository.netclient import UserNotFound
 from conary.conaryclient import ConaryClient
 from conary import versions
@@ -109,6 +109,20 @@ class AccountTest(MintRepositoryHelper):
 	conf = client.server._server.getConfirmation("Foo")
 	client.confirmUser(conf)
 	self.assertRaises(AlreadyConfirmed, client.confirmUser, conf)
+
+    def testImmediatelyActive(self):
+        client = self.openMintClient(("anonymous", "anonymous"))
+
+        self.assertRaises(PermissionDenied, client.registerNewUser,
+            "foo", "bar", "foo bar", "foo@localhost",
+            "foo at localhost", "blah, blah", True)
+
+        client = self.openMintClient()
+        client.registerNewUser("testuser", "testpass", "test user", "test@user.com",
+            "test at user dot com", "", True)
+
+        self.assertRaises(ItemNotFound, 
+            client.server._server.getConfirmation, "testuser")
 
     def testAccountConfirmation(self):
         client = self.openMintClient()

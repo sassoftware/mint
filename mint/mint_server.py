@@ -810,6 +810,8 @@ class MintServer(object):
     @private
     def registerNewUser(self, username, password, fullName, email,
                         displayEmail, blurb, active):
+        if active and not (list(self.authToken) == [self.cfg.authUser, self.cfg.authPass] or self.auth.admin):
+            raise PermissionDenied
         return self.users.registerNewUser(username, password, fullName, email,
                                           displayEmail, blurb, active)
 
@@ -954,9 +956,10 @@ class MintServer(object):
             raise database.ItemNotFound
         cu.execute("SELECT confirmation FROM Confirmations WHERE userId=?",
                    r[0][0])
+        r = cu.fetchall()
         if not r:
             raise database.ItemNotFound
-        return cu.fetchall()[0][0]
+        return r[0][0]
 
     @typeCheck(str)
     @private

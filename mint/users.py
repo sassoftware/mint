@@ -313,9 +313,10 @@ class UsersTable(database.KeyedTable):
             raise
         else:
             self.db.commit()
-        self.confirm_table.new(userId = userId,
-                               timeRequested = time.time(),
-                               confirmation = confirm)
+        if not active:
+            self.confirm_table.new(userId = userId,
+                                   timeRequested = time.time(),
+                                   confirmation = confirm)
         return userId
 
     def isUserStagnant(self, userId):
