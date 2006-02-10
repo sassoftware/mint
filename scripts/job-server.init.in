@@ -17,14 +17,14 @@ case "$1" in
   start)
         case `ps -A | grep "job-server"` in
         '')
-            sudo -u $JOBSERVER_USER $SCRIPT_PATH/job-server --config $CONFIG_FILE
+            HOME=/home/$JOBSERVER_USER/ sudo -u $JOBSERVER_USER $SCRIPT_PATH/job-server --config $CONFIG_FILE
             ;;
         *) echo "Other job servers appear to be running. please stop them before continuing"
            ;;
         esac
 	;;
   stop)
-	sudo -u $JOBSERVER_USER $SCRIPT_PATH/job-server --config $CONFIG_FILE -k
+	HOME=/home/$JOBSERVER_USER/ sudo -u $JOBSERVER_USER $SCRIPT_PATH/job-server --config $CONFIG_FILE -k
 	;;
   restart)
 	$0 stop
