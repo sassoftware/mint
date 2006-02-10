@@ -387,6 +387,15 @@ class UsersTable(database.KeyedTable):
         cu.execute(SQL)
 
         results = cu.fetchall()
+        for index, (userId, userName, active) in enumerate(results[:]):
+            cu.execute("""SELECT COUNT(*) FROM UserGroupMembers
+                              LEFT JOIN UserGroups
+                                  ON UserGroupMembers.userGroupId=
+                                          UserGroups.userGroupId
+                              WHERE UserGroup = 'MintAdmin'
+                              AND userId=?""", userId)
+            if cu.fetchone()[0]:
+                results[index] = userId, userName + " (admin)", active
         return results
 
     def getUsersWithEmail(self):
