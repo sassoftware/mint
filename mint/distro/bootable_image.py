@@ -408,6 +408,7 @@ quit
 
             import gencslist
             gencslist._linkOrCopyFile(file, newfile)
+            os.unlink(file)
             returnlist.append((newfile, name,))
         return returnlist
 
