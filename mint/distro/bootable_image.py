@@ -212,7 +212,6 @@ title %(name)s (%(kversion)s)
         cwd = os.getcwd()
         os.chdir(self.fakeroot)
         util.mkdirChain( 'etc', 'etc/sysconfig', 'etc/sysconfig/network-scripts', 'boot/grub', 'tmp', 'sys' )
-        os.chmod('tmp', 01777)
         os.chdir(cwd)
 
     @timeMe

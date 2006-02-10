@@ -51,6 +51,9 @@ rm /dev/ubda
 umount /dev/pts
 umount /sys
 
+# correct /tmp permissions
+chmod 01777 /tmp
+
 # we cannot remount while this script itself is still open, so
 # use this exec to go to a shell that has its script provided
 # entirely on the command line
