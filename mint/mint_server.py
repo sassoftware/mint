@@ -77,7 +77,7 @@ def deriveBaseFunc(func):
 
 def requiresAdmin(func):
     def wrapper(self, *args):
-        if self.authToken == [self.cfg.authUser, self.cfg.authPass] or self.auth.admin:
+        if list(self.authToken) == [self.cfg.authUser, self.cfg.authPass] or self.auth.admin:
             return func(self, *args)
         else:
             raise PermissionDenied
@@ -86,7 +86,7 @@ def requiresAdmin(func):
 
 def requiresAuth(func):
     def wrapper(self, *args):
-        if not self.auth.authorized or self.authToken == [self.cfg.authUser, self.cfg.authPass]:
+        if not (self.auth.authorized or list(self.authToken) == [self.cfg.authUser, self.cfg.authPass]):
             raise PermissionDenied
         else:
             return func(self, *args)
@@ -1408,6 +1408,7 @@ class MintServer(object):
         self.db.commit()
         return True
 
+    @typeCheck()
     @private
     def getAvailableImageTypes(self):
         if self.cfg.visibleImageTypes:
@@ -1550,7 +1551,7 @@ class MintServer(object):
         return [x[0] for x in cu.fetchall()]
 
     @typeCheck((list, str), (dict, (list, int)))
-    @requiresAdmin
+    @requiresAuth
     @private
     def startNextJob(self, archTypes, jobTypes):
         """Select a job to execute from the list of pending jobs
@@ -1566,17 +1567,17 @@ class MintServer(object):
             raise PermissionDenied("Repositories are currently offline.")
         for arch in archTypes:
             if arch not in ("1#x86", "1#x86_64"):
-                raise PermissionDenied("Not a legal architecture")
+                raise ParameterError("Not a legal architecture")
 
         imageTypes = jobTypes.get('imageTypes', [])
         cookTypes = jobTypes.get('cookTypes', [])
 
         if sum([(x not in releasetypes.TYPES) \
                 for x in imageTypes]):
-            raise PermissionDenied("Not a legal Release Type")
+            raise ParameterError("Not a legal Release Type")
 
         if sum([(x != cooktypes.GROUP_BUILDER) for x in cookTypes]):
-            raise PermissionDenied("Not a legal Cook Type")
+            raise ParameterError("Not a legal Cook Type")
 
         # client asked for nothing, client gets nothing.
         if not (imageTypes or cookTypes) or (not archTypes):
