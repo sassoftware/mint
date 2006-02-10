@@ -15,7 +15,13 @@ JOBSERVER_USER='isogen'
 
 case "$1" in
   start)
-	sudo -u $JOBSERVER_USER $SCRIPT_PATH/job-server --config $CONFIG_FILE
+        case `ps -A | grep "job-server"` in
+        '')
+            sudo -u $JOBSERVER_USER $SCRIPT_PATH/job-server --config $CONFIG_FILE
+            ;;
+        *) echo "Other job servers appear to be running. please stop them before continuing"
+           ;;
+        esac
 	;;
   stop)
 	sudo -u $JOBSERVER_USER $SCRIPT_PATH/job-server --config $CONFIG_FILE -k
