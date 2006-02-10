@@ -19,6 +19,7 @@
             <div class="pad">
               <p py:if="kwargs.get('extraMsg', None)" class="message" py:content="kwargs['extraMsg']"/>
               <form action="administer" method="post">
+	        <a href ="/administer/">Return to Administrator Page</a>
                 <h2>Select a project below to modify</h2>
                 <p>Key
                     <ul>
