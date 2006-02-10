@@ -12,6 +12,7 @@ from mint import jobs
 from mint import releasetypes
 from mint import cooktypes
 from mint import mint_error
+from mint.mint_server import ParameterError
 from mint.data import RDT_INT, RDT_STRING, RDT_BOOL
 from mint.distro import stub_image
 
@@ -862,7 +863,7 @@ class JobsTest(MintRepositoryHelper):
     def testStartBadArch(self):
         client, userId = self.quickMintUser("testuser", "testpass")
 
-        self.assertRaises(mint_error.PermissionDenied,
+        self.assertRaises(ParameterError,
                           client.startNextJob, ['this is not a frozen flavor'],
                           {'imageTypes' : [releasetypes.QEMU_IMAGE],
                            'cookTypes' : [cooktypes.GROUP_BUILDER]})
@@ -870,7 +871,7 @@ class JobsTest(MintRepositoryHelper):
     def testStartBadImage(self):
         client, userId = self.quickMintUser("testuser", "testpass")
 
-        self.assertRaises(mint_error.PermissionDenied,
+        self.assertRaises(ParameterError,
                           client.startNextJob, ['1#x86'],
                           {'imageTypes' : [9999],
                            'cookTypes' : [cooktypes.GROUP_BUILDER]})
@@ -878,7 +879,7 @@ class JobsTest(MintRepositoryHelper):
     def testStartBadCook(self):
         client, userId = self.quickMintUser("testuser", "testpass")
 
-        self.assertRaises(mint_error.PermissionDenied,
+        self.assertRaises(ParameterError,
                           client.startNextJob, ['1#x86'],
                           {'imageTypes' : [releasetypes.QEMU_IMAGE],
                            'cookTypes' : [9999]})
@@ -1077,6 +1078,14 @@ class JobsTest(MintRepositoryHelper):
 
         self.failIf(job, "startNextJob returned an owned image")
 
+    def testMimicJobServer(self):
+        client = self.openMintClient((self.mintCfg.authUser,
+                                      self.mintCfg.authPass))
+
+        # historically this always failed with permission denied, but it
+        # definitely needs to be allowed. return value doesn't matter
+        job = client.startNextJob(['1#x86_64'],
+                                  {'imageTypes': [releasetypes.QEMU_IMAGE]})
 
 if __name__ == "__main__":
     testsuite.main()
