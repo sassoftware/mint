@@ -152,6 +152,7 @@ class UsersTable(database.KeyedTable):
         cu = self.db.cursor()
         cu.execute("UPDATE Users SET salt=?, passwd=? WHERE username=?",
                    salt, passwd, username)
+        self.db.commit()
 
     def _checkPassword(self, salt, password, challenge):
         m = md5.new()

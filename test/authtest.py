@@ -46,7 +46,7 @@ class AuthTest(MintRepositoryHelper):
                                         "test@example.com", "test at example.com", "", active=True)
 
     def testRequiresAuth(self):
-        client = self.openMintClient('anonymous', 'anonymous')
+        client = self.openMintClient(('anonymous', 'anonymous'))
 
         try:
             client.getUserSearchResults('Any String Will Do')

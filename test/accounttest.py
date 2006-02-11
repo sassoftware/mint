@@ -121,7 +121,7 @@ class AccountTest(MintRepositoryHelper):
         client.registerNewUser("testuser", "testpass", "test user", "test@user.com",
             "test at user dot com", "", True)
 
-        self.assertRaises(ItemNotFound, 
+        self.assertRaises(ItemNotFound,
             client.server._server.getConfirmation, "testuser")
 
     def testAccountConfirmation(self):
@@ -357,6 +357,28 @@ class AccountTest(MintRepositoryHelper):
         # external repositor will be accessed anonymously
         cfg = external.getConaryConfig()
         assert(ConaryClient(cfg).getRepos().troveNames(extLabel) == [])
+
+    def testPasswordPermissions(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        adminClient, adminId = self.quickMintAdmin("adminuser", "adminpass")
+
+        # user changes own password
+        user = client.getUser(userId)
+        user.setPassword('newpass')
+        client = self.openMintClient(('testuser', 'newpass'))
+
+        # user attempts to change other user's password--should fail
+        user = client.getUser(adminId)
+        self.assertRaises(PermissionDenied, user.setPassword, 'newpass')
+
+        # admin changes user's password
+        user = adminClient.getUser(userId)
+        user.setPassword('testpass')
+
+        # verify auth user works
+        client = self.openMintClient((self.mintCfg.authUser,
+                                      self.mintCfg.authPass))
+        user.setPassword('foobar')
 
     def testHangingGroupMembership(self):
         client, userId = self.quickMintUser("testuser", "testpass")
