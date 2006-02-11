@@ -162,6 +162,7 @@ class JobDaemon:
 
         runningJobs = []
 
+        errors = 0
         while(True):
             for jobThread in runningJobs[:]:
                 if not jobThread.isAlive():
@@ -173,6 +174,9 @@ class JobDaemon:
                     job = client.startNextJob(["1#" + x for x in \
                                                cfg.supportedArch],
                                               cfg.jobTypes)
+                    if errors and not confirmedAlive:
+                        log.warning("rBuilder server reached after %d attempt(s), resuming normal operation" % errors)
+                        errors = 0
                     confirmedAlive = True
 
                     if not job:
@@ -200,10 +204,13 @@ class JobDaemon:
                 # was doing when the server went down. simply wait for it.
                 except (ProtocolError, socket.error), e:
                     if not confirmedAlive:
-                        import traceback
-                        traceback.print_exc()
-                        log.error("rBuilder Server Unreachable; exiting")
-                        return
+                        errors += 1
+                        if errors > 5:
+                            log.error("rBuilder Server Unreachable after 5 attempts; exiting")
+                            return
+                        else:
+                            log.error("rBuilder Server Unreachable: trying again (attempt %d/5)" % errors)
+
                     log.warning("Error retrieving job list:" + str(e))
                     time.sleep(5)
             else:
