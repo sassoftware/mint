@@ -61,6 +61,6 @@ chmod 0664 $topdir/isolinux/isolinux.*
 
 # modify isolinux message colors to match
 # our default splash palette.
-sed -i "s/07/0a/g;s/02/0e/g" isolinux/*.msg
+sed -i "s/07/0a/g;s/02/0e/g" $topdir/isolinux/*.msg
 
 mv $topdir/$subdir $topdir/PRODUCTNAME
