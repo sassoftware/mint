@@ -14,7 +14,8 @@ script_dist =			\
 	mklivecd		\
 	reset			\
 	splitdistro		\
-	update-package-index
+	update-package-index	\
+	update-package-index-external
 
 extra_dist = \
 	Makefile		\
