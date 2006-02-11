@@ -981,18 +981,21 @@ class MintServer(object):
     @typeCheck(int, str)
     @private
     def setPassword(self, userId, newPassword):
-        username = self.users.get(userId)['username']
+        if self.auth.admin or list(self.authToken) == [self.cfg.authUser, self.cfg.authPass] or self.auth.userId == userId:
+            username = self.users.get(userId)['username']
 
-        for projectId, level in self.getProjectIdsByMember(userId):
-            project = projects.Project(self, projectId)
+            for projectId, level in self.getProjectIdsByMember(userId):
+                project = projects.Project(self, projectId)
 
-            if not project.external:
-                authRepo = self._getProjectRepo(project)
-                authRepo.changePassword(project.getLabel(), username, newPassword)
+                if not project.external:
+                    authRepo = self._getProjectRepo(project)
+                    authRepo.changePassword(project.getLabel(), username, newPassword)
 
-        self.users.changePassword(username, newPassword)
+            self.users.changePassword(username, newPassword)
 
-        return True
+            return True
+        else:
+            raise PermissionDenied
 
     @typeCheck(str, int, int)
     @requiresAuth
