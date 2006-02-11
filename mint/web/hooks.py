@@ -243,6 +243,18 @@ def conaryHandler(req, cfg, pathInfo):
     secure = (req.subprocess_env.get('HTTPS', 'off') == 'on')
 
     repHash = repName + req.hostname
+    # hack to remap some repository names to others: we need a better
+    # database-based solution for this.
+    repNameMap = {'digium.rpath.org': 'conary.digium.com'}
+    if repName in repNameMap:
+        repName = repNameMap[repName]
+        print >> sys.stderr, "REMAPPING REPOSITORY NAME: ", repName
+
+    repNameMap = {'conary.digium.com': 'digium.digium.com',
+                 'digium.rpath.net': 'digium.digium.com'}
+    if repName in repNameMap:
+        repName = repNameMap[repName]
+        print >> sys.stderr, "REMAPPING REPOSITORY NAME: ", repName
 
     global db
     if cfg.reposDBDriver == "sqlite":
@@ -305,6 +317,15 @@ def conaryHandler(req, cfg, pathInfo):
                                                'basePath' : cfg.basePath}
         else:
             nscfg.commitAction = None
+
+        # XXX hack to override commitAction for foresight until foresight
+        # switches to our mailing lists.
+        if req.hostname == "foresight.rpath.org":
+            nscfg.commitAction = '''/usr/lib64/python2.4/site-packages/conary/commitaction --module "/usr/lib/python2.4/site-packages/mint/rbuilderaction.py --user %%(user)s --url http://www.rpath.org/xmlrpc-private/" --module "/usr/lib64/python2.4/site-packages/conary/changemail.py --user %(user)s --email desktop-commits@bizrace.com"'''
+        elif req.hostname == "conary.digium.com":
+            # another hack that needs to be generalized
+            nscfg.commitAction = '/usr/lib64/python2.4/site-packages/conary/commitaction --module "/usr/lib/python2.4/site-packages/mint/rbuilderaction.py --user %%(user)s --url http://www.rpath.org/xmlrpc-private/" --module "/usr/lib64/python2.4/site-packages/conary/changemail.py --user %(user)s --email digium-commits@lists.rpath.org"'
+
 
         if os.access(repositoryDir, os.F_OK):
             repositories[repHash] = netserver.NetworkRepositoryServer(nscfg, urlBase, db)
