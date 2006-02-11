@@ -7,55 +7,88 @@
 from mint import config
 from conary import dbstore
 
+import os
+import os.path
+import sys
+
+# lockfile try / creation
+# XXX: this needs to be abstracted out into a wrapper
+myname = 'update-package-index'
+lockPath = '/var/tmp/%s' % (myname, )
+
+if os.path.exists(lockPath):
+    lockFile = open(lockPath,"r")
+    lockPid = int(lockFile.readline().strip())
+    procFilePath = '/proc/%d/cmdline' % (lockPid, )
+    if os.path.exists(procFilePath):
+        procFile = open(procFilePath,"r")
+        if procFile.readline().find(myname) < 0:
+            print >> sys.stderr, "Deleting stale lockfile"
+            lockFile.close()
+            os.unlink(lockPath)
+        else:
+            print >> sys.stderr, "Looks like we're already running; exiting"
+            os._exit(1)
+        procFile.close()
+
+newLockFile = open(lockPath, "w+")
+newLockFile.write(str(os.getpid()))
+newLockFile.close()
+
 cfgPath = "/srv/mint/mint.conf"
 
-cfg = config.MintConfig()
-cfg.read(cfgPath)
-
-db = dbstore.connect(cfg.dbPath, driver = cfg.dbDriver)
-db.connect()
-cu = db.cursor()
-
 try:
-    # get a list of the latest version of each package, excluding hidden and
-    # disabled projects. comparing version strings isn't technically reliable,
-    # so we must use the latest timestamp to verify
-    cu.execute("""SELECT Projects.projectId, troveName, max(timestamp)
-                      FROM Commits
-                      LEFT JOIN Projects
-                          ON Commits.projectId=Projects.projectId
-                      WHERE troveName NOT LIKE '%:%'
-                      AND hidden=0 AND disabled=0
-                      GROUP BY Projects.projectId, troveName""")
+    cfg = config.MintConfig()
+    cfg.read(cfgPath)
 
-    for projectId, troveName, maxTime in cu.fetchall():
-        cu.execute("""SELECT version from Commits
-                          WHERE projectId=? AND troveName=? and timestamp=?""",
-                   projectId, troveName, maxTime)
+    db = dbstore.connect(cfg.dbPath, driver = cfg.dbDriver)
+    db.connect()
+    cu = db.cursor()
 
-        # at least one result will always exist. there should be only one.
-        version = cu.fetchone()[0]
+    try:
+        # get a list of the latest version of each package, excluding hidden and
+        # disabled projects. comparing version strings isn't technically reliable,
+        # so we must use the latest timestamp to verify
+        cu.execute("""SELECT Projects.projectId, troveName, max(timestamp)
+                          FROM Commits
+                          LEFT JOIN Projects
+                              ON Commits.projectId=Projects.projectId
+                          WHERE troveName NOT LIKE '%:%'
+                          AND hidden=0 AND disabled=0
+                          GROUP BY Projects.projectId, troveName""")
 
-        cu.execute("""SELECT pkgId FROM PackageIndex
-                          WHERE projectId=? AND name=?""",
-                   projectId, troveName)
-        res = cu.fetchone()
-        if not res:
-            cu.execute("""INSERT INTO PackageIndex (projectId, name, version)
-                              VALUES (?, ?, ?)""",
-                       projectId, troveName, version)
-            pass
-        else:
-            pkgId = res[0]
-            cu.execute("""UPDATE PackageIndex SET
-                                  projectId=?, name=?, version=?
-                                  WHERE pkgId=?""",
-                       projectId, troveName, version, pkgId)
+        for projectId, troveName, maxTime in cu.fetchall():
+            cu.execute("""SELECT version from Commits
+                              WHERE projectId=? AND troveName=? and timestamp=?""",
+                       projectId, troveName, maxTime)
 
-except:
-    db.rollback()
-    raise
-else:
-    db.commit()
+            # at least one result will always exist. there should be only one.
+            version = cu.fetchone()[0]
 
-db.close()
+            cu.execute("""SELECT pkgId FROM PackageIndex
+                              WHERE projectId=? AND name=?""",
+                       projectId, troveName)
+            res = cu.fetchone()
+            if not res:
+                cu.execute("""INSERT INTO PackageIndex (projectId, name, version)
+                                  VALUES (?, ?, ?)""",
+                           projectId, troveName, version)
+                pass
+            else:
+                pkgId = res[0]
+                cu.execute("""UPDATE PackageIndex SET
+                                      projectId=?, name=?, version=?
+                                      WHERE pkgId=?""",
+                           projectId, troveName, version, pkgId)
+
+    except:
+        db.rollback()
+        raise
+    else:
+        db.commit()
+
+    db.close()
+finally:
+    print "Cleaning up..."
+    os.unlink(lockPath)
+    print "Done."
