@@ -33,8 +33,7 @@ from conary.lib.cfg import *
                 <strong><tt>ssh ${req.hostname}</tt></strong><br/><br/></li>
 
                 <li>Once logged in, issue the following command:<br/><br/>
-                <strong><tt>touch
-                ${cfg.dataPath}${sid}.txt</tt></strong><br/><br/></li>
+                <strong><tt>touch ${cfg.dataPath}${sid}.txt</tt></strong><br/><br/></li>
 
                 <li>Reload this page by pressing your browser's reload
                 button</li>
