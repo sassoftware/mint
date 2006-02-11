@@ -49,6 +49,7 @@ install: install-subdirs
 	install -m 644 installable_iso.conf $(DESTDIR)/$(confdir)/installable_iso.conf.dist
 	install -m 644 live_iso.conf $(DESTDIR)/$(confdir)/live_iso.conf.dist
 	install -m 644 iso_gen.conf $(DESTDIR)/$(confdir)/iso_gen.conf.dist
+	install -m 644 bootable_image.conf $(DESTDIR)/$(confdir)/bootable_image.conf.dist
 
 	mkdir -p $(DESTDIR)/$(sysconfdir)/init.d/
 	install -m 755 job-server.init.in $(DESTDIR)/$(sysconfdir)/init.d/rbuilder-isogen
