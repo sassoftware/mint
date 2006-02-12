@@ -291,15 +291,13 @@ def conaryHandler(req, cfg, pathInfo):
            rest = req.uri
 
         # pull out any queryargs
-        if '?' in rest:
-            rest = req.uri.split("?")[0]
+        projectName = repName.split(".")[0]
 
-        urlBase = "%%(protocol)s://%s:%%(port)d" % \
-                        (req.hostname) + rest
+        urlBase = "%%(protocol)s://%s:%%(port)d/repos/%s/" % \
+            (req.hostname, projectName)
 
         # set up the commitAction
         buildLabel = repName + "@" + cfg.defaultBranch
-        projectName = repName.split(".")[0]
         if cfg.SSL:
             protocol = "https"
             host = cfg.secureHost
