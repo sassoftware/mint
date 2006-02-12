@@ -581,9 +581,9 @@ quit
                 #image to generate vmware, etc.
                 zipfn = None
                 if releasetypes.QEMU_IMAGE in self.imageTypes:
-                    self.status('Compressing Qemu image')
+                    self.status('Compressing QEMU image')
                     zipfn = self.compressImage(self.outfile)
-                    imagesList.append((zipfn, 'Bootable Qemu Image',))
+                    imagesList.append((zipfn, 'Bootable QEMU Image',))
 
             except:
                 if self.imgcfg.debug:
