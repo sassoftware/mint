@@ -98,6 +98,10 @@ class ConaryHandler(WebHandler, http.HttpHandler):
 
         ### end hack. ###
 
+        # try as a specified user, if fails, fall back to anonymous
+        if not self.repServer.auth.check(self.authToken):
+            self.authToken = ('anonymous', 'anonymous', None, None)
+
         if self.project.external or needsExternal:
             self.repos = conaryclient.ConaryClient(cfg).getRepos()
         else:
@@ -112,19 +116,9 @@ class ConaryHandler(WebHandler, http.HttpHandler):
 
         d = self.fields
         d['auth'] = self.authToken
-        try:
-            output = method(**d)
-            return output
-        except (http.InvalidPassword, errors.OpenError):
-            return self._requestAuth(d)
 
-    def _requestAuth(self, d):
-        # try to fall back to anonymous and rerun the handler
-        if self.authToken[0] != 'anonymous':
-            self.authToken = ('anonymous', 'anonymous')
-            return self._handle(**d)
-        else:
-            raise HttpForbidden
+        output = method(**d)
+        return output
 
     def _write(self, templateName, **values):
         return WebHandler._write(self, templateName, templatePath = self.reposTemplatePath, **values)
