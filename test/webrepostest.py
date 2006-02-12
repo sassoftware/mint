@@ -14,12 +14,13 @@ from conary import versions
 
 class WebReposTest(mint_rephelp.WebRepositoryHelper):
     def testRepositoryBrowser(self):
+        self.openRepository()
         client, userId = self.quickMintUser('testuser', 'testpass')
         projectId = self.newProject(client, 'Foo', 'testproject')
 
-        self.makeSourceTrove("testcase", testRecipe)
-        self.cookFromRepository("testcase",
-            versions.Label("testproject.rpath.local@rpl:devel"),
+        l = versions.Label("testproject.rpath.local@rpl:devel")
+        self.makeSourceTrove("testcase", testRecipe, l)
+        self.cookFromRepository("testcase", l,
             ignoreDeps = True)
 
         # first try anonymous browsing
@@ -31,16 +32,21 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
         page = page.assertContent('/repos/testproject/browse', ok_codes = [200],
             content = 'troveInfo?t=testcase:runtime')
 
+        # now try logged-in, as another user user
+        client, userId = self.quickMintUser('test2', 'test2pass')
+        page = self.webLogin('test2', 'test2pass')
+        page = page.assertContent('/repos/testproject/browse', ok_codes = [200],
+            content = 'troveInfo?t=testcase:runtime')
+
     def testBrowseHiddenProject(self):
-        raise testsuite.SkipTestException
         adminClient, adminUserId = self.quickMintAdmin("adminuser", "testpass")
 
         client, userId = self.quickMintUser('testuser', 'testpass')
         projectId = self.newProject(client, 'Foo', 'test')
 
         adminClient.hideProject(projectId)
-
         self.makeSourceTrove("testcase", testRecipe)
+
         self.cookFromRepository("testcase",
             versions.Label("test.rpath.local@rpl:devel"),
             ignoreDeps = True)
