@@ -129,8 +129,6 @@ class MintApp(WebHandler):
                 l = self.projectDict.setdefault(level, [])
                 l.append(project)
 
-        print >> sys.stderr, self.projectDict
-        sys.stderr.flush()
         self.auth.setToken(self.authToken)
 
         method = self._getHandler(pathInfo)
