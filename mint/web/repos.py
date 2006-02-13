@@ -65,10 +65,13 @@ class ConaryHandler(WebHandler, http.HttpHandler):
         """Handle either an HTTP POST or GET command."""
 
         if self.project.external:
-            useSSL = None # use the label as-is for external projects
+            useSSL = False
+            overrideAuth = False
         else:
             useSSL = self.cfg.SSL
-        cfg = self.project.getConaryConfig(overrideSSL = True, overrideAuth = True,
+            overrideAuth = True
+        cfg = self.project.getConaryConfig(overrideSSL = True,
+                                           overrideAuth = overrideAuth,
                                            newUser = self.authToken[0],
                                            newPass = self.authToken[1],
                                            useSSL = useSSL)
