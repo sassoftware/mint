@@ -5,6 +5,7 @@
 # All Rights Reserved
 #
 from mint import jobstatus
+from mint import releasetypes
 from mint import userlevels
 from mint.mint import upstream
 import time
@@ -96,7 +97,7 @@ import time
                             <a href="${cfg.basePath}downloadImage/${file['fileId']}/${file['filename']}"> Download ${file['title'] and file['title'] or "Disc " + str(i+1)}</a> (${file['size']/1048576}&nbsp;MB)
                         </li>
                     </ul>
-
+                   <div py:if="releasetypes.INSTALLABLE_ISO in release.imageTypes"> 
                     <h4 onclick="javascript:toggle_display('file_help');"
                         style="cursor: pointer;">What are these files?&nbsp;<img id="file_help_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" /></h4>
 
@@ -132,6 +133,7 @@ import time
                                 this file with any USB device.</li>
                                 </ul>
                             </div>
+			</div>
 
                     </div>
                     <p py:if="not files">Release has no downloadable files.</p>
