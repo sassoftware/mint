@@ -7,10 +7,19 @@
 import os
 import time
 
+START_MARKER = '>>'
+STOP_MARKER  = '<<'
+
+HTML_TAG = 'HTML'
+RPC_TAG = 'RPC'
+
 class Profile(object):
     def __init__(self, logFile = None):
+        self.times = {}
         if logFile:
             self.logFile = open(logFile, "a")
+
+        self.nestcount = 0
 
     def __del__(self):
         self.logFile.close()
@@ -20,22 +29,32 @@ class Profile(object):
             return
         if not formatString.endswith('\n'):
             formatString += '\n'
-        self.logFile.write(time.ctime(time.time()) + " (pid: %d): " % \
-                           os.getpid() + formatString % args)
+        self.logFile.write('%.3f|%.2f|%d|%d|' % (time.time(), os.getloadavg()[0],\
+            os.getpid(), self.nestcount) + (formatString % args))
         self.logFile.flush()
 
+    def start(self, type, tag):
+        self.nestcount += 1
+        if tag:
+            self.times[tag] = time.time()
+            self.write('%s|%s' % ((START_MARKER + type), tag))
+
+    def stop(self, type, tag):
+        if tag and self.times[tag]:
+            elapsed = ((time.time() - self.times[tag]) * 1000)
+            self.write('%s|%s|%d' % ((STOP_MARKER + type), tag, elapsed))
+        self.nestcount -= 1
+        del self.times[tag]
+
     def startXml(self, method):
-        self.xmlStartTime = time.time()
-        self.write("Starting XMLRPC request: %s", method)
+        self.start(RPC_TAG, method)
 
     def stopXml(self, method):
-        self.write("Ending XMLRPC request: %-s %.2f", method,
-                    (time.time() - self.xmlStartTime) * 1000)
+        self.stop(RPC_TAG, method)
 
     def startHtml(self, uri):
-        self.htmlStartTime = time.time()
-        self.write("Starting HTML request: %s", uri)
+        self.start(HTML_TAG, uri)
 
     def stopHtml(self, uri):
-        self.write("Ending HTML request: %-s %.2f", uri,
-                   (time.time() - self.htmlStartTime) * 1000)
+        self.stop(HTML_TAG, uri)
+
