@@ -129,16 +129,24 @@
 	    <div id="administer" py:if="auth.admin"><a href="/administer"><strong>Adminster ${cfg.productName}</strong></a></div>
         </div>
         <div class="boxBody" id="boxBody" py:if="projectList">
-            <ul>
-                <li py:for="project, level in sorted(projectList, cmp = userlevels.myProjectCompare)">
-                    <a href="${project.getUrl()}">
-                        ${project.getNameForDisplay()}</a><br/>
-                        ${userlevels.names[level]}
-                        <span py:if="not level and project.listJoinRequests()">
-                            <a href="${project.getUrl()}members"><b style="color: red;">Requests Pending</b></a>
-                        </span>
-                </li>
-            </ul>
+            <div py:for="level, title in [(userlevels.OWNER, 'Projects I Own'),
+                                          (userlevels.DEVELOPER, 'Projects I Work On'),
+                                          (userlevels.USER, 'Projects I Am Watching')]" 
+                 py:strip="True">
+                <div py:strip="True" py:if="level in projectDict">
+                    <h4>${title}</h4>
+                    <ul>
+                        <li py:for="project in projectDict[level]">
+                            <a href="${project.getUrl()}">
+                                ${project.getNameForDisplay()}</a><br/>
+                                ${userlevels.names[level]}
+                                <span py:if="not level and project.listJoinRequests()">
+                                    <a href="${project.getUrl()}members"><b style="color: red;">Requests Pending</b></a>
+                                </span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
             <div id="newProject"><a href="http://${SITE}newProject"><strong>Create a new project</strong></a></div>
             <div id="userSettings"><a href="http://${SITE}userSettings"><strong>Edit my account</strong></a></div>
 	    <div id="administer" py:if="auth.admin"><a href="/administer"><strong>Adminster ${cfg.productName}</strong></a></div>

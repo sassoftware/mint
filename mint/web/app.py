@@ -47,6 +47,7 @@ shimClients = {}
 class MintApp(WebHandler):
     project = None
     projectList = []
+    projectDict = {}
     userLevel = userlevels.NONMEMBER
     user = None
     session = {} 
@@ -118,16 +119,22 @@ class MintApp(WebHandler):
         if True or self.authToken not in shimClients:
             shimClients[self.authToken] = shimclient.ShimMintClient(self.cfg, self.authToken)
         self.client = shimClients[self.authToken]
-        
+
         self.auth = self.client.checkAuth()
         if self.auth.authorized:
             self.user = self.client.getUser(self.auth.userId)
             self.projectList = self.client.getProjectsByMember(self.auth.userId)
-        
+            self.projectDict = {}
+            for project, level in self.projectList:
+                l = self.projectDict.setdefault(level, [])
+                l.append(project)
+
+        print >> sys.stderr, self.projectDict
+        sys.stderr.flush()
         self.auth.setToken(self.authToken)
 
         method = self._getHandler(pathInfo)
-       
+
         d = self.fields.copy()
         d['auth'] = self.auth
 
@@ -216,6 +223,7 @@ class MintApp(WebHandler):
             'cfg':              self.cfg,
             'fields':           self.fields,
             'projectList':      self.projectList,
+            'projectDict':      self.projectDict,
             'req':              self.req,
             'session':          self.session,
             'siteHost':         self.cfg.siteHost,

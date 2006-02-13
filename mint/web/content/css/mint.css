@@ -475,7 +475,10 @@ div#projectsPane div.boxBody {
     overflow: auto;
 }
 
-div#projectsPane div.boxBody p, div#projectsPane div.boxBody h3 {
+div#projectsPane div.boxBody p,
+div#projectsPane div.boxBody h3,
+div#projectsPane div.boxBody h4 {
+
     padding: 0px 6px 0px 12px;
 }
 

@@ -50,6 +50,7 @@ class WebHandler(object):
                               project = self.project,
                               userLevel = self.userLevel,
                               projectList = self.projectList,
+                              projectDict = self.projectDict,
                               req = self.req,
                               session = self.session,
                               siteHost = self.siteHost,
