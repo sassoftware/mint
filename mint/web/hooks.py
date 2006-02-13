@@ -491,6 +491,10 @@ def handler(req):
     if not db:
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
 
+    # reopen a dead database
+    if not db.alive():
+        db.reopen()
+
     if cfg.profiling:
         prof = getProfile()
         if not prof:

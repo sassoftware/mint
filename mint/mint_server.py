@@ -2232,6 +2232,10 @@ class MintServer(object):
             self.db = dbstore.connect(cfg.dbPath, driver=cfg.dbDriver)
             dbConnection = self.db
 
+        # reopen a dead database
+        if not self.db.alive:
+            self.db.reopen()
+
         try:
             #The database version object has a dummy check so that it always passes.
             #At the end of all database object creation, fix the version
