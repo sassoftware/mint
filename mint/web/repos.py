@@ -70,6 +70,11 @@ class ConaryHandler(WebHandler, http.HttpHandler):
         else:
             useSSL = self.cfg.SSL
             overrideAuth = True
+
+            # try as a specified user, if fails, fall back to anonymous
+            if not self.repServer.auth.check(self.authToken):
+                self.authToken = ('anonymous', 'anonymous', None, None)
+
         cfg = self.project.getConaryConfig(overrideSSL = True,
                                            overrideAuth = overrideAuth,
                                            newUser = self.authToken[0],
@@ -101,9 +106,6 @@ class ConaryHandler(WebHandler, http.HttpHandler):
 
         ### end hack. ###
 
-        # try as a specified user, if fails, fall back to anonymous
-        if not self.repServer.auth.check(self.authToken):
-            self.authToken = ('anonymous', 'anonymous', None, None)
 
         if self.project.external or needsExternal:
             self.repos = conaryclient.ConaryClient(cfg).getRepos()
