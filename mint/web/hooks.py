@@ -492,8 +492,8 @@ def handler(req):
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
 
     # reopen a dead database
-    if not db.alive():
-        db.reopen()
+    if db.reopen():
+        print >> sys.stderr, "reopened a dead database connection in hooks.py"
 
     if cfg.profiling:
         prof = getProfile()

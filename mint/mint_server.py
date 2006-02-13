@@ -2233,8 +2233,9 @@ class MintServer(object):
             dbConnection = self.db
 
         # reopen a dead database
-        if not self.db.alive:
-            self.db.reopen()
+        if self.db.reopen():
+            print >> sys.stderr, "reopened dead database connection in mint_server"
+            sys.stderr.flush()
 
         try:
             #The database version object has a dummy check so that it always passes.
