@@ -495,13 +495,6 @@ def handler(req):
     if db.reopen():
         print >> sys.stderr, "reopened a dead database connection in hooks.py"
 
-    if cfg.profiling:
-        prof = getProfile()
-        if not prof:
-            prof = makeProfile(cfg)
-            setProfile(prof)
-        prof.startHtml(req.uri)
-
     if not req.uri.startswith('/setup/') and not cfg.configured:
         req.headers_out['Location'] = "/setup/"
         raise apache.SERVER_RETURN, apache.HTTP_MOVED_TEMPORARILY
@@ -515,26 +508,36 @@ def handler(req):
     pathInfo = normPath(pathInfo)
 
     ret = apache.HTTP_NOT_FOUND
-    for match, urlHandler in urls:
-        if re.match(match, pathInfo):
-            newPath = normPath(pathInfo[len(match)-1:])
-            try:
-                ret = urlHandler(req, cfg, newPath)
-            except HttpError, e:
-                raise apache.SERVER_RETURN, e.code
-            except:
-                # we only want to handle errors in production mode
-                if cfg.debugMode or req.bytes_sent > 0:
-                    raise
-                # only handle actual mint errors
-                if match !='^/':
-                    raise
-                exception, e, bt = sys.exc_info()
-                logErrorAndEmail(req, cfg, exception, e, bt)
-                ret = urlHandler(req, cfg, '/unknownError')
-            break
+
     if cfg.profiling:
-        prof.stopHtml(req.uri)
+        prof = getProfile()
+        if not prof:
+            prof = makeProfile(cfg)
+            setProfile(prof)
+        prof.startHtml(req.uri)
+
+    try:
+        for match, urlHandler in urls:
+            if re.match(match, pathInfo):
+                newPath = normPath(pathInfo[len(match)-1:])
+                try:
+                    ret = urlHandler(req, cfg, newPath)
+                except HttpError, e:
+                    raise apache.SERVER_RETURN, e.code
+                except:
+                    # we only want to handle errors in production mode
+                    if cfg.debugMode or req.bytes_sent > 0:
+                        raise
+                    # only handle actual mint errors
+                    if match !='^/':
+                        raise
+                    exception, e, bt = sys.exc_info()
+                    logErrorAndEmail(req, cfg, exception, e, bt)
+                    ret = urlHandler(req, cfg, '/unknownError')
+                break
+    finally:
+        if cfg.profiling:
+            prof.stopHtml(req.uri)
     return ret
 
 repositories = {}
