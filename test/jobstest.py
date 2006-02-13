@@ -65,8 +65,10 @@ class JobsTest(MintRepositoryHelper):
 
         job = client.startImageJob(release.getId())
 
-        client.getCfg().imagesPath = self.imagePath
-        imagegen = stub_image.StubImage(client, client.getCfg(), job,
+        from mint.distro import jobserver
+        isocfg = jobserver.IsoGenConfig()
+        isocfg.finishedPath = self.imagePath
+        imagegen = stub_image.StubImage(client, isocfg, job,
                                         release, project)
         imagegen.write()
         release.setFiles([[self.imagePath + "/stub.iso", "Stub"]])
@@ -497,6 +499,7 @@ class JobsTest(MintRepositoryHelper):
                                     subGroup, False, False, False)
 
         cookJobId = groupTrove.startCookJob("1#x86")
+        return cookJobId
 
     def setUpImageJob(self, client):
         projectId = client.newProject("Foo", "foo", "rpath.org")
@@ -507,6 +510,7 @@ class JobsTest(MintRepositoryHelper):
         self.stockReleaseFlavor(release.getId())
 
         relJob = client.startImageJob(release.getId())
+        return relJob
 
     def setUpBothJobs(self, client):
         projectId = client.newProject("Foo", "foo", "rpath.org")
@@ -532,6 +536,7 @@ class JobsTest(MintRepositoryHelper):
                                     subGroup, False, False, False)
 
         cookJobId = groupTrove.startCookJob("1#x86")
+        return relJob, cookJobId
 
     #####
     # test startNextJob for just images
@@ -1086,6 +1091,7 @@ class JobsTest(MintRepositoryHelper):
         # definitely needs to be allowed. return value doesn't matter
         job = client.startNextJob(['1#x86_64'],
                                   {'imageTypes': [releasetypes.QEMU_IMAGE]})
+
 
 if __name__ == "__main__":
     testsuite.main()

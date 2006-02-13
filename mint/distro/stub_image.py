@@ -9,7 +9,7 @@ from imagegen import ImageGenerator
 
 class StubImage(ImageGenerator):
     def write(self):
-        f = os.path.join(self.cfg.imagesPath, "stub.iso")
+        f = os.path.join(self.cfg.finishedPath, "stub.iso")
 
         releaseId = self.job.getReleaseId()
         release = self.client.getRelease(releaseId)

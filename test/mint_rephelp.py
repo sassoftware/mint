@@ -14,6 +14,7 @@ from webunit import webunittest
 from conary import dbstore
 from conary import sqlite3
 from conary import versions
+from conary.deps import deps
 from conary.lib import openpgpkey, util
 
 from mint import config
@@ -21,6 +22,7 @@ from mint import shimclient
 from mint import dbversion
 from mint import mint_server
 from mint.projects import mysqlTransTable
+from mint.distro.flavors import stockFlavors
 from mint import releasetypes
 
 MINT_DOMAIN = 'rpath.local'
@@ -297,11 +299,22 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
         #self.servers.getServer().stop()
         rephelp.RepositoryHelper.tearDown(self)
 
-    def stockReleaseFlavor(self, releaseId):
+    def stockReleaseFlavor(self, releaseId, arch = "x86_64"):
         cu = self.db.cursor()
-        cu.execute("UPDATE Releases set troveFlavor=? WHERE releaseId=?",
-                   "1#x86:i486:i586:i686:~!sse2|1#x86_64|5#use:X:~!alternatives:~!bootstrap:~!builddocs:~buildtests:desktop:~!dietlibc:emacs:gcj:~glibc.tls:gnome:~grub.static:gtk:ipv6:kde:~!kernel.debug:~!kernel.debugdata:~!kernel.numa:krb:ldap:nptl:~!openssh.smartcard:~!openssh.static_libcrypto:pam:pcre:perl:~!pie:~!postfix.mysql:python:qt:readline:sasl:~!selinux:~sqlite.threadsafe:ssl:tcl:tcpwrappers:tk:~!xorg-x11.xprint", releaseId)
+        flavor = deps.parseFlavor(stockFlavors['1#' + arch]).freeze()
+        cu.execute("UPDATE Releases set troveFlavor=? WHERE releaseId=?", flavor, releaseId)
         self.db.commit()
+
+    def hideOutput(self):
+        self.oldFd = os.dup(sys.stderr.fileno())
+        fd = os.open(os.devnull, os.W_OK)
+        os.dup2(fd, sys.stderr.fileno())
+        os.close(fd)
+
+    def showOutput(self):
+        os.dup2(self.oldFd, sys.stderr.fileno())
+        os.close(self.oldFd)
+
 
 class WebRepositoryHelper(MintRepositoryHelper, webunittest.WebTestCase):
     def __init__(self, methodName):

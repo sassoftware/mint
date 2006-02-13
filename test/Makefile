@@ -19,6 +19,8 @@ python_files = \
                htmltest.py \
                injectiontest.py \
                jobstest.py \
+	       jobservertest.py \
+               jobserverharness.py \
                joinrequesttest.py \
                labelstest.py \
                mint_rephelp.py \

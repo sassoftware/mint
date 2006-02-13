@@ -12,6 +12,7 @@ python_files = \
 	imagegen.py		\
 	__init__.py		\
 	installable_iso.py	\
+	jobserver.py		\
 	bootable_image.py	\
 	live_cf_image.py	\
 	live_iso.py		\
