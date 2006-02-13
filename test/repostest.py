@@ -202,6 +202,38 @@ class RepositoryTest(MintRepositoryHelper):
         self.makeSourceTrove("testcase2", testRecipe2, l1)
         self.cookFromRepository("testcase2", l1, ignoreDeps = True)
 
+    def testAnonymousFallback(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+
+        projectId = self.newProject(client)
+        self.makeSourceTrove("testcase", testRecipe)
+
+        project = client.getProject(projectId)
+        cfg = project.getConaryConfig()
+        nc = ConaryClient(cfg).getRepos()
+
+        troveNames = nc.troveNames(self.cfg.buildLabel)
+        assert(troveNames == ['testcase:source'])
+
+        # and now try as a non-existent user
+        reposMap = cfg.repositoryMap
+        cfg = ConaryConfiguration()
+        cfg.root = cfg.dbPath = ":memory:"
+        cfg.repositoryMap = reposMap
+
+        cfg.user.addServerGlob("testproject.rpath.local", "nosuchuser", "nonexist")
+        nc = ConaryClient(cfg).getRepos()
+
+        troveNames = nc.troveNames(self.cfg.buildLabel)
+        assert(troveNames == ['testcase:source'])
+
+        # try as a user with a bad pw
+        cfg.user.remove(("testproject.rpath.local", "nosuchuser", "nonexist"))
+        cfg.user.addServerGlob("testproject.rpath.local", "testuser", "badpass")
+
+        troveNames = nc.troveNames(self.cfg.buildLabel)
+        assert(troveNames == ['testcase:source'])
+
 
 if __name__ == "__main__":
     testsuite.main()
