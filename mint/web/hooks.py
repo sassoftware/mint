@@ -368,7 +368,7 @@ def rpcHandler(req, cfg, pathInfo):
     authToken = getHttpAuth(req)
 
     # instantiate a MintServer
-    server = mint_server.MintServer(cfg, allowPrivate = allowPrivate)
+    server = mint_server.MintServer(cfg, allowPrivate = allowPrivate, req = req)
 
     # switch on XML/JSON here
     if isXMLrpc:

@@ -1663,8 +1663,10 @@ class MintServer(object):
 
         cu.execute("UPDATE Jobs SET owner=NULL WHERE owner=? AND status=?",
                    ownerId, jobstatus.WAITING)
-
         self.db.commit()
+
+        if self.req:
+            self.jobData.setDataValue(jobId, "hostname", self.req.hostname, data.RDT_STRING)
 
         return jobId
 
@@ -2206,8 +2208,9 @@ class MintServer(object):
             raise PermissionDenied
         return base64.b64encode(self._getReportObject(name).getPdf())
 
-    def __init__(self, cfg, allowPrivate = False, alwaysReload = False, db = None):
+    def __init__(self, cfg, allowPrivate = False, alwaysReload = False, db = None, req = None):
         self.cfg = cfg
+        self.req = req
 
         # create the profiling log if self.cfg.profiling exists
         if self.cfg.profiling:
