@@ -49,6 +49,8 @@ class ReleaseTest(MintRepositoryHelper):
               'title': 'File Title 2', 'size': 0,}]
         )
 
+        assert(release.getDefaultName() == 'group-trove=1.0-1-1')
+
         desc = 'Just some random words'
         release.setDesc(desc)
         release.refresh()
@@ -430,6 +432,28 @@ class ReleaseTest(MintRepositoryHelper):
         release.setFiles([["file1", "File Title 1"]])
         release.setPublished(True)
 
+    def testHasVMwareImage(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        projectId = client.newProject("Foo", "foo", "rpath.org")
+
+        release = client.newRelease(projectId, "Test Release")
+        assert(release.hasVMwareImage() == False)
+
+        release.setFiles([["test.vmware.zip", "Test Image"]])
+        assert(release.hasVMwareImage() == True)
+
+    def testGetDisplayTemplates(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        projectId = client.newProject("Foo", "foo", "rpath.org")
+
+        release = client.newRelease(projectId, "Test Release")
+        templates = [x[0] for x in release.getDisplayTemplates()]
+        assert(['Image Settings',
+                'Installable ISO Settings',
+                'Bootable Image Settings',
+                'VMware Image Settings',
+                'Stub Image Settings'] == templates)
+        
 
 if __name__ == "__main__":
     testsuite.main()
