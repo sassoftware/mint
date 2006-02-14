@@ -18,6 +18,7 @@ from conary import versions
 from conary.deps import deps
 from conary.repository import changeset
 from conary.lib import util
+from conary import sqlite3
 
 from mint.distro import gencslist, anaconda_images
 from mint.distro.gencslist import _validateChangeSet
@@ -101,6 +102,20 @@ class DistroTest(MintRepositoryHelper):
             troveNames = set(x.getName() for x in cs.iterNewTroveList())
             assert(troveNames == set(expectedTroves))
 
+        # write a sqldb out and ensure its sanity:
+        gencslist.writeSqldb(groupcs, self.tmpDir + "/gencslist-sqldb")
+        sqldb = sqlite3.connect(self.tmpDir + "/gencslist-sqldb")
+        cu = sqldb.cursor()
+        cu.execute("SELECT item FROM Items ORDER BY item")
+        assert(cu.fetchall() == [('ALL',), ('bar',), ('bar:debuginfo',),
+                                 ('bar:runtime',), ('bar:source',),
+                                 ('baz:runtime',), ('baz:source',),
+                                 ('foo:runtime',), ('group-core',),
+                                 ('group-core:source',), ('group-dist',),
+                                 ('group-dist-extras',), ('group-dist:source',),
+                                 ('test',), ('test:devel',), ('test:runtime',),
+                                 ('test:source',)])
+
         util.rmtree(csdir)
 
     def testCache(self):
@@ -111,7 +126,7 @@ class DistroTest(MintRepositoryHelper):
                                                  (':debuginfo', False)])
 
         client = conaryclient.ConaryClient(self.cfg)
-        
+
         name, version, flavor = (trv.getName(), trv.getVersion(), trv.getFlavor())
         compNames = ['test:runtime']
 

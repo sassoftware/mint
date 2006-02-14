@@ -29,8 +29,8 @@ from conary.repository import shimclient
 
 from mint import config
 from mint import mint_server
-from mint import profile
 from mint import users
+from mint import profile
 from mint.projects import mysqlTransTable
 from webhandler import normPath, HttpError
 import app
@@ -458,22 +458,6 @@ def logErrorAndEmail(req, cfg, exception, e, bt):
                                  cfg.smallBugsEmail, cfg.bugsEmailSubject, body_small)
 
 
-global _profile
-_profile = None
-
-def getProfile():
-    global _profile
-    return _profile
-
-def setProfile(prof):
-    global _profile
-    _profile = prof
-
-def makeProfile(cfg):
-    if 'logs' not in os.listdir(cfg.dataPath):
-        os.mkdir(cfg.dataPath + '/logs')
-    return profile.Profile(cfg.dataPath + '/logs/profiling')
-
 cfg = None
 db = None
 def handler(req):
@@ -489,6 +473,8 @@ def handler(req):
     global db
     if not db:
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
+
+    prof = profile.Profile(cfg)
 
     # reopen a dead database
     if db.reopen():
@@ -508,12 +494,7 @@ def handler(req):
 
     ret = apache.HTTP_NOT_FOUND
 
-    if cfg.profiling:
-        prof = getProfile()
-        if not prof:
-            prof = makeProfile(cfg)
-            setProfile(prof)
-        prof.startHtml(req.uri)
+    prof.startHttp(req.uri)
 
     try:
         for match, urlHandler in urls:
@@ -535,8 +516,7 @@ def handler(req):
                     ret = urlHandler(req, cfg, '/unknownError')
                 break
     finally:
-        if cfg.profiling:
-            prof.stopHtml(req.uri)
+        prof.stopHttp(req.uri)
     return ret
 
 repositories = {}

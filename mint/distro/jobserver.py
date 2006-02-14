@@ -56,11 +56,12 @@ class JobRunner(threading.Thread):
         pid = os.fork()
         if not pid:
             self.doWork()
+            os._exit(0)
         else:
             try:
                 os.waitpid(pid, 0)
             except OSError, e:
-                if e.errno != 10:
+                if e.errno != errno.ECHILD:
                     raise
 
     def doWork(self):
@@ -185,6 +186,7 @@ class JobDaemon:
                         time.sleep(random.uniform(3, 5))
                         continue
 
+                    log.info("TOOK A JOB: jobId %d" % job.id)
                     if job.releaseId:
                         release = client.getRelease(job.releaseId)
                         if release.getArch() not in cfg.supportedArch:

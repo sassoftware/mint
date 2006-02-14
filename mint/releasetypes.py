@@ -34,3 +34,13 @@ typeNames = {
     VMWARE_IMAGE:         "Bootable VMware Player image",
     LIVE_ISO:           "Live ISO",
 }
+
+typeNamesShort = {
+    NETBOOT_IMAGE:      "Netboot",
+    INSTALLABLE_ISO:    "Inst ISO",
+    LIVE_CF_IMAGE:      "Live CF",
+    STUB_IMAGE:         "Stub",
+    QEMU_IMAGE:         "QEMU",
+    VMWARE_IMAGE:       "VMware",
+    LIVE_ISO:           "Live ISO",
+}
