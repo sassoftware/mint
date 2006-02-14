@@ -89,7 +89,7 @@
                     </td>
                   </tr>
                   </table>
-                  <button name="operation" value="process_external" class="img" type="submit"><img src="${cfg.staticPath}/apps/mint/images/create_button.png" alt="Create" /></button>
+                  <button name="operation" value="process_external" class="img" type="submit"><img src="${cfg.staticPath}/apps/mint/images/add_button.png" alt="Add" /></button>
               </form>
             </div>
         </td>
