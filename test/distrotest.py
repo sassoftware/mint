@@ -19,7 +19,7 @@ from conary.deps import deps
 from conary.repository import changeset
 from conary.lib import util
 
-from mint.distro import gencslist
+from mint.distro import gencslist, anaconda_images
 from mint.distro.gencslist import _validateChangeSet
 
 class DistroTest(MintRepositoryHelper):
@@ -158,7 +158,6 @@ class DistroTest(MintRepositoryHelper):
                                       compNames))
 
     def testUpdatedStockFlavors(self):
-        raise testsuite.SkipTestException
         from mint.distro.flavors import stockFlavors
 
         cfg = conarycfg.ConaryConfiguration()
@@ -172,9 +171,63 @@ class DistroTest(MintRepositoryHelper):
             if latestVersion is None or version > latestVersion:
                 latestVersion = version
 
+        overrideDict = {'x86':      deps.parseFlavor('is: x86(~cmov, ~i486, ~i586, ~i686)'),
+                        'x86_64':   deps.parseFlavor('is: x86(~i486, ~i586, ~i686) x86_64')}
+
         flavors = versionDict[latestVersion]
-        assert(deps.parseFlavor(stockFlavors['1#x86']) in flavors)
-        assert(deps.parseFlavor(stockFlavors['1#x86_64']) in flavors)
+        for f in flavors:
+            for arch in f.members[deps.DEP_CLASS_IS].members.keys():
+                for flag in f.members[deps.DEP_CLASS_IS].members[arch].flags:
+                    f.members[deps.DEP_CLASS_IS].members[arch].flags[flag] = deps.FLAG_SENSE_PREFERRED
+        x86 = deps.parseFlavor(stockFlavors['1#x86'])
+        x86_64 = deps.parseFlavor(stockFlavors['1#x86_64'])
+
+        assert(deps.overrideFlavor(x86, overrideDict['x86']) in flavors)
+        assert(deps.overrideFlavor(x86_64, overrideDict['x86_64']) in flavors)
+
+    def testAnacondaImages(self):
+        util.mkdirChain(self.tmpDir + "/ai")
+        ai = anaconda_images.AnacondaImages("Mint Test Suite",
+            "../scripts/data/pixmaps/", self.tmpDir + "/ai/",
+            "/usr/share/fonts/bitstream-vera/Vera.ttf")
+        ai.processImages()
+
+        from conary.lib import sha1helper
+        sha1s = {
+            'first-lowres.png': '9806b35fb077a1971c67645cd1e316078ae5000d',
+            'anaconda_header.png': '818d5c1f4e7838037ae91ad68ebd975a6c1fec46',
+            'progress_first.png': '0f4ebf8f39c94b7e678e2a3a5aaddfa4685881de',
+            'syslinux-splash.png': 'c187339e5f1e39059f8277f542525942b4005332',
+            'first.png': 'e5c9f81694c4fe1d74efe4f26d9ea737b2ee283d',
+            'splash.png': '7022e7e156ac253e772b06751a7670148e8ce851',
+            'progress_first-375.png': '3a510f4d87259442389a78b7af434087fae4e178'
+        }
+
+        for f in os.listdir(self.tmpDir + "/ai/"):
+            sha1 = sha1helper.sha1ToString(sha1helper.sha1FileBin(os.path.join(self.tmpDir, 'ai', f)))
+            assert(sha1 == sha1s[f])
+
+    def testAnacondaImagesOversizedText(self):
+        util.mkdirChain(self.tmpDir + "/ai")
+        ai = anaconda_images.AnacondaImages("This is a really long input string to force AnacondaImages to scale appropriately!",
+            "../scripts/data/pixmaps/", self.tmpDir + "/ai/",
+            "/usr/share/fonts/bitstream-vera/Vera.ttf")
+        ai.processImages()
+
+        from conary.lib import sha1helper
+        sha1s = {
+            'first-lowres.png':         '6bbd85d7379a569beceaa3f00e651841601a6564',
+            'anaconda_header.png':      '3739d0588704367d285577bdec7114b7a2b4b482',
+            'progress_first.png':       'd4c4d6087da670fc1739a874f7ef044318d57a0f',
+            'syslinux-splash.png':      'b5aa477cf62ce570eb5a8a17c5d5e3f6717b1dc1',
+            'first.png':                '3b5aee9a37551c6889a568f7e2d639295c0f8ad2',
+            'splash.png':               '29931484c8f8bd5b9055aa88a9cbd0314183f573',
+            'progress_first-375.png':   '6031ba99c41d0d4874ef10d5aef600ba11b577dc'
+        }
+
+        for f in os.listdir(self.tmpDir + "/ai/"):
+            sha1 = sha1helper.sha1ToString(sha1helper.sha1FileBin(os.path.join(self.tmpDir, 'ai', f)))
+            assert(sha1 == sha1s[f])
 
 
 if __name__ == "__main__":

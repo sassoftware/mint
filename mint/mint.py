@@ -533,10 +533,12 @@ def flavorWrap(f):
     f = textwrap.wrap(f, expand_tabs=False, replace_whitespace=False)
     return ",\n".join(x.replace(" ", ",") for x in f)
 
-def timeDelta(t):
+def timeDelta(t, currentTime=0):
     if not t:
         return "Never"
-    curTime = time.time()
+    curTime = currentTime
+    if not currentTime:
+	 curTime = time.time()
     timeOffset = time.timezone + 3600 * (time.localtime()[-1])
     days = int((curTime - timeOffset) / 86400) - int((t - timeOffset) / 86400)
     if not days:

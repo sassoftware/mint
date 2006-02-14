@@ -10,9 +10,11 @@ testsuite.setup()
 import kid
 import os
 import sys
+import time
 from mint import templates
 from mint.helperfuncs import truncateForDisplay
 from mint.userlevels import myProjectCompare
+from mint.mint import timeDelta
 
 testTemplate = \
 """<?xml version='1.0' encoding='UTF-8'?>
@@ -180,6 +182,20 @@ class HelperFunctionsTest(unittest.TestCase):
         self.failUnlessRaises(ValueError, truncateForDisplay, "Foo",  0)
         self.failUnlessRaises(ValueError, truncateForDisplay, "Foo", -1, -1)
         self.failUnlessRaises(ValueError, truncateForDisplay, "Foo", -1, 0)
+
+    def testTimeDelta(self):
+	ct = time.time()
+	assert(timeDelta(0) == "Never")
+	assert(timeDelta(ct, ct) == "This very second")
+	assert(timeDelta(ct - 30, ct) == "30 seconds ago")
+	assert(timeDelta(ct - 60, ct) == "1 minute ago")
+	assert(timeDelta(ct - 974, ct) == "16 minutes ago")
+	assert(timeDelta(ct - 3650, ct) == "1 hour ago")
+	assert(timeDelta(ct - 12459, ct) == "3 hours ago")
+	assert(timeDelta(ct - 100234, ct) == "Yesterday")
+	assert(timeDelta(ct - 373123, ct) == "4 days ago")
+	assert(timeDelta(ct - 2592000, ct) == 
+               time.strftime('%d-%b-%Y', time.localtime(ct - 2592000)))
 
 if __name__ == "__main__":
     testsuite.main()
