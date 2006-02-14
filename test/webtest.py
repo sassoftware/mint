@@ -715,6 +715,8 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
             '/newProject')
 
     def testMailSignin(self):
+        raise testsuite.SkipTestException
+
         client, userId = self.quickMintUser('foouser','foopass')
         projectId = self.newProject(client)
 
@@ -728,6 +730,8 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                                      '/newProject')
 
     def testMailSubscribe(self):
+        raise testsuite.SkipTestException
+
         client, userId = self.quickMintUser('foouser','foopass')
         projectId = self.newProject(client)
 
