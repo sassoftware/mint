@@ -18,33 +18,39 @@ from cache import pageCache, reqHash
 
 from mint import shimclient
 from mint.session import SqlSession
+from mint import profile
 
 kidCache = {}
 
 class WebHandler(object):
     """Mixin class for various helpful web methods."""
-    
+
     #Default content-type to send to browser
     content_type='text/html'
     #Default render type to send to kid
     output = 'html-strict'
 
-    def _write(self, template, templatePath = None, **values):
-        startTime = time.time()
+    def _write(self, templateName, templatePath = None, **values):
+        prof = profile.Profile(self.cfg)
+        wasCacheHit = False
+
         if not templatePath:
             templatePath = self.cfg.templatePath
+
+        path = os.path.join(templatePath, templateName + ".kid")
+        prof.startKid(templateName)
 
         if not self.cfg.debugMode:
             global kidCache
             #TODO Refresh if it's changed
-            if template not in kidCache:
-                path = os.path.join(templatePath, template + ".kid")
-                kidCache[template] = kid.load_template(path)
-
-            template = kidCache[template]
+            if templateName not in kidCache:
+                kidCache[templateName] = kid.load_template(path)
+            else:
+                wasCacheHit = True
+            template = kidCache[templateName]
         else:
-            path = os.path.join(templatePath, template + ".kid")
             template = kid.load_template(path)
+
         t = template.Template(cfg = self.cfg,
                               auth = self.auth,
                               project = self.project,
@@ -64,7 +70,10 @@ class WebHandler(object):
                               **values)
 
         t.assume_encoding = 'utf-8' # tell kid to assume that all input is utf-8
-        return t.serialize(encoding = "utf-8", output = self.output)
+        returner = t.serialize(encoding = "utf-8", output = self.output)
+        prof.stopKid(templateName, wasCacheHit)
+
+        return returner
 
     def _redirectHttp(self, location):
         if location.startswith('http://'):
@@ -121,7 +130,7 @@ class WebHandler(object):
         if "rss20.kid" not in kidCache:
             path = os.path.join(self.cfg.templatePath, "rss20.kid")
             kidCache["rss20.kid"] = kid.load_template(path)
-            
+
         template = kidCache["rss20.kid"]
         t = template.Template(**values)
         self.req.content_type = "text/xml"
