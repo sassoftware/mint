@@ -207,6 +207,28 @@ class DistroTest(MintRepositoryHelper):
             sha1 = sha1helper.sha1ToString(sha1helper.sha1FileBin(os.path.join(self.tmpDir, 'ai', f)))
             assert(sha1 == sha1s[f])
 
+    def testAnacondaImagesOversizedText(self):
+        util.mkdirChain(self.tmpDir + "/ai")
+        ai = anaconda_images.AnacondaImages("This is a really long input string to force AnacondaImages to scale appropriately!",
+            "../scripts/data/pixmaps/", self.tmpDir + "/ai/",
+            "/usr/share/fonts/bitstream-vera/Vera.ttf")
+        ai.processImages()
+
+        from conary.lib import sha1helper
+        sha1s = {
+            'first-lowres.png':         '6bbd85d7379a569beceaa3f00e651841601a6564',
+            'anaconda_header.png':      '3739d0588704367d285577bdec7114b7a2b4b482',
+            'progress_first.png':       'd4c4d6087da670fc1739a874f7ef044318d57a0f',
+            'syslinux-splash.png':      'b5aa477cf62ce570eb5a8a17c5d5e3f6717b1dc1',
+            'first.png':                '3b5aee9a37551c6889a568f7e2d639295c0f8ad2',
+            'splash.png':               '29931484c8f8bd5b9055aa88a9cbd0314183f573',
+            'progress_first-375.png':   '6031ba99c41d0d4874ef10d5aef600ba11b577dc'
+        }
+
+        for f in os.listdir(self.tmpDir + "/ai/"):
+            sha1 = sha1helper.sha1ToString(sha1helper.sha1FileBin(os.path.join(self.tmpDir, 'ai', f)))
+            assert(sha1 == sha1s[f])
+
 
 if __name__ == "__main__":
     testsuite.main()
