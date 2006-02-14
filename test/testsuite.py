@@ -615,13 +615,22 @@ def isIndividual():
     global _individual
     return _individual
 
-
 def main(*args, **keywords):
     from conary.lib import util
     sys.excepthook = util.genExcepthook(True)
 
     global _individual
     _individual = True
+    if '--coverage' in sys.argv:
+        runCoverage()
+        return
+
+    statFile = None
+    if '--stat-file' in sys.argv:
+        argLoc = sys.argv.index('--stat-file')
+        statFile = sys.argv[argLoc + 1]
+        del sys.argv[argLoc+1]
+        del sys.argv[argLoc]
 
     context = None
     if '--context' in sys.argv:
@@ -653,8 +662,73 @@ def main(*args, **keywords):
 
     runner = DebugTestRunner(verbosity=verbosity, debug=debug, 
                              useCallback=not dots)
-        
-    unittest.main(testRunner=runner, testLoader=loader, *args, **keywords)
+    try:
+        unittest.main(testRunner=runner, testLoader=loader, *args, **keywords)
+    finally:
+        if statFile:
+            outputStats(runner, open(statFile, 'w'))
+            import epdb
+            epdb.st()
+
+def outputStats(results, outFile):
+    outFile.write('''\
+tests run: %s
+skipped:   %s
+failed:    %s
+''' % (results.testsRun, results.skippedTests,
+      (results.erroredTests + results.failedTests)))
+
+
+def runCoverage():
+    import coveragewrapper
+    environ = coveragewrapper.getEnviron()
+    idx = sys.argv.index('--coverage')
+
+    if '--stat-file' in sys.argv:
+        argLoc = sys.argv.index('--stat-file')
+        statFile = sys.argv[argLoc + 1]
+    else:
+        statFile = None
+    doAnnotate = '--no-annotate' not in sys.argv
+    if not doAnnotate: sys.argv.remove('--no-annotate')
+    doReport = '--no-report' not in sys.argv
+    if not doReport: sys.argv.remove('--no-report')
+
+    baseDirs = [environ['mint']]
+    if len(sys.argv) > idx+1 and not sys.argv[idx+1].startswith('--'):
+        filesToCover = sys.argv[idx+1].split(',')
+        del sys.argv[idx + 1]
+        if filesToCover == ['']:
+            filesToCover = []
+    else:
+        filesToCover = []
+    del sys.argv[idx]
+
+    files, notExists = coveragewrapper.getFilesToAnnotate(baseDirs,
+                                                          filesToCover)
+    if notExists:
+        raise RuntimeError, 'no such file(s): %s' % ' '.join(notExists)
+
+    cw = coveragewrapper.CoverageWrapper(environ['coverage'],
+                                         os.getcwd() + '/.coverage',
+                                         os.getcwd() + '/annotate')
+    cw.reset()
+    cw.execute(' '.join(sys.argv))
+    if doReport:
+        cw.displayReport(files)
+    if doAnnotate:
+        from conary.lib import util
+        util.mkdirChain('annotate')
+        cw.writeAnnotatedFiles(files)
+
+    if statFile:
+        print 'Writing coverage stats (this could take a while)...'
+        open(statFile, 'a').write('''\
+lines:   %s
+covered: %s
+percent covered: %s
+''' % cw.getTotals(files))
+    return
 
 
 if __name__ == '__main__':
@@ -671,6 +745,17 @@ if __name__ == '__main__':
     from conary.lib import util
     from conary.lib import debugger
     sys.excepthook = util.genExcepthook(True)
+
+    if '--coverage' in sys.argv:
+        runCoverage()
+        sys.exit(0)
+
+    statFile = None
+    if '--stat-file' in sys.argv:
+        argLoc = sys.argv.index('--stat-file')
+        statFile = sys.argv[argLoc + 1]
+        del sys.argv[argLoc+1]
+        del sys.argv[argLoc]
 
     debug = False
     dots = False
@@ -733,7 +818,10 @@ if __name__ == '__main__':
 
     runner = DebugTestRunner(verbosity=verbosity, debug=debug, 
                              useCallback=not dots)
-    runner.run(suite)
+    results = runner.run(suite)
+
+    if statFile:
+        outputStats(results, open(statFile, 'w'))
 
     if profiling:
         prof.stop()
