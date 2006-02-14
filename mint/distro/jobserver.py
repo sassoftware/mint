@@ -186,6 +186,7 @@ class JobDaemon:
                         time.sleep(random.uniform(3, 5))
                         continue
 
+                    log.info("TOOK A JOB: jobId %d" % job.id)
                     if job.releaseId:
                         release = client.getRelease(job.releaseId)
                         if release.getArch() not in cfg.supportedArch:
