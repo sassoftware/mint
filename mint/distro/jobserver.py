@@ -56,7 +56,7 @@ class JobRunner(threading.Thread):
         pid = os.fork()
         if not pid:
             self.doWork()
-            sys._exit(0)
+            os._exit(0)
         else:
             try:
                 os.waitpid(pid, 0)
