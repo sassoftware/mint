@@ -3,6 +3,7 @@
 import time
 from mint import userlevels
 from mint import searcher
+from mint import releasetypes
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
@@ -65,7 +66,7 @@ from mint import searcher
                         <ol py:if="releases">
 
                             <li py:for="release in releases">
-                                <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${release[1]}/release?id=${release[2].getId()}">${release[2].getTroveName()}=${release[2].getTroveVersion().trailingRevision().asString()} (${release[2].getArch()})</a>
+                                <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${release[1]}/release?id=${release[2].getId()}">${release[2].getTroveName()}=${release[2].getTroveVersion().trailingRevision().asString()} (${release[2].getArch()} ${releasetypes.typeNamesShort[release[2].imageTypes[0]]})</a>
                             </li>
                         </ol>
                     </td>

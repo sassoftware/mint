@@ -18,6 +18,7 @@
     ?>
     <div py:strip="True" py:def="releaseTableRow(releaseName, release, isOwner, isFirst, numReleasesInVersion, defaultHidden, hiddenName)">
         <?python
+            from mint import releasetypes
             files = release.getFiles()
             rowAttrs = defaultHidden and { 'name': hiddenName, 'style': 'display: none;' } or {}
         ?>
@@ -27,7 +28,7 @@
                 <span style="color: #999">${releaseName}</span>
             </td>
             <td>
-                    <a href="release?id=${release.getId()}">${release.getArch()}</a>
+                    <a href="release?id=${release.getId()}">${release.getArch()} ${releasetypes.typeNamesShort[release.imageTypes[0]]}</a>
             </td>
             <td py:if="release.getPublished()">
                 <div py:strip="True" py:for="i, file in enumerate(files)">
