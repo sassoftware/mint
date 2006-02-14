@@ -1,0 +1,242 @@
+#!/usr/bin/python2.4
+#
+# Copyright (c) 2004-2006 rPath, Inc.
+#
+
+import testsuite
+testsuite.setup()
+import os
+import sys
+import time
+
+from conary import versions
+from conary.conaryclient import ConaryClient
+
+from repostest import testRecipe
+from mint_rephelp import MintRepositoryHelper
+
+from mint import jobstatus
+from mint import mint_server
+from mint import grouptrove
+from mint import userlevels
+from mint.database import ItemNotFound, DuplicateItem
+from mint.mint_error import PermissionDenied
+from mint.distro import group_trove
+from mint.jobs import DuplicateJob
+
+refRecipe = """class GroupTest(GroupRecipe):
+    name = 'group-test'
+    version = '1.0.0'
+
+    autoResolve = False
+
+    def setup(r):
+        r.setLabelPath('testproject.rpath.local@rpl:devel')
+        r.add('testcase', 'testproject.rpath.local@rpl:devel', '', groupName = 'group-test')
+"""
+
+groupsRecipe = """class GroupTest(GroupRecipe):
+    name = 'group-test'
+    version = '1.0.0'
+
+    autoResolve = False
+
+    def setup(r):
+        r.setLabelPath('testproject.rpath.local@rpl:devel', 'conary.rpath.com@rpl:1')
+        r.add('testcase', 'testproject.rpath.local@rpl:devel', '', groupName = 'group-test')
+        if Arch.x86_64:
+            r.add('group-core', 'conary.rpath.com@rpl:1', 'is:x86(i486,i586,i686) x86_64', groupName = 'group-test')
+        else:
+            r.add('group-core', 'conary.rpath.com@rpl:1', '', groupName = 'group-test')
+"""
+
+lockedRecipe = """class GroupTest(GroupRecipe):
+    name = 'group-test'
+    version = '1.0.0'
+
+    autoResolve = False
+
+    def setup(r):
+        r.setLabelPath('testproject.rpath.local@rpl:devel')
+        r.add('testcase', '/testproject.rpath.local@rpl:devel/1.0-1-1', '', groupName = 'group-test')
+"""
+
+class GroupTroveTest(MintRepositoryHelper):
+    def makeCookedTrove(self, branch = 'rpl:devel', hostname = 'testproject'):
+        l = versions.Label("%s.rpath.local@%s" % (hostname, branch))
+        self.makeSourceTrove("testcase", testRecipe, l)
+        self.cookFromRepository("testcase", l, ignoreDeps = True)
+
+    def addTestTrove(self, groupTrove, trvName,
+            trvVersion = '/testproject.rpath.local@rpl:devel/1.0-1-1',
+            trvFlavor='1#x86|5#use:~!kernel.debug:~kernel.smp',
+            subGroup = ''):
+        return groupTrove.addTrove(trvName, trvVersion, trvFlavor,
+                                   subGroup, False, False, False)
+
+    @testsuite.context('loginless')
+    def testTransGrpTrvCleanup(self):
+        raise testsuite.SkipTestException
+        client = self.openMintClient()
+        groupTrove = self.createTestGroupTrove(client, 0)
+
+        cu = self.db.cursor()
+        cu.execute("UPDATE GroupTroves SET timeModified=?",
+                   time.time() - 86300)
+        self.db.commit()
+
+        client.server.cleanupGroupTroves()
+
+        # cleanup should not have deleted item.
+        client.getGroupTrove(groupTrove.id)
+
+        cu.execute("UPDATE GroupTroves SET timeModified=?",
+                   time.time() - 86401)
+        self.db.commit()
+
+        client.server.cleanupGroupTroves()
+
+        self.assertRaises(ItemNotFound, client.getGroupTrove, groupTrove.id)
+
+    @testsuite.context('loginless')
+    def testTransGrpTrvProject(self):
+        raise testsuite.SkipTestException
+        client, userId = self.quickMintUser('foo', 'bar')
+        projectId = self.newProject(client)
+
+        # forget client
+        client = self.openMintClient()
+        groupTrove = self.createTestGroupTrove(client, 0)
+
+        # there's not actually a project, so listing can't work.
+        self.assertRaises(PermissionDenied, client.listGroupTrovesByProject, 0)
+
+    @testsuite.context('loginless')
+    def testTransGrpTrvAdd(self):
+        raise testsuite.SkipTestException
+        self.openRepository()
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client)
+
+        self.makeCookedTrove('foo:bar')
+
+        # forget client
+        client = self.openMintClient()
+        groupTrove = self.createTestGroupTrove(client, 0)
+
+        groupTrove.addTroveByProject('testcase', 'test', '', '', False, False,
+                                     False)
+
+    @testsuite.context('loginless')
+    def testTransGrpTrvList(self):
+        raise testsuite.SkipTestException
+        client = self.openMintClient()
+        groupTrove = self.createTestGroupTrove(client, 0)
+
+        self.failIf(groupTrove.listTroves() != [],
+                    "Listing items of transient group trove failed.")
+
+    @testsuite.context('loginless')
+    def testTransGrpTrvDesc(self):
+        raise testsuite.SkipTestException
+        client = self.openMintClient()
+
+        groupTrove = self.createTestGroupTrove(client, 0)
+
+        groupTrove.setDesc('What do you mean? African or European?')
+
+    @testsuite.context('loginless')
+    def testTransGrpTrvVersionLock(self):
+        raise testsuite.SkipTestException
+        client = self.openMintClient()
+        groupTrove = self.createTestGroupTrove(client, 0)
+
+        trvId = self.addTestTrove(groupTrove, 'testcase')
+
+        groupTrove.setTroveVersionLock(trvId, True)
+
+    @testsuite.context('loginless')
+    def testTransGrpTrvUseLock(self):
+        raise testsuite.SkipTestException
+        client = self.openMintClient()
+        groupTrove = self.createTestGroupTrove(client, 0)
+
+        trvId = self.addTestTrove(groupTrove, 'testcase')
+
+        groupTrove.setTroveUseLock(trvId, True)
+
+    @testsuite.context('loginless')
+    def testTransGrpTrvInstSetLock(self):
+        raise testsuite.SkipTestException
+        client = self.openMintClient()
+        groupTrove = self.createTestGroupTrove(client, 0)
+
+        trvId = self.addTestTrove(groupTrove, 'testcase')
+
+        groupTrove.setTroveInstSetLock(trvId, True)
+
+    @testsuite.context('loginless')
+    def testTransGrpTrvVersion(self):
+        raise testsuite.SkipTestException
+        client = self.openMintClient()
+
+        groupTrove = self.createTestGroupTrove(client, 0)
+        groupTroveId = groupTrove.getId()
+
+        assert(groupTrove.upstreamVersion == '1.0.0')
+
+        groupTrove.setUpstreamVersion("1.0.1")
+        groupTrove = client.getGroupTrove(groupTroveId)
+        assert(groupTrove.upstreamVersion == '1.0.1')
+
+    @testsuite.context('loginless')
+    def testTransGrpTrvRecipe(self):
+        raise testsuite.SkipTestException
+        client = self.openMintClient()
+        groupTrove= self.createTestGroupTrove(client, 0)
+
+        trvId = self.addTestTrove(groupTrove, "testcase")
+
+        groupTrove.getRecipe()
+
+    @testsuite.context('loginless')
+    def testTransGrpTrvCook(self):
+        raise testsuite.SkipTestException
+        self.openRepository()
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client)
+
+        #forget the client
+        client = self.openMintClient()
+
+        groupTrove = self.createTestGroupTrove(client, 0)
+        groupTroveId = groupTrove.getId()
+
+        self.makeSourceTrove("testcase", testRecipe)
+        self.cookFromRepository("testcase",
+            versions.Label("testproject.rpath.local@rpl:devel"),
+            ignoreDeps = True)
+
+        trvId = self.addTestTrove(groupTrove, "testcase")
+        # cook once to ensure we can create a new package
+        jobId = groupTrove.startCookJob("1#x86")
+        job = client.getJob(jobId)
+
+        cookJob = group_trove.GroupTroveCook(client, client.getCfg(), job)
+
+        # nasty hack. gencslist currently dumps to stderr...
+        # fd's routed to /dev/null to clean up output
+        oldFd = os.dup(sys.stderr.fileno())
+        fd = os.open(os.devnull, os.W_OK)
+        os.dup2(fd, sys.stderr.fileno())
+        os.close(fd)
+        try:
+            assert(cookJob.write() is not None)
+        finally:
+            #recover old fd
+            os.dup2(oldFd, sys.stderr.fileno())
+            os.close(oldFd)
+
+
+if __name__ == "__main__":
+    testsuite.main()
