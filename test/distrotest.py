@@ -158,7 +158,6 @@ class DistroTest(MintRepositoryHelper):
                                       compNames))
 
     def testUpdatedStockFlavors(self):
-        raise testsuite.SkipTestException
         from mint.distro.flavors import stockFlavors
 
         cfg = conarycfg.ConaryConfiguration()
@@ -172,9 +171,19 @@ class DistroTest(MintRepositoryHelper):
             if latestVersion is None or version > latestVersion:
                 latestVersion = version
 
+        overrideDict = {'x86':      deps.parseFlavor('is: x86(~cmov, ~i486, ~i586, ~i686)'),
+                        'x86_64':   deps.parseFlavor('is: x86(~i486, ~i586, ~i686) x86_64')}
+
         flavors = versionDict[latestVersion]
-        assert(deps.parseFlavor(stockFlavors['1#x86']) in flavors)
-        assert(deps.parseFlavor(stockFlavors['1#x86_64']) in flavors)
+        for f in flavors:
+            for arch in f.members[deps.DEP_CLASS_IS].members.keys():
+                for flag in f.members[deps.DEP_CLASS_IS].members[arch].flags:
+                    f.members[deps.DEP_CLASS_IS].members[arch].flags[flag] = deps.FLAG_SENSE_PREFERRED
+        x86 = deps.parseFlavor(stockFlavors['1#x86'])
+        x86_64 = deps.parseFlavor(stockFlavors['1#x86_64'])
+
+        assert(deps.overrideFlavor(x86, overrideDict['x86']) in flavors)
+        assert(deps.overrideFlavor(x86_64, overrideDict['x86_64']) in flavors)
 
 
 if __name__ == "__main__":
