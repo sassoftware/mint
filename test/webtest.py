@@ -905,6 +905,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         projectId = self.newProject(client)
 
         release = client.newRelease(projectId, 'Test Release')
+        release.setImageTypes([1])
         release.setTrove("group-trove",
             "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
 
