@@ -18,7 +18,8 @@ python_files = \
 	live_iso.py		\
 	netboot_image.py	\
 	stub_image.py		\
-	CreateDiskImage.py
+	CreateDiskImage.py      \
+        splitdistro.py
 
 extra_dist = Makefile
 

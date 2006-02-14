@@ -26,6 +26,7 @@ from flavors import stockFlavors
 from mint.mint import upstream
 from imagegen import ImageGenerator, assertParentAlive
 import gencslist
+import splitdistro
 
 class IsoConfig(ConfigFile):
     filename = 'installable_iso.conf'
@@ -356,7 +357,7 @@ class InstallableIso(ImageGenerator):
 
         self.writeProductImage('1#' + arch)
 
-        call(isocfg.scriptPath + "/splitdistro", topdir)
+        splitdistro.splitDistro(topdir, troveName)
 
         # Abort if parent thread has died
         assertParentAlive()

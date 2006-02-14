@@ -10,16 +10,13 @@ import os
 
 import conary
 from conary.lib import util
-sys.excepthook = util.genExcepthook()
+import conary.trove
+import conary.repository.changeset
 
 isoblocksize = 2048
 maxisosize = 650 * 1024 * 1024
 commonfiles = ('README', 'LICENSE')
 basicminimal = ('group-core', 'group-base')
-
-def usage():
-    print 'usage: %s /path/to/distro' %sys.argv[0]
-    sys.exit(1)
 
 def join(*args):
     return os.sep.join(args)
@@ -79,10 +76,11 @@ def writediscinfo(path, discnum, discinfo):
     f.write('\n')
     f.close()
 
-def reorderChangesets(f, csPath, initialSize):
+def reorderChangesets(f, csPath, initialSize, baseTrove):
     reservedTroves = []
     sizedList = []
     infoTroves = []
+    baseTroves = []
     for line in f:
         csFile = line.split()[0]
         trvName = line.split()[1]
@@ -91,14 +89,14 @@ def reorderChangesets(f, csPath, initialSize):
         spaceUsed = spaceused(join(csPath, csFile))
         if trvName.startswith('info-'):
             infoTroves.append((spaceUsed, line))
+        elif trvName == baseTrove:
+            baseTroves.append((spaceUsed, line))
         else:
             sizedList.append((spaceUsed, line))
     sizedList = [x for x in reversed(sorted(sizedList))]
 
     reservedList = []
     if reservedTroves:
-        import conary.trove
-        import conary.repository.changeset
         trvNames = set()
         for trvLine in reservedTroves:
             trvNames.add(trvLine.split()[1])
@@ -115,7 +113,7 @@ def reorderChangesets(f, csPath, initialSize):
                 reservedList.append((size, line))
                 sizedList.remove((size, line))
 
-    sizedList = infoTroves + reservedList + sizedList
+    sizedList = infoTroves + reservedList + baseTroves + sizedList
 
     reOrdList = [[[], maxisosize - initialSize]]
 
@@ -135,14 +133,10 @@ def reorderChangesets(f, csPath, initialSize):
         csList.extend(disc)
     return csList
 
-if __name__ == '__main__':
-    if len(sys.argv) != 2:
-        usage()
-
-    if not os.path.isdir(sys.argv[1]):
-        usage()
-
-    unified = sys.argv[1]
+def splitDistro(unified, baseTrove):
+    if not os.path.isdir(unified):
+        # FIXME: move ParameterError into mint_errors and use that.
+        raise AssertionError("path is not a directory")
 
     f = open(join(unified, '.discinfo'))
     discinfo = [ line.strip() for line in f ]
@@ -167,7 +161,7 @@ if __name__ == '__main__':
     # will fit
     f = open(join(unified, cslist))
     outcs = open(join(current, cslist), 'w')
-    reOrd = reorderChangesets(f, join(unified, csdir), used)
+    reOrd = reorderChangesets(f, join(unified, csdir), used, baseTrove)
     f.close()
     for line in reOrd:
         csfile = line.split()[0]
@@ -186,4 +180,3 @@ if __name__ == '__main__':
         newline = " ".join(line.split()[:-1])
         outcs.write("%s %d\n" %(newline, discnum))
     outcs.close()
-
