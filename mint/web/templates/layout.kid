@@ -58,9 +58,9 @@ onload = "javascript:;"
                             <label class="search" for="searchLabel">I'm looking for a...</label>
                             <input class="search" name="search" id="searchLabel" type="text" />
                             <button class="img" id="searchSubmit" type="submit"><img src="${cfg.staticPath}/apps/mint/images/search.png" alt="Search" /></button><br />
-                            <input id="typeProject" type="radio" name="type" value="Projects" checked="checked" />
+                            <input id="typeProject" type="radio" name="type" value="Projects" py:attrs="{'checked': self.session.get('searchType', 'Projects') == 'Projects' and 'checked' or None}" />
                             <label for="typeProject">Project</label>
-                            <input id="typePackage" type="radio" name="type" value="Packages" />
+                            <input id="typePackage" type="radio" name="type" value="Packages" py:attrs="{'checked': self.session.get('searchType', 'Projects') == 'Packages' and 'checked' or None}" />
                             <label for="typePackage">Package</label>
                             <span id="browseText">&nbsp;&nbsp;&nbsp;Or you can <a href="http://${cfg.siteHost}${cfg.basePath}projects">browse</a>.</span>
                         </div>
