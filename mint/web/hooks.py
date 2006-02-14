@@ -280,7 +280,6 @@ def conaryHandler(req, cfg, pathInfo):
         nscfg.cacheDB = None
 
         nscfg.contentsDir = " ".join(x % repName for x in cfg.reposContentsDir)
-        print >> sys.stderr, "debug: nscfg.contentsDir:", nscfg.contentsDir
 
         nscfg.serverName = repName
         nscfg.tmpDir = os.path.join(cfg.reposPath, repName, "tmp")
