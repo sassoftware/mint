@@ -13,7 +13,7 @@ from conary.conaryclient import ConaryClient
 from mint_rephelp import MintRepositoryHelper
 from mint import userlevels
 from mint.database import DuplicateItem, ItemNotFound
-from mint.projects import InvalidHostname
+from mint.projects import InvalidHostname, DuplicateHostname, DuplicateName
 from mint.mint_server import ParameterError, PermissionDenied
 
 class ProjectTest(MintRepositoryHelper):
@@ -404,6 +404,16 @@ class ProjectTest(MintRepositoryHelper):
         self.failIf(url != reposUrl,
                     "repos url was lost in translation. expected %s, got %s" %\
                     (reposUrl, url))
+
+    def testDuplicateProjects(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+
+        projectId = client.newProject("Foo", "foo", "localhost")
+
+        self.assertRaises(DuplicateHostname,
+            client.newProject, "Hello World", "foo", "localhost")
+        self.assertRaises(DuplicateName,
+            client.newProject, "Foo", "another", "localhost")
 
 
 if __name__ == "__main__":
