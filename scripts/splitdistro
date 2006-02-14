@@ -95,6 +95,7 @@ def reorderChangesets(f, csPath, initialSize):
         import conary.repository.changeset
         trvNames = set()
         for trvName in reservedList:
+            trvNames.add(trvName)
             cs = conary.repository.changeset.ChangeSetFromFile(join(csPath,
                                                                     trvName))
             trv = conary.trove.Trove([x for x in cs.iterNewTroveList()][0])
