@@ -43,7 +43,7 @@ def spaceused(path):
     if not os.path.isdir(path):
         sb = os.stat(path)
         return sb.st_size + (isoblocksize - sb.st_size % isoblocksize)
-    
+
     total = 0
     for dirpath, dirnames, filenames in os.walk(path):
         for filename in filenames:
@@ -59,7 +59,7 @@ def preparedir(unified, path, csdir):
         print >> sys.stderr, 'removing stale', path
         util.rmtree(path)
 
-    print >> sys.stderr, 'creating', path 
+    print >> sys.stderr, 'creating', path
     os.mkdir(path)
     base = path
     for d in csdir.split(os.sep):
@@ -77,6 +77,55 @@ def writediscinfo(path, discnum, discinfo):
     f.write('\n'.join(newinfo))
     f.write('\n')
     f.close()
+
+def reorderChangesets(f, csPath, initialSize):
+    reservedTroves = []
+    sizedList = []
+    for line in f:
+        csFile = line.split()[0]
+        if line.split()[1] in ('group-core', 'group-base'):
+            reservedTroves.append(line.split()[1])
+        spaceUsed = spaceused(join(csPath, csFile))
+        sizedList.append((spaceUsed, line))
+    sizedList = [x for x in reversed(sorted(sizedList))]
+
+    reservedList = []
+    if reservedTroves:
+        import conary.trove
+        import conary.repository.changeset
+        trvNames = set()
+        for trvName in reservedList:
+            cs = conary.repository.changeset.ChangeSetFromFile(join(csPath,
+                                                                    trvName))
+            trv = conary.trove.Trove([x for x in cs.iterNewTroveList()][0])
+            for includedTrv in [x[0] for x in \
+                                trv.iterTroveList(strongRefs = True,
+                                                  weakRefs = True)]:
+                trvNames.add(includedTrv)
+
+        for size, line in sizedList[:]:
+            if line.split()[1] in trvNames:
+                reservedList.append((size, line))
+                sizedList.remove((size, line))
+        sizedList = reservedList + sizedList
+
+    reOrdList = [[[], maxisosize - initialSize]]
+
+    for size, line in sizedList:
+        match = False
+        for i, (changesets, limit) in enumerate(reOrdList):
+            if size <= limit:
+                reOrdList[i][0].append(line)
+                reOrdList[i][1] -= size
+                match = True
+                break
+        if not match:
+            reOrdList.append([[line], maxisosize - size])
+
+    csList = []
+    for disc in [x[0] for x in reOrdList]:
+        csList.extend(disc)
+    return csList
 
 if __name__ == '__main__':
     if len(sys.argv) != 2:
@@ -98,7 +147,7 @@ if __name__ == '__main__':
     current = join(os.path.dirname(unified), 'disc1')
     discnum = 1
     if os.path.isdir(current):
-        print >> sys.stderr, 'removing stale', current 
+        print >> sys.stderr, 'removing stale', current
         util.rmtree(current)
     print >> sys.stderr, 'creating', current
     os.mkdir(current)
@@ -110,7 +159,9 @@ if __name__ == '__main__':
     # will fit
     f = open(join(unified, cslist))
     outcs = open(join(current, cslist), 'w')
-    for line in f:
+    reOrd = reorderChangesets(f, join(unified, csdir), used)
+    f.close()
+    for line in reOrd:
         csfile = line.split()[0]
         src = join(unified, csdir, csfile)
         used += spaceused(src)
@@ -127,5 +178,4 @@ if __name__ == '__main__':
         newline = " ".join(line.split()[:-1])
         outcs.write("%s %d\n" %(newline, discnum))
     outcs.close()
-        
-        
+
