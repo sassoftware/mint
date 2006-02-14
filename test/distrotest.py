@@ -19,7 +19,7 @@ from conary.deps import deps
 from conary.repository import changeset
 from conary.lib import util
 
-from mint.distro import gencslist
+from mint.distro import gencslist, anaconda_images
 from mint.distro.gencslist import _validateChangeSet
 
 class DistroTest(MintRepositoryHelper):
@@ -184,6 +184,28 @@ class DistroTest(MintRepositoryHelper):
 
         assert(deps.overrideFlavor(x86, overrideDict['x86']) in flavors)
         assert(deps.overrideFlavor(x86_64, overrideDict['x86_64']) in flavors)
+
+    def testAnacondaImages(self):
+        util.mkdirChain(self.tmpDir + "/ai")
+        ai = anaconda_images.AnacondaImages("Mint Test Suite",
+            "../scripts/data/pixmaps/", self.tmpDir + "/ai/",
+            "/usr/share/fonts/bitstream-vera/Vera.ttf")
+        ai.processImages()
+
+        from conary.lib import sha1helper
+        sha1s = {
+            'first-lowres.png': '9806b35fb077a1971c67645cd1e316078ae5000d',
+            'anaconda_header.png': '818d5c1f4e7838037ae91ad68ebd975a6c1fec46',
+            'progress_first.png': '0f4ebf8f39c94b7e678e2a3a5aaddfa4685881de',
+            'syslinux-splash.png': 'c187339e5f1e39059f8277f542525942b4005332',
+            'first.png': 'e5c9f81694c4fe1d74efe4f26d9ea737b2ee283d',
+            'splash.png': '7022e7e156ac253e772b06751a7670148e8ce851',
+            'progress_first-375.png': '3a510f4d87259442389a78b7af434087fae4e178'
+        }
+
+        for f in os.listdir(self.tmpDir + "/ai/"):
+            sha1 = sha1helper.sha1ToString(sha1helper.sha1FileBin(os.path.join(self.tmpDir, 'ai', f)))
+            assert(sha1 == sha1s[f])
 
 
 if __name__ == "__main__":
