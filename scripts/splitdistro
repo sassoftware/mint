@@ -15,6 +15,7 @@ sys.excepthook = util.genExcepthook()
 isoblocksize = 2048
 maxisosize = 650 * 1024 * 1024
 commonfiles = ('README', 'LICENSE')
+basicminimal = ('group-core', 'group-base')
 
 def usage():
     print 'usage: %s /path/to/distro' %sys.argv[0]
@@ -81,12 +82,17 @@ def writediscinfo(path, discnum, discinfo):
 def reorderChangesets(f, csPath, initialSize):
     reservedTroves = []
     sizedList = []
+    infoTroves = []
     for line in f:
         csFile = line.split()[0]
-        if line.split()[1] in ('group-core', 'group-base'):
-            reservedTroves.append(line.split()[1])
+        trvName = line.split()[1]
+        if trvName in basicminimal:
+            reservedTroves.append(line)
         spaceUsed = spaceused(join(csPath, csFile))
-        sizedList.append((spaceUsed, line))
+        if trvName.startswith('info-'):
+            infoTroves.append((spaceUsed, line))
+        else:
+            sizedList.append((spaceUsed, line))
     sizedList = [x for x in reversed(sorted(sizedList))]
 
     reservedList = []
@@ -94,12 +100,12 @@ def reorderChangesets(f, csPath, initialSize):
         import conary.trove
         import conary.repository.changeset
         trvNames = set()
-        for trvName in reservedList:
-            trvNames.add(trvName)
-            cs = conary.repository.changeset.ChangeSetFromFile(join(csPath,
-                                                                    trvName))
+        for trvLine in reservedTroves:
+            trvNames.add(trvLine.split()[1])
+            cs = conary.repository.changeset.ChangeSetFromFile( \
+                join(csPath, trvLine.split()[0]))
             trv = conary.trove.Trove([x for x in cs.iterNewTroveList()][0])
-            for includedTrv in [x[0] for x in \
+            for includedTrv in [x[0].split(':')[0] for x in \
                                 trv.iterTroveList(strongRefs = True,
                                                   weakRefs = True)]:
                 trvNames.add(includedTrv)
@@ -108,7 +114,8 @@ def reorderChangesets(f, csPath, initialSize):
             if line.split()[1] in trvNames:
                 reservedList.append((size, line))
                 sizedList.remove((size, line))
-        sizedList = reservedList + sizedList
+
+    sizedList = infoTroves + reservedList + sizedList
 
     reOrdList = [[[], maxisosize - initialSize]]
 
