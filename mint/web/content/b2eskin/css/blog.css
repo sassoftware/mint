@@ -1,0 +1,183 @@
+/* b2evolution rPath skin customizations */
+
+/* calendar navigation */
+
+body {
+    color: #333;
+}
+
+.bCalendarTable {
+    width: 200px;
+}
+
+.bCalendarTable a {
+    text-decoration: none;
+}
+
+.bCalendarCaption {
+    font-size: large;
+    margin-top: 15px;
+    margin-bottom: 20px;
+}
+
+.bCalendarLinkPost {
+    font-weight: bold;
+}
+
+.bCalendarHeaderCell {
+    font-size: smaller;
+    font-weight: normal;
+}
+
+.bCalendarTable td {
+    text-align: center;
+}
+
+
+/* blog list */
+
+.selectedBlog {
+    font-weight: bold;
+}
+
+#bloglist {
+    width: 200px;
+    text-align: center;
+}
+
+#bloglist h1 {
+    font-size: large;
+    font-weight: normal;
+}
+
+#bloglist ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+#bloglist ul li {
+    margin: 0.5em 0;
+}
+
+#bloglist a,
+#bloglist a:visited, 
+#bloglist a:active,
+#bloglist a:hover {
+    text-decoration: none;
+}
+
+
+/* blog title */
+
+.blogTitle {
+    margin: 0.2em 0;
+    text-align: center;
+}
+
+.blogDesc {
+    font-style: italic;
+    text-align: center;
+}
+
+/* news items */
+
+.news {
+    font-size:10pt;
+    padding: 0;
+}
+
+.news a,
+.news a:link,
+.news a:visited,
+.news a:active,
+.news a:hover {
+    text-decoration: none;
+    border-bottom: 1px dotted blue;
+}
+
+.news a:hover {
+    border-bottom: 1px solid blue;
+}
+
+.newsHeader {
+    border: 1px solid #ccc;
+    background-color: #eee;
+    padding: 0.1em;
+    margin-bottom: 1em;
+}
+
+.newsDate {
+    font-size: 14pt;
+    border-bottom: 1px solid #FF930B;
+}
+
+.newsItem {
+    margin: 1em 0 3em 0;
+}
+
+.itemTitle {
+    font-size: 14pt; 
+    font-weight: bold;
+}
+
+.itemByline {
+    float: right;
+    margin: 0.25em 0 1em 1em;
+    padding: 0 0 0 1em;
+    text-align: right;
+}
+
+.itemTitle a,
+.itemTitle a:link,
+.itemTitle a:visited,
+.itemTitle a:hover,
+.itemTitle a:active {
+    text-decoration: none;
+    border-bottom: none;
+}
+
+.itemHeader {
+    margin-bottom: 10px;
+}
+
+.itemContent {
+    margin: 0 0;
+    line-height: 1.3em;
+}
+
+.itemFooter {
+    font-size: smaller;
+}
+
+/* b2e links (login, etc.) */
+
+#b2elinks {
+    font-size: x-small;
+    width: 100%;
+    background-color: #eee;
+    margin-top: 2em;
+    padding-left: 10px;
+}
+
+#b2elinks,
+#b2elinks a,
+#b2elinks a:link,
+#b2elinks a:visited,
+#b2elinks a:hover,
+#b2elinks a:active { 
+    color: #aaa ! important;
+    font-weight: normal;
+}
+
+
+#b2elinks ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+#b2elinks ul li {
+    display: inline;
+    padding: 0 2em 0 0;
+}

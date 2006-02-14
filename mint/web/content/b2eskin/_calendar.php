@@ -43,7 +43,7 @@
 	// $Calendar->set( 'emptycellend', '</td>' );
 	// $Calendar->set( 'emptycellcontent', '&nbsp;' );
 	
-	$Calendar->set( 'browseyears', 1 );  // allow browsing years in the calendar's caption (month must be displayed)
+	// $Calendar->set( 'browseyears', 1 );  // allow browsing years in the calendar's caption (month must be displayed)
 
 	$Calendar->set( 'navigation', 'tfoot' );
 

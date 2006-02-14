@@ -20,18 +20,18 @@
 	}
 
 	# this is what will start and end your blog links
-	if(!isset($blog_list_start)) $blog_list_start = T_('<span style="color: black;">Select blog:</span>').' ';				
-	if(!isset($blog_list_end)) $blog_list_end = '<br />';				
+	if(!isset($blog_list_start)) $blog_list_start = T_('<div id="bloglist"><h1>rPath Blogs</h1><ul>').' ';				
+	if(!isset($blog_list_end)) $blog_list_end = '</ul></div>';				
 	# this is what will separate your blog links
-	if(!isset($blog_item_start)) $blog_item_start = ' [';				
-	if(!isset($blog_item_end)) $blog_item_end = '] ';
+	if(!isset($blog_item_start)) $blog_item_start = '<li>';				
+	if(!isset($blog_item_end)) $blog_item_end = '</li>';
 	# This is the class of for the selected blog link:
-	if(!isset($blog_selected_link_class)) $blog_selected_link_class = '';
+	if(!isset($blog_selected_link_class)) $blog_selected_link_class = 'selectedBlog';
 	# This is the class of for the other blog links:
 	if(!isset($blog_other_link_class)) $blog_other_link_class = '';
 	# This is additionnal markup before and after the selected blog name
-	if(!isset($blog_selected_name_before)) $blog_selected_name_before = '<strong>';				
-	if(!isset($blog_selected_name_after)) $blog_selected_name_after = '</strong>';
+	if(!isset($blog_selected_name_before)) $blog_selected_name_before = '';				
+	if(!isset($blog_selected_name_after)) $blog_selected_name_after = '';
 	# This is additionnal markup before and after the other blog names
 	if(!isset($blog_other_name_before)) $blog_other_name_before = '';				
 	if(!isset($blog_other_name_after)) $blog_other_name_after = '';
