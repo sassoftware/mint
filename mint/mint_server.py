@@ -36,6 +36,7 @@ from mint_error import PermissionDenied, ReleasePublished, ReleaseMissing, \
      MintError, ReleaseEmpty, UserAlreadyAdmin, AdminSelfDemotion
 from reports import MintReport
 from searcher import SearchTermsError
+import profile
 
 from conary import sqlite3
 from conary import versions
@@ -202,80 +203,85 @@ class MintServer(object):
         # reopen the database if it's changed
         self.db.reopen()
 
+        prof = profile.Profile(self.cfg)
+
         try:
             if methodName.startswith('_'):
                 raise AttributeError
             method = self.__getattribute__(methodName)
         except AttributeError:
             return (True, ("MethodNotSupported", methodName, ""))
+
+        # start profile
+        prof.startXml(methodName)
+
         try:
-            if self.cfg.profiling:
-                self.profile.startXml(methodName)
-            # check authorization
+            try:
+                # check authorization
 
-            # grab authToken from a session id if passed a session id
-            # the session id from the client is a hmac-signed string
-            # containing the actual session id.
-            if type(authToken) == str:
-                if len(authToken) == 64: # signed cookie
-                    sig, val = authToken[:32], authToken[32:]
+                # grab authToken from a session id if passed a session id
+                # the session id from the client is a hmac-signed string
+                # containing the actual session id.
+                if type(authToken) == str:
+                    if len(authToken) == 64: # signed cookie
+                        sig, val = authToken[:32], authToken[32:]
 
-                    mac = hmac.new(self.cfg.cookieSecretKey, 'pysid')
-                    mac.update(val)
-                    if mac.hexdigest() != sig:
+                        mac = hmac.new(self.cfg.cookieSecretKey, 'pysid')
+                        mac.update(val)
+                        if mac.hexdigest() != sig:
+                            raise PermissionDenied
+
+                        sid = val
+                    elif len(authToken) == 32: # unsigned cookie
+                        sid = authToken
+                    else:
                         raise PermissionDenied
 
-                    sid = val
-                elif len(authToken) == 32: # unsigned cookie
-                    sid = authToken
-                else:
-                    raise PermissionDenied
+                    d = self.sessions.load(sid)
+                    authToken = d['_data']['authToken']
 
-                d = self.sessions.load(sid)
-                authToken = d['_data']['authToken']
+                auth = self.users.checkAuth(authToken)
+                self.authToken = authToken
+                self.auth = users.Authorization(**auth)
 
-            auth = self.users.checkAuth(authToken)
-            self.authToken = authToken
-            self.auth = users.Authorization(**auth)
-
-            allowPrivate = self._allowPrivate
-            r = method(*args)
-            self._allowPrivate = allowPrivate
-            if self.cfg.profiling:
-                self.profile.stopXml(methodName)
-        except users.UserAlreadyExists, e:
-            self.db.rollback()
-            return (True, ("UserAlreadyExists", str(e)))
-        except database.DuplicateItem, e:
-            self.db.rollback()
-            return (True, ("DuplicateItem", e.item))
-        except database.ItemNotFound, e:
-            self.db.rollback()
-            return (True, ("ItemNotFound", e.item))
-        except SearchTermsError, e:
-            self.db.rollback()
-            return (True, ("SearchTermsError", str(e)))
-        except users.AuthRepoError, e:
-            self.db.rollback()
-            return (True, ("AuthRepoError", str(e)))
-        except jobs.DuplicateJob, e:
-            self.db.rollback()
-            return (True, ("DuplicateJob", str(e)))
-        except UserAlreadyAdmin, e:
-            self.db.rollback()
-            return (True, ("UserAlreadyAdmin", str(e)))
-        except AdminSelfDemotion, e:
-            self.db.rollback()
-            return (True, ("AdminSelfDemotion", str(e)))
-        except:
-            self.db.rollback()
-            raise
-        #except Exception, error:
-        #   exc_name = sys.exc_info()[0].__name__
-        #    return (True, (exc_name, error, str(error)))
-        else:
-            self.db.commit()
-            return (False, r)
+                allowPrivate = self._allowPrivate
+                r = method(*args)
+                self._allowPrivate = allowPrivate
+            except users.UserAlreadyExists, e:
+                self.db.rollback()
+                return (True, ("UserAlreadyExists", str(e)))
+            except database.DuplicateItem, e:
+                self.db.rollback()
+                return (True, ("DuplicateItem", e.item))
+            except database.ItemNotFound, e:
+                self.db.rollback()
+                return (True, ("ItemNotFound", e.item))
+            except SearchTermsError, e:
+                self.db.rollback()
+                return (True, ("SearchTermsError", str(e)))
+            except users.AuthRepoError, e:
+                self.db.rollback()
+                return (True, ("AuthRepoError", str(e)))
+            except jobs.DuplicateJob, e:
+                self.db.rollback()
+                return (True, ("DuplicateJob", str(e)))
+            except UserAlreadyAdmin, e:
+                self.db.rollback()
+                return (True, ("UserAlreadyAdmin", str(e)))
+            except AdminSelfDemotion, e:
+                self.db.rollback()
+                return (True, ("AdminSelfDemotion", str(e)))
+            except:
+                self.db.rollback()
+                raise
+            #except Exception, error:
+            #   exc_name = sys.exc_info()[0].__name__
+            #    return (True, (exc_name, error, str(error)))
+            else:
+                self.db.commit()
+                return (False, r)
+        finally:
+            prof.stopXml(methodName)
 
     def _getProjectRepo(self, project):
         if self.cfg.maintenanceMode:
@@ -2211,14 +2217,6 @@ class MintServer(object):
     def __init__(self, cfg, allowPrivate = False, alwaysReload = False, db = None, req = None):
         self.cfg = cfg
         self.req = req
-
-        # create the profiling log if self.cfg.profiling exists
-        if self.cfg.profiling:
-            import profile
-            if 'logs' not in os.listdir(self.cfg.dataPath):
-                os.mkdir(self.cfg.dataPath + '/logs')
-            self.profile = profile.Profile(self.cfg.dataPath + \
-                                           '/logs/profiling')
 
         # all methods are private (not callable via XMLRPC)
         # except the ones specifically decorated with @public.
