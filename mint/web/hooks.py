@@ -12,6 +12,7 @@ import os
 import xmlrpclib
 import zlib
 import re
+import stat
 import sys
 import time
 import traceback
@@ -459,16 +460,20 @@ def logErrorAndEmail(req, cfg, exception, e, bt):
 
 
 cfg = None
+cfgMTime = 0
 db = None
 def handler(req):
     if not req.hostname:
         return apache.HTTP_BAD_REQUEST
 
-    global cfg
-    if not cfg or True: # short-circuit the cache for the appliance
-                        # to read the conf file every time
+    # only reload the configuration file if it's changed
+    # since our last read
+    global cfg, cfgMTime
+    mtime = os.stat(req.filename)[stat.ST_MTIME]
+    if mtime > cfgMTime:
         cfg = config.MintConfig()
         cfg.read(req.filename)
+        cfgMTime = mtime
 
     global db
     if not db:
