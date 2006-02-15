@@ -11,6 +11,8 @@ from mint import jobstatus
 
 from threading import currentThread
 
+MSG_INTERVAL = 5
+
 class NoConfigFile(Exception):
     def __init__(self, path = ""):
         self._path = path

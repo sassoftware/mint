@@ -13,7 +13,7 @@ import tempfile
 import zipfile
 
 # mint imports
-from imagegen import ImageGenerator
+from imagegen import ImageGenerator, MSG_INTERVAL
 import gencslist
 from mint import releasetypes
 from mint.mint import upstream
@@ -136,15 +136,18 @@ class InstallCallback(UpdateCallback, ChangesetCallback):
         self.restored = 0
 
     def update(self, msg):
+        curTime = time.time()
         # only push an update into the database if it differs from the
         # current message
         if self.updateHunk[1] != 0:
             percent = (self.updateHunk[0] * 100) / self.updateHunk[1]
             msg = "Updating changesets: %d%% (%s)" % (percent, msg)
 
-        if self.msg != msg:
+        if self.msg != msg and (curTime - self.timeStamp) > MSG_INTERVAL:
             self.msg = msg
             self.status(msg)
+
+        self.timeStamp = curTime
 
     def __init__(self, status):
         self.abortEvent = None
@@ -154,6 +157,7 @@ class InstallCallback(UpdateCallback, ChangesetCallback):
         self.msg = ''
         self.changeset = ''
         self.prefix = 'BDI:'
+        self.timeStamp = 0
 
 class BootableImage(ImageGenerator):
     configObject = BootableImageConfig

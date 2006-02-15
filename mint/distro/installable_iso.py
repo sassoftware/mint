@@ -24,13 +24,13 @@ from conary.lib import util
 
 from flavors import stockFlavors
 from mint.mint import upstream
-from imagegen import ImageGenerator, assertParentAlive
+from imagegen import ImageGenerator, assertParentAlive, MSG_INTERVAL
 import gencslist
 import splitdistro
 
 class IsoConfig(ConfigFile):
     filename = 'installable_iso.conf'
-    
+
     imagesPath          = None
     scriptPath          = '/usr/share/mint/scripts/'
     cachePath           = '/srv/mint/changesets/'
@@ -42,7 +42,7 @@ class IsoConfig(ConfigFile):
 class AnacondaTemplateMissing(Exception):
     def __init__(self, arch = "arch"):
         self._arch = arch
-        
+
     def __str__(self):
         return "Anaconda template missing for architecture: %s" % self._arch
 
@@ -63,10 +63,13 @@ class Callback(callbacks.UpdateCallback, callbacks.ChangesetCallback):
 
     def _update(self, msg):
         # only push an update into the database if it differs from the
-        # current message
-        if self.msg != msg:
+        # current message, and a given timeout period has elapsed.
+        curTime = time.time()
+        if self.msg != msg and (curTime - self.timeStamp) > MSG_INTERVAL:
             self.msg = msg
             self.status(self.prefix + msg % self.changeset)
+
+        self.timeStamp = curTime
 
     def setChangeSet(self, name):
         self.changeset = name
@@ -81,6 +84,7 @@ class Callback(callbacks.UpdateCallback, callbacks.ChangesetCallback):
         self.msg = ''
         self.changeset = ''
         self.prefix = ''
+        self.timeStamp = 0
 
 
 def _linkRecurse(fromDir, toDir):
