@@ -1663,9 +1663,10 @@ class MintServer(object):
             jobId = 0
         else:
             jobId = res[0]
-            cu.execute("""UPDATE Jobs SET status=?, statusMessage=?
+            cu.execute("""UPDATE Jobs
+                              SET status=?, statusMessage=?, timeStarted=?
                               WHERE jobId=?""",
-                       jobstatus.RUNNING, 'Starting', jobId)
+                       jobstatus.RUNNING, 'Starting', time.time(), jobId)
 
         cu.execute("UPDATE Jobs SET owner=NULL WHERE owner=? AND status=?",
                    ownerId, jobstatus.WAITING)
@@ -1858,8 +1859,11 @@ class MintServer(object):
                     'message' : jobstatus.statusNames[jobstatus.NOJOB],
                     'queueLen': 0}
         else:
+            status = job.getStatus()
             return {'status'  : job.getStatus(),
-                    'message' : job.getStatusMessage(),
+                    'message' : (status == jobstatus.WAITING \
+                                 and self.getJobWaitMessage(job.id) \
+                                 or  job.getStatusMessage()),
                     'queueLen': self._getJobQueueLength(job.getId())}
 
     @typeCheck(int)
@@ -1875,8 +1879,11 @@ class MintServer(object):
                     'message' : jobstatus.statusNames[jobstatus.NOJOB],
                     'queueLen': 0}
         else:
+            status = job.getStatus()
             return {'status'  : job.getStatus(),
-                    'message' : job.getStatusMessage(),
+                    'message' : (status == jobstatus.WAITING \
+                                 and self.getJobWaitMessage(job.id) \
+                                 or  job.getStatusMessage()),
                     'queueLen': self._getJobQueueLength(jobId)}
 
     def _getJobQueueLength(self, jobId):
