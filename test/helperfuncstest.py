@@ -22,11 +22,11 @@ testTemplate = \
 """
 testTemplateWithConditional = \
 """<?xml version='1.0' encoding='UTF-8'?>
-<plain xmlns:py="http://purl.org/kid/ns#">
+<plain xmlns:py="http://purl.org/kid/ns%s">
 <div py:if="isChunky">${myString}</div>
 <div py:if="not isChunky">Not ${myString}</div>
 </plain>
-"""
+""" % '#'
 
 class HelperFunctionsTest(unittest.TestCase):
     def testMyProjectCompare(self):
@@ -74,22 +74,20 @@ class HelperFunctionsTest(unittest.TestCase):
     def testMakefiles(self):
         missing = False
         skipDirs = ('.hg', 'test/archive/arch', 'test/archive/use',
-                    'mint/web/content', 'scripts/DiskImageData',
-                    'scripts/servertest', 'test/templates')
+                    'mint/web/content', 'scripts', 'test/templates')
         mint_path = os.getenv('MINT_PATH')
+
+        # tweak skipdirs to be fully qualified path
+        skipDirs = [os.path.join(mint_path, x) for x in skipDirs]
         if not mint_path:
             print >> sys.stderr, "MINT_PATH is missing from your environment"
             raise testsuite.SkipTestException()
-        for dirPath, dirNames, fileNames in os.walk(mint_path):
+        for dirPath, dirNames, fileNames in \
+            [x for x in os.walk(mint_path) \
+             if True not in [x[0].startswith(y) for y in skipDirs]]:
             if "Makefile" not in fileNames:
-                ignore = False
-                for skipDir in skipDirs:
-                    if dirPath.startswith(os.path.join(mint_path, skipDir)):
-                        ignore = True
-                        break
-                if not ignore:
-                    print >> sys.stderr, "\n%s is missing Makefile" % dirPath,
-                    missing = True
+                print >> sys.stderr, "\n%s is missing Makefile" % dirPath,
+                missing = True
             else:
                 missing = max(missing, self.compareMakefile(dirPath))
         if missing:

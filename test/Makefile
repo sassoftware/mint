@@ -13,6 +13,7 @@ python_files = \
                cachetest.py \
                configtest.py \
                coverage.py \
+               coveragewrapper.py \
                distrotest.py \
                grouptrovetest.py \
                helperfuncstest.py \

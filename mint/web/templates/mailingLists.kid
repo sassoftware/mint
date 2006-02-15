@@ -33,38 +33,36 @@
                 <h1>${project.getNameForDisplay(maxWordLen = 50)}</h1>
                 <h2>Mailing Lists</h2>
                 <div py:strip="True" py:if="isRPL">
-                    <h3>
-                    <a href="http://lists.rpath.com/mailman/listinfo/distro-commits" target="_NEW">distro-commits</a></h3>
-                    <p>Commits to the rPath Linux distribution repository.</p>
-                    <div style="float:left; margin-right:5px;">
-                        <span>
-                        <a href="http://lists.rpath.com/pipermail/distro-commits/" class="option" target="_NEW">Archives</a>
-                        </span>
+                    <div class="mailingListButtons">
+                        <h3>
+                        <a href="http://lists.rpath.com/mailman/listinfo/distro-commits" target="_NEW">distro-commits</a></h3>
+                        <p>Commits to the rPath Linux distribution repository.</p>
+                        <ul>
+                            <li>
+                                <a href="http://lists.rpath.com/pipermail/distro-commits/" class="option" target="_NEW">Archives</a>
+                            </li>
+                        </ul>
                     </div>
+                    <div class="mailingListButtons">
+                        <h3>
+                        <a href="http://lists.rpath.com/mailman/listinfo/distro-list" target="_NEW">distro-list</a></h3>
+                        <p>rPath Linux Distribution Discussion.</p>
+                        <ul>
+                            <li>
+                                <a href="http://lists.rpath.com/pipermail/distro-list/" class="option" target="_NEW">Archives</a>
+                            </li>
+                        </ul>
 
-                    <br clear="all" />
-
-                    <h3>
-                    <a href="http://lists.rpath.com/mailman/listinfo/distro-list" target="_NEW">distro-list</a></h3>
-                    <p>rPath Linux Distribution Discussion.</p>
-                    <div style="float:left; margin-right:5px;">
-                        <span>
-                        <a href="http://lists.rpath.com/pipermail/distro-list/" class="option" target="_NEW">Archives</a>
-                        </span>
-                    </div>
-
-                    <br clear="all" />
-
-                    <div class="help" style="margin-top: 1em;">
-                        <p>Click on the mailing list's name to receive more
-                           more information about the mailing list,
-                           including directions on how to subscribe or
+                        <div class="help">
+                            <p>Click on the mailing list's name to receive more
+                               more information about the mailing list,
+                               including directions on how to subscribe or
                            unsubscribe.</p>
+                        </div>
                     </div>
-
                 </div>
 
-                <div py:if="not isRPL" py:for="list in lists" id="mailingListButtons">
+                <div py:if="not isRPL" py:for="list in lists" class="mailingListButtons">
                     <h3><a href="${mailhost + 'listinfo/' + list.name}" target="_NEW">${list.name}</a></h3>
                     <p>${list.description}</p>
 
@@ -90,9 +88,9 @@
                     </ul>
                 </div>
                 <div py:if="not (lists or isRPL)">This project has no lists.</div>
-                <h3 py:if="isOwner">Create a New Mailing List</h3>
+                <h3 py:if="isOwner and not isRPL">Create a New Mailing List</h3>
 
-                <form py:if="isOwner" name="createList" action="$basePath/createList" method="POST">
+                <form py:if="isOwner and not isRPL" name="createList" action="$basePath/createList" method="POST">
                     <table border="0" cellspacing="0" cellpadding="0" class="mainformhorizontal">
                         <tr>
                             <th><em class="required">List Name:</em></th>
