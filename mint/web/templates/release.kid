@@ -70,7 +70,7 @@ import time
                                 <a href="${basePath}editRelease?releaseId=${release.getId()}">Edit Release</a>
                             </li>
                             <li>
-                                <a href="${basePath}restartJob?releaseId=${release.getId()}">Regenerate Release</a>
+                                <a href="${basePath}restartJob?releaseId=${release.getId()}">Recreate Release</a>
                             </li>
                             <li py:if="not release.getPublished() and files">
                                 <a href="publish?releaseId=${release.getId()}">Publish Release</a>
@@ -97,7 +97,7 @@ import time
                             <a href="${cfg.basePath}downloadImage/${file['fileId']}/${file['filename']}"> Download ${file['title'] and file['title'] or "Disc " + str(i+1)}</a> (${file['size']/1048576}&nbsp;MB)
                         </li>
                     </ul>
-                   <div py:if="releasetypes.INSTALLABLE_ISO in release.imageTypes"> 
+                   <div py:if="releasetypes.INSTALLABLE_ISO in release.imageTypes">
                     <h4 onclick="javascript:toggle_display('file_help');"
                         style="cursor: pointer;">What are these files?&nbsp;<img id="file_help_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" /></h4>
 
@@ -135,20 +135,20 @@ import time
                             </div>
 			</div>
 
-                   <div py:if="releasetypes.VMWARE_IMAGE in release.imageTypes"> 
+                   <div py:if="releasetypes.VMWARE_IMAGE in release.imageTypes">
                     <h4 onclick="javascript:toggle_display('file_help');"
                         style="cursor: pointer;">What is this file?&nbsp;<img id="file_help_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" /></h4>
 
                         <div id="file_help" style="display: none;">
-                            <p>This is a VMWare Image.</p>                                
+                            <p>This is a VMWare Image.</p>
                             </div>
 			</div>
-			<div py:if="releasetypes.QEMU_IMAGE in release.imageTypes"> 
+			<div py:if="releasetypes.QEMU_IMAGE in release.imageTypes">
                     <h4 onclick="javascript:toggle_display('file_help');"
                         style="cursor: pointer;">What is this file?&nbsp;<img id="file_help_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" /></h4>
 
                         <div id="file_help" style="display: none;">
-                            <p>This is a QEmu Image.</p>                                
+                            <p>This is a QEmu Image.</p>
                             </div>
 			</div>
 
