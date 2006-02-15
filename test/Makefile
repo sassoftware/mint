@@ -38,6 +38,7 @@ python_files = \
                testsuite.py \
                xmltest.py \
                webtest.py \
+               webmemberstest.py \
 	       websetuptest.py \
 	       webrepostest.py
 
