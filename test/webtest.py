@@ -692,16 +692,14 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                                      '/newProject')
 
     def testTroveInfoLogin(self):
-        raise testsuite.SkipTestException( \
-            "Test uses netclient--needs multithreaded apache")
         client, userId = self.quickMintUser('foouser','foopass')
         projectId = self.newProject(client)
 
-        repos = self.openRepository()
+        project = client.getProject(projectId)
+        self.moveToServer(project, 1)
 
         self.addQuickTestComponent('foo:data',
-                                   '/testproject.rpath.local@rpl:devel/1.0-1',
-                                   repos = repos)
+            '/testproject.rpath.local@rpl:devel/1.0-1')
 
         # link historically brought up a spurious "my projects" pane
         page = self.assertContent( \
@@ -777,8 +775,8 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                                    '/testproject.rpath.local@rpl:devel/1.0-1',
                                    repos = repos)
 
-        raise testsuite.SkipTestException( \
-            "requires multithreaded apache past this point")
+        project = client.getProject(projectId)
+        self.moveToServer(project, 1)
 
         # check troveinfo page for proper source component rules
         page = self.assertNotContent( \

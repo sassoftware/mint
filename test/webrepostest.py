@@ -60,34 +60,39 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
             content = 'troveInfo?t=testcase:runtime')
 
     def testBrowseExternalProject(self):
-        raise testsuite.SkipTestException, "our multirepos support is broken"
         client, userId = self.quickMintUser("testuser", "testpass")
         extProjectId = self.newProject(client, "External Project", "external")
 
         extProject = client.getProject(extProjectId)
         labelId = extProject.getLabelIdMap()['external.rpath.local@rpl:devel']
 
-        self.openRepository(0)
         self.openRepository(1)
-        self.makeSourceTrove("testcase", testRecipe, buildLabel = versions.Label('localhost1@rpl:linux'), serverIdx = 1)
+        self.makeSourceTrove("testcase", testRecipe, buildLabel = versions.Label('localhost1@rpl:linux'))
 
         extProject.editLabel(labelId, "localhost1@rpl:devel",
-            'http://localhost1:%d/conary/' % self.servers.getServer(1).port, 'anonymous', 'anonymous')
+            'http://localhost:%d/conary/' % self.servers.getServer(1).port, 'anonymous', 'anonymous')
 
         page = self.assertCode('/repos/external/browse', code = 200)
+        page = page.assertCode('/repos/external/troveInfo?t=testcase:source', code = 200)
 
+        # log in and make sure we see the same thing
+        page = self.assertCode('/repos/external/browse', code = 200)
         page = page.assertCode('/repos/external/troveInfo?t=testcase:source', code = 200)
 
     def testTroveInfoPage(self):
-        raise testsuite.SkipTestException("This test needs networked repostiory client workaround")
         client, userId = self.quickMintUser('foouser','foopass')
         projectId = self.newProject(client)
+        project = client.getProject(projectId)
 
         # test that missing troves are a 404 not found error
         page = self.fetch('/repos/foo/troveInfo?t=group-foo', ok_codes = [404])
 
+        self.openRepository(1)
         self.addQuickTestComponent('foo:source',
                                    '/testproject.rpath.local@rpl:devel/1.0-1')
+
+        # shuffle the label around to talk to server #2
+        self.moveToServer(project, 1)
 
         # test that trove info page renders without error
         page = self.assertContent('/repos/testproject/troveInfo?t=foo:source',

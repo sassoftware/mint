@@ -77,6 +77,7 @@ class MySqlMintDatabase(MintDatabase):
         self.dropAndCreate("minttest")
         db.close()
 
+mintCfg = None
 
 class MintApacheServer(rephelp.ApacheServer):
     def __init__(self, name, reposDB, contents, server, serverDir, reposDir,
@@ -85,7 +86,18 @@ class MintApacheServer(rephelp.ApacheServer):
 
         rephelp.ApacheServer.__init__(self, name, reposDB, contents, server, serverDir, reposDir,
              conaryPath, repMap, useCache, requireSigs)
-        self.getMintCfg()
+
+        # point every mint server at the same database
+        # we don't need completely separate mint instances
+        # in the current test suite, but we do need multiple
+        # apache servers serving up the same instance.
+        global mintCfg
+        if not mintCfg:
+            self.getMintCfg()
+            mintCfg = self.mintCfg
+        else:
+            self.mintCfg = mintCfg
+
         f = file(self.serverRoot + "/mint.conf", "w")
         self.mintCfg.display(f)
         f.close()
@@ -185,8 +197,10 @@ rephelp.SERVER_HOSTNAME = "mint.rpath.local@rpl:devel"
 class MintRepositoryHelper(rephelp.RepositoryHelper):
     def openRepository(self, serverIdx = 0, requireSigs = False):
         ret = rephelp.RepositoryHelper.openRepository(self, serverIdx, requireSigs)
-        self.port = self.servers.getServer(serverIdx).port
-        self.mintCfg = self.servers.getServer(serverIdx).mintCfg
+
+        if serverIdx == 0:
+            self.port = self.servers.getServer(serverIdx).port
+            self.mintCfg = self.servers.getServer(serverIdx).mintCfg
 
         return ret
 
@@ -314,6 +328,19 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
     def showOutput(self):
         os.dup2(self.oldFd, sys.stderr.fileno())
         os.close(self.oldFd)
+
+    def moveToServer(self, project, serverIdx = 1):
+        """Call this to set up a project's Labels table to access a different
+           serverIdx instead of 0. Useful for multi-repos tests."""
+        self.openRepository(serverIdx)
+
+        defaultLabel = project.getLabelIdMap().keys()[0]
+        labelId = project.getLabelIdMap()[defaultLabel]
+        label = project.server.getLabel(labelId)
+
+        project.editLabel(labelId, defaultLabel,
+            'http://localhost:%d/repos/%s/' % (self.servers.getServer(serverIdx).port, project.hostname),
+            label[2], label[3])
 
 
 class WebRepositoryHelper(MintRepositoryHelper, webunittest.WebTestCase):

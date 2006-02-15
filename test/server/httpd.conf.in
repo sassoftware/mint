@@ -45,7 +45,6 @@ MaxRequestsPerChild  0
 #
 
 Listen 127.0.0.1:@PORT@
-Listen 127.0.0.5:@PORT@
 
 # ServerAdmin: Your address, where problems with the server should be
 # e-mailed.  This address appears on some server-generated pages, such
