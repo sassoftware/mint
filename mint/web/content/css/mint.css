@@ -638,7 +638,7 @@ span#editProject {
 }
 
 /* mailing-list specific styles */
-div#mailingListButtons div {
+div.mailingListButtons div {
     float:left;
     margin-right:5px;
 }
