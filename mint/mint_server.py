@@ -1545,6 +1545,9 @@ class MintServer(object):
                     data[key] = p[i]
             else:
                 data[key] = p[i]
+        # ensure waiting job messages get updated
+        if data['status'] == jobstatus.WAITING:
+            data['statusMessage'] = self.getJobWaitMessage(jobId)
         return data
 
     @typeCheck()
@@ -1891,6 +1894,13 @@ class MintServer(object):
         self._allowPrivate = True
         cu = self.db.cursor()
         if jobId:
+            cu.execute("SELECT status FROM Jobs WHERE jobId=?", jobId)
+            res = cu.fetchall()
+            if not res:
+                raise Database.ItemNotFound("No job with that Id")
+            # job is not in the queue
+            if res[0][0] != jobstatus.WAITING:
+                return 0
             cu.execute("""SELECT COUNT(*) FROM Jobs
                               WHERE timeStarted <
                                   (SELECT timeStarted FROM Jobs
