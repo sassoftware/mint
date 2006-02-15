@@ -146,19 +146,13 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
     def testLoginRedirect(self):
         # test to make sure that a login on one page
         # will redirect you back to that page after login
+        client, userId = self.quickMintUser('foouser', 'foopass')
 
-
-        # this test cannot be run at the moment. it depends on the existence of
-        # the login form on all pages, but the login box is currently only on
-        # front page during transition period
-        raise testsuite.SkipTestException
-
-        self.quickMintUser('foouser', 'foopass')
-
-        page = self.fetch('/search?type=Projects&search=abcd')
+        self.newProject(client)
+        page = self.fetch('/project/testproject/')
         startUrl = page.url
 
-        page = page.postForm(0, self.post, {'username': 'foouser',
+        page = page.postForm(1, self.post, {'username': 'foouser',
                                             'password': 'foopass'})
         assert(page.headers['Location'].endswith(startUrl))
         assert(page.code == 301)
