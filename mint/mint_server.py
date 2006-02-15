@@ -1663,9 +1663,9 @@ class MintServer(object):
             jobId = 0
         else:
             jobId = res[0]
-            cu.execute("""UPDATE Jobs SET status=?, statusMessage=?
+            cu.execute("""UPDATE Jobs SET status=?, statusMessage=?, timeStarted=?
                               WHERE jobId=?""",
-                       jobstatus.RUNNING, 'Starting', jobId)
+                       jobstatus.RUNNING, 'Starting', time.time(), jobId)
 
         cu.execute("UPDATE Jobs SET owner=NULL WHERE owner=? AND status=?",
                    ownerId, jobstatus.WAITING)
