@@ -41,7 +41,7 @@ from mint import releasetypes
                 </a>
                 <img src="${cfg.staticPath}apps/mint/images/three_easy_steps.png" width="239" height="23" alt="It's Just 3 Easy Steps" />
                 <div id="stepsText">There's nothing to download. All you need is your web browser.</div>
-                <img style="clear: left;" src="${cfg.staticPath}apps/mint/images/steps.png" alt="three steps to use rBuilder Online" />
+                <img style="clear: left;" src="${cfg.staticPath}apps/mint/images/steps.jpg" alt="three steps to use rBuilder Online" />
             </div>
         </div>
 
