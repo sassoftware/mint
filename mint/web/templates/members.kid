@@ -11,7 +11,8 @@ from mint import userlevels
 -->
 
     <?python
-        isOwner = userLevel == userlevels.OWNER or auth.admin
+        isTrueOwner = userLevel == userlevels.OWNER
+        isOwner = userLevel == isTrueOwner or auth.admin
         isDeveloper = userLevel == userlevels.DEVELOPER
         memberList = project.getMembers()
     ?>
@@ -88,7 +89,7 @@ from mint import userlevels
                     <p py:if="userLevel == userlevels.OWNER">
                         You are currently ${onlyOwner and "the owner" or "an owner"} of this project.
                     </p>
-                    <p py:if="not isOwner">Actions:
+                    <p py:if="not isTrueOwner">Actions:
                         <ul>
                             <li py:if="auth.authorized and userLevel == userlevels.NONMEMBER">
                             <a href="${basePath}watch">Watch this project</a>
@@ -98,7 +99,7 @@ from mint import userlevels
                             </li>
                             <div py:strip="True" py:if="not project.external">
                                 <li py:if="isDeveloper"><a href="${basePath}resign">Resign from this project</a></li>
-                                <li py:if="auth.authorized and not isOwner and not isDeveloper and True in [ x[2] not in userlevels.READERS for x in memberList]">
+                                <li py:if="auth.authorized and not isTrueOwner and not isDeveloper and True in [ x[2] not in userlevels.READERS for x in memberList]">
                                     <a py:if="not userHasReq" href="${basePath}joinRequest">Request to join this project</a>
                                     <a py:if="userHasReq" href="${basePath}joinRequest">Modify your comments to a pending join request</a>
                                 </li>
