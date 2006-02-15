@@ -151,6 +151,82 @@ class WebMemberTest(mint_rephelp.WebRepositoryHelper):
         page = self.fetch('/')
         self.assertContent('/', 'Requests Pending')
 
+    def testRejectJoinReq(self):
+        client, userId = self.quickMintUser('user1', 'user1')
+        client2, userId2 = self.quickMintUser('user2', 'user2')
+
+        projectId = self.newProject(client)
+        client2.setJoinReqComments(projectId, '')
+
+        self.webLogin('user1', 'user1')
+
+        page = self.assertContent( '/project/testproject/members',
+                                   'viewJoinRequest?userId=%d' % userId2)
+
+        page = self.fetch('/project/testproject/viewJoinRequest?userId=%d' % \
+                          userId2)
+
+        # reject it
+        page = page.postForm(1, self.post, {"reject" : "1"})
+        page.postForm(1, self.post, {})
+
+        cu = self.db.cursor()
+        cu.execute("SELECT * FROM MembershipRequests")
+
+        self.failIf(cu.fetchall(), "Join request was not rejected")
+
+    def testOwnerJoinReq(self):
+        client, userId = self.quickMintUser('user1', 'user1')
+        client2, userId2 = self.quickMintUser('user2', 'user2')
+
+        projectId = self.newProject(client)
+        client2.setJoinReqComments(projectId, '')
+
+        self.webLogin('user1', 'user1')
+
+        page = self.assertContent( '/project/testproject/members',
+                                   'viewJoinRequest?userId=%d' % userId2)
+
+        page = self.fetch('/project/testproject/viewJoinRequest?userId=%d' % \
+                          userId2)
+
+        # accept as owner
+        page = page.postForm(1, self.post, {"makeOwner" : "1"})
+
+        project = client.getProject(projectId)
+        self.failIf(project.listJoinRequests() != [],
+                    "Join request was not erased")
+
+        self.failIf([userId2, 'user2', userlevels.OWNER] \
+                    not in project.getMembers(),
+                    "user was not promoted to owner")
+
+    def testDevelJoinReq(self):
+        client, userId = self.quickMintUser('user1', 'user1')
+        client2, userId2 = self.quickMintUser('user2', 'user2')
+
+        projectId = self.newProject(client)
+        client2.setJoinReqComments(projectId, '')
+
+        self.webLogin('user1', 'user1')
+
+        page = self.assertContent( '/project/testproject/members',
+                                   'viewJoinRequest?userId=%d' % userId2)
+
+        page = self.fetch('/project/testproject/viewJoinRequest?userId=%d' % \
+                          userId2)
+
+        # accept as developer
+        page = page.postForm(1, self.post, {"makeDevel" : "1"})
+
+        project = client.getProject(projectId)
+        self.failIf(project.listJoinRequests() != [],
+                    "Join request was not erased")
+
+        self.failIf([userId2, 'user2', userlevels.DEVELOPER] \
+                    not in project.getMembers(),
+                    "user was not promoted to developer")
+
 
 if __name__ == '__main__':
     testsuite.main()
