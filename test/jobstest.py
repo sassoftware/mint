@@ -155,6 +155,158 @@ class JobsTest(MintRepositoryHelper):
         assert(client.server.getJobStatus(cookJobId)['queueLen'] == 0)
         assert(client.server.getJobStatus(job.getId())['queueLen'] == 1)
 
+    def testWaitStatus(self):
+        self.openRepository()
+        client, userId = self.quickMintUser("testuser", "testpass")
+        projectId = client.newProject("Foo", "foo", "rpath.org")
+
+        release = client.newRelease(projectId, "Test Release")
+        release.setImageTypes([releasetypes.STUB_IMAGE])
+        release.setDataValue('stringArg', 'Hello World!')
+
+        self.stockReleaseFlavor(release.getId())
+        job = client.startImageJob(release.getId())
+
+        self.failIf(client.server.getJobWaitMessage(job.id) != \
+                    'Next in line for processing',
+                    "Job failed to recognize that it was next")
+
+        newMessage = "And now for something completely different"
+        job.setStatus(jobstatus.WAITING, newMessage)
+
+        cu = self.db.cursor()
+        cu.execute("SELECT statusMessage FROM Jobs WHERE jobId=?", job.id)
+
+        self.failIf(cu.fetchone()[0] != newMessage,
+                    "database status message did not reflect true value.")
+
+        self.failIf(client.server.getJobWaitMessage(job.id) != \
+                    'Next in line for processing',
+                    "Job failed to recognize that it was next")
+
+        cu = self.db.cursor()
+        cu.execute("SELECT statusMessage FROM Jobs WHERE jobId=?", job.id)
+
+        self.failIf(cu.fetchone()[0] != newMessage,
+                    "database status message was altered.")
+
+    def testRunningStatus(self):
+        self.openRepository()
+        client, userId = self.quickMintUser("testuser", "testpass")
+        projectId = client.newProject("Foo", "foo", "rpath.org")
+
+        release = client.newRelease(projectId, "Test Release")
+        release.setImageTypes([releasetypes.STUB_IMAGE])
+        release.setDataValue('stringArg', 'Hello World!')
+
+        self.stockReleaseFlavor(release.getId())
+        job = client.startImageJob(release.getId())
+
+        newMsg = "We are the knights who say 'Ni!'"
+        job.setStatus(jobstatus.RUNNING, newMsg)
+
+        # refresh the job object
+        job = client.getJob(job.id)
+
+        self.failIf(job.getStatusMessage() == 'Next in line for processing',
+                    "job mistook itself for waiting.")
+
+    def testStartTimestamp(self):
+        self.openRepository()
+        client, userId = self.quickMintUser("testuser", "testpass")
+        projectId = client.newProject("Foo", "foo", "rpath.org")
+
+        release = client.newRelease(projectId, "Test Release")
+        release.setImageTypes([releasetypes.STUB_IMAGE])
+        release.setDataValue('stringArg', 'Hello World!')
+
+        self.stockReleaseFlavor(release.getId())
+        job = client.startImageJob(release.getId())
+
+        cu = self.db.cursor()
+        cu.execute("UPDATE Jobs set timeStarted = 100 where jobId=?", job.id)
+        self.db.commit()
+
+        # refresh job
+        job = client.getJob(job.id)
+
+        self.failIf(job.timeStarted != 100,
+                    "pre-start: job doesn't reflect altered timestamp")
+
+        newJob = client.startNextJob(['1#x86', '1#x86_64'],
+                                    {'imageTypes':
+                                     [releasetypes.STUB_IMAGE]})
+
+        assert(newJob.id == job.id)
+
+        self.failIf(job.timeStarted != 100,
+                    "post-start: job doesn't reflect altered timestamp")
+
+        self.failIf(job.timeStarted == newJob.timeStarted,
+                    "Job's start timestamp wasn't adjusted. timing metrics "
+                    "will be misleading")
+
+    def testTimestampInteraction(self):
+        self.openRepository()
+        client, userId = self.quickMintUser("testuser", "testpass")
+        projectId = client.newProject("Foo", "foo", "rpath.org")
+
+        release = client.newRelease(projectId, "Test Release")
+        release.setImageTypes([releasetypes.STUB_IMAGE])
+        release.setDataValue('stringArg', 'Hello World!')
+
+        self.stockReleaseFlavor(release.getId())
+        job = client.startImageJob(release.getId())
+
+        release2 = client.newRelease(projectId, "Test Release")
+        release2.setImageTypes([releasetypes.STUB_IMAGE])
+        release2.setDataValue('stringArg', 'Hello World!')
+
+        self.stockReleaseFlavor(release2.getId())
+        job2 = client.startImageJob(release2.getId())
+
+        release3 = client.newRelease(projectId, "Test Release")
+        release3.setImageTypes([releasetypes.STUB_IMAGE])
+        release3.setDataValue('stringArg', 'Hello World!')
+
+        self.stockReleaseFlavor(release3.getId())
+        job3 = client.startImageJob(release3.getId())
+
+        assert(job.getStatusMessage() == 'Next in line for processing')
+        assert(job2.getStatusMessage() == 'Number 2 in line for processing')
+        assert(job3.getStatusMessage() == 'Number 3 in line for processing')
+
+        newJob = client.startNextJob(['1#x86', '1#x86_64'],
+                                    {'imageTypes':
+                                     [releasetypes.STUB_IMAGE]})
+
+        job = client.getJob(job.id)
+        job2 = client.getJob(job2.id)
+        job3 = client.getJob(job3.id)
+
+        # testing this method directly ensures the getJob call has the correct
+        # status message at the moment of instantiation.
+        assert(job.getStatusMessage() == 'Starting')
+        assert(job2.getStatusMessage() == 'Next in line for processing')
+        assert(job3.getStatusMessage() == 'Number 2 in line for processing')
+
+        # of special importance is the queue length. should be zero for jobs
+        # not actually in the queue...
+        assert(client.server._server.getJobStatus(job.id) == \
+               {'status': 1,
+                'message': 'Starting',
+                'queueLen': 0})
+
+        assert(client.server._server.getJobStatus(job2.id) == \
+               {'status': 0,
+                'message': 'Next in line for processing',
+                'queueLen': 0})
+
+        assert(client.server._server.getJobStatus(job3.id) == \
+               {'status': 0,
+                'message': 'Number 2 in line for processing',
+                'queueLen': 1})
+
     def testJobQueueOrder(self):
         cu = self.db.cursor()
         self.openRepository()
