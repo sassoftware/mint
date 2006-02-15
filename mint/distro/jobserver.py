@@ -17,7 +17,7 @@ from xmlrpclib import ProtocolError
 from conary import conaryclient
 from conary.conarycfg import ConfigFile, ConaryConfiguration
 from conary.conarycfg import CfgList, CfgString, CfgBool, CfgInt, CfgEnum, CfgDict
-from conary.lib import log 
+from conary.lib import log
 
 # mint imports
 from mint import cooktypes
@@ -40,7 +40,8 @@ generators = {
 }
 
 SUPPORTED_ARCHS = ('x86', 'x86_64')
-
+# JOB_IDLE_INTERVAL: interval is in seconds. format is (min, max)
+JOB_IDLE_INTERVAL = (5, 10)
 
 class JobRunner(threading.Thread):
     def __init__(self, cfg, client, job):
@@ -136,13 +137,6 @@ class JobRunner(threading.Thread):
         else:
             self.job.setStatus(jobstatus.FINISHED, "Finished")
 
-def updateWaitStatus(client):
-    joblist = client.getJobs()
-    for job in joblist:
-        if job.getStatus() == jobstatus.WAITING:
-            job.setStatus(jobstatus.WAITING,
-                          client.server.getJobWaitMessage(job.getId()))
-
 
 class JobDaemon:
     def __init__(self, cfg):
@@ -183,7 +177,7 @@ class JobDaemon:
                         # sleeping for a random interval helps prevent
                         # concurrency issues with multiple instances of
                         # this code
-                        time.sleep(random.uniform(3, 5))
+                        time.sleep(random.uniform(*JOB_IDLE_INTERVAL))
                         continue
 
                     log.info("TOOK A JOB: jobId %d" % job.id)
@@ -195,7 +189,6 @@ class JobDaemon:
                     job.setStatus(jobstatus.RUNNING, 'Starting')
                     th = JobRunner(cfg, client, job)
                     th.start()
-                    updateWaitStatus(client)
 
                     # queue this thread and move on
                     runningJobs.append(th)
@@ -213,10 +206,8 @@ class JobDaemon:
                             log.error("rBuilder Server Unreachable: trying again (attempt %d/5)" % errors)
 
                     log.warning("Error retrieving job list:" + str(e))
-                    time.sleep(5)
-            else:
-                # we get here if we already have (maxThreads) jobs running
-                time.sleep(5)
+            # sleep at the end of every run, no matter what the outcome was
+            time.sleep(random.uniform(*JOB_IDLE_INTERVAL))
 
 
 class CfgCookType(CfgEnum):
