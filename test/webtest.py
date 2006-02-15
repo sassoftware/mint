@@ -933,5 +933,13 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         page = self.assertNotContent("/administer?operation=external",
                                      'name="hostname" value="rpath"')
 
+    def testBrowseUsers(self):
+        client, userId = self.quickMintAdmin('adminuser', 'adminpass')
+        self.webLogin('adminuser', 'adminpass')
+
+        page = self.assertContent("/users", ok_codes = [200],
+            content = '<a href="/userInfo?id=%d">' % userId)
+
+
 if __name__ == "__main__":
     testsuite.main()

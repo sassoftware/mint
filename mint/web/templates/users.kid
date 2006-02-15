@@ -18,7 +18,7 @@ from mint.mint import timeDelta
         <div py:def="formatResults(resultset = [])" py:strip="True">
             <?python
                 formattedresults = [
-                    ('userInfo?id=%s' % resultset[0], resultset[1]),
+                    (cfg.basePath + 'userInfo?id=%s' % resultset[0], resultset[1]),
                     resultset[2],
                     resultset[3],
                     resultset[4],
