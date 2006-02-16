@@ -2,6 +2,7 @@
 <?python
 from urllib import quote
 from conary import versions
+from mint.helperfuncs import truncateForDisplay
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
@@ -50,7 +51,7 @@ from conary import versions
             <form method="post" action="editGroup2?id=${curGroupTrove.id}">
                 <table class="groupTroveItems">
                     <tr><td colspan="4">
-                        <div style="float:left">${curGroupTrove.recipeName} version ${curGroupTrove.upstreamVersion}</div>
+                        <div style="float:left">${curGroupTrove.recipeName} version ${truncateForDisplay(curGroupTrove.upstreamVersion)}</div>
                         <div style="float:right"><a onclick="javascript:dropdown();" href="#">Edit 
                             <img  id="version_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" /></a></div>
                     </td></tr>

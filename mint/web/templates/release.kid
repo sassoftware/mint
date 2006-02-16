@@ -8,6 +8,7 @@ from mint import jobstatus
 from mint import releasetypes
 from mint import userlevels
 from mint.mint import upstream
+from mint.helperfuncs import truncateForDisplay
 import time
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
@@ -51,11 +52,11 @@ import time
                 ${groupTroveBuilder()}
             </div>
             <div id="middle">
-                <h1>${project.getNameForDisplay()}</h1>
+                <h1>${project.getNameForDisplay(maxWordLen=30)}</h1>
                 <h2>Release: ${name}</h2>
                 <h3>Release Information</h3>
 
-                <p>This release was created from version ${upstream(version)}
+                <p>This release was created from version ${truncateForDisplay(upstream(version), maxWordLen=50)}
                     of ${trove} for ${release.getArch()}.</p>
 
                 <div py:strip="True" py:if="isOwner">

@@ -45,7 +45,7 @@ def pluralTroves(c):
             </div>
 
             <div id="middle">
-                <h1>${project.getNameForDisplay(maxWordLen = 50)}</h1>
+                <h1>${project.getNameForDisplay(maxWordLen = 30)}</h1>
                 <h2>Repository Browser</h2>
 
                 <span py:for="l in string.uppercase" py:strip="True">

@@ -44,7 +44,7 @@
                         <tr>
                             <th><em class="required">Group Version:</em></th>
                             <td colspan="2">
-                                <input type="text" name="version" size="16" value="${kwargs['version']}"/>
+                                <input type="text" name="version" size="16" maxlength="128" value="${kwargs['version']}"/>
                                 <p class="help">Choose a version number for your group. Eg., 0.0.1</p>
                             </td>
                         </tr>

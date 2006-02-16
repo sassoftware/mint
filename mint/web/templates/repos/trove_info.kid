@@ -7,6 +7,7 @@
 from urllib import quote
 import time
 from mint import userlevels
+from mint.helperfuncs import truncateForDisplay
 
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
@@ -54,7 +55,7 @@ isOwner = (userLevel == userlevels.OWNER or auth.admin)
         ?>
         <p>Trove name: ${adder(trove)} ${trove.getName()}</p>
         <p>Built from trove: <a href="${sourceLink}">${trove.getSourceName()}</a></p>
-        <p>Version: ${lockedAdder(trove)} ${trove.getVersion().asString()}</p>
+        <p>Version: ${lockedAdder(trove)} ${truncateForDisplay(trove.getVersion().asString(), maxWordLen=60)}</p>
         Flavor:
 	<div py:for="trove in troves" py:strip="True">
 	    <p>${flavorWrap(trove.getFlavor())}</p>
@@ -117,8 +118,8 @@ isOwner = (userLevel == userlevels.OWNER or auth.admin)
                 <ul class="troveallversions">
                     <li py:for="ver in versionList">
                         <a href="troveInfo?t=${quote(troveName)};v=${quote(ver.freeze())}"
-                           py:if="ver != reqVer">${ver.asString()}</a>
-                        <span py:strip="True" py:if="ver == reqVer"><b>${ver.asString()}</b> (selected)</span>
+                           py:if="ver != reqVer">${truncateForDisplay(ver.asString(), maxWordLen=60)}</a>
+                        <span py:strip="True" py:if="ver == reqVer"><b>${truncateForDisplay(ver.asString(), maxWordLen=60)}</b> (selected)</span>
                     </li>
                 </ul>
             </div>

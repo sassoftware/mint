@@ -2,6 +2,7 @@
 <?python #need a comment?
     from mint import userlevels
     from mint.mint import upstream
+    from mint.helperfuncs import truncateForDisplay
 
     def condUpstream(upstreams, version):
         up = upstream(version)
@@ -61,7 +62,7 @@
                 <li class="release"
                     py:if="releaseList" py:for="release in sorted(releaseList[:5], key=lambda x: x.getTroveVersion(), reverse=True)">
                     <a href="${projectUrl}release?id=${release.getId()}">
-                        Version ${condUpstream(counts, release.getTroveVersion())} for ${release.getArch()}
+                        Version ${truncateForDisplay(condUpstream(counts, release.getTroveVersion()), maxWordLen=10)} for ${release.getArch()}
                     </a>
                 </li>
                 <li class="release" py:if="not releaseList">
@@ -89,7 +90,7 @@
           <ul>
             <li class="release" py:for="commit in commits">
                 <a
-                    href="${cfg.basePath}repos/${project.getHostname()}/troveInfo?t=${commit[0]};v=${commit[2]}">${commit[0]}=${commit[1]}</a>
+                    href="${cfg.basePath}repos/${project.getHostname()}/troveInfo?t=${commit[0]};v=${commit[2]}">${truncateForDisplay(commit[0] + "=" + commit[1], maxWordLen=31)}</a>
             </li>
           </ul>
         </div>

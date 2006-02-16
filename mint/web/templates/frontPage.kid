@@ -4,6 +4,8 @@ import time
 from mint import userlevels
 from mint import searcher
 from mint import releasetypes
+from mint.helperfuncs import truncateForDisplay
+
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
@@ -51,14 +53,14 @@ from mint import releasetypes
                     <td><span class="topten_header">Most Popular</span>
                         <ol>
                             <li py:for="project in popularProjects">
-                                <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${project[1]}/">${project[2]}</a>
+                                <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${project[1]}/">${truncateForDisplay(project[2], maxWordLen=30)}</a>
                             </li>
                         </ol>
                     </td>
                     <td><span class="topten_header">Most Active</span>
                         <ol>
                             <li py:for="project in activeProjects">
-                                <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${project[1]}/">${project[2]}</a>
+                                <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${project[1]}/">${truncateForDisplay(project[2], maxWordLen=30)}</a>
                             </li>
                         </ol>
                     </td>
@@ -66,7 +68,7 @@ from mint import releasetypes
                         <ol py:if="releases">
 
                             <li py:for="release in releases">
-                                <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${release[1]}/release?id=${release[2].getId()}">${release[2].getTroveName()}=${release[2].getTroveVersion().trailingRevision().asString()} (${release[2].getArch()} ${releasetypes.typeNamesShort[release[2].imageTypes[0]]})</a>
+                                <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${release[1]}/release?id=${release[2].getId()}">${release[2].getTroveName()}=${truncateForDisplay(release[2].getTroveVersion().trailingRevision().asString())} (${release[2].getArch()} ${releasetypes.typeNamesShort[release[2].imageTypes[0]]})</a>
                             </li>
                         </ol>
                     </td>

@@ -21,7 +21,7 @@
             </div>
 
             <div id="middle">
-                <h1>${project.getNameForDisplay(maxWordLen = 50)}</h1>
+                <h1>${project.getNameForDisplay(maxWordLen = 30)}</h1>
                 <h2>Group Builder: ${groupTrove.recipeName}</h2>
                 <h3>Cooking Your Group</h3>
 

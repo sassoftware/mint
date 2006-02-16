@@ -1,5 +1,8 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<?python from mint import userlevels ?>
+<?python 
+  from mint import userlevels 
+  from mint.helperfuncs import truncateForDisplay
+ ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'layout.kid'">
@@ -60,13 +63,13 @@
 
                 <h3>About ${user.username}:</h3>
                 <p py:for="line in user.getBlurb().splitlines()">
-                    ${line}
+                    ${truncateForDisplay(line, 1000000, 70)}
                 </p>
                 <div py:if="not user.getBlurb()">User has not entered any about text.</div>
 
                 <h3>Contact Information:</h3>
                 <p py:for="line in user.getDisplayEmail().splitlines()" py:strip="True">
-                    ${line}
+                    ${truncateForDisplay(line, 1000000, 70)}
                 </p>
                 <div py:if="not user.getDisplayEmail()">User has not entered any contact information.</div>
 

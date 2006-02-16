@@ -19,13 +19,14 @@
     <div py:strip="True" py:def="releaseTableRow(releaseName, release, isOwner, isFirst, numReleasesInVersion, defaultHidden, hiddenName)">
         <?python
             from mint import releasetypes
+            from mint.helperfuncs import truncateForDisplay
             files = release.getFiles()
             rowAttrs = defaultHidden and { 'name': hiddenName, 'style': 'display: none;' } or {}
         ?>
         <tr py:attrs="rowAttrs">
             <td py:if="isFirst" rowspan="${numReleasesInVersion}">
-                ${release.getName()}<br />
-                <span style="color: #999">${releaseName}</span>
+                ${truncateForDisplay(release.getName(), maxWordLen=25)}<br />
+                <span style="color: #999">${truncateForDisplay(releaseName, maxWordLen=30)}</span>
             </td>
             <td>
                     <a href="release?id=${release.getId()}">${release.getArch()} ${releasetypes.typeNamesShort[release.imageTypes[0]]}</a>
@@ -97,7 +98,7 @@
             </div>
             <div id="middle">
                 <?python hasVMwareImage = True in [ x.hasVMwareImage() for x in publishedReleases ] ?>
-                <h1>${project.getNameForDisplay(maxWordLen = 50)}</h1>
+                <h1>${project.getNameForDisplay(maxWordLen = 30)}</h1>
                 <h2><a py:if="hasVMwareImage" title="Download VMware Player" href="http://www.vmware.com/download/player/"><img class="vmwarebutton" src="${cfg.staticPath}apps/mint/images/get_vmware_player.gif" alt="Download VMware Player" /></a>Releases</h2>
                 <h3 py:if="isOwner">Published Releases</h3>
                 ${releasesTable(releases, releaseVersions, isOwner, True, 5)}

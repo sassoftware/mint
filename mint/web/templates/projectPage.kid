@@ -2,6 +2,7 @@
 <?python
 from mint import userlevels
 from mint.mint import upstream
+from mint.helperfuncs import truncateForDisplay
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
@@ -36,7 +37,7 @@ from mint.mint import upstream
                 ${groupTroveBuilder()}
             </div>
             <div id="middle">
-                <h1>${project.getNameForDisplay(maxWordLen = 50)} <span id="editProject" py:if="isOwner"><a href="${basePath}editProject">edit project</a></span></h1>
+                <h1>${project.getNameForDisplay(maxWordLen = 25)} <span id="editProject" py:if="isOwner"><a href="${basePath}editProject">edit project</a></span></h1>
                 <h2 py:if="project.getProjectUrl()">Project Home Page &#160;</h2>
 
                 <p class="help" py:if="not commits and cfg.hideFledgling">
@@ -50,11 +51,11 @@ from mint.mint import upstream
                     considered fledgling, and will appear on "Browse Projects" pages.
                 </p>
 
-                <p py:if="project.getProjectUrl()"><a href="${project.getProjectUrl()}" py:content="project.getProjectUrl()" />
+                <p py:if="project.getProjectUrl()"><a href="${project.getProjectUrl()}" py:content="truncateForDisplay(project.getProjectUrl(), maxWordLen=60)" />
                 </p>
                 <h3>Description</h3>
                 <p py:for="line in project.getDesc().splitlines()">
-                    ${line}
+		    ${truncateForDisplay(line, 10000000, 70)}
                 </p>
                 <p py:if="not project.getDesc()">The project owner has not entered a description.</p>
                 <hr />
