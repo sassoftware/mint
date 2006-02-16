@@ -107,7 +107,7 @@ function processGetReleaseStatus(aReq) {
         }
 
         // show downloads only when finished
-        if (releaseStatus.status == STATUS_FINISHED) {
+        if (releaseStatus.status == STATUS_FINISHED || releaseStatus.status == STATUS_UNKNOWN) {
             showElement('downloads');
         } else {
             hideElement('downloads');

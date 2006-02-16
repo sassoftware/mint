@@ -450,29 +450,14 @@ class SiteHandler(WebHandler):
             raise HttpNotFound
 
         # only count downloads of the first ISO
+        release = self.client.getRelease(releaseId)
         if idx == 0:
-            release = self.client.getRelease(releaseId)
             release.incDownloads()
         try:
-            size = os.stat(filename)[stat.ST_SIZE]
+            project = self.client.getProject(release.projectId)
 
-            self.req.content_type = "application/octet-stream"
-            self.req.headers_out["Content-Disposition"] = "attachment; filename=%s;" %\
-                os.path.basename(filename)
-            self.req.headers_out["Content-Length"] = str(size)
-
-            # XXX this doesn't work yet
-            # handle requests for partial content
-            #if 'Range' in self.req.headers_in:
-            #    # only support a specific syntax of Range
-            #    m = re.match('bytes=(\d+)-', self.req.headers_in['Range'])
-            #    if m:
-            #        startByte = int(m.groups()[0])
-            #        self.req.sendfile(filename, startByte)
-            #        raise HttpPartialContent
-
-            self.req.sendfile(filename)
-            return ''
+            fileUrl = "/images/%s/%d/%s" % (project.hostname, release.id, reqFilename)
+            self._redirect(fileUrl)
         except OSError, e:
             return self._write("error", shortError = "File error",
                 error = "An error has occurred opening the image file: %s" % e)
