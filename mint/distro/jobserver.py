@@ -4,7 +4,6 @@
 # All Rights Reserved
 #
 import errno
-import threading
 import socket
 import time
 import random
@@ -43,14 +42,11 @@ SUPPORTED_ARCHS = ('x86', 'x86_64')
 # JOB_IDLE_INTERVAL: interval is in seconds. format is (min, max)
 JOB_IDLE_INTERVAL = (5, 10)
 
-class JobRunner(threading.Thread):
+class JobRunner:
     def __init__(self, cfg, client, job):
-        threading.Thread.__init__(self)
         self.cfg = cfg
         self.client = client
         self.job = job
-        # still in parent thread when init gets called.
-        self.parentThread = threading.currentThread()
 
     def run(self):
         # ensure each job thread has it's own process space
@@ -59,11 +55,7 @@ class JobRunner(threading.Thread):
             self.doWork()
             os._exit(0)
         else:
-            try:
-                os.waitpid(pid, 0)
-            except OSError, e:
-                if e.errno != errno.ECHILD:
-                    raise
+            return pid
 
     def doWork(self):
         ret = None
@@ -84,8 +76,8 @@ class JobRunner(threading.Thread):
                 imageFilenames = []
                 if releasetypes.INSTALLABLE_ISO in imageTypes:
                     generator = generators[releasetypes.INSTALLABLE_ISO]
-                    log.info("%s job for %s started (id %d)" % \
-                             (generator.__name__,
+                    log.info("(%d) %s job for %s started (id %d)" % \
+                             (os.getpid(), generator.__name__,
                               project.getHostname(), jobId))
                     imageFilenames.extend(generator(self.client,
                                                     self.cfg, self.job,
@@ -95,8 +87,8 @@ class JobRunner(threading.Thread):
                 imagegen = BootableImage(self.client, self.cfg, self.job, release, project)
                 imagegen.setImageTypes(imageTypes)
                 if imagegen.workToDo():
-                    log.info("%s job for %s started (id %d)" % \
-                             (BootableImage.__name__,
+                    log.info("(%d) %s job for %s started (id %d)" % \
+                             (os.getpid(), BootableImage.__name__,
                               project.getHostname(), jobId))
 
                     imageFilenames.extend(imagegen.write())
@@ -118,11 +110,11 @@ class JobRunner(threading.Thread):
                 self.job.setStatus(jobstatus.ERROR, str(e))
             else:
                 release.setFiles(imageFilenames)
-                log.info("job %d finished: %s", jobId, str(imageFilenames))
+                log.info("(%d) job %d finished: %s", os.getpid(), jobId, str(imageFilenames))
             os.chdir(cwd)
         elif self.job.getGroupTroveId():
             try:
-                log.info("GroupTroveCook job started (id %d)" % (jobId))
+                log.info("(%d) GroupTroveCook job started (id %d)" % (os.getpid(), jobId))
                 ret = GroupTroveCook(self.client, self.cfg, self.job).write()
             except Exception, e:
                 traceback.print_exc()
@@ -130,7 +122,7 @@ class JobRunner(threading.Thread):
                 error = e
                 self.job.setStatus(jobstatus.ERROR, str(e))
             else:
-                log.info("job %d succeeded: %s" % (jobId, str(ret)))
+                log.info("(%d) job %d succeeded: %s" % (os.getpid(), jobId, str(ret)))
 
         if error:
             log.info(error)
@@ -158,10 +150,11 @@ class JobDaemon:
 
         errors = 0
         while(True):
-            for jobThread in runningJobs[:]:
-                if not jobThread.isAlive():
-                    jobThread.join()
-                    runningJobs.remove(jobThread)
+            for jobPid in runningJobs[:]:
+                try:
+                    os.waitpid(jobPid, os.WNOHANG)
+                except OSError:
+                    runningJobs.remove(jobPid)
 
             if len(runningJobs) < cfg.maxThreads:
                 try:
@@ -180,7 +173,7 @@ class JobDaemon:
                         time.sleep(random.uniform(*JOB_IDLE_INTERVAL))
                         continue
 
-                    log.info("TOOK A JOB: jobId %d" % job.id)
+                    log.info("(%d) TOOK A JOB: jobId %d" % (os.getpid(), job.id))
                     if job.releaseId:
                         release = client.getRelease(job.releaseId)
                         if release.getArch() not in cfg.supportedArch:
@@ -188,10 +181,10 @@ class JobDaemon:
 
                     job.setStatus(jobstatus.RUNNING, 'Starting')
                     th = JobRunner(cfg, client, job)
-                    th.start()
+                    jobPid = th.run()
 
                     # queue this thread and move on
-                    runningJobs.append(th)
+                    runningJobs.append(jobPid)
 
                 # if the rBuilder Online server is down, we will get either a
                 # ProtocolError or a socket error depending on what xmlrpc lib

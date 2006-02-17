@@ -61,7 +61,7 @@ def daemon(options, cfg):
     except socket.error, msg:
         log.error("connecting to rBuilder server: %s", msg[1])
     except KeyboardInterrupt:
-        log.info("interrupt caught; exiting")
+        log.info("(%d) interrupt caught; exiting" % os.getpid())
 
     try:
         os.unlink(cfg.lockFile)
@@ -132,7 +132,7 @@ if __name__ == "__main__":
             log.info("Old job daemon pid seems to be invalid. killing.")
             kill(cfg.lockFile)
 
-    log.debug("loading configuration file: %s", cfgFile)
+    log.debug("(%d) loading configuration file: %s", os.getpid(), cfgFile)
     log.info("using Conary in %s",
              os.path.dirname(sys.modules['conary'].__file__))
 
@@ -162,5 +162,5 @@ if __name__ == "__main__":
 
                 daemon(options, cfg)
         else:
-            log.info("rBuilder ISO generation server started")
+            log.info("(%d) rBuilder ISO generation server started", os.getpid())
             os._exit(0)
