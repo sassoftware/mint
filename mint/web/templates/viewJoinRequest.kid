@@ -34,10 +34,10 @@ from mint import userlevels
                     <h4>Comments:</h4>
                     <blockquote>${comments}</blockquote>
                     <p>
-                        <button type="submit" name="makeOwner" value="1" onclick="window.parent.hide_popup('joinReqBox', true);">Make Owner</button>
-                        <button type="submit" name="makeDevel" value="1" onclick="window.parent.hide_popup('joinReqBox', true);">Make Developer</button>
+                        <button class="img" id="makeOwner" type="submit" name="makeOwner" value="1"><img src="${cfg.staticPath}/apps/mint/images/make_owner_button.png" alt="Make Owner" /></button>
+                        <button class="img" id="makeDevel" type="submit" name="makeDevel" value="1"><img src="${cfg.staticPath}/apps/mint/images/make_devel_button.png" alt="Make Developer" /></button>
                         <input type="hidden" name="userId" value="${userId}"/>
-                        <button type="submit" name="reject" value="1" onclick="window.parent.hide_popup('joinReqBox', false);">Reject Request</button>
+                        <button class="img" id="rejectRequest" type="submit" name="reject" value="1"><img src="${cfg.staticPath}/apps/mint/images/reject_request_button.png" alt="Reject Request" /></button>
                     </p>
                 </form>
             </div>
