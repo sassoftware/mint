@@ -24,7 +24,7 @@ from conary.lib import util
 
 from flavors import stockFlavors
 from mint.mint import upstream
-from imagegen import ImageGenerator, assertParentAlive, MSG_INTERVAL
+from imagegen import ImageGenerator, MSG_INTERVAL
 import gencslist
 import splitdistro
 
@@ -216,8 +216,6 @@ class InstallableIso(ImageGenerator):
         util.rmtree(tmpPath)
         util.rmtree(tmpRoot)
 
-        assertParentAlive()
-
     def write(self):
         isocfg = self.getConfig()
         self.isocfg = isocfg
@@ -276,7 +274,6 @@ class InstallableIso(ImageGenerator):
 
         csdir = os.path.join(topdir, subdir, 'changesets')
         util.mkdirChain(csdir)
-        assertParentAlive()
 
         # build a set of the things we already have extracted.
         self.status("Extracting changesets")
@@ -295,9 +292,6 @@ class InstallableIso(ImageGenerator):
             print >> sys.stderr, "multiple matches for", groupName
             raise RuntimeException
 
-        # Abort if parent thread has died
-        assertParentAlive()
-
         groupName, groupVer, groupFlavor = trvList[0]
 
         self.callback = Callback(self.status)
@@ -307,9 +301,6 @@ class InstallableIso(ImageGenerator):
                                          cacheDir = isocfg.cachePath,
                                          callback = self.callback)
         cslist, groupcs = rc
-
-        # Abort if parent thread has died
-        assertParentAlive()
 
         releaseVer = upstream(version)
         releasePhase = "ALPHA"
@@ -344,9 +335,6 @@ class InstallableIso(ImageGenerator):
         }
         util.mkdirChain(infoMap['isodir'])
 
-        # Abort if parent thread has died
-        assertParentAlive()
-
         # write .discinfo
         discInfoPath = os.path.join(topdir, ".discinfo")
         os.unlink(discInfoPath)
@@ -362,9 +350,6 @@ class InstallableIso(ImageGenerator):
         self.writeProductImage('1#' + arch)
 
         splitdistro.splitDistro(topdir, troveName)
-
-        # Abort if parent thread has died
-        assertParentAlive()
 
         isoList = []
         isoname = "%(safeName)s-%(version)s-%(arch)s-%%(disc)s.iso" % infoMap
@@ -391,14 +376,10 @@ class InstallableIso(ImageGenerator):
                                 "-boot-info-table", "-R", "-J",
                                 "-V",  "%(discname)s" % infoMap,
                                 "-T", ".")
-                # Abort if parent thread has died
-                assertParentAlive()
             else:
                 os.chdir(os.path.join(discdir, d))
                 call("mkisofs", "-o", "%(isodir)s/%(iso)s" % infoMap,
                      "-R", "-J", "-V", "%(discname)s" % infoMap, "-T", ".")
-                # Abort if parent thread has died
-                assertParentAlive()
 
             isoList.append((infoMap['iso'], "%s Disc %s" % (infoMap['name'], discNum)))
 
