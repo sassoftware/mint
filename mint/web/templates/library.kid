@@ -225,4 +225,23 @@ def injectVersion(version):
         </div>
     </div>
 
+    <div py:def="stepContent">
+    </div>
+
+    <div py:def="stepsWidget(steps, curStep = 0)" class="palette" id="stepWidget">
+        <img class="left" src="${cfg.staticPath}apps/mint/images/header_blue_left.png" alt="" />
+        <img class="right" src="${cfg.staticPath}apps/mint/images/header_blue_right.png" alt="" />
+        <div class="boxHeader">
+            Steps to Register
+        </div>
+
+        <div class="boxBody">
+            <div py:for="i, step in enumerate(steps)" class="oneStep"
+                py:attrs="{'style': (i == curStep and i != len(steps)-1) and 'border-bottom: 1px solid black;' or None}">
+                <h2><span py:if="i &lt; curStep" style="color: green; float: right;">&#x2714;</span> ${i+1}. ${step}</h2>
+                <div py:strip="True" py:if="curStep == i">${stepContent()}</div>
+            </div>
+        </div>
+    </div>
+
 </html>
