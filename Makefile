@@ -7,7 +7,7 @@ all: subdirs
 product=mint
 export DESTDIR=
 installdir=
-export VERSION=1.5.0
+export VERSION=1.5.2
 export TOPDIR = $(shell pwd)
 export DISTDIR = $(TOPDIR)/$(product)$(productqualifier)-$(VERSION)
 export prefix = /usr
@@ -28,7 +28,7 @@ SUBDIRS = mint test scripts mailman
 
 extra_files = Makefile Make.rules mint.conf httpd.conf
 
-doc_files = NEWS TODO
+doc_files = NEWS
 
 dist_files = $(extra_files) $(doc_files)
 
