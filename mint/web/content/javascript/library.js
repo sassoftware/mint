@@ -214,6 +214,17 @@ function getTroveVersionsByArch(projectId, troveNameWithLabel) {
     req.send(true, [projectId, troveNameWithLabel]);
 }
 
+function reloadCallback() {
+    window.location.reload();
+}
+
+function setUserLevel(userId, projectId, newLevel) {
+    var req = new JsonRpcRequest("/jsonrpc", "setUserLevel");
+    req.setAuth(getCookieValue("pysid"));
+    req.setCallback(reloadCallback);
+    req.send(true, [userId, projectId, newLevel])
+}
+
 // baton --------------------------------------------------------------------
 
 var ticks = 0;

@@ -136,7 +136,7 @@ from mint import userlevels
                     <tr py:for="userId, username in sorted(users[userlevels.DEVELOPER], key=lambda x: x[1])">
                         <th><a py:strip="not auth.authorized" href="http://${SITE}userInfo?id=${userId}">${username}</a></th>
                         <td py:if="isOwner">
-                            <a href="promoteMember?userId=${userId}" class="option">Promote to Owner</a>
+                            <a onclick="javascript:setUserLevel(${userId}, ${project.id}, ${userlevels.OWNER});" href="#" class="option">Promote to Owner</a>
                         </td>
                         <td py:if="isOwner"><a href="delMember?id=${userId}" class="option">Remove From Project</a></td>
                     </tr>
