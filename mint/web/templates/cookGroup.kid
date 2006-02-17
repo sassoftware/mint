@@ -22,10 +22,10 @@
 
             <div id="middle">
                 <h1>${project.getNameForDisplay(maxWordLen = 30)}</h1>
-                <h2>Group Builder: ${groupTrove.recipeName}</h2>
+                <h2>Group Builder: ${curGroupTrove.recipeName}</h2>
                 <h3>Cooking Your Group</h3>
 
-                <p>Your request to cook ${groupTrove.recipeName} has been
+                <p>Your request to cook ${curGroupTrove.recipeName} has been
                 submitted.</p>
 
                 <h3>Request Status</h3>
@@ -34,7 +34,7 @@
                 <p>When the request status "Finished" appears, your group
                 has finished cooking. Click on the "Releases" link in the
                 "Project Resources" sidebar, and select
-                ${groupTrove.recipeName} to create a release.</p>
+                ${curGroupTrove.recipeName} to create a release.</p>
             </div>
         </div>
     </body>
