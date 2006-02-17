@@ -40,6 +40,6 @@ class JobServerTest(jobserverharness.JobServerHelper):
         assert(contents == "Hello World!\n")
         assert(job.getDataValue("hostname") == "localhost")
 
+
 if __name__ == "__main__":
     testsuite.main()
-

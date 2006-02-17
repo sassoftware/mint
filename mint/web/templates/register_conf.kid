@@ -10,11 +10,21 @@
     <head>
         <title>${formatTitle('Thank You for Registering')}</title>
     </head>
+
+    <div py:def="stepContent">
+        Check your email and follow the link enclosed.
+    </div>
+
     <body>
         <div class="layout">
-            <h2>Thank you for registering</h2>
-            <p>An email confirming your request has been sent to the email address you provided.</p>
-            <p>Please follow the directions in your confirmation email to complete the registration process.</p>
+            <div id="right" class="side">
+                ${stepsWidget(['Get Started', 'Sign Up', 'Confirm Email'], 2)}
+            </div>
+            <div id="spanleft">
+                <h2>Thank you for registering</h2>
+                <p>An email confirming your request has been sent to the email address you provided.</p>
+                <p>Please follow the directions in your confirmation email to complete the registration process.</p>
+            </div>
         </div>
     </body>
 </html>
