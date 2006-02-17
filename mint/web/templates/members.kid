@@ -12,7 +12,7 @@ from mint import userlevels
 
     <?python
         isTrueOwner = userLevel == userlevels.OWNER
-        isOwner = userLevel == isTrueOwner or auth.admin
+        isOwner = isTrueOwner or auth.admin
         isDeveloper = userLevel == userlevels.DEVELOPER
         memberList = project.getMembers()
     ?>
@@ -124,7 +124,7 @@ from mint import userlevels
                     </tr>
                 </table>
                 <p py:if="not users[userlevels.OWNER]">This project has been orphaned.</p>
-                <p class="help" py:if="isOwner and lastOwner and not auth.admin">
+                <p class="help" py:if="isTrueOwner and lastOwner">
                     Because a project cannot have developers with no owner, you cannot change your
                     ownership status at this time. To remove yourself from this project, promote
                     a developer to Owner status, or orphan the project by removing all developers,
