@@ -33,6 +33,7 @@
             <li><a href="${projectUrl}members"><strong py:strip="lastchunk != 'members'">Members</strong></a></li>
             <li><a href="${projectUrl}mailingLists"><strong py:strip="lastchunk != 'mailingLists'">Mailing Lists</strong></a></li>
             <li py:if="0"><a href="#"><strong py:strip="lastchunk != 'bugs'">Bug Tracking</strong></a></li>
+            <li><a href="${projectUrl}help"><strong py:strip="lastchunk != 'help'">Help</strong></a></li>
         </ul>
     </div>
 
@@ -132,7 +133,7 @@
         <div class="boxBody" id="boxBody" py:if="projectList">
             <div py:for="level, title in [(userlevels.OWNER, 'Projects I Own'),
                                           (userlevels.DEVELOPER, 'Projects I Work On'),
-                                          (userlevels.USER, 'Projects I Am Watching')]" 
+                                          (userlevels.USER, 'Projects I Am Watching')]"
                  py:strip="True">
                 <div py:strip="True" py:if="level in projectDict">
                     <h4>${title}</h4>
