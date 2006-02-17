@@ -13,6 +13,7 @@ import rephelp
 
 from mint import mint_error
 from mint import releasetypes
+from mint import jobstatus
 from conary.repository import errors
 
 from repostest import testRecipe
@@ -609,7 +610,6 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                                      content = 'closeCurrentGroup')
 
     def testGroupBuilderCook(self):
-        raise testsuite.SkipTestException
         # prove that the group builder box actually closes after cook
         client, userId = self.quickMintUser('foouser','foopass')
         projectId = self.newProject(client)
@@ -639,6 +639,43 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         self.assertNotContent('/project/testproject/releases',
                               content = 'closeCurrentGroup')
+
+    def testGroupCookRespawn(self):
+        # prove that the group builder box actually closes after cook
+        client, userId = self.quickMintUser('foouser','foopass')
+        projectId = self.newProject(client)
+        project = client.getProject(projectId)
+
+        groupTrove = self.createTestGroupTrove(client, projectId)
+
+        self.addComponent("test:runtime", "1.0")
+        self.addComponent("test:devel", "1.0")
+        self.addCollection("test", "1.0", [ ":runtime", ":devel" ])
+
+        groupTrove.addTrove('test', '/testproject.rpath.local@rpl:devel/1.0-1',
+                            '', '', False, False, False)
+
+        page = self.webLogin('foouser', 'foopass')
+
+        # editing the group makes the Pane active
+        page = self.fetch('/project/testproject/editGroup?id=%d' % \
+                          groupTrove.id)
+
+        # cook the group to make it go away
+        page = self.fetch('/project/testproject/pickArch?id=%d' % \
+                          groupTrove.id)
+
+        page.postForm(1, self.post, {"arch" : "1#x86"})
+
+        cu = self.db.cursor()
+        cu.execute("UPDATE Jobs SET status=?, statusMessage='Finished'",
+                   jobstatus.FINISHED)
+        self.db.commit()
+
+        page = page.postForm(1, self.post, {"arch" : "1#x86"})
+
+        self.failIf('Error' in page.body,
+                    "recooking triggered backtrace")
 
     def testGroupTroveItem(self):
         client, userId = self.quickMintUser('foouser','foopass')
