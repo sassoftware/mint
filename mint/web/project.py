@@ -290,7 +290,11 @@ class ProjectHandler(WebHandler):
         else:
             jobId = job.id
 
-        return self._write("cookGroup", jobId = jobId, recipe = recipe)
+        if 'groupTroveId' in self.session:
+            del self.session['groupTroveId']
+
+        return self._write("cookGroup", jobId = jobId, recipe = recipe,
+                           curGroupTrove = curGroupTrove)
 
     @ownerOnly
     def newRelease(self, auth):
