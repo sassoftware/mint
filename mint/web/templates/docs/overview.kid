@@ -58,7 +58,7 @@
                 software specific to the project</li>
 
                 <li>A project-specific hostname
-                (&lt;project-name&gt;.rpath.org)</li>
+                (&lt;project-name&gt;.${cfg.projectDomainName})</li>
 
                 <li>Project-specific mailing lists</li>
 
