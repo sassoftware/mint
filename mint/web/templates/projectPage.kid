@@ -93,10 +93,14 @@ from mint.helperfuncs import truncateForDisplay
 
                 <p>
                     For detailed information on building or installing software
-                    for ${isOwner and "your" or "this"} project, check out the
-                    project's <a href="${project.getUrl()}help">help
-                    pages</a>.
+                    for ${isOwner and "your" or "this"} project, check out:
                 </p>
+                <ul>
+                    <li py:if="isOwner or isDeveloper">
+                        <a href="${basePath}conaryDevelCfg">Setting up ${isOwner and "your" or "the"} project build environment</a>
+                    </li>
+                    <li><a href="${basePath}conaryUserCfg">Installing packages from ${isOwner and "your" or "this"} project</a></li>
+                </ul>
             </div>
         </div>
     </body>

@@ -773,8 +773,8 @@ class MintServer(object):
 
     @typeCheck(int, int, int)
     @requiresAuth
+    @private
     def setUserLevel(self, userId, projectId, level):
-        self._allowPrivate = True
         self._filterProjectAccess(projectId)
         if (self.auth.userId != userId) and (level == userlevels.USER):
             raise users.UserInduction()

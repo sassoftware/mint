@@ -6,8 +6,6 @@
     Copyright (c) 2005-2006 rPath, Inc.
     All Rights Reserved
 -->
-
-
     <?python
         for var in ['username', 'email', 'email2', 'fullName', 'displayEmail', 'blurb', 'tos', 'privacy']:
             kwargs[var] = kwargs.get(var, '')
@@ -16,11 +14,8 @@
         <title>${formatTitle('Create an Account')}</title>
     </head>
     <body>
-        <div class="layout">
-            <div id="right" class="side">
-                ${stepsWidget(['Get Started', 'Sign Up', 'Confirm Email'], 1)}
-            </div>
-            <div id="spanleft">
+       <td id="main" class="spanleft" >
+            <div class="pad">
                 <p py:if="errors" class="error">Account Creation Error${len(errors) > 1 and 's' or ''}</p>
                 <p py:for="error in errors" class="errormessage" py:content="error"/>
                 <h2>Create an Account</h2>
@@ -65,14 +60,8 @@
                             <td>
                                 <input type="text" name="email" value="${kwargs['email']}"/>
 
-                                <p class="help">A confirmation message will be sent to this address for verification
-                                    You may need to enable email from ${cfg.adminMail} in your spam filtering software.
-                                    You will not be able to access your account until you have confirmed your e-mail address.
-                                </p>
-                                <p class="help">This email address will not be displayed on the ${cfg.productName} website
-                                    and will never be shared or sold. More information can be found in our
-                                    ${legal('%slegal?page=privacy' % cfg.basePath, 'Privacy Policy')}.
-                                </p>
+                                <p class="help">A confirmation message will be sent to this address for verification.  You may need to enable email from ${cfg.adminMail} in your spam filtering software.  You will not be able to access your account until you have confirmed your e-mail address. </p>
+                                <p class="help">This email address will not be displayed on the ${cfg.productName} website and will never be shared or sold. More information can be found in our ${legal('%slegal?page=privacy' % cfg.basePath, 'Privacy Policy')}.</p>
                             </td>
                         </tr>
                         <tr>
@@ -123,6 +112,10 @@
                     </button></p>
                 </form>
             </div>
-        </div>
+        </td>
+        <td id="right" class="plain">
+            <div class="pad">
+            </div>
+        </td>
     </body>
 </html>

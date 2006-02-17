@@ -714,6 +714,3 @@ class ProjectHandler(WebHandler):
             desc = ""
 
         return self._writeRss(items = items, title = title, link = link, desc = desc)
-
-    def help(self, auth):
-        return self._write("help")

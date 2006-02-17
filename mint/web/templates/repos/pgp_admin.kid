@@ -16,7 +16,7 @@
                     py:attrs="{'selected': (userId==userid) and 'selected' or None}"
                     py:content="userName" />
         </select>
-        <button type="submit" value="Change">Change Owner</button>
+        <button class="img" id="pgpChangeOwner" type="submit"><img src="${cfg.staticPath}/apps/mint/images/change_owner_button.png" alt="Change Owner" /></button>
       </form>
     </div>
 

@@ -28,7 +28,7 @@ from mint import userlevels
                     <input type="hidden" name="userId" value="${userId}"/>
                     <tr>
                         <td>
-                            <button type="submit">Submit</button>
+                            <button class="img" type="submit"><img src="${cfg.staticPath}apps/mint/images/submit_button.png" alt="Submit" /></button>
                         </td>
                     </tr>
                 </table>

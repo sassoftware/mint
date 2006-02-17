@@ -13,12 +13,13 @@
     <body>
         <div class="layout">
             <div id="right" class="side">
-                ${stepsWidget(['Get Started', 'Sign Up', 'Confirm Email'], 3)}
+                ${resourcePane()}
+		${groupTroveBuilder()}
             </div>
-            <div id="spanleft">
+            <div id="middle">
                 <h2>Thank you for confirming</h2>
                 <p>Your account has now been confirmed.</p>
-                <p>Please <a href="${cfg.basePath}">sign in</a> to begin using ${cfg.productName}.</p>
+                <p>Please sign in to begin using ${cfg.productName}.</p>
             </div>
         </div>
     </body>
