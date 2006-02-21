@@ -59,13 +59,19 @@
             ${resultRow(formattedresults)}
         </div>
         <div class="layout">
-            <h2>Search Results: ${searchType}</h2>
-            ${navigation("search?type=%s;search=%s;modified=%d"%(searchType, terms, modified), terms, count, limit, offset)}
-            <table cellspacing="0" cellpadding="0" class="results">
-                ${columnTitles(columns)}
-                ${searchResults(results)}
-            </table>
-            ${navigation("search?type=%s;search=%s;modified=%d"%(searchType, terms, modified), terms, count, limit, offset, True)}
+            <div id="right" class="side">
+                ${resourcePane()}
+                ${groupTroveBuilder()}
+            </div>
+            <div id="spanleft">
+                <h2>Search Results: ${searchType}</h2>
+                ${navigation("search?type=%s;search=%s;modified=%d"%(searchType, terms, modified), terms, count, limit, offset)}
+                <table cellspacing="0" cellpadding="0" class="results">
+                    ${columnTitles(columns)}
+                    ${searchResults(results)}
+                </table>
+                ${navigation("search?type=%s;search=%s;modified=%d"%(searchType, terms, modified), terms, count, limit, offset, True)}
+            </div>
         </div>
     </body>
 </html>
