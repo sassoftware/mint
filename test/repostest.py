@@ -186,8 +186,8 @@ class RepositoryTest(MintRepositoryHelper):
         projectId1 = self.newProject(client, "Test Project 1", "testp1")
         projectId2 = self.newProject(client, "Test Project 2", "testp2")
 
-        self.cfg.repositoryMap.update({'testp1.rpath.local': 'http://mint.rpath.local:%d/repos/testp1/' % self.port,
-                                       'testp2.rpath.local': 'http://mint.rpath.local:%d/repos/testp2/' % self.port})
+        self.cfg.repositoryMap.update({'testp1.rpath.local': 'http://test.rpath.local:%d/repos/testp1/' % self.port,
+                                       'testp2.rpath.local': 'http://test.rpath.local:%d/repos/testp2/' % self.port})
 
         l1 = versions.Label("testp1.rpath.local@rpl:devel")
         l2 = versions.Label("testp2.rpath.local@rpl:devel")
