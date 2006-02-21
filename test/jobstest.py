@@ -6,6 +6,8 @@
 import testsuite
 testsuite.setup()
 
+import time
+
 from mint_rephelp import MintRepositoryHelper
 from mint import jobstatus
 from mint import jobs
@@ -629,6 +631,65 @@ class JobsTest(MintRepositoryHelper):
 
         self.failIf(cu.fetchone() != (jobstatus.WAITING, None),
                     "Job not regenerated properly. will never run")
+
+    def testListActiveJobs(self):
+        client, userId = self.quickMintUser('foouser', 'foopass')
+        projectId = self.newProject(client)
+
+        jobIds = []
+
+        for i in range(3):
+            groupTrove = client.createGroupTrove(projectId, 'group-test',
+                                                 '1.0.0', 'No Description',
+                                                 False)
+
+            trvName = 'testtrove'
+            trvVersion = '/testproject.rpath.local@rpl:devel/1.0-1-1'
+            trvFlavor = '1#x86|5#use:~!kernel.debug:~kernel.smp'
+            subGroup = ''
+
+            groupTrove.addTrove(trvName, trvVersion, trvFlavor,
+                                subGroup, False, False, False)
+
+            jobIds.append(groupTrove.startCookJob("1#x86"))
+            # hack to ensure timestamps are different.
+            time.sleep(1)
+
+        self.failIf(client.listActiveJobs(True) != jobIds,
+                    "listActiveJobs should have listed %s" % str(jobIds))
+
+        self.failIf(client.listActiveJobs(False) != jobIds,
+                    "listActiveJobs should have listed %s" % str(jobIds))
+
+        cu = self.db.cursor()
+        cu.execute("UPDATE Jobs SET timeStarted = 0 WHERE jobId=?", jobIds[0])
+        self.db.commit()
+
+        self.failIf(client.listActiveJobs(True) != jobIds,
+                    "listActiveJobs should have listed %s" % str(jobIds))
+
+        self.failIf(client.listActiveJobs(False) != jobIds,
+                    "listActiveJobs should have listed %s" % str(jobIds))
+
+        cu.execute("UPDATE Jobs SET status=? WHERE jobId=?",
+                   jobstatus.FINISHED, jobIds[-1])
+        self.db.commit()
+
+        self.failIf(client.listActiveJobs(True) != jobIds[:-1],
+                    "listActiveJobs should have listed %s" % str(jobIds[:-1]))
+
+        self.failIf(client.listActiveJobs(False) != jobIds,
+                    "listActiveJobs should have listed %s" % str(jobIds))
+
+        cu.execute("UPDATE Jobs SET status=? WHERE jobId=?",
+                   jobstatus.FINISHED, jobIds[0])
+        self.db.commit()
+
+        self.failIf(client.listActiveJobs(True) != [jobIds[1]],
+                    "listActiveJobs should have listed %s" % str([jobIds[1]]))
+
+        self.failIf(client.listActiveJobs(False) != jobIds[1:],
+                    "listActiveJobs should have listed %s" % str(jobIds[1:]))
 
     #####
     # setup for testing startNextJob
