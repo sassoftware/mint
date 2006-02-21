@@ -429,6 +429,9 @@ class MintClient:
     def getReportPdf(self, name):
         return base64.b64decode(self.server.getReportPdf(name))
 
+    def getReport(self, name):
+        return self.server.getReport(name)
+
     # label functions
     def versionIsExternal(self, versionStr):
         return self.server.versionIsExternal(versionStr)
