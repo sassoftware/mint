@@ -5,6 +5,7 @@
 
 import time
 from reports import MintReport
+from mint import releasetypes
 
 class NewProjectsReport(MintReport):
     title = 'Site Summary'
@@ -65,6 +66,7 @@ class NewProjectsReport(MintReport):
                    reportTime - 604800)
         data.append(('Unconfirmed users older than a week', cu.fetchone()[0]))
 
+        # spacer
         data.append(('',''))
 
         # count total number of projects
@@ -130,5 +132,45 @@ class NewProjectsReport(MintReport):
                           GROUP BY projectId) AS DistinctProjects
                           WHERE numUsers >= 5""")
         data.append(('Projects with 5 or more users', cu.fetchone()[0]))
+
+        # spacer
+        data.append(('',''))
+
+        countedReleases = (releasetypes.INSTALLABLE_ISO,
+                           releasetypes.QEMU_IMAGE,
+                            releasetypes.VMWARE_IMAGE)
+        queryStr = '(' + ', '.join([str(x) for x in countedReleases]) + ')'
+        # count the total releases
+        cu.execute("""SELECT COUNT(*) FROM Releases
+                              LEFT JOIN ReleaseImageTypes
+                                  ON ReleaseImageTypes.releaseId =
+                                      Releases.releaseId
+                          WHERE imageType IN %s""" % str(countedReleases))
+
+        data.append(('Total Images', cu.fetchone()[0]))
+
+        # count releases for each image type
+        for releaseType in countedReleases:
+            cu.execute("""SELECT COUNT(*) FROM Releases
+                              LEFT JOIN ReleaseImageTypes
+                                  ON ReleaseImageTypes.releaseId =
+                                      Releases.releaseId
+                              WHERE ReleaseImageTypes.imageType=?""",
+                       releaseType)
+            data.append((releasetypes.typeNames[releaseType],
+                         cu.fetchone()[0]))
+
+        # spacer
+        data.append(('',''))
+
+        # count group-builder source commits
+        cu.execute("""SELECT COUNT(*) FROM Commits
+                          WHERE troveName LIKE '%:source' AND userId=0""")
+        data.append(('Source commits from Group Builder', cu.fetchone()[0]))
+
+        # count non-group-builder source commits
+        cu.execute("""SELECT COUNT(*) FROM Commits
+                          WHERE troveName LIKE '%:source' AND userId<>0""")
+        data.append(('Source commits from command line', cu.fetchone()[0]))
 
         return data
