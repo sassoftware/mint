@@ -333,6 +333,13 @@ class MintClient:
         """
         return jobs.Job(self.server, jobId)
 
+    def listActiveJobs(self, filter):
+        """List the jobs in the job queue.
+        @param filter: If True it will only show running or waiting jobs.
+          If False it will show all jobs for past 24 hours.
+        @return: list of jobIds"""
+        return self.server.listActiveJobs(filter)
+
     def startNextJob(self, archTypes, jobTypes):
         jobId = self.server.startNextJob(archTypes, jobTypes)
         if jobId:

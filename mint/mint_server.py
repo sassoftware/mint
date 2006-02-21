@@ -1560,6 +1560,29 @@ class MintServer(object):
 
         return [x[0] for x in cu.fetchall()]
 
+    @typeCheck(bool)
+    @requiresAuth
+    @private
+    def listActiveJobs(self, filter):
+        """List the jobs in the job queue.
+        @param filter: If True it will only show running or waiting jobs.
+          If False it will show all jobs for past 24 hours plus waiting jobs.
+        @return: list of jobIds"""
+
+        cu = self.db.cursor()
+
+        if filter:
+            cu.execute("""SELECT jobId FROM Jobs
+                              WHERE status IN (?, ?) ORDER BY timeStarted""",
+                       jobstatus.WAITING, jobstatus.RUNNING)
+        else:
+            cu.execute("""SELECT jobId FROM Jobs WHERE timeStarted > ?
+                              OR status IN (?, ?) ORDER BY timeStarted""",
+                       time.time() - 86400, jobstatus.WAITING,
+                       jobstatus.RUNNING)
+
+        return [x[0] for x in cu.fetchall()]
+
     @typeCheck((list, str), (dict, (list, int)))
     @requiresAuth
     @private
