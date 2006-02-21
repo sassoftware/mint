@@ -12,6 +12,8 @@
 RBO_SERVER = 'www.rpath.com'
 RBO_PORT = 80
 DEST_DIR = '/tmp/rbo_reports'
+DB_DRIVER = 'sqlite'
+DB_PATH = '/tmp/rbo_reports/rboreports.sql'
 ######
 import os, socket, sys, time
 
@@ -26,14 +28,33 @@ if len(sys.argv) > 3:
 # set up import resolution environment
 parDir = '/'.join(os.path.realpath(__file__).split('/')[:-2])
 mintPath = os.getenv('MINT_PATH', parDir)
-
 if mintPath not in sys.path:
     sys.path.insert(0, mintPath)
+
+conaryPath = os.getenv('CONARY_PATH', parDir)
+if conaryPath not in sys.path:
+    sys.path.insert(0, conaryPath)
 # end set up import resolution environment
 
-
 from mint.mint import MintClient
+from conary import dbstore
 
+def logSummary(db, mc):
+    cu = db.cursor()
+    try:
+        cu.execute("select * from Summary")
+    except:
+        cu.execute("""CREATE TABLE Summary(metric NVARCHAR(256),
+                                           answer INT,
+                                           timestamp INT)""")
+    timeStamp = time.time()
+    report = mc.getReport('site_summary')
+    for key, value in report['data']:
+        # there are empty lines (for spacing) in the data. don't log them.
+        if key:
+            cu.execute("INSERT INTO Summary VALUES(?, ?, ?)",
+                       key, value, timeStamp)
+    db.commit()
 
 def touchDir(dirPath):
     # a rudimentary function to ensure a directory exists. it will not
@@ -46,12 +67,15 @@ def touchDir(dirPath):
             raise
         os.mkdir(dirPath)
 
-
 try:
     mc = MintClient("http://mintauth:mintpass@%s:%s/xmlrpc-private" % \
                     (RBO_SERVER, RBO_PORT))
 
+    db = dbstore.connect(DB_PATH, DB_DRIVER)
+
     dateStr = ''.join(["%02d" % x for x in time.localtime(time.time())[:3]])
+
+    logSummary(db, mc)
 
     reports = {}
     for report, title in mc.listAvailableReports().items():
