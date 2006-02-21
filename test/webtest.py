@@ -555,25 +555,18 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
             content = 'An unknown error occured')
 
     def testDownloadISO(self):
-        filename = self.tmpDir + "/test.iso"
-        data = "Hello World"
-        f = file(filename, "w")
-        f.write(data)
-        f.close()
-
         client, userId = self.quickMintUser("testuser", "testpass")
         projectId = client.newProject("Foo", "foo", "rpath.org")
         release = client.newRelease(projectId, "Test Release")
         release.setImageTypes([0])
 
         cu = self.db.cursor()
-        cu.execute("INSERT INTO ImageFiles VALUES (1, ?, 0, ?, 'Test Image')",
-                   release.id, filename)
+        cu.execute("INSERT INTO ImageFiles VALUES (1, ?, 0, 'test.iso', 'Test Image')",
+                   release.id)
         self.db.commit()
         release.setPublished(True)
 
-        page = self.fetch('/downloadImage/1/test.iso')
-        assert(page.body == data)
+        page = self.assertCode('/downloadImage/1/test.iso', code = 301)
 
     def testUtf8ProjectName(self):
         client, userId = self.quickMintUser('foouser','foopass')
