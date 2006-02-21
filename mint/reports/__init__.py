@@ -15,7 +15,7 @@ global _reportlab_present
 try:
     import reportlab
     _reportlab_present = True
-except NameError:
+except ImportError:
     _reportlab_present = False
 
 from reports import MintReport
