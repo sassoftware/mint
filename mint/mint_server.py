@@ -1562,7 +1562,6 @@ class MintServer(object):
 
     @typeCheck(bool)
     @requiresAuth
-    @private
     def listActiveJobs(self, filter):
         """List the jobs in the job queue.
         @param filter: If True it will only show running or waiting jobs.
