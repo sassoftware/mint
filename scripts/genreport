@@ -45,7 +45,7 @@ def logSummary(db, mc):
         cu.execute("select * from Summary")
     except:
         cu.execute("""CREATE TABLE Summary(metric NVARCHAR(256),
-                                           answer INT,
+                                           value INT,
                                            timestamp INT)""")
     timeStamp = time.time()
     report = mc.getReport('site_summary')
