@@ -20,7 +20,7 @@ from mint.distro import jobserver
 def kill(lockFile):
     try:
         lock = open(lockFile, "r")
-        pid = int(lock.read())
+        pid = int(lock.readline())
         lock.close()
     except Exception, e:
         log.warning("unable to open lockfile: %s (%s)", lockFile, str(e))
@@ -118,16 +118,16 @@ if __name__ == "__main__":
 
     if os.access(cfg.lockFile, os.R_OK):
         lock = open(cfg.lockFile, "r")
-        pid = lock.read()
+        pid = int(lock.readline())
         lock.close()
         # check if the pid is actually valid...
-        pipeFD = os.popen("ps -p %s -o pid="% pid)
+        pipeFD = os.popen("ps -p %d -o pid="% pid)
         pidLine = pipeFD.readline()
         pipeFD.close()
 
-        if pid in pidLine:
+        if str(pid) in pidLine:
             log.error("rBuilder ISO generation server already"
-                      " running as pid %s", pid)
+                      " running as pid %d", pid)
             sys.exit(1)
         else:
             log.info("Old job daemon pid seems to be invalid. killing.")
