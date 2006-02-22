@@ -19,6 +19,7 @@ kid_files = \
 	forgotPassword.kid	\
 	frontPage.kid		\
 	groups.kid		\
+	help.kid		\
 	joinRequest.kid		\
 	layout.kid		\
 	library.kid		\
