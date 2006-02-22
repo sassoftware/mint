@@ -1746,6 +1746,17 @@ class MintServer(object):
             self.jobs.update(jobId, status = newStatus, statusMessage = statusMessage)
         return True
 
+    @typeCheck()
+    @private
+    @requiresAdmin
+    def getJobServerStatus(self):
+        # Handling the job server in this manner is temporary
+        # This is only useful in an appliance context at this time.
+        pipeFD = os.popen("/sbin/service rbuilder-isogen status")
+        res = pipeFd.read()
+        pipeFD.close()
+        return res
+
     @typeCheck(int, (list, (list, str)))
     @requiresAuth
     @private
