@@ -166,11 +166,11 @@ class NewProjectsReport(MintReport):
         # count group-builder source commits
         cu.execute("""SELECT COUNT(*) FROM Commits
                           WHERE troveName LIKE '%:source' AND userId=0""")
-        data.append(('Source commits from Group Builder', cu.fetchone()[0]))
+        data.append(('Group Builder commits', cu.fetchone()[0]))
 
         # count non-group-builder source commits
         cu.execute("""SELECT COUNT(*) FROM Commits
                           WHERE troveName LIKE '%:source' AND userId<>0""")
-        data.append(('Source commits from command line', cu.fetchone()[0]))
+        data.append(('Command line commits', cu.fetchone()[0]))
 
         return data
