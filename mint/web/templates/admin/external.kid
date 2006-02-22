@@ -88,6 +88,31 @@
                       <strong>http://conary.example.com/conary/</strong>)</p>
                     </td>
                   </tr>
+                </table>
+
+                <h2>Mirror Settings</h2>
+                <table class="mainformhorizontal">
+                  <tr>
+                    <th>Mirroring Enabled:</th>
+                    <td><input type="checkbox" class="check" name="useMirror" /> Mirror this repository locally.</td>
+                  </tr>
+                  <tr>
+                    <th>Authorization:</th>
+                    <td>Username: <input type="text" name="mirrorUser" style="width: 25%;" /></td>
+                  </tr>
+                  <tr>
+                    <th></th>
+                    <td>Password: <input type="password" name="mirrorPass" style="width: 25%;" />
+                      <p class="help">
+                          Enter the username and password of a user authorized to mirror this repository.
+                      </p>
+                      <p class="help">
+                          Otherwise, if you have a mirroring entitlement rather than a username and
+                          password, please paste it here:
+                      </p>
+                      <textarea rows="5" cols="50" name="mirrorEnt" />
+                    </td>
+                  </tr>
                   </table>
                   <button name="operation" value="process_external" class="img" type="submit"><img src="${cfg.staticPath}/apps/mint/images/add_button.png" alt="Add" /></button>
               </form>

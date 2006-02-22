@@ -18,6 +18,7 @@ import dbversion
 import grouptrove
 import jobs
 import jobstatus
+import mirror
 import news
 import pkgindex
 import projects
@@ -191,6 +192,7 @@ def getTables(db, cfg):
     d['groupTroveItems'] = grouptrove.GroupTroveItemsTable(db)
     d['jobData'] = data.JobDataTable(db)
     d['releaseImageTypes'] = releases.ReleaseImageTypesTable(db)
+    d['mirrorLabels'] = mirror.MirrorLabelsTable(db)
     if not min([x.upToDate for x in d.values()]):
         d['version'].bumpVersion()
         return getTables(db, cfg)
@@ -2252,6 +2254,14 @@ class MintServer(object):
         if name not in reports.getAvailableReports():
             raise PermissionDenied
         return base64.b64encode(self._getReportObject(name).getPdf())
+
+    # mirrored labels
+    @private
+    @typeCheck(int, str, str, str)
+    @requiresAdmin
+    def addMirroredLabel(self, targetLabelId, url, username, password):
+        return self.mirrorLabels.new(targetLabelId = targetLabelId,
+            url = url, username = username, password = password)
 
     def __init__(self, cfg, allowPrivate = False, alwaysReload = False, db = None, req = None):
         self.cfg = cfg

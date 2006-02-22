@@ -114,6 +114,12 @@ class LabelsTest(MintRepositoryHelper):
         #self.assertRaises(database.ItemNotFound, client2.versionIsExternal,
         #                  '/just.not.there@rpl:devel//1/1.0.0-1-0.1')
 
+    def testMirroredLabel(self):
+        client, userId = self.quickMintAdmin("testuser", "testpass")
+
+        client.addMirroredLabel(0, "http://www.example.com/conary/", "mirror", "mirrorpass")
+        # XXX add more useful test code
+
 
 if __name__ == "__main__":
     testsuite.main()
