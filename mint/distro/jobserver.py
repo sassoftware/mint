@@ -43,29 +43,6 @@ SUPPORTED_ARCHS = ('x86', 'x86_64')
 # JOB_IDLE_INTERVAL: interval is in seconds. format is (min, max)
 JOB_IDLE_INTERVAL = (5, 10)
 
-global takingJobs
-global origterm
-global origInt
-takingJobs = True
-
-def stopJobs(signalNum, frame):
-    global takingJobs
-    global origTerm
-    global origInt
-    takingJobs = False
-    if signalNum == signal.SIGTERM:
-        signalName = 'SIGTERM'
-    elif signalNum == signal.SIGINT:
-        signalName = 'SIGINT'
-    else:
-        signalName = 'UNKNOWN'
-    log.info("Caught %s signal. Taking no more jobs..." % signalName)
-    signal.signal(signal.SIGTERM, origTerm)
-    signal.signal(signal.SIGINT, origInt)
-
-origTerm = signal.signal(signal.SIGTERM, stopJobs)
-origInt = signal.signal(signal.SIGINT, stopJobs)
-
 class JobRunner:
     def __init__(self, cfg, client, job):
         self.cfg = cfg
@@ -160,7 +137,27 @@ class JobDaemon:
 
         confirmedAlive = False
 
-        global takingJobs
+        self.takingJobs = True
+
+        def stopJobs(signalNum, frame):
+            self.takingJobs = False
+            if signalNum == signal.SIGTERM:
+                signalName = 'SIGTERM'
+            elif signalNum == signal.SIGINT:
+                signalName = 'SIGINT'
+            else:
+                signalName = 'UNKNOWN'
+            log.info("Caught %s signal. No more jobs will be requested." % \
+                     signalName)
+            signal.signal(signal.SIGTERM, self.origTerm)
+            signal.signal(signal.SIGINT, self.origInt)
+            # alter the lock file
+            lockFile = open(cfg.lockFile, 'a')
+            lockFile.write('\nSHUTTING_DOWN')
+            lockFile.close()
+
+        self.origTerm = signal.signal(signal.SIGTERM, stopJobs)
+        self.origInt = signal.signal(signal.SIGINT, stopJobs)
 
         try:
             os.makedirs(cfg.logPath)
@@ -175,7 +172,7 @@ class JobDaemon:
         runningJobs = []
 
         errors = 0
-        while(runningJobs or takingJobs):
+        while(self.takingJobs or runningJobs):
             for jobPid in runningJobs[:]:
                 try:
                     os.waitpid(jobPid, os.WNOHANG)
@@ -184,7 +181,7 @@ class JobDaemon:
 
             if len(runningJobs) < cfg.maxThreads:
                 try:
-                    if takingJobs:
+                    if self.takingJobs:
                         job = client.startNextJob(["1#" + x for x in \
                                                    cfg.supportedArch],
                                                   cfg.jobTypes)
