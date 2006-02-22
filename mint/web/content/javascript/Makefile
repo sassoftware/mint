@@ -1,12 +1,26 @@
-javascript_files = *.js
+javascript_files =\
+	generic.js \
+	groupbuilder.js \
+	library.js \
+	rpc.js
+
+generated_files =\
+	releasetypes.js \
+	jobstatus.js
 
 dist_files = $(javascript_files) Makefile
 
-all:
+all: $(javascript_files) $(generated_files)
+
+releasetypes.js: ../../../releasetypes.py
+	python ../../../releasetypes.py --genjs > releasetypes.js
+
+jobstatus.js: ../../../jobstatus.py
+	python ../../../jobstatus.py --genjs > jobstatus.js
 
 install:
 	mkdir -p $(DESTDIR)$(contentdir)/javascript
-	for f in $(javascript_files); do \
+	for f in $(javascript_files) $(generated_files); do \
 		install -m 644 $$f $(DESTDIR)$(contentdir)/javascript/$$f; \
 	done
 

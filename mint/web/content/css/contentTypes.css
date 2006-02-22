@@ -129,19 +129,26 @@ th .required {
 	padding:0px 0px 4px 0px; margin:8px 0px 8px 0px;
 	border-bottom:1px #ccc solid; border-top:1px #ccc solid;
 }
+
 .results th {
 	font-weight:normal; color:#999;
 	border-bottom:1px #999 solid;
 	padding:6px 12px 6px 0px;
 }
+
 .results td {
 	vertical-align:top; padding:6px 12px 6px 0px;
 	border-top:1px #e6e6e6 solid;
 }
 
-.results tbody tr.key-ids{
+.results tbody tr.key-ids {
         font-family: "times", monospace;
 }
+
+.results tbody tr:first-child td {
+        border-top: 0;
+}
+
 strong.keyword {
 	color:#FF7C04;
 }

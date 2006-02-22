@@ -665,7 +665,7 @@ class JobsTest(MintRepositoryHelper):
                     "listActiveJobs should have listed %s" % str(jobIds))
 
         cu = self.db.cursor()
-        cu.execute("UPDATE Jobs SET timeStarted = 0 WHERE jobId=?", jobIds[0])
+        cu.execute("UPDATE Jobs SET timeSubmitted = 0 WHERE jobId=?", jobIds[0])
         self.db.commit()
 
         self.failIf(listActiveJobs(client, True) != jobIds,

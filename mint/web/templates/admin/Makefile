@@ -10,9 +10,11 @@ kid_files =			\
 	notify.kid		\
 	project.kid		\
 	report.kid		\
-	user.kid                \
-        newUser.kid             \
-        external.kid
+	user.kid		\
+	newUser.kid		\
+	jobs.kid		\
+	external.kid
+
 
 python_files =
 
@@ -31,7 +33,7 @@ kidfiles-install:
                 cp -a $$f $(DESTDIR)$(mintdir)$(DIR)/$$f; \
         done
 
-dist: default-dist 
+dist: default-dist
 
 clean: default-clean
 

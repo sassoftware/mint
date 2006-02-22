@@ -66,7 +66,7 @@ kidfiles-install:
                 cp -a $$f $(DESTDIR)$(mintdir)$(DIR)/$$f; \
         done
 
-dist: default-dist 
+dist: default-dist
 
 clean: default-clean
 

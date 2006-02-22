@@ -1,3 +1,21 @@
+// Globals - top level stuff
+var refreshed = false;
+var oldStatus = -1;
+var cookStatusRefreshTime = 2000; /* 2 seconds */
+var cookStatusId;
+var releaseStatusRefreshTime = 5000; /* 5 seconds */
+var releaseStatusId;
+var jobsListRefreshTime = 10000; /* 10 seconds */
+var jobsListId;
+var jobsList = "global";
+var archDict = "global";
+var cookStatus = "global";
+var releaseStatus = "global";
+var oldStatus = STATUS_UNKNOWN;
+var userCache = {};
+var groupTroveCache = {};
+var releaseCache = {};
+
 // user interface helpers ---------------------------------------------------
 
 // toggles visiblity of a single element based on the element's id
@@ -55,25 +73,93 @@ function getCookieValue (cookie) {
         return false;
 }
 
-// RPC callbacks ------------------------------------------------------------
+// given a python time (e.g. from time.time()), turns it into a
+// human readable string
+function humanReadableDate(aPythonicTimestamp) {
+    var retval;
 
-var STATUS_WAITING = 0;
-var STATUS_RUNNING = 1;
-var STATUS_FINISHED = 2;
-var STATUS_DELETED = 3;
-var STATUS_ERROR = 4;
-var STATUS_NOJOB = 5;
-var STATUS_UNKNOWN = 9999;
-var refreshed = false;
-var oldStatus = -1;
-var cookStatusRefreshTime    = 2000; /* 2 seconds */
-var cookStatusId;
-var releaseStatusRefreshTime = 5000; /* 5 seconds */
-var releaseStatusId;
-var archDict = "global";
-var cookStatus = "global";
-var releaseStatus = "global";
-var oldStatus = STATUS_UNKNOWN;
+    if (!typeof(aPythonicTimestamp) == "number")
+        return "Invalid Timestamp";
+
+    var d = (aPythonicTimestamp*1000).toFixed(0);
+    if (d > 0) {
+        var dObj = new Date();
+        dObj.setTime(d);
+        retval =  dObj.toLocaleString();
+    } else {
+        retval = "-";
+    }
+
+    return retval;
+}
+
+// get release image type
+getReleaseImageTypeDesc = function(aTypeId) {
+    return releaseImageTypeNamesShort[aTypeId];
+};
+
+// function that generates a generic header table row
+headerRowDisplay = function(aRow) {
+    return TR(null, map(partial(TH, null), aRow));
+};
+
+// function that generates a generic table row
+rowDisplay = function(aRow) {
+    return TR(null, map(partial(TD, null), aRow));
+};
+
+// generate a row for the job table
+makeJobRowData = function(aRow) {
+    var username;
+    var jobDesc;
+    var dateOfInterest;
+
+    // Get the user ID
+    var userObj = getUserById(aRow['userId']);
+    if (userObj) {
+        username = userObj['username'];
+    } else {
+        username = "-unknown-";
+    }
+
+    // Create a meaningful job description
+    if (aRow['groupTroveId']) {
+        var groupTroveObj = getGroupTroveById(aRow['groupTroveId']);
+        if (groupTroveObj) {
+            jobDesc = "Group cook: " + groupTroveObj['recipeName'];
+        }
+    }
+    else if (aRow['releaseId']) {
+        var releaseObj = getReleaseById(aRow['releaseId']);
+        if (releaseObj) {
+            jobDesc = "Release build: " + releaseObj['name'];
+            if (releaseObj.imageTypes) {
+                jobDesc += " (" + map(getReleaseImageTypeDesc, releaseObj.imageTypes).join(", ") + ")";
+            }
+        }
+    }
+    else
+    {
+        jobDesc = "-Unknown-";
+    }
+
+    // pick the appropriate time we are interested in
+    // if we are queued, display the submitted time
+    // if we are running, display the started time
+    // if we are finished, display the finished time
+    if (aRow['status'] < STATUS_RUNNING) {
+        dateOfInterest = aRow['timeSubmitted'];
+    } else if (aRow['status'] == STATUS_RUNNING) {
+        dateOfInterest = aRow['timeStarted'];
+    } else if (aRow['status'] > STATUS_RUNNING) {
+        dateOfInterest = aRow['timeFinished'];
+    }
+
+    return [ aRow['jobId'], username, jobDesc,
+             humanReadableDate(dateOfInterest), aRow['statusMessage'] ];
+};
+
+// RPC callbacks ------------------------------------------------------------
 
 function processGetReleaseStatus(aReq) {
     var el = $("jobStatus");
@@ -177,6 +263,57 @@ function processGetTroveVersionsByArch(aReq) {
 
 }
 
+function processListActiveJobs(aReq) {
+    var jobTable;
+    var oldJobTable = $("jobsTable");
+
+    logDebug("[JSON] response: ", aReq.responseText);
+    jobsList = evalJSONRequest(aReq);
+
+    // segregate jobsList into mini-lists
+    var queuedJobsList = map(makeJobRowData, filter(
+        function (job) {
+            return (job.status < STATUS_RUNNING);
+        }, jobsList));
+
+    var runningJobsList = map(makeJobRowData, filter(
+        function (job) {
+            return (job.status == STATUS_RUNNING);
+        }, jobsList));
+
+    var finishedJobsList = map(makeJobRowData, filter(
+        function (job) {
+            return (job.status > STATUS_RUNNING);
+        }, jobsList));
+
+    var runningJobsTable =
+        TABLE({ class: "results" },
+        THEAD(null, headerRowDisplay(["Job ID", "Submitter", "Description",
+            "Started", "Last Status Message Received"])),
+        TBODY(null, map(rowDisplay, runningJobsList)));
+
+    var queuedJobsTable =
+        TABLE({ class: "results" },
+        THEAD(null, headerRowDisplay(["Job ID", "Submitter", "Description",
+            "Submitted", "Last Status Message Received"])),
+        TBODY(null, map(rowDisplay, queuedJobsList)));
+
+    var finishedJobsTable =
+        TABLE({ class: "results" },
+        THEAD(null, headerRowDisplay(["Job ID", "Submitter", "Description",
+             "Finished", "Last Status Message Received"])),
+        TBODY(null, map(rowDisplay, finishedJobsList)));
+
+    // build the jobs display
+    jobTable = DIV({ id: "jobsTable" },
+        H2(null, "Running Jobs"), runningJobsTable,
+        H2(null, "Queued Jobs"), queuedJobsTable,
+        H2(null, "Finished Jobs"), finishedJobsTable);
+
+    // display it
+    swapDOM(oldJobTable, jobTable);
+}
+
 // RPC calls ----------------------------------------------------------------
 
 function getReleaseStatus(releaseId) {
@@ -212,6 +349,18 @@ function getTroveVersionsByArch(projectId, troveNameWithLabel) {
     req.setAuth(getCookieValue("pysid"));
     req.setCallback(processGetTroveVersionsByArch);
     req.send(true, [projectId, troveNameWithLabel]);
+}
+
+function listActiveJobs(wantOnlyActive) {
+    var req = new JsonRpcRequest("/jsonrpc", "listActiveJobs");
+    req.setAuth(getCookieValue("pysid"));
+    req.setCallback(processListActiveJobs);
+    req.send(false, [wantOnlyActive]);
+    // continue calling self until we're finished
+    if (jobsList != null) {
+        jobsListId = setTimeout("listActiveJobs("+wantOnlyActive+")", jobsListRefreshTime);
+    }
+
 }
 
 function reloadCallback() {
@@ -336,5 +485,62 @@ function handleReleaseTypes(aSelectedArch) {
         qemuImageSel.disabled = false;
         vmwareImageSel.disabled = false;
     }
+
+}
+
+// cache-y goodness
+
+function getReleaseById(aId) {
+    var releaseObj;
+
+    lclReleaseCallback = function(aReq) {
+        logDebug("[JSON] response: ", aReq.responseText);
+        releaseCache[aId] = evalJSONRequest(aReq);
+    };
+
+    if (!releaseCache[aId]) {
+        var req = new JsonRpcRequest('/jsonrpc', 'getRelease');
+        req.setAuth(getCookieValue("pysid"));
+        req.setCallback(lclReleaseCallback);
+        req.send(false, [aId]);
+    }
+
+    return releaseCache[aId];
+
+}
+
+function getUserById(aId) {
+
+    lclUserCallback = function(aReq) {
+        logDebug("[JSON] response: ", aReq.responseText);
+        userCache[aId] = evalJSONRequest(aReq);
+    };
+
+    if (!userCache[aId]) {
+        var req = new JsonRpcRequest('/jsonrpc', 'getUserPublic');
+        req.setAuth(getCookieValue("pysid"));
+        req.setCallback(lclUserCallback);
+        req.send(false, [aId]);
+    }
+
+    return userCache[aId];
+
+}
+
+function getGroupTroveById(aId) {
+
+    lclGroupTroveCallback = function(aReq) {
+        logDebug("[JSON] response: ", aReq.responseText);
+        groupTroveCache[aId] = evalJSONRequest(aReq);
+    };
+
+    if (!groupTroveCache[aId]) {
+        var req = new JsonRpcRequest('/jsonrpc', 'getGroupTrove');
+        req.setAuth(getCookieValue("pysid"));
+        req.setCallback(lclGroupTroveCallback);
+        req.send(false, [aId]);
+    }
+
+    return groupTroveCache[aId];
 
 }

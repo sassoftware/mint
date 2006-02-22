@@ -6,3 +6,5 @@
 \.(pyc|swp|swo|orig|rej)$
 test/\.(times|coverage)
 mint/constants\.py
+mint/web/content/javascript/releasetypes\.js
+mint/web/content/javascript/jobstatus\.js

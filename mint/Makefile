@@ -24,6 +24,7 @@ python_files =			\
 	mint_error.py		\
 	mint.py			\
 	mint_server.py		\
+	mirror.py		\
 	news.py			\
 	pkgindex.py		\
 	profile.py		\

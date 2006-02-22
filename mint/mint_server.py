@@ -758,6 +758,14 @@ class MintServer(object):
     def getUser(self, id):
         return self.users.get(id)
 
+    @typeCheck(int)
+    def getUserPublic(self, id):
+        """Public version of getUser which takes out the private bits."""
+        u = self.users.get(id)
+        u['salt'] = ""
+        u['passwd'] = ""
+        return u
+
     @typeCheck(int, int)
     @private
     def getUserLevel(self, userId, projectId):
@@ -1259,7 +1267,6 @@ class MintServer(object):
         return self.commits.getCommitsByProject(projectId)
 
     @typeCheck(int)
-    @private
     def getRelease(self, releaseId):
         self._filterReleaseAccess(releaseId)
         return self.releases.get(releaseId)
@@ -1448,7 +1455,9 @@ class MintServer(object):
                                    userId = self.auth.userId,
                                    status = jobstatus.WAITING,
                                    statusMessage = self.getJobWaitMessage(0),
-                                   timeStarted = time.time(), timeFinished = 0)
+                                   timeSubmitted = time.time(),
+                                   timeStarted = 0,
+                                   timeFinished = 0)
             cu.execute('SELECT troveFlavor FROM Releases WHERE releaseId=?',
                        releaseId)
             flavorString = cu.fetchone()[0]
@@ -1461,10 +1470,11 @@ class MintServer(object):
             if status in (jobstatus.WAITING, jobstatus.RUNNING):
                 raise jobs.DuplicateJob
             else:
-                # getJobWaitMessage orders by timeStarted, so update must
+                # getJobWaitMessage orders by timeSubmitted, so update must
                 # occur in two steps
                 self.jobs.update(jobId, status = jobstatus.WAITING,
-                                 timeStarted = time.time(), timeFinished = 0,
+                                 timeSubmitted= time.time(), timeStarted = 0,
+                                 timeFinished = 0,
                                  owner = None)
                 msg = self.getJobWaitMessage(jobId)
                 self.jobs.update(jobId, statusMessage = msg)
@@ -1493,7 +1503,9 @@ class MintServer(object):
                                    userId = self.auth.userId,
                                    status = jobstatus.WAITING,
                                    statusMessage = self.getJobWaitMessage(0),
-                timeStarted = time.time(), timeFinished = 0)
+                                   timeSubmitted = time.time(),
+                                   timeStarted = 0,
+                                   timeFinished = 0)
         else:
             jobId, status = r[0]
             if status in (jobstatus.WAITING, jobstatus.RUNNING):
@@ -1502,7 +1514,9 @@ class MintServer(object):
                 # getJobWaitMessage orders by timeStarted, so update must
                 # occur in two steps
                 self.jobs.update(jobId, status = jobstatus.WAITING,
-                                 timeStarted = time.time(), timeFinished = 0,
+                                 timeSubmitted = time.time(),
+                                 timeStarted = 0,
+                                 timeFinished = 0,
                                  owner = None)
                 msg = self.getJobWaitMessage(jobId)
                 self.jobs.update(jobId, statusMessage = msg)
@@ -1527,7 +1541,7 @@ class MintServer(object):
         cu = self.db.cursor()
 
         cu.execute("SELECT userId, releaseId, groupTroveId, status,"
-                   "  statusMessage, timeStarted, "
+                   "  statusMessage, timeSubmitted, timeStarted, "
                    "  timeFinished FROM Jobs "
                    " WHERE jobId=?", jobId)
 
@@ -1536,7 +1550,8 @@ class MintServer(object):
             raise jobs.JobMissing
 
         dataKeys = ['userId', 'releaseId', 'groupTroveId', 'status',
-                    'statusMessage', 'timeStarted', 'timeFinished']
+                    'statusMessage', 'timeSubmitted', 'timeStarted',
+                    'timeFinished']
         data = {}
         for i, key in enumerate(dataKeys):
             # these keys can be NULL from the db
@@ -1558,7 +1573,7 @@ class MintServer(object):
     def getJobIds(self):
         cu = self.db.cursor()
 
-        cu.execute("SELECT jobId FROM Jobs ORDER BY timeStarted")
+        cu.execute("SELECT jobId FROM Jobs ORDER BY timeSubmitted")
 
         return [x[0] for x in cu.fetchall()]
 
@@ -1574,11 +1589,11 @@ class MintServer(object):
 
         if filter:
             cu.execute("""SELECT jobId FROM Jobs
-                              WHERE status IN (?, ?) ORDER BY timeStarted""",
+                              WHERE status IN (?, ?) ORDER BY timeSubmitted""",
                        jobstatus.WAITING, jobstatus.RUNNING)
         else:
-            cu.execute("""SELECT jobId FROM Jobs WHERE timeStarted > ?
-                              OR status IN (?, ?) ORDER BY timeStarted""",
+            cu.execute("""SELECT jobId FROM Jobs WHERE timeSubmitted > ?
+                              OR status IN (?, ?) ORDER BY timeSubmitted""",
                        time.time() - 86400, jobstatus.WAITING,
                        jobstatus.RUNNING)
 
@@ -1646,7 +1661,7 @@ class MintServer(object):
                            AND Jobs.releaseId IS NULL
                            AND owner=?
                            AND JobData.value IN %s
-                       ORDER BY timeStarted
+                       ORDER BY timeSubmitted
                        LIMIT 1""" % archTypeQuery
             cu.execute(query, jobstatus.WAITING, ownerId, *archTypes)
         elif not cookTypes:
@@ -1661,7 +1676,7 @@ class MintServer(object):
                            AND owner=?
                            AND JobData.value IN %s
                            AND ReleaseImageTypes.imageType IN %s
-                       ORDER BY timeStarted
+                       ORDER BY timeSubmitted
                        LIMIT 1""" % (archTypeQuery, imageTypeQuery)
 
             cu.execute(query, jobstatus.WAITING, ownerId,
@@ -1678,7 +1693,7 @@ class MintServer(object):
                            AND JobData.value IN %s
                            AND (ReleaseImageTypes.imageType IN %s OR
                                 (groupTroveId IS NOT NULL))
-                       ORDER BY timeStarted
+                       ORDER BY timeSubmitted
                        LIMIT 1""" % (archTypeQuery, imageTypeQuery)
 
             cu.execute(query, jobstatus.WAITING, ownerId,
@@ -1937,8 +1952,8 @@ class MintServer(object):
             if res[0][0] != jobstatus.WAITING:
                 return 0
             cu.execute("""SELECT COUNT(*) FROM Jobs
-                              WHERE timeStarted <
-                                  (SELECT timeStarted FROM Jobs
+                              WHERE timeSubmitted <
+                                  (SELECT timeSubmitted FROM Jobs
                                       WHERE jobId = ?)
                               AND status = ?""", jobId, jobstatus.WAITING)
         else:
@@ -2062,7 +2077,6 @@ class MintServer(object):
     @requiresAuth
     def createGroupTrove(self, projectId, recipeName, upstreamVersion,
                          description, autoResolve):
-        # projectId 0 indicates (public) transient group trove.
         self._filterProjectAccess(projectId)
         self._requireProjectDeveloper(projectId)
         creatorId = self.users.getIdByColumn("username", self.authToken[0])
@@ -2070,14 +2084,12 @@ class MintServer(object):
                                                  recipeName, upstreamVersion,
                                                  description, autoResolve)
 
-    @private
     @typeCheck(int)
     @requiresAuth
     def getGroupTrove(self, groupTroveId):
         projectId = self.groupTroves.getProjectId(groupTroveId)
         self._filterProjectAccess(projectId)
         self._requireProjectDeveloper(projectId)
-        # projectId 0 indicates (public) transient group trove.
         return self.groupTroves.get(groupTroveId)
 
     @private

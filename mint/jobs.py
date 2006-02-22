@@ -30,12 +30,14 @@ class JobsTable(database.KeyedTable):
                     userId          INT,
                     status          INT,
                     statusMessage   TEXT,
+                    timeSubmitted   DOUBLE,
                     timeStarted     DOUBLE,
                     timeFinished    DOUBLE
                 )"""
 
     fields = ['jobId', 'releaseId', 'groupTroveId', 'owner', 'userId',
-              'status', 'statusMessage', 'timeStarted', 'timeFinished']
+              'status', 'statusMessage', 'timeSubmitted',
+              'timeStarted', 'timeFinished']
 
     indexes = {"JobsReleaseIdx": """CREATE INDEX JobsReleaseIdx
                                         ON Jobs(releaseId)""",
@@ -53,6 +55,10 @@ class JobsTable(database.KeyedTable):
             if dbversion == 11:
                 cu = self.db.cursor()
                 cu.execute("ALTER TABLE Jobs ADD COLUMN owner INT")
+                return (dbversion + 1) == self.schemaVersion
+            if dbversion == 12:
+                cu = self.db.cursor()
+                cu.execute("ALTER TABLE Jobs ADD COLUMN timeSubmitted DOUBLE")
                 return (dbversion + 1) == self.schemaVersion
         return True
 
@@ -87,6 +93,9 @@ class Job(database.TableObject):
 
     def setStatus(self, status, statusMessage):
         return self.server.setJobStatus(self.id, status, statusMessage)
+
+    def getTimeSubmitted(self):
+        return self.timeSubmitted
 
     def getTimeStarted(self):
         return self.timeStarted
