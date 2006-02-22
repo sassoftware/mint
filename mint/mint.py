@@ -436,8 +436,14 @@ class MintClient:
     def versionIsExternal(self, versionStr):
         return self.server.versionIsExternal(versionStr)
 
-    def addMirroredLabel(self, targetLabelId, url, username, password):
-        return self.server.addMirroredLabel(targetLabelId, url, username, password)
+    def addMirroredLabel(self, projectId, targetLabelId, url, username, password):
+        return self.server.addMirroredLabel(projectId, targetLabelId, url, username, password)
+
+    def getMirroredLabels(self):
+        return self.server.getMirroredLabels()
+
+    def getLabel(self, labelId):
+        return self.server.getLabel(labelId)
 
 class ServerProxy(xmlrpclib.ServerProxy):
     def __getattr__(self, name):

@@ -1,0 +1,62 @@
+#!/usr/bin/python2.4
+#
+# Copyright (c) 2006 rPath, Inc.
+#
+# All Rights Reserved
+#
+
+import sys
+
+from conary.conaryclient import mirror
+from conary import versions
+from conary.repository import netclient
+from conary.lib import util, log
+
+from mint import mint
+
+log.setVerbosity(log.DEBUG)
+sys.excepthook = util.genExcepthook(debug=True)
+
+
+def usage():
+    print "%s <url to rBuilder server>" % sys.argv[0]
+    return 1
+
+
+if len(sys.argv) < 2:
+    sys.exit(usage())
+
+client = mint.MintClient(sys.argv[1])
+cfg = mirror.MirrorConfiguration()
+
+mirroredLabels = client.getMirroredLabels()
+
+for label in mirroredLabels:
+    projectId, targetLabelId, sourceUrl, sourceUser, sourcePass = label
+    project = client.getProject(projectId)
+
+    labelStr, targetUrl, targetUser, targetPass  = client.getLabel(targetLabelId)
+    reposHost = versions.Label(labelStr).getHost()
+
+    cfg.source.repositoryMap = {reposHost: sourceUrl}
+    cfg.source.user.addServerGlob(reposHost, sourceUser, sourcePass)
+
+    cfg.target.repositoryMap = {reposHost: targetUrl}
+    cfg.target.user.addServerGlob(reposHost, targetUser, targetPass)
+
+    cfg.host = reposHost
+    cfg.labels = [versions.Label(project.getLabel())]
+
+    sourceRepos = netclient.NetworkRepositoryClient(cfg.source.repositoryMap,
+                              cfg.source.user,
+                              entitlementDir = cfg.entitlementDirectory)
+
+    targetRepos = netclient.NetworkRepositoryClient(cfg.target.repositoryMap,
+                              cfg.target.user,
+                              entitlementDir = cfg.entitlementDirectory)
+
+    count = mirror.mirrorRepository(sourceRepos, targetRepos, cfg, False,
+                             False, False)
+    while not options.test and count:
+        count = mirror.mirrorRepository(sourceRepos, targetRepos, cfg, False,
+                                 False, False)

@@ -193,6 +193,7 @@ def getTables(db, cfg):
     d['jobData'] = data.JobDataTable(db)
     d['releaseImageTypes'] = releases.ReleaseImageTypesTable(db)
     d['mirrorLabels'] = mirror.MirrorLabelsTable(db)
+    d['repNameMap'] = mirror.RepNameMapTable(db)
     if not min([x.upToDate for x in d.values()]):
         d['version'].bumpVersion()
         return getTables(db, cfg)
@@ -278,7 +279,7 @@ class MintServer(object):
                 raise
             #except Exception, error:
             #   exc_name = sys.exc_info()[0].__name__
-            #    return (True, (exc_name, error, str(error)))
+            #   return (True, (exc_name, error, str(error)))
             else:
                 self.db.commit()
                 return (False, r)
@@ -2268,11 +2269,23 @@ class MintServer(object):
 
     # mirrored labels
     @private
-    @typeCheck(int, str, str, str)
+    @typeCheck(int, int, str, str, str)
     @requiresAdmin
-    def addMirroredLabel(self, targetLabelId, url, username, password):
-        return self.mirrorLabels.new(targetLabelId = targetLabelId,
+    def addMirroredLabel(self, projectId, targetLabelId, url, username, password):
+        return self.mirrorLabels.new(projectId = projectId, targetLabelId = targetLabelId,
             url = url, username = username, password = password)
+
+    @private
+    @typeCheck()
+    @requiresAdmin
+    def getMirroredLabels(self):
+        cu = self.db.cursor()
+
+        cu.execute("SELECT projectId, targetLabelId, url, username, password FROM MirrorLabels")
+        ret = []
+        for r in cu.fetchall():
+            ret.append(list(r))
+        return ret
 
     def __init__(self, cfg, allowPrivate = False, alwaysReload = False, db = None, req = None):
         self.cfg = cfg

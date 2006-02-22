@@ -117,8 +117,10 @@ class LabelsTest(MintRepositoryHelper):
     def testMirroredLabel(self):
         client, userId = self.quickMintAdmin("testuser", "testpass")
 
-        client.addMirroredLabel(0, "http://www.example.com/conary/", "mirror", "mirrorpass")
-        # XXX add more useful test code
+        client.addMirroredLabel(0, 0, "http://www.example.com/conary/", "mirror", "mirrorpass")
+
+        labels = client.getMirroredLabels()
+        assert(labels == [[0, 0, 'http://www.example.com/conary/', 'mirror', 'mirrorpass']])
 
 
 if __name__ == "__main__":
