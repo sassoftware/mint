@@ -6,7 +6,7 @@
 # description: This is the daemon which periodically requests a list of
 #              ISO generation jobs from an rBuilder server and generates
 #              the requested images.
-# processname: job-server 
+# processname: job-server
 # config: @DESTDIR@/usr/bin
 
 CONFIG_FILE='@DESTDIR@/srv/mint/iso_gen.conf'
@@ -27,21 +27,27 @@ case "$1" in
 	HOME=/home/$JOBSERVER_USER/ sudo -u $JOBSERVER_USER $SCRIPT_PATH/job-server --config $CONFIG_FILE -k
 	;;
   restart)
-	$0 stop
-	$0 start
+        $0 stop
+        # Wait for job server to exit.
+        lockFile=`cat $CONFIG_FILE 2>&1 | grep "lockFile" | sed "s/.* //"`
+        echo "Waiting for rBuilder ISO Generation server to terminate."
+        while [ -f "$lockFile" ]; do sleep 1; done
+        $0 start
 	;;
   status)
 	lockFile=`cat $CONFIG_FILE 2>&1 | grep "lockFile" | sed "s/.* //"`
 	pid=`cat "$lockFile" 2>&1`
 	case "$pid" in
 	  *'No such file or directory')
-		echo "Job server not running"
-		exit 0
+		echo "Job server is not running."
 		;;
+          *'SHUTTING_DOWN')
+                echo "Job server is shutting down."
+                ;;
 	  *)
 		case "`ps -p $pid -o comm=`" in
 		  'job-server')
-		    echo "Job server is running"
+		    echo "Job server is running."
 		    ;;
 		  *)
 		    echo "lockfile is stale. run '$0 stop' to remove it."
