@@ -39,13 +39,12 @@ case "$1" in
 		exit 0
 		;;
 	  *)
-		case "`ps -p $pid -o pid=`" in
-		  '')
-		    echo "lockfile is stale. fixing"
-		    rm "$lockFile"
+		case "`ps -p $pid -o comm=`" in
+		  'job-server')
+		    echo "Job server is running"
 		    ;;
 		  *)
-		    echo "Job server is running"
+		    echo "lockfile is stale. run '$0 stop' to remove it."
 		    ;;
 		esac
 		;;
