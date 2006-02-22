@@ -30,6 +30,7 @@ from conary.repository import shimclient
 
 from mint import config
 from mint import mint_server
+from mint import mirror
 from mint import users
 from mint import profile
 from mint.projects import mysqlTransTable
@@ -243,19 +244,11 @@ def conaryHandler(req, cfg, pathInfo):
     port = req.connection.local_addr[1]
     secure = (req.subprocess_env.get('HTTPS', 'off') == 'on')
 
-    repHash = repName + req.hostname
-    # hack to remap some repository names to others: we need a better
-    # database-based solution for this.
-    repNameMap = {'digium.rpath.org': 'conary.digium.com'}
     if repName in repNameMap:
         repName = repNameMap[repName]
-        print >> sys.stderr, "REMAPPING REPOSITORY NAME: ", repName
+        req.log_error("remapping repository name: %s" % repName)
 
-    repNameMap = {'conary.digium.com': 'digium.digium.com',
-                 'digium.rpath.net': 'digium.digium.com'}
-    if repName in repNameMap:
-        repName = repNameMap[repName]
-        print >> sys.stderr, "REMAPPING REPOSITORY NAME: ", repName
+    repHash = repName + req.hostname
 
     global db
     if cfg.reposDBDriver == "sqlite":
@@ -323,7 +316,6 @@ def conaryHandler(req, cfg, pathInfo):
         elif req.hostname == "conary.digium.com":
             # another hack that needs to be generalized
             nscfg.commitAction = '/usr/lib64/python2.4/site-packages/conary/commitaction --module "/usr/lib/python2.4/site-packages/mint/rbuilderaction.py --user %%(user)s --url http://www.rpath.org/xmlrpc-private/" --module "/usr/lib64/python2.4/site-packages/conary/changemail.py --user %(user)s --email digium-commits@lists.rpath.org"'
-
 
         if os.access(repositoryDir, os.F_OK):
             repositories[repHash] = netserver.NetworkRepositoryServer(nscfg, urlBase, db)
@@ -462,6 +454,23 @@ def logErrorAndEmail(req, cfg, exception, e, bt):
 cfg = None
 cfgMTime = 0
 db = None
+repNameMap = {}
+
+def getRepNameMap(db):
+    d = {}
+
+    # wrap this in a try/except to avoid first-hit problems
+    # before RepNameMap even exists.
+    try:
+        cu = db.cursor()
+        cu.execute("SELECT fromName, toName FROM RepNameMap")
+        for r in cu.fetchall():
+            d.update({r[0]: r[1]})
+    except Exception, e:
+        req.log_error("ignoring exception fetching RepNameMap: %s" % str(e))
+
+    return d
+
 def handler(req):
     if not req.hostname:
         return apache.HTTP_BAD_REQUEST
@@ -475,15 +484,17 @@ def handler(req):
         cfg.read(req.filename)
         cfgMTime = mtime
 
-    global db
+    global db, repNameMap
     if not db:
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
+        repNameMap = getRepNameMap(db)
 
     prof = profile.Profile(cfg)
 
     # reopen a dead database
     if db.reopen():
-        print >> sys.stderr, "reopened a dead database connection in hooks.py"
+        req.log_error("reopened a dead database connection in hooks.py")
+        repNameMap = getRepNameMap(db)
 
     if not req.uri.startswith('/setup/') and not cfg.configured:
         req.headers_out['Location'] = "/setup/"
