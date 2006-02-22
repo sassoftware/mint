@@ -31,10 +31,14 @@ def kill(lockFile):
         if sys.argv[0] not in procName:
             log.error("pid: %d does not seem to be an rBuilder"
             " ISO generation server." % pid)
+            try:
+                log.info("removing lock file")
+                os.unlink(lockFile)
+            except OSError, e:
+                pass
             sys.exit(1)
         log.info("killing rBuilder ISO generation server pid %d" % pid)
         try:
-            pass
             os.kill(pid, signal.SIGINT)
         except OSError, e:
             if e.errno != errno.ESRCH:
@@ -42,12 +46,9 @@ def kill(lockFile):
             else:
                 log.info("process not found; removing lock file")
                 os.unlink(lockFile)
-        else:
-            try:
-                os.unlink(lockFile)
-            except OSError, e:
-                pass
-
+        # note, the lock file is not removed if an interrupt signal is
+        # sucessfully sent. the rBuilder isogen server will remove the lock
+        # on it's own once it has finsihed processing.
 
 def daemon(options, cfg):
     try:
