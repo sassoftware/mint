@@ -1582,7 +1582,7 @@ class MintServer(object):
                        time.time() - 86400, jobstatus.WAITING,
                        jobstatus.RUNNING)
 
-        return [x[0] for x in cu.fetchall()]
+        return [self.jobs.get(x[0]) for x in cu.fetchall()]
 
     @typeCheck((list, str), (dict, (list, int)))
     @requiresAuth
