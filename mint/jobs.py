@@ -34,8 +34,8 @@ class JobsTable(database.KeyedTable):
                     timeFinished    DOUBLE
                 )"""
 
-    fields = ['jobId', 'releaseId', 'groupTroveId', 'userId', 'status',
-              'statusMessage', 'timeStarted', 'timeFinished']
+    fields = ['jobId', 'releaseId', 'groupTroveId', 'owner', 'userId',
+              'status', 'statusMessage', 'timeStarted', 'timeFinished']
 
     indexes = {"JobsReleaseIdx": """CREATE INDEX JobsReleaseIdx
                                         ON Jobs(releaseId)""",
@@ -57,8 +57,9 @@ class JobsTable(database.KeyedTable):
         return True
 
     def get(self, id):
-        res = database.get(self, id)
-        del(res['owner'])
+        res = database.KeyedTable.get(self, id)
+        del res['owner']
+        return res
 
 class Job(database.TableObject):
     __slots__ = [JobsTable.key] + JobsTable.fields
