@@ -117,10 +117,9 @@ from mint import userlevels
                     <tr py:for="userId, username in sorted(users[userlevels.OWNER], key=lambda x: x[1])">
                         <th><a py:strip="not auth.authorized" href="http://${SITE}userInfo?id=${userId}">${username}</a></th>
                         <td py:if="isOwner and not onlyOwner">
-                            <a href="demoteMember?userId=${userId}" class="option">Demote to Developer</a>
+                            <a onclick="javascript:setUserLevel(${userId}, ${project.id}, ${userlevels.DEVELOPER});" href="#" class="option">Demote to Developer</a>
                         </td>
-                        <td py:if="isOwner and not lastOwner">
-                            <a href="delMember?id=${userId}" class="option">Remove From Project</a> </td>
+                        <td py:if="isOwner and not lastOwner"><a onclick="javascript:delMember(${project.id}, ${userId});" href="#" class="option">Remove From Project</a></td>
                     </tr>
                 </table>
                 <p py:if="not users[userlevels.OWNER]">This project has been orphaned.</p>
@@ -138,7 +137,7 @@ from mint import userlevels
                         <td py:if="isOwner">
                             <a onclick="javascript:setUserLevel(${userId}, ${project.id}, ${userlevels.OWNER});" href="#" class="option">Promote to Owner</a>
                         </td>
-                        <td py:if="isOwner"><a href="delMember?id=${userId}" class="option">Remove From Project</a></td>
+                        <td py:if="isOwner"><a onclick="javascript:delMember(${project.id}, ${userId});" href="#" class="option">Remove From Project</a></td>
                     </tr>
                 </table>
                 <p py:if="not users[userlevels.DEVELOPER]">This project currently has no developers.</p>

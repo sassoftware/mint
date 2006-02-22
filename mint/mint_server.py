@@ -643,8 +643,8 @@ class MintServer(object):
 
     @typeCheck(int, int, bool)
     @requiresAuth
-    @private
     def delMember(self, projectId, userId, notify=True):
+        self._allowPrivate = True
         self._filterProjectAccess(projectId)
         #XXX Make this atomic
         try:

@@ -222,7 +222,14 @@ function setUserLevel(userId, projectId, newLevel) {
     var req = new JsonRpcRequest("/jsonrpc", "setUserLevel");
     req.setAuth(getCookieValue("pysid"));
     req.setCallback(reloadCallback);
-    req.send(true, [userId, projectId, newLevel])
+    req.send(true, [userId, projectId, newLevel]);
+}
+
+function delMember(projectId, userId) {
+    var req = new JsonRpcRequest("/jsonrpc", "delMember");
+    req.setAuth(getCookieValue("pysid"));
+    req.setCallback(reloadCallback);
+    req.send(true, [projectId, userId, true]);
 }
 
 // baton --------------------------------------------------------------------
