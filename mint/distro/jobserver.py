@@ -11,6 +11,7 @@ import traceback
 import os
 import sys
 from xmlrpclib import ProtocolError
+import signal
 
 # conary imports
 from conary import conaryclient
@@ -41,6 +42,29 @@ generators = {
 SUPPORTED_ARCHS = ('x86', 'x86_64')
 # JOB_IDLE_INTERVAL: interval is in seconds. format is (min, max)
 JOB_IDLE_INTERVAL = (5, 10)
+
+global takingJobs
+global origterm
+global origInt
+takingJobs = True
+
+def stopJobs(signalNum, frame):
+    global takingJobs
+    global origTerm
+    global origInt
+    takingJobs = False
+    if signalNum == signal.SIGTERM:
+        signalName = 'SIGTERM'
+    elif signalNum == signal.SIGINT:
+        signalName = 'SIGINT'
+    else:
+        signalName = 'UNKNOWN'
+    log.info("Caught %s signal. Taking no more jobs..." % signalName)
+    signal.signal(signal.SIGTERM, origTerm)
+    signal.signal(signal.SIGINT, origInt)
+
+origTerm = signal.signal(signal.SIGTERM, stopJobs)
+origInt = signal.signal(signal.SIGINT, stopJobs)
 
 class JobRunner:
     def __init__(self, cfg, client, job):
@@ -136,6 +160,8 @@ class JobDaemon:
 
         confirmedAlive = False
 
+        global takingJobs
+
         try:
             os.makedirs(cfg.logPath)
         except OSError, e:
@@ -149,7 +175,7 @@ class JobDaemon:
         runningJobs = []
 
         errors = 0
-        while(True):
+        while(runningJobs or takingJobs):
             for jobPid in runningJobs[:]:
                 try:
                     os.waitpid(jobPid, os.WNOHANG)
@@ -158,9 +184,12 @@ class JobDaemon:
 
             if len(runningJobs) < cfg.maxThreads:
                 try:
-                    job = client.startNextJob(["1#" + x for x in \
-                                               cfg.supportedArch],
-                                              cfg.jobTypes)
+                    if takingJobs:
+                        job = client.startNextJob(["1#" + x for x in \
+                                                   cfg.supportedArch],
+                                                  cfg.jobTypes)
+                    else:
+                        job = None
                     if errors and not confirmedAlive:
                         log.warning("rBuilder server reached after %d attempt(s), resuming normal operation" % errors)
                         errors = 0
@@ -201,6 +230,7 @@ class JobDaemon:
                     log.warning("Error retrieving job list:" + str(e))
             # sleep at the end of every run, no matter what the outcome was
             time.sleep(random.uniform(*JOB_IDLE_INTERVAL))
+        log.info("Job server daemon is exiting.")
 
 
 class CfgCookType(CfgEnum):
