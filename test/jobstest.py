@@ -633,6 +633,9 @@ class JobsTest(MintRepositoryHelper):
                     "Job not regenerated properly. will never run")
 
     def testListActiveJobs(self):
+        def listActiveJobs(client, filter):
+            return [x['jobId'] for x in client.listActiveJobs(filter)]
+
         client, userId = self.quickMintUser('foouser', 'foopass')
         projectId = self.newProject(client)
 
@@ -655,40 +658,40 @@ class JobsTest(MintRepositoryHelper):
             # hack to ensure timestamps are different.
             time.sleep(1)
 
-        self.failIf(client.listActiveJobs(True) != jobIds,
+        self.failIf(listActiveJobs(client, True) != jobIds,
                     "listActiveJobs should have listed %s" % str(jobIds))
 
-        self.failIf(client.listActiveJobs(False) != jobIds,
+        self.failIf(listActiveJobs(client, False) != jobIds,
                     "listActiveJobs should have listed %s" % str(jobIds))
 
         cu = self.db.cursor()
         cu.execute("UPDATE Jobs SET timeStarted = 0 WHERE jobId=?", jobIds[0])
         self.db.commit()
 
-        self.failIf(client.listActiveJobs(True) != jobIds,
+        self.failIf(listActiveJobs(client, True) != jobIds,
                     "listActiveJobs should have listed %s" % str(jobIds))
 
-        self.failIf(client.listActiveJobs(False) != jobIds,
+        self.failIf(listActiveJobs(client, False) != jobIds,
                     "listActiveJobs should have listed %s" % str(jobIds))
 
         cu.execute("UPDATE Jobs SET status=? WHERE jobId=?",
                    jobstatus.FINISHED, jobIds[-1])
         self.db.commit()
 
-        self.failIf(client.listActiveJobs(True) != jobIds[:-1],
+        self.failIf(listActiveJobs(client, True) != jobIds[:-1],
                     "listActiveJobs should have listed %s" % str(jobIds[:-1]))
 
-        self.failIf(client.listActiveJobs(False) != jobIds,
+        self.failIf(listActiveJobs(client, False) != jobIds,
                     "listActiveJobs should have listed %s" % str(jobIds))
 
         cu.execute("UPDATE Jobs SET status=? WHERE jobId=?",
                    jobstatus.FINISHED, jobIds[0])
         self.db.commit()
 
-        self.failIf(client.listActiveJobs(True) != [jobIds[1]],
+        self.failIf(listActiveJobs(client, True) != [jobIds[1]],
                     "listActiveJobs should have listed %s" % str([jobIds[1]]))
 
-        self.failIf(client.listActiveJobs(False) != jobIds[1:],
+        self.failIf(listActiveJobs(client, False) != jobIds[1:],
                     "listActiveJobs should have listed %s" % str(jobIds[1:]))
 
     #####
