@@ -467,7 +467,7 @@ def getRepNameMap(db):
         for r in cu.fetchall():
             d.update({r[0]: r[1]})
     except Exception, e:
-        req.log_error("ignoring exception fetching RepNameMap: %s" % str(e))
+        apache.log_error("ignoring exception fetching RepNameMap: %s" % str(e))
 
     return d
 
