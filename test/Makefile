@@ -25,6 +25,7 @@ python_files = \
                joinrequesttest.py \
                labelstest.py \
                mint_rephelp.py \
+               mirrortest.py \
                projecttest.py \
                recipes.py \
                releasetest.py \

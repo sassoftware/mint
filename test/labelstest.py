@@ -117,6 +117,8 @@ class LabelsTest(MintRepositoryHelper):
     def testMirroredLabel(self):
         client, userId = self.quickMintAdmin("testuser", "testpass")
 
+        import epdb
+        epdb.st()
         client.addMirroredLabel(0, 0, "http://www.example.com/conary/", "mirror", "mirrorpass")
 
         labels = client.getMirroredLabels()

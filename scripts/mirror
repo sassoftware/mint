@@ -57,6 +57,6 @@ for label in mirroredLabels:
 
     count = mirror.mirrorRepository(sourceRepos, targetRepos, cfg, False,
                              False, False)
-    while not options.test and count:
+    while count:
         count = mirror.mirrorRepository(sourceRepos, targetRepos, cfg, False,
                                  False, False)

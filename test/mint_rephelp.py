@@ -195,8 +195,8 @@ rephelp.SERVER_HOSTNAME = "mint.rpath.local@rpl:devel"
 
 
 class MintRepositoryHelper(rephelp.RepositoryHelper):
-    def openRepository(self, serverIdx = 0, requireSigs = False):
-        ret = rephelp.RepositoryHelper.openRepository(self, serverIdx, requireSigs)
+    def openRepository(self, serverIdx = 0, requireSigs = False, serverName = None):
+        ret = rephelp.RepositoryHelper.openRepository(self, serverIdx, requireSigs, serverName)
 
         if serverIdx == 0:
             self.port = self.servers.getServer(serverIdx).port
