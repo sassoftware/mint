@@ -317,7 +317,7 @@ function processListActiveJobs(aReq) {
 // RPC calls ----------------------------------------------------------------
 
 function getReleaseStatus(releaseId) {
-    var req = new JsonRpcRequest("/jsonrpc", "getReleaseStatus");
+    var req = new JsonRpcRequest("/jsonrpc/", "getReleaseStatus");
     req.setAuth(getCookieValue("pysid"));
     req.setCallback(processGetReleaseStatus);
     req.send(false, [releaseId]);
@@ -327,7 +327,7 @@ function getReleaseStatus(releaseId) {
 }
 
 function getCookStatus(jobId) {
-    var req = new JsonRpcRequest("/jsonrpc", "getJobStatus");
+    var req = new JsonRpcRequest("/jsonrpc/", "getJobStatus");
     req.setAuth(getCookieValue("pysid"));
     req.setCallback(processGetCookStatus);
     req.send(false, [jobId]);
@@ -338,21 +338,21 @@ function getCookStatus(jobId) {
 }
 
 function getTroveList(projectId) {
-    var req = new JsonRpcRequest("/jsonrpc", "getGroupTroves");
+    var req = new JsonRpcRequest("/jsonrpc/", "getGroupTroves");
     req.setAuth(getCookieValue("pysid"));
     req.setCallback(processGetTroveList);
     req.send(true, [projectId]);
 }
 
 function getTroveVersionsByArch(projectId, troveNameWithLabel) {
-    var req = new JsonRpcRequest("/jsonrpc", "getTroveVersionsByArch");
+    var req = new JsonRpcRequest("/jsonrpc/", "getTroveVersionsByArch");
     req.setAuth(getCookieValue("pysid"));
     req.setCallback(processGetTroveVersionsByArch);
     req.send(true, [projectId, troveNameWithLabel]);
 }
 
 function listActiveJobs(wantOnlyActive) {
-    var req = new JsonRpcRequest("/jsonrpc", "listActiveJobs");
+    var req = new JsonRpcRequest("/jsonrpc/", "listActiveJobs");
     req.setAuth(getCookieValue("pysid"));
     req.setCallback(processListActiveJobs);
     req.send(false, [wantOnlyActive]);
@@ -368,14 +368,14 @@ function reloadCallback() {
 }
 
 function setUserLevel(userId, projectId, newLevel) {
-    var req = new JsonRpcRequest("/jsonrpc", "setUserLevel");
+    var req = new JsonRpcRequest("/jsonrpc/", "setUserLevel");
     req.setAuth(getCookieValue("pysid"));
     req.setCallback(reloadCallback);
     req.send(true, [userId, projectId, newLevel]);
 }
 
 function delMember(projectId, userId) {
-    var req = new JsonRpcRequest("/jsonrpc", "delMember");
+    var req = new JsonRpcRequest("/jsonrpc/", "delMember");
     req.setAuth(getCookieValue("pysid"));
     req.setCallback(reloadCallback);
     req.send(true, [projectId, userId, true]);
@@ -499,7 +499,7 @@ function getReleaseById(aId) {
     };
 
     if (!releaseCache[aId]) {
-        var req = new JsonRpcRequest('/jsonrpc', 'getRelease');
+        var req = new JsonRpcRequest('/jsonrpc/', 'getRelease');
         req.setAuth(getCookieValue("pysid"));
         req.setCallback(lclReleaseCallback);
         req.send(false, [aId]);
@@ -517,7 +517,7 @@ function getUserById(aId) {
     };
 
     if (!userCache[aId]) {
-        var req = new JsonRpcRequest('/jsonrpc', 'getUserPublic');
+        var req = new JsonRpcRequest('/jsonrpc/', 'getUserPublic');
         req.setAuth(getCookieValue("pysid"));
         req.setCallback(lclUserCallback);
         req.send(false, [aId]);
@@ -535,7 +535,7 @@ function getGroupTroveById(aId) {
     };
 
     if (!groupTroveCache[aId]) {
-        var req = new JsonRpcRequest('/jsonrpc', 'getGroupTrove');
+        var req = new JsonRpcRequest('/jsonrpc/', 'getGroupTrove');
         req.setAuth(getCookieValue("pysid"));
         req.setCallback(lclGroupTroveCallback);
         req.send(false, [aId]);
