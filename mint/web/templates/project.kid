@@ -151,7 +151,7 @@
             </div>
             <div id="newProject"><a href="http://${SITE}newProject"><strong>Create a new project</strong></a></div>
             <div id="userSettings"><a href="http://${SITE}userSettings"><strong>Edit my account</strong></a></div>
-	    <div id="administer" py:if="auth.admin"><a href="/administer"><strong>Adminster ${cfg.productName}</strong></a></div>
+            <div id="administer" py:if="auth.admin"><a href="http://${SITE}administer"><strong>Administer ${cfg.productName}</strong></a></div>
         </div>
     </div>
 </html>
