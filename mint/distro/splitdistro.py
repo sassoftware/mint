@@ -7,6 +7,7 @@
 
 import sys
 import os
+import tempfile
 
 import conary
 from conary.lib import util
@@ -21,13 +22,27 @@ basicminimal = ('group-core', 'group-base')
 def join(*args):
     return os.sep.join(args)
 
-def lndir(src, dest, excludes=None):
+def lndir(src, dest, excludes=[]):
     for dirpath, dirnames, filenames in os.walk(src):
         curdir = dirpath[len(src) + 1:]
-        if curdir in excludes:
+        # skipping the directory by itself is not enough, we need to ensure
+        # that sub directories get excluded as well (since we can't know them
+        # ahead of time)
+        skipDir = False
+        for excluded in excludes:
+            if excluded in curdir:
+                skipDir = True
+        if skipDir:
             continue
         for d in dirnames:
-            os.mkdir(join(dest, curdir, d))
+            if d in excludes:
+                continue
+            try:
+                os.mkdir(join(dest, curdir, d))
+            except OSError, e:
+                # if target dir already exists, that's not an error
+                if e.errno != 17:
+                    raise
         for f in filenames:
             if curdir:
                 curfile = join(curdir, f)
@@ -35,7 +50,11 @@ def lndir(src, dest, excludes=None):
                 curfile = f
             if curfile in excludes:
                 continue
-            os.link(join(dirpath, f), join(dest, curfile))
+            try:
+                os.link(join(dirpath, f), join(dest, curfile))
+            except OSError, e:
+                if e.errno != 17:
+                    raise
 
 def spaceused(path):
     if not os.path.isdir(path):
@@ -67,6 +86,9 @@ def preparedir(unified, path, csdir):
         src = join(unified, f)
         if os.access(src, os.R_OK):
             os.link(src, join(path, f))
+    if 'media-template' in os.listdir(unified) and \
+       'all' in os.listdir(os.path.join(unified, 'media-template')):
+        lndir(os.path.join(unified, 'media-template', 'all'), path)
 
 def writediscinfo(path, discnum, discinfo):
     newinfo = discinfo[:]
@@ -76,7 +98,7 @@ def writediscinfo(path, discnum, discinfo):
     f.write('\n')
     f.close()
 
-def reorderChangesets(f, csPath, initialSize, baseTrove):
+def reorderChangesets(f, csPath, initialSizes, baseTrove):
     reservedTroves = []
     sizedList = []
     infoTroves = []
@@ -115,7 +137,7 @@ def reorderChangesets(f, csPath, initialSize, baseTrove):
 
     sizedList = infoTroves + reservedList + baseTroves + sizedList
 
-    reOrdList = [[[], maxisosize - initialSize]]
+    reOrdList = [[[], maxisosize - initialSizes[0]]]
 
     for size, line in sizedList:
         match = False
@@ -126,7 +148,7 @@ def reorderChangesets(f, csPath, initialSize, baseTrove):
                 match = True
                 break
         if not match:
-            reOrdList.append([[line], maxisosize - size])
+            reOrdList.append([[line], maxisosize - size - initialSizes[1]])
 
     csList = []
     for disc in [x[0] for x in reOrdList]:
@@ -153,15 +175,32 @@ def splitDistro(unified, baseTrove):
         util.rmtree(current)
     print >> sys.stderr, 'creating', current
     os.mkdir(current)
-    lndir(unified, current, excludes=(csdir, cslist, '.discinfo'))
+    lndir(unified, current, excludes=(csdir, cslist, '.discinfo',
+                                      'media-template'))
     writediscinfo(current, discnum, discinfo)
+    # clone custom media content in before calculating size.
+    # lay 'disc1' before 'all' to ensure collisions are handled correctly
+    for cDir in ('disc1', 'all'):
+        if 'media-template' in os.listdir(unified) and \
+               cDir in os.listdir(os.path.join(unified, 'media-template')):
+            lndir(os.path.join(unified, 'media-template', cDir), current)
+
     used = spaceused(current)
+
+    # prepare a dummy disc ahead of time to precalc the initial size correctly
+    # the fact that media-template is completely custom has the unlimited
+    # power to make this extremely messy through other calculation methods.
+    tmpDisc = tempfile.mkdtemp()
+    preparedir(unified, tmpDisc, csdir)
+    allContentSize = spaceused(tmpDisc)
+    util.rmtree(tmpDisc)
 
     # iterate through the cslist, copying all the changesets that
     # will fit
     f = open(join(unified, cslist))
     outcs = open(join(current, cslist), 'w')
-    reOrd = reorderChangesets(f, join(unified, csdir), used, baseTrove)
+    reOrd = reorderChangesets(f, join(unified, csdir), (used, allContentSize),
+                              baseTrove)
     f.close()
     for line in reOrd:
         csfile = line.split()[0]
