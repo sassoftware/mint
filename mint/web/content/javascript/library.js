@@ -305,10 +305,23 @@ function processListActiveJobs(aReq) {
         TBODY(null, map(rowDisplay, finishedJobsList)));
 
     // build the jobs display
-    jobTable = DIV({ id: "jobsTable" },
-        H2(null, "Running Jobs"), runningJobsTable,
-        H2(null, "Queued Jobs"), queuedJobsTable,
-        H2(null, "Finished Jobs"), finishedJobsTable);
+    jobTable = DIV({ id: "jobsTable" });
+    if (jobsList.length == 0) {
+        appendChildNodes(jobTable, P(null, "No active jobs."));
+    } else {
+        if (queuedJobsList.length > 0) {
+            appendChildNodes(jobTable, H2(null, "Queued Jobs"),
+                queuedJobsTable);
+        }
+        if (runningJobsList.length > 0) {
+            appendChildNodes(jobTable, H2(null, "Running Jobs"),
+                runningJobsTable);
+        }
+        if (finishedJobsList.length > 0) {
+            appendChildNodes(jobTable, H2(null, "Finished Jobs"),
+                finishedJobsTable);
+        }
+    }
 
     // display it
     swapDOM(oldJobTable, jobTable);
