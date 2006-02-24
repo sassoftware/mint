@@ -159,7 +159,7 @@ import time
                             <p>NOTE: This image has been compressed using
                             GNU zip.  Before using this image, you must
                             first uncompress it (using the <tt>gunzip</tt>
-                            command.</p>
+                            command).</p>
                             </div>
                         </div>
 
