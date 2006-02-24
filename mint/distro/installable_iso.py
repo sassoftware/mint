@@ -119,6 +119,21 @@ class InstallableIso(ImageGenerator):
             return None
         return uJob
 
+    def getConaryClient(self, tmpRoot, arch):
+        cfg = self.project.getConaryConfig(overrideSSL = True,
+                                           overrideAuth = True,
+                                           newUser='mintauth',
+                                           newPass='mintpass',
+                                           useSSL = self.cfg.SSL)
+        cfg.root = tmpRoot
+        cfg.dbPath = tmpRoot + "/var/lib/conarydb/conarydb"
+        cfg.installLabelPath = [self.version.branch().label()]
+        cfg.buildFlavor = deps.deps.parseFlavor(stockFlavors[arch])
+        cfg.flavor = [cfg.buildFlavor]
+        cfg.initializeFlavors()
+
+        return conaryclient.ConaryClient(cfg)
+
     def writeProductImage(self, arch):
         # write the product.img cramfs
         productPath = os.path.join(self.baseDir, "product.img")
@@ -139,19 +154,9 @@ class InstallableIso(ImageGenerator):
         # extract anaconda-images from repository, if exists
         tmpRoot = tempfile.mkdtemp()
         if not self.project.external:
-            cfg = self.project.getConaryConfig(overrideSSL = True, overrideAuth = True, 
-                newUser='mintauth', newPass='mintpass', useSSL = self.cfg.SSL) 
-            cfg.root = tmpRoot
-            cfg.dbPath = tmpRoot + "/var/lib/conarydb/conarydb"
-            cfg.installLabelPath = [self.version.branch().label()]
-            cfg.buildFlavor = deps.deps.parseFlavor(stockFlavors[arch])
-            cfg.flavor = [cfg.buildFlavor]
-            cfg.initializeFlavors()
-
-            cclient = conaryclient.ConaryClient(cfg)
-
+            cclient = self.getConaryClient(tmpRoot, arch)
             uJob = None
-            print >> sys.stderr, "extracting artwork from anaconda-custom=%s" % cfg.installLabelPath[0].asString()
+            print >> sys.stderr, "extracting artwork from anaconda-custom=%s" % cclient.cfg.installLabelPath[0].asString()
             uJob = self._getUpdateJob(cclient, "anaconda-custom")
             if not uJob:
                 print >> sys.stderr, "anaconda-custom not found on repository, falling back to anaconda-images"
@@ -246,16 +251,16 @@ class InstallableIso(ImageGenerator):
         cfg.initializeFlavors()
         cfg.pubRing = ['/dev/null']
         client = conaryclient.ConaryClient(cfg)
-        
+
         revision = version.trailingRevision().asString()
         topdir = os.path.join(self.cfg.imagesPath, self.project.getHostname(),
-            self.release.getArch(), str(self.release.getId()), "unified") 
+            self.release.getArch(), str(self.release.getId()), "unified")
         self.topdir = topdir
         util.mkdirChain(topdir)
         # subdir = string.capwords(self.project.getHostname())
         subdir = 'rPath'
         self.subdir = subdir
-       
+
         # hardlink template files to topdir
         templateDir = os.path.join(isocfg.templatePath, self.release.getArch())
         if not os.path.exists(os.path.join(templateDir, 'PRODUCTNAME')):
@@ -347,8 +352,29 @@ class InstallableIso(ImageGenerator):
             print >> discInfoFile, "%s/%s" % (subdir, x)
         discInfoFile.close()
 
+        tmpRoot = tempfile.mkdtemp()
+        cclient = self.getConaryClient(tmpRoot, "1#" + arch)
+
+        # extract media-template from repository, if it exists
+        print >> sys.stderr, "extracting ad-hoc content from " \
+              "media-template=%s" % cfg.installLabelPath[0].asString()
+        uJob = self._getUpdateJob(cclient, "media-template")
+        if uJob:
+            cclient.applyUpdate(uJob, callback = self.callback)
+            print >> sys.stderr, "success."
+            print >> sys.stderr, "copying media template data to unified tree"
+            sys.stderr.flush()
+
+            # copy content into unified tree root. add recurse and no-deref
+            # flags to command. following symlinks is really bad in this case.
+            call('cp', '-R', '--no-dereference',
+                 tmpRoot + '/usr/lib/media-template', topdir)
+        else:
+            print >> sys.stderr, "media-template not found on repository"
+
         self.writeProductImage('1#' + arch)
 
+        self.status("Mapping ISOs")
         splitdistro.splitDistro(topdir, troveName)
 
         isoList = []
@@ -359,7 +385,7 @@ class InstallableIso(ImageGenerator):
         for d in sorted(os.listdir(discdir)):
             if not d.startswith('disc'):
                 continue
-            
+
             discNum = d.split("disc")[-1]
             infoMap['disc'] = d
             discNumStr = "Disc %d" % int(discNum)
@@ -399,7 +425,7 @@ class InstallableIso(ImageGenerator):
         diskbootDest = os.path.join(infoMap['isodir'], 'diskboot.img')
         gencslist._linkOrCopyFile(os.path.join(topdir, 'images', 'boot.iso'), bootDest)
         gencslist._linkOrCopyFile(os.path.join(topdir, 'images', 'diskboot.img'), diskbootDest)
-        
+
         # clean up
         self.status("Cleaning up...")
         util.rmtree(os.path.normpath(os.path.join(topdir, "..")))
