@@ -20,10 +20,6 @@
               <p py:if="kwargs.get('extraMsg', None)" class="message" py:content="kwargs['extraMsg']"/>
               <h1>Manage Jobs</h1>
               <p id="jobsTable">Retrieving job status from server...</p>
-              <!-- COMING SOON ... <h2>Other Job Tasks</h2>
-              <form action="administer" method="post">
-                  <button name="operation" value="jobs_toggle_jobserver">Start / Stop Job Server</button>
-              </form> -->
               <p><a href ="/administer/">Return to Administrator Page</a></p>
             </div>
         </div>
