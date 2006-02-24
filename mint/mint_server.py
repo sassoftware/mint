@@ -1769,7 +1769,7 @@ class MintServer(object):
         # Handling the job server in this manner is temporary
         # This is only useful in an appliance context at this time.
         pipeFD = os.popen("/sbin/service rbuilder-isogen status")
-        res = pipeFd.read()
+        res = pipeFD.read()
         pipeFD.close()
         return res
 

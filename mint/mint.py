@@ -399,6 +399,14 @@ class MintClient:
          """
          return self.server.demoteUserFromAdmin(userId)
 
+    def getJobServerStatus(self):
+         """
+         Hack to get the job server status for rBuilder Appliance.
+         This needs to be extended for multiple job servers.
+         Don't use with rBuilder Online!
+         """
+         return self.server.getJobServerStatus()
+
     # session management
     def loadSession(self, sid):
         return self.server.loadSession(sid)

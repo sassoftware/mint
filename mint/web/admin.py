@@ -5,6 +5,7 @@
 #
 
 import sys
+import os
 from mod_python import apache
 
 from mint import mint_error
@@ -212,7 +213,37 @@ class AdminHandler(WebHandler):
                            firstTime = firstTime)
 
     def _admin_jobs(self, *args, **kwargs):
-        return self._write('admin/jobs', kwargs = kwargs)
+        try:
+            enableToggle = True
+            jobServerStatus = self.client.getJobServerStatus()
+        except:
+            enableToggle = False
+            jobServerStatus = "Job server status is unknown."
+
+        return self._write('admin/jobs', kwargs = kwargs,
+                jobServerStatus = jobServerStatus, enableToggle = enableToggle)
+
+    def _admin_jobs_jobserver_start(self, *args, **kwargs):
+        try:
+            pipeFD = os.popen("/sbin/service rbuilder-isogen start")
+            kwargs['extraMsg'] = pipeFD.read()
+            pipeFD.close()
+        except:
+            kwargs['extraMsg'] = "Failed to start the job server."
+
+        return self._admin_jobs(*args, **kwargs)
+
+    def _admin_jobs_jobserver_stop(self, *args, **kwargs):
+        try:
+            pipeFD = os.popen("/sbin/service rbuilder-isogen stop")
+            kwargs['extraMsg'] = pipeFD.read()
+            pipeFD.close()
+        except:
+            kwargs['extraMsg'] = "Failed to stop the job server."
+
+
+        return self._admin_jobs(*args, **kwargs)
+
 
     def _administer(self, *args, **kwargs):
         return self._write('admin/administer', kwargs = kwargs)
