@@ -317,7 +317,7 @@ function processListActiveJobs(aReq) {
 
         if (queuedJobsList.length > 0) {
             appendChildNodes(theTableItself,
-                TR(null, TH({ colspan: "5" },
+                TR(null, TH({ colspan: "5", style: "font-weight: bold;" },
                     "Queued jobs")),
                     headerRowDisplay(["Job ID", "Submitter", "Time Submitted",
                     "Description", "Last Status Message Received"]),
@@ -325,7 +325,7 @@ function processListActiveJobs(aReq) {
         }
         if (runningJobsList.length > 0) {
             appendChildNodes(theTableItself,
-                TR(null, TH({ colspan: "5" },
+                TR(null, TH({ colspan: "5", style: "font-weight: bold;" },
                     "Running jobs")),
                     headerRowDisplay(["Job ID", "Submitter", "Time Started",
                     "Description", "Last Status Message Received"]),
@@ -333,7 +333,7 @@ function processListActiveJobs(aReq) {
         }
         if (finishedJobsList.length > 0) {
             appendChildNodes(theTableItself,
-                TR(null, TH({ colspan: "5" },
+                TR(null, TH({ colspan: "5", style: "font-weight: bold;" },
                     "Jobs finished within the last 24 hours")),
                     headerRowDisplay(["Job ID", "Submitter", "Time Finished",
                         "Description", "Last Status Message Received"]),
