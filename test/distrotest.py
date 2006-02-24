@@ -10,6 +10,7 @@ import rephelp
 
 import os
 import sys
+import tempfile
 
 from mint_rephelp import MintRepositoryHelper
 
@@ -20,7 +21,7 @@ from conary.repository import changeset
 from conary.lib import util
 from conary import sqlite3
 
-from mint.distro import gencslist, anaconda_images
+from mint.distro import gencslist, anaconda_images, splitdistro
 from mint.distro.gencslist import _validateChangeSet
 
 class DistroTest(MintRepositoryHelper):
@@ -244,6 +245,53 @@ class DistroTest(MintRepositoryHelper):
             sha1 = sha1helper.sha1ToString(sha1helper.sha1FileBin(os.path.join(self.tmpDir, 'ai', f)))
             assert(sha1 == sha1s[f])
 
+    def testCloneTree(self):
+        def mkfile(path, fileName, contents = ""):
+            tmpFile = open(os.path.join(path, fileName), 'w')
+            tmpFile.write(contents)
+            tmpFile.close()
+
+        def getContents(*args):
+            tmpFile = open(os.path.join(*args))
+            res = tmpFile.read()
+            tmpFile.close()
+            return res
+
+        # prepare source dir
+        srcDir = tempfile.mkdtemp()
+        subDir = os.path.join(srcDir, 'subdir')
+        os.mkdir(subDir)
+        destDir = tempfile.mkdtemp()
+
+        # stock some initial files in the source tree
+        mkfile(srcDir, 'EULA', "Nobody expects the Spanish Inquisition!")
+        mkfile(srcDir, 'LICENSE', "Tell him we've already got one.")
+        mkfile(subDir, 'README', "None shall pass.")
+
+        # now make a colliding dir
+        os.mkdir(os.path.join(srcDir, 'collide'))
+        os.mkdir(os.path.join(destDir, 'collide'))
+
+        # and collide a file
+        mkfile(destDir, 'LICENSE', "Spam, Spam, Spam, Spam...")
+
+        try:
+            splitdistro.lndir(srcDir, destDir)
+            # ensure basic files were cloned
+            assert(getContents(destDir, 'EULA') == getContents(srcDir, 'EULA'))
+
+            # ensure initial contents were overwritten
+            self.failIf(getContents(destDir, 'LICENSE') == \
+                        getContents(srcDir, 'LICENSE'),
+                        "File contents were illegally overridden.")
+
+            # ensure sub directories were properly traversed
+            assert(getContents(destDir, 'subdir', 'README') == \
+                   "None shall pass.")
+        finally:
+            # clean up dirs
+            util.rmtree(srcDir)
+            util.rmtree(destDir)
 
 if __name__ == "__main__":
     testsuite.main()
