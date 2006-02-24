@@ -149,9 +149,19 @@ import time
                         style="cursor: pointer;">What is this file?&nbsp;<img id="file_help_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" /></h4>
 
                         <div id="file_help" style="display: none;">
-                            <p>This is a QEmu Image.</p>
+                            <p>This file contains an image of a bootable
+                            environment capable of running under the <a
+                            href="http://fabrice.bellard.free.fr/qemu/">QEMU</a>
+                            processor emulator, or written onto an IDE disk
+                            drive (using the <tt>dd</tt> command) and
+                            booted.</p>
+
+                            <p>NOTE: This image has been compressed using
+                            GNU zip.  Before using this image, you must
+                            first uncompress it (using the <tt>gunzip</tt>
+                            command.</p>
                             </div>
-			</div>
+                        </div>
 
                     </div>
                     <p py:if="not files">Release has no downloadable files.</p>
