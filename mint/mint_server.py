@@ -2299,6 +2299,12 @@ class MintServer(object):
             ret.append(list(r))
         return ret
 
+    @private
+    @typeCheck(str, str)
+    @requiresAdmin
+    def addRemappedRepository(self, fromName, toName):
+        return self.repNameMap.new(fromName = fromName, toName = toName)
+
     def __init__(self, cfg, allowPrivate = False, alwaysReload = False, db = None, req = None):
         self.cfg = cfg
         self.req = req

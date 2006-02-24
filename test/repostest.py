@@ -233,16 +233,13 @@ class RepositoryTest(MintRepositoryHelper):
 
         troveNames = nc.troveNames(self.cfg.buildLabel)
         assert(troveNames == ['testcase:source'])
-        
-    def test1ReposNameMap(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
+
+    def testReposNameMap(self):
+        client, userId = self.quickMintAdmin("testuser", "testpass")
 
         projectId = self.newProject(client, domainname = 'other.host')
 
-        cu = self.db.cursor()
-        cu.execute("INSERT INTO RepNameMap VALUES ('testproject.rpath.local', 'testproject.other.host')")
-        self.db.commit()
-
+        client.addRemappedRepository('testproject.rpath.local', 'testproject.other.host')
         self.makeSourceTrove("testcase", testRecipe)
 
         project = client.getProject(projectId)

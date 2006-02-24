@@ -28,8 +28,15 @@ class RepNameMapTable(database.DatabaseTable):
     name = "RepNameMap"
     createSQL = """CREATE TABLE RepNameMap (
         fromName    VARCHAR(255),
-        toName      VARCHAR(255)
+        toName      VARCHAR(255),
+        PRIMARY KEY(fromName, toName)
     ) %(TABLEOPTS)s"""
 
     fields = ['fromName', 'toName']
     indexes = {'RepNameMap_fromName_idx': 'CREATE INDEX RepNameMap_fromName_idx ON RepNameMap(fromName)'}
+
+    def new(self, fromName, toName):
+        cu = self.db.cursor()
+
+        cu.execute("INSERT INTO RepNameMap VALUES (?, ?)", fromName, toName)
+        self.db.commit()
