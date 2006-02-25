@@ -7,8 +7,9 @@
 import database
 
 (RDT_STRING,
-     RDT_BOOL,
-     RDT_INT)= range(3)
+ RDT_BOOL,
+ RDT_INT,
+ RDT_ENUM)= range(4)
 
 class GenericDataTable(database.DatabaseTable):
     '''
@@ -39,7 +40,6 @@ class GenericDataTable(database.DatabaseTable):
                                 % (self.name + "Idx", self.name, self.front)}
 
         return database.DatabaseTable.__init__(self, db)
-    
 
     def setDataValue(self, id, name, value, dataType):
         # do any data conversions necessary to safely store value as a string
