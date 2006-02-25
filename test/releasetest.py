@@ -16,7 +16,7 @@ from mint.releases import ReleaseDataNameError
 from mint.mint_error import ReleasePublished, ReleaseMissing, ReleaseEmpty
 from mint import releasetypes
 from mint.database import ItemNotFound
-from mint.mint_server import deriveBaseFunc
+from mint.mint_server import deriveBaseFunc, ParameterError
 from mint.distro import installable_iso
 
 from conary.lib import util
@@ -96,6 +96,34 @@ class ReleaseTest(MintRepositoryHelper):
             release.setDataValue('intArg', intArg)
             assert(intArg == release.getDataValue('intArg'))
 
+        # test enum behavior
+        for enumArg in range(3):
+            release.setDataValue('enumArg', str(enumArg))
+            assert(str(enumArg) == release.getDataValue('enumArg'))
+
+        # ensure invalid enum values are not accepted.
+        self.assertRaises(ParameterError, release.setDataValue, 'enumArg', '5')
+
+    def testMaxIsoSize(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        projectId = client.newProject("Foo", "foo", "rpath.org")
+        release = client.newRelease(projectId, "Test Release")
+        imageTypes = [releasetypes.INSTALLABLE_ISO]
+        release.setImageTypes(imageTypes)
+
+        for size in ('681574400', '734003200', '4700000000', '8500000000'):
+            release.setDataValue('maxIsoSize', size)
+            self.failIf(release.getDataValue('maxIsoSize') != size,
+                        "size was mangled in xml-rpc")
+
+        self.assertRaises(ParameterError, release.setDataValue, 'maxIsoSize',
+                          '10000000')
+
+        maxIsoSize = release.getDataDict()['maxIsoSize']
+        self.failIf(maxIsoSize != '8500000000',
+                    "Data dict contained %s of %s but expected %s of type str"\
+                    % (str(maxIsoSize), str(type(maxIsoSize)), '8500000000'))
+
     def testMissingReleaseData(self):
         # make sure releasedata properly returns the default value
         # if the row is missing. this will handle the case of a modified
@@ -114,7 +142,6 @@ class ReleaseTest(MintRepositoryHelper):
             pass
         else:
             self.fail("getDataTemplate returned bogus template data")
-            
 
         self.db.cursor().execute("DELETE FROM ReleaseData WHERE name='bugsUrl'")
         self.db.commit()
@@ -453,7 +480,7 @@ class ReleaseTest(MintRepositoryHelper):
                 'Bootable Image Settings',
                 'VMware Image Settings',
                 'Stub Image Settings'] == templates)
-        
+
 
 if __name__ == "__main__":
     testsuite.main()
