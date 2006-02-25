@@ -234,6 +234,16 @@ class InstallableIso(ImageGenerator):
         self.version = version
 
         skipMediaCheck = self.release.getDataValue('skipMediaCheck')
+        maxIsoSize = int(self.release.getDataValue('maxIsoSize'))
+
+        print >> sys.stderr, "Building ISOs of size: %d Mb" % \
+              (maxIsoSize / 1048576)
+        sys.stderr.flush()
+
+        # FIXME: hack to ensure we don't trigger overburns.
+        # there are probably cleaner ways to do this.
+        if maxIsoSize > 681574400:
+            maxIsoSize -= 1024 * 1024
 
         cfg = conarycfg.ConaryConfiguration()
 
@@ -305,6 +315,8 @@ class InstallableIso(ImageGenerator):
                                          oldFiles = existingChangesets,
                                          cacheDir = isocfg.cachePath,
                                          callback = self.callback)
+        print >> sys.stderr, "done extracting changesets"
+        sys.stderr.flush()
         cslist, groupcs = rc
 
         releaseVer = upstream(version)
@@ -375,7 +387,7 @@ class InstallableIso(ImageGenerator):
         self.writeProductImage('1#' + arch)
 
         self.status("Mapping ISOs")
-        splitdistro.splitDistro(topdir, troveName)
+        splitdistro.splitDistro(topdir, troveName, maxIsoSize)
 
         isoList = []
         isoname = "%(safeName)s-%(version)s-%(arch)s-%%(disc)s.iso" % infoMap
@@ -428,7 +440,9 @@ class InstallableIso(ImageGenerator):
 
         # clean up
         self.status("Cleaning up...")
-        util.rmtree(os.path.normpath(os.path.join(topdir, "..")))
+                                                                               
+        #util.rmtree(os.path.normpath(os.path.join(topdir, "..")))             
+                                                                               
         isoList += ( (bootDest, "boot.iso"),
                      (diskbootDest, "diskboot.img"), )
 

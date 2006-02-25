@@ -14,8 +14,6 @@ from conary.lib import util
 import conary.trove
 import conary.repository.changeset
 
-isoblocksize = 2048
-maxisosize = 650 * 1024 * 1024
 commonfiles = ('README', 'LICENSE')
 basicminimal = ('group-core', 'group-base')
 
@@ -56,7 +54,7 @@ def lndir(src, dest, excludes=[]):
                 if e.errno != 17:
                     raise
 
-def spaceused(path):
+def spaceused(path, isoblocksize):
     if not os.path.isdir(path):
         sb = os.stat(path)
         return sb.st_size + (isoblocksize - sb.st_size % isoblocksize)
@@ -98,7 +96,8 @@ def writediscinfo(path, discnum, discinfo):
     f.write('\n')
     f.close()
 
-def reorderChangesets(f, csPath, initialSizes, baseTrove):
+def reorderChangesets(f, csPath, initialSizes, maxisosize, isoblocksize,
+                      baseTrove):
     reservedTroves = []
     sizedList = []
     infoTroves = []
@@ -108,7 +107,7 @@ def reorderChangesets(f, csPath, initialSizes, baseTrove):
         trvName = line.split()[1]
         if trvName in basicminimal:
             reservedTroves.append(line)
-        spaceUsed = spaceused(join(csPath, csFile))
+        spaceUsed = spaceused(join(csPath, csFile), isoblocksize)
         if trvName.startswith('info-'):
             infoTroves.append((spaceUsed, line))
         elif trvName == baseTrove:
@@ -155,7 +154,8 @@ def reorderChangesets(f, csPath, initialSizes, baseTrove):
         csList.extend(disc)
     return csList
 
-def splitDistro(unified, baseTrove):
+def splitDistro(unified, baseTrove, maxisosize = 650 * 1024 * 1024,
+                isoblocksize = 2048):
     if not os.path.isdir(unified):
         # FIXME: move ParameterError into mint_errors and use that.
         raise AssertionError("path is not a directory")
@@ -185,14 +185,14 @@ def splitDistro(unified, baseTrove):
                cDir in os.listdir(os.path.join(unified, 'media-template')):
             lndir(os.path.join(unified, 'media-template', cDir), current)
 
-    used = spaceused(current)
+    used = spaceused(current, isoblocksize)
 
     # prepare a dummy disc ahead of time to precalc the initial size correctly
     # the fact that media-template is completely custom has the unlimited
     # power to make this extremely messy through other calculation methods.
     tmpDisc = tempfile.mkdtemp()
     preparedir(unified, tmpDisc, csdir)
-    allContentSize = spaceused(tmpDisc)
+    allContentSize = spaceused(tmpDisc, isoblocksize)
     util.rmtree(tmpDisc)
 
     # iterate through the cslist, copying all the changesets that
@@ -200,19 +200,20 @@ def splitDistro(unified, baseTrove):
     f = open(join(unified, cslist))
     outcs = open(join(current, cslist), 'w')
     reOrd = reorderChangesets(f, join(unified, csdir), (used, allContentSize),
-                              baseTrove)
+                              maxisosize, isoblocksize, baseTrove)
     f.close()
     for line in reOrd:
         csfile = line.split()[0]
         src = join(unified, csdir, csfile)
-        used += spaceused(src)
+        used += spaceused(src, isoblocksize)
         if used > maxisosize:
             # oops, ran out of space.  set up a new disc
             discnum += 1
             current = join(os.path.dirname(unified), 'disc%d' %discnum)
             preparedir(unified, current, csdir)
             writediscinfo(current, discnum, discinfo)
-            used = spaceused(current) + spaceused(src)
+            used = spaceused(current, isoblocksize) + \
+                   spaceused(src, isoblocksize)
         dest = join(current, csdir, csfile)
         os.link(src, dest)
         # cut off disc number, record the disc location
