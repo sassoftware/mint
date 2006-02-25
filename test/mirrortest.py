@@ -86,10 +86,10 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
         project.editLabel(labelId, "localhost.other.host@rpl:linux",
             "http://mint.rpath.local:%d/repos/localhost/" % self.port, "mintauth", "mintpass")
         client.addMirroredLabel(projectId, labelId, "http://localhost:%s/conary/" % sourcePort, "mirror", "mirror")
+        client.addRemappedRepository('localhost.rpath.local', 'localhost.other.host')
 
         cu = self.db.cursor()
         cu.execute("UPDATE Projects SET external=1 WHERE projectId=?", projectId)
-        cu.execute("INSERT INTO RepNameMap VALUES ('localhost.rpath.local', 'localhost.other.host')")
         self.db.commit()
 
         # do the mirror

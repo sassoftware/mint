@@ -93,6 +93,22 @@ function humanReadableDate(aPythonicTimestamp) {
     return retval;
 }
 
+
+// crude algorithm to make a string plural given a count and a word
+// i.e. pluralize(1, "cat") ==> "1 cat", and pluralize(2, "dog") ==> "2 dogs"
+// FIXME: doesn't handle exceptions in English (e.g. "mouse", "deer", etc.)
+function pluralize(aNumber, aString) {
+    if (aNumber != 1) {
+        if (aString.slice(-1) == "s"  || aString.slice(-1) == "x" ||
+            aString.slice(-2) == "ch" || aString.slice(-2) == "sh") {
+            aString += "es";
+        } else {
+            aString += "s";
+        }
+    }
+    return aNumber + " " + aString;
+}
+
 // get release image type
 getReleaseImageTypeDesc = function(aTypeId) {
     return releaseImageTypeNamesShort[aTypeId];
@@ -155,8 +171,8 @@ makeJobRowData = function(aRow) {
         dateOfInterest = aRow['timeFinished'];
     }
 
-    return [ aRow['jobId'], username, jobDesc,
-             humanReadableDate(dateOfInterest), aRow['statusMessage'] ];
+    return [ aRow['jobId'], username, humanReadableDate(dateOfInterest),
+                jobDesc, aRow['statusMessage'] ];
 };
 
 // RPC callbacks ------------------------------------------------------------
@@ -286,41 +302,45 @@ function processListActiveJobs(aReq) {
             return (job.status > STATUS_RUNNING);
         }, jobsList));
 
-    var runningJobsTable =
-        TABLE({ class: "results" },
-        THEAD(null, headerRowDisplay(["Job ID", "Submitter", "Description",
-            "Started", "Last Status Message Received"])),
-        TBODY(null, map(rowDisplay, runningJobsList)));
-
-    var queuedJobsTable =
-        TABLE({ class: "results" },
-        THEAD(null, headerRowDisplay(["Job ID", "Submitter", "Description",
-            "Submitted", "Last Status Message Received"])),
-        TBODY(null, map(rowDisplay, queuedJobsList)));
-
-    var finishedJobsTable =
-        TABLE({ class: "results" },
-        THEAD(null, headerRowDisplay(["Job ID", "Submitter", "Description",
-             "Finished", "Last Status Message Received"])),
-        TBODY(null, map(rowDisplay, finishedJobsList)));
-
     // build the jobs display
     jobTable = DIV({ id: "jobsTable" });
     if (jobsList.length == 0) {
         appendChildNodes(jobTable, P(null, "No active jobs."));
     } else {
+        appendChildNodes(jobTable, P(null, pluralize(jobsList.length, "job") +
+            " (" +
+            queuedJobsList.length + " queued, " +
+            runningJobsList.length + " running, " +
+            finishedJobsList.length + " finished)"));
+
+        var theTableItself = TABLE({ class: "results" });
+
         if (queuedJobsList.length > 0) {
-            appendChildNodes(jobTable, H2(null, "Queued Jobs"),
-                queuedJobsTable);
+            appendChildNodes(theTableItself,
+                TR(null, TH({ colspan: "5", class: "tablesubhead" },
+                    "Queued jobs")),
+                    headerRowDisplay(["Job ID", "Submitter", "Time Submitted",
+                    "Description", "Last Status Message Received"]),
+                    map(rowDisplay, queuedJobsList));
         }
         if (runningJobsList.length > 0) {
-            appendChildNodes(jobTable, H2(null, "Running Jobs"),
-                runningJobsTable);
+            appendChildNodes(theTableItself,
+                TR(null, TH({ colspan: "5", class: "tablesubhead" },
+                    "Running jobs")),
+                    headerRowDisplay(["Job ID", "Submitter", "Time Started",
+                    "Description", "Last Status Message Received"]),
+                    map(rowDisplay, runningJobsList));
         }
         if (finishedJobsList.length > 0) {
-            appendChildNodes(jobTable, H2(null, "Finished Jobs"),
-                finishedJobsTable);
+            appendChildNodes(theTableItself,
+                TR(null, TH({ colspan: "5", class: "tablesubhead" },
+                    "Jobs finished within the last 24 hours")),
+                    headerRowDisplay(["Job ID", "Submitter", "Time Finished",
+                        "Description", "Last Status Message Received"]),
+                    map(rowDisplay, finishedJobsList));
         }
+
+        appendChildNodes(jobTable, TBODY(null, theTableItself));
     }
 
     // display it

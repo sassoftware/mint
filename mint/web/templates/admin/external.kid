@@ -107,7 +107,7 @@
                           Enter the username and password of a user authorized to mirror this repository.
                       </p>
                       <p class="help">
-                          Otherwise, if you have a mirroring entitlement rather than a username and
+                          If you have a mirroring entitlement instead of a username and
                           password, please paste it here:
                       </p>
                       <textarea rows="5" cols="50" name="mirrorEnt" />

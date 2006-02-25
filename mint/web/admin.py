@@ -5,10 +5,12 @@
 #
 
 import sys
+import os
 from mod_python import apache
 
 from mint import mint_error
 from webhandler import WebHandler
+from conary import versions
 from conary.web.fields import strFields, intFields, listFields, boolFields
 
 class AdminHandler(WebHandler):
@@ -174,11 +176,26 @@ class AdminHandler(WebHandler):
         self.req.content_type = "application/x-pdf"
         return pdfData
 
-    @strFields(name = None, hostname = None, label = None, url = '')
+    @strFields(name = None, hostname = None, label = None, url = '',\
+        mirrorUser = '', mirrorPass = '', mirrorEnt = '')
+    @boolFields(useMirror = False)
     def _admin_process_external(self, name, hostname, label, url,
-                                *args, **kwargs):
-        self.client.newExternalProject(name, hostname,
-                                       self.cfg.projectDomainName, label, url)
+                                mirrorUser, mirrorPass, mirrorEnt,
+                                useMirror, *args, **kwargs):
+        projectId = self.client.newExternalProject(name, hostname,
+            self.cfg.projectDomainName, label, url)
+        project = self.client.getProject(projectId)
+
+        extLabel = versions.Label(label)
+        # set up the mirror, if requested
+        if useMirror:
+            labelIdMap, _, _ = self.client.getLabelsForProject(projectId)
+            label, labelId = labelIdMap.items()[0]
+            localUrl = "http://%s%srepos/%s/" % (self.cfg.projectSiteHost, self.cfg.basePath, hostname)
+
+            project.editLabel(labelId, label, localUrl, self.cfg.authUser, self.cfg.authPass)
+            self.client.addMirroredLabel(projectId, labelId, url, mirrorUser, mirrorPass)
+            self.client.addRemappedRepository(hostname + "." + self.cfg.projectSiteHost, extLabel.getHost())
 
         self._redirect(self._redirect("http://%s%sproject/%s/" % \
                                       (self.cfg.projectSiteHost,
@@ -196,7 +213,37 @@ class AdminHandler(WebHandler):
                            firstTime = firstTime)
 
     def _admin_jobs(self, *args, **kwargs):
-        return self._write('admin/jobs', kwargs = kwargs)
+        try:
+            enableToggle = True
+            jobServerStatus = self.client.getJobServerStatus()
+        except:
+            enableToggle = False
+            jobServerStatus = "Job server status is unknown."
+
+        return self._write('admin/jobs', kwargs = kwargs,
+                jobServerStatus = jobServerStatus, enableToggle = enableToggle)
+
+    def _admin_jobs_jobserver_start(self, *args, **kwargs):
+        try:
+            pipeFD = os.popen("/sbin/service rbuilder-isogen start")
+            kwargs['extraMsg'] = pipeFD.read()
+            pipeFD.close()
+        except:
+            kwargs['extraMsg'] = "Failed to start the job server."
+
+        return self._admin_jobs(*args, **kwargs)
+
+    def _admin_jobs_jobserver_stop(self, *args, **kwargs):
+        try:
+            pipeFD = os.popen("/sbin/service rbuilder-isogen stop")
+            kwargs['extraMsg'] = pipeFD.read()
+            pipeFD.close()
+        except:
+            kwargs['extraMsg'] = "Failed to stop the job server."
+
+
+        return self._admin_jobs(*args, **kwargs)
+
 
     def _administer(self, *args, **kwargs):
         return self._write('admin/administer', kwargs = kwargs)

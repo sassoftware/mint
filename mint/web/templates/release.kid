@@ -141,7 +141,21 @@ import time
                         style="cursor: pointer;">What is this file?&nbsp;<img id="file_help_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" /></h4>
 
                         <div id="file_help" style="display: none;">
-                            <p>This is a VMWare Image.</p>
+                            <p>This file contains the <tt>.vmdk</tt> and
+                            <tt>.vmx</tt> files usable by VMware
+                            Player.</p>
+
+                            <p>NOTE: Before using this file, you must unzip
+                            it using the utility of your choice.  However,
+                            be aware that some unzip utilities cannot
+                            correctly uncompress a zipped file if one of
+                            the files in the zip archive is larger than
+                            2GB.  If this file contains a <tt>.vmdk</tt>
+                            file larger than 2GB (you can use the
+                            <tt>zipinfo</tt> command to find out), you may
+                            experience this.  Note that the <tt>unzip</tt>
+                            utility packaged with rPath Linux can
+                            unzip files larger than 2GB.</p>
                             </div>
 			</div>
 			<div py:if="releasetypes.QEMU_IMAGE in release.imageTypes">
@@ -149,9 +163,19 @@ import time
                         style="cursor: pointer;">What is this file?&nbsp;<img id="file_help_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" /></h4>
 
                         <div id="file_help" style="display: none;">
-                            <p>This is a QEmu Image.</p>
+                            <p>This file contains an image of a bootable
+                            environment capable of running under the <a
+                            href="http://fabrice.bellard.free.fr/qemu/">QEMU</a>
+                            processor emulator, or written onto an IDE disk
+                            drive (using the <tt>dd</tt> command) and
+                            booted.</p>
+
+                            <p>NOTE: This image has been compressed using
+                            GNU zip.  Before using this image, you must
+                            first uncompress it (using the <tt>gunzip</tt>
+                            command).</p>
                             </div>
-			</div>
+                        </div>
 
                     </div>
                     <p py:if="not files">Release has no downloadable files.</p>

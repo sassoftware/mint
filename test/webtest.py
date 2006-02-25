@@ -955,6 +955,32 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         page = self.assertNotContent("/administer?operation=external",
                                      'name="hostname" value="rpath"')
 
+    def testCreateMirroredProject(self):
+        client, userId = self.quickMintAdmin('adminuser', 'adminpass')
+
+        self.webLogin('adminuser', 'adminpass')
+
+        # ensure "first time" content appears on page
+        page = self.assertContent("/administer?operation=external",
+                                  'name="hostname" value="rpath"')
+
+        page = page.postForm(1, self.post,
+                             {'hostname' : 'rpath',
+                              'name' : 'rPath Linux',
+                              'label' : 'conary.rpath.com@rpl:devel',
+                              'url' : '',
+                              'useMirror': '1',
+                              'mirrorUser': 'mirror',
+                              'mirrorPass': 'mirrorpass',
+                              'operation' : 'process_external'})
+
+        # ensure "first time" content does not appear on page
+        page = self.assertNotContent("/administer?operation=external",
+                                     'name="hostname" value="rpath"')
+
+        # and make sure that the appropriate database entries are created
+        assert(client.getMirroredLabels() == [[1, 1, '', 'mirror', 'mirrorpass']])
+
     def testBrowseUsers(self):
         client, userId = self.quickMintAdmin('adminuser', 'adminpass')
         self.webLogin('adminuser', 'adminpass')

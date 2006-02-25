@@ -1769,7 +1769,7 @@ class MintServer(object):
         # Handling the job server in this manner is temporary
         # This is only useful in an appliance context at this time.
         pipeFD = os.popen("/sbin/service rbuilder-isogen status")
-        res = pipeFd.read()
+        res = pipeFD.read()
         pipeFD.close()
         return res
 
@@ -2298,6 +2298,12 @@ class MintServer(object):
         for r in cu.fetchall():
             ret.append(list(r))
         return ret
+
+    @private
+    @typeCheck(str, str)
+    @requiresAdmin
+    def addRemappedRepository(self, fromName, toName):
+        return self.repNameMap.new(fromName = fromName, toName = toName)
 
     def __init__(self, cfg, allowPrivate = False, alwaysReload = False, db = None, req = None):
         self.cfg = cfg

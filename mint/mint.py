@@ -245,6 +245,13 @@ class MintClient:
         """
         return self.server.getProjects(sortOrder, limit, offset)
 
+    def getLabelsForProject(self, projectId,
+            overrideSSL = False, overrideAuth = False,
+            newUser = '', newPass = '', useSSL = False):
+        return self.server.getLabelsForProject(projectId,
+            overrideSSL, overrideAuth,
+            newUser, newPass, useSSL)
+
     def getUsers(self, sortOrder, limit, offset):
         """
         Return a list of users unfiltered in any way
@@ -392,6 +399,14 @@ class MintClient:
          """
          return self.server.demoteUserFromAdmin(userId)
 
+    def getJobServerStatus(self):
+         """
+         Hack to get the job server status for rBuilder Appliance.
+         This needs to be extended for multiple job servers.
+         Don't use with rBuilder Online!
+         """
+         return self.server.getJobServerStatus()
+
     # session management
     def loadSession(self, sid):
         return self.server.loadSession(sid)
@@ -445,9 +460,14 @@ class MintClient:
     def getLabel(self, labelId):
         return self.server.getLabel(labelId)
 
+    def addRemappedRepository(self, fromName, toName):
+        return self.server.addRemappedRepository(fromName, toName)
+
+
 class ServerProxy(xmlrpclib.ServerProxy):
     def __getattr__(self, name):
         return _Method(self.__request, name)
+
 
 class _Method(xmlrpclib._Method):
     def __repr__(self):

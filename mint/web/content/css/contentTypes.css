@@ -149,6 +149,13 @@ th .required {
         border-top: 0;
 }
 
+.results .tablesubhead {
+        font-size: larger;
+        border-bottom: 0;
+        padding-bottom: 0;
+        padding-top: 0.75em;
+}
+
 strong.keyword {
 	color:#FF7C04;
 }

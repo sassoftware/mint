@@ -19,7 +19,7 @@ case "$1" in
         '')
             HOME=/home/$JOBSERVER_USER/ sudo -u $JOBSERVER_USER $SCRIPT_PATH/job-server --config $CONFIG_FILE
             ;;
-        *) echo "Other job servers appear to be running. please stop them before continuing"
+        *) echo "Other job servers appear to be running. Please stop them before continuing"
            ;;
         esac
 	;;
