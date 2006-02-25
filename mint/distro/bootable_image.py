@@ -56,11 +56,17 @@ def debugme(type, value, tb):
 
 class Journal:
     def lchown(self, root, target, user, group):
-        # get rid of the root
-        target = target[len(root):]
-        dirname = os.path.dirname(target)
-        filename = os.path.basename(target)
-        f = open(os.sep.join((root, dirname, '.UIDGID')), 'a')
+        # put UIDGID entries for directories on .
+        if os.path.isdir(target):
+            target = target[len(root):]
+            filename = '.'
+            f = open(os.sep.join((root, target, '.UIDGID')), 'a')
+        else:
+            # get rid of the root
+            target = target[len(root):]
+            dirname = os.path.dirname(target)
+            filename = os.path.basename(target)
+            f = open(os.sep.join((root, dirname, '.UIDGID')), 'a')
         trfilename = filename.replace(' ', r'\ ').replace('\t', r'\t')
         f.write('%s %s %s\n' %(trfilename, user, group))
         f.close()
