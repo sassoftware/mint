@@ -3,7 +3,7 @@
 <?python
 from mint import releasetypes
 from mint.releasetypes import typeNames
-from mint.data import RDT_STRING, RDT_BOOL, RDT_INT
+from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM
 ?>
 
 <html xmlns="http://www.w3.org/1999/xhtml"
@@ -125,6 +125,12 @@ from mint.data import RDT_STRING, RDT_BOOL, RDT_INT
                                         <label for="${name}">${dataRow[2]}</label>
 
                                         <input type="text" name="${name}" id="${name}" value="${dataValue}"/>
+                                    </div>
+                                    <div py:strip="True" py:if="(dataRow[0] == RDT_ENUM)">
+                                        <label for="${name}">${dataRow[2]}</label>
+                                        <select name="${name}">
+                                            <option py:for="prompt, val in sorted(dataRow[3].iteritems())" py:content="prompt" value="${val}" py:attrs="{'selected' : val == dataRow[1] and 'selected' or None}"/>
+                                        </select>
                                     </div>
                                     <br />
                                 </div>
