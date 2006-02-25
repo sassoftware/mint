@@ -440,9 +440,7 @@ class InstallableIso(ImageGenerator):
 
         # clean up
         self.status("Cleaning up...")
-                                                                               
-        #util.rmtree(os.path.normpath(os.path.join(topdir, "..")))             
-                                                                               
+        util.rmtree(os.path.normpath(os.path.join(topdir, "..")))
         isoList += ( (bootDest, "boot.iso"),
                      (diskbootDest, "diskboot.img"), )
 
