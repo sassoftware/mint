@@ -21,7 +21,7 @@ from mint import jobstatus
 from webhandler import WebHandler, normPath, HttpNotFound
 from decorators import ownerOnly, requiresAuth, requiresAdmin, mailList, redirectHttp
 from mint.users import sendMailWithChecks
-from mint.releases import RDT_STRING, RDT_BOOL, RDT_INT
+from mint.releases import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM
 
 from conary import conaryclient
 from conary import conarycfg
@@ -339,11 +339,9 @@ class ProjectHandler(WebHandler):
 
     @requiresAuth
     @intFields(releaseId = None)
-    @strFields(trove = None, version = None,
-               desc = "", mediaSize = "640")
-    def saveRelease(self, auth, releaseId,
-                     trove, version,
-                     desc, mediaSize, name, **kwargs):
+    @strFields(trove = None, version = None, desc = "")
+    def saveRelease(self, auth, releaseId, trove, version, desc, name,
+                    **kwargs):
 
         release = self.client.getRelease(releaseId)
 
@@ -372,7 +370,7 @@ class ProjectHandler(WebHandler):
                 val = kwargs[name]
                 if template[name][0] == RDT_BOOL:
                     val = True
-                if template[name][0] == RDT_STRING:
+                if template[name][0] in (RDT_STRING, RDT_ENUM):
                     val = str(val)
                 if template[name][0] == RDT_INT:
                     val = int(val)
