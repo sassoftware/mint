@@ -11,7 +11,8 @@ import database
 import jobs
 import releasetypes
 from mint_error import MintError
-from data import RDT_STRING, RDT_BOOL, RDT_INT
+from mint_server import ParameterError
+from data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM
 
 from conary import versions
 from conary.deps import deps
@@ -35,6 +36,14 @@ class ReleaseDataNameError(MintError):
         else:
             self.str = reason
 
+# sizes are listed in bytes...
+discSizes = {
+    'CD: 650 MB'  : '681574400',
+    'CD: 700 MB'  : '734003200',
+    'DVD: 4.7 GB' : '4700000000',
+    'DVD: 8.5 GB' : '8500000000',
+    }
+
 imageGenTemplate = {
     # XXX this is kind of a lousy description; a toggleable "override ILP option would be nicer
     'installLabelPath': (RDT_STRING, '',  'Custom Conary installLabelPath setting (leave blank for default)'),
@@ -45,6 +54,7 @@ installableIsoTemplate = {
     'skipMediaCheck':   (RDT_BOOL, False, 'Prompt to verify CD images during install'),
     'betaNag':          (RDT_BOOL, False, 'This release is considered a beta'),
     'bugsUrl':          (RDT_STRING, 'http://bugs.rpath.com/', 'Bug report URL'),
+    'maxIsoSize':       (RDT_ENUM, '681574400', 'ISO Size', discSizes)
 }
 
 bootableImageTemplate = {
@@ -61,6 +71,8 @@ stubImageTemplate = {
     'boolArg'   : (RDT_BOOL, False, 'Garbage Boolean'),
     'stringArg' : (RDT_STRING, '', 'Garbage String'),
     'intArg'    : (RDT_INT, 0, 'Garbage Integer'),
+    'enumArg'   : (RDT_ENUM, '2', 'Garbage Enum',
+                   {'foo' : '0', 'bar': '1', 'baz': '2'})
 }
 
 dataHeadings = {
@@ -394,6 +406,8 @@ class Release(database.TableObject):
             raise ReleaseDataNameError("Named value not in data template: %s" %name)
         if dataType is None:
             dataType = template[name][0]
+        if dataType == RDT_ENUM and value not in template[name][3].values():
+            raise ParameterError("%s is not a legal enumerated value" % value)
         return self.server.setReleaseDataValue(self.getId(), name, value, dataType)
 
     def getDataValue(self, name):
