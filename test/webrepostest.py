@@ -59,6 +59,7 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
         page = page.assertContent('/repos/test/browse', ok_codes = [200],
             content = 'troveInfo?t=testcase:runtime')
 
+    @testsuite.context("broken")
     def testBrowseExternalProject(self):
         client, userId = self.quickMintUser("testuser", "testpass")
         extProjectId = self.newProject(client, "External Project", "external")
@@ -78,6 +79,8 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
         # log in and make sure we see the same thing
         page = self.assertCode('/repos/external/browse', code = 200)
         page = page.assertCode('/repos/external/troveInfo?t=testcase:source', code = 200)
+        import epdb
+        epdb.st()
 
     def testTroveInfoPage(self):
         client, userId = self.quickMintUser('foouser','foopass')

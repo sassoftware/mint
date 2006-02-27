@@ -5,8 +5,7 @@
 # All rights reserved
 #
 
-import os, sys, tempfile
-if '..' not in sys.path: sys.path.append('..')
+import os
 import testsuite
 testsuite.setup()
 
@@ -18,7 +17,7 @@ from conary.conaryclient import ConaryClient
 from conary.build import signtrove
 from conary.lib import openpgpfile, openpgpkey
 
-runTest = True 
+runTest = False
 
 class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
     def createMirrorUser(self, repos):
