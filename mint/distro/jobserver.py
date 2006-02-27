@@ -152,9 +152,17 @@ class JobDaemon:
             signal.signal(signal.SIGTERM, self.origTerm)
             signal.signal(signal.SIGINT, self.origInt)
             # alter the lock file
-            lockFile = open(cfg.lockFile, 'a')
-            lockFile.write('\nSHUTTING_DOWN')
-            lockFile.close()
+            try:
+                stats = os.stat(cfg.lockfile)
+            except:
+                exc, e, bt = sys.exc_info()
+                log.error("got %s while trying to stat lockfile" % str(e))
+            else:
+                # ensure we don't write to an empty file
+                if stats[7]:
+                    lockFile = open(cfg.lockFile, 'a')
+                    lockFile.write('\nSHUTTING_DOWN')
+                    lockFile.close()
 
         self.origTerm = signal.signal(signal.SIGTERM, stopJobs)
         self.origInt = signal.signal(signal.SIGINT, stopJobs)
