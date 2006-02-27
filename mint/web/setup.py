@@ -111,6 +111,14 @@ class SetupHandler(WebHandler):
         mintClient.promoteUserToAdmin(userId)
         self.req.log_error("promoted %d to admin" % userId)
 
+        # save entitlements
+        if 'entitlement' in kwargs:
+            for ent in ["conary.rpath.com", "products.rpath.com"]:
+                f = open("/etc/conary/entitlements/%s" % ent, "w")
+                f.write(kwargs['entitlement'])
+                f.close()
+                self.req.log_error("wrote entitlement to /etc/conary/entitlements/%s" % ent)
+
         cfg = file('/srv/mint/mint.conf', 'w')
         newCfg.display(out = cfg)
         self.req.log_error("writing new configuration to /srv/mint/mint.conf")

@@ -81,7 +81,19 @@ from conary.lib.cfg import *
                         </td>
                     </tr>
                 </table>
-
+                <h2>Entitlements</h2>
+                <table class="setup">
+                    <tr>
+                        <td>
+                            If you received an entitlement string from rPath, please paste it here:
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <textarea name="entitlement" rows="10" cols="72"></textarea>
+                        </td>
+                    </tr>
+                </table>
             <p><button type="submit" class="img"><img src="${cfg.staticPath}apps/mint/images/save_changes_button.png" alt="Save Changes" /></button></p>
           </form>
         </div>
