@@ -324,7 +324,7 @@ title %(name)s (%(kversion)s)
         util.copyfile(os.path.join(self.imgcfg.dataDir, 'ifcfg-eth0'), os.path.join(self.fakeroot, 'etc', 'sysconfig', 'network-scripts'))
         util.copyfile(os.path.join(self.imgcfg.dataDir, 'keyboard'), os.path.join(self.fakeroot, 'etc', 'sysconfig'))
         #Was X installed?
-        if os.path.isfile(os.path.join(self.fakeroot, 'usr', 'X11R6', 'bin', 'X')):
+        if os.path.isfile(os.path.join(self.fakeroot, 'usr', 'bin', 'X11', 'X')):
             #copy in the xorg.conf file
             util.copyfile(os.path.join(self.imgcfg.dataDir, 'xorg.conf'), os.path.join(self.fakeroot, 'etc', 'X11'))
             #tweak the inittab to start at level 5
