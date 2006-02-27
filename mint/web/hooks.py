@@ -127,7 +127,7 @@ def post(port, isSecure, repos, cfg, req):
         return apache.OK
     else:
         webfe = app.MintApp(req, cfg, repServer = shimRepo)
-        return webfe._handle(req.uri)
+        return webfe._handle(req.path_info)
 
 def get(port, isSecure, repos, cfg, req):
     repos, shimRepo = repos
@@ -207,7 +207,7 @@ def get(port, isSecure, repos, cfg, req):
         return apache.OK
     else:
         webfe = app.MintApp(req, cfg, repServer = shimRepo)
-        return webfe._handle(req.uri)
+        return webfe._handle(req.path_info)
 
 def putFile(port, isSecure, repos, req):
     if not isSecure and repos.forceSecure:
@@ -233,10 +233,11 @@ def conaryHandler(req, cfg, pathInfo):
         return apache.HTTP_FORBIDDEN
 
     paths = normPath(req.uri).split("/")
-    if paths[1] == "repos":
+    if "repos" in paths:
         # test suite hook: lop off any port specified in cfg file
         domainName = cfg.projectDomainName.split(":")[0]
-        repName = paths[2] + "." + domainName
+        hostName = paths[paths.index('repos')+1]
+        repName = hostName + "." + domainName
     else:
         repName = req.hostname
 
