@@ -90,7 +90,7 @@ import time
 
                 <p>${release.getDesc().strip() or "Release has no description."}</p>
 
-                <div id="downloads">
+                <div id="downloads" py:if="not releaseInProgress">
                     <h3><a py:if="release.hasVMwareImage()" title="Download VMware Player" href="http://www.vmware.com/download/player/"><img class="vmwarebutton" src="${cfg.staticPath}apps/mint/images/get_vmware_player.gif" alt="Download VMware Player" /></a>Downloads</h3>
                     <div py:strip="True" py:if="files">
                     <ul>

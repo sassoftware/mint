@@ -208,13 +208,6 @@ function processGetReleaseStatus(aReq) {
             statusText = textWithBaton(releaseStatus.message);
         }
 
-        // show downloads only when finished
-        if (releaseStatus.status == STATUS_FINISHED || releaseStatus.status == STATUS_UNKNOWN) {
-            showElement('downloads');
-        } else {
-            hideElement('downloads');
-        }
-
         oldStatus = status;
     }
 

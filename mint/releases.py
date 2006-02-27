@@ -337,7 +337,7 @@ class Release(database.TableObject):
     #    return releasetypes.typeNames[type]
 
     def getJob(self):
-        jobId = self.server.getJobIdsForRelease(self.id)
+        jobId = self.server.getJobIdForRelease(self.id)
         if jobId:
             return jobs.Job(self.server, jobId)
         else:

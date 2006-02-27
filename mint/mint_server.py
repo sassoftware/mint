@@ -1471,6 +1471,10 @@ class MintServer(object):
             if status in (jobstatus.WAITING, jobstatus.RUNNING):
                 raise jobs.DuplicateJob
             else:
+                # delete any files in the ImageFiles table prior to regeneration
+                cu.execute("DELETE FROM ImageFiles WHERE releaseId = ?",
+                        releaseId)
+
                 # getJobWaitMessage orders by timeSubmitted, so update must
                 # occur in two steps
                 self.jobs.update(jobId, status = jobstatus.WAITING,
@@ -1724,7 +1728,7 @@ class MintServer(object):
     @typeCheck(int)
     @requiresAuth
     @private
-    def getJobIdsForRelease(self, releaseId):
+    def getJobIdForRelease(self, releaseId):
         self._filterReleaseAccess(releaseId)
         cu = self.db.cursor()
 

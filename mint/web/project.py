@@ -400,6 +400,12 @@ class ProjectHandler(WebHandler):
         releases = self.project.getReleases(showUnpublished = True)
         publishedReleases = [x for x in releases if x.getPublished()]
         release = self.client.getRelease(id)
+        releaseInProgress = False
+        if auth.authorized:
+            releaseJob = release.getJob()
+            if releaseJob:
+                releaseInProgress = \
+                        (releaseJob.getStatus() <= jobstatus.RUNNING)
 
         try:
             trove, version, flavor = release.getTrove()
@@ -414,7 +420,8 @@ class ProjectHandler(WebHandler):
                 flavor = deps.ThawDependencySet(flavor),
                 releaseId = id, projectId = self.project.getId(),
                 publishedReleases = publishedReleases,
-                files = files)
+                files = files,
+                releaseInProgress = releaseInProgress)
 
     @ownerOnly
     @intFields(releaseId = None)
