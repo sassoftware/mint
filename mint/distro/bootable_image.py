@@ -199,7 +199,7 @@ class BootableImage(ImageGenerator):
 # Note that you do not have to rerun grub after making changes to this file
 #boot=/dev/hda
 default=0
-timeout=10
+timeout=0
 title %(name)s (%(kversion)s)
     root (hd0,0)
     kernel /boot/vmlinuz-%(kversion)s ro root=LABEL=/ quiet
