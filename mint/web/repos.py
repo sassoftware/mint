@@ -42,7 +42,7 @@ class ConaryHandler(WebHandler, http.HttpHandler):
         # set up the netclient
         self.serverName = self.req.hostname
 
-        path = self.req.path_info.split("/")
+        path = self.req.uri.split("/")
         self.cmd = path[3]
         try:
             if path[1] == "repos":
