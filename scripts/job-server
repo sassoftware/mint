@@ -36,7 +36,7 @@ def kill(lockFile):
                 os.unlink(lockFile)
             except OSError, e:
                 pass
-            sys.exit(1)
+            return
         log.info("killing rBuilder ISO generation server pid %d" % pid)
         try:
             os.kill(pid, signal.SIGINT)
