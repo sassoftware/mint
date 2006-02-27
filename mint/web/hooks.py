@@ -7,7 +7,6 @@
 from mod_python import apache
 from mod_python import util
 
-import base64
 import os
 import xmlrpclib
 import zlib
@@ -34,35 +33,10 @@ from mint import mirror
 from mint import users
 from mint import profile
 from mint.projects import mysqlTransTable
-from webhandler import normPath, HttpError
+from webhandler import normPath, HttpError, getHttpAuth
 import app
 
 BUFFER=1024 * 256
-
-def getHttpAuth(req):
-    # special header to pass a session id through
-    # instead of a real http authorization token
-    if 'X-Session-Id' in req.headers_in:
-        return req.headers_in['X-Session-Id']
-
-    if not 'Authorization' in req.headers_in:
-        return ('anonymous', 'anonymous')
-
-    info = req.headers_in['Authorization'].split()
-    if len(info) != 2 or info[0] != "Basic":
-        raise apache.SERVER_RETURN, apache.HTTP_BAD_REQUEST
-
-    try:
-        authString = base64.decodestring(info[1])
-    except:
-        raise apache.SERVER_RETURN, apache.HTTP_BAD_REQUEST
-
-    if authString.count(":") != 1:
-        raise apache.SERVER_RETURN, apache.HTTP_BAD_REQUEST
-
-    authToken = authString.split(":")
-
-    return authToken
 
 def checkAuth(req, repos):
     if not req.headers_in.has_key('Authorization'):
@@ -339,58 +313,6 @@ def conaryHandler(req, cfg, pathInfo):
     else:
         return apache.HTTP_METHOD_NOT_ALLOWED
 
-def rpcHandler(req, cfg, pathInfo):
-
-    isJSONrpc = isXMLrpc = allowPrivate = False
-
-    # only handle POSTs
-    if req.method.upper() != 'POST':
-        return apache.HTTP_METHOD_NOT_ALLOWED
-
-    if req.headers_in['Content-Type'] == 'text/xml'\
-            and req.uri.startswith('/xmlrpc'):
-        isXMLrpc = True
-        if req.uri.startswith('/xmlrpc-private'):
-            allowPrivate = True
-    elif req.headers_in['Content-Type'] == 'application/x-json'\
-            and req.uri.startswith('/jsonrpc'):
-        isJSONrpc = True
-    else:
-        return apache.HTTP_NOT_FOUND
-
-    authToken = getHttpAuth(req)
-
-    # instantiate a MintServer
-    server = mint_server.MintServer(cfg, allowPrivate = allowPrivate, req = req)
-
-    # switch on XML/JSON here
-    if isXMLrpc:
-        (paramList, method) = xmlrpclib.loads(req.read())
-    if isJSONrpc:
-        (method, paramList) = simplejson.loads(req.read())
-
-    # coax parameters into something MintServer likes
-    params = [method, authToken, paramList]
-
-    # go for it; return 403 if permission is denied
-    try:
-        # result is (isError, returnValues)
-        result = server.callWrapper(*params)
-    except (errors.InsufficientPermission, mint_server.PermissionDenied):
-        return apache.HTTP_FORBIDDEN
-
-    # create a response
-    if isXMLrpc:
-        resp = xmlrpclib.dumps((result,), methodresponse=1)
-        req.content_type = "text/xml"
-    elif isJSONrpc:
-        resp = simplejson.dumps(result[1])
-        req.content_type = "application/x-json"
-
-    # write repsonse
-    req.write(resp)
-
-    return apache.OK
 
 def mintHandler(req, cfg, pathInfo):
     webfe = app.MintApp(req, cfg)
@@ -398,9 +320,6 @@ def mintHandler(req, cfg, pathInfo):
 
 urls = (
     (r'^/conary/',           conaryHandler),
-    (r'^/jsonrpc/',          rpcHandler),
-    (r'^/xmlrpc/',           rpcHandler),
-    (r'^/xmlrpc-private/',   rpcHandler),
     (r'^/repos/',            conaryHandler),
     (r'^/',                  mintHandler),
 )

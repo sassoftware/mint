@@ -8,7 +8,7 @@ generated_files =\
 	releasetypes.js \
 	jobstatus.js
 
-dist_files = $(javascript_files) Makefile
+dist_files = $(javascript_files) $(generated_files) Makefile
 
 all: $(javascript_files) $(generated_files)
 

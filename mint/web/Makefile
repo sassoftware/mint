@@ -12,6 +12,7 @@ python_files = \
 	app.py		\
 	cache.py	\
 	repos.py	\
+	rpchooks.py	\
 	decorators.py	\
 	hooks.py	\
 	project.py	\

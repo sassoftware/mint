@@ -60,12 +60,34 @@ LoadModule alias_module modules/mod_alias.so
 DocumentRoot "@DOCROOT@"
 
 Alias /conary/ "@DOCROOT@/test.cnr/"
-Alias / "@DOCROOT@/mint.conf/"
+
+Alias /jsonrpc/             "@DOCROOT@/mint.conf/"
+Alias /xmlrpc/              "@DOCROOT@/mint.conf/"
+Alias /xmlrpc-private/      "@DOCROOT@/mint.conf/"
+Alias /                     "@DOCROOT@/mint.conf/"
+
 <Location />
     AddHandler python-program .conf
     PythonHandler mint.web.hooks
     PythonDebug Off
 </Location>
+
+<Location /xmlrpc/>
+    AddHandler python-program .conf
+    PythonHandler mint.web.rpchooks
+</Location>
+
+<Location /xmlrpc-private/>
+    AddHandler python-program .conf
+    PythonHandler mint.web.rpchooks
+    PythonOption allowPrivate True
+</Location>
+
+<Location /jsonrpc/>
+    AddHandler python-program .conf
+    PythonHandler mint.web.rpchooks
+</Location>
+
 
 <Location /conary/>
     Options FollowSymLinks
@@ -74,6 +96,8 @@ Alias / "@DOCROOT@/mint.conf/"
     AddHandler python-program .cnr
     PythonHandler conary.server.apachehooks
 </Location>
+
+
 
 
 # TypesConfig describes where the mime.types file (or equivalent) is

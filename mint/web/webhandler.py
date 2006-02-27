@@ -3,6 +3,7 @@
 #
 # All rights reserved
 #
+import base64
 import os
 import textwrap
 import time
@@ -230,6 +231,32 @@ def normPath(path):
         path = "/" + path
     path = path.replace('//', '/')
     return path
+
+
+def getHttpAuth(req):
+    # special header to pass a session id through
+    # instead of a real http authorization token
+    if 'X-Session-Id' in req.headers_in:
+        return req.headers_in['X-Session-Id']
+
+    if not 'Authorization' in req.headers_in:
+        return ('anonymous', 'anonymous')
+
+    info = req.headers_in['Authorization'].split()
+    if len(info) != 2 or info[0] != "Basic":
+        raise apache.SERVER_RETURN, apache.HTTP_BAD_REQUEST
+
+    try:
+        authString = base64.decodestring(info[1])
+    except:
+        raise apache.SERVER_RETURN, apache.HTTP_BAD_REQUEST
+
+    if authString.count(":") != 1:
+        raise apache.SERVER_RETURN, apache.HTTP_BAD_REQUEST
+
+    authToken = authString.split(":")
+
+    return authToken
 
 
 class HttpError(Exception):
