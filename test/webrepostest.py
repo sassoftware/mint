@@ -79,8 +79,6 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
         # log in and make sure we see the same thing
         page = self.assertCode('/repos/external/browse', code = 200)
         page = page.assertCode('/repos/external/troveInfo?t=testcase:source', code = 200)
-        import epdb
-        epdb.st()
 
     def testTroveInfoPage(self):
         client, userId = self.quickMintUser('foouser','foopass')
