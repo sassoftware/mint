@@ -324,7 +324,7 @@ urls = (
     (r'^/repos/',            conaryHandler),
     (r'^/xmlrpc/',           rpcHandler),
     (r'^/jsonrpc/',          rpcHandler),
-    (r'^/xmlrpc-private/',   rpchandler),
+    (r'^/xmlrpc-private/',   rpcHandler),
     (r'^/',                  mintHandler),
 )
 
