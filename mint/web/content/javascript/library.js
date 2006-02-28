@@ -214,7 +214,7 @@ function processGetReleaseStatus(aReq) {
             hideElement('editOptions');
         }
         replaceChildNodes(releaseStatusEl, SPAN({"style": "font-weight: bold;"}, "Status: "), SPAN({}, releaseStatus.message));
-        oldStatus = releaseStatus;
+        oldStatus = status;
     }
     swapDOM(oldReleaseStatus, releaseStatusEl);
 }
