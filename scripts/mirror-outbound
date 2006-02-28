@@ -1,0 +1,68 @@
+#!/usr/bin/python2.4
+#
+# Copyright (c) 2006 rPath, Inc.
+#
+# All Rights Reserved
+#
+
+# This script is only used when the target mirror is in a DMZ and does not
+# have permission/access to call back to the rBuilder Appliance to mirror.
+# This script should be run from a machine with access to both rBA and mirror.
+
+import sys
+
+from conary.conaryclient import mirror
+from conary import versions
+from conary.repository import netclient
+from conary.lib import util, log
+
+from mint import mint
+
+log.setVerbosity(log.DEBUG)
+sys.excepthook = util.genExcepthook(debug=True)
+
+
+def usage():
+    print "%s <url to rBuilder server>" % sys.argv[0]
+    return 1
+
+
+if len(sys.argv) < 2:
+    sys.exit(usage())
+
+client = mint.MintClient(sys.argv[1])
+cfg = mirror.MirrorConfiguration()
+
+mirroredLabels = client.getOutboundLabels()
+
+for label in mirroredLabels:
+    projectId, sourceLabelId, targetUrl, targetUser, targetPass = label
+    projectId = int(projectId)
+    sourceLabelId = int(sourceLabelId)
+    project = client.getProject(projectId)
+
+    labelStr, sourceUrl, sourceUser, sourcePass  = \
+              client.getLabel(sourceLabelId)
+
+    reposHost = versions.Label(labelStr).getHost()
+
+    cfg.target.repositoryMap = {reposHost: targetUrl}
+    cfg.target.user.addServerGlob(reposHost, targetUser, targetPass)
+
+    cfg.source.repositoryMap = {reposHost: sourceUrl}
+    cfg.source.user.addServerGlob(reposHost, sourceUser, sourcePass)
+
+    cfg.host = reposHost
+    cfg.labels = [versions.Label(project.getLabel())]
+
+    targetRepos = netclient.NetworkRepositoryClient(cfg.target.repositoryMap,
+                          cfg.target.user,
+                          entitlementDir = cfg.entitlementDirectory)
+
+    sourceRepos = netclient.NetworkRepositoryClient(cfg.source.repositoryMap,
+                          cfg.source.user,
+                          entitlementDir = cfg.entitlementDirectory)
+
+    while mirror.mirrorRepository(sourceRepos, targetRepos, cfg, False, False,
+                                  False):
+        pass
