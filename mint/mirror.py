@@ -5,24 +5,43 @@
 #
 from mint import database
 
-class MirrorLabelsTable(database.KeyedTable):
-    name = 'MirrorLabels'
-    key = 'targetLabelId'
-    createSQL= """CREATE TABLE MirrorLabels (
+class InboundLabelsTable(database.KeyedTable):
+    name = 'InboundLabels'
+    key = 'labelId'
+    createSQL= """CREATE TABLE InboundLabels (
         projectId       INT NOT NULL,
-        targetLabelId   INT NOT NULL,
+        labelId   INT NOT NULL,
         url             VARCHAR(255),
         username        VARCHAR(255),
         password        VARCHAR(255),
-        CONSTRAINT MirrorLabels_projectId_fk
+        CONSTRAINT InboundLabels_projectId_fk
             FOREIGN KEY (projectId) REFERENCES Projects(projectId)
             ON DELETE RESTRICT ON UPDATE CASCADE,
-        CONSTRAINT MirrorLabels_targetLabelId_fk
-            FOREIGN KEY (targetLabelId) REFERENCES Labels(labelId)
+        CONSTRAINT InboundLabels_labelId_fk
+            FOREIGN KEY (labelId) REFERENCES Labels(labelId)
             ON DELETE RESTRICT ON UPDATE CASCADE
     ) %(TABLEOPTS)s"""
 
-    fields = ['projectId', 'targetLabelId', 'url', 'username', 'password']
+    fields = ['projectId', 'labelId', 'url', 'username', 'password']
+
+class OutboundLabelsTable(database.KeyedTable):
+    name = 'OutboundLabels'
+    key = 'labelId'
+    createSQL= """CREATE TABLE OutboundLabels (
+        projectId       INT NOT NULL,
+        labelId   INT NOT NULL,
+        url             VARCHAR(255),
+        username        VARCHAR(255),
+        password        VARCHAR(255),
+        CONSTRAINT OutboundLabels_projectId_fk
+            FOREIGN KEY (projectId) REFERENCES Projects(projectId)
+            ON DELETE RESTRICT ON UPDATE CASCADE,
+        CONSTRAINT OutboundLabels_labelId_fk
+            FOREIGN KEY (labelId) REFERENCES Labels(labelId)
+            ON DELETE RESTRICT ON UPDATE CASCADE
+    ) %(TABLEOPTS)s"""
+
+    fields = ['projectId', 'labelId', 'url', 'username', 'password']
 
 class RepNameMapTable(database.DatabaseTable):
     name = "RepNameMap"
@@ -33,7 +52,8 @@ class RepNameMapTable(database.DatabaseTable):
     ) %(TABLEOPTS)s"""
 
     fields = ['fromName', 'toName']
-    indexes = {'RepNameMap_fromName_idx': 'CREATE INDEX RepNameMap_fromName_idx ON RepNameMap(fromName)'}
+    indexes = {'RepNameMap_fromName_idx': \
+               'CREATE INDEX RepNameMap_fromName_idx ON RepNameMap(fromName)'}
 
     def new(self, fromName, toName):
         cu = self.db.cursor()
