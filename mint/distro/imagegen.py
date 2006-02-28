@@ -39,7 +39,7 @@ class Generator:
             raise NoConfigFile(cfgFile)
         return imageCfg
 
-    def readConaryRc(cfg):
+    def readConaryRc(self, cfg):
         self.conarycfgFile = os.path.join(self.cfg.configPath, 'conaryrc')
         if os.path.exists(self.conarycfgFile):
             cfg.read(self.conarycfgFile)
