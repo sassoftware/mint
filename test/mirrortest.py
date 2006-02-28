@@ -19,29 +19,49 @@ from conary.lib import openpgpfile, openpgpkey
 
 runTest = False
 
+scriptPath = os.path.join(os.path.split(os.path.split(os.path.realpath(__file__))[0])[0], 'scripts')
+
 class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
-    def createMirrorUser(self, repos):
-        label = versions.Label("localhost.other.host@rpl:linux")
+    def createMirrorUser(self, repos,
+                         labelStr = "localhost.other.host@rpl:linux"):
+        label = versions.Label(labelStr)
         repos.addUser(label, "mirror", "mirror")
         repos.addAcl(label, "mirror", None, None, True, False, False)
         repos.setUserGroupCanMirror(label, "mirror", True)
 
     def createTroves(self, repos, start, count):
-        for i in range(start, start + 2):
+        for i in range(start, start + count):
             self.addComponent('test%d:runtime' % i, '1.0', filePrimer = i,
                               repos = repos)
             self.addCollection('test%d' % i, '1.0', [ "test%d:runtime" % i ],
                               repos = repos)
 
-    def runMirror(self):
-        url = "http://mintauth:mintpass@localhost:%d/xmlrpc-private/" % self.port
+    def inboundMirror(self):
+        url = "http://mintauth:mintpass@localhost:%d/xmlrpc-private/" % \
+              self.port
+
+        mirrorScript = os.path.join(scriptPath , 'mirror-inbound')
+        assert(os.access(mirrorScript, os.X_OK))
         self.hideOutput()
         try:
-            os.system("../scripts/mirror %s" % url)
+            os.system("%s %s" % (mirrorScript, url))
         finally:
             self.showOutput()
 
-    def compareRepositories(self, repos1, repos2):
+    def outboundMirror(self):
+        url = "http://mintauth:mintpass@localhost:%d/xmlrpc-private/" % \
+              self.port
+
+        mirrorScript = os.path.join(scriptPath , 'mirror-outbound')
+        assert(os.access(mirrorScript, os.X_OK))
+        self.hideOutput()
+        try:
+            os.system("%s %s" % (mirrorScript, url))
+        finally:
+            self.showOutput()
+
+    def compareRepositories(self, repos1, repos2,
+                            base = "localhost.other.host"):
 
         def _flatten(d):
             l = []
@@ -51,19 +71,20 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
 
             return l
 
-        troveD1 = repos1.getTroveVersionList("localhost.other.host", { None : None })
-        troveD2 = repos2.getTroveVersionList("localhost.other.host", { None : None })
+        troveD1 = repos1.getTroveVersionList(base, { None : None })
+        troveD2 = repos2.getTroveVersionList(base, { None : None })
+
         assert(troveD1 == troveD2)
 
         troves1 = repos1.getTroves(_flatten(troveD1))
         troves2 = repos2.getTroves(_flatten(troveD2))
         assert(troves1 == troves2)
 
-        pgpKeys1 = repos1.getNewPGPKeys("localhost.other.host", -1)
-        pgpKeys2 = repos2.getNewPGPKeys("localhost.other.host", -1)
+        pgpKeys1 = repos1.getNewPGPKeys(base, -1)
+        pgpKeys2 = repos2.getNewPGPKeys(base, -1)
         assert(pgpKeys1 == pgpKeys2)
 
-    def testMirror(self):
+    def testInboundMirror(self):
         global runTest
         if not runTest:
             raise testsuite.SkipTestException
@@ -83,8 +104,8 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
         project = client.getProject(projectId)
         labelId = project.getLabelIdMap().values()[0]
         project.editLabel(labelId, "localhost.other.host@rpl:linux",
-            "http://mint.rpath.local:%d/repos/localhost/" % self.port, "mintauth", "mintpass")
-        client.addMirroredLabel(projectId, labelId, "http://localhost:%s/conary/" % sourcePort, "mirror", "mirror")
+            "http://test.rpath.local:%d/repos/localhost/" % self.port, "mintauth", "mintpass")
+        client.addInboundLabel(projectId, labelId, "http://localhost:%s/conary/" % sourcePort, "mirror", "mirror")
         client.addRemappedRepository('localhost.rpath.local', 'localhost.other.host')
 
         cu = self.db.cursor()
@@ -92,11 +113,46 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
         self.db.commit()
 
         # do the mirror
-        self.runMirror()
+        self.inboundMirror()
 
         # compare
         targetRepos = ConaryClient(project.getConaryConfig()).getRepos()
         self.compareRepositories(sourceRepos, targetRepos)
+        self.stopRepository(1)
+
+    def testOutboundMirror(self):
+        global runTest
+        if not runTest:
+            raise testsuite.SkipTestException
+
+        client, userId = self.quickMintAdmin("testuser", "testpass")
+
+        # set up the target repository
+        targetRepos = self.openRepository(1,
+                                          serverName = "localhost.rpath.local")
+        targetPort = self.servers.getServer(1).port
+        map = dict(self.cfg.repositoryMap)
+        self.createMirrorUser(targetRepos, "localhost.rpath.local@rpl:linux")
+        self.cfg.buildLabel = versions.Label("localhost.rpath.local@rpl:linux")
+
+        # set up the source repository
+        projectId = self.newProject(client, "Mirrored Project", "localhost")
+        project = client.getProject(projectId)
+        labelId = project.getLabelIdMap().values()[0]
+        client.addOutboundLabel(projectId, labelId,
+                                "http://localhost:%s/conary/" % targetPort,
+                                "mirror", "mirror")
+
+        sourceRepos = ConaryClient(project.getConaryConfig()).getRepos()
+        self.createTroves(sourceRepos, 0, 2)
+
+        # do the mirror
+        self.outboundMirror()
+
+        # compare
+        self.compareRepositories(sourceRepos, targetRepos,
+                                 base = "localhost.rpath.local")
+        self.stopRepository(1)
 
 
 if __name__ == "__main__":
