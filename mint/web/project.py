@@ -27,7 +27,7 @@ from conary import conaryclient
 from conary import conarycfg
 from conary import versions
 from conary.deps import deps
-from conary.web.fields import strFields, intFields, listFields, boolFields
+from conary.web.fields import strFields, intFields, listFields, boolFields, dictFields
 
 def getUserDict(members):
     users = { userlevels.USER: [],
@@ -237,18 +237,17 @@ class ProjectHandler(WebHandler):
             self.session.save()
         self._redirect(referer)
 
-    @intFields(id = None)
+    @dictFields(yesArgs = {})
     @boolFields(confirmed=False)
-    def deleteGroup(self, auth, id, confirmed):
+    def deleteGroup(self, auth, confirmed, **yesArgs):
         if confirmed:
             # Delete the group
-            self.client.deleteGroupTrove(id)
-            if 'groupTroveId' in self.session and self.session['groupTroveId'] == id:
+            self.client.deleteGroupTrove(int(yesArgs['id']))
+            if 'groupTroveId' in self.session and self.session['groupTroveId'] == int(yesArgs['id']):
                 del self.session['groupTroveId']
             self._redirect('groups')
         else:
-            return self._write('confirm', message = "Are you sure you want to delete this group trove?",
-                yesLink = "deleteGroup?id=%d;confirmed=1" % id, noLink = "groups")
+            return self._write('confirm', message = "Are you sure you want to delete this group trove?", yesArgs = {'func':'deleteGroup', 'id':yesArgs['id'], 'confirmed':'1'} , noLink = "groups")
 
     @intFields(id=None)
     @strFields(trove=None, version='', flavor='', referer='', projectName = '')
@@ -471,17 +470,17 @@ class ProjectHandler(WebHandler):
 
     @ownerOnly
     @boolFields(confirmed = False)
-    @strFields(list = None)
     @mailList
-    def resetPassword(self, auth, mlists, list, confirmed):
+    @dictFields(yesArgs = {})
+    def resetPassword(self, auth, mlists, **yesArgs):
         if confirmed:
-            if mlists.reset_list_password(list, self.cfg.MailListPass):
-                return self._mailingLists(auth, mlists, ['Mailing list password reset for %s' % list])
+            if mlists.reset_list_password(yesArgs['list'], self.cfg.MailListPass):
+                return self._mailingLists(auth, mlists, ['Mailing list password reset for %s' % yesArgs['list']])
             else:
-                return self._mailingLists(auth, mlists, ['Mailing list password for %s was not reset' % list])
+                return self._mailingLists(auth, mlists, ['Mailing list password for %s was not reset' % yesArgs['list']])
         else:
-            return self._write("confirm", message = "Reset the administrator password for the %s mailing list and send a reminder to the list owners?" %list,
-                yesLink = "resetPassword?list=%s;confirmed=1" % list, noLink = "mailingLists")
+            return self._write("confirm", message = "Reset the administrator password for the %s mailing list and send a reminder to the list owners?" %yesArgs['list'],
+                yesArgs = {'func':'resetPassword', 'list':yesArgs['list'], 'confirmed':'1'}, noLink = "mailingLists")
 
 
     @ownerOnly
@@ -686,13 +685,14 @@ class ProjectHandler(WebHandler):
 
     @requiresAuth
     @boolFields(confirmed = False)
-    def resign(self, auth, confirmed):
+    @dictFields(yesArgs = {})
+    def resign(self, auth, confirmed, **yesArgs):
         if confirmed:
             self.project.delMemberById(auth.userId)
             self._redirect(self.basePath)
         else:
             return self._write("confirm", message = "Are you sure you want to resign from this project?",
-                yesLink = "resign?confirmed=1", noLink = "/")
+                yesArgs = {'func':'resign', 'confirmed':'1'}, noLink = "/")
 
     @strFields(feed= "releases")
     def rss(self, auth, feed):
