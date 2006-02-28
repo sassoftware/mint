@@ -472,7 +472,7 @@ class ProjectHandler(WebHandler):
     @boolFields(confirmed = False)
     @mailList
     @dictFields(yesArgs = {})
-    def resetPassword(self, auth, mlists, **yesArgs):
+    def resetPassword(self, auth, confirmed, mlists, **yesArgs):
         if confirmed:
             if mlists.reset_list_password(yesArgs['list'], self.cfg.MailListPass):
                 return self._mailingLists(auth, mlists, ['Mailing list password reset for %s' % yesArgs['list']])
