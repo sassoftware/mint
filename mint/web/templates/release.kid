@@ -69,7 +69,7 @@ import time
                     <div py:if="isOwner and not release.getPublished()" id="jobStatusDingus">
                         <div>
                             <img src="${cfg.staticPath}apps/mint/images/circle-ball-dark-antialiased.gif" id="spinner" style="float: right;"/>
-                            <div id="releaseStatus" />
+                            <div id="releaseStatus" class="running" />
                         </div>
 
                         <ul id="editOptions" py:attrs="{'style': editOptionsStyle}">
