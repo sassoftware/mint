@@ -21,9 +21,15 @@
                     </p>
                 </td>
                 <td>
-                    <p style="width: 50%;">
-                        <a href="${yesLink}"><img src="${cfg.staticPath}apps/mint/images/yes_button.png" alt="Yes" /></a>
+                    <form method="post" action="${yesArgs['func']}">
+                        
+                        <span py:for="k, v in yesArgs.iteritems()">
+                          <input type="hidden" name="${k}" value="${v}"/>
+                        </span>
+                        <p style="width: 50%;">
+                        <button class="img" id="yes" type="submit"><img src="${cfg.staticPath}apps/mint/images/yes_button.png" alt="Yes" /></button>
                     </p>
+                    </form>
                 </td><td width="50%"/></tr>
             </table>
         </div>

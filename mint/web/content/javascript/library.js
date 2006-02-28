@@ -176,42 +176,47 @@ makeJobRowData = function(aRow) {
 };
 
 // RPC callbacks ------------------------------------------------------------
-
 function processGetReleaseStatus(aReq) {
-    var el = $("jobStatus");
-    var statusText = "";
+    var oldReleaseStatus = $("releaseStatus");
 
     logDebug("[JSON] response: ", aReq.responseText);
     releaseStatus = evalJSONRequest(aReq);
 
+    releaseStatusEl = DIV({ id: "releaseStatus", class: "running" }, "");
     if (!releaseStatus) {
-        statusText = "No status";
         status = STATUS_NOJOB;
     } else {
+        status = releaseStatus.status;
+        // FIXME: replace this with a status -> class name map or something
+        if(status == STATUS_RUNNING)
+            setElementClass(releaseStatusEl, "running");
+        if(status == STATUS_FINISHED)
+            setElementClass(releaseStatusEl, "finished");
+        if(status == STATUS_ERROR)
+            setElementClass(releaseStatusEl, "error");
 
         // refresh page when job successfully completes
         // to get new download list
         if ((oldStatus <= STATUS_RUNNING) &&
-            (releaseStatus.status == STATUS_FINISHED)) {
+            (status == STATUS_FINISHED)) {
             document.location = document.location;
         }
 
         // handle edit options; also, spin baton if we're still
         // running
-        if (releaseStatus.status > STATUS_RUNNING) {
+        if (status > STATUS_RUNNING) {
+            hideElement('spinner');
             hideElement('editOptionsDisabled');
             showElement('editOptions');
-            statusText = releaseStatus.message;
         } else {
+            showElement('spinner');
             showElement('editOptionsDisabled');
             hideElement('editOptions');
-            statusText = textWithBaton(releaseStatus.message);
         }
-
+        replaceChildNodes(releaseStatusEl, SPAN({"style": "font-weight: bold;"}, "Status: "), SPAN({}, releaseStatus.message));
         oldStatus = status;
     }
-
-    replaceChildNodes(el, statusText);
+    swapDOM(oldReleaseStatus, releaseStatusEl);
 }
 
 function processGetCookStatus(aReq) {

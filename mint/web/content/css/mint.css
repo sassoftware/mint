@@ -686,3 +686,27 @@ img.vmwarebutton {
 div.palette div.boxBody {
     padding: 0px 8px 0px 8px;
 }
+
+/* job status colors */
+div#releaseStatus.error {
+    background: #edc2c2;
+    border: 2px solid #ed6464;
+    padding: 4px;
+}
+
+div#releaseStatus.running {
+    background: #eeeeff;
+    border: 2px solid #8888ff;
+    padding: 4px;
+}
+
+div#releaseStatus.finished {
+    background: #cdedc2;
+    border: 2px solid #7bbb66;
+    padding: 4px;
+}
+
+div#jobStatusDingus div img#spinner {
+    padding: 8px;
+    float: right;
+}

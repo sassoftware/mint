@@ -14,7 +14,7 @@ from urllib import quote, unquote, quote_plus
 from mod_python import apache
 
 import conary.versions
-from conary.web.fields import strFields, intFields, listFields, boolFields
+from conary.web.fields import strFields, intFields, listFields, boolFields, dictFields
 
 from mint import mint_error
 from mint import projects
@@ -463,8 +463,9 @@ class SiteHandler(WebHandler):
                 error = "An error has occurred opening the image file: %s" % e)
 
     @requiresAuth
+    @dictFields(yesArgs = {})
     @boolFields(confirmed = False)
-    def cancelAccount(self, auth, confirmed):
+    def cancelAccount(self, auth, confirmed, **yesArgs):
         if confirmed:
             #do the actual deletion
             self.user.cancelUserAccount()
@@ -472,7 +473,7 @@ class SiteHandler(WebHandler):
             self._redirect(self.cfg.basePath)
         else:
             return self._write("confirm", message = "Are you sure you want to close your account?",
-                yesLink = "cancelAccount?confirmed=1", noLink = self.cfg.basePath)
+                yesArgs = {'func':'cancelAccount', 'confirmed':'1'}, noLink = self.cfg.basePath)
 
     @strFields(feed = 'newProjects')
     def rss(self, auth, feed):

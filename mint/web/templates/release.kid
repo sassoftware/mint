@@ -54,17 +54,23 @@ import time
             <div id="middle">
                 <h1>${project.getNameForDisplay(maxWordLen=30)}</h1>
                 <h2>Release: ${name}</h2>
-                <h3>Release Information</h3>
 
-                <p>This release was created from version ${truncateForDisplay(upstream(version), maxWordLen=50)}
-                    of ${trove} for ${release.getArch()}.</p>
+                <p>This release was created from version <b>${truncateForDisplay(str(version.trailingRevision()), maxWordLen=50)}</b>
+                    of <b>${trove}</b> for <b>${release.getArch()}</b>.</p>
+                <p>This release is currently <b>${release.getPublished() and "published" or "unpublished"}</b>.</p>
+
+                <h3>Description</h3>
+                <p>${release.getDesc().strip() or "Release has no description."}</p>
+
 
                 <div py:strip="True" py:if="isOwner">
-                    <h3>Status</h3>
-                    <p>This release is currently ${release.getPublished() and "published" or "unpublished"}.</p>
+                    <h3>Creation Status</h3>
 
                     <div py:if="isOwner and not release.getPublished()" id="jobStatusDingus">
-                        <p>Image creation status: <span id="jobStatus">Retrieving status...</span></p>
+                        <div>
+                            <img src="${cfg.staticPath}apps/mint/images/circle-ball-dark-antialiased.gif" id="spinner" style="float: right;"/>
+                            <div id="releaseStatus" class="running" />
+                        </div>
 
                         <ul id="editOptions" py:attrs="{'style': editOptionsStyle}">
                             <li>
@@ -85,10 +91,6 @@ import time
                     </div>
                 </div>
 
-
-                <h3>Description</h3>
-
-                <p>${release.getDesc().strip() or "Release has no description."}</p>
 
                 <div id="downloads" py:if="not releaseInProgress">
                     <h3><a py:if="release.hasVMwareImage()" title="Download VMware Player" href="http://www.vmware.com/download/player/"><img class="vmwarebutton" src="${cfg.staticPath}apps/mint/images/get_vmware_player.gif" alt="Download VMware Player" /></a>Downloads</h3>
