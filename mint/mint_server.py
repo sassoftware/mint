@@ -192,7 +192,8 @@ def getTables(db, cfg):
     d['groupTroveItems'] = grouptrove.GroupTroveItemsTable(db)
     d['jobData'] = data.JobDataTable(db)
     d['releaseImageTypes'] = releases.ReleaseImageTypesTable(db)
-    d['mirrorLabels'] = mirror.MirrorLabelsTable(db)
+    d['inboundLabels'] = mirror.InboundLabelsTable(db)
+    d['outboundLabels'] = mirror.OutboundLabelsTable(db)
     d['repNameMap'] = mirror.RepNameMapTable(db)
     if not min([x.upToDate for x in d.values()]):
         d['version'].bumpVersion()
@@ -2287,21 +2288,39 @@ class MintServer(object):
     @private
     @typeCheck(int, int, str, str, str)
     @requiresAdmin
-    def addMirroredLabel(self, projectId, targetLabelId, url, username, password):
-        return self.mirrorLabels.new(projectId = projectId, targetLabelId = targetLabelId,
-            url = url, username = username, password = password)
+    def addInboundLabel(self, projectId, labelId, url, username, password):
+        return self.inboundLabels.new(projectId = projectId, labelId = labelId,
+                                      url = url, username = username,
+                                      password = password)
 
     @private
     @typeCheck()
     @requiresAdmin
-    def getMirroredLabels(self):
+    def getInboundLabels(self):
         cu = self.db.cursor()
 
-        cu.execute("SELECT projectId, targetLabelId, url, username, password FROM MirrorLabels")
-        ret = []
-        for r in cu.fetchall():
-            ret.append(list(r))
-        return ret
+        cu.execute("""SELECT projectId, labelId, url, username, password
+                          FROM InboundLabels""")
+        return [list(x) for x in cu.fetchall()]
+
+    @private
+    @typeCheck(int, int, str, str, str)
+    @requiresAdmin
+    def addOutboundLabel(self, projectId, labelId, url, username, password):
+        return self.outboundLabels.new(projectId = projectId,
+                                       labelId = labelId, url = url,
+                                       username = username,
+                                       password = password)
+
+    @private
+    @typeCheck()
+    @requiresAdmin
+    def getOutboundLabels(self):
+        cu = self.db.cursor()
+
+        cu.execute("""SELECT projectId, labelId, url, username, password
+                          FROM OutboundLabels""")
+        return [list(x) for x in cu.fetchall()]
 
     @private
     @typeCheck(str, str)
