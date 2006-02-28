@@ -83,7 +83,6 @@ dataHeadings = {
     releasetypes.STUB_IMAGE       : 'Stub Image Settings',
 }
 
-
 # It is not necessary to define templates for image types with no settings
 dataTemplates = {
     releasetypes.BOOTABLE_IMAGE   : imageGenTemplate,
@@ -386,7 +385,8 @@ class Release(database.TableObject):
 
     def getDataTemplate(self):
         returner = {}
-        for i in self._TemplateCompatibleImageTypes():
+        for i in [x for x in self._TemplateCompatibleImageTypes() \
+                  if x in dataTemplates]:
             returner.update(dataTemplates[i])
         return returner
 
