@@ -51,14 +51,14 @@ class MintConfig(ConfigFile):
     dbDriver                = 'sqlite'
     imagesPath              = None
     siteDomainName          = (cfgtypes.CfgString, 'rpath.com',
-        "Domain of the rBuilder site. For example, <tt>example.com</tt>")
+        "Domain of the rBuilder site. For example, <b><tt>example.com</tt></b>")
     projectDomainName       = None
     externalDomainName      = None
     secureHost              = None
     hostName                = (cfgtypes.CfgString, None,
-        "Hostname to access the rBuilder site. For example, <tt>rbuilder</tt>. "\
+        "Hostname to access the rBuilder site. For example, <b><tt>rbuilder</tt></b>. "\
         "(The complete URL to access rBuilder is constructed from the "\
-        "host name and domain name. For example, <tt>rbuilder.example.com</tt>)")
+        "host name and domain name.)")
 
     SSL                     = (cfgtypes.CfgBool, False, "SSL required for login and write access to rBuilder projects?")
     adminMail               = 'mint@rpath.org'
