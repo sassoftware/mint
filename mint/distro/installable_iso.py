@@ -198,7 +198,7 @@ class InstallableIso(ImageGenerator):
                 # FIXME: regenerate boot.iso here
         else:
             cfg = conarycfg.ConaryConfiguration()
-            cfg.read(self.conarycfgFile)
+            self.readConaryRc(cfg)
             cfg.root = cfg.dbPath = ":memory:"
             cfg.installLabelPath = [versions.Label(self.project.getLabel())]
             cclient = conaryclient.ConaryClient(cfg)
@@ -252,9 +252,7 @@ class InstallableIso(ImageGenerator):
         cfg.installLabelPath = [versions.Label(self.project.getLabel())]
         cfg.repositoryMap.update(projCfg.repositoryMap)
         cfg.user = projCfg.user
-        self.conarycfgFile = os.path.join(self.cfg.configPath, 'conaryrc')
-        if os.path.exists(self.conarycfgFile):
-            cfg.read(self.conarycfgFile)
+        self.readConaryRc(cfg)
 
         cfg.dbPath = ':memory:'
         cfg.root = ':memory:'

@@ -231,6 +231,7 @@ title %(name)s (%(kversion)s)
             self.conarycfg = conarycfg.ConaryConfiguration(readConfigFiles=False)
             self.conarycfg.repositoryMap = self.repoMap
             self.conarycfg.flavor = None
+            self.readConaryRc(self.conarycfg)
             #TODO Add the user if anonymous access is not available
 
         self.conarycfg.threaded = False

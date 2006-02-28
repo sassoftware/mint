@@ -110,6 +110,7 @@ class GroupTroveCook(Generator):
             cfg.buildLabel = versions.Label(project.getLabel())
             cfg.buildFlavor = deps.parseFlavor(stockFlavors[arch.freeze()])
             cfg.initializeFlavors()
+            self.readConaryRc(cfg)
 
             repos = conaryclient.ConaryClient(cfg).getRepos()
             trvLeaves = repos.getTroveLeavesByLabel(\
