@@ -14,7 +14,7 @@ from mint import config
 from mint import mint_server
 from webhandler import getHttpAuth
 
-def rpcHandler(req, cfg):
+def rpcHandler(req, cfg, pathInfo = None):
     isJSONrpc = isXMLrpc = allowPrivate = False
 
     # only handle POSTs

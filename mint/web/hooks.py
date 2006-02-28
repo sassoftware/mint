@@ -34,6 +34,7 @@ from mint import users
 from mint import profile
 from mint.projects import mysqlTransTable
 from webhandler import normPath, HttpError, getHttpAuth
+from rpchooks import rpcHandler
 import app
 
 BUFFER=1024 * 256
@@ -321,6 +322,9 @@ def mintHandler(req, cfg, pathInfo):
 urls = (
     (r'^/conary/',           conaryHandler),
     (r'^/repos/',            conaryHandler),
+    (r'^/xmlrpc/',           rpcHandler),
+    (r'^/jsonrpc/',          rpcHandler),
+    (r'^/xmlrpc-private/',   rpchandler),
     (r'^/',                  mintHandler),
 )
 
