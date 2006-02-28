@@ -182,7 +182,7 @@ function processGetReleaseStatus(aReq) {
     logDebug("[JSON] response: ", aReq.responseText);
     releaseStatus = evalJSONRequest(aReq);
 
-    releaseStatusEl = DIV({ id: "releaseStatus" }, "");
+    releaseStatusEl = DIV({ id: "releaseStatus", class: "running" }, "");
     if (!releaseStatus) {
         status = STATUS_NOJOB;
     } else {
