@@ -29,7 +29,7 @@ if len(sys.argv) < 2:
 client = mint.MintClient(sys.argv[1])
 cfg = mirror.MirrorConfiguration()
 
-mirroredLabels = client.getMirroredLabels()
+mirroredLabels = client.getInboundLabels()
 
 for label in mirroredLabels:
     projectId, targetLabelId, sourceUrl, sourceUser, sourcePass = label
