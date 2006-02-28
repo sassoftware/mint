@@ -451,11 +451,19 @@ class MintClient:
     def versionIsExternal(self, versionStr):
         return self.server.versionIsExternal(versionStr)
 
-    def addMirroredLabel(self, projectId, targetLabelId, url, username, password):
-        return self.server.addMirroredLabel(projectId, targetLabelId, url, username, password)
+    def addInboundLabel(self, projectId, labelId, url, username, password):
+        return self.server.addInboundLabel(projectId, labelId, url,
+                                           username, password)
 
-    def getMirroredLabels(self):
-        return self.server.getMirroredLabels()
+    def addOutboundLabel(self, projectId, labelId, url, username, password):
+        return self.server.addOutboundLabel(projectId, labelId, url,
+                                            username, password)
+
+    def getInboundLabels(self):
+        return self.server.getInboundLabels()
+
+    def getOutboundLabels(self):
+        return self.server.getOutboundLabels()
 
     def getLabel(self, labelId):
         return self.server.getLabel(labelId)
