@@ -73,6 +73,9 @@ class SetupHandler(WebHandler):
 
         errors = []
 
+        if '.' in kwargs['hostName']:
+            errors.append("""The hostname of the rBuilder server must not contain periods. The
+                hostname is only the first part of the fully-qualified domain name.""")
         if 'new_username' not in kwargs:
             errors.append("You must enter a username to be created")
         if 'new_email' not in kwargs:
