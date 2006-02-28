@@ -21,7 +21,8 @@ def rpcHandler(req, cfg, pathInfo = None):
     if req.method.upper() != 'POST':
         return apache.HTTP_METHOD_NOT_ALLOWED
 
-    if "allowPrivate" in req.get_options():
+    if "allowPrivate" in req.get_options() or \
+       "private" in req.uri.split("/")[1]:
         allowPrivate = req.get_options()['allowPrivate']
 
     if req.headers_in['Content-Type'] == 'text/xml':
