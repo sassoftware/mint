@@ -80,9 +80,7 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
         troves2 = repos2.getTroves(_flatten(troveD2))
         assert(troves1 == troves2)
 
-        pgpKeys1 = repos1.getNewPGPKeys(base, -1)
-        pgpKeys2 = repos2.getNewPGPKeys(base, -1)
-        assert(pgpKeys1 == pgpKeys2)
+        assert(troveD1)
 
     def testInboundMirror(self):
         global runTest
