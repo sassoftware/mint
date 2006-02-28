@@ -152,8 +152,7 @@ class InstallCallback(UpdateCallback, ChangesetCallback):
         if self.msg != msg and (curTime - self.timeStamp) > MSG_INTERVAL:
             self.msg = msg
             self.status(msg)
-
-        self.timeStamp = curTime
+            self.timeStamp = curTime
 
     def __init__(self, status):
         self.abortEvent = None

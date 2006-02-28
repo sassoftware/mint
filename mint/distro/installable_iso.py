@@ -68,8 +68,7 @@ class Callback(callbacks.UpdateCallback, callbacks.ChangesetCallback):
         if self.msg != msg and (curTime - self.timeStamp) > MSG_INTERVAL:
             self.msg = msg
             self.status(self.prefix + msg % self.changeset)
-
-        self.timeStamp = curTime
+            self.timeStamp = curTime
 
     def setChangeSet(self, name):
         self.changeset = name
