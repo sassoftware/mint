@@ -474,13 +474,13 @@ class ProjectHandler(WebHandler):
     @dictFields(yesArgs = {})
     def resetPassword(self, auth, confirmed, mlists, **yesArgs):
         if confirmed:
-            if mlists.reset_list_password(yesArgs['list'], self.cfg.MailListPass):
-                return self._mailingLists(auth, mlists, ['Mailing list password reset for %s' % yesArgs['list']])
+            if mlists.reset_list_password(str(yesArgs['list']), self.cfg.MailListPass):
+                return self._mailingLists(auth, mlists, ['Mailing list password reset for %s' % str(yesArgs['list'])])
             else:
-                return self._mailingLists(auth, mlists, ['Mailing list password for %s was not reset' % yesArgs['list']])
+                return self._mailingLists(auth, mlists, ['Mailing list password for %s was not reset' % str(yesArgs['list'])])
         else:
-            return self._write("confirm", message = "Reset the administrator password for the %s mailing list and send a reminder to the list owners?" %yesArgs['list'],
-                yesArgs = {'func':'resetPassword', 'list':yesArgs['list'], 'confirmed':'1'}, noLink = "mailingLists")
+            return self._write("confirm", message = "Reset the administrator password for the %s mailing list and send a reminder to the list owners?" % str(yesArgs['list']),
+                yesArgs = {'func':'resetPassword', 'list':str(yesArgs['list']), 'confirmed':'1'}, noLink = "mailingLists")
 
 
     @ownerOnly
