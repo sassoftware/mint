@@ -979,7 +979,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                                      'name="hostname" value="rpath"')
 
         # and make sure that the appropriate database entries are created
-        assert(client.getMirroredLabels() == [[1, 1, '', 'mirror', 'mirrorpass']])
+        assert(client.getInboundLabels() == [[1, 1, '', 'mirror', 'mirrorpass']])
 
     def testBrowseUsers(self):
         client, userId = self.quickMintAdmin('adminuser', 'adminpass')

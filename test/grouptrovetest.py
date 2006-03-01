@@ -525,7 +525,8 @@ class GroupTroveTest(MintRepositoryHelper):
         except DuplicateJob:
             pass
 
-        cookJob = group_trove.GroupTroveCook(client, client.getCfg(), job)
+        isocfg = self.writeIsoGenCfg()
+        cookJob = group_trove.GroupTroveCook(client, isocfg, job)
         trvName, trvVersion, trvFlavor = cookJob.write()
 
         # give some time for the commit action to run
@@ -541,7 +542,7 @@ class GroupTroveTest(MintRepositoryHelper):
         job = client.getJob(jobId)
         assert(job.getDataValue("arch") == "1#x86")
 
-        cookJob = group_trove.GroupTroveCook(client, client.getCfg(), job)
+        cookJob = group_trove.GroupTroveCook(client, isocfg, job)
         trvName, trvVersion, trvFlavor = cookJob.write()
 
         # give some time for the commit action to run
@@ -597,7 +598,8 @@ class GroupTroveTest(MintRepositoryHelper):
         jobId = groupTrove.startCookJob("1#x86")
 
         job = client.getJob(jobId)
-        cookJob = group_trove.GroupTroveCook(client, client.getCfg(), job)
+        isocfg = self.writeIsoGenCfg()
+        cookJob = group_trove.GroupTroveCook(client, isocfg, job)
         trvName, trvVersion, trvFlavor = cookJob.write()
 
         # give some time for the commit action to run

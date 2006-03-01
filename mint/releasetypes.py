@@ -30,7 +30,7 @@ typeNames = {
     INSTALLABLE_ISO:    "Installable CD",
     LIVE_CF_IMAGE:      "Live CF Image",
     STUB_IMAGE:         "Stub Image (for testing)",
-    QEMU_IMAGE:         "Raw Hard Drive Image",
+    QEMU_IMAGE:         "Raw Hard Disk Image",
     VMWARE_IMAGE:       "VMware Player Image",
     LIVE_ISO:           "Live CD",
 }

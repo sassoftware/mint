@@ -18,10 +18,12 @@ from conary.deps import deps
 from conary.lib import openpgpkey, util
 
 from mint import config
+from mint import cooktypes, releasetypes
 from mint import shimclient
 from mint import dbversion
 from mint import mint_server
 from mint.projects import mysqlTransTable
+from mint.distro import jobserver
 from mint.distro.flavors import stockFlavors
 from mint import releasetypes
 
@@ -341,6 +343,28 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
         project.editLabel(labelId, defaultLabel,
             'http://localhost:%d/repos/%s/' % (self.servers.getServer(serverIdx).port, project.hostname),
             label[2], label[3])
+
+    def writeIsoGenCfg(self):
+        cfg = jobserver.IsoGenConfig()
+
+        cfg.serverUrl       = "http://mintauth:mintpass@localhost:%d/xmlrpc-private/" % self.port
+        cfg.supportedArch   = ['x86']
+        cfg.cookTypes       = [cooktypes.GROUP_BUILDER]
+        cfg.imageTypes      = [releasetypes.STUB_IMAGE]
+        cfg.logPath         = os.path.join(self.reposDir, "jobserver", "logs")
+        cfg.imagesPath      = os.path.join(self.reposDir, "jobserver", "images")
+        cfg.finishedPath    = os.path.join(self.reposDir, "jobserver", "finished-images")
+        cfg.lockFile        = os.path.join(self.reposDir, "jobserver", "jobserver.pid")
+
+        for x in ["logs", "images", "finished-images"]:
+            util.mkdirChain(os.path.join(self.reposDir, "jobserver", x))
+
+        f = open(self.tmpDir + "/iso_gen.conf", "w")
+        cfg.display(f)
+        f.close()
+
+        cfg.configPath = self.tmpDir
+        return cfg
 
 
 class WebRepositoryHelper(MintRepositoryHelper, webunittest.WebTestCase):

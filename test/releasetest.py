@@ -476,8 +476,8 @@ class ReleaseTest(MintRepositoryHelper):
         release = client.newRelease(projectId, "Test Release")
         templates = [x[0] for x in release.getDisplayTemplates()]
         assert(['Image Settings',
-                'Installable ISO Settings',
-                'Bootable Image Settings',
+                'Installable CD Settings',
+                'Raw Hard Disk Image Settings',
                 'VMware Image Settings',
                 'Stub Image Settings'] == templates)
 

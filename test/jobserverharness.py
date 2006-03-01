@@ -14,27 +14,6 @@ from mint.distro import jobserver
 
 
 class JobServerHelper(MintRepositoryHelper):
-    def writeIsoGenCfg(self):
-        cfg = jobserver.IsoGenConfig()
-
-        cfg.serverUrl       = "http://mintauth:mintpass@localhost:%d/xmlrpc-private/" % self.port
-        cfg.supportedArch   = ['x86']
-        cfg.cookTypes       = [cooktypes.GROUP_BUILDER]
-        cfg.imageTypes      = [releasetypes.STUB_IMAGE]
-        cfg.logPath         = os.path.join(self.reposDir, "jobserver", "logs")
-        cfg.imagesPath      = os.path.join(self.reposDir, "jobserver", "images")
-        cfg.finishedPath    = os.path.join(self.reposDir, "jobserver", "finished-images")
-        cfg.lockFile        = os.path.join(self.reposDir, "jobserver", "jobserver.pid")
-
-        for x in ["logs", "images", "finished-images"]:
-            util.mkdirChain(os.path.join(self.reposDir, "jobserver", x))
-
-        f = open(self.tmpDir + "/iso_gen.conf", "w")
-        cfg.display(f)
-        f.close()
-
-        return cfg
-
     def startJobServer(self):
         self.jsCfg = self.writeIsoGenCfg()
         jspid = os.fork()
