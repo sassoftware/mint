@@ -38,9 +38,9 @@
                 <span py:if="not files">N/A</span>
             </td>
             <div py:strip="True" py:if="isOwner and not release.getPublished()">
-            <td><a href="deleteRelease?releaseId=${release.getId()}" id="${release.getId()}Delete" class="option">Delete</a>
+            <td><a onclick="javascript:deleteRelease(${release.getId()});" href="#" class="option">Delete</a> 
             </td>
-            <td><a py:if="release.getFiles()" href="publish?releaseId=${release.getId()}" id="${release.getId()}Publish" class="option">Publish</a>
+            <td><a py:if="release.getFiles()" onclick="javascript:setReleasePublished(${release.getId()});" class="option" href="#">Publish</a>
             </td>
             </div>
         </tr>

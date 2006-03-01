@@ -1290,8 +1290,8 @@ class MintServer(object):
 
     @typeCheck(int)
     @requiresAuth
-    @private
     def deleteRelease(self, releaseId):
+        self._allowPrivate = True
         self._filterReleaseAccess(releaseId)
         if not self.releases.releaseExists(releaseId):
             raise ReleaseMissing()
@@ -1392,8 +1392,8 @@ class MintServer(object):
 
     @typeCheck(int, bool)
     @requiresAuth
-    @private
     def setReleasePublished(self, releaseId, published):
+        self._allowPrivate = True
         self._filterReleaseAccess(releaseId)
         if not self.releases.releaseExists(releaseId):
             raise ReleaseMissing()
