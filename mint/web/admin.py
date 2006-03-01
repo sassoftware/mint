@@ -183,7 +183,7 @@ class AdminHandler(WebHandler):
                                 mirrorUser, mirrorPass, mirrorEnt,
                                 useMirror, *args, **kwargs):
         projectId = self.client.newExternalProject(name, hostname,
-            self.cfg.projectDomainName, label, url)
+            self.cfg.projectDomainName, label, url, useMirror)
         project = self.client.getProject(projectId)
 
         extLabel = versions.Label(label)
@@ -195,7 +195,7 @@ class AdminHandler(WebHandler):
 
             project.editLabel(labelId, label, localUrl, self.cfg.authUser, self.cfg.authPass)
             self.client.addInboundLabel(projectId, labelId, url, mirrorUser, mirrorPass)
-            self.client.addRemappedRepository(hostname + "." + self.cfg.projectSiteHost, extLabel.getHost())
+            self.client.addRemappedRepository(hostname + "." + self.cfg.siteDomainName, extLabel.getHost())
 
         self._redirect(self._redirect("http://%s%sproject/%s/" % \
                                       (self.cfg.projectSiteHost,

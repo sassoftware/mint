@@ -45,7 +45,7 @@ class MintClient:
         """
         return self.server.newProject(name, hostname, domainname, projecturl, desc)
 
-    def newExternalProject(self, name, hostname, domainname, label, url):
+    def newExternalProject(self, name, hostname, domainname, label, url, mirror):
         """
         Create a new project.
         @param name: name of new project
@@ -53,10 +53,11 @@ class MintClient:
         @param domainname: domain name for new project
         @param label: label of external repository
         @param url: url of external repository
+        @param mirror: this repository is a mirror of an external repository
         @return: primary key of newly created project.
         """
         return self.server.newExternalProject(name, hostname, domainname,
-                                              label, url)
+                                              label, url, mirror)
 
     def checkAuth(self):
         """

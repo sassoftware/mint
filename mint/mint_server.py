@@ -444,10 +444,10 @@ class MintServer(object):
 
         return projectId
 
-    @typeCheck(str, str, str, str, str)
+    @typeCheck(str, str, str, str, str, bool)
     @requiresAdmin
     @private
-    def newExternalProject(self, name, hostname, domainname, label, url):
+    def newExternalProject(self, name, hostname, domainname, label, url, mirrored):
         if self.cfg.maintenanceMode:
             raise PermissionDenied("Repositories are currenly offline.")
 
@@ -481,6 +481,12 @@ class MintServer(object):
 
         # create the labels entry
         project.addLabel(label, url, 'anonymous', 'anonymous')
+
+        # create the target repository if needed
+        if mirrored:
+            self.projects.createRepos(self.cfg.reposPath, self.cfg.reposContentsDir,
+                hostname, domainname, None, None)
+
         return projectId
 
     @typeCheck(int)

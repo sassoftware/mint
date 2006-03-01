@@ -376,7 +376,7 @@ class ProjectsTable(database.KeyedTable):
 
         return [x[1] for x in sorted([(x[2].lower(),x) for x in ids])], count
 
-    def createRepos(self, reposPath, contentsDirs, hostname, domainname, username, password):
+    def createRepos(self, reposPath, contentsDirs, hostname, domainname, username = None, password = None):
         dbPath = os.path.join(reposPath, hostname + "." + domainname)
         tmpPath = os.path.join(dbPath, 'tmp')
         util.mkdirChain(tmpPath)
@@ -401,8 +401,9 @@ class ProjectsTable(database.KeyedTable):
 
         repos = netserver.NetworkRepositoryServer(cfg, '')
 
-        repos.auth.addUser(username, password)
-        repos.auth.addAcl(username, None, None, True, False, True)
+        if username:
+            repos.auth.addUser(username, password)
+            repos.auth.addAcl(username, None, None, True, False, True)
 
         repos.auth.addUser("anonymous", "anonymous")
         repos.auth.addAcl("anonymous", None, None, False, False, False)
@@ -411,6 +412,7 @@ class ProjectsTable(database.KeyedTable):
         # to this repository
         repos.auth.addUser(self.cfg.authUser, self.cfg.authPass)
         repos.auth.addAcl(self.cfg.authUser, None, None, True, False, True)
+        repos.auth.setMirror(self.cfg.authUser, True)
 
     def hide(self, projectId):
         # Anonymous user is added/removed in mint_server
