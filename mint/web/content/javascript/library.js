@@ -182,7 +182,7 @@ function processGetReleaseStatus(aReq) {
     logDebug("[JSON] response: ", aReq.responseText);
     releaseStatus = evalJSONRequest(aReq);
 
-    releaseStatusEl = DIV({ id: "releaseStatus", class: "running" }, "");
+    releaseStatusEl = DIV({ 'id': 'releaseStatus', 'class': 'running' }, null);
     if (!releaseStatus) {
         status = STATUS_NOJOB;
     } else {
@@ -213,7 +213,7 @@ function processGetReleaseStatus(aReq) {
             showElement('editOptionsDisabled');
             hideElement('editOptions');
         }
-        replaceChildNodes(releaseStatusEl, SPAN({"style": "font-weight: bold;"}, "Status: "), SPAN({}, releaseStatus.message));
+        replaceChildNodes(releaseStatusEl, SPAN({'style': 'font-weight: bold;'}, "Status: "), SPAN(null, releaseStatus.message));
         oldStatus = status;
     }
     swapDOM(oldReleaseStatus, releaseStatusEl);
@@ -301,7 +301,7 @@ function processListActiveJobs(aReq) {
         }, jobsList));
 
     // build the jobs display
-    jobTable = DIV({ id: "jobsTable" });
+    jobTable = DIV({ 'id': 'jobsTable' });
     if (jobsList.length == 0) {
         appendChildNodes(jobTable, P(null, "No active jobs."));
     } else {
@@ -311,11 +311,11 @@ function processListActiveJobs(aReq) {
             runningJobsList.length + " running, " +
             finishedJobsList.length + " finished)"));
 
-        var theTableItself = TABLE({ class: "results" });
+        var theTableItself = TABLE({ 'class': 'results' });
 
         if (queuedJobsList.length > 0) {
             appendChildNodes(theTableItself,
-                TR(null, TH({ colspan: "5", class: "tablesubhead" },
+                TR(null, TH({ 'colspan': '5', 'class': 'tablesubhead' },
                     "Queued jobs")),
                     headerRowDisplay(["Job ID", "Submitter", "Time Submitted",
                     "Description", "Last Status Message Received"]),
@@ -323,7 +323,7 @@ function processListActiveJobs(aReq) {
         }
         if (runningJobsList.length > 0) {
             appendChildNodes(theTableItself,
-                TR(null, TH({ colspan: "5", class: "tablesubhead" },
+                TR(null, TH({ 'colspan': '5', 'class': 'tablesubhead' },
                     "Running jobs")),
                     headerRowDisplay(["Job ID", "Submitter", "Time Started",
                     "Description", "Last Status Message Received"]),
@@ -331,7 +331,7 @@ function processListActiveJobs(aReq) {
         }
         if (finishedJobsList.length > 0) {
             appendChildNodes(theTableItself,
-                TR(null, TH({ colspan: "5", class: "tablesubhead" },
+                TR(null, TH({ 'colspan': '5', 'class': 'tablesubhead' },
                     "Jobs finished within the last 24 hours")),
                     headerRowDisplay(["Job ID", "Submitter", "Time Finished",
                         "Description", "Last Status Message Received"]),
