@@ -153,7 +153,7 @@ class JobDaemon:
             signal.signal(signal.SIGINT, self.origInt)
             # alter the lock file
             try:
-                stats = os.stat(cfg.lockfile)
+                stats = os.stat(cfg.lockFile)
             except:
                 exc, e, bt = sys.exc_info()
                 log.error("got %s while trying to stat lockfile" % str(e))
