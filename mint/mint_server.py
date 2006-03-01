@@ -484,6 +484,8 @@ class MintServer(object):
 
         # create the target repository if needed
         if mirrored:
+            parts = versions.Label(label).getHost().split(".")
+            hostname, domainname = parts[0], ".".join(parts[1:])
             self.projects.createRepos(self.cfg.reposPath, self.cfg.reposContentsDir,
                 hostname, domainname, None, None)
 
