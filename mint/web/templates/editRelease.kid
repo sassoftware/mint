@@ -128,7 +128,7 @@ from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM
                                     </div>
                                     <div py:strip="True" py:if="(dataRow[0] == RDT_ENUM)">
                                         <label for="${name}">${dataRow[2]}</label>
-                                        <select name="${name}">
+                                        <select name="${name}" id="${name}">
                                             <option py:for="prompt, val in sorted(dataRow[3].iteritems())" py:content="prompt" value="${val}" py:attrs="{'selected' : val == dataRow[1] and 'selected' or None}"/>
                                         </select>
                                     </div>
