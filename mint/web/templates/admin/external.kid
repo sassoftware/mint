@@ -94,7 +94,7 @@
                 <table class="mainformhorizontal">
                   <tr>
                     <th>Mirroring Enabled:</th>
-                    <td><input type="checkbox" class="check" name="useMirror" /> Mirror this repository locally.</td>
+                    <td><input type="checkbox" class="check" name="useMirror" value="1" /> Mirror this repository locally.</td>
                   </tr>
                   <tr>
                     <th>Authorization:</th>
