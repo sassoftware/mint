@@ -78,7 +78,7 @@ stubImageTemplate = {
 dataHeadings = {
     releasetypes.BOOTABLE_IMAGE   : 'Image Settings',
     releasetypes.INSTALLABLE_ISO  : 'Installable CD Settings',
-    releasetypes.QEMU_IMAGE       : 'Raw HDD Image Settings',
+    releasetypes.QEMU_IMAGE       : 'Raw Hard Disk Image Settings',
     releasetypes.VMWARE_IMAGE     : 'VMware Image Settings',
     releasetypes.STUB_IMAGE       : 'Stub Image Settings',
 }
