@@ -5,6 +5,7 @@
 # All Rights Reserved
 #
 
+import os
 import testsuite
 testsuite.setup()
 
@@ -980,6 +981,9 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         # and make sure that the appropriate database entries are created
         assert(client.getInboundLabels() == [[1, 1, '', 'mirror', 'mirrorpass']])
+
+        # and make sure that the 'shell' repository was created
+        assert(os.path.exists(os.path.join(self.reposDir, 'repos', 'rpath.rpath.local:%d' % self.port)))
 
     def testBrowseUsers(self):
         client, userId = self.quickMintAdmin('adminuser', 'adminpass')
