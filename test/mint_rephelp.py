@@ -215,13 +215,13 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
         """Return a mint client authenticated via authToken, defaults to 'mintauth', 'mintpass'"""
         return shimclient.ShimMintClient(self.mintCfg, authToken)
 
-    def quickMintUser(self, username, password):
+    def quickMintUser(self, username, password, email = "test@example.com"):
         """Retrieves a client, creates a user as specified by username and
         password, and returns a connection to mint as that new user, and the
         user ID.:"""
         client = self.openMintClient(('mintauth', 'mintpass'))
         userId = client.registerNewUser(username, password, "Test User",
-                "test@example.com", "test at example.com", "", active=True)
+            email, "test at example.com", "", active=True)
 
         cu = self.db.cursor()
         cu.execute("DELETE FROM Confirmations WHERE userId=?", userId)
@@ -233,7 +233,7 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
 
         return self.openMintClient((username, password)), userId
 
-    def quickMintAdmin(self, username, password):
+    def quickMintAdmin(self, username, password, email = "test@example.com"):
         # manipulate the UserGroups and UserGroup
         cu = self.db.cursor()
 
@@ -250,7 +250,7 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
             cu.execute("""SELECT userGroupId FROM UserGroups
                               WHERE UserGroup = 'MintAdmin'""")
             groupId = cu.fetchone()[0]
-        client, userId = self.quickMintUser(username, password)
+        client, userId = self.quickMintUser(username, password, email = email)
 
         cu.execute("SELECT userId from Users where username=?", username)
         authUserId = cu.fetchone()[0]

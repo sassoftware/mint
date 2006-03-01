@@ -29,7 +29,10 @@
 	      <a href ="/administer/">Return to Administrator Page</a>
 
               <h2>Notify All Users</h2>
-              <p>Fields labeled with a <em class="required">red arrow</em> are required.  Note that the submission of this form may take several minutes, and will not ask for confirmation.  Be sure you are ready before hitting "Send"</p>
+              <p>Fields labeled with a <em class="required">red arrow</em> are required.
+                Note that the submission of this form may take several minutes, and will
+                not ask for confirmation.  Be sure you are ready before hitting "Send".
+              </p>
               <form action="administer" method="post">
                 <table cellpadding="0" border="0" cellspacing="0" class="mainformhorizontal">
                   <tr>
@@ -42,7 +45,11 @@
                     <th><em class="required">Message Body:</em></th>
                     <td>
                       <textarea rows="12" name="body" py:content="kwargs['body']"/>
-                      <p class="help">Please type your message above.  It is suggested that you use another text editor (one with spell check capabilities) to compose your message, and then paste it below.</p>
+                      <p class="help">
+                        Please type your message above.  It is suggested that you use
+                        another text editor (one with spell check capabilities) to
+                        compose your message, and then paste it above.
+                      </p>
                     </td>
                   </tr>
                 </table>

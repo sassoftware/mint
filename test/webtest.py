@@ -988,6 +988,21 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         page = self.assertContent("/users", ok_codes = [200],
             content = '<a href="/userInfo?id=%d">' % userId)
 
+    def testNotifyAllUsers(self):
+        client, userId = self.quickMintAdmin('adminuser', 'adminpass', email = "test@NONE")
+        self.webLogin('adminuser', 'adminpass')
+
+        page = self.assertContent("/administer?operation=notify",
+            ok_codes = [200], content = 'value="notify_send"')
+
+        page = page.postForm(1, self.post,
+            {'subject':     'This is is my subject',
+             'body':        'This is my body.',
+             'operation':  'notify_send'})
+
+        # make sure that our user was invalidated properly
+        assert(client.server._server.getConfirmation('adminuser'))
+
 
 if __name__ == "__main__":
     testsuite.main()
