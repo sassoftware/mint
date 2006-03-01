@@ -156,7 +156,7 @@ class AdminHandler(WebHandler):
             kwargs['errors'].append('You must supply a message body')
         if not kwargs['errors']:
             try:
-                returner = self.client.notifyUsers(kwargs['subject'], kwargs['body'])
+                returner = self.client.notifyUsers(str(kwargs['subject']), str(kwargs['body']))
                 kwargs['extraMsg'] = 'Message sent successfully'
             except Exception, e:
                 kwargs['errors'].append('An unknown error occurred: %s' % str(e))
