@@ -25,11 +25,6 @@ class ConaryHandler(WebHandler, http.HttpHandler):
         protocol = 'http'
         port = 80
 
-        #If the browser can support it, give it what it wants.
-        if 'application/xhtml+xml' in req.headers_in.get('Accept', ''):
-            self.content_type = 'application/xhtml+xml'
-            self.output = 'xhtml'
-
         if repServer:
             self.repServer = repServer
             self.troveStore = self.repServer.troveStore
