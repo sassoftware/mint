@@ -194,7 +194,7 @@ class AdminHandler(WebHandler):
             localUrl = "http://%s%srepos/%s/" % (self.cfg.projectSiteHost, self.cfg.basePath, hostname)
 
             project.editLabel(labelId, label, localUrl, self.cfg.authUser, self.cfg.authPass)
-            self.client.addMirroredLabel(projectId, labelId, url, mirrorUser, mirrorPass)
+            self.client.addInboundLabel(projectId, labelId, url, mirrorUser, mirrorPass)
             self.client.addRemappedRepository(hostname + "." + self.cfg.projectSiteHost, extLabel.getHost())
 
         self._redirect(self._redirect("http://%s%sproject/%s/" % \
@@ -225,7 +225,7 @@ class AdminHandler(WebHandler):
 
     def _admin_jobs_jobserver_start(self, *args, **kwargs):
         try:
-            pipeFD = os.popen("/sbin/service rbuilder-isogen start")
+            pipeFD = os.popen("sudo /sbin/service rbuilder-isogen start")
             kwargs['extraMsg'] = pipeFD.read()
             pipeFD.close()
         except:
@@ -235,7 +235,7 @@ class AdminHandler(WebHandler):
 
     def _admin_jobs_jobserver_stop(self, *args, **kwargs):
         try:
-            pipeFD = os.popen("/sbin/service rbuilder-isogen stop")
+            pipeFD = os.popen("sudo /sbin/service rbuilder-isogen stop")
             kwargs['extraMsg'] = pipeFD.read()
             pipeFD.close()
         except:
