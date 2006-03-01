@@ -311,10 +311,10 @@ function processListActiveJobs(aReq) {
             runningJobsList.length + " running, " +
             finishedJobsList.length + " finished)"));
 
-        var theTableItself = TABLE({ 'class': 'results' });
+        var tableBody = TBODY(null, null);
 
         if (queuedJobsList.length > 0) {
-            appendChildNodes(theTableItself,
+            appendChildNodes(tableBody,
                 TR(null, TH({ 'colspan': '5', 'class': 'tablesubhead' },
                     "Queued jobs")),
                     headerRowDisplay(["Job ID", "Submitter", "Time Submitted",
@@ -322,7 +322,7 @@ function processListActiveJobs(aReq) {
                     map(rowDisplay, queuedJobsList));
         }
         if (runningJobsList.length > 0) {
-            appendChildNodes(theTableItself,
+            appendChildNodes(tableBody,
                 TR(null, TH({ 'colspan': '5', 'class': 'tablesubhead' },
                     "Running jobs")),
                     headerRowDisplay(["Job ID", "Submitter", "Time Started",
@@ -330,7 +330,7 @@ function processListActiveJobs(aReq) {
                     map(rowDisplay, runningJobsList));
         }
         if (finishedJobsList.length > 0) {
-            appendChildNodes(theTableItself,
+            appendChildNodes(tableBody,
                 TR(null, TH({ 'colspan': '5', 'class': 'tablesubhead' },
                     "Jobs finished within the last 24 hours")),
                     headerRowDisplay(["Job ID", "Submitter", "Time Finished",
@@ -338,7 +338,7 @@ function processListActiveJobs(aReq) {
                     map(rowDisplay, finishedJobsList));
         }
 
-        appendChildNodes(jobTable, TBODY(null, theTableItself));
+        appendChildNodes(jobTable, TABLE({ 'class': 'results' }, tableBody));
     }
 
     // display it

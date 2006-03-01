@@ -53,13 +53,17 @@ if __name__ == "__main__":
         print "// do not edit or check into source control"
 
         print "var releaseImageTypeNames = { "
+        i = []
         for k, v in typeNames.items():
-            print ("    %d:  \"%s\"," % (k, v,))
+            i.append("    '%d':  '%s'" % (k, v,))
+        print ",\n".join(i)
         print "};"
 
         print "var releaseImageTypeNamesShort = { "
+        i = []
         for k, v in typeNamesShort.items():
-            print ("    %d:  \"%s\"," % (k, v,))
+            i.append("    '%d':  '%s'" % (k, v,))
+        print ",\n".join(i)
         print "};"
 
         sys.exit(0)

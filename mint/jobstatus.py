@@ -36,8 +36,10 @@ if __name__ == "__main__":
         print "// do not edit or check into source control"
 
         print "var statusNames = { "
+        i = []
         for k, v in statusNames.items():
-            print ("    %d:  \"%s\"," % (k, v,))
+            i.append("    '%d':  '%s'" % (k, v,))
+        print ",\n".join(i)
         print "};"
 
         for k, v in statusCodeNames.items():

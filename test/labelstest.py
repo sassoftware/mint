@@ -114,13 +114,23 @@ class LabelsTest(MintRepositoryHelper):
         #self.assertRaises(database.ItemNotFound, client2.versionIsExternal,
         #                  '/just.not.there@rpl:devel//1/1.0.0-1-0.1')
 
-    def testMirroredLabel(self):
+    def testInboundLabel(self):
         client, userId = self.quickMintAdmin("testuser", "testpass")
-        client.addMirroredLabel(0, 0, "http://www.example.com/conary/", "mirror", "mirrorpass")
+        client.addInboundLabel(0, 0, "http://www.example.com/conary/",
+                               "mirror", "mirrorpass")
 
-        labels = client.getMirroredLabels()
-        assert(labels == [[0, 0, 'http://www.example.com/conary/', 'mirror', 'mirrorpass']])
+        labels = client.getInboundLabels()
+        assert(labels == [[0, 0, 'http://www.example.com/conary/',
+                           'mirror', 'mirrorpass']])
 
+    def testOutboundLabel(self):
+        client, userId = self.quickMintAdmin("testuser", "testpass")
+        client.addOutboundLabel(0, 0, "http://www.example.com/conary/",
+                                "mirror", "mirrorpass")
+
+        labels = client.getOutboundLabels()
+        assert(labels == [[0, 0, 'http://www.example.com/conary/',
+                           'mirror', 'mirrorpass']])
 
 if __name__ == "__main__":
     testsuite.main()
