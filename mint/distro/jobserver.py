@@ -255,9 +255,11 @@ class IsoGenConfig(ConfigFile):
     finishedPath    = '/srv/mint/finished-images/'
     lockFile        = '/var/run/mint-jobdaemon.pid'
     maxThreads      = (CfgInt, 5)
+    configPath       = '/srv/mint/'
 
     def read(cfg, path, exception = False):
         ConfigFile.read(cfg, path, exception)
+        cfg.configPath = os.path.dirname(path)
         for arch in cfg.supportedArch:
             if arch not in SUPPORTED_ARCHS:
                 log.error("unsupported architecture: %s", arch)
