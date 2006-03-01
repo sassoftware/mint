@@ -412,6 +412,20 @@ function delMember(projectId, userId) {
     req.send(true, [projectId, userId, true]);
 }
 
+function deleteRelease(releaseId) {
+    var req = new JsonRpcRequest("/jsonrpc/", "deleteRelease");
+    req.setAuth(getCookieValue("pysid"));
+    req.setCallback(reloadCallback);
+    req.send(true, [releaseId]);
+}
+
+function setReleasePublished(releaseId) {
+    var req = new JsonRpcRequest("/jsonrpc/", "setReleasePublished");
+    req.setAuth(getCookieValue("pysid"));
+    req.setCallback(reloadCallback);
+    req.send(true, [releaseId, true]);
+}
+
 // baton --------------------------------------------------------------------
 
 var ticks = 0;
