@@ -30,7 +30,7 @@ from repos import ConaryHandler
 from setup import SetupHandler
 import cache
 
-from webhandler import WebHandler, normPath, HttpNotFound 
+from webhandler import WebHandler, normPath, HttpNotFound
 from cache import pageCache, reqHash
 
 #called from hooks.py if an exception was not caught
@@ -50,19 +50,26 @@ class MintApp(WebHandler):
     projectDict = {}
     userLevel = userlevels.NONMEMBER
     user = None
-    session = {} 
+    session = {}
 
     def __init__(self, req, cfg, repServer = None):
         self.req = req
         self.cfg = cfg
 
-        #If the browser can support it, give it what it wants.
+        # always send xhtml-strict
+        self.output = 'xhtml-strict'
+
+        # Send the proper content type for those browser who know to ask
+        # for XHTML. Otherwise, serve XHTML as text/html with the proper
+        # charset encoding as per the W3C guidelines·
+        # (c.f. http://www.w3.org/TR/xhtml1/guidelines.html)
         if 'application/xhtml+xml' in self.req.headers_in.get('Accept', ''):
             self.content_type = 'application/xhtml+xml'
-            self.output = 'xhtml-strict'
+        else:
+            self.content_type = 'text/html; charset=utf-8'
 
         self.req.content_type = self.content_type
-        
+
         try:
             self.fields = dict(FieldStorage(self.req))
         # for some reason mod_python raises a 501 error
@@ -70,7 +77,7 @@ class MintApp(WebHandler):
         # a 404 instead.
         except apache.SERVER_RETURN:
             raise HttpNotFound
-       
+
         self.basePath = normPath(self.cfg.basePath)
 
         self.siteHandler = SiteHandler()
@@ -111,7 +118,7 @@ class MintApp(WebHandler):
 
         # default to anonToken if the current session has no authToken
         self.authToken = self.session.get('authToken', anonToken)
-    
+
         # open up a new client with the retrieved authToken
 
         # XXX short-circuit this cache until we can determine if it's completely
@@ -150,10 +157,10 @@ class MintApp(WebHandler):
             output = self._write("error", shortError = err_name, error = str(e))
         except fields.MissingParameterError, e:
             output = self._write("error", shortError = "Missing Parameter", error = str(e))
-        
+
         self.req.write(output)
         return apache.OK
- 
+
     def _getHandler(self, pathInfo):
         fullHost = self.req.headers_in.get('host', self.req.hostname)
         protocol='https'
@@ -182,11 +189,11 @@ class MintApp(WebHandler):
                     self._redirect("%s://%s%sproject/%s/" % (protocol, self.cfg.projectSiteHost, self.cfg.basePath, hostname))
 
         self.siteHost = self.cfg.siteHost
-       
+
         # redirect from domain.org to host.domain.org
         if self.cfg.hostName and fullHost == self.cfg.siteDomainName:
             self._redirect('http://' + self.cfg.hostName + "." + self.cfg.siteDomainName)
-        
+
         # mapping of url regexps to handlers
         urls = (
             (r'^/project/',     self.projectHandler),
@@ -212,7 +219,7 @@ class MintApp(WebHandler):
         else:
             self.groupTrove = None
             self.groupProject = None
-            
+
         # a set of information to be passed into the next handler
         context = {
             'auth':             self.auth,

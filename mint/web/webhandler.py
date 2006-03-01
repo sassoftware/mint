@@ -27,9 +27,10 @@ class WebHandler(object):
     """Mixin class for various helpful web methods."""
 
     #Default content-type to send to browser
-    content_type='text/html'
+    content_type='text/html; charset=utf-8'
+
     #Default render type to send to kid
-    output = 'html-strict'
+    output = 'xhtml-strict'
 
     def _write(self, templateName, templatePath = None, **values):
         prof = profile.Profile(self.cfg)

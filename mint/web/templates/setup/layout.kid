@@ -14,7 +14,6 @@ onload = "javascript:;"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'../library.kid'">
     <head py:match="item.tag == '{http://www.w3.org/1999/xhtml}head'" >
-        <meta http-equiv="Content-Type" content="application/xhtml+xml; charset=utf-8" />
         <script type="text/javascript" src="${cfg.staticPath}apps/MochiKit/MochiKit.js" />
         <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/mint.css" />
         <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/setup.css" />
