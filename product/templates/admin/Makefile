@@ -4,7 +4,7 @@
 # All Rights Reserved
 #
 
-kid_files = project.kid
+kid_files = project.kid jobs.kid
 
 python_files =
 
