@@ -444,6 +444,8 @@ def handler(req):
                     ret = urlHandler(req, cfg, newPath)
                 except HttpError, e:
                     raise apache.SERVER_RETURN, e.code
+                except apache.SERVER_RETURN, e:
+                    raise apache.SERVER_RETURN, e
                 except:
                     # we only want to handle errors in production mode
                     if cfg.debugMode or req.bytes_sent > 0:
