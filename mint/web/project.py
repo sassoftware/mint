@@ -253,7 +253,6 @@ class ProjectHandler(WebHandler):
     @strFields(trove=None, version='', flavor='', referer='', projectName = '')
     @boolFields(versionLock=False)
     def addGroupTrove(self, auth, id, trove, version, flavor, referer, versionLock, projectName):
-        assert(id == self.session['groupTroveId'])
         curGroupTrove = self.client.getGroupTrove(id)
         if version != '':
             curGroupTrove.addTrove(trove, version, '', '', versionLock, False, False)
@@ -266,7 +265,7 @@ class ProjectHandler(WebHandler):
     @intFields(id=None, troveId=None)
     @strFields(referer='')
     def deleteGroupTrove(self, auth, id, troveId, referer):
-        assert(id == self.session['groupTroveId'])
+        """Remove a trove from a group trove."""
         curGroupTrove = self.client.getGroupTrove(id)
         curGroupTrove.delTrove(troveId)
         if not referer:
