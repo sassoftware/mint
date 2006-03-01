@@ -106,21 +106,21 @@ class InstallCallback(UpdateCallback, ChangesetCallback):
     def restoreFiles(self, size, totalSize):
         if totalSize != 0:
             self.restored += size
-            self.update('writing files')
+            self.update('Writing files')
 
     def requestingChangeSet(self):
-        self.update('requesting changeset')
+        self.update('Requesting changeset')
 
     def downloadingChangeSet(self, got, need):
         if need != 0:
-            self.update('downloading changeset')
+            self.update('Downloading changeset')
 
     def requestingFileContents(self):
-        self.update('requesting file contents')
+        self.update('Requesting file contents')
 
     def downloadingFileContents(self, got, need):
         if need != 0:
-            self.update('downloading files')
+            self.update('Downloading files')
 
     def preparingChangeSet(self):
         self.update('Preparing changeset')
@@ -132,10 +132,10 @@ class InstallCallback(UpdateCallback, ChangesetCallback):
         self.update('Creating rollback')
 
     def creatingDatabaseTransaction(self, troveNum, troveCount):
-        self.update('creating database transaction')
+        self.update('Creating database transaction')
 
     def committingTransaction(self):
-        self.update('committing transaction')
+        self.update('Committing transaction')
 
     def setUpdateHunk(self, num, total):
         self.updateHunk = (num, total)
@@ -591,9 +591,9 @@ quit
                 #image to generate vmware, etc.
                 zipfn = None
                 if releasetypes.QEMU_IMAGE in self.imageTypes:
-                    self.status('Compressing QEMU image')
+                    self.status('Compressing hard disk image')
                     zipfn = self.compressImage(self.outfile)
-                    imagesList.append((zipfn, 'Bootable QEMU Image',))
+                    imagesList.append((zipfn, 'Raw Hard Disk Image',))
 
             except:
                 if self.imgcfg.debug:

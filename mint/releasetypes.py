@@ -27,22 +27,22 @@ sys.modules[__name__].__dict__.update(validImageTypes)
 #BOOTABLE_IMAGE Should never get stored in the DB and therefore doesn't need a name
 typeNames = {
     NETBOOT_IMAGE:      "Netboot Image",
-    INSTALLABLE_ISO:    "Installable ISO",
+    INSTALLABLE_ISO:    "Installable CD",
     LIVE_CF_IMAGE:      "Live CF Image",
     STUB_IMAGE:         "Stub Image (for testing)",
-    QEMU_IMAGE:         "Bootable QEMU image",
-    VMWARE_IMAGE:         "Bootable VMware Player image",
-    LIVE_ISO:           "Live ISO",
+    QEMU_IMAGE:         "Raw Hard Drive Image",
+    VMWARE_IMAGE:       "VMware Player Image",
+    LIVE_ISO:           "Live CD",
 }
 
 typeNamesShort = {
     NETBOOT_IMAGE:      "Netboot",
-    INSTALLABLE_ISO:    "Inst ISO",
+    INSTALLABLE_ISO:    "Inst CD",
     LIVE_CF_IMAGE:      "Live CF",
     STUB_IMAGE:         "Stub",
-    QEMU_IMAGE:         "QEMU",
+    QEMU_IMAGE:         "HDD",
     VMWARE_IMAGE:       "VMware",
-    LIVE_ISO:           "Live ISO",
+    LIVE_ISO:           "Live CD",
 }
 
 # code generator run by make to generate javascript constants
