@@ -11,7 +11,8 @@ script_dist =			\
 	deleteproject.py	\
 	job-server		\
 	MakeDiskImage.py	\
-	mirror			\
+	mirror-inbound		\
+	mirror-outbound		\
 	mklivecd		\
 	reset			\
 	splitdistro		\
