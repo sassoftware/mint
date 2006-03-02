@@ -63,7 +63,7 @@ from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM
                             </select>
                         </div>
                         <div py:strip="True" py:if="not isNewRelease">
-                            <span py:if="not isNewRelease" style="font-weight: bold;" id="trove" py:content="troveName" />
+                            <input type="text" name="troveDisplay" id="trove" value="${troveName}" disabled="disabled" />
                             <input type="hidden" name="trove" value="${troveName}=${label.asString()}" />
                         </div>
                         <div class="clearleft">&nbsp;</div>
@@ -75,7 +75,7 @@ from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM
                             </select>
                         </div>
                         <div py:strip="True" py:if="not isNewRelease">
-                            <span style="font-weight: bold;" id="arch" py:content="not isNewRelease and arch or None" />
+                            <input type="text" id="arch" name="archDisplay" value="${not isNewRelease and arch or None}" disabled="disabled" />
                             <input type="hidden" name="arch" value="${not isNewRelease and arch or None}" />
                         </div>
                         <div class="clearleft">&nbsp;</div>
@@ -87,7 +87,7 @@ from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM
                             </select>
                         </div>
                         <div py:strip="True" py:if="not isNewRelease">
-                            <span py:if="not isNewRelease" style="font-weight: bold;" id="version" py:content="versionStr" />
+                            <input type="text" id="version" name="versionDisp" value="${versionStr}" disabled="disabled" />
                             <input type="hidden" name="version" value="${version + ' ' + flavor}" />
                         </div>
                         <div class="clearleft">&nbsp;</div>
