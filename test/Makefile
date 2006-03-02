@@ -6,7 +6,6 @@
 SUBDIRS = server archive
 
 python_files = \
-               _apache.py \
                accounttest.py \
                acltest.py \
                authtest.py \
@@ -29,13 +28,11 @@ python_files = \
                projecttest.py \
                recipes.py \
                releasetest.py \
-               rephelp.py \
                repostest.py \
                reportstest.py \
                schematest.py \
                searchtest.py \
                sessionstest.py \
-               tablestest.py \
                testsuite.py \
                xmltest.py \
                webtest.py \

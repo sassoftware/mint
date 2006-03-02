@@ -11,7 +11,6 @@ kid_files =			\
 	group_contents.kid	\
 	notice.kid		\
 	pgp_admin.kid		\
-	pgp_submit_key.kid	\
 	trove_info.kid
 
 python_files = __init__.py

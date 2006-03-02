@@ -19,7 +19,6 @@ python_files = \
 	netboot_image.py	\
         raw_hd_image.py         \
 	stub_image.py		\
-	CreateDiskImage.py      \
         splitdistro.py          \
         vmware_image.py
 

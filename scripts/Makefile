@@ -10,12 +10,10 @@ script_dist =			\
 	cvtmysql.py		\
 	deleteproject.py	\
 	job-server		\
-	MakeDiskImage.py	\
 	mirror-inbound		\
 	mirror-outbound		\
 	mklivecd		\
 	reset			\
-	splitdistro		\
 	update-package-index	\
 	update-package-index-external
 
