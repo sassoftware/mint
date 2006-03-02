@@ -620,8 +620,10 @@ span#editProject {
     padding-right: 10px;
 }
 
-.formgroup br {
+div.clearleft {
     clear: left;
+    margin: 0;
+    padding: 0;
 }
 
 .formgroup label.reversed,
@@ -634,7 +636,7 @@ span#editProject {
 
 .formgroup input.reversed {
     width: 14px;
-    margin-left: 10%;
+    margin-left: 30px;
 }
 
 /* mailing-list specific styles */

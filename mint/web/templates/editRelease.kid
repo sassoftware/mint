@@ -47,10 +47,10 @@ from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM
                     <div class="formgroupTitle">Distribution Information</div>
                     <div class="formgroup">
                         <label for="relname">Name</label>
-                        <input id="relname" name="name" type="text" value="${release.getName()}" /><br />
+                        <input id="relname" name="name" type="text" value="${release.getName()}" /><div class="clearleft">&nbsp;</div>
 
                         <label for="reldesc">Description (optional)</label>
-                        <textarea id="reldesc" name="desc" type="text" py:content="release.getDesc()" /><br />
+                        <textarea id="reldesc" name="desc" type="text" py:content="release.getDesc()" /><div class="clearleft">&nbsp;</div>
 
                     </div>
 
@@ -66,7 +66,7 @@ from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM
                             <span py:if="not isNewRelease" style="font-weight: bold;" id="trove" py:content="troveName" />
                             <input type="hidden" name="trove" value="${troveName}=${label.asString()}" />
                         </div>
-                        <br />
+                        <div class="clearleft">&nbsp;</div>
 
                         <label for="arch">Target Architecture</label>
                         <div py:strip="True" py:if="isNewRelease">
@@ -78,7 +78,7 @@ from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM
                             <span style="font-weight: bold;" id="arch" py:content="not isNewRelease and arch or None" />
                             <input type="hidden" name="arch" value="${not isNewRelease and arch or None}" />
                         </div>
-                        <br />
+                        <div class="clearleft">&nbsp;</div>
 
                         <label for="version">Group Version</label>
                         <div py:strip="True" py:if="isNewRelease">
@@ -90,14 +90,14 @@ from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM
                             <span py:if="not isNewRelease" style="font-weight: bold;" id="version" py:content="versionStr" />
                             <input type="hidden" name="version" value="${version + ' ' + flavor}" />
                         </div>
-                        <br />
+                        <div class="clearleft">&nbsp;</div>
                     </div>
 
                     <div class="formgroupTitle">Image Types</div>
                     <div class="formgroup">
                         <div py:strip="True" py:for="key in self.cfg.visibleImageTypes">
                             <input class="reversed" id="imagetype_${key}" name="imagetype" value="${key}" type="radio" py:attrs="{'checked': key in imageTypes and 'checked' or None}" />
-                            <label class="reversed" for="imagetype_${key}">${typeNames[key]}</label><br />
+                            <label class="reversed" for="imagetype_${key}">${typeNames[key]}</label><div class="clearleft">&nbsp;</div>
                         </div>
                     </div>
 
@@ -132,7 +132,7 @@ from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM
                                             <option py:for="prompt, val in sorted(dataRow[3].iteritems())" py:content="prompt" value="${val}" py:attrs="{'selected' : val == dataRow[1] and 'selected' or None}"/>
                                         </select>
                                     </div>
-                                    <br />
+                                    <div class="clearleft">&nbsp;</div>
                                 </div>
                             </div>
                         </div>
