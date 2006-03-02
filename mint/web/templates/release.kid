@@ -166,11 +166,11 @@ import time
 
                         <div id="file_help" style="display: none;">
                             <p>This file contains an image of a bootable
-                            environment capable of running under the <a
+                            environment capable of being written onto an
+                            IDE disk drive using the <tt>dd</tt> command.
+                            This image can also be run under the <a
                             href="http://fabrice.bellard.free.fr/qemu/">QEMU</a>
-                            processor emulator, or written onto an IDE disk
-                            drive (using the <tt>dd</tt> command) and
-                            booted.</p>
+                            processor emulator.</p>
 
                             <p>NOTE: This image has been compressed using
                             GNU zip.  Before using this image, you must
