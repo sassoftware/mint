@@ -1,3 +1,9 @@
+#
+# Copyright (c) 2004-2006 rPath, Inc.
+#
+# All Rights Reserved
+#
+
 import os
 from conary.lib import util, epdb
 import bootable_image
@@ -28,4 +34,3 @@ class RawHdImage(bootable_image.BootableImage):
                                 os.path.join(self.cfg.finishedPath,
                                              self.project.getHostname(),
                                              str(self.release.getId())))
-
