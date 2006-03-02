@@ -985,6 +985,37 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         # and make sure that the 'shell' repository was created
         assert(os.path.exists(os.path.join(self.reposDir, 'repos', 'conary.rpath.com')))
 
+    def createOutboundMirror(self):
+        client, userId = self.quickMintAdmin('adminuser', 'adminpass')
+        projectId = client.newProject("Foo", "testproject", "rpath.local")
+
+        self.webLogin('adminuser', 'adminpass')
+
+        # ensure "first time" content appears on page
+        page = self.assertContent("/administer?operation=outbound", ok_codes = [200],
+            content = "No projects are currently mirrored")
+        page = self.assertContent("/administer?operation=add_outbound", ok_codes = [200],
+            content = "Project to mirror:")
+
+        page = page.postForm(1, self.post,
+            {'projectId': str(projectId),
+             'targetUrl':   'http://www.example.com/conary/',
+             'mirrorUser':  'mirror',
+             'mirrorPass':  'mirrorpass',
+             'operation':   'process_add_outbound'})
+
+        self.assertContent("/administer?operation=outbound", ok_codes = [200],
+            content = "testproject.rpath.local@rpl:devel")
+        assert(client.getOutboundLabels() == \
+            [[projectId, 1, 'http://www.example.com/conary/', 'mirror', 'mirrorpass']])
+
+        page = self.fetch("/administer?operation=outbound")
+        page = page.postForm(1, self.post,
+            {'remove':      '1 http://www.example.com/conary/',
+             'operation':   'remove_outbound'})
+
+        assert(client.getOutboundLabels() == [])
+
     def testBrowseUsers(self):
         client, userId = self.quickMintAdmin('adminuser', 'adminpass')
         self.webLogin('adminuser', 'adminpass')

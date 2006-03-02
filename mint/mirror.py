@@ -10,7 +10,7 @@ class InboundLabelsTable(database.KeyedTable):
     key = 'labelId'
     createSQL= """CREATE TABLE InboundLabels (
         projectId       INT NOT NULL,
-        labelId   INT NOT NULL,
+        labelId         INT NOT NULL,
         url             VARCHAR(255),
         username        VARCHAR(255),
         password        VARCHAR(255),
@@ -24,12 +24,13 @@ class InboundLabelsTable(database.KeyedTable):
 
     fields = ['projectId', 'labelId', 'url', 'username', 'password']
 
+
 class OutboundLabelsTable(database.KeyedTable):
     name = 'OutboundLabels'
     key = 'labelId'
     createSQL= """CREATE TABLE OutboundLabels (
         projectId       INT NOT NULL,
-        labelId   INT NOT NULL,
+        labelId         INT NOT NULL,
         url             VARCHAR(255),
         username        VARCHAR(255),
         password        VARCHAR(255),
@@ -42,6 +43,13 @@ class OutboundLabelsTable(database.KeyedTable):
     ) %(TABLEOPTS)s"""
 
     fields = ['projectId', 'labelId', 'url', 'username', 'password']
+
+    def delete(self, labelId, url):
+        cu = self.db.cursor()
+
+        cu.execute("DELETE FROM OutboundLabels WHERE labelId=? AND url=?", labelId, url)
+        self.db.commit()
+
 
 class RepNameMapTable(database.DatabaseTable):
     name = "RepNameMap"

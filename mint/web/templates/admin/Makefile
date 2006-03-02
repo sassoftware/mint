@@ -5,11 +5,13 @@
 #
 
 kid_files =			\
+	add_outbound.kid	\
 	administer.kid		\
 	external.kid		\
 	notify.kid		\
 	project.kid		\
 	report.kid		\
+	outbound.kid		\
 	user.kid		\
 	newUser.kid		\
 	jobs.kid		\

@@ -28,6 +28,7 @@
                 <li><a href="administer?operation=notify">Notify All Users</a></li>
                 <li><a href="administer?operation=report">View Reports</a></li>
                 <li><a href="administer?operation=external">Add External Project</a></li>
+                <li><a href="administer?operation=outbound">Manage Outbound Mirror Settings</a></li>
                 <li><a href="administer?operation=jobs">Manage Jobs</a></li>
               </ul>
             </div>
