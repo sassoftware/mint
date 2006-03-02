@@ -45,7 +45,7 @@ class MintClient:
         """
         return self.server.newProject(name, hostname, domainname, projecturl, desc)
 
-    def newExternalProject(self, name, hostname, domainname, label, url, mirror):
+    def newExternalProject(self, name, hostname, domainname, label, url, mirror = False):
         """
         Create a new project.
         @param name: name of new project
