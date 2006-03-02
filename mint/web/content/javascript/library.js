@@ -199,7 +199,7 @@ function processGetReleaseStatus(aReq) {
         // to get new download list
         if ((oldStatus <= STATUS_RUNNING) &&
             (status == STATUS_FINISHED)) {
-            document.location = document.location;
+            window.location.reload();
         }
 
         // handle edit options; also, spin baton if we're still
@@ -426,6 +426,12 @@ function setReleasePublished(releaseId) {
     req.send(true, [releaseId, true]);
 }
 
+function startImageJob(releaseId) {
+    var req = new JsonRpcRequest("/jsonrpc/", "startImageJob");
+    req.setAuth(getCookieValue("pysid"));
+    req.setCallback(reloadCallback);
+    req.send(true, [releaseId]);
+}
 // baton --------------------------------------------------------------------
 
 var ticks = 0;

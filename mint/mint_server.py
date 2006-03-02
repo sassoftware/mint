@@ -1446,8 +1446,8 @@ class MintServer(object):
 
     @typeCheck(int)
     @requiresAuth
-    @private
     def startImageJob(self, releaseId):
+        self._allowPrivate = True
         self._filterReleaseAccess(releaseId)
         if not self.releases.releaseExists(releaseId):
             raise ReleaseMissing()

@@ -77,7 +77,7 @@ import time
                                 <a href="${basePath}editRelease?releaseId=${release.getId()}">Edit Release</a>
                             </li>
                             <li>
-                                <a href="${basePath}restartJob?releaseId=${release.getId()}">Recreate Release</a>
+                                <a onclick="javascript:startImageJob(${release.getId()});" href="#">Recreate Release</a>
                             </li>
                             <li py:if="not release.getPublished() and files">
                                  <a onclick="javascript:setReleasePublished(${release.getId()});" href="#">Publish Release</a>
