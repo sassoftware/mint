@@ -19,7 +19,15 @@ templatePath = os.path.dirname(sys.modules['mint'].__file__)
 
 class CfgImageEnum(cfgtypes.CfgEnum):
     validValues = releasetypes.validImageTypes
+    deprecatedValues = releasetypes.deprecatedImageTypes
 
+    def parseString(self, val):
+        if val in self.deprecatedValues:
+            preferred = self.origName[self.deprecatedValues[val]]
+            print >> sys.stderr, "Warning: %s is deprecated. Please use: %s" %\
+                  (val, preferred)
+            val = preferred
+        return cfgtypes.CfgEnum.parseString(self, val)
 
 class MintConfig(ConfigFile):
     companyName             = (cfgtypes.CfgString, 'rPath, Inc.',

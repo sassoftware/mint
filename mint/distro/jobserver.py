@@ -16,7 +16,8 @@ import signal
 # conary imports
 from conary import conaryclient
 from conary.conarycfg import ConfigFile, ConaryConfiguration
-from conary.conarycfg import CfgList, CfgString, CfgBool, CfgInt, CfgEnum, CfgDict
+from conary.conarycfg import CfgList, CfgString, CfgBool, CfgInt, CfgDict, \
+     CfgEnum
 from conary.lib import log
 
 # mint imports
@@ -24,6 +25,7 @@ from mint import cooktypes
 from mint import jobstatus
 from mint import releasetypes
 from mint.mint import MintClient
+from mint.config import CfgImageEnum
 
 # image generators
 from mint.distro.installable_iso import InstallableIso
@@ -220,16 +222,13 @@ class JobDaemon:
         log.info("Job server daemon is exiting.")
 
 
-class CfgCookType(CfgEnum):
+class CfgCookEnum(CfgEnum):
     validValues = cooktypes.validCookTypes
-
-class CfgImageType(CfgEnum):
-    validValues = releasetypes.validImageTypes
 
 class IsoGenConfig(ConfigFile):
     supportedArch   = CfgList(CfgString)
-    cookTypes       = CfgList(CfgCookType)
-    imageTypes      = CfgList(CfgImageType)
+    cookTypes       = CfgList(CfgCookEnum)
+    imageTypes      = CfgList(CfgImageEnum)
     serverUrl       = None
     SSL             = (CfgBool, False)
     logPath         = '/srv/mint/logs'

@@ -24,6 +24,11 @@ TYPES = validImageTypes.values()
 # approach of "releasetypes.IMAGE_TYPE" will result in the expected enum
 sys.modules[__name__].__dict__.update(validImageTypes)
 
+deprecatedImageTypes = {
+    'QEMU_IMAGE' : RAW_HD_IMAGE
+    }
+
+
 #BOOTABLE_IMAGE Should never get stored in the DB and therefore doesn't need a name
 typeNames = {
     NETBOOT_IMAGE:      "Netboot Image",
