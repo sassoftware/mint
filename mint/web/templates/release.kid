@@ -160,7 +160,7 @@ import time
                             unzip files larger than 2GB.</p>
                             </div>
 			</div>
-			<div py:if="releasetypes.QEMU_IMAGE in release.imageTypes">
+			<div py:if="releasetypes.RAW_HD_IMAGE in release.imageTypes">
                     <h4 onclick="javascript:toggle_display('file_help');"
                         style="cursor: pointer;">What is this file?&nbsp;<img id="file_help_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" /></h4>
 

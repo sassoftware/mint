@@ -29,6 +29,8 @@ from mint.mint import MintClient
 from mint.distro.installable_iso import InstallableIso
 from mint.distro.live_iso import LiveIso
 from mint.distro.live_cf_image import LiveCFImage
+from mint.distro.raw_hd_image import RawHdImage
+from mint.distro.vmware_image import VMwareImage
 from mint.distro.stub_image import StubImage
 from mint.distro.netboot_image import NetbootImage
 from mint.distro.group_trove import GroupTroveCook
@@ -37,6 +39,9 @@ from mint.distro.bootable_image import BootableImage
 generators = {
     releasetypes.INSTALLABLE_ISO:   InstallableIso,
     releasetypes.STUB_IMAGE:        StubImage,
+    releasetypes.LIVE_ISO:          LiveIso,
+    releasetypes.RAW_HD_IMAGE:      RawHdImage,
+    releasetypes.VMWARE_IMAGE:      VMwareImage,
 }
 
 SUPPORTED_ARCHS = ('x86', 'x86_64')
@@ -72,37 +77,14 @@ class JobRunner:
             # (or scripts that change the wd)
             cwd = os.getcwd()
             try:
-                #Iterate through the different jobs
-                imageTypes = release.getImageTypes()
-                imageFilenames = []
-                if releasetypes.INSTALLABLE_ISO in imageTypes:
-                    generator = generators[releasetypes.INSTALLABLE_ISO]
-                    log.info("(%d) %s job for %s started (id %d)" % \
-                             (os.getpid(), generator.__name__,
-                              project.getHostname(), jobId))
-                    imageFilenames.extend(generator(self.client,
-                                                    self.cfg, self.job,
-                                                    release, project).write())
-                    os.chdir(cwd)
-                #Now for the bootable images
-                imagegen = BootableImage(self.client, self.cfg, self.job, release, project)
-                imagegen.setImageTypes(imageTypes)
-                if imagegen.workToDo():
-                    log.info("(%d) %s job for %s started (id %d)" % \
-                             (os.getpid(), BootableImage.__name__,
-                              project.getHostname(), jobId))
-
-                    imageFilenames.extend(imagegen.write())
-                else:
-                    log.info("job %s:%d did not have a bootable image"
-                             " generation request" % (project.getHostname(),
-                                                      jobId))
-                # and stub images
-                if releasetypes.STUB_IMAGE in imageTypes:
-                    generator = generators[releasetypes.STUB_IMAGE]
-                    log.info("stub image for %s started (id %d)" % (project.getHostname(), jobId))
-                    imageFilenames.extend(generator(self.client,
-                        self.cfg, self.job, release, project).write())
+                # this line assumes that there's only one image per job.
+                generator = generators[release.getImageTypes()[0]]
+                log.info("(%d) %s job for %s started (id %d)" % \
+                         (os.getpid(), generator.__name__,
+                          project.getHostname(), jobId))
+                imageFilenames = generator(self.client, self.cfg, self.job,
+                                           release, project).write()
+                os.chdir(cwd)
 
             except Exception, e:
                 traceback.print_exc()

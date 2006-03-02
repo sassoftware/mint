@@ -14,8 +14,8 @@ validImageTypes = {
     'NETBOOT_IMAGE'    : 4,
     'GROUP_TROVE_COOK' : 5,
     'LIVE_ISO'         : 6,
-    'QEMU_IMAGE'       : 7,
-    'VMWARE_IMAGE'     : 8
+    'RAW_HD_IMAGE'     : 7,
+    'VMWARE_IMAGE'     : 8,
     }
 
 TYPES = validImageTypes.values()
@@ -30,7 +30,7 @@ typeNames = {
     INSTALLABLE_ISO:    "Installable CD",
     LIVE_CF_IMAGE:      "Live CF Image",
     STUB_IMAGE:         "Stub Image (for testing)",
-    QEMU_IMAGE:         "Raw Hard Disk Image",
+    RAW_HD_IMAGE:       "Raw Hard Disk Image",
     VMWARE_IMAGE:       "VMware Player Image",
     LIVE_ISO:           "Live CD",
 }
@@ -40,7 +40,7 @@ typeNamesShort = {
     INSTALLABLE_ISO:    "Inst CD",
     LIVE_CF_IMAGE:      "Live CF",
     STUB_IMAGE:         "Stub",
-    QEMU_IMAGE:         "HDD",
+    RAW_HD_IMAGE:       "HDD",
     VMWARE_IMAGE:       "VMware",
     LIVE_ISO:           "Live CD",
 }

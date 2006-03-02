@@ -10,7 +10,7 @@ import tempfile
 import subprocess
 
 # mint imports
-from imagegen import ImageGenerator
+from imagegen import ImageGenerator, MSG_INTERVAL
 
 # conary imports
 from conary import conaryclient
@@ -47,14 +47,17 @@ class InstallCallback(UpdateCallback, ChangesetCallback):
     def update(self, msg):
         # only push an update into the database if it differs from the
         # current message
-        if self.msg != msg:
+        curTime = time.time()
+        if self.msg != msg and (curTime - self.timeStamp) > MSG_INTERVAL:
             self.msg = msg
-            self.status(msg)
+            self.status(self.prefix + msg % self.changeset)
+            self.timeStamp = curTime
 
     def __init__(self, status):
         self.status = status
         self.restored = 0
         self.msg = ''
+        self.timeStamp = 0
 
 class Journal:
     def lchown(self, root, target, user, group):

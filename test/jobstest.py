@@ -792,7 +792,7 @@ class JobsTest(MintRepositoryHelper):
 
         # ask for a different image type
         job = client.startNextJob(["1#x86_64"],
-                                  {'imageTypes' : [releasetypes.QEMU_IMAGE]})
+                                  {'imageTypes' : [releasetypes.RAW_HD_IMAGE]})
 
         self.failIf(job, "startNextJob returned the wrong image type")
 
@@ -1072,7 +1072,7 @@ class JobsTest(MintRepositoryHelper):
 
         # ask for all jobs but wrong image type
         job = client.startNextJob(['1#x86_64', '1#x86'],
-                                  {'imageTypes' : [releasetypes.QEMU_IMAGE],
+                                  {'imageTypes' : [releasetypes.RAW_HD_IMAGE],
                                    'cookTypes' : [cooktypes.GROUP_BUILDER]})
 
         self.failIf(not job.groupTroveId, "startNextJob didn't match cook")
@@ -1086,7 +1086,7 @@ class JobsTest(MintRepositoryHelper):
 
         self.assertRaises(ParameterError,
                           client.startNextJob, ['this is not a frozen flavor'],
-                          {'imageTypes' : [releasetypes.QEMU_IMAGE],
+                          {'imageTypes' : [releasetypes.RAW_HD_IMAGE],
                            'cookTypes' : [cooktypes.GROUP_BUILDER]})
 
     def testStartBadImage(self):
@@ -1102,7 +1102,7 @@ class JobsTest(MintRepositoryHelper):
 
         self.assertRaises(ParameterError,
                           client.startNextJob, ['1#x86'],
-                          {'imageTypes' : [releasetypes.QEMU_IMAGE],
+                          {'imageTypes' : [releasetypes.RAW_HD_IMAGE],
                            'cookTypes' : [9999]})
 
     def testStartLegalImage(self):
@@ -1148,7 +1148,7 @@ class JobsTest(MintRepositoryHelper):
 
         job = client.startNextJob(['1#x86'],
                                   {'cookTypes' : [cooktypes.GROUP_BUILDER],
-                                   'imageTypes': [releasetypes.QEMU_IMAGE]})
+                                   'imageTypes': [releasetypes.RAW_HD_IMAGE]})
 
         self.failIf(job, "startNextJob returned a finished cook")
 
@@ -1163,7 +1163,7 @@ class JobsTest(MintRepositoryHelper):
         self.db.commit()
 
         job = client.startNextJob(['1#x86'],
-                                  {'imageTypes': [releasetypes.QEMU_IMAGE]})
+                                  {'imageTypes': [releasetypes.RAW_HD_IMAGE]})
 
         self.failIf(job, "startNextJob returned a finished cook")
 
@@ -1194,7 +1194,7 @@ class JobsTest(MintRepositoryHelper):
 
         job = client.startNextJob(['1#x86_64'],
                                   {'cookTypes' : [cooktypes.GROUP_BUILDER],
-                                   'imageTypes': [releasetypes.QEMU_IMAGE]})
+                                   'imageTypes': [releasetypes.RAW_HD_IMAGE]})
 
         self.failIf(job, "startNextJob returned a finished image")
 
@@ -1209,7 +1209,7 @@ class JobsTest(MintRepositoryHelper):
         self.db.commit()
 
         job = client.startNextJob(['1#x86_64'],
-                                  {'imageTypes': [releasetypes.QEMU_IMAGE]})
+                                  {'imageTypes': [releasetypes.RAW_HD_IMAGE]})
 
         self.failIf(job, "startNextJob returned a finished image")
 
@@ -1238,7 +1238,7 @@ class JobsTest(MintRepositoryHelper):
 
         job = client.startNextJob(['1#x86'],
                                   {'cookTypes' : [cooktypes.GROUP_BUILDER],
-                                   'imageTypes': [releasetypes.QEMU_IMAGE]})
+                                   'imageTypes': [releasetypes.RAW_HD_IMAGE]})
 
         self.failIf(job, "startNextJob returned an owned cook")
 
@@ -1252,7 +1252,7 @@ class JobsTest(MintRepositoryHelper):
         self.db.commit()
 
         job = client.startNextJob(['1#x86'],
-                                  {'imageTypes': [releasetypes.QEMU_IMAGE]})
+                                  {'imageTypes': [releasetypes.RAW_HD_IMAGE]})
 
         self.failIf(job, "startNextJob returned an owned cook")
 
@@ -1281,7 +1281,7 @@ class JobsTest(MintRepositoryHelper):
 
         job = client.startNextJob(['1#x86_64'],
                                   {'cookTypes' : [cooktypes.GROUP_BUILDER],
-                                   'imageTypes': [releasetypes.QEMU_IMAGE]})
+                                   'imageTypes': [releasetypes.RAW_HD_IMAGE]})
 
         self.failIf(job, "startNextJob returned an owned image")
 
@@ -1295,7 +1295,7 @@ class JobsTest(MintRepositoryHelper):
         self.db.commit()
 
         job = client.startNextJob(['1#x86_64'],
-                                  {'imageTypes': [releasetypes.QEMU_IMAGE]})
+                                  {'imageTypes': [releasetypes.RAW_HD_IMAGE]})
 
         self.failIf(job, "startNextJob returned an owned image")
 
@@ -1306,7 +1306,7 @@ class JobsTest(MintRepositoryHelper):
         # historically this always failed with permission denied, but it
         # definitely needs to be allowed. return value doesn't matter
         job = client.startNextJob(['1#x86_64'],
-                                  {'imageTypes': [releasetypes.QEMU_IMAGE]})
+                                  {'imageTypes': [releasetypes.RAW_HD_IMAGE]})
 
 
 if __name__ == "__main__":

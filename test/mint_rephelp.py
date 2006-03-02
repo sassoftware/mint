@@ -175,7 +175,7 @@ class MintApacheServer(rephelp.ApacheServer):
         cfg.SSL = False
 
         cfg.visibleImageTypes = [releasetypes.INSTALLABLE_ISO,
-                                 releasetypes.QEMU_IMAGE,
+                                 releasetypes.RAW_HD_IMAGE,
                                  releasetypes.VMWARE_IMAGE,
                                  releasetypes.STUB_IMAGE]
 

@@ -51,9 +51,9 @@ class ConfigTest(MintRepositoryHelper):
         self.failIf(cfg.visibleImageTypes != [releasetypes.INSTALLABLE_ISO],
                     "visibleImageTypes did not incorporate first release type")
 
-        cfg.configLine("visibleImageTypes QEMU_IMAGE")
+        cfg.configLine("visibleImageTypes RAW_HD_IMAGE")
         self.failIf(cfg.visibleImageTypes != \
-                    [releasetypes.INSTALLABLE_ISO, releasetypes.QEMU_IMAGE],
+                    [releasetypes.INSTALLABLE_ISO, releasetypes.RAW_HD_IMAGE],
                     "visibleImageTypes did not properly incorporate "
                     "a second release")
 

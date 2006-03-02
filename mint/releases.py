@@ -78,7 +78,7 @@ stubImageTemplate = {
 dataHeadings = {
     releasetypes.BOOTABLE_IMAGE   : 'Image Settings',
     releasetypes.INSTALLABLE_ISO  : 'Installable CD Settings',
-    releasetypes.QEMU_IMAGE       : 'Raw Hard Disk Image Settings',
+    releasetypes.RAW_HD_IMAGE     : 'Raw Hard Disk Image Settings',
     releasetypes.VMWARE_IMAGE     : 'VMware Image Settings',
     releasetypes.STUB_IMAGE       : 'Stub Image Settings',
 }
@@ -87,7 +87,7 @@ dataHeadings = {
 dataTemplates = {
     releasetypes.BOOTABLE_IMAGE   : imageGenTemplate,
     releasetypes.INSTALLABLE_ISO  : installableIsoTemplate,
-    releasetypes.QEMU_IMAGE       : bootableImageTemplate,
+    releasetypes.RAW_HD_IMAGE     : bootableImageTemplate,
     releasetypes.VMWARE_IMAGE     : vmwareImageTemplate,
     releasetypes.STUB_IMAGE       : stubImageTemplate,
 }
@@ -378,9 +378,9 @@ class Release(database.TableObject):
             returner.extend(self.server.getAvailableImageTypes())
         else:
             returner.extend(self.imageTypes)
-        if releasetypes.QEMU_IMAGE not in returner:
+        if releasetypes.RAW_HD_IMAGE not in returner:
             if set(bootableImageTemplateDependents) & set(returner):
-                returner.append(releasetypes.QEMU_IMAGE)
+                returner.append(releasetypes.RAW_HD_IMAGE)
         return returner
 
     def getDataTemplate(self):

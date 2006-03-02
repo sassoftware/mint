@@ -17,9 +17,11 @@ python_files = \
 	live_cf_image.py	\
 	live_iso.py		\
 	netboot_image.py	\
+        raw_hd_image.py         \
 	stub_image.py		\
 	CreateDiskImage.py      \
-        splitdistro.py
+        splitdistro.py          \
+        vmware_image.py
 
 extra_dist = Makefile
 

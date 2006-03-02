@@ -137,7 +137,7 @@ class NewProjectsReport(MintReport):
         data.append(('',''))
 
         countedReleases = (releasetypes.INSTALLABLE_ISO,
-                           releasetypes.QEMU_IMAGE,
+                           releasetypes.RAW_HD_IMAGE,
                             releasetypes.VMWARE_IMAGE)
         queryStr = '(' + ', '.join([str(x) for x in countedReleases]) + ')'
         # count the total releases

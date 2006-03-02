@@ -46,9 +46,6 @@ class BootableImageConfig(ConfigFile):
     dataDir         = os.path.join(os.path.dirname(__file__), '..', '..', 'scripts', 'DiskImageData')
     umlKernel       = CfgDict(CfgString)
     debug           = (CfgBool, 0)
-    shortCircuit    = (CfgBool, 0) #1: Use a static name for the root dir and
-                                   #the qemu image.  Change this to false to
-                                   #use securely named temp files.
 
 def debugme(type, value, tb):
     from conary.lib import epdb
@@ -208,9 +205,8 @@ title %(name)s (%(kversion)s)
         fd.close()
         os.chmod(os.path.join(self.fakeroot, 'boot/grub/grub.conf'), 0600)
         #create the appropriate links
-        if not self.imgcfg.shortCircuit:
-            os.symlink('grub.conf', os.path.join(self.fakeroot, 'boot', 'grub', 'menu.lst'))
-            os.symlink('../boot/grub/grub.conf', os.path.join(self.fakeroot, 'etc', 'grub.conf'))
+        os.symlink('grub.conf', os.path.join(self.fakeroot, 'boot', 'grub', 'menu.lst'))
+        os.symlink('../boot/grub/grub.conf', os.path.join(self.fakeroot, 'etc', 'grub.conf'))
 
     @timeMe
     def createTemporaryRoot(self, basedir = os.getcwd()):
@@ -424,186 +420,79 @@ quit
             returnlist.append((newfile, name,))
         return returnlist
 
-    @timeMe
-    def createVMDK(self, outfile):
-        flags = ''
-        if self.imgcfg.debug:
-            flags += ' -v'
-        cmd = 'raw2vmdk -C %d %s %s %s' % (self.cylinders, self.outfile,
-                    outfile, flags)
-        log.debug("Running", cmd)
-        util.execute(cmd)
-
-    @timeMe
-    def createVMX(self, outfile, displayName, memsize):
-        #Read in the stub file
-        infile = open(os.path.join(self.imgcfg.dataDir, 'vmwareplayer.vmx'), 'rb')
-        #Replace the @DELIMITED@ text with the appropriate values
-        filecontents = infile.read()
-        infile.close()
-        #@NAME@ @MEM@ @FILENAME@
-        displayName.replace('"', '')
-        filecontents = filecontents.replace('@NAME@', displayName)
-        filecontents = filecontents.replace('@MEM@', str(memsize))
-        filecontents = filecontents.replace('@FILENAME@', self.basefilename)
-        #write the file to the proper location
-        ofile = open(outfile, 'wb')
-        ofile.write(filecontents)
-        ofile.close()
-
-    @timeMe
-    def zipVMwarePlayerFiles(self, dir, outfile):
-        zip = zipfile.ZipFile(outfile, 'w', zipfile.ZIP_DEFLATED)
-        for f in ('.vmdk', '.vmx'):
-            zip.write(os.path.join(dir, self.basefilename + f), os.path.join(self.basefilename, self.basefilename + f))
-        zip.close()
-        os.chmod(outfile, 0644)
-
-    @timeMe
-    def createVMwarePlayerImage(self, outfile, displayName, mem, basedir=os.getcwd()):
-        #Create a temporary directory
-        vmbasedir = tempfile.mkdtemp('', 'mint-MDI-cvmpi-', basedir)
-        try:
-            filebase = os.path.join(vmbasedir, self.basefilename)
-            #run qemu-img to convert to vmdk
-            self.createVMDK(filebase + '.vmdk')
-            #Populate the vmx file
-            self.createVMX(filebase + '.vmx', displayName, mem)
-            #zip the resultant files
-            self.zipVMwarePlayerFiles(vmbasedir, outfile)
-        finally:
-            if not self.imgcfg.shortCircuit:
-                util.rmtree(vmbasedir)
-        return (outfile, 'VMware Player Image')
-
-    supportedImageTypes = [
-        releasetypes.QEMU_IMAGE,
-        releasetypes.LIVE_ISO,
-        releasetypes.VMWARE_IMAGE,
-        ]
-
-    def setImageTypes(self, imageTypes):
-        self.imageTypes = imageTypes
-
-    def workToDo(self):
-        returner = False
-        for imageType in self.imageTypes:
-            if imageType in self.supportedImageTypes:
-                returner = True
-                break
-        return returner
-
-    def write(self):
+    def createFileTree(self):
         self.imgcfg = self.getConfig()
 
         #Create the output file:
-        if not self.imgcfg.shortCircuit:
-            fd, self.outfile = tempfile.mkstemp('.img', 'qemuimg', self.cfg.imagesPath)
-            os.close(fd)
-            os.chmod(self.outfile, 0644)
-        else:
-            self.outfile = os.path.join(self.cfg.imagesPath, 'qemu-%d.img' % self.release.getId())
+        fd, self.outfile = tempfile.mkstemp('.img', 'qemuimg',
+                                            self.cfg.imagesPath)
+        os.close(fd)
+        os.chmod(self.outfile, 0644)
 
         #Create the directory to use as the root for the conary commands
-        if not self.imgcfg.shortCircuit:
-            self.fakeroot = tempfile.mkdtemp("", "imagetool", self.cfg.imagesPath)
-            log.info('generating qemu image with tmpdir %s', self.fakeroot)
-        else:
-            self.fakeroot = os.path.join(self.cfg.imagesPath, 'shortcircuit_qemud-%d' % self.release.getId())
-            try:
-                os.makedirs(self.fakeroot)
-            except OSError, e:
-                if e.errno != errno.EEXIST:
-                    raise
+        self.fakeroot = tempfile.mkdtemp("", "imagetool", self.cfg.imagesPath)
+        log.info('generating qemu image with tmpdir %s', self.fakeroot)
 
-        try:
-            #Figure out what group trove to use
-            self.basetrove, versionStr, flavorStr = self.release.getTrove()
-            log.info('self.release.getTrove returned (%s, %s, %s)' % (self.basetrove, versionStr, flavorStr))
+        #Figure out what group trove to use
+        self.basetrove, versionStr, flavorStr = self.release.getTrove()
+        log.info('self.release.getTrove returned (%s, %s, %s)' % \
+                 (self.basetrove, versionStr, flavorStr))
 
-            #Thaw the version string
-            version = versions.ThawVersion(versionStr)
-            self.baseversion = version.asString()
+        #Thaw the version string
+        version = versions.ThawVersion(versionStr)
+        self.baseversion = version.asString()
 
-            #Thaw the flavor string
-            self.baseflavor = deps.deps.ThawDependencySet(flavorStr)
+        #Thaw the flavor string
+        self.baseflavor = deps.deps.ThawDependencySet(flavorStr)
 
-            # set up configuration
-            self.conarycfg = self.project.getConaryConfig(overrideSSL=True, useSSL=self.cfg.SSL)
-            # turn off threading
+        # set up configuration
+        self.conarycfg = self.project.getConaryConfig(overrideSSL=True,
+                                                      useSSL=self.cfg.SSL)
+        # turn off threading
 
-            self.arch = self.release.getArch()
-            freespace = self.release.getDataValue("freespace")
-            basefilename = "%(name)s-%(version)s-%(arch)s" % {
-                    'name': self.project.getHostname(),
-                    'version': upstream(version),
-                    'arch': self.arch,
-                }
+        self.arch = self.release.getArch()
+        freespace = self.release.getDataValue("freespace")
+        basefilename = "%(name)s-%(version)s-%(arch)s" % {
+                'name': self.project.getHostname(),
+                'version': upstream(version),
+                'arch': self.arch,
+            }
 
-            #initialize some stuff
-            self.basefilename = basefilename
-            self.freespace = freespace * 1024 * 1024
+        #initialize some stuff
+        self.basefilename = basefilename
+        self.freespace = freespace * 1024 * 1024
 
-            callback = InstallCallback(self.status)
-            imagesList = []
+        callback = InstallCallback(self.status)
 
-            self.setupConaryClient()
-            try:
-                if not self.imgcfg.shortCircuit:
-                    pass
+        self.setupConaryClient()
+        self.status('Creating temporary root')
+        self.createTemporaryRoot()
 
-                self.status('Creating temporary root')
-                self.createTemporaryRoot()
+        #Don't need status here.  It's very fast
+        self.setupConaryClient()
 
-                #Don't need status here.  It's very fast
-                self.setupConaryClient()
+        self.status('Installing software')
+        self.populateTemporaryRoot(callback)
 
-                self.status('Installing software')
-                self.populateTemporaryRoot(callback)
+        self.status('Installing %s kernel' % self.arch)
+        self.installKernel(callback)
 
-                self.status('Installing %s kernel' % self.arch)
-                self.installKernel(callback)
+        self.status('Adding filesystem bits')
+        self.fileSystemOddsNEnds()
 
-                self.status('Adding filesystem bits')
-                self.fileSystemOddsNEnds()
+    def createImage(self):
+        self.status('Creating root file system')
+        self.createFileSystem(self.cfg.imagesPath)
 
-                self.status('Creating root file system')
-                self.createFileSystem(self.cfg.imagesPath)
+        self.status('Running tag-scripts')
+        self.runTagScripts()
 
-                self.status('Running tag-scripts')
-                self.runTagScripts()
+        self.status('Making image bootable')
+        self.makeBootable()
 
-                self.status('Making image bootable')
-                self.makeBootable()
+        #As soon as that's done, we can delete the fakeroot to free up space
+        util.rmtree(self.fakeroot)
+        self.fakeroot = None
 
-                #As soon as that's done, we can delete the fakeroot to free up space
-                util.rmtree(self.fakeroot)
-                self.fakeroot = None
-
-                if releasetypes.VMWARE_IMAGE in self.imageTypes:
-                    self.status('Creating VMware Player Image')
-                    fd, vmfn = tempfile.mkstemp('.vmware.zip', 'mint-MDI-cvmpi-', self.cfg.imagesPath)
-                    os.close(fd)
-                    del fd
-                    imagesList.append(self.createVMwarePlayerImage(vmfn, self.project.getName(), self.release.getDataValue('vmMemory'), self.cfg.imagesPath))
-
-                #This has to be done after everything else as we need the qemu
-                #image to generate vmware, etc.
-                zipfn = None
-                if releasetypes.QEMU_IMAGE in self.imageTypes:
-                    self.status('Compressing hard disk image')
-                    zipfn = self.compressImage(self.outfile)
-                    imagesList.append((zipfn, 'Raw Hard Disk Image',))
-
-            except:
-                if self.imgcfg.debug:
-                    epdb.post_mortem(sys.exc_info()[2])
-                raise
-        finally:
-            if not self.imgcfg.shortCircuit:
-                if self.fakeroot:
-                    util.rmtree(self.fakeroot)
-                os.unlink(self.outfile)
-
-        return self.moveToFinal(imagesList, os.path.join(self.cfg.finishedPath, self.project.getHostname(), str(self.release.getId())))
-
+    def write(self):
+        raise NotImplementedError
