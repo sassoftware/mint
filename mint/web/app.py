@@ -61,7 +61,7 @@ class MintApp(WebHandler):
 
         # Send the proper content type for those browser who know to ask
         # for XHTML. Otherwise, serve XHTML as text/html with the proper
-        # charset encoding as per the W3C guidelines·
+        # charset encoding as per the W3C guidelines
         # (c.f. http://www.w3.org/TR/xhtml1/guidelines.html)
         if 'application/xhtml+xml' in self.req.headers_in.get('Accept', ''):
             self.content_type = 'application/xhtml+xml'

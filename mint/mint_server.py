@@ -2321,6 +2321,12 @@ class MintServer(object):
                                        password = password)
 
     @private
+    @typeCheck(int, str)
+    @requiresAdmin
+    def delOutboundLabel(self, labelId, url):
+        return self.outboundLabels.delete(labelId, url)
+
+    @private
     @typeCheck()
     @requiresAdmin
     def getOutboundLabels(self):

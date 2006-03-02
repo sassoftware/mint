@@ -132,5 +132,10 @@ class LabelsTest(MintRepositoryHelper):
         assert(labels == [[0, 0, 'http://www.example.com/conary/',
                            'mirror', 'mirrorpass']])
 
+        client.delOutboundLabel(0, 'http://www.example.com/conary/')
+        labels = client.getOutboundLabels()
+        assert(labels == [])
+
+
 if __name__ == "__main__":
     testsuite.main()

@@ -9,7 +9,7 @@ import os
 from mod_python import apache
 
 from mint import mint_error
-from webhandler import WebHandler
+from webhandler import WebHandler, HttpNotFound
 from conary import versions
 from conary.web.fields import strFields, intFields, listFields, boolFields
 
@@ -26,7 +26,10 @@ class AdminHandler(WebHandler):
         if not operation:
             return self._administer(*args, **kwargs)
 
-        return self.__getattribute__('_admin_%s'%operation)(*args, **kwargs)
+        try:
+            return self.__getattribute__('_admin_%s'%operation)(*args, **kwargs)
+        except AttributeError:
+            raise HttpNotFound
 
     def _admin_user(self, *args, **kwargs):
         #get a list of all users in a format suitable for producing a
@@ -241,9 +244,31 @@ class AdminHandler(WebHandler):
         except:
             kwargs['extraMsg'] = "Failed to stop the job server."
 
-
         return self._admin_jobs(*args, **kwargs)
 
+    def _admin_outbound(self, *args, **kwargs):
+        outboundLabels = [(self.client.getProject(x[0]), self.client.getLabel(x[1]), x[1], x[2], x[3], x[4]) for x in self.client.getOutboundLabels()]
+        return self._write('admin/outbound', outboundLabels = outboundLabels)
+
+    def _admin_add_outbound(self, *args, **kwargs):
+        projects = self.client.getProjectsList()
+        return self._write('admin/add_outbound', projects = projects)
+
+    @intFields(projectId = None)
+    @strFields(targetUrl = None, mirrorUser = None, mirrorPass = None)
+    def _admin_process_add_outbound(self, projectId, targetUrl, mirrorUser, mirrorPass, *args, **kwargs):
+        project = self.client.getProject(projectId)
+        labelId = project.getLabelIdMap().values()[0]
+        self.client.addOutboundLabel(projectId, labelId, targetUrl, mirrorUser, mirrorPass)
+
+        self._redirect("administer?operation=outbound")
+
+    @listFields(str, remove = [])
+    def _admin_remove_outbound(self, remove, *args, **kwargs):
+        for x in remove:
+            labelId, url = x.split(" ")
+            self.client.delOutboundLabel(int(labelId), url)
+        self._redirect("administer?operation=outbound")
 
     def _administer(self, *args, **kwargs):
         return self._write('admin/administer', kwargs = kwargs)

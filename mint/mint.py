@@ -460,6 +460,9 @@ class MintClient:
         return self.server.addOutboundLabel(projectId, labelId, url,
                                             username, password)
 
+    def delOutboundLabel(self, labelId, url):
+        return self.server.delOutboundLabel(labelId, url)
+
     def getInboundLabels(self):
         return self.server.getInboundLabels()
 
