@@ -983,7 +983,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         assert(client.getInboundLabels() == [[1, 1, '', 'mirror', 'mirrorpass']])
 
         # and make sure that the 'shell' repository was created
-        assert(os.path.exists(os.path.join(self.reposDir, 'repos', 'rpath.rpath.local:%d' % self.port)))
+        assert(os.path.exists(os.path.join(self.reposDir, 'repos', 'conary.rpath.com')))
 
     def testBrowseUsers(self):
         client, userId = self.quickMintAdmin('adminuser', 'adminpass')
