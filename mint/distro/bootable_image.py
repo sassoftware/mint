@@ -43,7 +43,7 @@ class BootableImageConfig(ConfigFile):
     partoffset0     = 512
 
     #directory containing the uml init script as well as fstab and other hooks
-    dataDir         = os.path.join(os.path.dirname(__file__), '..', '..', 'scripts', 'DiskImageData')
+    dataDir         = '/usr/share/mint/DiskImageData/'
     umlKernel       = CfgDict(CfgString)
     debug           = (CfgBool, 0)
 
