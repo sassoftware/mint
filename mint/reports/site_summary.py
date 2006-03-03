@@ -81,7 +81,9 @@ class NewProjectsReport(MintReport):
 
         # count projects with releases
         cu.execute("""SELECT COUNT(*) FROM
-                          (SELECT DISTINCT projectId FROM Releases)
+                          (SELECT DISTINCT projectId
+                            FROM Releases
+                            WHERE troveName IS NOT NULL)
                           AS ProjectReleases""")
         data.append(('Projects with releases', cu.fetchone()[0]))
 
