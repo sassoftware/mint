@@ -220,13 +220,14 @@ def conaryHandler(req, cfg, pathInfo):
     port = req.connection.local_addr[1]
     secure = (req.subprocess_env.get('HTTPS', 'off') == 'on')
 
+    global db
+    repNameMap = getRepNameMap(db)
     if repName in repNameMap:
         repName = repNameMap[repName]
         req.log_error("remapping repository name: %s" % repName)
 
     repHash = repName + req.hostname
 
-    global db
     if cfg.reposDBDriver == "sqlite":
         db = None
         dbName = repName
@@ -378,7 +379,6 @@ def logErrorAndEmail(req, cfg, exception, e, bt):
 cfg = None
 cfgMTime = 0
 db = None
-repNameMap = {}
 
 def getRepNameMap(db):
     d = {}
@@ -408,17 +408,15 @@ def handler(req):
         cfg.read(req.filename)
         cfgMTime = mtime
 
-    global db, repNameMap
+    global db
     if not db:
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
-        repNameMap = getRepNameMap(db)
 
     prof = profile.Profile(cfg)
 
     # reopen a dead database
     if db.reopen():
         req.log_error("reopened a dead database connection in hooks.py")
-        repNameMap = getRepNameMap(db)
 
     if not req.uri.startswith('/setup/') and not cfg.configured:
         req.headers_out['Location'] = "/setup/"
