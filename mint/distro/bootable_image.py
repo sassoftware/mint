@@ -267,7 +267,7 @@ title %(name)s (%(kversion)s)
     def updateKernelChangeSet(self, callback):
         #Install the Kernel
         try:
-            kernel, version, flavor = parseTroveSpec('kernel[!kernel.smp is: %s]' % self.arch)
+            kernel, version, flavor = parseTroveSpec('kernel:runtime[!kernel.smp is: %s]' % self.arch)
             itemList = [(kernel, (None, None), (version, flavor), True)]
             uJob, suggMap = self.cclient.updateChangeSet(itemList, sync=True,
                                 callback = callback, split=True,
