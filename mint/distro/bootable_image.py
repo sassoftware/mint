@@ -229,7 +229,7 @@ title %(name)s (%(kversion)s)
             self.readConaryRc(self.conarycfg)
             #TODO Add the user if anonymous access is not available
 
-        self.conarycfg.threaded = False
+        self.conarycfg.threaded = True
         self.conarycfg.setValue('root', self.fakeroot)
         self.conarycfg.installLabelPath = None
         self.conarycfg.dbPath = '/var/lib/conarydb/'
