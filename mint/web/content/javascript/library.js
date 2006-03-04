@@ -257,7 +257,8 @@ function processGetTroveList(aReq) {
             appendToSelect(sel, troveName + "=" + label, document.createTextNode(troveName), "trove");
         }
     }
-
+    hideElement("nameSpinner");
+    hideElement("archSpinner");
 }
 
 function processGetTroveVersionsByArch(aReq) {
@@ -274,7 +275,8 @@ function processGetTroveVersionsByArch(aReq) {
         appendToSelect(archSel, archStr, document.createTextNode(archStr), "arch");
     }
     archSel.disabled = false;
-
+    hideElement("nameSpinner");
+    hideElement("archSpinner");
 }
 
 function processListActiveJobs(aReq) {
@@ -369,6 +371,8 @@ function getCookStatus(jobId) {
 }
 
 function getTroveList(projectId) {
+    showElement("nameSpinner");
+    hideElement("archSpinner");
     var req = new JsonRpcRequest("/jsonrpc/", "getGroupTroves");
     req.setAuth(getCookieValue("pysid"));
     req.setCallback(processGetTroveList);
@@ -376,6 +380,8 @@ function getTroveList(projectId) {
 }
 
 function getTroveVersionsByArch(projectId, troveNameWithLabel) {
+    hideElement("nameSpinner");
+    showElement("archSpinner");
     var req = new JsonRpcRequest("/jsonrpc/", "getTroveVersionsByArch");
     req.setAuth(getCookieValue("pysid"));
     req.setCallback(processGetTroveVersionsByArch);

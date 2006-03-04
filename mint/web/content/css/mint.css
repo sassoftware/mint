@@ -714,3 +714,8 @@ div#jobStatusDingus div img#spinner {
     padding: 8px;
     float: right;
 }
+
+img#nameSpinner, img#archSpinner {
+    display: none;
+    padding-right: 4px;
+}

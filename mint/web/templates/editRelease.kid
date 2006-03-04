@@ -61,10 +61,12 @@ from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM
                             <select py:if="isNewRelease" onchange="javascript:onTroveChange(${project.getId()});" id="trove" name="trove">
                                 <option value=""></option>
                             </select>
+                            <img src="${cfg.staticPath}apps/mint/images/circle-ball-dark-antialiased.gif" id="nameSpinner" style="float: right;"/>
                         </div>
                         <div py:strip="True" py:if="not isNewRelease">
                             <input type="text" name="troveDisplay" id="trove" value="${troveName}" disabled="disabled" />
                             <input type="hidden" name="trove" value="${troveName}=${label.asString()}" />
+                            <img src="${cfg.staticPath}apps/mint/images/circle-ball-dark-antialiased.gif" id="nameSpinner" style="float: right;"/>
                         </div>
                         <div class="clearleft">&nbsp;</div>
 
@@ -73,10 +75,12 @@ from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM
                             <select onchange="javascript:onArchChange();" id="arch" name="arch" disabled="disabled">
                                 <option value=""/>
                             </select>
+                            <img src="${cfg.staticPath}apps/mint/images/circle-ball-dark-antialiased.gif" id="archSpinner" style="float: right;"/>
                         </div>
                         <div py:strip="True" py:if="not isNewRelease">
                             <input type="text" id="arch" name="archDisplay" value="${not isNewRelease and arch or None}" disabled="disabled" />
                             <input type="hidden" name="arch" value="${not isNewRelease and arch or None}" />
+                            <img src="${cfg.staticPath}apps/mint/images/circle-ball-dark-antialiased.gif" id="archSpinner" style="float: right;"/>
                         </div>
                         <div class="clearleft">&nbsp;</div>
 
