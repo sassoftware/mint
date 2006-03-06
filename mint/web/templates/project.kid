@@ -140,8 +140,7 @@
                     <ul>
                         <li py:for="project in projectDict[level]">
                             <a href="${project.getUrl()}">
-                                ${project.getNameForDisplay()}</a><br/>
-                                ${userlevels.names[level]}
+                                ${project.getNameForDisplay()}</a>
                                 <span py:if="not level and project.listJoinRequests()">
                                     <a href="${project.getUrl()}members"><b style="color: red;">Requests Pending</b></a>
                                 </span>
