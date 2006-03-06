@@ -506,7 +506,7 @@ div#projectsPane div#administer {
 
 div#groupBuilder {
     clear: right;
-    max-width: 224px;
+    width: 224px;
     margin: 8px 3px 12px 3px;
     background: url(../images/box_body_r.png) no-repeat bottom left;
 }
