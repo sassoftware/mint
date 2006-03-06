@@ -170,7 +170,11 @@ class GroupTroveCook(Generator):
             sys.stdout.flush()
 
             if not ret:
-                raise build.errors.GroupPathConflicts(e)
+                # FIXME: this needs to be handled in a better, more non-interactive fashion.
+                raise RuntimeError("Your group has included packages which have conflicting paths, "
+                                   "which can not be included together, and rBuilder Online could "
+                                   "not figure out how to resolve the conflict automatically. Please "
+                                   "check your group for likely conflicts.")
 
             ret = ret[0][0]
         finally:
