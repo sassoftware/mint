@@ -95,3 +95,8 @@ class VMwareImage(bootable_image.BootableImage):
                                 os.path.join(self.cfg.finishedPath,
                                              self.project.getHostname(),
                                              str(self.release.getId())))
+
+    def __init__(self, *args, **kwargs):
+        res = bootable_image.BootableImage.__init__(self, *args, **kwargs)
+        self.freespace = self.release.getDataValue("freespace") * 1048576
+        return res
