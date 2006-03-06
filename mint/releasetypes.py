@@ -10,7 +10,7 @@ validImageTypes = {
     'BOOTABLE_IMAGE'   : 0,
     'INSTALLABLE_ISO'  : 1,
     'STUB_IMAGE'       : 2,
-    'LIVE_CF_IMAGE'    : 3,
+    'RAW_FS_IMAGE'    : 3,
     'NETBOOT_IMAGE'    : 4,
     'GROUP_TROVE_COOK' : 5,
     'LIVE_ISO'         : 6,
@@ -33,7 +33,7 @@ deprecatedImageTypes = {
 typeNames = {
     NETBOOT_IMAGE:      "Netboot Image",
     INSTALLABLE_ISO:    "Installable CD",
-    LIVE_CF_IMAGE:      "Live CF Image",
+    RAW_FS_IMAGE:       "Raw Filesystem Image",
     STUB_IMAGE:         "Stub Image (for testing)",
     RAW_HD_IMAGE:       "Raw Hard Disk Image",
     VMWARE_IMAGE:       "VMware Player Image",
@@ -43,7 +43,7 @@ typeNames = {
 typeNamesShort = {
     NETBOOT_IMAGE:      "Netboot",
     INSTALLABLE_ISO:    "Inst CD",
-    LIVE_CF_IMAGE:      "Live CF",
+    RAW_FS_IMAGE:       "Raw FS",
     STUB_IMAGE:         "Stub",
     RAW_HD_IMAGE:       "HDD",
     VMWARE_IMAGE:       "VMware",
