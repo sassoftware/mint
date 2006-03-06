@@ -11,6 +11,7 @@ import errno
 import time
 import tempfile
 import zipfile
+from math import ceil
 
 # mint imports
 from imagegen import ImageGenerator, MSG_INTERVAL
@@ -369,6 +370,8 @@ title %(name)s (%(kversion)s)
             fd = os.popen('/usr/bin/du -B1 --max-depth=0 %s' % self.fakeroot, 'r')
             size = int(fd.read().strip().split()[0])
             size += self.freespace + self.imgcfg.partoffset0
+            # account for inodes and extra space for tag scripts
+            size = int(ceil(size / 0.65)) + 20 * 1024 * 1024
             padding = self.imgcfg.cylindersize - (size % self.imgcfg.cylindersize)
             if self.imgcfg.cylindersize == padding:
                 padding = 0
@@ -424,14 +427,14 @@ quit
         self.imgcfg = self.getConfig()
 
         #Create the output file:
-        fd, self.outfile = tempfile.mkstemp('.img', 'qemuimg',
+        fd, self.outfile = tempfile.mkstemp('.img', 'raw_hd',
                                             self.cfg.imagesPath)
         os.close(fd)
         os.chmod(self.outfile, 0644)
 
         #Create the directory to use as the root for the conary commands
         self.fakeroot = tempfile.mkdtemp("", "imagetool", self.cfg.imagesPath)
-        log.info('generating qemu image with tmpdir %s', self.fakeroot)
+        log.info('generating raw hd image with tmpdir %s', self.fakeroot)
 
         #Figure out what group trove to use
         self.basetrove, versionStr, flavorStr = self.release.getTrove()
@@ -451,7 +454,6 @@ quit
         # turn off threading
 
         self.arch = self.release.getArch()
-        freespace = self.release.getDataValue("freespace")
         basefilename = "%(name)s-%(version)s-%(arch)s" % {
                 'name': self.project.getHostname(),
                 'version': upstream(version),
@@ -460,7 +462,6 @@ quit
 
         #initialize some stuff
         self.basefilename = basefilename
-        self.freespace = freespace * 1024 * 1024
 
         callback = InstallCallback(self.status)
 
