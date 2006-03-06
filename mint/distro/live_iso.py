@@ -5,12 +5,14 @@
 #
 
 # python standard library imports
-import os
+import os, sys
 import tempfile
 import subprocess
+import re
 
 # mint imports
 from imagegen import ImageGenerator, MSG_INTERVAL
+import bootable_image
 
 # conary imports
 from conary import conaryclient
@@ -19,12 +21,7 @@ from conary import flavorcfg
 from conary import versions
 from conary.callbacks import UpdateCallback, ChangesetCallback
 from conary.conarycfg import ConfigFile
-from conary.lib import log
-
-class LiveIsoConfig(ConfigFile):
-    defaults = {
-        'scriptPath':        None,
-    }
+from conary.lib import log, util, epdb
 
 class InstallCallback(UpdateCallback, ChangesetCallback):
     def restoreFiles(self, size, totalSize):
@@ -59,80 +56,238 @@ class InstallCallback(UpdateCallback, ChangesetCallback):
         self.msg = ''
         self.timeStamp = 0
 
-class Journal:
-    def lchown(self, root, target, user, group):
-        # get rid of the root
-        target = target[len(root):]
-        dirname = os.path.dirname(target)
-        filename = os.path.basename(target)
-        f = open(os.sep.join((root, dirname, '.UIDGID')), 'a')
-        # XXX e2fsimage does not handle group lookups yet
-        f.write('%s %s\n' %(filename, user))
+
+devices = """loop0 b 7 0 0660
+console c 5 1 0660
+null c 1 3 0660
+zero c 1 5 0660
+systty c 4 0 0660
+tty1 c 4 1 0660
+tty2 c 4 2 0660
+tty3 c 4 3 0660
+tty4 c 4 4 0660"""
+
+# with udev turned on, it appears we don't need any devices at all.
+devices = ""
+
+linuxrc = """#!/bin/nash
+mount -t proc /proc /proc/
+echo Mounted /proc
+echo Mounting sysfs
+mount -t sysfs none /sys
+echo Creating /dev
+mount -o mode=0755 -t tmpfs /dev /dev
+
+echo Creating block devices
+%(devices)s
+mkdir /dev/pts
+mkdir /dev/shm
+
+%(modules)s
+
+echo Starting udev
+/sbin/udevstart
+
+### REVIEW THIS LINE ###
+echo 0x0100 > /proc/sys/kernel/real-root-dev
+### END REVIEW ###
+
+# FIXME: this must be dymanic
+echo Mounting CD-ROM
+mount -o mode=0644 --ro -t iso9660 /dev/hdc /cdrom
+
+echo Making system mount points
+mkdir /sysroot1
+mkdir /sysroot2
+
+echo Mounting root filesystem
+losetup --ro /dev/loop0 /cdrom/livecd.img
+mount -o defaults --ro -t ext2 /dev/loop0 /sysroot1
+mount -o defaults -t tmpfs /dev/shm /sysroot2
+mount -o dirs=sysroot2=rw:sysroot1=ro,delete=whiteout -t unionfs none /sysroot
+
+echo Running pivot_root
+pivot_root /sysroot /sysroot/initrd
+umount /initrd/proc
+"""
+
+isolinuxCfg="""label linux
+  kernel vmlinuz
+  append initrd=initrd.img
+"""
+
+class LiveIso(bootable_image.BootableImage):
+    def findFile(self, baseDir, fileName):
+        for base, dirs, files in os.walk(baseDir):
+            matches = [x for x in files if re.match(fileName, x)]
+            if matches:
+                print >> sys.stderr, "match found for %s" % os.path.join(base, matches[0])
+                return os.path.join(base, matches[0])
+        return None
+
+    def copyFallback(self, src, dest):
+        tFile = os.path.basename(src)
+        pFile = os.popen('file %s' % src)
+        fileStr = pFile.read()
+        pFile.close()
+        fallback = not ('statically' in fileStr or \
+                        fileStr.endswith(': data\n'))
+        if fallback:
+            print >> sys.stderr, "Using fallback for: %s" % tFile
+            # executable is dynamically linked, use precompiled static one
+            util.copyfile(os.path.join(self.cfg.fallback, tFile), dest)
+        else:
+            print >> sys.stderr, "Using user defined: %s" % tFile
+            util.copyfile(src, dest)
+        return not fallback
+
+    def mkinitrd(self):
+        # this is where we'll create the initrd image
+        initRdDir = tempfile.mkdtemp()
+        macros = {'modules' : 'echo Inserting Kernel Modules'}
+
+        for subDir in ('bin', 'dev', 'lib', 'proc', 'sys', 'sysroot',
+                       'etc', os.path.join('etc', 'udev'), 'cdrom'):
+            os.mkdir(os.path.join(initRdDir, subDir))
+
+        # soft link sbin to bin
+        os.symlink('bin', os.path.join(initRdDir, 'sbin'))
+
+        # copy binaries from fileSystem image to initrd
+        for tFile in ('nash', 'insmod', 'udev', 'udevstart'):
+            self.copyFallback(os.path.join(self.fakeroot, 'sbin', tFile),
+                              os.path.join(initRdDir, 'bin', tFile))
+            os.chmod(os.path.join(initRdDir, 'bin', tFile), 0755) # octal 755
+
+        # soft link modprobe and hotplug to nash: keeps udev from being psycho
+        for tFile in ('modprobe', 'hotplug'):
+            os.symlink('/sbin/nash', os.path.join(initRdDir, 'bin', tFile))
+
+        # copy the udev config file
+        util.copyfile(os.path.join(self.fakeroot, 'etc', 'udev', 'udev.conf'),
+                      os.path.join(initRdDir, 'etc', 'udev', 'udev.conf'))
+
+        for modName in ('loop', 'unionfs'):
+            modName += '.ko'
+            # copy loop.ko module into intird
+            modPath = self.findFile( \
+            os.path.join(self.fakeroot, 'lib', 'modules'), modName)
+            if modPath:
+                util.copyfile(modPath, os.path.join(initRdDir, 'lib', modName))
+                macros['modules'] += '\n/bin/insmod /lib/%s' % modName
+            else:
+                raise AssertionError('Missing required Module: %s' % modName)
+
+        # make .DEVICES file
+        f = open(os.path.join(initRdDir, 'dev', '.DEVICES'), 'w')
+        f.write(devices)
         f.close()
 
-    def mknod(self, root, target, devtype, major, minor, mode,
-              uid, gid):
-        # get rid of the root
-        target = target[len(root):]
-        dirname = os.path.dirname(target)
-        filename = os.path.basename(target)
-        f = open(os.sep.join((root, dirname, '.DEVICES')), 'a')
-        # XXX e2fsimage does not handle symbolic users/groups for .DEVICES
-        f.write('%s %s %d %d 0%o\n' %(filename, devtype, major, minor, mode))
+        macros['devices'] = '\n'.join( \
+            ['mknod /dev/' + ' '.join(x.split()[:-1]) \
+             for x in devices.split('\n')])
+
+        # make linuxrc file
+        f = open(os.path.join(initRdDir, 'linuxrc'), 'w')
+        f.write(linuxrc % macros)
+        f.close()
+        os.chmod(os.path.join(initRdDir, 'linuxrc'), 0755) # octal 755
+
+        nonZipped = os.path.join(self.liveDir, 'initrd.nogz')
+        zippedImg = os.path.join(self.liveDir, 'initrd.img')
+        util.execute('e2fsimage -v -d %s -u 0 -g 0 -f %s -s 8000' % \
+                     (initRdDir, nonZipped))
+        util.execute('gzip -9 < %s > %s' % (nonZipped, zippedImg))
+        os.unlink(nonZipped)
+
+        # this image is trackable from self.liveDir, but return a path to it
+        return zippedImg
+
+    def makeLiveCdTree(self):
+        self.liveDir = tempfile.mkdtemp()
+        # for pivotroot
+        os.mkdir(os.path.join(self.liveDir, 'initrd'))
+
+        self.mkinitrd()
+
+        kernel = self.findFile(os.path.join(self.fakeroot, 'boot'),
+                               'vmlinuz.*')
+        util.copyfile(kernel, os.path.join(self.liveDir, 'vmlinuz'))
+
+        self.copyFallback(os.path.join(self.fakeroot, 'usr', 'lib', 'syslinux',
+                                       'isolinux.bin'),
+                          os.path.join(self.liveDir, 'isolinux.bin'))
+
+        f = open(os.path.join(self.liveDir, 'isolinux.cfg'), 'w')
+        f.write(isolinuxCfg)
         f.close()
 
-class LiveIso(ImageGenerator):
-    def getConfig(self):
-        cfg = LiveIsoConfig()
-        cfg.read("live_iso.conf")
-        return cfg
+    def finalizeIso(self):
+        fIn = open(self.outfile)
+        fOut = open(os.path.join(self.liveDir, 'livecd.img'), 'w')
+        # chop off the disk boot sector. we don't need it.
+        fIn.seek(512)
+        util.copyfileobj(fIn, fOut)
+        fIn.close()
+        fOut.close()
+        os.chmod(os.path.join(self.liveDir, 'livecd.img'), 0644) # octal 644
+
+        # make a target and call mkisofs
+        os.chdir(self.liveDir)
+        fd, self.liveISO = tempfile.mkstemp('.iso', 'livecd',
+                                            self.cfg.imagesPath)
+        os.close(fd)
+        util.execute('mkisofs -o %s -J -R -b isolinux.bin -c boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table .' % self.liveISO)
+        os.chmod(self.liveISO, 0644) # octal 644
+
+        # we'll need to zip this puppy up before shipping...
+
+        #zippedImage = tempfile.mkstemp('.gz', os.path.basename(self.liveISO))
+        #util.execute('gzip -9 < %s > %s' % (self.liveISO, zippedImg))
+
+        return (self.liveISO, 'Live CD')
+
+    def cleanupDirs(self):
+        return
+        for cDir in (self.fakeroot, self.outfile, self.liveDir):
+            if cDir:
+                util.rmtree(cDir)
 
     def write(self):
-        imgcfg = self.getConfig()
-        if not imgcfg.scriptPath:
-            raise RuntimeError, 'scriptPath must be set in configuration file'
+        try:
+            # instantiate the contents that need to go into the image
+            self.createFileTree()
 
-        tmpDir = tempfile.mkdtemp("", "imagetool", self.cfg.imagesPath)
-        log.info('generating live iso with tmpdir %s', tmpDir)
+            # use the filesystem tree to create the proper initrd
+            self.status("Making initrd")
+            self.makeLiveCdTree()
 
-        release = self.client.getRelease(self.job.getReleaseId())
-        trove, versionStr, flavorStr = release.getTrove()
-        flavor = deps.deps.ThawDependencySet(flavorStr)
-        version = versions.ThawVersion(versionStr)
+            # and instantiate the hard disk image
+            self.createImage()
 
-        project = self.client.getProject(release.getProjectId())
+            # now merge them. the hard disk image must be inserted into the iso
+            self.status('Finalizing image')
+            imagesList = [self.finalizeIso()]
+        except:
+            if self.imgcfg.debug:
+                epdb.post_mortem(sys.exc_info()[2])
+            self.cleanupDirs()
+            raise
+        else:
+            self.cleanupDirs()
 
-        # set up configuration
-        cfg = project.getConaryConfig()
-        # turn off threading
-        cfg.threaded = False
-        # configure flavor
-        flavorConfig = flavorcfg.FlavorConfig(cfg.useDirs, cfg.archDirs)
-        cfg.flavor = flavorConfig.toDependency(override=cfg.flavor[0])
-        insSet = deps.deps.DependencySet()
-        for dep in deps.arch.currentArch:
-            insSet.addDep(deps.deps.InstructionSetDependency, dep[0])
-        cfg.flavor.union(insSet)
-        cfg.buildFlavor = cfg.flavor.copy()
-        flavorConfig.populateBuildFlags()
-        cfg.setValue('root', tmpDir)
+        return self.moveToFinal(imagesList,
+                                os.path.join(self.cfg.finishedPath,
+                                             self.project.getHostname(),
+                                             str(self.release.getId())))
 
-        client = conaryclient.ConaryClient(cfg)
-        applyList = [(trove, version, flavor)]
-        self.status('installing software')
-        callback = InstallCallback(self.status)
-        (updJob, suggMap) = client.updateChangeSet(applyList, recurse = True,
-                                                   resolveDeps = False,
-                                                   callback = callback)
-        journal = Journal()
-        client.applyUpdate(updJob, journal=journal, callback = callback)
-
-        self.status('generating images')
-        fd, fn = tempfile.mkstemp('.iso', 'livecd', self.cfg.imagesPath)
-        os.close(fd)
-
-        subprocess.call((os.path.join(imgcfg.scriptPath, 'mklivecd'), tmpDir,
-                         fn))
-        os.chmod(fn, 0644)
-
-        return [fn]
+    def __init__(self, *args, **kwargs):
+        res = bootable_image.BootableImage.__init__(self, *args, **kwargs)
+        self.fakeroot = None
+        self.outFile = None
+        self.liveDir = None
+        self.liveISO = None
+        self.freespace = 0
+        self.cfg.fallback = os.path.join('/srv/mint/fallback',
+                                         self.release.getArch())
+        return res
