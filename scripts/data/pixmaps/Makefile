@@ -11,9 +11,9 @@ clean: default-clean
 dist: default-dist
 
 install: 
-	mkdir -p $(DESTDIR)$(datadir)/pixmaps
+	mkdir -p $(DESTDIR)$(datadir)/pixmaps-$(VERSION)
 	for f in $(image_files); do \
-                install -m 644 $$f $(DESTDIR)$(datadir)/pixmaps/$$f; \
+                install -m 644 $$f $(DESTDIR)$(datadir)/pixmaps-$(VERSION)/$$f; \
         done
 
 include ../../../Make.rules
