@@ -18,8 +18,8 @@ On pages that allow for group manipulation do the following:
         Sorting of the list
 */
 // Some frequently used strings
-const LockedVersionTitle = "Click to use the most recent version";
-const UnlockedVersionTitle = "Click to lock version";
+var LockedVersionTitle = "Click to use the most recent version";
+var UnlockedVersionTitle = "Click to lock version";
 
 function GroupTroveItem(item) {
     bindMethods(this);
