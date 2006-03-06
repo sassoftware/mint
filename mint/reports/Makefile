@@ -4,7 +4,7 @@
 # All Rights Reserved
 #
 
-python_files = __init__.py new_projects.py new_users.py reports.py site_summary.py active_users.py
+python_files = __init__.py new_projects.py new_users.py reports.py site_summary.py active_users.py exec_summary.py
 
 extra_dist = Makefile
 

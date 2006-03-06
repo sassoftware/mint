@@ -7,7 +7,7 @@ import time
 from reports import MintReport
 from mint import releasetypes
 
-class NewProjectsReport(MintReport):
+class SiteSummary(MintReport):
     title = 'Site Summary'
     headers = ('Metric', 'Answer')
 
