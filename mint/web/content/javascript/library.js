@@ -446,7 +446,7 @@ var baton = '-\\|/';
 function textWithBaton(text) {
 
     var newText = text;
-    newText += "  " + baton[ticks];
+    newText += "  " + baton.charAt(ticks);
     ticks = ((ticks + 1) % baton.length);
     return newText;
 
