@@ -67,6 +67,11 @@ vmwareImageTemplate = {
     'vmMemory':         (RDT_INT, '256', 'How much memory should VMware use when running this image?')
 }
 
+liveIsoTemplate = {
+    'unionfs':          (RDT_BOOL, True, 'Use unionfs (recommended)'),
+    'udev':             (RDT_BOOL, True, 'Use udev'),
+    }
+
 stubImageTemplate = {
     'boolArg'   : (RDT_BOOL, False, 'Garbage Boolean'),
     'stringArg' : (RDT_STRING, '', 'Garbage String'),
@@ -80,6 +85,7 @@ dataHeadings = {
     releasetypes.INSTALLABLE_ISO  : 'Installable CD Settings',
     releasetypes.RAW_HD_IMAGE     : 'Raw Hard Disk Image Settings',
     releasetypes.VMWARE_IMAGE     : 'VMware Image Settings',
+    releasetypes.LIVE_ISO         : 'Live ISO Settings',
     releasetypes.STUB_IMAGE       : 'Stub Image Settings',
 }
 
@@ -89,6 +95,7 @@ dataTemplates = {
     releasetypes.INSTALLABLE_ISO  : installableIsoTemplate,
     releasetypes.RAW_HD_IMAGE     : bootableImageTemplate,
     releasetypes.VMWARE_IMAGE     : vmwareImageTemplate,
+    releasetypes.LIVE_ISO         : liveIsoTemplate,
     releasetypes.STUB_IMAGE       : stubImageTemplate,
 }
 

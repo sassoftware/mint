@@ -67,9 +67,6 @@ tty2 c 4 2 0660
 tty3 c 4 3 0660
 tty4 c 4 4 0660"""
 
-# with udev turned on, it appears we don't need any devices at all.
-devices = ""
-
 linuxrc = """#!/bin/nash
 mount -t proc /proc /proc/
 echo Mounted /proc
@@ -84,9 +81,7 @@ mkdir /dev/pts
 mkdir /dev/shm
 
 %(modules)s
-
-echo Starting udev
-/sbin/udevstart
+%(udev)s
 
 ### REVIEW THIS LINE ###
 echo 0x0100 > /proc/sys/kernel/real-root-dev
@@ -95,17 +90,7 @@ echo 0x0100 > /proc/sys/kernel/real-root-dev
 # FIXME: this must be dymanic
 echo Mounting CD-ROM
 mount -o mode=0644 --ro -t iso9660 /dev/hdc /cdrom
-
-echo Making system mount points
-mkdir /sysroot1
-mkdir /sysroot2
-
-echo Mounting root filesystem
-losetup --ro /dev/loop0 /cdrom/livecd.img
-mount -o defaults --ro -t ext2 /dev/loop0 /sysroot1
-mount -o defaults -t tmpfs /dev/shm /sysroot2
-mount -o dirs=sysroot2=rw:sysroot1=ro,delete=whiteout -t unionfs none /sysroot
-
+%(mountCmd)s
 echo Running pivot_root
 pivot_root /sysroot /sysroot/initrd
 umount /initrd/proc
@@ -135,7 +120,7 @@ class LiveIso(bootable_image.BootableImage):
         if fallback:
             print >> sys.stderr, "Using fallback for: %s" % tFile
             # executable is dynamically linked, use precompiled static one
-            util.copyfile(os.path.join(self.cfg.fallback, tFile), dest)
+            util.copyfile(os.path.join(self.fallback, tFile), dest)
         else:
             print >> sys.stderr, "Using user defined: %s" % tFile
             util.copyfile(src, dest)
@@ -144,7 +129,10 @@ class LiveIso(bootable_image.BootableImage):
     def mkinitrd(self):
         # this is where we'll create the initrd image
         initRdDir = tempfile.mkdtemp()
-        macros = {'modules' : 'echo Inserting Kernel Modules'}
+        macros = {'modules' : 'echo Inserting Kernel Modules',
+                  'udev' : '',
+                  'devices' : '',
+                  'mountCmd': ''}
 
         for subDir in ('bin', 'dev', 'lib', 'proc', 'sys', 'sysroot',
                        'etc', os.path.join('etc', 'udev'), 'cdrom'):
@@ -153,8 +141,18 @@ class LiveIso(bootable_image.BootableImage):
         # soft link sbin to bin
         os.symlink('bin', os.path.join(initRdDir, 'sbin'))
 
+        # set up the binaries to copy into new filesystem.
+        binaries = ('nash', 'insmod')
+        if self.release.getDataValue('udev'):
+            binaries += ('udev', 'udevstart')
+
+            # copy the udev config file
+            util.copyfile(os.path.join(self.fakeroot, 'etc', 'udev',
+                                       'udev.conf'),
+                          os.path.join(initRdDir, 'etc', 'udev', 'udev.conf'))
+
         # copy binaries from fileSystem image to initrd
-        for tFile in ('nash', 'insmod', 'udev', 'udevstart'):
+        for tFile in binaries:
             self.copyFallback(os.path.join(self.fakeroot, 'sbin', tFile),
                               os.path.join(initRdDir, 'bin', tFile))
             os.chmod(os.path.join(initRdDir, 'bin', tFile), 0755) # octal 755
@@ -163,11 +161,10 @@ class LiveIso(bootable_image.BootableImage):
         for tFile in ('modprobe', 'hotplug'):
             os.symlink('/sbin/nash', os.path.join(initRdDir, 'bin', tFile))
 
-        # copy the udev config file
-        util.copyfile(os.path.join(self.fakeroot, 'etc', 'udev', 'udev.conf'),
-                      os.path.join(initRdDir, 'etc', 'udev', 'udev.conf'))
-
-        for modName in ('loop', 'unionfs'):
+        kMods = ('loop',)
+        if self.release.getDataValue('unionfs'):
+            kMods += ('unionfs',)
+        for modName in kMods:
             modName += '.ko'
             # copy loop.ko module into intird
             modPath = self.findFile( \
@@ -183,9 +180,31 @@ class LiveIso(bootable_image.BootableImage):
         f.write(devices)
         f.close()
 
-        macros['devices'] = '\n'.join( \
+        if self.release.getDataValue('udev'):
+            macros['udev'] ="""echo Starting udev
+/sbin/udevstart"""
+        else:
+            macros['devices'] = '\n'.join( \
             ['mknod /dev/' + ' '.join(x.split()[:-1]) \
              for x in devices.split('\n')])
+
+        if self.release.getDataValue('unionfs'):
+            macros['mountCmd'] = """echo Making system mount points
+mkdir /sysroot1
+mkdir /sysroot2
+
+echo Mounting root filesystem
+losetup --ro /dev/loop0 /cdrom/livecd.img
+mount -o defaults --ro -t ext2 /dev/loop0 /sysroot1
+mount -o defaults -t tmpfs /dev/shm /sysroot2
+mount -o dirs=sysroot2=rw:sysroot1=ro,delete=whiteout -t unionfs none /sysroot
+"""
+        else:
+            macros['mountCmd'] = """
+echo Mounting root filesystem
+losetup --ro /dev/loop0 /cdrom/livecd.img
+mount -o defaults --ro -t ext2 /dev/loop0 /sysroot
+"""
 
         # make linuxrc file
         f = open(os.path.join(initRdDir, 'linuxrc'), 'w')
@@ -288,8 +307,8 @@ class LiveIso(bootable_image.BootableImage):
         self.liveDir = None
         self.liveISO = None
         self.freespace = 0
-        self.cfg.fallback = os.path.join('/srv/mint/fallback',
-                                         self.release.getArch())
+        self.fallback = os.path.join(self.imgcfg.fallbackDir,
+                                     self.release.getArch())
         self.addJournal = False
         # the inner image does not need to be bootable
         self.makeBootable = False

@@ -55,6 +55,9 @@ class BootableImageConfig(ConfigFile):
     umlKernel       = CfgDict(CfgString)
     debug           = (CfgBool, 0)
 
+    # where to look for tools needed to boot a live ISO if not in user tree.
+    fallbackDir     = '/srv/mint/fallback'
+
 def debugme(type, value, tb):
     from conary.lib import epdb
     epdb.post_mortem(tb,type,value)
@@ -435,8 +438,6 @@ quit
         return returnlist
 
     def createFileTree(self):
-        self.imgcfg = self.getConfig()
-
         #Create the output file:
         fd, self.outfile = tempfile.mkstemp('.img', 'raw_hd',
                                             self.cfg.imagesPath)
@@ -509,3 +510,10 @@ quit
 
     def write(self):
         raise NotImplementedError
+
+    def __init__(self, *args, **kwargs):
+        ImageGenerator.__init__(self, *args, **kwargs)
+        # set default options for all bootable image types
+        self.imgcfg = self.getConfig()
+        self.addJournal = True
+        self.makeBootable = True
