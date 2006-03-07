@@ -186,8 +186,11 @@ class BootableImage(ImageGenerator):
 
         #Do the partition table
         self.cylinders = self.imagesize / self.imgcfg.cylindersize
-        cmd = '/sbin/sfdisk -C %d -S %d -H %d %s > /dev/null' % (self.cylinders, self.imgcfg.sectors, self.imgcfg.heads, self.outfile)
+        cmd = '/sbin/sfdisk -C %d -S %d -H %d %s' % (self.cylinders, self.imgcfg.sectors, self.imgcfg.heads, self.outfile)
         input = "0 %d L *\n" % (self.cylinders)
+
+        if not self.imgcfg.debug:
+            cmd += " >& /dev/null"
         sfdisk = util.popen(cmd, 'w')
         sfdisk.write(input)
         retval = sfdisk.close()
@@ -338,21 +341,23 @@ title %(name)s (%(kversion)s)
     @timeMe
     def MakeE3FsImage(self, file):
         flags = ''
-        if self.imgcfg.debug:
+        silence = ''
+        if not self.imgcfg.debug:
             flags += ' -v'
+            silence = ' >& /dev/null'
         # XXX Hack to work around weird permissions that e2fsimage fails to handle:
         util.execute("find %s -perm 0111 -exec chmod u+r {} \;" % self.fakeroot)
 
-        cmd = '/usr/bin/e2fsimage -f %s -d %s -s %d %s' % (file,
+        cmd = '/usr/bin/e2fsimage -f %s -d %s -s %d %s %s' % (file,
                 self.fakeroot, (self.imagesize - self.imgcfg.partoffset0)/1024,
-                flags)
+                flags, silence)
         util.execute(cmd)
-        cmd = '/sbin/e2label %s /' % file
+        cmd = '/sbin/e2label %s / %s' % (file, silence)
         util.execute(cmd)
         if self.addJournal:
-            cmd = '/sbin/tune2fs -i 0 -c 0 -j %s' % file
+            cmd = '/sbin/tune2fs -i 0 -c 0 -j %s %s' % (file, silence)
         else:
-            cmd = '/sbin/tune2fs -i 0 -c 0 %s' % file
+            cmd = '/sbin/tune2fs -i 0 -c 0 %s %s' % (file, silence)
         util.execute(cmd)
 
     @outputfilesize
@@ -392,6 +397,8 @@ title %(name)s (%(kversion)s)
     @timeMe
     def runTagScripts(self):
         cmd = '%s root=/dev/ubda1 init=/tmp/init.sh mem=128M ubd0=%s' % (self.imgcfg.umlKernel[self.arch], self.outfile)
+        if not self.imgcfg.debug:
+            cmd += " > /dev/null"
         util.execute(cmd)
 
     @timeMe
@@ -406,6 +413,9 @@ root    (hd0,0)
 setup   (hd0)
 quit
 """ % self.outfile
+
+        if not self.imgcfg.debug:
+            cmd += " > /dev/null"
         uml = util.popen(cmd, 'w')
         uml.write(input)
         retval = uml.close()
