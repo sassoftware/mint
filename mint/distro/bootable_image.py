@@ -17,6 +17,7 @@ from math import ceil
 from imagegen import ImageGenerator, MSG_INTERVAL
 import gencslist
 from mint import releasetypes
+from mint import mint_error
 from mint.mint import upstream
 
 # conary imports
@@ -30,6 +31,12 @@ from conary.callbacks import UpdateCallback
 from conary.callbacks import ChangesetCallback
 from conary.conarycfg import ConfigFile, CfgDict, CfgString, CfgBool
 from conary.lib import log, util, epdb
+
+
+class KernelTroveRequired(mint_error.MintError):
+    def __str__(self):
+        return "Your group must include a kernel for proper operation."
+
 
 class BootableImageConfig(ConfigFile):
     filename = 'bootable_image.conf'
@@ -239,58 +246,57 @@ title %(name)s (%(kversion)s)
 
     @timeMe
     def updateGroupChangeSet(self, callback):
-        try:
-            itemList = [(self.basetrove, (None, None), (self.baseversion, self.baseflavor), True)]
-            log.info("itemList: %s" % str(itemList))
-            sys.stderr.flush()
-            uJob, suggMap = self.cclient.updateChangeSet(itemList,
-                                    resolveDeps = False,
-                                    split = True,
-                                    callback = callback)
-        except errors.TroveNotFound:
-            raise
-        return uJob
+        itemList = [(self.basetrove, (None, None), (self.baseversion, self.baseflavor), True)]
+        log.info("itemList: %s" % str(itemList))
+        sys.stderr.flush()
+
+        repos = self.cclient.getRepos()
+        parentGroup = repos.getTroves([(self.basetrove, versions.VersionFromString(self.baseversion), self.baseflavor)])[0]
+
+        # choose an appropriate kernel
+        # set a default
+        kuJob = None
+        kItem = None
+        troves = parentGroup.iterTroveList(strongRefs = True)
+        strongKernels = [x for x in sorted(troves) if x[0] == 'kernel' or x[0] == 'kernel:runtime']
+        if strongKernels:
+            # if there's a kernel immediately in the parent group, it will be strongly included
+            # and no further action is required
+            kItem = None
+        else:
+            # find any weakly-referred kernels, and pick the first one
+            troves = parentGroup.iterTroveList(weakRefs = True)
+            weakKernels = [x for x in sorted(troves) if x[0] == 'kernel' or x[0] == 'kernel:runtime']
+            if weakKernels:
+                kItem = weakKernels[0]
+
+        if kItem:
+            kItemList = [(kItem[0], (None, None), (kItem[1], kItem[2]), True)]
+            kuJob, _ = self.cclient.updateChangeSet(kItemList,
+                resolveDeps = False, callback = callback)
+        if not kItem and not strongKernels:
+            raise KernelTroveRequired
+
+        uJob, _ = self.cclient.updateChangeSet(itemList,
+            resolveDeps = False, split = True, callback = callback)
+
+        return [uJob, kuJob]
 
     @timeMe
-    def applyGroupUpdate(self, uJob, callback):
+    def applyUpdate(self, uJob, callback, tagScript):
         #Capture devices, taghandlers and ownership changes
         journal = Journal()
         #Install the group
         self.cclient.applyUpdate(uJob, journal=journal, callback = callback,
-                tagScript=os.path.join(self.fakeroot, 'tmp', 'tag-scripts'))
+                tagScript=os.path.join(self.fakeroot, 'tmp', tagScript))
 
     @timeMe
     def populateTemporaryRoot(self, callback = None):
-        uJob = self.updateGroupChangeSet( callback )
-        self.applyGroupUpdate(uJob, callback)
+        uJob, kuJob = self.updateGroupChangeSet(callback)
+        self.applyUpdate(uJob, callback, 'tag-scripts')
 
-    @timeMe
-    def updateKernelChangeSet(self, callback):
-        #Install the Kernel
-        try:
-            kernel, version, flavor = parseTroveSpec('kernel:runtime[!kernel.smp is: %s]' % self.arch)
-            itemList = [(kernel, (None, None), (version, flavor), True)]
-            uJob, suggMap = self.cclient.updateChangeSet(itemList, sync=True,
-                                callback = callback, split=True,
-                                resolveDeps=False)
-        except errors.TroveNotFound:
-            raise
-        return uJob
-
-    @timeMe
-    def applyKernelUpdate(self, uJob, callback):
-        journal = Journal()
-        self.cclient.applyUpdate(uJob, journal=journal, callback = callback,
-                tagScript=os.path.join(self.fakeroot, 'tmp', 'kernel-tag-scripts'))
-
-    @timeMe
-    def installKernel(self, callback = None):
-        try:
-            uJob = self.updateKernelChangeSet(callback)
-            self.applyKernelUpdate(uJob, callback)
-        except conaryclient.NoNewTrovesError:
-            log.info("kernel already installed--skipping manual kernel install step")
-
+        if kuJob:
+            self.applyUpdate(kuJob, callback, 'kernel-tag-scripts')
 
     @timeMe
     def fileSystemOddsNEnds(self):
@@ -437,6 +443,38 @@ quit
         os.close(fd)
         os.chmod(self.outfile, 0644)
 
+        callback = InstallCallback(self.status)
+
+        self.setupConaryClient()
+        self.status('Creating temporary root')
+        self.createTemporaryRoot()
+
+        self.status('Installing software')
+        self.populateTemporaryRoot(callback)
+
+        self.status('Adding filesystem bits')
+        self.fileSystemOddsNEnds()
+
+    def createImage(self):
+        self.status('Creating root file system')
+        self.createFileSystem(self.cfg.imagesPath)
+
+        self.status('Running tag-scripts')
+        self.runTagScripts()
+
+        self.status('Making image bootable')
+        self.makeBootable()
+
+        #As soon as that's done, we can delete the fakeroot to free up space
+        util.rmtree(self.fakeroot)
+        self.fakeroot = None
+
+    def __init__(self, client, cfg, job, release, project):
+        ImageGenerator.__init__(self, client, cfg, job, release, project)
+        # set default options for all bootable image types
+        self.addJournal = True
+        self.makeBootable = True
+
         #Create the directory to use as the root for the conary commands
         self.fakeroot = tempfile.mkdtemp("", "imagetool", self.cfg.imagesPath)
         log.info('generating raw hd image with tmpdir %s', self.fakeroot)
@@ -456,7 +494,6 @@ quit
         # set up configuration
         self.conarycfg = self.project.getConaryConfig(overrideSSL=True,
                                                       useSSL=self.cfg.SSL)
-        # turn off threading
 
         self.arch = self.release.getArch()
         basefilename = "%(name)s-%(version)s-%(arch)s" % {
@@ -468,42 +505,7 @@ quit
         #initialize some stuff
         self.basefilename = basefilename
 
-        callback = InstallCallback(self.status)
 
-        self.setupConaryClient()
-        self.status('Creating temporary root')
-        self.createTemporaryRoot()
-
-        #Don't need status here.  It's very fast
-        self.setupConaryClient()
-
-        self.status('Installing software')
-        self.populateTemporaryRoot(callback)
-
-        self.status('Installing %s kernel' % self.arch)
-        self.installKernel(callback)
-
-        self.status('Adding filesystem bits')
-        self.fileSystemOddsNEnds()
-
-    def createImage(self):
-        self.status('Creating root file system')
-        self.createFileSystem(self.cfg.imagesPath)
-
-        self.status('Running tag-scripts')
-        self.runTagScripts()
-
-        self.status('Making image bootable')
-        self.makeBootable()
-
-        #As soon as that's done, we can delete the fakeroot to free up space
-        util.rmtree(self.fakeroot)
-        self.fakeroot = None
 
     def write(self):
         raise NotImplementedError
-
-    def __init__(self, *args, **kwargs):
-        # set default options for all bootable image types
-        self.addJournal = True
-        self.makeBootable = True
