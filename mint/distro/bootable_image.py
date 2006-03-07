@@ -400,7 +400,7 @@ title %(name)s (%(kversion)s)
         util.execute(cmd)
 
     @timeMe
-    def makeBootable(self):
+    def makeBootBlock(self):
         if not self.makeBootable:
             return
         #install boot manager
@@ -464,7 +464,7 @@ quit
         self.runTagScripts()
 
         self.status('Making image bootable')
-        self.makeBootable()
+        self.makeBootBlock()
 
         #As soon as that's done, we can delete the fakeroot to free up space
         util.rmtree(self.fakeroot)
@@ -473,6 +473,7 @@ quit
     def __init__(self, client, cfg, job, release, project):
         ImageGenerator.__init__(self, client, cfg, job, release, project)
         # set default options for all bootable image types
+        self.imgcfg = self.getConfig()
         self.addJournal = True
         self.makeBootable = True
 
@@ -506,14 +507,5 @@ quit
         #initialize some stuff
         self.basefilename = basefilename
 
-
-
     def write(self):
         raise NotImplementedError
-
-    def __init__(self, *args, **kwargs):
-        ImageGenerator.__init__(self, *args, **kwargs)
-        # set default options for all bootable image types
-        self.imgcfg = self.getConfig()
-        self.addJournal = True
-        self.makeBootable = True
