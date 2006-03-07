@@ -232,14 +232,6 @@ title %(name)s (%(kversion)s)
 
     @timeMe
     def setupConaryClient(self):
-        #Create a ConaryClient
-        if self.conarycfg is None:
-            self.conarycfg = conarycfg.ConaryConfiguration(readConfigFiles=False)
-            self.conarycfg.repositoryMap = self.repoMap
-            self.conarycfg.flavor = None
-            self.readConaryRc(self.conarycfg)
-            #TODO Add the user if anonymous access is not available
-
         self.conarycfg.threaded = True
         self.conarycfg.setValue('root', self.fakeroot)
         self.conarycfg.installLabelPath = None
@@ -419,6 +411,20 @@ quit
         retval = uml.close()
 
     @timeMe
+    def stripBootBlock(self):
+        fIn = open(self.outfile)
+        fdOut, fnOut = tempfile.mkstemp()
+        os.close(fdOut)
+        fOut = open(fnOut, 'w')
+        # chop off the disk boot sector by seeking past it before copying.
+        fIn.seek(512)
+        util.copyfileobj(fIn, fOut)
+        fIn.close()
+        fOut.close()
+        util.copyfile(fnOut, self.outfile)
+        os.unlink(fnOut)
+
+    @timeMe
     def compressImage(self, filename):
         outfile = filename + '.gz'
         cmd = '/bin/gzip -c %s > %s' % (filename, outfile)
@@ -466,8 +472,11 @@ quit
         self.status('Running tag-scripts')
         self.runTagScripts()
 
-        self.status('Making image bootable')
-        self.makeBootBlock()
+        if self.makeBootable:
+            self.status('Making image bootable')
+            self.makeBootBlock()
+        else:
+            self.stripBootBlock()
 
         #As soon as that's done, we can delete the fakeroot to free up space
         util.rmtree(self.fakeroot)

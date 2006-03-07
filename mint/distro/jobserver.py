@@ -37,6 +37,7 @@ from mint.distro.stub_image import StubImage
 from mint.distro.netboot_image import NetbootImage
 from mint.distro.group_trove import GroupTroveCook
 from mint.distro.bootable_image import BootableImage
+from mint.distro.raw_fs_image import RawFsImage
 
 generators = {
     releasetypes.INSTALLABLE_ISO:   InstallableIso,
@@ -44,6 +45,7 @@ generators = {
     releasetypes.LIVE_ISO:          LiveIso,
     releasetypes.RAW_HD_IMAGE:      RawHdImage,
     releasetypes.VMWARE_IMAGE:      VMwareImage,
+    releasetypes.RAW_FS_IMAGE:      RawFsImage,
 }
 
 SUPPORTED_ARCHS = ('x86', 'x86_64')
@@ -160,6 +162,14 @@ class JobDaemon:
         # normalize the job daemon machine's architecture
         # right now we only handle x86 and x86_64 images
         log.info("handling jobs of architecture: %s", cfg.supportedArch)
+        if 'imageTypes' in cfg.jobTypes:
+            log.info("handling images: %s" \
+                     % str([releasetypes.typeNamesShort[x] \
+                            for x in cfg.jobTypes['imageTypes']]))
+        if 'cookTypes' in cfg.jobTypes:
+            log.info("handling cooks: %s" \
+                     % str([cooktypes.typeNames[x] \
+                            for x in cfg.jobTypes['cookTypes']]))
 
         runningJobs = []
 

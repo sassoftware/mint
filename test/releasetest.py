@@ -475,12 +475,24 @@ class ReleaseTest(MintRepositoryHelper):
 
         release = client.newRelease(projectId, "Test Release")
         templates = [x[0] for x in release.getDisplayTemplates()]
-        assert(['Image Settings',
-                'Installable CD Settings',
-                'Raw Hard Disk Image Settings',
-                'VMware Image Settings',
+        assert(['Image Settings', 'Installable CD Settings',
+                'Bootable Image Settings', 'VMware Image Settings',
                 'Stub Image Settings'] == templates)
 
+    def testFreespace(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        projectId = client.newProject("Foo", "foo", "rpath.org")
+
+        release = client.newRelease(projectId, "Test Release")
+        release.setImageTypes([releasetypes.RAW_FS_IMAGE])
+
+        self.failIf(not isinstance(release.getDataValue('freespace'), int),
+                    "freespace is not an integer")
+
+        release.setDataValue('freespace', 10, RDT_INT)
+
+        self.failIf(not isinstance(release.getDataValue('freespace'), int),
+                    "freespace is not an integer")
 
 if __name__ == "__main__":
     testsuite.main()

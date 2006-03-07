@@ -58,13 +58,13 @@ installableIsoTemplate = {
 }
 
 bootableImageTemplate = {
-    'freespace':        (RDT_INT, '250', 'How many megabytes of free space should be allocated in the image?'),
+    'freespace':        (RDT_INT, 250, 'How many megabytes of free space should be allocated in the image?'),
 }
 
-bootableImageTemplateDependents = [releasetypes.VMWARE_IMAGE, releasetypes.LIVE_ISO]
+bootableImageTemplateDependents = [releasetypes.VMWARE_IMAGE, releasetypes.RAW_HD_IMAGE, releasetypes.RAW_FS_IMAGE, releasetypes.LIVE_ISO]
 
 vmwareImageTemplate = {
-    'vmMemory':         (RDT_INT, '256', 'How much memory should VMware use when running this image?')
+    'vmMemory':         (RDT_INT, 256, 'How much memory should VMware use when running this image?')
 }
 
 liveIsoTemplate = {
@@ -83,7 +83,8 @@ stubImageTemplate = {
 dataHeadings = {
     releasetypes.BOOTABLE_IMAGE   : 'Image Settings',
     releasetypes.INSTALLABLE_ISO  : 'Installable CD Settings',
-    releasetypes.RAW_HD_IMAGE     : 'Raw Hard Disk Image Settings',
+    # don't tweak this name too much. it applies to a large amount of templates
+    releasetypes.RAW_HD_IMAGE     : 'Bootable Image Common Settings',
     releasetypes.VMWARE_IMAGE     : 'VMware Image Settings',
     releasetypes.LIVE_ISO         : 'Live ISO Settings',
     releasetypes.STUB_IMAGE       : 'Stub Image Settings',
@@ -401,7 +402,10 @@ class Release(database.TableObject):
         self.refresh()
         returner = []
         try:
-            for i in self._TemplateCompatibleImageTypes(allAvailable = True):
+            for i in \
+                [x for x in \
+                 self._TemplateCompatibleImageTypes(allAvailable = True) if \
+                 x in dataTemplates]:
                 returner.append((dataHeadings[i], dataTemplates[i]))
         except KeyError:
             pass

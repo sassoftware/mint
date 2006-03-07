@@ -242,13 +242,8 @@ mount -o defaults --ro -t ext2 /dev/loop0 /sysroot
         f.close()
 
     def finalizeIso(self):
-        fIn = open(self.outfile)
-        fOut = open(os.path.join(self.liveDir, 'livecd.img'), 'w')
-        # chop off the disk boot sector. we don't need it.
-        fIn.seek(512)
-        util.copyfileobj(fIn, fOut)
-        fIn.close()
-        fOut.close()
+        # move the image into place
+        util.copyfile(self.outfile, os.path.join(self.liveDir, 'livecd.img'))
         os.chmod(os.path.join(self.liveDir, 'livecd.img'), 0644) # octal 644
 
         # make a target and call mkisofs
@@ -263,6 +258,8 @@ mount -o defaults --ro -t ext2 /dev/loop0 /sysroot
 
         #zippedImage = tempfile.mkstemp('.gz', os.path.basename(self.liveISO))
         #util.execute('gzip -9 < %s > %s' % (self.liveISO, zippedImg))
+        # when we do put in unzip code, remember to add self.liveISO to the
+        # list of things that should be cleaned up...
 
         return (self.liveISO, 'Live CD')
 
@@ -302,7 +299,6 @@ mount -o defaults --ro -t ext2 /dev/loop0 /sysroot
 
     def __init__(self, *args, **kwargs):
         res = bootable_image.BootableImage.__init__(self, *args, **kwargs)
-        self.fakeroot = None
         self.outFile = None
         self.liveDir = None
         self.liveISO = None
