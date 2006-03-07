@@ -363,6 +363,9 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
         cfg.display(f)
         f.close()
 
+        f = open(self.tmpDir + "/bootable_image.conf", "w")
+        f.close()
+
         cfg.configPath = self.tmpDir
         return cfg
 

@@ -22,7 +22,7 @@ from mint.mint import upstream
 
 # conary imports
 from conary import conaryclient
-from conary import deps
+from conary.deps import deps
 from conary import flavorcfg
 from conary import versions
 from conary.conaryclient.cmdline import parseTroveSpec
@@ -212,7 +212,7 @@ title %(name)s (%(kversion)s)
     kernel /boot/vmlinuz-%(kversion)s ro root=LABEL=/ quiet
     initrd /boot/initrd-%(kversion)s.img
 
-""" % {'name': name, 'kversion': 'somesillyversion'})
+""" % {'name': name, 'kversion': 'template'})
         fd.close()
         os.chmod(os.path.join(self.fakeroot, 'boot/grub/grub.conf'), 0600)
         #create the appropriate links
@@ -269,12 +269,15 @@ title %(name)s (%(kversion)s)
         else:
             # find any weakly-referred kernels, and pick the first one
             troves = parentGroup.iterTroveList(weakRefs = True)
-            weakKernels = [x for x in sorted(troves) if x[0] == 'kernel' or x[0] == 'kernel:runtime']
+            noSMPFlavor = deps.parseFlavor("!kernel.smp")
+            weakKernels = [x for x in sorted(troves) if x[0] == 'kernel:runtime' and x[2].satisfies(noSMPFlavor)]
             if weakKernels:
                 kItem = weakKernels[0]
 
         if kItem:
-            kItemList = [(kItem[0], (None, None), (kItem[1], kItem[2]), True)]
+            kItemList = [('kernel:runtime', (None, None), (kItem[1], kItem[2]), True),
+                         ('kernel:configs', (None, None), (kItem[1], kItem[2]), True)]
+
             kuJob, _ = self.cclient.updateChangeSet(kItemList,
                 resolveDeps = False, callback = callback)
         if not kItem and not strongKernels:
@@ -491,7 +494,7 @@ quit
         self.baseversion = version.asString()
 
         #Thaw the flavor string
-        self.baseflavor = deps.deps.ThawDependencySet(flavorStr)
+        self.baseflavor = deps.ThawDependencySet(flavorStr)
 
         # set up configuration
         self.conarycfg = self.project.getConaryConfig(overrideSSL=True,

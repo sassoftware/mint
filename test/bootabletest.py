@@ -13,9 +13,13 @@ import sys
 from mint_rephelp import MintRepositoryHelper
 from conary import conarycfg, conaryclient
 from conary.deps import deps
+from conary import versions
 from conary.callbacks import UpdateCallback, ChangesetCallback
 
 from mint.distro import bootable_image
+
+VFS = versions.VersionFromString
+Flavor = deps.parseFlavor
 
 class EmptyCallback(UpdateCallback, ChangesetCallback):
     pass
@@ -55,20 +59,42 @@ class BootableImageTest(MintRepositoryHelper):
 
     def testWeakKernel(self):
         """Test that the bootable image code pulls in the correct weakly-included kernel"""
-        self.addComponent("kernel:runtime", "1.0", flavor = "is: x86")
-        self.addCollection("group-core", "1.0",
-            [("kernel:runtime", False)], defaultFlavor = "is: x86")
+
+        # emulate the usual group-core configuration with two notByDefault kernels:
+        # one smp, one not. we want to prefer the !smp flavored kernel.
+        SMP = "use:kernel.smp is:x86"
+        noSMP = "use:!kernel.smp is:x86"
+        self.addComponent("kernel:runtime", "1.0", flavor = noSMP)
+        self.addComponent("kernel:runtime", "1.0", flavor = SMP)
+        self.addComponent("kernel:configs", "1.0", flavor = noSMP)
+        self.addComponent("kernel:configs", "1.0", flavor = SMP)
+        self.addComponent("kernel:build-tree", "1.0", flavor = noSMP)
+        self.addComponent("kernel:build-tree", "1.0", flavor = SMP)
+
+        trove = self.addCollection("group-core", "1.0",
+            [
+                ("kernel:runtime", "1.0", noSMP, False),
+                ("kernel:configs", "1.0", noSMP, False),
+                ("kernel:build-tree", "1.0", noSMP, False),
+                ("kernel:runtime", "1.0", SMP, False),
+                ("kernel:configs", "1.0", SMP, False),
+                ("kernel:build-tree", "1.0", SMP, False),
+            ], defaultFlavor = "is:x86",
+        )
 
         self.addComponent("test:runtime", "1.0")
         trove = self.addCollection("group-dist", "1.0",
-            [("group-core", True),
-             ("test:runtime", True)], defaultFlavor = "is: x86")
+            [("group-core", "1.0", trove.getFlavor(), True),
+             ("test:runtime", True)], defaultFlavor = "is:x86")
 
         bi = self.setupBootableImage(trove)
         uJob, kuJob = bi.updateGroupChangeSet(EmptyCallback())
 
+        # make sure we get !smp flavors of kernel:runtime and kernel:config:
+        correctSet = set([('kernel:runtime', (None, None), (VFS('/localhost@rpl:linux/1.0-1-1'), Flavor('!kernel.smp is: x86')), True),
+                          ('kernel:configs', (None, None), (VFS('/localhost@rpl:linux/1.0-1-1'), Flavor('!kernel.smp is: x86')), True)])
+        assert(kuJob.getPrimaryJobs() == correctSet)
         assert(uJob)
-        assert(kuJob) # kernel update job should be explicitly provided
 
     def testNoKernel(self):
         self.addComponent("test:runtime", "1.0")
