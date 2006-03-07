@@ -66,6 +66,22 @@ class ExecSummary(MintReport):
                           WHERE numUsers >= 5""")
         data.append(('Projects with 5 or more users', cu.fetchone()[0]))
 
+        # count the total number of non-rpath projects
+        cu.execute("""SELECT COUNT(projectList)
+                          FROM (SELECT Projects.projectId AS projectList,
+                                       COUNT(userId) AS numUsers
+                                    FROM Projects
+                                    LEFT JOIN ProjectUsers
+                                        ON ProjectUsers.projectId =
+                                               Projects.projectId
+                                    WHERE level IN (0, 1)
+                                    AND userId NOT IN %s
+                                    GROUP BY Projects.projectId) AS A
+                          WHERE numUsers > 5""" % str(self.employeeIds))
+
+        data.append(('Projects with 5 or more non-rPath users',
+                     cu.fetchone()[0]))
+
         # spacer
         data.append(('',''))
         data.append(('Top Projects',' Users'))

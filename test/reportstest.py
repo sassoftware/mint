@@ -54,6 +54,12 @@ class ReportTest(MintRepositoryHelper):
         self.quickMintUser('foouser', 'foopass')
         report = client.server.getReport('site_summary')
 
+    def testExecSummary(self):
+        client, userId = self.quickMintAdmin('adminuser', 'adminpass')
+        projectId = client.newProject('Foo Project', 'foo', 'rpath.local')
+        self.quickMintUser('foouser', 'foopass')
+        report = client.server.getReport('exec_summary')
+
     def testActiveUsersReport(self):
         adminClient, adminId = self.quickMintAdmin('adminuser', 'adminpass')
         projectId = adminClient.newProject('Foo Project', 'foo', 'rpath.local')
