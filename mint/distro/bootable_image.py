@@ -345,7 +345,10 @@ title %(name)s (%(kversion)s)
         util.execute(cmd)
         cmd = '/sbin/e2label %s /' % file
         util.execute(cmd)
-        cmd = '/sbin/tune2fs -i 0 -c 0 -j %s' % file
+        if self.addJournal:
+            cmd = '/sbin/tune2fs -i 0 -c 0 -j %s' % file
+        else:
+            cmd = '/sbin/tune2fs -i 0 -c 0 %s' % file
         util.execute(cmd)
 
     @outputfilesize
@@ -389,6 +392,8 @@ title %(name)s (%(kversion)s)
 
     @timeMe
     def makeBootable(self):
+        if not self.makeBootable:
+            return
         #install boot manager
         cmd = '%s --device-map=/dev/null --batch' % os.path.join(self.fakeroot, 'sbin', 'grub')
         input = """
@@ -497,3 +502,8 @@ quit
 
     def write(self):
         raise NotImplementedError
+
+    def __init__(self, *args, **kwargs):
+        # set default options for all bootable image types
+        self.addJournal = True
+        self.makeBootable = True

@@ -290,4 +290,7 @@ class LiveIso(bootable_image.BootableImage):
         self.freespace = 0
         self.cfg.fallback = os.path.join('/srv/mint/fallback',
                                          self.release.getArch())
+        self.addJournal = False
+        # the inner image does not need to be bootable
+        self.makeBootable = False
         return res
