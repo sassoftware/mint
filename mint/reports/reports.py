@@ -24,6 +24,10 @@ class MintReport(object):
     title = "Report Title"
     headers = ()
 
+    employeeIds = (1445, 1, 2, 3, 4, 6, 10, 12, 13, 14, 20, 27, 28,
+        29, 31, 32, 34, 37, 38, 43, 44, 47, 50, 51, 57, 1423, 1181,
+        1832, 74, 2025, 1657, 91, 221, 311, 1231)
+
     def __init__(self, db):
         self.db = db
         self.available = _reportlab_present
