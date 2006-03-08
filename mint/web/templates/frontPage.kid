@@ -68,7 +68,15 @@ from mint.helperfuncs import truncateForDisplay
                         <ol py:if="releases">
 
                             <li py:for="release in releases">
-                                <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${release[1]}/release?id=${release[2].getId()}">${release[2].getTroveName()}=${truncateForDisplay(release[2].getTroveVersion().trailingRevision().asString())} (${release[2].getArch()} ${releasetypes.typeNamesShort[release[2].imageTypes[0]]})</a>
+                                <?python
+                                    projectName = release[0]
+                                    if projectName != release[2].getName():
+                                        releaseName = truncateForDisplay(release[2].getName(), maxWords=5)
+                                    else:
+                                        releaseName = release[2].getTroveVersion().trailingRevision().asString()
+                                    projectName = truncateForDisplay(projectName, maxWords=5)
+                                ?>
+                                <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${release[1]}/release?id=${release[2].getId()}">${projectName} <span style="font-size: smaller">${releaseName} (${release[2].getArch()} ${releasetypes.typeNamesShort[release[2].imageTypes[0]]})</span></a>
                             </li>
                         </ol>
                     </td>
