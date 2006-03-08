@@ -93,7 +93,7 @@ class WebHandler(object):
         self._redirect(location)
 
     def _redirect(self, location, temporary = False):
-        self.req.headers_out['Cache-Control'] = "no-store"
+        self.req.err_headers_out['Cache-Control'] = "no-store"
         self.req.headers_out['Location'] = location
 
         if temporary:
@@ -147,7 +147,6 @@ class WebHandler(object):
 
     def _session_start(self):
         sid = self.fields.get('sid', None)
-        # prepare a new session
 
         sessionClient = shimclient.ShimMintClient(self.cfg, (self.cfg.authUser, self.cfg.authPass))
 
@@ -160,7 +159,7 @@ class WebHandler(object):
         self.session = SqlSession(self.req, sessionClient,
             sid = sid,
             secret = self.cfg.cookieSecretKey,
-            timeout = 86400, # XXX timeout of one day; should it be configurable?
+            timeout = 86400,
             domain = cookieDomain,
             lock = False)
         if self.session.is_new():
@@ -168,7 +167,8 @@ class WebHandler(object):
                 self._protocol(), \
                 self.req.headers_in.get('host', self.req.hostname), '/')
             self.session['visited'] = { }
-        #Mark the current domain as visited
+
+        # mark the current domain as visited
         self.session['visited'][domain] = True
 
         c = self.session.make_cookie()
@@ -180,10 +180,10 @@ class WebHandler(object):
                 self.session.set_timeout(1209600)
                 self.session.save()
 
-        c.domain = cookieDomain
-        #add it to the err_headers_out because these ALWAYS go to the browser
-        self.req.err_headers_out.add('Set-Cookie', str(c))
-        self.req.err_headers_out.add('Cache-Control', 'no-cache="set-cookie"')
+        if self.session.is_new():
+            c.domain = cookieDomain
+            self.req.err_headers_out.add('Set-Cookie', str(c))
+            self.req.err_headers_out.add('Cache-Control', 'no-cache="set-cookie"')
 
     def _redirect_storm(self, sid):
         #Now figure out if we need to redirect
