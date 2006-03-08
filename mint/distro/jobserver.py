@@ -30,7 +30,6 @@ from mint.config import CfgImageEnum
 # image generators
 from mint.distro.installable_iso import InstallableIso
 from mint.distro.live_iso import LiveIso
-from mint.distro.live_cf_image import LiveCFImage
 from mint.distro.raw_hd_image import RawHdImage
 from mint.distro.vmware_image import VMwareImage
 from mint.distro.stub_image import StubImage
