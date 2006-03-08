@@ -361,19 +361,58 @@ div#topten table td {
     width: 33%;
 }
 
-div#topten ol {
-    padding-left: 33px;
-}
-
 div#topten ol li {
-    padding-bottom: 2px;
-    font-size: 90%;
+    padding-bottom: 0.5em;
+    margin-left: -1.0em;
 }
 
-span.topten_header {
-    font-size: 14pt;
+/* Simple rounded corner boxes using CSS (and a single image)               */
+/* c.f. http://www.modxcms.com/simple-rounded-corner-css-boxes.html         */
+/*      for more on this technique.                                         */
+
+/* set the image to use and establish the lower-right position */
+#topten .cssbox,
+#topten .cssbox_body,
+#topten .cssbox_head,
+#topten .cssbox_head h2 {
+    background: transparent url(../images/rounded_grey_box_lg.png) no-repeat bottom right;
+}
+
+#topten .cssbox {
+    width: 955px !important; /* intended total box width - padding-right(next) */
+    width: 955px; /* IE Win = width - padding */
+    padding-right: 0px; /* the gap on the right edge of the image (not content padding) */
+    margin: 20px auto; /* use to position the box */
+}
+
+/* set the top-right image */
+#topten .cssbox_head {
+    background-position: top right;
+    margin-right: 0; /* pull the right image over on top of border */
+    padding-right: 25px; /* right-image-gap + right-inside padding */
+}
+
+/* set the top-left image */
+#topten .cssbox_head h2 {
+    background-position: top left;
+    margin: 0; /* reset main site styles*/
+    border: 0; /* ditto */
+    padding: 0 0 0 25px; /* padding-left = image gap + interior padding ... no padding-right */
+    height: auto !important;
+    height: 1%; /* IE Holly Hack */
+}
+
+
+/* set the lower-left corner image */
+#topten .cssbox_body {
+    background-position: bottom left;
+    margin-right: 25px; /* interior-padding right */
+    padding: 0 0 0 25px; /* mirror .cssbox_head right/left */
+}
+
+th.topten_header {
+    font-size: larger;
     font-weight: bold;
-    padding-left: 4px;
     vertical-align: top;
 }
 
@@ -382,7 +421,7 @@ span.topten_header a:hover {
 }
 
 /* Palette styles */
-div.palette img.left{
+div.palette img.left {
     float: left;
 }
 
@@ -711,46 +750,3 @@ img#nameSpinner, img#archSpinner {
     padding-right: 4px;
 }
 
-/* Simple rounded corner boxes using CSS (and a single image)               */
-/* c.f. http://www.modxcms.com/simple-rounded-corner-css-boxes.html         */
-/*      for more on this technique.                                         */
-
-/* set the image to use and establish the lower-right position */
-#topten .cssbox,
-#topten .cssbox_body,
-#topten .cssbox_head,
-#topten .cssbox_head h2 {
-    background: transparent url(../images/rounded_grey_box_lg.png) no-repeat bottom right;
-}
-
-#topten .cssbox {
-    width: 940px !important; /* intended total box width - padding-right(next) */
-    width: 925px; /* IE Win = width - padding */
-    padding-right: 15px; /* the gap on the right edge of the image (not content padding) */
-    margin: 20px auto; /* use to position the box */
-}
-
-/* set the top-right image */
-#topten .cssbox_head {
-    background-position: top right;
-    margin-right: -15px; /* pull the right image over on top of border */
-    padding-right: 40px; /* right-image-gap + right-inside padding */
-}
-
-/* set the top-left image */
-#topten .cssbox_head h2 {
-    background-position: top left;
-    margin: 0; /* reset main site styles*/
-    border: 0; /* ditto */
-    padding-left: 40px; /* padding-left = image gap + interior padding ... no padding-right */
-    height: auto !important;
-    height: 1%; /* IE Holly Hack */
-}
-
-
-/* set the lower-left corner image */
-#topten .cssbox_body {
-    background-position: bottom left;
-    margin-right: 25px; /* interior-padding right */
-    padding: 15px 0 15px 40px; /* mirror .cssbox_head right/left */
-}

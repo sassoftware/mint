@@ -54,21 +54,26 @@ from mint.mint import upstream
             <div class="cssbox_body">
                 <table style="width: 100%;">
                     <tr>
-                        <td><span class="topten_header">Most Popular</span>
+                        <th class="topten_header">Most Popular</th>
+                        <th class="topten_header">Most Active</th>
+                        <th class="topten_header">Recent Releases&nbsp;<a href="${basePath}rss?feed=newReleases"><img src="${cfg.staticPath}apps/mint/images/rss-inline.gif" alt="RSS" /></a></th>
+                    </tr>
+                    <tr>
+                        <td>
                             <ol>
                                 <li py:for="project in popularProjects">
                                     <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${project[1]}/">${truncateForDisplay(project[2], maxWordLen=30)}</a>
                                 </li>
                             </ol>
                         </td>
-                        <td><span class="topten_header">Most Active</span>
+                        <td>
                             <ol>
                                 <li py:for="project in activeProjects">
                                     <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${project[1]}/">${truncateForDisplay(project[2], maxWordLen=30)}</a>
                                 </li>
                             </ol>
                         </td>
-                        <td><span class="topten_header">Recent Releases&nbsp;<a href="${basePath}rss?feed=newReleases"><img src="${cfg.staticPath}apps/mint/images/rss-inline.gif" alt="RSS" /></a></span>
+                        <td>
                             <ol py:if="releases">
 
                                 <li py:for="release in releases">
