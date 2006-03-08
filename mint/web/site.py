@@ -456,7 +456,7 @@ class SiteHandler(WebHandler):
         try:
             project = self.client.getProject(release.projectId)
 
-            fileUrl = "/images/%s/%d/%s" % (project.hostname, release.id, reqFilename)
+            fileUrl = "http://%s/images/%s/%d/%s" % (self.cfg.siteHost, project.hostname, release.id, reqFilename)
             self._redirect(fileUrl)
         except OSError, e:
             return self._write("error", shortError = "File error",

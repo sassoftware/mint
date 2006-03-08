@@ -93,6 +93,7 @@ class WebHandler(object):
         self._redirect(location)
 
     def _redirect(self, location, temporary = False):
+        self.req.headers_out['Cache-Control'] = "no-store"
         self.req.headers_out['Location'] = location
 
         if temporary:
