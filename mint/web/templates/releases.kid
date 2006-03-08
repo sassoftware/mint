@@ -33,7 +33,7 @@
             </td>
             <td py:if="release.getPublished()">
                 <div py:strip="True" py:for="i, file in enumerate(files)">
-                    <a href="${cfg.basePath}downloadImage/${file['fileId']}/${file['filename']}">${file['title'] and file['title'] or "Disc " + str(i+1)}</a> (${file['size']/1048576}&nbsp;MB)<br />
+                    <a href="http://${cfg.siteHost}${cfg.basePath}downloadImage/${file['fileId']}/${file['filename']}">${file['title'] and file['title'] or "Disc " + str(i+1)}</a> (${file['size']/1048576}&nbsp;MB)<br />
                 </div>
                 <span py:if="not files">N/A</span>
             </td>

@@ -97,7 +97,7 @@ import time
                     <div py:strip="True" py:if="files">
                     <ul>
                         <li py:for="i, file in enumerate(files)">
-                            <a href="${cfg.basePath}downloadImage/${file['fileId']}/${file['filename']}"> Download ${file['title'] and file['title'] or "Disc " + str(i+1)}</a> (${file['size']/1048576}&nbsp;MB)
+                            <a href="http://${cfg.siteHost}${cfg.basePath}downloadImage/${file['fileId']}/${file['filename']}"> Download ${file['title'] and file['title'] or "Disc " + str(i+1)}</a> (${file['size']/1048576}&nbsp;MB)
                         </li>
                     </ul>
                    <div py:if="releasetypes.INSTALLABLE_ISO in release.imageTypes">
