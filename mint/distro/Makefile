@@ -14,7 +14,7 @@ python_files = \
 	installable_iso.py	\
 	jobserver.py		\
 	bootable_image.py	\
-	live_cf_image.py	\
+	raw_fs_image.py	\
 	live_iso.py		\
 	netboot_image.py	\
         raw_hd_image.py         \
