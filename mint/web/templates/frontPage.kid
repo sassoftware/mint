@@ -5,6 +5,7 @@ from mint import userlevels
 from mint import searcher
 from mint import releasetypes
 from mint.helperfuncs import truncateForDisplay
+from mint.mint import upstream
 
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
@@ -48,40 +49,46 @@ from mint.helperfuncs import truncateForDisplay
         </div>
 
         <div id="topten">
-            <table style="width: 100%;">
-                <tr>
-                    <td><span class="topten_header">Most Popular</span>
-                        <ol>
-                            <li py:for="project in popularProjects">
-                                <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${project[1]}/">${truncateForDisplay(project[2], maxWordLen=30)}</a>
-                            </li>
-                        </ol>
-                    </td>
-                    <td><span class="topten_header">Most Active</span>
-                        <ol>
-                            <li py:for="project in activeProjects">
-                                <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${project[1]}/">${truncateForDisplay(project[2], maxWordLen=30)}</a>
-                            </li>
-                        </ol>
-                    </td>
-                    <td><span class="topten_header">Recent Releases&nbsp;<a href="${basePath}rss?feed=newReleases"><img src="${cfg.staticPath}apps/mint/images/rss-inline.gif" alt="RSS" /></a></span>
-                        <ol py:if="releases">
+            <div class="cssbox">
+            <div class="cssbox_head"><h2>&nbsp;</h2></div>
+            <div class="cssbox_body">
+                <table style="width: 100%;">
+                    <tr>
+                        <td><span class="topten_header">Most Popular</span>
+                            <ol>
+                                <li py:for="project in popularProjects">
+                                    <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${project[1]}/">${truncateForDisplay(project[2], maxWordLen=30)}</a>
+                                </li>
+                            </ol>
+                        </td>
+                        <td><span class="topten_header">Most Active</span>
+                            <ol>
+                                <li py:for="project in activeProjects">
+                                    <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${project[1]}/">${truncateForDisplay(project[2], maxWordLen=30)}</a>
+                                </li>
+                            </ol>
+                        </td>
+                        <td><span class="topten_header">Recent Releases&nbsp;<a href="${basePath}rss?feed=newReleases"><img src="${cfg.staticPath}apps/mint/images/rss-inline.gif" alt="RSS" /></a></span>
+                            <ol py:if="releases">
 
-                            <li py:for="release in releases">
-                                <?python
-                                    projectName = release[0]
-                                    if projectName != release[2].getName():
-                                        releaseName = truncateForDisplay(release[2].getName(), maxWords=5)
-                                    else:
-                                        releaseName = release[2].getTroveVersion().trailingRevision().asString()
-                                    projectName = truncateForDisplay(projectName, maxWords=5)
-                                ?>
-                                <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${release[1]}/release?id=${release[2].getId()}">${projectName} <span style="font-size: smaller">${releaseName} (${release[2].getArch()} ${releasetypes.typeNamesShort[release[2].imageTypes[0]]})</span></a>
-                            </li>
-                        </ol>
-                    </td>
-                </tr>
-            </table>
+                                <li py:for="release in releases">
+                                    <?python
+                                        projectName = release[0]
+                                        if projectName != release[2].getName():
+                                            releaseName = truncateForDisplay(release[2].getName(), maxWords=5)
+                                        else:
+                                            releaseName = upstream(release[2].getTroveVersion())
+                                        projectName = truncateForDisplay(projectName, maxWords=5)
+                                        trove = release[2].getTroveName() + "=" + release[2].getTroveVersion().trailingRevision().asString()
+                                    ?>
+                                    <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${release[1]}/release?id=${release[2].getId()}" title="${trove}">${projectName} <span style="font-size: smaller">${releaseName} (${release[2].getArch()} ${releasetypes.typeNamesShort[release[2].imageTypes[0]]})</span></a>
+                                </li>
+                            </ol>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
         </div>
     </body>
 </html>
