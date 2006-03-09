@@ -38,7 +38,6 @@ def injectVersion(version):
     <div id="groupBuilder" py:def="groupTroveBuilder" py:if="groupTrove" >
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/groupbuilder.js"/>
         <script type="text/javascript">
-            var BaseUrl = '${cfg.basePath}';
             addLoadEvent(initLinkManager);
             addLoadEvent(initGroupTroveManager);
         </script>
