@@ -32,6 +32,7 @@ from mint import mint_server
 from mint import mirror
 from mint import users
 from mint import profile
+from mint.helperfuncs import extractBasePath
 from mint.projects import mysqlTransTable
 from webhandler import normPath, HttpError, getHttpAuth
 from rpchooks import rpcHandler
@@ -408,6 +409,11 @@ def handler(req):
         cfg.read(req.filename)
         cfgMTime = mtime
 
+    basePath = extractBasePath(req.uri, req.path_info)
+    print >> sys.stderr, "calculated basePath:", extractBasePath(req.uri, req.path_info)
+    sys.stderr.flush()
+    cfg.basePath = basePath
+
     global db
     if not db:
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
@@ -423,13 +429,7 @@ def handler(req):
         raise apache.SERVER_RETURN, apache.HTTP_MOVED_TEMPORARILY
 
     # normalize req path and base path
-    pathInfo = normPath(req.uri)
-    basePath = normPath(cfg.basePath)
-
-    # strip off base path and normalize again
-    pathInfo = pathInfo[len(basePath):]
-    pathInfo = normPath(pathInfo)
-
+    pathInfo = req.path_info
     ret = apache.HTTP_NOT_FOUND
 
     prof.startHttp(req.uri)
