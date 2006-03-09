@@ -12,7 +12,7 @@ import os
 import sys
 import time
 from mint import templates
-from mint.helperfuncs import truncateForDisplay
+from mint.helperfuncs import truncateForDisplay, extractBasePath
 from mint.userlevels import myProjectCompare
 from mint.mint import timeDelta
 
@@ -194,6 +194,13 @@ class HelperFunctionsTest(unittest.TestCase):
 	assert(timeDelta(ct - 373123, ct) == "4 days ago")
 	assert(timeDelta(ct - 2592000, ct) == 
                time.strftime('%d-%b-%Y', time.localtime(ct - 2592000)))
+
+    def testExtractBasePath(self):
+        assert(extractBasePath("/", "/") == "/")
+        assert(extractBasePath("/foo", "/foo") == "/")
+        assert(extractBasePath("/rbuilder/", "/") == "/rbuilder/")
+        assert(extractBasePath("/rbuilder/foo", "/foo") == "/rbuilder/")
+
 
 if __name__ == "__main__":
     testsuite.main()
