@@ -8,7 +8,7 @@ def truncateForDisplay(s, maxWords=10, maxWordLen=15):
     """Truncates a string s for display. May limit the number of words in the
     displayed string to maxWords (default 10) and the maximum number of
     letters in a word to maxWordLen (default 15).
-    
+
     Raises ValueError if you give it insane values for maxWords and/or 
     maxWordLen."""
 
@@ -17,7 +17,7 @@ def truncateForDisplay(s, maxWords=10, maxWordLen=15):
     # Sanity check args
     if ((maxWords < 1) or (maxWordLen < 1)):
         raise ValueError
-    
+
     # Split the words on whitespace
     wordlist = re.split('[\ ]+', s)
 
@@ -40,3 +40,9 @@ def truncateForDisplay(s, maxWords=10, maxWordLen=15):
 
     # Return the new wordlist joined with spaces.
     return ' '.join(wordlist)
+
+
+def extractBasePath(uri, path_info):
+    if path_info == "/":
+        return uri
+    return uri[:-len(path_info)+1]
