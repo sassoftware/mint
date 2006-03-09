@@ -223,6 +223,7 @@ def conaryHandler(req, cfg, pathInfo):
 
     global db
     repNameMap = getRepNameMap(db)
+    projectName = repName.split(".")[0]
     if repName in repNameMap:
         repName = repNameMap[repName]
         req.log_error("remapping repository name: %s" % repName)
@@ -260,9 +261,6 @@ def conaryHandler(req, cfg, pathInfo):
            rest = os.path.dirname(req.uri) + "/"
         else:
            rest = req.uri
-
-        # pull out any queryargs
-        projectName = repName.split(".")[0]
 
         urlBase = "%%(protocol)s://%s:%%(port)d/repos/%s/" % \
             (req.hostname, projectName)
