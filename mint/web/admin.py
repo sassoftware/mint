@@ -136,7 +136,8 @@ class AdminHandler(WebHandler):
 
     def _admin_project_jump(self, page, **kwargs):
         name = self.client.getProject(int(kwargs['projectId'])).getHostname()
-        return self._redirect('/project/%s/%s' % (name, page))
+        return self._redirect('http://%s%sproject/%s/%s' % \
+            (self.cfg.projectSiteHost, self.cfg.basePath, name, page))
 
     def _admin_project_maillists(self, *args, **kwargs):
         return self._admin_project_jump('mailingLists', **kwargs)
@@ -261,14 +262,14 @@ class AdminHandler(WebHandler):
         labelId = project.getLabelIdMap().values()[0]
         self.client.addOutboundLabel(projectId, labelId, targetUrl, mirrorUser, mirrorPass)
 
-        self._redirect("administer?operation=outbound")
+        self._redirect("http://%s%sadminister?operation=outbound" % (self.cfg.siteHost, self.cfg.basePath))
 
     @listFields(str, remove = [])
     def _admin_remove_outbound(self, remove, *args, **kwargs):
         for x in remove:
             labelId, url = x.split(" ")
             self.client.delOutboundLabel(int(labelId), url)
-        self._redirect("administer?operation=outbound")
+        self._redirect("http://%s%sadminister?operation=outbound" % (self.cfg.siteHost, self.cfg.basePath))
 
     def _administer(self, *args, **kwargs):
         return self._write('admin/administer', kwargs = kwargs)

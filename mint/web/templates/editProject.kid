@@ -21,7 +21,7 @@
                 <p py:for="error in errors" class="errormessage" py:content="error"/>
 
                 <h2>Edit Project Properties</h2>
-                <form method="post" action="$basePath/processEditProject">
+                <form method="post" action="${basePath}processEditProject">
                     <table border="0" cellspacing="0" cellpadding="0" class="mainformhorizontal">
                         <tr>
                             <th>Project Title</th>

@@ -409,10 +409,7 @@ def handler(req):
         cfg.read(req.filename)
         cfgMTime = mtime
 
-    basePath = extractBasePath(req.uri, req.path_info)
-    print >> sys.stderr, "calculated basePath:", extractBasePath(req.uri, req.path_info)
-    sys.stderr.flush()
-    cfg.basePath = basePath
+    cfg.basePath = extractBasePath(normPath(req.uri), normPath(req.path_info))
 
     global db
     if not db:

@@ -82,6 +82,9 @@ class ProjectHandler(WebHandler):
 
         return method
 
+    def _predirect(self, path = ""):
+        self._redirect("http://%s%sproject/%s/%s" % (self.cfg.projectSiteHost, self.cfg.basePath, self.project.hostname, path))
+
     @redirectHttp
     def projectPage(self, auth):
         return self._write("projectPage")
@@ -194,7 +197,7 @@ class ProjectHandler(WebHandler):
             for troveName, troveVersion, troveFlavor in (x.split(" ") for x in initialTrove):
                 gt.addTrove(troveName, troveVersion, troveFlavor, fullGroupName, False, False, False)
 
-            self._redirect("editGroup?id=%d" % gtId)
+            self._predirect("editGroup?id=%d" % gtId)
         else:
             kwargs = {'groupName': groupName, 'version': version}
             troves, troveDict, metadata = self._getBasicTroves()
@@ -235,7 +238,7 @@ class ProjectHandler(WebHandler):
         if 'groupTroveId' in self.session:
             del self.session['groupTroveId']
             self.session.save()
-        self._redirect(referer)
+        self._redirect("http://%s%s" % (self.cfg.siteHost, referer))
 
     @dictFields(yesArgs = {})
     @boolFields(confirmed=False)
@@ -245,9 +248,10 @@ class ProjectHandler(WebHandler):
             self.client.deleteGroupTrove(int(yesArgs['id']))
             if 'groupTroveId' in self.session and self.session['groupTroveId'] == int(yesArgs['id']):
                 del self.session['groupTroveId']
-            self._redirect('groups')
+            self._predirect("groups")
         else:
-            return self._write('confirm', message = "Are you sure you want to delete this group trove?", yesArgs = {'func':'deleteGroup', 'id':yesArgs['id'], 'confirmed':'1'} , noLink = "groups")
+            return self._write('confirm', message = "Are you sure you want to delete this group trove?", 
+                yesArgs = {'func':'deleteGroup', 'id':yesArgs['id'], 'confirmed':'1'} , noLink = "groups")
 
     @intFields(id=None)
     @strFields(trove=None, version='', flavor='', referer='', projectName = '')
@@ -260,7 +264,8 @@ class ProjectHandler(WebHandler):
             curGroupTrove.addTroveByProject(trove, projectName, '', '', versionLock, False, False)
         if not referer:
             referer = project.getUrl()
-        self._redirect(referer)
+            self._redirect(referer)
+        self._redirect("http://%s%s" % (self.cfg.siteHost, referer))
 
     @intFields(id=None, troveId=None)
     @strFields(referer='')
@@ -270,7 +275,8 @@ class ProjectHandler(WebHandler):
         curGroupTrove.delTrove(troveId)
         if not referer:
             referer = project.getUrl()
-        self._redirect(referer)
+            self._redirect(referer)
+        self._redirect("http://%s%s" % (self.cfg.siteHost, referer))
 
     @intFields(id = None)
     def pickArch(self, auth, id):
@@ -384,14 +390,14 @@ class ProjectHandler(WebHandler):
         except jobs.DuplicateJob:
             pass
 
-        self._redirect(self.basePath + "release?id=%d" % releaseId)
+        self._predirect("release?id=%d" % releaseId)
 
     @intFields(releaseId = None)
     @ownerOnly
     def deleteRelease(self, auth, releaseId):
         release = self.client.getRelease(releaseId)
         release.deleteRelease()
-        self._redirect(self.basePath + "releases")
+        self._predirect("release")
 
     @intFields(id = None)
     def release(self, auth, id):
@@ -409,7 +415,7 @@ class ProjectHandler(WebHandler):
             trove, version, flavor = release.getTrove()
             files = release.getFiles()
         except releases.TroveNotSet:
-            self._redirect(self.basePath + "editRelease?releaseId=%d" % release.getId())
+            self._predirect("editRelease?releaseId=%d" % release.id)
         else:
             return self._write("release", release = release,
                 name = release.getName(),
@@ -427,13 +433,14 @@ class ProjectHandler(WebHandler):
         release = self.client.getRelease(releaseId)
         release.setPublished(True)
 
-        self._redirect(self.basePath + "release?id=%d" % releaseId)
+        self.predirect("release?id=%d" % releaseId)
 
     @ownerOnly
     @intFields(releaseId = None)
     def restartJob(self, auth, releaseId):
         self.client.startImageJob(releaseId)
-        self._redirect(self.basePath + "release?id=%d" % releaseId)
+
+        self._predirect("release?id=%d" % releaseId)
 
     def _mailingLists(self, auth, mlists, messages=[]):
         if not self.cfg.EnableMailLists:
@@ -441,7 +448,6 @@ class ProjectHandler(WebHandler):
         hostname = self.project.getHostname()
         lists = mlists.list_lists(hostname)
         return self._write("mailingLists", lists=lists, mailhost=self.cfg.MailListBaseURL, hostname=hostname, messages=messages)
-
 
     @mailList
     def mailingLists(self, auth, mlists, messages=[]):
@@ -549,7 +555,7 @@ class ProjectHandler(WebHandler):
                 'branch': self.project.getLabel().split('@')[1]}
             return self._write("editProject", kwargs = kwargs, errors = errors)
         else:
-            self._redirect(self.basePath)
+            self._predirect()
 
     def members(self, auth):
         if (self.userLevel == userlevels.OWNER or auth.admin):
@@ -564,27 +570,27 @@ class ProjectHandler(WebHandler):
     @requiresAuth
     def adopt(self, auth):
         self.project.adopt(auth, self.cfg.EnableMailLists, self.cfg.MailListBaseURL, self.cfg.MailListPass)
-        self._redirect(self.basePath + "members")
+        self._predirect("members")
 
     @strFields(username = None)
     @intFields(level = None)
     @ownerOnly
     def addMember(self, auth, username, level):
         self.project.addMemberByName(username, level)
-        self._redirect(self.basePath + "members")
+        self._predirect("members")
 
     @requiresAuth
     def watch(self, auth):
         #some kind of check to make sure the user's not a member
         if self.userLevel == userlevels.NONMEMBER:
             self.project.addMemberByName(auth.username, userlevels.USER)
-        self._redirect(self.basePath)
+        self._predirect("members")
 
     @requiresAuth
     def unwatch(self, auth):
         if self.userLevel == userlevels.USER:
             self.project.delMemberById(auth.userId)
-        self._redirect(self.basePath)
+        self._predirect("members")
 
     @strFields(comments = '')
     @intFields(keepReq = None)
@@ -596,7 +602,7 @@ class ProjectHandler(WebHandler):
             self.client.setJoinReqComments(projectId, comments)
         else:
             self.client.deleteJoinRequest(projectId, userId)
-        self._redirect(self.basePath)
+        self._predirect("members")
 
     @requiresAuth
     @intFields(userId = None)
@@ -618,7 +624,7 @@ class ProjectHandler(WebHandler):
             self.project.addMemberByName(username, userlevels.OWNER)
         elif (makeDevel):
             self.project.addMemberByName(username, userlevels.DEVELOPER)
-        self._redirect(self.basePath + "members")
+        self._predirect("members")
 
     @requiresAuth
     @intFields(userId = None)
@@ -636,7 +642,7 @@ class ProjectHandler(WebHandler):
             user = self.client.getUser(userId)
             sendMailWithChecks(self.cfg.adminMail, self.cfg.productName, user.getEmail(), subject, body)
         self.client.deleteJoinRequest(self.project.getId(), userId)
-        self._redirect(self.basePath + "members")
+        self._predirect("members")
 
     @requiresAuth
     def joinRequest(self, auth):
@@ -646,7 +652,7 @@ class ProjectHandler(WebHandler):
     @ownerOnly
     def editMember(self, auth, userId, level):
         self.project.updateUserLevel(userId, level)
-        self._redirect(self.basePath + "members")
+        self._predirect("members")
 
     @intFields(userId = None)
     @ownerOnly
@@ -658,8 +664,8 @@ class ProjectHandler(WebHandler):
                 if user[0] == userId:
                     levelidx = userlevels.LEVELS.index(level)
                     self.project.updateUserLevel(userId, userlevels.LEVELS[levelidx - 1])
-                    self._redirect(self.basePath + "members")
-        self._redirect(self.basePath + "members")
+                    self._predirect("members")
+        self._predirect("members")
 
     @intFields(userId = None)
     @ownerOnly
@@ -671,8 +677,9 @@ class ProjectHandler(WebHandler):
                 if user[0] == userId:
                     levelidx = userlevels.LEVELS.index(level)
                     self.project.updateUserLevel(userId, userlevels.LEVELS[levelidx + 1])
-                    self._redirect(self.basePath + "members")
-        self._redirect(self.basePath + "members")
+                    self._predirect("members")
+
+        self._predirect("members")
 
     @intFields(id = None)
     @ownerOnly
@@ -680,7 +687,7 @@ class ProjectHandler(WebHandler):
         self.project.delMemberById(id)
         if self.project.getMembers() == []:
             self.project.orphan(self.cfg.EnableMailLists, self.cfg.MailListBaseURL, self.cfg.MailListPass)
-        self._redirect(self.basePath + "members")
+        self._predirect("members")
 
     @requiresAuth
     @boolFields(confirmed = False)
@@ -688,7 +695,7 @@ class ProjectHandler(WebHandler):
     def resign(self, auth, confirmed, **yesArgs):
         if confirmed:
             self.project.delMemberById(auth.userId)
-            self._redirect(self.basePath)
+            self._redirect('http://%s%s' % (self.cfg.siteHost, self.cfg.basePath))
         else:
             return self._write("confirm", message = "Are you sure you want to resign from this project?",
                 yesArgs = {'func':'resign', 'confirmed':'1'}, noLink = "/")

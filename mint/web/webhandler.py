@@ -94,6 +94,8 @@ class WebHandler(object):
 
     def _redirect(self, location, temporary = False):
         self.req.err_headers_out['Cache-Control'] = "no-store"
+        if not location.startswith('http'):
+            self.req.log_error("ERROR IN REDIRECT: " + location)
         self.req.headers_out['Location'] = location
 
         if temporary:

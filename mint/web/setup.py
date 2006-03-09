@@ -148,7 +148,7 @@ class SetupHandler(WebHandler):
         os.system("sudo killall -USR1 httpd")
         os.system("sudo /sbin/service rbuilder-isogen restart")
         time.sleep(5)
-        self._redirect(self.cfg.basePath)
+        self._redirect("http://%s%s" % (self.cfg.siteHost, self.cfg.basePath))
 
     def secure(self, auth):
         return self._write("setup/secure", sid = self.session.id())

@@ -160,7 +160,7 @@ class SiteHandler(WebHandler):
 
     def logout(self, auth):
         self._clearAuth()
-        self._redirect(self.cfg.basePath)
+        self._redirect("http://%s%s" % (self.cfg.siteHost, self.cfg.basePath))
 
     @requiresHttps
     @strFields(username = None)
@@ -216,7 +216,7 @@ class SiteHandler(WebHandler):
                 error = "Your account has already been confirmed.")
         else:
             if auth.authorized:
-                self._redirect(self.cfg.basePath)
+                self._redirect("http://%s%s" % (self.cfg.siteHost, self.cfg.basePath))
             else:
                 return self._write("register_active")
 
@@ -303,7 +303,7 @@ class SiteHandler(WebHandler):
                 except Exception, e:
                     return self._write("uploadKey", errors = ['Error uploading key: %s' % str(e)],
                             kwargs={'projects': projects, 'keydata': keydata})
-        self._redirect(self.cfg.basePath)
+        self._redirect("http://%s%s" % (self.cfg.siteHost, self.cfg.basePath))
 
     @requiresAuth
     def newProject(self, auth):
@@ -372,7 +372,7 @@ class SiteHandler(WebHandler):
             raise mint_error.PermissionDenied
 
         project.addMemberById(userId, level)
-        self._redirect("%sproject/%s" % (self.cfg.basePath, project.getHostname()))
+        self._redirect("http://%s%sproject/%s" % (self.cfg.projectSiteHost, self.cfg.basePath, project.getHostname()))
 
     @intFields(id = None)
     @requiresAuth
@@ -470,7 +470,7 @@ class SiteHandler(WebHandler):
             #do the actual deletion
             self.user.cancelUserAccount()
             self._clearAuth()
-            self._redirect(self.cfg.basePath)
+            self._redirect("http://%s%s" % (self.cfg.siteHost, self.cfg.basePath))
         else:
             return self._write("confirm", message = "Are you sure you want to close your account?",
                 yesArgs = {'func':'cancelAccount', 'confirmed':'1'}, noLink = self.cfg.basePath)
