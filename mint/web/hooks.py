@@ -411,8 +411,11 @@ def handler(req):
 
     if "basePath" not in req.get_options():
         cfg.basePath = extractBasePath(normPath(req.uri), normPath(req.path_info))
+        pathInfo = req.path_info
     else:
         cfg.basePath = req.get_options()['basePath']
+        # chop off the provided base path
+        pathInfo = normPath(req.uri[len(cfg.basePath):])
 
     global db
     if not db:
@@ -428,12 +431,10 @@ def handler(req):
         req.headers_out['Location'] = "/setup/"
         raise apache.SERVER_RETURN, apache.HTTP_MOVED_TEMPORARILY
 
-    # normalize req path and base path
-    pathInfo = req.path_info
-    ret = apache.HTTP_NOT_FOUND
 
     prof.startHttp(req.uri)
 
+    ret = apache.HTTP_NOT_FOUND
     try:
         for match, urlHandler in urls:
             if re.match(match, pathInfo):
