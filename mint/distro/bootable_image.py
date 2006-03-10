@@ -258,15 +258,17 @@ title %(name)s (%(kversion)s)
         troves = parentGroup.iterTroveList(strongRefs = True)
         strongKernels = [x for x in sorted(troves) if x[0] == 'kernel' or x[0] == 'kernel:runtime']
         if strongKernels:
-            # if there's a kernel immediately in the parent group, it will be strongly included
-            # and no further action is required
+            # if there's a kernel:runtime immediately in the parent group,
+            # it will be strongly included and no further action is required.
             troveNames = [x[0] for x in strongKernels]
-            if 'kernel:runtime' in troveNames and 'kernel:configs' in troveNames:
+            if 'kernel:runtime' in troveNames:
                 kItem = None
             else:
+                # if kernel:runtime is not included, make sure we include it but
+                # match version and flavor of whatever other kernel components are included.
                 kItem = strongKernels[0]
         else:
-            # find any weakly-referred kernels, and pick the first one
+            # find any weakly-referred kernels, and pick the first non-SMP one
             troves = parentGroup.iterTroveList(weakRefs = True)
             noSMPFlavor = deps.parseFlavor("!kernel.smp")
             weakKernels = [x for x in sorted(troves) if x[0] == 'kernel:runtime' and x[2].satisfies(noSMPFlavor)]
@@ -274,8 +276,7 @@ title %(name)s (%(kversion)s)
                 kItem = weakKernels[0]
 
         if kItem:
-            kItemList = [('kernel:runtime', (None, None), (kItem[1], kItem[2]), True),
-                         ('kernel:configs', (None, None), (kItem[1], kItem[2]), True)]
+            kItemList = [('kernel:runtime', (None, None), (kItem[1], kItem[2]), True)]
 
             kuJob, _ = self.cclient.updateChangeSet(kItemList,
                 resolveDeps = False, callback = callback)
@@ -289,10 +290,7 @@ title %(name)s (%(kversion)s)
 
     @timeMe
     def applyUpdate(self, uJob, callback, tagScript):
-        #Capture devices, taghandlers and ownership changes
-        journal = Journal()
-        #Install the group
-        self.cclient.applyUpdate(uJob, journal=journal, callback = callback,
+        self.cclient.applyUpdate(uJob, journal = Journal(), callback = callback,
                 tagScript=os.path.join(self.fakeroot, 'tmp', tagScript))
 
     @timeMe
