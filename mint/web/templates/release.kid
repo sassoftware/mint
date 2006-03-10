@@ -106,12 +106,12 @@ import time
 
                         <div id="file_help" style="display: none;">
                             <p>The file(s) entitled <tt>Disc <em>N</em></tt>
-                            represent the CD-ROM(s) required to install this
+                            represent the disc(s) required to install this
                             release. These files are in ISO 9660 format, and can be
-                            burned onto CD-R (or CD-RW) media using the CD burning
+                            burned onto (CD or DVD) media using the CD/DVD burning
                             software of your choice. The installation process is
-                            then started by booting your system from a CD burned
-                            from the file entitled <tt>Disc 1</tt>.</p>
+                            then started by booting your system from a disc
+                            burned from the file entitled <tt>Disc 1</tt>.</p>
 
                             <p>The last two files are used only if you want to
                             perform a network installation.  To do so, you must
@@ -121,19 +121,20 @@ import time
 
                             <ul>
                                 <li>Use the <tt>boot.iso</tt> file if your system
-                                can boot from CD-ROM. This file is an ISO 9660
+                                can boot from CD/DVD. This file is an ISO 9660
                                 image of a bootable CD-ROM, and can be burned onto
-                                CD-R (or CD-RW) media using the CD burning software
+                                CD or DVD  media using the CD/DVD burning software
                                 of your choice.</li>
 
                                 <li>Use the <tt>diskboot.img</tt> file if your
-                                system cannot boot from CD-ROM, but can boot from
+                                system cannot boot from CD/DVD, but can boot from
                                 some other type of bootable device. This file is a
                                 VFAT filesystem image that can be written (using
-                                the dd command) to a USB pendrive or other bootable
-                                media larger than a diskette.  Note that your
-                                system's BIOS must support booting from USB to use
-                                this file with any USB device.</li>
+                                the <tt>dd</tt> command) to a USB pendrive
+                                or other bootable media larger than a
+                                diskette.  Note that your system's BIOS
+                                must support booting from USB to use this
+                                file with any USB device.</li>
                                 </ul>
                             </div>
 			</div>
