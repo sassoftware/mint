@@ -260,7 +260,11 @@ title %(name)s (%(kversion)s)
         if strongKernels:
             # if there's a kernel immediately in the parent group, it will be strongly included
             # and no further action is required
-            kItem = None
+            troveNames = [x[0] for x in strongKernels]
+            if 'kernel:runtime' in troveNames and 'kernel:configs' in troveNames:
+                kItem = None
+            else:
+                kItem = strongKernels[0]
         else:
             # find any weakly-referred kernels, and pick the first one
             troves = parentGroup.iterTroveList(weakRefs = True)
