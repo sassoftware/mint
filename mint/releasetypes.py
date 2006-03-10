@@ -32,22 +32,22 @@ deprecatedImageTypes = {
 #BOOTABLE_IMAGE Should never get stored in the DB and therefore doesn't need a name
 typeNames = {
     NETBOOT_IMAGE:      "Netboot Image",
-    INSTALLABLE_ISO:    "Installable CD",
+    INSTALLABLE_ISO:    "Installable CD/DVD",
     RAW_FS_IMAGE:       "Raw Filesystem Image",
     STUB_IMAGE:         "Stub Image (for testing)",
     RAW_HD_IMAGE:       "Raw Hard Disk Image",
     VMWARE_IMAGE:       "VMware Player Image",
-    LIVE_ISO:           "Live CD",
+    LIVE_ISO:           "Live CD/DVD",
 }
 
 typeNamesShort = {
     NETBOOT_IMAGE:      "Netboot",
-    INSTALLABLE_ISO:    "Inst CD",
+    INSTALLABLE_ISO:    "Inst CD/DVD",
     RAW_FS_IMAGE:       "Raw FS",
     STUB_IMAGE:         "Stub",
     RAW_HD_IMAGE:       "HDD",
     VMWARE_IMAGE:       "VMware",
-    LIVE_ISO:           "Live CD",
+    LIVE_ISO:           "Live CD/DVD",
 }
 
 # code generator run by make to generate javascript constants

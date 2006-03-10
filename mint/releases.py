@@ -51,7 +51,7 @@ imageGenTemplate = {
 }
 
 installableIsoTemplate = {
-    'skipMediaCheck':   (RDT_BOOL, False, 'Prompt to verify CD images during install'),
+    'skipMediaCheck':   (RDT_BOOL, False, 'Prompt to verify CD/DVD images during install'),
     'betaNag':          (RDT_BOOL, False, 'This release is considered a beta'),
     'bugsUrl':          (RDT_STRING, 'http://bugs.rpath.com/', 'Bug report URL'),
     'maxIsoSize':       (RDT_ENUM, '681574400', 'ISO Size', discSizes)
@@ -82,7 +82,7 @@ stubImageTemplate = {
 
 dataHeadings = {
     releasetypes.BOOTABLE_IMAGE   : 'Image Settings',
-    releasetypes.INSTALLABLE_ISO  : 'Installable CD Settings',
+    releasetypes.INSTALLABLE_ISO  : 'Installable CD/DVD Settings',
     # don't tweak this name too much. it applies to a large amount of templates
     releasetypes.RAW_HD_IMAGE     : 'Bootable Image Common Settings',
     releasetypes.VMWARE_IMAGE     : 'VMware Image Settings',
