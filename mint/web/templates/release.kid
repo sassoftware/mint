@@ -108,7 +108,7 @@ import time
                             <p>The file(s) entitled <tt>Disc <em>N</em></tt>
                             represent the disc(s) required to install this
                             release. These files are in ISO 9660 format, and can be
-                            burned onto (CD or DVD) media using the CD/DVD burning
+                            burned onto CD or DVD media using the CD/DVD burning
                             software of your choice. The installation process is
                             then started by booting your system from a disc
                             burned from the file entitled <tt>Disc 1</tt>.</p>
