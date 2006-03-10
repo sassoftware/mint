@@ -1038,6 +1038,10 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         # make sure that our user was invalidated properly
         assert(client.server._server.getConfirmation('adminuser'))
 
+    def testBrokenDownloadUrl(self):
+        # for some reason lots of people do this and used to trigger a traceback:
+        self.assertCode("/downloadImage/", code = 404)
+
 
 if __name__ == "__main__":
     testsuite.main()
