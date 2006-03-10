@@ -239,6 +239,7 @@ title %(name)s (%(kversion)s)
         self.conarycfg.setValue('root', self.fakeroot)
         self.conarycfg.installLabelPath = None
         self.conarycfg.dbPath = '/var/lib/conarydb/'
+        self.readConaryRc(self.conarycfg)
 
         self.cclient = conaryclient.ConaryClient(self.conarycfg)
 
