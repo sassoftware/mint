@@ -312,7 +312,7 @@ function initGroupTroveManager() {
 
 function initLinkManager() {
     linkManager = new LinkManager();
-    linkManager.url = BaseUrl + 'xmlrpc';
+    linkManager.url = 'xmlrpc';
     linkManager.reworkLinks();
     linkManager.setupLockLinks();
 }
