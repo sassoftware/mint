@@ -109,6 +109,21 @@ function pluralize(aNumber, aString) {
     return aNumber + " " + aString;
 }
 
+// Normalize a web path by prepending a / if missing, and appending
+// a / if missing
+function normPath(path) {
+    if(path == "")
+        path = "/";
+    else if(path[path.length-1] != "/")
+        path += "/";
+
+    if(path[0] != "/")
+        path = "/" + path;
+
+    path = path.replace("//", "/");
+    return path;
+}
+
 // get release image type
 getReleaseImageTypeDesc = function(aTypeId) {
     return releaseImageTypeNamesShort[aTypeId];

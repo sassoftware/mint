@@ -118,7 +118,7 @@ GenericRpcRequest.prototype.send = function(aIsAsync, aArgList) {
 // ctor
 function XmlRpcRequest(aUrl, aMethod) {
     this.method = aMethod;
-    this.url = BaseUrl + aUrl;
+    this.url = normPath(BaseUrl + aUrl);
 }
 
 // XmlRpcRequest inherits from GenericRpcRequest
@@ -168,7 +168,7 @@ XmlRpcRequest.prototype.marshalParams = function(aArgList) {
 // ctor
 function JsonRpcRequest(aUrl, aMethod) {
     this.method = aMethod;
-    this.url = BaseUrl + aUrl;
+    this.url = normPath(BaseUrl + aUrl);
     logDebug("json Request: ", this.url);
 }
 
