@@ -550,7 +550,7 @@ div#groupBuilder img.right {
 }
 
 div#groupBuilder div.boxHeader {
-    color: black;
+    color: white;
     background: url(../images/header_orange_bg.png);
     padding: 4px 11px 6px 11px;
     margin-bottom: 0px;

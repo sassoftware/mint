@@ -35,7 +35,7 @@ def injectVersion(version):
         </td>
     </div>
 
-    <div id="groupBuilder" py:def="groupTroveBuilder" py:if="groupTrove" >
+    <div id="groupBuilder" py:def="groupTroveBuilder" py:if="groupTrove">
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/groupbuilder.js"/>
         <script type="text/javascript">
             addLoadEvent(initLinkManager);
