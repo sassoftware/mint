@@ -259,15 +259,7 @@ title %(name)s (%(kversion)s)
         troves = parentGroup.iterTroveList(strongRefs = True)
         strongKernels = [x for x in sorted(troves) if x[0] == 'kernel' or x[0] == 'kernel:runtime']
         if strongKernels:
-            # if there's a kernel:runtime immediately in the parent group,
-            # it will be strongly included and no further action is required.
-            troveNames = [x[0] for x in strongKernels]
-            if 'kernel:runtime' in troveNames:
-                kItem = None
-            else:
-                # if kernel:runtime is not included, make sure we include it but
-                # match version and flavor of whatever other kernel components are included.
-                kItem = strongKernels[0]
+            kItem = None
         else:
             # find any weakly-referred kernels, and pick the first non-SMP one
             troves = parentGroup.iterTroveList(weakRefs = True)
