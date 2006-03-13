@@ -564,9 +564,16 @@ class MintServer(object):
                 projectName = self.getProject(projectId)['name']
                 subject = projectName + " Membership Request"
 
+                if self.auth.fullName:
+                    name = "%s (%s)" % (self.auth.username, self.auth.fullName)
+                else:
+                    name = self.auth.username
                 import templates.joinRequest
                 message = templates.write(templates.joinRequest,
-                    projectName = projectName, comments = comments, cfg = self.cfg)
+                                          projectName = projectName, 
+                                          comments = comments, cfg = self.cfg,
+                                          displayEmail = self.auth.displayEmail,
+                                          name = name)
                 users.sendMailWithChecks(self.cfg.adminMail, self.cfg.productName, email, subject, message)
         return self.membershipRequests.setComments(projectId, userId, comments)
 
