@@ -34,14 +34,14 @@ isOwner = (userLevel == userlevels.OWNER or auth.admin)
 
     <span py:def="lockedAdder(trove)" style="float: right;" py:if="groupTrove and groupTrove.recipeName != trove.getName()">
         <a href="${groupProject.getUrl()}addGroupTrove?id=${groupTrove.id};trove=${quote(trove.getName())};version=${quote(trove.getVersion().asString())};versionLock=1;referer=${quote(req.unparsed_uri)}">
-            Add this exact version to ${groupTrove.recipeName} <img style="border: none;" src="${cfg.staticPath}apps/mint/images/group.png" />
+            Add this exact version to ${groupTrove.recipeName}
         </a>
     </span>
 
     <span py:def="adder(trove)" style="float: right;"
         py:if="groupTrove and groupTrove.recipeName != trove.getName()">
         <a href="${groupProject.getUrl()}addGroupTrove?id=${groupTrove.id};trove=${quote(trove.getName())};version=${quote(trove.getVersion().asString())};referer=${quote(req.unparsed_uri)}">
-            Add to ${groupTrove.recipeName} <img style="border: none;" src="${cfg.staticPath}apps/mint/images/group.png" />
+            Add to ${groupTrove.recipeName}
         </a>
     </span>
 
