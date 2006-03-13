@@ -55,5 +55,12 @@ umount /sys
 # use this exec to go to a shell that has its script provided
 # entirely on the command line
 
-exec /bin/bash -x -c 'rm -rf /tmp/*; mount -n -o remount,ro / || echo s > /proc/sysrq-trigger && echo u > /proc/sysrq-trigger && echo s > /proc/sysrq-trigger ; /sbin/halt -f -p'
-
+# no-halt option ensures script won't forcibly halt system if it is
+# not the primary init called direcly by the kernel.
+if [ "$1" != "no-halt" ]
+then
+  exec /bin/bash -x -c 'rm -rf /tmp/*; mount -n -o remount,ro / || echo s > /proc/sysrq-trigger && echo u > /proc/sysrq-trigger && echo s > /proc/sysrq-trigger ; /sbin/halt -f -p'
+else
+  umount /proc
+  exec /bin/bash -x -c 'rm -rf /tmp/*; mount -n -o remount,ro /'
+fi

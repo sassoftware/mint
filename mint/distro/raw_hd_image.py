@@ -4,7 +4,7 @@
 # All Rights Reserved
 #
 
-import os
+import os, sys
 from conary.lib import util, epdb
 import bootable_image
 

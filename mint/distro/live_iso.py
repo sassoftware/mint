@@ -89,7 +89,7 @@ echo 0x0100 > /proc/sys/kernel/real-root-dev
 
 # FIXME: this must be dymanic
 echo Mounting CD-ROM
-mount -o mode=0644 --ro -t iso9660 /dev/hdc /cdrom
+mount -o defaults --ro -t iso9660 /dev/hdc /cdrom
 %(mountCmd)s
 echo Running pivot_root
 pivot_root /sysroot /sysroot/initrd
@@ -112,6 +112,8 @@ class LiveIso(bootable_image.BootableImage):
 
     def copyFallback(self, src, dest):
         tFile = os.path.basename(src)
+        # FIXME: some of the files we actually want are there, but have -static
+        # appended to their name
         pFile = os.popen('file %s' % src)
         fileStr = pFile.read()
         pFile.close()
@@ -119,7 +121,7 @@ class LiveIso(bootable_image.BootableImage):
                         fileStr.endswith(': data\n'))
         if fallback:
             print >> sys.stderr, "Using fallback for: %s" % tFile
-            # executable is dynamically linked, use precompiled static one
+            # named executable isn't suitable, use precompiled static one
             util.copyfile(os.path.join(self.fallback, tFile), dest)
         else:
             print >> sys.stderr, "Using user defined: %s" % tFile
@@ -156,6 +158,13 @@ class LiveIso(bootable_image.BootableImage):
             self.copyFallback(os.path.join(self.fakeroot, 'sbin', tFile),
                               os.path.join(initRdDir, 'bin', tFile))
             os.chmod(os.path.join(initRdDir, 'bin', tFile), 0755) # octal 755
+
+        # FIXME: remove once nash has proper losetup args in place
+        print >> sys.stderr, "Forcing temporary nash fallback (for losetup)"
+        util.copyfile(os.path.join(self.fallback, 'nash'),
+                      os.path.join(initRdDir, 'bin', 'nash'))
+        os.chmod(os.path.join(initRdDir, 'bin', 'nash'), 0755) # octal 755
+        # end FIXME
 
         # soft link modprobe and hotplug to nash: keeps udev from being psycho
         for tFile in ('modprobe', 'hotplug'):
@@ -195,7 +204,7 @@ mkdir /sysroot2
 
 echo Mounting root filesystem
 losetup --ro /dev/loop0 /cdrom/livecd.img
-mount -o defaults --ro -t ext2 /dev/loop0 /sysroot1
+mount -o defaults --ro -t iso9660 /dev/loop0 /sysroot1
 mount -o defaults -t tmpfs /dev/shm /sysroot2
 mount -o dirs=sysroot2=rw:sysroot1=ro,delete=whiteout -t unionfs none /sysroot
 """
@@ -224,6 +233,7 @@ mount -o defaults --ro -t ext2 /dev/loop0 /sysroot
 
     def makeLiveCdTree(self):
         self.liveDir = tempfile.mkdtemp()
+        os.chmod(self.liveDir, 0755)
         # for pivotroot
         os.mkdir(os.path.join(self.liveDir, 'initrd'))
 
@@ -244,7 +254,7 @@ mount -o defaults --ro -t ext2 /dev/loop0 /sysroot
     def finalizeIso(self):
         # move the image into place
         util.copyfile(self.outfile, os.path.join(self.liveDir, 'livecd.img'))
-        os.chmod(os.path.join(self.liveDir, 'livecd.img'), 0644) # octal 644
+        os.chmod(os.path.join(self.liveDir, 'livecd.img'), 0755) # octal 755
 
         # make a target and call mkisofs
         os.chdir(self.liveDir)
@@ -252,15 +262,17 @@ mount -o defaults --ro -t ext2 /dev/loop0 /sysroot
                                             self.cfg.imagesPath)
         os.close(fd)
         util.execute('mkisofs -o %s -J -R -b isolinux.bin -c boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table .' % self.liveISO)
-        os.chmod(self.liveISO, 0644) # octal 644
+        os.chmod(self.liveISO, 0755) # octal 755
 
-        # we'll need to zip this puppy up before shipping...
+        # zip the final product is the main image wasn't compressed already
+        if not self.release.getDataValue('compress'):
+            zippedImage = self.liveISO + '.gz'
+            util.execute('gzip -9 < %s > %s' % (self.liveISO, zippedImage))
+            os.unlink(self.liveISO)
+            os.chmod(zippedImage, 0755)
+            return (zippedImage, 'Live CD')
 
-        #zippedImage = tempfile.mkstemp('.gz', os.path.basename(self.liveISO))
-        #util.execute('gzip -9 < %s > %s' % (self.liveISO, zippedImg))
-        # when we do put in unzip code, remember to add self.liveISO to the
-        # list of things that should be cleaned up...
-
+        os.chmod(self.liveISO, 0755)
         return (self.liveISO, 'Live CD')
 
     def cleanupDirs(self):
@@ -279,7 +291,8 @@ mount -o defaults --ro -t ext2 /dev/loop0 /sysroot
             self.makeLiveCdTree()
 
             # and instantiate the hard disk image
-            self.createImage()
+            self.createImage(self.release.getDataValue('compress') and \
+                             'zisofs' or 'isofs')
 
             # now merge them. the hard disk image must be inserted into the iso
             self.status('Finalizing image')

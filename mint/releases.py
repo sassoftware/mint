@@ -70,6 +70,7 @@ vmwareImageTemplate = {
 liveIsoTemplate = {
     'unionfs':          (RDT_BOOL, True, 'Use unionfs (recommended)'),
     'udev':             (RDT_BOOL, True, 'Use udev'),
+    'compress':         (RDT_BOOL, True, 'Compress filesystem')
     }
 
 stubImageTemplate = {

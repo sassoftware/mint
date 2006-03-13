@@ -55,8 +55,9 @@ class BootableImageConfig(ConfigFile):
     umlKernel       = CfgDict(CfgString)
     debug           = (CfgBool, 0)
 
-    # where to look for tools needed to boot a live ISO if not in user tree.
+    # where to look for tools needed to boot a live ISO.
     fallbackDir     = '/srv/mint/fallback'
+    toolkitImage     = '/srv/mint/toolkit/image_maker.img'
 
 def debugme(type, value, tb):
     from conary.lib import epdb
@@ -390,11 +391,69 @@ title %(name)s (%(kversion)s)
             os.unlink(file)
 
     @timeMe
-    def runTagScripts(self):
-        cmd = '%s root=/dev/ubda1 init=/tmp/init.sh mem=128M ubd0=%s' % (self.imgcfg.umlKernel[self.arch], self.outfile)
-        if not self.imgcfg.debug:
-            cmd += " > /dev/null"
-        util.execute(cmd)
+    def createSparseFile(self, size=10240):
+        # size is defined in terms of megabytes
+        fd, tmpFile = tempfile.mkstemp()
+        os.close(fd)
+        os.system('dd if=/dev/zero of=%s count=1 seek=%d bs=1M >/dev/null' % \
+                  (tmpFile, size))
+        return tmpFile
+
+    @timeMe
+    def copySparse(self, src, dest):
+        # overcome the apparent size of a sparse file. this would fail if there
+        # were holes in the src file, but there shouldn't be any.
+        fd = os.popen('/usr/bin/isosize %s' % src)
+        #fd = os.popen('du --block-size=1 %s' % src)
+        size = int(fd.read().strip().split()[0])
+        fd.close()
+        size = size // 2048 + bool(size % 2048)
+        # use dd to limit size. no python libs seem to do this correctly
+        os.system('dd if=%s of=%s count=%d ibs=2048' % (src, dest, size))
+        return size * 2048
+
+    @timeMe
+    def runTagScripts(self, target = 'ext3'):
+        if target == 'ext3':
+            cmd = '%s root=/dev/ubda1 init=/tmp/init.sh ubd0=%s' % \
+                  (self.imgcfg.umlKernel[self.arch], self.outfile)
+            if not self.imgcfg.debug:
+                cmd += " > /dev/null"
+            # uml-kernel sometimes returns spurious error codes on exit
+            os.system(cmd)
+        else:
+            # use a wrapper image to run tagscripts and re-export image in a
+            # new filesystem format...
+            if target not in ('cramfs', 'isofs', 'zisofs'):
+                raise AssertionError('Target: %s is not implemented' % target)
+            tmpFile = self.createSparseFile()
+            cmd = '%s root=/dev/ubda1 init=/sbin/target_inits/%s_init.sh ' \
+                  'ubd0=%s ubd1=%s ubd2=%s' % \
+                  (self.imgcfg.umlKernel[self.arch], target,
+                   self.imgcfg.toolkitImage, self.outfile, tmpFile)
+            if target == 'zisofs':
+                # some targets require a work partition. size is in MB
+                fd = os.popen('/usr/bin/du -B1048576 -s %s' % \
+                              self.outfile, 'r')
+                # double the source partition size should be more than enough,
+                # but cap it at 10 GB... unless more is really needed.
+                size = int(fd.read().strip().split()[0])
+                size = max(size, min(size * 2, 10240))
+                fd.close()
+                tmpFile2 = self.createSparseFile(size)
+                cmd += ' ubd3=%s' % tmpFile2
+            if not self.imgcfg.debug:
+                cmd += " > /dev/null"
+            # uml-kernel sometimes returns spurious error codes on exit
+            os.system(cmd)
+            if target == 'zisofs':
+                os.unlink(tmpFile2)
+            # and move the output filesystem image back into place
+            os.unlink(self.outfile)
+            # be very wary of taking out or replacing this call,
+            # it keeps the output image from ballooning to 10GB
+            print >> sys.stderr, "copySparse: copied %d bytes" % \
+                  self.copySparse(tmpFile, self.outfile)
 
     @timeMe
     def makeBootBlock(self):
@@ -417,17 +476,12 @@ quit
 
     @timeMe
     def stripBootBlock(self):
-        fIn = open(self.outfile)
-        fdOut, fnOut = tempfile.mkstemp()
-        os.close(fdOut)
-        fOut = open(fnOut, 'w')
-        # chop off the disk boot sector by seeking past it before copying.
-        fIn.seek(512)
-        util.copyfileobj(fIn, fOut)
-        fIn.close()
-        fOut.close()
-        util.copyfile(fnOut, self.outfile)
-        os.unlink(fnOut)
+        tempName = self.outfile + "nonstrip"
+        # move outfile out of the way, then copy it back, minus boot block.
+        os.rename(self.outfile, tempName)
+        os.system('dd if=%s of=%s skip=1 ibs=512' % \
+                  (tempName, self.outfile))
+        os.unlink(tempName)
 
     @timeMe
     def compressImage(self, filename):
@@ -470,18 +524,20 @@ quit
         self.status('Adding filesystem bits')
         self.fileSystemOddsNEnds()
 
-    def createImage(self):
+    def createImage(self, target = 'ext3'):
         self.status('Creating root file system')
         self.createFileSystem(self.cfg.imagesPath)
 
         self.status('Running tag-scripts')
-        self.runTagScripts()
+        self.runTagScripts(target = target)
 
         if self.makeBootable:
             self.status('Making image bootable')
             self.makeBootBlock()
         else:
-            self.stripBootBlock()
+            # don't try and strip boot blocks from iso images.
+            if target in ('ext3', 'ext2'):
+                self.stripBootBlock()
 
         #As soon as that's done, we can delete the fakeroot to free up space
         util.rmtree(self.fakeroot)
