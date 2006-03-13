@@ -110,12 +110,6 @@ class BrowseTest(MintRepositoryHelper):
         snoofId = client.newProject("Snoof Project", "snoof", "rpath.org")
         self._changeTimestamps(snoofId, 1128540003, 1129540003)
 
-        try:
-            client.getProjectSearchResults('oo ')
-            self.fail("Search for illegal values 'oo ' succeeded")
-        except searcher.SearchTermsError:
-            pass
-
         if client.getProjectSearchResults('Foo') != ([[1, 'foo', 'Foo Project', '', 1128540046]], 1):
             self.fail("Search for 'Foo' did not return the correct results.")
         res = client.getProjectSearchResults('Project')
@@ -165,50 +159,6 @@ class BrowseTest(MintRepositoryHelper):
         assert client.getPackageSearchResults('foo')[1] == 2, "substring match failed"
         assert client.getPackageSearchResults('barbot')[1] == 1, "case-insensitive match failed"
 
-
-    # historically all of these search tests failed due to logical bugs in the
-    # searcher's token parsing algorithm, resulting in malformed SQL.
-    def testSearchShortOr(self):
-        search = searcher.Searcher()
-        # first arg too short
-        # should not raise error--at least one arg is correct
-        res = search.where("A OR Foo", ['foo', 'bar'])
-        self.failIf("WHEREOR" in ''.join(res[0].split()).upper())
-
-    def testSearchShortOr2(self):
-        search = searcher.Searcher()
-        # second arg too short
-        # should not raise error--at least one arg is correct
-        res = search.where("foo OR a", ['foo', 'bar'])
-        self.failIf("WHEREOR" in ''.join(res[0].split()).upper())
-
-    def testSearchShortOr3(self):
-        search = searcher.Searcher()
-        # middle args too short
-        # should not raise error--at least one arg is correct
-        res = search.where("foo OR a OR BAR", ['foo', 'bar'])
-        self.failIf("WHEREOR" in ''.join(res[0].split()).upper())
-
-    def testSearchShortOrToken(self):
-        search = searcher.Searcher()
-        # term inside quotes too short
-        # should not raise error--at least one arg is correct
-        res = search.where('"A" OR Foo', ['foo', 'bar'])
-        self.failIf("WHEREOR" in ''.join(res[0].split()).upper())
-
-    def testSearchShortAnd(self):
-        search = searcher.Searcher()
-        # compound and tokens too short
-        # should not raise error--at least one arg is correct
-        res = search.where('"A b" OR Foo', ['foo', 'bar'])
-        self.failIf("WHEREOR" in ''.join(res[0].split()).upper())
-
-    def testSearchShortTokens(self):
-        search = searcher.Searcher()
-        # and tokens too short
-        self.assertRaises(searcher.SearchTermsError,
-                          search.where, '"A b"', ['foo', 'bar'])
-
     def testSearchEmpty(self):
         search = searcher.Searcher()
         # empty search
@@ -220,25 +170,6 @@ class BrowseTest(MintRepositoryHelper):
         # empty token
         self.assertRaises(searcher.SearchTermsError,
                           search.where, '""', ['foo', 'bar'])
-
-    def testSearchTokenAnd(self):
-        search = searcher.Searcher()
-        # explicit AND in token
-        self.assertRaises(searcher.SearchTermsError,
-                          search.where, '"A AND B"', ['foo', 'bar'])
-
-    def testSearchTokenAnd(self):
-        search = searcher.Searcher()
-        # explicit AND outside token
-        self.assertRaises(searcher.SearchTermsError,
-                          search.where, 'A AND B', ['foo', 'bar'])
-
-    def testSearchTokenSpaces(self):
-        search = searcher.Searcher()
-        # extra spaces in search token
-        self.assertRaises(searcher.SearchTermsError,
-                          search.where, 'A     B', ['foo', 'bar'])
-
 
 if __name__ == "__main__":
     testsuite.main()
