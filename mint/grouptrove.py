@@ -163,7 +163,7 @@ class GroupTroveItemsTable(database.KeyedTable):
     def setVersionLock(self, groupTroveItemId, lock):
         self.update(groupTroveItemId, versionLock = lock)
         self.updateModifiedTime(groupTroveItemId)
-        
+
     def setUseLock(self, groupTroveItemId, lock):
         self.update(groupTroveItemId, useLock = lock)
         self.updateModifiedTime(groupTroveItemId)
@@ -177,12 +177,13 @@ class GroupTroveItemsTable(database.KeyedTable):
             raise GroupTroveNameError("Can't add source components")
         cu = self.db.cursor()
         cu.execute("""SELECT COUNT(groupTroveId)
-                        FROM GroupTroveItems 
-                        WHERE trvName=? AND trvVersion=? AND trvFlavor=? AND groupTroveId=?""",
+                        FROM GroupTroveItems
+                        WHERE trvName=? AND trvVersion=? AND trvFlavor=?
+                            AND groupTroveId=?""",
             trvName, trvVersion, trvFlavor, groupTroveId)
         if cu.fetchone()[0] > 0:
             raise database.DuplicateItem
-        
+
         cu.execute("SELECT IFNULL(MAX(groupTroveItemId), 0) + 1 as groupTroveItemId FROM GroupTroveItems")
 
         groupTroveItemId = cu.fetchone()[0]
@@ -241,7 +242,7 @@ class GroupTroveItemsTable(database.KeyedTable):
         ret['trvFlavor'] = flavStr
         if ret['subGroup'] == '':
             cu = self.db.cursor()
-            cu.execute("""SELECT recipeName from GroupTroveItems, GroupTroves 
+            cu.execute("""SELECT recipeName from GroupTroveItems, GroupTroves
                             WHERE GroupTroveItems.groupTroveItemId=? AND
                                   GroupTroveItems.groupTroveId=
                                           GroupTroves.groupTroveId""",
@@ -252,7 +253,7 @@ class GroupTroveItemsTable(database.KeyedTable):
     def getProjectId(self, groupTroveItemId):
         cu = self.db.cursor()
         cu.execute("""SELECT projectId from GroupTroveItems, GroupTroves
-                        WHERE GroupTroveItems.groupTroveItemId=? AND 
+                        WHERE GroupTroveItems.groupTroveItemId=? AND
                               GroupTroveItems.groupTroveId=
                                       GroupTroves.groupTroveId""",
                    groupTroveItemId)
