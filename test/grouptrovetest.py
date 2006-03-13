@@ -50,6 +50,19 @@ groupsRecipe = """class GroupTest(GroupRecipe):
             r.add('group-core', 'conary.rpath.com@rpl:1', '', groupName = 'group-test')
 """
 
+refRedirRecipe = """class GroupTest(GroupRecipe):
+    name = 'group-test'
+    version = '1.0.0'
+
+    autoResolve = False
+
+    def setup(r):
+        r.setLabelPath('testproject.rpath.local@rpl:devel')
+        r.add('testcase', 'testproject.rpath.local@rpl:devel', '', groupName = 'group-test')
+        r.add('redirect:lib', 'testproject.rpath.local@rpl:devel', '', groupName = 'group-test')
+        r.add('test:lib', '/testproject.rpath.local@rpl:devel/1.0-1-1', 'is: x86', groupName = 'group-test')
+"""
+
 lockedRecipe = """class GroupTest(GroupRecipe):
     name = 'group-test'
     version = '1.0.0'
@@ -59,6 +72,42 @@ lockedRecipe = """class GroupTest(GroupRecipe):
     def setup(r):
         r.setLabelPath('testproject.rpath.local@rpl:devel')
         r.add('testcase', '/testproject.rpath.local@rpl:devel/1.0-1-1', '', groupName = 'group-test')
+"""
+
+packageRecipe = """
+class testRecipe(PackageRecipe):
+    name = "test"
+    version = "1.0"
+    clearBuildReqs()
+
+    def setup(self):
+	self.Create("/etc/file")
+        self.Create("/usr/lib/file")
+        self.ComponentSpec('runtime', '/etc/')
+        self.ComponentRequires({'lib': set()})
+"""
+
+redirectBaseRecipe = """
+class testRedirect(PackageRecipe):
+    name = "redirect"
+    version = "0.1"
+    clearBuildReqs()
+
+    def setup(self):
+	self.Create("/etc/base")
+        self.Create("/usr/lib/base")
+        self.ComponentSpec('runtime', '/etc/')
+        self.ComponentRequires({'lib': set()})
+"""
+
+redirectRecipe = """
+class testRedirect(RedirectRecipe):
+    name = 'redirect'
+    version = '1.0'
+
+    def setup(r):
+        l = "testproject.rpath.local@rpl:devel"
+        r.addRedirect("test", l)
 """
 
 class GroupTroveTest(MintRepositoryHelper):
@@ -404,12 +453,16 @@ class GroupTroveTest(MintRepositoryHelper):
         client.server.delGroupTroveItem(trvId)
 
     def testGetRecipe(self):
+        def bogusResolve(a, b, c, d):
+            return []
+
         client, userId = self.quickMintUser('testuser', 'testpass')
         projectId = self.newProject(client)
 
         groupTrove = self.createTestGroupTrove(client, projectId)
         groupTroveId = groupTrove.getId()
 
+        self.makeCookedTrove('rpl:devel')
         trvId = self.addTestTrove(groupTrove, "testcase")
         assert(groupTrove.getRecipe() == refRecipe)
 
@@ -418,15 +471,38 @@ class GroupTroveTest(MintRepositoryHelper):
         groupTrove.setTroveVersionLock(trvId, False)
 
         # test the "fancy-flavored" group-core hack:
-        groupTrove.addTrove('group-core', '/conary.rpath.com@rpl:devel//1/0.99.0-0.1-1',
-            '1#x86:i486:i586:i686:~!sse2|1#x86_64|5#use:X:~!alternatives:~!bootstrap:'
-            '~!builddocs:~buildtests:desktop:~!dietlibc:emacs:gcj:~glibc.tls:gnome:'
-            '~grub.static:gtk:ipv6:kde:~!kernel.debug:~!kernel.debugdata:~!kernel.numa:'
-            'krb:ldap:nptl:~!openssh.smartcard:~!openssh.static_libcrypto:pam:pcre:perl:'
-            '~!pie:~!postfix.mysql:python:qt:readline:sasl:~!selinux:~sqlite.threadsafe:'
-            'ssl:tcl:tcpwrappers:tk:~!xorg-x11.xprint', 'group-test', False, False, False)
+        grpTrvItem = groupTrove.addTrove(\
+            'group-core', '/conary.rpath.com@rpl:devel//1/1.0-0.5-10',
+            '1#x86', 'group-test', False, False, False)
+
+        #groupTrove.setTroveInstSetLock(grpTrvItem, True)
+        groupTrove.server._server._resolveRedirects = bogusResolve
+
         assert(groupTrove.getRecipe() == groupsRecipe)
 
+    def testGetRecipeRedir(self):
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client)
+
+        groupTrove = self.createTestGroupTrove(client, projectId)
+        groupTroveId = groupTrove.getId()
+
+        self.makeCookedTrove('rpl:devel')
+        trvId = self.addTestTrove(groupTrove, "testcase")
+        assert(groupTrove.getRecipe() == refRecipe)
+
+        groupTrove.setTroveVersionLock(trvId, True)
+        assert(groupTrove.getRecipe() == lockedRecipe)
+        groupTrove.setTroveVersionLock(trvId, False)
+
+        self.build(packageRecipe, "testRecipe")
+        self.build(redirectBaseRecipe, "testRedirect")
+        trv = self.build(redirectRecipe, "testRedirect")
+
+        self.addTestTrove(groupTrove, trv.name(), str(trv.version()),
+                          trv.flavor().freeze())
+
+        assert(groupTrove.getRecipe() == refRedirRecipe)
 
     def testMultipleAdditions(self):
         client, userId = self.quickMintUser('testuser', 'testpass')

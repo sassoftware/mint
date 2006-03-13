@@ -2006,36 +2006,76 @@ class MintServer(object):
     def cleanupGroupTroves(self):
         self.groupTroves.cleanup()
 
+    def _resolveRedirects(self, groupTroveId, trvName, trvVersion, trvFlavor):
+        # get the repo object
+        projectId = self.getGroupTrove(groupTroveId)['projectId']
+        project = projects.Project(self, projectId)
+        repos = self._getProjectRepo(project)
+
+        cfg = project.getConaryConfig()
+        cfg.initializeFlavors()
+
+        cclient = conaryclient.ConaryClient(cfg)
+
+        trvList = repos.findTrove(\
+            None, (trvName, trvVersion, deps.parseFlavor(trvFlavor)),
+            cfg.buildFlavor, bestFlavor=True)
+
+        res = []
+        for lName, lVer, lFlav in trvList:
+            trv = repos.getTrove(lName, lVer, lFlav)
+
+            if trv.isRedirect():
+                uJob = cclient.updateChangeSet(\
+                    [(lName, (None, None),
+                      (lVer, lFlav), True)])[0]
+                res.extend([(x[0], str(x[2][0]), str(x[2][1])) \
+                            for x in uJob.getJobs()[0]])
+        return res
+
     def _getRecipe(self, groupTroveId):
         groupTrove = self.groupTroves.get(groupTroveId)
         groupTroveItems = self.groupTroveItems.listByGroupTroveId(groupTroveId)
 
         recipe = ""
-        name = ''.join((string.capwords(' '.join(groupTrove['recipeName'].split('-')))).split(' '))
+        name = ''.join((string.capwords(
+            ' '.join(groupTrove['recipeName'].split('-')))).split(' '))
         indent = 4 * " "
 
         recipe += "class " + name + "(GroupRecipe):\n"
         recipe += indent + "name = '%s'\n" % groupTrove['recipeName']
         recipe += indent + "version = '%s'\n\n" % groupTrove['upstreamVersion']
-        recipe += indent + "autoResolve = %s\n\n" % str(groupTrove['autoResolve'])
+        recipe += indent + "autoResolve = %s\n\n" % \
+                  str(groupTrove['autoResolve'])
         recipe += indent + 'def setup(r):\n'
 
         indent = 8 * " "
         recipeLabels = self.getGroupTroveLabelPath(groupTroveId)
-        recipe += indent + "r.setLabelPath(%s)\n" % str(recipeLabels).split('[')[1].split(']')[0]
+        recipe += indent + "r.setLabelPath(%s)\n" % \
+                  str(recipeLabels).split('[')[1].split(']')[0]
 
         for trv in groupTroveItems:
-            if trv['versionLock']:
-                ver = trv['trvVersion']
-            else:
-                ver = trv['trvLabel']
+            ver = trv['versionLock'] and trv['trvVersion'] or trv['trvLabel']
 
-            # XXX HACK to use the "fancy-flavored" group troves from conary.rpath.com
-            if trv['trvName'].startswith('group-') and trv['trvLabel'].startswith('conary.rpath.com@'):
+            # XXX HACK to use the "fancy-flavored" group troves from
+            # conary.rpath.com
+            if trv['trvName'].startswith('group-') and \
+                   trv['trvLabel'].startswith('conary.rpath.com@'):
                 recipe += indent + "if Arch.x86_64:\n"
-                recipe += (12 * " ") + "r.add('" + trv['trvName'] + "', '" + ver + "', 'is:x86(i486,i586,i686) x86_64', groupName = '" +trv['subGroup'] +"')\n"
+                recipe += (12 * " ") + "r.add('" + trv['trvName'] + "', '" + \
+                          ver + "', 'is:x86(i486,i586,i686) x86_64', " + \
+                          "groupName = '" + trv['subGroup'] +"')\n"
                 recipe += indent + "else:\n" + (4 * " ")
-            recipe += indent + "r.add('" + trv['trvName'] + "', '" + ver + "', '" + trv['trvFlavor'] + "', groupName = '" +trv['subGroup'] +"')\n"
+            recipe += indent + "r.add('" + trv['trvName'] + "', '" + ver \
+                      + "', '" + trv['trvFlavor'] + "', groupName = '" + \
+                      trv['subGroup'] +"')\n"
+
+            # properly support redirected troves, by explicitly including them
+            for rName, rVer, rFlav in \
+                    self._resolveRedirects(groupTroveId, trv['trvName'], ver,
+                                           trv['trvFlavor']):
+                recipe += indent + "r.add('" + rName + "', '" + rVer + "', '" \
+                          + rFlav + "', groupName = '" +trv['subGroup'] +"')\n"
         return recipe
 
     @typeCheck(int)
