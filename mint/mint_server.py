@@ -39,6 +39,7 @@ from mint_error import PermissionDenied, ReleasePublished, ReleaseMissing, \
      JobserverVersionMismatch
 from reports import MintReport
 from searcher import SearchTermsError
+from distro.flavors import stockFlavors
 import profile
 
 from conary import sqlite3
@@ -708,7 +709,7 @@ class MintServer(object):
         if self.cfg.sendNotificationEmails:
             users.sendMail(self.cfg.adminMail, self.cfg.productName,
                            user['email'],
-                           "%s user account modification" % \
+                           "Your %s account" % \
                            self.cfg.productName,
                            '\n\n'.join((greeting, message, closing)))
             members = project.getMembers()
@@ -720,7 +721,7 @@ class MintServer(object):
             for addr in confAddr:
                 users.sendMail(self.cfg.adminMail, self.cfg.productName,
                                addr,
-                               "%s user account modification" % \
+                               "%s project membership modification" % \
                                self.cfg.productName,
                                '\n\n'.join((admingreeting, message, closing)))
 
@@ -2053,12 +2054,17 @@ class MintServer(object):
         # get the repo object
         projectId = self.getGroupTrove(groupTroveId)['projectId']
         project = projects.Project(self, projectId)
-        repos = self._getProjectRepo(project)
 
         cfg = project.getConaryConfig()
-        cfg.initializeFlavors()
 
+        flavor = deps.parseFlavor(trvFlavor)
+        if deps.DEP_CLASS_IS in flavor.members:
+            arch = "1#" + flavor.members[deps.DEP_CLASS_IS].members.keys()[0]
+            cfg.buildFlavor = deps.parseFlavor(stockFlavors[arch])
+
+        cfg.initializeFlavors()
         cclient = conaryclient.ConaryClient(cfg)
+        repos = cclient.getRepos()
 
         trvList = repos.findTrove(\
             None, (trvName, trvVersion, deps.parseFlavor(trvFlavor)),

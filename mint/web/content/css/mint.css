@@ -454,6 +454,15 @@ div.palette img.right {
 .palette li {
     padding:4px 0px 4px 11px; margin:0px 11px 0px 11px;
 }
+.palette dt {
+    padding:0px 0px 0px 0px; margin:0px 11px 0px 11px;
+}
+.palette dd {
+    padding:0px 0px 4px 0px; margin:0px 11px 0px 11px;
+    margin-bottom: 0.25em;
+    font-size: smaller;
+    color: #999;
+}
 .palette ul li:first-child {
     border:0px;
 }
@@ -749,4 +758,5 @@ img#nameSpinner, img#archSpinner {
     display: none;
     padding-right: 4px;
 }
+
 
