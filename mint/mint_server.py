@@ -691,16 +691,33 @@ class MintServer(object):
                 userlevelname
         }
         greeting = "Hello,"
+        admingreeting = "The following message has been sent to: %s\nbecause of an action performed by: %s\n\n%s" % (user['username'], self.auth.username, greeting)
+        helpLink = "\nInstructions on how to set up your build environment for this project can be found at: http://%s.%s/project/%s/conaryDevelCfg" % (self.cfg.hostName, project.getDomainname(), project.getHostname())
         message = "Your %s account: %s\n" % (self.cfg.productName, user['username'])
         message += actionText[action]
         message += "\n%s\n" % project.getName()
+        if action == "Added":
+            message += helpLink
         closing = 'Please contact the project owner(s) with any questions.'
 
         if self.cfg.sendNotificationEmails:
             users.sendMail(self.cfg.adminMail, self.cfg.productName,
-                        user['email'],
-                        "%s user account modification" % self.cfg.productName,
-                        '\n\n'.join((greeting, message, closing)))
+                           user['email'],
+                           "%s user account modification" % \
+                           self.cfg.productName,
+                           '\n\n'.join((greeting, message, closing)))
+            members = project.getMembers()
+            confAddr = []
+            for level in [userlevels.OWNER]:
+                for addr in [self.getUser(x[0])['email'] for x in members \
+                             if x[2] == level]:
+                    confAddr.append(addr)
+            for addr in confAddr:
+                users.sendMail(self.cfg.adminMail, self.cfg.productName,
+                               addr,
+                               "%s user account modification" % \
+                               self.cfg.productName,
+                               '\n\n'.join((admingreeting, message, closing)))
 
     @typeCheck(str, str)
     @requiresAdmin
