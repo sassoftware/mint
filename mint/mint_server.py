@@ -703,7 +703,7 @@ class MintServer(object):
         if self.cfg.sendNotificationEmails:
             users.sendMail(self.cfg.adminMail, self.cfg.productName,
                            user['email'],
-                           "%s user account modification" % \
+                           "Your %s account" % \
                            self.cfg.productName,
                            '\n\n'.join((greeting, message, closing)))
             members = project.getMembers()
@@ -715,7 +715,7 @@ class MintServer(object):
             for addr in confAddr:
                 users.sendMail(self.cfg.adminMail, self.cfg.productName,
                                addr,
-                               "%s user account modification" % \
+                               "%s project membership modification" % \
                                self.cfg.productName,
                                '\n\n'.join((admingreeting, message, closing)))
 
