@@ -17,7 +17,7 @@ from mint.mint_error import ReleasePublished, ReleaseMissing, ReleaseEmpty
 from mint import releasetypes
 from mint.database import ItemNotFound
 from mint.mint_server import deriveBaseFunc, ParameterError
-from mint.distro import installable_iso
+from mint.distro import installable_iso, jsversion
 
 from conary.lib import util
 from conary.repository.errors import TroveNotFound
@@ -286,6 +286,23 @@ class ReleaseTest(MintRepositoryHelper):
         cu.execute("SELECT COUNT(*) FROM Releases")
         if cu.fetchone()[0] != 2:
             self.fail("Finished release was deleted")
+
+    def testUnfinishedReleaseData(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+        projectId = client.newProject("Foo", "foo", "rpath.org")
+
+        brokenRelease = client.newRelease(projectId, "Test Release")
+
+        cu = self.db.cursor()
+        assert(brokenRelease.getDataValue('jsversion') == \
+               jsversion.getDefaultVersion())
+        # because the first release is not yet finished, creating a new
+        # release before finishing it should kill the first.
+        release = client.newRelease(projectId, "Test Release")
+
+        # ensure release data gets cleaned up automatically too.
+        self.assertRaises(ReleaseDataNameError,
+                          brokenRelease.getDataValue, 'jsversion')
 
     def testReleaseStatus(self):
         client, userId = self.quickMintUser("testuser", "testpass")
