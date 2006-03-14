@@ -35,6 +35,13 @@ class ReleaseEmpty(MintError):
     def __str__(self):
         return "The referenced release has no files and cannot be published."
 
+class JobserverVersionMismatch(MintError):
+    def __str__(self):
+        return self.msg
+
+    def __init__(self, msg = "Image job cannot be run."):
+        self.msg = msg
+
 class UserAlreadyAdmin(MintError):
     def __str__(self):
         return "User is already an administrator."
