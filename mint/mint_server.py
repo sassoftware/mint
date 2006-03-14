@@ -32,9 +32,11 @@ import templates
 import userlevels
 import users
 import simplejson
+from distro import jsversion
 
 from mint_error import PermissionDenied, ReleasePublished, ReleaseMissing, \
-     MintError, ReleaseEmpty, UserAlreadyAdmin, AdminSelfDemotion
+     MintError, ReleaseEmpty, UserAlreadyAdmin, AdminSelfDemotion, \
+     JobserverVersionMismatch
 from reports import MintReport
 from searcher import SearchTermsError
 import profile
@@ -274,7 +276,10 @@ class MintServer(object):
                 return (True, ("UserAlreadyAdmin", str(e)))
             except AdminSelfDemotion, e:
                 self.db.rollback()
-                return (True, ("AdminSelfDemotion", str(e)))
+                return (True, ("AdminSelfDemotion" , str(e)))
+            except JobserverVersionMismatch, e:
+                self.db.rollback()
+                return (True, ("JobserverVersionMismatch", str(e)))
             except:
                 self.db.rollback()
                 raise
@@ -1310,9 +1315,15 @@ class MintServer(object):
     @private
     def newRelease(self, projectId, releaseName, published):
         self._filterProjectAccess(projectId)
-        return self.releases.new(projectId = projectId,
-                                 name = releaseName,
-                                 published = published)
+        releaseId = self.releases.new(projectId = projectId,
+                                      name = releaseName,
+                                      published = published)
+
+        self.releaseData.setDataValue(releaseId, 'jsversion',
+                                      jsversion.getDefaultVersion(),
+                                      data.RDT_STRING)
+
+        return releaseId
 
     @typeCheck(int)
     @requiresAuth
@@ -1477,6 +1488,11 @@ class MintServer(object):
             raise ReleaseMissing()
         if self.releases.getPublished(releaseId):
             raise ReleasePublished()
+        found, jsVer = self.releaseData.getDataValue(releaseId, 'jsversion')
+        if not found:
+            raise JobserverVersionMismatch('No job server version available.')
+        if jsVer not in jsversion.getVersions():
+            raise JobserverVersionMismatch
 
         cu = self.db.cursor()
 
@@ -1637,14 +1653,15 @@ class MintServer(object):
 
         return [self.jobs.get(x[0]) for x in cu.fetchall()]
 
-    @typeCheck((list, str), (dict, (list, int)))
+    @typeCheck((list, str), (dict, (list, int)), str)
     @requiresAuth
     @private
-    def startNextJob(self, archTypes, jobTypes):
+    def startNextJob(self, archTypes, jobTypes, jobserverVersion):
         """Select a job to execute from the list of pending jobs
         @param archTypes: list of frozen flavors. only specify arch flags.
         @param jobTypes: dict. keys are the kinds of jobs.
           values are lists of valid types for that job.
+        @param jobserverVersion: string. version of the job server.
         @return: jobId of job to execute, or 0 for no job.
         """
         import cooktypes
@@ -1666,6 +1683,8 @@ class MintServer(object):
         if sum([(x != cooktypes.GROUP_BUILDER) for x in cookTypes]):
             raise ParameterError("Not a legal Cook Type")
 
+        if jobserverVersion not in jsversion.getVersions():
+            raise ParameterError("Not a legal job server version")
         # client asked for nothing, client gets nothing.
         if not (imageTypes or cookTypes) or (not archTypes):
             return 0
@@ -1707,35 +1726,42 @@ class MintServer(object):
             query = """SELECT Jobs.jobId FROM Jobs
                        LEFT JOIN JobData
                            ON Jobs.jobId=JobData.jobId
+                               AND JobData.name='arch'
                        LEFT JOIN ReleaseImageTypes
                            ON ReleaseImageTypes.releaseId=Jobs.releaseId
-                       WHERE status=? AND JobData.name='arch'
+                       LEFT JOIN ReleaseData
+                           ON ReleaseData.releaseId=Jobs.releaseId
+                               AND ReleaseData.name='jsversion'
+                       WHERE status=?
                            AND Jobs.groupTroveId IS NULL
                            AND owner=?
+                           AND ReleaseData.value=?
                            AND JobData.value IN %s
                            AND ReleaseImageTypes.imageType IN %s
                        ORDER BY timeSubmitted
                        LIMIT 1""" % (archTypeQuery, imageTypeQuery)
-
-            cu.execute(query, jobstatus.WAITING, ownerId,
+            cu.execute(query, jobstatus.WAITING, ownerId, jobserverVersion,
                        *(archTypes + imageTypes))
         else:
             # client wants both cook and image jobs
             query = """SELECT Jobs.jobId FROM Jobs
                        LEFT JOIN JobData
-                           ON Jobs.jobId=JobData.jobId
+                           ON Jobs.jobId=JobData.jobId AND JobData.name='arch'
                        LEFT JOIN ReleaseImageTypes
                            ON ReleaseImageTypes.releaseId=Jobs.releaseId
-                       WHERE status=? AND JobData.name='arch'
-                           AND owner=?
-                           AND JobData.value IN %s
-                           AND (ReleaseImageTypes.imageType IN %s OR
+                       LEFT JOIN ReleaseData
+                           ON ReleaseData.releaseId=Jobs.releaseId
+                               AND ReleaseData.name='jsversion'
+                       WHERE status=? AND owner=?
+                           AND ((ReleaseData.value=? AND
+                               ReleaseImageTypes.imageType IN %s) OR
                                 (groupTroveId IS NOT NULL))
+                           AND JobData.value IN %s
                        ORDER BY timeSubmitted
-                       LIMIT 1""" % (archTypeQuery, imageTypeQuery)
+                       LIMIT 1""" % (imageTypeQuery, archTypeQuery)
 
-            cu.execute(query, jobstatus.WAITING, ownerId,
-                       *(archTypes + imageTypes))
+            cu.execute(query, jobstatus.WAITING, ownerId, jobserverVersion,
+                       *(imageTypes + archTypes))
 
         res = cu.fetchone()
 
