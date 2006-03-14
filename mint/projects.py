@@ -585,7 +585,11 @@ class RepositoryDatabase:
         self.cfg = cfg
 
     def create(self, name):
-        pass
+        # pre-initialize the cache for test suite purposes
+        cache = os.path.dirname(self.cfg.reposDBPath % name) + '/cache.sql'
+        if not os.path.exists(cache):
+            from conary.repository.netrepos import cacheset
+            cacheset.CacheSet(('sqlite', cache), None)
 
     def getRepositoryDB(self, name):
         raise NotImplementedError
@@ -594,6 +598,7 @@ class SqliteRepositoryDatabase(RepositoryDatabase):
     def create(self, name):
         if os.path.exists(self.cfg.reposDBPath % name):
             os.unlink(self.cfg.reposDBPath % name)
+        RepositoryDatabase.create(self, name)
 
     def getRepositoryDB(self, name):
         return ('sqlite', self.cfg.reposDBPath % name)
@@ -623,6 +628,7 @@ class MySqlRepositoryDatabase(RepositoryDatabase):
                     "Attempted to delete an existing project database.")
         cu.execute("CREATE DATABASE %s" % dbName)
         db.close()
+        RepositoryDatabase.create(self, name)
 
     def getRepositoryDB(self, name):
         dbName = self.translate(name)
