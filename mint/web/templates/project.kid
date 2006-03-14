@@ -1,8 +1,9 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <?python #need a comment?
-    from mint import userlevels
+    from mint import userlevels, releasetypes
     from mint.mint import upstream
     from mint.helperfuncs import truncateForDisplay
+    from mint.mint import timeDelta
 
     def condUpstream(upstreams, version):
         up = upstream(version)
@@ -54,22 +55,30 @@
                 </a>
             </div>
             <div id="release_items" style="display: $display">
-                <ul>
-                <?python
-                    upstreamList = [upstream(x.getTroveVersion()) for x in releaseList[:5]]
-                    # create a dictionary with counts of duplicate upstream versions
-                    counts = dict(zip(set(upstreamList), [upstreamList.count(x) for x in set(upstreamList)]))
-                ?>
-                <li class="release"
-                    py:if="releaseList" py:for="release in sorted(releaseList[:5], key=lambda x: x.getTroveVersion(), reverse=True)">
-                    <a href="${projectUrl}release?id=${release.getId()}">
-                        Version ${truncateForDisplay(condUpstream(counts, release.getTroveVersion()), maxWordLen=10)} for ${release.getArch()}
-                    </a>
-                </li>
-                <li class="release" py:if="not releaseList">
-                    No Releases
-                </li>
-              </ul>
+              <?python
+                  upstreamList = [upstream(x.getTroveVersion()) for x in releaseList[:5]]
+                  # create a dictionary with counts of duplicate upstream versions
+                  counts = dict(zip(set(upstreamList), [upstreamList.count(x) for x in set(upstreamList)]))
+              ?>
+              <dl py:if="releaseList">
+                <?python projectName = project.getName() ?>
+                <div py:strip="True" py:for="release in sorted(releaseList[:5], key=lambda x: x.getTroveVersion(), reverse=True)">
+                  <?python
+                      # XXX: this code should not be here after the new
+                      #      release metaphor is put in place.
+                      if projectName != release.getName():
+                          releaseName = truncateForDisplay(release.getName(), maxWords=5, maxWordLen=8)
+                      else:
+                          releaseName = "Version " + condUpstream(counts, release.getTroveVersion())
+                          desc = "%s %s (%s)" % (release.getArch(), releasetypes.typeNamesShort[release.imageTypes[0]], timeDelta(release.timePublished))
+                  ?>
+                    <dt><a href="${projectUrl}release?id=${release.getId()}">${releaseName}</a></dt>
+                    <dd>${desc}</dd>
+                </div>
+              </dl>
+              <div py:if="not releaseList">
+                 No Releases
+              </div>
               <div class="release" py:if="isOwner" style="text-align: right; padding-right:8px;">
                   <a href="${projectUrl}newRelease"><strong>Create a new release</strong></a>
               </div>
@@ -85,15 +94,14 @@
         <img class="left" src="${cfg.staticPath}apps/mint/images/header_blue_left.png" alt="" />
         <img class="right" src="${cfg.staticPath}apps/mint/images/header_blue_right.png" alt="" />
 
-
         <div class="boxHeader">Recent Commits</div>
         <div id="commit_items" style="display: $display">
-          <ul>
-            <li class="release" py:for="commit in commits">
-                <a
-                    href="${cfg.basePath}repos/${project.getHostname()}/troveInfo?t=${commit[0]};v=${commit[2]}">${truncateForDisplay(commit[0] + "=" + commit[1], maxWordLen=31)}</a>
-            </li>
-          </ul>
+          <dl>
+            <div py:strip="True" py:for="commit in commits">
+                <dt><a href="${cfg.basePath}repos/${project.getHostname()}/troveInfo?t=${commit[0]};v=${commit[2]}">${truncateForDisplay(commit[0], maxWordLen=24)}</a></dt>
+                <dd>${commit[1]} (${timeDelta(commit[3])})</dd>
+            </div>
+         </dl>
         </div>
       </div>
     </div>
