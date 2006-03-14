@@ -10,6 +10,7 @@ import sys
 import time
 
 from conary import versions
+from conary.deps import deps
 from conary.conaryclient import ConaryClient
 
 from repostest import testRecipe
@@ -47,7 +48,7 @@ groupsRecipe = """class GroupTest(GroupRecipe):
         if Arch.x86_64:
             r.add('group-core', 'conary.rpath.com@rpl:1', 'is:x86(i486,i586,i686) x86_64', groupName = 'group-test')
         else:
-            r.add('group-core', 'conary.rpath.com@rpl:1', '', groupName = 'group-test')
+            r.add('group-core', 'conary.rpath.com@rpl:1', 'is: x86', groupName = 'group-test')
 """
 
 refRedirRecipe = """class GroupTest(GroupRecipe):
@@ -471,12 +472,10 @@ class GroupTroveTest(MintRepositoryHelper):
         groupTrove.setTroveVersionLock(trvId, False)
 
         # test the "fancy-flavored" group-core hack:
+        # XXX: this has to connect to the outside world and hit conary.rpath.com
         grpTrvItem = groupTrove.addTrove(\
             'group-core', '/conary.rpath.com@rpl:devel//1/1.0-0.5-10',
-            '1#x86', 'group-test', False, False, False)
-
-        #groupTrove.setTroveInstSetLock(grpTrvItem, True)
-        groupTrove.server._server._resolveRedirects = bogusResolve
+            '1#x86', 'group-test', False, True, True)
 
         assert(groupTrove.getRecipe() == groupsRecipe)
 
