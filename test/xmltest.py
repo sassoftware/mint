@@ -17,7 +17,7 @@ SKIP_PRIVATE = ('callWrapper', 'getReleaseStatus', 'getGroupTroves',
                 'addGroupTroveItemByProject', 'setGroupTroveItemVersionLock',
                 'getTroveVersionsByArch', 'setUserLevel', 'getGroupTrove',
                 'getRelease', 'getUserPublic', 'listActiveJobs', 'delMember',
-                'setReleasePublished')
+                'setReleasePublished', 'deleteRelease', 'startImageJob')
 
 class XmlInterfaceTest(MintRepositoryHelper):
     def _getMethods(self, skipSet):

@@ -475,8 +475,8 @@ class ReleaseTest(MintRepositoryHelper):
 
         release = client.newRelease(projectId, "Test Release")
         templates = [x[0] for x in release.getDisplayTemplates()]
-        assert(['Image Settings', 'Installable CD Settings',
-                'Bootable Image Settings', 'VMware Image Settings',
+        assert(['Image Settings', 'Installable CD/DVD Settings',
+                'Bootable Image Common Settings', 'VMware Image Settings',
                 'Stub Image Settings'] == templates)
 
     def testFreespace(self):

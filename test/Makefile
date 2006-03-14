@@ -9,6 +9,7 @@ python_files = \
                accounttest.py \
                acltest.py \
                authtest.py \
+	       bootabletest.py \
                cachetest.py \
                configtest.py \
                coverage.py \
