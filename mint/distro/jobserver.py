@@ -37,6 +37,7 @@ from mint.distro.netboot_image import NetbootImage
 from mint.distro.group_trove import GroupTroveCook
 from mint.distro.bootable_image import BootableImage
 from mint.distro.raw_fs_image import RawFsImage
+from mint.distro import jsversion
 
 generators = {
     releasetypes.INSTALLABLE_ISO:   InstallableIso,
@@ -185,7 +186,8 @@ class JobDaemon:
                     if self.takingJobs:
                         job = client.startNextJob(["1#" + x for x in \
                                                    cfg.supportedArch],
-                                                  cfg.jobTypes)
+                                                  cfg.jobTypes,
+                                                  jsversion.getDefaultVersion())
                     else:
                         job = None
                     if errors and not confirmedAlive:
@@ -267,4 +269,3 @@ class IsoGenConfig(ConfigFile):
             log.error("serverUrl http://username:userpass@"
                       "www.example.com/xmlrpc-private/")
             sys.exit(1)
-
