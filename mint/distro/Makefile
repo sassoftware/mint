@@ -13,6 +13,7 @@ python_files = \
 	__init__.py		\
 	installable_iso.py	\
 	jobserver.py		\
+	jsversion.py            \
 	bootable_image.py	\
 	raw_fs_image.py	\
 	live_iso.py		\
