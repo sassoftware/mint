@@ -91,8 +91,7 @@ class BootableImageTest(MintRepositoryHelper):
         uJob, kuJob = bi.updateGroupChangeSet(EmptyCallback())
 
         # make sure we get !smp flavors of kernel:runtime and kernel:config:
-        correctSet = set([('kernel:runtime', (None, None), (VFS('/localhost@rpl:linux/1.0-1-1'), Flavor('!kernel.smp is: x86')), True),
-                          ('kernel:configs', (None, None), (VFS('/localhost@rpl:linux/1.0-1-1'), Flavor('!kernel.smp is: x86')), True)])
+        correctSet = set([('kernel:runtime', (None, None), (VFS('/localhost@rpl:linux/1.0-1-1'), Flavor('!kernel.smp is: x86')), True)])
         assert(kuJob.getPrimaryJobs() == correctSet)
         assert(uJob)
 
