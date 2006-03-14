@@ -12,6 +12,17 @@ import mint_rephelp
 from repostest import testRecipe
 from conary import versions
 
+testDirRecipe = """
+class TestCase(PackageRecipe):
+    name = "testcase"
+    version = "1.0"
+
+    def setup(r):
+        r.Create("/temp/foo")
+        r.MakeDirs("/temp/directory", mode = 0775)
+"""
+
+
 class WebReposTest(mint_rephelp.WebRepositoryHelper):
     def testRepositoryBrowser(self):
         self.openRepository()
@@ -107,6 +118,27 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
 
         self.failIf('/repos/testproject/rss' in page.body,
                     "Malformed base path for rss feed on repos page")
+
+    def testFileListDirectories(self):
+        self.openRepository()
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client, 'Foo', 'testproject')
+        project = client.getProject(projectId)
+
+        self.openRepository(1)
+        l = versions.Label("testproject.rpath.local@rpl:devel")
+        self.makeSourceTrove("testcase", testDirRecipe, l)
+        self.cookFromRepository("testcase", l,
+            ignoreDeps = True)
+
+        self.moveToServer(project, 1)
+
+        page = self.fetch('/repos/testproject/troveInfo?t=testcase:runtime')
+        fileLink = [x for x in page.getDOM().getByName('a') if x[0] == "Show Troves"][0]
+
+        page = self.assertContent('/repos/testproject/' + fileLink.getattr('href'), ok_codes = [200],
+            content = '<span>/temp/directory</span>')
+
 
 if __name__ == "__main__":
     testsuite.main()

@@ -38,8 +38,9 @@
                 <td>${fObj.sizeString()}</td>
                 <td>${fObj.timeString()}</td>
                 <td>
-                    <a py:if="not isinstance(fObj, files.SymbolicLink)" href="${url}">${path}</a>
+                    <a py:if="isinstance(fObj, files.RegularFile) and not isinstance(fObj, files.SymbolicLink)" href="${url}">${path}</a>
                     <span py:if="isinstance(fObj, files.SymbolicLink)">${path} -&gt; ${fObj.target()}</span>
+                    <span py:if="not isinstance(fObj, files.SymbolicLink) and not isinstance(fObj, files.RegularFile)">${path}</span>
                 </td>
             </tr>
         </table>
