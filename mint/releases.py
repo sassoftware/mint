@@ -144,7 +144,14 @@ class ReleasesTable(database.KeyedTable):
     def new(self, **kwargs):
         projectId = kwargs['projectId']
         cu = self.db.cursor()
-        cu.execute("DELETE FROM Releases WHERE projectId=? AND troveLastChanged IS NULL", projectId)
+        cu.execute("""SELECT releaseId FROM Releases
+                          WHERE projectId=?
+                          AND troveLastChanged IS NULL""", projectId)
+        for releaseId in [x[0] for x in cu.fetchall()]:
+            cu.execute("DELETE FROM ReleaseData WHERE releaseId=?", releaseId)
+        cu.execute("""DELETE FROM Releases
+                        WHERE projectId=?
+                        AND troveLastChanged IS NULL""", projectId)
         self.db.commit()
         return database.KeyedTable.new(self, **kwargs)
 
@@ -424,9 +431,9 @@ class Release(database.TableObject):
 
     def getDataValue(self, name):
         template = self.getDataTemplate()
-        if name not in template:
-            raise ReleaseDataNameError("Named value not in data template: %s" %name)
         isPresent, val = self.server.getReleaseDataValue(self.getId(), name)
+        if not isPresent and name not in template:
+            raise ReleaseDataNameError( "%s not in data template" % name)
         if not isPresent:
             val = template[name][1]
         return val
