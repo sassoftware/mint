@@ -11,10 +11,15 @@ import kid
 import os
 import sys
 import time
+import tempfile
+
 from mint import templates
 from mint.helperfuncs import truncateForDisplay, extractBasePath
 from mint.userlevels import myProjectCompare
 from mint.mint import timeDelta
+from mint.distro import jsversion
+
+from conary.lib import util
 
 testTemplate = \
 """<?xml version='1.0' encoding='UTF-8'?>
@@ -200,6 +205,39 @@ class HelperFunctionsTest(unittest.TestCase):
         assert(extractBasePath("/foo", "/foo") == "/")
         assert(extractBasePath("/rbuilder/", "/") == "/rbuilder/")
         assert(extractBasePath("/rbuilder/foo", "/foo") == "/rbuilder/")
+
+    def testJsVersions(self):
+        tmpDir = tempfile.mkdtemp()
+        try:
+            for dir in ('15.20.1', '1.5', '10.20', '10.2', '1.5.4beta', '1A',
+                        'README'):
+                os.mkdir(os.path.join(tmpDir, dir))
+            for fName in ('FOO', '1.5.4'):
+                f = open(os.path.join(tmpDir, fName), 'w')
+                f.close()
+            self.failIf(jsversion.getVersions(tmpDir) !=
+                        ['1.5', '1.5.4beta', '10.2', '10.20', '15.20.1'],
+                        "Version list contained improper job server versions.")
+            self.failIf(jsversion.getDefaultVersion(tmpDir) != '15.20.1',
+                        "Wrong default job server version.")
+
+            specStrings = ('/testproject.rpath.local@rpl:devel=1.0.0-1-1',
+                           '/testproject.rpath.local@rpl:devel=1.5.4-1-1',
+                           '/testproject.rpath.local@rpl:devel=2.0.3-1-1',)
+            f = open(os.path.join(tmpDir, 'versions'), 'w')
+            f.write('\n'.join(specStrings))
+            f.close()
+            self.failIf(jsversion.getVersions(tmpDir) !=
+                        ['1.0.0', '1.5.4', '2.0.3'],
+                        "Versions file did not override directories")
+            self.failIf(jsversion.getDefaultVersion(tmpDir) != '2.0.3',
+                        "Wrong default job server version.")
+        finally:
+            util.rmtree(tmpDir)
+
+    def testReality(self):
+        import epdb
+        epdb.st()
 
 
 if __name__ == "__main__":
