@@ -42,8 +42,6 @@ class AnacondaImages:
         (x,y) = available
         x = x - 2 * self.textwidthbuffer
         assert(y > self.mintextheight)
-        if x > ix and y > iy:
-            return image
         if x < ix:
             #scale proportionally
             scalefactor = x / float(ix)
@@ -54,6 +52,8 @@ class AnacondaImages:
             if resimg.size[0] > x:
                 resimg = resimg.crop((0,0,x,resimg.size[1]))
             return resimg
+        else:
+            return image
 
     def centerInTopSection(self, topfraction, fill=None):
         if not fill:
