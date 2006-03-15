@@ -511,5 +511,79 @@ class ReleaseTest(MintRepositoryHelper):
         self.failIf(not isinstance(release.getDataValue('freespace'), int),
                     "freespace is not an integer")
 
+    def testInstLongNames(self):
+        isoMap = {681574399: 'Installable CD: 650 MB',
+                  681574400: 'Installable CD: 650 MB',
+                  681574401: 'Installable CD: 700 MB',
+                  734003200: 'Installable CD: 700 MB',
+                  734003201: 'Installable DVD: 4.7 GB',
+                  4700000000: 'Installable DVD: 4.7 GB',
+                  4700000001: 'Installable DVD: 8.5 GB',
+                  8500000000: 'Installable DVD: 8.5 GB',
+                  8500000001: 'Installable DVD: Overburn'}
+        for size, ref in isoMap.iteritems():
+            n = releasetypes.getImageName(releasetypes.INSTALLABLE_ISO, size)
+            self.failIf(n != ref,
+                        "Size: %d. Expected %s, got %s" % (size, ref, n))
+
+    def testInstShortNames(self):
+        isoMap = {681574399: 'Inst CD',
+                  681574400: 'Inst CD',
+                  681574401: 'Inst CD',
+                  734003200: 'Inst CD',
+                  734003201: 'Inst DVD',
+                  4700000000: 'Inst DVD',
+                  4700000001: 'Inst DVD',
+                  8500000000: 'Inst DVD',
+                  8500000001: 'Inst DVD'}
+        for size, ref in isoMap.iteritems():
+            n = releasetypes.getImageName(releasetypes.INSTALLABLE_ISO, size,
+                                          True)
+            self.failIf(n != ref,
+                        "Size: %d. Expected %s, got %s" % (size, ref, n))
+
+    def testLiveLongNames(self):
+        isoMap = {681574399: 'Live CD: 650 MB',
+                  681574400: 'Live CD: 650 MB',
+                  681574401: 'Live CD: 700 MB',
+                  734003200: 'Live CD: 700 MB',
+                  734003201: 'Live DVD: 4.7 GB',
+                  4700000000: 'Live DVD: 4.7 GB',
+                  4700000001: 'Live DVD: 8.5 GB',
+                  8500000000: 'Live DVD: 8.5 GB',
+                  8500000001: 'Live DVD: Overburn'}
+        for size, ref in isoMap.iteritems():
+            n = releasetypes.getImageName(releasetypes.LIVE_ISO, size)
+            self.failIf(n != ref,
+                        "Size: %d. Expected %s, got %s" % (size, ref, n))
+
+    def testInstShortNames(self):
+        isoMap = {681574399: 'Live CD',
+                  681574400: 'Live CD',
+                  681574401: 'Live CD',
+                  734003200: 'Live CD',
+                  734003201: 'Live DVD',
+                  4700000000: 'Live DVD',
+                  4700000001: 'Live DVD',
+                  8500000000: 'Live DVD',
+                  8500000001: 'Live DVD'}
+        for size, ref in isoMap.iteritems():
+            n = releasetypes.getImageName(releasetypes.LIVE_ISO, size,
+                                          True)
+            self.failIf(n != ref,
+                        "Size: %d. Expected %s, got %s" % (size, ref, n))
+
+    def testGeneralNames(self):
+        for type, name in [x for x in releasetypes.typeNames.iteritems() \
+                           if 'CD/DVD' not in x[1]]:
+            self.failIf(releasetypes.getImageName(type) != name,
+                        "getImageName can't handle general case long names")
+
+        for type, name in [x for x in releasetypes.typeNamesShort.iteritems() \
+            if 'CD/DVD' not in x[1]]:
+            self.failIf(releasetypes.getImageName(type, short = True) != name,
+                        "getImageName can't handle general case short names")
+
+
 if __name__ == "__main__":
     testsuite.main()
