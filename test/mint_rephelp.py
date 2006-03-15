@@ -16,6 +16,7 @@ from conary import sqlite3
 from conary import versions
 from conary.deps import deps
 from conary.lib import openpgpkey, util
+from conary.callbacks import UpdateCallback, ChangesetCallback
 
 from mint import config
 from mint import cooktypes, releasetypes
@@ -26,6 +27,12 @@ from mint.projects import mysqlTransTable
 from mint.distro import jobserver
 from mint.distro.flavors import stockFlavors
 from mint import releasetypes
+
+
+class EmptyCallback(UpdateCallback, ChangesetCallback):
+    def setChangeSet(self, name):
+        pass
+
 
 MINT_DOMAIN = 'rpath.local'
 MINT_HOST = 'test'
