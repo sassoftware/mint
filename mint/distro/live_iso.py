@@ -251,6 +251,15 @@ mount -o defaults --ro -t ext2 /dev/loop0 /sysroot
         f.write(isolinuxCfg)
         f.close()
 
+    def isoName(self, file):
+        f = os.popen('isosize %s' % file, 'r')
+        size = int(f.read())
+        f.close()
+        if size > 734003200:
+            return 'Live DVD'
+        else:
+            return 'Live CD'
+
     def finalizeIso(self):
         # move the image into place
         util.copyfile(self.outfile, os.path.join(self.liveDir, 'livecd.img'))
@@ -270,10 +279,10 @@ mount -o defaults --ro -t ext2 /dev/loop0 /sysroot
             util.execute('gzip -9 < %s > %s' % (self.liveISO, zippedImage))
             os.unlink(self.liveISO)
             os.chmod(zippedImage, 0755)
-            return (zippedImage, 'Live CD')
+            return (zippedImage, self.isoName(zippedImage))
 
         os.chmod(self.liveISO, 0755)
-        return (self.liveISO, 'Live CD')
+        return (self.liveISO, self.isoName(self.liveISO))
 
     def cleanupDirs(self):
         return
