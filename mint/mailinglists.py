@@ -4,6 +4,8 @@
 # All rights reserved
 #
 import xmlrpclib
+import sys
+import re
 from mint_error import MintError
 
 (PROJECT, PROJECT_COMMITS, PROJECT_DEVEL, PROJECT_BUGS) = range(0, 4)
@@ -60,7 +62,10 @@ class MailingListClient:
         self.server = xmlrpclib.ServerProxy(server)
 
     def list_all_lists(self):
-        lists = self.server.Mailman.listAdvertisedLists()
+        try:
+            lists = self.server.Mailman.listAdvertisedLists()
+        except:
+            raise MailingListException("Mailing List Error")
         lists.remove('mailman')
         return lists
 
@@ -72,7 +77,10 @@ class MailingListClient:
         """
         class listobj: pass
         pcre = "^%s$|^%s-" % (projectName, projectName)
-        lists = self.server.Mailman.listAdvertisedLists(pcre)
+        try:
+            lists = self.server.Mailman.listAdvertisedLists(pcre)
+        except:
+            raise MailingListException("Mailing List Error")
         returner = []
         for listname, description in lists:
             list = listobj()
@@ -82,21 +90,38 @@ class MailingListClient:
         return returner
 
     def add_list(self, adminpw, listname, listpw, description, owners, notify=True, moderate=False, domain=''):
-        listpw = self.server.Mailman.createList(adminpw, listname,
-            domain, moderate, owners, listpw, notify, ['en'])
+        try:
+            listpw = self.server.Mailman.createList(adminpw, listname,
+                domain, moderate, owners, listpw, notify, ['en'])
+        except:
+            exc_data = sys.exc_info()
+            if not re.search("Errors\.BadListNameError", str(exc_data)):
+                raise MailingListException("Mailing List Error")
         if not listpw:
             return False
         else:
-            return self.server.Mailman.setOptions(listname, listpw, {'description': description})
+            try:
+                return self.server.Mailman.setOptions(listname, listpw, {'description': description})
+            except:
+                raise MailingListException("Mailing List Error")
 
     def delete_list(self, adminpw, listname, delarchives = True):
-        return self.server.Mailman.deleteList(adminpw, listname, delarchives)
+        try:
+            return self.server.Mailman.deleteList(adminpw, listname, delarchives)
+        except:
+            raise MailingListException("Mailing List Error")
 
     def set_owners(self, listname, listpw, owners=[]):
-        return self.server.Mailman.setOptions(listname, listpw, {'owner' :owners})
+        try:
+            return self.server.Mailman.setOptions(listname, listpw, {'owner' :owners})
+        except:
+            raise MailingListException("Mailing List Error")
 
     def get_owners(self, listname, listpw):
-        return self.server.Mailman.getOptions(listname, listpw, ['owner'])['owner']
+        try:
+            return self.server.Mailman.getOptions(listname, listpw, ['owner'])['owner']
+        except:
+            raise MailingListException("Mailing List Error")
 
     def orphan_lists(self, adminpw, projectname):
         lists = self.list_lists(projectname)
@@ -109,8 +134,14 @@ class MailingListClient:
             }
         for list in lists:
             if not self.get_owners(list.name, adminpw):
-                self.server.Mailman.setOptions(list.name, adminpw, settings)
-                self.server.Mailman.resetListPassword(list.name, adminpw, '')
+                try:
+                    self.server.Mailman.setOptions(list.name, adminpw, settings)
+                except:
+                    raise MailingListException("Mailing List Error")
+                try:
+                    self.server.Mailman.resetListPassword(list.name, adminpw, '')
+                except:
+                    raise MailingListException("Mailing List Error")
         return True
 
     def adopt_lists(self, auth, adminpw, projectname):
@@ -123,9 +154,18 @@ class MailingListClient:
                 'owner': [auth.email]
             }
         for list in lists:
-            self.server.Mailman.setOptions(list.name, adminpw, settings)
-            self.server.Mailman.resetListPassword(list.name, adminpw, '')
+            try:
+                self.server.Mailman.setOptions(list.name, adminpw, settings)
+            except:
+                raise MailingListException("Mailing List Error")
+            try:
+                self.server.Mailman.resetListPassword(list.name, adminpw, '')
+            except:
+                raise MailingListException("Mailing List Error")
 
     def reset_list_password(self, listname, adminpw):
-        return self.server.Mailman.resetListPassword(listname, adminpw, '')
+        try:
+            return self.server.Mailman.resetListPassword(listname, adminpw, '')
+        except:
+            raise MailingListException("Mailing List Error")
 
