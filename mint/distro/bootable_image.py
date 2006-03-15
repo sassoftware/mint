@@ -521,7 +521,7 @@ quit
         self.status('Installing software')
         self.populateTemporaryRoot(callback)
 
-        self.status('Adding filesystem bits')
+        self.status('Populating configuration files')
         self.fileSystemOddsNEnds()
 
     def createImage(self, target = 'ext3'):
