@@ -37,7 +37,7 @@ from mint.distro.netboot_image import NetbootImage
 from mint.distro.group_trove import GroupTroveCook
 from mint.distro.bootable_image import BootableImage
 from mint.distro.raw_fs_image import RawFsImage
-from mint.distro import jsversion
+from mint.constants import mintVersion
 
 generators = {
     releasetypes.INSTALLABLE_ISO:   InstallableIso,
@@ -161,6 +161,7 @@ class JobDaemon:
 
         # normalize the job daemon machine's architecture
         # right now we only handle x86 and x86_64 images
+        log.info("rBuilder ISOgen Version: %s" % mintVersion)
         log.info("handling jobs of architecture: %s", cfg.supportedArch)
         if 'imageTypes' in cfg.jobTypes:
             log.info("handling images: %s" \
@@ -187,7 +188,7 @@ class JobDaemon:
                         job = client.startNextJob(["1#" + x for x in \
                                                    cfg.supportedArch],
                                                   cfg.jobTypes,
-                                                  jsversion.getDefaultVersion())
+                                                  mintVersion)
                     else:
                         job = None
                     if errors and not confirmedAlive:
@@ -259,10 +260,8 @@ class IsoGenConfig(ConfigFile):
         cfg.jobTypes = {}
         if 'cookTypes' in cfg.__dict__:
             cfg.jobTypes['cookTypes'] = cfg.cookTypes
-            del cfg.cookTypes
         if 'imageTypes' in cfg.__dict__:
             cfg.jobTypes['imageTypes'] = cfg.imageTypes
-            del cfg.imageTypes
         if cfg.serverUrl is None:
             log.error("a server URL must be specified in the config file,"
             " for example:")
