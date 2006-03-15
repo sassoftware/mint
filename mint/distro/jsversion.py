@@ -34,5 +34,5 @@ def getDefaultVersion(basePath = None):
     try:
         return getVersions(basePath)[-1]
     except IndexError:
-        raise mint_error.JobserverVersionMismatch("No job servers could be found.")
+        raise mint_error.JobserverVersionMismatch("No job server versions available.")
 
