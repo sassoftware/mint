@@ -20,6 +20,7 @@ from conary import versions
 from conary.repository import errors
 from conary.build import use
 from conary.conarycfg import ConfigFile
+from conary.conaryclient.cmdline import parseTroveSpec
 from conary.lib import util
 
 from flavors import stockFlavors
@@ -111,7 +112,13 @@ class InstallableIso(ImageGenerator):
     def _getUpdateJob(self, cclient, troveName):
         self.callback.setChangeSet(troveName)
         try:
-            itemList = [(troveName, (None, None), (None, None), True)]
+            dataDict = self.release.getDataDict()
+            if troveName in dataDict:
+                spec = parseTroveSpec(dataDict[troveName])
+            else:
+                spec = (troveName, None, None)
+
+            itemList = [(troveName, (None, None), (spec[1], spec[2]), True)]
             uJob, suggMap = cclient.updateChangeSet(itemList,
                 resolveDeps = False,
                 callback = self.callback)

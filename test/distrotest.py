@@ -26,6 +26,9 @@ from mint.distro import gencslist, anaconda_images, splitdistro
 from mint.distro import installable_iso
 from mint.distro.gencslist import _validateChangeSet
 
+VFS = versions.VersionFromString
+Flavor = deps.parseFlavor
+
 class DistroTest(MintRepositoryHelper):
     def testGencslist(self):
         self.addComponent("test:runtime", "1.0")
@@ -320,6 +323,11 @@ class DistroTest(MintRepositoryHelper):
         data = release.getDataDict()
         assert(data['test'] == 'test=/testproject.rpath.local@rpl:devel/1.0-1-1[]')
 
+        # update and make sure the next getUpdateJob returns the older revision
+        self.addComponent("test:runtime", "1.1")
+        uJob = iso._getUpdateJob(cclient, "test")
+        job = uJob.getPrimaryJobs().pop()
+        assert(job == ('test', (None, None), (VFS('/testproject.rpath.local@rpl:devel/1.0-1-1'), Flavor('')), True))
 
 if __name__ == "__main__":
     testsuite.main()
