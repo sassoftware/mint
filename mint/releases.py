@@ -36,14 +36,6 @@ class ReleaseDataNameError(MintError):
         else:
             self.str = reason
 
-# sizes are listed in bytes...
-discSizes = {
-    'CD: 650 MB'  : '681574400',
-    'CD: 700 MB'  : '734003200',
-    'DVD: 4.7 GB' : '4700000000',
-    'DVD: 8.5 GB' : '8500000000',
-    }
-
 imageGenTemplate = {
     # XXX this is kind of a lousy description; a toggleable "override ILP option would be nicer
     'installLabelPath': (RDT_STRING, '',  'Custom Conary installLabelPath setting (leave blank for default)'),
@@ -54,7 +46,8 @@ installableIsoTemplate = {
     'skipMediaCheck':   (RDT_BOOL, False, 'Prompt to verify CD/DVD images during install'),
     'betaNag':          (RDT_BOOL, False, 'This release is considered a beta'),
     'bugsUrl':          (RDT_STRING, 'http://bugs.rpath.com/', 'Bug report URL'),
-    'maxIsoSize':       (RDT_ENUM, '681574400', 'ISO Size', discSizes)
+    'maxIsoSize':       (RDT_ENUM, '681574400', 'ISO Size',
+                         releasetypes.discSizes)
 }
 
 bootableImageTemplate = {
