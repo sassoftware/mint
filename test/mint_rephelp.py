@@ -176,6 +176,8 @@ class MintApacheServer(rephelp.ApacheServer):
 
         cfg.visibleImageTypes = [releasetypes.INSTALLABLE_ISO,
                                  releasetypes.RAW_HD_IMAGE,
+                                 releasetypes.RAW_FS_IMAGE,
+                                 releasetypes.LIVE_ISO,
                                  releasetypes.VMWARE_IMAGE,
                                  releasetypes.STUB_IMAGE]
 
@@ -208,8 +210,15 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
 
     def __init__(self, methodName):
         rephelp.RepositoryHelper.__init__(self, methodName)
-        self.imagePath = self.tmpDir + "/images"
+        self.imagePath = os.path.join(self.tmpDir, "images")
         os.mkdir(self.imagePath)
+
+        # FIXME: this awful hack needs to go away when the MCP comes online.
+        from mint.distro import jsversion
+        from mint.constants import mintVersion
+        jsversion.DEFAULT_BASEPATH = os.path.join(self.tmpDir, 'jobserver')
+        os.mkdir(jsversion.DEFAULT_BASEPATH)
+        os.mkdir(os.path.join(jsversion.DEFAULT_BASEPATH, mintVersion))
 
     def openMintClient(self, authToken=('mintauth', 'mintpass')):
         """Return a mint client authenticated via authToken, defaults to 'mintauth', 'mintpass'"""
@@ -356,6 +365,9 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
         cfg.finishedPath    = os.path.join(self.reposDir, "jobserver", "finished-images")
         cfg.lockFile        = os.path.join(self.reposDir, "jobserver", "jobserver.pid")
 
+        cfg.jobTypes        = {'cookTypes' : cfg.cookTypes,
+                               'imageTypes' : cfg.imageTypes}
+
         for x in ["logs", "images", "finished-images"]:
             util.mkdirChain(os.path.join(self.reposDir, "jobserver", x))
 
@@ -364,6 +376,10 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
         f.close()
 
         f = open(self.tmpDir + "/bootable_image.conf", "w")
+        f.close()
+
+        f = open(self.tmpDir + "/conaryrc", "w")
+        self.cfg.display(f)
         f.close()
 
         cfg.configPath = self.tmpDir
