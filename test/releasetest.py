@@ -81,7 +81,18 @@ class ReleaseTest(MintRepositoryHelper):
 
         # test bad name lockdown
         self.assertRaises(ReleaseDataNameError,
+            release.setDataValue, 'undefinedName', 'test string')
+        self.assertRaises(ReleaseDataNameError,
                           release.getDataValue, 'undefinedName')
+
+        # test bad name with validation override
+        release.setDataValue('undefinedName', 'test string',
+            dataType = RDT_STRING, validate = False)
+        assert('test string' == release.getDataValue('undefinedName'))
+
+        # test bad name with validation override and no data type specified
+        self.assertRaises(ReleaseDataNameError,
+            release.setDataValue, 'undefinedName', None, False)
 
         release.setImageTypes([releasetypes.STUB_IMAGE])
 

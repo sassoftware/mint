@@ -13,6 +13,7 @@ import sys
 import tempfile
 
 from mint_rephelp import MintRepositoryHelper
+from mint_rephelp import EmptyCallback
 
 from conary import conarycfg, conaryclient
 from conary import versions
@@ -22,7 +23,11 @@ from conary.lib import util
 from conary import sqlite3
 
 from mint.distro import gencslist, anaconda_images, splitdistro
+from mint.distro import installable_iso
 from mint.distro.gencslist import _validateChangeSet
+
+VFS = versions.VersionFromString
+Flavor = deps.parseFlavor
 
 class DistroTest(MintRepositoryHelper):
     def testGencslist(self):
@@ -292,6 +297,37 @@ class DistroTest(MintRepositoryHelper):
             # clean up dirs
             util.rmtree(srcDir)
             util.rmtree(destDir)
+
+    def testStoreUpdateJob(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+
+        projectId = self.newProject(client)
+        project = client.getProject(projectId)
+
+        release = client.newRelease(projectId, "Test Release")
+        release.setTrove("group-dist", "/testproject.rpath.local@rpl:devel/1.0-1-1", "1#x86")
+        job = client.startImageJob(release.id)
+        isocfg = self.writeIsoGenCfg()
+
+        self.addComponent("test:runtime", "1.0")
+        self.addCollection("test", "1.0",
+            [("test:runtime", True)])
+
+        iso = installable_iso.InstallableIso(client, isocfg, job, release, project)
+        iso.callback = EmptyCallback()
+
+        cclient = conaryclient.ConaryClient(project.getConaryConfig())
+        uJob = iso._getUpdateJob(cclient, 'test')
+        iso._storeUpdateJob(uJob)
+
+        data = release.getDataDict()
+        assert(data['test'] == 'test=/testproject.rpath.local@rpl:devel/1.0-1-1[]')
+
+        # update and make sure the next getUpdateJob returns the older revision
+        self.addComponent("test:runtime", "1.1")
+        uJob = iso._getUpdateJob(cclient, "test")
+        job = uJob.getPrimaryJobs().pop()
+        assert(job == ('test', (None, None), (VFS('/testproject.rpath.local@rpl:devel/1.0-1-1'), Flavor('')), True))
 
 if __name__ == "__main__":
     testsuite.main()

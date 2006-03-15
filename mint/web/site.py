@@ -322,11 +322,14 @@ class SiteHandler(WebHandler):
             success = mlists.add_list(self.cfg.MailListPass, name, '', values['description'], auth.email, True, values['moderate'])
             if not success: error = False
         #add the commits sender address
-        mlists.server.Mailman.setOptions(
-                mailinglists.listnames[mailinglists.PROJECT_COMMITS]%projectName,
-                self.cfg.MailListPass,
-                {'accept_these_nonmembers': self.cfg.commitEmail }
-            )
+        try:
+            mlists.server.Mailman.setOptions(
+                    mailinglists.listnames[mailinglists.PROJECT_COMMITS]%projectName,
+                    self.cfg.MailListPass,
+                    {'accept_these_nonmembers': self.cfg.commitEmail }
+                )
+        except: 
+            mailinglists.MailingListException("Mailing List Error")
         return not error
 
     @strFields(title = '', hostname = '', projecturl = '', blurb = '')

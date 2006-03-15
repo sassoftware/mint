@@ -509,8 +509,19 @@ class ProjectHandler(WebHandler):
     def subscribe(self, auth, mlists, list):
         if not self.cfg.EnableMailLists:
             raise mailinglists.MailingListException("Mail Lists Disabled")
-        mlists.server.Mailman.addMember(list, self.cfg.MailListPass, auth.email, auth.fullName, '', False, True)
-        return self._mailingLists(auth, mlists, ['You have been subscribed to %s' % list])
+
+        return_data = 'You have been subscribed to %s' % list
+        try:
+            mlists.server.Mailman.addMember(list, self.cfg.MailListPass, auth.email, auth.fullName, '', False, True)
+        except:
+            exc_data = sys.exc_info()
+            if re.search("Errors\.MMAlreadyAMember", str(exc_data)):
+                return_data = "You are already subscribed to %s" % list
+            elif re.search("Errors\.MMBadEmailError", str(exc_data)):
+                raise mailinglists.MailingListException("Bad E-Mail Address")
+            else:
+                raise mailinglists.MailingListException("Mailing List Error")
+        return self._mailingLists(auth, mlists, [return_data])
 
     @requiresAuth
     @ownerOnly

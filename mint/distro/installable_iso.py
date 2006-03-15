@@ -20,10 +20,12 @@ from conary import versions
 from conary.repository import errors
 from conary.build import use
 from conary.conarycfg import ConfigFile
+from conary.conaryclient.cmdline import parseTroveSpec
 from conary.lib import util
 
 from flavors import stockFlavors
 from mint.mint import upstream
+from mint.data import RDT_STRING
 from imagegen import ImageGenerator, MSG_INTERVAL
 import gencslist
 import splitdistro
@@ -110,13 +112,28 @@ class InstallableIso(ImageGenerator):
     def _getUpdateJob(self, cclient, troveName):
         self.callback.setChangeSet(troveName)
         try:
-            itemList = [(troveName, (None, None), (None, None), True)]
+            dataDict = self.release.getDataDict()
+            if troveName in dataDict:
+                spec = parseTroveSpec(dataDict[troveName])
+            else:
+                spec = (troveName, None, None)
+
+            itemList = [(troveName, (None, None), (spec[1], spec[2]), True)]
             uJob, suggMap = cclient.updateChangeSet(itemList,
                 resolveDeps = False,
                 callback = self.callback)
         except errors.TroveNotFound:
             return None
         return uJob
+
+    def _storeUpdateJob(self, uJob):
+        """Stores the version and flavor of an update job in the ReleaseData tables"""
+        jobs = uJob.getPrimaryJobs()
+        for job in uJob.getPrimaryJobs():
+            trvName, trvVersion, trvFlavor = job[0], str(job[2][0]), str(job[2][1])
+            troveSpec = "%s=%s[%s]" % (trvName, trvVersion, trvFlavor)
+            self.release.setDataValue(trvName, troveSpec,
+                dataType = RDT_STRING, validate = False)
 
     def getConaryClient(self, tmpRoot, arch):
         cfg = self.project.getConaryConfig(overrideSSL = True,
@@ -163,6 +180,7 @@ class InstallableIso(ImageGenerator):
 
             util.mkdirChain(tmpPath + '/pixmaps')
             if uJob:
+                self._storeUpdateJob(uJob)
                 cclient.applyUpdate(uJob, callback = self.callback)
                 print >> sys.stderr, "success."
                 sys.stderr.flush()
@@ -370,8 +388,8 @@ class InstallableIso(ImageGenerator):
         uJob = self._getUpdateJob(cclient, "media-template")
         if uJob:
             cclient.applyUpdate(uJob, callback = self.callback)
-            print >> sys.stderr, "success."
-            print >> sys.stderr, "copying media template data to unified tree"
+            self._storeUpdateJob(uJob)
+            print >> sys.stderr, "sucess: copying media template data to unified tree"
             sys.stderr.flush()
 
             # copy content into unified tree root. add recurse and no-deref

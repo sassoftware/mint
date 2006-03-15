@@ -11,18 +11,15 @@ import os
 import sys
 
 from mint_rephelp import MintRepositoryHelper
+from mint_rephelp import EmptyCallback
 from conary import conarycfg, conaryclient
 from conary.deps import deps
 from conary import versions
-from conary.callbacks import UpdateCallback, ChangesetCallback
 
 from mint.distro import bootable_image
 
 VFS = versions.VersionFromString
 Flavor = deps.parseFlavor
-
-class EmptyCallback(UpdateCallback, ChangesetCallback):
-    pass
 
 class BootableImageTest(MintRepositoryHelper):
     def setupBootableImage(self, trove):

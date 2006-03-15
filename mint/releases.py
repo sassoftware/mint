@@ -412,9 +412,9 @@ class Release(database.TableObject):
             pass
         return returner
 
-    def setDataValue(self, name, value, dataType = None):
+    def setDataValue(self, name, value, dataType = None, validate = True):
         template = self.getDataTemplate()
-        if name not in template:
+        if (name not in template and validate) or (dataType is None and not validate):
             raise ReleaseDataNameError("Named value not in data template: %s" %name)
         if dataType is None:
             dataType = template[name][0]
