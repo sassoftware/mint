@@ -22,7 +22,7 @@ import grouptrove
 import base64
 from mint_error import MintError, UnknownException, PermissionDenied, \
     ReleasePublished, ReleaseMissing, ReleaseEmpty, UserAlreadyAdmin, \
-    AdminSelfDemotion
+    AdminSelfDemotion, JobserverVersionMismatch
 from searcher import SearchTermsError
 
 
@@ -348,8 +348,8 @@ class MintClient:
         @return: list of jobIds"""
         return self.server.listActiveJobs(filter)
 
-    def startNextJob(self, archTypes, jobTypes):
-        jobId = self.server.startNextJob(archTypes, jobTypes)
+    def startNextJob(self, archTypes, jobTypes, jobServerVersion):
+        jobId = self.server.startNextJob(archTypes, jobTypes, jobServerVersion)
         if jobId:
             return self.getJob(jobId)
         return None
@@ -549,6 +549,8 @@ class _Method(xmlrpclib._Method):
             raise UserAlreadyAdmin(exceptionArgs[0])
         elif exceptionName == "AdminSelfDemotion":
             raise AdminSelfDemotion(exceptionArgs[0])
+        elif exceptionName == "JobserverVersionMismatch":
+            raise JobserverVersionMismatch(exceptionArgs[0])
         else:
             raise UnknownException(exceptionName, exceptionArgs)
 
