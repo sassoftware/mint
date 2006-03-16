@@ -50,7 +50,6 @@ typeNamesShort = {
     LIVE_ISO:           "Live CD/DVD",
 }
 
-
 # sizes are listed in bytes...
 discSizes = {
     'CD: 650 MB'  : '681574400',
@@ -58,24 +57,6 @@ discSizes = {
     'DVD: 4.7 GB' : '4700000000',
     'DVD: 8.5 GB' : '8500000000',
     }
-
-def getImageName(nameIndex, size = 0, short = False):
-    if short:
-        baseName = typeNamesShort[nameIndex]
-    else:
-        baseName = typeNames[nameIndex]
-    if 'CD/DVD' not in baseName:
-        return baseName
-
-    try:
-        app = sorted([(int(x[1]),x[0]) for x in discSizes.iteritems() \
-                      if size <= int(x[1])])[0][1]
-    except IndexError:
-        # index error means your disc was too big
-        app = 'DVD: Overburn'
-    if short:
-        app = app.split(':')[0]
-    return baseName.replace('CD/DVD', app)
 
 # code generator run by make to generate javascript constants
 # should only be run by the makefile in mint/web/content/javascript
