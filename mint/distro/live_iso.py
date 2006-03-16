@@ -57,31 +57,17 @@ class InstallCallback(UpdateCallback, ChangesetCallback):
         self.timeStamp = 0
 
 
-devices = """loop0 b 7 0 0660
-console c 5 1 0660
-null c 1 3 0660
-zero c 1 5 0660
-systty c 4 0 0660
-tty1 c 4 1 0660
-tty2 c 4 2 0660
-tty3 c 4 3 0660
-tty4 c 4 4 0660"""
-
 linuxrc = """#!/bin/nash
 mount -t proc /proc /proc/
 echo Mounted /proc
 echo Mounting sysfs
 mount -t sysfs none /sys
-echo Creating /dev
+echo Mounting /dev
 mount -o mode=0755 -t tmpfs /dev /dev
 
-echo Creating block devices
-%(devices)s
-mkdir /dev/pts
-mkdir /dev/shm
-
 %(modules)s
-%(udev)s
+echo Starting udev
+/sbin/udevstart
 
 ### REVIEW THIS LINE ###
 echo 0x0100 > /proc/sys/kernel/real-root-dev
@@ -132,8 +118,6 @@ class LiveIso(bootable_image.BootableImage):
         # this is where we'll create the initrd image
         initRdDir = tempfile.mkdtemp()
         macros = {'modules' : 'echo Inserting Kernel Modules',
-                  'udev' : '',
-                  'devices' : '',
                   'mountCmd': ''}
 
         for subDir in ('bin', 'dev', 'lib', 'proc', 'sys', 'sysroot',
@@ -144,14 +128,10 @@ class LiveIso(bootable_image.BootableImage):
         os.symlink('bin', os.path.join(initRdDir, 'sbin'))
 
         # set up the binaries to copy into new filesystem.
-        binaries = ('nash', 'insmod')
-        if self.release.getDataValue('udev'):
-            binaries += ('udev', 'udevstart')
-
-            # copy the udev config file
-            util.copyfile(os.path.join(self.fakeroot, 'etc', 'udev',
-                                       'udev.conf'),
-                          os.path.join(initRdDir, 'etc', 'udev', 'udev.conf'))
+        binaries = ('nash', 'insmod', 'udev', 'udevstart')
+        # copy the udev config file
+        util.copyfile(os.path.join(self.fakeroot, 'etc', 'udev', 'udev.conf'),
+                      os.path.join(initRdDir, 'etc', 'udev', 'udev.conf'))
 
         # copy binaries from fileSystem image to initrd
         for tFile in binaries:
@@ -164,7 +144,7 @@ class LiveIso(bootable_image.BootableImage):
         util.copyfile(os.path.join(self.fallback, 'nash'),
                       os.path.join(initRdDir, 'bin', 'nash'))
         os.chmod(os.path.join(initRdDir, 'bin', 'nash'), 0755) # octal 755
-        # end FIXME
+        # end nash-losetup FIXME
 
         # soft link modprobe and hotplug to nash: keeps udev from being psycho
         for tFile in ('modprobe', 'hotplug'):
@@ -183,19 +163,6 @@ class LiveIso(bootable_image.BootableImage):
                 macros['modules'] += '\n/bin/insmod /lib/%s' % modName
             else:
                 raise AssertionError('Missing required Module: %s' % modName)
-
-        # make .DEVICES file
-        f = open(os.path.join(initRdDir, 'dev', '.DEVICES'), 'w')
-        f.write(devices)
-        f.close()
-
-        if self.release.getDataValue('udev'):
-            macros['udev'] ="""echo Starting udev
-/sbin/udevstart"""
-        else:
-            macros['devices'] = '\n'.join( \
-            ['mknod /dev/' + ' '.join(x.split()[:-1]) \
-             for x in devices.split('\n')])
 
         if self.release.getDataValue('unionfs'):
             macros['mountCmd'] = """echo Making system mount points
