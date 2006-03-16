@@ -18,6 +18,9 @@ onload = "javascript:;"
         <meta name="DESCRIPTION" content="rPath enables applications to be delivered as a software appliance which combines a software application and a streamlined version of system software that easily installs on industry standard hardware (typically a Linux server)." />
 
         <script type="text/javascript" src="${cfg.staticPath}apps/MochiKit/MochiKit.js" />
+        <script type="text/javascript">
+            var BaseUrl = '${cfg.basePath}';
+        </script>
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/generic.js" />
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/releasetypes.js" />
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/jobstatus.js" />
