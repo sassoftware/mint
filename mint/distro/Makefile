@@ -29,7 +29,7 @@ dist_files = $(python_files) $(extra_dist)
 
 all: default-all
 
-install: install-subdirs pyfiles-install-versioned
+install: install-subdirs pyfiles-install
 
 dist: default-dist
 

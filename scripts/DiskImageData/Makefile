@@ -22,12 +22,12 @@ clean: default-clean
 dist: default-dist
 
 install: 
-	mkdir -p $(DESTDIR)$(datadir)/DiskImageData-$(VERSION)
+	mkdir -p $(DESTDIR)$(datadir)/DiskImageData
 	for f in $(data_files); do \
-                install -m 644 $$f $(DESTDIR)$(datadir)/DiskImageData-$(VERSION)/$$f; \
+                install -m 644 $$f $(DESTDIR)$(datadir)/DiskImageData/$$f; \
         done
 	for f in $(bin_files); do \
-		 install -m 755 $$f $(DESTDIR)$(datadir)/DiskImageData-$(VERSION)/$$f; \
+		 install -m 755 $$f $(DESTDIR)$(datadir)/DiskImageData/$$f; \
         done
 
 include ../../Make.rules

@@ -15,13 +15,6 @@ pyfiles-install:
 		cp -a $$f $(DESTDIR)/$(mintdir)/$(DIR)/$$f; \
 	done
 
-pyfiles-install-versioned:
-	mkdir -p $(DESTDIR)$(mintdir)
-	for f in $(python_files) $(bin_files) $(extra_inst); do \
-		mkdir -p `dirname $(DESTDIR)/$(mintdir)/$(DIR)-$(VERSION)/$$f`; \
-		cp -a $$f $(DESTDIR)/$(mintdir)/$(DIR)-$(VERSION)/$$f; \
-	done
-
 default-dist: dist-subdirs
 	for f in $(dist_files); do \
 		mkdir -p $(DISTDIR)/$(DIR)/`dirname $$f`; \
