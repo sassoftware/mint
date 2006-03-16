@@ -11,7 +11,7 @@ from conary.conaryclient.cmdline import parseTroveSpec
 
 DEFAULT_BASEPATH = os.path.join(os.path.sep, 'srv', 'mint', 'jobserver')
 
-def _getVersions(basePath = None):
+def getVersionsOnDisk(basePath = None):
     if basePath is None:
         basePath = DEFAULT_BASEPATH
     return sorted([x for x in os.listdir(basePath) \
@@ -24,7 +24,7 @@ def getVersions(basePath = None):
     try:
         f = open(os.path.join(basePath, 'versions'))
     except:
-        return _getVersions(basePath)
+        return getVersionsOnDisk(basePath)
     try:
         return [parseTroveSpec(x)[1].split('-')[0] for x in f.readlines()]
     finally:
