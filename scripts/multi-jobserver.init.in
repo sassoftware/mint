@@ -7,7 +7,7 @@
 # processname: job-server
 # config: @DESTDIR@/usr/bin
 
-JOBSERVER_BASEPATH = '@DESTDIR@/jobserver'
+JOBSERVER_BASEPATH='@DESTDIR@/%(servicedir)s/mint/jobserver'
 
 case "$1" in
   start|stop|restart)

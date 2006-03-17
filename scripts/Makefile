@@ -54,6 +54,9 @@ install: install-subdirs
 	mkdir -p $(DESTDIR)/$(sysconfdir)/init.d/
 	install -m 755 job-server.init.in $(DESTDIR)/$(sysconfdir)/init.d/rbuilder-isogen
 	sed -i "s,@DESTDIR@,$(installdir),g" $(DESTDIR)/$(sysconfdir)/init.d/rbuilder-isogen
+	install -m 755 multi-jobserver.init.in $(DESTDIR)/$(sysconfdir)/init.d/multi-jobserver
+	sed -i "s,@DESTDIR@,$(installdir),g" $(DESTDIR)/$(sysconfdir)/init.d/multi-jobserver
+
 	mkdir -p $(DESTDIR)/$(bindir)/
 	install -m 755 raw2vmdk	$(DESTDIR)/$(bindir)/
 
