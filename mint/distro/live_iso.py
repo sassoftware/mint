@@ -69,13 +69,11 @@ mount -o mode=0755 -t tmpfs /dev /dev
 echo Starting udev
 /sbin/udevstart
 
-### REVIEW THIS LINE ###
+mkrootdev /dev/root
 echo 0x0100 > /proc/sys/kernel/real-root-dev
-### END REVIEW ###
 
-# FIXME: this must be dymanic
 echo Mounting CD-ROM
-mount -o defaults --ro -t iso9660 /dev/hdc /cdrom
+mount -o defaults --ro -t iso9660 /dev/root /cdrom
 %(mountCmd)s
 echo Running pivot_root
 pivot_root /sysroot /sysroot/initrd
@@ -84,7 +82,7 @@ umount /initrd/proc
 
 isolinuxCfg="""label linux
   kernel vmlinuz
-  append initrd=initrd.img
+  append initrd=initrd.img root=LABEL=%s
 """
 
 class LiveIso(bootable_image.BootableImage):
@@ -113,6 +111,11 @@ class LiveIso(bootable_image.BootableImage):
             print >> sys.stderr, "Using user defined: %s" % tFile
             util.copyfile(src, dest)
         return not fallback
+
+    def getVolName(self):
+        name = self.release.getName()
+        # srcub all non alphanumeric characters. we use this in a system call.
+        return ''.join([x.isalnum() and x or '_' for x in name])
 
     def mkinitrd(self):
         # this is where we'll create the initrd image
@@ -215,7 +218,7 @@ mount -o defaults --ro -t ext2 /dev/loop0 /sysroot
                           os.path.join(self.liveDir, 'isolinux.bin'))
 
         f = open(os.path.join(self.liveDir, 'isolinux.cfg'), 'w')
-        f.write(isolinuxCfg)
+        f.write(isolinuxCfg % self.getVolName())
         f.close()
 
     def isoName(self, file):
@@ -237,7 +240,7 @@ mount -o defaults --ro -t ext2 /dev/loop0 /sysroot
         fd, self.liveISO = tempfile.mkstemp('.iso', 'livecd',
                                             self.cfg.imagesPath)
         os.close(fd)
-        util.execute('mkisofs -o %s -J -R -b isolinux.bin -c boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table .' % self.liveISO)
+        util.execute('mkisofs -o %s -J -R -b isolinux.bin -c boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -V %s .' % (self.liveISO, self.getVolName()))
         os.chmod(self.liveISO, 0755) # octal 755
 
         # zip the final product is the main image wasn't compressed already
