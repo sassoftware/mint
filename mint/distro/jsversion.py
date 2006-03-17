@@ -27,7 +27,7 @@ def getVersions(basePath = None):
     except:
         return getVersionsOnDisk(basePath)
     try:
-        vers = [versions.VersionFromString(parseTroveSpec(x)[1]) for x in f.readlines()]
+        vers = [versions.VersionFromString(parseTroveSpec(x.strip())[1]) for x in f.readlines()]
         return [str(x.trailingRevision()).split('-')[0] for x in vers]
     finally:
         f.close()
