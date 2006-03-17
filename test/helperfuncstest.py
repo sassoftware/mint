@@ -221,9 +221,9 @@ class HelperFunctionsTest(unittest.TestCase):
             self.failIf(jsversion.getDefaultVersion(tmpDir) != '15.20.1',
                         "Wrong default job server version.")
 
-            specStrings = ('/testproject.rpath.local@rpl:devel=1.0.0-1-1',
-                           '/testproject.rpath.local@rpl:devel=1.5.4-1-1',
-                           '/testproject.rpath.local@rpl:devel=2.0.3-1-1',)
+            specStrings = ('trove=/testproject.rpath.local@rpl:devel/1.0.0-1-1',
+                           'trove=/testproject.rpath.local@rpl:devel/1.5.4-1-1',
+                           'trove=/testproject.rpath.local@rpl:devel/2.0.3-1-1',)
             f = open(os.path.join(tmpDir, 'versions'), 'w')
             f.write('\n'.join(specStrings))
             f.close()

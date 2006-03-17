@@ -7,6 +7,7 @@ import os
 import re
 from mint import mint_error
 
+from conary import versions
 from conary.conaryclient.cmdline import parseTroveSpec
 
 DEFAULT_BASEPATH = os.path.join(os.path.sep, 'srv', 'mint', 'jobserver')
@@ -26,7 +27,8 @@ def getVersions(basePath = None):
     except:
         return getVersionsOnDisk(basePath)
     try:
-        return [parseTroveSpec(x)[1].split('-')[0] for x in f.readlines()]
+        vers = [versions.VersionFromString(parseTroveSpec(x)[1]) for x in f.readlines()]
+        return [str(x.trailingRevision()).split('-')[0] for x in vers]
     finally:
         f.close()
 
