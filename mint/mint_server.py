@@ -1910,9 +1910,9 @@ class MintServer(object):
         # of MintServer is instantiated per call.
         self._allowPrivate = True
 
-        def dictByArch(leaves, trove):
+        def dictByArch(versionList, trove):
             archMap = {}
-            for v, flavors in reversed(sorted(leaves[trove].items())):
+            for v, flavors in reversed(sorted(versionList[trove].items())):
                 for f in flavors:
                     # skip broken groups that don't have an instruction set
                     if deps.DEP_CLASS_IS not in f.members:
@@ -1934,10 +1934,10 @@ class MintServer(object):
         else:
             cfg = project.getConaryConfig(overrideSSL = True, useSSL = self.cfg.SSL)
         nc = conaryclient.ConaryClient(cfg).getRepos()
-        leaves = nc.getAllTroveLeaves(cfg.repositoryMap.keys()[0], {trove: {None: None}})
+        versionList = nc.getTroveVersionList(cfg.repositoryMap.keys()[0], {None:None})
 
         # group trove by major architecture
-        return dictByArch(leaves, trove)
+        return dictByArch(versionList, trove)
 
     @typeCheck(int)
     @requiresAuth

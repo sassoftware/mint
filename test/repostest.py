@@ -159,10 +159,17 @@ class RepositoryTest(MintRepositoryHelper):
         assert(troveNames == ['testcase', 'testcase:runtime', 'testcase:source'])
 
     def testGetTroveVersionsByArch(self):
-        expectedRE = "\{'x86_64': \[\('/testproject.rpath.local@rpl:devel/1.0-1-1', "\
+        expectedRE = "\{'x86_64': \[\('/testproject.rpath.local@rpl:devel/1.0-1-2', "\
+                   "'/testproject\.rpath\.local@rpl:devel/\d+\.\d+:1.0-1-2', "\
+                   "'1#x86_64'\), "\
+                   "\('/testproject.rpath.local@rpl:devel/1.0-1-1', "\
                    "'/testproject\.rpath\.local@rpl:devel/\d+\.\d+:1.0-1-1', "\
-                   "'1#x86_64'\)\], 'x86': "\
-                   "\[\('/testproject.rpath.local@rpl:devel/1.0-1-1', "\
+                   "'1#x86_64'\)\], "\
+                   "'x86': "\
+                   "\[\('/testproject.rpath.local@rpl:devel/1.0-1-2', "\
+                   "'/testproject.rpath.local@rpl:devel/\d+\.\d+:1.0-1-2', "\
+                   "'1#x86'\), "\
+                   "\('/testproject.rpath.local@rpl:devel/1.0-1-1', "\
                    "'/testproject.rpath.local@rpl:devel/\d+\.\d+:1.0-1-1', "\
                    "'1#x86'\)\]\}"
 
@@ -175,6 +182,7 @@ class RepositoryTest(MintRepositoryHelper):
             self.addComponent("test:runtime", "1.0", flavor=f)
             self.addCollection("test", "1.0", [(":runtime", "1.0", f) ])
             self.addCollection("group-core", "1.0", [("test", "1.0" , f)])
+            self.addCollection("group-core", "1.0-1-2", [("test", "1.0" , f)])
 
         troveVersions = client.server.getTroveVersionsByArch(projectId, "group-core=testproject.rpath.local@rpl:devel")
 
