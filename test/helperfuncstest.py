@@ -235,10 +235,6 @@ class HelperFunctionsTest(unittest.TestCase):
         finally:
             util.rmtree(tmpDir)
 
-    def testReality(self):
-        import epdb
-        epdb.st()
-
 
 if __name__ == "__main__":
     testsuite.main()
