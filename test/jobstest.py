@@ -9,6 +9,7 @@ testsuite.setup()
 import time
 
 from mint_rephelp import MintRepositoryHelper
+from mint_rephelp import MINT_PROJECT_DOMAIN
 from mint import jobstatus
 from mint import jobs
 from mint import releasetypes
@@ -133,11 +134,13 @@ class JobsTest(MintRepositoryHelper):
 
         self.makeSourceTrove("testcase", testRecipe)
         self.cookFromRepository("testcase",
-            versions.Label("testproject.rpath.local@rpl:devel"),
+            versions.Label("testproject." + MINT_PROJECT_DOMAIN + \
+                    "@rpl:devel"),
             ignoreDeps = True)
 
         trvName = 'testtrove'
-        trvVersion = '/testproject.rpath.local@rpl:devel/1.0-1-1'
+        trvVersion = '/testproject.' + MINT_PROJECT_DOMAIN + \
+                '@rpl:devel/1.0-1-1'
         trvFlavor = '1#x86|5#use:~!kernel.debug:~kernel.smp'
         subGroup = ''
 
@@ -356,7 +359,8 @@ class JobsTest(MintRepositoryHelper):
         groupTroveId = groupTrove.getId()
 
         trvName = 'testtrove'
-        trvVersion = '/testproject.rpath.local@rpl:devel/1.0-1-1'
+        trvVersion = '/testproject.' + MINT_PROJECT_DOMAIN + \
+                '@rpl:devel/1.0-1-1'
         trvFlavor = '1#x86|5#use:~!kernel.debug:~kernel.smp'
         subGroup = ''
 
@@ -429,7 +433,8 @@ class JobsTest(MintRepositoryHelper):
         groupTroveId = groupTrove.getId()
 
         trvName = 'testtrove'
-        trvVersion = '/testproject.rpath.local@rpl:devel/1.0-1-1'
+        trvVersion = '/testproject.' + MINT_PROJECT_DOMAIN + \
+                '@rpl:devel/1.0-1-1'
         trvFlavor = '1#x86|5#use:~!kernel.debug:~kernel.smp'
         subGroup = ''
 
@@ -490,7 +495,8 @@ class JobsTest(MintRepositoryHelper):
         groupTroveId = groupTrove.getId()
 
         trvName = 'testtrove'
-        trvVersion = '/testproject.rpath.local@rpl:devel/1.0-1-1'
+        trvVersion = '/testproject.' + MINT_PROJECT_DOMAIN + \
+                '@rpl:devel/1.0-1-1'
         trvFlavor = '1#x86|5#use:~!kernel.debug:~kernel.smp'
         subGroup = ''
 
@@ -526,7 +532,8 @@ class JobsTest(MintRepositoryHelper):
 
             groupTroveId = groupTrove.getId()
             trvName = 'testtrove'
-            trvVersion = '/testproject.rpath.local@rpl:devel/1.0-1-1'
+            trvVersion = '/testproject.' + MINT_PROJECT_DOMAIN + \
+                    '@rpl:devel/1.0-1-1'
             trvFlavor = '1#x86|5#use:~!kernel.debug:~kernel.smp'
             subGroup = ''
 
@@ -569,7 +576,8 @@ class JobsTest(MintRepositoryHelper):
 
         groupTroveId = groupTrove.getId()
         trvName = 'testtrove'
-        trvVersion = '/testproject.rpath.local@rpl:devel/1.0-1-1'
+        trvVersion = '/testproject.' + MINT_PROJECT_DOMAIN + \
+                '@rpl:devel/1.0-1-1'
         trvFlavor = '1#x86|5#use:~!kernel.debug:~kernel.smp'
         subGroup = ''
 
@@ -624,7 +632,8 @@ class JobsTest(MintRepositoryHelper):
         groupTroveId = groupTrove.getId()
 
         trvName = 'testtrove'
-        trvVersion = '/testproject.rpath.local@rpl:devel/1.0-1-1'
+        trvVersion = '/testproject.' + MINT_PROJECT_DOMAIN + \
+                '@rpl:devel/1.0-1-1'
         trvFlavor = '1#x86|5#use:~!kernel.debug:~kernel.smp'
         subGroup = ''
 
@@ -666,7 +675,8 @@ class JobsTest(MintRepositoryHelper):
                                                  False)
 
             trvName = 'testtrove'
-            trvVersion = '/testproject.rpath.local@rpl:devel/1.0-1-1'
+            trvVersion = '/testproject.' + MINT_PROJECT_DOMAIN + \
+                    '@rpl:devel/1.0-1-1'
             trvFlavor = '1#x86|5#use:~!kernel.debug:~kernel.smp'
             subGroup = ''
 
@@ -726,7 +736,8 @@ class JobsTest(MintRepositoryHelper):
         groupTroveId = groupTrove.getId()
 
         trvName = 'testtrove'
-        trvVersion = '/testproject.rpath.local@rpl:devel/1.0-1-1'
+        trvVersion = '/testproject.' + MINT_PROJECT_DOMAIN + \
+                '@rpl:devel/1.0-1-1'
         trvFlavor = '1#x86|5#use:~!kernel.debug:~kernel.smp'
         subGroup = ''
 
@@ -763,7 +774,8 @@ class JobsTest(MintRepositoryHelper):
         groupTroveId = groupTrove.getId()
 
         trvName = 'testtrove'
-        trvVersion = '/testproject.rpath.local@rpl:devel/1.0-1-1'
+        trvVersion = '/testproject.' + MINT_PROJECT_DOMAIN + \
+                '@rpl:devel/1.0-1-1'
         trvFlavor = '1#x86|5#use:~!kernel.debug:~kernel.smp'
         subGroup = ''
 

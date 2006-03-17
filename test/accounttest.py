@@ -7,6 +7,7 @@ import testsuite
 testsuite.setup()
 
 from mint_rephelp import MintRepositoryHelper
+from mint_rephelp import MINT_HOST, MINT_PROJECT_DOMAIN
 from mint import userlevels
 from mint.mint_error import PermissionDenied, UserAlreadyAdmin, AdminSelfDemotion
 from mint.users import LastOwner, UserInduction, MailError, GroupAlreadyExists, AlreadyConfirmed
@@ -326,14 +327,18 @@ class AccountTest(MintRepositoryHelper):
 
         self.openRepository()
         client, userId = self.quickMintUser("testuser", "testpass")
-        intProjectId = self.newProject(client, "Internal Project", "internal")
-        extProjectId = self.newProject(client, "External Project", "external")
+        intProjectId = self.newProject(client, "Internal Project", "internal",
+                MINT_PROJECT_DOMAIN)
+        extProjectId = self.newProject(client, "External Project", "external",
+                MINT_PROJECT_DOMAIN)
 
         deleteMintAuth(extProjectId)
         extProject = client.getProject(extProjectId)
-        labelId = extProject.getLabelIdMap()['external.rpath.local@rpl:devel']
-        extProject.editLabel(labelId, "external.rpath.local@rpl:devel",
-            'http://test.rpath.local:%d/repos/external/' % self.port, 'anonymous', 'anonymous')
+        labelId = extProject.getLabelIdMap()['external.'+MINT_PROJECT_DOMAIN+'@rpl:devel']
+        extProject.editLabel(labelId, "external.%s@rpl:devel" % \
+                MINT_PROJECT_DOMAIN,
+            'http://%s.%s:%d/repos/external/' % (MINT_HOST,
+                MINT_PROJECT_DOMAIN, self.port), 'anonymous', 'anonymous')
 
         cu = self.db.cursor()
         cu.execute("UPDATE Projects SET external=1 WHERE projectId=?", extProjectId)
@@ -347,8 +352,10 @@ class AccountTest(MintRepositoryHelper):
         internal = client.getProject(intProjectId)
         external = client.getProject(extProjectId)
 
-        intLabel = versions.Label('internal.rpath.local@rpl:devel')
-        extLabel = versions.Label('external.rpath.local@rpl:devel')
+        intLabel = versions.Label('internal.' + MINT_PROJECT_DOMAIN + \
+                '@rpl:devel')
+        extLabel = versions.Label('external.' + MINT_PROJECT_DOMAIN + \
+                '@rpl:devel')
 
         # accessed using new password
         cfg = internal.getConaryConfig()

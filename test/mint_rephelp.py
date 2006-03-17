@@ -8,6 +8,7 @@ import mysqlharness
 import testsuite
 import rephelp
 import sys
+import urlparse
 
 from webunit import webunittest
 
@@ -28,14 +29,21 @@ from mint.distro import jobserver
 from mint.distro.flavors import stockFlavors
 from mint import releasetypes
 
+# NOTE: make sure that test.rpath.local and test.rpath.local2 is in your
+# system's /etc/hosts file (pointing to 127.0.0.1) before running this
+# test suite.
+MINT_HOST = 'test'
+MINT_DOMAIN = 'rpath.local'
+MINT_PROJECT_DOMAIN = 'rpath.local2'
+
+# Stop any redirection loops, if encountered, after 20 redirects.
+MAX_REDIRECTS = 20
+
 
 class EmptyCallback(UpdateCallback, ChangesetCallback):
     def setChangeSet(self, name):
         pass
 
-
-MINT_DOMAIN = 'rpath.local'
-MINT_HOST = 'test'
 
 class MintDatabase:
     def __init__(self, path):
@@ -141,10 +149,12 @@ class MintApacheServer(rephelp.ApacheServer):
         cfg = config.MintConfig()
 
         cfg.siteDomainName = "%s:%i" % (MINT_DOMAIN, self.port)
-        cfg.projectDomainName = "%s:%i" % (MINT_DOMAIN, self.port)
+        cfg.projectDomainName = "%s:%i" % (MINT_PROJECT_DOMAIN, self.port)
         cfg.externalDomainName = "%s:%i" % (MINT_DOMAIN, self.port)
         cfg.hostName = MINT_HOST
         cfg.secureHost = "%s.%s:%i" % (MINT_HOST, MINT_DOMAIN, self.port)
+        cfg.httpPort = self.port
+        cfg.httpsPort = self.port
 
         sqldriver = os.environ.get('CONARY_REPOS_DB', 'sqlite')
         if sqldriver == 'sqlite':
@@ -175,7 +185,8 @@ class MintApacheServer(rephelp.ApacheServer):
         cfg.configured = True
         cfg.debugMode = True
         cfg.sendNotificationEmails = False
-        cfg.commitAction = """%s/scripts/commitaction --username mintauth --password mintpass --repmap '%%(repMap)s' --build-label %%(buildLabel)s --module \'%s/mint/rbuilderaction.py --user %%%%(user)s --url http://mintauth:mintpass@%s:%d/xmlrpc-private/'""" % (conaryPath, mintPath, 'test.rpath.local', self.port)
+        cfg.commitAction = """%s/scripts/commitaction --username mintauth --password mintpass --repmap '%%(repMap)s' --build-label %%(buildLabel)s --module \'%s/mint/rbuilderaction.py --user %%%%(user)s --url http://mintauth:mintpass@%s:%d/xmlrpc-private/'""" % (conaryPath, mintPath, MINT_HOST + '.' + \
+                MINT_PROJECT_DOMAIN, self.port)
         cfg.postCfg()
 
         cfg.hideFledgling = True
@@ -193,7 +204,7 @@ class MintApacheServer(rephelp.ApacheServer):
 
 class MintServerCache(rephelp.ServerCache):
     def getServerClass(self, envname):
-        name = "mint.rpath.local"
+        name = "mint." + MINT_DOMAIN
         server = None
         serverDir = os.environ.get('CONARY_PATH') + '/conary/server'
         serverClass = MintApacheServer
@@ -202,7 +213,7 @@ class MintServerCache(rephelp.ServerCache):
 
 
 rephelp._servers = MintServerCache()
-rephelp.SERVER_HOSTNAME = "mint.rpath.local@rpl:devel"
+rephelp.SERVER_HOSTNAME = "mint." + MINT_DOMAIN + "@rpl:devel"
 
 
 class MintRepositoryHelper(rephelp.RepositoryHelper):
@@ -283,7 +294,7 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
 
     def newProject(self, client, name = "Test Project",
                    hostname = "testproject",
-                   domainname = "rpath.local"):
+                   domainname = MINT_PROJECT_DOMAIN):
         """Create a new mint project and return that project ID."""
         # save the current openpgpkey cache
         keyCache = openpgpkey.getKeyCache()
@@ -301,7 +312,7 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
         self.cfg.buildLabel = versions.Label("%s.%s@rpl:devel" % \
                                              (hostname, domainname))
         self.cfg.repositoryMap = {"%s.%s" % (hostname, domainname):
-            "http://%s.%s:%d/repos/%s/" % (MINT_HOST, MINT_DOMAIN,
+            "http://%s.%s:%d/repos/%s/" % (MINT_HOST, MINT_PROJECT_DOMAIN,
                                            self.port, hostname)}
 
         self.cfg.user.insert(0, ("%s.%s" % (hostname, domainname),
@@ -398,17 +409,59 @@ class WebRepositoryHelper(MintRepositoryHelper, webunittest.WebTestCase):
         webunittest.WebTestCase.__init__(self, methodName)
         MintRepositoryHelper.__init__(self, methodName)
 
+    # XXX: Override broken version of assertContent / assertNotContent
+    # which doesn't pass along kwargs. This can be removed if webunittest
+    # ever gets fixed. --sgp
+    def assertContent(self, url, content, code=None, **kw):
+        if code is None: self.expect_codes
+        return self.postAssertContent(url, None, content, code, **kw)
+
+    def assertNotContent(self, url, content, code=None, **kw):
+        if code is None: self.expect_codes
+        return self.postAssertNotContent(url, None, content, code, **kw)
+
+    def fetchWithRedirect(self, url, params = None, code = None, **kwargs):
+        if code is None: code = self.expect_codes
+        redirects = 0
+
+        while True:
+            try:
+                if not redirects and params:
+                    response = self.post(url, params, code, **kwargs)
+                else:
+                    response = self.get(url, code, **kwargs)
+                if response.code not in (301, 302):
+                    break
+                redirects += 1
+                if redirects >= MAX_REDIRECTS:
+                    raise self.failureException, "Too many redirects"
+                # Figure the location - which may be relative
+                newurl = response.headers['Location']
+                url = urlparse.urljoin(url, newurl)
+            except webunittest.HTTPError, error:
+                raise self.failureException, str(error)
+
+        return response
+
     def getServerData(self):
-        server = 'test.rpath.local'
+        server = self.getServerHostname()
         # spawn a server if needed, then point our code at it...
         if self.servers.servers[0] is None:
             self.openRepository()
         return server, self.servers.servers[0].port
 
+    def getServerHostname(self):
+        return '%s.%s' % (MINT_HOST, MINT_DOMAIN)
+
+    def getProjectServerHostname(self):
+        return '%s.%s' % (MINT_HOST, MINT_PROJECT_DOMAIN)
+
     def getMintUrl(self):
         return 'http://%s:%d/' % (self.getServerData())
 
     def setUp(self):
+        # add our redirect method into HTTPResponse
+        webunittest.HTTPResponse.fetchWithRedirect = self.fetchWithRedirect
         webunittest.WebTestCase.setUp(self)
         MintRepositoryHelper.setUp(self)
         self.setAcceptCookies(True)
@@ -417,8 +470,6 @@ class WebRepositoryHelper(MintRepositoryHelper, webunittest.WebTestCase):
         # this is tortured, but webunit won't run without it.
         webunittest.HTTPResponse._TestCase__testMethodName = \
                                           self._TestCase__testMethodName
-        # set the cookie to stop the redirect madness
-        page = self.fetch('')
 
     def tearDown(self):
         self.clearCookies()
@@ -428,8 +479,8 @@ class WebRepositoryHelper(MintRepositoryHelper, webunittest.WebTestCase):
 
     def webLogin(self, username, password):
         page = self.fetch('')
-        page = self.fetch('/processLogin', postdata = \
-            {'username': username,
-             'password': password})
+        page = page.postForm(1, self.fetchWithRedirect,
+                    {'username': username,
+                     'password': password})
         page = self.fetch('')
         return page

@@ -14,6 +14,7 @@ import tempfile
 
 from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import EmptyCallback
+from mint_rephelp import MINT_PROJECT_DOMAIN
 
 from conary import conarycfg, conaryclient
 from conary import versions
@@ -305,7 +306,8 @@ class DistroTest(MintRepositoryHelper):
         project = client.getProject(projectId)
 
         release = client.newRelease(projectId, "Test Release")
-        release.setTrove("group-dist", "/testproject.rpath.local@rpl:devel/1.0-1-1", "1#x86")
+        release.setTrove("group-dist", "/testproject." + \
+                MINT_PROJECT_DOMAIN + "@rpl:devel/1.0-1-1", "1#x86")
         job = client.startImageJob(release.id)
         isocfg = self.writeIsoGenCfg()
 
@@ -321,13 +323,15 @@ class DistroTest(MintRepositoryHelper):
         iso._storeUpdateJob(uJob)
 
         data = release.getDataDict()
-        assert(data['test'] == 'test=/testproject.rpath.local@rpl:devel/1.0-1-1[]')
+        assert(data['test'] == 'test=/testproject.' + \
+                MINT_PROJECT_DOMAIN + '@rpl:devel/1.0-1-1[]')
 
         # update and make sure the next getUpdateJob returns the older revision
         self.addComponent("test:runtime", "1.1")
         uJob = iso._getUpdateJob(cclient, "test")
         job = uJob.getPrimaryJobs().pop()
-        assert(job == ('test', (None, None), (VFS('/testproject.rpath.local@rpl:devel/1.0-1-1'), Flavor('')), True))
+        assert(job == ('test', (None, None), (VFS('/testproject.' + \
+                MINT_PROJECT_DOMAIN + '@rpl:devel/1.0-1-1'), Flavor('')), True))
 
 if __name__ == "__main__":
     testsuite.main()

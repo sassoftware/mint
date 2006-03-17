@@ -18,6 +18,7 @@ from mint.helperfuncs import truncateForDisplay, extractBasePath
 from mint.userlevels import myProjectCompare
 from mint.mint import timeDelta
 from mint.distro import jsversion
+from mint_rephelp import MINT_PROJECT_DOMAIN
 
 from conary.lib import util
 
@@ -221,9 +222,12 @@ class HelperFunctionsTest(unittest.TestCase):
             self.failIf(jsversion.getDefaultVersion(tmpDir) != '15.20.1',
                         "Wrong default job server version.")
 
-            specStrings = ('trove=/testproject.rpath.local@rpl:devel/1.0.0-1-1',
-                           'trove=/testproject.rpath.local@rpl:devel/1.5.4-1-1',
-                           'trove=/testproject.rpath.local@rpl:devel/2.0.3-1-1',)
+            specStrings = ('trove=/testproject.' + MINT_PROJECT_DOMAIN + \
+                                   '@rpl:devel/1.0.0-1-1',
+                           'trove=/testproject.' + MINT_PROJECT_DOMAIN + \
+                                   '@rpl:devel/1.5.4-1-1',
+                           'trove=/testproject.' + MINT_PROJECT_DOMAIN + \
+                                   '@rpl:devel/2.0.3-1-1',)
             f = open(os.path.join(tmpDir, 'versions'), 'w')
             f.write('\n'.join(specStrings))
             f.close()

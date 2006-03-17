@@ -11,6 +11,7 @@ import os
 import sys
 
 from mint_rephelp import MintRepositoryHelper
+from mint_rephelp import MINT_PROJECT_DOMAIN
 from mint.data import RDT_STRING, RDT_BOOL, RDT_INT
 from mint.releases import ReleaseDataNameError
 from mint.mint_error import ReleasePublished, ReleaseMissing, ReleaseEmpty
@@ -439,7 +440,8 @@ class ReleaseTest(MintRepositoryHelper):
         release = client.newRelease(projectId, 'release 1')
         release.setImageTypes([releasetypes.INSTALLABLE_ISO])
         release.setTrove("group-core",
-                         "/testproject.rpath.local@rpl:devel/0.0:1.0-1-1",
+                         "/testproject." + MINT_PROJECT_DOMAIN + \
+                                 "@rpl:devel/0.0:1.0-1-1",
                          "1#x86")
 
         self.stockReleaseFlavor(release.getId())
@@ -504,8 +506,8 @@ class ReleaseTest(MintRepositoryHelper):
         release = client.newRelease(projectId, "Test Release")
         templates = [x[0] for x in release.getDisplayTemplates()]
         assert(['Image Settings', 'Installable CD/DVD Settings',
-                'Bootable Image Common Settings', 'VMware Image Settings',
-                'Stub Image Settings'] == templates)
+                'Bootable Image Common Settings', 'Live ISO Settings',
+                'VMware Image Settings', 'Stub Image Settings'] == templates)
 
     def testFreespace(self):
         client, userId = self.quickMintUser("testuser", "testpass")

@@ -11,6 +11,7 @@ import sys
 from conary.conaryclient import ConaryClient
 
 from mint_rephelp import MintRepositoryHelper
+from mint_rephelp import MINT_PROJECT_DOMAIN
 from mint import userlevels
 from mint.database import DuplicateItem, ItemNotFound
 from mint.projects import InvalidHostname, DuplicateHostname, DuplicateName
@@ -74,7 +75,7 @@ class ProjectTest(MintRepositoryHelper):
         project = client.getProjectByHostname("test1")
         assert(projectId == project.getId())
 
-        project = client.getProjectByFQDN("test1.rpath.local")
+        project = client.getProjectByFQDN("test1." + MINT_PROJECT_DOMAIN)
         assert(projectId == project.getId())
    
     def testMembers(self):
@@ -162,11 +163,13 @@ class ProjectTest(MintRepositoryHelper):
         # make sure we can properly translate a hostname with a dash in it
         # all the way to the conary handler.
         client, userId = self.quickMintUser("testuser", "testpass")
-        projectId = client.newProject("Foo", "test-project", "rpath.local")
+        projectId = client.newProject("Foo", "test-project",
+                MINT_PROJECT_DOMAIN)
 
         project = client.getProject(projectId)
         cfg = project.getConaryConfig()
-        assert(ConaryClient(cfg).getRepos().troveNamesOnServer("test-project.rpath.local") == [])
+        assert(ConaryClient(cfg).getRepos().troveNamesOnServer("test-project." \
+                + MINT_PROJECT_DOMAIN) == [])
 
     def testUnconfirmedMembers(self):
         client = self.openMintClient()
@@ -337,7 +340,7 @@ class ProjectTest(MintRepositoryHelper):
         self.db.commit()
 
         project = client.getProject(projectId)
-        assert(client.server._server.getGroupTroves(projectId) == {'external.rpath.local@rpl:devel': []})
+        assert(client.server._server.getGroupTroves(projectId) == {'external.' + MINT_PROJECT_DOMAIN + '@rpl:devel': []})
 
     def testCreateExternalProject(self):
         # ensure only site admins can create external projects

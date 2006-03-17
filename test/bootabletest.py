@@ -11,6 +11,7 @@ import os
 import sys
 
 from mint_rephelp import MintRepositoryHelper
+from mint_rephelp import MINT_PROJECT_DOMAIN
 from mint_rephelp import EmptyCallback
 from conary import conarycfg, conaryclient
 from conary.deps import deps
@@ -25,7 +26,8 @@ class BootableImageTest(MintRepositoryHelper):
     def setupBootableImage(self, trove):
         client, userId = self.quickMintUser("testuser", "testpass")
 
-        projectId = client.newProject("Test", "testproject", "rpath.local")
+        projectId = client.newProject("Test", "testproject",
+                MINT_PROJECT_DOMAIN)
         project = client.getProject(projectId)
 
         release = client.newRelease(projectId, "Test Release")

@@ -10,6 +10,8 @@ import testsuite
 testsuite.setup()
 
 import mint_rephelp
+from mint_rephelp import MINT_PROJECT_DOMAIN, MINT_DOMAIN
+
 import rephelp
 
 from mint import mint_error
@@ -24,7 +26,7 @@ import cPickle
 
 class WebPageTest(mint_rephelp.WebRepositoryHelper):
     def sessionData(self):
-        sid = self.cookies['.rpath.local']['/']['pysid'].value
+        sid = self.cookies['.' + MINT_PROJECT_DOMAIN + '']['/']['pysid'].value
         cu = self.db.cursor()
         cu.execute("SELECT data FROM Sessions WHERE sid=?", sid)
         return cPickle.loads(cu.fetchone()[0])['_data']
@@ -36,16 +38,17 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         client, userId = self.quickMintUser('foouser', 'foopass')
         projectId = self.newProject(client)
 
+        # we are working with the project server right now
+        self.setServer(self.getProjectServerHostname(), self.port)
+
         # pick a page to log in from
         pageURI = '/project/testproject/releases'
         page = self.fetch(pageURI)
 
-        page = page.postForm(1, self.post, {'username':'foouser', 'password':'foopass'})
+        page = page.postForm(1, self.fetchWithRedirect,
+                {'username':'foouser', 'password':'foopass'})
 
-        # strip extra slash
-        properUrl = self.URL + pageURI[1:]
-
-        self.failIf(properUrl not in page.body,
+        self.failIf(pageURI not in page.url,
                     "rBO explicit redirects are improper. "
                     "Web browsers will be confused.")
 
@@ -152,13 +155,16 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         client, userId = self.quickMintUser('foouser', 'foopass')
 
         self.newProject(client)
+
+        # we are working with the project server right now
+        self.setServer(self.getProjectServerHostname(), self.port)
+
         page = self.fetch('/project/testproject/')
         startUrl = page.url
 
-        page = page.postForm(1, self.post, {'username': 'foouser',
-                                            'password': 'foopass'})
-        assert(page.headers['Location'].endswith(startUrl))
-        assert(page.code == 301)
+        page = page.postForm(1, self.fetchWithRedirect, 
+                {'username': 'foouser', 'password': 'foopass'})
+        assert(page.url.endswith(startUrl))
 
     def testNewProject(self):
         client, userId = self.quickMintUser('foouser','foopass')
@@ -176,27 +182,34 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
     def testEditProject(self):
         client, userId = self.quickMintUser('foouser','foopass')
-        projectId = client.newProject('Foo', 'foo', 'rpath.local')
+        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
         page = self.webLogin('foouser', 'foopass')
 
-        page = page.assertCode('/project/foo/editProject', code = 200)
+        # we are working with the project server right now
+        self.setServer(self.getProjectServerHostname(), self.port)
+
+        page = self.assertCode('/project/foo/editProject', code = 200)
 
     def testProcessEditProject(self):
         client, userId = self.quickMintUser('foouser','foopass')
-        projectId = client.newProject('Foo', 'foo', 'rpath.local')
+        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
         page = self.webLogin('foouser', 'foopass')
-        page = page.fetch('/project/foo/processEditProject', postdata =
+
+        # we are working with the project server right now
+        self.setServer(self.getProjectServerHostname(), self.port)
+
+        page = self.fetch('/project/foo/processEditProject', postdata =
                           {'name'   : 'Bar',
                            'branch' : 'foo:bar'},
                           ok_codes = [301])
 
         project = client.getProject(projectId)
         assert(project.name == 'Bar')
-        assert(project.getLabel() == 'foo.rpath.local@foo:bar')
+        assert(project.getLabel() == 'foo.' + MINT_PROJECT_DOMAIN + '@foo:bar')
 
     def testEditProjectBranch(self):
         client, userId = self.quickMintUser('foouser','foopass')
-        projectId = client.newProject('Foo', 'foo', 'rpath.local')
+        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
         page = self.webLogin('foouser', 'foopass')
 
         # edit the project label to something not related to project fqdn
@@ -205,24 +218,26 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                    'bar.rpath.com@rpl:devel', projectId)
         self.db.commit()
 
-        page = page.fetch('/project/foo/processEditProject', postdata =
+        # we are working with the project server right now
+        self.setServer(self.getProjectServerHostname(), self.port)
+
+        page = self.fetch('/project/foo/processEditProject', postdata =
                           {'name'   : 'foo',
-                           'branch' : 'foo:bar'},
-                           ok_codes = [301])
+                           'branch' : 'foo:bar'})
 
         project = client.getProject(projectId)
         assert(project.getLabel() == 'bar.rpath.com@foo:bar')
 
     def testBrowseProjects(self):
         client, userId = self.quickMintUser('foouser','foopass')
-        projectId = client.newProject('Foo', 'foo', 'rpath.local')
+        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
         for sortOrder in range(10):
             page = self.fetch('/projects?sortOrder=%d' % sortOrder,
                                ok_codes = [200])
 
     def testSearchProjects(self):
         client, userId = self.quickMintUser('foouser','foopass')
-        projectId = client.newProject('Foo', 'foo', 'rpath.local')
+        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
 
         page = self.fetch('/search?type=Projects&search=foo',
                           ok_codes = [200])
@@ -237,39 +252,54 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
     def testProjectsPage(self):
         client, userId = self.quickMintUser('foouser','foopass')
-        projectId = client.newProject('Foo', 'foo', 'rpath.local')
+        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
 
-        page = self.fetch('/project/foo/', ok_codes = [200])
+        # we are working with the project server right now
+        self.setServer(self.getProjectServerHostname(), self.port)
+
+        page = self.fetch('/project/foo/', 
+                ok_codes = [200])
 
     def testMembersPage(self):
         self.quickMintUser('testuser','testpass')
         client, userId = self.quickMintUser('foouser','foopass')
-        projectId = client.newProject('Foo', 'foo', 'rpath.local')
+        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
 
         self.webLogin('foouser', 'foopass')
-        page = self.fetch('/project/foo/members/', ok_codes = [200])
+
+        # we are working with the project server right now
+        self.setServer(self.getProjectServerHostname(), self.port)
+
+        page = self.fetch('/project/foo/members/', 
+                ok_codes = [200])
         page = page.postForm(1, self.post, {'username' : 'testuser',
                                             'level' : 0})
 
 
     def testReleasesPage(self):
         client, userId = self.quickMintUser('foouser','foopass')
-        projectId = client.newProject('Foo', 'foo', 'rpath.local')
+        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
+
+        # we are working with the project server right now
+        self.setServer(self.getProjectServerHostname(), self.port)
 
         page = self.assertContent('/project/foo/releases/',
-                                  ok_codes = [200],
-                                  content = 'has no published')
+                                  content = 'has no published',
+                                  code = [200])
 
     def testMailListsPage(self):
         client, userId = self.quickMintUser('foouser','foopass')
-        projectId = client.newProject('Foo', 'foo', 'rpath.local')
+        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
+
+        # we are working with the project server right now
+        self.setServer(self.getProjectServerHostname(), self.port)
 
         page = self.fetch('/project/foo/mailingLists',
                                   ok_codes = [200])
 
     def testPgpAdminPage(self):
         client, userId = self.quickMintUser('foouser','foopass')
-        projectId = client.newProject('Foo', 'foo', 'rpath.local')
+        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
         page = self.webLogin('foouser', 'foopass')
 
         page = page.fetch('/repos/foo/pgpAdminForm',
@@ -295,63 +325,73 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         # view shows up for owner
         self.webLogin('foouser', 'foopass')
         page = self.assertContent('/project/testproject/members',
-                                  "View OpenPGP Signing Keys")
+                                  "View OpenPGP Signing Keys",
+                                  server = self.getProjectServerHostname())
         self.fetch("/logout")
 
         # view shows up for developer
         self.webLogin('devuser', 'devpass')
         page = self.assertContent('/project/testproject/members',
-                                  "View OpenPGP Signing Keys")
+                                  "View OpenPGP Signing Keys",
+                                  server = self.getProjectServerHostname())
         self.fetch("/logout")
 
         # view doesn't show up for watcher
         self.webLogin('watchuser', 'watchpass')
         page = self.assertNotContent('/project/testproject/members',
-                                  "View OpenPGP Signing Keys")
+                                  "View OpenPGP Signing Keys",
+                                  server = self.getProjectServerHostname())
         self.fetch("/logout")
 
         # view doesn't show up for non-member
         self.webLogin('nonuser', 'nonpass')
         page = self.assertNotContent('/project/testproject/members',
-                                  "View OpenPGP Signing Keys")
+                                  "View OpenPGP Signing Keys",
+                                  server = self.getProjectServerHostname())
         self.fetch("/logout")
 
         # manage shows up for admin
         self.webLogin('adminuser', 'adminpass')
         page = self.assertContent('/project/testproject/members',
-                                  "Manage OpenPGP Signing Keys")
+                                  "Manage OpenPGP Signing Keys",
+                                  server = self.getProjectServerHostname())
         self.fetch("/logout")
 
     def testRepoBrowserPage(self):
         client, userId = self.quickMintUser('foouser','foopass')
-        projectId = client.newProject('Foo', 'foo', 'rpath.local')
+        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
+
+        # we are working with the project server right now
+        self.setServer(self.getProjectServerHostname(), self.port)
 
         page = self.assertContent('/repos/foo/browse',
-                                  ok_codes = [200],
+                                  code = [200],
                                   content = 'Repository Browser')
 
     def testGroupBuilderInResources(self):
         client, userId = self.quickMintUser('foouser','foopass')
-        projectId = client.newProject('Foo', 'foo', 'rpath.local')
+        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
 
         # test for group builder while not logged in
-        page = self.assertNotContent('/project/foo/', ok_codes = [200],
-                                 content = "Group Builder")
+        page = self.assertNotContent('/project/foo/', code = [200],
+                                 content = "Group Builder",
+                                 server = self.getProjectServerHostname())
 
         page = self.webLogin('foouser', 'foopass')
-        page = self.assertContent('/project/foo/', ok_codes = [200],
-                                 content = "Group Builder")
+        page = self.assertContent('/project/foo/', code = [200],
+                                 content = "Group Builder",
+                                 server = self.getProjectServerHostname())
 
     def testUploadKeyPage(self):
         client, userId = self.quickMintUser('foouser','foopass')
-        projectId = client.newProject('Foo', 'foo', 'rpath.local')
+        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
 
-        page = self.assertContent('/uploadKey', ok_codes = [200],
+        page = self.assertContent('/uploadKey', code = [200],
                                  content = "Permission Denied")
 
         page = self.webLogin('foouser', 'foopass')
 
-        page = self.assertNotContent('/uploadKey', ok_codes = [200],
+        page = self.assertNotContent('/uploadKey', code = [200],
                                  content = "Permission Denied")
 
     def testUploadKey(self):
@@ -359,7 +399,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         keyData = keyFile.read()
         keyFile.close()
         client, userId = self.quickMintUser('foouser','foopass')
-        projectId = client.newProject('Foo', 'foo', 'rpath.local')
+        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
 
         page = self.webLogin('foouser', 'foopass')
 
@@ -370,14 +410,15 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
             self.fail('Posting OpenPGP Key to project failed.')
 
     def testCreateGroup(self):
-        client, userId = self.quickMintUser('foouser','foopass')
-        projectId = client.newProject('Foo', 'foo', 'rpath.local')
+        client, userId = self.quickMintUser('foouser', 'foopass')
+        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
 
         page = self.webLogin('foouser', 'foopass')
 
         page = self.fetch('/project/foo/createGroup', postdata =
                           { 'groupName' : 'foo',
-                            'version'   : '1.0.0' })
+                            'version'   : '1.0.0' },
+                            server = self.getProjectServerHostname())
 
         groupTrove = client.getGroupTrove(1)
 
@@ -389,22 +430,26 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         # the basic issue is a mixing of hidden and checkbox fields on the page
         raise testsuite.SkipTestException
         client, userId = self.quickMintUser('foouser','foopass')
-        projectId = client.newProject('Foo', 'foo', 'rpath.local')
+        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
 
         page = self.webLogin('foouser', 'foopass')
 
-        page = self.fetch('/project/foo/newGroup')
+        page = self.fetch('/project/foo/newGroup',
+                server = self.getProjectServerHostname())
 
         page.postForm(1, self.post, {'groupName' : 'bar', 'version' : '1.1'})
 
     def testPickArch(self):
         client, userId = self.quickMintUser('foouser','foopass')
-        projectId = client.newProject('Foo', 'foo', 'rpath.local')
+        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
 
         group = client.createGroupTrove(projectId, 'group-foo', '1.0.0',
                                         'no desc', False)
 
         page = self.webLogin('foouser', 'foopass')
+
+        # we are working with the project server right now
+        self.setServer(self.getProjectServerHostname(), self.port)
 
         page = self.fetch('/project/foo/pickArch?id=1')
 
@@ -413,9 +458,12 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
     def testDeletedGroup(self):
         client, userId = self.quickMintUser('foouser','foopass')
-        projectId = client.newProject('Foo', 'foo', 'rpath.local')
+        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
 
         page = self.webLogin('foouser', 'foopass')
+
+        # we are working with the project server right now
+        self.setServer(self.getProjectServerHostname(), self.port)
 
         page = self.fetch('/project/foo/createGroup', postdata =
                           { 'groupName' : 'foo',
@@ -427,7 +475,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         cu.execute("DELETE FROM GroupTroves WHERE groupTroveId=?", s['groupTroveId'])
         self.db.commit()
 
-        page.assertContent('/project/foo/groups', ok_codes = [200],
+        page.assertContent('/project/foo/groups', code = [200],
             content = 'You can use Group Builder to create a group')
 
     def testAddGroupTroveItem(self):
@@ -436,13 +484,16 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         self.makeSourceTrove("testcase", testRecipe)
         self.cookFromRepository("testcase",
-            versions.Label("testproject.rpath.local@rpl:devel"),
+            versions.Label("testproject." + MINT_PROJECT_DOMAIN + "@rpl:devel"),
             ignoreDeps = True)
 
         page = self.webLogin('testuser', 'testpass')
 
         groupTrove = client.createGroupTrove(projectId, 'group-foo',
                                              '1.0.0', '', False)
+
+        # we are working with the project server right now
+        self.setServer(self.getProjectServerHostname(), self.port)
 
         page = self.fetch('/project/testproject/editGroup?id=%d' % groupTrove.id,
                           ok_codes = [200])
@@ -478,42 +529,49 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
     def testUnconfirmedAccess(self):
         # make a project for later then forget this user
         client, userId = self.quickMintUser('foouser','foopass')
-
         projectId = self.newProject(client, 'Foo', 'foo')
+
         cu = self.db.cursor()
         cu.execute("INSERT INTO Confirmations VALUES (?, ?, ?)", userId, 0,
                    40 * "0")
         self.db.commit()
-        page = self.webLogin('foouser', 'foopass')
+
+        page = self.fetch('/')
+        page = page.postForm(1, self.fetchWithRedirect,
+                {'username': 'foouser', 'password': 'foopass'})
         self.failIf("Email Confirmation Required" not in page.body,
                     'Unconfirmed user broke out of confirm email jail'
                     ' on front page.')
-        page = self.fetch('/project/foo/', ok_codes = [200])
+
+        page = page.fetchWithRedirect('/project/foo/',
+                server = self.getProjectServerHostname())
         self.failIf("Email Confirmation Required" not in page.body,
                     'Unconfirmed user broke out of confirm email jail'
                     ' on project home page.')
-        page = self.fetch('/projects', ok_codes = [200])
 
+        page = page.fetchWithRedirect('/projects',
+                server = self.getProjectServerHostname())
         self.failIf("Email Confirmation Required" not in page.body,
                     'Unconfirmed user broke out of confirm email jail on'
                     ' projects page.')
 
-        page = self.fetch('/repos/foo/browse', ok_codes = [200])
+        page = page.fetchWithRedirect('/repos/foo/browse',
+                server = self.getProjectServerHostname())
         self.failIf("Email Confirmation Required" not in page.body,
                     'Unconfirmed user broke out of confirm email jail on'
                     ' repository page.')
 
-        page = self.fetch('/editUserSettings', postdata = \
-                          {'email'    : ''})
+        page = page.fetchWithRedirect('/editUserSettings', params = \
+                          {'email'    : ''},
+                          server = self.getProjectServerHostname())
         self.failIf("Email Confirmation Required" in page.body,
                     'Unconfirmed user was unable to change email address.')
 
-        page = self.fetch('/logout', ok_codes = [301])
-
+        page = page.fetchWithRedirect('/logout')
         self.failIf("Email Confirmation Required" in page.body,
                     'Unconfirmed user was unable to log out.')
 
-        page = self.fetch('/confirm?id=%s' % (40*"0"), ok_codes = [200])
+        page = self.fetchWithRedirect('/confirm?id=%s' % (40*"0"))
         self.failIf("Your account has now been confirmed." not in page.body,
                     'Unconfirmed user was unable to confirm.')
 
@@ -541,10 +599,11 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         # session not in table and not in cache
         self.failIf(username in page.body,
-                    'Unchached session not logged out')
+                    'Uncached session not logged out')
 
         # HACK alter cookie to match what we moved session to earlier
-        self.cookies['.rpath.local']['/']['pysid'].coded_value = newSid
+        self.cookies['.'+MINT_DOMAIN]['/']['pysid'].coded_value = newSid
+
         # session in db but not in cache
         cookie = 'pysid'
         self.registerExpectedCookie(cookie)
@@ -553,12 +612,13 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                     'Uncached session appears to be logged out')
 
     def testUnknownError(self):
-        page = self.assertContent('/unknownError', ok_codes = [200],
-            content = 'An unknown error occured')
+        page = self.assertContent('/unknownError', code = [200],
+            content = 'An unknown error occured',
+            server = self.getProjectServerHostname())
 
     def testDownloadISO(self):
         client, userId = self.quickMintUser("testuser", "testpass")
-        projectId = client.newProject("Foo", "foo", "rpath.org")
+        projectId = client.newProject("Foo", "foo", MINT_PROJECT_DOMAIN)
         release = client.newRelease(projectId, "Test Release")
         release.setImageTypes([0])
 
@@ -572,7 +632,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
     def testUtf8ProjectName(self):
         client, userId = self.quickMintUser('foouser','foopass')
-        projectId = client.newProject('Foo', 'foo', 'rpath.local')
+        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
         project = client.getProject(projectId)
 
         project.editProject("http://example.com/",
@@ -580,8 +640,9 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
             "Test Title")
         project.refresh()
 
-        page = self.assertContent('/project/foo/', ok_codes = [200],
-            content = project.getDesc())
+        page = self.assertContent('/project/foo/', code = [200],
+            content = project.getDesc(),
+            server = self.getProjectServerHostname())
 
 
     def testGroupBuilderCloseBox(self):
@@ -593,6 +654,10 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         page = self.webLogin('foouser', 'foopass')
 
+        # we are working with the project server right now
+        self.setServer(self.getProjectServerHostname(), self.port)
+
+        groupTrove = self.createTestGroupTrove(client, projectId)
         page = self.fetch('/project/testproject/editGroup?id=%d' % \
                           groupTrove.id)
 
@@ -608,19 +673,25 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         # prove that the group builder box actually closes after cook
         client, userId = self.quickMintUser('foouser','foopass')
         projectId = self.newProject(client)
-        project = client.getProject(projectId)
 
+        # XXX: workaround to solve nesting XML-RPC call in cookGroup
+        project = client.getProject(projectId)
+        self.moveToServer(project, 1)
+        
         groupTrove = self.createTestGroupTrove(client, projectId)
 
         self.addComponent("test:runtime", "1.0")
         self.addComponent("test:devel", "1.0")
         self.addCollection("test", "1.0", [ ":runtime", ":devel" ])
 
-        groupTrove.addTrove('test', '/testproject.rpath.local@rpl:devel/1.0-1',
+        groupTrove.addTrove('test', '/testproject.' + MINT_PROJECT_DOMAIN + \
+                            '@rpl:devel/1.0-1',
                             '', '', False, False, False)
 
         page = self.webLogin('foouser', 'foopass')
 
+        # we are working with the project server right now
+        self.setServer(self.getProjectServerHostname(), self.port)
 
         # editing the group makes the Pane active
         page = self.fetch('/project/testproject/editGroup?id=%d' % \
@@ -630,16 +701,19 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         page = self.fetch('/project/testproject/pickArch?id=%d' % \
                           groupTrove.id)
 
-        page.postForm(1, self.post, {"arch" : "1#x86"})
+        page = page.postForm(1, self.post, {'arch': '1#x86'})
 
-        self.assertNotContent('/project/testproject/releases',
+        page = self.assertNotContent('/project/testproject/releases',
                               content = 'closeCurrentGroup')
 
     def testGroupCookRespawn(self):
         # prove that the group builder box actually closes after cook
         client, userId = self.quickMintUser('foouser','foopass')
         projectId = self.newProject(client)
+
+        # XXX: workaround to solve nesting XML-RPC call in cookGroup
         project = client.getProject(projectId)
+        self.moveToServer(project, 1)
 
         groupTrove = self.createTestGroupTrove(client, projectId)
 
@@ -647,10 +721,14 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.addComponent("test:devel", "1.0")
         self.addCollection("test", "1.0", [ ":runtime", ":devel" ])
 
-        groupTrove.addTrove('test', '/testproject.rpath.local@rpl:devel/1.0-1',
+        groupTrove.addTrove('test', '/testproject.' + MINT_PROJECT_DOMAIN + \
+                            '@rpl:devel/1.0-1',
                             '', '', False, False, False)
 
         page = self.webLogin('foouser', 'foopass')
+
+        # we are working with the project server right now
+        self.setServer(self.getProjectServerHostname(), self.port)
 
         # editing the group makes the Pane active
         page = self.fetch('/project/testproject/editGroup?id=%d' % \
@@ -681,10 +759,14 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         repos = self.openRepository()
 
         self.addQuickTestComponent('foo:data',
-                                   '/testproject.rpath.local@rpl:devel/1.0-1',
+                                   '/testproject.' + MINT_PROJECT_DOMAIN + \
+                                   '@rpl:devel/1.0-1',
                                    repos = repos)
 
         page = self.webLogin('foouser', 'foopass')
+
+        # we are working with the project server right now
+        self.setServer(self.getProjectServerHostname(), self.port)
 
         page = self.fetch('/project/testproject/editGroup?id=%d' % \
                           groupTrove.id)
@@ -700,6 +782,9 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         client, userId = self.quickMintUser('foouser','foopass')
         projectId = self.newProject(client)
 
+        # we are working with the project server right now
+        self.setServer(self.getProjectServerHostname(), self.port)
+
         # link historically showed up wrong by not pre-pending a /
         page = self.assertNotContent('/project/testproject/',
                                      'a href="register"')
@@ -710,12 +795,14 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         # link historically brought up a spurious "my projects" pane
         page = self.assertContent('/repos/testproject/browse',
-                                     '/processLogin')
+                                     '/processLogin',
+                                     server = self.getProjectServerHostname())
 
         page = self.webLogin('foouser', 'foopass')
 
         page = self.assertContent('/repos/testproject/browse',
-                                     '/newProject')
+                                     '/newProject',
+                                     server = self.getProjectServerHostname())
 
     def testTroveInfoLogin(self):
         client, userId = self.quickMintUser('foouser','foopass')
@@ -725,18 +812,20 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.moveToServer(project, 1)
 
         self.addQuickTestComponent('foo:data',
-            '/testproject.rpath.local@rpl:devel/1.0-1')
+            '/testproject.' + MINT_PROJECT_DOMAIN + '@rpl:devel/1.0-1')
 
         # link historically brought up a spurious "my projects" pane
         page = self.assertContent( \
             '/repos/testproject/troveInfo?t=foo:data',
-            '/processLogin')
+            '/processLogin',
+            server = self.getProjectServerHostname())
 
         page = self.webLogin('foouser', 'foopass')
 
         page = self.assertContent( \
             '/repos/testproject/troveInfo?t=foo:data',
-            '/newProject')
+            '/newProject',
+            server = self.getProjectServerHostname())
 
     def testMailSignin(self):
         raise testsuite.SkipTestException
@@ -746,12 +835,14 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         # link historically brought up a spurious "my projects" pane
         page = self.assertContent('/project/testproject/mailingLists',
-                                     '/processLogin')
+                                     '/processLogin',
+                                     server = self.getProjectServerHostname())
 
         page = self.webLogin('foouser', 'foopass')
 
         page = self.assertContent('/project/testproject/mailingLists',
-                                     '/newProject')
+                                     '/newProject',
+                                     server = self.getProjectServerHostname())
 
     def testMailSubscribe(self):
         raise testsuite.SkipTestException
@@ -760,6 +851,9 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         projectId = self.newProject(client)
 
         page = self.webLogin('foouser', 'foopass')
+
+        # we are working with the project server right now
+        self.setServer(self.getProjectServerHostname(), self.port)
 
         # historically, there was an extra slash in subscribe links
         page = self.assertNotContent('/project/testproject/mailingLists',
@@ -778,13 +872,17 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         repos = self.openRepository()
 
         self.addQuickTestComponent('foo:source',
-                                   '/testproject.rpath.local@rpl:devel/1.0-1',
+                                   '/testproject.' + MINT_PROJECT_DOMAIN + \
+                                   '@rpl:devel/1.0-1',
                                    repos = repos)
 
         groupTrove = client.createGroupTrove(projectId, 'group-foo', '1.0.0',
                                              'no desc', False)
 
         page = self.webLogin('foouser', 'foopass')
+
+        # we are working with the project server right now
+        self.setServer(self.getProjectServerHostname(), self.port)
 
         # activate the group trove builder
         page = self.fetch('/project/testproject/editGroup?id=%d' % \
@@ -798,9 +896,11 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         # now add a trove that should show up for troveInfo. this couldn't
         # be added sooner or it would confuse browsing check
         self.addQuickTestComponent('foo:data',
-                                   '/testproject.rpath.local@rpl:devel/1.0-1',
-                                   repos = repos)
+                                   '/testproject.' + MINT_PROJECT_DOMAIN + \
+                                   '@rpl:devel/1.0-1', repos = repos)
 
+
+        # XXX: workaround to solve nesting XML-RPC call in cookGroup
         project = client.getProject(projectId)
         self.moveToServer(project, 1)
 
@@ -840,12 +940,18 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.addCollection('group-test', '1.0', ['test'])
 
         page = self.webLogin('foouser', 'foopass')
+
+        # we are working with the project server right now
+        self.setServer(self.getProjectServerHostname(), self.port)
+
         page = self.fetch('/project/testproject/newRelease')
 
         page = page.postForm(1, self.post, \
                              {'name' : 'Foo',
                               'trove': 'group-test=rpl:devel',
-                              'version': '/testproject.rpath.local@rpl:devel/1.0-1-1 1#x86',
+                              'version': '/testproject.' + \
+                                  MINT_PROJECT_DOMAIN + \
+                                  '@rpl:devel/1.0-1-1 1#x86',
                               'imagetype_1' : '1'})
 
         cu = self.db.cursor()
@@ -893,7 +999,8 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                         "Server did not reject project creation attempt")
 
             # this call would normally not be safe.
-            page = self.fetch('/repos/testproject/browse', ok_codes = [403])
+            page = self.fetch('/repos/testproject/browse', ok_codes = [403],
+                    server = self.getProjectServerHostname())
 
             # now lock down shim clients as well
             self.mintServer.cfg.maintenanceMode = True
@@ -908,7 +1015,8 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
             self.assertRaises(errors.OpenError, self.addComponent,
                               'test:data',
-                              '/testproject.rpath.local@rpl:devel/1.0-1-1')
+                              '/testproject.' + MINT_PROJECT_DOMAIN + \
+                              '@rpl:devel/1.0-1-1')
 
         finally:
             # put the server back how we found it, lest other tests suffer.
@@ -935,8 +1043,10 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
             "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
 
         self.webLogin('foouser', 'foopass')
-        page = self.assertNotContent('/project/testproject/releases', ok_codes = [200],
-            content = 'href="publish?releaseId')
+        page = self.assertNotContent('/project/testproject/releases', 
+            code = [200],
+            content = 'href="publish?releaseId',
+            server = self.getProjectServerHostname())
 
     def testCreateExternalProject(self):
         client, userId = self.quickMintAdmin('adminuser', 'adminpass')
@@ -989,7 +1099,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
     def createOutboundMirror(self):
         client, userId = self.quickMintAdmin('adminuser', 'adminpass')
-        projectId = client.newProject("Foo", "testproject", "rpath.local")
+        projectId = client.newProject("Foo", "testproject", MINT_PROJECT_DOMAIN)
 
         self.webLogin('adminuser', 'adminpass')
 
@@ -1007,7 +1117,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
              'operation':   'process_add_outbound'})
 
         self.assertContent("/administer?operation=outbound", ok_codes = [200],
-            content = "testproject.rpath.local@rpl:devel")
+            content = "testproject." + MINT_PROJECT_DOMAIN + "@rpl:devel")
         assert(client.getOutboundLabels() == \
             [[projectId, 1, 'http://www.example.com/conary/', 'mirror', 'mirrorpass']])
 
@@ -1022,7 +1132,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         client, userId = self.quickMintAdmin('adminuser', 'adminpass')
         self.webLogin('adminuser', 'adminpass')
 
-        page = self.assertContent("/users", ok_codes = [200],
+        page = self.assertContent("/users", code = [200],
             content = '<a href="/userInfo?id=%d">' % userId)
 
     def testNotifyAllUsers(self):
@@ -1030,7 +1140,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.webLogin('adminuser', 'adminpass')
 
         page = self.assertContent("/administer?operation=notify",
-            ok_codes = [200], content = 'value="notify_send"')
+            code = [200], content = 'value="notify_send"')
 
         page = page.postForm(1, self.post,
             {'subject':     'This is is my subject',

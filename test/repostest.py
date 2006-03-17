@@ -10,6 +10,7 @@ import re
 testsuite.setup()
 
 from mint_rephelp import MintRepositoryHelper
+from mint_rephelp import MINT_HOST, MINT_PROJECT_DOMAIN
 import recipes
 
 from conary.conarycfg import ConaryConfiguration, UserInformation
@@ -49,17 +50,20 @@ class RepositoryTest(MintRepositoryHelper):
         client, userId = self.quickMintUser("testuser", "testpass")
         projectId = self.newProject(client)
 
-        client.server.registerCommit('testproject.rpath.local', 'testuser',
+        client.server.registerCommit('testproject.' + MINT_PROJECT_DOMAIN,
+                                     'testuser',
                                      'mytrove:source',
-                                     '/testproject.rpath.local@rpl:devel/1.0-1')
+                                     '/testproject.' + MINT_PROJECT_DOMAIN + \
+                                             '@rpl:devel/1.0-1')
         project = client.getProject(projectId)
         assert([x[:2] for x in project.getCommits()] == [('mytrove:source',
                                                           '1.0-1')])
 
         # using a bogus username should not fail
-        client.server.registerCommit('testproject.rpath.local',
+        client.server.registerCommit('testproject.' + MINT_PROJECT_DOMAIN,
                                      'nonexistentuser', 'mytrove:source',
-                                     '/testproject.rpath.local@rpl:devel/1.0-1')
+                                     '/testproject.' + MINT_PROJECT_DOMAIN + \
+                                             '@rpl:devel/1.0-1')
 
     def testBasicRepository(self):
         self.openRepository()
@@ -73,7 +77,8 @@ class RepositoryTest(MintRepositoryHelper):
         nc = ConaryClient(cfg).getRepos()
 
         # test that the source trove landed properly
-        troveNames = nc.troveNames(versions.Label("testproject.rpath.local@rpl:devel"))
+        troveNames = nc.troveNames(versions.Label("testproject." + \
+                MINT_PROJECT_DOMAIN + "@rpl:devel"))
         assert(troveNames == ["testcase:source"])
 
         # test that the commits table was updated
@@ -92,15 +97,18 @@ class RepositoryTest(MintRepositoryHelper):
     def testHooksResponse(self):
         self.openRepository()
         cfg = ConaryConfiguration(readConfigFiles = False)
-        cfg.installLabelPath = ['notfound.rpath.local@rpl:devel']
-        cfg.repositoryMap = {'notfound.rpath.local': 'http://test.rpath.local:%d/repos/notfound/' % self.port}
+        cfg.installLabelPath = ['notfound.' + MINT_PROJECT_DOMAIN + \
+                '@rpl:devel']
+        cfg.repositoryMap = {'notfound.' + MINT_PROJECT_DOMAIN: \
+                'http://%s.%s:%d/repos/notfound/' % \
+                (MINT_HOST, MINT_PROJECT_DOMAIN, self.port)}
         cfg.root = ':memory:'
         cfg.dbPath = ':memory:'
 
         repos = ConaryClient(cfg).getRepos()
 
         try:
-            repos.troveNamesOnServer('notfound.rpath.local')
+            repos.troveNamesOnServer('notfound.' + MINT_PROJECT_DOMAIN)
         except repository.errors.OpenError, e:
             assert "404 Not Found" in str(e), \
             "accessing a non-existent repository did not return a "
@@ -109,8 +117,6 @@ class RepositoryTest(MintRepositoryHelper):
         else:
             self.fail("accessing a non-existent repository did not return "
                       "an error")
-
-
     def testCook(self):
         self.openRepository()
         client, userId = self.quickMintUser("testuser", "testpass")
@@ -119,22 +125,25 @@ class RepositoryTest(MintRepositoryHelper):
         project = client.getProject(projectId)
         self.makeSourceTrove("testcase", testRecipe)
         self.cookFromRepository("testcase",
-            versions.Label("testproject.rpath.local@rpl:devel"),
+            versions.Label("testproject." + MINT_PROJECT_DOMAIN + \
+                "@rpl:devel"),
             ignoreDeps = True)
 
         self.makeSourceTrove("group-test", testGroup)
         self.cookFromRepository("group-test",
-            versions.Label("testproject.rpath.local@rpl:devel"))
+            versions.Label("testproject." + MINT_PROJECT_DOMAIN + "@rpl:devel"))
 
         cfg = project.getConaryConfig()
         nc = ConaryClient(cfg).getRepos()
 
-        troveNames = nc.troveNames(versions.Label("testproject.rpath.local@rpl:devel"))
+        troveNames = nc.troveNames(versions.Label("testproject." + \
+                MINT_PROJECT_DOMAIN + "@rpl:devel"))
         assert(troveNames == ['testcase', 'testcase:runtime', 'group-test',
                               'group-test:source', 'testcase:source'])
 
         groupTroves = client.server.getGroupTroves(projectId)
-        assert(groupTroves == {'testproject.rpath.local@rpl:devel': ['group-test']})
+        assert(groupTroves == {'testproject.' + MINT_PROJECT_DOMAIN + \
+                '@rpl:devel': ['group-test']})
 
     def testMultipleContentsDirs(self):
         self.openRepository()
@@ -144,7 +153,7 @@ class RepositoryTest(MintRepositoryHelper):
         project = client.getProject(projectId)
         self.makeSourceTrove("testcase", testRecipe)
         self.cookFromRepository("testcase",
-            versions.Label("testproject.rpath.local@rpl:devel"),
+            versions.Label("testproject." + MINT_PROJECT_DOMAIN + "@rpl:devel"),
             ignoreDeps = True)
 
         # compare two contents directories:
@@ -155,22 +164,24 @@ class RepositoryTest(MintRepositoryHelper):
         cfg = project.getConaryConfig()
         nc = ConaryClient(cfg).getRepos()
 
-        troveNames = nc.troveNames(versions.Label("testproject.rpath.local@rpl:devel"))
+        troveNames = nc.troveNames(versions.Label("testproject." + \
+                MINT_PROJECT_DOMAIN + "@rpl:devel"))
         assert(troveNames == ['testcase', 'testcase:runtime', 'testcase:source'])
 
     def testGetTroveVersionsByArch(self):
-        expectedRE = "\{'x86_64': \[\('/testproject.rpath.local@rpl:devel/1.0-1-2', "\
-                   "'/testproject\.rpath\.local@rpl:devel/\d+\.\d+:1.0-1-2', "\
+        # XXX: hardcoded MINT_PROJECT_DOMAIN in this RE, sorry --sgp
+        expectedRE = "\{'x86_64': \[\('/testproject.rpath.local2@rpl:devel/1.0-1-2', "\
+                   "'/testproject\.rpath\.local2@rpl:devel/\d+\.\d+:1.0-1-2', "\
                    "'1#x86_64'\), "\
-                   "\('/testproject.rpath.local@rpl:devel/1.0-1-1', "\
-                   "'/testproject\.rpath\.local@rpl:devel/\d+\.\d+:1.0-1-1', "\
+                   "\('/testproject.rpath.local2@rpl:devel/1.0-1-1', "\
+                   "'/testproject\.rpath\.local2@rpl:devel/\d+\.\d+:1.0-1-1', "\
                    "'1#x86_64'\)\], "\
                    "'x86': "\
-                   "\[\('/testproject.rpath.local@rpl:devel/1.0-1-2', "\
-                   "'/testproject.rpath.local@rpl:devel/\d+\.\d+:1.0-1-2', "\
+                   "\[\('/testproject.rpath.local2@rpl:devel/1.0-1-2', "\
+                   "'/testproject.rpath.local2@rpl:devel/\d+\.\d+:1.0-1-2', "\
                    "'1#x86'\), "\
-                   "\('/testproject.rpath.local@rpl:devel/1.0-1-1', "\
-                   "'/testproject.rpath.local@rpl:devel/\d+\.\d+:1.0-1-1', "\
+                   "\('/testproject.rpath.local2@rpl:devel/1.0-1-1', "\
+                   "'/testproject.rpath.local2@rpl:devel/\d+\.\d+:1.0-1-1', "\
                    "'1#x86'\)\]\}"
 
         repos = self.openRepository()
@@ -184,7 +195,8 @@ class RepositoryTest(MintRepositoryHelper):
             self.addCollection("group-core", "1.0", [("test", "1.0" , f)])
             self.addCollection("group-core", "1.0-1-2", [("test", "1.0" , f)])
 
-        troveVersions = client.server.getTroveVersionsByArch(projectId, "group-core=testproject.rpath.local@rpl:devel")
+        troveVersions = client.server.getTroveVersionsByArch(projectId,
+            "group-core=testproject." + MINT_PROJECT_DOMAIN + " @rpl:devel")
 
         assert re.compile(expectedRE).match(str(troveVersions))
 
@@ -194,11 +206,17 @@ class RepositoryTest(MintRepositoryHelper):
         projectId1 = self.newProject(client, "Test Project 1", "testp1")
         projectId2 = self.newProject(client, "Test Project 2", "testp2")
 
-        self.cfg.repositoryMap.update({'testp1.rpath.local': 'http://test.rpath.local:%d/repos/testp1/' % self.port,
-                                       'testp2.rpath.local': 'http://test.rpath.local:%d/repos/testp2/' % self.port})
+        self.cfg.repositoryMap.update({'testp1.' + MINT_PROJECT_DOMAIN: \
+            'http://test.%s:%d/repos/testp1/' % \
+            (MINT_PROJECT_DOMAIN, self.port) , \
+            'testp2.' + MINT_PROJECT_DOMAIN: \
+            'http://test.%s:%d/repos/testp2/' % \
+            (MINT_PROJECT_DOMAIN, self.port)})
 
-        l1 = versions.Label("testp1.rpath.local@rpl:devel")
-        l2 = versions.Label("testp2.rpath.local@rpl:devel")
+        l1 = versions.Label("testp1." + MINT_PROJECT_DOMAIN + \
+                "@rpl:devel")
+        l2 = versions.Label("testp2." + MINT_PROJECT_DOMAIN + \
+                "@rpl:devel")
 
         self.makeSourceTrove("testcase", testRecipe, l1)
         self.cookFromRepository("testcase", l1, ignoreDeps = True)
@@ -229,15 +247,18 @@ class RepositoryTest(MintRepositoryHelper):
         cfg.root = cfg.dbPath = ":memory:"
         cfg.repositoryMap = reposMap
 
-        cfg.user.addServerGlob("testproject.rpath.local", "nosuchuser", "nonexist")
+        cfg.user.addServerGlob("testproject." + MINT_PROJECT_DOMAIN, 
+                "nosuchuser", "nonexist")
         nc = ConaryClient(cfg).getRepos()
 
         troveNames = nc.troveNames(self.cfg.buildLabel)
         assert(troveNames == ['testcase:source'])
 
         # try as a user with a bad pw
-        cfg.user.remove(("testproject.rpath.local", "nosuchuser", "nonexist"))
-        cfg.user.addServerGlob("testproject.rpath.local", "testuser", "badpass")
+        cfg.user.remove(("testproject." + MINT_PROJECT_DOMAIN,
+                "nosuchuser", "nonexist"))
+        cfg.user.addServerGlob("testproject." + MINT_PROJECT_DOMAIN,
+                "testuser", "badpass")
 
         troveNames = nc.troveNames(self.cfg.buildLabel)
         assert(troveNames == ['testcase:source'])
@@ -247,7 +268,8 @@ class RepositoryTest(MintRepositoryHelper):
 
         projectId = self.newProject(client, domainname = 'other.host')
 
-        client.addRemappedRepository('testproject.rpath.local', 'testproject.other.host')
+        client.addRemappedRepository('testproject.' + MINT_PROJECT_DOMAIN,
+                'testproject.other.host')
         self.makeSourceTrove("testcase", testRecipe)
 
         project = client.getProject(projectId)

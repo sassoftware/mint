@@ -23,8 +23,10 @@ class WebMemberTest(mint_rephelp.WebRepositoryHelper):
 
         # try as unrelated user
         self.webLogin('user2', 'user2')
+
         self.assertContent('/project/testproject/members',
-                           '/project/testproject/joinRequest')
+                           '/project/testproject/joinRequest',
+                           server = self.getProjectServerHostname())
 
         self.fetch('/logout')
 
@@ -34,21 +36,24 @@ class WebMemberTest(mint_rephelp.WebRepositoryHelper):
         # try as developer
         self.webLogin('user2', 'user2')
         self.assertNotContent('/project/testproject/members',
-                              '/project/testproject/joinRequest')
+                              '/project/testproject/joinRequest',
+                              server = self.getProjectServerHostname())
 
         self.fetch('/logout')
 
         # try as admin
         self.webLogin('adminuser', 'adminuser')
         self.assertContent('/project/testproject/members',
-                           '/project/testproject/joinRequest')
+                           '/project/testproject/joinRequest',
+                           server = self.getProjectServerHostname())
 
         self.fetch('/logout')
 
         # try as owner
         self.webLogin('user1', 'user1')
         self.assertNotContent('/project/testproject/members',
-                              '/project/testproject/joinRequest')
+                              '/project/testproject/joinRequest',
+                              server = self.getProjectServerHostname())
 
         self.fetch('/logout')
 
@@ -58,7 +63,8 @@ class WebMemberTest(mint_rephelp.WebRepositoryHelper):
         # try as watcher
         self.webLogin('user3', 'user3')
         self.assertContent('/project/testproject/members',
-                           '/project/testproject/joinRequest')
+                           '/project/testproject/joinRequest',
+                           server = self.getProjectServerHostname())
 
     def testWatchLink(self):
         client, userId = self.quickMintUser('user1', 'user1')
@@ -71,7 +77,8 @@ class WebMemberTest(mint_rephelp.WebRepositoryHelper):
         # try as unrelated user
         self.webLogin('user2', 'user2')
         self.assertContent('/project/testproject/members',
-                           '/project/testproject/watch')
+                           '/project/testproject/watch',
+                           server = self.getProjectServerHostname())
 
         self.fetch('/logout')
 
@@ -81,21 +88,24 @@ class WebMemberTest(mint_rephelp.WebRepositoryHelper):
         # try as developer
         self.webLogin('user2', 'user2')
         self.assertNotContent('/project/testproject/members',
-                              '/project/testproject/watch')
+                              '/project/testproject/watch',
+                              server = self.getProjectServerHostname())
 
         self.fetch('/logout')
 
         # try as admin
         self.webLogin('adminuser', 'adminuser')
         self.assertContent('/project/testproject/members',
-                           '/project/testproject/watch')
+                           '/project/testproject/watch',
+                           server = self.getProjectServerHostname())
 
         self.fetch('/logout')
 
         # try as owner
         self.webLogin('user1', 'user1')
         self.assertNotContent('/project/testproject/members',
-                              '/project/testproject/watch')
+                              '/project/testproject/watch',
+                              server = self.getProjectServerHostname())
 
         self.fetch('/logout')
 
@@ -105,7 +115,8 @@ class WebMemberTest(mint_rephelp.WebRepositoryHelper):
         # try as watcher
         self.webLogin('user3', 'user3')
         self.assertContent('/project/testproject/members',
-                           '/project/testproject/unwatch')
+                           '/project/testproject/unwatch',
+                           server = self.getProjectServerHostname())
 
     def testJoinRequest(self):
         client, userId = self.quickMintUser('user1', 'user1')
@@ -114,6 +125,10 @@ class WebMemberTest(mint_rephelp.WebRepositoryHelper):
         projectId = self.newProject(client)
 
         self.webLogin('user2', 'user2')
+
+        # using the project server for this test
+        self.setServer(self.getProjectServerHostname(), self.port)
+
         page = self.fetch('/project/testproject/joinRequest')
 
         # perform the join
@@ -138,17 +153,19 @@ class WebMemberTest(mint_rephelp.WebRepositoryHelper):
         projectId = self.newProject(client)
 
         self.webLogin('user2', 'user2')
-        page = self.fetch('/project/testproject/joinRequest')
+
+        page = self.fetch('/project/testproject/joinRequest',
+                server = self.getProjectServerHostname())
 
         # perform the join
         commentStr = "What do you mean? African or European?"
-        page = page.postForm(1, self.post, {'comments': commentStr,
+        page = page.postForm(1, page.post, {'comments': commentStr,
                                             'keepReq' : '1'})
 
-        self.fetch('/logout')
+        self.fetchWithRedirect('/logout')
         self.webLogin('user1', 'user1')
 
-        page = self.fetch('/')
+        page = self.fetchWithRedirect('/')
         self.assertContent('/', 'Requests Pending')
 
     def testRejectJoinReq(self):
@@ -159,6 +176,9 @@ class WebMemberTest(mint_rephelp.WebRepositoryHelper):
         client2.setJoinReqComments(projectId, '')
 
         self.webLogin('user1', 'user1')
+
+        # using the project server for this test
+        self.setServer(self.getProjectServerHostname(), self.port)
 
         page = self.assertContent( '/project/testproject/members',
                                    'viewJoinRequest?userId=%d' % userId2)
@@ -183,6 +203,9 @@ class WebMemberTest(mint_rephelp.WebRepositoryHelper):
         client2.setJoinReqComments(projectId, '')
 
         self.webLogin('user1', 'user1')
+
+        # using the project server for this test
+        self.setServer(self.getProjectServerHostname(), self.port)
 
         page = self.assertContent( '/project/testproject/members',
                                    'viewJoinRequest?userId=%d' % userId2)
@@ -209,6 +232,9 @@ class WebMemberTest(mint_rephelp.WebRepositoryHelper):
         client2.setJoinReqComments(projectId, '')
 
         self.webLogin('user1', 'user1')
+
+        # using the project server for this test
+        self.setServer(self.getProjectServerHostname(), self.port)
 
         page = self.assertContent( '/project/testproject/members',
                                    'viewJoinRequest?userId=%d' % userId2)
