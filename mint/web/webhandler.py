@@ -85,11 +85,13 @@ class WebHandler(object):
         else:
             while location and location[0] == '/':
                 location = location[1:]
+            hostname = self.req.headers_in.get('host', self.req.hostname)
+            if ':' not in hostname:
+                hostname = '%s:%i' % \
+                       (hostname, self.req.connection.local_addr[1])
             location = 'http://%s%s%s' % \
-                       (self.req.headers_in.get('host', self.req.hostname),
-                        self.cfg.basePath, location)
+                       (hostname, self.cfg.basePath, location)
 
-        sys.stderr.flush()
         self._redirect(location)
 
     def _redirect(self, location, temporary = False):
@@ -191,12 +193,13 @@ class WebHandler(object):
         #Now figure out if we need to redirect
         nexthop = None
         # split is used to ensure port number doesn't affect cookie domain
-        for dom in (self.cfg.siteDomainName.split(':')[0],
-                    self.cfg.projectDomainName.split(':')[0]):
-            if not self.session['visited'].get(dom, None):
+        for dom in (self.cfg.siteDomainName.split(':'),
+                    self.cfg.projectDomainName.split(':')):
+            if not self.session['visited'].get(dom[0], None):
                 #Yeah we need to redirect
                 nexthop = dom
                 break
+
         # if we were passed a sid, specifically set a cookie
         # for the requested domain with that sid.
         if sid or nexthop:
@@ -216,7 +219,10 @@ class WebHandler(object):
         if nexthop:
             #Save the session
             self.session.save()
-            self._redirect("http://%s.%s%sblank?sid=%s" % (self.cfg.hostName, nexthop, self.cfg.basePath, self.session.id()))
+            #Don't forget to put the port specifier back here
+            self._redirect("http://%s.%s%sblank?sid=%s" % \
+                    (self.cfg.hostName, ':'.join(nexthop),
+                        self.cfg.basePath, self.session.id()))
         else:
             if sid:
                 #Clear the sid from the request by redirecting to the first page.
