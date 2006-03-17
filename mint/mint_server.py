@@ -1685,7 +1685,7 @@ class MintServer(object):
             raise ParameterError("Not a legal Cook Type")
 
         if jobserverVersion not in jsversion.getVersions():
-            raise ParameterError("Not a legal job server version")
+            raise ParameterError("Not a legal job server version: %s" % jobserverVersion)
         # client asked for nothing, client gets nothing.
         if not (imageTypes or cookTypes) or (not archTypes):
             return 0
