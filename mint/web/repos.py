@@ -115,6 +115,7 @@ class ConaryHandler(WebHandler, http.HttpHandler):
             raise HttpNotFound
 
         d = self.fields
+        d['auth'] = self.authToken
 
         if self.auth.admin:
             # if we are admin, we have the right to touch any repo, but that
@@ -123,6 +124,7 @@ class ConaryHandler(WebHandler, http.HttpHandler):
             saveToken = self.authToken
             self.authToken = (self.cfg.authUser, self.cfg.authPass, None, None)
             try:
+                d['auth'] = self.authToken
                 output = method(**d)
             finally:
                 # carefully restore old credentials so that this code can work
