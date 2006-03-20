@@ -115,9 +115,21 @@ class ConaryHandler(WebHandler, http.HttpHandler):
             raise HttpNotFound
 
         d = self.fields
-        d['auth'] = self.authToken
 
-        output = method(**d)
+        if self.auth.admin:
+            # if we are admin, we have the right to touch any repo, but that
+            # particular repo might not know our credentials (not a project
+            # member)... so use the auth user.
+            saveToken = self.authToken
+            self.authToken = (self.cfg.authUser, self.cfg.authPass, None, None)
+            try:
+                output = method(**d)
+            finally:
+                # carefully restore old credentials so that this code can work
+                # outside of mod-python environments.
+                self.authToken = saveToken
+        else:
+            output = method(**d)
         return output
 
     def _write(self, templateName, **values):
@@ -153,5 +165,5 @@ class ConaryHandler(WebHandler, http.HttpHandler):
     for method in http.HttpHandler.__dict__.keys():
         if not (method.startswith('_') or method in allowedMethods):
             if callable(http.HttpHandler.__dict__[method]):
-                print >> sys.stderr, "Warning: conary handler method is not explicitly allowed: %s\n please updte repos.py" % method
+                print >> sys.stderr, "Warning: conary handler method is not explicitly allowed: %s\n please update repos.py" % method
 
