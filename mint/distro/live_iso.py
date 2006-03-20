@@ -243,16 +243,17 @@ mount -o defaults --ro -t ext2 /dev/loop0 /sysroot
         util.execute('mkisofs -o %s -J -R -b isolinux.bin -c boot.cat -no-emul-boot -boot-load-size 4 -boot-info-table -V %s .' % (self.liveISO, self.getVolName()))
         os.chmod(self.liveISO, 0755) # octal 755
 
-        # zip the final product is the main image wasn't compressed already
+        isoName = self.isoName(self.liveISO)
+        # zip the final product if the main image wasn't compressed already
         if not self.release.getDataValue('compress'):
             zippedImage = self.liveISO + '.gz'
             util.execute('gzip -9 < %s > %s' % (self.liveISO, zippedImage))
             os.unlink(self.liveISO)
             os.chmod(zippedImage, 0755)
-            return (zippedImage, self.isoName(zippedImage))
+            return (zippedImage, isoName)
 
         os.chmod(self.liveISO, 0755)
-        return (self.liveISO, self.isoName(self.liveISO))
+        return (self.liveISO, isoName)
 
     def cleanupDirs(self):
         return
