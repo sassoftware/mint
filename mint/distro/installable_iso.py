@@ -437,6 +437,17 @@ class InstallableIso(ImageGenerator):
             isoList.append((infoMap['iso'], "%s Disc %s" % (infoMap['name'], discNum)))
 
         isoList = [ (os.path.join(infoMap['isodir'], iso[0]), iso[1]) for iso in isoList ]
+        # this for loop re-identifies any iso greater than 700MB as a DVD
+        for index, (iso, name) in zip(range(len(isoList)), isoList[:]):
+            szPipe = os.popen('isosize %s' % iso, 'r')
+            isoSize = int(szPipe.read())
+            szPipe.close()
+            if isoSize > 734003200: # 700 MB in bytes
+                newIso = iso.replace('disc', 'dvd')
+                newName = name.replace('Disc', 'DVD')
+                os.rename(iso, newIso)
+                isoList[index] = (newIso, newName)
+
         for iso, name in isoList:
             if not os.access(iso, os.R_OK):
                 raise RuntimeError, "ISO generation failed"
