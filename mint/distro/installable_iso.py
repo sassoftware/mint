@@ -389,7 +389,7 @@ class InstallableIso(ImageGenerator):
         if uJob:
             cclient.applyUpdate(uJob, callback = self.callback)
             self._storeUpdateJob(uJob)
-            print >> sys.stderr, "sucess: copying media template data to unified tree"
+            print >> sys.stderr, "success: copying media template data to unified tree"
             sys.stderr.flush()
 
             # copy content into unified tree root. add recurse and no-deref
@@ -400,6 +400,13 @@ class InstallableIso(ImageGenerator):
             print >> sys.stderr, "media-template not found on repository"
 
         self.writeProductImage('1#' + arch)
+
+        if os.path.exists(os.path.join(topdir, 'media-template',
+                                       'disc1', 'ks.cfg')):
+
+            print >> sys.stderr, "Adding kickstart arguments"
+            os.system("sed -i '0,/append/s/append.*$/& ks=cdrom/' %s" % \
+                      os.path.join(topdir, 'isolinux', 'isolinux.cfg'))
 
         self.status("Mapping ISOs")
         splitdistro.splitDistro(topdir, troveName, maxIsoSize)
