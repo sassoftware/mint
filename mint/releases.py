@@ -36,6 +36,10 @@ class ReleaseDataNameError(MintError):
         else:
             self.str = reason
 
+# *** Extremely Important ***
+# Changing the names or semantic meanings of the keys to data templates is the
+# same this as making a schema upgrade! do not do this lightly.
+
 imageGenTemplate = {
     # XXX this is kind of a lousy description; a toggleable "override ILP option would be nicer
     'installLabelPath': (RDT_STRING, '',  'Custom Conary installLabelPath setting (leave blank for default)'),
@@ -62,7 +66,7 @@ vmwareImageTemplate = {
 
 liveIsoTemplate = {
     'unionfs':          (RDT_BOOL, True, 'Use unionfs (recommended)'),
-    'compress':         (RDT_BOOL, True, 'Compress filesystem')
+    'zisofs' :          (RDT_BOOL, True, 'Compress filesystem')
     }
 
 stubImageTemplate = {
