@@ -245,7 +245,7 @@ mount -o defaults --ro -t ext2 /dev/loop0 /sysroot
 
         isoName = self.isoName(self.liveISO)
         # zip the final product if the main image wasn't compressed already
-        if not self.release.getDataValue('compress'):
+        if not self.release.getDataValue('zisofs'):
             zippedImage = self.liveISO + '.gz'
             util.execute('gzip -9 < %s > %s' % (self.liveISO, zippedImage))
             os.unlink(self.liveISO)
@@ -271,7 +271,7 @@ mount -o defaults --ro -t ext2 /dev/loop0 /sysroot
             self.makeLiveCdTree()
 
             # and instantiate the hard disk image
-            self.createImage(self.release.getDataValue('compress') and \
+            self.createImage(self.release.getDataValue('zisofs') and \
                              'zisofs' or 'isofs')
 
             # now merge them. the hard disk image must be inserted into the iso
