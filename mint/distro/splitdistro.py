@@ -13,6 +13,7 @@ import conary
 from conary.lib import util
 import conary.trove
 import conary.repository.changeset
+from gencslist import _linkOrCopyFile
 
 commonfiles = ('README', 'LICENSE')
 basicminimal = ('group-core', 'group-base')
@@ -48,11 +49,9 @@ def lndir(src, dest, excludes=[]):
                 curfile = f
             if curfile in excludes:
                 continue
-            try:
-                os.link(join(dirpath, f), join(dest, curfile))
-            except OSError, e:
-                if e.errno != 17:
-                    raise
+            if not os.path.exists(join(dest, curfile)):
+                _linkOrCopyFile(join(dirpath, f), join(dest, curfile))
+
 
 def spaceused(path, isoblocksize):
     if not os.path.isdir(path):
