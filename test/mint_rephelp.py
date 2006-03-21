@@ -422,6 +422,7 @@ class WebRepositoryHelper(MintRepositoryHelper, webunittest.WebTestCase):
 
     def fetchWithRedirect(self, url, params = None, code = None, **kwargs):
         if code is None: code = self.expect_codes
+        else: code = code.extend([301, 302]) # must have these for redirection
         redirects = 0
 
         while True:
