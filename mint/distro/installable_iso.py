@@ -136,10 +136,7 @@ class InstallableIso(ImageGenerator):
                 dataType = RDT_STRING, validate = False)
 
     def getConaryClient(self, tmpRoot, arch):
-        cfg = self.project.getConaryConfig(overrideSSL = True,
-                                           overrideAuth = True,
-                                           newUser='mintauth',
-                                           newPass='mintpass',
+        cfg = self.project.getConaryConfig(overrideSSL = not self.project.external,
                                            useSSL = self.cfg.SSL)
         cfg.root = tmpRoot
         cfg.dbPath = tmpRoot + "/var/lib/conarydb/conarydb"
