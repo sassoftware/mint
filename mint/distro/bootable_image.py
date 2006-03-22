@@ -240,7 +240,7 @@ title %(name)s (%(kversion)s)
     def setupConaryClient(self):
         self.conarycfg.threaded = True
         self.conarycfg.root = self.fakeroot
-        self.conarycfg.dbPath = self.fakeroot + '/var/lib/conarydb/'
+        self.conarycfg.dbPath = self.fakeroot + '/var/lib/conarydb'
         self.conarycfg.installLabelPath = None
         self.readConaryRc(self.conarycfg)
 
