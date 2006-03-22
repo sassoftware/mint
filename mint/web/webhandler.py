@@ -78,19 +78,21 @@ class WebHandler(object):
         return returner
 
     def _redirectHttp(self, location):
-        if location.startswith('http://'):
-            pass
-        elif location.startswith('https://'):
-            location = location.replace('https://', 'http://', 1)
+        if ':' in self.cfg.externalDomainName:
+            httpPort = self.cfg.externalDomainName.split(':')[1]
         else:
-            while location and location[0] == '/':
-                location = location[1:]
-            hostname = self.req.headers_in.get('host', self.req.hostname)
-            if ':' not in hostname:
-                hostname = '%s:%i' % \
-                       (hostname, self.req.connection.local_addr[1])
-            location = 'http://%s%s%s' % \
-                       (hostname, self.cfg.basePath, location)
+            httpPort = 80
+
+        while location and location[0] == '/':
+            location = location[1:]
+
+        hostname = self.req.headers_in.get('host', self.req.hostname)
+        if ':' not in hostname and httpPort != 80:
+            hostname = '%s:%i' % \
+                   (hostname, httpPort)
+
+        location = 'http://%s%s%s' % \
+                   (hostname, self.cfg.basePath, location)
 
         self._redirect(location)
 

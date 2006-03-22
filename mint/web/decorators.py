@@ -32,10 +32,16 @@ def redirectHttp(func):
 
 def redirectHttps(func):
     def wrapper(self, *args, **kwargs):
+        reqPort = self.req.parsed_uri[apache.URI_PORT]
+        reqHost = self.req.headers_in.get('host', self.req.hostname)
+        if reqPort and reqPort != 443:
+            hostname = '%s:%s' % (reqHost, reqPort)
+        else:
+            hostname = reqHost
         if (self.req.subprocess_env.get('HTTPS', 'off') != 'on' or \
-            self.req.hostname != self.cfg.secureHost) and self.cfg.SSL:
+            hostname != self.cfg.secureHost) and self.cfg.SSL:
             return self._redirect('https://%s%s' % \
-                                  (self.cfg.secureHost, self.req.unparsed_uri))
+                    (self.cfg.secureHost, self.req.unparsed_uri))
         else:
             return func(self, *args, **kwargs)
     return wrapper
