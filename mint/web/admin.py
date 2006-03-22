@@ -9,7 +9,7 @@ import os
 from mod_python import apache
 
 from mint import mint_error
-from webhandler import WebHandler, HttpNotFound
+from webhandler import WebHandler, HttpNotFound, HttpForbidden
 from conary import versions
 from conary.web.fields import strFields, intFields, listFields, boolFields
 
@@ -17,7 +17,7 @@ class AdminHandler(WebHandler):
     def handle(self, context):
         self.__dict__.update(**context)
         if not self.auth.admin:
-            raise mint_error.PermissionDenied
+            raise HttpForbidden
 
         return self.adminHandler
 

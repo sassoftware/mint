@@ -1154,6 +1154,8 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         # for some reason lots of people do this and used to trigger a traceback:
         self.assertCode("/downloadImage/", code = 404)
 
+    def testNoAdminPowers(self):
+        self.assertCode("/administer", code = 403)
 
 if __name__ == "__main__":
     testsuite.main()
