@@ -254,7 +254,7 @@ class InstallableIso(ImageGenerator):
             discNumStr = "Disc %d" % int(discNum)
             truncatedName = self.project.getName()[:31-len(discNumStr)]
             volumeId = "%s %s" % (truncatedName, discNumStr)
-            outputIsoName = isoNameTemplate + d
+            outputIsoName = isoNameTemplate + d + ".iso"
             if os.access(os.path.join(sourceDir, d, "isolinux/isolinux.bin"), os.R_OK):
                 os.chdir(os.path.join(sourceDir, d))
                 call("mkisofs", "-o", outputDir + "/" + outputIsoName,
