@@ -7,6 +7,7 @@
 import os
 import types
 import sys
+import syslog
 import config
 import time
 
@@ -20,7 +21,7 @@ HTTP_TAG = 'HTTP'
 RPC_TAG = 'RPC'
 KID_TAG = 'KID'
 
-class Profile(object):
+class AbstractProfile(object):
     """
     Profile is a singleton object to be used to profile calling times within
     the Mint codebase. It currently saves its state in a stack (thus
@@ -36,7 +37,6 @@ class Profile(object):
     the system after each request.
     """
 
-    _logfile = None
     _stack = []
 
     def __new__(cls, *p, **kwargs):
@@ -61,42 +61,6 @@ class Profile(object):
         else:
             self.profiling = cfg.profiling
             self.cfg = cfg
-
-    def _logPath(self):
-        """
-        Returns the current log path to be used by profiling.
-        """
-        return os.path.join(self.cfg.dataPath, 'logs')
-
-    def _logfileName(self):
-        """
-        Returns the current log file name (with path) to be used by profiling.
-        """
-        return os.path.join(self._logPath(), 'profiling')
-
-    def _openLog(self):
-        """
-        Opens the log file if it isn't already open.
-        """
-        if not Profile._logfile:
-            if 'logs' not in os.listdir(self.cfg.dataPath):
-                os.mkdir(self._logPath())
-            Profile._logfile = open(self._logfileName(), 'a')
-
-    def _closeLog(self):
-        """
-        Closes the log file and resets it to None.
-        """
-        if Profile._logfile:
-            Profile._logfile.close()
-            Profile._logfile = None
-
-    def _logExists(self):
-        """
-        Returns whether the current log file exists or not.
-        Useful to handle log rotation.
-        """
-        return os.path.exists(self._logfileName())
 
     def _writeData(self, formatString, *args):
         """
@@ -123,21 +87,7 @@ class Profile(object):
         self._write(COMMENT_MARKER + s)
 
     def _write(self, s):
-        """
-        Writes and flushes the data to the currently open logfile, if any.
-        @param s: the string to write to the file
-        """
-        # Tack on a line separator
-        if not s.endswith('\n'):
-            s += '\n'
-
-        # Write the string and flush buffers
-        #
-        # XXX: Yes, I know that this is ugly; but it assures that logrotate
-        # doesn't lose data.
-        self._openLog()
-        Profile._logfile.write(s)
-        self._closeLog()
+        raise NotImplementedError
 
     def _get_refcounts(self):
         """
@@ -232,4 +182,74 @@ class Profile(object):
         """
         logText = (wasCacheHit and "+" or "-") + templateName
         self.stop(KID_TAG, logText)
+
+
+class SyslogProfile(AbstractProfile):
+    """Log profiling data to syslog."""
+    def __new__(cls, *p, **kwargs):
+        ret = AbstractProfile.__new__(cls, *p, **kwargs)
+        syslog.openlog('rbuilder', 0, syslog.LOG_LOCAL0)
+        return ret
+
+    def _write(self, s):
+        syslog.syslog(syslog.LOG_INFO, s)
+
+
+class Profile(AbstractProfile):
+    """Log profiling data to an arbitrary file."""
+    _logfile = None
+
+    def _openLog(self):
+        """
+        Opens the log file if it isn't already open.
+        """
+        if not Profile._logfile:
+            if 'logs' not in os.listdir(self.cfg.dataPath):
+                os.mkdir(self._logPath())
+            Profile._logfile = open(self._logfileName(), 'a')
+
+    def _closeLog(self):
+        """
+        Closes the log file and resets it to None.
+        """
+        if Profile._logfile:
+            Profile._logfile.close()
+            Profile._logfile = None
+
+    def _write(self, s):
+        """
+        Writes and flushes the data to the currently open logfile, if any.
+        @param s: the string to write to the file
+        """
+        # Tack on a line separator
+        if not s.endswith('\n'):
+            s += '\n'
+
+        # Write the string and flush buffers
+        #
+        # XXX: Yes, I know that this is ugly; but it assures that logrotate
+        # doesn't lose data.
+        self._openLog()
+        Profile._logfile.write(s)
+        self._closeLog()
+
+    def _logPath(self):
+        """
+        Returns the current log path to be used by profiling.
+        """
+        return os.path.join(self.cfg.dataPath, 'logs')
+
+    def _logfileName(self):
+        """
+        Returns the current log file name (with path) to be used by profiling.
+        """
+        return os.path.join(self._logPath(), 'profiling')
+
+    def _logExists(self):
+        """
+        Returns whether the current log file exists or not.
+        Useful to handle log rotation.
+        """
+        return os.path.exists(self._logfileName())
+
 
