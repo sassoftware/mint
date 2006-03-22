@@ -2241,6 +2241,16 @@ class MintServer(object):
         self._requireProjectDeveloper(projectId)
         return self.groupTroveItems.listByGroupTroveId(groupTroveId)
 
+    @private
+    @typeCheck(int, str, str, str)
+    @requiresAuth
+    def troveInGroupTroveItems(self, groupTroveId, name, version, flavor):
+        projectId = self.groupTroves.getProjectId(groupTroveId)
+        self._filterProjectAccess(projectId)
+        self._requireProjectDeveloper(projectId)
+        return self.groupTroveItems.troveInGroupTroveItems( \
+            groupTroveId, name, version, flavor)
+
     @typeCheck(int, bool)
     @requiresAuth
     def setGroupTroveItemVersionLock(self, groupTroveItemId, lock):
