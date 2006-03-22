@@ -147,18 +147,22 @@ class GroupTroveCook(Generator):
                 except build.errors.GroupPathConflicts, e:
                     labelPath = groupTrove.getLabelPath()
                     for group, conflicts in e.conflicts.items():
-                        for l in labelPath:
-                            matches = []
-                            # loop through each conflicting trove for each label in the path,
-                            # and pick the first conflicting trove that matches.
-                            for conflict in conflicts:
-                                matches = [x for x in conflict[0] if x[1].branch().label().asString() == l]
+                        for conflict in conflicts:
+                            expMatches = [x for x in conflict[0] \
+                                      if groupTrove.troveInGroup( \
+                                x[0].split(':')[0], str(x[1]), x[2].freeze())]
+
+                            for l in labelPath:
+                                # if expMatches is not empty, we must honor it.
+                                # otherwise fallback to all conflicts.
+                                matches = [x for x in \
+                                          (expMatches or conflict[0]) \
+                                          if x[1].branch().label().asString() == l]
                                 if matches:
                                     con = list(conflict[0])
                                     con.remove(matches[0])
                                     removeTroves.extend([x for x in con])
-                            if matches:
-                                break
+                                    break
                 else:
                     break
                 for rm in removeTroves:

@@ -216,6 +216,38 @@ class GroupTroveItemsTable(database.KeyedTable):
             trvList.append(self.get(trvId))
         return trvList
 
+    def troveInGroupTroveItems(self, groupTroveId, name, version, flavor):
+        trvDicts = self.listByGroupTroveId(groupTroveId)
+        trvDicts = [x for x in trvDicts if x['trvName'] == name]
+        if not trvDicts:
+            return False
+        for trvDict in trvDicts:
+            flav = deps.ThawDependencySet(flavor)
+            if not (trvDict['useLock'] or trvDict['instSetLock']):
+                flavor = ''
+            elif (trvDict['useLock'] and trvDict['instSetLock']):
+                flavor = str(flav)
+            elif trvDict['useLock']:
+                depSet = deps.DependencySet()
+                depSet.addDeps(deps.UseDependency,
+                               flav.iterDepsByClass(deps.UseDependency))
+                flavor = str(depSet)
+            else:
+                depSet = deps.DependencySet()
+                depSet.addDeps(deps.InstructionSetDependency,
+                               flav.iterDepsByClass(deps.InstructionSetDependency))
+                flavor = str(depSet)
+            match = trvDict['trvFlavor'] == flavor
+            parsedVer = versions.VersionFromString(version)
+            label = str(parsedVer.branch().label())
+            if trvDict['trvFlavor'] == flavor and \
+               (trvDict['versionLock'] and  \
+               version == trvDict['trvVersion'] or \
+                (not trvDict['versionLock'] and
+                    trvDict['trvLabel'] == label)):
+                return True
+        return False
+
     def get(self, groupTroveItemId):
         ret = database.KeyedTable.get(self, groupTroveItemId)
         ret['versionLock'] = bool(ret['versionLock'])
@@ -303,6 +335,10 @@ class GroupTrove(database.TableObject):
 
     def listTroves(self):
         return self.server.listGroupTroveItemsByGroupTrove(self.getId())
+
+    def troveInGroup(self, name, version, flavor):
+        return self.server.troveInGroupTroveItems(self.getId(), name, version,
+                                                  flavor)
 
     def setDesc(self, description):
         self.server.setGroupTroveDesc(self.getId(), description)
