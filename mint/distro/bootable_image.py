@@ -231,10 +231,6 @@ title %(name)s (%(kversion)s)
 
     @timeMe
     def createTemporaryRoot(self, basedir = os.getcwd()):
-        #Create a temporary directory
-        if self.fakeroot is None:
-            self.fakeroot = tempfile.mkdtemp('', 'mint-MDI-', basedir)
-        #Create some structure
         cwd = os.getcwd()
         os.chdir(self.fakeroot)
         util.mkdirChain( 'etc', 'etc/sysconfig', 'etc/sysconfig/network-scripts', 'boot/grub', 'tmp', 'sys' )
@@ -243,9 +239,9 @@ title %(name)s (%(kversion)s)
     @timeMe
     def setupConaryClient(self):
         self.conarycfg.threaded = True
-        self.conarycfg.setValue('root', self.fakeroot)
+        self.conarycfg.root = self.fakeroot
+        self.conarycfg.dbPath = self.fakeroot + '/var/lib/conarydb/'
         self.conarycfg.installLabelPath = None
-        self.conarycfg.dbPath = '/var/lib/conarydb/'
         self.readConaryRc(self.conarycfg)
 
         self.cclient = conaryclient.ConaryClient(self.conarycfg)
@@ -259,34 +255,9 @@ title %(name)s (%(kversion)s)
         repos = self.cclient.getRepos()
         parentGroup = repos.getTroves([(self.basetrove, versions.VersionFromString(self.baseversion), self.baseflavor)])[0]
 
-        # choose an appropriate kernel
-        # set a default
-        kuJob = None
-        kItem = None
-        troves = parentGroup.iterTroveList(strongRefs = True)
-        strongKernels = [x for x in sorted(troves) if x[0] == 'kernel' or x[0] == 'kernel:runtime']
-        if strongKernels:
-            kItem = None
-        else:
-            # find any weakly-referred kernels, and pick the first non-SMP one
-            troves = parentGroup.iterTroveList(weakRefs = True)
-            noSMPFlavor = deps.parseFlavor("!kernel.smp")
-            weakKernels = [x for x in sorted(troves) if x[0] == 'kernel:runtime' and x[2].satisfies(noSMPFlavor)]
-            if weakKernels:
-                kItem = weakKernels[0]
-
-        if kItem:
-            kItemList = [('kernel:runtime', (None, None), (kItem[1], kItem[2]), True)]
-
-            kuJob, _ = self.cclient.updateChangeSet(kItemList,
-                resolveDeps = False, callback = callback)
-        if not kItem and not strongKernels:
-            raise KernelTroveRequired
-
         uJob, _ = self.cclient.updateChangeSet(itemList,
             resolveDeps = False, split = True, callback = callback)
-
-        return [uJob, kuJob]
+        return uJob
 
     @timeMe
     def applyUpdate(self, uJob, callback, tagScript):
@@ -294,11 +265,29 @@ title %(name)s (%(kversion)s)
                 tagScript=os.path.join(self.fakeroot, 'tmp', tagScript))
 
     @timeMe
+    def updateKernelChangeSet(self, callback):
+        #Install the Kernel
+        try:
+            # since sync = True, this will sync up to the kernel requested by the group.
+            kernel, version, flavor = parseTroveSpec('kernel:runtime[!kernel.smp is: %s]' % self.arch)
+            itemList = [(kernel, (None, None), (version, flavor), True)]
+            uJob, suggMap = self.cclient.updateChangeSet(itemList, sync = True,
+                                callback = callback, split = True,
+                                resolveDeps = False)
+        except errors.TroveNotFound:
+            raise KernelTroveRequired
+        return uJob
+
+    @timeMe
     def populateTemporaryRoot(self, callback = None):
-        uJob, kuJob = self.updateGroupChangeSet(callback)
+        uJob = self.updateGroupChangeSet(callback)
         self.applyUpdate(uJob, callback, 'tag-scripts')
 
-        if kuJob:
+        try:
+            kuJob = self.updateKernelChangeSet(callback)
+        except conaryclient.NoNewTrovesError:
+            log.info("strongly-included kernel found--no new kernel trove to sync")
+        else:
             self.applyUpdate(kuJob, callback, 'kernel-tag-scripts')
 
     @timeMe

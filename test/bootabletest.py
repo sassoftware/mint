@@ -15,6 +15,7 @@ from mint_rephelp import MINT_PROJECT_DOMAIN
 from mint_rephelp import EmptyCallback
 from conary import conarycfg, conaryclient
 from conary.deps import deps
+from conary.lib import util
 from conary import versions
 
 from mint.distro import bootable_image
@@ -38,6 +39,11 @@ class BootableImageTest(MintRepositoryHelper):
         bi = bootable_image.BootableImage(client, isocfg, job, release, project)
         bi.conarycfg = self.cfg
         bi.setupConaryClient()
+        util.mkdirChain(bi.fakeroot + "/tmp")
+
+        empty = EmptyCallback()
+        uJob = bi.updateGroupChangeSet(empty)
+        bi.applyUpdate(uJob, empty, 'tag-scripts')
 
         return bi
 
@@ -51,10 +57,8 @@ class BootableImageTest(MintRepositoryHelper):
              ("test:runtime", True)], defaultFlavor = "is: x86")
 
         bi = self.setupBootableImage(trove)
-        uJob, kuJob = bi.updateGroupChangeSet(EmptyCallback())
-
-        assert(uJob)
-        assert(not kuJob) # kernel update job should be null since we have a strongly-included kernel
+        self.assertRaises(conaryclient.NoNewTrovesError,
+            bi.updateKernelChangeSet, EmptyCallback())
 
     def testWeakKernel(self):
         """Test that the bootable image code pulls in the correct weakly-included kernel"""
@@ -87,12 +91,11 @@ class BootableImageTest(MintRepositoryHelper):
              ("test:runtime", True)], defaultFlavor = "is:x86")
 
         bi = self.setupBootableImage(trove)
-        uJob, kuJob = bi.updateGroupChangeSet(EmptyCallback())
+        kuJob = bi.updateKernelChangeSet(EmptyCallback())
 
-        # make sure we get !smp flavors of kernel:runtime and kernel:config:
+        # make sure we get !smp flavors of kernel:runtime
         correctSet = set([('kernel:runtime', (None, None), (VFS('/localhost@rpl:linux/1.0-1-1'), Flavor('!kernel.smp is: x86')), True)])
         assert(kuJob.getPrimaryJobs() == correctSet)
-        assert(uJob)
 
     def testNoKernel(self):
         self.addComponent("test:runtime", "1.0")
@@ -103,7 +106,7 @@ class BootableImageTest(MintRepositoryHelper):
         bi = self.setupBootableImage(trove)
 
         self.assertRaises(bootable_image.KernelTroveRequired,
-            bi.updateGroupChangeSet, EmptyCallback())
+            bi.updateKernelChangeSet, EmptyCallback())
 
 
 if __name__ == "__main__":

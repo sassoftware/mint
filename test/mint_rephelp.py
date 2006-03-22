@@ -173,6 +173,7 @@ class MintApacheServer(rephelp.ApacheServer):
         elif reposdriver == 'mysql':
             cfg.reposDBPath = 'root@localhost.localdomain:%d/%%s' % self.reposDB.port
         cfg.reposDBDriver = reposdriver
+        cfg.reposPath = self.reposDir + "/repos/"
         cfg.reposContentsDir = [self.reposDir + "/contents1/%s/", self.reposDir + "/contents2/%s/"]
 
         cfg.dataPath = self.reposDir

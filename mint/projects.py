@@ -589,8 +589,8 @@ class RepositoryDatabase:
         cache = os.path.dirname("%s/%s/cache.sql" % (self.cfg.reposPath, name))
         if not os.path.exists(cache):
             util.mkdirChain(os.path.dirname(cache))
-            from conary.repository.netrepos import cacheset
-            cacheset.CacheSet(('sqlite', cache), None)
+        from conary.repository.netrepos import cacheset
+        cacheset.CacheSet(('sqlite', cache + "/cache.sql"), None)
 
     def getRepositoryDB(self, name):
         raise NotImplementedError
