@@ -2055,7 +2055,10 @@ class MintServer(object):
         projectId = self.getGroupTrove(groupTroveId)['projectId']
         project = projects.Project(self, projectId)
 
-        cfg = project.getConaryConfig()
+        # external projects follow what's in the labels table,
+        # internal projects follow the configuration:
+        cfg = project.getConaryConfig(overrideSSL = not project.external,
+            useSSL = self.cfg.SSL)
 
         flavor = deps.parseFlavor(trvFlavor)
         if deps.DEP_CLASS_IS in flavor.members:
