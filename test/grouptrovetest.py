@@ -744,5 +744,111 @@ class GroupTroveTest(MintRepositoryHelper):
         self.assertRaises(grouptrove.GroupTroveNameError, self.addTestTrove,
                           groupTrove, "test:source", v.asString())
 
+    def testTroveInGroupVersions(self):
+        self.openRepository()
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client)
+
+        project = client.getProject(projectId)
+
+        groupTrove = self.createTestGroupTrove(client, projectId)
+        groupTroveId = groupTrove.getId()
+
+        trvId = self.addTestTrove(groupTrove, "testcase")
+
+        # exact version, unlocked
+        self.failIf(not groupTrove.troveInGroup( \
+            "testcase", '/testproject.' + MINT_PROJECT_DOMAIN +
+            '@rpl:devel/1.0-1-1', ""),
+                     "Group Trove didn't identify correct trove")
+
+        # mismatch version, but unlocked
+        self.failIf(not groupTrove.troveInGroup( \
+            "testcase", '/testproject.' + MINT_PROJECT_DOMAIN +
+            '@rpl:devel/5.0-1-1', ""),
+                     "Group Trove didn't identify unlocked version")
+
+        # mismatched branch, unlocked
+        self.failIf(groupTrove.troveInGroup( \
+            "testcase", '/testproject.neverland@rpl:devel/5.0-1-1', ""),
+                     "Group Trove didn't identify locked version")
+        groupTrove.setTroveVersionLock(trvId, True)
+
+        # newer version, locked
+        self.failIf(groupTrove.troveInGroup( \
+            "testcase", '/testproject.' + MINT_PROJECT_DOMAIN +
+            '@rpl:devel/5.0-1-1', ""),
+                     "Group Trove didn't identify locked version")
+
+        # exact version, locked
+        self.failIf(not groupTrove.troveInGroup( \
+            "testcase", '/testproject.' + MINT_PROJECT_DOMAIN +
+            '@rpl:devel/1.0-1-1', ""),
+                     "Group Trove didn't identify correct trove")
+
+    def testTroveInGroupIS(self):
+        self.openRepository()
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client)
+
+        project = client.getProject(projectId)
+
+        groupTrove = self.createTestGroupTrove(client, projectId)
+        groupTroveId = groupTrove.getId()
+
+        trvId = self.addTestTrove(groupTrove, "testcase")
+        # mismatch arch, unlocked
+        self.failIf(not groupTrove.troveInGroup( \
+            "testcase", '/testproject.' + MINT_PROJECT_DOMAIN +
+            '@rpl:devel/1.0-1-1', "1#x86_64"),
+                     "Group Trove didn't identify mismatched unlocked arch")
+
+        groupTrove.setTroveInstSetLock(trvId, True)
+
+        # mismatch arch, locked
+        self.failIf(groupTrove.troveInGroup( \
+            "testcase", '/testproject.' + MINT_PROJECT_DOMAIN +
+            '@rpl:devel/1.0-1-1', "1#x86_64"),
+                     "Group Trove didn't identify mismatched locked arch")
+
+        # match arch, locked
+        self.failIf(not groupTrove.troveInGroup( \
+            "testcase", '/testproject.' + MINT_PROJECT_DOMAIN +
+            '@rpl:devel/1.0-1-1', "1#x86"),
+                     "Group Trove didn't identify correct locked arch")
+
+    def testTroveInGroupUse(self):
+        self.openRepository()
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client)
+
+        project = client.getProject(projectId)
+
+        groupTrove = self.createTestGroupTrove(client, projectId)
+        groupTroveId = groupTrove.getId()
+
+        trvId = self.addTestTrove(groupTrove, "testcase")
+
+        # match, unlocked
+        self.failIf(not groupTrove.troveInGroup(\
+            "testcase", '/testproject.' + MINT_PROJECT_DOMAIN +
+            '@rpl:devel/1.0-1-1', '5#use:~!kernel.debug:~kernel.smp'),
+                     "Group Trove didn't identify unlocked use flags")
+
+        groupTrove.setTroveUseLock(trvId, True)
+
+        # match, locked
+        self.failIf(not groupTrove.troveInGroup(\
+            "testcase", '/testproject.' + MINT_PROJECT_DOMAIN +
+            '@rpl:devel/1.0-1-1', '5#use:~!kernel.debug:~kernel.smp'),
+                     "Group Trove didn't identify correct locked use flags")
+
+        # mismatch, locked
+        self.failIf(groupTrove.troveInGroup(\
+            "testcase", '/testproject.' + MINT_PROJECT_DOMAIN +
+            '@rpl:devel/1.0-1-1', '5#use:~!kernel.debug:kernel.smp'),
+                     "Group Trove didn't identify mismatched locked use flags")
+
+
 if __name__ == "__main__":
     testsuite.main()
