@@ -40,9 +40,10 @@ class Generator:
         return imageCfg
 
     def readConaryRc(self, cfg):
-        self.conarycfgFile = os.path.join(self.cfg.configPath, 'conaryrc')
-        if os.path.exists(self.conarycfgFile):
-            cfg.read(self.conarycfgFile)
+        conarycfgFile = os.path.join(self.cfg.configPath, 'conaryrc')
+        if os.path.exists(conarycfgFile):
+            cfg.read(conarycfgFile)
+        return conarycfgFile
 
     def write(self):
         raise NotImplementedError

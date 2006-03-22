@@ -108,6 +108,7 @@ def call(*cmds):
 
 class InstallableIso(ImageGenerator):
     configObject = IsoConfig
+    productDir = 'rPath'
 
     def _getUpdateJob(self, cclient, troveName):
         self.callback.setChangeSet(troveName)
@@ -140,89 +141,89 @@ class InstallableIso(ImageGenerator):
                                            useSSL = self.cfg.SSL)
         cfg.root = tmpRoot
         cfg.dbPath = tmpRoot + "/var/lib/conarydb/conarydb"
-        cfg.installLabelPath = [self.version.branch().label()]
+        cfg.installLabelPath = [self.troveVersion.branch().label()]
         cfg.buildFlavor = deps.deps.parseFlavor(stockFlavors[arch])
         cfg.flavor = [cfg.buildFlavor]
         cfg.initializeFlavors()
+        self.readConaryRc(cfg)
 
         return conaryclient.ConaryClient(cfg)
 
-    def writeProductImage(self, arch):
-        # write the product.img cramfs
-        productPath = os.path.join(self.baseDir, "product.img")
-        tmpPath = tempfile.mkdtemp()
+    def convertSplash(self, topdir, tmpPath):
+        # convert syslinux-splash.png to splash.lss, if exists
+        if os.path.exists(tmpPath + '/pixmaps/syslinux-splash.png'):
+            print >> sys.stderr, "found syslinux-splash.png, converting to splash.lss"
 
-        # write .buildstamp
+            splash = file(tmpPath + '/pixmaps/splash.lss', 'w')
+            palette = [] # '#000000=0', '#cdcfd5=7', '#c90000=2', '#ffffff=15', '#5b6c93=9']
+            pngtopnm = subprocess.Popen(['pngtopnm', tmpPath + '/pixmaps/syslinux-splash.png'], stdout = subprocess.PIPE)
+            ppmtolss16 = subprocess.Popen(['ppmtolss16'] + palette, stdin = pngtopnm.stdout, stdout = splash)
+            ppmtolss16.communicate()
+
+        # copy the splash.lss files to the appropriate place
+        if os.path.exists(tmpPath + '/pixmaps/splash.lss'):
+            print >> sys.stderr, "found splash.lss; moving to isolinux directory"
+            splashTarget = os.path.join(topdir, 'isolinux')
+            call('cp', '--remove-destination', '-v', tmpPath + '/pixmaps/splash.lss', splashTarget)
+            # FIXME: regenerate boot.iso here
+
+    def writeBuildstamp(self, tmpPath):
         bsFile = open(os.path.join(tmpPath, ".buildstamp"), "w")
         print >> bsFile, time.time()
         print >> bsFile, self.project.getName()
         print >> bsFile, upstream(self.release.getTroveVersion())
-        print >> bsFile, self.subdir
+        print >> bsFile, self.productDir
         print >> bsFile, self.release.getDataValue("bugsUrl")
         print >> bsFile, "%s %s %s" % (self.release.getTroveName(),
                                        self.release.getTroveVersion().asString(),
                                        self.release.getTroveFlavor().freeze())
         bsFile.close()
 
+    def writeProductImage(self, topdir, arch):
+        # write the product.img cramfs
+        baseDir = os.path.join(topdir, self.productDir, 'base')
+        productPath = os.path.join(baseDir, "product.img")
+        tmpPath = tempfile.mkdtemp()
+
+        self.writeBuildStamp(tmpPath)
+
         # extract anaconda-images from repository, if exists
         tmpRoot = tempfile.mkdtemp()
-        if not self.project.external:
-            cclient = self.getConaryClient(tmpRoot, arch)
-            uJob = None
-            print >> sys.stderr, "extracting artwork from anaconda-custom=%s" % cclient.cfg.installLabelPath[0].asString()
-            uJob = self._getUpdateJob(cclient, "anaconda-custom")
-            if not uJob:
-                print >> sys.stderr, "anaconda-custom not found on repository, falling back to anaconda-images"
-                uJob = self._getUpdateJob(cclient, "anaconda-images")
+        cclient = self.getConaryClient(tmpRoot, arch)
 
-            util.mkdirChain(tmpPath + '/pixmaps')
-            if uJob:
-                self._storeUpdateJob(uJob)
-                cclient.applyUpdate(uJob, callback = self.callback)
-                print >> sys.stderr, "success."
-                sys.stderr.flush()
+        uJob = None
+        print >> sys.stderr, "extracting artwork from anaconda-custom=%s" % cclient.cfg.installLabelPath[0].asString()
+        uJob = self._getUpdateJob(cclient, "anaconda-custom")
+        if not uJob:
+            print >> sys.stderr, "anaconda-custom not found on repository, falling back to anaconda-images"
+            uJob = self._getUpdateJob(cclient, "anaconda-images")
 
-                # copy pixmaps and scripts into cramfs root
-                tmpTar = tempfile.mktemp(suffix = '.tar')
-                call('tar', 'cf', tmpTar, '-C', tmpRoot + '/usr/share/anaconda/', './')
-                call('tar', 'xf', tmpTar, '-C', tmpPath)
-                call('rm', tmpTar)
-            elif not self.project.external:
-                print >> sys.stderr, "anaconda-images not found on repository either, using generated artwork."
-                ai = AnacondaImages(self.project.getName(), indir = self.isocfg.anacondaImagesPath,
-                        outdir = tmpPath + '/pixmaps',
-                        fontfile = '/usr/share/fonts/bitstream-vera/Vera.ttf')
-                ai.processImages()
+        util.mkdirChain(tmpPath + '/pixmaps')
+        if uJob:
+            self._storeUpdateJob(uJob)
+            cclient.applyUpdate(uJob, callback = self.callback)
+            print >> sys.stderr, "success."
+            sys.stderr.flush()
 
-            # convert syslinux-splash.png to splash.lss, if exists
-            if os.path.exists(tmpPath + '/pixmaps/syslinux-splash.png'):
-                print >> sys.stderr, "found syslinux-splash.png, converting to splash.lss"
-
-                splash = file(tmpPath + '/pixmaps/splash.lss', 'w')
-                palette = [] # '#000000=0', '#cdcfd5=7', '#c90000=2', '#ffffff=15', '#5b6c93=9']
-                pngtopnm = subprocess.Popen(['pngtopnm', tmpPath + '/pixmaps/syslinux-splash.png'], stdout = subprocess.PIPE)
-                ppmtolss16 = subprocess.Popen(['ppmtolss16'] + palette, stdin = pngtopnm.stdout, stdout = splash)
-                ppmtolss16.communicate()
-
-            # copy the splash.lss files to the appropriate place
-            if os.path.exists(tmpPath + '/pixmaps/splash.lss'):
-                print >> sys.stderr, "found splash.lss; moving to isolinux directory"
-                splashTarget = os.path.join(self.topdir, 'isolinux')
-                call('cp', '--remove-destination', '-v', tmpPath + '/pixmaps/splash.lss', splashTarget)
-                # FIXME: regenerate boot.iso here
+            # copy pixmaps and scripts into cramfs root
+            tmpTar = tempfile.mktemp(suffix = '.tar')
+            call('tar', 'cf', tmpTar, '-C', tmpRoot + '/usr/share/anaconda/', './')
+            call('tar', 'xf', tmpTar, '-C', tmpPath)
+            call('rm', tmpTar)
         else:
-            cfg = conarycfg.ConaryConfiguration()
-            self.readConaryRc(cfg)
-            cfg.root = cfg.dbPath = ":memory:"
-            cfg.installLabelPath = [versions.Label(self.project.getLabel())]
-            cclient = conaryclient.ConaryClient(cfg)
+            print >> sys.stderr, "anaconda-images not found on repository either, using generated artwork."
+            ai = AnacondaImages(self.project.getName(), indir = self.isocfg.anacondaImagesPath,
+                    outdir = tmpPath + '/pixmaps',
+                    fontfile = '/usr/share/fonts/bitstream-vera/Vera.ttf')
+            ai.processImages()
 
+        self.convertSplash(topdir, tmpPath)
         self.writeConaryRc(tmpPath, cclient)
 
         # extract constants.py from the stage2.img template and override the BETANAG flag
         # this would be better if constants.py could load a secondary constants.py
         stage2Path = tempfile.mkdtemp()
-        call('/sbin/fsck.cramfs', self.topdir + '/rPath/base/stage2.img', '-x', stage2Path)
+        call('/sbin/fsck.cramfs', topdir + '/rPath/base/stage2.img', '-x', stage2Path)
         call('cp', stage2Path + '/usr/lib/anaconda/constants.py', tmpPath)
         betaNag = self.release.getDataValue('betaNag')
         call('sed', '-i', 's/BETANAG = 1/BETANAG = %d/' % int(betaNag), tmpPath + '/constants.py')
@@ -233,214 +234,45 @@ class InstallableIso(ImageGenerator):
 
         # clean up
         util.rmtree(tmpPath)
-        util.rmtree(tmpRoot)
 
-    def write(self):
-        isocfg = self.getConfig()
-        self.isocfg = isocfg
-        if isocfg.imagesPath != None:
-            print >> sys.stderr, "WARNING: The imagesPath configuration entry has moved from installable_iso.conf to iso_gen.conf."
-            sys.stderr.flush()
-
-        troveName, versionStr, flavorStr = self.release.getTrove()
-        version = versions.ThawVersion(versionStr)
-        flavor = deps.deps.ThawDependencySet(flavorStr)
-        self.version = version
-
+    def buildIsos(self, topdir):
         skipMediaCheck = self.release.getDataValue('skipMediaCheck')
-        maxIsoSize = int(self.release.getDataValue('maxIsoSize'))
-
-        print >> sys.stderr, "Building ISOs of size: %d Mb" % \
-              (maxIsoSize / 1048576)
-        sys.stderr.flush()
-
-        # FIXME: hack to ensure we don't trigger overburns.
-        # there are probably cleaner ways to do this.
-        if maxIsoSize > 681574400:
-            maxIsoSize -= 1024 * 1024
-
-        cfg = conarycfg.ConaryConfiguration()
-
-        # add a repositoryMap and user entry to cfg
-        projCfg = self.project.getConaryConfig(overrideSSL = not self.project.external, useSSL = self.cfg.SSL)
-        cfg.installLabelPath = [versions.Label(self.project.getLabel())]
-        cfg.repositoryMap.update(projCfg.repositoryMap)
-        cfg.user = projCfg.user
-        self.readConaryRc(cfg)
-
-        cfg.dbPath = ':memory:'
-        cfg.root = ':memory:'
-        cfg.initializeFlavors()
-        cfg.pubRing = ['/dev/null']
-        client = conaryclient.ConaryClient(cfg)
-
-        revision = version.trailingRevision().asString()
-        topdir = os.path.join(self.cfg.imagesPath, self.project.getHostname(),
-            self.release.getArch(), str(self.release.getId()), "unified")
-        self.topdir = topdir
-        util.mkdirChain(topdir)
-        # subdir = string.capwords(self.project.getHostname())
-        subdir = 'rPath'
-        self.subdir = subdir
-
-        # hardlink template files to topdir
-        templateDir = os.path.join(isocfg.templatePath, self.release.getArch())
-        if not os.path.exists(os.path.join(templateDir, 'PRODUCTNAME')):
-            raise AnacondaTemplateMissing(self.release.getArch())
-
-        self.status("Preparing ISO template")
-        _linkRecurse(templateDir, topdir)
-        productDir = os.path.join(topdir, subdir)
-        if os.path.isdir(productDir):
-            # reinit template if exists
-            util.rmtree(productDir)
-        os.rename(os.path.join(topdir, 'PRODUCTNAME'), productDir)
-        # replace isolinux.bin with a real copy, since it's modified
-        call('cp', '--remove-destination', '-a',
-            templateDir + '/isolinux/isolinux.bin', topdir + '/isolinux/isolinux.bin')
-
-        csdir = os.path.join(topdir, subdir, 'changesets')
-        util.mkdirChain(csdir)
-
-        # build a set of the things we already have extracted.
-        self.status("Extracting changesets")
-        existingChangesets = set()
-        for path in (os.path.join(csdir, x) for x in os.listdir(csdir)):
-            existingChangesets.add(path)
-
-        trvList = client.repos.findTrove(cfg.installLabelPath[0],\
-                                 (troveName, version.asString(), flavor),
-                                 defaultFlavor = cfg.flavor)
-
-        if not trvList:
-            print >> sys.stderr, "no match for", groupName
-            raise RuntimeException
-        elif len(trvList) > 1:
-            print >> sys.stderr, "multiple matches for", groupName
-            raise RuntimeException
-
-        groupName, groupVer, groupFlavor = trvList[0]
-
-        self.callback = Callback(self.status)
-        rc = gencslist.extractChangeSets(client, cfg, csdir, groupName,
-                                         groupVer, groupFlavor,
-                                         oldFiles = existingChangesets,
-                                         cacheDir = isocfg.cachePath,
-                                         callback = self.callback)
-        print >> sys.stderr, "done extracting changesets"
-        sys.stderr.flush()
-        cslist, groupcs = rc
-
-        releaseVer = upstream(version)
-        releasePhase = "ALPHA"
-        arch = self.release.getArch()
-        assert(arch in ('x86', 'x86_64'))
-        if arch == 'x86':
-            anacondaArch = 'i386'
-        else:
-            anacondaArch = arch
-
-        # write the sqldb file
-        baseDir = os.path.join(topdir, subdir, 'base')
-        self.baseDir = baseDir
-        sqldbPath = os.path.join(baseDir, 'sqldb')
-        gencslist.writeSqldb(groupcs, sqldbPath, cfgFile = self.conarycfgFile)
-
-        # write the cslist
-        cslistPath = os.path.join(baseDir, 'cslist')
-        cslistFile = file(cslistPath, "w")
-        cslistFile.write("\n".join(cslist))
-        cslistFile.close()
-
-        infoMap = {
-            "isodir":       os.path.normpath(os.path.join(self.cfg.finishedPath, self.project.getHostname(), str(self.release.getId()))),
-            "topdir":       topdir,
-            "subdir":       subdir,
-            "name":         self.project.getName(),
-            "safeName":     self.project.getHostname(),
-            "version":      releaseVer,
-            "arch":         anacondaArch,
-            "scriptsdir":   isocfg.scriptPath,
-        }
-        util.mkdirChain(infoMap['isodir'])
-
-        # write .discinfo
-        discInfoPath = os.path.join(topdir, ".discinfo")
-        os.unlink(discInfoPath)
-        discInfoFile = open(discInfoPath, "w")
-        print >> discInfoFile, time.time()
-        print >> discInfoFile, self.project.getName()
-        print >> discInfoFile, anacondaArch
-        print >> discInfoFile, "1"
-        for x in ["base", "changesets", "pixmaps"]:
-            print >> discInfoFile, "%s/%s" % (subdir, x)
-        discInfoFile.close()
-
-        tmpRoot = tempfile.mkdtemp()
-        cclient = self.getConaryClient(tmpRoot, "1#" + arch)
-
-        # extract media-template from repository, if it exists
-        print >> sys.stderr, "extracting ad-hoc content from " \
-              "media-template=%s" % cfg.installLabelPath[0].asString()
-        uJob = self._getUpdateJob(cclient, "media-template")
-        if uJob:
-            cclient.applyUpdate(uJob, callback = self.callback)
-            self._storeUpdateJob(uJob)
-            print >> sys.stderr, "success: copying media template data to unified tree"
-            sys.stderr.flush()
-
-            # copy content into unified tree root. add recurse and no-deref
-            # flags to command. following symlinks is really bad in this case.
-            call('cp', '-R', '--no-dereference',
-                 tmpRoot + '/usr/lib/media-template', topdir)
-        else:
-            print >> sys.stderr, "media-template not found on repository"
-
-        self.writeProductImage('1#' + arch)
-
-        if os.path.exists(os.path.join(topdir, 'media-template',
-                                       'disc1', 'ks.cfg')):
-
-            print >> sys.stderr, "Adding kickstart arguments"
-            os.system("sed -i '0,/append/s/append.*$/& ks=cdrom/' %s" % \
-                      os.path.join(topdir, 'isolinux', 'isolinux.cfg'))
-
-        self.status("Mapping ISOs")
-        splitdistro.splitDistro(topdir, troveName, maxIsoSize)
+        outputDir = os.path.normpath(os.path.join(self.cfg.finishedPath, self.project.getHostname(), str(self.release.getId())))
+        util.mkdirChain(outputDir)
 
         isoList = []
-        isoname = "%(safeName)s-%(version)s-%(arch)s-%%(disc)s.iso" % infoMap
-        discdir = os.path.normpath(topdir + "/../")
-        self.status("Building ISOs")
+        isoNameTemplate = "%s-%s-%s-" % (self.project.getHostname(),
+                                    upstream(self.troveVersion),
+                                    self.release.getArch())
+        sourceDir = os.path.normpath(topdir + "/../")
 
-        for d in sorted(os.listdir(discdir)):
+        for d in sorted(os.listdir(sourceDir)):
             if not d.startswith('disc'):
                 continue
 
             discNum = d.split("disc")[-1]
-            infoMap['disc'] = d
             discNumStr = "Disc %d" % int(discNum)
-            truncatedName = infoMap['name'][:31-len(discNumStr)]
-            infoMap['discname'] = "%s %s" % (truncatedName, discNumStr)
-            infoMap['iso'] =  isoname % infoMap
-            if os.access(os.path.join(discdir, d, "isolinux/isolinux.bin"), os.R_OK):
-                os.chdir(os.path.join(discdir, d))
-                call("mkisofs", "-o", "%(isodir)s/%(iso)s" % infoMap,
+            truncatedName = self.project.getName()[:31-len(discNumStr)]
+            volumeId = "%s %s" % (truncatedName, discNumStr)
+            outputIsoName = isoNameTemplate + d
+            if os.access(os.path.join(sourceDir, d, "isolinux/isolinux.bin"), os.R_OK):
+                os.chdir(os.path.join(sourceDir, d))
+                call("mkisofs", "-o", outputDir + "/" + outputIsoName,
                                 "-b", "isolinux/isolinux.bin",
                                 "-c", "isolinux/boot.cat",
                                 "-no-emul-boot",
                                 "-boot-load-size", "4",
                                 "-boot-info-table", "-R", "-J",
-                                "-V",  "%(discname)s" % infoMap,
+                                "-V", volumeId,
                                 "-T", ".")
             else:
-                os.chdir(os.path.join(discdir, d))
-                call("mkisofs", "-o", "%(isodir)s/%(iso)s" % infoMap,
-                     "-R", "-J", "-V", "%(discname)s" % infoMap, "-T", ".")
+                os.chdir(os.path.join(sourceDir, d))
+                call("mkisofs", "-o", outputDir + "/" + outputIsoName,
+                     "-R", "-J", "-V", volumeId, "-T", ".")
 
-            isoList.append((infoMap['iso'], "%s Disc %s" % (infoMap['name'], discNum)))
+            isoList.append((outputIsoName, "%s Disc %s" % (self.project.getName(), discNum)))
 
-        isoList = [ (os.path.join(infoMap['isodir'], iso[0]), iso[1]) for iso in isoList ]
+        isoList = [ (os.path.join(outputDir, iso[0]), iso[1]) for iso in isoList ]
         # this for loop re-identifies any iso greater than 700MB as a DVD
         for index, (iso, name) in zip(range(len(isoList)), isoList[:]):
             szPipe = os.popen('isosize %s' % iso, 'r')
@@ -456,22 +288,170 @@ class InstallableIso(ImageGenerator):
             if not os.access(iso, os.R_OK):
                 raise RuntimeError, "ISO generation failed"
             else:
-                cmd = [isocfg.implantIsoMd5]
+                cmd = [self.isocfg.implantIsoMd5]
                 if skipMediaCheck:
                     cmd.append('--supported-iso')
                 cmd.append(iso)
                 call(*cmd)
 
         # add the netboot images
-        bootDest = os.path.join(infoMap['isodir'], 'boot.iso')
-        diskbootDest = os.path.join(infoMap['isodir'], 'diskboot.img')
+        bootDest = os.path.join(outputDir, 'boot.iso')
+        diskbootDest = os.path.join(outputDir, 'diskboot.img')
         gencslist._linkOrCopyFile(os.path.join(topdir, 'images', 'boot.iso'), bootDest)
         gencslist._linkOrCopyFile(os.path.join(topdir, 'images', 'diskboot.img'), diskbootDest)
+        isoList += ( (bootDest, "boot.iso"),
+                     (diskbootDest, "diskboot.img"), )
+
+        return isoList
+
+    def setupKickstart(self, topdir):
+        if os.path.exists(os.path.join(topdir, 'media-template',
+                                       'disc1', 'ks.cfg')):
+            print >> sys.stderr, "Adding kickstart arguments"
+            os.system("sed -i '0,/append/s/append.*$/& ks=cdrom/' %s" % \
+                      os.path.join(topdir, 'isolinux', 'isolinux.cfg'))
+
+    def prepareTemplates(self, topdir):
+        # hardlink template files to topdir
+        templateDir = os.path.join(self.isocfg.templatePath, self.release.getArch())
+        if not os.path.exists(os.path.join(templateDir, 'PRODUCTNAME')):
+            raise AnacondaTemplateMissing(self.release.getArch())
+
+        self.status("Preparing ISO template")
+        _linkRecurse(templateDir, topdir)
+        productDir = os.path.join(topdir, self.productDir)
+        if os.path.isdir(productDir):
+            # reinit template if exists
+            util.rmtree(productDir)
+        os.rename(os.path.join(topdir, 'PRODUCTNAME'), productDir)
+        # replace isolinux.bin with a real copy, since it's modified
+        call('cp', '--remove-destination', '-a',
+            templateDir + '/isolinux/isolinux.bin', topdir + '/isolinux/isolinux.bin')
+
+        csdir = os.path.join(topdir, self.productDir, 'changesets')
+        util.mkdirChain(csdir)
+        return csdir
+
+    def extractMediaTemplate(self, topdir):
+        tmpRoot = tempfile.mkdtemp()
+        try:
+            client = self.getConaryClient(tmpRoot, "1#" + self.release.getArch())
+
+            print >> sys.stderr, "extracting ad-hoc content from " \
+                  "media-template=%s" % client.cfg.installLabelPath[0].asString()
+            uJob = self._getUpdateJob(client, "media-template")
+            if uJob:
+                client.applyUpdate(uJob, callback = self.callback)
+                self._storeUpdateJob(uJob)
+                print >> sys.stderr, "success: copying media template data to unified tree"
+                sys.stderr.flush()
+
+                # copy content into unified tree root. add recurse and no-deref
+                # flags to command. following symlinks is really bad in this case.
+                call('cp', '-R', '--no-dereference',
+                     tmpRoot + '/usr/lib/media-template', topdir)
+            else:
+                print >> sys.stderr, "media-template not found on repository"
+        finally:
+            util.rmtree(tmpRoot)
+
+    def extractChangeSets(self, csdir):
+        # build a set of the things we already have extracted.
+        self.status("Extracting changesets")
+        existingChangesets = set()
+        for path in (os.path.join(csdir, x) for x in os.listdir(csdir)):
+            existingChangesets.add(path)
+
+        tmpRoot = tempfile.mkdtemp()
+        client = self.getConaryClient(tmpRoot, "1#" + self.release.getArch())
+        trvList = client.repos.findTrove(client.cfg.installLabelPath[0],\
+                                 (self.troveName, str(self.troveVersion), self.troveFlavor),
+                                 defaultFlavor = client.cfg.flavor)
+
+        if not trvList:
+            raise RuntimeError, "no match for %s" % groupName
+        elif len(trvList) > 1:
+            raise RuntimeError, "multiple matches for %s" % groupName 
+
+        groupName, groupVer, groupFlavor = trvList[0]
+
+        self.callback = Callback(self.status)
+        rc = gencslist.extractChangeSets(client, client.cfg, csdir, groupName,
+                                         groupVer, groupFlavor,
+                                         oldFiles = existingChangesets,
+                                         cacheDir = self.isocfg.cachePath,
+                                         callback = self.callback)
+        print >> sys.stderr, "done extracting changesets"
+        sys.stderr.flush()
+        return rc
+
+
+    def write(self):
+        self.isocfg = self.getConfig()
+
+        # set up the topdir
+        topdir = os.path.join(self.cfg.imagesPath, self.project.getHostname(),
+            self.release.getArch(), str(self.release.getId()), "unified")
+        util.mkdirChain(topdir)
+
+        troveName, versionStr, flavorStr = self.release.getTrove()
+        self.troveName = troveName
+        self.troveVersion = versions.ThawVersion(versionStr)
+        self.troveFlavor = deps.deps.ThawDependencySet(flavorStr)
+
+        maxIsoSize = int(self.release.getDataValue('maxIsoSize'))
+
+        print >> sys.stderr, "Building ISOs of size: %d Mb" % \
+              (maxIsoSize / 1048576)
+        sys.stderr.flush()
+
+        # FIXME: hack to ensure we don't trigger overburns.
+        # there are probably cleaner ways to do this.
+        if maxIsoSize > 681574400:
+            maxIsoSize -= 1024 * 1024
+
+        csdir = self.prepareTemplates(topdir)
+        cslist, groupcs = self.extractChangeSets(csdir)
+
+        arch = self.release.getArch()
+        if arch == 'x86':
+            anacondaArch = 'i386'
+        else:
+            anacondaArch = arch
+
+        # write the sqldb file
+        baseDir = os.path.join(topdir, self.productDir, 'base')
+        sqldbPath = os.path.join(baseDir, 'sqldb')
+        gencslist.writeSqldb(groupcs, sqldbPath,
+            cfgFile = os.path.join(self.cfg.configPath, 'conaryrc'))
+
+        # write the cslist
+        cslistPath = os.path.join(baseDir, 'cslist')
+        cslistFile = file(cslistPath, "w")
+        cslistFile.write("\n".join(cslist))
+        cslistFile.close()
+
+        # write .discinfo
+        discInfoPath = os.path.join(topdir, ".discinfo")
+        os.unlink(discInfoPath)
+        discInfoFile = open(discInfoPath, "w")
+        print >> discInfoFile, time.time()
+        print >> discInfoFile, self.project.getName()
+        print >> discInfoFile, anacondaArch
+        print >> discInfoFile, "1"
+        for x in ["base", "changesets", "pixmaps"]:
+            print >> discInfoFile, "%s/%s" % (self.productDir, x)
+        discInfoFile.close()
+
+        self.extractMediaTemplate(topdir)
+        self.setupKickstart(topdir)
+        self.writeProductImage(topdir, '1#' + arch)
+
+        self.status("Building ISOs")
+        splitdistro.splitDistro(topdir, troveName, maxIsoSize)
+        isoList = self.buildIsos(topdir)
 
         # clean up
         self.status("Cleaning up...")
         util.rmtree(os.path.normpath(os.path.join(topdir, "..")))
-        isoList += ( (bootDest, "boot.iso"),
-                     (diskbootDest, "diskboot.img"), )
-
         return isoList
