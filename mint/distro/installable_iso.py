@@ -167,7 +167,7 @@ class InstallableIso(ImageGenerator):
             call('cp', '--remove-destination', '-v', tmpPath + '/pixmaps/splash.lss', splashTarget)
             # FIXME: regenerate boot.iso here
 
-    def writeBuildstamp(self, tmpPath):
+    def writeBuildStamp(self, tmpPath):
         bsFile = open(os.path.join(tmpPath, ".buildstamp"), "w")
         print >> bsFile, time.time()
         print >> bsFile, self.project.getName()
