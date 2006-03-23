@@ -2062,8 +2062,14 @@ class MintServer(object):
 
         res = {}
         for arch, flavor in stockFlavors.items():
-            cfg.buildFlavor = deps.parseFlavor(flavor)
+            flavor = deps.ThawDependencySet(arch)
+
+            cfg.flavor = [flavor]
+            cfg.buildFlavor = flavor
+
+            cfg.root = cfg.dbPath = ":memory:"
             cfg.initializeFlavors()
+
             cclient = conaryclient.ConaryClient(cfg)
             repos = cclient.getRepos()
 
