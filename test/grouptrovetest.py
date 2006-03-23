@@ -64,9 +64,7 @@ refRedirRecipe = """class GroupTest(GroupRecipe):
         r.add('redirect:lib', 'testproject.%s@rpl:devel', '', groupName = 'group-test')
         if Arch.x86:
             r.add('test:lib', '/testproject.%s@rpl:devel/1.0-1-1', 'is: x86', groupName = 'group-test')
-        if Arch.x86_64:
-            r.add('test:lib', '/testproject.%s@rpl:devel/1.0-1-1', 'is: x86', groupName = 'group-test')
-""" % ((MINT_PROJECT_DOMAIN,) * 5)
+""" % ((MINT_PROJECT_DOMAIN,) * 4)
 
 lockedRecipe = """class GroupTest(GroupRecipe):
     name = 'group-test'
