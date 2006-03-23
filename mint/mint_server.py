@@ -2079,7 +2079,7 @@ class MintServer(object):
                     if trv.isRedirect():
                         uJob = cclient.updateChangeSet(\
                             [(lName, (None, None),
-                              (lVer, lFlav), True)])[0]
+                              (lVer, lFlav), True)], resolveDeps = False)[0]
                         res[arch].extend([(x[0], str(x[2][0]), str(x[2][1])) \
                                     for x in uJob.getJobs()[0]])
             except TroveNotFound:
