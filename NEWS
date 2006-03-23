@@ -2,6 +2,8 @@ Changes in 1.5.5:
 
 * Redirects in the group builder are now handled more correctly--
 the correct flavored redirect will be pulled in automatically.
+* Group Builder conflicts have been modified to behave more intuitively.
+  User specified troves will always replace troves pulled in from deps.
 
 Changes in 1.5.4:
 
