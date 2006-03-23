@@ -79,9 +79,9 @@ onload = "javascript:;"
                     <ul class="footerLinks">
                         <li><a href="${cfg.corpSite}">About ${cfg.companyName}</a></li>
                         <li py:if="cfg.announceLink"><a href="${cfg.announceLink}">Site Announcements</a></li>
-                        <li><a href="/legal/">Legal</a></li>
+                        <li><a href="${cfg.basePath}legal/">Legal</a></li>
                         <li><a href="${cfg.corpSite}company-contact-rpath.html">Contact Us</a></li>
-                        <li><a href="/help/">Help</a></li>
+                        <li><a href="${cfg.basePath}help/">Help</a></li>
                     </ul>
                 </div>
                 <div id="bottomText">
