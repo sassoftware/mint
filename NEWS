@@ -1,4 +1,10 @@
-Latest:
+Changes in 1.5.5:
+
+* Redirects in the group builder are now handled more correctly--
+the correct flavored redirect will be pulled in automatically.
+
+Changes in 1.5.4:
+
 * configurable ISO sizes
 * media-template support
 
