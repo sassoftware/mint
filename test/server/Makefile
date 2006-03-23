@@ -4,7 +4,7 @@
 # All Rights Reserved
 #
 
-dist_files = Makefile httpd.conf.in
+dist_files = Makefile httpd.conf.in ssl.conf.in test.crt test.key
 
 all: default-all
 

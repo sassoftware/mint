@@ -60,40 +60,125 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         if '/processLogin' not in page.body:
             self.fail("Login form did not appear on page")
-        page = page.fetch('/processLogin', postdata = \
-            {'username': 'foouser',
-             'password': 'foopass'})
+
+        page = page.postForm(1, self.fetchWithRedirect,
+            {'username': 'foouser', 'password': 'foopass'})
+
         if '/processLogin' in page.body:
             self.fail("Login form appeared on page for logged in user")
 
-        page = page.assertCode('/logout', code = 301)
-        page = self.fetch('')
+        page = page.fetchWithRedirect('/logout')
+
         if '/processLogin' not in page.body:
             self.fail("Login form did not appear on page")
-        page = page.fetch('/processLogin', postdata = \
-            {'username': 'wronguser',
-             'password': 'foopass'})
 
-    def testNonvolatileSession(self):
+    def testLoginWrongUser(self):
+        page = self.fetch('/')
+
+        page = page.postForm(1, self.fetchWithRedirect,
+                {'username': 'baduser', 'password': 'somepassword'})
+
+        if 'Error' not in page.body:
+            self.fail("Wrong username should show an error page.")
+
+    def testLoginWrongPassword(self):
         self.quickMintUser('foouser','foopass')
 
         page = self.fetch('/')
-        page = page.postForm(1, self.post, {'username': 'foouser',
-                                            'password': 'foopass'})
 
-        self.failIf(self.cookies.values()[0]['/']['pysid']['expires'],
-                    "Session cookie has unexpected expiration")
+        page = page.postForm(1, self.fetchWithRedirect,
+                {'username': 'foouser', 'password': 'badpassword'})
 
-        page = self.fetch('/logout')
+        if 'Error' not in page.body:
+            self.fail("Wrong password should show an error page.")
+
+    def testLoginCookies(self):
+        self.quickMintUser('foouser', 'foopass')
 
         page = self.fetch('/')
+        page = page.postForm(1, self.fetchWithRedirect,
+                {'username': 'foouser', 'password': 'foopass'})
 
-        page = page.postForm(1, self.post, {'username'   : 'foouser',
-                                            'password'   : 'foopass',
-                                            'rememberMe' : '1'})
+        page = page.fetch('/')
+        page.registerExpectedCookie('pysid')
 
-        self.failIf(not self.cookies.values()[0]['/']['pysid']['expires'],
-                    "Two-week cookie is missing expiration")
+        self.failUnless('.%s' % MINT_DOMAIN in self.cookies.keys(),
+                "%s missing from cookies" % MINT_DOMAIN)
+        if (MINT_PROJECT_DOMAIN != MINT_DOMAIN):
+            self.failUnless('.%s' % MINT_PROJECT_DOMAIN in self.cookies.keys(),
+                "%s missing from cookies" % MINT_PROJECT_DOMAIN)
+            self.failUnless(self.cookies['.%s' % MINT_DOMAIN] !=
+                    self.cookies['.%s' % MINT_PROJECT_DOMAIN],
+                    "Cookies should be identical")
+
+    def testLoginNonvolatileSession(self):
+        self.quickMintUser('foouser','foopass')
+
+        page = self.fetch('/')
+        page = page.postForm(1, self.fetchWithRedirect,
+                {'username': 'foouser', 'password': 'foopass'})
+
+        self.failIf(self.cookies.values()[0]['/']['pysid']['expires'],
+                "Session cookie has unexpected expiration")
+
+        page.registerExpectedCookie('pysid')
+
+        page = page.fetchWithRedirect('/logout')
+
+        page = page.fetchWithRedirect('/')
+
+        page = page.postForm(1, self.fetchWithRedirect,
+                {'username'   : 'foouser',
+                 'password'   : 'foopass',
+                 'rememberMe' : '1'})
+
+        for c in self.cookies.items():
+            self.failUnless(c[1]['/']['pysid']['expires'],
+                "Session cookie for %s is missing expiration" % c[0])
+
+    def testLogout(self):
+        client, userid = self.quickMintUser('foouser', 'foopass')
+        self.newProject(client, 'Foo', 'foo')
+
+        page = self.fetch('/')
+        page = page.postForm(1, self.fetchWithRedirect,
+                {'username'   : 'foouser',
+                 'password'   : 'foopass',
+                 'rememberMe' : '1'})
+
+        page.assertContent('/', '/logout')
+
+        page = page.fetchWithRedirect('/logout')
+
+        page = page.fetchWithRedirect('/project/foo', code = [200])
+        self.failIf(('/logout' in page.body), "Still logged in on" \
+                "project domain (cookie still active)")
+
+        page = page.fetchWithRedirect('/', code = [200])
+        self.failIf(('/logout' in page.body), "Still logged in on" \
+                "main site domain (cookie still active)")
+
+    def testLogoutNoCookie(self):
+        self.quickMintUser('foouser', 'foopass')
+
+        page = self.fetch('/')
+        page = page.postForm(1, self.fetchWithRedirect,
+                {'username'   : 'foouser',
+                 'password'   : 'foopass',
+                 'rememberMe' : '1'})
+
+        page.assertContent('/', '/logout')
+
+        page = page.fetchWithRedirect('/logout')
+
+        page = page.fetchWithRedirect('/')
+        self.failIf('Set-Cookie:' in page.headers,
+                "Cookies should not be set in headers after logout")
+
+    def testCookieBeforeLogin(self):
+        page = self.fetchWithRedirect('/')
+        self.failIf('Set-Cookie:' in page.headers,
+                "Cookies should not be set in headers before login")
 
     def testSessionCleanup(self):
         client, userId = self.quickMintUser('foouser','foopass')
@@ -129,15 +214,16 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         cu.execute("SELECT confirmation FROM Confirmations")
         assert(not cu.fetchall())
 
-        page = self.assertCode('/register', code = 200)
+        page = self.fetchWithRedirect('/register')
 
-        page = page.postForm(1, self.post, {'username':  'foouser',
-                                            'password':  'foopass',
-                                            'password2': 'foopass',
-                                            'email':     'foo@localhost',
-                                            'email2':     'foo@localhost',
-                                            'tos':       'True',
-                                            'privacy':   'True'})
+        page = page.postForm(1, page.fetchWithRedirect,
+                {'username':  'foouser',
+                 'password':  'foopass',
+                 'password2': 'foopass',
+                 'email':     'foo@localhost',
+                 'email2':    'foo@localhost',
+                 'tos':       'True',
+                 'privacy':   'True'})
 
         client = self.openMintClient()
 
@@ -518,10 +604,12 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         page = self.webLogin('foouser', 'foopass')
 
-        page = self.fetch('/editUserSettings', postdata =
+        page = self.fetchWithRedirect('/editUserSettings', params =
                           { 'fullName' : 'Bob Loblaw',
-                            'email'    : user.email},
-                          ok_codes = [301])
+                            'email'    : user.email })
+
+        user = client.getUser(userId)
+        self.assertEqual(user.fullName, 'Bob Loblaw')
 
     def testNonExistProject(self):
         self.assertCode('/project/doesnotexist', code = 404)

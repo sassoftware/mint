@@ -85,10 +85,14 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
         extProjectId = self.newProject(client, "External Project", "external",
                 MINT_PROJECT_DOMAIN)
 
+        cu = self.db.cursor()
+        cu.execute("UPDATE projects SET external = 1 WHERE projectId=?",
+                extProjectId)
+        self.db.commit()
+
         extProject = client.getProject(extProjectId)
         labelId = extProject.getLabelIdMap()['external.' + \
                 MINT_PROJECT_DOMAIN + '@rpl:devel']
-
         self.openRepository(1)
         self.makeSourceTrove("testcase", testRecipe, buildLabel = versions.Label('localhost1@rpl:linux'))
 
@@ -103,6 +107,7 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
         page = page.assertCode('/repos/external/troveInfo?t=testcase:source', code = 200)
 
     def testTroveInfoPage(self):
+
         client, userId = self.quickMintUser('foouser','foopass')
         projectId = self.newProject(client)
         project = client.getProject(projectId)
