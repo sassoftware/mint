@@ -56,7 +56,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.quickMintUser('foouser','foopass')
 
         # historically, port was missing from login form action
-        page = self.assertContent('/', '%d/processLogin' % self.port)
+        page = self.assertContent('/', '%d/processLogin' % self.securePort)
 
         if '/processLogin' not in page.body:
             self.fail("Login form did not appear on page")
@@ -215,8 +215,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         assert(not cu.fetchall())
 
         page = self.fetchWithRedirect('/register')
-
-        page = page.postForm(1, page.fetchWithRedirect,
+        page = page.postForm(1, page.post,
                 {'username':  'foouser',
                  'password':  'foopass',
                  'password2': 'foopass',
@@ -224,7 +223,6 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                  'email2':    'foo@localhost',
                  'tos':       'True',
                  'privacy':   'True'})
-
         client = self.openMintClient()
 
         conf = client.server._server.getConfirmation('foouser')
@@ -594,8 +592,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         page = self.webLogin('foouser', 'foopass')
 
-        page = self.fetch('/userSettings',
-                          ok_codes = [200])
+        page = self.fetchWithRedirect('/userSettings')
 
     def testEditUserSettings(self):
         client, userId = self.quickMintUser('foouser','foopass')
