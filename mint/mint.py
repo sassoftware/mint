@@ -247,11 +247,9 @@ class MintClient:
         return self.server.getProjects(sortOrder, limit, offset)
 
     def getLabelsForProject(self, projectId,
-            overrideSSL = False, overrideAuth = False,
-            newUser = '', newPass = '', useSSL = False):
+            overrideAuth = False, newUser = '', newPass = ''):
         return self.server.getLabelsForProject(projectId,
-            overrideSSL, overrideAuth,
-            newUser, newPass, useSSL)
+            overrideAuth, newUser, newPass)
 
     def getUsers(self, sortOrder, limit, offset):
         """

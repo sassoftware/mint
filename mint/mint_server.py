@@ -176,7 +176,7 @@ tables = {}
 def getTables(db, cfg):
     d = {}
     d['version'] = dbversion.VersionTable(db)
-    d['labels'] = projects.LabelsTable(db)
+    d['labels'] = projects.LabelsTable(db, cfg)
     d['projects'] = projects.ProjectsTable(db, cfg)
     d['jobs'] = jobs.JobsTable(db)
     d['images'] = jobs.ImageFilesTable(db)
@@ -438,7 +438,6 @@ class MintServer(object):
                               level = userlevels.OWNER)
 
         project = projects.Project(self, projectId)
-
 
         project.addLabel(fqdn.split(':')[0] + "@%s" % self.cfg.defaultBranch,
             "http://%s%srepos/%s/" % (self.cfg.projectSiteHost, self.cfg.basePath, hostname),
@@ -1197,12 +1196,12 @@ class MintServer(object):
         self._filterProjectAccess(projectId)
         return self.labels.getDefaultProjectLabel(projectId)
 
-    @typeCheck(int, bool, bool, ((str, type(None)),), ((str, type(None)),), ((bool, type(None)),))
+    @typeCheck(int, bool, ((str, type(None)),), ((str, type(None)),))
     @private
-    def getLabelsForProject(self, projectId, overrideSSL, overrideAuth, newUser, newPass, useSSL):
+    def getLabelsForProject(self, projectId, overrideAuth, newUser, newPass):
         """Returns a mapping of labels to labelIds and a repository map dictionary for the current user"""
         self._filterProjectAccess(projectId)
-        return self.labels.getLabelsForProject(projectId, overrideSSL, overrideAuth, useSSL, newUser, newPass)
+        return self.labels.getLabelsForProject(projectId, overrideAuth, newUser, newPass)
 
     @typeCheck(int, str, str, str, str)
     @requiresAuth
@@ -1929,10 +1928,8 @@ class MintServer(object):
         version = None
         flavor = None
 
-        if project.external:
-            cfg = project.getConaryConfig()
-        else:
-            cfg = project.getConaryConfig(overrideSSL = True, useSSL = self.cfg.SSL)
+        cfg = project.getConaryConfig()
+
         nc = conaryclient.ConaryClient(cfg).getRepos()
         versionList = nc.getTroveVersionList(cfg.repositoryMap.keys()[0], {None:None})
 

@@ -562,8 +562,7 @@ quit
         self.baseflavor = deps.ThawDependencySet(flavorStr)
 
         # set up configuration
-        self.conarycfg = self.project.getConaryConfig(overrideSSL=True,
-                                                      useSSL=self.cfg.SSL)
+        self.conarycfg = self.project.getConaryConfig()
 
         self.arch = self.release.getArch()
         basefilename = "%(name)s-%(version)s-%(arch)s" % {

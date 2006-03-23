@@ -102,8 +102,7 @@ class GroupTroveCook(Generator):
 
             project = self.client.getProject(projectId)
 
-            cfg = project.getConaryConfig(overrideSSL = True,
-                                          useSSL = self.cfg.SSL)
+            cfg = project.getConaryConfig()
             cfg.name = "rBuilder Online"
             cfg.contact = "http://www.rpath.org"
             cfg.quiet = True

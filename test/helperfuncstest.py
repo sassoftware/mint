@@ -14,7 +14,8 @@ import time
 import tempfile
 
 from mint import templates
-from mint.helperfuncs import truncateForDisplay, extractBasePath
+from mint.helperfuncs import truncateForDisplay, extractBasePath, \
+        hostPortParse, rewriteUrlProtocolPort
 from mint.userlevels import myProjectCompare
 from mint.mint import timeDelta
 from mint.distro import jsversion
@@ -239,6 +240,38 @@ class HelperFunctionsTest(unittest.TestCase):
                         "Wrong default job server version.")
         finally:
             util.rmtree(tmpDir)
+
+    def testHostPortParse(self):
+        self.assertEqual(hostPortParse('foo.bar.baz:80', 80),
+                ('foo.bar.baz', 80))
+        self.assertEqual(hostPortParse('foo.bar.baz:8080', 80),
+                ('foo.bar.baz', 8080))
+        self.assertEqual(hostPortParse('foo.bar.baz', 443),
+                ('foo.bar.baz', 443))
+
+    def testHostnamePortParseBadCalls(self):
+        self.failUnlessRaises(ValueError, hostPortParse, "", 80)
+        self.failUnlessRaises(ValueError, hostPortParse, None, 80)
+
+    def testRewriteUrlProtocolPort(self):
+        url = 'http://a.special.somewhere.org/happy/happy/joy/joy/'
+        urlSSL = 'https://vault.fortknox.gov/'
+
+        # these shouldn't mutate the URL at all (default ports)
+        self.assertEqual(rewriteUrlProtocolPort(url, 'http', 80), url)
+        self.assertEqual(rewriteUrlProtocolPort(urlSSL, 'https', 443), urlSSL)
+
+        # these replace the protocol using default ports
+        self.assertEqual(rewriteUrlProtocolPort(url, 'https', 443),
+                'https://a.special.somewhere.org/happy/happy/joy/joy/')
+        self.assertEqual(rewriteUrlProtocolPort(urlSSL, 'http', 80),
+                'http://vault.fortknox.gov/')
+
+        # these replace the protocol and port
+        self.assertEqual(rewriteUrlProtocolPort(url, 'https', 10000),
+                'https://a.special.somewhere.org:10000/happy/happy/joy/joy/')
+        self.assertEqual(rewriteUrlProtocolPort(urlSSL, 'http', 20000),
+                'http://vault.fortknox.gov:20000/')
 
 
 if __name__ == "__main__":

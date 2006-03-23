@@ -46,3 +46,37 @@ def extractBasePath(uri, path_info):
     if path_info == "/":
         return uri
     return uri[:-len(path_info)+1]
+
+
+def hostPortParse(hostname, defaultPort):
+    """ A simple function to split a hostname:port construct, returning
+        a 2-tuple of the hostname and port. If the colon specifier isn't in
+        the string, then the defaultPort is passed back as the port. """
+
+    if not hostname:
+        raise ValueError
+
+    if ':' in hostname:
+        (h, p) = hostname.split(':')
+    else:
+        h = hostname
+        p = defaultPort
+
+    return (h, int(p))
+
+def rewriteUrlProtocolPort(url, newProtocol, newPort):
+    """ Given a URL, rewrites it to point to a different protocol and port. """
+
+    import urlparse
+
+    spliturl = urlparse.urlsplit(url)
+    hostname = spliturl[1]
+    if ':' in spliturl[1]:
+        hostname = hostname.split(':')[0]
+
+    if ((newProtocol == 'http' and newPort != 80) or  \
+        (newProtocol == 'https' and newPort != 443)):
+        hostname = "%s:%d" % (hostname, newPort)
+
+    return urlparse.urlunsplit((newProtocol, hostname) + spliturl[2:])
+

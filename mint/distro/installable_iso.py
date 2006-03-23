@@ -137,8 +137,7 @@ class InstallableIso(ImageGenerator):
                 dataType = RDT_STRING, validate = False)
 
     def getConaryClient(self, tmpRoot, arch):
-        cfg = self.project.getConaryConfig(overrideSSL = not self.project.external,
-                                           useSSL = self.cfg.SSL)
+        cfg = self.project.getConaryConfig()
         cfg.root = tmpRoot
         cfg.dbPath = tmpRoot + "/var/lib/conarydb"
         cfg.installLabelPath = [self.troveVersion.branch().label()]

@@ -7,7 +7,6 @@ import os
 from conary import sqlite3
 import string
 import sys
-import urlparse
 import time
 
 from conary import dbstore
@@ -15,7 +14,8 @@ from conary import versions
 from conary.lib import util
 from conary.repository.netrepos import netserver
 from conary.conarycfg import ConaryConfiguration
-from helperfuncs import truncateForDisplay
+from helperfuncs import truncateForDisplay, rewriteUrlProtocolPort, \
+        hostPortParse
 
 import database
 import userlevels
@@ -128,12 +128,12 @@ class Project(database.TableObject):
 
     def getLabelIdMap(self):
         """Returns a dictionary mapping of label names to database IDs"""
-        labelPath, repoMap, userMap = self.server.getLabelsForProject(self.id, False, False, '', '', False)
+        labelPath, repoMap, userMap = self.server.getLabelsForProject(self.id, False, '', '')
         return labelPath
 
-    def getConaryConfig(self, overrideSSL = False, overrideAuth = False, newUser = '', newPass = '', useSSL = False):
-        # XXX fixme getLabelsForProject
-        labelPath, repoMap, userMap = self.server.getLabelsForProject(self.id, overrideSSL, overrideAuth, newUser, newPass, useSSL)
+    def getConaryConfig(self, overrideAuth = False, newUser = '', newPass = ''):
+
+        labelPath, repoMap, userMap = self.server.getLabelsForProject(self.id, overrideAuth, newUser, newPass)
 
         cfg = ConaryConfiguration(readConfigFiles=False)
         cfg.root = ":memory:"
@@ -480,6 +480,10 @@ class LabelsTable(database.KeyedTable):
     indexes = {"LabelsPackageIdx": """CREATE INDEX LabelsPackageIdx
                                           ON Labels(projectId)"""}
 
+    def __init__(self, db, cfg):
+        database.DatabaseTable.__init__(self, db)
+        self.cfg = cfg
+
     def getDefaultProjectLabel(self, projectId):
         cu = self.db.cursor()
 
@@ -492,18 +496,19 @@ class LabelsTable(database.KeyedTable):
         return label[0]
 
     def getLabelsForProject(self, projectId,
-            overrideSSL = False, overrideAuth = False,
-            useSSL = False, newUser = '', newPass = ''):
+            overrideAuth = False, newUser = '', newPass = ''):
         cu = self.db.cursor()
 
-        cu.execute("""SELECT labelId, label, url, username, password
-                      FROM Labels
-                      WHERE projectId=?""", projectId)
+        cu.execute("""SELECT l.labelId, l.label, l.url, l.username, l.password,
+                             p.external
+                      FROM Labels l, Projects p
+                      WHERE p.projectId=? AND l.projectId=p.projectId""",
+                      projectId)
 
         repoMap = {}
         labelIdMap = {}
         userMap = {}
-        for labelId, label, url, username, password in cu.fetchall():
+        for labelId, label, url, username, password, external in cu.fetchall():
             if overrideAuth:
                 username = newUser
                 password = newPass
@@ -512,17 +517,17 @@ class LabelsTable(database.KeyedTable):
             host = label[:label.find('@')]
             if url:
                 if username and password:
-                    urlparts = urlparse.urlparse(url)
+                    if not external:
+                        if self.cfg.SSL:
+                            protocol = "https"
+                            newHost, newPort = hostPortParse(self.cfg.secureHost, 443)
+                        else:
+                            protocol = "http"
+                            newHost, newPort = hostPortParse(self.cfg.projectDomainName, 80)
 
-                    if not overrideSSL:
-                        protocol = urlparts[0]
-                    elif useSSL == True:
-                        protocol = "https"
-                    else:
-                        protocol = "http"
-                    map = "%s://%s" % (protocol, "".join(urlparts[1:]))
-                else:
-                    map = url
+                        url = rewriteUrlProtocolPort(url, protocol, newPort)
+
+                map = url
             else:
                 map = "http://%s/conary/" % (host)
 
