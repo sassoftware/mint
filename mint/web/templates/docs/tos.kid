@@ -1,11 +1,16 @@
+<?xml version='1.0' encoding='UTF-8'?>
 <html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:py="http://purl.org/kid/ns#">
+      xmlns:py="http://purl.org/kid/ns#"
+      py:extends="'../layout.kid'">
+<!--
+    Copyright (c) 2005-2006 rPath, Inc.
+    All Rights Reserved
+-->
     <head>
-        <title>Terms of Service - ${cfg.productName}</title>
-        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/legal.css"/>
+        <title>${formatTitle('Terms of Service')}</title>
     </head>
     <body id="legal">
-        <h2>TERMS OF SERVICE</h2>
+        <center><h2>TERMS OF SERVICE</h2></center>
 
         <p>IMPORTANT! PLEASE READ THIS AGREEMENT CAREFULLY BEFORE UPLOADING
         OR DOWNLOADING ANY MATERIAL OR USING ANY OF THE SERVICES PROVIDED

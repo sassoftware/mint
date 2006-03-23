@@ -1,11 +1,16 @@
+<?xml version='1.0' encoding='UTF-8'?>
 <html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:py="http://purl.org/kid/ns#">
+      xmlns:py="http://purl.org/kid/ns#"
+      py:extends="'../layout.kid'">
+<!--
+    Copyright (c) 2005-2006 rPath, Inc.
+    All Rights Reserved
+-->
     <head>
-        <title>Privacy Policy - ${cfg.productName}</title>
-        <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/legal.css"/>
+        <title>${formatTitle('Privacy Policy')}</title>
     </head>
     <body id="legal">
-        <h2>rpath.org privacy policy</h2>
+        <center><h2>rpath.org privacy policy</h2></center>
 
         <p>Preface:  We intend this policy to be a common-sense policy
         supporting minimal use and storage of private information.  Our goal
