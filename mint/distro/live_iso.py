@@ -115,7 +115,8 @@ class LiveIso(bootable_image.BootableImage):
     def getVolName(self):
         name = self.release.getName()
         # srcub all non alphanumeric characters. we use this in a system call.
-        return ''.join([x.isalnum() and x or '_' for x in name])
+        # limit name to 32 chars--max volumne name for iso-9660
+        return ''.join([x.isalnum() and x or '_' for x in name][:32])
 
     def mkinitrd(self):
         # this is where we'll create the initrd image
