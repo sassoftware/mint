@@ -34,7 +34,7 @@ def redirectHttps(func):
     def wrapper(self, *args, **kwargs):
         reqPort = self.req.parsed_uri[apache.URI_PORT]
         reqHost = self.req.headers_in.get('host', self.req.hostname)
-        if reqPort and reqPort != 443:
+        if ':' not in reqHost and reqPort and reqPort != 443:
             hostname = '%s:%s' % (reqHost, reqPort)
         else:
             hostname = reqHost
