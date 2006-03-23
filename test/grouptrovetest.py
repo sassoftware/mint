@@ -62,8 +62,11 @@ refRedirRecipe = """class GroupTest(GroupRecipe):
         r.setLabelPath('testproject.%s@rpl:devel')
         r.add('testcase', 'testproject.%s@rpl:devel', '', groupName = 'group-test')
         r.add('redirect:lib', 'testproject.%s@rpl:devel', '', groupName = 'group-test')
-        r.add('test:lib', '/testproject.%s@rpl:devel/1.0-1-1', 'is: x86', groupName = 'group-test')
-""" % ((MINT_PROJECT_DOMAIN,) * 4)
+        if Arch.x86:
+            r.add('test:lib', '/testproject.%s@rpl:devel/1.0-1-1', 'is: x86', groupName = 'group-test')
+        if Arch.x86_64:
+            r.add('test:lib', '/testproject.%s@rpl:devel/1.0-1-1', 'is: x86', groupName = 'group-test')
+""" % ((MINT_PROJECT_DOMAIN,) * 5)
 
 lockedRecipe = """class GroupTest(GroupRecipe):
     name = 'group-test'
@@ -111,6 +114,7 @@ class testRedirect(RedirectRecipe):
         l = "testproject.%s@rpl:devel"
         r.addRedirect("test", l)
 """ % (MINT_PROJECT_DOMAIN,)
+
 
 class GroupTroveTest(MintRepositoryHelper):
     def makeCookedTrove(self, branch = 'rpl:devel', hostname = 'testproject'):
@@ -504,6 +508,7 @@ class GroupTroveTest(MintRepositoryHelper):
 
         self.build(packageRecipe, "testRecipe")
         self.build(redirectBaseRecipe, "testRedirect")
+
         trv = self.build(redirectRecipe, "testRedirect")
 
         self.addTestTrove(groupTrove, trv.name(), str(trv.version()),

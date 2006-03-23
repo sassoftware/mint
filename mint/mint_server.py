@@ -2060,29 +2060,30 @@ class MintServer(object):
         cfg = project.getConaryConfig(overrideSSL = not project.external,
             useSSL = self.cfg.SSL)
 
-        flavor = deps.parseFlavor(trvFlavor)
-        if deps.DEP_CLASS_IS in flavor.members:
-            arch = "1#" + flavor.members[deps.DEP_CLASS_IS].members.keys()[0]
-            cfg.buildFlavor = deps.parseFlavor(stockFlavors[arch])
+        res = {}
+        for arch, flavor in stockFlavors.items():
+            cfg.buildFlavor = deps.parseFlavor(flavor)
+            cfg.initializeFlavors()
+            cclient = conaryclient.ConaryClient(cfg)
+            repos = cclient.getRepos()
 
-        cfg.initializeFlavors()
-        cclient = conaryclient.ConaryClient(cfg)
-        repos = cclient.getRepos()
+            try:
+                trvList = repos.findTrove(\
+                    None, (trvName, trvVersion, deps.parseFlavor(trvFlavor)),
+                    cfg.buildFlavor, bestFlavor=True)
 
-        trvList = repos.findTrove(\
-            None, (trvName, trvVersion, deps.parseFlavor(trvFlavor)),
-            cfg.buildFlavor, bestFlavor=True)
+                res[arch] = []
+                for lName, lVer, lFlav in trvList:
+                    trv = repos.getTrove(lName, lVer, lFlav)
 
-        res = []
-        for lName, lVer, lFlav in trvList:
-            trv = repos.getTrove(lName, lVer, lFlav)
-
-            if trv.isRedirect():
-                uJob = cclient.updateChangeSet(\
-                    [(lName, (None, None),
-                      (lVer, lFlav), True)])[0]
-                res.extend([(x[0], str(x[2][0]), str(x[2][1])) \
-                            for x in uJob.getJobs()[0]])
+                    if trv.isRedirect():
+                        uJob = cclient.updateChangeSet(\
+                            [(lName, (None, None),
+                              (lVer, lFlav), True)])[0]
+                        res[arch].extend([(x[0], str(x[2][0]), str(x[2][1])) \
+                                    for x in uJob.getJobs()[0]])
+            except TroveNotFound:
+                pass
         return res
 
     def _getRecipe(self, groupTroveId):
@@ -2123,11 +2124,12 @@ class MintServer(object):
                       trv['subGroup'] +"')\n"
 
             # properly support redirected troves, by explicitly including them
-            for rName, rVer, rFlav in \
-                    self._resolveRedirects(groupTroveId, trv['trvName'], ver,
-                                           trv['trvFlavor']):
-                recipe += indent + "r.add('" + rName + "', '" + rVer + "', '" \
-                          + rFlav + "', groupName = '" +trv['subGroup'] +"')\n"
+            for arch, redirList in self._resolveRedirects(groupTroveId, trv['trvName'], ver, trv['trvFlavor']).iteritems():
+                if redirList:
+                    recipe += indent + "if Arch.%s:\n" % arch.split("#")[1]
+                    for rName, rVer, rFlav in redirList:
+                        recipe += (12 * " ") + "r.add('%s', '%s', '%s', groupName = '%s')\n" % \
+                            (rName, rVer, rFlav, trv['subGroup'])
         return recipe
 
     @typeCheck(int)
