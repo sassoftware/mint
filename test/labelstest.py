@@ -7,6 +7,7 @@ import testsuite
 testsuite.setup()
 
 from mint_rephelp import MintRepositoryHelper
+from mint_rephelp import MINT_DOMAIN, MINT_PROJECT_DOMAIN
 from mint import mint_server
 from mint import users
 from mint.projects import LabelMissing
@@ -46,17 +47,24 @@ class LabelsTest(MintRepositoryHelper):
         projectId = client.newProject("Test Project", "test", "localhost")
         project = client.getProject(projectId)
 
-        # require no SSL repository map
-        noSSL = project.getConaryConfig(overrideSSL = True, useSSL = False)
-        assert(noSSL.repositoryMap.values()[0].startswith("http://"))
+        ccfg = project.getConaryConfig()
+        if self.mintCfg.SSL:
+            assert(ccfg.repositoryMap.values()[0].startswith("https://"))
+        else:
+            assert(ccfg.repositoryMap.values()[0].startswith("http://"))
 
-        # require SSLized repository map
-        SSL = project.getConaryConfig(overrideSSL = True, useSSL = True)
-        assert(SSL.repositoryMap.values()[0].startswith("https://"))
+        extProjectId = client.newProject("External Project", "external",
+                "localhost")
 
-        # let the database decide
-        default = project.getConaryConfig()
-        assert(default.repositoryMap.values()[0].startswith("http://"))
+        cu = self.db.cursor()
+        cu.execute("UPDATE Projects SET external=1 WHERE projectId=?",
+                extProjectId)
+        self.db.commit()
+
+        extProject = client.getProject(extProjectId)
+        ccfg = extProject.getConaryConfig()
+        assert(ccfg.repositoryMap.values()[0].startswith("http://"))
+
 
     def testExternalVersions(self):
         def addLabel(projectId, label, url = 'http://none'):
