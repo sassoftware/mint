@@ -85,7 +85,7 @@
                         <tr>
                             <td colspan="2">
                                 <p><strong>Package Signing Keys:</strong>
-                                <a href="/uploadKey">Upload a package signing key</a></p>
+                                <a href="http://${SITE}uploadKey">Upload a package signing key</a></p>
                             </td>
                         </tr>
                     </table>
