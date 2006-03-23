@@ -238,6 +238,12 @@ mount -o defaults --ro -t ext2 /dev/loop0 /sysroot
         f.write(isolinuxCfg % self.getVolName())
         f.close()
 
+        if not self.release.getDataValue('unionfs'):
+            util.mkdirChain(os.path.join(self.fakeroot, 'etc', 'sysconfig'))
+            f = open(os.path.join(self.fakeroot, 'etc', 'sysconfig', 'readonly-root'), 'w')
+            f.write("READONLY=yes\n")
+            f.close()
+
     def isoName(self, file):
         f = os.popen('isosize %s' % file, 'r')
         size = int(f.read())
