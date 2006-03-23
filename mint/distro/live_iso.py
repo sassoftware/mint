@@ -94,6 +94,11 @@ class LiveIso(bootable_image.BootableImage):
                 return os.path.join(base, matches[0])
         return None
 
+    def iterFiles(self, baseDir, fileName):
+        for base, dirs, files in os.walk(baseDir):
+            for match in [x for x in files if re.match(fileName, x)]:
+                yield os.path.join(base, match)
+
     def copyFallback(self, src, dest):
         tFile = os.path.basename(src)
         # FIXME: some of the files we actually want are there, but have -static
@@ -210,9 +215,20 @@ mount -o defaults --ro -t ext2 /dev/loop0 /sysroot
 
         self.mkinitrd()
 
-        kernel = self.findFile(os.path.join(self.fakeroot, 'boot'),
-                               'vmlinuz.*')
-        util.copyfile(kernel, os.path.join(self.liveDir, 'vmlinuz'))
+        allKernels = [x for x in self.iterFiles( \
+            os.path.join(self.fakeroot, 'boot'), 'vmlinuz.*')]
+
+        if len(allKernels) > 1:
+            if self.release.getDataValue('unionfs'):
+                raise AssertionError("Multiple kernels detected. The most "
+                                     "likely cause is a mismatch between the "
+                                     "kernel in group-core and the kernel "
+                                     "that unionfs was compiled for.")
+            else:
+                raise AssertionError("Multiple kernels detected. Please check "
+                                     " that your group contains only one.")
+
+        util.copyfile(allKernels[0], os.path.join(self.liveDir, 'vmlinuz'))
 
         self.copyFallback(os.path.join(self.fakeroot, 'usr', 'lib', 'syslinux',
                                        'isolinux.bin'),
