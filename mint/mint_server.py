@@ -2054,8 +2054,7 @@ class MintServer(object):
 
         # external projects follow what's in the labels table,
         # internal projects follow the configuration:
-        cfg = project.getConaryConfig(overrideSSL = not project.external,
-            useSSL = self.cfg.SSL)
+        cfg = project.getConaryConfig()
 
         res = {}
         for arch, flavor in stockFlavors.items():
