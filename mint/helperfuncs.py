@@ -64,19 +64,22 @@ def hostPortParse(hostname, defaultPort):
 
     return (h, int(p))
 
-def rewriteUrlProtocolPort(url, newProtocol, newPort):
-    """ Given a URL, rewrites it to point to a different protocol and port. """
+def rewriteUrlProtocolPort(url, newProtocol, newPort = None):
+    """ Given a URL, rewrites it to point to a different protocol. 
+        Optionally rewrites the port if newPort is given. """
 
     import urlparse
 
     spliturl = urlparse.urlsplit(url)
     hostname = spliturl[1]
-    if ':' in spliturl[1]:
-        hostname = hostname.split(':')[0]
 
-    if ((newProtocol == 'http' and newPort != 80) or  \
-        (newProtocol == 'https' and newPort != 443)):
-        hostname = "%s:%d" % (hostname, newPort)
+    if newPort:
+        if ':' in spliturl[1]:
+            hostname = hostname.split(':')[0]
+
+        if ((newProtocol == 'http' and newPort != 80) or  \
+            (newProtocol == 'https' and newPort != 443)):
+            hostname = "%s:%d" % (hostname, newPort)
 
     return urlparse.urlunsplit((newProtocol, hostname) + spliturl[2:])
 

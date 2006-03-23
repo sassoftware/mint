@@ -255,11 +255,15 @@ class HelperFunctionsTest(unittest.TestCase):
 
     def testRewriteUrlProtocolPort(self):
         url = 'http://a.special.somewhere.org/happy/happy/joy/joy/'
+        url2 = 'http://bagel.to.go:39393/'
         urlSSL = 'https://vault.fortknox.gov/'
 
         # these shouldn't mutate the URL at all (default ports)
         self.assertEqual(rewriteUrlProtocolPort(url, 'http', 80), url)
+        self.assertEqual(rewriteUrlProtocolPort(url, 'http'), url)
+        self.assertEqual(rewriteUrlProtocolPort(url2, 'http'), url2)
         self.assertEqual(rewriteUrlProtocolPort(urlSSL, 'https', 443), urlSSL)
+        self.assertEqual(rewriteUrlProtocolPort(urlSSL, 'https'), urlSSL)
 
         # these replace the protocol using default ports
         self.assertEqual(rewriteUrlProtocolPort(url, 'https', 443),
