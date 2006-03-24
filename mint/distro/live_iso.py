@@ -188,7 +188,7 @@ mount -o dirs=sysroot2=rw:sysroot1=ro,delete=whiteout -t unionfs none /sysroot
             macros['mountCmd'] = """
 echo Mounting root filesystem
 losetup --ro /dev/loop0 /cdrom/livecd.img
-mount -o defaults --ro -t ext2 /dev/loop0 /sysroot
+mount -o defaults --ro -t iso9660 /dev/loop0 /sysroot
 """
 
         # make linuxrc file
@@ -238,7 +238,9 @@ mount -o defaults --ro -t ext2 /dev/loop0 /sysroot
         f.write(isolinuxCfg % self.getVolName())
         f.close()
 
+        # tweaks to make read-only filesystem possible.
         if not self.release.getDataValue('unionfs'):
+            util.mkdirChain(os.path.join(self.fakeroot, 'ramdisk'))
             util.mkdirChain(os.path.join(self.fakeroot, 'etc', 'sysconfig'))
             f = open(os.path.join(self.fakeroot, 'etc', 'sysconfig', 'readonly-root'), 'w')
             f.write("READONLY=yes\n")
