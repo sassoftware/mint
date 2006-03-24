@@ -84,8 +84,8 @@ def main():
     if xmlrpcurl is None:
         if not cfg.privateUrl:
             usage(1, "you must specify the URL either on the command line or in the configuration file")
-    else:
-        xmlrpcurl = cfg.privateUrl
+        else:
+            xmlrpcurl = cfg.privateUrl
 
     listnames = Utils.list_names()
 
