@@ -56,7 +56,8 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.quickMintUser('foouser','foopass')
 
         # historically, port was missing from login form action
-        page = self.assertContent('/', '%d/processLogin' % self.securePort)
+        port = self.mintCfg.SSL and self.securePort or self.port
+        page = self.assertContent('/', '%d/processLogin' % port)
 
         if '/processLogin' not in page.body:
             self.fail("Login form did not appear on page")

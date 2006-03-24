@@ -134,14 +134,15 @@ class LabelsTest(MintRepositoryHelper):
 
     def testOutboundLabel(self):
         client, userId = self.quickMintAdmin("testuser", "testpass")
-        client.addOutboundLabel(0, 0, "http://www.example.com/conary/",
+        projectId = self.newProject(client)
+        client.addOutboundLabel(projectId, projectId, "http://www.example.com/conary/",
                                 "mirror", "mirrorpass")
 
         labels = client.getOutboundLabels()
-        assert(labels == [[0, 0, 'http://www.example.com/conary/',
+        assert(labels == [[projectId, projectId, 'http://www.example.com/conary/',
                            'mirror', 'mirrorpass']])
 
-        client.delOutboundLabel(0, 'http://www.example.com/conary/')
+        client.delOutboundLabel(projectId, 'http://www.example.com/conary/')
         labels = client.getOutboundLabels()
         assert(labels == [])
 

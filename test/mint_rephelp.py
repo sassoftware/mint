@@ -257,6 +257,8 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
             self.mintCfg = self.servers.getServer(serverIdx).mintCfg
             if self.mintCfg.SSL:
                 self.securePort = self.servers.getServer(serverIdx).securePort
+            else:
+                self.securePort = 0
 
         return ret
 
