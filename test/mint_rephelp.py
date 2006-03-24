@@ -177,6 +177,7 @@ class MintApacheServer(rephelp.ApacheServer):
                 self.sslDisabled and self.port or self.securePort)
         cfg.externalDomainName = "%s:%i" % (MINT_DOMAIN, self.port)
         cfg.hostName = MINT_HOST
+        cfg.basePath = '/'
 
         sqldriver = os.environ.get('CONARY_REPOS_DB', 'sqlite')
         if sqldriver == 'sqlite':
@@ -356,8 +357,8 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
             port = self.port
             protocol = 'http'
         self.cfg.repositoryMap = {"%s.%s" % (hostname, domainname):
-            "%s://%s.%s:%d/repos/%s/" % (protocol, MINT_HOST, 
-                    MINT_PROJECT_DOMAIN, port, hostname)}
+            "%s://%s.%s:%d%srepos/%s/" % (protocol, MINT_HOST, 
+                    MINT_PROJECT_DOMAIN, port, self.mintCfg.basePath, hostname)}
 
         self.cfg.user.insert(0, ("%s.%s" % (hostname, domainname),
                               client.server._server.authToken[0],
@@ -527,7 +528,7 @@ class WebRepositoryHelper(MintRepositoryHelper, webunittest.WebTestCase):
         # tear down the running server...
 
     def webLogin(self, username, password):
-        page = self.fetch('')
+        page = self.fetch(self.mintCfg.basePath)
         page = page.postForm(1, self.fetchWithRedirect,
                     {'username': username,
                      'password': password})
