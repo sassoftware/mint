@@ -28,32 +28,12 @@ from mint.helperfuncs import truncateForDisplay
             <div id="middle">
             <p py:if="message" class="message" py:content="message"/>
             <h1>Edit Group</h1>
-            <script type="text/javascript">
-              function dropdown()
-              {
-                var verelem = document.getElementById('editGTDropdown');
-                var state = verelem.style.display;
-                var newstate = null;
-                var img = document.getElementById('version_expander');
-                if (state == 'none') {
-                    newstate = null;
-                    img.src = img.src.replace('expand', 'collapse');
-                }
-                else {
-                    newstate = 'none';
-                    img.src = img.src.replace('collapse', 'expand');
-                }
-                verelem.style.display = newstate;
-                return false;
-              }
-            </script>
-
             <form method="post" action="editGroup2?id=${curGroupTrove.id}">
                 <table class="groupTroveItems">
                     <tr><td colspan="4">
                         <div style="float:left">${curGroupTrove.recipeName} version ${truncateForDisplay(curGroupTrove.upstreamVersion)}</div>
-                        <div style="float:right"><a onclick="javascript:dropdown();" href="#">Edit 
-                            <img  id="version_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" /></a></div>
+                        <div style="float:right"><a onclick="javascript:toggle_display('editGTDropdown');" href="#">Edit 
+                            <img  id="editGTDropdown_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" /></a></div>
                     </td></tr>
                     <tr id="editGTDropdown" style="display:none;">
                         <td colspan="4">
