@@ -47,7 +47,7 @@ imageGenTemplate = {
 }
 
 installableIsoTemplate = {
-    'skipMediaCheck':   (RDT_BOOL, False, 'Prompt to verify CD/DVD images during install'),
+    'showMediaCheck':   (RDT_BOOL, False, 'Prompt to verify CD/DVD images during install'),
     'betaNag':          (RDT_BOOL, False, 'This release is considered a beta'),
     'bugsUrl':          (RDT_STRING, 'http://bugs.rpath.com/', 'Bug report URL'),
     'maxIsoSize':       (RDT_ENUM, '681574400', 'ISO Size',

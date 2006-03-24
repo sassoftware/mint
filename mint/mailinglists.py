@@ -94,6 +94,9 @@ class MailingListClient:
             listpw = self.server.Mailman.createList(adminpw, listname,
                 domain, moderate, owners, listpw, notify, ['en'])
         except:
+            import traceback
+            traceback.print_exc(sys.stderr)
+            sys.stderr.flush()
             exc_data = sys.exc_info()
             if not re.search("Errors\.BadListNameError", str(exc_data)):
                 raise MailingListException("Mailing List Error")

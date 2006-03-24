@@ -235,7 +235,7 @@ class InstallableIso(ImageGenerator):
         util.rmtree(tmpPath)
 
     def buildIsos(self, topdir):
-        skipMediaCheck = self.release.getDataValue('skipMediaCheck')
+        showMediaCheck = self.release.getDataValue('showMediaCheck')
         outputDir = os.path.normpath(os.path.join(self.cfg.finishedPath, self.project.getHostname(), str(self.release.getId())))
         util.mkdirChain(outputDir)
 
@@ -288,7 +288,7 @@ class InstallableIso(ImageGenerator):
                 raise RuntimeError, "ISO generation failed"
             else:
                 cmd = [self.isocfg.implantIsoMd5]
-                if skipMediaCheck:
+                if showMediaCheck:
                     cmd.append('--supported-iso')
                 cmd.append(iso)
                 call(*cmd)
