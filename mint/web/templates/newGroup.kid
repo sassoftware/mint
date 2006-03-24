@@ -20,7 +20,7 @@
                 ${projectResourcesMenu()}
             </div>
 
-            <div id="main" style="width: 600px;">
+            <div id="spanright">
                 <p py:if="errors" class="error">Group Creation Error${len(errors) > 1 and 's' or ''}</p>
                 <p py:for="error in errors" class="errormessage" py:content="error"/>
                 <h2>Create a Group</h2>

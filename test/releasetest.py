@@ -65,7 +65,7 @@ class ReleaseTest(MintRepositoryHelper):
         imageTypes = [releasetypes.INSTALLABLE_ISO, releasetypes.VMWARE_IMAGE]
         release.setImageTypes(imageTypes)
         assert(imageTypes == release.imageTypes)
-        assert(release.getDataTemplate()['skipMediaCheck'])
+        assert(release.getDataTemplate()['showMediaCheck'])
         assert(release.getDataTemplate()['autoResolve'])
         assert(release.getDataTemplate()['freespace'])
         assert(release.getDataTemplate()['vmMemory'])
@@ -77,8 +77,8 @@ class ReleaseTest(MintRepositoryHelper):
 
         # test behavior of booleans
         for mediaCheck in (False, True):
-            release.setDataValue('skipMediaCheck', mediaCheck)
-            assert (mediaCheck == release.getDataValue('skipMediaCheck'))
+            release.setDataValue('showMediaCheck', mediaCheck)
+            assert (mediaCheck == release.getDataValue('showMediaCheck'))
 
         # test bad name lockdown
         self.assertRaises(ReleaseDataNameError,
@@ -146,7 +146,7 @@ class ReleaseTest(MintRepositoryHelper):
         release = client.newRelease(projectId, "Test Release")
         release.setImageTypes([releasetypes.INSTALLABLE_ISO])
         assert(release.getImageTypes() == [releasetypes.INSTALLABLE_ISO])
-        assert(release.getDataTemplate()['skipMediaCheck'])
+        assert(release.getDataTemplate()['showMediaCheck'])
         assert(release.getDataTemplate()['autoResolve'])
         try:
             release.getDataTemplate()['freespace']

@@ -77,7 +77,7 @@
                 </div>
               </dl>
               <div py:if="not releaseList">
-                 No Releases
+                 <dl><dt>No Releases</dt></dl>
               </div>
               <div class="release" py:if="isOwner" style="text-align: right; padding-right:8px;">
                   <a href="${projectUrl}newRelease"><strong>Create a new release</strong></a>

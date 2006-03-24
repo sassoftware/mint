@@ -95,13 +95,24 @@ class JobDataTable(GenericDataTable):
     def versionCheck(self):
         dbversion = self.getDBVersion()
         if dbversion != self.schemaVersion:
-            falling = False
             if dbversion == 7:
                 cu = self.db.cursor()
                 #Need to drop the JobData Table.  It's not compatible
                 #with the new genericdatatable
                 cu.execute('DROP TABLE JobData')
                 cu.execute(self.createSQL)
+                return (dbversion + 1) == self.schemaVersion
+            if dbversion == 13:
+                cu = self.db.cursor()
+                # replace all skipMediaCheck calls with showMediaCheck
+                # use modular math since sqlite does not support XOR.
+                cu.execute("""INSERT INTO ReleaseData
+                                  SELECT releaseId, 'showMediaCheck',
+                                          (value + 1) % 2, datatype
+                                   FROM ReleaseData
+                                   WHERE name='skipMediaCheck'""")
+                cu.execute("""DELETE FROM ReleaseData
+                                  WHERE name='skipMediaCheck'""")
                 return (dbversion + 1) == self.schemaVersion
         return True
 

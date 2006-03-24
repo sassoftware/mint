@@ -46,17 +46,17 @@ isOwner = (userLevel == userlevels.OWNER or auth.admin)
     </span>
 
 
-    <div py:def="binaryTroveInfo(troves)" class="troveinfo">
+    <table py:def="binaryTroveInfo(troves)" class="troveinfo">
         <?python
             from mint.mint import flavorWrap
             trove = troves[0]
             sourceVersion = trove.getVersion().getSourceVersion().freeze()
             sourceLink = "troveInfo?t=%s;v=%s" % (quote(trove.getSourceName()), quote(sourceVersion))
         ?>
-        <p>Trove name: ${adder(trove)} ${trove.getName()}</p>
-        <p>Built from trove: <a href="${sourceLink}">${trove.getSourceName()}</a></p>
-        <p>Version: ${lockedAdder(trove)} ${splitVersionForDisplay(str(trove.getVersion()))}</p>
-        Flavor:
+        <tr><th>Trove name:</th><td>${adder(trove)} ${trove.getName()}</td></tr>
+        <tr><th>Built from trove:</th><td><a href="${sourceLink}">${trove.getSourceName()}</a></td></tr>
+        <tr><th>Version:</th><td>${lockedAdder(trove)} ${splitVersionForDisplay(str(trove.getVersion()))}</td></tr>
+        <tr><th>Flavor:</th><td>
 	<div py:for="trove in troves" py:strip="True">
 	    <p>${flavorWrap(trove.getFlavor())}</p>
             <a href="#" onclick="javascript:toggle_display('${trove.getFlavor().freeze()}_items'); return false;">Details <img id="${trove.getFlavor().freeze()}_items_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" /></a>
@@ -84,8 +84,8 @@ isOwner = (userLevel == userlevels.OWNER or auth.admin)
 		    <tr><td colspan="2"><a href="files?t=${quote(troveName)};v=${quote(trove.getVersion().freeze())};f=${quote(trove.getFlavor().freeze())}">Show Troves</a></td></tr>
 		</tbody>
 	    </table>
-        </div>
-    </div>
+        </div></td></tr>
+    </table>
 
     <head>
         <title>${formatTitle('Trove Information: %s'%troveName)}</title>
