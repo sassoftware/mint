@@ -30,16 +30,16 @@ from mint.mint import upstream
         </div>
         <div id="steps">
             <span>
-                <span id="findit" onclick="javascript:window.location='help?page=user-tutorial'">
+                <span id="findit" onclick="javascript:window.location='${cfg.basePath}help?page=user-tutorial'">
                     Check out the software appliances others have made.
                 </span>
-                <span id="buildit" onclick="javascript:window.location='help?page=dev-tutorial'">
+                <span id="buildit" onclick="javascript:window.location='${cfg.basePath}help?page=dev-tutorial'">
                     Make your own software appliance in three easy steps.
                 </span>
             </span>
 
             <div id="threeEasySteps">
-                <a href="/help?page=dev-tutorial">
+                <a href="${cfg.basePath}help?page=dev-tutorial">
                     <img id="getStarted" src="${cfg.staticPath}apps/mint/images/getting_started.png" width="147" height="37" alt="Get Started" />
                 </a>
                 <img src="${cfg.staticPath}apps/mint/images/three_easy_steps.png" width="239" height="23" alt="It's Just 3 Easy Steps" />
