@@ -329,19 +329,6 @@ class ProjectTest(MintRepositoryHelper):
         client.getProject(projectId)
         watcherClient.getProject(projectId)
 
-    def testExternalProject(self):
-        self.openRepository()
-        client, userId = self.quickMintUser("testuser", "testpass")
-        projectId = self.newProject(client, "External Project", "external")
-
-        cu = self.db.cursor()
-        cu.execute("UPDATE Projects SET external=1 WHERE projectId=?",
-                   projectId)
-        self.db.commit()
-
-        project = client.getProject(projectId)
-        assert(client.server._server.getGroupTroves(projectId) == {'external.' + MINT_PROJECT_DOMAIN + '@rpl:devel': []})
-
     def testCreateExternalProject(self):
         # ensure only site admins can create external projects
         client, userId = self.quickMintUser("testuser", "testpass")
