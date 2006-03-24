@@ -35,7 +35,10 @@ newLockFile = open(lockPath, "w+")
 newLockFile.write(str(os.getpid()))
 newLockFile.close()
 
-cfgPath = "/srv/mint/mint.conf"
+if len(sys.argv) > 1:
+    cfgPath = sys.argv[1]
+else:
+    cfgPath = "/srv/mint/mint.conf"
 
 try:
     cfg = config.MintConfig()
