@@ -287,7 +287,6 @@ class ProjectHandler(WebHandler):
     def cookGroup(self, auth, id, arch):
         curGroupTrove = self.client.getGroupTrove(id)
 
-        recipe = curGroupTrove.getRecipe()
         job = curGroupTrove.getJob()
         if not job or (job and job.status not in (jobstatus.WAITING, jobstatus.RUNNING)):
             jobId = curGroupTrove.startCookJob(arch)
@@ -297,8 +296,8 @@ class ProjectHandler(WebHandler):
         if 'groupTroveId' in self.session:
             del self.session['groupTroveId']
 
-        return self._write("cookGroup", jobId = jobId, recipe = recipe,
-                           curGroupTrove = curGroupTrove)
+        return self._write("cookGroup", jobId = jobId,
+            curGroupTrove = curGroupTrove)
 
     @ownerOnly
     def newRelease(self, auth):
