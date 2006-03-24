@@ -34,6 +34,7 @@ python_files = \
                schematest.py \
                searchtest.py \
                sessionstest.py \
+               spidertest.py \
                testsuite.py \
                xmltest.py \
                webtest.py \
