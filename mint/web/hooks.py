@@ -383,6 +383,8 @@ def getRepNameMap(db):
     # wrap this in a try/except to avoid first-hit problems
     # before RepNameMap even exists.
     try:
+        if cfg.dbDriver != "sqlite":
+            db.use(cfg.dbPath.split("/")[-1])
         cu = db.cursor()
         cu.execute("SELECT fromName, toName FROM RepNameMap")
         for r in cu.fetchall():
