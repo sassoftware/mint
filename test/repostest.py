@@ -200,34 +200,6 @@ class RepositoryTest(MintRepositoryHelper):
 
         assert re.compile(expectedRE).match(str(troveVersions))
 
-    def testMultipleRepos(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-
-        projectId1 = self.newProject(client, "Test Project 1", "testp1")
-        projectId2 = self.newProject(client, "Test Project 2", "testp2")
-
-        self.cfg.repositoryMap.update({'testp1.' + MINT_PROJECT_DOMAIN: \
-            'http://test.%s:%d/repos/testp1/' % \
-            (MINT_PROJECT_DOMAIN, self.port) , \
-            'testp2.' + MINT_PROJECT_DOMAIN: \
-            'http://test.%s:%d/repos/testp2/' % \
-            (MINT_PROJECT_DOMAIN, self.port)})
-
-        l1 = versions.Label("testp1." + MINT_PROJECT_DOMAIN + \
-                "@rpl:devel")
-        l2 = versions.Label("testp2." + MINT_PROJECT_DOMAIN + \
-                "@rpl:devel")
-
-        self.makeSourceTrove("testcase", testRecipe, l1)
-        self.cookFromRepository("testcase", l1, ignoreDeps = True)
-
-        self.makeSourceTrove("testcase", testRecipe, l2)
-        self.cookFromRepository("testcase", l2, ignoreDeps = True)
-
-        # move back to testp1
-        self.makeSourceTrove("testcase2", testRecipe2, l1)
-        self.cookFromRepository("testcase2", l1, ignoreDeps = True)
-
     def testAnonymousFallback(self):
         client, userId = self.quickMintUser("testuser", "testpass")
 
