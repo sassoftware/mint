@@ -417,6 +417,7 @@ function listActiveJobs(wantOnlyActive) {
 
 function reloadCallback() {
     window.location.reload();
+    alert("window.location.reload()");
 }
 
 function setUserLevel(userId, projectId, newLevel) {
