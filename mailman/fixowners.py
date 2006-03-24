@@ -7,7 +7,7 @@ import sys, getopt, os
 import xmlrpclib
 from fixownersconfig import FixOwnersConfig
 
-from Mailman import MailList, Utils
+from Mailman import MailList, Utils, Errors
 
 def FixOwners(cfg, mlist, minturl):
     projectname = mlist._internal_name
@@ -85,7 +85,7 @@ def main():
         if not cfg.privateUrl:
             usage(1, "you must specify the URL either on the command line or in the configuration file")
     else:
-        cfg.privateUrl = xmlrpcurl
+        xmlrpcurl = cfg.privateUrl
 
     listnames = Utils.list_names()
 
