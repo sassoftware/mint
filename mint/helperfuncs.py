@@ -42,6 +42,13 @@ def truncateForDisplay(s, maxWords=10, maxWordLen=15):
     return ' '.join(wordlist)
 
 
+def splitVersionForDisplay(s):
+    if len(s) < 60:
+        return s
+    else:
+        return s.replace('//', ' //')
+
+
 def extractBasePath(uri, path_info):
     if path_info == "/":
         return uri
