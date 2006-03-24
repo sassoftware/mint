@@ -192,7 +192,7 @@ class JobDaemon:
                     else:
                         job = None
                     if errors and not confirmedAlive:
-                        log.warning("rBuilder server reached after %d attempt(s), resuming normal operation" % errors)
+                        log.info("rBuilder server reached after %d attempt(s), resuming normal operation" % errors)
                         errors = 0
                     confirmedAlive = True
 
