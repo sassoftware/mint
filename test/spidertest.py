@@ -80,7 +80,7 @@ class SpiderPageTest(mint_rephelp.WebRepositoryHelper):
                         brokenLinks = True
         return brokenLinks
 
-    def testRebase(self):
+    def testBrokenLinks(self):
         client, userId = self.quickMintUser('foouser', 'foopass')
         projectId = self.newProject(client)
 
@@ -103,7 +103,13 @@ class SpiderPageTest(mint_rephelp.WebRepositoryHelper):
 
         self.checked = []
         self.failIf(self.spiderLink(self.mintCfg.basePath),
-                    "There are broken links in the site.")
+                    "There are broken links in the site for anonymous users.")
+
+        self.webLogin('foouser', 'foopass')
+
+        self.checked = []
+        self.failIf(self.spiderLink(self.mintCfg.basePath),
+                    "There are broken links in the site for logged-in users.")
 
 
 if __name__ == "__main__":

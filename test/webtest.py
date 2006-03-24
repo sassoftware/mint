@@ -1050,6 +1050,9 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                     "Trove name was malformed during release creation.")
 
     def testMaintenanceMode(self):
+        if self.mintCfg.dbDriver != "sqlite":
+            raise testsuite.SkipTestException
+
         from mint import mint_server
         def newMintCfg(self):
             self.getOldMintCfg()
