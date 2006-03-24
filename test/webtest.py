@@ -601,7 +601,8 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         page = self.webLogin('foouser', 'foopass')
 
-        page = self.fetchWithRedirect('/editUserSettings', params =
+        page = self.fetchWithRedirect('/userSettings')
+        page = page.postForm(2, page.post,
                           { 'fullName' : 'Bob Loblaw',
                             'email'    : user.email })
 
