@@ -18,85 +18,22 @@
 
     <div py:def="breadcrumb()" py:strip="True">
         <a href="${cfg.basePath}help">Help</a>
-        <a href="#">Developers</a>
+        <a href="#">Users</a>
     </div>
 
     <head>
-        <title>${formatTitle('Help: Developers')}</title>
-        <script>
-            <![CDATA[
-                var curStep = ${step};
-                var steps = Array('none', 'step1', 'step2', 'step3', 'step4');
-                function showStep(step) {
-                    for(var i = 1; i < steps.length; i++ ) {
-                        stepEl = document.getElementById(steps[i]);
-                        if(!stepEl)
-                            alert(i + " - " + steps[i] + " - " + stepEl);
-                        stepEl.style.display = "none";
-                    }
-                    stepEl = document.getElementById(steps[step]);
-                    stepEl.style.display = "block";
-                    if(step == 1) {
-                        document.getElementById("prevImg1").style.visibility = "hidden";
-                        document.getElementById("nextImg1").style.visibility = "visible";
-                        document.getElementById("prevImg2").style.visibility = "hidden";
-                        document.getElementById("nextImg2").style.visibility = "visible";
-                    } else if(step == 4) {
-                        document.getElementById("prevImg1").style.visibility = "visible";
-                        document.getElementById("nextImg1").style.visibility = "hidden";
-                        document.getElementById("prevImg2").style.visibility = "visible";
-                        document.getElementById("nextImg2").style.visibility = "hidden";
-                    } else {
-                        document.getElementById("prevImg1").style.visibility = "visible";
-                        document.getElementById("nextImg1").style.visibility = "visible";
-                        document.getElementById("prevImg2").style.visibility = "visible";
-                        document.getElementById("nextImg2").style.visibility = "visible";
-                    }
-                    document.getElementById("showAll2").style.visibility = "visible";
-
-                    curStep = step;
-                }
-                function showAll() {
-                    for(var i = 1; i < steps.length; i++ )
-                        document.getElementById(steps[i]).style.display = "block";
-                    document.getElementById("prevImg1").style.visibility = "hidden";
-                    document.getElementById("nextImg1").style.visibility = "hidden";
-                    document.getElementById("prevImg2").style.visibility = "hidden";
-                    document.getElementById("nextImg2").style.visibility = "hidden";
-                    document.getElementById("showAll2").style.visibility = "hidden";
-                }
-
-            ]]>
-        </script>
+        <title>${formatTitle('Help: Users')}</title>
     </head>
 
-    <body onload="javascript:showStep(curStep);">
-        <?python
-            attrs = dict([(i, {'style': i == step and "display: block;" or "display: none;"}) for i in range(1, 9)])
-        ?>
-
+    <body>
         <div class="layout">
             <h1>rBuilder Online for Users</h1>
 
             <p>If you are already using a Conary-based system, then you have come to the
                 right place to look for software.</p>
 
-            <table style="width: 100%;">
-                <tr>
-                    <td id="prevImg1" style="text-align: left; width: 50%;">
-                        <img src="${cfg.staticPath}/apps/mint/images/prev.gif" /> 
-                        <a href="javascript:showStep(curStep-1);">Previous Step</a>
-                    </td>
-                    <td id="nextImg1" style="text-align: right; width: 50%;">
-                        <a href="javascript:showStep(curStep+1);">Next Step 
-                        <img class="noborder" src="${cfg.staticPath}/apps/mint/images/next.gif" /></a>
-                    </td>
-                </tr>
-            </table>
-
-
-            <h2><a href="javascript:showStep(1);">Step 1. Find the right package or distribution</a></h2>
-            <div py:attrs="attrs[1]" id="step1">
+            <h2>Step 1. Find the right package or distribution</h2>
+            <div id="step1">
                 <p>Browse the repository or search for the right package.</p>
                 <div class="helpBlock">
                     <p>Use the Browse and Search boxes on the left hand side to find the projects 
@@ -105,8 +42,8 @@
                 </div>
             </div>
 
-            <h2><a href="javascript:showStep(2);">Step 2. Download and Install</a></h2>
-            <div py:attrs="attrs[2]" id="step2">
+            <h2>Step 2. Download and Install</h2>
+            <div id="step2">
                 <p>It is quick and easy, whether a installing package or a whole distribution.</p>
 
                 <div class="helpBlock">
@@ -125,8 +62,8 @@
                 </div>
             </div>
 
-            <h2><a href="javascript:showStep(3);">Step 3. Stay Up To Date</a></h2>
-            <div py:attrs="attrs[3]" id="step3">
+            <h2>Step 3. Stay Up To Date</h2>
+            <div id="step3">
                 <p>Of course you can keep the software updated, but you can also keep track of
                     what is going on with the project.</p>
 
@@ -160,9 +97,9 @@
 
 
             
-            <h2><a href="javascript:showStep(4);">Step 4. Participate in a project or create your own project</a></h2>
+            <h2>Step 4. Participate in a project or create your own project</h2>
 
-            <div py:attrs="attrs[4]" id="step4">
+            <div id="step4">
                 <p>Join up with others or strike out on your own.</p>
 
                 <div class="helpBlock">
@@ -179,22 +116,6 @@
                 </div>
             </div>
 
-
-            <table style="width: 100%; padding: 0.5em; border-top: 2px solid gray;">
-                <tr>
-                    <td id="prevImg2" style="text-align: left; width: 33%;">
-                        <img src="${cfg.staticPath}/apps/mint/images/prev.gif" /> 
-                        <a href="javascript:showStep(curStep-1);">Previous Step</a>
-                    </td>
-                    <td id="showAll2" style="text-align: center; width: 33%;">
-                        <a href="javascript:showAll();">Show All</a>
-                    </td>
-                    <td id="nextImg2" style="text-align: right; width: 33%;">
-                        <a href="javascript:showStep(curStep+1);">Next Step 
-                        <img class="noborder" src="${cfg.staticPath}/apps/mint/images/next.gif" /></a>
-                    </td>
-                </tr>
-            </table>
             <p />
         </div>
     </body>
