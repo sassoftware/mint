@@ -174,7 +174,7 @@
                     create an rBuilder Online account, and offer your services.</p>
 
                     <p>If you would like to start your own project, then get started here: 
-                        <a href="/help?page=dev-tutorial">rBuilder Online for Developers</a></p>
+                        <a href="${cfg.basePath}help?page=dev-tutorial">rBuilder Online for Developers</a></p>
 
                 </div>
             </div>
