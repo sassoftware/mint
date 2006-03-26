@@ -216,7 +216,6 @@ class ProjectHandler(WebHandler):
     @strFields(version = None, description = '')
     def editGroup2(self, auth, id, version, description, **kwargs):
         curGroupTrove = self.client.getGroupTrove(id)
-        assert(self.session['groupTroveId'] == id)
 
         # Set the new version and description
         if description != curGroupTrove.description:
