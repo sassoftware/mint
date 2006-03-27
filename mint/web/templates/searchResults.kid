@@ -34,14 +34,14 @@
                 formattedresults = []
                 if searchType == "Projects":
                     formattedresults = [
-                        (resultset[0].getUrl(), 
+                        (self.cfg.basePath + resultset[0].getUrl(), 
                         resultset[0].getNameForDisplay() ),
                         resultset[0].getDescForDisplay(),
                         timeDelta(resultset[4])
                     ]
                 elif searchType == "Users":
                     formattedresults = [
-                        ('userInfo?id=%d' % resultset[0], resultset[1]),
+                        (self.cfg.basePath + 'userInfo?id=%d' % resultset[0], resultset[1]),
                         resultset[2],
                         resultset[3], 
                         resultset[4],
@@ -49,12 +49,12 @@
                     ]
                 elif searchType == "Packages":
                     formattedresults = [
-                        (resultset[2], resultset[0]),
+                        (self.cfg.basePath + resultset[2], resultset[0]),
                         resultset[1],
-                        (resultset[4], resultset[3])
+                        (self.cfg.basePath + resultset[4], resultset[3])
                     ]
                     if groupTrove and resultset[2] != groupTrove.recipeName:
-                        formattedresults.append(('project/%s/addGroupTrove?id=%d;trove=%s;version=%s;referer=%s' % (groupTrove.projectName, groupTrove.getId(), quote(resultset[0]), resultset[1], quote(req.unparsed_uri)) , 'Add to %s' % groupTrove.recipeName))
+                        formattedresults.append((self.cfg.basePath + 'project/%s/addGroupTrove?id=%d;trove=%s;version=%s;referer=%s' % (groupTrove.projectName, groupTrove.getId(), quote(resultset[0]), resultset[1], quote(req.unparsed_uri)) , 'Add to %s' % groupTrove.recipeName))
             ?>
             ${resultRow(formattedresults)}
         </div>
