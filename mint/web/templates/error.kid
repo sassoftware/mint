@@ -18,6 +18,10 @@
                 ${XML(cfg.supportContactHTML)}
                 for assistance.
             </p>
+            <div py:if="traceback" py:strip="True">
+                <p class="error">Traceback:</p>
+                <pre py:content="traceback" />
+            </div>
         </div>
     </body>
 </html>

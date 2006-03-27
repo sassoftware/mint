@@ -151,10 +151,16 @@ class MintApp(WebHandler):
                 pageCache[reqHash(self.req)] = output
 
         except mint_error.MintError, e:
+            import traceback
+            tb = traceback.format_exc()
+
+            for line in tb.split("\n"):
+                self.req.log_error(line)
+
             self.toUrl = self.cfg.basePath
             err_name = sys.exc_info()[0].__name__
-            self.req.log_error("%s: %s" % (err_name, str(e)))
-            output = self._write("error", shortError = err_name, error = str(e))
+            output = self._write("error", shortError = err_name, error = str(e),
+                traceback = self.cfg.debugMode and tb or None)
         except fields.MissingParameterError, e:
             output = self._write("error", shortError = "Missing Parameter", error = str(e))
 
