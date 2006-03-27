@@ -416,7 +416,9 @@ function listActiveJobs(wantOnlyActive) {
 }
 
 function reloadCallback() {
-    window.location.reload();
+    window.location.replace(document.URL);
+    // Needed for Safari to reload properly.  Weird.
+    setTimeout('window.location.reload()', 0);
 }
 
 function setUserLevel(userId, projectId, newLevel) {
