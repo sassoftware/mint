@@ -94,8 +94,6 @@ class SpiderPageTest(mint_rephelp.WebRepositoryHelper):
             try:
                 page = self.fetch(link)
             except:
-                import epdb
-                epdb.st()
                 raise BrokenLink("Broken Link: %s" % link)
         # find all html anchors
         links = self.reLinks.findall(page.body)
