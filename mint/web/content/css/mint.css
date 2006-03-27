@@ -93,8 +93,11 @@ p.error {
     font-weight: bold;
 }
 p.errormessage {
-    color: red;
+    background: #edc2c2;
+    border: 2px solid #ed6464;
+    padding: 4px;
     margin-left: 1em;
+    margin-right: 1em;
 }
 
 p.message {
@@ -345,6 +348,7 @@ div#topten a:visited,
 div#topten a:active,
 div#topten a:hover {
     color: #0c2577;
+    clear: right;
 }
 
 div#topten a,
@@ -480,7 +484,6 @@ div.palette img.right {
 
 div#projectsPane {
     width: 224px;
-    height: 345px;
     margin-left: 3px;
     margin-right: 3px;
     background: url(../images/box_body_r.png) no-repeat bottom left;
@@ -510,8 +513,7 @@ div#projectsPane div.boxHeader {
 }
 
 div#projectsPane div.boxBody {
-    height: 300px;
-    overflow: auto;
+    padding-bottom: 25px;
 }
 
 div#projectsPane div.boxBody p,
