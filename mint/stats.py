@@ -38,10 +38,18 @@ class CommitsTable(database.DatabaseTable):
         cu.execute("""SELECT troveName, version, timestamp
                             FROM Commits
                             WHERE projectId = ? AND troveName LIKE ?
-                            ORDER BY timestamp DESC LIMIT ?""", projectId, like, limit)
+                            ORDER BY timestamp DESC LIMIT ?""",
+                   (projectId, like, limit))
         for x in cu.fetchall():
             v = versions.VersionFromString(x[1])
-            v.resetTimeStamps()
+            # FIXME: set all the timestamps to 1.0.  The timestamps
+            # are not needed by any user of this method, but some functions
+            # that are used currently expect a frozen version instead of
+            # a version string.
+            # FIXME: we're using an internal method here
+            v._clearVersionCache()
+            for item in v.iterRevisions():
+                item.timeStamp = 1.0
             commitList.append( (x[0], v.trailingRevision().asString(),
-                v.freeze(), x[2]) )
+                                v.freeze(), x[2]) )
         return commitList
