@@ -55,6 +55,13 @@ class SpiderPageTest(mint_rephelp.WebRepositoryHelper):
                 skip = False
                 if newLink.startswith('/'):
                     relativeLink = True
+                if not (relativeLink or "://" in newLink):
+                    # there can exist implicit relative links--rebase them
+                    # manually, just like a browser would.
+                    newLink = '/'.join(link.split('?')[0].split('/')[:-1] \
+                                       + ['']) + newLink
+                    if newLink.startswith('/'):
+                        relativeLink = True
                 if not relativeLink and MINT_DOMAIN not in newLink \
                        and MINT_PROJECT_DOMAIN not in newLink:
                     # silently ignore pages outside our domain.
@@ -89,7 +96,7 @@ class SpiderPageTest(mint_rephelp.WebRepositoryHelper):
 
     def spiderLink(self, link, page = None):
         self.checked.append(link)
-        # print "link:", link
+        #print "link:", link
         if page is None:
             try:
                 page = self.fetch(link)
