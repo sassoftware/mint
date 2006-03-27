@@ -146,7 +146,7 @@
                 <div py:strip="True" py:if="level in projectDict">
                     <h4>${title}</h4>
                     <ul>
-                        <li py:for="project in projectDict[level]">
+                        <li py:for="project in sorted(projectDict[level], key = lambda x: x.name)">
                             <a href="${project.getUrl()}">
                                 ${project.getNameForDisplay()}</a>
                                 <span py:if="not level and project.listJoinRequests()">
