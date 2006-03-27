@@ -425,8 +425,8 @@ class SiteHandler(WebHandler):
         for x in results:
             p = self.client.getProject(x[2])
             host = p.getHostname()
-            reposUrl = '/project/%s/' % host
-            packageUrl = '/repos/%s/troveInfo?t=%s' % (host, quote_plus(x[0]))
+            reposUrl = self.cfg.basePath + 'project/%s/' % host
+            packageUrl = self.cfg.basePath + 'repos/%s/troveInfo?t=%s' % (host, quote_plus(x[0]))
             searchResults.append( (x[0], x[1], packageUrl, p.getName(), reposUrl) )
 
         return self._write("searchResults", searchType = "Packages", terms = terms, results = searchResults,

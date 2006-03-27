@@ -34,7 +34,7 @@
                 formattedresults = []
                 if searchType == "Projects":
                     formattedresults = [
-                        (self.cfg.basePath + resultset[0].getUrl(), 
+                        (resultset[0].getUrl(), 
                         resultset[0].getNameForDisplay() ),
                         resultset[0].getDescForDisplay(),
                         timeDelta(resultset[4])
@@ -49,9 +49,9 @@
                     ]
                 elif searchType == "Packages":
                     formattedresults = [
-                        (self.cfg.basePath + resultset[2], resultset[0]),
+                        (resultset[2], resultset[0]),
                         resultset[1],
-                        (self.cfg.basePath + resultset[4], resultset[3])
+                        (resultset[4], resultset[3])
                     ]
                     if groupTrove and resultset[2] != groupTrove.recipeName:
                         formattedresults.append((self.cfg.basePath + 'project/%s/addGroupTrove?id=%d;trove=%s;version=%s;referer=%s' % (groupTrove.projectName, groupTrove.getId(), quote(resultset[0]), resultset[1], quote(req.unparsed_uri)) , 'Add to %s' % groupTrove.recipeName))
