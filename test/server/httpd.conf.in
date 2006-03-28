@@ -69,6 +69,7 @@ Alias /conary/ "@DOCROOT@/test.cnr/"
 Alias /jsonrpc/             "@DOCROOT@/mint.conf/"
 Alias /xmlrpc/              "@DOCROOT@/mint.conf/"
 Alias /xmlrpc-private/      "@DOCROOT@/mint.conf/"
+Alias /images/              "@IMAGESPATH/"
 Alias /                     "@DOCROOT@/mint.conf/"
 
 <Location />
@@ -102,6 +103,11 @@ Alias /                     "@DOCROOT@/mint.conf/"
     PythonHandler conary.server.apachehooks
 </Location>
 
+<Location /images/>
+    SetHandler none
+    DefaultType application/octet-stream
+    AddType application/octet-stream .iso .img
+</Location>
 
 
 

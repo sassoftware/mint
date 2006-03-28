@@ -105,6 +105,19 @@ class MintApacheServer(rephelp.ApacheServer):
         rephelp.ApacheServer.__init__(self, name, reposDB, contents, server, serverDir, reposDir, conaryPath, repMap, useCache, requireSigs)
 
         self.sslDisabled = bool(os.environ.get("MINT_TEST_NOSSL", ""))
+
+        # Add dynamic images path to apache settings if necessary
+        f = open("%s/httpd.conf" % self.serverRoot)
+        if 'finished-images' not in f.read():
+            os.rename("%s/httpd.conf" % self.serverRoot,
+                      "%s/httpd.conf.in" % self.serverRoot)
+            os.system("sed 's|@IMAGESPATH|%s|g'"
+                    " < %s/httpd.conf.in > %s/httpd.conf" % \
+                      (os.path.join(self.reposDir, "jobserver",
+                                    "finished-images"),
+                       self.serverRoot, self.serverRoot))
+        f.close()
+
         if not self.sslDisabled:
 
             # Reserve SSL port
