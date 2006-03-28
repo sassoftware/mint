@@ -70,7 +70,7 @@
                           releaseName = truncateForDisplay(release.getName(), maxWords=5, maxWordLen=8)
                       else:
                           releaseName = "Version " + condUpstream(counts, release.getTroveVersion())
-                          desc = "%s %s (%s)" % (release.getArch(), releasetypes.typeNamesShort[release.imageTypes[0]], timeDelta(release.timePublished))
+                      desc = "%s %s (%s)" % (release.getArch(), releasetypes.typeNamesShort[release.imageTypes[0]], timeDelta(release.timePublished))
                   ?>
                     <dt><a href="${projectUrl}release?id=${release.getId()}">${releaseName}</a></dt>
                     <dd>${desc}</dd>
