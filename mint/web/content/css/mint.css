@@ -751,7 +751,7 @@ div#releaseStatus.finished {
     padding: 4px;
 }
 
-div#jobStatusDingus div img#spinner {
+img#spinner {
     padding: 8px;
     float: right;
 }

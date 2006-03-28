@@ -235,25 +235,31 @@ function processGetReleaseStatus(aReq) {
 }
 
 function processGetCookStatus(aReq) {
-    var el = $("jobStatus");
-    var statusText = "";
+    var oldEl = $("releaseStatus");
+    var el = DIV({ 'id': 'releaseStatus', 'class': 'running' }, null);
 
     logDebug("[JSON] response: ", aReq.responseText);
     cookStatus = evalJSONRequest(aReq);
 
-    if(!cookStatus.message) {
-        statusText = "No status";
+    if(!cookStatus) {
         status = STATUS_NOJOB;
     } else {
-        if (cookStatus.status > STATUS_RUNNING) {
-            statusText = cookStatus.message;
+        status = cookStatus.status;
+        if(status == STATUS_RUNNING)
+            setElementClass(el, "running");
+        if(status == STATUS_FINISHED)
+            setElementClass(el, "finished");
+        if(status == STATUS_ERROR)
+            setElementClass(el, "error");
+
+        if (status > STATUS_RUNNING) {
+            hideElement('spinner');
         } else {
-            statusText = textWithBaton(cookStatus.message);
+            showElement('spinner');
         }
+        replaceChildNodes(el, SPAN({'style': 'font-weight: bold;'}, "Status: "), SPAN(null, cookStatus.message));
     }
-
-    replaceChildNodes(el, statusText);
-
+    swapDOM(oldEl, el);
 }
 
 function processGetTroveList(aReq) {

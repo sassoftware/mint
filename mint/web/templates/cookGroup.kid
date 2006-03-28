@@ -29,7 +29,11 @@
                 submitted.</p>
 
                 <h3>Request Status</h3>
-                <p id="jobStatus">Retrieving cook status...</p>
+                <div>
+                    <img src="${cfg.staticPath}apps/mint/images/circle-ball-dark-antialiased.gif" id="spinner" style="float: right;"/>
+                    <div id="releaseStatus" class="running" />
+                </div>
+
 
                 <p>When the request status "Finished" appears, your group
                 has finished cooking. Click on the "Releases" link in the
