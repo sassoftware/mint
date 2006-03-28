@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
-      py:extends="'../library.kid'">
+      py:extends="'../layout.kid'">
 <!--
  Copyright (c) 2005-2006 rPath, Inc.
 
@@ -13,7 +13,7 @@
     <body>
         <div id="layout">
             <div id="left" class="side">
-                ${projectResourcesMenu()} 
+                ${projectResourcesMenu()}
             </div>
             <div id="middle">
                 <h2>Error</h2>
