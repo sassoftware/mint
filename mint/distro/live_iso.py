@@ -59,31 +59,29 @@ class InstallCallback(UpdateCallback, ChangesetCallback):
 
 linuxrc = """#!/bin/nash
 mount -t proc /proc /proc/
-echo Mounted /proc
-echo Mounting sysfs
 mount -t sysfs none /sys
-echo Mounting /dev
 mount -o mode=0755 -t tmpfs /dev /dev
 
 %(modules)s
-echo Starting udev
 /sbin/udevstart
 
 mkrootdev /dev/root
 echo 0x0100 > /proc/sys/kernel/real-root-dev
 
-echo Mounting CD-ROM
 mount -o defaults --ro -t iso9660 /dev/root /cdrom
 %(mountCmd)s
-echo Running pivot_root
 pivot_root /sysroot /sysroot/initrd
 umount /initrd/proc
 """
 
-isolinuxCfg="""label linux
-  kernel vmlinuz
-  append initrd=initrd.img root=LABEL=%s
-"""
+isolinuxCfg= '\n'.join(('say "Welcome to %s."',
+                       'default linux',
+                       'timeout 100',
+                       'prompt 1'
+                       'label linux',
+                       'kernel vmlinuz',
+                       'append initrd=initrd.img root=LABEL=%s'))
+
 
 class LiveIso(bootable_image.BootableImage):
     def findFile(self, baseDir, fileName):
@@ -235,7 +233,7 @@ mount -o defaults --ro -t iso9660 /dev/loop0 /sysroot
                           os.path.join(self.liveDir, 'isolinux.bin'))
 
         f = open(os.path.join(self.liveDir, 'isolinux.cfg'), 'w')
-        f.write(isolinuxCfg % self.getVolName())
+        f.write(isolinuxCfg % (self.release.getName(), self.getVolName()))
         f.close()
 
         # tweaks to make read-only filesystem possible.
