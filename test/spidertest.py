@@ -10,6 +10,9 @@ testsuite.setup()
 
 import mint_rephelp
 from mint_rephelp import MINT_PROJECT_DOMAIN, MINT_DOMAIN
+from mint import releasetypes
+
+from conary.lib import util
 
 import os, sys
 import tempfile
@@ -123,10 +126,14 @@ class SpiderPageTest(mint_rephelp.WebRepositoryHelper):
         project = client.getProject(projectId)
         self.moveToServer(project, 1)
 
+        # add needed components
         self.addComponent('testcase:source', '1.0.0')
         self.addComponent('testcase:runtime', '1.0.0')
         self.addCollection('testcase', '1.0.0', ['testcase:runtime'])
+        self.addComponent('group-test:source', '1.0.0')
+        trv = self.addCollection('group-test', '1.0.0', ['testcase'])
 
+        # set up package index
         fd, fn = tempfile.mkstemp()
         os.close(fd)
 
@@ -139,6 +146,25 @@ class SpiderPageTest(mint_rephelp.WebRepositoryHelper):
             self.captureOutput(os.system, "%s %s" % (upi, fn))
         finally:
             os.unlink(fn)
+
+        # make releases
+        for i in range(2):
+            release = client.newRelease(projectId, "Test Release")
+            # add timestamp field.
+            release.setTrove(trv.name(), trv.version.freeze(), "1#x86")
+            release.setFiles([["testimage.iso", "Test Image"]])
+            imagePath = os.path.join(self.reposDir, "jobserver",
+                                         "finished-images", project.hostname,
+                                         str(release.id))
+            util.mkdirChain(imagePath)
+            f = open(os.path.join(imagePath, 'testimage.iso'), 'w')
+            f.write('bogus image')
+            f.close()
+
+            release.setDesc('')
+            release.setImageTypes([releasetypes.STUB_IMAGE])
+            if not i:
+                release.setPublished(True)
 
         # compile regex expressions
         self.reLinks = re.compile("<a href=[^<>]*>", re.IGNORECASE)
