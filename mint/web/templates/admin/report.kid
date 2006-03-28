@@ -6,19 +6,14 @@
     Copyright (c) 2005-2006 rPath, Inc.
     All Rights Reserved
 -->
-    <div py:def="breadcrumb()" py:strip="True">
-        ${adminbreadcrumb()}
-        <a href="administer?operation=report">View Reports</a>
-    </div>
-
     <head>
         <title>${formatTitle('View Reports')}</title>
     </head>
     <body>
-	<a href ="/administer/">Return to Administrator Page</a>
+	<a href ="${cfg.basePath}administer">Return to Administrator Page</a>
         <td id="main" class="spanall">
             <div class="pad">
-              <form action="administer" method="post">
+              <form action="${cfg.basePath}administer" method="post">
                 <h2>Select a report</h2>
                 <p>
                   <select name="reportName">

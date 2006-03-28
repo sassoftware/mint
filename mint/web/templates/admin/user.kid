@@ -6,11 +6,6 @@
     Copyright (c) 2005-2006 rPath, Inc.
     All Rights Reserved
 -->
-    <div py:def="breadcrumb()" py:strip="True">
-        ${adminbreadcrumb()}
-        <a href="administer?operation=user">User Administration</a>
-    </div>
-
     <head>
         <title>${formatTitle('Administer Users')}</title>
     </head>
@@ -18,8 +13,8 @@
         <td id="main" class="spanall">
             <div class="pad">
               <p py:if="kwargs.get('extraMsg', None)" class="message" py:content="kwargs['extraMsg']"/>
-              <form action="administer" method="post">
-	        <a href ="/administer/">Return to Administrator Page</a>
+              <form action="${cfg.basePath}administer" method="post">
+	        <a href ="${cfg.basePath}administer">Return to Administrator Page</a>
                 <h2>Select a user below to modify</h2>
                 <p>
                   <select name="userId">
@@ -35,7 +30,7 @@
               </form>
               <div>
                 <h2>Other user operations</h2>
-                <p><a href="administer?operation=user_new">Create a new user</a></p>
+                <p><a href="${cfg.basePath}administer?operation=user_new">Create a new user</a></p>
               </div>
             </div>
         </td>

@@ -6,11 +6,6 @@
     Copyright (c) 2005-2006 rPath, Inc.
     All Rights Reserved
 -->
-    <div py:def="breadcrumb()" py:strip="True">
-        ${adminbreadcrumb()}
-        <a href="administer?operation=notify">User Notification</a>
-    </div>
-
     <?python
         for var in ['extraMsg', 'subject', 'body']:
             kwargs[var] = kwargs.get(var, '')
@@ -26,14 +21,14 @@
               <p py:if="kwargs['extraMsg'] and not errors" class="message" py:content="kwargs['extraMsg']"/>
               <p py:if="kwargs['errors']" class="error">An Error Has Occurred</p>
               <p py:for="error in kwargs['errors']" class="errormessage" py:content="error"/>
-	      <a href ="/administer/">Return to Administrator Page</a>
+	      <a href ="${cfg.basePath}administer">Return to Administrator Page</a>
 
               <h2>Notify All Users</h2>
               <p>Fields labeled with a <em class="required">red arrow</em> are required.
                 Note that the submission of this form may take several minutes, and will
                 not ask for confirmation.  Be sure you are ready before hitting "Send".
               </p>
-              <form action="administer" method="post">
+              <form action="${cfg.basePath}administer" method="post">
                 <table cellpadding="0" border="0" cellspacing="0" class="mainformhorizontal">
                   <tr>
                     <th><em class="required">Message Subject:</em></th>

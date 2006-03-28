@@ -6,11 +6,6 @@
     Copyright (c) 2005-2006 rPath, Inc.
     All Rights Reserved
 -->
-    <div py:def="breadcrumb()" py:strip="True">
-        ${adminbreadcrumb()}
-        <a href="administer?operation=jobs">Manage Jobs</a>
-    </div>
-
     <head>
         <title>${formatTitle('Manage Jobs')}</title>
     </head>

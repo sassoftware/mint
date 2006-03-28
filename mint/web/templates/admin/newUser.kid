@@ -6,11 +6,6 @@
     Copyright (c) 2005-2006 rPath, Inc.
     All Rights Reserved
 -->
-    <div py:def="breadcrumb()" py:strip="True">
-        ${adminbreadcrumb()}
-        <a href="administer?operation=user">User Administration</a>
-        <a href="#">Create an Account</a>
-    </div>
     <?python
         for var in ['username', 'email', 'fullName', 'displayEmail', 'blurb', 'tos', 'privacy']:
             kwargs[var] = kwargs.get(var, '')
@@ -25,7 +20,7 @@
                 <p py:for="error in errors" class="errormessage" py:content="error"/>
                 <h2>Create an Account</h2>
                 <p>Fields labeled with a <em class="required">red arrow</em> are required.</p>
-                <form method="post" action="administer?operation=user_register">
+                <form method="post" action="${cfg.basePath}administer?operation=user_register">
 
                     <table border="0" cellspacing="0" cellpadding="0" class="mainformhorizontal">
                         <tr>

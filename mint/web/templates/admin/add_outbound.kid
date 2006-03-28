@@ -6,17 +6,12 @@
     Copyright (c) 2005-2006 rPath, Inc.
     All Rights Reserved
 -->
-    <div py:def="breadcrumb()" py:strip="True">
-        ${adminbreadcrumb()}
-        <a href="administer?operation=external">Add Outbound Mirror</a>
-    </div>
-
     <head>
         <title>${formatTitle('Add Outbound Mirror')}</title>
     </head>
     <body>
         <div class="layout">
-            <form action="administer" method="post">
+            <form action="${cfg.basePath}administer" method="post">
                 <h2>Add Outbound Mirror</h2>
 
                 <table cellpadding="0" border="0" cellspacing="0" class="mainformhorizontal">
