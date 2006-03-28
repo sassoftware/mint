@@ -115,7 +115,8 @@ class WebHandler(object):
             del self.session['firstTimer']
 
         self.session['authToken'] = self.authToken
-        self.session.invalidate()
+        if self.session and isinstance(self.session, SqlSession):
+            self.session.invalidate()
 
     def _resetPasswordById(self, userId):
         newpw = users.newPassword()
@@ -151,85 +152,52 @@ class WebHandler(object):
             protocol = 'http'
         return protocol
 
-    def _session_start(self):
+    def _session_start(self, rememberMe = False):
         sid = self.fields.get('sid', None)
 
         sessionClient = shimclient.ShimMintClient(self.cfg, (self.cfg.authUser, self.cfg.authPass))
-
-        if self.cfg.configured:
-            domain = ".".join(self.req.hostname.split(".")[1:])
-            cookieDomain = "." + domain
-        else:
-            domain = cookieDomain = self.req.hostname
 
         self.session = SqlSession(self.req, sessionClient,
             sid = sid,
             secret = self.cfg.cookieSecretKey,
             timeout = 86400,
-            domain = cookieDomain,
             lock = False)
+
         if self.session.is_new():
             self.session['firstPage'] = "%s://%s%s" % ( \
                 self._protocol(), \
                 self.req.headers_in.get('host', self.req.hostname), '/')
             self.session['visited'] = { }
-
-        # mark the current domain as visited
-        self.session['visited'][domain] = True
+            self.session['rememberMe'] = rememberMe
+        else:
+            rememberMe = self.session['rememberMe']
 
         c = self.session.make_cookie()
 
-        if self.session.get('rememberMe', False):
+        if rememberMe:
             c.expires = 1209600 + time.time()
             # ensure timeout is 2 weeks for remembered sessions
             if self.session.timeout() != 1209600:
                 self.session.set_timeout(1209600)
-                self.session.save()
 
-        if self.session.is_new():
-            c.domain = cookieDomain
-            self.req.err_headers_out.add('Set-Cookie', str(c))
-            self.req.err_headers_out.add('Cache-Control', 'no-cache="set-cookie"')
+        self.req.err_headers_out.add('Set-Cookie', str(c))
+        self.req.err_headers_out.add('Cache-Control', 'no-cache="set-cookie"')
 
-    def _redirect_storm(self, sid):
+        # mark the current domain as visited
+        self.session['visited'][self.req.hostname] = True
+
+    def _getNextHop(self):
         #Now figure out if we need to redirect
         nexthop = None
         # split is used to ensure port number doesn't affect cookie domain
         for dom in (self.cfg.siteDomainName.split(':'),
                     self.cfg.projectDomainName.split(':')):
-            if not self.session['visited'].get(dom[0], None):
+            visitedHost = "%s.%s" % (self.cfg.hostName, dom[0])
+            if not self.session['visited'].get(visitedHost, False):
                 #Yeah we need to redirect
-                nexthop = dom
+                nexthop = "%s.%s" % (self.cfg.hostName, ':'.join(dom))
                 break
-
-        # if we were passed a sid, specifically set a cookie
-        # for the requested domain with that sid.
-        if sid or nexthop:
-            c = self.session.make_cookie()
-
-            if self.session.get('rememberMe', False):
-                c.expires = 1209600 + time.time()
-                # ensure timeout is 2 weeks for remembered sessions
-                if self.session.timeout() != 1209600:
-                    self.session.set_timeout(1209600)
-                    self.session.save()
-
-            c.domain = '.' + ".".join(self.req.hostname.split(".")[1:])
-            #add it to the err_headers_out because these ALWAYS go to the browser
-            self.req.err_headers_out.add('Set-Cookie', str(c))
-            self.req.err_headers_out.add('Cache-Control', 'no-cache="set-cookie"')
-        if nexthop:
-            #Save the session
-            self.session.save()
-            #Don't forget to put the port specifier back here
-            self._redirect("http://%s.%s%sblank?sid=%s" % \
-                    (self.cfg.hostName, ':'.join(nexthop),
-                        self.cfg.basePath, self.session.id()))
-        else:
-            if sid:
-                #Clear the sid from the request by redirecting to the first page.
-                self.session.save()
-                self._redirect(self.session['firstPage'])
+        return nexthop
 
 
 def normPath(path):

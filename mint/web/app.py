@@ -99,15 +99,6 @@ class MintApp(WebHandler):
         else:
             cookies = Cookie.get_cookies(self.req, Cookie.Cookie)
 
-        sid = self.fields.get('sid', None)
-        rememberMe = self.fields.get('rememberMe', False)
-        if sid:
-            self._session_start()
-            if rememberMe != self.session.get('rememberMe', False):
-                self.session['rememberMe'] = rememberMe
-                self.session.save()
-            self._redirect_storm(sid)
-
         if 'pysid' not in cookies:
             rh = cache.reqHash(self.req)
             if rh in cache.pageCache:
@@ -250,7 +241,7 @@ class MintApp(WebHandler):
             'output':           self.output,
         }
 
-        if self.auth.stagnant and ''.join(pathInfo.split('/')) not in ['editUserSettings','confirm','logout']:
+        if self.auth.stagnant and ''.join(pathInfo.split('/')) not in ['editUserSettings','confirm','logout','continueLogout']:
             context['cmd'] = 'confirmEmail'
             return self.siteHandler.handle(context)
 

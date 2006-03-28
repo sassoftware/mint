@@ -26,7 +26,8 @@ import cPickle
 
 class WebPageTest(mint_rephelp.WebRepositoryHelper):
     def sessionData(self):
-        sid = self.cookies['.' + MINT_PROJECT_DOMAIN + '']['/']['pysid'].value
+        sid = self.cookies['%s.%s' % (self.mintCfg.hostName,
+                MINT_PROJECT_DOMAIN)]['/']['pysid'].value
         cu = self.db.cursor()
         cu.execute("SELECT data FROM Sessions WHERE sid=?", sid)
         return cPickle.loads(cu.fetchone()[0])['_data']
@@ -59,15 +60,9 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         port = self.mintCfg.SSL and self.securePort or self.port
         page = self.assertContent('/', '%d/processLogin' % port)
 
-        if '/processLogin' not in page.body:
-            self.fail("Login form did not appear on page")
+        self.webLogin('foouser', 'foopass')
 
-        page = page.postForm(1, self.fetchWithRedirect,
-            {'username': 'foouser', 'password': 'foopass'})
-
-        if '/processLogin' in page.body:
-            self.fail("Login form appeared on page for logged in user")
-
+        page = self.fetch(self.mintCfg.basePath)
         page = page.fetchWithRedirect('/logout')
 
         if '/processLogin' not in page.body:
@@ -103,14 +98,16 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         page = page.fetch('/')
         page.registerExpectedCookie('pysid')
 
-        self.failUnless('.%s' % MINT_DOMAIN in self.cookies.keys(),
+        self.failUnless('%s.%s' % (self.mintCfg.hostName, MINT_DOMAIN) \
+                in self.cookies.keys(),
                 "%s missing from cookies" % MINT_DOMAIN)
         if (MINT_PROJECT_DOMAIN != MINT_DOMAIN):
-            self.failUnless('.%s' % MINT_PROJECT_DOMAIN in self.cookies.keys(),
+            self.failUnless('%s.%s' % (self.mintCfg.hostName,
+                MINT_PROJECT_DOMAIN) in self.cookies.keys(),
                 "%s missing from cookies" % MINT_PROJECT_DOMAIN)
-            self.failUnless(self.cookies['.%s' % MINT_DOMAIN] !=
-                    self.cookies['.%s' % MINT_PROJECT_DOMAIN],
-                    "Cookies should be identical")
+            self.assertEqual(self.cookies['%s.%s' % (self.mintCfg.hostName,
+                MINT_DOMAIN)], self.cookies['%s.%s' % (self.mintCfg.hostName,
+                MINT_PROJECT_DOMAIN)], "Cookies should be identical")
 
     def testLoginNonvolatileSession(self):
         self.quickMintUser('foouser','foopass')
@@ -412,35 +409,35 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         page = self.assertContent('/project/testproject/members',
                                   "View OpenPGP Signing Keys",
                                   server = self.getProjectServerHostname())
-        self.fetch("/logout")
+        page.fetchWithRedirect("/logout")
 
         # view shows up for developer
         self.webLogin('devuser', 'devpass')
         page = self.assertContent('/project/testproject/members',
                                   "View OpenPGP Signing Keys",
                                   server = self.getProjectServerHostname())
-        self.fetch("/logout")
+        page.fetchWithRedirect("/logout")
 
         # view doesn't show up for watcher
         self.webLogin('watchuser', 'watchpass')
         page = self.assertNotContent('/project/testproject/members',
                                   "View OpenPGP Signing Keys",
                                   server = self.getProjectServerHostname())
-        self.fetch("/logout")
+        page.fetchWithRedirect("/logout")
 
         # view doesn't show up for non-member
         self.webLogin('nonuser', 'nonpass')
         page = self.assertNotContent('/project/testproject/members',
                                   "View OpenPGP Signing Keys",
                                   server = self.getProjectServerHostname())
-        self.fetch("/logout")
+        page.fetchWithRedirect("/logout")
 
         # manage shows up for admin
         self.webLogin('adminuser', 'adminpass')
         page = self.assertContent('/project/testproject/members',
                                   "Manage OpenPGP Signing Keys",
                                   server = self.getProjectServerHostname())
-        self.fetch("/logout")
+        page.fetchWithRedirect("/logout")
 
     def testRepoBrowserPage(self):
         client, userId = self.quickMintUser('foouser','foopass')
@@ -689,7 +686,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                     'Uncached session not logged out')
 
         # HACK alter cookie to match what we moved session to earlier
-        self.cookies['.'+MINT_DOMAIN]['/']['pysid'].coded_value = newSid
+        self.cookies['%s.%s' % (self.mintCfg.hostName, MINT_DOMAIN)]['/']['pysid'].coded_value = newSid
 
         # session in db but not in cache
         cookie = 'pysid'

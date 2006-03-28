@@ -28,7 +28,7 @@ class WebMemberTest(mint_rephelp.WebRepositoryHelper):
                            '/project/testproject/joinRequest',
                            server = self.getProjectServerHostname())
 
-        self.fetch('/logout')
+        self.fetchWithRedirect('/logout')
 
         project = client.getProject(projectId)
         project.addMemberById(userId2, userlevels.DEVELOPER)
@@ -39,7 +39,7 @@ class WebMemberTest(mint_rephelp.WebRepositoryHelper):
                               '/project/testproject/joinRequest',
                               server = self.getProjectServerHostname())
 
-        self.fetch('/logout')
+        self.fetchWithRedirect('/logout')
 
         # try as admin
         self.webLogin('adminuser', 'adminuser')
@@ -47,7 +47,7 @@ class WebMemberTest(mint_rephelp.WebRepositoryHelper):
                            '/project/testproject/joinRequest',
                            server = self.getProjectServerHostname())
 
-        self.fetch('/logout')
+        self.fetchWithRedirect('/logout')
 
         # try as owner
         self.webLogin('user1', 'user1')
@@ -55,7 +55,7 @@ class WebMemberTest(mint_rephelp.WebRepositoryHelper):
                               '/project/testproject/joinRequest',
                               server = self.getProjectServerHostname())
 
-        self.fetch('/logout')
+        self.fetchWithRedirect('/logout')
 
         project = client3.getProject(projectId)
         project.addMemberById(userId3, userlevels.USER)
@@ -80,7 +80,7 @@ class WebMemberTest(mint_rephelp.WebRepositoryHelper):
                            '/project/testproject/watch',
                            server = self.getProjectServerHostname())
 
-        self.fetch('/logout')
+        self.fetchWithRedirect('/logout')
 
         project = client.getProject(projectId)
         project.addMemberById(userId2, userlevels.DEVELOPER)
@@ -91,7 +91,7 @@ class WebMemberTest(mint_rephelp.WebRepositoryHelper):
                               '/project/testproject/watch',
                               server = self.getProjectServerHostname())
 
-        self.fetch('/logout')
+        self.fetchWithRedirect('/logout')
 
         # try as admin
         self.webLogin('adminuser', 'adminuser')
@@ -99,7 +99,7 @@ class WebMemberTest(mint_rephelp.WebRepositoryHelper):
                            '/project/testproject/watch',
                            server = self.getProjectServerHostname())
 
-        self.fetch('/logout')
+        self.fetchWithRedirect('/logout')
 
         # try as owner
         self.webLogin('user1', 'user1')
@@ -107,7 +107,7 @@ class WebMemberTest(mint_rephelp.WebRepositoryHelper):
                               '/project/testproject/watch',
                               server = self.getProjectServerHostname())
 
-        self.fetch('/logout')
+        self.fetchWithRedirect('/logout')
 
         project = client3.getProject(projectId)
         project.addMemberById(userId3, userlevels.USER)
@@ -162,7 +162,7 @@ class WebMemberTest(mint_rephelp.WebRepositoryHelper):
         page = page.postForm(1, page.post, {'comments': commentStr,
                                             'keepReq' : '1'})
 
-        self.fetchWithRedirect('/logout')
+        page.fetchWithRedirect('/logout')
         self.webLogin('user1', 'user1')
 
         page = self.fetchWithRedirect('/')

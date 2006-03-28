@@ -40,8 +40,10 @@ class SiteHandler(WebHandler):
 
         # if someone attempts to access the SITE from something other than
         # the site host and SSL is not requested, redirect.
+        # Notable exception: we will allow continueLogout to be accessed
+        # on both domains.
         if self.req.hostname != self.cfg.siteHost.split(':')[0] and \
-               self.req.subprocess_env.get('HTTPS', 'off') == 'off':
+                self.req.subprocess_env.get('HTTPS', 'off') == 'off':
             self._redirect("http://" + self.cfg.siteHost + \
                            self.req.unparsed_uri)
         if not cmd:
@@ -158,7 +160,25 @@ class SiteHandler(WebHandler):
             return self._write("docs/overview")
         return self._write("docs/" + page, step = step)
 
+    @redirectHttps
     def logout(self, auth):
+        self.session['visited'] = { }
+        self.session['visited'][self.req.hostname] = True
+        nexthop = self._getNextHop()
+        if nexthop:
+            c = self.session.make_cookie()
+            c.expires = 0
+            self.req.err_headers_out.add('Set-Cookie', str(c))
+            self.req.err_headers_out.add('Cache-Control', 
+                    'no-cache="set-cookie"')
+            self._redirect("http://%s%scontinueLogout" % \
+                    (nexthop, self.cfg.basePath))
+        else:
+            self._clearAuth()
+            self._redirect("http://%s%s" % \
+                    (self.cfg.siteHost, self.cfg.basePath))
+
+    def continueLogout(self, auth):
         self._clearAuth()
         self._redirect("http://%s%s" % (self.cfg.siteHost, self.cfg.basePath))
 
@@ -192,14 +212,26 @@ class SiteHandler(WebHandler):
                     firstTimer = True
                 client.updateAccessedTime(auth.userId)
 
-                self._session_start()
+                self._session_start(rememberMe)
                 self.session['authToken'] = authToken
                 self.session['firstTimer'] = firstTimer
                 self.session['firstPage'] = unquote(to)
-                self.session['rememberMe'] = rememberMe
                 self.session.save()
 
-                self._redirect_storm(self.session.id())
+                # redirect storm if needed
+                nexthop = self._getNextHop()
+                if nexthop:
+                    self._redirect("http://%s%scontinueLogin?sid=%s" % \
+                        (nexthop, self.cfg.basePath, self.session.id()))
+                else:
+                    self._redirect(self.session['firstPage'])
+        else:
+            raise HttpNotFound
+
+    def continueLogin(self, auth, sid):
+        if sid:
+            self._session_start()
+            self._redirect(self.session['firstPage'])
         else:
             raise HttpNotFound
 
