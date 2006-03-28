@@ -34,5 +34,17 @@ class PackageIndexTable(database.KeyedTable):
 
         for i, x in enumerate(ids[:]):
             ids[i] = list(x)
-            
+
         return ids, count
+
+    def __init__(self, db):
+        database.KeyedTable.__init__(self, db)
+
+        # create this table without an associated KeyedTable
+        # or DatabaseTable object, since nobody uses this but
+        # update-package-index.
+        if "PackageIndexMark" not in db.tables:
+            cu = db.cursor()
+            cu.execute("CREATE TABLE PackageIndexMark (mark INT)")
+            cu.execute("INSERT INTO PackageIndexMark VALUES(0)")
+            self.db.commit()

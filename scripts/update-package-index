@@ -52,14 +52,10 @@ try:
         cu.execute("SELECT MAX(timestamp) FROM Commits")
         newMark = cu.fetchone()[0]
 
-        if "PackageIndexMark" not in db.tables:
-            cu.execute("CREATE TABLE PackageIndexMark (mark INT)")
-            cu.execute("INSERT INTO PackageIndexMark VALUES(0)")
-
         # Clear out Package index if the timestamp in PackageIndexMark == 0
         cu.execute("""DELETE FROM PackageIndex WHERE
                           (SELECT mark FROM PackageIndexMark) = 0""")
-        
+
         # get a list of the latest version of each package, excluding hidden and
         # disabled projects. comparing version strings isn't technically reliable,
         # so we must use the latest timestamp to verify
