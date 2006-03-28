@@ -45,23 +45,38 @@ try:
     cfg.read(cfgPath)
 
     db = dbstore.connect(cfg.dbPath, driver = cfg.dbDriver)
-    db.connect()
+    db.loadSchema()
     cu = db.cursor()
 
     try:
+        cu.execute("SELECT MAX(timestamp) FROM Commits")
+        newMark = cu.fetchone()[0]
+
+        if "PackageIndexMark" not in db.tables:
+            cu.execute("CREATE TABLE PackageIndexMark (mark INT)")
+            cu.execute("INSERT INTO PackageIndexMark VALUES(0)")
+
+        # Clear out Package index if the timestamp in PackageIndexMark == 0
+        cu.execute("""DELETE FROM PackageIndex WHERE
+                          (SELECT mark FROM PackageIndexMark) = 0""")
+        
         # get a list of the latest version of each package, excluding hidden and
         # disabled projects. comparing version strings isn't technically reliable,
         # so we must use the latest timestamp to verify
+        # grab only the packages that have been updated since the last time
+        # this script was run.
         cu.execute("""SELECT Projects.projectId, troveName, max(timestamp)
                           FROM Commits
                           LEFT JOIN Projects
                               ON Commits.projectId=Projects.projectId
                           WHERE troveName NOT LIKE '%:%'
                           AND hidden=0 AND disabled=0
+                          AND timestamp >=
+                              (SELECT mark FROM PackageIndexMark)
                           GROUP BY Projects.projectId, troveName""")
 
         for projectId, troveName, maxTime in cu.fetchall():
-            cu.execute("""SELECT version from Commits
+            cu.execute("""SELECT version FROM Commits
                               WHERE projectId=? AND troveName=? and timestamp=?""",
                        projectId, troveName, maxTime)
 
@@ -83,6 +98,7 @@ try:
                                       projectId=?, name=?, version=?
                                       WHERE pkgId=?""",
                            projectId, troveName, version, pkgId)
+        cu.execute("UPDATE PackageIndexMark SET mark=?", newMark)
 
     except:
         db.rollback()
