@@ -82,7 +82,7 @@ umount /initrd/proc
 
 isolinuxCfg="""label linux
   kernel vmlinuz
-  append initrd=initrd.img root=LABEL=%s
+  append initrd=initrd.img ramdisk_size=1048576 root=LABEL=%s
 """
 
 class LiveIso(bootable_image.BootableImage):
