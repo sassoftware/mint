@@ -19,14 +19,15 @@ script_dist =			\
 
 extra_dist = \
 	Makefile		\
-        bootable_image.conf	\
+	bootable_image.conf	\
 	installable_iso.conf	\
 	iso_gen.conf		\
 	live_iso.conf		\
 	buildiso		\
 	buildtemplates		\
 	raw2vmdk.c		\
-	job-server.init.in
+	job-server.init.in	\
+	multi-jobserver.init.in
 
 SUBDIRS = data DiskImageData
 
