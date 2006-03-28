@@ -102,9 +102,9 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
         project = client.getProject(projectId)
         labelId = project.getLabelIdMap().values()[0]
         project.editLabel(labelId, "localhost.other.host@rpl:linux",
-            "http://test.rpath.local:%d/repos/localhost/" % self.port, "mintauth", "mintpass")
+            "http://test.rpath.local2:%d/repos/localhost/" % self.port, "mintauth", "mintpass")
         client.addInboundLabel(projectId, labelId, "http://localhost:%s/conary/" % sourcePort, "mirror", "mirror")
-        client.addRemappedRepository('localhost.rpath.local', 'localhost.other.host')
+        client.addRemappedRepository('localhost.rpath.local2', 'localhost.other.host')
 
         cu = self.db.cursor()
         cu.execute("UPDATE Projects SET external=1 WHERE projectId=?", projectId)
@@ -127,11 +127,11 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
 
         # set up the target repository
         targetRepos = self.openRepository(1,
-                                          serverName = "localhost.rpath.local")
+                                          serverName = "localhost.rpath.local2")
         targetPort = self.servers.getServer(1).port
         map = dict(self.cfg.repositoryMap)
-        self.createMirrorUser(targetRepos, "localhost.rpath.local@rpl:linux")
-        self.cfg.buildLabel = versions.Label("localhost.rpath.local@rpl:linux")
+        self.createMirrorUser(targetRepos, "localhost.rpath.local2@rpl:linux")
+        self.cfg.buildLabel = versions.Label("localhost.rpath.local2@rpl:linux")
 
         # set up the source repository
         projectId = self.newProject(client, "Mirrored Project", "localhost")
@@ -149,7 +149,7 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
 
         # compare
         self.compareRepositories(sourceRepos, targetRepos,
-                                 base = "localhost.rpath.local")
+                                 base = "localhost.rpath.local2")
         self.stopRepository(1)
 
 
