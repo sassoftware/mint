@@ -42,12 +42,22 @@ class SpiderPageTest(mint_rephelp.WebRepositoryHelper):
                 res = self.spiderLink(link, newPage) or res
         return res
 
+    def rebaseLink(self, link, newLink):
+        newLink = '/'.join(link.split('?')[0].split('/')[:-1] + ['']) + newLink
+        linkSearch = re.compile('/[^/]*/\.\.')
+        derefLink = linkSearch.search(newLink)
+        while derefLink:
+            newLink = newLink.replace(derefLink.group(), '')
+            derefLink = linkSearch.search(newLink)
+        return newLink
+
     def checkLinks(self, links, link):
         brokenLinks = False
         for newLink in links:
             relativeLink = False
             valid = False
-            if newLink.startswith('#'):
+            skip = False
+            if newLink.startswith('#') or newLink.startswith('javascript'):
                 # ignore "#" links
                 pass
             else:
@@ -57,9 +67,7 @@ class SpiderPageTest(mint_rephelp.WebRepositoryHelper):
                     relativeLink = True
                 if not (relativeLink or "://" in newLink):
                     # there can exist implicit relative links--rebase them
-                    # manually, just like a browser would.
-                    newLink = '/'.join(link.split('?')[0].split('/')[:-1] \
-                                       + ['']) + newLink
+                    newLink = self.rebaseLink(link, newLink)
                     if newLink.startswith('/'):
                         relativeLink = True
                 if not relativeLink and MINT_DOMAIN not in newLink \
@@ -109,7 +117,7 @@ class SpiderPageTest(mint_rephelp.WebRepositoryHelper):
         brokenLinks = self.checkLinks(links, link) or self.checkForms(page)
         return brokenLinks
 
-    def testBrokenLinks(self):
+    def setUpMint(self):
         client, userId = self.quickMintUser('foouser', 'foopass')
         projectId = self.newProject(client)
         project = client.getProject(projectId)
@@ -140,38 +148,36 @@ class SpiderPageTest(mint_rephelp.WebRepositoryHelper):
         self.reMethod = re.compile("""method=['"][^'"]*['"]""", re.IGNORECASE)
         #end regex expressions
 
+        return client, userId, projectId
+
+    def testAnonLinks(self):
+        self.setUpMint()
+
         self.checked = []
         self.failIf(self.spiderLink(self.mintCfg.basePath),
                     "There are broken links in the site for anonymous users.")
 
+
+    def testUserLinks(self):
+        self.setUpMint()
         self.webLogin('foouser', 'foopass')
 
         self.checked = []
         self.failIf(self.spiderLink(self.mintCfg.basePath),
                     "There are broken links in the site for logged-in users.")
 
+    def testAdminLinks(self):
+        self.setUpMint()
+        self.quickMintAdmin('adminuser', 'adminpass')
+        self.webLogin('adminuser', 'adminpass')
+
+        self.checked = []
+        self.failIf(self.spiderLink(self.mintCfg.basePath),
+                    "There are broken links in the site for admin users.")
+
     def testCommitTimestamps(self):
-        client, userId = self.quickMintUser('foouser', 'foopass')
-        projectId = self.newProject(client)
+        client, userId, projectId = self.setUpMint()
         project = client.getProject(projectId)
-        self.moveToServer(project, 1)
-
-        self.addComponent('testcase:source', '1.0.0')
-        self.addComponent('testcase:runtime', '1.0.0')
-        self.addCollection('testcase', '1.0.0', ['testcase:runtime'])
-
-        fd, fn = tempfile.mkstemp()
-        os.close(fd)
-
-        f= open(fn ,'w')
-        self.mintCfg.display(f)
-        f.close()
-
-        upi = os.path.join(scriptPath, 'update-package-index')
-        try:
-            self.captureOutput(os.system, "%s %s" % (upi, fn))
-        finally:
-            os.unlink(fn)
 
         self.failIf(project.getCommits() != project.getCommits(),
                     "getCommits results are not constant. This will trigger "
