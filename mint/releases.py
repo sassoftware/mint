@@ -135,6 +135,19 @@ class ReleasesTable(database.KeyedTable):
                 cu.execute("ALTER TABLE Releases ADD COLUMN description STR")
                 cu.execute("UPDATE Releases SET description=desc")
                 return (dbversion + 1) == self.schemaVersion
+            if dbversion == 14:
+                from distro import jsversion
+                cu = self.db.cursor()
+                cu.execute("""INSERT INTO ReleaseData
+                                  SELECT DISTINCT releaseId, 'jsversion',
+                                                  '%s', 0
+                                      FROM Releases
+                                      WHERE releaseId NOT IN
+                                          (SELECT DISTINCT releaseId
+                                               FROM ReleaseData
+                                               WHERE name='jsversion')""" % \
+                           jsversion.getDefaultVersion())
+                return (dbversion + 1) == self.schemaVersion
         return True
 
     def new(self, **kwargs):
