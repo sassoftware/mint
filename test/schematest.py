@@ -9,6 +9,7 @@ testsuite.setup()
 
 from mint_rephelp import MintRepositoryHelper
 from mint import userlevels, mint_server
+from mint.distro import jsversion
 from conary import dbstore
 from conary import sqlite3
 from conary.lib import util
@@ -410,6 +411,13 @@ class UpgradePathTest(MintRepositoryHelper):
         cu.execute("INSERT INTO Releases VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",
                    2, 2, '', '', 1, '', '', '', 0, 0, 3, 0)
 
+        # add some release data
+        cu.execute("INSERT INTO ReleaseData VALUES(?, ?, ?, ?)",
+                   1, 'jsversion', '1.5.4', 0)
+
+        cu.execute("INSERT INTO ReleaseData VALUES(?, ?, ?, ?)",
+                   1, 'skipMediaCheck', '1', 1)
+
         # set version
         cu.execute("INSERT INTO DatabaseVersion VALUES(8, 0)")
 
@@ -455,6 +463,26 @@ class UpgradePathTest(MintRepositoryHelper):
         self.failIf(cu.fetchone()[0] != \
                     client.server._server.version.schemaVersion,
                     "Schema failed to follow complete upgrade path")
+
+        cu.execute("""SELECT releaseId, value FROM ReleaseData
+                          WHERE name='showMediaCheck'""")
+
+        self.failIf(cu.fetchone() != (1, '0'),
+                    "schema upgrade 14 failed for showMediaCheck.")
+
+        cu.execute("""SELECT releaseId, value FROM ReleaseData
+                          WHERE name='skipMediaCheck'""")
+
+        self.failIf(cu.fetchone(),
+                    "schema upgrade 14 failed for skipMediaCheck.")
+
+        cu.execute("""SELECT releaseId, value FROM ReleaseData
+                          WHERE name='jsversion'""")
+
+        jsVer = jsversion.getDefaultVersion()
+        self.failIf(cu.fetchall() != [(1, '1.5.4'), (2, jsVer)],
+                    "schema upgrade 15 failed.")
+
 
 if __name__ == "__main__":
     testsuite.main()
