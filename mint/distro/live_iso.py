@@ -74,7 +74,11 @@ pivot_root /sysroot /sysroot/initrd
 umount /initrd/proc
 """
 
-isolinuxCfg= '\n'.join(('label linux',
+isolinuxCfg= '\n'.join(('say Welcome to %s.',
+                        'default linux',
+                        'timeout 100',
+                        'prompt 1',
+                        'label linux',
                         'kernel vmlinuz',
                         'append initrd=initrd.img root=LABEL=%s'))
 
