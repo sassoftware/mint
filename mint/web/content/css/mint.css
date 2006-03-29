@@ -761,4 +761,8 @@ img#nameSpinner, img#archSpinner {
     padding-right: 4px;
 }
 
-
+#mintVersionString {
+    text-align: center;
+    font-size: xx-small;
+    color: #c0c0c0 !important;
+}
