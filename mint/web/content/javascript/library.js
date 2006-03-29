@@ -298,6 +298,8 @@ function processGetTroveVersionsByArch(aReq) {
     archSel.disabled = false;
     hideElement("nameSpinner");
     hideElement("archSpinner");
+    var sel = $("trove");
+    sel.disabled = false;
 }
 
 function processListActiveJobs(aReq) {
@@ -497,6 +499,15 @@ function onTroveChange(projectId) {
         return;
     }
 
+    // Disable so a quick user can't change anything while we're in transition
+    // Reset arch and version to display nothing
+    sel.disabled = true;
+    clearSelection(vSel);
+    vSel.disabled = true;
+    clearSelection(archSel);
+    archSel.disabled = true;
+    sb.disabled = true;
+
     var troveNameWithLabel = sel.options[sel.selectedIndex].value;
     // XXX: cache values?
     getTroveVersionsByArch(projectId, troveNameWithLabel);
@@ -504,29 +515,36 @@ function onTroveChange(projectId) {
 
 function onArchChange() {
 
+    var sel = $("trove");
     var archSel = $("arch");
     var vSel = $("version");
     var sb = $("submitButton");
     var i = archSel.selectedIndex;
 
+    // Disable everything else while arch is in transition
+    sel.disabled = true;
+    archSel.disabled = true;
+    sb.disabled = true;
+
     // handle versions
     clearSelection(vSel);
-    appendToSelect(vSel, "", document.createTextNode("---"), "version");
     vSel.disabled = true;
 
     if (i > 0) {
         selectedArch = archSel.value;
         var versionlist = archDict[selectedArch];
         logDebug(versionlist);
+        appendToSelect(vSel, "", document.createTextNode("---"), "version");
         for (var i in versionlist) {
             appendToSelect(vSel, versionlist[i][1] + " " + versionlist[i][2], document.createTextNode(versionlist[i][0]), "version");
         }
         vSel.disabled = false;
         handleReleaseTypes(selectedArch);
     }
-    else {
-        sb.disabled = true;
-    }
+
+    // Re-enable trove & arch selectors
+    sel.disabled = false;
+    archSel.disabled = false;
 
 }
 
