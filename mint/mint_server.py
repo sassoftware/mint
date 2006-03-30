@@ -697,7 +697,7 @@ class MintServer(object):
         }
         greeting = "Hello,"
         admingreeting = "The following message has been sent to: %s\nbecause of an action performed by: %s\n\n%s" % (user['username'], self.auth.username, greeting)
-        helpLink = "\nInstructions on how to set up your build environment for this project can be found at: http://%s.%s/project/%s/conaryDevelCfg" % (self.cfg.hostName, project.getDomainname(), project.getHostname())
+        helpLink = "\nInstructions on how to set up your build environment for this project can be found at: http://%s.%s%sproject/%s/conaryDevelCfg" % (self.cfg.hostName, project.getDomainname(), self.cfg.basePath, project.getHostname())
         message = "Your %s account: %s\n" % (self.cfg.productName, user['username'])
         message += actionText[action]
         message += "\n%s\n" % project.getName()
