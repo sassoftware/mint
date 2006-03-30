@@ -190,7 +190,9 @@ class HelperFunctionsTest(unittest.TestCase):
         self.failUnlessRaises(ValueError, truncateForDisplay, "Foo", -1, 0)
 
     def testTimeDelta(self):
-	ct = time.time()
+        # use hard coded time to prevent variable results based on
+        # time of day when test is run.
+        ct = 1143668527.7868781
 	assert(timeDelta(0) == "Never")
 	assert(timeDelta(ct, ct) == "This very second")
 	assert(timeDelta(ct - 30, ct) == "30 seconds ago")
