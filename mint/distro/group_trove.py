@@ -159,8 +159,17 @@ class GroupTroveCook(Generator):
                                           if x[1].branch().label().asString() == l]
                                 if matches:
                                     con = list(conflict[0])
-                                    con.remove(matches[0])
-                                    removeTroves.extend([x for x in con])
+                                    # very rare corner case: 2 matches on same
+                                    # branch: largest version number is best.
+                                    con.remove(max(matches))
+                                    # only remove packages. do it here to keep
+                                    # format consistency between expMatches and
+                                    # conflicts
+                                    con = [(x[0].split(':')[0], x[1], x[2]) \
+                                         for x in con]
+                                    for trvCon in con:
+                                        if trvCon not in removeTroves:
+                                            removeTroves.append(trvCon)
                                     break
                 else:
                     break
