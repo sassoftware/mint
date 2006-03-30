@@ -704,6 +704,90 @@ class GroupTroveTest(MintRepositoryHelper):
 
         job.setStatus(jobstatus.FINISHED,"Finished")
 
+
+    def testGrpTrvConfRes(self):
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client)
+
+        project = client.getProject(projectId)
+
+        self.moveToServer(project, 1)
+
+        groupTrove = self.createTestGroupTrove(client, projectId)
+
+        # do a full fledged cook. test suite shortcuts will break.
+        self.makeSourceTrove("testcase", testRecipe)
+        res = self.cookFromRepository("testcase",
+                                      versions.Label("testproject." + \
+                                                     MINT_PROJECT_DOMAIN + \
+                                                     "@rpl:devel"),
+                                      ignoreDeps = True)[0]
+
+        groupTrove.addTrove('testcase', res[1], res[2].freeze(), '',
+                            False, False, False)
+        recipe = groupTrove.getRecipe()
+        jobId = groupTrove.startCookJob('1#x86')
+        job = client.getJob(jobId)
+
+        isocfg = self.writeIsoGenCfg()
+        cookJob = group_trove.GroupTroveCook(client, isocfg, job)
+        trvName, trvVersion, trvFlavor = cookJob.write()
+
+        repos = client.server._server._getProjectRepo(project)
+        trv = repos.getTrove(*repos.findTrove( \
+            versions.VersionFromString(trvVersion).branch().label(),
+            (trvName + ":source", None, None))[0])
+
+        pId, fPath, fId, fVer = [x for x in trv.iterFileList() if \
+                                 x[1] == 'group-test.recipe'][0]
+
+        mainRepos = self.openRepository()
+        newRecipe = mainRepos.getFileContents([(fId, fVer)])[0].get().read()
+
+        self.failIf(newRecipe != recipe,
+                    "recipe mangled during group builder cook.")
+
+        # cook again to force a new upstream version
+        res = self.cookFromRepository("testcase",
+                                      versions.Label("testproject." + \
+                                                     MINT_PROJECT_DOMAIN + \
+                                                     "@rpl:devel"),
+                                      ignoreDeps = True)[0]
+
+        groupTrove = self.createTestGroupTrove(client, projectId,
+                                               "group-conflict")
+        groupTrove.addTrove('group-test', str(trv.version()),
+                            trv.flavor.freeze(), '', False, False, False)
+
+        # force the most extreme conflict. two matches from same branch, but
+        # only one is explicit. leave version ulocked to force group_trove to
+        # make the decision. the highest version number is the correct choice.
+        trvId = groupTrove.addTrove('testcase', res[1], res[2].freeze(), '',
+                                    False, False, False)
+
+        recipe = groupTrove.getRecipe()
+        jobId = groupTrove.startCookJob('1#x86')
+        job = client.getJob(jobId)
+
+        isocfg = self.writeIsoGenCfg()
+        cookJob = group_trove.GroupTroveCook(client, isocfg, job)
+        trvName, trvVersion, trvFlavor = cookJob.write()
+
+        repos = client.server._server._getProjectRepo(project)
+        trv = repos.getTrove(*repos.findTrove( \
+            versions.VersionFromString(trvVersion).branch().label(),
+            (trvName + ":source", None, None))[0])
+
+        pId, fPath, fId, fVer = [x for x in trv.iterFileList() if \
+                                 x[1] == 'group-conflict.recipe'][0]
+
+        mainRepos = self.openRepository()
+        newRecipe = mainRepos.getFileContents([(fId, fVer)])[0].get().read()
+
+        self.failIf(recipe + "        r.remove('testcase', '/testproject"
+                    ".rpath.local2@rpl:devel/1.0-1-1', '')\n\n" != newRecipe,
+                    "group recipe did not reflect proper conflict resolution.")
+
     def testEmptyCook(self):
         self.openRepository()
         client, userId = self.quickMintUser('testuser', 'testpass')
