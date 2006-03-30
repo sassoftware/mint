@@ -6,104 +6,95 @@
 #
 from mint import config
 from conary import dbstore
+from scriptlibrary import SingletonScript
 
 import os
 import os.path
 import sys
 
-# lockfile try / creation
-# XXX: this needs to be abstracted out into a wrapper
-myname = 'update-package-index'
-lockPath = '/var/tmp/%s' % (myname, )
+class UpdatePackageIndex(SingletonScript):
 
-if os.path.exists(lockPath):
-    lockFile = open(lockPath,"r")
-    lockPid = int(lockFile.readline().strip())
-    procFilePath = '/proc/%d/cmdline' % (lockPid, )
-    if os.path.exists(procFilePath):
-        procFile = open(procFilePath,"r")
-        if procFile.readline().find(myname) < 0:
-            print >> sys.stderr, "Deleting stale lockfile"
-            lockFile.close()
-            os.unlink(lockPath)
-        else:
-            print >> sys.stderr, "Looks like we're already running; exiting"
-            os._exit(1)
-        procFile.close()
-
-newLockFile = open(lockPath, "w+")
-newLockFile.write(str(os.getpid()))
-newLockFile.close()
-
-if len(sys.argv) > 1:
-    cfgPath = sys.argv[1]
-else:
     cfgPath = "/srv/mint/mint.conf"
+    db = None
 
-try:
-    cfg = config.MintConfig()
-    cfg.read(cfgPath)
+    def handle_args(self):
+        if len(sys.argv) > 1:
+            self.cfgPath = sys.argv[1]
+        return True
 
-    db = dbstore.connect(cfg.dbPath, driver = cfg.dbDriver)
-    db.loadSchema()
-    cu = db.cursor()
+    def action(self):
+        cfg = config.MintConfig()
+        cfg.read(self.cfgPath)
 
-    try:
-        cu.execute("SELECT MAX(timestamp) FROM Commits")
-        newMark = cu.fetchone()[0]
+        self.db = dbstore.connect(cfg.dbPath, driver = cfg.dbDriver)
+        self.db.loadSchema()
+        cu = self.db.cursor()
 
-        # Clear out Package index if the timestamp in PackageIndexMark == 0
-        cu.execute("""DELETE FROM PackageIndex WHERE
-                          (SELECT mark FROM PackageIndexMark) = 0""")
+        try:
+            cu.execute("SELECT MAX(timestamp) FROM Commits")
+            newMark = cu.fetchone()[0]
 
-        # get a list of the latest version of each package, excluding hidden and
-        # disabled projects. comparing version strings isn't technically reliable,
-        # so we must use the latest timestamp to verify
-        # grab only the packages that have been updated since the last time
-        # this script was run.
-        cu.execute("""SELECT Projects.projectId, troveName, max(timestamp)
-                          FROM Commits
-                          LEFT JOIN Projects
-                              ON Commits.projectId=Projects.projectId
-                          WHERE troveName NOT LIKE '%:%'
-                          AND hidden=0 AND disabled=0
-                          AND timestamp >=
-                              (SELECT mark FROM PackageIndexMark)
-                          GROUP BY Projects.projectId, troveName""")
+            # Clear out Package index if the timestamp in PackageIndexMark == 0
+            cu.execute("""DELETE FROM PackageIndex WHERE
+                              (SELECT mark FROM PackageIndexMark) = 0""")
 
-        for projectId, troveName, maxTime in cu.fetchall():
-            cu.execute("""SELECT version FROM Commits
-                              WHERE projectId=? AND troveName=? and timestamp=?""",
-                       projectId, troveName, maxTime)
+            # Get a list of the latest version of each package, excluding 
+            # hidden and disabled projects. Comparing version strings isn't 
+            # technically reliable, so we must use the latest timestamp to 
+            # verify grab only the packages that have been updated since 
+            # the last time this script was run.
+            cu.execute("""SELECT Projects.projectId, troveName, max(timestamp)
+                              FROM Commits
+                              LEFT JOIN Projects
+                                  ON Commits.projectId=Projects.projectId
+                              WHERE troveName NOT LIKE '%:%'
+                              AND hidden=0 AND disabled=0
+                              AND timestamp >=
+                                  (SELECT mark FROM PackageIndexMark)
+                              GROUP BY Projects.projectId, troveName""")
 
-            # at least one result will always exist. there should be only one.
-            version = cu.fetchone()[0]
+            for projectId, troveName, maxTime in cu.fetchall():
+                cu.execute("""SELECT version FROM Commits
+                                  WHERE projectId=? AND troveName=?
+                                  AND timestamp=?""",
+                           projectId, troveName, maxTime)
 
-            cu.execute("""SELECT pkgId FROM PackageIndex
-                              WHERE projectId=? AND name=?""",
-                       projectId, troveName)
-            res = cu.fetchone()
-            if not res:
-                cu.execute("""INSERT INTO PackageIndex (projectId, name, version)
-                                  VALUES (?, ?, ?)""",
-                           projectId, troveName, version)
-                pass
-            else:
-                pkgId = res[0]
-                cu.execute("""UPDATE PackageIndex SET
-                                      projectId=?, name=?, version=?
-                                      WHERE pkgId=?""",
-                           projectId, troveName, version, pkgId)
-        cu.execute("UPDATE PackageIndexMark SET mark=?", newMark)
+                # at least one result will always exist. 
+                # there should be only one.
+                version = cu.fetchone()[0]
 
-    except:
-        db.rollback()
-        raise
-    else:
-        db.commit()
+                cu.execute("""SELECT pkgId FROM PackageIndex
+                                  WHERE projectId=? AND name=?""",
+                           projectId, troveName)
+                res = cu.fetchone()
+                if not res:
+                    cu.execute("""INSERT INTO PackageIndex 
+                                      (projectId, name, version)
+                                      VALUES (?, ?, ?)""",
+                               projectId, troveName, version)
+                    pass
+                else:
+                    pkgId = res[0]
+                    cu.execute("""UPDATE PackageIndex SET
+                                          projectId=?, name=?, version=?
+                                          WHERE pkgId=?""",
+                               projectId, troveName, version, pkgId)
+            cu.execute("UPDATE PackageIndexMark SET mark=?", newMark)
 
-    db.close()
-finally:
-    print "Cleaning up..."
-    os.unlink(lockPath)
-    print "Done."
+        except:
+            self.db.rollback()
+            exitcode = 1
+            raise
+        else:
+            exitcode = 0
+            self.db.commit()
+        return exitcode
+
+    def cleanup(self):
+        if self.db:
+            self.db.close()
+
+if __name__ == "__main__":
+    upi = UpdatePackageIndex()
+    os._exit(upi.run())
+
