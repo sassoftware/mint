@@ -9,6 +9,8 @@ from conary.lib import util
 import bootable_image
 
 class RawHdImage(bootable_image.BootableImage):
+    fileType = 'Raw Hard Disk Image'
+
     def write(self):
         try:
             # instantiate the contents that need to go into the image
@@ -17,7 +19,7 @@ class RawHdImage(bootable_image.BootableImage):
             self.createImage()
             self.status('Compressing hard disk image')
             zipfn = self.compressImage(self.outfile)
-            imagesList = [(zipfn, 'Raw Hard Disk Image')]
+            imagesList = [(zipfn, self.fileType)]
         finally:
             if self.fakeroot:
                 util.rmtree(self.fakeroot)
