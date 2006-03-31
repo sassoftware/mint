@@ -572,16 +572,22 @@ function handleReleaseTypes(aSelectedArch) {
     var isoImageSel  = $('imagetype_1');
     var qemuImageSel = $('imagetype_7');
     var vmwareImageSel = $('imagetype_8');
+    var rawFsImageSel = $('imagetype_3');
+    var liveIsoImageSel = $('imagetype_6');
 
     if (aSelectedArch == "x86_64") {
         isoImageSel.disabled = false;
         qemuImageSel.disabled = true;
         vmwareImageSel.disabled = true;
+	rawFsImageSel.disabled = true;
+	liveIsoImageSel.disabled = true;
         isoImageSel.click();
     } else {
         isoImageSel.disabled = false;
         qemuImageSel.disabled = false;
         vmwareImageSel.disabled = false;
+	rawFsImageSel.disabled = false;
+	liveIsoImageSel.disabled = false;
     }
 
 }
