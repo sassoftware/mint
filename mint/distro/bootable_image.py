@@ -233,7 +233,9 @@ title %(name)s (%(kversion)s)
     def createTemporaryRoot(self, basedir = os.getcwd()):
         cwd = os.getcwd()
         os.chdir(self.fakeroot)
-        util.mkdirChain( 'etc', 'etc/sysconfig', 'etc/sysconfig/network-scripts', 'boot/grub', 'tmp', 'sys' )
+        util.mkdirChain('etc', 'etc/sysconfig',
+            'etc/sysconfig/network-scripts',
+            'boot/grub', 'tmp', 'sys', 'root')
         os.chdir(cwd)
 
     @timeMe
