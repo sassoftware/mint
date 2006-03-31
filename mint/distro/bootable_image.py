@@ -262,7 +262,7 @@ title %(name)s (%(kversion)s)
     @timeMe
     def applyUpdate(self, uJob, callback, tagScript):
         self.cclient.applyUpdate(uJob, journal = Journal(), callback = callback,
-                tagScript=os.path.join(self.fakeroot, 'tmp', tagScript))
+                tagScript=os.path.join(self.fakeroot, 'root', tagScript))
 
     @timeMe
     def updateKernelChangeSet(self, callback):
@@ -281,14 +281,14 @@ title %(name)s (%(kversion)s)
     @timeMe
     def populateTemporaryRoot(self, callback = None):
         uJob = self.updateGroupChangeSet(callback)
-        self.applyUpdate(uJob, callback, 'tag-scripts')
+        self.applyUpdate(uJob, callback, 'conary-tag-script')
 
         try:
             kuJob = self.updateKernelChangeSet(callback)
         except conaryclient.NoNewTrovesError:
             log.info("strongly-included kernel found--no new kernel trove to sync")
         else:
-            self.applyUpdate(kuJob, callback, 'kernel-tag-scripts')
+            self.applyUpdate(kuJob, callback, 'conary-kernel-tag-script')
 
     @timeMe
     def fileSystemOddsNEnds(self):
@@ -307,9 +307,9 @@ title %(name)s (%(kversion)s)
         #Create the init script
         util.copyfile(os.path.join(self.imgcfg.dataDir, 'init.sh'), os.path.join(self.fakeroot, 'tmp'))
         os.chmod(os.path.join(self.fakeroot, 'tmp', 'init.sh'), 0755)
-        util.copyfile(os.path.join(self.imgcfg.dataDir, 'pre-tag-scripts'), os.path.join(self.fakeroot, 'tmp'))
-        util.copyfile(os.path.join(self.imgcfg.dataDir, 'post-tag-scripts'), os.path.join(self.fakeroot, 'tmp'))
-        util.copyfile(os.path.join(self.imgcfg.dataDir, 'post-kernel-tag-scripts'), os.path.join(self.fakeroot, 'tmp'))
+        util.copyfile(os.path.join(self.imgcfg.dataDir, 'pre-tag-scripts'), os.path.join(self.fakeroot, 'root'))
+        util.copyfile(os.path.join(self.imgcfg.dataDir, 'post-tag-scripts'), os.path.join(self.fakeroot, 'root'))
+        util.copyfile(os.path.join(self.imgcfg.dataDir, 'post-kernel-tag-scripts'), os.path.join(self.fakeroot, 'root'))
         #Write the conaryrc file
         self.writeConaryRc(os.path.join(self.fakeroot, 'etc'), self.cclient)
 
