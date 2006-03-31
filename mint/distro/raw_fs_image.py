@@ -7,6 +7,8 @@
 import raw_hd_image
 
 class RawFsImage(raw_hd_image.RawHdImage):
+    fileType = 'Raw Filesystem Image'
+
     def __init__(self, *args, **kwargs):
         res = raw_hd_image.RawHdImage.__init__(self, *args, **kwargs)
         self.makeBootable = False
