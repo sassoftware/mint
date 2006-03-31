@@ -144,6 +144,11 @@ class GroupTroveCook(Generator):
                 try:
                     ret = cook.cookItem(repos, cfg, troveSpec)
                 except build.errors.GroupPathConflicts, e:
+                    if tries:
+                        import itertools
+                        conflicts = [y for y in itertools.chain( \
+                            *[x[1] for x in e.conflicts.items()])]
+                        break
                     labelPath = groupTrove.getLabelPath()
                     for group, conflicts in e.conflicts.items():
                         for conflict in conflicts:
@@ -162,10 +167,7 @@ class GroupTroveCook(Generator):
                                     # very rare corner case: 2 matches on same
                                     # branch: largest version number is best.
                                     con.remove(max(matches))
-                                    # only remove packages. do it here to keep
-                                    # format consistency between expMatches and
-                                    # conflicts
-                                    con = [(x[0].split(':')[0], x[1], x[2]) \
+                                    con = [(x[0].split(':')[0], x[1], x[2], group) \
                                          for x in con]
                                     for trvCon in con:
                                         if trvCon not in removeTroves:
@@ -174,7 +176,7 @@ class GroupTroveCook(Generator):
                 else:
                     break
                 for rm in removeTroves:
-                    recipe += "        r.remove('%s', '%s', '%s')\n" % (rm[0], rm[1].asString(), str(rm[2]))
+                    recipe += "        r.remove('%s', '%s', '%s', groupName='%s')\n" % (rm[0], rm[1].asString(), str(rm[2]), rm[3])
                 recipe += "\n"
                 tries += 1
 
@@ -182,11 +184,12 @@ class GroupTroveCook(Generator):
             sys.stdout.flush()
 
             if not ret:
-                # FIXME: this needs to be handled in a better, more non-interactive fashion.
-                raise RuntimeError("Your group has included packages which have conflicting paths, "
-                                   "which can not be included together, and rBuilder Online could "
-                                   "not figure out how to resolve the conflict automatically. Please "
-                                   "check your group for likely conflicts.")
+                raise RuntimeError("Conflicts which couldn't be automatically "
+                                   "corrected have occured:\n%s " % \
+                                   '\n'.join(\
+                    ['\n'.join([z[0] + "=" + str(z[1]) + "[" + str(z[2]) + "]"\
+                               for z in y]) for y in [x[0] \
+                                                      for x in conflicts]]))
 
             ret = ret[0][0]
         finally:
