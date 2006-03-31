@@ -30,9 +30,13 @@ mount -f /dev/pts >/dev/null 2>&1
 #turn on swap
 /sbin/swapon -a -e
 
-for i in pre-tag-scripts tag-scripts post-tag-scripts kernel-tag-scripts post-kernel-tag-scripts; do
-    [ -f /tmp/$i ] && /bin/sh /tmp/$i && rm /tmp/$i
+for i in pre-tag-scripts conary-tag-script post-tag-scripts conary-kernel-tag-script post-kernel-tag-scripts; do
+    [ -f /root/$i ] && /bin/sh /root/$i 2>&1 >> /root/conary-tag-scripts.output
 done
+
+rm -f /root/pre-tag-scripts
+rm -f /root/post-tag-scripts
+rm -f /root/post-kernel-tag-scripts
 
 #Setup /etc/nsswitch and system-auth
 /usr/bin/authconfig --kickstart --enablemd5 --enableshadow --disablecache

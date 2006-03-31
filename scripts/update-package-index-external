@@ -20,106 +20,94 @@ from conary import conaryclient
 from conary import conarycfg
 from conary import dbstore
 from conary.repository import repository
+from scriptlibrary import SingletonScript
 
 import os
 import os.path
 import sys
 
-# lockfile try / creation
-# XXX: this needs to be abstracted out into a wrapper
-myname = 'update-package-index-external'
-lockPath = '/var/tmp/%s' % (myname, )
+class UpdatePackageIndexExternal(SingletonScript):
 
-if os.path.exists(lockPath):
-    lockFile = open(lockPath,"r")
-    lockPid = int(lockFile.readline().strip())
-    procFilePath = '/proc/%d/cmdline' % (lockPid, )
-    if os.path.exists(procFilePath):
-        procFile = open(procFilePath,"r")
-        if procFile.readline().find(myname) < 0:
-            print >> sys.stderr, "Deleting stale lockfile"
-            lockFile.close()
-            os.unlink(lockPath)
-        else:
-            print >> sys.stderr, "Looks like we're already running; exiting"
-            os._exit(1)
-        procFile.close()
+    db = None
 
-newLockFile = open(lockPath, "w+")
-newLockFile.write(str(os.getpid()))
-newLockFile.close()
+    def action(self):
+        cfgPath = "/srv/mint/mint.conf"
 
-try:
-    cfgPath = "/srv/mint/mint.conf"
-    cfg = config.MintConfig()
-    cfg.read(cfgPath)
+        cfg = config.MintConfig()
+        cfg.read(cfgPath)
 
-    db = dbstore.connect(cfg.dbPath, driver = cfg.dbDriver)
-    db.connect()
-    db.loadSchema()
-    cu = db.cursor()
-    pkgIdx = pkgindex.PackageIndexTable(db)
-    labelsTable = projects.LabelsTable(db)
-    db.commit()
+        self.db = dbstore.connect(cfg.dbPath, driver = cfg.dbDriver)
+        self.db.connect()
+        self.db.loadSchema()
+        cu = self.db.cursor()
+        pkgIdx = pkgindex.PackageIndexTable(self.db)
+        labelsTable = projects.LabelsTable(self.db, cfg)
+        self.db.commit()
 
-    cu = db.cursor()
-    cu.execute("""SELECT projectId, hostname || '.' || domainname
-                     FROM Projects
-                     WHERE external=1 AND hidden=0 AND disabled=0""")
+        cu = self.db.cursor()
+        cu.execute("""SELECT projectId, hostname || '.' || domainname
+                         FROM Projects
+                         WHERE external=1 AND hidden=0 AND disabled=0""")
 
-    labels = {}
-    projectIds = {}
-    netclients = {}
+        labels = {}
+        projectIds = {}
+        netclients = {}
 
-    for r in cu.fetchall():
-        projectId, hostname = r
+        for r in cu.fetchall():
+            projectId, hostname = r
 
-        print "Retrieving labels from %s..." % hostname
-        l, repMap, userMap = labelsTable.getLabelsForProject(projectId,
-            overrideAuth = True, newUser = 'anonymous', newPass = 'anonymous')
+            print "Retrieving labels from %s..." % hostname
+            l, repMap, userMap = labelsTable.getLabelsForProject(projectId,
+                overrideAuth = True, newUser = 'anonymous', newPass = 'anonymous')
 
-        hostname = repMap.keys()[0]
-        labels[hostname] = versions.Label(l.keys()[0])
-        projectIds[hostname] = projectId
+            hostname = repMap.keys()[0]
+            labels[hostname] = versions.Label(l.keys()[0])
+            projectIds[hostname] = projectId
 
-        ccfg = conarycfg.ConaryConfiguration()
-        ccfg.root = ccfg.dbPath = ':memory:'
-        ccfg.repositoryMap = repMap
-        repos = conaryclient.ConaryClient(ccfg).getRepos()
-        netclients[hostname] = repos
+            ccfg = conarycfg.ConaryConfiguration()
+            ccfg.root = ccfg.dbPath = ':memory:'
+            ccfg.repositoryMap = repMap
+            repos = conaryclient.ConaryClient(ccfg).getRepos()
+            netclients[hostname] = repos
 
-    rows = []
-    for host in netclients.keys():
-        print "Retrieving trove list from %s..." % host
-        try:
-            troves = netclients[host].getAllTroveLeaves(host, {None: {None: None}})
-        except repository.OpenError, e:
-            print >> sys.stderr,"warning: unable to access %s" % host
-            continue
+        rows = []
+        for host in netclients.keys():
+            print "Retrieving trove list from %s..." % host
+            try:
+                troves = netclients[host].getAllTroveLeaves(host, {None: {None: None}})
+            except repository.OpenError, e:
+                print >> sys.stderr,"warning: unable to access %s" % host
+                continue
 
-        pkgs = [x for x in troves.keys() if ':' not in x]
+            pkgs = [x for x in troves.keys() if ':' not in x]
 
-        for pkg in pkgs:
-            latestVer = sorted(troves[pkg].keys(), reverse = True)[0]
-            row = (projectIds[host], pkg, latestVer.asString())
-            rows.append(row)
+            for pkg in pkgs:
+                latestVer = sorted(troves[pkg].keys(), reverse = True)[0]
+                row = (projectIds[host], pkg, latestVer.asString())
+                rows.append(row)
 
-        print "Retrieved %d trove%s from %s." % (len(rows), ((len(rows) != 1) and 's' or ''), host)
+            print "Retrieved %d trove%s from %s." % (len(rows), ((len(rows) != 1) and 's' or ''), host)
 
-    print "Updating database..."
-    for row in rows:
-        cu.execute("SELECT pkgId FROM PackageIndex WHERE projectId=? AND name=? AND version=?", *row)
-        r = cu.fetchone()
-        if r:
-            pkgId = r[0]
-            cu.execute("UPDATE PackageIndex SET projectId=?, name=?, version=? WHERE pkgId=?", row[0], row[1], row[2], pkgId)
-        else:
-            cu.execute("INSERT INTO PackageIndex VALUES (NULL, ?, ?, ?)", *row)
+        print "Updating database..."
+        for row in rows:
+            cu.execute("SELECT pkgId FROM PackageIndex WHERE projectId=? AND name=? AND version=?", *row)
+            r = cu.fetchone()
+            if r:
+                pkgId = r[0]
+                cu.execute("UPDATE PackageIndex SET projectId=?, name=?, version=? WHERE pkgId=?", row[0], row[1], row[2], pkgId)
+            else:
+                cu.execute("INSERT INTO PackageIndex VALUES (NULL, ?, ?, ?)", *row)
 
-    db.commit()
-    print "Update complete."
-finally:
-    print "Cleaning up..."
-    os.unlink(lockPath)
-    print "Done."
+        self.db.commit()
+        print "Update complete."
+        return 0
+
+    def cleanup(self):
+        if self.db:
+            self.db.close()
+
+
+if __name__ == "__main__":
+    upie = UpdatePackageIndexExternal()
+    os._exit(upie.run())
 

@@ -175,13 +175,10 @@ function JsonRpcRequest(aUrl, aMethod) {
 // JsonRpcRequest inherits from GenericRpcRequest
 JsonRpcRequest.prototype = new GenericRpcRequest(null, null);
 
-// XmlRpcRequest inherits from GenericRpcRequest
-JsonRpcRequest.prototype = new GenericRpcRequest(null, null);
-
-// specific MIME Content-Type for XML-RPC
+// specific MIME Content-Type for JsonRPC
 JsonRpcRequest.prototype.contentType = "application/x-json";
 
-// marshal a list of params to an XML-RPC call
+// marshal a list of params to a JsonRPC call
 JsonRpcRequest.prototype.marshalParams = function(aArgList) {
 
     var ary = new Array();

@@ -1,0 +1,30 @@
+#!/bin/sh
+# Helper script to install a jobserver root and set up
+# a little bit of the chroot environment.
+#
+# ./install-jsroot <upstream version> <trovespec of job server root trove>
+#
+if [ $# -lt 2 ]; then
+    echo "not enough arguments: $0 $*" >&2
+    echo "usage: $0 <upstream version> <trovespec of job server root>" >&2
+    exit 1
+fi
+
+set -x
+
+upstreamVer=$1
+troveSpec=$2
+ROOT=/srv/mint/jobserver-stage/$upstreamVer/
+
+conary update --root $ROOT $troveSpec
+touch $ROOT/etc/mtab
+mknod $ROOT/dev/random c 1 8
+mknod $ROOT/dev/random c 1 9
+
+for x in '/proc' '/dev/pts' '/srv/mint/finished-images'; do   
+    echo -e "$x\\t$ROOT$x\\tnone\\tbind\\t0\\t0"
+done
+
+for x in '/etc/nsswitch.conf' '/etc/hosts' '/etc/resolv.conf'; do
+    cp $x $ROOT/etc/
+done

@@ -5,10 +5,10 @@
 #
 
 script_dist =			\
-	buildinstall		\
 	buildtemplates		\
 	cvtmysql.py		\
 	deleteproject.py	\
+	install-jsroot		\
 	job-server		\
 	mirror-inbound		\
 	mirror-outbound		\
