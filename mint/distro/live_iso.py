@@ -21,7 +21,7 @@ from conary import flavorcfg
 from conary import versions
 from conary.callbacks import UpdateCallback, ChangesetCallback
 from conary.conarycfg import ConfigFile
-from conary.lib import log, util, epdb
+from conary.lib import log, util
 
 class InstallCallback(UpdateCallback, ChangesetCallback):
     def restoreFiles(self, size, totalSize):
@@ -300,12 +300,7 @@ mount -o defaults --ro -t iso9660 /dev/loop0 /sysroot
             # now merge them. the hard disk image must be inserted into the iso
             self.status('Finalizing image')
             imagesList = [self.finalizeIso()]
-        except:
-            if self.imgcfg.debug:
-                epdb.post_mortem(sys.exc_info()[2])
-            self.cleanupDirs()
-            raise
-        else:
+        finally:
             self.cleanupDirs()
 
         return self.moveToFinal(imagesList,

@@ -5,7 +5,7 @@
 #
 
 import os, sys
-from conary.lib import util, epdb
+from conary.lib import util
 import bootable_image
 
 class RawHdImage(bootable_image.BootableImage):
@@ -18,14 +18,7 @@ class RawHdImage(bootable_image.BootableImage):
             self.status('Compressing hard disk image')
             zipfn = self.compressImage(self.outfile)
             imagesList = [(zipfn, 'Raw Hard Disk Image')]
-        except:
-            if self.imgcfg.debug:
-                epdb.post_mortem(sys.exc_info()[2])
-            if self.fakeroot:
-                util.rmtree(self.fakeroot)
-            os.unlink(self.outfile)
-            raise
-        else:
+        finally:
             if self.fakeroot:
                 util.rmtree(self.fakeroot)
             os.unlink(self.outfile)

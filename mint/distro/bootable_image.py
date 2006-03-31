@@ -8,7 +8,6 @@
 import errno
 import os
 import re
-import sys
 import time
 import tempfile
 import zipfile
@@ -31,7 +30,7 @@ from conary.repository import errors
 from conary.callbacks import UpdateCallback
 from conary.callbacks import ChangesetCallback
 from conary.conarycfg import ConfigFile, CfgDict, CfgString, CfgBool
-from conary.lib import log, util, epdb
+from conary.lib import log, util
 
 
 class KernelTroveRequired(mint_error.MintError):
@@ -59,10 +58,6 @@ class BootableImageConfig(ConfigFile):
     # where to look for tools needed to boot a live ISO.
     fallbackDir     = '/srv/mint/fallback'
     toolkitImage     = '/srv/mint/toolkit/image_maker.img'
-
-def debugme(type, value, tb):
-    from conary.lib import epdb
-    epdb.post_mortem(tb,type,value)
 
 class Journal:
     def lchown(self, root, target, user, group):
@@ -252,7 +247,6 @@ title %(name)s (%(kversion)s)
     def updateGroupChangeSet(self, callback):
         itemList = [(self.basetrove, (None, None), (self.baseversion, self.baseflavor), True)]
         log.info("itemList: %s" % str(itemList))
-        sys.stderr.flush()
 
         repos = self.cclient.getRepos()
         parentGroup = repos.getTroves([(self.basetrove, versions.VersionFromString(self.baseversion), self.baseflavor)])[0]
@@ -449,8 +443,8 @@ title %(name)s (%(kversion)s)
             os.unlink(self.outfile)
             # be very wary of taking out or replacing this call,
             # it keeps the output image from ballooning to 10GB
-            print >> sys.stderr, "copySparse: copied %d bytes" % \
-                  self.copySparse(tmpFile, self.outfile)
+            log.info("copySparse: copied %d bytes" % \
+                  self.copySparse(tmpFile, self.outfile))
 
     @timeMe
     def makeBootBlock(self):

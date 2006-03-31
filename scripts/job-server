@@ -84,12 +84,6 @@ if __name__ == "__main__":
                       help = "Do not run as a daemon")
     (options, args) = parser.parse_args()
 
-    if options.debug:
-        sys.excepthook = util.genExcepthook()
-        log.setVerbosity(log.DEBUG)
-    else:
-        log.setVerbosity(log.INFO)
-
     # use sys.argv[1] as config file if provided
     # if not, try some standard locations
     cfgFiles = ["iso_gen.conf", None]
@@ -111,6 +105,12 @@ if __name__ == "__main__":
     if options.kill:
         kill(cfg.lockFile)
         sys.exit(1)
+
+    if options.debug:
+        log.setVerbosity(log.DEBUG)
+        cfg.debug = True
+    else:
+        log.setVerbosity(log.INFO)
 
     if os.access(cfg.lockFile, os.R_OK):
         lock = open(cfg.lockFile, "r")

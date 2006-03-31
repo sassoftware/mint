@@ -1,7 +1,7 @@
 import os
 import tempfile
 import zipfile
-from conary.lib import util, log, epdb
+from conary.lib import util, log
 from mint import releasetypes
 import bootable_image
 from bootable_image import timeMe
@@ -79,14 +79,7 @@ class VMwareImage(bootable_image.BootableImage):
                 vmfn, self.project.getName(),
                 self.release.getDataValue('vmMemory'),
                 self.cfg.imagesPath)]
-        except:
-            if self.imgcfg.debug:
-                epdb.post_mortem(sys.exc_info()[2])
-            if self.fakeroot:
-                util.rmtree(self.fakeroot)
-            os.unlink(self.outfile)
-            raise
-        else:
+        finally:
             if self.fakeroot:
                 util.rmtree(self.fakeroot)
             os.unlink(self.outfile)
