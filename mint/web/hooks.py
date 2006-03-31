@@ -255,13 +255,14 @@ def conaryHandler(req, cfg, pathInfo):
         nscfg.serverName = repName
         nscfg.tmpDir = os.path.join(cfg.reposPath, repName, "tmp")
 
-        if os.path.basename(req.uri) == "changeset":
-           rest = os.path.dirname(req.uri) + "/"
+        rest = req.uri
+        projectHost = cfg.projectSiteHost.split(":")[0]
+        if req.server.server_hostname != projectHost:
+            urlBase = "%%(protocol)s://%s:%%(port)d" % \
+                (projectHost) + rest
         else:
-           rest = req.uri
-
-        urlBase = "%%(protocol)s://%s:%%(port)d/repos/%s/" % \
-            (req.hostname, projectName)
+            urlBase = "%%(protocol)s://%s:%%(port)d/repos/%s/" % \
+                (req.hostname, projectName)
 
         # set up the commitAction
         buildLabel = repName + "@" + cfg.defaultBranch
