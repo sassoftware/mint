@@ -785,7 +785,8 @@ class GroupTroveTest(MintRepositoryHelper):
         newRecipe = mainRepos.getFileContents([(fId, fVer)])[0].get().read()
 
         self.failIf(recipe + "        r.remove('testcase', '/testproject"
-                    ".rpath.local2@rpl:devel/1.0-1-1', '')\n\n" != newRecipe,
+                    ".rpath.local2@rpl:devel/1.0-1-1', '', "
+                    "groupName='group-conflict')\n\n" != newRecipe,
                     "group recipe did not reflect proper conflict resolution.")
 
     def testEmptyCook(self):
