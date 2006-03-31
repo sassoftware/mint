@@ -7,9 +7,10 @@
 import os, sys
 from conary.lib import util
 import bootable_image
+from mint import releasetypes
 
 class RawHdImage(bootable_image.BootableImage):
-    fileType = 'Raw Hard Disk Image'
+    fileType = releasetypes.typeNames[releasetypes.RAW_HD_IMAGE]
 
     def write(self):
         try:
