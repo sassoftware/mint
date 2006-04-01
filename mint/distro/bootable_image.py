@@ -394,10 +394,19 @@ title %(name)s (%(kversion)s)
     def copySparse(self, src, dest):
         # overcome the apparent size of a sparse file. this would fail if there
         # were holes in the src file, but there shouldn't be any.
-        fd = os.popen('/usr/bin/isosize %s' % src)
-        #fd = os.popen('du --block-size=1 %s' % src)
-        size = int(fd.read().strip().split()[0])
-        fd.close()
+        f = os.popen('file %s' % src)
+        fileType = f.read()
+        f.close()
+        if 'gzip compressed data' in fileType:
+            # fixme. this method adds approx 100K of trailing zero bytes.
+            # gzip ignores it so it's not fatal, but it's suboptimal.
+            fd = os.popen('du --block-size=1 %s' % src)
+            size = int(fd.read().strip().split()[0])
+            fd.close()
+        else:
+            fd = os.popen('/usr/bin/isosize %s' % src)
+            size = int(fd.read().strip().split()[0])
+            fd.close()
         size = size // 2048 + bool(size % 2048)
         # use dd to limit size. no python libs seem to do this correctly
         os.system('dd if=%s of=%s count=%d ibs=2048' % (src, dest, size))
@@ -415,8 +424,6 @@ title %(name)s (%(kversion)s)
         else:
             # use a wrapper image to run tagscripts and re-export image in a
             # new filesystem format...
-            if target not in ('cramfs', 'isofs', 'zisofs'):
-                raise AssertionError('Target: %s is not implemented' % target)
             tmpFile = self.createSparseFile()
             cmd = '%s root=/dev/ubda1 init=/sbin/target_inits/%s_init.sh ' \
                   'ubd0=%s ubd1=%s ubd2=%s' % \
