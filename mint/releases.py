@@ -58,7 +58,7 @@ bootableImageTemplate = {
     'freespace':        (RDT_INT, 250, 'How many megabytes of free space should be allocated in the image?'),
 }
 
-bootableImageTemplateDependents = [releasetypes.VMWARE_IMAGE, releasetypes.RAW_HD_IMAGE, releasetypes.RAW_FS_IMAGE, releasetypes.LIVE_ISO]
+bootableImageTemplateDependents = [releasetypes.VMWARE_IMAGE, releasetypes.RAW_HD_IMAGE, releasetypes.RAW_FS_IMAGE, releasetypes.LIVE_ISO, releasetypes.TARBALL]
 
 vmwareImageTemplate = {
     'vmMemory':         (RDT_INT, 256, 'How much memory should VMware use when running this image?')
