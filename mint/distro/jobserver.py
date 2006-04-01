@@ -37,6 +37,7 @@ from mint.distro.netboot_image import NetbootImage
 from mint.distro.group_trove import GroupTroveCook
 from mint.distro.bootable_image import BootableImage
 from mint.distro.raw_fs_image import RawFsImage
+from mint.distro.tarball import Tarball
 from mint.constants import mintVersion
 
 generators = {
@@ -46,6 +47,7 @@ generators = {
     releasetypes.RAW_HD_IMAGE:      RawHdImage,
     releasetypes.VMWARE_IMAGE:      VMwareImage,
     releasetypes.RAW_FS_IMAGE:      RawFsImage,
+    releasetypes.TARBALL:           Tarball,
 }
 
 SUPPORTED_ARCHS = ('x86', 'x86_64')
