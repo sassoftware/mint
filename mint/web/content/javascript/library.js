@@ -574,6 +574,7 @@ function handleReleaseTypes(aSelectedArch) {
     var vmwareImageSel = $('imagetype_8');
     var rawFsImageSel = $('imagetype_3');
     var liveIsoImageSel = $('imagetype_6');
+    var tarballImageSel = $('imagetype_5')
 
     if (aSelectedArch == "x86_64") {
         isoImageSel.disabled = false;
@@ -581,6 +582,7 @@ function handleReleaseTypes(aSelectedArch) {
         vmwareImageSel.disabled = true;
 	rawFsImageSel.disabled = true;
 	liveIsoImageSel.disabled = true;
+	tarballImageSel.disabled = true;
         isoImageSel.click();
     } else {
         isoImageSel.disabled = false;
@@ -588,6 +590,7 @@ function handleReleaseTypes(aSelectedArch) {
         vmwareImageSel.disabled = false;
 	rawFsImageSel.disabled = false;
 	liveIsoImageSel.disabled = false;
+	tarballImageSel.disabled = false;
     }
 
 }
