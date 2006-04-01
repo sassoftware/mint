@@ -279,7 +279,6 @@ mount -o defaults --ro -t iso9660 /dev/loop0 /sysroot
         return (self.liveISO, isoName)
 
     def cleanupDirs(self):
-        return
         for cDir in (self.fakeroot, self.outfile, self.liveDir):
             if cDir:
                 util.rmtree(cDir)
