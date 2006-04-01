@@ -391,6 +391,43 @@ title %(name)s (%(kversion)s)
         return tmpFile
 
     @timeMe
+    def estimateSize(self, fileName):
+        "find real size of contents of sparse file by ignoring trailing nulls."
+        # this function will fail if the file truly has trailing nulls.
+        f = os.popen('du --block-size=1 %s' % fileName)
+        upperSize = int(f.read().strip().split()[0])
+        f.close()
+        f = open(fileName)
+        # iteratively back up in 1MB chunks until it appears to be within file
+        lowerSize = max(upperSize - 1024 * 1024, 0)
+        while lowerSize:
+            f.seek(lowerSize)
+            c = f.read(1)
+            if c == chr(0) or c == '':
+                lowerSize = max(lowerSize - 1024 * 1024, 0)
+            else:
+                break
+        try:
+            while True:
+                estimatedSize = lowerSize + (upperSize - lowerSize) / 2
+                sizeDiff = upperSize - estimatedSize
+                f.seek(estimatedSize)
+                buf = f.read(sizeDiff)
+                if buf == len(buf) * chr(0):
+                    # we are past the end of the file
+                    upperSize = estimatedSize
+                else:
+                    if sizeDiff == 1:
+                        estimatedSize = upperSize
+                        break
+                    # we're not pointing at the end of the file
+                    lowerSize = estimatedSize
+        finally:
+            f.close()
+        # size is in bytes
+        return estimatedSize
+
+    @timeMe
     def copySparse(self, src, dest):
         # overcome the apparent size of a sparse file. this would fail if there
         # were holes in the src file, but there shouldn't be any.
@@ -398,19 +435,25 @@ title %(name)s (%(kversion)s)
         fileType = f.read()
         f.close()
         if 'gzip compressed data' in fileType:
-            # fixme. this method adds approx 100K of trailing zero bytes.
-            # gzip ignores it so it's not fatal, but it's suboptimal.
-            fd = os.popen('du --block-size=1 %s' % src)
-            size = int(fd.read().strip().split()[0])
-            fd.close()
+            # per RFC 1952: GZIP file format specification version 4.3
+            # the last 8 bytes of gzip file are 32 bit CRC and 32 bit orig len.
+            # for estimateSize to fail horribly, the uncompressed tarball would
+            # need to be an exact multiple of 4GB and an all-zero CRC.
+            # however gzip will complain if we truncate inadverdently.
+            # HACK: we add 8 bytes to the esitmated size to virtually nullify
+            # the chance of losing real data. gzip ignores trailing zeroes
+            # this has a side effect of making gzip -l report orig size as 0
+            size = self.estimateSize(src) + 8
+            util.execute('head -c %d %s > %s' % (size, src, dest))
+            return size
         else:
             fd = os.popen('/usr/bin/isosize %s' % src)
             size = int(fd.read().strip().split()[0])
             fd.close()
-        size = size // 2048 + bool(size % 2048)
-        # use dd to limit size. no python libs seem to do this correctly
-        os.system('dd if=%s of=%s count=%d ibs=2048' % (src, dest, size))
-        return size * 2048
+            size = size // 2048 + bool(size % 2048)
+            # use dd to limit size. no python libs seem to do this correctly
+            os.system('dd if=%s of=%s count=%d ibs=2048' % (src, dest, size))
+            return size * 2048
 
     @timeMe
     def runTagScripts(self, target = 'ext3'):
