@@ -39,6 +39,9 @@ class AdminHandler(WebHandler):
 
     @intFields(userId=None)
     def _admin_user_cancel(self, userId, *args, **kwargs):
+        if userId == self.auth.userId:
+            kwargs['errors'] = ['You cannot close your account from this interface.']
+            return self._admin_user(*args, **kwargs)
         self.client.removeUserAccount(userId)
         kwargs['extraMsg'] = "User account deleted"
         return self._admin_user(*args, **kwargs)

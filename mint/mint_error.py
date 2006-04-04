@@ -48,4 +48,14 @@ class UserAlreadyAdmin(MintError):
 
 class AdminSelfDemotion(MintError):
     def __str__(self):
-        return "You cannot demote yourself."
+        return self.msg
+
+    def __init__(self, msg = "You cannot demote yourself."):
+        self.msg = msg
+
+class LastAdmin(MintError):
+     def __str__(self):
+         return self.msg
+
+     def __init__(self, msg = "You cannot close your account."):
+         self.msg = msg

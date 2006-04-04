@@ -9,7 +9,8 @@ testsuite.setup()
 from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import MINT_HOST, MINT_PROJECT_DOMAIN
 from mint import userlevels
-from mint.mint_error import PermissionDenied, UserAlreadyAdmin, AdminSelfDemotion
+from mint.mint_error import PermissionDenied, UserAlreadyAdmin, \
+     AdminSelfDemotion, LastAdmin
 from mint.users import LastOwner, UserInduction, MailError, GroupAlreadyExists, AlreadyConfirmed
 from mint.database import DuplicateItem, ItemNotFound
 from conary.repository.netclient import UserNotFound
@@ -463,6 +464,14 @@ class AccountTest(MintRepositoryHelper):
         # this should return the same value twice
         mintAdminId2 = client.server._server.userGroups.getMintAdminId()
         self.failUnlessEqual(mintAdminId, mintAdminId2)
+
+    def testLastAdmin(self):
+        client, userId = self.quickMintAdmin('foouser', 'foopass')
+        # this should fail
+        self.assertRaises(LastAdmin, client.removeUserAccount, userId)
+        client, userId = self.quickMintAdmin('foouser1', 'foopass1')
+        # this should succeed
+        client.removeUserAccount(userId);
 
 
 if __name__ == "__main__":

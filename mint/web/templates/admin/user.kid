@@ -12,6 +12,7 @@
     <body>
         <td id="main" class="spanall">
             <div class="pad">
+              <p py:for=" errorMsg in kwargs.get('errors', [])" class="errormessage" py:content="errorMsg"/>
               <p py:if="kwargs.get('extraMsg', None)" class="message" py:content="kwargs['extraMsg']"/>
               <form action="${cfg.basePath}administer" method="post">
 	        <a href ="${cfg.basePath}administer">Return to Administrator Page</a>

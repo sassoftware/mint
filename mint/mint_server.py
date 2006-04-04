@@ -36,7 +36,7 @@ from distro import jsversion
 
 from mint_error import PermissionDenied, ReleasePublished, ReleaseMissing, \
      MintError, ReleaseEmpty, UserAlreadyAdmin, AdminSelfDemotion, \
-     JobserverVersionMismatch
+     JobserverVersionMismatch, LastAdmin
 from reports import MintReport
 from searcher import SearchTermsError
 from distro.flavors import stockFlavors
@@ -967,12 +967,34 @@ class MintServer(object):
     @typeCheck(int)
     @requiresAuth
     @private
+    def filterLastAdmin(self, userId):
+        """Raises an exception if the last site admin attempts to cancel their
+        account, to protect against not having any admins at all."""
+        if not self.auth.admin:
+            return
+        cu = self.db.cursor()
+        cu.execute("""SELECT COUNT(*)
+                          FROM UserGroups
+                          LEFT JOIN UserGroupMembers
+                          ON UserGroups.userGroupId =
+                                 UserGroupMembers.userGroupId
+                          WHERE userGroup='MintAdmin'""")
+        if cu.fetchone()[0] == 1:
+            # userId is admin, and there is only one admin => last admin
+            raise LastAdmin("There are no more admin accounts. Your request "
+                            "to close your account has been rejected to "
+                            "ensure that at least one account is admin.")
+
+    @typeCheck(int)
+    @requiresAuth
+    @private
     def removeUserAccount(self, userId):
         """Removes the user account from the authrepo and mint databases.
         Also removes the user from each project listed in projects.
         """
         if not self.auth.admin and userId != self.auth.userId:
             raise PermissionDenied
+        self.filterLastAdmin(userId)
         username = self.users.getUsername(userId)
 
         #Handle projects
