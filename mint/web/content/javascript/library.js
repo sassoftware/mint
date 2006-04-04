@@ -563,6 +563,35 @@ function onVersionChange() {
 
 }
 
+function setDisabledByElem(elem, disable) {
+    for (var i=0; i< elem.childNodes.length; i++) {
+        var e = elem.childNodes[i]
+        if (e.nodeType == 1) {
+            e.disabled = disable;
+            setDisabledByElem(e, disable);
+        }
+    }
+    elem.disabled = disable;
+}
+
+function onImageChange(img) {
+    // beware of these boundary conditions, when we add more release targets...
+    for (t = 1; t < 9; t++) {
+        targImg = "formgroup_" + t;
+        // ensure we only tinker with elements that exist on the page
+        if (document.getElementById(targImg)) {
+            var elem = document.getElementById(targImg)
+            if (targImg == img) {
+                elem.style.display = "";
+                setDisabledByElem(elem, false)
+            }
+            else {
+                elem.style.display = "none";
+                setDisabledByElem(elem, true)
+            }
+        }
+    }
+}
 
 /* TODO: This begs for a more configurable way based on supported
          available job server capabilities.  */

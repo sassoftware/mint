@@ -100,7 +100,7 @@ from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM
                     <div class="formgroupTitle">Image Types</div>
                     <div class="formgroup">
                         <div py:strip="True" py:for="key in self.cfg.visibleImageTypes">
-                            <input class="reversed" id="imagetype_${key}" name="imagetype" value="${key}" type="radio" py:attrs="{'checked': key in imageTypes and 'checked' or None}" />
+                            <input class="reversed" id="imagetype_${key}" name="imagetype" value="${key}" onchange="javascript:onImageChange('formgroup_${key}');" type="radio" py:attrs="{'checked': key in imageTypes and 'checked' or None}" />
                             <label class="reversed" for="imagetype_${key}">${typeNames[key]}</label><div class="clearleft">&nbsp;</div>
                         </div>
                     </div>
@@ -108,10 +108,12 @@ from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM
                     <?python
                         templates = release.getDisplayTemplates()
                         dataDict = release.getDataDict()
+                        defaultTemplate = release.imageTypes and release.imageTypes[0] or 1
                     ?>
                     <div class="formgroupTitle" style="cursor: pointer;" onclick="javascript:toggle_display('advanced_settings');"><img id="advanced_settings_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" />Advanced Options</div>
                     <div id="advanced_settings" class="formgroup" style="display: none;">
-                        <div py:strip="True" py:for="heading, template in templates">
+                        <div py:strip="True" py:for="key, heading, template in templates">
+                            <div class="formsubgroupcontainer" id="formgroup_${key}" py:attrs="{'style' : key != defaultTemplate and 'display : none;' or None}">
                             <div class="formsubgroupTitle">${heading}</div>
                             <div class="formsubgroup">
                                 <div py:strip="True" py:for="name, dataRow in sorted(template.items(), key = lambda x: x[1][0])">
@@ -122,22 +124,23 @@ from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM
                                             dataValue = dataRow[1]
                                     ?>
                                     <div py:strip="True" py:if="(dataRow[0] == RDT_BOOL)">
-                                        <input class="reversed" py:attrs="{'checked': 'checked' and dataValue or None}" type="checkbox" id="${name}" name="${name}" value="1" />
+                                        <input class="reversed" py:attrs="{'checked': 'checked' and dataValue or None, 'disabled' : key != defaultTemplate and 'disabled' or None}" type="checkbox" name="${name}" value="1" id="${name}"/>
                                         <label class="reversed" for="${name}">${dataRow[2]}</label>
                                     </div>
                                     <div py:strip="True" py:if="(dataRow[0] == RDT_INT) or (dataRow[0] == RDT_STRING)">
                                         <label for="${name}">${dataRow[2]}</label>
 
-                                        <input type="text" name="${name}" id="${name}" value="${dataValue}"/>
+                                        <input type="text" name="${name}" id="${name}" value="${dataValue}" py:attrs="{'disabled' : key != defaultTemplate and 'disabled' or None}"/>
                                     </div>
                                     <div py:strip="True" py:if="(dataRow[0] == RDT_ENUM)">
                                         <label for="${name}">${dataRow[2]}</label>
-                                        <select name="${name}" id="${name}">
+                                        <select name="${name}" id="${name}" py:attrs="{'disabled' : key != defaultTemplate and 'disabled' or None}">
                                             <option py:for="prompt, val in sorted(dataRow[3].iteritems())" py:content="prompt" value="${val}" py:attrs="{'selected' : val == dataRow[1] and 'selected' or None}"/>
                                         </select>
                                     </div>
                                     <div class="clearleft">&nbsp;</div>
                                 </div>
+                            </div>
                             </div>
                         </div>
                     </div>

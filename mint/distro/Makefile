@@ -21,6 +21,7 @@ python_files = \
         raw_hd_image.py         \
 	stub_image.py		\
         splitdistro.py          \
+        tarball.py              \
         vmware_image.py
 
 extra_dist = Makefile

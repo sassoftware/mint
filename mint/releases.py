@@ -13,6 +13,7 @@ import releasetypes
 from mint_error import MintError
 from mint_server import ParameterError
 from data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM
+from releasetemplates import dataHeadings, dataTemplates
 
 from conary import versions
 from conary.deps import deps
@@ -35,67 +36,6 @@ class ReleaseDataNameError(MintError):
             self.str = "Named value is not in data template."
         else:
             self.str = reason
-
-# *** Extremely Important ***
-# Changing the names or semantic meanings of the keys to data templates is the
-# same this as making a schema upgrade! do not do this lightly.
-
-imageGenTemplate = {
-    # XXX this is kind of a lousy description; a toggleable "override ILP option would be nicer
-    'installLabelPath': (RDT_STRING, '',  'Custom Conary installLabelPath setting (leave blank for default)'),
-    'autoResolve':      (RDT_BOOL, False, 'Automatically install required dependencies during updates'),
-}
-
-installableIsoTemplate = {
-    'showMediaCheck':   (RDT_BOOL, False, 'Prompt to verify CD/DVD images during install'),
-    'betaNag':          (RDT_BOOL, False, 'This release is considered a beta'),
-    'bugsUrl':          (RDT_STRING, 'http://bugs.rpath.com/', 'Bug report URL'),
-    'maxIsoSize':       (RDT_ENUM, '681574400', 'ISO Size',
-                         releasetypes.discSizes)
-}
-
-bootableImageTemplate = {
-    'freespace':        (RDT_INT, 250, 'How many megabytes of free space should be allocated in the image?'),
-}
-
-bootableImageTemplateDependents = [releasetypes.VMWARE_IMAGE, releasetypes.RAW_HD_IMAGE, releasetypes.RAW_FS_IMAGE, releasetypes.LIVE_ISO, releasetypes.TARBALL]
-
-vmwareImageTemplate = {
-    'vmMemory':         (RDT_INT, 256, 'How much memory should VMware use when running this image?')
-}
-
-liveIsoTemplate = {
-    'unionfs':          (RDT_BOOL, True, 'Use unionfs (recommended)'),
-    'zisofs' :          (RDT_BOOL, True, 'Compress filesystem')
-    }
-
-stubImageTemplate = {
-    'boolArg'   : (RDT_BOOL, False, 'Garbage Boolean'),
-    'stringArg' : (RDT_STRING, '', 'Garbage String'),
-    'intArg'    : (RDT_INT, 0, 'Garbage Integer'),
-    'enumArg'   : (RDT_ENUM, '2', 'Garbage Enum',
-                   {'foo' : '0', 'bar': '1', 'baz': '2'})
-}
-
-dataHeadings = {
-    releasetypes.BOOTABLE_IMAGE   : 'Image Settings',
-    releasetypes.INSTALLABLE_ISO  : 'Installable CD/DVD Settings',
-    # don't tweak this name too much. it applies to a large amount of templates
-    releasetypes.RAW_HD_IMAGE     : 'Bootable Image Common Settings',
-    releasetypes.VMWARE_IMAGE     : 'VMware Image Settings',
-    releasetypes.LIVE_ISO         : 'Live ISO Settings',
-    releasetypes.STUB_IMAGE       : 'Stub Image Settings',
-}
-
-# It is not necessary to define templates for image types with no settings
-dataTemplates = {
-    releasetypes.BOOTABLE_IMAGE   : imageGenTemplate,
-    releasetypes.INSTALLABLE_ISO  : installableIsoTemplate,
-    releasetypes.RAW_HD_IMAGE     : bootableImageTemplate,
-    releasetypes.VMWARE_IMAGE     : vmwareImageTemplate,
-    releasetypes.LIVE_ISO         : liveIsoTemplate,
-    releasetypes.STUB_IMAGE       : stubImageTemplate,
-}
 
 class ReleasesTable(database.KeyedTable):
     name = "Releases"
@@ -392,41 +332,21 @@ class Release(database.TableObject):
     def setPublished(self, published):
         return self.server.setReleasePublished(self.releaseId, published)
 
-    def _TemplateCompatibleImageTypes(self, allAvailable = False):
-        """ Return a list of compatible image types. If allAvailable is
-            True, then will query the server for the currently
-            available image types; otherwise, will return a list
-            based upon the current image types in this release. """
-        #This needs to be added to all release lists
-        returner = [releasetypes.BOOTABLE_IMAGE]
-        if allAvailable:
-            returner.extend(self.server.getAvailableImageTypes())
-        else:
-            returner.extend(self.imageTypes)
-        if releasetypes.RAW_HD_IMAGE not in returner:
-            if set(bootableImageTemplateDependents) & set(returner):
-                returner.append(releasetypes.RAW_HD_IMAGE)
-        return returner
-
     def getDataTemplate(self):
-        returner = {}
-        for i in [x for x in self._TemplateCompatibleImageTypes() \
-                  if x in dataTemplates]:
-            returner.update(dataTemplates[i])
-        return returner
+        if len(self.imageTypes):
+            return dataTemplates[self.imageTypes[0]]
+        else:
+            return {}
 
     def getDisplayTemplates(self):
-        self.refresh()
-        returner = []
-        try:
-            for i in \
-                [x for x in \
-                 self._TemplateCompatibleImageTypes(allAvailable = True) if \
-                 x in dataTemplates]:
-                returner.append((dataHeadings[i], dataTemplates[i]))
-        except KeyError:
-            pass
-        return returner
+        return [(x, dataHeadings[x], dataTemplates[x]) \
+                for x in dataTemplates.keys()]
+        # FIXME: use the following code once we revert to new release model
+        if len(self.imageTypes):
+            return [(dataHeadings[self.imageTypes[0]], \
+                     dataTemplates[self.imageTypes[0]])]
+        else:
+            return 'No Image Selected', {}
 
     def setDataValue(self, name, value, dataType = None, validate = True):
         template = self.getDataTemplate()

@@ -15,7 +15,7 @@ from mint_rephelp import MINT_PROJECT_DOMAIN
 from mint.data import RDT_STRING, RDT_BOOL, RDT_INT
 from mint.releases import ReleaseDataNameError
 from mint.mint_error import ReleasePublished, ReleaseMissing, ReleaseEmpty
-from mint import releasetypes
+from mint import releasetypes, releasetemplates
 from mint.database import ItemNotFound
 from mint.mint_server import deriveBaseFunc, ParameterError
 from mint.distro import installable_iso, jsversion
@@ -62,13 +62,13 @@ class ReleaseTest(MintRepositoryHelper):
         projectId = client.newProject("Foo", "foo", "rpath.org")
         release = client.newRelease(projectId, "Test Release")
 
-        imageTypes = [releasetypes.INSTALLABLE_ISO, releasetypes.VMWARE_IMAGE]
+        imageTypes = [releasetypes.INSTALLABLE_ISO]
         release.setImageTypes(imageTypes)
         assert(imageTypes == release.imageTypes)
-        assert(release.getDataTemplate()['showMediaCheck'])
-        assert(release.getDataTemplate()['autoResolve'])
-        assert(release.getDataTemplate()['freespace'])
-        assert(release.getDataTemplate()['vmMemory'])
+        dataTemplate = release.getDataTemplate()
+        assert('showMediaCheck' in dataTemplate)
+        assert('autoResolve' in dataTemplate)
+        assert('freespace' not in dataTemplate)
 
         rDict = release.getDataDict()
         tDict = release.getDataTemplate()
@@ -78,7 +78,7 @@ class ReleaseTest(MintRepositoryHelper):
         # test behavior of booleans
         for mediaCheck in (False, True):
             release.setDataValue('showMediaCheck', mediaCheck)
-            assert (mediaCheck == release.getDataValue('showMediaCheck'))
+            assert (release.getDataValue('showMediaCheck') is mediaCheck)
 
         # test bad name lockdown
         self.assertRaises(ReleaseDataNameError,
@@ -504,10 +504,10 @@ class ReleaseTest(MintRepositoryHelper):
         projectId = client.newProject("Foo", "foo", "rpath.org")
 
         release = client.newRelease(projectId, "Test Release")
-        templates = [x[0] for x in release.getDisplayTemplates()]
-        assert(['Image Settings', 'Installable CD/DVD Settings',
-                'Bootable Image Common Settings', 'Live ISO Settings',
-                'VMware Image Settings', 'Stub Image Settings'] == templates)
+
+        self.failIf([(x[0], x[2]) for x in release.getDisplayTemplates()] != \
+                    [x for x in releasetemplates.dataTemplates.iteritems()],
+                    "dataTemplates lost in display translation")
 
     def testFreespace(self):
         client, userId = self.quickMintUser("testuser", "testpass")

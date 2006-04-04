@@ -32,6 +32,7 @@ python_files =			\
 	projects.py		\
 	releases.py		\
 	releasetypes.py		\
+        releasetemplates.py     \
 	requests.py		\
 	searcher.py		\
 	session.py		\
