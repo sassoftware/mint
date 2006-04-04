@@ -9,6 +9,7 @@ testsuite.setup()
 
 import kid
 import os
+import re
 import sys
 import time
 import tempfile
@@ -278,6 +279,62 @@ class HelperFunctionsTest(unittest.TestCase):
                 'https://a.special.somewhere.org:10000/happy/happy/joy/joy/')
         self.assertEqual(rewriteUrlProtocolPort(urlSSL, 'http', 20000),
                 'http://vault.fortknox.gov:20000/')
+
+    def testJavascript(self):
+        libraryPath = os.path.join(os.path.split(os.path.split(\
+            os.path.realpath(__file__))[0])[0], 'mint', 'web', 'content',
+                                   'javascript', 'library.js')
+        f = open(libraryPath)
+        docu = f.read()
+        f.close()
+
+        # strip multi-line comments.
+        for comment in re.findall('/\*[^/*]*\*/', docu):
+            # we want to preserve newlines...
+            newComment = '\n'.join(['' for x in comment.splitlines()])
+            docu = docu.replace(comment, newComment)
+
+        # recursively strip paren expressions
+        expressions = re.findall('\([^()]*\)', docu)
+        while expressions:
+            for exp in expressions:
+                newExp = '^^^' + '\n'.join(['' for x in exp.splitlines()]) + '~~~'
+                docu = docu.replace(exp, newExp)
+            expressions = re.findall('\([^()]*\)', docu)
+        docu = docu.replace('^^^', '(')
+        docu = docu.replace('~~~', ')')
+        # recursively strip paren expressions
+        expressions = re.findall('\[[^\[\]]*\]', docu)
+        while expressions:
+            for exp in expressions:
+                newExp = '^^^' + '\n'.join(['' for x in exp.splitlines()]) + '~~~'
+                docu = docu.replace(exp, newExp)
+            expressions = re.findall('\[[^\[\]]*\]', docu)
+        docu = docu.replace('^^^', '[')
+        docu = docu.replace('~~~', ']')
+        lines = docu.split('\n')
+
+        lines = zip(range(1, len(lines) + 1), lines)
+        broken = False
+        brokenLines = []
+        for lineNum, line in lines:
+            line = line.strip()
+            match = re.search('//.*', line)
+            if match:
+                comment = match.group()
+                newComment = '\n'.join(['' for x in comment.splitlines()])
+                line = line.replace(comment, newComment)
+            line = line.strip()
+            if line and line[-1] not in [';', '{', '}', '(', '[']:
+                broken = True
+                for tok in ('if', 'else', 'for', 'while'):
+                    if line.startswith(tok):
+                        broken = False
+                if broken:
+                    brokenLines.append(lineNum)
+        self.failIf(brokenLines,
+                    "Javascript syntax may be broken. "
+                    "check lines: %s" % str(brokenLines))
 
 
 if __name__ == "__main__":
