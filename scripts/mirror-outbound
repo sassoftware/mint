@@ -10,7 +10,6 @@
 # This script should be run from a machine with access to both rBA and mirror.
 
 import sys
-from os import _exit
 
 from conary.conaryclient import mirror
 from conary import versions
@@ -18,62 +17,52 @@ from conary.repository import netclient
 from conary.lib import util, log
 
 from mint import mint
-from mint.scriptlibrary import SingletonScript
 
 log.setVerbosity(log.DEBUG)
 sys.excepthook = util.genExcepthook(debug=True)
 
-class MirrorOutbound(SingletonScript):
 
-    def handle_args(self):
-        if len(sys.argv) < 2:
-            return False
-        return True
+def usage():
+    print "%s <url to rBuilder server>" % sys.argv[0]
+    return 1
 
-    def usage(self):
-        print "usage: %s <url to rBuilder server>" % self.name
-        return 1
 
-    def action(self):
-        client = mint.MintClient(sys.argv[1])
-        cfg = mirror.MirrorConfiguration()
+if len(sys.argv) < 2:
+    sys.exit(usage())
 
-        mirroredLabels = client.getOutboundLabels()
+client = mint.MintClient(sys.argv[1])
+cfg = mirror.MirrorConfiguration()
 
-        for label in mirroredLabels:
-            projectId, sourceLabelId, targetUrl, targetUser, targetPass = label
-            projectId = int(projectId)
-            sourceLabelId = int(sourceLabelId)
-            project = client.getProject(projectId)
+mirroredLabels = client.getOutboundLabels()
 
-            labelStr, sourceUrl, sourceUser, sourcePass  = \
-                      client.getLabel(sourceLabelId)
+for label in mirroredLabels:
+    projectId, sourceLabelId, targetUrl, targetUser, targetPass = label
+    projectId = int(projectId)
+    sourceLabelId = int(sourceLabelId)
+    project = client.getProject(projectId)
 
-            reposHost = versions.Label(labelStr).getHost()
+    labelStr, sourceUrl, sourceUser, sourcePass  = \
+              client.getLabel(sourceLabelId)
 
-            cfg.target.repositoryMap = {reposHost: targetUrl}
-            cfg.target.user.addServerGlob(reposHost, targetUser, targetPass)
+    reposHost = versions.Label(labelStr).getHost()
 
-            cfg.source.repositoryMap = {reposHost: sourceUrl}
-            cfg.source.user.addServerGlob(reposHost, sourceUser, sourcePass)
+    cfg.target.repositoryMap = {reposHost: targetUrl}
+    cfg.target.user.addServerGlob(reposHost, targetUser, targetPass)
 
-            cfg.host = reposHost
-            cfg.labels = [versions.Label(project.getLabel())]
+    cfg.source.repositoryMap = {reposHost: sourceUrl}
+    cfg.source.user.addServerGlob(reposHost, sourceUser, sourcePass)
 
-            targetRepos = netclient.NetworkRepositoryClient(cfg.target.repositoryMap,
-                                  cfg.target.user,
-                                  entitlementDir = cfg.entitlementDirectory)
+    cfg.host = reposHost
+    cfg.labels = [versions.Label(project.getLabel())]
 
-            sourceRepos = netclient.NetworkRepositoryClient(cfg.source.repositoryMap,
-                                  cfg.source.user,
-                                  entitlementDir = cfg.entitlementDirectory)
+    targetRepos = netclient.NetworkRepositoryClient(cfg.target.repositoryMap,
+                          cfg.target.user,
+                          entitlementDir = cfg.entitlementDirectory)
 
-            while mirror.mirrorRepository(sourceRepos, targetRepos, cfg, False, False,
-                                          False):
-                pass
+    sourceRepos = netclient.NetworkRepositoryClient(cfg.source.repositoryMap,
+                          cfg.source.user,
+                          entitlementDir = cfg.entitlementDirectory)
 
-        return 0
-
-if __name__ == "__main__":
-    mo = MirrorOutbound()
-    _exit(mo.run())
+    while mirror.mirrorRepository(sourceRepos, targetRepos, cfg, False, False,
+                                  False):
+        pass

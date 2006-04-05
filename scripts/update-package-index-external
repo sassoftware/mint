@@ -13,7 +13,6 @@
 from mint import config
 from mint import pkgindex
 from mint import projects
-from mint.scriptlibrary import SingletonScript
 
 from conary import sqlite3
 from conary import versions
@@ -21,6 +20,7 @@ from conary import conaryclient
 from conary import conarycfg
 from conary import dbstore
 from conary.repository import repository
+from scriptlibrary import SingletonScript
 
 import os
 import os.path
@@ -56,7 +56,7 @@ class UpdatePackageIndexExternal(SingletonScript):
         for r in cu.fetchall():
             projectId, hostname = r
 
-            self.log.info("Retrieving labels from %s...", hostname)
+            print "Retrieving labels from %s..." % hostname
             l, repMap, userMap = labelsTable.getLabelsForProject(projectId,
                 overrideAuth = True, newUser = 'anonymous', newPass = 'anonymous')
 
@@ -72,11 +72,11 @@ class UpdatePackageIndexExternal(SingletonScript):
 
         rows = []
         for host in netclients.keys():
-            self.log.info("Retrieving trove list from %s...", host)
+            print "Retrieving trove list from %s..." % host
             try:
                 troves = netclients[host].getAllTroveLeaves(host, {None: {None: None}})
             except repository.OpenError, e:
-                self.log.warning("unable to access %s", host)
+                print >> sys.stderr,"warning: unable to access %s" % host
                 continue
 
             pkgs = [x for x in troves.keys() if ':' not in x]
@@ -86,9 +86,9 @@ class UpdatePackageIndexExternal(SingletonScript):
                 row = (projectIds[host], pkg, latestVer.asString())
                 rows.append(row)
 
-            self.log.info("Retrieved %d trove%s from %s.", len(rows), ((len(rows) != 1) and 's' or ''), host)
+            print "Retrieved %d trove%s from %s." % (len(rows), ((len(rows) != 1) and 's' or ''), host)
 
-        self.log.info("Updating database...")
+        print "Updating database..."
         for row in rows:
             cu.execute("SELECT pkgId FROM PackageIndex WHERE projectId=? AND name=? AND version=?", *row)
             r = cu.fetchone()

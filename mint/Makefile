@@ -34,7 +34,6 @@ python_files =			\
 	releasetypes.py		\
         releasetemplates.py     \
 	requests.py		\
-	scriptlibrary.py	\
 	searcher.py		\
 	session.py		\
 	sessiondb.py		\

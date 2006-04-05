@@ -18,12 +18,12 @@ from conary import conaryclient
 from conary.conarycfg import ConfigFile, ConaryConfiguration
 from conary.conarycfg import CfgList, CfgString, CfgBool, CfgInt, CfgDict, \
      CfgEnum
+from conary.lib import log
 
 # mint imports
 from mint import cooktypes
 from mint import jobstatus
 from mint import releasetypes
-from mint import scriptlibrary
 from mint.mint import MintClient
 from mint.config import CfgImageEnum
 
@@ -73,22 +73,6 @@ class JobRunner:
         ret = None
         error = None
         jobId = self.job.getId()
-        log = scriptlibrary.getScriptLogger()
-
-        if self.cfg.saveChildOutput:
-            joboutputPath = os.path.join(self.cfg.logPath, 'joboutput')
-            if not os.path.exists(joboutputPath):
-                os.mkdir(joboutputPath)
-            logFile = os.path.join(self.cfg.logPath, "joboutput", "%s_%d" % \
-                    (time.strftime('%Y%m%d%H%M%S'), jobId))
-            log.info("Output logged to %s" % logFile)
-
-            logfd = os.open(logFile, os.O_APPEND | os.O_WRONLY | os.O_CREAT,
-                    0666)
-
-            os.dup2(logfd, sys.stdout.fileno())
-            os.dup2(logfd, sys.stderr.fileno())
-
         self.job.setStatus(jobstatus.RUNNING, 'Running')
 
         if self.job.releaseId:
@@ -101,8 +85,9 @@ class JobRunner:
             try:
                 # this line assumes that there's only one image per job.
                 generator = generators[release.getImageTypes()[0]]
-                log.info("%s job for %s started (id %d)" % \
-                         (generator.__name__, project.getHostname(), jobId))
+                log.info("(%d) %s job for %s started (id %d)" % \
+                         (os.getpid(), generator.__name__,
+                          project.getHostname(), jobId))
                 imageFilenames = generator(self.client, self.cfg, self.job,
                                            release, project).write()
                 os.chdir(cwd)
@@ -114,11 +99,11 @@ class JobRunner:
                 self.job.setStatus(jobstatus.ERROR, str(e))
             else:
                 release.setFiles(imageFilenames)
-                log.info("job %d finished: %s", jobId, str(imageFilenames))
+                log.info("(%d) job %d finished: %s", os.getpid(), jobId, str(imageFilenames))
             os.chdir(cwd)
         elif self.job.getGroupTroveId():
             try:
-                log.info("GroupTroveCook job started (id %d)" % jobId)
+                log.info("(%d) GroupTroveCook job started (id %d)" % (os.getpid(), jobId))
                 ret = GroupTroveCook(self.client, self.cfg, self.job).write()
             except Exception, e:
                 traceback.print_exc()
@@ -126,10 +111,10 @@ class JobRunner:
                 error = e
                 self.job.setStatus(jobstatus.ERROR, str(e))
             else:
-                log.info("job %d succeeded: %s" % (jobId, str(ret)))
+                log.info("(%d) job %d succeeded: %s" % (os.getpid(), jobId, str(ret)))
 
         if error:
-            log.error(error)
+            log.info(error)
         else:
             self.job.setStatus(jobstatus.FINISHED, "Finished")
 
@@ -142,10 +127,7 @@ class JobDaemon:
 
         self.takingJobs = True
 
-        log = scriptlibrary.getScriptLogger()
-
         def stopJobs(signalNum, frame):
-            log = scriptlibrary.getScriptLogger()
             self.takingJobs = False
             if signalNum == signal.SIGTERM:
                 signalName = 'SIGTERM'
@@ -223,7 +205,7 @@ class JobDaemon:
                         time.sleep(random.uniform(*JOB_IDLE_INTERVAL))
                         continue
 
-                    log.info("TOOK A JOB: jobId %d" % job.id)
+                    log.info("(%d) TOOK A JOB: jobId %d" % (os.getpid(), job.id))
                     if job.releaseId:
                         release = client.getRelease(job.releaseId)
                         if release.getArch() not in cfg.supportedArch:
@@ -271,7 +253,6 @@ class IsoGenConfig(ConfigFile):
     configPath       = '/srv/mint/'
 
     def read(cfg, path, exception = False):
-        log = scriptlibrary.getScriptLogger()
         ConfigFile.read(cfg, path, exception)
         cfg.configPath = os.path.dirname(path)
         for arch in cfg.supportedArch:
@@ -284,6 +265,8 @@ class IsoGenConfig(ConfigFile):
         if 'imageTypes' in cfg.__dict__:
             cfg.jobTypes['imageTypes'] = cfg.imageTypes
         if cfg.serverUrl is None:
-            log.error("A server URL must be specified in the config file. For example:")
-            log.error("    serverUrl http://username:userpass@www.example.com/xmlrpc-private/")
+            log.error("a server URL must be specified in the config file,"
+            " for example:")
+            log.error("serverUrl http://username:userpass@"
+                      "www.example.com/xmlrpc-private/")
             sys.exit(1)
