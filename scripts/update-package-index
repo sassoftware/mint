@@ -5,8 +5,8 @@
 # All rights reserved
 #
 from mint import config
+from mint.scriptlibrary import SingletonScript
 from conary import dbstore
-from scriptlibrary import SingletonScript
 
 import os
 import os.path

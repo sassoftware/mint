@@ -565,7 +565,7 @@ function onVersionChange() {
 
 function setDisabledByElem(elem, disable) {
     for (var i=0; i< elem.childNodes.length; i++) {
-        var e = elem.childNodes[i]
+        var e = elem.childNodes[i];
         if (e.nodeType == 1) {
             e.disabled = disable;
             setDisabledByElem(e, disable);
@@ -577,50 +577,37 @@ function setDisabledByElem(elem, disable) {
 function onImageChange(img) {
     // beware of these boundary conditions, when we add more release targets...
     for (t = 1; t < 9; t++) {
-        targImg = "formgroup_" + t;
+        var targImg = "formgroup_" + t;
         // ensure we only tinker with elements that exist on the page
         if (document.getElementById(targImg)) {
-            var elem = document.getElementById(targImg)
+            var elem = document.getElementById(targImg);
             if (targImg == img) {
                 elem.style.display = "";
-                setDisabledByElem(elem, false)
+                setDisabledByElem(elem, false);
             }
             else {
                 elem.style.display = "none";
-                setDisabledByElem(elem, true)
+                setDisabledByElem(elem, true);
             }
         }
     }
 }
 
-/* TODO: This begs for a more configurable way based on supported
-         available job server capabilities.  */
 function handleReleaseTypes(aSelectedArch) {
 
-    var arch = $('arch');
-    var isoImageSel  = $('imagetype_1');
-    var qemuImageSel = $('imagetype_7');
-    var vmwareImageSel = $('imagetype_8');
-    var rawFsImageSel = $('imagetype_3');
-    var liveIsoImageSel = $('imagetype_6');
-    var tarballImageSel = $('imagetype_5')
+    // see layout.kid for definitions of VisibleBootableImageTypes, etc.
+    var one = iter(VisibleBootableImageTypes);
 
-    if (aSelectedArch == "x86_64") {
-        isoImageSel.disabled = false;
-        qemuImageSel.disabled = true;
-        vmwareImageSel.disabled = true;
-	rawFsImageSel.disabled = true;
-	liveIsoImageSel.disabled = true;
-	tarballImageSel.disabled = true;
-        isoImageSel.click();
-    } else {
-        isoImageSel.disabled = false;
-        qemuImageSel.disabled = false;
-        vmwareImageSel.disabled = false;
-	rawFsImageSel.disabled = false;
-	liveIsoImageSel.disabled = false;
-	tarballImageSel.disabled = false;
-    }
+    // VisibleBootableImageTypes are not currently compatible with x86_64
+    // so, if that arch was selected, disable it
+    forEach(one, function (x) {
+        var el = $('imagetype_'+x);
+        if (aSelectedArch == "x86_64") {
+            el.disable = true;
+        } else {
+            el.disable = false;
+        }
+    });
 
 }
 

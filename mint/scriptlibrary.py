@@ -18,6 +18,8 @@ class GenericScript:
 
     def __init__(self):
         self.name = os.path.basename(sys.argv[0])
+        setupScriptLogger(consoleLevel)
+        self.log = getScriptLogger()
 
     def run(self):
         """ 
@@ -64,13 +66,12 @@ class GenericScript:
                 exitcode = self.action()
             finally:
                 self.cleanup()
-                logging.shutdown()
 
         return exitcode
 
 
 # XXX: this should probably be /var/lock, but we need a properly setgid()
-# wrapper that will make the script setgid to the 'lock' group for rPL.
+# wrapper that will make the script setgid to the 'lock' group.
 DEFAULT_LOCKPATH = '/var/tmp'
 
 class SingletonScript(GenericScript):
@@ -152,17 +153,16 @@ class SingletonScript(GenericScript):
 
         finally:
             self._unlock()
-            logging.shutdown()
             return exitcode
 
 LOGGER_ID_SCRIPT = 'scriptlogger'
 
 class ScriptLogger(object):
     """
-    Class for handling log output in scripts.
+    Singleton class for handling log output in scripts.
     """
-    
-    logger = None
+
+    setup = False
 
     def __new__(cls, *p, **kwargs):
         """
@@ -173,40 +173,79 @@ class ScriptLogger(object):
             cls._it = object.__new__(cls)
         return cls._it
 
-    def __init__(self, aLogfile = None, aConsoleLevel = logging.INFO, aLogfileLevel = logging.INFO):
+    def __init__(self):
+        """
+        This should not be called by the public; use setupScriptLogger
+        and getScriptLogger instead.
+        """
 
-        if not self.logger:
-            # get our instance of logger
-            self.logger = logging.getLogger(LOGGER_ID_SCRIPT)
-
-            # set up a console handler
-            consoleFormatter = logging.Formatter('%(levelname)s: %(message)s')
-            consoleHandler = logging.StreamHandler()
-            consoleHandler.setFormatter(consoleFormatter)
-            consoleHandler.setLevel(aConsoleLevel)
-            self.logger.addHandler(consoleHandler)
-
-            # if a logfile was specified, create a handler for it, too
-            if aLogfile:
-                logfileFormatter = logging.Formatter('%(asctime)s [%(process)d] %(levelname)s: %(message)s', '%Y-%b-%d %H:%M:%S')
-                logfileHandler = logging.FileHandler(aLogfile)
-                logfileHandler.setFormatter(logfileFormatter)
-                logfileHandler.setLevel(aLogfileLevel)
-                self.logger.addHandler(logfileHandler)
+        # get our instance of slogger
+        self.slogger = logging.getLogger(LOGGER_ID_SCRIPT)
 
     def error(self, *args):
         "Log an error"
-        self.logger.error(*args)
+        self.slogger.error(*args)
 
     def warning(self, *args):
         "Log a warning"
-        self.logger.warning(*args)
+        self.slogger.warning(*args)
 
     def info(self, *args):
         "Log an informative message"
-        self.logger.info(*args)
+        self.slogger.info(*args)
 
     def debug(self, *args):
         "Log a debugging message"
-        self.logger.debug(*args)
+        self.slogger.debug(*args)
+
+_scriptLogger = ScriptLogger()
+
+def setupScriptLogger(logfile = None, consoleLevel = logging.WARNING,
+        logfileLevel = logging.INFO):
+    """
+    Sets up the script logger instance for the process. If aLogfile
+    is given, will log output to the given logfile in addition to 
+    sys.stderr. Defaults to logging WARNING level messages to sys.stderr,
+    and INFO level messages to the logfile (if aLogfile is specified).
+    By default, output is sent to sys.stderr ONLY.
+
+    While setupScriptLogger may be called more than once to reconfigure
+    the script logger, it is better practice to call it before calling
+    getScriptLogger (unless you want the script logger's default behavior).
+    """
+    assert(_scriptLogger)
+
+    # clear the handlers before proceeding
+    while _scriptLogger.slogger.handlers:
+        _scriptLogger.slogger.removeHandler(_scriptLogger.slogger.handlers[0])
+
+    # set up a console handler
+    consoleFormatter = logging.Formatter('%(levelname)s: %(message)s')
+    consoleHandler = logging.StreamHandler()
+    consoleHandler.setFormatter(consoleFormatter)
+    consoleHandler.setLevel(consoleLevel)
+    _scriptLogger.slogger.addHandler(consoleHandler)
+
+    # if a logfile was specified, create a handler for it, too
+    if logfile:
+        logfileFormatter = logging.Formatter('%(asctime)s [%(process)d] %(levelname)s: %(message)s', '%Y-%b-%d %H:%M:%S')
+        logfileHandler = logging.FileHandler(logfile)
+        logfileHandler.setFormatter(logfileFormatter)
+        logfileHandler.setLevel(logfileLevel)
+        _scriptLogger.slogger.addHandler(logfileHandler)
+
+    # make sure the slogger handles all of the messages we want
+    _scriptLogger.slogger.setLevel(min(consoleLevel, logfileLevel))
+
+    _scriptLogger.setup = True
+
+def getScriptLogger():
+    "Returns the singleton instance of the script logger."
+
+    assert(_scriptLogger)
+
+    if not _scriptLogger.setup:
+        setupScriptLogger()
+
+    return _scriptLogger
 
