@@ -44,6 +44,9 @@ rm -f /root/post-kernel-tag-scripts
 #Reset the root password to blank
 /usr/sbin/usermod -p '' root
 
+# delete all rollbacks
+rm -rf /var/lib/conarydb/rollbacks/*
+
 #Remove the blkid.tab file that causes the kernel to try to boot off of /dev/ubd0
 #when in qemu/vmware
 [ -f /etc/blkid.tab ] && rm /etc/blkid.tab
