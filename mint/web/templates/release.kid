@@ -100,9 +100,8 @@ import time
                             <a href="http://${cfg.siteHost}${cfg.basePath}downloadImage/${file['fileId']}/${file['filename']}"> Download ${file['title'] and file['title'] or "Disc " + str(i+1)}</a> (${file['size']/1048576}&nbsp;MB)
                         </li>
                     </ul>
-                   <div py:if="releasetypes.INSTALLABLE_ISO in release.imageTypes">
-                    <h4 onclick="javascript:toggle_display('file_help');"
-                        style="cursor: pointer;">What are these files?&nbsp;<img id="file_help_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" /></h4>
+                    <div py:if="releasetypes.INSTALLABLE_ISO in release.imageTypes">
+                        <h4 onclick="javascript:toggle_display('file_help');" style="cursor: pointer;">What are these files?&nbsp;<img id="file_help_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" /></h4>
 
                         <div id="file_help" style="display: none;">
                             <p>The file(s) entitled <tt>Disc <em>N</em></tt>
@@ -139,47 +138,65 @@ import time
                             </div>
 			</div>
 
-                   <div py:if="releasetypes.VMWARE_IMAGE in release.imageTypes">
-                    <h4 onclick="javascript:toggle_display('file_help');"
-                        style="cursor: pointer;">What is this file?&nbsp;<img id="file_help_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" /></h4>
+                        <div py:if="releasetypes.VMWARE_IMAGE in release.imageTypes">
+                            <h4 onclick="javascript:toggle_display('file_help');" style="cursor: pointer;">What is this file?&nbsp;<img id="file_help_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" /></h4>
 
-                        <div id="file_help" style="display: none;">
-                            <p>This file contains the <tt>.vmdk</tt> and
-                            <tt>.vmx</tt> files usable by VMware
-                            Player.</p>
+                            <div id="file_help" style="display: none;">
+                                <p>This file contains the <tt>.vmdk</tt> and
+                                <tt>.vmx</tt> files usable by VMware
+                                Player.</p>
 
-                            <p>NOTE: Before using this file, you must unzip
-                            it using the utility of your choice.  However,
-                            be aware that some unzip utilities cannot
-                            correctly uncompress a zipped file if one of
-                            the files in the zip archive is larger than
-                            2GB.  If this file contains a <tt>.vmdk</tt>
-                            file larger than 2GB (you can use the
-                            <tt>zipinfo</tt> command to find out), you may
-                            experience this.  Note that the <tt>unzip</tt>
-                            utility packaged with rPath Linux can
-                            unzip files larger than 2GB.</p>
+                                <p>NOTE: Before using this file, you must unzip
+                                it using the utility of your choice.  However,
+                                be aware that some unzip utilities cannot
+                                correctly uncompress a zipped file if one of
+                                the files in the zip archive is larger than
+                                2GB.  If this file contains a <tt>.vmdk</tt>
+                                file larger than 2GB (you can use the
+                                <tt>zipinfo</tt> command to find out), you may
+                                experience this.  Note that the <tt>unzip</tt>
+                                utility packaged with rPath Linux can
+                                unzip files larger than 2GB.</p>
                             </div>
 			</div>
 			<div py:if="releasetypes.RAW_HD_IMAGE in release.imageTypes">
-                    <h4 onclick="javascript:toggle_display('file_help');"
-                        style="cursor: pointer;">What is this file?&nbsp;<img id="file_help_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" /></h4>
+                            <h4 onclick="javascript:toggle_display('file_help');" style="cursor: pointer;">What is this file?&nbsp;<img id="file_help_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" /></h4>
 
-                        <div id="file_help" style="display: none;">
-                            <p>This file contains an image of a bootable
-                            environment capable of being written onto an
-                            IDE disk drive using the <tt>dd</tt> command.
-                            This image can also be run under the <a
-                            href="http://fabrice.bellard.free.fr/qemu/">QEMU</a>
-                            processor emulator.</p>
+                            <div id="file_help" style="display: none;">
+                                <p>This file contains an image of a bootable
+                                environment capable of being written onto an
+                                IDE disk drive using the <tt>dd</tt> command.
+                                This image can also be run under the <a
+                                href="http://fabrice.bellard.free.fr/qemu/">QEMU</a>
+                                processor emulator.</p>
 
-                            <p>NOTE: This image has been compressed using
-                            GNU zip.  Before using this image, you must
-                            first uncompress it (using the <tt>gunzip</tt>
-                            command).</p>
+                                <p>NOTE: This image has been compressed using
+                                GNU zip.  Before using this image, you must
+                                first uncompress it (using the <tt>gunzip</tt>
+                                command).</p>
                             </div>
                         </div>
+                        <div py:if="releasetypes.RAW_FS_IMAGE in release.imageTypes">
+                            <h4 onclick="javascript:toggle_display('file_help');" style="cursor: pointer;">What is this file?&nbsp;<img id="file_help_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" /></h4>
 
+                            <div id="file_help" style="display: none;">
+                                <p>Raw Filesystem __DESCRIPTION_STUB__</p>
+                            </div>
+                        </div>
+                        <div py:if="releasetypes.TARBALL in release.imageTypes">
+                            <h4 onclick="javascript:toggle_display('file_help');" style="cursor: pointer;">What is this file?&nbsp;<img id="file_help_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" /></h4>
+
+                            <div id="file_help" style="display: none;">
+                                <p>Tarball __DESCRIPTION_STUB__</p>
+                            </div>
+                        </div>
+                        <div py:if="releasetypes.LIVE_ISO in release.imageTypes">
+                            <h4 onclick="javascript:toggle_display('file_help');" style="cursor: pointer;">What is this file?&nbsp;<img id="file_help_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" /></h4>
+
+                            <div id="file_help" style="display: none;">
+                                <p>Live CD/DVD __DESCRIPTION_STUB__</p>
+                            </div>
+                        </div>
                     </div>
                     <p py:if="not files">Release has no downloadable files.</p>
                 </div>
