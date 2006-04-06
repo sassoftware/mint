@@ -24,6 +24,7 @@ python_files = \
                jobserverharness.py \
                joinrequesttest.py \
                labelstest.py \
+               maintenancetest.py \
                mint_rephelp.py \
                mirrortest.py \
                projecttest.py \
