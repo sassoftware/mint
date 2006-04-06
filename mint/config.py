@@ -52,9 +52,11 @@ class MintConfig(ConfigFile):
     authPass                = None
     authDbPath              = None
     templatePath            = os.path.join(templatePath, 'web', 'templates')
-    dataPath                = '/srv/mint/'
+    dataPath                = os.path.join(os.path.sep, 'srv', 'mint', '')
     reposPath               = None
-    reposContentsDir        = (cfgtypes.CfgPathList, ["/srv/mint/repos/%s/contents/"])
+    reposContentsDir        = (cfgtypes.CfgPathList,
+                               [os.path.join(os.path.sep, 'srv', 'mint',
+                                             'repos', '%s', 'contents', '')])
     dbPath                  = None
     dbDriver                = 'sqlite'
     imagesPath              = None
@@ -89,9 +91,10 @@ class MintConfig(ConfigFile):
     hideFledgling           = (cfgtypes.CfgBool, False)
 
     reposDBDriver           = 'sqlite'
-    reposDBPath             = '/srv/mint/repos/%s/sqldb'
+    reposDBPath             = os.path.join(os.path.sep, 'srv', 'mint',
+                                           'repos', '%s', 'sqldb')
     visibleImageTypes       = (cfgtypes.CfgList(CfgImageEnum))
-    maintenanceMode         = (cfgtypes.CfgBool, False)
+    maintenanceLockPath     = os.path.join(dataPath, 'maintenance.lock')
     announceLink            = ''
 
     def read(self, path, exception = False):
