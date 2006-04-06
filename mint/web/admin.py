@@ -274,5 +274,16 @@ class AdminHandler(WebHandler):
             self.client.delOutboundLabel(int(labelId), url)
         self._redirect("http://%s%sadminister?operation=outbound" % (self.cfg.siteHost, self.cfg.basePath))
 
+    def _admin_toggle_maintenance_lock(self, *args, **kwargs):
+        if os.path.exists(self.cfg.maintenanceLockPath):
+            os.unlink(self.cfg.maintenanceLockPath)
+        else:
+            f = open(self.cfg.maintenanceLockPath, 'w')
+            f.close()
+        self._redirect("http://%s%sadminister?operation=maintenance_mode" % (self.cfg.siteHost, self.cfg.basePath))
+
+    def _admin_maintenance_mode(self, *args, **kwargs):
+        return self._write('admin/maintenance', kwargs = kwargs)
+
     def _administer(self, *args, **kwargs):
         return self._write('admin/administer', kwargs = kwargs)
