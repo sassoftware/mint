@@ -244,6 +244,9 @@ class MintApacheServer(rephelp.ApacheServer):
                                  releasetypes.LIVE_ISO,
                                  releasetypes.VMWARE_IMAGE,
                                  releasetypes.STUB_IMAGE]
+        cfg.maintenanceMode = False
+        cfg.maintenanceLockPath  = os.path.join(cfg.dataPath,
+                                                'maintenance.lock')
 
         self.mintCfg = cfg
 
