@@ -180,7 +180,16 @@ import time
                             <h4 onclick="javascript:toggle_display('file_help');" style="cursor: pointer;">What is this file?&nbsp;<img id="file_help_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" /></h4>
 
                             <div id="file_help" style="display: none;">
-                                <p>Raw Filesystem __DESCRIPTION_STUB__</p>
+                                <p>This file contains a system environment
+                                in a single filesystem (it includes no
+                                partition table).  It can be written onto
+                                an IDE disk drive using the <tt>dd</tt>
+                                command.</p>
+
+                                <p>NOTE: This image has been compressed using
+                                GNU zip.  Before using this image, you must
+                                first uncompress it (using the <tt>gunzip</tt>
+                                command).</p>
                             </div>
                         </div>
                         <div py:if="releasetypes.TARBALL in release.imageTypes">
