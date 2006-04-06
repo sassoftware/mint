@@ -142,6 +142,8 @@ class MintApp(WebHandler):
                 pageCache[reqHash(self.req)] = output
 
         except mint_error.MintError, e:
+            if isinstance(e, mint_error.MaintenanceMode):
+                raise
             import traceback
             tb = traceback.format_exc()
 
