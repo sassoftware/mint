@@ -187,7 +187,11 @@ import time
                             <h4 onclick="javascript:toggle_display('file_help');" style="cursor: pointer;">What is this file?&nbsp;<img id="file_help_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" /></h4>
 
                             <div id="file_help" style="display: none;">
-                                <p>Tarball __DESCRIPTION_STUB__</p>
+                                <p>This file contains a system environment
+                                in tar format, compressed using GNU zip.
+                                Before using this image, you must first
+                                uncompress it (using the <tt>gunzip</tt>
+                                command).</p>
                             </div>
                         </div>
                         <div py:if="releasetypes.LIVE_ISO in release.imageTypes">
