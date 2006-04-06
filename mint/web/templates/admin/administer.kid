@@ -22,6 +22,7 @@
                 <li><a href="${cfg.basePath}administer?operation=external">Add External Project</a></li>
                 <li><a href="${cfg.basePath}administer?operation=outbound">Manage Outbound Mirror Settings</a></li>
                 <li><a href="${cfg.basePath}administer?operation=jobs">Manage Jobs</a></li>
+                <li><a href="${cfg.basePath}administer?operation=maintenance_mode">Manage Maintenance Mode</a></li>
               </ul>
             </div>
         </td>
