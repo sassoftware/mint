@@ -26,12 +26,14 @@ from conary.repository.filecontainer import FileContainer
 from conary.repository import changeset
 from conary.repository import errors
 from conary.repository import shimclient
+from conary.repository.transport import Transport
 
 from mint import config
 from mint import mint_server
 from mint import mirror
 from mint import users
 from mint import profile
+from mint import mint_error
 from mint.helperfuncs import extractBasePath
 from mint.projects import mysqlTransTable
 from webhandler import normPath, HttpError, getHttpAuth
@@ -206,7 +208,7 @@ def putFile(port, isSecure, repos, req):
 
 def conaryHandler(req, cfg, pathInfo):
     if cfg.maintenanceMode:
-        return apache.HTTP_FORBIDDEN
+        raise mint_error.MaintenanceMode
 
     paths = normPath(req.uri).split("/")
     if "repos" in paths:
@@ -407,6 +409,12 @@ def handler(req):
         cfg.read(req.filename)
         cfgMTime = mtime
 
+    if os.path.exists(cfg.maintenanceLockPath):
+        cfg.maintenanceMode = True
+    else:
+        # must be explicit or the server won't come back without a poke.
+        cfg.maintenanceMode = False
+
     if "basePath" not in req.get_options():
         cfg.basePath = extractBasePath(normPath(req.uri), normPath(req.path_info))
         pathInfo = req.path_info
@@ -429,7 +437,6 @@ def handler(req):
         req.headers_out['Location'] = "/setup/"
         raise apache.SERVER_RETURN, apache.HTTP_MOVED_TEMPORARILY
 
-
     prof.startHttp(req.uri)
 
     ret = apache.HTTP_NOT_FOUND
@@ -443,6 +450,18 @@ def handler(req):
                     raise apache.SERVER_RETURN, e.code
                 except apache.SERVER_RETURN, e:
                     raise apache.SERVER_RETURN, e
+                except mint_error.MaintenanceMode, e:
+                    # this is a conary client, or an unknown python browser
+                    if 'User-agent' in req.headers_in and \
+                           req.headers_in['User-agent'] == Transport.user_agent:
+                        return apache.HTTP_FORBIDDEN
+                    else:
+                        # this page offers a way to log in. vice standard error
+                        # we must force a redirect to ensure half finished
+                        # work flowpaths don't trigger more errors.
+                        req.err_headers_out['Cache-Control'] = "no-store"
+                        req.headers_out['Location'] = cfg.basePath + 'maintenance'
+                        return apache.HTTP_MOVED_TEMPORARILY
                 except:
                     # we only want to handle errors in production mode
                     if cfg.debugMode or req.bytes_sent > 0:
