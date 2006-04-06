@@ -8,6 +8,7 @@ kid_files =			\
 	add_outbound.kid	\
 	administer.kid		\
 	external.kid		\
+        maintenance.kid         \
 	notify.kid		\
 	project.kid		\
 	report.kid		\
