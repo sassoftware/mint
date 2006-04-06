@@ -194,7 +194,12 @@ import time
                             <h4 onclick="javascript:toggle_display('file_help');" style="cursor: pointer;">What is this file?&nbsp;<img id="file_help_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" /></h4>
 
                             <div id="file_help" style="display: none;">
-                                <p>Live CD/DVD __DESCRIPTION_STUB__</p>
+                                <p>This file contains a system environment
+                                capable of being booted and run directly
+                                from a CD/DVD.  The file is in ISO 9660
+                                format, and can be burned onto CD or DVD
+                                media using the CD/DVD burning software of
+                                your choice.</p>
                             </div>
                         </div>
                     </div>
