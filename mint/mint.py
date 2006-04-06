@@ -21,7 +21,7 @@ import grouptrove
 import base64
 from mint_error import MintError, UnknownException, PermissionDenied, \
     ReleasePublished, ReleaseMissing, ReleaseEmpty, UserAlreadyAdmin, \
-    AdminSelfDemotion, JobserverVersionMismatch
+    AdminSelfDemotion, JobserverVersionMismatch, MaintenanceMode
 from searcher import SearchTermsError
 
 
@@ -548,6 +548,8 @@ class _Method(xmlrpclib._Method):
             raise AdminSelfDemotion(exceptionArgs[0])
         elif exceptionName == "JobserverVersionMismatch":
             raise JobserverVersionMismatch(exceptionArgs[0])
+        elif exceptionName == "MaintenanceMode":
+            raise MaintenanceMode(exceptionArgs[0])
         else:
             raise UnknownException(exceptionName, exceptionArgs)
 
