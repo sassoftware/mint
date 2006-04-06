@@ -59,3 +59,10 @@ class LastAdmin(MintError):
 
      def __init__(self, msg = "You cannot close your account."):
          self.msg = msg
+
+class MaintenanceMode(MintError):
+    def __str__(self):
+        return self.msg
+
+    def __init__(self, msg = "Repositories are currently offline."):
+        self.msg = msg
