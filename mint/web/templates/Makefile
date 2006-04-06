@@ -24,6 +24,7 @@ kid_files = \
 	layout.kid		\
 	library.kid		\
 	mailingLists.kid	\
+        maintenance.kid         \
 	members.kid		\
 	newGroup.kid		\
 	newProject.kid		\
