@@ -1046,80 +1046,6 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.failIf(res[0][0] != 'group-test',
                     "Trove name was malformed during release creation.")
 
-    def testMaintenanceMode(self):
-        if self.mintCfg.dbDriver != "sqlite":
-            raise testsuite.SkipTestException
-
-        from mint import mint_server
-        def newMintCfg(self):
-            self.getOldMintCfg()
-            self.mintCfg.maintenanceMode = True
-        serverRoot = self.servers.getServer().serverRoot
-
-        mint_rephelp.MintApacheServer.getOldMintCfg = mint_rephelp.MintApacheServer.getMintCfg
-        mint_rephelp.MintApacheServer.getMintCfg = newMintCfg
-        try:
-            server = self.servers.getServer()
-            server.stop()
-            server.getMintCfg()
-            f = file(serverRoot + "/mint.conf", "w")
-            server.mintCfg.display(f)
-            f.close()
-            rephelp.ApacheServer.start(server, False)
-
-            # from this point forward:
-            # apache server is cfg.maintnenanceMode True--will reject requests
-            # that interact with project repositories
-            # shimclients have cfg.maintenanceMode False--anything goes
-            # this allows us to use client to set up the initial env
-            client, userId = self.quickMintUser('foouser', 'foopass')
-            projectId = self.newProject(client)
-
-            page = self.webLogin('foouser', 'foopass')
-
-            page = page.fetch('/newProject')
-            # the client call passed. this will fail with permission denied.
-            page = page.postForm(1, self.post, {'title': 'Bar Project',
-                                                'hostname': 'bar'})
-
-            self.failIf("Permission Denied" not in page.body,
-                        "Server did not reject project creation attempt")
-
-            # this call would normally not be safe.
-            page = self.fetch('/repos/testproject/browse', ok_codes = [403],
-                    server = self.getProjectServerHostname())
-
-            # now lock down shim clients as well
-            self.mintServer.cfg.maintenanceMode = True
-            self.assertRaises(mint_error.PermissionDenied,
-                              client.server._server.startNextJob,
-                              ['1#x86'],
-                               {'imageTypes' : [releasetypes.STUB_IMAGE]},
-                              jsversion.getDefaultVersion())
-
-            self.assertRaises(mint_error.PermissionDenied,
-                              self.newProject, client)
-
-            self.assertRaises(errors.OpenError, self.addComponent,
-                              'test:data',
-                              '/testproject.' + MINT_PROJECT_DOMAIN + \
-                              '@rpl:devel/1.0-1-1')
-
-        finally:
-            # put the server back how we found it, lest other tests suffer.
-            self.mintServer.cfg.maintenanceMode = False
-            mint_rephelp.MintApacheServer.getMintCfg = mint_rephelp.MintApacheServer.getOldMintCfg
-            del mint_rephelp.MintApacheServer.getOldMintCfg
-            server = self.servers.getServer()
-            server.stop()
-
-            server.getMintCfg()
-            f = file(serverRoot + "/mint.conf", "w")
-            server.mintCfg.display(f)
-            f.close()
-
-            rephelp.ApacheServer.start(server)
-
     def testCantPublishReleasesWithoutFiles(self):
         client, userId = self.quickMintUser('foouser', 'foopass')
         projectId = self.newProject(client)
@@ -1243,6 +1169,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
     def testNoAdminPowers(self):
         self.assertCode("/administer", code = 403)
+
 
 if __name__ == "__main__":
     testsuite.main()
