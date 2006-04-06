@@ -203,6 +203,10 @@ class SiteHandler(WebHandler):
             client = shimclient.ShimMintClient(self.cfg, authToken)
             auth = client.checkAuth()
 
+            if not auth.admin and self.cfg.maintenanceMode:
+                # do not allow logins to occur for non-admins in maintenance
+                raise mint_error.MaintenanceMode
+
             if not auth.authorized:
                 raise mint_error.InvalidLogin
             else:
@@ -512,6 +516,9 @@ class SiteHandler(WebHandler):
         else:
             return self._write("confirm", message = "Are you sure you want to close your account?",
                 yesArgs = {'func':'cancelAccount', 'confirmed':'1'}, noLink = self.cfg.basePath)
+
+    def maintenance(self, auth, *args, **kwargs):
+        return self._write("maintenance")
 
     @strFields(feed = 'newProjects')
     def rss(self, auth, feed):
