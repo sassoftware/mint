@@ -60,7 +60,13 @@ onload = "javascript:;"
                     </a>
                 </div>
                 <div id="topRight">
-                    <div class="about"><a href="${cfg.corpSite}">About ${cfg.companyName}</a>
+                    <div class="about">
+                        <a href="${cfg.basePath}administer?operation=maintenance_mode" py:if="cfg.maintenanceMode and auth.admin">
+                          <b style="color: red;">
+                          Maintenance Mode&nbsp;
+                          </b>
+                        </a>
+                        <a href="${cfg.corpSite}">About ${cfg.companyName}</a>
                         <span py:omit="True" py:if="not auth.authorized and req.uri != cfg.basePath"> | <a href="http://${SITE}">Sign In</a></span>
                     </div>
                     <form action="http://${cfg.siteHost}${cfg.basePath}search" method="get" id="searchForm">
