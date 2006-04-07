@@ -15,8 +15,23 @@ from conary.repository import errors
 from mint import mint_error
 from mint import releasetypes
 from mint.distro import jsversion
+from mint import maintenance
+from mint import config
+from mint import users
 
 class MaintenanceTest(mint_rephelp.WebRepositoryHelper):
+    def tearDown(self):
+        # ensure that locks cannot transcend test cases.
+        try:
+            os.unlink(self.mintCfg.maintenanceLockPath)
+        except OSError, e:
+            if e.errno != 2:
+                raise
+        mint_rephelp.WebRepositoryHelper.tearDown(self)
+
+    def setMaintenanceMode(self, mode):
+        maintenance.setMaintenanceMode(self.mintCfg, mode)
+
     def testLogins(self):
         client, userId = self.quickMintUser('foouser', 'foopass')
         adminClient, adminUserId = self.quickMintAdmin('admin', 'admin')
@@ -25,53 +40,47 @@ class MaintenanceTest(mint_rephelp.WebRepositoryHelper):
         page = self.fetchWithRedirect('/logout')
         page = self.webLogin('admin', 'admin')
         page = self.fetchWithRedirect('/logout')
-        f = open(self.mintCfg.maintenanceLockPath, 'w')
-        f.close()
-        try:
-            # test that browsers get redirected to maintenance page
-            page = self.fetch(self.mintCfg.basePath, ok_codes = [302])
-            self.failIf(self.mintCfg.basePath + 'maintenance' not in page.body,
-                        "Browsers should be redirected to maintenance page")
-            # test that non-admin users are not allowed to log in.
-            self.clearCookies()
-            page = self.fetchWithRedirect(self.mintCfg.basePath)
-            page = page.postForm(1, self.fetchWithRedirect,
-                                 {'username': 'foouser',
-                                  'password': 'foopass'})
-            self.failIf('is currently undergoing maintenance' not in page.body,
-                        "non-admin user appears to have logged in")
 
-            # ensure no cookies are set
-            self.failIf(self.cookies, "non-admin user got session cookies.")
+        self.setMaintenanceMode(maintenance.LOCKED_MODE)
 
-            page = self.fetchWithRedirect(self.mintCfg.basePath)
-            page = page.postForm(1, self.fetchWithRedirect,
-                                 {'username': 'admin',
-                                  'password': 'admin'})
-            self.failIf('is currently undergoing maintenance' in page.body,
-                        "admin user's login was rejected.")
+        # test that browsers get redirected to maintenance page
+        page = self.fetch(self.mintCfg.basePath, ok_codes = [302])
+        self.failIf(self.mintCfg.basePath + 'maintenance' not in page.body,
+                    "Browsers should be redirected to maintenance page")
+        # test that non-admin users are not allowed to log in.
+        self.clearCookies()
+        page = self.fetchWithRedirect(self.mintCfg.basePath)
+        page = page.postForm(1, self.fetchWithRedirect,
+                             {'username': 'foouser',
+                              'password': 'foopass'})
+        self.failIf('is currently undergoing maintenance' not in page.body,
+                    "non-admin user appears to have logged in")
 
-            # ensure cookies are set
-            self.failIf(not self.cookies, "admin user got no session cookies.")
+        # ensure no cookies are set
+        self.failIf(self.cookies, "non-admin user got session cookies.")
 
-            self.failIf('Maintenance Mode' not in page.body,
-                        "Page does not indicate maintenance mode")
-        finally:
-            os.unlink(self.mintCfg.maintenanceLockPath)
+        page = self.fetchWithRedirect(self.mintCfg.basePath)
+        page = page.postForm(1, self.fetchWithRedirect,
+                             {'username': 'admin',
+                              'password': 'admin'})
+        self.failIf('is currently undergoing maintenance' in page.body,
+                    "admin user's login was rejected.")
+
+        # ensure cookies are set
+        self.failIf(not self.cookies, "admin user got no session cookies.")
+
+        self.failIf('Maintenance Mode' not in page.body,
+                    "Page does not indicate maintenance mode")
 
     def testProjects(self):
         client, userId = self.quickMintAdmin('admin', 'admin')
         page = self.webLogin('admin', 'admin')
-        f = open(self.mintCfg.maintenanceLockPath, 'w')
-        f.close()
-        try:
-            page = self.fetchWithRedirect('/newProject')
-            page = page.postForm(1, self.post, {'title': 'Bar Project',
-                                                'hostname': 'bar'})
-            self.failIf("Repositories are currenly offline" not in page.body,
-                        "Admin user was allowed to create a project")
-        finally:
-            os.unlink(self.mintCfg.maintenanceLockPath)
+        self.setMaintenanceMode(maintenance.LOCKED_MODE)
+        page = self.fetchWithRedirect('/newProject')
+        page = page.postForm(1, self.post, {'title': 'Bar Project',
+                                            'hostname': 'bar'})
+        self.failIf("Repositories are currently offline" not in page.body,
+                    "Admin user was allowed to create a project")
 
     def testCommits(self):
         client, userId = self.quickMintAdmin('admin', 'admin')
@@ -81,54 +90,39 @@ class MaintenanceTest(mint_rephelp.WebRepositoryHelper):
         self.addComponent('test:data',
                           '/testproject.' + MINT_PROJECT_DOMAIN + \
                           '@rpl:devel/1.0-1-1')
-        f = open(self.mintCfg.maintenanceLockPath, 'w')
-        f.close()
-        try:
-            # ensure commit fails in maintenanceMode.
-            self.assertRaises(errors.OpenError, self.addComponent,
-                              'test:data',
-                              '/testproject.' + MINT_PROJECT_DOMAIN + \
-                              '@rpl:devel/1.0-1-1')
-        finally:
-            os.unlink(self.mintCfg.maintenanceLockPath)
+        self.setMaintenanceMode(maintenance.LOCKED_MODE)
+
+        # ensure commit fails in maintenance mode.
+        self.assertRaises(errors.OpenError, self.addComponent,
+                          'test:data',
+                          '/testproject.' + MINT_PROJECT_DOMAIN + \
+                          '@rpl:devel/1.0-1-1')
 
     def testJobs(self):
         client, userId = self.quickMintAdmin('admin', 'admin')
         # use a shim client and skip the lockfile.
-        maintenanceMode = self.mintServer.cfg.maintenanceMode
-        self.mintServer.cfg.maintenanceMode = True
-        try:
-            self.assertRaises(mint_error.MaintenanceMode,
-                              client.startNextJob,
-                              ['1#x86'],
-                              {'imageTypes' : [releasetypes.STUB_IMAGE]},
-                              jsversion.getDefaultVersion())
-        finally:
-            self.mintServer.cfg.maintenanceMode = maintenanceMode
+        self.setMaintenanceMode(maintenance.LOCKED_MODE)
+        self.assertRaises(mint_error.MaintenanceMode,
+                          client.startNextJob,
+                          ['1#x86'],
+                          {'imageTypes' : [releasetypes.STUB_IMAGE]},
+                          jsversion.getDefaultVersion())
 
     def testRepos(self):
         client, userId = self.quickMintAdmin('admin', 'admin')
         self.newProject(client)
-        f = open(self.mintCfg.maintenanceLockPath, 'w')
-        f.close()
-        try:
-            # this call would normally not be safe.
-            page = self.fetchWithRedirect('/repos/testproject/browse',
-                              server = self.getProjectServerHostname())
-            self.failIf("is currently undergoing maintenance" not in page.body,
-                        "It appears we could browse the repo")
-        finally:
-            os.unlink(self.mintCfg.maintenanceLockPath)
+        self.setMaintenanceMode(maintenance.LOCKED_MODE)
+        # this call would normally not be safe.
+        page = self.fetchWithRedirect('/repos/testproject/browse',
+                                      server = self.getProjectServerHostname())
+        self.failIf("is currently undergoing maintenance" not in page.body,
+                    "It appears we could browse the repo")
 
     def testUsers(self):
         # use a shim client and skip the lockfile.
-        maintenanceMode = self.mintServer.cfg.maintenanceMode
-        self.mintServer.cfg.maintenanceMode = True
-        try:
-            self.assertRaises(mint_error.MaintenanceMode,
-                              self.quickMintUser, 'newuser', 'newpass')
-        finally:
-            self.mintServer.cfg.maintenanceMode = maintenanceMode
+        self.setMaintenanceMode(maintenance.LOCKED_MODE)
+        self.assertRaises(mint_error.MaintenanceMode,
+                          self.quickMintUser, 'newuser', 'newpass')
 
     def testToggleLock(self):
         self.quickMintAdmin('adminuser', 'adminpass')
@@ -137,21 +131,66 @@ class MaintenanceTest(mint_rephelp.WebRepositoryHelper):
                                       "?operation=maintenance_mode")
         self.failIf(os.path.exists(self.mintCfg.maintenanceLockPath),
                     "lock existed before test started")
-        try:
-            page.postForm(1, self.post, {'operation' :
-                                         'toggle_maintenance_lock'})
-            self.failIf(not os.path.exists(self.mintCfg.maintenanceLockPath),
-                        "lock wasn't created by admin interface")
-            page.postForm(1, self.post, {'operation' :
-                                         'toggle_maintenance_lock'})
-            self.failIf(os.path.exists(self.mintCfg.maintenanceLockPath),
-                        "lock wasn't removed by admin interface")
-        finally:
-            try:
-                os.unlink(self.mintCfg.maintenanceLockPath)
-            except:
-                # ignore "missing file" errors silently
-                pass
+        page.postForm(1, self.post, {'operation' :
+                                     'toggle_maintenance_lock'})
+        self.failIf(maintenance.getMaintenanceMode(self.mintCfg) != \
+                    maintenance.LOCKED_MODE,
+                    "lock wasn't created by admin interface")
+        page.postForm(1, self.post, {'operation' :
+                                     'toggle_maintenance_lock'})
+        self.failIf(maintenance.getMaintenanceMode(self.mintCfg) != \
+                    maintenance.NORMAL_MODE,
+                    "lock wasn't removed by admin interface")
+
+    def testGetMode(self):
+        self.failIf(maintenance.getMaintenanceMode(self.mintCfg) !=
+                    maintenance.NORMAL_MODE,
+                    "missing lock file didn't equate to normal mode")
+        for mode in (maintenance.NORMAL_MODE, maintenance.LOCKED_MODE):
+            f = open(self.mintCfg.maintenanceLockPath, 'w')
+            f.write(mode * chr(0))
+            f.close()
+            self.failIf(maintenance.getMaintenanceMode(self.mintCfg) !=
+                        mode, "getMaintenanceMode returned incorrect value")
+
+    def testSetMode(self):
+        maintenance.setMaintenanceMode(self.mintCfg, maintenance.NORMAL_MODE)
+        self.failIf(os.path.exists(self.mintCfg.maintenanceLockPath),
+                    "setMaintenanceMode to normal didn't remove lock file")
+        maintenance.setMaintenanceMode(self.mintCfg, maintenance.LOCKED_MODE)
+        f = open(self.mintCfg.maintenanceLockPath)
+        mode = len(f.read())
+        f.close()
+        self.failIf(mode != maintenance.LOCKED_MODE,
+                    "maintenance mode not set properly")
+
+    def testEnforceNormalMode(self):
+        cfg = config.MintConfig()
+        cfg.maintenanceLockPath = self.mintCfg.maintenanceLockPath
+        userAuth = users.Authorization(authorized = True, username = "foo",
+                                       stagnent = False)
+        adminAuth = users.Authorization(authorized = True, username = "foo",
+                                        stagnent = False, admin = True)
+        # ensure no calls to enforceMaintenanceMode raise exception
+        maintenance.enforceMaintenanceMode(cfg, userAuth)
+        maintenance.enforceMaintenanceMode(cfg)
+        maintenance.enforceMaintenanceMode(cfg, adminAuth)
+
+    def testEnforceLockedMode(self):
+        cfg = config.MintConfig()
+        cfg.maintenanceLockPath = self.mintCfg.maintenanceLockPath
+        userAuth = users.Authorization(authorized = True, username = "foo",
+                                       stagnent = False)
+        adminAuth = users.Authorization(authorized = True, username = "foo",
+                                        stagnent = False, admin = True)
+        # ensure proper calls to enforceMaintenanceMode raise exception
+        self.setMaintenanceMode(maintenance.LOCKED_MODE)
+        self.assertRaises(mint_error.MaintenanceMode,
+                          maintenance.enforceMaintenanceMode, cfg, userAuth)
+        self.assertRaises(mint_error.MaintenanceMode,
+                          maintenance.enforceMaintenanceMode, cfg)
+        maintenance.enforceMaintenanceMode(cfg, adminAuth)
+
 
 if __name__ == "__main__":
     testsuite.main()
