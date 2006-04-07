@@ -1,3 +1,8 @@
+Changes in 1.6.1:
+
+* Bootable images now save the taghandler script and the output
+of that script in /root/, the same way the installable CD does.
+
 Changes in 1.6.0:
 
 * Redirects in the group builder are now handled more correctly:

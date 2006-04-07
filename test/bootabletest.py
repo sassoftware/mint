@@ -39,7 +39,7 @@ class BootableImageTest(MintRepositoryHelper):
         bi = bootable_image.BootableImage(client, isocfg, job, release, project)
         bi.conarycfg = self.cfg
         bi.setupConaryClient()
-        util.mkdirChain(bi.fakeroot + "/tmp")
+        util.mkdirChain(bi.fakeroot + "/tmp", bi.fakeroot + "/root")
 
         empty = EmptyCallback()
         uJob = bi.updateGroupChangeSet(empty)

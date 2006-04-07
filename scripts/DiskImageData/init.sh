@@ -31,7 +31,7 @@ mount -f /dev/pts >/dev/null 2>&1
 /sbin/swapon -a -e
 
 for i in pre-tag-scripts conary-tag-script post-tag-scripts conary-kernel-tag-script post-kernel-tag-scripts; do
-    [ -f /root/$i ] && /bin/sh /root/$i 2>&1 >> /root/conary-tag-scripts.output
+    [ -f /root/$i ] && /bin/sh /root/$i 2>&1 >> /root/conary-tag-script.output
 done
 
 rm -f /root/pre-tag-scripts
