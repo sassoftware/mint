@@ -10,64 +10,67 @@ import signal
 import socket
 import sys
 import os
+import logging
 from optparse import OptionParser
 
-from conary.lib import log, util
+from conary.lib import util
+from mint import scriptlibrary
 
 from mint.distro import jobserver
 
-
 def kill(lockFile):
+    slog = scriptlibrary.getScriptLogger()
     try:
         lock = open(lockFile, "r")
         pid = int(lock.readline())
         lock.close()
     except Exception, e:
-        log.warning("unable to open lockfile: %s (%s)", lockFile, str(e))
+        slog.warning("unable to open lockfile: %s (%s)", lockFile, str(e))
     else:
         pipeFD = os.popen("ps p %d -o 'comm= args='" %pid)
         procName = pipeFD.readline().strip()
         pipeFD.close()
         if sys.argv[0] not in procName:
-            log.error("pid: %d does not seem to be an rBuilder"
+            slog.error("pid %d does not seem to be an rBuilder"
             " ISO generation server." % pid)
             try:
-                log.info("removing lock file")
+                slog.info("removing lock file")
                 os.unlink(lockFile)
             except OSError, e:
                 pass
             return
-        log.info("killing rBuilder ISO generation server pid %d" % pid)
+        slog.info("killing rBuilder ISO generation server pid %d" % pid)
         try:
             os.kill(pid, signal.SIGINT)
         except OSError, e:
             if e.errno != errno.ESRCH:
                 raise
             else:
-                log.info("process not found; removing lock file")
+                slog.info("process not found; removing lock file")
                 os.unlink(lockFile)
         # note, the lock file is not removed if an interrupt signal is
         # sucessfully sent. the rBuilder isogen server will remove the lock
         # on it's own once it has finsihed processing.
 
 def daemon(options, cfg):
+    slog = scriptlibrary.getScriptLogger()
     try:
         lock = open(cfg.lockFile, "w")
         lock.write("%d" % os.getpid())
         lock.close()
     except Exception, e:
-        log.warning("unable to open lockfile: %s (%s)", cfg.lockFile, str(e))
+        slog.warning("unable to open lockfile: %s (%s)", cfg.lockFile, str(e))
     try:
         jd = jobserver.JobDaemon(cfg)
     except socket.error, msg:
-        log.error("connecting to rBuilder server: %s", msg[1])
+        slog.error("connecting to rBuilder server: %s", msg[1])
     except KeyboardInterrupt:
-        log.info("(%d) interrupt caught; exiting" % os.getpid())
+        slog.info("interrupt caught; exiting")
 
     try:
         os.unlink(cfg.lockFile)
     except (IOError, OSError):
-        log.warning("unable to remove lockfile: %s", cfg.lockFile)
+        slog.warning("unable to remove lockfile: %s", cfg.lockFile)
 
 
 if __name__ == "__main__":
@@ -84,6 +87,8 @@ if __name__ == "__main__":
                       help = "Do not run as a daemon")
     (options, args) = parser.parse_args()
 
+    slog = scriptlibrary.getScriptLogger()
+
     # use sys.argv[1] as config file if provided
     # if not, try some standard locations
     cfgFiles = ["iso_gen.conf", None]
@@ -95,22 +100,38 @@ if __name__ == "__main__":
                 if os.access(cfgFile, os.R_OK) and os.path.isfile(cfgFile):
                     break
     if not cfgFile:
-        log.error("unable to open iso_gen.conf configuration file."
-                  " Please use --config=<path>.")
+        slog.error("Unable to open iso_gen.conf configuration " \
+                  "file. Please use --config=<path>.")
         sys.exit(1)
 
     cfg = jobserver.IsoGenConfig()
     cfg.read(cfgFile)
 
+    cfg.saveChildOutput = False
+    consoleLevel = logging.INFO
+    logfileLevel = logging.INFO
+
+    # --no-daemon implies --debug
+    if options.noDaemon:
+        consoleLevel = logging.DEBUG
+        options.debug = True
+
+    if options.debug:
+        # don't write debug data to file if --no-daemon specified
+        if not options.noDaemon:
+            cfg.saveChildOutput = True
+        cfg.debug = True
+        logfileLevel = logging.DEBUG
+
+    # create log instance
+    scriptlibrary.setupScriptLogger(os.path.join(cfg.logPath, "job-server.log"),
+            consoleLevel, logfileLevel)
+
+    slog.debug("Loaded configuration file from %s", cfgFile)
+
     if options.kill:
         kill(cfg.lockFile)
         sys.exit(1)
-
-    if options.debug:
-        log.setVerbosity(log.DEBUG)
-        cfg.debug = True
-    else:
-        log.setVerbosity(log.INFO)
 
     if os.access(cfg.lockFile, os.R_OK):
         lock = open(cfg.lockFile, "r")
@@ -122,16 +143,15 @@ if __name__ == "__main__":
         pipeFD.close()
 
         if str(pid) in pidLine:
-            log.error("rBuilder ISO generation server already"
+            slog.error("rBuilder ISO generation server already"
                       " running as pid %d", pid)
             sys.exit(1)
         else:
-            log.info("Old job daemon pid seems to be invalid. killing.")
+            slog.info("Old job daemon pid seems to be invalid; killing.")
             kill(cfg.lockFile)
 
-    log.debug("(%d) loading configuration file: %s", os.getpid(), cfgFile)
-    log.info("using Conary in %s",
-             os.path.dirname(sys.modules['conary'].__file__))
+    slog.debug("using Conary in %s",
+            os.path.dirname(sys.modules['conary'].__file__))
 
     if options.noDaemon:
         sys.excepthook = util.genExcepthook()
@@ -141,24 +161,25 @@ if __name__ == "__main__":
         pid = os.fork()
 
         if pid == 0:
-            # redirect stdout and stderr to job-server.log
-            logFile = os.path.join(cfg.logPath, "job-server.log")
-            null = os.open("/dev/null", os.O_WRONLY)
-            logfd = os.open(logFile, os.O_APPEND | os.O_WRONLY | os.O_CREAT, 0666)
-            os.dup2(logfd, sys.stdout.fileno())
-            os.dup2(logfd, sys.stderr.fileno())
-            os.dup2(null, sys.stdin.fileno())
-            os.close(null)
+
+            os.chdir("/")
+            # no longer write to console in daemon mode
+            nullfd = os.open('/dev/null', os.O_WRONLY)
+            os.dup2(nullfd, sys.stderr.fileno())
+            os.dup2(nullfd, sys.stdout.fileno())
+            os.dup2(nullfd, sys.stdin.fileno())
+            os.close(nullfd)
 
             pid = os.fork()
+
             if pid == 0:
-                # abandon the controlling tty by resetting session id
-                os.setsid()
 
                 sys.stdout.flush()
                 sys.stderr.flush()
 
+                # abandon the controlling tty by resetting session id
+                os.setsid()
                 daemon(options, cfg)
         else:
-            log.info("(%d) rBuilder ISO generation server started", os.getpid())
+            slog.info("rBuilder ISO generation server started")
             os._exit(0)

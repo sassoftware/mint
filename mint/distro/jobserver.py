@@ -18,12 +18,12 @@ from conary import conaryclient
 from conary.conarycfg import ConfigFile, ConaryConfiguration
 from conary.conarycfg import CfgList, CfgString, CfgBool, CfgInt, CfgDict, \
      CfgEnum
-from conary.lib import log
 
 # mint imports
 from mint import cooktypes
 from mint import jobstatus
 from mint import releasetypes
+from mint import scriptlibrary
 from mint.mint import MintClient
 from mint.config import CfgImageEnum
 
@@ -61,6 +61,7 @@ class JobRunner:
         self.job = job
 
     def run(self):
+        
         # ensure each job thread has it's own process space
         pid = os.fork()
         if not pid:
@@ -73,7 +74,33 @@ class JobRunner:
         ret = None
         error = None
         jobId = self.job.getId()
+        slog = scriptlibrary.getScriptLogger()
+
         self.job.setStatus(jobstatus.RUNNING, 'Running')
+
+        if self.cfg.saveChildOutput:
+            joboutputPath = os.path.join(self.cfg.logPath, 'joboutput')
+            if not os.path.exists(joboutputPath):
+                os.mkdir(joboutputPath)
+            logFile = os.path.join(self.cfg.logPath, "joboutput",
+                    "%s_%d.out" % (time.strftime('%Y%m%d%H%M%S'), jobId))
+            slog.debug("Output logged to %s" % logFile)
+
+            sys.stdout.flush()
+            sys.stderr.flush()
+
+            logfd = os.open(logFile, os.O_WRONLY | os.O_CREAT, 0664)
+
+            os.dup2(logfd, sys.stdout.fileno())
+            os.dup2(logfd, sys.stderr.fileno())
+
+            sys.stdout.flush()
+
+        # make sure conary's logger instance is logging (almost) all output
+        # N.B. debug is probably *too* verbose, really
+        from conary.lib import log
+        from logging import INFO
+        log.setVerbosity(INFO)
 
         if self.job.releaseId:
             release = self.client.getRelease(self.job.releaseId)
@@ -85,36 +112,38 @@ class JobRunner:
             try:
                 # this line assumes that there's only one image per job.
                 generator = generators[release.getImageTypes()[0]]
-                log.info("(%d) %s job for %s started (id %d)" % \
-                         (os.getpid(), generator.__name__,
-                          project.getHostname(), jobId))
+                slog.info("%s job for %s started (id %d)" % \
+                         (generator.__name__, project.getHostname(), jobId))
                 imageFilenames = generator(self.client, self.cfg, self.job,
                                            release, project).write()
-                os.chdir(cwd)
-
             except Exception, e:
                 traceback.print_exc()
                 sys.stdout.flush()
                 error = e
-                self.job.setStatus(jobstatus.ERROR, str(e))
             else:
                 release.setFiles(imageFilenames)
-                log.info("(%d) job %d finished: %s", os.getpid(), jobId, str(imageFilenames))
-            os.chdir(cwd)
+                slog.info("Job %d finished: %s", jobId, str(imageFilenames))
+
+            try:
+                os.chdir(cwd)
+            except:
+                pass
+
         elif self.job.getGroupTroveId():
             try:
-                log.info("(%d) GroupTroveCook job started (id %d)" % (os.getpid(), jobId))
+                slog.info("Group trove cook job started (id %d)" % jobId)
                 ret = GroupTroveCook(self.client, self.cfg, self.job).write()
             except Exception, e:
                 traceback.print_exc()
                 sys.stdout.flush()
                 error = e
-                self.job.setStatus(jobstatus.ERROR, str(e))
             else:
-                log.info("(%d) job %d succeeded: %s" % (os.getpid(), jobId, str(ret)))
+                slog.info("Job %d succeeded: %s" % (jobId, str(ret)))
 
         if error:
-            log.info(error)
+            slog.error("Job %d failed: %s", jobId, str(error))
+            self.job.setStatus(jobstatus.ERROR, str(e))
+            raise error
         else:
             self.job.setStatus(jobstatus.FINISHED, "Finished")
 
@@ -127,7 +156,10 @@ class JobDaemon:
 
         self.takingJobs = True
 
+        slog = scriptlibrary.getScriptLogger()
+
         def stopJobs(signalNum, frame):
+            slog = scriptlibrary.getScriptLogger()
             self.takingJobs = False
             if signalNum == signal.SIGTERM:
                 signalName = 'SIGTERM'
@@ -135,7 +167,7 @@ class JobDaemon:
                 signalName = 'SIGINT'
             else:
                 signalName = 'UNKNOWN'
-            log.info("Caught %s signal. No more jobs will be requested." % \
+            slog.info("Caught %s signal. No more jobs will be requested." % \
                      signalName)
             signal.signal(signal.SIGTERM, self.origTerm)
             signal.signal(signal.SIGINT, self.origInt)
@@ -144,7 +176,7 @@ class JobDaemon:
                 stats = os.stat(cfg.lockFile)
             except:
                 exc, e, bt = sys.exc_info()
-                log.error("got %s while trying to stat lockfile" % str(e))
+                slog.error("Got %s while trying to stat lockfile" % str(e))
             else:
                 # ensure we don't write to an empty file
                 if stats[7]:
@@ -163,14 +195,14 @@ class JobDaemon:
 
         # normalize the job daemon machine's architecture
         # right now we only handle x86 and x86_64 images
-        log.info("rBuilder ISOgen Version: %s" % mintVersion)
-        log.info("handling jobs of architecture: %s", cfg.supportedArch)
+        slog.info("rBuilder ISOgen Version: %s" % mintVersion)
+        slog.info("handling jobs of architecture: %s", cfg.supportedArch)
         if 'imageTypes' in cfg.jobTypes:
-            log.info("handling images: %s" \
+            slog.info("handling images: %s" \
                      % str([releasetypes.typeNamesShort[x] \
                             for x in cfg.jobTypes['imageTypes']]))
         if 'cookTypes' in cfg.jobTypes:
-            log.info("handling cooks: %s" \
+            slog.info("handling cooks: %s" \
                      % str([cooktypes.typeNames[x] \
                             for x in cfg.jobTypes['cookTypes']]))
 
@@ -194,7 +226,7 @@ class JobDaemon:
                     else:
                         job = None
                     if errors and not confirmedAlive:
-                        log.info("rBuilder server reached after %d attempt(s), resuming normal operation" % errors)
+                        slog.info("rBuilder server reached after %d attempt(s), resuming normal operation" % errors)
                         errors = 0
                     confirmedAlive = True
 
@@ -205,13 +237,13 @@ class JobDaemon:
                         time.sleep(random.uniform(*JOB_IDLE_INTERVAL))
                         continue
 
-                    log.info("(%d) TOOK A JOB: jobId %d" % (os.getpid(), job.id))
                     if job.releaseId:
                         release = client.getRelease(job.releaseId)
                         if release.getArch() not in cfg.supportedArch:
                             continue
 
                     job.setStatus(jobstatus.RUNNING, 'Starting')
+                    slog.info("Took ownership of jobId %d" % job.id)
                     th = JobRunner(cfg, client, job)
                     jobPid = th.run()
 
@@ -225,15 +257,15 @@ class JobDaemon:
                     if not confirmedAlive:
                         errors += 1
                         if errors > 5:
-                            log.error("rBuilder Server Unreachable after 5 attempts; exiting")
+                            slog.error("rBuilder Server Unreachable after 5 attempts; exiting")
                             return
                         else:
-                            log.error("rBuilder Server Unreachable: trying again (attempt %d/5)" % errors)
+                            slog.error("rBuilder Server Unreachable: trying again (attempt %d/5)" % errors)
 
-                    log.warning("Error retrieving job list:" + str(e))
+                    slog.warning("Error retrieving job list: " + str(e))
             # sleep at the end of every run, no matter what the outcome was
             time.sleep(random.uniform(*JOB_IDLE_INTERVAL))
-        log.info("Job server daemon is exiting.")
+        slog.info("Job server daemon is exiting.")
 
 
 class CfgCookEnum(CfgEnum):
@@ -250,14 +282,15 @@ class IsoGenConfig(ConfigFile):
     finishedPath    = '/srv/mint/finished-images/'
     lockFile        = '/var/run/mint-jobdaemon.pid'
     maxThreads      = (CfgInt, 5)
-    configPath       = '/srv/mint/'
+    configPath      = '/srv/mint/'
 
     def read(cfg, path, exception = False):
+        slog = scriptlibrary.getScriptLogger()
         ConfigFile.read(cfg, path, exception)
         cfg.configPath = os.path.dirname(path)
         for arch in cfg.supportedArch:
             if arch not in SUPPORTED_ARCHS:
-                log.error("unsupported architecture: %s", arch)
+                slog.error("unsupported architecture: %s", arch)
                 sys.exit(1)
         cfg.jobTypes = {}
         if 'cookTypes' in cfg.__dict__:
@@ -265,8 +298,6 @@ class IsoGenConfig(ConfigFile):
         if 'imageTypes' in cfg.__dict__:
             cfg.jobTypes['imageTypes'] = cfg.imageTypes
         if cfg.serverUrl is None:
-            log.error("a server URL must be specified in the config file,"
-            " for example:")
-            log.error("serverUrl http://username:userpass@"
-                      "www.example.com/xmlrpc-private/")
+            slog.error("A server URL must be specified in the config file. For example:")
+            slog.error("    serverUrl http://username:userpass@www.example.com/xmlrpc-private/")
             sys.exit(1)
