@@ -18,6 +18,28 @@
     font-family: "times", monospace;
 }
 
+.results a {
+    text-decoration: none;
+    color: black;
+}
+
+.results a:hover {
+    text-decoration: underline;
+}
+
+.mainSearchItem {
+    font-size: larger;
+}
+
+.results td.mainSearchItemDesc {
+    font-size: x-small;
+    color: #666;
+    border: 0;
+    padding-top: 0;
+    padding-left: 2em;
+    margin-bottom: 0.5em;
+}
+
 strong.keyword {
     color:#FF7C04;
 }

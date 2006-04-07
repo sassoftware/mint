@@ -24,15 +24,22 @@ def injectVersion(version):
         </tr>
     </thead>
 
-    <div py:def="resultRow(resultset = [])" py:strip="True">
-        <td py:for="item in resultset">
-            <a py:if="type(item) == tuple"
-               py:content="item[1]"
-               href="${item[0]}"/>
-            <div py:if="type(item) != tuple"
-                 py:strip="True"
-                 py:content="item"/>
-        </td>
+    <div py:def="resultRow(resultset = [], resultsetdesc = None)" py:strip="True">
+        <?python firstItem = True ?>
+        <tr>
+            <div py:for="item in resultset" py:strip="True">
+                <td py:if="type(item) == tuple and len(item) == 2">
+                    <a py:content="item[1]" href="${item[0]}" py:attrs="{ 'class': (firstItem and 'mainSearchItem' or None) }" />
+                </td>
+                <td py:if="type(item) != tuple" py:content="item" />
+                <?python firstItem = False ?>
+            </div>
+        </tr>
+        <tr py:if="resultsetdesc">
+            <td colspan="${len(resultset)}" class="mainSearchItemDesc">
+                ${resultsetdesc}
+            </td>
+        </tr>
     </div>
 
     <div id="groupBuilder" py:def="groupTroveBuilder" py:if="groupTrove">
@@ -158,9 +165,9 @@ def injectVersion(version):
         [('id', 'data item 1' ... 'data item n'), ]
     -->
     <tbody py:def="searchResults(results=[])" py:strip="True">
-        <tr py:for="i, resultset in enumerate(results)" class="${i % 2 and 'even' or 'odd'}">
+        <div py:strip="True" py:for="i, resultset in enumerate(results)" class="${i % 2 and 'even' or 'odd'}">
             ${formatResults(resultset)}
-        </tr>
+        </div>
     </tbody>
 
     <a py:def="legal(page, text)" py:strip="False" href="${page}"

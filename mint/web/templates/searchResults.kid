@@ -15,14 +15,14 @@
     <?python
         columns = []
         if searchType == "Projects":
-            columns = ('Project Name', 'Project Description', 'Last Commit')
+            columns = ('Project', 'Last Commit')
         elif searchType == "Users":
-            columns = ('User Name', 'Full Name', 'Contact Info', 'About', 'Last Accessed')
+            columns = ('User Name', 'About', 'Last Accessed')
         elif searchType == "Packages":
             if groupTrove:
-                columns = ('Package Name', 'Version', 'Project', '')
+                columns = ('Package', 'Project', '')
             else:
-                columns = ('Package Name', 'Version', 'Project')
+                columns = ('Package', 'Project')
     ?>
 
     <head>
@@ -34,30 +34,30 @@
                 formattedresults = []
                 if searchType == "Projects":
                     formattedresults = [
-                        (resultset[0].getUrl(), 
-                        resultset[0].getNameForDisplay() ),
-                        resultset[0].getDescForDisplay(),
+                        (resultset[0].getUrl(),
+                        resultset[0].getNameForDisplay()),
                         timeDelta(resultset[4])
                     ]
+                    resultsetdesc = resultset[0].getDescForDisplay()
                 elif searchType == "Users":
                     formattedresults = [
                         (self.cfg.basePath + 'userInfo?id=%d' % resultset[0], resultset[1]),
-                        resultset[2],
-                        resultset[3], 
                         resultset[4],
                         timeDelta(resultset[5])
                     ]
+                    resultsetdesc = resultset[2]
                 elif searchType == "Packages":
                     formattedresults = [
                         (resultset[2], resultset[0]),
-                        resultset[1],
                         (resultset[4], resultset[3])
                     ]
+                    resultsetdesc = resultset[1]
                     if groupTrove and resultset[2] != groupTrove.recipeName:
                         formattedresults.append((self.cfg.basePath + 'project/%s/addGroupTrove?id=%d;trove=%s;version=%s;referer=%s' % (groupTrove.projectName, groupTrove.getId(), quote(resultset[0]), resultset[1], quote(req.unparsed_uri)) , 'Add to %s' % groupTrove.recipeName))
             ?>
-            ${resultRow(formattedresults)}
+            ${resultRow(formattedresults, resultsetdesc)}
         </div>
+
         <div class="layout">
             <div id="right" class="side">
                 ${resourcePane()}

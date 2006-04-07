@@ -1146,7 +1146,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.webLogin('adminuser', 'adminpass')
 
         page = self.assertContent("/users", code = [200],
-            content = '<a href="/userInfo?id=%d">' % userId)
+            content = '<a href="/userInfo?id=%d"' % userId)
 
     def testNotifyAllUsers(self):
         client, userId = self.quickMintAdmin('adminuser', 'adminpass', email = "test@NONE")
