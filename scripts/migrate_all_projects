@@ -16,10 +16,17 @@ from conary.server import schema
 cfg = config.MintConfig()
 cfg.read(cfgPath)
 
-if not cfg.maintenanceMode:
-    print >> sys.stderr, "rBO repositories are not locked."
-    print >> sys.stderr, "please ensure the following line is in %s:" % cfgPath
-    print >> sys.stderr, "maintenanceMode True"
+try:
+    if not cfg.maintenanceMode:
+        okToProceed = True
+except Exception, e:
+    print >> sys.stderr, "ERROR: %s" % str(e)
+    okToProceed = False
+
+if not okToProceed:
+    print >> sys.stderr, "\nrBO repositories are not locked."
+    print >> sys.stderr, "Please ensure the following line is in %s:\n" % cfgPath
+    print >> sys.stderr, "maintenanceMode True\n"
     sys.exit(1)
 
 db = dbstore.connect(cfg.dbPath, driver = cfg.dbDriver)
