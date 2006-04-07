@@ -9,18 +9,6 @@ if os.getuid():
     sys.stderr.flush()
     sys.exit(1)
 
-# set up import resolution environment
-conaryPath = os.getenv('CONARY_PATH')
-if conaryPath and conaryPath not in sys.path:
-    sys.path.insert(0, conaryPath)
-
-parDir = '/'.join(os.path.realpath(__file__).split('/')[:-2])
-mintPath = os.getenv('MINT_PATH', parDir)
-
-if mintPath not in sys.path:
-    sys.path.insert(0, mintPath)
-# end set up import resolution environment
-
 from mint import config
 from mint import database
 from conary import dbstore

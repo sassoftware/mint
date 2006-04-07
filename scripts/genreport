@@ -29,17 +29,6 @@ if len(sys.argv) > 4:
 if len(sys.argv) > 5:
     DB_PATH = sys.argv[5]
 
-# set up import resolution environment
-parDir = '/'.join(os.path.realpath(__file__).split('/')[:-2])
-mintPath = os.getenv('MINT_PATH', parDir)
-if mintPath not in sys.path:
-    sys.path.insert(0, mintPath)
-
-conaryPath = os.getenv('CONARY_PATH', parDir)
-if conaryPath not in sys.path:
-    sys.path.insert(0, conaryPath)
-# end set up import resolution environment
-
 from mint.mint import MintClient
 from conary import dbstore
 
