@@ -34,6 +34,7 @@ from mint import mirror
 from mint import users
 from mint import profile
 from mint import mint_error
+from mint import maintenance
 from mint.helperfuncs import extractBasePath
 from mint.projects import mysqlTransTable
 from webhandler import normPath, HttpError, getHttpAuth
@@ -207,8 +208,7 @@ def putFile(port, isSecure, repos, req):
     return apache.OK
 
 def conaryHandler(req, cfg, pathInfo):
-    if cfg.maintenanceMode:
-        raise mint_error.MaintenanceMode
+    maintenance.enforceMaintenanceMode(cfg)
 
     paths = normPath(req.uri).split("/")
     if "repos" in paths:
@@ -408,12 +408,6 @@ def handler(req):
         cfg = config.MintConfig()
         cfg.read(req.filename)
         cfgMTime = mtime
-
-    if os.path.exists(cfg.maintenanceLockPath):
-        cfg.maintenanceMode = True
-    else:
-        # must be explicit or the server won't come back without a poke.
-        cfg.maintenanceMode = False
 
     if "basePath" not in req.get_options():
         cfg.basePath = extractBasePath(normPath(req.uri), normPath(req.path_info))

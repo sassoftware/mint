@@ -10,23 +10,16 @@ import os, sys
 cfgPath = "/srv/mint/mint.conf"
 
 from mint import config
+from mint import maintenance
 from conary import dbstore
 from conary.server import schema
 
 cfg = config.MintConfig()
 cfg.read(cfgPath)
 
-try:
-    if not cfg.maintenanceMode:
-        okToProceed = True
-except Exception, e:
-    print >> sys.stderr, "ERROR: %s" % str(e)
-    okToProceed = False
-
-if not okToProceed:
-    print >> sys.stderr, "\nrBO repositories are not locked."
-    print >> sys.stderr, "Please ensure the following line is in %s:\n" % cfgPath
-    print >> sys.stderr, "maintenanceMode True\n"
+if maintenance.getMaintenanceMode(cfg)==maintenance.NORMAL_MODE:
+    print >> sys.stderr, "rBuilder repositories are not locked. rBuilder"
+    print >> sys.stderr, "administrators can place the site in this mode."
     sys.exit(1)
 
 db = dbstore.connect(cfg.dbPath, driver = cfg.dbDriver)

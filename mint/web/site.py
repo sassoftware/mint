@@ -21,6 +21,7 @@ from mint import projects
 from mint import shimclient
 from mint import users
 from mint import userlevels
+from mint import maintenance
 from mint import mailinglists
 from mint import projectlisting
 from mint import database
@@ -203,9 +204,7 @@ class SiteHandler(WebHandler):
             client = shimclient.ShimMintClient(self.cfg, authToken)
             auth = client.checkAuth()
 
-            if not auth.admin and self.cfg.maintenanceMode:
-                # do not allow logins to occur for non-admins in maintenance
-                raise mint_error.MaintenanceMode
+            maintenance.enforceMaintenanceMode(self.cfg, auth)
 
             if not auth.authorized:
                 raise mint_error.InvalidLogin

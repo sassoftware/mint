@@ -20,6 +20,7 @@ python_files =			\
 	helperfuncs.py \
 	jobs.py			\
 	jobstatus.py		\
+        maintenance.py          \
 	mailinglists.py		\
 	mint_error.py		\
 	mint.py			\

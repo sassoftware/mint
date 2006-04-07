@@ -9,6 +9,7 @@ import os
 from mod_python import apache
 
 from mint import mint_error
+from mint import maintenance
 from webhandler import WebHandler, HttpNotFound, HttpForbidden
 from conary import versions
 from conary.web.fields import strFields, intFields, listFields, boolFields
@@ -275,11 +276,8 @@ class AdminHandler(WebHandler):
         self._redirect("http://%s%sadminister?operation=outbound" % (self.cfg.siteHost, self.cfg.basePath))
 
     def _admin_toggle_maintenance_lock(self, *args, **kwargs):
-        if os.path.exists(self.cfg.maintenanceLockPath):
-            os.unlink(self.cfg.maintenanceLockPath)
-        else:
-            f = open(self.cfg.maintenanceLockPath, 'w')
-            f.close()
+        mode = maintenance.getMaintenanceMode(self.cfg) ^ 1
+        maintenance.setMaintenanceMode(self.cfg, mode)
         self._redirect("http://%s%sadminister?operation=maintenance_mode" % (self.cfg.siteHost, self.cfg.basePath))
 
     def _admin_maintenance_mode(self, *args, **kwargs):

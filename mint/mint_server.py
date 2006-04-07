@@ -34,6 +34,7 @@ import users
 import simplejson
 from distro import jsversion
 
+import maintenance
 from mint_error import PermissionDenied, ReleasePublished, ReleaseMissing, \
      MintError, ReleaseEmpty, UserAlreadyAdmin, AdminSelfDemotion, \
      JobserverVersionMismatch, LastAdmin, MaintenanceMode
@@ -251,9 +252,12 @@ class MintServer(object):
                 self.authToken = authToken
                 self.auth = users.Authorization(**auth)
 
-                if self.cfg.maintenanceMode and not self.auth.admin:
-                    if methodName not in self.allowedMethods:
-                        raise MaintenanceMode
+                try:
+                    maintenance.enforceMaintenanceMode(self.cfg, self.auth)
+                except MaintenanceMode:
+                    # supress exceptions for certain critical methods.
+                    if methodName not in self.maintenanceMethods:
+                        raise
 
                 allowPrivate = self._allowPrivate
                 r = method(*args)
@@ -301,8 +305,8 @@ class MintServer(object):
             prof.stopXml(methodName)
 
     def _getProjectRepo(self, project):
-        if self.cfg.maintenanceMode:
-            raise MaintenanceMode("Repositories are currently offline.")
+        maintenance.enforceMaintenanceMode( \
+            self.cfg, auth = None, msg = "Repositories are currently offline.")
         # use a shimclient for mint-handled repositories; netclient if not
         if project.external:
             cfg = project.getConaryConfig()
@@ -419,8 +423,8 @@ class MintServer(object):
     @requiresAuth
     @private
     def newProject(self, projectName, hostname, domainname, projecturl, desc):
-        if self.cfg.maintenanceMode:
-            raise MaintenanceMode("Repositories are currenly offline.")
+        maintenance.enforceMaintenanceMode( \
+            self.cfg, auth = None, msg = "Repositories are currently offline.")
         if not hostname:
             raise projects.InvalidHostname
         if validHost.match(hostname) == None:
@@ -460,8 +464,8 @@ class MintServer(object):
     @requiresAdmin
     @private
     def newExternalProject(self, name, hostname, domainname, label, url, mirrored):
-        if self.cfg.maintenanceMode:
-            raise MaintenanceMode("Repositories are currenly offline.")
+        maintenance.enforceMaintenanceMode( \
+            self.cfg, auth = None, msg = "Repositories are currently offline.")
 
         from conary import versions
         # ensure that the label we were passed is valid
@@ -1696,8 +1700,8 @@ class MintServer(object):
         import cooktypes
         import releasetypes
         # scrub archTypes and jobTypes.
-        if self.cfg.maintenanceMode:
-            raise MaintenanceMode("Repositories are currently offline.")
+        maintenance.enforceMaintenanceMode( \
+            self.cfg, auth = None, msg = "Repositories are currently offline.")
         for arch in archTypes:
             if arch not in ("1#x86", "1#x86_64"):
                 raise ParameterError("Not a legal architecture")
@@ -2492,7 +2496,8 @@ class MintServer(object):
         # except the ones specifically decorated with @public.
         self._allowPrivate = allowPrivate
 
-        self.allowedMethods = ('checkAuth', 'loadSession', 'saveSession', 'deleteSession')
+        self.maintenanceMethods = ('checkAuth', 'loadSession', 'saveSession',
+                                   'deleteSession')
 
         from conary import dbstore
         global dbConnection

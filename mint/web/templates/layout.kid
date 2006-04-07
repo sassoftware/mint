@@ -6,6 +6,7 @@
 #
 from mint import userlevels
 from mint import constants
+from mint import maintenance
 from urllib import quote
 onload = "javascript:;"
 ?>
@@ -61,7 +62,7 @@ onload = "javascript:;"
                 </div>
                 <div id="topRight">
                     <div class="about">
-                        <a href="${cfg.basePath}administer?operation=maintenance_mode" py:if="cfg.maintenanceMode and auth.admin">
+                        <a href="${cfg.basePath}administer?operation=maintenance_mode" py:if="auth.admin and maintenance.getMaintenanceMode(cfg)==maintenance.LOCKED_MODE">
                           <b style="color: red;">
                           Maintenance Mode&nbsp;
                           </b>
