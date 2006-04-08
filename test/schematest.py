@@ -4,6 +4,7 @@
 #
 
 import tempfile
+import time
 import testsuite
 testsuite.setup()
 
@@ -322,12 +323,12 @@ class UpgradePathTest(MintRepositoryHelper):
 
         newAuthRepo = tempfile.mktemp()
         util.copyfile("archive/authdb", newAuthRepo)
-       
+
         client = self.openMintClient()
         cfg = client.getCfg()
         cfg.authDbPath = newAuthRepo
         authDb = sqlite3.connect(newAuthRepo)
-        
+
         aCu = authDb.cursor()
         cu = self.db.cursor()
 
@@ -482,6 +483,56 @@ class UpgradePathTest(MintRepositoryHelper):
         jsVer = jsversion.getDefaultVersion()
         self.failIf(cu.fetchall() != [(1, '1.5.4'), (2, jsVer)],
                     "schema upgrade 15 failed.")
+
+    def testSchemaVerFifteen(self):
+        # schema test designed to test upgrade codepath for exisiting project
+        # repos for rBuilder Schema 15. only tests one schema bump.
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        client2, userId2 = self.quickMintUser('testuser1', 'testpass')
+        projectId = self.newProject(client, 'With Mirror ACL', 'hasMirror')
+        projectId2 = self.newProject(client, 'Without Mirror ACL', 'noMirror')
+        projectId3 = self.newProject(client, 'Pretend External', 'notThere')
+
+        project = client.getProject(projectId)
+        project.addMemberById(userId2, userlevels.DEVELOPER)
+
+        project2 = client.getProject(projectId2)
+        project3 = client.getProject(projectId3)
+
+        repos = project2.server._server._getProjectRepo(project2)
+        repos.setUserGroupCanMirror(project2.getLabel(), self.mintCfg.authUser, 0)
+
+        repos = project3.server._server._getProjectRepo(project3)
+        repos.setUserGroupCanMirror(project3.getLabel(), 'testuser', 0)
+
+        assert(self.getMirrorAcl(project, self.mintCfg.authUser) == 1)
+        assert(self.getMirrorAcl(project2, self.mintCfg.authUser) == 0)
+
+        #make one project external
+        cu = self.db.cursor()
+        cu.execute("UPDATE Projects SET external=1 WHERE projectId=?",
+                   projectId3)
+
+        # force schema 15
+        cu.execute("DELETE FROM DatabaseVersion WHERE version > 14")
+        cu.execute("INSERT INTO DatabaseVersion VALUES(?, ?)", 15, time.time())
+        self.db.commit()
+
+        # do only one iteration of version check
+        client.server._server.projects.versionCheck()
+
+        assert(self.getMirrorAcl(project, self.mintCfg.authUser) == 1)
+        self.failIf(self.getMirrorAcl(project2, self.mintCfg.authUser) != 1,
+                    "schema upgrade didn't correct authUser mirror ACLs")
+
+        self.failIf(self.getMirrorAcl(project, 'testuser') != 1,
+                    "schema upgrade didn't correct owner mirror ACLs")
+
+        self.failIf(self.getMirrorAcl(project, 'testuser1'),
+                    "schema upgrade incorrectly added mirror ACL to developer")
+
+        self.failIf(self.getMirrorAcl(project3, 'testuser') == 1,
+                    "schema upgrade tried to update external project.")
 
 
 if __name__ == "__main__":
