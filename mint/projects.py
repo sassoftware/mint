@@ -216,13 +216,14 @@ class ProjectsTable(database.KeyedTable):
               }
 
     def __init__(self, db, cfg):
-        database.DatabaseTable.__init__(self, db)
         self.cfg = cfg
 
         # poor excuse for a switch statement
         self.reposDB = {'sqlite': SqliteRepositoryDatabase,
                         'mysql':  MySqlRepositoryDatabase,
                        }[self.cfg.reposDBDriver](cfg)
+        # call init last so that we can use reposDB during schema upgrades
+        database.DatabaseTable.__init__(self, db)
 
     def versionCheck(self):
         dbversion = self.getDBVersion()
@@ -240,6 +241,44 @@ class ProjectsTable(database.KeyedTable):
             if dbversion == 4:
                 cu.execute("ALTER TABLE Projects ADD COLUMN description STR")
                 cu.execute("UPDATE Projects SET description=desc")
+                return (dbversion + 1) == self.schemaVersion
+            if dbversion == 15:
+                # logic to upgrade mirror ACLs in project repos
+                cu = self.db.cursor()
+                cu.execute("""SELECT projectId, hostname, domainName, external
+                                  FROM Projects""")
+                projList = [(x[0], x[1] + '.' + x[2]) for x in cu.fetchall() \
+                            if not x[3]]
+                for projectId, FQDN in projList:
+                    dbCon = self.reposDB.getRepositoryDB(FQDN)
+                    try:
+                        rDb = dbstore.connect(dbCon[1], dbCon[0])
+                    except:
+                        # skip missing repo DB's
+                        continue
+                    rCu = rDb.cursor()
+                    cu.execute("""SELECT userName
+                                      FROM ProjectUsers
+                                      LEFT JOIN Users ON
+                                          Users.userId=ProjectUsers.userId
+                                      WHERE projectId=? AND level=?""",
+                               projectId, userlevels.OWNER)
+                    userList = [x[0] for x in cu.fetchall()] + \
+                               [self.cfg.authUser]
+                    rCu.execute("""SELECT userGroupId
+                                       FROM Users
+                                       LEFT JOIN UserGroupMembers
+                                       ON UserGroupMembers.userId =
+                                              Users.userId
+                                       WHERE username IN %s""" % \
+                                str(tuple(userList)))
+                    userGroups = [int(x[0]) for x in rCu.fetchall()]
+                    rCu.execute("""UPDATE UserGroups
+                                       SET canMirror=1
+                                       WHERE userGroupId IN %s""" % \
+                                str(tuple(userGroups)))
+                    rDb.commit()
+                    rDb.close()
                 return (dbversion + 1) == self.schemaVersion
         return True
 
@@ -413,6 +452,8 @@ class ProjectsTable(database.KeyedTable):
         repos.auth.addUser(self.cfg.authUser, self.cfg.authPass)
         repos.auth.addAcl(self.cfg.authUser, None, None, True, False, True)
         repos.auth.setMirror(self.cfg.authUser, True)
+        if username:
+            repos.auth.setMirror(username, True)
 
     def hide(self, projectId):
         # Anonymous user is added/removed in mint_server
