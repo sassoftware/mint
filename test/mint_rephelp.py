@@ -418,6 +418,29 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
         os.dup2(self.oldFd, sys.stderr.fileno())
         os.close(self.oldFd)
 
+    def getMirrorAcl(self, project, username):
+        dbCon = project.server._server.projects.reposDB.getRepositoryDB( \
+            project.getFQDN())
+        db = dbstore.connect(dbCon[1], dbCon[0])
+
+        cu = db.cursor()
+
+        cu.execute("""SELECT canMirror
+                          FROM Users
+                          LEFT JOIN UserGroupMembers ON Users.userId =
+                                  UserGroupMembers.userId
+                          LEFT JOIN UserGroups ON UserGroups.userGroupId =
+                                  UserGroupMembers.userGroupId
+                          WHERE Users.username=?""", username)
+
+        try:
+            # nonexistent results trigger value error
+            canMirror = max([x[0] for x in cu.fetchall()])
+        except ValueError:
+            canMirror = None
+        db.close()
+        return canMirror
+
     def moveToServer(self, project, serverIdx = 1):
         """Call this to set up a project's Labels table to access a different
            serverIdx instead of 0. Useful for multi-repos tests."""
