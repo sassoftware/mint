@@ -271,12 +271,12 @@ class ProjectsTable(database.KeyedTable):
                                        ON UserGroupMembers.userId =
                                               Users.userId
                                        WHERE username IN %s""" % \
-                                str(tuple(userList)))
+                                str(tuple(userList)).replace(",)", ")"))
                     userGroups = [int(x[0]) for x in rCu.fetchall()]
                     rCu.execute("""UPDATE UserGroups
                                        SET canMirror=1
                                        WHERE userGroupId IN %s""" % \
-                                str(tuple(userGroups)))
+                                str(tuple(userGroups)).replace(",)", ")"))
                     rDb.commit()
                     rDb.close()
                 return (dbversion + 1) == self.schemaVersion

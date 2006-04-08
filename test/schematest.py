@@ -492,12 +492,15 @@ class UpgradePathTest(MintRepositoryHelper):
         projectId = self.newProject(client, 'With Mirror ACL', 'hasMirror')
         projectId2 = self.newProject(client, 'Without Mirror ACL', 'noMirror')
         projectId3 = self.newProject(client, 'Pretend External', 'notThere')
+        projectId4 = self.newProject(client, 'Orphaned project', 'orphan')
 
         project = client.getProject(projectId)
         project.addMemberById(userId2, userlevels.DEVELOPER)
 
         project2 = client.getProject(projectId2)
         project3 = client.getProject(projectId3)
+        project4 = client.getProject(projectId4)
+        project4.delMemberById(userId)
 
         repos = project2.server._server._getProjectRepo(project2)
         repos.setUserGroupCanMirror(project2.getLabel(), self.mintCfg.authUser, 0)
