@@ -641,6 +641,9 @@ class MintServer(object):
             self.projectUsers.new(projectId, userId, level)
         except database.DuplicateItem:
             project.updateUserLevel(userId, level)
+            repos = self._getProjectRepo(project)
+            repos.setUserGroupCanMirror(project.getLabel(), username,
+                                        int(level == userlevels.OWNER))
             return True
 
         if not project.external:
@@ -657,6 +660,8 @@ class MintServer(object):
             repos.addAcl(project.getLabel(), username, None, None,
                          level in userlevels.WRITERS, False,
                          level == userlevels.OWNER)
+            repos.setUserGroupCanMirror(project.getLabel(), username,
+                                        int(level == userlevels.OWNER))
 
         self._notifyUser('Added', self.getUser(userId),
                          projects.Project(self,projectId), level)
