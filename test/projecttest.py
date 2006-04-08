@@ -9,6 +9,7 @@ testsuite.setup()
 import sys
 
 from conary.conaryclient import ConaryClient
+from conary import dbstore
 
 from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import MINT_PROJECT_DOMAIN
@@ -404,6 +405,76 @@ class ProjectTest(MintRepositoryHelper):
             client.newProject, "Hello World", "foo", "localhost")
         self.assertRaises(DuplicateName,
             client.newProject, "Foo", "another", "localhost")
+
+    def testOwnerMirror(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+
+        projectId = client.newProject("Foo", "foo", "localhost")
+        project = client.getProject(projectId)
+        canMirror = self.getMirrorAcl(project, 'testuser')
+
+        self.failIf(not canMirror, "Project owner does not have mirror ACL.")
+
+    def testRemovedMirror(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+
+        projectId = client.newProject("Foo", "foo", "localhost")
+        project = client.getProject(projectId)
+        project.delMemberById(userId)
+
+        canMirror = self.getMirrorAcl(project, 'testuser')
+
+        self.failIf(canMirror is not None,
+                    "Project owner's ACL outlived membership.")
+
+    def testDevelMirror(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+
+        projectId = client.newProject("Foo", "foo", "localhost")
+        project = client.getProject(projectId)
+
+        client, userId = self.quickMintUser("newuser", "newpass")
+        project.addMemberById(userId, userlevels.DEVELOPER)
+        canMirror = self.getMirrorAcl(project, 'newuser')
+
+        self.failIf(canMirror, "Project developer has mirror ACL.")
+
+    def testPromotedMirror(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+
+        projectId = client.newProject("Foo", "foo", "localhost")
+        project = client.getProject(projectId)
+
+        client, userId = self.quickMintUser("newuser", "newpass")
+        # ensure a promoted member gets same treatment as others
+        project.addMemberById(userId, userlevels.DEVELOPER)
+        project.addMemberById(userId, userlevels.OWNER)
+        canMirror = self.getMirrorAcl(project, 'newuser')
+
+        self.failIf(not canMirror, "Promoted owner does not have mirror ACL.")
+
+    def testDemotedMirror(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+
+        projectId = client.newProject("Foo", "foo", "localhost")
+        project = client.getProject(projectId)
+
+        client, userId = self.quickMintUser("newuser", "newpass")
+        # ensure a demoted member gets same treatment as others
+        project.addMemberById(userId, userlevels.OWNER)
+        project.addMemberById(userId, userlevels.DEVELOPER)
+        canMirror = self.getMirrorAcl(project, 'newuser')
+
+        self.failIf(canMirror, "Demoted project developer has mirror ACL.")
+
+    def testAuthUserMirror(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+
+        projectId = client.newProject("Foo", "foo", "localhost")
+        project = client.getProject(projectId)
+        canMirror = self.getMirrorAcl(project, self.mintCfg.authUser)
+
+        self.failIf(not canMirror, "Auth user does not have mirror ACL.")
 
 
 if __name__ == "__main__":
