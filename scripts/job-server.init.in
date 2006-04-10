@@ -9,46 +9,86 @@
 # processname: job-server
 # config: @DESTDIR@/usr/bin
 
+# Source function library
+. /etc/init.d/functions
+
+# Configuration options
+DEBUG_MODE=0    # set to non-zero to turn debug mode logging on
+
 CONFIG_FILE='@DESTDIR@/srv/mint/iso_gen.conf'
 SCRIPT_PATH='@DESTDIR@/usr/share/mint/scripts'
 JOBSERVER_USER='isogen'
+JOBSERVER_HOME='/srv/mint/images'
+JOBSERVER_SCRIPT="$SCRIPT_PATH/job-server"
+
+LONGNAME="rBuilder ISO Generation Server"
+
+#############################################################################
+
+# Check for config file
+if [ ! -r "$CONFIG_FILE" ]; then
+    echo "Job server configuration file $CONFIG_FILE not found."
+    exit 1
+fi
+
+# Check for debug mode and add to args if necessary
+[ -z $DEBUG_MODE ] && EXTRA_ARGS="--debug $EXTRA_ARGS"
+
+start() {
+    echo -n "Starting $LONGNAME:"
+    daemon --user $JOBSERVER_USER \
+        HOME=$JOBSERVER_HOME \
+        $JOBSERVER_SCRIPT --config $CONFIG_FILE $EXTRA_ARGS
+    echo ""
+}
+
+stop() {
+    echo -n "Stopping $LONGNAME:"
+    killproc `basename $JOBSERVER_SCRIPT` -TERM
+    echo ""
+    if [ "$1" = "--wait" ]; then
+        echo -n "Waiting for rBuilder ISO Generation server to terminate..."
+        while [ -f "$LOCKFILE" ]; do sleep 1; done
+        echo "done."
+    fi 
+}
+
+status() {
+    lockFile=`cat $CONFIG_FILE 2>&1 | grep "lockFile" | sed "s/.* //"`
+    pid=`cat "$lockFile" 2>&1`
+    case "$pid" in
+        *'No such file or directory')
+            echo "$LONGNAME is not running."
+            ;;
+        *'SHUTTING_DOWN')
+            echo "$LONGNAME is shutting down."
+            ;;
+        *)
+            case "`ps -p $pid -o comm=`" in
+               'job-server')
+                   echo "$LONGNAME is running."
+                   ;;
+               *)
+                   echo "Lockfile is stale. Run '$0 stop' to remove it."
+                   ;;
+            esac
+            ;;
+    esac
+}
 
 case "$1" in
   start)
-	HOME=/home/$JOBSERVER_USER/ sudo -u $JOBSERVER_USER $SCRIPT_PATH/job-server --config $CONFIG_FILE
+        start
 	;;
   stop)
-	HOME=/home/$JOBSERVER_USER/ sudo -u $JOBSERVER_USER $SCRIPT_PATH/job-server --config $CONFIG_FILE -k
+        stop
 	;;
   restart)
-        $0 stop
-        # Wait for job server to exit.
-        lockFile=`cat $CONFIG_FILE 2>&1 | grep "lockFile" | sed "s/.* //"`
-        echo "Waiting for rBuilder ISO Generation server to terminate."
-        while [ -f "$lockFile" ]; do sleep 1; done
-        $0 start
+        stop --wait
+        start
 	;;
   status)
-	lockFile=`cat $CONFIG_FILE 2>&1 | grep "lockFile" | sed "s/.* //"`
-	pid=`cat "$lockFile" 2>&1`
-	case "$pid" in
-	  *'No such file or directory')
-		echo "Job server is not running."
-		;;
-          *'SHUTTING_DOWN')
-                echo "Job server is shutting down."
-                ;;
-	  *)
-		case "`ps -p $pid -o comm=`" in
-		  'job-server')
-		    echo "Job server is running."
-		    ;;
-		  *)
-		    echo "lockfile is stale. run '$0 stop' to remove it."
-		    ;;
-		esac
-		;;
-	esac
+        status job-server
 	;;
   *)
     echo "Usage: `basename $0` {start|stop|restart|status}"
