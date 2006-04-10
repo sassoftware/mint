@@ -1811,13 +1811,12 @@ class MintServer(object):
                               SET status=?, statusMessage=?, timeStarted=?
                               WHERE jobId=?""",
                        jobstatus.RUNNING, 'Starting', time.time(), jobId)
+            if self.req:
+                self.jobData.setDataValue(jobId, "hostname", self.req.connection.remote_ip, data.RDT_STRING)
 
         cu.execute("UPDATE Jobs SET owner=NULL WHERE owner=? AND status=?",
                    ownerId, jobstatus.WAITING)
         self.db.commit()
-
-        if self.req:
-            self.jobData.setDataValue(jobId, "hostname", self.req.hostname, data.RDT_STRING)
 
         return jobId
 
