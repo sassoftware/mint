@@ -65,7 +65,7 @@ def daemon(options, cfg):
     except socket.error, msg:
         slog.error("connecting to rBuilder server: %s", msg[1])
     except KeyboardInterrupt:
-        slog.info("interrupt caught; exiting")
+        slog.warning("interrupt caught; exiting")
 
     try:
         os.unlink(cfg.lockFile)
@@ -108,7 +108,7 @@ if __name__ == "__main__":
     cfg.read(cfgFile)
 
     cfg.saveChildOutput = False
-    consoleLevel = logging.INFO
+    consoleLevel = logging.WARNING
     logfileLevel = logging.INFO
 
     # --no-daemon implies --debug
@@ -147,7 +147,7 @@ if __name__ == "__main__":
                       " running as pid %d", pid)
             sys.exit(1)
         else:
-            slog.info("Old job daemon pid seems to be invalid; killing.")
+            slog.warning("Old job daemon pid seems to be invalid; killing.")
             kill(cfg.lockFile)
 
     slog.debug("using Conary in %s",
