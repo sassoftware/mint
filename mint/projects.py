@@ -249,6 +249,7 @@ class ProjectsTable(database.KeyedTable):
                                   FROM Projects""")
                 projList = [(x[0], x[1] + '.' + x[2]) for x in cu.fetchall() \
                             if not x[3]]
+                rDb = None
                 if self.cfg.reposDBDriver != 'sqlite':
                     needDb = True
                 else:
@@ -290,7 +291,8 @@ class ProjectsTable(database.KeyedTable):
                     rDb.commit()
                     if self.cfg.reposDBDriver == 'sqlite':
                         rDb.close()
-                rDb.close()
+                if rDb:
+                    rDb.close()
                 return (dbversion + 1) == self.schemaVersion
         return True
 
