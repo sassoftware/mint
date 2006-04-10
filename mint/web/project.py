@@ -219,7 +219,8 @@ class ProjectHandler(WebHandler):
     def editGroup(self, auth, id):
         curGroupTrove = self.client.getGroupTrove(id)
         self.session['groupTroveId'] = id
-
+        self.groupTrove = curGroupTrove
+        self.groupProject = self.client.getProject(self.groupTrove.projectId)
         return self._write("editGroup", message = None, curGroupTrove = curGroupTrove)
 
     @intFields(id = None)
