@@ -99,6 +99,57 @@ class BrowseTest(MintRepositoryHelper):
         if client.getProjectsList() != [(4, 0, 0, 'bal - Bal'), (2, 0, 0, 'bar - Bar'), (3, 0, 0, 'baz - Baz'), (5, 0, 0, 'biz - Biz'), (1, 0, 0, 'foo - Foo')]:
             self.fail("getProjectsList did not return alphabetical results")
 
+    def testFledgling(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+
+        hideFledgling = self.mintCfg.hideFledgling
+        try:
+            projectId = client.newProject("Bar", "bar", "rpath.org")
+            self._changeTimestamps(projectId, 1124540046, 1124540046)
+
+            self.mintCfg.hideFledgling = False
+            self.failIf(client.getProjects(PROJECTNAME_ASC, 30, 0)[1] != 1,
+                        "Fledgling projects not counted in project list")
+
+            self.mintCfg.hideFledgling = True
+            self.failIf(client.getProjects(PROJECTNAME_ASC, 30, 0)[1],
+                        "Fledgling projects counted in project list")
+
+            # add a fake commit to trigger non-fledgling status
+            self._fakeCommit(projectId, 1129550003, userId)
+
+            self.failIf(client.getProjects(PROJECTNAME_ASC, 30, 0)[1] != 1,
+                        "Non fledgling project didn't show up")
+
+        finally:
+            self.mintCfg.hideFledgling = hideFledgling
+
+    def testExternal(self):
+        client, userId = self.quickMintUser("testuser", "testpass")
+
+        hideFledgling = self.mintCfg.hideFledgling
+        try:
+            projectId = client.newProject("Bar", "bar", "rpath.org")
+            self._changeTimestamps(projectId, 1124540046, 1124540046)
+
+            self.mintCfg.hideFledgling = False
+            self.failIf(client.getProjects(PROJECTNAME_ASC, 30, 0)[1] != 1,
+                        "Fledgling projects not counted in project list")
+
+            self.mintCfg.hideFledgling = True
+            self.failIf(client.getProjects(PROJECTNAME_ASC, 30, 0)[1],
+                        "Fledgling projects counted in project list")
+
+            # alter project to appear to be external
+            cu = self.db.cursor()
+            cu.execute("UPDATE Projects set external=1")
+            self.db.commit()
+
+            self.failIf(client.getProjects(PROJECTNAME_ASC, 30, 0)[1] != 1,
+                        "external project counted as fledgling")
+        finally:
+            self.mintCfg.hideFledgling = hideFledgling
+
     def testSearchProjects(self):
         client, userId = self.quickMintUser("testuser", "testpass")
         fooId = client.newProject("Foo Project", "foo", "rpath.org")
