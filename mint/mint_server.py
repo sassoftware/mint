@@ -1676,7 +1676,7 @@ class MintServer(object):
         @param filter: If True it will only show running or waiting jobs.
           If False it will show all jobs for past 24 hours plus waiting jobs.
         @return: list of jobIds"""
-
+        self._allowPrivate = True
         cu = self.db.cursor()
 
         if filter:
@@ -1689,7 +1689,16 @@ class MintServer(object):
                        time.time() - 86400, jobstatus.WAITING,
                        jobstatus.RUNNING)
 
-        return [self.jobs.get(x[0]) for x in cu.fetchall()]
+        ret = []
+        for x in cu.fetchall():
+            job = self.jobs.get(x[0])
+            hostname = self.getJobDataValue(x[0], 'hostname')
+            if hostname[0]:
+                job['hostname'] = hostname[1]
+            else:
+                job['hostname'] = "None"
+            ret.append(job)
+        return ret
 
     @typeCheck((list, str), (dict, (list, int)), str)
     @requiresAuth

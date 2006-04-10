@@ -187,7 +187,7 @@ makeJobRowData = function(aRow) {
     }
 
     return [ aRow['jobId'], username, humanReadableDate(dateOfInterest),
-                jobDesc, aRow['statusMessage'] ];
+                jobDesc, aRow['statusMessage'], aRow['hostname'] ];
 };
 
 // RPC callbacks ------------------------------------------------------------
@@ -343,7 +343,7 @@ function processListActiveJobs(aReq) {
                 TR(null, TH({ 'colspan': '5', 'class': 'tablesubhead' },
                     "Queued jobs")),
                     headerRowDisplay(["Job ID", "Submitter", "Time Submitted",
-                    "Description", "Last Status Message Received"]),
+                    "Description", "Last Status Message Received", "Job Server IP"]),
                     map(rowDisplay, queuedJobsList));
         }
         if (runningJobsList.length > 0) {
@@ -351,7 +351,7 @@ function processListActiveJobs(aReq) {
                 TR(null, TH({ 'colspan': '5', 'class': 'tablesubhead' },
                     "Running jobs")),
                     headerRowDisplay(["Job ID", "Submitter", "Time Started",
-                    "Description", "Last Status Message Received"]),
+                    "Description", "Last Status Message Received", "Job Server IP"]),
                     map(rowDisplay, runningJobsList));
         }
         if (finishedJobsList.length > 0) {
@@ -359,7 +359,7 @@ function processListActiveJobs(aReq) {
                 TR(null, TH({ 'colspan': '5', 'class': 'tablesubhead' },
                     "Jobs finished within the last 24 hours")),
                     headerRowDisplay(["Job ID", "Submitter", "Time Finished",
-                        "Description", "Last Status Message Received"]),
+                        "Description", "Last Status Message Received", "Job Server IP"]),
                     map(rowDisplay, finishedJobsList));
         }
 

@@ -684,6 +684,8 @@ class JobsTest(MintRepositoryHelper):
                                 subGroup, False, False, False)
 
             jobIds.append(groupTrove.startCookJob("1#x86"))
+            job = client.getJob(jobIds[i])
+            job.setDataValue("hostname", "127.0.0.1", RDT_STRING)
             # hack to ensure timestamps are different.
             time.sleep(1)
 
@@ -722,6 +724,9 @@ class JobsTest(MintRepositoryHelper):
 
         self.failIf(listActiveJobs(client, False) != jobIds[1:],
                     "listActiveJobs should have listed %s" % str(jobIds[1:]))
+
+        self.failIf(client.listActiveJobs(False)[0]['hostname'] != '127.0.0.1')
+
 
     #####
     # setup for testing startNextJob
