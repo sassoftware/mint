@@ -9,6 +9,9 @@ def truncateForDisplay(s, maxWords=10, maxWordLen=15):
     displayed string to maxWords (default 10) and the maximum number of
     letters in a word to maxWordLen (default 15).
 
+    Note: this function will strip out newlines and carriage returns and
+    remove redundant spaces (i.e. "  " will become " ").
+
     Raises ValueError if you give it insane values for maxWords and/or 
     maxWordLen."""
 
@@ -19,7 +22,7 @@ def truncateForDisplay(s, maxWords=10, maxWordLen=15):
         raise ValueError
 
     # Split the words on whitespace
-    wordlist = re.split('[\ ]+', s)
+    wordlist = re.split('\s+', s)
 
     # If the number of words in the new wordlist exceeded maxWords, whack
     # them and append "....". This denotes that there is more text to follow.

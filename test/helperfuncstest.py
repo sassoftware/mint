@@ -190,6 +190,14 @@ class HelperFunctionsTest(unittest.TestCase):
         self.failUnlessRaises(ValueError, truncateForDisplay, "Foo", -1, -1)
         self.failUnlessRaises(ValueError, truncateForDisplay, "Foo", -1, 0)
 
+    # Make sure we handle line breaks properly. We strip them out and do
+    # not count them as a part of a word.
+    def testTruncateWithLineBreaks(self):
+        text = """I am a line. I am very expeditious.
+
+Much like Powdermilk Biscuits[tm]."""
+        self.assertEqual(truncateForDisplay(text), "I am a line. I am very expeditious. Much like ....")
+
     def testTimeDelta(self):
         # use hard coded time to prevent variable results based on
         # time of day when test is run.
