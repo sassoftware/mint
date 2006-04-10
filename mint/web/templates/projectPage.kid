@@ -40,7 +40,7 @@ from mint.helperfuncs import truncateForDisplay
                 <h1>${project.getNameForDisplay(maxWordLen = 25)} <span id="editProject" py:if="isOwner"><a href="${basePath}editProject">edit project</a></span></h1>
                 <h2 py:if="project.getProjectUrl()">Project Home Page &#160;</h2>
 
-                <p class="help" py:if="not commits and cfg.hideFledgling">
+                <p class="help" py:if="not (commits or project.external) and cfg.hideFledgling">
                     This is a fledgling project. The developers of this project
                     have not yet committed software into the project's repository.
                     To give the project's developers time to get started before
