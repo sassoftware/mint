@@ -1170,6 +1170,19 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
     def testNoAdminPowers(self):
         self.assertCode("/administer", code = 403)
 
+    def testBrokenDNS(self):
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        self.webLogin('testuser', 'testpass')
+
+        projectId = client.newProject("Foo", "testproject", MINT_PROJECT_DOMAIN)
+        self.assertContent("/project/testproject/", code = [200],
+            content = "cannot be resolved", server = self.getProjectServerHostname())
+
+        # a bit of a hack to create a project fqdn that will resolve
+        projectId = client.newProject("Resolves", "test", "rpath.org")
+        self.assertNotContent("/project/test/", code = [200],
+            content = "cannot be resolved", server = self.getProjectServerHostname())
+
 
 if __name__ == "__main__":
     testsuite.main()

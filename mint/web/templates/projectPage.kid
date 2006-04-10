@@ -18,6 +18,11 @@ from mint.helperfuncs import truncateForDisplay
 
         releases = project.getReleases(showUnpublished = False)
         commits = project.getCommits()
+
+        if cfg.SSL:
+            proto = "https"
+        else:
+            proto = "http"
     ?>
     <head>
         <title>${formatTitle("Project Page: %s"%project.getNameForDisplay())}</title>
@@ -26,7 +31,17 @@ from mint.helperfuncs import truncateForDisplay
 
     </head>
     <body>
+        <p class="errormessage" py:if="not canResolve">
+            <div><b>Warning:</b> The hostname of this project, <tt>${project.getFQDN()}</tt>, cannot be resolved
+                This could indicate a local configuration error. Please add the following line to your conaryrc file:
+            </div>
+            <pre style="overflow: auto; white-space: nowrap; background: #fefefe;">
+                repositoryMap ${project.getFQDN()} $proto://${cfg.projectSiteHost}/repos/${project.getHostname()}/
+            </pre>
+        </p>
+
         <div class="layout">
+
             <div id="left" class="side">
                 ${projectResourcesMenu()}
                 ${releasesMenu(releases, isOwner)}

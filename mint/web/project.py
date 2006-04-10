@@ -9,6 +9,9 @@ import re
 import sys
 from mod_python import apache
 
+import dns.resolver
+import dns.exception
+
 from mint import database
 from mint import mailinglists
 from mint import releases
@@ -87,7 +90,14 @@ class ProjectHandler(WebHandler):
 
     @redirectHttp
     def projectPage(self, auth):
-        return self._write("projectPage")
+        try:
+            dns.resolver.query(self.project.getFQDN())
+        except dns.exception.DNSException:
+            canResolve = False
+        else:
+            canResolve = True
+
+        return self._write("projectPage", canResolve = canResolve)
 
     def conaryUserCfg(self, auth):
         return self._write("conaryUserCfg")
