@@ -11,7 +11,7 @@
     </head>
     <body>
         <div class="layout">
-            <p class="error">Confirm:</p>
+            <h2>Confirm:</h2>
 
             <p class="errormessage">${message}</p>
             <table>

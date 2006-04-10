@@ -11,8 +11,9 @@
     </head>
     <body>
         <div class="layout">
-            <p class="error">Email Confirmation Required:</p>
+            <h2>Email Confirmation Required:</h2>
             <p class="errormessage">You have been redirected to this page because you have not yet confirmed your email address</p>
+
             <p>You will be required to do so before continuing.</p>
             <p>If you would like to use a different email address, please enter it below</p>
             <form method="post" action="editUserSettings">

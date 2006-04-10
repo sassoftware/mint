@@ -17,7 +17,7 @@
             </div>
 
             <div id="spanleft">
-                <p py:if="errors" class="error">Project Details Error${len(errors) > 1 and 's' or ''}</p>
+                <h2 py:if="errors">Project Details Error${len(errors) > 1 and 's' or ''}</h2>
                 <p py:for="error in errors" class="errormessage" py:content="error"/>
 
                 <h2>Edit Project Properties</h2>
