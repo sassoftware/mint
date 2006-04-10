@@ -104,5 +104,11 @@ onload = "javascript:;"
                 <p id="mintVersionString">${cfg.productName} version ${constants.mintVersion}</p>
             </div>
         </div>
+<script src="http://www.google-analytics.com/urchin.js" type="text/javascript">
+</script>
+<script type="text/javascript">
+_uacct = "UA-284172-1";
+urchinTracker();
+</script>
     </body>
 </html>
