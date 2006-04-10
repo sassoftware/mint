@@ -149,7 +149,7 @@ class MailingListClient:
         settings = {
                 'emergency': 0,
                 'member_moderation_action': 0,
-                'generic_nonmember_action': 1,
+                'generic_nonmember_action': 2, # refuse all nonmember posts
                 'member_moderation_notice': "",
                 'owner': [auth.email]
             }
