@@ -32,9 +32,13 @@ from mint.helperfuncs import truncateForDisplay
     </head>
     <body>
         <p class="errormessage" py:if="not canResolve">
-            <div><b>Warning:</b> The hostname of this project, <tt>${project.getFQDN()}</tt>, cannot be resolved
-                This could indicate a local configuration error. Please add the following line to your conaryrc file:
-            </div>
+
+
+            <div><b>Note:</b> A DNS entry for this project's hostname
+            (<tt>${project.getFQDN()}</tt>) does not exist. For Conary to
+            access to this project's repository, either create an
+            appropriate DNS entry, or add the following line to your Conary
+            configuration:</div>
             <pre style="overflow: auto; white-space: nowrap; background: #fefefe;">
                 repositoryMap ${project.getFQDN()} $proto://${cfg.projectSiteHost}/repos/${project.getHostname()}/
             </pre>
