@@ -249,11 +249,21 @@ class ProjectsTable(database.KeyedTable):
                                   FROM Projects""")
                 projList = [(x[0], x[1] + '.' + x[2]) for x in cu.fetchall() \
                             if not x[3]]
+                if self.cfg.reposDBDriver != 'sqlite':
+                    needDb = True
+                else:
+                    needDb = False
                 for projectId, FQDN in projList:
                     dbCon = self.reposDB.getRepositoryDB(FQDN)
                     try:
-                        rDb = dbstore.connect(dbCon[1], dbCon[0])
+                        if self.cfg.reposDBDriver == 'sqlite' or needDb:
+                            rDb = dbstore.connect(dbCon[1], dbCon[0])
+                            needDb = False
+                        else:
+                            rDb.use(dbCon[1].split('/')[1])
                     except:
+                        from conary.lib import log
+                        log.warning('could not connect to: %s' % FQDN)
                         # skip missing repo DB's
                         continue
                     rCu = rDb.cursor()
@@ -278,7 +288,9 @@ class ProjectsTable(database.KeyedTable):
                                        WHERE userGroupId IN %s""" % \
                                 str(tuple(userGroups)).replace(",)", ")"))
                     rDb.commit()
-                    rDb.close()
+                    if self.cfg.reposDBDriver == 'sqlite':
+                        rDb.close()
+                rDb.close()
                 return (dbversion + 1) == self.schemaVersion
         return True
 
