@@ -427,8 +427,8 @@ def handler(req):
     if db.reopen():
         req.log_error("reopened a dead database connection in hooks.py")
 
-    if not req.uri.startswith('/setup/') and not cfg.configured:
-        req.headers_out['Location'] = "/setup/"
+    if not req.uri.startswith(cfg.basePath + 'setup/') and not cfg.configured:
+        req.headers_out['Location'] = cfg.basePath + "setup/"
         raise apache.SERVER_RETURN, apache.HTTP_MOVED_TEMPORARILY
 
     prof.startHttp(req.uri)
