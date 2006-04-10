@@ -259,9 +259,9 @@ class MintServer(object):
                     if methodName not in self.maintenanceMethods:
                         raise
 
-                allowPrivate = self._allowPrivate
+                # let inner private-only calls pass
+                self._allowPrivate = True
                 r = method(*args)
-                self._allowPrivate = allowPrivate
             except users.UserAlreadyExists, e:
                 self.db.rollback()
                 return (True, ("UserAlreadyExists", str(e)))
@@ -682,7 +682,6 @@ class MintServer(object):
     @typeCheck(int, int, bool)
     @requiresAuth
     def delMember(self, projectId, userId, notify=True):
-        self._allowPrivate = True
         self._filterProjectAccess(projectId)
         #XXX Make this atomic
         try:
@@ -839,7 +838,6 @@ class MintServer(object):
     @typeCheck(int, int, int)
     @requiresAuth
     def setUserLevel(self, userId, projectId, level):
-        self._allowPrivate = True
         self._filterProjectAccess(projectId)
         if (self.auth.userId != userId) and (level == userlevels.USER):
             raise users.UserInduction()
@@ -1366,7 +1364,6 @@ class MintServer(object):
     @typeCheck(int)
     @requiresAuth
     def deleteRelease(self, releaseId):
-        self._allowPrivate = True
         self._filterReleaseAccess(releaseId)
         if not self.releases.releaseExists(releaseId):
             raise ReleaseMissing()
@@ -1468,7 +1465,6 @@ class MintServer(object):
     @typeCheck(int, bool)
     @requiresAuth
     def setReleasePublished(self, releaseId, published):
-        self._allowPrivate = True
         self._filterReleaseAccess(releaseId)
         if not self.releases.releaseExists(releaseId):
             raise ReleaseMissing()
@@ -1520,7 +1516,6 @@ class MintServer(object):
     @typeCheck(int)
     @requiresAuth
     def startImageJob(self, releaseId):
-        self._allowPrivate = True
         self._filterReleaseAccess(releaseId)
         if not self.releases.releaseExists(releaseId):
             raise ReleaseMissing()
@@ -1676,7 +1671,6 @@ class MintServer(object):
         @param filter: If True it will only show running or waiting jobs.
           If False it will show all jobs for past 24 hours plus waiting jobs.
         @return: list of jobIds"""
-        self._allowPrivate = True
         cu = self.db.cursor()
 
         if filter:
@@ -1947,13 +1941,7 @@ class MintServer(object):
     @typeCheck(int, ((str, unicode),))
     @requiresAuth
     def getTroveVersionsByArch(self, projectId, troveNameWithLabel):
-
         self._filterProjectAccess(projectId)
-        # XXX: should this be a decorator?
-        # enable internal methods so that public methods can make
-        # private calls; this is safe because only one instance
-        # of MintServer is instantiated per call.
-        self._allowPrivate = True
 
         def dictByArch(versionList, trove):
             archMap = {}
@@ -1986,11 +1974,6 @@ class MintServer(object):
     @requiresAuth
     def getGroupTroves(self, projectId):
         self._filterProjectAccess(projectId)
-        # enable internal methods so that public methods can make
-        # private calls; this is safe because only one instance
-        # of MintServer is instantiated per call.
-        self._allowPrivate = True
-
         project = projects.Project(self, projectId)
 
         labelIdMap = project.getLabelIdMap()
@@ -2010,7 +1993,6 @@ class MintServer(object):
     @requiresAuth
     def getReleaseStatus(self, releaseId):
         self._filterReleaseAccess(releaseId)
-        self._allowPrivate = True
 
         release = releases.Release(self, releaseId)
         job = release.getJob()
@@ -2031,7 +2013,6 @@ class MintServer(object):
     @requiresAuth
     def getJobStatus(self, jobId):
         self._filterJobAccess(jobId)
-        self._allowPrivate = True
 
         job = jobs.Job(self, jobId)
 
@@ -2049,7 +2030,6 @@ class MintServer(object):
 
     def _getJobQueueLength(self, jobId):
         self._filterJobAccess(jobId)
-        self._allowPrivate = True
         cu = self.db.cursor()
         if jobId:
             cu.execute("SELECT status FROM Jobs WHERE jobId=?", jobId)
@@ -2353,7 +2333,6 @@ class MintServer(object):
     def addGroupTroveItemByProject(self, groupTroveId, trvName, projectName,
                                    trvFlavor, subGroup, versionLock, useLock,
                                    instSetLock):
-        self._allowPrivate = True
         projectId = self.projects.getProjectIdByHostname(projectName)
         self._filterProjectAccess(projectId)
         project = projects.Project(self, projectId)
