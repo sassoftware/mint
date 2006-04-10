@@ -18,11 +18,11 @@ from mint.mint import timeDelta
             <?python
                 formattedresults = [
                     (resultset[0].getUrl(), resultset[0].getNameForDisplay()),
-                    resultset[0].getDescForDisplay(),
                     timeDelta(resultset[4]),
                 ]
+                resultsetdesc = resultset[0].getDescForDisplay()
             ?>
-            ${resultRow(formattedresults)}
+            ${resultRow(formattedresults, resultsetdesc)}
         </div>
 
         <p py:def="sortOrderForm(sortOrder = 0)">
@@ -42,7 +42,7 @@ from mint.mint import timeDelta
                 ${sortOrderForm(sortOrder)}
                 ${navigation("projects?sortOrder=%d"%(sortOrder), "all projects", count, limit, offset)}
                 <table cellpadding="0" cellspacing="0" class="results">
-                    ${columnTitles(('Project Name', 'Project Description', 'Last Commit'))}
+                    ${columnTitles(('Project', 'Last Commit'))}
                     ${searchResults(results)}
                 </table>
                 ${navigation("projects?sortOrder=%d"%(sortOrder), "all projects", count, limit, offset, True)}

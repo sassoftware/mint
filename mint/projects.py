@@ -80,7 +80,7 @@ class Project(database.TableObject):
         return self.description
 
     def getDescForDisplay(self):
-        return truncateForDisplay(self.description)
+        return truncateForDisplay(self.description, maxWords=100)
 
     def getTimeCreated(self):
         return self.timeCreated
