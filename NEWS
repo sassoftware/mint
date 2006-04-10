@@ -6,6 +6,7 @@ Changes in 1.6.1:
   FQDN is not resolvable.
 * Mailing lists are now created with the default options to reject all
   non-member posts.
+* "Remember me on this computer" now functions as expected.
 
 Changes in 1.6.0:
 
