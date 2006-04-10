@@ -176,8 +176,9 @@ class MintApp(WebHandler):
             and self.cfg.configured:
             try:
                 project = self.client.getProjectByHostname(hostname)
-            except Exception, e:
-                self.req.log_error(str(e))
+            except database.ItemNotFound:
+                # project does not exist, redirect to front page
+                self._redirect("http://%s%s" % (self.cfg.siteHost, self.cfg.basePath))
                 raise HttpNotFound
             else:
                 # coerce "external" projects to the externalSiteHost, or
