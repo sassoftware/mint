@@ -20,7 +20,7 @@ if 'traceback' not in locals():
                 ${resourcePane()}
             </div>
             <div id="spanleft">
-            <p class="error">Site is temporarily down</p>
+            <h2>Site is temporarily down</h2>
             <p class="errormessage">${cfg.productName} is currently undergoing maintenance.</p>
             <p>
                 A posting will be made on

@@ -21,7 +21,7 @@
                 ${stepsWidget(['Get Started', 'Sign Up', 'Confirm Email'], 1)}
             </div>
             <div id="spanleft">
-                <p py:if="errors" class="error">Account Creation Error${len(errors) > 1 and 's' or ''}</p>
+                <h2 py:if="errors">Account Creation Error${len(errors) > 1 and 's' or ''}</h2>
                 <p py:for="error in errors" class="errormessage" py:content="error"/>
                 <h2>Create an Account</h2>
                 <p>

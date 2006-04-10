@@ -88,10 +88,7 @@ div.layout#help {
     margin-left: 15%;
 }
 
-p.error {
-    font-size: 125%;
-    font-weight: bold;
-}
+/* serious errors */
 p.errormessage {
     background: #edc2c2;
     border: 2px solid #ed6464;
@@ -100,6 +97,7 @@ p.errormessage {
     margin-right: 1em;
 }
 
+/* warnings that may not be fatal */
 p.warningmessage {
     background: #f4e3ab;
     border: 2px solid #fba517;
@@ -108,7 +106,7 @@ p.warningmessage {
     margin-right: 1em;
 }
 
-
+/* informative messages */
 p.message {
     background: #f5e4ae;
     border: 2px solid #f7c86a;

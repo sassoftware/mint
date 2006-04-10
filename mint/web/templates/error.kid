@@ -16,7 +16,7 @@ if 'traceback' not in locals():
     </head>
     <body>
         <div class="layout">
-            <p class="error">Error:</p>
+            <h2>Error:</h2>
             <p class="errormessage">${error}</p>
             <p>
                 Please go back and try again or contact
@@ -24,7 +24,7 @@ if 'traceback' not in locals():
                 for assistance.
             </p>
             <div py:if="traceback" py:strip="True">
-                <p class="error">Traceback:</p>
+                <h2>Traceback:</h2>
                 <pre py:content="traceback" />
             </div>
         </div>
