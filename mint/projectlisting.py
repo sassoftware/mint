@@ -52,7 +52,8 @@ sqlbase = """
                      timeCreated,
                      (SELECT COUNT(userId) AS numDevs FROM ProjectUsers
                           WHERE ProjectUsers.projectId=Projects.projectId)
-                     AS numDevs
+                     AS numDevs,
+                     Projects.external AS external
                      FROM
                          Projects
                      LEFT JOIN Commits ON
