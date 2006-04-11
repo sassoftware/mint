@@ -72,23 +72,11 @@ def injectVersion(version):
                     import time
                 ?>
                 <tr py:for="item in groupTrove.listTroves()" id="groupbuilder-item-${item['groupTroveItemId']}">
-                    <?python
-                        host = versions.VersionFromString(item['trvVersion']).branch().label().getHost()
-                        shorthost = host.split('.')[0]
-
-                        # This is a totally hackerrific. We really need a
-                        # better way to alias projects to shortnames
-                        # i.e. rPath Linux = conary.rpath.com, however,
-                        # its repos is in 'rpath', not 'conary'. [Bug #714]
-
-                        if shorthost == 'conary':
-                            shorthost = 'rpath'
-
-                    ?>
                     <td py:if="item['versionLock']"><img alt="Lock" class="lockicon" id="groupbuilder-item-lockicon-${item['groupTroveItemId']}" src="${cfg.staticPath}apps/mint/images/locked.gif" title="Version is locked" /></td>
                     <td py:if="not item['versionLock']"><img alt="Lock" class="lockicon" id="groupbuilder-item-lockicon-${item['groupTroveItemId']}" src="${cfg.staticPath}apps/mint/images/unlocked.gif" title="Version is unlocked"/></td>
-                    <td><a href="${cfg.basePath}repos/${shorthost}/troveInfo?t=${quote(item['trvName'])};v=${quote(injectVersion(item['trvVersion']))}" title="Name: ${item['trvName']}; Version: ${item['trvVersion']}">${item['trvName']}</a></td>
-                    <td><a href="${cfg.basePath}repos/${shorthost}/browse">${shorthost}</a></td>
+                    <td py:if="item['versionLock']"><a href="${item['baseUrl']}troveInfo?t=${quote(item['trvName'])};v=${quote(injectVersion(item['trvVersion']))}" title="Name: ${item['trvName']}; Version: ${item['trvVersion']}" id="groupbuilder-item-trvname-${item['groupTroveItemId']}">${item['trvName']}</a></td>
+                    <td py:if="not item['versionLock']"><a href="${item['baseUrl']}troveInfo?t=${quote(item['trvName'])}" title="Name: ${item['trvName']}; Label: ${item['trvLabel']}" id="groupbuilder-item-trvname-${item['groupTroveItemId']}">${item['trvName']}</a></td>
+                    <td><a href="${item['baseUrl']}browse">${item['shortHost']}</a></td>
                     <td><a href="${groupProject.getUrl()}deleteGroupTrove?id=${groupTrove.id};troveId=${item['groupTroveItemId']};referer=${quote(req.unparsed_uri)}">X</a></td>
                 </tr>
                 <tr id="groupbuilder-example" style="display:none">
