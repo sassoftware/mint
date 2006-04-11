@@ -285,13 +285,6 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
 
         self.sslDisabled = bool(os.environ.get("MINT_TEST_NOSSL", ""))
 
-        # FIXME: this awful hack needs to go away when the MCP comes online.
-        from mint.distro import jsversion
-        from mint.constants import mintVersion
-        jsversion.DEFAULT_BASEPATH = os.path.join(self.tmpDir, 'jobserver')
-        os.mkdir(jsversion.DEFAULT_BASEPATH)
-        os.mkdir(os.path.join(jsversion.DEFAULT_BASEPATH, mintVersion))
-
     def openMintClient(self, authToken=('mintauth', 'mintpass')):
         """Return a mint client authenticated via authToken, defaults to 'mintauth', 'mintpass'"""
         return shimclient.ShimMintClient(self.mintCfg, authToken)

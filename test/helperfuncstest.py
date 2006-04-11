@@ -21,6 +21,7 @@ from mint.userlevels import myProjectCompare
 from mint.mint import timeDelta
 from mint.distro import jsversion
 from mint_rephelp import MINT_PROJECT_DOMAIN
+from mint import constants
 
 from conary.lib import util
 
@@ -223,6 +224,9 @@ Much like Powdermilk Biscuits[tm]."""
     def testJsVersions(self):
         tmpDir = tempfile.mkdtemp()
         try:
+            self.failIf(jsversion.getVersions(tmpDir) != [constants.mintVersion])
+            self.failIf(jsversion.getVersionsOnDisk(tmpDir) != [constants.mintVersion])
+
             for dir in ('15.20.1', '1.5', '10.20', '10.2', '1.5.4beta', '1A',
                         'README'):
                 os.mkdir(os.path.join(tmpDir, dir))

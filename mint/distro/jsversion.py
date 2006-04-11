@@ -6,6 +6,7 @@
 import os
 import re
 from mint import mint_error
+from mint import constants
 
 from conary import versions
 from conary.conaryclient.cmdline import parseTroveSpec
@@ -15,9 +16,10 @@ DEFAULT_BASEPATH = os.path.join(os.path.sep, 'srv', 'mint', 'jobserver')
 def getVersionsOnDisk(basePath = None):
     if basePath is None:
         basePath = DEFAULT_BASEPATH
-    return sorted([x for x in os.listdir(basePath) \
+    ret = sorted([x for x in os.listdir(basePath) \
                    if re.match('\d*(\.\d*)+.*', x) \
                    and os.path.isdir(os.path.join(basePath, x))])
+    return ret and ret or [constants.mintVersion]
 
 def getVersions(basePath = None):
     if basePath is None:
@@ -28,7 +30,8 @@ def getVersions(basePath = None):
         return getVersionsOnDisk(basePath)
     try:
         vers = [versions.VersionFromString(parseTroveSpec(x.strip())[1]) for x in f.readlines()]
-        return [str(x.trailingRevision()).split('-')[0] for x in vers]
+        ret = [str(x.trailingRevision()).split('-')[0] for x in vers]
+        return ret and ret or [constants.mintVersion]
     finally:
         f.close()
 
@@ -37,4 +40,3 @@ def getDefaultVersion(basePath = None):
         return getVersions(basePath)[-1]
     except IndexError:
         raise mint_error.JobserverVersionMismatch("No job server versions available.")
-
