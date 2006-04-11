@@ -3,6 +3,12 @@
 from urllib import quote
 from conary import versions
 from mint.helperfuncs import truncateForDisplay
+import time
+
+def injectVersion(version):
+    parts = version.split('/')
+    parts[-1] = str(time.time()) + ':' + parts[-1]
+    return '/'.join(parts)
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
@@ -22,7 +28,6 @@ from mint.helperfuncs import truncateForDisplay
             </div>
             <div id="right" class="side">
                 ${resourcePane()}
-                ${groupTroveBuilder()}
             </div>
 
             <div id="middle">
@@ -31,8 +36,8 @@ from mint.helperfuncs import truncateForDisplay
             <form method="post" action="editGroup2?id=${curGroupTrove.id}">
                 <table class="groupTroveItems">
                     <tr><td colspan="4">
-                        <div style="float:left">${curGroupTrove.recipeName} version ${truncateForDisplay(curGroupTrove.upstreamVersion)}</div>
-                        <div style="float:right"><a onclick="javascript:toggle_display('editGTDropdown');" href="#">Edit 
+                        <div style="float:left">${curGroupTrove.recipeName} version ${True and truncateForDisplay(curGroupTrove.upstreamVersion) or 'Latest'}</div>
+                        <div style="float:right"><a onclick="javascript:toggle_display('editGTDropdown');" href="#">Edit
                             <img  id="editGTDropdown_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" /></a></div>
                     </td></tr>
                     <tr id="editGTDropdown" style="display:none;">
@@ -58,9 +63,17 @@ from mint.helperfuncs import truncateForDisplay
 
                     <tr py:for="t in curGroupTrove.listTroves()">
                         <td>${t['trvName']}</td>
-                        <td><a href="#" title="${t['trvVersion']}">
-                            ${versions.VersionFromString(t['trvVersion']).trailingRevision().asString()}</a>
+                        <td py:if="t['versionLock']">
+                            <a href="${t['baseUrl']}troveInfo?t=${quote(t['trvName'])};v=${quote(injectVersion(t['trvVersion']))}" title="${t['trvVersion']}">
+                                ${versions.VersionFromString(t['trvVersion']).trailingRevision().asString()}
+                            </a>
                         </td>
+                        <td py:if="not t['versionLock']">
+                            <a href="${t['baseUrl']}troveInfo?t=${quote(t['trvName'])}" title="${t['trvLabel']}">
+                                Latest
+                            </a>
+                        </td>
+
                         <td><input type="checkbox" name="${t['groupTroveItemId']}_versionLock" py:attrs="{'checked': t['versionLock'] and 'checked' or None}"/></td>
                         <td><a href="deleteGroupTrove?id=${curGroupTrove.getId()};troveId=${t['groupTroveItemId']};referer=${quote(req.unparsed_uri)}">X</a></td>
                     </tr>
