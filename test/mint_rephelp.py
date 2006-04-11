@@ -285,6 +285,18 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
 
         self.sslDisabled = bool(os.environ.get("MINT_TEST_NOSSL", ""))
 
+        if 'context' in self.__class__.__dict__:
+            # take string or list of strings--ensure we copy the original
+            # otherwise recursive behavior ensues to ill effect.
+            context = isinstance(self.context, str) and \
+                      [self.context] or self.context[:]
+
+            method = self.__class__.__dict__[self._TestCase__testMethodName]
+            if '_contexts' in method.__dict__:
+                method._contexts.extend(context)
+            else:
+                method._contexts = context
+
     def openMintClient(self, authToken=('mintauth', 'mintpass')):
         """Return a mint client authenticated via authToken, defaults to 'mintauth', 'mintpass'"""
         return shimclient.ShimMintClient(self.mintCfg, authToken)
