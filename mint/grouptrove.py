@@ -154,6 +154,10 @@ class GroupTroveItemsTable(database.KeyedTable):
     indexes = {"GroupTroveItemsUserIdx": """CREATE INDEX GroupTroveItemsUserIdx
                                               ON GroupTroveItems(creatorId)"""}
 
+    def __init__(self, db, cfg):
+        self.cfg = cfg
+        database.DatabaseTable.__init__(self, db)
+
     def updateModifiedTime(self, groupTroveItemId):
         cu = self.db.cursor()
         cu.execute("SELECT groupTroveId FROM GroupTroveItems WHERE groupTroveItemId=?", groupTroveItemId)
@@ -255,6 +259,16 @@ class GroupTroveItemsTable(database.KeyedTable):
         ret['instSetLock'] = bool(ret['instSetLock'])
         parsedVer = versions.VersionFromString(ret['trvVersion'])
         ret['trvLabel'] = str(parsedVer.branch().label())
+        ret['shortHost'] = parsedVer.branch().label().getHost().split('.')[0]
+
+         # This is a totally hackerrific. We really need a
+         # better way to alias projects to shortnames
+         # i.e. rPath Linux = conary.rpath.com, however,
+         # its repos is in 'rpath', not 'conary'. [Bug #714]
+        if ret['shortHost'] == 'conary':
+            ret['shortHost'] = 'rpath'
+
+        ret['baseUrl'] = self.cfg.basePath + 'repos/' + ret['shortHost'] + '/'
 
         flav = deps.ThawDependencySet(ret['trvFlavor'])
         if not (ret['useLock'] or ret['instSetLock']):
