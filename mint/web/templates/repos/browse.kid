@@ -19,7 +19,7 @@ def pluralTroves(c):
 ?>
 
     <span py:def="adder(package, component='')" style="float: right;"
-        py:if="groupTrove and package != groupTrove.recipeName and not package.endswith(':source')">
+        py:if="groupTrove and not groupTrove.troveInGroup(package) and not package.endswith(':source')">
         <?python
             if component:
                 package += ":" + component
