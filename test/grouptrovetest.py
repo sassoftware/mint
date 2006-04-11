@@ -874,6 +874,40 @@ class GroupTroveTest(MintRepositoryHelper):
             '@rpl:devel/1.0-1-1', ""),
                      "Group Trove didn't identify correct trove")
 
+    def testAgnosticTroveInGroup(self):
+        self.openRepository()
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client)
+
+        project = client.getProject(projectId)
+
+        groupTrove = self.createTestGroupTrove(client, projectId)
+        groupTroveId = groupTrove.getId()
+
+        trvId = self.addTestTrove(groupTrove, "testcase")
+
+        # agnostic trove, unlocked
+        self.failIf(not groupTrove.troveInGroup("testcase"),
+                    "Group Trove didn't identify agnostic trove")
+
+        groupTrove.setTroveVersionLock(trvId, True)
+        # agnostic trove, version locked
+        self.failIf(not groupTrove.troveInGroup("testcase"),
+                    "Group Trove didn't identify agnostic trove (ver lock)")
+
+        groupTrove.setTroveUseLock(trvId, True)
+        # agnostic trove, Use locked
+        self.failIf(not groupTrove.troveInGroup("testcase"),
+                    "Group Trove didn't identify agnostic trove")
+
+        groupTrove.setTroveUseLock(trvId, True)
+        # agnostic trove, IS locked
+        self.failIf(not groupTrove.troveInGroup("testcase"),
+                    "Group Trove didn't identify agnostic trove (IS lock)")
+
+        self.failIf(groupTrove.troveInGroup("notthere"),
+                    "Group Trove identified bad agnostic trove")
+
     def testTroveInGroupIS(self):
         self.openRepository()
         client, userId = self.quickMintUser('testuser', 'testpass')
