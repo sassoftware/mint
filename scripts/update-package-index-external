@@ -75,7 +75,7 @@ class UpdatePackageIndexExternal(SingletonScript):
             self.log.info("Retrieving trove list from %s...", host)
             try:
                 troves = netclients[host].getAllTroveLeaves(host, {None: {None: None}})
-            except repository.OpenError, e:
+            except repository.errors.OpenError, e:
                 self.log.warning("unable to access %s", host)
                 continue
 
