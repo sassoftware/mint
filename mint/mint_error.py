@@ -66,3 +66,16 @@ class MaintenanceMode(MintError):
 
     def __init__(self, msg = "Repositories are currently offline."):
         self.msg = msg
+
+class ParameterError(MintError):
+    def __str__(self):
+        return self.reason
+    def __init__(self, reason = "A required Parameter had an incorrect type"):
+        self.reason = reason
+
+class GroupTroveEmpty(MintError):
+    def __str__(self):
+        return self.reason
+    def __init__(self, reason = "Group Trove cannot be empty"):
+        self.reason = reason
+

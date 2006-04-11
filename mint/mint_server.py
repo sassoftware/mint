@@ -37,7 +37,8 @@ from distro import jsversion
 import maintenance
 from mint_error import PermissionDenied, ReleasePublished, ReleaseMissing, \
      MintError, ReleaseEmpty, UserAlreadyAdmin, AdminSelfDemotion, \
-     JobserverVersionMismatch, LastAdmin, MaintenanceMode
+     JobserverVersionMismatch, LastAdmin, MaintenanceMode, ParameterError, \
+     GroupTroveEmpty
 from reports import MintReport
 from searcher import SearchTermsError
 from distro.flavors import stockFlavors
@@ -53,23 +54,10 @@ from conary.deps import deps
 from conary import conarycfg
 from conary import conaryclient
 
-
 validHost = re.compile('^[a-zA-Z][a-zA-Z0-9\-]*$')
 reservedHosts = ['admin', 'mail', 'mint', 'www', 'web', 'rpath', 'wiki', 'conary', 'lists']
 
 dbConnection = None
-
-class ParameterError(MintError):
-    def __str__(self):
-        return self.reason
-    def __init__(self, reason = "A required Parameter had an incorrect type"):
-        self.reason = reason
-
-class GroupTroveEmpty(MintError):
-    def __str__(self):
-        return self.reason
-    def __init__(self, reason = "Group Trove cannot be empty"):
-        self.reason = reason
 
 def deriveBaseFunc(func):
     r = func
@@ -292,6 +280,9 @@ class MintServer(object):
             except MaintenanceMode, e:
                 self.db.rollback()
                 return (True, ("MaintenanceMode", str(e)))
+            except ParameterError, e:
+                self.db.rollback()
+                return (True, ("ParameterError", str(e)))
             except:
                 self.db.rollback()
                 raise

@@ -263,6 +263,9 @@ class JobDaemon:
                             slog.error("rBuilder Server Unreachable: trying again (attempt %d/5)" % errors)
 
                     slog.warning("Error retrieving job list: " + str(e))
+                except Exception, e:
+                    slog.error("Fatal exception caught: " + str(e))
+                    break
             # sleep at the end of every run, no matter what the outcome was
             time.sleep(random.uniform(*JOB_IDLE_INTERVAL))
         slog.info("Job server daemon is exiting.")

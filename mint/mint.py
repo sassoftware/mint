@@ -21,9 +21,9 @@ import grouptrove
 import base64
 from mint_error import MintError, UnknownException, PermissionDenied, \
     ReleasePublished, ReleaseMissing, ReleaseEmpty, UserAlreadyAdmin, \
-    AdminSelfDemotion, JobserverVersionMismatch, MaintenanceMode
+    AdminSelfDemotion, JobserverVersionMismatch, MaintenanceMode, \
+    ParameterError, GroupTroveEmpty
 from searcher import SearchTermsError
-
 
 class MintClient:
     def __init__(self, server):
@@ -550,6 +550,8 @@ class _Method(xmlrpclib._Method):
             raise JobserverVersionMismatch(exceptionArgs[0])
         elif exceptionName == "MaintenanceMode":
             raise MaintenanceMode(exceptionArgs[0])
+        elif exceptionName == "ParameterError":
+            raise ParameterError(exceptionArgs[0])
         else:
             raise UnknownException(exceptionName, exceptionArgs)
 

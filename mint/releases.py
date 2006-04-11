@@ -10,8 +10,7 @@ import sys
 import database
 import jobs
 import releasetypes
-from mint_error import MintError
-from mint_server import ParameterError
+from mint_error import MintError, ParameterError
 from data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM
 from releasetemplates import dataHeadings, dataTemplates
 
