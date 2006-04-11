@@ -1176,12 +1176,12 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         projectId = client.newProject("Foo", "testproject", MINT_PROJECT_DOMAIN)
         self.assertContent("/project/testproject/", code = [200],
-            content = "cannot be resolved", server = self.getProjectServerHostname())
+            content = "A DNS entry for this project's hostname", server = self.getProjectServerHostname())
 
         # a bit of a hack to create a project fqdn that will resolve
         projectId = client.newProject("Resolves", "test", "rpath.org")
         self.assertNotContent("/project/test/", code = [200],
-            content = "cannot be resolved", server = self.getProjectServerHostname())
+            content = "A DNS entry for this project's hostname", server = self.getProjectServerHostname())
 
 
 if __name__ == "__main__":
