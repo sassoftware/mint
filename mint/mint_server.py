@@ -193,7 +193,7 @@ def getTables(db, cfg):
     d['commits'] = stats.CommitsTable(db)
     d['releaseData'] = data.ReleaseDataTable(db)
     d['groupTroves'] = grouptrove.GroupTroveTable(db)
-    d['groupTroveItems'] = grouptrove.GroupTroveItemsTable(db)
+    d['groupTroveItems'] = grouptrove.GroupTroveItemsTable(db, cfg)
     d['jobData'] = data.JobDataTable(db)
     d['releaseImageTypes'] = releases.ReleaseImageTypesTable(db)
     d['inboundLabels'] = mirror.InboundLabelsTable(db)
@@ -2291,7 +2291,7 @@ class MintServer(object):
         self._filterProjectAccess(projectId)
         self._requireProjectDeveloper(projectId)
         self.groupTroveItems.setVersionLock(groupTroveItemId, lock)
-        return lock
+        return self.groupTroveItems.get(groupTroveItemId)
 
     @private
     @typeCheck(int, bool)
