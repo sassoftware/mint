@@ -7,6 +7,10 @@ Changes in 1.6.1:
 * Mailing lists are now created with the default options to reject all
   non-member posts.
 * "Remember me on this computer" now functions as expected.
+* Search results have a better UI.
+* The projects pane expands to fit the contents.
+* The IP address of the job server is now correctly recorded in the JobData table.
+* The group cook page uses the new status dialog.
 
 Changes in 1.6.0:
 
