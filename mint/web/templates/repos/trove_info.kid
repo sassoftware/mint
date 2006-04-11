@@ -32,14 +32,14 @@ isOwner = (userLevel == userlevels.OWNER or auth.admin)
         </tr>
     </table>
 
-    <span py:def="lockedAdder(trove)" style="float: right;" py:if="groupTrove and groupTrove.recipeName != trove.getName()">
+    <span py:def="lockedAdder(trove)" style="float: right;" py:if="groupTrove and not groupTrove.troveInGroup(trove.getName())">
         <a href="${groupProject.getUrl()}addGroupTrove?id=${groupTrove.id};trove=${quote(trove.getName())};version=${quote(trove.getVersion().asString())};versionLock=1;referer=${quote(req.unparsed_uri)}">
             Add this exact version to ${groupTrove.recipeName}
         </a>
     </span>
 
     <span py:def="adder(trove)" style="float: right;"
-        py:if="groupTrove and groupTrove.recipeName != trove.getName()">
+        py:if="groupTrove and not groupTrove.troveInGroup(trove.getName())">
         <a href="${groupProject.getUrl()}addGroupTrove?id=${groupTrove.id};trove=${quote(trove.getName())};version=${quote(trove.getVersion().asString())};referer=${quote(req.unparsed_uri)}">
             Add to ${groupTrove.recipeName}
         </a>
