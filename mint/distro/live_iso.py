@@ -72,6 +72,7 @@ mount -o defaults --ro -t iso9660 /dev/root /cdrom
 %(mountCmd)s
 pivot_root /sysroot /sysroot/initrd
 umount /initrd/proc
+umount /initrd/sys
 """
 
 isolinuxCfg= '\n'.join(('say Welcome to %s.',
