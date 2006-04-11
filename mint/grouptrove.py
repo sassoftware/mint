@@ -241,7 +241,14 @@ class GroupTroveItemsTable(database.KeyedTable):
                 depSet.addDeps(deps.InstructionSetDependency,
                                flav.iterDepsByClass(deps.InstructionSetDependency))
                 flavor = str(depSet)
-            match = trvDict['trvFlavor'] == flavor
+            if flavor:
+                flavorMatch = trvDict['trvFlavor'] == flavor
+            else:
+                # short circuit degenerate flavors
+                flavorMatch = True
+            if version == '':
+                # short circuit degenerate versions
+                return flavorMatch
             parsedVer = versions.VersionFromString(version)
             label = str(parsedVer.branch().label())
             if trvDict['trvFlavor'] == flavor and \
@@ -350,7 +357,7 @@ class GroupTrove(database.TableObject):
     def listTroves(self):
         return self.server.listGroupTroveItemsByGroupTrove(self.getId())
 
-    def troveInGroup(self, name, version, flavor):
+    def troveInGroup(self, name, version = '', flavor = ''):
         return self.server.troveInGroupTroveItems(self.getId(), name, version,
                                                   flavor)
 
