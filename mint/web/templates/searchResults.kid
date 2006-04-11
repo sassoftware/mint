@@ -52,7 +52,7 @@
                         (resultset[4], resultset[3])
                     ]
                     resultsetdesc = resultset[1]
-                    if groupTrove and resultset[2] != groupTrove.recipeName:
+                    if groupTrove and not groupTrove.troveInGroup(resultset[0]):
                         formattedresults.append((self.cfg.basePath + 'project/%s/addGroupTrove?id=%d;trove=%s;version=%s;referer=%s' % (groupTrove.projectName, groupTrove.getId(), quote(resultset[0]), resultset[1], quote(req.unparsed_uri)) , 'Add to %s' % groupTrove.recipeName))
             ?>
             ${resultRow(formattedresults, resultsetdesc)}
