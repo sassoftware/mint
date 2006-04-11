@@ -48,8 +48,8 @@ GroupTroveManager.prototype.toggleLockState = function (url, id) {
         lock = false;
     }
     log("Current lock state: " + lock);
-    logDebug('creating toggleLockState XMLRPC request object');
-    var req = new XmlRpcRequest(url, 'setGroupTroveItemVersionLock');
+    logDebug('creating toggleLockState JSONRPC request object');
+    var req = new JsonRpcRequest(url, 'setGroupTroveItemVersionLock');
     req.setAuth(getCookieValue('pysid'));
     req.setCallback(this.toggleVersionLock);
     req.setCallbackData({'id': id});
@@ -162,22 +162,25 @@ GroupTroveManager.prototype.createTroveRow = function(data) {
 
 GroupTroveManager.prototype.toggleVersionLock = function(data, req) {
     logDebug('toggleVersionLock');
-    var xml = req.responseXML;
     var img = getElement('groupbuilder-item-lockicon-' + data['id']);
-    var bools = xml.getElementsByTagName('boolean');
     var str = null;
     var title = null;
-    locked = scrapeText(bools[1]) == '1'
-    logDebug("returned state: " + locked);
-    if(locked) {
+    jR = evalJSONRequest(req);
+    var trvLink = getElement('groupbuilder-item-trvname-' + data['id']);
+    if(jR['versionLock']) {
         str = 'locked';
         title = LockedVersionTitle;
+        newTitle = 'Name: ' + jR['trvName'] + '; Version: ' + jR['trvVersion'];
+        newLink = jR['baseUrl'] + 'troveInfo?t=' + jR['trvName'] + ';v=' + jR['trvVersion'];
     }
     else{
         str = 'unlocked';
         title = UnlockedVersionTitle;
+        newTitle = 'Name: ' + jR['trvName'] + '; Label: ' + jR['trvLabel'];
+        newLink = jR['baseUrl'] + 'troveInfo?t=' + jR['trvName'];
     }
-    logDebug("current state as returned: " + str);
+    swapDOM(trvLink, A({'href' : newLink, 'id' : trvLink.id,
+                        'title' : newTitle}, jR['trvName']));
     img.src = img.src.replace(/unlocked|locked/, str);
     logDebug("Set src to: " + img.src);
     // Fix the tooltip
