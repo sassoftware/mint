@@ -11,9 +11,12 @@ testsuite.setup()
 import jobserverharness
 
 from mint import releasetypes
+from conary.lib import util
+from mint import constants
+from mint.distro import jsversion
 
 class JobServerTest(jobserverharness.JobServerHelper):
-    def testStubImage(self):
+    def testJobServer(self):
         client, userId = self.quickMintUser("testuser", "testpass")
         projectId = client.newProject("Foo", "foo", "rpath.org")
         project = client.getProject(projectId)
@@ -38,7 +41,7 @@ class JobServerTest(jobserverharness.JobServerHelper):
 
         contents = open(self.jsCfg.finishedPath + "/stub.iso").read()
         assert(contents == "Hello World!\n")
-        assert(job.getDataValue("hostname") == "localhost")
+        assert(job.getDataValue("hostname") == "127.0.0.1")
 
 
 if __name__ == "__main__":
