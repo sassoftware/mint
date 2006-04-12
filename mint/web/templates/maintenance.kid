@@ -20,18 +20,21 @@ if 'traceback' not in locals():
                 ${resourcePane()}
             </div>
             <div id="spanleft">
-            <h2>Site is temporarily down</h2>
-            <p class="errormessage">${cfg.productName} is currently undergoing maintenance.</p>
-            <p>
-                A posting will be made on
-                <a href="${cfg.announceLink}">Site Announcements</a>
-                when this situaion is resolved.
-            </p>
-            <p>
-                contact
-                ${XML(cfg.supportContactHTML)}
-                for assistance.
-            </p>
+            <h2>Maintenance in Progress</h2>
+
+            <p>${cfg.productName} is currently undergoing maintenance.
+            During this time, you will be unable to access the site.</p>
+
+            <p py:if="cfg.announceLink">Check the <a
+            href="${cfg.announceLink}">site announcements</a> for current
+            status.</p>
+
+            <p py:if="not cfg.announceLink">Contact
+            ${XML(cfg.supportContactHTML)} for current status.</p>
+
+            <p>${cfg.productName} administrators: To access
+            maintenance-mode functions, enter your username and
+            password to login.</p>
             </div>
         </div>
     </body>
