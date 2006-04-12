@@ -10,6 +10,7 @@ Mint Report Application
 @group Report Modules: new_users
 """
 import os
+import re
 
 global _reportlab_present
 try:
@@ -31,11 +32,10 @@ def moduleHasReportObject(repModule):
 
 global availableReports
 if _reportlab_present:
-    moduleNames = [''.join(x.split('.py')) for x in
-                        os.listdir(__path__[0])
-                        if x.endswith('.py') and not x.startswith('#')
-                        and not x.startswith('.') and not x.startswith('_')
-                        and x != 'reports.py']
+    moduleNames = list(set(['.'.join(x.split('.')[:-1]) for x in \
+                            os.listdir(__path__[0]) if \
+                            re.match('^[^._].*[(\.pyc)(\.py)]$', x) and \
+                            x not in ('reports.py', 'reports.pyc')]))
     __dict__ = {}
     availableReports = []
     for moduleName in moduleNames:
