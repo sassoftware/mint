@@ -6,6 +6,7 @@
 import testsuite
 testsuite.setup()
 
+import os
 import time
 from mint_rephelp import MintRepositoryHelper
 from mint.mint_server import PermissionDenied
@@ -84,6 +85,32 @@ class ReportTest(MintRepositoryHelper):
                     [['adminuser', 'Test User', 'test@example.com', 2],
                      ['foouser', 'Test User', 'test@example.com', 1]],
                     "user activity report wasn't properly computed")
+
+    def testPrecompiledReports(self):
+        client, userId = self.quickMintAdmin('adminuser', 'adminpass')
+        reportsPath = os.path.sep.join( \
+            os.path.abspath(__file__).split(os.path.sep)[:-2] + \
+            ['mint', 'reports'])
+        rogueReport = reportsPath + os.path.sep + 'rogueReportForTesting.pyc'
+        rgSrc = os.path.sep.join([os.path.split(os.path.abspath(__file__))[0]]\
+                                 + ['archive', 'rogueReportForTesting.pyc'])
+        try:
+            os.link(rgSrc, rogueReport)
+            from mint import reports
+            reload(reports)
+            reps = client.server.listAvailableReports()
+            self.failIf('rogueReportForTesting' not in reps,
+                        "precompiled report modules won't show up.")
+        finally:
+            try:
+                os.unlink(rogueReport)
+            finally:
+                pass
+            reload(reports)
+        reps = client.server.listAvailableReports()
+        self.failIf('rogueReportForTesting' in reps,
+                    "rogue report module wasn't deleted after test.")
+
 
 if __name__ == "__main__":
     testsuite.main()
