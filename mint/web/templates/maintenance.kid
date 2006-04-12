@@ -5,6 +5,8 @@
 <?python
 if 'traceback' not in locals():
     traceback = None
+from mint import config
+defaultConfig = config.MintConfig()
 ?>
 
 <!--
@@ -25,12 +27,12 @@ if 'traceback' not in locals():
             <p>${cfg.productName} is currently undergoing maintenance.
             During this time, you will be unable to access the site.</p>
 
-            <p py:if="cfg.announceLink">Check the <a
+            <p py:if="cfg.announceLink != defaultConfig.announceLink">Check the <a
             href="${cfg.announceLink}">site announcements</a> for current
             status.</p>
 
-            <p py:if="not cfg.announceLink">Contact
-            ${XML(cfg.supportContactHTML)} for current status.</p>
+            <p py:if="cfg.supportContactHTML != defaultConfig.supportContactHTML">Contact
+            ${XML(cfg.supportContactHTML)} if you have any questions.</p>
 
             <p>${cfg.productName} administrators: To access
             maintenance-mode functions, enter your username and
