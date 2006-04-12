@@ -5,6 +5,7 @@
 
 import tempfile
 import time
+import os, sys
 import testsuite
 testsuite.setup()
 
@@ -426,8 +427,16 @@ class UpgradePathTest(MintRepositoryHelper):
 
         # now create a server object (which will perform the upgrade)
         try:
+            fd = os.open(os.devnull, os.W_OK)
+            oldStdOut = os.dup(sys.stdout.fileno())
+            oldStdErr = os.dup(sys.stderr.fileno())
+            os.dup2(fd, sys.stdout.fileno())
+            os.dup2(fd, sys.stderr.fileno())
+            os.close(fd)
             mint_server.MintServer(cfg, alwaysReload = True)
         finally:
+            os.dup2(oldStdOut, sys.stdout.fileno())
+            os.dup2(oldStdErr, sys.stderr.fileno())
             # sqlite: since the schema changed we need to reconnect.
             if cfg.dbDriver == "sqlite":
                 self.db.dbh.close()
@@ -483,6 +492,11 @@ class UpgradePathTest(MintRepositoryHelper):
         jsVer = jsversion.getDefaultVersion()
         self.failIf(cu.fetchall() != [(1, '1.5.4'), (2, jsVer)],
                     "schema upgrade 15 failed.")
+
+        adminClient, adminId = self.quickMintAdmin('admin', 'admin')
+        # check to see if a name of the new max size falters.
+        adminClient.createGroupTrove(1, 'group-' + ('a' * 194),
+                                     '1.0.0', '', True)
 
     def testSchemaVerFifteen(self):
         # schema test designed to test upgrade codepath for exisiting project
