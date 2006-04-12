@@ -231,7 +231,7 @@ class SiteHandler(WebHandler):
         else:
             raise HttpNotFound
 
-    def continueLogin(self, auth, sid):
+    def continueLogin(self, auth, sid = None):
         if sid:
             self._session_start()
             self._redirect(self.session['firstPage'])
