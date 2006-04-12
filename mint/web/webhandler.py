@@ -120,7 +120,8 @@ class WebHandler(object):
 
     def _resetPasswordById(self, userId):
         newpw = users.newPassword()
-        user = self.client.getUser(userId)
+        adminClient = shimclient.ShimMintClient(self.cfg, (self.cfg.authUser, self.cfg.authPass))
+        user = adminClient.getUser(userId)
         user.setPassword(newpw)
 
         message = "\n".join(["Your password for username %s at %s has been reset to:" % (user.getUsername(), self.cfg.productName),
@@ -132,9 +133,12 @@ class WebHandler(object):
                              "this password as soon as possible."
                              ])
 
-        users.sendMail(self.cfg.adminMail, self.cfg.productName,
-                   user.getEmail(),
-                   "%s forgotten password"%self.cfg.productName, message)
+        if self.cfg.sendNotificationEmails:
+            users.sendMail(self.cfg.adminMail, self.cfg.productName,
+                       user.getEmail(),
+                       "%s forgotten password"%self.cfg.productName, message)
+        else:
+            self.req.log_error("The password for %s has been reset to %s" % (user.username, newpw))
 
     def _writeRss(self, **values):
         if "rss20.kid" not in kidCache:

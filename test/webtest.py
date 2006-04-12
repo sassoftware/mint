@@ -1183,6 +1183,18 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.assertNotContent("/project/test/", code = [200],
             content = "A DNS entry for this project's hostname", server = self.getProjectServerHostname())
 
+    def testForgotPassword(self):
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        page = self.fetchWithRedirect('/forgotPassword')
+        page = page.post("/resetPassword",
+            {'username': 'testuser'})
+
+        assert("An email with a new password has been sent" in page.body)
+
+        # make sure the old password doesn't work
+        self.assertRaises(AssertionError, 
+            self.webLogin, 'testuser', 'testpass')
+
 
 if __name__ == "__main__":
     testsuite.main()
