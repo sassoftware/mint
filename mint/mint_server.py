@@ -180,7 +180,7 @@ def getTables(db, cfg):
     d['membershipRequests'] = requests.MembershipRequestTable(db)
     d['commits'] = stats.CommitsTable(db)
     d['releaseData'] = data.ReleaseDataTable(db)
-    d['groupTroves'] = grouptrove.GroupTroveTable(db)
+    d['groupTroves'] = grouptrove.GroupTroveTable(db, cfg)
     d['groupTroveItems'] = grouptrove.GroupTroveItemsTable(db, cfg)
     d['jobData'] = data.JobDataTable(db)
     d['releaseImageTypes'] = releases.ReleaseImageTypesTable(db)

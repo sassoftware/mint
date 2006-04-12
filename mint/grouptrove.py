@@ -33,7 +33,7 @@ class GroupTroveTable(database.KeyedTable):
                                  groupTroveId %(PRIMARYKEY)s,
                                  projectId INT,
                                  creatorId INT,
-                                 recipeName CHAR(32),
+                                 recipeName CHAR(200),
                                  upstreamVersion CHAR(128),
                                  description TEXT,
                                  timeCreated INT,
@@ -50,6 +50,26 @@ class GroupTroveTable(database.KeyedTable):
                                                ON GroupTroves(projectId)""",
                "GroupTrovesUserIdx": """CREATE INDEX GroupTrovesUserIdx
                                             ON GroupTroves(creatorId)"""}
+
+    def __init__(self, db, cfg):
+        self.cfg = cfg
+        database.DatabaseTable.__init__(self, db)
+
+    def versionCheck(self):
+        dbversion = self.getDBVersion()
+        if dbversion != self.schemaVersion:
+            if dbversion == 16:
+                cu = self.db.cursor()
+                if self.cfg.dbDriver == 'sqlite':
+                    cu.execute("""CREATE TABLE GroupTroves_backup AS
+                                      SELECT * FROM %s""" % self.name)
+                    cu.execute('DROP TABLE %s' % self.name)
+                    cu.execute(self.createSQL % self.db.keywords)
+                else:
+                    cu.execute("""ALTER TABLE GroupTroves
+                                      MODIFY COLUMN recipeName CHAR(200)""")
+                return (dbversion + 1) == self.schemaVersion
+        return True
 
     def listGroupTrovesByProject(self, projectId):
         cu = self.db.cursor()
