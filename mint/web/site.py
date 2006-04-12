@@ -517,7 +517,10 @@ class SiteHandler(WebHandler):
                 yesArgs = {'func':'cancelAccount', 'confirmed':'1'}, noLink = self.cfg.basePath)
 
     def maintenance(self, auth, *args, **kwargs):
-        return self._write("maintenance")
+        if maintenance.getMaintenanceMode(self.cfg) == maintenance.NORMAL_MODE:
+            self._redirect(self.cfg.basePath)
+        else:
+            return self._write("maintenance")
 
     @strFields(feed = 'newProjects')
     def rss(self, auth, feed):
