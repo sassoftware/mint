@@ -1,11 +1,6 @@
 image_files = *.gif *.jpg *.png favicon.ico
 
-favicon = favicon/rpath-16x16-favicon.ico
-
 dist_files = Makefile $(image_files)
-
-all:
-	cp -a $(favicon) favicon.ico
 
 clean: default-clean
 
