@@ -69,14 +69,6 @@ class SiteHandler(WebHandler):
         return self._write("frontPage", firstTime=self.session.get('firstTimer', False),
             releases=releases, popularProjects = popularProjects, activeProjects = activeProjects)
 
-    def blank(self, auth, sid, hostname):
-        self.req.content_type = "image/gif"
-
-        # 1x1 transparent gif
-        return 'GIF89a\x01\x00\x01\x00\x80\x00\x00\xff\xff\xff\xff\xff\xff!'\
-               '\xf9\x04\x01\n\x00\x01\x00,\x00\x00\x00\x00\x01\x00\x01\x00'\
-               '\x00\x02\x02L\x01\x00;'
-
     @redirectHttps
     def register(self, auth):
         self.toUrl = self.cfg.basePath
@@ -231,7 +223,7 @@ class SiteHandler(WebHandler):
         else:
             raise HttpNotFound
 
-    def continueLogin(self, auth, sid):
+    def continueLogin(self, auth, sid = None):
         if sid:
             self._session_start()
             self._redirect(self.session['firstPage'])
