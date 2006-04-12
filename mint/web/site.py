@@ -519,6 +519,8 @@ class SiteHandler(WebHandler):
     def maintenance(self, auth, *args, **kwargs):
         if maintenance.getMaintenanceMode(self.cfg) == maintenance.NORMAL_MODE:
             self._redirect(self.cfg.basePath)
+        elif auth.admin:
+            self._redirect(self.cfg.basePath + "administer")
         else:
             return self._write("maintenance")
 
