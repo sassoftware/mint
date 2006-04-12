@@ -34,7 +34,7 @@
                             </th>
                             <td>group-</td>
                             <td>
-                                <input type="text" name="groupName" value="${kwargs['groupName']}" size="16" maxlength="16"/>
+                                <input type="text" name="groupName" value="${kwargs['groupName']}" size="16" maxlength="32"/>
                                 <p class="help">Please choose a name for your group. "group-" is required and will be
                                     automatically prepended to the name you enter.
                                 </p>
