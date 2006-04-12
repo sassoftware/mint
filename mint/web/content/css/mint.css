@@ -518,6 +518,9 @@ div#projectsPane div.boxHeaderText {
 div#projectsPane div.boxHeader {
     background: url(../images/header_orange_bg.png);
 }
+div#projectsPane div.blueBoxHeader {
+    background: url(../images/header_blue_bg.png);
+}
 
 div#projectsPane div.boxBody {
     padding-bottom: 25px;
