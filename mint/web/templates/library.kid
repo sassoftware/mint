@@ -4,6 +4,7 @@ import time
 from mint import searcher
 from urllib import quote
 from mint import userlevels
+from mint import maintenance
 
 def injectVersion(version):
     parts = version.split('/')
@@ -172,12 +173,23 @@ def injectVersion(version):
                 if cfg.SSL:
                     secureProtocol = "https"
             ?>
-        <img class="left" src="${cfg.staticPath}apps/mint/images/header_orange_left.png" alt="" />
-        <img class="right" src="${cfg.staticPath}apps/mint/images/header_orange_right.png" alt="" />
-        <div class="boxHeader">
-            <div class="boxHeaderText" style="font-size: 120%;">
-                Sign In
-            </div>
+        <div class="userLogin" py:if="maintenance.getMaintenanceMode(cfg) == maintenance.NORMAL_MODE">
+          <img class="left" src="${cfg.staticPath}apps/mint/images/header_orange_left.png" alt="" />
+          <img class="right" src="${cfg.staticPath}apps/mint/images/header_orange_right.png" alt="" />
+          <div class="boxHeader">
+              <div class="boxHeaderText" style="font-size: 120%;">
+                  Sign In
+              </div>
+          </div>
+        </div>
+        <div class="adminLogin" py:if="maintenance.getMaintenanceMode(cfg) != maintenance.NORMAL_MODE">
+          <img class="left" src="${cfg.staticPath}apps/mint/images/header_blue_left.png" alt="" />
+          <img class="right" src="${cfg.staticPath}apps/mint/images/header_blue_right.png" alt="" />
+          <div class="blueBoxHeader">
+              <div class="boxHeaderText" style="font-size: 120%;">
+                  Admin Sign In
+              </div>
+          </div>
         </div>
         <div class="boxBody">
             <p>
