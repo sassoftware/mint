@@ -712,7 +712,9 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.db.commit()
         release.setPublished(True)
 
-        page = self.assertCode('/downloadImage/1/test.iso', code = 301)
+        # check for the meta refresh tag
+        page = self.assertContent('/downloadImage/1/test.iso', code = [200],
+            content = "2;url=http://test.%s:%d/images/foo/1/test.iso" % (MINT_DOMAIN, self.port))
 
     def testUtf8ProjectName(self):
         client, userId = self.quickMintUser('foouser','foopass')

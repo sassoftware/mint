@@ -52,10 +52,18 @@ dist_files = $(python_files) $(extra_dist)
 
 all: default-all default-subdirs constants.py
 
+generated_files = *.pyo *.pyc
+
+.PHONY: clean dist install subdirs
+
+subdir: default-subdirs
+
 constants.py: constants.py.in ../Makefile
 	sed s,@version@,$(VERSION),g $< > $@
 
-install: install-subdirs pyfiles-install
+install: all install-subdirs pyfiles-install
+	python -c "import compileall; compileall.compile_dir('$(DESTDIR)$(mintdir)', ddir='$(mintdir)', quiet=1)"
+	python -OO -c "import compileall; compileall.compile_dir('$(DESTDIR)$(mintdir)', ddir='$(mintdir)', quiet=1)"
 
 dist: default-dist
 

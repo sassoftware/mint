@@ -299,6 +299,7 @@ def conaryHandler(req, cfg, pathInfo):
 
             repositories[repHash].forceSecure = cfg.SSL
         else:
+            req.log_error("failed to open repository directory: %s" % repositoryDir)
             repositories[repHash] = None
             shim_repositories[repHash] = None
 
