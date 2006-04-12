@@ -191,6 +191,21 @@ class MaintenanceTest(mint_rephelp.WebRepositoryHelper):
                           maintenance.enforceMaintenanceMode, cfg)
         maintenance.enforceMaintenanceMode(cfg, adminAuth)
 
+    def testUserRedirect(self):
+        page = self.fetchWithRedirect(self.mintCfg.basePath + 'maintenance')
+        self.failIf(page.url != self.mintCfg.basePath,
+                    "maintenance landing page didn't redirect to main page "
+                    "when not in maintenance mode.")
+
+    def testAdminRedirect(self):
+        self.quickMintAdmin('adminuser', 'adminpass')
+        self.webLogin('adminuser', 'adminpass')
+        self.setMaintenanceMode(maintenance.LOCKED_MODE)
+        page = self.fetchWithRedirect(self.mintCfg.basePath + 'maintenance')
+        self.failIf(page.url != self.mintCfg.basePath + 'administer',
+                    "maintenance landing page didn't redirect to admin page "
+                    "for admin users.")
+
 
 if __name__ == "__main__":
     testsuite.main()
