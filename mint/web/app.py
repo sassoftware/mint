@@ -156,6 +156,8 @@ class MintApp(WebHandler):
                 traceback = self.cfg.debugMode and tb or None)
         except fields.MissingParameterError, e:
             output = self._write("error", shortError = "Missing Parameter", error = str(e))
+        except fields.BadParameterError, e:
+            output = self._write("error", shortError = "Bad Parameter", error = str(e))
 
         self.req.write(output)
         return apache.OK
