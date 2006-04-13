@@ -61,10 +61,13 @@ class GroupTroveTable(database.KeyedTable):
             if dbversion == 16:
                 cu = self.db.cursor()
                 if self.cfg.dbDriver == 'sqlite':
-                    cu.execute("""CREATE TABLE GroupTroves_backup AS
-                                      SELECT * FROM %s""" % self.name)
+                    cu.execute("""CREATE TABLE %s_backup AS
+                                      SELECT * FROM %s""" % \
+                               (self.name, self.name))
                     cu.execute('DROP TABLE %s' % self.name)
                     cu.execute(self.createSQL % self.db.keywords)
+                    cu.execute("""INSERT INTO GroupTroves
+                                      SELECT * FROM %s_backup""" % self.name)
                 else:
                     cu.execute("""ALTER TABLE GroupTroves
                                       MODIFY COLUMN recipeName CHAR(200)""")
