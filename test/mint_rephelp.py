@@ -35,7 +35,10 @@ from mint import releasetypes
 # test suite.
 MINT_HOST = 'test'
 MINT_DOMAIN = 'rpath.local'
-MINT_PROJECT_DOMAIN = 'rpath.local2'
+if bool(os.environ.get("MINT_TEST_SAMEDOMAINS", "")):
+    MINT_PROJECT_DOMAIN = MINT_DOMAIN
+else:
+    MINT_PROJECT_DOMAIN = 'rpath.local2'
 
 # Stop any redirection loops, if encountered, after 20 redirects.
 MAX_REDIRECTS = 20
