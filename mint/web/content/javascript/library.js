@@ -539,7 +539,11 @@ function onArchChange() {
         logDebug(versionlist);
         appendToSelect(vSel, "", document.createTextNode("---"), '', "version");
         for (var i in versionlist) {
-            appendToSelect(vSel, versionlist[i][1] + " " + versionlist[i][2], document.createTextNode(versionlist[i][0]), versionlist[i][0], "version");
+            verTitle = versionlist[i][0];
+            if (verTitle.length > 50) {
+               verTitle = '...' + verTitle.slice(-50);
+            }
+            appendToSelect(vSel, versionlist[i][1] + " " + versionlist[i][2], document.createTextNode(versionlist[i][0]), verTitle, "version");
         }
         vSel.disabled = false;
         handleReleaseTypes(selectedArch);
