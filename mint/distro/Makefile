@@ -22,7 +22,8 @@ python_files = \
 	stub_image.py		\
         splitdistro.py          \
         tarball.py              \
-        vmware_image.py
+        vmware_image.py         \
+        conaryinstall.py
 
 extra_dist = Makefile
 
