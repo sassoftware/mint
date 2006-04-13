@@ -420,6 +420,9 @@ class UpgradePathTest(MintRepositoryHelper):
         cu.execute("INSERT INTO ReleaseData VALUES(?, ?, ?, ?)",
                    1, 'skipMediaCheck', '1', 1)
 
+        cu.execute("INSERT INTO GroupTroves VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                   1, 1, 1, 'group-test', '0.0.1', '', 0, 0, 1)
+
         # set version
         cu.execute("INSERT INTO DatabaseVersion VALUES(8, 0)")
 
@@ -492,6 +495,11 @@ class UpgradePathTest(MintRepositoryHelper):
         jsVer = jsversion.getDefaultVersion()
         self.failIf(cu.fetchall() != [(1, '1.5.4'), (2, jsVer)],
                     "schema upgrade 15 failed.")
+
+        cu.execute("SELECT * FROM GroupTroves")
+        self.failIf(cu.fetchall() != \
+                    [(1, 1, 1, 'group-test', '0.0.1', '', 0, 0, 1)],
+                    "Accidentally lost group trove entries during upgrade")
 
         adminClient, adminId = self.quickMintAdmin('admin', 'admin')
         # check to see if a name of the new max size falters.
