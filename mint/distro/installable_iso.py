@@ -228,6 +228,11 @@ class InstallableIso(ImageGenerator):
         call('sed', '-i', 's/BETANAG = 1/BETANAG = %d/' % int(betaNag), tmpPath + '/constants.py')
         util.rmtree(stage2Path)
 
+        # FIXME remove this
+        # emergency fixup for installs with network. circa 1.6.0
+        gencslist._linkOrCopyFile(os.path.split(__file__)[0] + os.path.sep + 'conaryinstall.py', tmpPath+ os.path.sep + 'conaryinstall.py' )
+        # END FIXME
+
         # create cramfs
         call('mkcramfs', tmpPath, productPath)
 
