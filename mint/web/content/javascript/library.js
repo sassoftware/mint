@@ -47,10 +47,13 @@ function toggle_display_by_name(elName) {
 }
 
 // appends a new item to a select element
-function appendToSelect(select, value, content, className) {
+function appendToSelect(select, value, content, title, className) {
     var o = document.createElement("option");
     o.value = value;
     o.className = className;
+    if (title != '') {
+        o.title = (title);
+    }
     o.appendChild(content);
     select.appendChild(o);
 }
@@ -269,13 +272,13 @@ function processGetTroveList(aReq) {
 
     /* make an empty selection, forcing user to pick */
     clearSelection(sel);
-    appendToSelect(sel, "", document.createTextNode("---"), "trove");
+    appendToSelect(sel, "", document.createTextNode("---"), '', "trove");
 
     for (var label in trovelist) {
         var troveNames = sorted(trovelist[label]);
         for (var troveNameIdx in troveNames) {
             var troveName = troveNames[troveNameIdx];
-            appendToSelect(sel, troveName + "=" + label, document.createTextNode(troveName), "trove");
+            appendToSelect(sel, troveName + "=" + label, document.createTextNode(troveName), troveName, "trove");
         }
     }
     hideElement("nameSpinner");
@@ -290,10 +293,10 @@ function processGetTroveVersionsByArch(aReq) {
     var archs = keys(archDict).sort();
     var archSel = $("arch");
     clearSelection(archSel);
-    appendToSelect(archSel, "", document.createTextNode("---"), "arch");
+    appendToSelect(archSel, "", document.createTextNode("---"), '', "arch");
     for (var i in archs) {
         var archStr = archs[i];
-        appendToSelect(archSel, archStr, document.createTextNode(archStr), "arch");
+        appendToSelect(archSel, archStr, document.createTextNode(archStr), archStr, "arch");
     }
     archSel.disabled = false;
     hideElement("nameSpinner");
@@ -534,9 +537,9 @@ function onArchChange() {
         selectedArch = archSel.value;
         var versionlist = archDict[selectedArch];
         logDebug(versionlist);
-        appendToSelect(vSel, "", document.createTextNode("---"), "version");
+        appendToSelect(vSel, "", document.createTextNode("---"), '', "version");
         for (var i in versionlist) {
-            appendToSelect(vSel, versionlist[i][1] + " " + versionlist[i][2], document.createTextNode(versionlist[i][0]), "version");
+            appendToSelect(vSel, versionlist[i][1] + " " + versionlist[i][2], document.createTextNode(versionlist[i][0]), versionlist[i][0], "version");
         }
         vSel.disabled = false;
         handleReleaseTypes(selectedArch);
