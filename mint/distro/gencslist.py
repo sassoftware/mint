@@ -97,7 +97,7 @@ def _findValidTroves(cs, groupName, groupVersion, groupFlavor,
                              skipNotByDefault, childTopTrove, valid)
     return valid
 
-def _makeEntry(groupCs, name, version, flavor, components):
+def _makeEntry(groupCs, name, version, flavor, components, csFiles):
     # set up the base name, version, release that we'll use for anaconda
     base = name
     trailing = version.trailingRevision().asString()
@@ -119,6 +119,11 @@ def _makeEntry(groupCs, name, version, flavor, components):
         pkgarch = 'none';
 
     csfile = "%s-%s-%s.ccs" % (base, trailing, pkgarch)
+    if csfile in csFiles:
+        collideCount = 2
+        while csfile.replace('.ccs', '%d.ccs' % collideCount) in csFiles:
+            collideCount += 1
+        csfile = csfile.replace('.ccs', '%d.ccs' % collideCount)
 
     # instantiate the trove so we canget the size out of it
     if not components and not trove.troveIsCollection(name):
@@ -285,6 +290,7 @@ def extractChangeSets(client, cfg, csdir, groupName, groupVer, groupFlavor,
         assert(os.path.isdir(cacheDir))
 
     cslist = []
+    csFiles = set([])
 
     cl = [ (groupName, (None, None), (groupVer, groupFlavor), 0) ]
     print >> sys.stderr, 'requesting changeset', groupName, groupVer
@@ -318,7 +324,9 @@ def extractChangeSets(client, cfg, csdir, groupName, groupVer, groupFlavor,
     # use the order to extract changesets from the repository
     for num, ((name, version, flavor), compNames) in enumerate(orderedList):
         components = [ (x, version, flavor) for x in compNames ]
-        csfile, entry = _makeEntry(group, name, version, flavor, components)
+        csfile, entry = _makeEntry(group, name, version, flavor, components,
+                                   csFiles)
+        csFiles.add(csfile)
         path = '%s/%s' % (csdir, csfile)
         keep = False
 
@@ -366,15 +374,15 @@ def extractChangeSets(client, cfg, csdir, groupName, groupVer, groupFlavor,
                 if callback:
                     callback.setPrefix('changeset %d of %d: ' %(num, total))
                     callback.setChangeSet(name)
-                client.getRepos().createChangeSetFile(csRequest, fn, 
-                              recurse = False, 
+                client.getRepos().createChangeSetFile(csRequest, fn,
+                              recurse = False,
                               primaryTroveList = [(name, version, flavor)],
                               callback = callback)
 
             # rename to final path and change permissions
             os.rename(fn, path)
             os.chmod(path, 0644)
- 
+
             # link this into the cache dir if we need to
             if cacheDir:
                 # cachedPath is calculated above
