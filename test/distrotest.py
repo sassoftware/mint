@@ -332,6 +332,93 @@ class DistroTest(MintRepositoryHelper):
         job = uJob.getPrimaryJobs().pop()
         assert(job == ('test', (None, None), (VFS('/testproject.' + \
                 MINT_PROJECT_DOMAIN + '@rpl:devel/1.0-1-1'), Flavor('')), True))
+    def testSameFilename(self):
+        csdir = tempfile.mkdtemp(dir=self.workDir)
+        savedCsdir = tempfile.mkdtemp(dir=self.workDir)
+        try:
+            client, userId = self.quickMintUser('foouser', 'foopass')
+            projectId = self.newProject(client)
+            project = client.getProject(projectId)
+            self.moveToServer(project, 1)
+            name = 'sidebyside:runtime'
+            verStr = "/testproject.%s@rpl:devel/1.0.0-1-1" % \
+                     MINT_PROJECT_DOMAIN
+
+            ver = versions.VersionFromString(verStr)
+            self.addComponent(name, verStr, 'smp', filePrimer=0)
+            self.addComponent(name, verStr, '!smp', filePrimer=1)
+            self.addComponent(name, verStr, 'foo', filePrimer=1)
+            t = self.addCollection('group-sidebyside', verStr,
+                                   [('sidebyside:runtime', ver, 'smp'),
+                                    ('sidebyside:runtime', ver, '!smp'),
+                                    ('sidebyside:runtime', ver, 'foo')])
+            n, v, f = t.getName(), t.getVersion(), t.getFlavor()
+
+            cfg = conarycfg.ConaryConfiguration()
+            cfg.dbPath = ':memory:'
+            cfg.root = ':memory:'
+            useSsl = not os.environ.get('MINT_TEST_NOSSL', 0)
+            cfg.repositoryMap = {'testproject.%s' % MINT_PROJECT_DOMAIN :
+                                 'http%s://test.%s/repos/testproject/' % \
+                                 (useSsl and 's' or '',
+                                  self.mintCfg.projectDomainName)}
+            cfg.initializeFlavors()
+            client = conaryclient.ConaryClient(cfg)
+
+            try:
+                self.hideOutput()
+                (cslist, groupcs), str = self.captureOutput(
+                    gencslist.extractChangeSets,
+                    client, cfg, csdir, n, v, f,
+                    oldFiles = None, cacheDir = None)
+            finally:
+                self.showOutput()
+
+            self.failIf([x.split()[0] for x in cslist if 'runtime' in x] != \
+                        ['sidebyside:runtime-1.0.0-1-1-none.ccs',
+                         'sidebyside:runtime-1.0.0-1-1-none2.ccs',
+                         'sidebyside:runtime-1.0.0-1-1-none3.ccs'],
+                        "changesets didn't get numbered one-up")
+
+            savedCsDict = dict([(x.split()[3], x.split()[0]) for x \
+                                in cslist if 'runtime' in x])
+            for baseDir, dirs, files in os.walk(csdir):
+                for file in files:
+                    util.copyfile(os.path.join(baseDir, file),
+                                  os.path.join(savedCsdir, file))
+
+            verStr = "/testproject.%s@rpl:devel/1.0.0-1-2" % \
+                     MINT_PROJECT_DOMAIN
+
+            # repeat test but re-order the troves...
+            t = self.addCollection('group-sidebyside', verStr,
+                                   [('sidebyside:runtime', ver, 'foo'),
+                                    ('sidebyside:runtime', ver, 'smp'),
+                                    ('sidebyside:runtime', ver, '!smp')])
+            n, v, f = t.getName(), t.getVersion(), t.getFlavor()
+
+            try:
+                self.hideOutput()
+                (cslist, groupcs), str = self.captureOutput(
+                    gencslist.extractChangeSets,
+                    client, cfg, csdir, n, v, f,
+                    oldFiles = None, cacheDir = None)
+            finally:
+                self.showOutput()
+
+            for flav, trvfn in [(x.split()[3], x.split()[0]) for x \
+                               in cslist if 'runtime' in x]:
+                csA = changeset.ChangeSetFromFile(os.path.join(csdir, trvfn))
+                trvA = [x for x in csA.iterNewTroveList()][0]
+                csB = changeset.ChangeSetFromFile( \
+                    os.path.join(savedCsdir, savedCsDict[flav]))
+                trvB = [x for x in csB.iterNewTroveList()][0]
+                self.failIf(trvA.newFlavor() != trvB.newFlavor(),
+                            "gencslist missed reordering an old changeset")
+        finally:
+            util.rmtree(csdir)
+            util.rmtree(savedCsdir)
+
 
 if __name__ == "__main__":
     testsuite.main()
