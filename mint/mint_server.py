@@ -755,15 +755,15 @@ class MintServer(object):
                            self.cfg.productName,
                            '\n\n'.join((greeting, message, closing)))
             members = project.getMembers()
-            confAddr = []
+            adminUsers = []
             for level in [userlevels.OWNER]:
-                for addr in [self.getUser(x[0])['email'] for x in members \
+                for admnUsr in [self.getUser(x[0]) for x in members \
                              if x[2] == level]:
-                    confAddr.append(addr)
-            for addr in confAddr:
-                if addr != user['email']:
+                    adminUsers.append(admnUsr)
+            for usr in adminUsers:
+                if usr['username'] != user['username']:
                     users.sendMail(self.cfg.adminMail, self.cfg.productName,
-                                   addr,
+                                   usr['email'],
                                    "%s project membership modification" % \
                                    self.cfg.productName,
                                    '\n\n'.join((greeting, adminMessage)))
