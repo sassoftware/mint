@@ -693,24 +693,61 @@ class MintServer(object):
             self._notifyUser('Removed', user, project)
 
     def _notifyUser(self, action, user, project, userlevel=None):
-        if self.auth.userId == user['userId']:
-            return
-        userlevelname = ((userlevel >=0) and userlevels.names[userlevel] or 'Unknown')
-        actionText = {'Removed': "has been removed from the following project:",
-            'Added': "has been added to the following project as %s:" % userlevelname,
-            'Changed': "has had its current access level changed to %s on the following project:" % \
-                userlevelname
-        }
-        greeting = "Hello,"
-        admingreeting = "The following message has been sent to: %s\nbecause of an action performed by: %s\n\n%s" % (user['username'], self.auth.username, greeting)
-        helpLink = "\nInstructions on how to set up your build environment for this project can be found at: http://%s.%s%sproject/%s/conaryDevelCfg" % (self.cfg.hostName, project.getDomainname(), self.cfg.basePath, project.getHostname())
-        message = "Your %s account: %s\n" % (self.cfg.productName, user['username'])
-        message += actionText[action]
-        message += "\n%s\n" % project.getName()
-        if action == "Added":
-            message += helpLink
-        closing = 'Please contact the project owner(s) with any questions.'
+        userlevelname = ((userlevel >=0) and userlevels.names[userlevel] or\
+                                             'Unknown')
+        projectUrl = 'http://%s.%s%sproject/%s/' %\
+                      (self.cfg.hostName, project.getDomainname(),
+                       self.cfg.basePath, project.getHostname())
 
+        greeting = "Hello,"
+
+        actionText = {'Removed':'has been removed from the "%s" project'%\
+                       project.getName(),
+
+                      'Added':'has been added to the "%s" project as %s %s' % (project.getName(), userlevelname == 'Developer' and 'a' or 'an', userlevelname),
+
+                      'Changed':'has had its current access level changed to "%s" on the "%s" project' % (userlevelname, project.getName())
+                     }
+
+        helpLink = "\n\nInstructions on how to set up your build environment for this project can be found at %sconaryDevelCfg\n\nIf you would not like to be %s %s of this project, you may resign from this project at %smembers" % (projectUrl, userlevelname == 'Developer' and 'a' or 'an', userlevelname, projectUrl)
+
+        closing = 'If you have questions about the project, please contact the project owners.'
+
+        adminHelpText = {'Removed':'',
+         
+                         'Added':'\n\nIf you would not like this account to be %s %s of this project, you may remove them from the project at %smembers' %\
+                         (userlevelname == 'Developer' and 'a' or 'an', 
+                          userlevelname, projectUrl),
+
+                         'Changed':'\n\nIf you would not like this account to be %s %s of this project, you may change their access level at %smembers' %\
+                         (userlevelname == 'Developer' and 'a' or 'an',
+                          userlevelname, projectUrl)
+                        }
+
+
+        if self.auth.userId != user['userId']:
+            message = 'Your %s account "%s" ' % (self.cfg.productName, 
+                                              user['username'])
+            message += actionText[action] + '.'
+            if action == "Added":
+                message += helpLink
+
+            adminMessage = 'The %s account "%s" ' % (self.cfg.productName,
+                                                   user['username'])
+            adminMessage += actionText[action] + ' by the project owner "%s".' % (self.auth.username)
+            adminMessage += adminHelpText[action]
+        else:
+            if action == 'Removed':
+                message = 'You have resigned from the %s project "%s".' %\
+                          (self.cfg.productName, project.getName())
+                adminMessage = 'The %s account "%s" has resigned from the "%s" project.' % (self.cfg.productName, user['username'], project.getName())
+            elif action == 'Changed':
+                message = 'You have changed your access level from Owner to Developer on the %s project "%s".' % (self.cfg.productName, project.getName())
+                adminMessage = 'The %s account "%s" ' % (self.cfg.productName,
+                                                         user['username'])
+                adminMessage += actionText[action] + ' by the project owner "%s".' % (self.auth.username)
+                adminMessage += adminHelpText[action]
+            
         if self.cfg.sendNotificationEmails:
             users.sendMail(self.cfg.adminMail, self.cfg.productName,
                            user['email'],
@@ -724,11 +761,12 @@ class MintServer(object):
                              if x[2] == level]:
                     confAddr.append(addr)
             for addr in confAddr:
-                users.sendMail(self.cfg.adminMail, self.cfg.productName,
-                               addr,
-                               "%s project membership modification" % \
-                               self.cfg.productName,
-                               '\n\n'.join((admingreeting, message, closing)))
+                if addr != user['email']:
+                    users.sendMail(self.cfg.adminMail, self.cfg.productName,
+                                   addr,
+                                   "%s project membership modification" % \
+                                   self.cfg.productName,
+                                   '\n\n'.join((greeting, adminMessage)))
 
     @typeCheck(str, str)
     @requiresAdmin
