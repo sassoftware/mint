@@ -8,16 +8,8 @@
 #
 # All Rights Reserved
 #
+from mint.helperfuncs import truncateForDisplay
 ?>
-    <div py:def="breadcrumb" py:strip="True">
-
-        <a
-            href="${cfg.basePath}project/${project.getHostname()}/">${project.getNameForDisplay()}</a>
-        <a href="${basePath}browse">Repository Browser</a>
-        <a href="${basePath}troveInfo?t=${troveName}">${troveName}</a>
-        <a href="#">Files</a>
-    </div>
-
     <div id="fileList" py:def="fileList(fList)">
         <table style="width: 100%;">
             <tr py:for="pathId, path, fileId, version, fObj in fList">
@@ -26,6 +18,7 @@
                     from urllib import quote
                     from conary import files
                     import os
+                    from mint.helperfuncs import truncateForDisplay
 
                     url = "getFile?path=%s;pathId=%s;fileId=%s;fileV=%s" % (os.path.basename(path),
                                                                             sha1helper.md5ToString(pathId),
@@ -38,9 +31,9 @@
                 <td>${fObj.sizeString()}</td>
                 <td>${fObj.timeString()}</td>
                 <td>
-                    <a py:if="isinstance(fObj, files.RegularFile) and not isinstance(fObj, files.SymbolicLink)" href="${url}">${path}</a>
+                    <a py:if="isinstance(fObj, files.RegularFile) and not isinstance(fObj, files.SymbolicLink)" href="${url}" title="${path}">${truncateForDisplay(path, maxWordLen = 70)}</a>
                     <span py:if="isinstance(fObj, files.SymbolicLink)">${path} -&gt; ${fObj.target()}</span>
-                    <span py:if="not isinstance(fObj, files.SymbolicLink) and not isinstance(fObj, files.RegularFile)">${path}</span>
+                    <span py:if="not isinstance(fObj, files.SymbolicLink) and not isinstance(fObj, files.RegularFile)" title="${path}">${truncateForDisplay(path, maxWordLen = 70)}</span>
                 </td>
             </tr>
         </table>
@@ -51,7 +44,7 @@
     </head>
     <body>
         <div id="layout">
-            <h2>Files in <a href="troveInfo?t=${troveName}">${troveName}</a></h2>
+            <h2>Files in <a href="troveInfo?t=${troveName}" title="${troveName}">${truncateForDisplay(troveName, maxWordLen=80)}</a></h2>
 
             ${fileList(fileIters)}
             <hr/>

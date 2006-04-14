@@ -3,6 +3,7 @@
 #
 # Copyright (c) 2005-2006 rPath, Inc.
 #
+from mint.helperfuncs import truncateForDisplay
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
@@ -25,7 +26,7 @@
     <head/>
     <body>
         <div id="layout">
-            <h2>Troves in <a href="troveInfo?t=${troveName}">${troveName}</a></h2>
+            <h2>Troves in <a href="troveInfo?t=${troveName}" title="${troveName}">${truncateForDisplay(troveName, maxWordLen=80)}</a></h2>
 
             ${troveList(troves)}
         </div>

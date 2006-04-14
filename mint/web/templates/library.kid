@@ -5,6 +5,7 @@ from mint import searcher
 from urllib import quote
 from mint import userlevels
 from mint import maintenance
+from mint.helperfuncs import truncateForDisplay
 
 def injectVersion(version):
     parts = version.split('/')
@@ -57,7 +58,7 @@ def injectVersion(version):
         </div>
 
         <div id="groupBuilderItems">
-            <div><a href="${groupProject.getUrl()}editGroup?id=${groupTrove.id}">Current Group: ${groupTrove.recipeName}</a></div>
+            <div><a href="${groupProject.getUrl()}editGroup?id=${groupTrove.id}" title="${groupTrove.recipeName}">Current Group: ${truncateForDisplay(groupTrove.recipeName, maxWordLen = 30)}</a></div>
             <table>
               <thead>
                 <tr>

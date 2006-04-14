@@ -7,7 +7,7 @@
 from urllib import quote
 import time
 from mint import userlevels
-from mint.helperfuncs import splitVersionForDisplay
+from mint.helperfuncs import splitVersionForDisplay, truncateForDisplay
 
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
@@ -19,7 +19,7 @@ isOwner = (userLevel == userlevels.OWNER or auth.admin)
 ?>
 
     <table py:def="sourceTroveInfo(trove)" class="troveinfo">
-        <tr><th>Trove name:</th><td>${trove.getName()}</td></tr>
+        <tr><th>Trove name:</th><td title="${trove.getName()}">${truncateForDisplay(trove.getName(), maxWordLen=45)}</td></tr>
         <tr><th>Change log:</th>
             <td>
                 <?python
@@ -33,15 +33,15 @@ isOwner = (userLevel == userlevels.OWNER or auth.admin)
     </table>
 
     <span py:def="lockedAdder(trove)" style="float: right;" py:if="groupTrove and not groupTrove.troveInGroup(trove.getName())">
-        <a href="${groupProject.getUrl()}addGroupTrove?id=${groupTrove.id};trove=${quote(trove.getName())};version=${quote(trove.getVersion().asString())};versionLock=1;referer=${quote(req.unparsed_uri)}">
-            Add this exact version to ${groupTrove.recipeName}
+        <a href="${groupProject.getUrl()}addGroupTrove?id=${groupTrove.id};trove=${quote(trove.getName())};version=${quote(trove.getVersion().asString())};versionLock=1;referer=${quote(req.unparsed_uri)}" title="Add this exact version to ${groupTrove.recipeName}">
+            Add this exact version to ${truncateForDisplay(groupTrove.recipeName, maxWordLen = 10)}
         </a>
     </span>
 
     <span py:def="adder(trove)" style="float: right;"
         py:if="groupTrove and not groupTrove.troveInGroup(trove.getName())">
-        <a href="${groupProject.getUrl()}addGroupTrove?id=${groupTrove.id};trove=${quote(trove.getName())};version=${quote(trove.getVersion().asString())};referer=${quote(req.unparsed_uri)}">
-            Add to ${groupTrove.recipeName}
+        <a href="${groupProject.getUrl()}addGroupTrove?id=${groupTrove.id};trove=${quote(trove.getName())};version=${quote(trove.getVersion().asString())};referer=${quote(req.unparsed_uri)}" title="Add to ${groupTrove.recipeName}">
+            Add to ${truncateForDisplay(groupTrove.recipeName, maxWordLen = 10)}
         </a>
     </span>
 
@@ -53,8 +53,8 @@ isOwner = (userLevel == userlevels.OWNER or auth.admin)
             sourceVersion = trove.getVersion().getSourceVersion().freeze()
             sourceLink = "troveInfo?t=%s;v=%s" % (quote(trove.getSourceName()), quote(sourceVersion))
         ?>
-        <tr><th>Trove name:</th><td>${adder(trove)} ${trove.getName()}</td></tr>
-        <tr><th>Built from trove:</th><td><a href="${sourceLink}">${trove.getSourceName()}</a></td></tr>
+        <tr><th>Trove name:</th><td title="${trove.getName()}">${adder(trove)} ${truncateForDisplay(trove.getName(), maxWordLen = 40)}</td></tr>
+        <tr><th>Built from trove:</th><td><a href="${sourceLink}" title="${trove.getSourceName()}">${truncateForDisplay(trove.getSourceName(), maxWordLen = 45)}</a></td></tr>
         <tr><th>Version:</th><td>${lockedAdder(trove)} ${splitVersionForDisplay(str(trove.getVersion()))}</td></tr>
         <tr><th>Flavor:</th><td>
 	<div py:for="trove in troves" py:strip="True">
@@ -66,7 +66,7 @@ isOwner = (userLevel == userlevels.OWNER or auth.admin)
 		    <tr>
 			<th>Provides: </th>
 			<td>
-			    <div py:for="dep in str(trove.provides.deps).split('\n')">${dep}</div>
+			    <div py:for="dep in str(trove.provides.deps).split('\n')" title="${dep}">${truncateForDisplay(dep, maxWordLen = 36)}</div>
 			    <div py:if="not trove.provides.deps">
 				Trove satisfies no dependencies.
 			    </div>
@@ -88,7 +88,7 @@ isOwner = (userLevel == userlevels.OWNER or auth.admin)
     </table>
 
     <head>
-        <title>${formatTitle('Trove Information: %s'%troveName)}</title>
+        <title>${formatTitle('Trove Information: %s' % truncateForDisplay(troveName, maxWordLen = 64))}</title>
     </head>
     <body>
         <div id="layout">
@@ -101,9 +101,8 @@ isOwner = (userLevel == userlevels.OWNER or auth.admin)
                 ${resourcePane()}
                 ${groupTroveBuilder()}
             </div>
-           
             <div id="middle">
-                <h2>${project.getNameForDisplay(maxWordLen = 50)}<br />Repository Browser<br />Trove information for ${troveName}</h2>
+                <h2 title="${troveName}">${project.getNameForDisplay(maxWordLen = 50)}<br />Repository Browser<br />Trove information for ${truncateForDisplay(troveName, maxWordLen = 45)}</h2>
 
                 <div py:strip="True" py:if="troves[0].getName().endswith(':source')">
                     ${sourceTroveInfo(troves[0])}

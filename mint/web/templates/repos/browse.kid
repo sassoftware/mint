@@ -16,6 +16,7 @@ from mint import userlevels
 isOwner = (userLevel == userlevels.OWNER or auth.admin)
 def pluralTroves(c):
     return c == 1 and "trove" or "troves"
+from mint.helperfuncs import truncateForDisplay
 ?>
 
     <span py:def="adder(package, component='')" style="float: right;"
@@ -23,9 +24,10 @@ def pluralTroves(c):
         <?python
             if component:
                 package += ":" + component
+            from mint.helperfuncs import truncateForDisplay
         ?>
-        <a href="${groupProject.getUrl()}addGroupTrove?id=${groupTrove.id};trove=${quote(package)};referer=${quote(req.unparsed_uri)};projectName=${project.hostname}">
-            Add to ${groupTrove.recipeName}
+        <a href="${groupProject.getUrl()}addGroupTrove?id=${groupTrove.id};trove=${quote(package)};referer=${quote(req.unparsed_uri)};projectName=${project.hostname}" title="Add to ${groupTrove.recipeName}">
+            Add to ${truncateForDisplay(groupTrove.recipeName, maxWordLen = 10)}
         </a>
     </span>
 
@@ -78,7 +80,7 @@ def pluralTroves(c):
                             <div>
                               ${adder(package)}
                               <span>
-                                <a href="troveInfo?t=${quote(package)}">${package}</a>
+                                <a href="troveInfo?t=${quote(package)}" title="${package}">${truncateForDisplay(package, maxWordLen = 42)}</a>
                                 <a py:if="package in components" class="trove"
                                    href="javascript:toggle_display('components__${i}');"><img class="noborder" id="components__${i}_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif"/></a>
                               </span>
