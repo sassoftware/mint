@@ -1,6 +1,8 @@
 Changes in (tip):
 * Refactoring of code; removed relative imports from the main codebase (save
   for tests and scripts).
+* Refactored admin backend, url changed to /admin/ from /administer/ (the latter
+  still works, to preserve bookmarks).
 
 Changes in 1.6.1:
 

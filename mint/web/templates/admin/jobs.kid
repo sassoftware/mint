@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
-      py:extends="'administer.kid'">
+      py:extends="'../layout.kid'">
 <!--
     Copyright (c) 2005-2006 rPath, Inc.
     All Rights Reserved
@@ -15,7 +15,7 @@
               <p py:if="kwargs.get('extraMsg', None)" class="message" py:content="kwargs['extraMsg']"/>
               <h1>Manage Jobs</h1>
               <p id="jobsTable">Retrieving job status from server...</p>
-              <p><a href ="${cfg.basePath}administer/">Return to Administrator Page</a></p>
+              <p><a href ="${cfg.basePath}admin/">Return to Administrator Page</a></p>
             </div>
         </div>
     </body>

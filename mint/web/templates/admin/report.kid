@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
-      py:extends="'administer.kid'">
+      py:extends="'../layout.kid'">
 <!--
     Copyright (c) 2005-2006 rPath, Inc.
     All Rights Reserved
@@ -10,10 +10,10 @@
         <title>${formatTitle('View Reports')}</title>
     </head>
     <body>
-	<a href ="${cfg.basePath}administer">Return to Administrator Page</a>
+	<a href ="${cfg.basePath}admin/">Return to Administrator Page</a>
         <td id="main" class="spanall">
             <div class="pad">
-              <form action="${cfg.basePath}administer" method="post">
+              <form action="${cfg.basePath}admin/viewReport" method="post">
                 <h2>Select a report</h2>
                 <p>
                   <select name="reportName">
@@ -21,7 +21,7 @@
                   </select>
                 </p>
                 <p>
-                  <button name="operation" value="report_view">View Report</button>
+                  <button type="submit">View Report</button>
                 </p>
               </form>
             </div>

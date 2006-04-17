@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
-      py:extends="'administer.kid'">
+      py:extends="'../layout.kid'">
 <!--
     Copyright (c) 2005-2006 rPath, Inc.
     All Rights Reserved
@@ -21,14 +21,14 @@
               <p py:if="kwargs['extraMsg'] and not errors" class="message" py:content="kwargs['extraMsg']"/>
               <p py:if="kwargs['errors']" class="error">An Error Has Occurred</p>
               <p py:for="error in kwargs['errors']" class="errormessage" py:content="error"/>
-	      <a href ="${cfg.basePath}administer">Return to Administrator Page</a>
+              <a href ="${cfg.basePath}admin">Return to Administrator Page</a>
 
               <h2>Notify All Users</h2>
               <p>Fields labeled with a <em class="required">red arrow</em> are required.
                 Note that the submission of this form may take several minutes, and will
                 not ask for confirmation.  Be sure you are ready before hitting "Send".
               </p>
-              <form action="${cfg.basePath}administer" method="post">
+              <form action="${cfg.basePath}admin/sendNotify" method="post">
                 <table cellpadding="0" border="0" cellspacing="0" class="mainformhorizontal">
                   <tr>
                     <th><em class="required">Message Subject:</em></th>

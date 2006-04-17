@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
-      py:extends="'administer.kid'">
+      py:extends="'../layout.kid'">
 <!--
     Copyright (c) 2005-2006 rPath, Inc.
     All Rights Reserved
@@ -14,8 +14,8 @@
             <div class="pad">
               <p py:for=" errorMsg in kwargs.get('errors', [])" class="errormessage" py:content="errorMsg"/>
               <p py:if="kwargs.get('extraMsg', None)" class="message" py:content="kwargs['extraMsg']"/>
-              <form action="${cfg.basePath}administer" method="post">
-	        <a href ="${cfg.basePath}administer">Return to Administrator Page</a>
+              <form action="${cfg.basePath}admin/processUserAction" method="post">
+	        <a href="${cfg.basePath}admin">Return to Administrator Page</a>
                 <h2>Select a user below to modify</h2>
                 <p>
                   <select name="userId">
@@ -31,7 +31,7 @@
               </form>
               <div>
                 <h2>Other user operations</h2>
-                <p><a href="${cfg.basePath}administer?operation=user_new">Create a new user</a></p>
+                <p><a href="${cfg.basePath}admin/newUser">Create a new user</a></p>
               </div>
             </div>
         </td>

@@ -11,7 +11,7 @@ from mod_python import apache
 
 from mint import mint_error
 from mint import maintenance
-from mint.web.webhandler import WebHandler, HttpNotFound, HttpForbidden
+from mint.web.webhandler import normPath, WebHandler, HttpNotFound, HttpForbidden
 
 from conary import versions
 from conary.web.fields import strFields, intFields, listFields, boolFields
@@ -22,39 +22,34 @@ class AdminHandler(WebHandler):
         if not self.auth.admin:
             raise HttpForbidden
 
-        return self.adminHandler
+        path = normPath(context['cmd'])
+        cmd = path.split('/')[1]
 
-    def adminHandler(self, *args, **kwargs):
-        operation = kwargs.get('operation', '')
-        if not operation:
-            return self._administer(*args, **kwargs)
-
+        if not cmd:
+            return self._frontPage
         try:
-            return self.__getattribute__('_admin_%s'%operation)(*args, **kwargs)
+            method = self.__getattribute__(cmd)
         except AttributeError:
             raise HttpNotFound
 
-    def _admin_user(self, *args, **kwargs):
-        #get a list of all users in a format suitable for producing a
-        #dropdown or multi-select list
+        if not callable(method):
+            raise HttpNotFound
+
+        return method
+
+    def _frontPage(self, *args, **kwargs):
+        return self._write('admin/frontPage', kwargs = kwargs)
+
+    def users(self, *args, **kwargs):
         userlist = self.client.getUsersList()
-        return self._write('admin/user', userlist=userlist, kwargs = kwargs)
+        return self._write('admin/user', userlist = userlist, kwargs = kwargs)
 
-    @intFields(userId=None)
-    def _admin_user_cancel(self, userId, *args, **kwargs):
-        if userId == self.auth.userId:
-            kwargs['errors'] = ['You cannot close your account from this interface.']
-            return self._admin_user(*args, **kwargs)
-        self.client.removeUserAccount(userId)
-        kwargs['extraMsg'] = "User account deleted"
-        return self._admin_user(*args, **kwargs)
-
-    def _admin_user_new(self, *args, **kwargs):
+    def newUser(self, *args, **kwargs):
         return self._write('admin/newUser', kwargs = kwargs, errors=[])
 
     @strFields(username = '', email = '', password = '', password2 = '',
                fullName = '', displayEmail = '', blurb = '')
-    def _admin_user_register(self, username, fullName, email, password,
+    def processNewUser(self, username, fullName, email, password,
                              password2, displayEmail, blurb, *args, **kwargs):
         errors = []
         if not username:
@@ -79,7 +74,7 @@ class AdminHandler(WebHandler):
                 errors.append(e.context);
         if not errors:
             kwargs['extraMsg'] = "User account created"
-            return self._admin_user(*args, **kwargs)
+            return self.users(*args, **kwargs)
         else:
             kwargs = {'username': username,
                       'email': email,
@@ -89,76 +84,64 @@ class AdminHandler(WebHandler):
                      }
             return self._write("admin/newUser", errors=errors, kwargs = kwargs)
 
-    @intFields(userId=None)
-    def _admin_user_reset_password(self, userId, *args, **kwargs):
-        self._resetPasswordById(userId)
-        kwargs['extraMsg'] = "User password reset"
-        return self._admin_user(*args, **kwargs)
+    @intFields(userId = None)
+    @strFields(operation = None)
+    def processUserAction(self, userId, operation, *args, **kwargs):
+        errors = []
+        if operation == "user_reset_password":
+            self._resetPasswordById(userId)
+            extraMsg = "User password reset"
+        elif operation == "user_cancel":
+            if userId == self.auth.userId:
+                errors = ['You cannot close your account from this interface.']
+            self.client.removeUserAccount(userId)
+            extraMsg = "User account deleted"
+        elif operation == "user_promote_admin":
+            self.client.promoteUserToAdmin(userId)
+            extraMsg = 'User promoted to administrator.'
+        elif operation == "user_demote_admin":
+            self.client.demoteUserFromAdmin(userId)
+            extraMsg = 'Administrative privileges revoked'
 
-    @intFields(userId=None)
-    def _admin_user_promote_admin(self, userId, *args, **kwargs):
-        self.client.promoteUserToAdmin(userId)
-        kwargs['extraMsg'] = 'User promoted to administrator.'
-        return self._admin_user(*args, **kwargs)
+        if not errors:
+            kwargs['extraMsg'] = extraMsg
+        else:
+            kwargs['errors'] = errors
+        return self.users(*args, **kwargs)
 
-    @intFields(userId=None)
-    def _admin_user_demote_admin(self, userId, *args, **kwargs):
-	self.client.demoteUserFromAdmin(userId)
-	kwargs['extraMsg'] = 'Administrative privileges revoked'
-	return self._admin_user(*args, **kwargs)
 
-    def _admin_project(self, *args, **kwargs):
-        #Get a list of all the projects in a format suitable for producing
-        #a dropdown or multi-select list.
+    def projects(self, *args, **kwargs):
         projects = self.client.getProjectsList()
-
         return self._write('admin/project', projects = projects, kwargs = kwargs)
 
-    def _admin_project_delete(self, *args, **kwargs):
-        # XXX Go through with it.  This functionality may be added in some later release
-        return self._admin_project(*args, **kwargs)
-
     @intFields(projectId = None)
-    def _admin_project_toggle_hide(self, projectId, *args, **kwargs):
+    @strFields(operation = None)
+    def processProjectAction(self, projectId, operation, *args, **kwargs):
         project = self.client.getProject(projectId)
-        if project.hidden:
-            self.client.unhideProject(projectId)
-            kwargs['extraMsg'] = "Project unhidden"
+
+        if operation == "project_toggle_hide":
+            if project.hidden:
+                self.client.unhideProject(projectId)
+                kwargs['extraMsg'] = "Project unhidden"
+            else:
+                self.client.hideProject(projectId)
+                kwargs['extraMsg'] = "Project hidden"
+        elif operation == "project_toggle_disable":
+            if project.disabled:
+                self.client.enableProject(projectId)
+                kwargs['extraMsg'] = "Project enabled"
+            else:
+                self.client.disableProject(projectId)
+                kwargs['extraMsg'] = "Project disabled"
         else:
-            self.client.hideProject(projectId)
-            kwargs['extraMsg'] = "Project hidden"
-        return self._admin_project(*args, **kwargs)
+            raise HttpNotFound
 
-    @intFields(projectId = None)
-    def _admin_project_toggle_disable(self, projectId, *args, **kwargs):
-        project = self.client.getProject(projectId)
-        if project.disabled:
-            self.client.enableProject(projectId)
-            kwargs['extraMsg'] = "Project enabled"
-        else:
-            self.client.disableProject(projectId)
-            kwargs['extraMsg'] = "Project disabled"
-        return self._admin_project(*args, **kwargs)
+        return self.projects(*args, **kwargs)
 
-    def _admin_project_jump(self, page, **kwargs):
-        name = self.client.getProject(int(kwargs['projectId'])).getHostname()
-        return self._redirect('http://%s%sproject/%s/%s' % \
-            (self.cfg.projectSiteHost, self.cfg.basePath, name, page))
-
-    def _admin_project_maillists(self, *args, **kwargs):
-        return self._admin_project_jump('mailingLists', **kwargs)
-
-    def _admin_project_edit(self, *args, **kwargs):
-        return self._admin_project_jump('editProject', **kwargs)
-
-    def _admin_project_change_members(self, *args, **kwargs):
-        return self._admin_project_jump('members', **kwargs)
-
-    def _admin_notify(self, *args, **kwargs):
+    def notify(self, *args, **kwargs):
         return self._write('admin/notify', kwargs=kwargs)
 
-    def _admin_notify_send(self, *args, **kwargs):
-        #send the message
+    def sendNotify(self, *args, **kwargs):
         kwargs['errors'] = []
         if not kwargs.get('subject', None):
             kwargs['errors'].append('You must supply a subject')
@@ -170,18 +153,18 @@ class AdminHandler(WebHandler):
                 kwargs['extraMsg'] = 'Message sent successfully'
             except Exception, e:
                 kwargs['errors'].append('An unknown error occurred: %s' % str(e))
-                return self._admin_notify(*args, **kwargs)
+                return self.notify(*args, **kwargs)
         else:
-            return self._admin_notify(*args, **kwargs)
-        return self._administer(*args, **kwargs)
+            return self.notify(*args, **kwargs)
+        self.redirect(self.cfg.basePath + "admin")
 
-    def _admin_report(self, *args, **kwargs):
+    def reports(self, *args, **kwargs):
         reports = self.client.listAvailableReports()
         return self._write('admin/report', kwargs=kwargs,
             availableReports = reports.iteritems())
 
     @strFields(reportName = None)
-    def _admin_report_view(self, *args, **kwargs):
+    def viewReport(self, *args, **kwargs):
         pdfData = self.client.getReportPdf(kwargs['reportName'])
         self.req.content_type = "application/x-pdf"
         return pdfData
@@ -189,7 +172,7 @@ class AdminHandler(WebHandler):
     @strFields(name = None, hostname = None, label = None, url = '',\
         mirrorUser = '', mirrorPass = '', mirrorEnt = '')
     @boolFields(useMirror = False)
-    def _admin_process_external(self, name, hostname, label, url,
+    def processExternal(self, name, hostname, label, url,
                                 mirrorUser, mirrorPass, mirrorEnt,
                                 useMirror, *args, **kwargs):
         projectId = self.client.newExternalProject(name, hostname,
@@ -211,7 +194,7 @@ class AdminHandler(WebHandler):
                                       (self.cfg.projectSiteHost,
                                        self.cfg.basePath, hostname)))
 
-    def _admin_external(self, *args, **kwargs):
+    def external(self, *args, **kwargs):
         from mint import database
         try:
             self.client.getProjectByHostname('rpath')
@@ -222,7 +205,7 @@ class AdminHandler(WebHandler):
         return self._write('admin/external', kwargs = kwargs,
                            firstTime = firstTime)
 
-    def _admin_jobs(self, *args, **kwargs):
+    def jobs(self, *args, **kwargs):
         try:
             enableToggle = True
             jobServerStatus = self.client.getJobServerStatus()
@@ -233,57 +216,46 @@ class AdminHandler(WebHandler):
         return self._write('admin/jobs', kwargs = kwargs,
                 jobServerStatus = jobServerStatus, enableToggle = enableToggle)
 
-    def _admin_jobs_jobserver_start(self, *args, **kwargs):
+    @strFields(operation = None)
+    def jobserverOperation(self, operation, *args, **kwargs):
+        if operation not in ('start', 'stop'):
+            raise HttpNotFound
         try:
-            pipeFD = os.popen("sudo /sbin/service rbuilder-isogen start")
+            pipeFD = os.popen("sudo /sbin/service rbuilder-isogen %s" % operation)
             kwargs['extraMsg'] = pipeFD.read()
             pipeFD.close()
         except:
-            kwargs['extraMsg'] = "Failed to start the job server."
+            kwargs['extraMsg'] = "Failed to %s the job server." % operation
+        return self.jobs(*args, **kwargs)
 
-        return self._admin_jobs(*args, **kwargs)
-
-    def _admin_jobs_jobserver_stop(self, *args, **kwargs):
-        try:
-            pipeFD = os.popen("sudo /sbin/service rbuilder-isogen stop")
-            kwargs['extraMsg'] = pipeFD.read()
-            pipeFD.close()
-        except:
-            kwargs['extraMsg'] = "Failed to stop the job server."
-
-        return self._admin_jobs(*args, **kwargs)
-
-    def _admin_outbound(self, *args, **kwargs):
+    def outbound(self, *args, **kwargs):
         outboundLabels = [(self.client.getProject(x[0]), self.client.getLabel(x[1]), x[1], x[2], x[3], x[4]) for x in self.client.getOutboundLabels()]
         return self._write('admin/outbound', outboundLabels = outboundLabels)
 
-    def _admin_add_outbound(self, *args, **kwargs):
+    def addOutbound(self, *args, **kwargs):
         projects = self.client.getProjectsList()
         return self._write('admin/add_outbound', projects = projects)
 
     @intFields(projectId = None)
     @strFields(targetUrl = None, mirrorUser = None, mirrorPass = None)
-    def _admin_process_add_outbound(self, projectId, targetUrl, mirrorUser, mirrorPass, *args, **kwargs):
+    def processAddOutbound(self, projectId, targetUrl, mirrorUser, mirrorPass, *args, **kwargs):
         project = self.client.getProject(projectId)
         labelId = project.getLabelIdMap().values()[0]
         self.client.addOutboundLabel(projectId, labelId, targetUrl, mirrorUser, mirrorPass)
 
-        self._redirect("http://%s%sadminister?operation=outbound" % (self.cfg.siteHost, self.cfg.basePath))
+        self._redirect("http://%s%sadmin/outbound" % (self.cfg.siteHost, self.cfg.basePath))
 
     @listFields(str, remove = [])
-    def _admin_remove_outbound(self, remove, *args, **kwargs):
+    def removeOutbound(self, remove, *args, **kwargs):
         for x in remove:
             labelId, url = x.split(" ")
             self.client.delOutboundLabel(int(labelId), url)
-        self._redirect("http://%s%sadminister?operation=outbound" % (self.cfg.siteHost, self.cfg.basePath))
+        self._redirect("http://%s%sadmin/outbound" % (self.cfg.siteHost, self.cfg.basePath))
 
-    def _admin_toggle_maintenance_lock(self, *args, **kwargs):
-        mode = maintenance.getMaintenanceMode(self.cfg) ^ 1
-        maintenance.setMaintenanceMode(self.cfg, mode)
-        self._redirect("http://%s%sadminister?operation=maintenance_mode" % (self.cfg.siteHost, self.cfg.basePath))
-
-    def _admin_maintenance_mode(self, *args, **kwargs):
+    def maintenance(self, *args, **kwargs):
         return self._write('admin/maintenance', kwargs = kwargs)
 
-    def _administer(self, *args, **kwargs):
-        return self._write('admin/administer', kwargs = kwargs)
+    def toggleMaintLock(self, *args, **kwargs):
+        mode = maintenance.getMaintenanceMode(self.cfg) ^ 1
+        maintenance.setMaintenanceMode(self.cfg, mode)
+        self._redirect("http://%s%sadmin/maintenance" % (self.cfg.siteHost, self.cfg.basePath))

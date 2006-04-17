@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
-      py:extends="'administer.kid'">
+      py:extends="'../layout.kid'">
 <!--
     Copyright (c) 2005-2006 rPath, Inc.
     All Rights Reserved
@@ -20,7 +20,7 @@
                 <p py:for="error in errors" class="errormessage" py:content="error"/>
                 <h2>Create an Account</h2>
                 <p>Fields labeled with a <em class="required">red arrow</em> are required.</p>
-                <form method="post" action="${cfg.basePath}administer?operation=user_register">
+                <form method="post" action="${cfg.basePath}admin/processNewUser">
 
                     <table border="0" cellspacing="0" cellpadding="0" class="mainformhorizontal">
                         <tr>

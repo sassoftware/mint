@@ -62,7 +62,7 @@ onload = "javascript:;"
                 </div>
                 <div id="topRight">
                     <div class="about">
-                        <a href="${cfg.basePath}administer?operation=maintenance_mode" py:if="auth.admin and maintenance.getMaintenanceMode(cfg)==maintenance.LOCKED_MODE">
+                        <a href="${cfg.basePath}admin/maintenance" py:if="auth.admin and maintenance.getMaintenanceMode(cfg)==maintenance.LOCKED_MODE">
                           <b style="color: red;">
                           Maintenance Mode&nbsp;
                           </b>

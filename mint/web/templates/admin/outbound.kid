@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
-      py:extends="'administer.kid'">
+      py:extends="'../layout.kid'">
 <!--
     Copyright (c) 2005-2006 rPath, Inc.
     All Rights Reserved
@@ -12,7 +12,7 @@
     <body>
         <td id="main" class="spanall">
             <div class="pad">
-                <form action="${cfg.basePath}administer" method="post">
+                <form action="${cfg.basePath}admin/removeOutbound" method="post">
                     <h2>Outbound Mirroring</h2>
                     <p class="help">
                         You can select projects in ${cfg.productName} to be mirrored out to
@@ -39,8 +39,8 @@
                     </div>
                     <button py:if="outboundLabels" style="float: right;" type="submit" name="operation" value="remove_outbound">Remove Selected</button>
                 </form>
-                <p style="clear: right;"><b><a href="${cfg.basePath}administer?operation=add_outbound">Add an Outbound Mirror</a></b></p>
-                <p><b><a href ="${cfg.basePath}administer">Return to Administrator Page</a></b></p>
+                <p style="clear: right;"><b><a href="${cfg.basePath}admin/addOutbound">Add an Outbound Mirror</a></b></p>
+                <p><b><a href ="${cfg.basePath}admin/">Return to Administrator Page</a></b></p>
             </div>
         </td>
     </body>

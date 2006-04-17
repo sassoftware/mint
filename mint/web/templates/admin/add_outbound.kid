@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
-      py:extends="'administer.kid'">
+      py:extends="'../layout.kid'">
 <!--
     Copyright (c) 2005-2006 rPath, Inc.
     All Rights Reserved
@@ -11,7 +11,7 @@
     </head>
     <body>
         <div class="layout">
-            <form action="${cfg.basePath}administer" method="post">
+            <form action="${cfg.basePath}admin/processAddOutbound" method="post">
                 <h2>Add Outbound Mirror</h2>
 
                 <table cellpadding="0" border="0" cellspacing="0" class="mainformhorizontal">
@@ -42,7 +42,7 @@
                         <td><input type="password" name="mirrorPass" style="width: 25%;" /></td>
                     </tr>
                 </table>
-                <button name="operation" value="process_add_outbound" class="img" type="submit">
+                <button class="img" type="submit">
                     <img src="${cfg.staticPath}/apps/mint/images/add_button.png" alt="Add" />
                 </button>
             </form>

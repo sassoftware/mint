@@ -6,7 +6,7 @@
 
 kid_files =			\
 	add_outbound.kid	\
-	administer.kid		\
+	frontPage.kid		\
 	external.kid		\
         maintenance.kid         \
 	notify.kid		\

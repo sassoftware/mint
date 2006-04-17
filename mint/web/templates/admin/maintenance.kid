@@ -16,14 +16,14 @@
         <td id="main" class="spanall">
             <div class="pad">
               <p py:if="kwargs.get('extraMsg', None) and not kwargs.get('errors',None)" class="message" py:content="kwargs['extraMsg']"/>
-              <a href ="${cfg.basePath}administer">Return to Administrator Page</a>
+              <a href ="${cfg.basePath}admin">Return to Administrator Page</a>
               <h2>Current Condition:&nbsp;
               <b style="color: red;" py:if="maintenance.getMaintenanceMode(cfg)==maintenance.LOCKED_MODE">Maintenance Mode</b>
               <b style="color: green;" py:if="maintenance.getMaintenanceMode(cfg)==maintenance.NORMAL_MODE">Operating Normally</b>
               </h2>
-              <form action="${cfg.basePath}administer" method="post">
+              <form action="${cfg.basePath}admin/toggleMaintLock" method="post">
                 <p>
-                  <button name="operation" value="toggle_maintenance_lock">${maintenance.getMaintenanceMode(cfg)==maintenance.LOCKED_MODE and "Restore Normal Operation" or "Invoke Maintenance Mode"}</button>
+                  <button type="submit">${maintenance.getMaintenanceMode(cfg)==maintenance.LOCKED_MODE and "Restore Normal Operation" or "Invoke Maintenance Mode"}</button>
                 </p>
               </form>
             </div>

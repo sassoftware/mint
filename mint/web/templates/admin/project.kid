@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
-      py:extends="'administer.kid'">
+      py:extends="'../layout.kid'">
 <!--
     Copyright (c) 2005-2006 rPath, Inc.
     All Rights Reserved
@@ -13,8 +13,8 @@
         <td id="main" class="spanall">
             <div class="pad">
               <p py:if="kwargs.get('extraMsg', None)" class="message" py:content="kwargs['extraMsg']"/>
-              <form action="${cfg.basePath}administer" method="post">
-	        <a href ="${cfg.basePath}administer">Return to Administrator Page</a>
+              <form action="${cfg.basePath}admin/processProjectAction" method="post">
+	        <a href ="${cfg.basePath}admin">Return to Administrator Page</a>
                 <h2>Select a project below to modify</h2>
                 <p>Key
                     <ul>
@@ -39,9 +39,6 @@
                 <p>
                    <button name="operation" value="project_toggle_hide">Hide/Unhide Project</button>
                    <button name="operation" value="project_toggle_disable">Enable/Disable Project</button>
-                  <button name="operation" value="project_change_members">Change Members</button>
-                  <button name="operation" value="project_maillists">Manage Mailing Lists</button>
-                  <button name="operation" value="project_edit">Edit</button>
                 </p>
               </form>
             </div>
