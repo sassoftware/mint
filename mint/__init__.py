@@ -7,8 +7,8 @@
 Mint Web Application
 
 @group Web Interface: web, web.app, web.hooks, web.repos
-@group Main Application: mint, database, users, projects, releases, cache, config,
-jobs, jobstatus, mailinglists, mint_error, mint_server, news, pkgindex, projectlisting,
+@group Main Application: client, database, users, projects, releases, cache, config,
+jobs, jobstatus, mailinglists, mint_error, server, news, pkgindex, projectlisting,
 releasetypes, searcher, shimclient, stats, userlevels, userlisting
 @group ISO Generation: distro
 """

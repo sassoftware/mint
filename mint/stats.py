@@ -3,7 +3,9 @@
 #
 # All Rights Reserved
 #
-import database
+
+from mint import database
+
 from conary import versions
 
 class CommitsTable(database.DatabaseTable):

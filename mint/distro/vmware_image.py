@@ -1,13 +1,14 @@
 import os
 import tempfile
 import zipfile
-from conary.lib import util, log
+
 from mint import releasetypes
-import bootable_image
-from bootable_image import timeMe
+from mint.distro import bootable_image
+
+from conary.lib import util, log
 
 class VMwareImage(bootable_image.BootableImage):
-    @timeMe
+    @bootable_image.timeMe
     def zipVMwarePlayerFiles(self, dir, outfile):
         zip = zipfile.ZipFile(outfile, 'w', zipfile.ZIP_DEFLATED)
         for f in ('.vmdk', '.vmx'):
@@ -15,7 +16,7 @@ class VMwareImage(bootable_image.BootableImage):
         zip.close()
         os.chmod(outfile, 0644)
 
-    @timeMe
+    @bootable_image.timeMe
     def createVMwarePlayerImage(self, outfile, displayName, mem, basedir=os.getcwd()):
         #Create a temporary directory
         vmbasedir = tempfile.mkdtemp('', 'mint-MDI-cvmpi-', basedir)
@@ -31,7 +32,7 @@ class VMwareImage(bootable_image.BootableImage):
             util.rmtree(vmbasedir)
         return (outfile, 'VMware Player Image')
 
-    @timeMe
+    @bootable_image.timeMe
     def createVMDK(self, outfile):
         flags = ''
         if self.imgcfg.debug:
@@ -41,7 +42,7 @@ class VMwareImage(bootable_image.BootableImage):
         log.debug("Running", cmd)
         util.execute(cmd)
 
-    @timeMe
+    @bootable_image.timeMe
     def createVMX(self, outfile, displayName, memsize):
         #Read in the stub file
         infile = open(os.path.join(self.imgcfg.dataDir, 'vmwareplayer.vmx'), 'rb')

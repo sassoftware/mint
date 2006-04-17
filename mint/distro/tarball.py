@@ -6,13 +6,13 @@
 
 # python standard library imports
 import os, sys
-import tempfile
-import subprocess
 import re
+import subprocess
+import tempfile
 
 # mint imports
-from imagegen import ImageGenerator, MSG_INTERVAL
-import bootable_image
+from mint.distro.imagegen import ImageGenerator, MSG_INTERVAL
+from mint.distro import bootable_image
 
 from conary.lib import util
 from mint import releasetypes

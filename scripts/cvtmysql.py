@@ -1,9 +1,11 @@
 #!/usr/bin/python
 
-from mint.config import MintConfig
+import sys
+
 from conary import dbstore
 from conary.lib import util
-import sys
+
+from mint.config import MintConfig
 
 reload(sys)
 sys.setdefaultencoding("utf-8")

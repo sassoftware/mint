@@ -1,9 +1,9 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <?python #need a comment?
     from mint import userlevels, releasetypes
-    from mint.mint import upstream
+    from mint.client import timeDelta
+    from mint.client import upstream
     from mint.helperfuncs import truncateForDisplay
-    from mint.mint import timeDelta
 
     def condUpstream(upstreams, version):
         up = upstream(version)

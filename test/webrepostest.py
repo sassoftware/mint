@@ -158,7 +158,7 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
 
         page = self.assertContent('/repos/testproject/' + \
                 fileLink.getattr('href'), code = [200],
-                content = '<span>/temp/directory</span>')
+                content = '<span title="/temp/directory">/temp/directory</span>')
 
 
 if __name__ == "__main__":

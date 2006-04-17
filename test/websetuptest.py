@@ -10,6 +10,7 @@ testsuite.setup()
 import mint_rephelp
 
 from repostest import testRecipe
+
 from conary import versions
 
 class MintTest(mint_rephelp.WebRepositoryHelper):

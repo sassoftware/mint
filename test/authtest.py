@@ -8,8 +8,7 @@ testsuite.setup()
 
 from mint_rephelp import MintRepositoryHelper
 
-from mint import mint_server
-
+from mint import server
 from mint import users
 
 class AuthTest(MintRepositoryHelper):
@@ -51,7 +50,7 @@ class AuthTest(MintRepositoryHelper):
         try:
             client.getUserSearchResults('Any String Will Do')
             self.fail("Not-logged-in client was allowed to perform a function requiring authorization")
-        except mint_server.PermissionDenied:
+        except server.PermissionDenied:
             pass
 
         client, userid = self.quickMintUser('testuser','testpass')
@@ -64,7 +63,7 @@ class AuthTest(MintRepositoryHelper):
         try:
             client.hideProject(projectId)
             self.fail("User was allowed to perform an admin only function")
-        except mint_server.PermissionDenied:
+        except server.PermissionDenied:
             pass
 
 if __name__ == "__main__":

@@ -6,7 +6,7 @@
 import cPickle
 import time
 
-from database import DatabaseTable
+from mint.database import DatabaseTable
 
 class SessionsTable(DatabaseTable):
     name = "Sessions"

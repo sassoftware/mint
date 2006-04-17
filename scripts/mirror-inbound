@@ -13,7 +13,7 @@ from conary import versions
 from conary.repository import netclient
 from conary.lib import util, log
 
-from mint import mint
+from mint import client
 from mint.scriptlibrary import SingletonScript
 
 log.setVerbosity(log.DEBUG)
@@ -31,7 +31,7 @@ class MirrorInbound(SingletonScript):
         return 1
 
     def action(self):
-        client = mint.MintClient(sys.argv[1])
+        client = client.MintClient(sys.argv[1])
         cfg = mirror.MirrorConfiguration()
 
         mirroredLabels = client.getInboundLabels()

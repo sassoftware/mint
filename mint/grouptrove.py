@@ -8,11 +8,12 @@ import database
 import re
 import time
 
-from conary.deps import deps
-from conary import versions
+from mint import jobs
+from mint import mint_error
 
-import jobs
-import mint_error
+from conary import versions
+from conary.deps import deps
+
 
 class GroupTroveNameError(mint_error.MintError):
     def __str__(self):

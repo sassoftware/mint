@@ -11,17 +11,17 @@ import kid
 import os
 import re
 import sys
-import time
 import tempfile
+import time
 
+from mint import constants
 from mint import templates
 from mint.helperfuncs import truncateForDisplay, extractBasePath, \
         hostPortParse, rewriteUrlProtocolPort
-from mint.userlevels import myProjectCompare
-from mint.mint import timeDelta
+from mint.client import timeDelta
 from mint.distro import jsversion
 from mint_rephelp import MINT_PROJECT_DOMAIN
-from mint import constants
+from mint.userlevels import myProjectCompare
 
 from conary.lib import util
 

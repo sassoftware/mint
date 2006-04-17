@@ -6,31 +6,31 @@
 
 # python standard library imports
 import errno
+from math import ceil
 import os
 import re
 import time
 import tempfile
 import zipfile
-from math import ceil
 
 # mint imports
-from imagegen import ImageGenerator, MSG_INTERVAL
-import gencslist
-from mint import releasetypes
 from mint import mint_error
-from mint.mint import upstream
+from mint import releasetypes
+from mint.distro import gencslist
+from mint.distro.imagegen import ImageGenerator, MSG_INTERVAL
+from mint.client import upstream
 
 # conary imports
 from conary import conaryclient
-from conary.deps import deps
 from conary import flavorcfg
 from conary import versions
-from conary.conaryclient.cmdline import parseTroveSpec
-from conary.repository import errors
-from conary.callbacks import UpdateCallback
 from conary.callbacks import ChangesetCallback
 from conary.conarycfg import ConfigFile, CfgDict, CfgString, CfgBool
+from conary.callbacks import UpdateCallback
+from conary.conaryclient.cmdline import parseTroveSpec
+from conary.deps import deps
 from conary.lib import log, util
+from conary.repository import errors
 
 
 class KernelTroveRequired(mint_error.MintError):

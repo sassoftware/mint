@@ -3,32 +3,32 @@
 #
 # All rights reserved
 #
+import base64
 import os
 import sys
-import xmlrpclib
 import time
+import xmlrpclib
+
+from mint import database
+from mint import grouptrove
+from mint import jobs
+from mint import projects
+from mint import releases
+from mint import users
+from mint.mint_error import MintError, UnknownException, PermissionDenied, \
+    ReleasePublished, ReleaseMissing, ReleaseEmpty, UserAlreadyAdmin, \
+    AdminSelfDemotion, JobserverVersionMismatch, MaintenanceMode, \
+    ParameterError, GroupTroveEmpty
+from mint.searcher import SearchTermsError
 
 from conary.repository import repository
 from conary.repository.netclient import UserNotFound
 from conary.deps import deps
 
-import database
-import jobs
-import projects
-import releases
-import users
-import grouptrove
-import base64
-from mint_error import MintError, UnknownException, PermissionDenied, \
-    ReleasePublished, ReleaseMissing, ReleaseEmpty, UserAlreadyAdmin, \
-    AdminSelfDemotion, JobserverVersionMismatch, MaintenanceMode, \
-    ParameterError, GroupTroveEmpty
-from searcher import SearchTermsError
-
 class MintClient:
     def __init__(self, server):
         """
-        @param server: URL to the L{mint.mint_server.MintServer} XMLRPC interface.
+        @param server: URL to the L{mint.server.MintServer} XMLRPC interface.
         """
         self.server = ServerProxy(server)
 

@@ -1,6 +1,6 @@
-import time
 import os
 import os.path
+import time
 
 calldict = {}
 firstline = True

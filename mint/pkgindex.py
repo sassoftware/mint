@@ -3,8 +3,8 @@
 #
 # All Rights Reserved
 #
-import database
-import searcher
+from mint import database
+from mint import searcher
 
 class PackageIndexTable(database.KeyedTable):
     name = 'PackageIndex'

@@ -5,12 +5,19 @@
 #
 import os
 import re
-import subprocess
 import string
+import subprocess
 import sys
 import tempfile
 import time
-from anaconda_images import AnacondaImages
+
+from mint.client import upstream
+from mint.data import RDT_STRING
+from mint.distro import gencslist
+from mint.distro import splitdistro
+from mint.distro.anaconda_images import AnacondaImages
+from mint.distro.flavors import stockFlavors
+from mint.distro.imagegen import ImageGenerator, MSG_INTERVAL
 
 from conary import callbacks
 from conary import conaryclient
@@ -23,12 +30,6 @@ from conary.conarycfg import ConfigFile
 from conary.conaryclient.cmdline import parseTroveSpec
 from conary.lib import util
 
-from flavors import stockFlavors
-from mint.mint import upstream
-from mint.data import RDT_STRING
-from imagegen import ImageGenerator, MSG_INTERVAL
-import gencslist
-import splitdistro
 
 class IsoConfig(ConfigFile):
     filename = 'installable_iso.conf'

@@ -8,23 +8,22 @@ SUBDIRS = web distro reports templates
 
 python_files =			\
 	__init__.py		\
-        accesscontrol.py        \
+	accesscontrol.py	\
 	checkhtml.py		\
+	client.py		\
 	config.py		\
 	constants.py		\
-        cooktypes.py            \
+	cooktypes.py		\
 	data.py			\
 	database.py		\
 	dbversion.py		\
 	grouptrove.py		\
-	helperfuncs.py \
+	helperfuncs.py		\
 	jobs.py			\
 	jobstatus.py		\
-        maintenance.py          \
+	maintenance.py		\
 	mailinglists.py		\
 	mint_error.py		\
-	mint.py			\
-	mint_server.py		\
 	mirror.py		\
 	news.py			\
 	pkgindex.py		\
@@ -33,10 +32,11 @@ python_files =			\
 	projects.py		\
 	releases.py		\
 	releasetypes.py		\
-        releasetemplates.py     \
+	releasetemplates.py	\
 	requests.py		\
 	scriptlibrary.py	\
 	searcher.py		\
+	server.py		\
 	session.py		\
 	sessiondb.py		\
 	shimclient.py		\

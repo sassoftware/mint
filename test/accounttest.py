@@ -8,14 +8,16 @@ testsuite.setup()
 
 from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import MINT_HOST, MINT_PROJECT_DOMAIN
+
 from mint import userlevels
+from mint.database import DuplicateItem, ItemNotFound
 from mint.mint_error import PermissionDenied, UserAlreadyAdmin, \
      AdminSelfDemotion, LastAdmin
 from mint.users import LastOwner, UserInduction, MailError, GroupAlreadyExists, AlreadyConfirmed
-from mint.database import DuplicateItem, ItemNotFound
-from conary.repository.netclient import UserNotFound
-from conary.conaryclient import ConaryClient
+
 from conary import versions
+from conary.conaryclient import ConaryClient
+from conary.repository.netclient import UserNotFound
 
 class AccountTest(MintRepositoryHelper):
 

@@ -8,10 +8,11 @@ testsuite.setup()
 
 from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import MINT_DOMAIN, MINT_PROJECT_DOMAIN
-from mint import mint_server
+
+from mint import database
+from mint import server
 from mint import users
 from mint.projects import LabelMissing
-from mint import database
 
 class LabelsTest(MintRepositoryHelper):
     def testBasicAttributes(self):

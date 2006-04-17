@@ -5,20 +5,21 @@
 
 import testsuite
 testsuite.setup()
-import rephelp
 
 import os
 import sys
 
+import rephelp
+from mint_rephelp import EmptyCallback
 from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import MINT_PROJECT_DOMAIN
-from mint_rephelp import EmptyCallback
-from conary import conarycfg, conaryclient
-from conary.deps import deps
-from conary.lib import util
-from conary import versions
 
 from mint.distro import bootable_image
+
+from conary import conarycfg, conaryclient
+from conary import versions
+from conary.deps import deps
+from conary.lib import util
 
 VFS = versions.VersionFromString
 Flavor = deps.parseFlavor

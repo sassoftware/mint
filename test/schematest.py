@@ -10,7 +10,7 @@ import testsuite
 testsuite.setup()
 
 from mint_rephelp import MintRepositoryHelper
-from mint import userlevels, mint_server
+from mint import userlevels, server
 from mint.distro import jsversion
 from conary import dbstore
 from conary import sqlite3
@@ -436,7 +436,7 @@ class UpgradePathTest(MintRepositoryHelper):
             os.dup2(fd, sys.stdout.fileno())
             os.dup2(fd, sys.stderr.fileno())
             os.close(fd)
-            mint_server.MintServer(cfg, alwaysReload = True)
+            server.MintServer(cfg, alwaysReload = True)
         finally:
             os.dup2(oldStdOut, sys.stdout.fileno())
             os.dup2(oldStdErr, sys.stderr.fileno())

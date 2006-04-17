@@ -4,14 +4,14 @@
 # All Rights Reserved
 #
 import errno
-import socket
-import time
 import random
-import traceback
 import os
-import sys
-from xmlrpclib import ProtocolError
 import signal
+import socket
+import sys
+import time
+import traceback
+from xmlrpclib import ProtocolError
 
 # conary imports
 from conary import conaryclient
@@ -24,8 +24,9 @@ from mint import cooktypes
 from mint import jobstatus
 from mint import releasetypes
 from mint import scriptlibrary
-from mint.mint import MintClient
+from mint.client import MintClient
 from mint.config import CfgImageEnum
+from mint.constants import mintVersion
 
 # image generators
 from mint.distro.installable_iso import InstallableIso
@@ -38,7 +39,6 @@ from mint.distro.group_trove import GroupTroveCook
 from mint.distro.bootable_image import BootableImage
 from mint.distro.raw_fs_image import RawFsImage
 from mint.distro.tarball import Tarball
-from mint.constants import mintVersion
 
 generators = {
     releasetypes.INSTALLABLE_ISO:   InstallableIso,

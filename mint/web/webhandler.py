@@ -4,22 +4,20 @@
 # All rights reserved
 #
 import base64
+import kid
 import os
 import textwrap
 import time
 import sys
 
-import kid
-
 from mod_python import apache
 from mod_python import Cookie
 
-from mint import users
-from cache import pageCache, reqHash
-
 from mint import shimclient
-from mint.session import SqlSession
 from mint import profile
+from mint import users
+from mint.session import SqlSession
+from mint.web.cache import pageCache, reqHash
 
 kidCache = {}
 

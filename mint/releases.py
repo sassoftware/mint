@@ -3,16 +3,16 @@
 #
 # All Rights Reserved
 #
-import urlparse
-import time
 import sys
+import time
+import urlparse
 
-import database
-import jobs
-import releasetypes
-from mint_error import MintError, ParameterError
-from data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM
-from releasetemplates import dataHeadings, dataTemplates
+from mint import database
+from mint import jobs
+from mint import releasetypes
+from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM
+from mint.mint_error import MintError, ParameterError
+from mint.releasetemplates import dataHeadings, dataTemplates
 
 from conary import versions
 from conary.deps import deps
@@ -75,7 +75,7 @@ class ReleasesTable(database.KeyedTable):
                 cu.execute("UPDATE Releases SET description=desc")
                 return (dbversion + 1) == self.schemaVersion
             if dbversion == 14:
-                from distro import jsversion
+                from mint.distro import jsversion
                 cu = self.db.cursor()
                 cu.execute("""INSERT INTO ReleaseData
                                   SELECT DISTINCT releaseId, 'jsversion',

@@ -4,12 +4,12 @@
 # All Rights Reserved
 #
 
+import config
 import os
-import types
 import sys
 import syslog
-import config
 import time
+import types
 
 # Markers used in the data output
 START_MARKER = '>>'

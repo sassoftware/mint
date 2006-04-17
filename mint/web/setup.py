@@ -16,7 +16,8 @@ from mod_python import apache
 from mint import mint_error
 from mint import shimclient
 from mint.session import SqlSession
-from webhandler import WebHandler, normPath, HttpNotFound, HttpForbidden
+from mint.web.webhandler import WebHandler, normPath, HttpNotFound, HttpForbidden
+
 from conary.web.fields import strFields, intFields, listFields, boolFields
 
 configGroups = {

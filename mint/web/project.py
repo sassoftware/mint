@@ -3,33 +3,33 @@
 #
 # All rights reserved
 #
+import dns.resolver
+import dns.exception
 import email
 import os
 import re
 import sys
 from mod_python import apache
 
-import dns.resolver
-import dns.exception
-
 from mint import database
 from mint import mailinglists
+from mint import jobs
+from mint import jobstatus
 from mint import releases
 from mint import releasetypes
 from mint import userlevels
 from mint import users
-from mint import jobs
-from mint import jobstatus
 
-from webhandler import WebHandler, normPath, HttpNotFound
-from decorators import ownerOnly, requiresAuth, requiresAdmin, mailList, redirectHttp
-from mint.users import sendMailWithChecks
 from mint.releases import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM
+from mint.users import sendMailWithChecks
+from mint.web.webhandler import WebHandler, normPath, HttpNotFound
+from mint.web.decorators import ownerOnly, requiresAuth, requiresAdmin, \
+        mailList, redirectHttp
 
 from conary import conaryclient
 from conary import conarycfg
-from conary import versions
 from conary.deps import deps
+from conary import versions
 from conary.web.fields import strFields, intFields, listFields, boolFields, dictFields
 
 def getUserDict(members):

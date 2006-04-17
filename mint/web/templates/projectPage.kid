@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <?python
 from mint import userlevels
-from mint.mint import upstream
+from mint.client import upstream
 from mint.helperfuncs import truncateForDisplay
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"

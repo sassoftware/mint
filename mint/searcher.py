@@ -3,10 +3,12 @@
 #
 # All Rights Reserved
 #
-import string
+
 import re
+import string
 import time
-from mint_error import MintError
+
+from mint.mint_error import MintError
 
 NEVER, DAY, THREEDAYS, WEEK, TWOWEEKS, FOURWEEKS = range(0, 6)
 

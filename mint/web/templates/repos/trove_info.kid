@@ -4,8 +4,8 @@
 #
 # All Rights Reserved
 
-from urllib import quote
 import time
+from urllib import quote
 from mint import userlevels
 from mint.helperfuncs import splitVersionForDisplay, truncateForDisplay
 
@@ -48,7 +48,7 @@ isOwner = (userLevel == userlevels.OWNER or auth.admin)
 
     <table py:def="binaryTroveInfo(troves)" class="troveinfo">
         <?python
-            from mint.mint import flavorWrap
+            from mint.client import flavorWrap
             trove = troves[0]
             sourceVersion = trove.getVersion().getSourceVersion().freeze()
             sourceLink = "troveInfo?t=%s;v=%s" % (quote(trove.getSourceName()), quote(sourceVersion))

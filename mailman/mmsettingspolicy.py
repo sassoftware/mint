@@ -3,8 +3,8 @@
 # This script requires the pythonpath to include the mailman directory
 # Mailman is installed to /var/mailman by default
 
-import sys
 import getopt
+import sys
 
 from Mailman import Utils, MailList, Errors, mm_cfg
 

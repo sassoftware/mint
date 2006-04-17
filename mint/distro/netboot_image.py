@@ -11,7 +11,7 @@ import tempfile
 import subprocess
 
 # mint imports
-from imagegen import ImageGenerator
+from mint.distro.imagegen import ImageGenerator
 
 # conary imports
 from conary import conaryclient

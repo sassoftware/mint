@@ -5,19 +5,22 @@
 # All Rights Reserved
 #
 
-import os
 import testsuite
 testsuite.setup()
 
+import os
+
 import mint_rephelp
 from mint_rephelp import MINT_PROJECT_DOMAIN, MINT_DOMAIN
-from conary.repository import errors
+
+from mint import config
+from mint import maintenance
 from mint import mint_error
 from mint import releasetypes
-from mint.distro import jsversion
-from mint import maintenance
-from mint import config
 from mint import users
+from mint.distro import jsversion
+
+from conary.repository import errors
 
 class MaintenanceTest(mint_rephelp.WebRepositoryHelper):
     def tearDown(self):

@@ -5,15 +5,15 @@
 # All rights reserved
 #
 
-import sys
-import os
+import os, sys
 import tempfile
+
+from mint.distro.gencslist import _linkOrCopyFile
 
 import conary
 from conary.lib import util
 import conary.trove
 import conary.repository.changeset
-from gencslist import _linkOrCopyFile
 
 commonfiles = ('README', 'LICENSE')
 basicminimal = ('group-core', 'group-base')

@@ -4,8 +4,9 @@
 #
 
 import time
-from reports import MintReport
+
 from mint import releasetypes
+from mint.reports.mint_reports import MintReport
 
 class SiteSummary(MintReport):
     title = 'Site Summary'

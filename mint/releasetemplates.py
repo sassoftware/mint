@@ -2,8 +2,8 @@
 #
 # All Rights Reserved
 #
-from data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM
-import releasetypes
+from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM
+from mint import releasetypes
 
 # *** Extremely Important ***
 # Changing the names or semantic meanings of the keys to data templates is the

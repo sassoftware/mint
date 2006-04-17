@@ -5,8 +5,9 @@
 #
 import os
 import re
-from mint import mint_error
+
 from mint import constants
+from mint import mint_error
 
 from conary import versions
 from conary.conaryclient.cmdline import parseTroveSpec

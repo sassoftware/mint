@@ -10,15 +10,16 @@ import traceback
 
 from mod_python import apache
 
+from mint import database
+from mint.session import SqlSession
+from mint.web.templates import repos
+from mint.web.webhandler import WebHandler, normPath, HttpForbidden, HttpNotFound
+
 from conary.server import http
 from conary.repository import errors
 from conary.repository.shimclient import ShimNetClient
 from conary import conaryclient
 
-from webhandler import WebHandler, normPath, HttpForbidden, HttpNotFound
-from templates import repos
-from mint.session import SqlSession
-from mint import database
 
 class ConaryHandler(WebHandler, http.HttpHandler):
     def __init__(self, req, cfg, repServer = None):
@@ -29,7 +30,7 @@ class ConaryHandler(WebHandler, http.HttpHandler):
             self.repServer = repServer
             self.troveStore = self.repServer.troveStore
         if 'mint.web.templates.repos' in sys.modules:
-            self.reposTemplatePath = os.path.dirname(sys.modules['mint.web.templates.repos'].__file__) + "/repos/"
+            self.reposTemplatePath = os.path.dirname(sys.modules['mint.web.templates.repos'].__file__)
 
     def handle(self, context):
         self.__dict__.update(**context)

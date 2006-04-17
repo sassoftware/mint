@@ -4,19 +4,20 @@
 #
 
 import os
-from time import sleep
-import testsuite
 import re
+from time import sleep
+
+import testsuite
 testsuite.setup()
 
 from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import MINT_HOST, MINT_PROJECT_DOMAIN
 import recipes
 
-from conary.conarycfg import ConaryConfiguration, UserInformation
-from conary.conaryclient import ConaryClient
 from conary import repository
 from conary import versions
+from conary.conarycfg import ConaryConfiguration, UserInformation
+from conary.conaryclient import ConaryClient
 
 testRecipe = """
 class TestCase(PackageRecipe):

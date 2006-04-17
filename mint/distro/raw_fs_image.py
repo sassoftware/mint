@@ -5,7 +5,7 @@
 #
 
 from mint import releasetypes
-import raw_hd_image
+from mint.distro import raw_hd_image
 
 class RawFsImage(raw_hd_image.RawHdImage):
     fileType = fileType = releasetypes.typeNames[releasetypes.RAW_FS_IMAGE]

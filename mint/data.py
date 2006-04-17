@@ -4,7 +4,7 @@
 # All Rights Reserved
 #
 
-import database
+from mint import database
 
 (RDT_STRING,
  RDT_BOOL,

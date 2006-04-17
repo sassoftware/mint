@@ -7,7 +7,7 @@
 from mint import jobstatus
 from mint import releasetypes
 from mint import userlevels
-from mint.mint import upstream
+from mint.client import upstream
 from mint.helperfuncs import truncateForDisplay
 import time
 ?>

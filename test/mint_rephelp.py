@@ -6,29 +6,30 @@
 import os
 import shutil
 import mysqlharness
-import testsuite
 import rephelp
 import sys
+import testsuite
 import urlparse
 
 from webunit import webunittest
 
+from mint import config
+from mint import cooktypes, releasetypes
+from mint import dbversion
+from mint import server
+from mint import shimclient
+from mint import releasetypes
+
+from mint.distro import jobserver
+from mint.distro.flavors import stockFlavors
+from mint.projects import mysqlTransTable
+
 from conary import dbstore
 from conary import sqlite3
 from conary import versions
+from conary.callbacks import UpdateCallback, ChangesetCallback
 from conary.deps import deps
 from conary.lib import openpgpkey, util
-from conary.callbacks import UpdateCallback, ChangesetCallback
-
-from mint import config
-from mint import cooktypes, releasetypes
-from mint import shimclient
-from mint import dbversion
-from mint import mint_server
-from mint.projects import mysqlTransTable
-from mint.distro import jobserver
-from mint.distro.flavors import stockFlavors
-from mint import releasetypes
 
 # NOTE: make sure that test.rpath.local and test.rpath.local2 is in your
 # system's /etc/hosts file (pointing to 127.0.0.1) before running this
@@ -402,7 +403,7 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
         rephelp.RepositoryHelper.setUp(self)
         self.openRepository()
 
-        self.mintServer = mint_server.MintServer(self.mintCfg, alwaysReload = True)
+        self.mintServer = server.MintServer(self.mintCfg, alwaysReload = True)
         self.db = self.mintServer.db
 
     def tearDown(self):

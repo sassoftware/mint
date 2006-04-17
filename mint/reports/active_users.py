@@ -4,7 +4,7 @@
 #
 
 import time
-from reports import MintReport
+from mint.reports.mint_reports import MintReport
 
 class ActiveUsersReport(MintReport):
     title = 'Active users in the last 30 days'

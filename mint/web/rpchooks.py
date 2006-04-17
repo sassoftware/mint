@@ -4,15 +4,17 @@
 # All Rights Reserved
 #
 import base64
+import simplejson
 import sys
 import xmlrpclib
-import simplejson
+
+from mod_python import apache
+
+from mint import config
+from mint import server
+from mint.web.webhandler import getHttpAuth
 
 from conary.repository import errors
-from mod_python import apache
-from mint import config
-from mint import mint_server
-from webhandler import getHttpAuth
 
 def rpcHandler(req, cfg, pathInfo = None):
     isJSONrpc = isXMLrpc = allowPrivate = False
@@ -36,7 +38,7 @@ def rpcHandler(req, cfg, pathInfo = None):
     authToken = getHttpAuth(req)
 
     # instantiate a MintServer
-    server = mint_server.MintServer(cfg, allowPrivate = allowPrivate, req = req)
+    srvr = server.MintServer(cfg, allowPrivate = allowPrivate, req = req)
 
     # switch on XML/JSON here
     if isXMLrpc:
@@ -50,8 +52,8 @@ def rpcHandler(req, cfg, pathInfo = None):
     # go for it; return 403 if permission is denied
     try:
         # result is (isError, returnValues)
-        result = server.callWrapper(*params)
-    except (errors.InsufficientPermission, mint_server.PermissionDenied):
+        result = srvr.callWrapper(*params)
+    except (errors.InsufficientPermission, server.PermissionDenied):
         return apache.HTTP_FORBIDDEN
 
     # create a response

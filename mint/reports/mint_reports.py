@@ -4,6 +4,7 @@
 #
 
 import os
+import time
 
 global _reportlab_present
 try:
@@ -18,7 +19,6 @@ except ImportError:
 
 import conary
 from conary.lib.util import mkstemp, rmtree
-import time
 
 class MintReport(object):
     title = "Report Title"

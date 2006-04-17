@@ -6,13 +6,12 @@
 import os
 import sys
 
-import mint
+from mint import client
+from mint import releasetypes
 
 from conary import conarycfg
 from conary.conarycfg import ConfigFile
-
 from conary.lib import cfgtypes
-import releasetypes
 
 templatePath = os.path.dirname(sys.modules['mint'].__file__)
 

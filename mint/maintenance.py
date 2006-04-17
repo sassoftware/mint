@@ -5,7 +5,8 @@
 #
 
 import os
-import mint_error
+
+from mint import mint_error
 
 # the length of the maintenanceLockPath file is used as the maintenance mode
 # as defined below. no file equates to a length of zero.

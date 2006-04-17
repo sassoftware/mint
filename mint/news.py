@@ -5,12 +5,12 @@
 #
 
 import calendar
+from elementtree import ElementTree
 import time
 import rfc822
-import urllib2 
-from elementtree import ElementTree
+import urllib2
 
-import database
+from mint import database
 
 REFRESH_TIME = 600 # seconds
 

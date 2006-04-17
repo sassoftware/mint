@@ -5,8 +5,8 @@
 #
 import base64
 import os
-import sys
 import re
+import sys
 import time
 from urllib import quote, unquote
 
@@ -14,24 +14,23 @@ from mod_python import apache
 from mod_python import Cookie
 from mod_python.util import FieldStorage
 
-from conary.web import fields
-
-from mint.session import SqlSession, COOKIE_NAME
 from mint import database
 from mint import mint_error
-from mint import mint_server
+from mint import server
 from mint import shimclient
 from mint import users, userlevels
+from mint.session import SqlSession, COOKIE_NAME
+from mint.web import cache
+from mint.web.admin import AdminHandler
+from mint.web.cache import pageCache, reqHash
+from mint.web.project import ProjectHandler
+from mint.web.repos import ConaryHandler
+from mint.web.site import SiteHandler
+from mint.web.setup import SetupHandler
+from mint.web.webhandler import WebHandler, normPath, HttpNotFound
 
-from admin import AdminHandler
-from project import ProjectHandler
-from site import SiteHandler
-from repos import ConaryHandler
-from setup import SetupHandler
-import cache
+from conary.web import fields
 
-from webhandler import WebHandler, normPath, HttpNotFound
-from cache import pageCache, reqHash
 
 #called from hooks.py if an exception was not caught
 class ErrorHandler(WebHandler):
@@ -173,7 +172,7 @@ class MintApp(WebHandler):
 
         # if it looks like we're requesting a project (hostname isn't in reserved hosts
         # and doesn't match cfg.hostName, try to request the project.
-        if hostname not in mint_server.reservedHosts \
+        if hostname not in server.reservedHosts \
             and hostname != self.cfg.hostName \
             and self.cfg.configured:
             try:

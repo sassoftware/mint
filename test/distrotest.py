@@ -3,29 +3,29 @@
 # Copyright (c) 2004-2006 rPath, Inc.
 #
 
-import tempfile
 import testsuite
 testsuite.setup()
-import rephelp
 
 import os
 import sys
 import tempfile
 
+import rephelp
 from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import EmptyCallback
 from mint_rephelp import MINT_PROJECT_DOMAIN
 
-from conary import conarycfg, conaryclient
-from conary import versions
-from conary.deps import deps
-from conary.repository import changeset
-from conary.lib import util
-from conary import sqlite3
-
 from mint.distro import gencslist, anaconda_images, splitdistro
 from mint.distro import installable_iso
 from mint.distro.gencslist import _validateChangeSet
+
+from conary import conarycfg, conaryclient
+from conary import sqlite3
+from conary import versions
+from conary.deps import deps
+from conary.lib import util
+from conary.repository import changeset
+
 
 VFS = versions.VersionFromString
 Flavor = deps.parseFlavor

@@ -8,15 +8,17 @@
 import testsuite
 testsuite.setup()
 
+import os
+import re
+import sys
+import tempfile
+
 import mint_rephelp
 from mint_rephelp import MINT_PROJECT_DOMAIN, MINT_DOMAIN
+
 from mint import releasetypes
 
 from conary.lib import util
-
-import os, sys
-import tempfile
-import re
 
 scriptPath = os.path.join(os.path.split(os.path.split( \
     os.path.realpath(__file__))[0])[0], 'scripts')

@@ -6,10 +6,10 @@
 
 import os
 import sys
+from threading import currentThread
 
 from mint import jobstatus
 
-from threading import currentThread
 
 MSG_INTERVAL = 5
 

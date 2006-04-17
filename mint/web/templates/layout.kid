@@ -4,9 +4,9 @@
 # Copyright (c) 2005-2006 rPath, Inc.
 # All Rights Reserved
 #
-from mint import userlevels
 from mint import constants
 from mint import maintenance
+from mint import userlevels
 from urllib import quote
 onload = "javascript:;"
 ?>

@@ -5,9 +5,10 @@
 #
 import sys, time
 import weakref
+
 from conary.dbstore import sqlerrors
 
-from mint_error import MintError
+from mint.mint_error import MintError
 
 class ItemNotFound(MintError):
     def __init__(self, item = "item"):
@@ -39,7 +40,7 @@ def concat(db, *items):
 
 class TableObject(object):
     """A simple base class defining a object-oriented interface to an SQL table.
-       @cvar server: Internal L{mint.mint_server.MintServer} object to modify the object in
+       @cvar server: Internal L{mint.server.MintServer} object to modify the object in
                       the database.
        @cvar id: The database primary key of the current object.
     """
@@ -53,7 +54,7 @@ class TableObject(object):
         raise NotImplementedError
 
     def __init__(self, server, id):
-        """@param server: a L{mint.mint_server.MintServer} object
+        """@param server: a L{mint.server.MintServer} object
                           for manipulation of the item
                           represented by this object.
            @param id: database primary key of the item

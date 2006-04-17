@@ -7,9 +7,12 @@ import testsuite
 testsuite.setup()
 
 import os
+import shutil
+import tempfile
 import time
+
 from mint_rephelp import MintRepositoryHelper
-from mint.mint_server import PermissionDenied
+from mint.server import PermissionDenied
 
 class ReportTest(MintRepositoryHelper):
     def testReportList(self):
@@ -87,29 +90,48 @@ class ReportTest(MintRepositoryHelper):
                     "user activity report wasn't properly computed")
 
     def testPrecompiledReports(self):
-        client, userId = self.quickMintAdmin('adminuser', 'adminpass')
-        reportsPath = os.path.sep.join( \
-            os.path.abspath(__file__).split(os.path.sep)[:-2] + \
-            ['mint', 'reports'])
-        rogueReport = reportsPath + os.path.sep + 'rogueReportForTesting.pyc'
-        rgSrc = os.path.sep.join([os.path.split(os.path.abspath(__file__))[0]]\
-                                 + ['archive', 'rogueReportForTesting.pyc'])
-        try:
-            os.link(rgSrc, rogueReport)
-            from mint import reports
-            reload(reports)
-            reps = client.server.listAvailableReports()
-            self.failIf('rogueReportForTesting' not in reps,
-                        "precompiled report modules won't show up.")
-        finally:
+
+        # compile a test report
+        mintDir = os.path.sep.join(os.path.abspath(__file__).split(os.path.sep)[:-2])
+        testDir = os.path.sep.join(os.path.abspath(__file__).split(os.path.sep)[:-1])
+        reportScript = """
+from mint.reports.mint_reports import MintReport
+
+class RogueReport(MintReport):
+    title = "Rogue report for testing. If this appears in mint.reports, delete it."
+"""
+        pyPath = os.path.join(testDir, "rogueReportForTesting.py") 
+        pycPath = pyPath + "c"
+        fh = os.open(pyPath, os.O_CREAT | os.O_WRONLY)
+        os.write(fh, reportScript)
+        os.close(fh)
+        os.system("PYTHONPATH='%s' python -c 'import rogueReportForTesting'" % \
+                mintDir)
+        if os.path.exists(pycPath):
+            os.unlink(pyPath)
+            reportsPath = os.path.join(mintDir, 'mint', 'reports')
+            rogueReport = os.path.join(reportsPath, 'rogueReportForTesting.pyc')
+            shutil.move(pycPath, rogueReport)
+
+            client, userId = self.quickMintAdmin('adminuser', 'adminpass')
             try:
-                os.unlink(rogueReport)
+                from mint import reports
+                reload(reports)
+                reps = client.server.listAvailableReports()
+                self.failIf('rogueReportForTesting' not in reps,
+                            "precompiled report modules won't show up.")
             finally:
-                pass
-            reload(reports)
-        reps = client.server.listAvailableReports()
-        self.failIf('rogueReportForTesting' in reps,
-                    "rogue report module wasn't deleted after test.")
+                try:
+                    os.unlink(rogueReport)
+                finally:
+                    pass
+                reload(reports)
+            reps = client.server.listAvailableReports()
+            self.failIf('rogueReportForTesting' in reps,
+                        "rogue report module wasn't deleted after test.")
+        else:
+            os.unlink(pyPath)
+            self.fail("problems compiling the script")
 
 
 if __name__ == "__main__":

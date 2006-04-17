@@ -3,7 +3,7 @@
 #
 # All Rights Reserved
 #
-import database
+from mint import database
 
 # reserve special code zero to more more compliant with db engines
 (ACTION_VIEW_PROJECT, ACTION_GROUP_BUILDER, ACTION_ISO_GEN, \
@@ -55,7 +55,7 @@ class PermissionsTable(database.DatabaseTable):
         return False
 
     def grant(self, groupId, action, objectId):
-        # no permission checks at this level. do it in mint_server.
+        # no permission checks at this level. do it in mint.server.
         cu = self.db.cursor()
         try:
             cu.execute("INSERT INTO Permissions VALUES(?, ?, ?)", groupId,
@@ -67,7 +67,7 @@ class PermissionsTable(database.DatabaseTable):
             self.db.commit()
 
     def revoke(self, groupId, action, objectId):
-        # no permission checks at this level. do it in mint_server.
+        # no permission checks at this level. do it in mint.server.
         cu = self.db.cursor()
         cu.execute("""DELETE FROM Permissions
                           WHERE groupId=? AND action=? AND objectId=?""",

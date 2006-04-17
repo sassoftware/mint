@@ -5,7 +5,7 @@
 #
 import os.path
 
-from imagegen import ImageGenerator
+from mint.distro.imagegen import ImageGenerator
 
 class StubImage(ImageGenerator):
     def write(self):

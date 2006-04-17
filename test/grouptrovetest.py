@@ -18,8 +18,8 @@ from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import MINT_PROJECT_DOMAIN
 
 from mint import jobstatus
-from mint import mint_server
 from mint import grouptrove
+from mint import server
 from mint import userlevels
 from mint.database import ItemNotFound, DuplicateItem
 from mint.mint_error import PermissionDenied
@@ -808,7 +808,7 @@ class GroupTroveTest(MintRepositoryHelper):
 
         try:
             groupTrove.startCookJob("1#x86")
-        except mint_server.GroupTroveEmpty:
+        except server.GroupTroveEmpty:
             pass
         else:
             self.fail("allowed to start an empty cook job")

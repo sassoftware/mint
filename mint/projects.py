@@ -4,25 +4,25 @@
 # All Rights Reserved
 #
 import os
-from conary import sqlite3
 import string
 import sys
 import time
 
+from mint import database
+from mint.helperfuncs import truncateForDisplay, rewriteUrlProtocolPort, \
+        hostPortParse
+from mint import mailinglists
+from mint import projectlisting
+from mint import searcher
+from mint import userlevels
+from mint.mint_error import MintError
+
 from conary import dbstore
+from conary import sqlite3
 from conary import versions
 from conary.lib import util
 from conary.repository.netrepos import netserver
 from conary.conarycfg import ConaryConfiguration
-from helperfuncs import truncateForDisplay, rewriteUrlProtocolPort, \
-        hostPortParse
-
-import database
-import userlevels
-import mailinglists
-import projectlisting
-import searcher
-from mint_error import MintError
 
 
 class InvalidHostname(MintError):
@@ -480,7 +480,7 @@ class ProjectsTable(database.KeyedTable):
             repos.auth.setMirror(username, True)
 
     def hide(self, projectId):
-        # Anonymous user is added/removed in mint_server
+        # Anonymous user is added/removed in server
         cu = self.db.cursor()
 
         cu.execute("UPDATE Projects SET hidden=1, timeModified=? WHERE projectId=?", time.time(), projectId)
@@ -488,7 +488,7 @@ class ProjectsTable(database.KeyedTable):
         self.db.commit()
 
     def unhide(self, projectId):
-        # Anonymous user is added/removed in mint_server
+        # Anonymous user is added/removed in server
         cu = self.db.cursor()
 
         cu.execute("UPDATE Projects SET hidden=0, timeModified=? WHERE projectId=?", time.time(), projectId)

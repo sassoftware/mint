@@ -7,11 +7,11 @@ import time
 
 from conary.lib import util
 
-from mint_rephelp import MintRepositoryHelper
 from mint import cooktypes
 from mint import releasetypes
 from mint.distro import jobserver
 
+from mint_rephelp import MintRepositoryHelper
 
 class JobServerHelper(MintRepositoryHelper):
     def startJobServer(self):

@@ -1,4 +1,4 @@
-<html >
+<html>
     <head>
         <title>Terms of Service - ${cfg.productName}</title>
         <link rel="stylesheet" type="text/css" href="${cfg.staticPath}apps/mint/css/basic.css"/>

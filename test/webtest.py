@@ -5,24 +5,25 @@
 # All Rights Reserved
 #
 
-import os
 import testsuite
 testsuite.setup()
 
+import cPickle
+import os
+
 import mint_rephelp
 from mint_rephelp import MINT_PROJECT_DOMAIN, MINT_DOMAIN
-
 import rephelp
 
 from mint import mint_error
 from mint import releasetypes
 from mint import jobstatus
 from mint.distro import jsversion
-from conary.repository import errors
 
 from repostest import testRecipe
+
 from conary import versions
-import cPickle
+from conary.repository import errors
 
 class WebPageTest(mint_rephelp.WebRepositoryHelper):
     def sessionData(self):

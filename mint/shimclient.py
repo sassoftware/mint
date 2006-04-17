@@ -3,11 +3,12 @@
 #
 # All rights reserved
 #
-import mint
 import weakref
-from mint_server import MintServer
 
-class ShimMintClient(mint.MintClient):
+from mint import client
+from mint.server import MintServer
+
+class ShimMintClient(client.MintClient):
     _allowPrivate = True # enable all private methods of MintClient
     def __init__(self, cfg, authToken):
         self.server = ShimServerProxy(cfg, authToken)
@@ -16,7 +17,7 @@ class ShimMintClient(mint.MintClient):
     def getCfg(self):
         return self._cfg
 
-class _ShimMethod(mint._Method, object):
+class _ShimMethod(client._Method, object):
     weakRefs = ('_server',)
     def __init__(self, server, authToken, name):
         self._server = server
@@ -24,7 +25,7 @@ class _ShimMethod(mint._Method, object):
         self._name = name
 
     def __repr__(self):
-        return "<mint._ShimMethod(%r)>" % (self._name)
+        return "<client._ShimMethod(%r)>" % (self._name)
 
     def __call__(self, *args):
         isException, result = self._server.callWrapper(self._name,
@@ -45,7 +46,7 @@ class _ShimMethod(mint._Method, object):
             return object.__setattr__(self, name, weakref.ref(val))
         return object.__setattr__(self, name, val)
 
-class ShimServerProxy(mint.ServerProxy):
+class ShimServerProxy(client.ServerProxy):
     def __init__(self, cfg, authToken):
         self._cfg = cfg
         self._authToken = authToken

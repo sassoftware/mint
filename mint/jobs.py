@@ -3,8 +3,8 @@
 #
 # All rights reserved
 #
-import database
-from mint_error import MintError
+from mint import database
+from mint.mint_error import MintError
 
 class JobMissing(MintError):
     def __str__(self):

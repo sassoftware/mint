@@ -4,13 +4,15 @@
 # All rights reserved
 #
 
-import sys
 import os
+import sys
+
 from mod_python import apache
 
 from mint import mint_error
 from mint import maintenance
-from webhandler import WebHandler, HttpNotFound, HttpForbidden
+from mint.web.webhandler import WebHandler, HttpNotFound, HttpForbidden
+
 from conary import versions
 from conary.web.fields import strFields, intFields, listFields, boolFields
 

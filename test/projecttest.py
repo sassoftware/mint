@@ -8,15 +8,16 @@ testsuite.setup()
 
 import sys
 
-from conary.conaryclient import ConaryClient
-from conary import dbstore
-
 from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import MINT_PROJECT_DOMAIN
+
 from mint import userlevels
 from mint.database import DuplicateItem, ItemNotFound
 from mint.projects import InvalidHostname, DuplicateHostname, DuplicateName
-from mint.mint_server import ParameterError, PermissionDenied
+from mint.server import ParameterError, PermissionDenied
+
+from conary import dbstore
+from conary.conaryclient import ConaryClient
 
 class ProjectTest(MintRepositoryHelper):
     def testBasicAttributes(self):

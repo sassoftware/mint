@@ -19,7 +19,7 @@ try:
 except ImportError:
     _reportlab_present = False
 
-from reports import MintReport
+from mint.reports.mint_reports import MintReport
 
 def moduleHasReportObject(repModule):
     for objName in repModule.__dict__.keys():

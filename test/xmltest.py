@@ -7,8 +7,9 @@ import testsuite
 testsuite.setup()
 
 from mint_rephelp import MintRepositoryHelper
+
 from mint import userlevels
-from mint.mint_server import deriveBaseFunc, checkParam, typeCheck, ParameterError
+from mint.server import deriveBaseFunc, checkParam, typeCheck, ParameterError
 
 SKIP_TYPE_CHECK = ('callWrapper', 'loadSession', 'saveSession', 'deleteSession', 'cleanupSessions')
 

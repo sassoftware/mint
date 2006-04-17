@@ -10,6 +10,7 @@ testsuite.setup()
 
 import mint_rephelp
 import rephelp
+
 from mint import userlevels
 
 class WebMemberTest(mint_rephelp.WebRepositoryHelper):

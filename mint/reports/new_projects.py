@@ -4,7 +4,8 @@
 #
 
 import time
-from reports import MintReport
+
+from mint.reports.mint_reports import MintReport
 
 class NewProjectsReport(MintReport):
     title = 'New projects in the last 7 days'

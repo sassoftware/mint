@@ -5,8 +5,8 @@
 #
 # An in-memory page cache for non-logged-in users
 
-import time
 import sys
+import time
 
 def cache(func):
     func.cacheable = True

@@ -17,20 +17,21 @@ import sys
 import time
 from email import MIMEText
 
-from conary import repository
-from conary.lib import sha1helper
-from conary import conaryclient
+from mint import database
+from mint import userlevels
+from mint import templates
+from mint.templates import registerNewUser
+from mint.templates import validateNewEmail
+from mint import searcher
+from mint import userlisting
+from mint.mint_error import MintError
+from mint.mint_error import PermissionDenied
 
-from mint_error import MintError
-from mint_error import PermissionDenied
-import database
-import userlevels
-import searcher
-import userlisting
-import templates
-import templates.registerNewUser
-import templates.validateNewEmail
+from conary import conaryclient
+from conary import repository
 from conary import sqlite3
+from conary.lib import sha1helper
+
 
 class MailError(MintError):
     def __str__(self):

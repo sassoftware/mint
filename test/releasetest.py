@@ -6,19 +6,20 @@
 import testsuite
 testsuite.setup()
 
-import time
 import os
 import sys
+import time
 
 from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import MINT_PROJECT_DOMAIN
-from mint.data import RDT_STRING, RDT_BOOL, RDT_INT
-from mint.releases import ReleaseDataNameError
-from mint.mint_error import ReleasePublished, ReleaseMissing, ReleaseEmpty
+
 from mint import releasetypes, releasetemplates
+from mint.data import RDT_STRING, RDT_BOOL, RDT_INT
 from mint.database import ItemNotFound
-from mint.mint_server import deriveBaseFunc, ParameterError
 from mint.distro import installable_iso, jsversion
+from mint.mint_error import ReleasePublished, ReleaseMissing, ReleaseEmpty
+from mint.releases import ReleaseDataNameError
+from mint.server import deriveBaseFunc, ParameterError
 
 from conary.lib import util
 from conary.repository.errors import TroveNotFound

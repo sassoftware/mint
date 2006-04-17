@@ -3,13 +3,14 @@
 # Copyright (c) 2004-2006 rPath, Inc.
 #
 
-import time
 import testsuite
 testsuite.setup()
 
-import rephelp
+import time
 
+import rephelp
 from mint_rephelp import MintRepositoryHelper
+
 from mint import dbversion
 from mint import sessiondb
 

@@ -13,24 +13,23 @@ from urllib import quote, unquote, quote_plus
 
 from mod_python import apache
 
-import conary.versions
-from conary.web.fields import strFields, intFields, listFields, boolFields, dictFields
-
+from mint import database
 from mint import mint_error
+from mint import maintenance
+from mint import mailinglists
 from mint import projects
+from mint import projectlisting
 from mint import shimclient
 from mint import users
 from mint import userlevels
-from mint import maintenance
-from mint import mailinglists
-from mint import projectlisting
-from mint import database
 from mint.session import SqlSession
 
-from webhandler import WebHandler, normPath, HttpNotFound, HttpPartialContent, HttpOK
-from decorators import requiresAdmin, requiresAuth, requiresHttps, redirectHttps, redirectHttp
-from decorators import mailList
-from cache import cache
+from mint.web.cache import cache
+from mint.web.decorators import mailList, requiresAdmin, requiresAuth, requiresHttps, redirectHttps, redirectHttp
+from mint.web.webhandler import WebHandler, normPath, HttpNotFound, HttpPartialContent, HttpOK
+
+import conary.versions
+from conary.web.fields import boolFields, dictFields, intFields, listFields, strFields
 
 class SiteHandler(WebHandler):
     def handle(self, context):

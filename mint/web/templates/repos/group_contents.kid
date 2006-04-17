@@ -12,7 +12,7 @@ from mint.helperfuncs import truncateForDisplay
         <table style="width: 100%;">
             <tr py:for="name, version, flavor in troves">
                 <?python #
-                    from mint.mint import flavorWrap
+                    from mint.client import flavorWrap
                     from urllib import quote
                     url = "files?t=%s;v=%s;f=%s" % (quote(name), quote(version.freeze()), quote(flavor.freeze()))
                 ?>

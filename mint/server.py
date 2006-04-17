@@ -3,56 +3,56 @@
 #
 # All Rights Reserved
 #
+
+import base64
 import hmac
 import os
 import re
+import random
+import simplejson
 import string
 import sys
 import time
 from urlparse import urlparse
 
-import base64
-import data
-import database
-import dbversion
-import grouptrove
-import jobs
-import jobstatus
-import mirror
-import news
-import pkgindex
-import projects
-import random
-import releases
-import reports
-import requests
-import sessiondb
-import stats
-import templates
-import userlevels
-import users
-import simplejson
-from distro import jsversion
+from mint import data
+from mint import database
+from mint import dbversion
+from mint import grouptrove
+from mint import jobs
+from mint import jobstatus
+from mint import maintenance
+from mint import mirror
+from mint import news
+from mint import pkgindex
+from mint import profile
+from mint import projects
+from mint import releases
+from mint import reports
+from mint import requests
+from mint import sessiondb
+from mint import stats
+from mint import templates
+from mint import userlevels
+from mint import users
+from mint.distro import jsversion
+from mint.distro.flavors import stockFlavors
+from mint.mint_error import PermissionDenied, ReleasePublished, \
+     ReleaseMissing, MintError, ReleaseEmpty, UserAlreadyAdmin, \
+     AdminSelfDemotion, JobserverVersionMismatch, LastAdmin, \
+     MaintenanceMode, ParameterError, GroupTroveEmpty
+from mint.reports import MintReport
+from mint.searcher import SearchTermsError
 
-import maintenance
-from mint_error import PermissionDenied, ReleasePublished, ReleaseMissing, \
-     MintError, ReleaseEmpty, UserAlreadyAdmin, AdminSelfDemotion, \
-     JobserverVersionMismatch, LastAdmin, MaintenanceMode, ParameterError, \
-     GroupTroveEmpty
-from reports import MintReport
-from searcher import SearchTermsError
-from distro.flavors import stockFlavors
-import profile
-
+from conary import conarycfg
+from conary import conaryclient
 from conary import sqlite3
 from conary import versions
+from conary.deps import deps
 from conary.repository.errors import TroveNotFound
 from conary.repository import netclient
 from conary.repository import shimclient
 from conary.repository.netrepos import netserver
-from conary.deps import deps
-from conary import conarycfg
-from conary import conaryclient
 
 validHost = re.compile('^[a-zA-Z][a-zA-Z0-9\-]*$')
 reservedHosts = ['admin', 'mail', 'mint', 'www', 'web', 'rpath', 'wiki', 'conary', 'lists']
@@ -2533,7 +2533,7 @@ class MintServer(object):
 
         # reopen a dead database
         if self.db.reopen():
-            print >> sys.stderr, "reopened dead database connection in mint_server"
+            print >> sys.stderr, "reopened dead database connection in mint server"
             sys.stderr.flush()
 
         try:

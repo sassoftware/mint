@@ -16,7 +16,7 @@ from repostest import testRecipe
 from mint_rephelp import MintRepositoryHelper
 
 from mint import jobstatus
-from mint import mint_server
+from mint import server
 from mint import grouptrove
 from mint import userlevels
 from mint.database import ItemNotFound, DuplicateItem

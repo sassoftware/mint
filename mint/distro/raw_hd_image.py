@@ -5,9 +5,11 @@
 #
 
 import os, sys
-from conary.lib import util
-import bootable_image
+
 from mint import releasetypes
+from mint.distro import bootable_image
+
+from conary.lib import util
 
 class RawHdImage(bootable_image.BootableImage):
     fileType = releasetypes.typeNames[releasetypes.RAW_HD_IMAGE]

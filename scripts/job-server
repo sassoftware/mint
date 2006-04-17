@@ -13,10 +13,11 @@ import os
 import logging
 from optparse import OptionParser
 
-from conary.lib import util
 from mint import scriptlibrary
-
 from mint.distro import jobserver
+
+from conary.lib import util
+
 
 def kill(lockFile):
     slog = scriptlibrary.getScriptLogger()

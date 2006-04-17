@@ -8,6 +8,11 @@ import sys
 import tempfile
 import time
 
+from mint import projects
+from mint.distro.flavors import stockFlavors
+import mint.distro.gencslist
+from mint.distro.imagegen import Generator
+
 from conary import checkin
 from conary import conarycfg
 from conary import versions
@@ -17,12 +22,6 @@ from conary.deps import deps
 from conary import conaryclient
 from conary.repository import changeset
 from conary.lib import util
-
-from imagegen import Generator
-from mint import projects
-
-from flavors import stockFlavors
-import gencslist
 
 
 class GroupTroveCook(Generator):

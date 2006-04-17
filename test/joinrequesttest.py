@@ -7,6 +7,7 @@ import testsuite
 testsuite.setup()
 
 from mint_rephelp import MintRepositoryHelper
+
 from mint import userlevels
 
 class JoinRequestTest(MintRepositoryHelper):

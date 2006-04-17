@@ -5,7 +5,7 @@ from mint import userlevels
 from mint import searcher
 from mint import releasetypes
 from mint.helperfuncs import truncateForDisplay
-from mint.mint import upstream
+from mint.client import upstream
 
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"

@@ -3,10 +3,11 @@
 #
 # All rights reserved
 #
-import xmlrpclib
-import sys
 import re
-from mint_error import MintError
+import sys
+import xmlrpclib
+
+from mint.mint_error import MintError
 
 (PROJECT, PROJECT_COMMITS, PROJECT_DEVEL, PROJECT_BUGS) = range(0, 4)
 

@@ -6,7 +6,7 @@
 import elementtree
 from elementtree.XMLTreeBuilder import FancyTreeBuilder
 
-from mint_error import MintError
+from mint.mint_error import MintError
 
 class HtmlTagNotAllowed(MintError):
     pass

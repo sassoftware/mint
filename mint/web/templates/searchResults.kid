@@ -1,9 +1,9 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <?python
-    from mint import searcher
     import time
     from urllib import quote
-    from mint.mint import timeDelta
+    from mint import searcher
+    from mint.client import timeDelta
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"

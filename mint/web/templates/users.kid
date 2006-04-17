@@ -2,7 +2,7 @@
 <?python
 from mint import userlisting
 import time
-from mint.mint import timeDelta
+from mint.client import timeDelta
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"

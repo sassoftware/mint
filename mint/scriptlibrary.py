@@ -3,11 +3,12 @@
 #
 # All rights reserved
 #
+
+import logging
 import os
 import os.path
 import sys
 import traceback
-import logging
 
 
 class GenericScript:

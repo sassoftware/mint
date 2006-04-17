@@ -10,16 +10,17 @@ import time
 
 from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import MINT_PROJECT_DOMAIN
+from repostest import testRecipe
+
 from mint import jobstatus
 from mint import jobs
 from mint import releasetypes
 from mint import cooktypes
 from mint import mint_error
-from mint.mint_server import ParameterError
 from mint.data import RDT_INT, RDT_STRING, RDT_BOOL
 from mint.distro import stub_image, jsversion
+from mint.server import ParameterError
 
-from repostest import testRecipe
 from conary import versions
 
 class JobsTest(MintRepositoryHelper):

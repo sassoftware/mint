@@ -11,9 +11,10 @@ testsuite.setup()
 import jobserverharness
 
 from mint import releasetypes
-from conary.lib import util
 from mint import constants
 from mint.distro import jsversion
+
+from conary.lib import util
 
 class JobServerTest(jobserverharness.JobServerHelper):
     def testJobServer(self):

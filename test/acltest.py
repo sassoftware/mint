@@ -6,6 +6,7 @@ import testsuite
 testsuite.setup()
 
 import mint_rephelp
+
 from mint import accesscontrol
 from mint.accesscontrol import OBJ_TYPE_PROJECT, OBJ_TYPE_SITE, \
      ACTION_VIEW_PROJECT
