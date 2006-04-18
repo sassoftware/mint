@@ -179,34 +179,6 @@ class DistroTest(MintRepositoryHelper):
         assert(not _validateChangeSet(cachePath, group, name, version, flavor, 
                                       compNames))
 
-    def testUpdatedStockFlavors(self):
-        from mint.distro.flavors import stockFlavors
-
-        cfg = conarycfg.ConaryConfiguration()
-        cfg.dbPath = cfg.root = ":memory:"
-        label = versions.Label('conary.rpath.com@rpl:1')
-
-        repos = conaryclient.ConaryClient(cfg).getRepos()
-        versionDict = repos.getTroveLeavesByLabel({'group-dist': {label: None}})['group-dist']
-        latestVersion = None
-        for version, flavorList in versionDict.iteritems():
-            if latestVersion is None or version > latestVersion:
-                latestVersion = version
-
-        overrideDict = {'x86':      deps.parseFlavor('is: x86(~cmov, ~i486, ~i586, ~i686)'),
-                        'x86_64':   deps.parseFlavor('is: x86(~i486, ~i586, ~i686) x86_64')}
-
-        flavors = versionDict[latestVersion]
-        for f in flavors:
-            for arch in f.members[deps.DEP_CLASS_IS].members.keys():
-                for flag in f.members[deps.DEP_CLASS_IS].members[arch].flags:
-                    f.members[deps.DEP_CLASS_IS].members[arch].flags[flag] = deps.FLAG_SENSE_PREFERRED
-        x86 = deps.parseFlavor(stockFlavors['1#x86'])
-        x86_64 = deps.parseFlavor(stockFlavors['1#x86_64'])
-
-        assert(deps.overrideFlavor(x86, overrideDict['x86']) in flavors)
-        assert(deps.overrideFlavor(x86_64, overrideDict['x86_64']) in flavors)
-
     def testAnacondaImages(self):
         util.mkdirChain(self.tmpDir + "/ai")
         ai = anaconda_images.AnacondaImages("Mint Test Suite",
