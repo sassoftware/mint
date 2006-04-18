@@ -130,8 +130,7 @@ class MaintenanceTest(mint_rephelp.WebRepositoryHelper):
     def testToggleLock(self):
         self.quickMintAdmin('adminuser', 'adminpass')
         self.webLogin('adminuser', 'adminpass')
-        page = self.fetchWithRedirect(self.mintCfg.basePath + 'administer' + \
-                                      "?operation=maintenance_mode")
+        page = self.fetchWithRedirect(self.mintCfg.basePath + 'admin/maintenance')
         self.failIf(os.path.exists(self.mintCfg.maintenanceLockPath),
                     "lock existed before test started")
         page.postForm(1, self.post, {'operation' :

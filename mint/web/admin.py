@@ -156,7 +156,7 @@ class AdminHandler(WebHandler):
                 return self.notify(*args, **kwargs)
         else:
             return self.notify(*args, **kwargs)
-        self.redirect(self.cfg.basePath + "admin")
+        self._redirect(self.cfg.basePath + "admin")
 
     def reports(self, *args, **kwargs):
         reports = self.client.listAvailableReports()

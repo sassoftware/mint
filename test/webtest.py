@@ -1070,7 +1070,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.webLogin('adminuser', 'adminpass')
 
         # ensure "first time" content appears on page
-        page = self.assertContent("/administer?operation=external",
+        page = self.assertContent("/admin/external",
                                   'name="hostname" value="rpath"')
 
         page = page.postForm(1, self.post,
@@ -1081,7 +1081,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                               'operation' : 'process_external'})
 
         # ensure "first time" content does not appear on page
-        page = self.assertNotContent("/administer?operation=external",
+        page = self.assertNotContent("/admin/external",
                                      'name="hostname" value="rpath"')
 
     def testCreateMirroredProject(self):
@@ -1090,7 +1090,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.webLogin('adminuser', 'adminpass')
 
         # ensure "first time" content appears on page
-        page = self.assertContent("/administer?operation=external",
+        page = self.assertContent("/admin/external",
                                   'name="hostname" value="rpath"')
 
         page = page.postForm(1, self.post,
@@ -1104,7 +1104,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                               'operation' : 'process_external'})
 
         # ensure "first time" content does not appear on page
-        page = self.assertNotContent("/administer?operation=external",
+        page = self.assertNotContent("/admin/external",
                                      'name="hostname" value="rpath"')
 
         # and make sure that the appropriate database entries are created
@@ -1120,9 +1120,9 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.webLogin('adminuser', 'adminpass')
 
         # ensure "first time" content appears on page
-        page = self.assertContent("/administer?operation=outbound", ok_codes = [200],
+        page = self.assertContent("/admin/outbound", ok_codes = [200],
             content = "No projects are currently mirrored")
-        page = self.assertContent("/administer?operation=add_outbound", ok_codes = [200],
+        page = self.assertContent("/admin/add_outbound", ok_codes = [200],
             content = "Project to mirror:")
 
         page = page.postForm(1, self.post,
@@ -1132,12 +1132,12 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
              'mirrorPass':  'mirrorpass',
              'operation':   'process_add_outbound'})
 
-        self.assertContent("/administer?operation=outbound", ok_codes = [200],
+        self.assertContent("/admin/outbound", ok_codes = [200],
             content = "testproject." + MINT_PROJECT_DOMAIN + "@rpl:devel")
         assert(client.getOutboundLabels() == \
             [[projectId, 1, 'http://www.example.com/conary/', 'mirror', 'mirrorpass']])
 
-        page = self.fetch("/administer?operation=outbound")
+        page = self.fetch("/admin/outbound")
         page = page.postForm(1, self.post,
             {'remove':      '1 http://www.example.com/conary/',
              'operation':   'remove_outbound'})
@@ -1155,7 +1155,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         client, userId = self.quickMintAdmin('adminuser', 'adminpass', email = "test@NONE")
         self.webLogin('adminuser', 'adminpass')
 
-        page = self.assertContent("/administer?operation=notify",
+        page = self.assertContent("/admin/notify",
             code = [200], content = 'value="notify_send"')
 
         page = page.postForm(1, self.post,
@@ -1171,7 +1171,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.assertCode("/downloadImage/", code = 404)
 
     def testNoAdminPowers(self):
-        self.assertCode("/administer", code = 403)
+        self.assertCode("/admin/", code = 403)
 
     def testBrokenDNS(self):
         client, userId = self.quickMintUser('testuser', 'testpass')
