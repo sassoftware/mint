@@ -333,7 +333,7 @@ class SiteHandler(WebHandler):
 
     @requiresAuth
     def newProject(self, auth):
-        return self._write("newProject", errors=[], kwargs={})
+        return self._write("newProject", errors=[], kwargs={'domainname': self.cfg.projectDomainName.split(':')[0]})
 
     @mailList
     def _createProjectLists(self, mlists, auth, projectName, optlists = []):
@@ -358,10 +358,10 @@ class SiteHandler(WebHandler):
             mailinglists.MailingListException("Mailing List Error")
         return not error
 
-    @strFields(title = '', hostname = '', projecturl = '', blurb = '')
+    @strFields(title = '', hostname = '', domainname = '', projecturl = '', blurb = '')
     @listFields(int, optlists = [])
     @requiresAuth
-    def createProject(self, auth, title, hostname, projecturl, blurb, optlists):
+    def createProject(self, auth, title, hostname, domainname, projecturl, blurb, optlists):
         hostname = hostname.lower()
         errors = []
         if not title:
@@ -372,7 +372,7 @@ class SiteHandler(WebHandler):
             try:
                 # attempt to create the project
                 projectId = self.client.newProject(title, hostname,
-                    self.cfg.projectDomainName, projecturl, blurb)
+                    domainname, projecturl, blurb)
                 # now create the mailing lists
                 if self.cfg.EnableMailLists and not errors:
                     if not self._createProjectLists(auth=auth,
@@ -390,7 +390,7 @@ class SiteHandler(WebHandler):
         if not errors:
             self._redirect("http://%s%sproject/%s/" % (self.cfg.projectSiteHost, self.cfg.basePath, hostname))
         else:
-            kwargs = {'title': title, 'hostname': hostname, 'projecturl': projecturl, 'blurb': blurb, 'optlists': optlists}
+            kwargs = {'title': title, 'hostname': hostname, 'domainname': domainname, 'projecturl': projecturl, 'blurb': blurb, 'optlists': optlists}
             return self._write("newProject", errors=errors, kwargs=kwargs)
 
     @intFields(userId = None, projectId = None, level = None)
