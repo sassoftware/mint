@@ -255,7 +255,8 @@ class AdminHandler(WebHandler):
     def maintenance(self, *args, **kwargs):
         return self._write('admin/maintenance', kwargs = kwargs)
 
-    def toggleMaintLock(self, *args, **kwargs):
-        mode = maintenance.getMaintenanceMode(self.cfg) ^ 1
+    @intFields(curMode = None)
+    def toggleMaintLock(self, curMode, *args, **kwargs):
+        mode = curMode ^ 1
         maintenance.setMaintenanceMode(self.cfg, mode)
         self._redirect("http://%s%sadmin/maintenance" % (self.cfg.siteHost, self.cfg.basePath))
