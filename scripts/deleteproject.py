@@ -34,20 +34,33 @@ def deleteProject(projectName):
     cu = db.cursor()
     print "Deleting Project: %s" % projectName
 
-    # step one is to delete the repos database.
-    if cfg.reposDBDriver == 'mysql':
-        # we need to delete the database manually with a drop database command
-        dbName = projectName + '.' + cfg.projectDomainName
-        dbName = dbName.replace('.', '_').replace('-','_')
-        status("Dropping Database: " + dbName)
-        try:
-            cu.execute("DROP DATABASE %s" % dbName)
-        except dbstore.sqlerrors.DatabaseError, e:
-            if e.args[0][1] != 1008:
-                raise
+    cu.execute("""SELECT projectId, hostname, domainname, external 
+                  FROM Projects
+                  WHERE hostname = ?""", projectName)
+    res = cu.fetchone()
+    if not res:
+        status("Project %s not found in the database; skipping" % projectName)
+        print >> sys.stdout, ""
+        return
 
-    # delete the actual repos directory
-    rmtree(cfg.reposPath + projectName + '.' + cfg.projectDomainName)
+    (projectId, hostname, domainname, external) = res
+
+    projectFQDN = '%s.%s' % (hostname, domainname)
+
+    if not external:
+        # step one is to delete the repos database.
+        if cfg.reposDBDriver == 'mysql':
+            # we need to delete the database manually with a drop database command
+            dbName = projectFQDN.replace('.', '_').replace('-','_')
+            status("Dropping Database: " + dbName)
+            try:
+                cu.execute("DROP DATABASE %s" % dbName)
+            except dbstore.sqlerrors.DatabaseError, e:
+                if e.args[0][1] != 1008:
+                    raise
+
+        # delete the actual repos directory
+        rmtree(cfg.reposPath + projectFQDN)
 
     # delete the images directory
     imagesPath = cfg.imagesPath .split('/')[:-1]
@@ -60,15 +73,6 @@ def deleteProject(projectName):
     # delete the finished images directory
     imagesPath = os.path.join(cfg.imagesPath, projectName)
     rmtree(imagesPath)
-
-    # find projectId
-    cu.execute("SELECT projectId FROM Projects WHERE hostname=?",
-               projectName)
-    res = cu.fetchall()
-    if not res:
-        status('')
-        return
-    projectId = res[0][0]
 
     status("Deleting Group Troves")
     # get all group trove Ids
@@ -155,4 +159,6 @@ if answer.upper() != 'YES':
 
 for projectName in sys.argv[1:]:
     deleteProject(projectName)
+print >> sys.stdout, "done."
+
 
