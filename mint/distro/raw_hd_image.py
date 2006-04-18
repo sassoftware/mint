@@ -36,4 +36,5 @@ class RawHdImage(bootable_image.BootableImage):
     def __init__(self, *args, **kwargs):
         res = bootable_image.BootableImage.__init__(self, *args, **kwargs)
         self.freespace = self.release.getDataValue("freespace") * 1048576
+        self.swapSize = self.release.getDataValue("swapSize") * 1048576
         return res

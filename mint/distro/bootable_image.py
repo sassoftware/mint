@@ -194,8 +194,15 @@ class BootableImage(ImageGenerator):
 
     def _writefstab(self):
         util.copyfile(os.path.join(self.imgcfg.dataDir, 'fstab'), os.path.join(self.fakeroot, 'etc'))
+        if not self.swapSize:
+            # remove any reference to swap if swapSize is 0
+            util.execute('sed -i "s/.*swap.*//" %s' % \
+                         os.path.join(self.fakeroot, 'etc', 'fstab'))
 
     def _setupGrub(self):
+        if not os.path.exists(os.path.join(self.fakeroot, 'sbin', 'grub')):
+            log.info("grub not found. skipping setup.")
+            return
         util.copytree(os.path.join(self.fakeroot, 'usr', 'share', 'grub', '*', '*'), os.path.join(self.fakeroot, 'boot', 'grub'))
         #Create a stub grub.conf
         name = open(os.path.join(self.fakeroot, 'etc', 'issue'), 'r').readlines()[0].strip()
@@ -278,11 +285,12 @@ title %(name)s (%(kversion)s)
     def populateTemporaryRoot(self, callback = None):
         uJob = self.updateGroupChangeSet(callback)
         self.applyUpdate(uJob, callback, 'conary-tag-script')
-
         try:
             kuJob = self.updateKernelChangeSet(callback)
         except conaryclient.NoNewTrovesError:
             log.info("strongly-included kernel found--no new kernel trove to sync")
+        except KernelTroveRequired:
+            log.info("no kernel found at all. skipping.")
         else:
             self.applyUpdate(kuJob, callback, 'conary-kernel-tag-script')
 
@@ -291,13 +299,15 @@ title %(name)s (%(kversion)s)
         #write the fstab
         self._writefstab()
         #create a swap file
-        swap = open(os.path.join(self.fakeroot, 'var', 'swap'), 'w')
-        swap.seek(128*1024*1024 - 1)
-        swap.write('\x00')
-        swap.close()
-        #Initialize the swap file
-        cmd = '/sbin/mkswap %s' % os.path.join(self.fakeroot, 'var', 'swap')
-        util.execute(cmd)
+        if self.swapSize:
+            swap = open(os.path.join(self.fakeroot, 'var', 'swap'), 'w')
+            swap.seek(self.swapSize - 1)
+            swap.write('\x00')
+            swap.close()
+            #Initialize the swap file
+            cmd = '/sbin/mkswap %s' % \
+                  os.path.join(self.fakeroot, 'var', 'swap')
+            util.execute(cmd)
         #copy the files needed by grub and set up the links
         self._setupGrub()
         #Create the init script
@@ -369,8 +379,12 @@ title %(name)s (%(kversion)s)
             fd = os.popen('/usr/bin/du -B1 --max-depth=0 %s' % self.fakeroot, 'r')
             size = int(fd.read().strip().split()[0])
             size += self.freespace + self.imgcfg.partoffset0
-            # account for inodes and extra space for tag scripts
-            size = int(ceil(size / 0.65)) + 20 * 1024 * 1024
+            # account for inodes and extra space for tag scripts and swap space
+            # inodes are 8%.
+            # super user reserved blocks are 5% of total
+            # swap defaults to 128MB
+            # tag scripts swag is 20MB
+            size = int(ceil((size + 20 * 1024 * 1024 + self.swapSize) / 0.87))
             padding = self.imgcfg.cylindersize - (size % self.imgcfg.cylindersize)
             if self.imgcfg.cylindersize == padding:
                 padding = 0
@@ -499,6 +513,9 @@ title %(name)s (%(kversion)s)
     @timeMe
     def makeBootBlock(self):
         if not self.makeBootable:
+            return
+        if not os.path.exists(os.path.join(self.fakeroot, 'sbin', 'grub')):
+            log.info("grub not found. skipping execution.")
             return
         #install boot manager
         cmd = '%s --device-map=/dev/null --batch' % os.path.join(self.fakeroot, 'sbin', 'grub')

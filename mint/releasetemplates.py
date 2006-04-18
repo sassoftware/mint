@@ -29,8 +29,12 @@ bootableImageTemplate.update({
     'freespace':        (RDT_INT, 250, 'How many megabytes of free space should be allocated in the image?'),
     })
 
+swapSize = {'swapSize': (RDT_INT, 128, 'How many megabytes swap space should be reserved in this image?')}
+
 rawHdTemplate = bootableImageTemplate.copy()
+rawHdTemplate.update(swapSize)
 rawFsTemplate = bootableImageTemplate.copy()
+rawFsTemplate.update(swapSize)
 
 vmwareImageTemplate = bootableImageTemplate.copy()
 vmwareImageTemplate.update({
@@ -44,6 +48,7 @@ liveIsoTemplate.update({
     })
 
 tarballTemplate = imageGenTemplate.copy()
+tarballTemplate.update(swapSize)
 
 stubImageTemplate = {
     'boolArg'   : (RDT_BOOL, False, 'Garbage Boolean'),
