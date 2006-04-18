@@ -1,24 +1,19 @@
+#
+# Copyright (c) 2004-2006 rPath, Inc.
+# All Rights Reserved
+#
 import inspect
+import unittest
 import tempfile
 from mint_rephelp import MINT_PROJECT_DOMAIN
-import time
 import os
-
-import fixtures
 
 from mint import shimclient
 from mint import config
-from mint import jobstatus
-from mint import jobs
 from mint import releasetypes
-from mint import cooktypes
-from mint import mint_error
-from mint.data import RDT_INT, RDT_STRING, RDT_BOOL
-from mint.distro import stub_image, jsversion
 from mint.distro.flavors import stockFlavors
-from mint.server import ParameterError, MintServer
+from mint.server import MintServer
 
-from conary import versions
 from conary import dbstore
 from conary.deps import deps
 from conary.lib import util
@@ -200,3 +195,30 @@ class SqliteFixtureCache(FixtureCache):
     def __del__(self):
         for f in self.fixtures.values():
             os.unlink(f[0])
+
+class FixturedUnitTest(unittest.TestCase):
+    def loadFixture(self, name):
+        db, fixtureData = fixtureCache.load(name)
+
+        self.cfg = fixtureCache.getMintCfg()
+        self.cfg = config.MintConfig()
+        self.cfg.authUser = 'mintauth'
+        self.cfg.authPass = 'mintpass'
+        self.cfg.postCfg()
+
+        self.cfg.dbPath = db[0]
+        self.cfg.dbDriver = db[1]
+        db = dbstore.connect(self.cfg.dbPath, self.cfg.dbDriver)
+        client = shimclient.ShimMintClient(self.cfg, ('testuser', 'testpass'))
+
+        self.imagePath = fixtureCache.getDataDir() + "/images/"
+        util.mkdirChain(self.imagePath)
+        return db, client, fixtureData
+
+    def tearDown(self):
+        try:
+            util.rmtree(fixtureCache.getDataDir())
+        except OSError:
+            pass
+
+fixtureCache = SqliteFixtureCache()

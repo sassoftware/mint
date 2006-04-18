@@ -4,7 +4,6 @@
 #
 
 import testsuite
-import unittest
 testsuite.setup()
 
 from mint_rephelp import MINT_PROJECT_DOMAIN
@@ -30,33 +29,9 @@ from conary import dbstore
 from conary.deps import deps
 from conary.lib import util
 
-fixtureCache = fixtures.SqliteFixtureCache()
+from fixtures import fixtureCache
 
-class JobsTest(unittest.TestCase):
-    def loadFixture(self, name):
-        db, fixtureData = fixtureCache.load(name)
-
-        self.cfg = fixtureCache.getMintCfg()
-        self.cfg = config.MintConfig()
-        self.cfg.authUser = 'mintauth'
-        self.cfg.authPass = 'mintpass'
-        self.cfg.postCfg()
-
-        self.cfg.dbPath = db[0]
-        self.cfg.dbDriver = db[1]
-        db = dbstore.connect(self.cfg.dbPath, self.cfg.dbDriver)
-        client = shimclient.ShimMintClient(self.cfg, ('testuser', 'testpass'))
-
-        self.imagePath = fixtureCache.getDataDir() + "/images/"
-        util.mkdirChain(self.imagePath)
-        return db, client, fixtureData
-
-    def tearDown(self):
-        try:
-            util.rmtree(fixtureCache.getDataDir())
-        except OSError:
-            pass
-
+class JobsTest(fixtures.FixturedUnitTest):
     def stockReleaseFlavor(self, db, releaseId, arch = "x86_64"):
         cu = db.cursor()
         flavor = deps.parseFlavor(stockFlavors['1#' + arch]).freeze()
