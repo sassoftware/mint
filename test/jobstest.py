@@ -4,14 +4,17 @@
 #
 
 import testsuite
+import unittest
 testsuite.setup()
 
-import time
-
-from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import MINT_PROJECT_DOMAIN
-from repostest import testRecipe
+import time
+import os
 
+import fixtures
+
+from mint import shimclient
+from mint import config
 from mint import jobstatus
 from mint import jobs
 from mint import releasetypes
@@ -19,18 +22,687 @@ from mint import cooktypes
 from mint import mint_error
 from mint.data import RDT_INT, RDT_STRING, RDT_BOOL
 from mint.distro import stub_image, jsversion
-from mint.server import ParameterError
+from mint.distro.flavors import stockFlavors
+from mint.server import ParameterError, MintServer
 
 from conary import versions
+from conary import dbstore
+from conary.deps import deps
+from conary.lib import util
 
-class JobsTest(MintRepositoryHelper):
+fixtureCache = fixtures.SqliteFixtureCache()
+
+class JobsTest(unittest.TestCase):
+    def loadFixture(self, name):
+        db, fixtureData = fixtureCache.load(name)
+
+        self.cfg = fixtureCache.getMintCfg()
+        self.cfg = config.MintConfig()
+        self.cfg.authUser = 'mintauth'
+        self.cfg.authPass = 'mintpass'
+        self.cfg.postCfg()
+
+        self.cfg.dbPath = db[0]
+        self.cfg.dbDriver = db[1]
+        db = dbstore.connect(self.cfg.dbPath, self.cfg.dbDriver)
+        client = shimclient.ShimMintClient(self.cfg, ('testuser', 'testpass'))
+
+        self.imagePath = fixtureCache.getDataDir() + "/images/"
+        util.mkdirChain(self.imagePath)
+        return db, client, fixtureData
+
+    def tearDown(self):
+        try:
+            util.rmtree(fixtureCache.getDataDir())
+        except OSError:
+            pass
+
+    def stockReleaseFlavor(self, db, releaseId, arch = "x86_64"):
+        cu = db.cursor()
+        flavor = deps.parseFlavor(stockFlavors['1#' + arch]).freeze()
+        cu.execute("UPDATE Releases set troveFlavor=? WHERE releaseId=?", flavor, releaseId)
+        db.commit()
+
+    #####
+    # test startNextJob for just images
+    #####
+
+    def testStartImageNoJobType(self):
+        db, client, data = self.loadFixture('ImageJob')
+
+        # ask for no job types
+        job = client.startNextJob(["1#x86_64"], {},
+                                  jsversion.getDefaultVersion())
+
+        self.failIf(job, "startNextJob returned something when nothing wanted")
+
+    def testStartImageNoType(self):
+        db, client, data = self.loadFixture('ImageJob')
+
+        # ask for no arch type or job types
+        job = client.startNextJob([], {},
+                                  jsversion.getDefaultVersion())
+
+        self.failIf(job, "startNextJob returned something when nothing wanted")
+
+    def testStartImageNoArch(self):
+        db, client, data = self.loadFixture('ImageJob')
+
+        # ask for no arch
+        job = client.startNextJob([],
+                                  {'imageTypes' : [releasetypes.STUB_IMAGE]},
+                                  jsversion.getDefaultVersion())
+
+        self.failIf(job, "startNextJob returned the wrong image type")
+
+    def testStartImageWrongType(self):
+        db, client, data = self.loadFixture('ImageJob')
+
+        # ask for a different image type
+        job = client.startNextJob(["1#x86_64"],
+                                  {'imageTypes' : [releasetypes.RAW_HD_IMAGE]},
+                                  jsversion.getDefaultVersion())
+
+        self.failIf(job, "startNextJob returned the wrong image type")
+
+    def testStartImageWrongArch(self):
+        db, client, data = self.loadFixture('ImageJob')
+
+        # ask for a different architecture
+        job = client.startNextJob(["1#x86"],
+                                  {'imageTypes' : [releasetypes.STUB_IMAGE]},
+                                  jsversion.getDefaultVersion())
+
+        self.failIf(job, "startNextJob matched the wrong architecture")
+
+    def testStartImageCookArch(self):
+        db, client, data = self.loadFixture('ImageJob')
+
+        # ask for a cook job with wrong arch
+        job = client.startNextJob(["1#x86"],
+                                  {'cookTypes' : [cooktypes.GROUP_BUILDER]},
+                                  jsversion.getDefaultVersion())
+
+        self.failIf(job, "startNextJob erroneously matched cook "
+                    "job for wrong arch")
+
+    def testStartImageCook(self):
+        db, client, data = self.loadFixture('ImageJob')
+
+        # ask for a cook job with right arch
+        job = client.startNextJob(["1#x86"],
+                                  {'cookTypes' : [cooktypes.GROUP_BUILDER]},
+                                  jsversion.getDefaultVersion())
+
+        self.failIf(job, "startNextJob erreneously matched cook job")
+
+    def testStartImage(self):
+        db, client, data = self.loadFixture('ImageJob')
+
+        # ask for the right parameters
+        job = client.startNextJob(["1#x86_64"],
+                                  {'imageTypes' : [releasetypes.STUB_IMAGE]},
+                                  jsversion.getDefaultVersion())
+
+        self.failIf(not job, "startNext job didn't match for correct values")
+
+    #####
+    # test startNextJob for just cooks
+    #####
+
+    def testStartCookWrongArch(self):
+        db, client, data = self.loadFixture('CookJob')
+
+        # ask for a cook job with wrong arch
+        job = client.startNextJob(["1#x86_64"],
+                                  {'cookTypes' : [cooktypes.GROUP_BUILDER]},
+                                  jsversion.getDefaultVersion())
+
+        self.failIf(job, "startNextJob matched cook job for wrong arch")
+
+    def testStartCook(self):
+        db, client, data = self.loadFixture('CookJob')
+
+        # ask for a cook job with right arch
+        job = client.startNextJob(["1#x86"],
+                                  {'cookTypes' : [cooktypes.GROUP_BUILDER]},
+                                  jsversion.getDefaultVersion())
+
+        self.failIf(not job, "startNextJob matched cook job for wrong arch")
+
+    def testStartCookImageArch(self):
+        db, client, data = self.loadFixture('CookJob')
+
+        # ask for a image job with wrong arch
+        job = client.startNextJob(["1#x86_64"],
+                                  {'imageTypes' : [releasetypes.STUB_IMAGE]},
+                                  jsversion.getDefaultVersion())
+
+        self.failIf(job, "startNextJob matched cook job when asked for image")
+
+    def testStartCookImage(self):
+        db, client, data = self.loadFixture('CookJob')
+
+        # ask for a image job with right arch
+        job = client.startNextJob(["1#x86"],
+                                  {'imageTypes' : [releasetypes.STUB_IMAGE]},
+                                  jsversion.getDefaultVersion())
+
+        self.failIf(job, "startNextJob matched cook job when asked for image")
+
+    def testStartCookNoJobType(self):
+        db, client, data = self.loadFixture('CookJob')
+
+        # ask for a no job with right arch
+        job = client.startNextJob(["1#x86"], {},
+                                  jsversion.getDefaultVersion())
+
+        self.failIf(job, "startNextJob matched cook job but asked for nothing")
+
+    def testStartCookNoJobType2(self):
+        db, client, data = self.loadFixture('CookJob')
+
+        # ask for no job with wrong arch
+        job = client.startNextJob(["1#x86_64"], {},
+                                  jsversion.getDefaultVersion())
+
+        self.failIf(job, "startNextJob matched cook job but asked for nothing")
+
+    def testStartCookNoJob(self):
+        db, client, data = self.loadFixture('CookJob')
+
+        # ask for no job with no arch
+        job = client.startNextJob([], {},
+                                  jsversion.getDefaultVersion())
+
+        self.failIf(job, "startNextJob matched cook job but asked for nothing")
+
+    def testStartCookNoJobArch(self):
+        db, client, data = self.loadFixture('CookJob')
+
+        # ask for an image job with no arch
+        job = client.startNextJob([],
+                                  {'imageTypes' : [releasetypes.STUB_IMAGE]},
+                                  jsversion.getDefaultVersion())
+
+        self.failIf(job, "startNextJob matched cook job but asked for nothing")
+
+    #####
+    # test startNextJob for cooks and images together
+    #####
+
+    def testStartCompImage(self):
+        db, client, data = self.loadFixture('BothJobs')
+
+        # ask for an image job with right arch
+        job = client.startNextJob(['1#x86_64'],
+                                  {'imageTypes' : [releasetypes.STUB_IMAGE]},
+                                  jsversion.getDefaultVersion())
+
+        self.failIf(not job, "startNextJob ignored an image job")
+
+    def testStartCompCook(self):
+        db, client, data = self.loadFixture('BothJobs')
+
+        # ask for an image job with right arch
+        job = client.startNextJob(['1#x86'],
+                                  {'cookTypes' : [cooktypes.GROUP_BUILDER]},
+                                  jsversion.getDefaultVersion())
+
+        self.failIf(not job, "startNextJob ignored a cook job")
+
+    def testStartCompImageArch(self):
+        db, client, data = self.loadFixture('BothJobs')
+
+        # ask for an image job with wrong arch
+        job = client.startNextJob(['1#x86'],
+                                  {'imageTypes' : [releasetypes.STUB_IMAGE]},
+                                  jsversion.getDefaultVersion())
+
+        self.failIf(job, "startNextJob matched image job wrong arch")
+
+    def testStartCompCookArch(self):
+        db, client, data = self.loadFixture('BothJobs')
+
+        # ask for an image job with wrong arch
+        job = client.startNextJob(['1#x86_64'],
+                                  {'cookTypes' : [cooktypes.GROUP_BUILDER]},
+                                  jsversion.getDefaultVersion())
+
+        self.failIf(job, "startNextJob matched cook job wrong arch")
+
+
+    def testStartCompImageNoArch(self):
+        db, client, data = self.loadFixture('BothJobs')
+
+        # ask for an image job with no arch
+        job = client.startNextJob([],
+                                  {'imageTypes' : [releasetypes.STUB_IMAGE]},
+                                  jsversion.getDefaultVersion())
+
+        self.failIf(job, "startNextJob matched image job no arch")
+
+    def testStartCompCookNoArch(self):
+        db, client, data = self.loadFixture('BothJobs')
+
+        # ask for an image job with wrong arch
+        job = client.startNextJob([],
+                                  {'cookTypes' : [cooktypes.GROUP_BUILDER]},
+                                  jsversion.getDefaultVersion())
+
+        self.failIf(job, "startNextJob matched cook job no arch")
+
+    def testStartCompNoArch(self):
+        db, client, data = self.loadFixture('BothJobs')
+
+        # ask for an image job with wrong arch
+        job = client.startNextJob([], {},
+                                  jsversion.getDefaultVersion())
+
+        self.failIf(job, "startNextJob matched job no arch and no type")
+
+    def testStartCompArch(self):
+        db, client, data = self.loadFixture('BothJobs')
+
+        # ask for an image job with wrong arch
+        job = client.startNextJob(['1#x86'], {},
+                                  jsversion.getDefaultVersion())
+
+        self.failIf(job, "startNextJob matched job no type")
+
+    def testStartCompArch2(self):
+        db, client, data = self.loadFixture('BothJobs')
+
+        # ask for an image job with wrong arch
+        job = client.startNextJob(['1#x86_64'], {},
+                                  jsversion.getDefaultVersion())
+
+        self.failIf(job, "startNextJob matched job no type")
+
+    #####
+    # test both cooks and images while asking for both
+    #####
+
+    def testStartCompBothCook(self):
+        db, client, data = self.loadFixture('BothJobs')
+
+        # ask for all jobs with x86 arch (will match cook)
+        job = client.startNextJob(['1#x86'],
+                                  {'imageTypes' : [releasetypes.STUB_IMAGE],
+                                   'cookTypes' : [cooktypes.GROUP_BUILDER]},
+                                  jsversion.getDefaultVersion())
+
+        self.failIf(not (job and job.groupTroveId),
+                    "startNextJob ignored a cook job")
+
+    def testStartCompBothImage(self):
+        db, client, data = self.loadFixture('BothJobs')
+
+        # ask for all jobs with x86_64 arch (will match image)
+        job = client.startNextJob(['1#x86_64'],
+                                  {'imageTypes' : [releasetypes.STUB_IMAGE],
+                                   'cookTypes' : [cooktypes.GROUP_BUILDER]},
+                                  jsversion.getDefaultVersion())
+
+        self.failIf(not (job and job.releaseId),
+                    "startNextJob ignored an image job")
+
+    def testStartCompBothNoArch(self):
+        db, client, data = self.loadFixture('BothJobs')
+
+        # ask for all jobs no arch
+        job = client.startNextJob([],
+                                  {'imageTypes' : [releasetypes.STUB_IMAGE],
+                                   'cookTypes' : [cooktypes.GROUP_BUILDER]},
+                                  jsversion.getDefaultVersion())
+
+        self.failIf(job, "startNextJob matched for no arch")
+
+    def testStartCompBothArch(self):
+        db, client, data = self.loadFixture('BothJobs')
+
+        # ask for all jobs
+        job = client.startNextJob(['1#x86_64', '1#x86'],
+                                  {'imageTypes' : [releasetypes.STUB_IMAGE],
+                                   'cookTypes' : [cooktypes.GROUP_BUILDER]},
+                                  jsversion.getDefaultVersion())
+
+        self.failIf(not (job and job.releaseId),
+                    "startNextJob didn't match image job")
+
+        # ask for all jobs
+        job = client.startNextJob(['1#x86_64', '1#x86'],
+                                  {'imageTypes' : [releasetypes.STUB_IMAGE],
+                                   'cookTypes' : [cooktypes.GROUP_BUILDER]},
+                                  jsversion.getDefaultVersion())
+
+        self.failIf(not (job and job.groupTroveId),
+                    "startNextJob didn't match group trove")
+
+    def testStartCompImageType(self):
+        db, client, data = self.loadFixture('BothJobs')
+
+        # ask for all jobs but wrong image type
+        job = client.startNextJob(['1#x86_64', '1#x86'],
+                                  {'imageTypes' : [releasetypes.RAW_HD_IMAGE],
+                                   'cookTypes' : [cooktypes.GROUP_BUILDER]},
+                                  jsversion.getDefaultVersion())
+
+        self.failIf(not (job and job.groupTroveId),
+                    "startNextJob didn't match cook")
+
+    #####
+    # and just to round it out, test for bad parmaeters
+    #####
+
+    def testStartBadArch(self):
+        db, client, data = self.loadFixture('Empty')
+        self.assertRaises(ParameterError,
+                          client.startNextJob, ['this is not a frozen flavor'],
+                          {'imageTypes' : [releasetypes.RAW_HD_IMAGE],
+                           'cookTypes' : [cooktypes.GROUP_BUILDER]},
+                          jsversion.getDefaultVersion())
+
+    def testStartBadImage(self):
+        db, client, data = self.loadFixture('Empty')
+        self.assertRaises(ParameterError,
+                          client.startNextJob, ['1#x86'],
+                          {'imageTypes' : [9999],
+                           'cookTypes' : [cooktypes.GROUP_BUILDER]},
+                          jsversion.getDefaultVersion())
+
+    def testStartBadCook(self):
+        db, client, data = self.loadFixture('Empty')
+        self.assertRaises(ParameterError,
+                          client.startNextJob, ['1#x86'],
+                          {'imageTypes' : [releasetypes.RAW_HD_IMAGE],
+                           'cookTypes' : [9999]},
+                          jsversion.getDefaultVersion())
+
+    def testStartLegalImage(self):
+        db, client, data = self.loadFixture('ImageJob')
+
+        # ask for an image type that's technically in the list, but not served
+        # by this server. historically this raised permission denied.
+        job = client.startNextJob(['1#x86_64', '1#x86'],
+                                  {'imageTypes' : [releasetypes.NETBOOT_IMAGE],
+                                   'cookTypes' : [cooktypes.GROUP_BUILDER]},
+                                  jsversion.getDefaultVersion())
+
+        self.failIf(job, "startNextJob erroneously matched image")
+
+    #####
+    # ensure jobs do not get inadverdently respwaned
+    #####
+
+    def testStartCookFinished(self):
+        db, client, data = self.loadFixture('CookJob')
+
+        # mark job as finished
+        cu = db.cursor()
+        cu.execute("UPDATE Jobs SET status=?, statusMessage='Finished'",
+                   jobstatus.FINISHED)
+        db.commit()
+
+        job = client.startNextJob(['1#x86'],
+                                  {'cookTypes' : [cooktypes.GROUP_BUILDER]},
+                                  jsversion.getDefaultVersion())
+
+        self.failIf(job, "startNextJob returned a finished cook")
+
+    def testStartCookFinished2(self):
+        db, client, data = self.loadFixture('CookJob')
+
+        # mark job as finished
+        cu = db.cursor()
+        cu.execute("UPDATE Jobs SET status=?, statusMessage='Finished'",
+                   jobstatus.FINISHED)
+        db.commit()
+
+        job = client.startNextJob(['1#x86'],
+                                  {'cookTypes' : [cooktypes.GROUP_BUILDER],
+                                   'imageTypes': [releasetypes.RAW_HD_IMAGE]},
+                                  jsversion.getDefaultVersion())
+
+        self.failIf(job, "startNextJob returned a finished cook")
+
+    def testStartCookFinished3(self):
+        db, client, data = self.loadFixture('CookJob')
+
+        # mark job as finished
+        cu = db.cursor()
+        cu.execute("UPDATE Jobs SET status=?, statusMessage='Finished'",
+                   jobstatus.FINISHED)
+        db.commit()
+
+        job = client.startNextJob(['1#x86'],
+                                  {'imageTypes': [releasetypes.RAW_HD_IMAGE]},
+                                  jsversion.getDefaultVersion())
+
+        self.failIf(job, "startNextJob returned a finished cook")
+
+    def testStartImageFinished(self):
+        db, client, data = self.loadFixture('ImageJob')
+
+        # mark job as finished
+        cu = db.cursor()
+        cu.execute("UPDATE Jobs SET status=?, statusMessage='Finished'",
+                   jobstatus.FINISHED)
+        db.commit()
+
+        job = client.startNextJob(['1#x86_64'],
+                                  {'cookTypes' : [cooktypes.GROUP_BUILDER]},
+                                  jsversion.getDefaultVersion())
+
+        self.failIf(job, "startNextJob returned a finished image")
+
+    def testStartImageFinished2(self):
+        db, client, data = self.loadFixture('ImageJob')
+
+        # mark job as finished
+        cu = db.cursor()
+        cu.execute("UPDATE Jobs SET status=?, statusMessage='Finished'",
+                   jobstatus.FINISHED)
+        db.commit()
+
+        job = client.startNextJob(['1#x86_64'],
+                                  {'cookTypes' : [cooktypes.GROUP_BUILDER],
+                                   'imageTypes': [releasetypes.RAW_HD_IMAGE]},
+                                  jsversion.getDefaultVersion())
+
+        self.failIf(job, "startNextJob returned a finished image")
+
+    def testStartImageFinished3(self):
+        db, client, data = self.loadFixture('ImageJob')
+
+        # mark job as finished
+        cu = db.cursor()
+        cu.execute("UPDATE Jobs SET status=?, statusMessage='Finished'",
+                   jobstatus.FINISHED)
+        db.commit()
+
+        job = client.startNextJob(['1#x86_64'],
+                                  {'imageTypes': [releasetypes.RAW_HD_IMAGE]},
+                                  jsversion.getDefaultVersion())
+
+        self.failIf(job, "startNextJob returned a finished image")
+
+    def testStartCookOwned(self):
+        db, client, data = self.loadFixture('CookJob')
+
+        # mark job as finished
+        cu = db.cursor()
+        cu.execute("UPDATE Jobs SET owner=1")
+        db.commit()
+
+        job = client.startNextJob(['1#x86'],
+                                  {'cookTypes' : [cooktypes.GROUP_BUILDER]},
+                                  jsversion.getDefaultVersion())
+
+        self.failIf(job, "startNextJob returned an owned cook")
+
+    def testStartCookOwned2(self):
+        db, client, data = self.loadFixture('CookJob')
+
+        # mark job as finished
+        cu = db.cursor()
+        cu.execute("UPDATE Jobs SET owner=1")
+        db.commit()
+
+        job = client.startNextJob(['1#x86'],
+                                  {'cookTypes' : [cooktypes.GROUP_BUILDER],
+                                   'imageTypes': [releasetypes.RAW_HD_IMAGE]},
+                                  jsversion.getDefaultVersion())
+
+        self.failIf(job, "startNextJob returned an owned cook")
+
+    def testStartCookOwned3(self):
+        db, client, data = self.loadFixture('CookJob')
+
+        # mark job as finished
+        cu = db.cursor()
+        cu.execute("UPDATE Jobs SET owner=1")
+        db.commit()
+
+        job = client.startNextJob(['1#x86'],
+                                  {'imageTypes': [releasetypes.RAW_HD_IMAGE]},
+                                  jsversion.getDefaultVersion())
+
+        self.failIf(job, "startNextJob returned an owned cook")
+
+    def testStartImageOwned(self):
+        db, client, data = self.loadFixture('ImageJob')
+
+        # mark job as finished
+        cu = db.cursor()
+        cu.execute("UPDATE Jobs SET owner=1")
+        db.commit()
+
+        job = client.startNextJob(['1#x86_64'],
+                                  {'cookTypes' : [cooktypes.GROUP_BUILDER]},
+                                  jsversion.getDefaultVersion())
+
+        self.failIf(job, "startNextJob returned an owned image")
+
+    def testStartImageOwned2(self):
+        db, client, data = self.loadFixture('ImageJob')
+
+        # mark job as finished
+        cu = db.cursor()
+        cu.execute("UPDATE Jobs SET owner=1")
+        db.commit()
+
+        job = client.startNextJob(['1#x86_64'],
+                                  {'cookTypes' : [cooktypes.GROUP_BUILDER],
+                                   'imageTypes': [releasetypes.RAW_HD_IMAGE]},
+                                  jsversion.getDefaultVersion())
+
+        self.failIf(job, "startNextJob returned an owned image")
+
+    def testStartImageOwned3(self):
+        db, client, data = self.loadFixture('ImageJob')
+
+        # mark job as finished
+        cu = db.cursor()
+        cu.execute("UPDATE Jobs SET owner=1")
+        db.commit()
+
+        job = client.startNextJob(['1#x86_64'],
+                                  {'imageTypes': [releasetypes.RAW_HD_IMAGE]},
+                                  jsversion.getDefaultVersion())
+
+        self.failIf(job, "startNextJob returned an owned image")
+
+    def testMimicJobServer(self):
+        db, client, data = self.loadFixture("Empty")
+        # historically this always failed with permission denied, but it
+        # definitely needs to be allowed. return value doesn't matter
+        job = client.startNextJob(['1#x86_64'],
+                                  {'imageTypes': [releasetypes.RAW_HD_IMAGE]},
+                                  jsversion.getDefaultVersion())
+
+    #####
+    # test jobserver version
+    #####
+
+    def testImageJSVersion(self):
+        # ensure an image job cannot be started for a mismatched job server.
+        db, client, data = self.loadFixture("Release")
+
+        cu = db.cursor()
+        cu.execute("""UPDATE ReleaseData SET value='illegal'
+                          WHERE name='jsversion'""")
+        db.commit()
+
+        self.assertRaises(mint_error.JobserverVersionMismatch,
+                          client.startImageJob, data['releaseId'])
+
+    def testStartImageJobJSV(self):
+        # masquerading as a job server version that server doesn't support
+        # raises parameter error.
+        db, client, data = self.loadFixture('ImageJob')
+
+        self.assertRaises(ParameterError, client.startNextJob,
+                          ['1#x86', '1#x86_64'],
+                          {'imageTypes': [releasetypes.RAW_HD_IMAGE]},
+                          'wackyversion')
+
+    def testStartImageJobJSV2(self):
+        # ensure image jobs cannot be selected for mismatched job server type
+        # using only image types defined
+        db, client, data = self.loadFixture('ImageJob')
+
+        cu = db.cursor()
+        cu.execute("""UPDATE ReleaseData SET value='1.0.0'
+                          WHERE name='jsversion'""")
+        db.commit()
+
+        job = client.startNextJob(['1#x86', '1#x86_64'],
+                                  {'imageTypes': [releasetypes.STUB_IMAGE]},
+                                  jsversion.getDefaultVersion())
+
+        self.failIf(job, "startNextJob returned a mismatched jobserver image")
+
+    def testStartImageJobJSV3(self):
+        # ensure image jobs cannot be selected for mismatched job server type
+        # using composite job request
+        db, client, data = self.loadFixture('ImageJob')
+
+        cu = db.cursor()
+        cu.execute("""UPDATE ReleaseData SET value='1.0.0'
+                          WHERE name='jsversion'""")
+        db.commit()
+
+        job = client.startNextJob(['1#x86', '1#x86_64'],
+                                  {'imageTypes': [releasetypes.STUB_IMAGE],
+                                   'cookTypes' : [cooktypes.GROUP_BUILDER]},
+                                  jsversion.getDefaultVersion())
+
+        self.failIf(job, "startNextJob returned a mismatched jobserver image")
+
+    def testStartCookJobJSV(self):
+        # ensure cook jobs don't interact badly with job server version
+        db, client, data = self.loadFixture('BothJobs')
+
+        cu = db.cursor()
+        cu.execute("""UPDATE ReleaseData SET value='1.0.0'
+                          WHERE name='jsversion'""")
+        db.commit()
+
+        job = client.startNextJob(['1#x86', '1#x86_64'],
+                                  {'imageTypes': [releasetypes.STUB_IMAGE],
+                                   'cookTypes' : [cooktypes.GROUP_BUILDER]},
+                                  jsversion.getDefaultVersion())
+
+        self.failIf(not (job and job.groupTroveId),
+                    "startNextJob ignored a cook job")
+
+# ############################################################################
+##############################################################################
+
     def testJobs(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        projectId = client.newProject("Foo", "foo", "rpath.org")
-
-        release = client.newRelease(projectId, "Test Release")
-
-        self.stockReleaseFlavor(release.getId())
+        db, client, data = self.loadFixture("Release")
+        release = client.getRelease(data['releaseId'])
 
         job = client.startImageJob(release.getId())
         job = release.getJob()
@@ -57,15 +729,12 @@ class JobsTest(MintRepositoryHelper):
         job.setStatus(jobstatus.FINISHED,"Finished")
 
     def testStubImage(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        projectId = client.newProject("Foo", "foo", "rpath.org")
-        project = client.getProject(projectId)
+        db, client, data = self.loadFixture("Release")
 
-        release = client.newRelease(projectId, "Test Release")
+        release = client.getRelease(data['releaseId'])
+        project = client.getProject(data['projectId'])
         release.setImageTypes([releasetypes.STUB_IMAGE])
         release.setDataValue('stringArg', 'Hello World!')
-
-        self.stockReleaseFlavor(release.getId())
 
         job = client.startImageJob(release.getId())
 
@@ -77,7 +746,7 @@ class JobsTest(MintRepositoryHelper):
         imagegen.write()
         release.setFiles([[self.imagePath + "/stub.iso", "Stub"]])
 
-        self.verifyFile(self.imagePath + "/stub.iso", "Hello World!\n")
+        assert(os.path.exists(self.imagePath + "/stub.iso"))
 
         release.refresh()
         files = release.getFiles()
@@ -95,12 +764,9 @@ class JobsTest(MintRepositoryHelper):
             pass
 
     def testStubImageFileOrder(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        projectId = client.newProject("Foo", "foo", "rpath.org")
+        db, client, data = self.loadFixture("Release")
 
-        release = client.newRelease(projectId, "Test Release")
-        release.setImageTypes([releasetypes.STUB_IMAGE])
-
+        release = client.getRelease(data['releaseId'])
         # make sure that the incoming ordering of files is preserved
         release.setFiles([['zaaa.iso', 'Zaaa'], ['aaaa.iso', 'Aaaa']])
         assert(release.getFiles() == [{'size': 0, 'title': 'Zaaa',
@@ -109,15 +775,12 @@ class JobsTest(MintRepositoryHelper):
                                        'filename': 'aaaa.iso', 'fileId': 2}])
 
     def testJobQueue(self):
-        self.openRepository()
-        client, userId = self.quickMintUser("testuser", "testpass")
-        projectId = client.newProject("Foo", "foo", "rpath.org")
+        db, client, data = self.loadFixture("Release")
 
-        release = client.newRelease(projectId, "Test Release")
+        release = client.getRelease(data['releaseId'])
         release.setImageTypes([releasetypes.STUB_IMAGE])
         release.setDataValue('stringArg', 'Hello World!')
 
-        self.stockReleaseFlavor(release.getId())
         job = client.startImageJob(release.getId())
 
         assert(client.server.getJobStatus(job.getId())['queueLen'] == 0)
@@ -125,19 +788,11 @@ class JobsTest(MintRepositoryHelper):
         assert(client.server.getJobWaitMessage(job.getId()) == \
                'Next in line for processing')
 
-        projectId = self.newProject(client)
+        project = client.getProject(data['projectId'])
 
-        project = client.getProject(projectId)
-
-        groupTrove = client.createGroupTrove(projectId, 'group-test', '1.0.0',
+        groupTrove = client.createGroupTrove(data['projectId'], 'group-test', '1.0.0',
                                              'No Description', False)
         groupTroveId = groupTrove.getId()
-
-        self.makeSourceTrove("testcase", testRecipe)
-        self.cookFromRepository("testcase",
-            versions.Label("testproject." + MINT_PROJECT_DOMAIN + \
-                    "@rpl:devel"),
-            ignoreDeps = True)
 
         trvName = 'testtrove'
         trvVersion = '/testproject.' + MINT_PROJECT_DOMAIN + \
@@ -162,15 +817,12 @@ class JobsTest(MintRepositoryHelper):
         assert(client.server.getJobStatus(job.getId())['queueLen'] == 1)
 
     def testWaitStatus(self):
-        self.openRepository()
-        client, userId = self.quickMintUser("testuser", "testpass")
-        projectId = client.newProject("Foo", "foo", "rpath.org")
+        db, client, data = self.loadFixture("Release")
 
-        release = client.newRelease(projectId, "Test Release")
+        release = client.getRelease(data['releaseId'])
         release.setImageTypes([releasetypes.STUB_IMAGE])
         release.setDataValue('stringArg', 'Hello World!')
 
-        self.stockReleaseFlavor(release.getId())
         job = client.startImageJob(release.getId())
 
         self.failIf(client.server.getJobWaitMessage(job.id) != \
@@ -180,7 +832,7 @@ class JobsTest(MintRepositoryHelper):
         newMessage = "And now for something completely different"
         job.setStatus(jobstatus.WAITING, newMessage)
 
-        cu = self.db.cursor()
+        cu = db.cursor()
         cu.execute("SELECT statusMessage FROM Jobs WHERE jobId=?", job.id)
 
         self.failIf(cu.fetchone()[0] != newMessage,
@@ -190,22 +842,19 @@ class JobsTest(MintRepositoryHelper):
                     'Next in line for processing',
                     "Job failed to recognize that it was next")
 
-        cu = self.db.cursor()
+        cu = db.cursor()
         cu.execute("SELECT statusMessage FROM Jobs WHERE jobId=?", job.id)
 
         self.failIf(cu.fetchone()[0] != newMessage,
                     "database status message was altered.")
 
     def testRunningStatus(self):
-        self.openRepository()
-        client, userId = self.quickMintUser("testuser", "testpass")
-        projectId = client.newProject("Foo", "foo", "rpath.org")
+        db, client, data = self.loadFixture("Release")
 
-        release = client.newRelease(projectId, "Test Release")
+        release = client.getRelease(data['releaseId'])
         release.setImageTypes([releasetypes.STUB_IMAGE])
         release.setDataValue('stringArg', 'Hello World!')
 
-        self.stockReleaseFlavor(release.getId())
         job = client.startImageJob(release.getId())
 
         newMsg = "We are the knights who say 'Ni!'"
@@ -218,20 +867,17 @@ class JobsTest(MintRepositoryHelper):
                     "job mistook itself for waiting.")
 
     def testStartTimestamp(self):
-        self.openRepository()
-        client, userId = self.quickMintUser("testuser", "testpass")
-        projectId = client.newProject("Foo", "foo", "rpath.org")
+        db, client, data = self.loadFixture("Release")
 
-        release = client.newRelease(projectId, "Test Release")
+        release = client.getRelease(data['releaseId'])
         release.setImageTypes([releasetypes.STUB_IMAGE])
         release.setDataValue('stringArg', 'Hello World!')
 
-        self.stockReleaseFlavor(release.getId())
         job = client.startImageJob(release.getId())
 
-        cu = self.db.cursor()
+        cu = db.cursor()
         cu.execute("UPDATE Jobs set timeStarted = 100 where jobId=?", job.id)
-        self.db.commit()
+        db.commit()
 
         # refresh job
         job = client.getJob(job.id)
@@ -254,37 +900,37 @@ class JobsTest(MintRepositoryHelper):
                     "will be misleading")
 
     def testTimestampInteraction(self):
-        self.openRepository()
-        client, userId = self.quickMintUser("testuser", "testpass")
+        db, client, data = self.loadFixture("Empty")
+
         projectId = client.newProject("Foo", "foo", "rpath.org")
 
-        cu = self.db.cursor()
+        cu = db.cursor()
 
         release = client.newRelease(projectId, "Test Release")
         release.setImageTypes([releasetypes.STUB_IMAGE])
         release.setDataValue('stringArg', 'Hello World!')
 
-        self.stockReleaseFlavor(release.getId())
+        self.stockReleaseFlavor(db, release.getId())
         job = client.startImageJob(release.getId())
 
         cu.execute("UPDATE Releases SET troveLastChanged=0")
-        self.db.commit()
+        db.commit()
 
         release2 = client.newRelease(projectId, "Test Release")
         release2.setImageTypes([releasetypes.STUB_IMAGE])
         release2.setDataValue('stringArg', 'Hello World!')
 
-        self.stockReleaseFlavor(release2.getId())
+        self.stockReleaseFlavor(db, release2.getId())
         job2 = client.startImageJob(release2.getId())
 
         cu.execute("UPDATE Releases SET troveLastChanged=0")
-        self.db.commit()
+        db.commit()
 
         release3 = client.newRelease(projectId, "Test Release")
         release3.setImageTypes([releasetypes.STUB_IMAGE])
         release3.setDataValue('stringArg', 'Hello World!')
 
-        self.stockReleaseFlavor(release3.getId())
+        self.stockReleaseFlavor(db, release3.getId())
         job3 = client.startImageJob(release3.getId())
 
         assert(job.getStatusMessage() == 'Next in line for processing')
@@ -324,32 +970,31 @@ class JobsTest(MintRepositoryHelper):
                 'queueLen': 1})
 
     def testJobQueueOrder(self):
-        cu = self.db.cursor()
-        self.openRepository()
-        client, userId = self.quickMintUser("testuser", "testpass")
-        projectId = client.newProject("Foo", "foo", "rpath.org")
+        db, client, data = self.loadFixture("Empty")
+        cu = db.cursor()
 
+        projectId = client.newProject("Foo", "foo", "rpath.org")
         release = client.newRelease(projectId, "Test Release")
         release.setImageTypes([releasetypes.STUB_IMAGE])
         release.setDataValue('stringArg', 'Hello World!')
 
-        self.stockReleaseFlavor(release.getId())
+        self.stockReleaseFlavor(db, release.getId())
         job1 = client.startImageJob(release.getId())
 
         # protect this release from being auto-deleted
         cu.execute("UPDATE Releases SET troveLastChanged=1")
-        self.db.commit()
+        db.commit()
 
         release2 = client.newRelease(projectId, "Test Release")
         release2.setImageTypes([releasetypes.STUB_IMAGE])
         release2.setDataValue('stringArg', 'Hello World!')
 
-        self.stockReleaseFlavor(release2.getId())
+        self.stockReleaseFlavor(db, release2.getId())
         job2 = client.startImageJob(release2.getId())
 
         # protect this release from being auto-deleted
         cu.execute("UPDATE Releases SET troveLastChanged=1")
-        self.db.commit()
+        db.commit()
 
         self.failIf(job2.statusMessage == 'Next in line for processing',
                     "Consecutive releases both show up as next.")
@@ -379,12 +1024,12 @@ class JobsTest(MintRepositoryHelper):
         release3.setImageTypes([releasetypes.STUB_IMAGE])
         release3.setDataValue('stringArg', 'Hello World!')
 
-        self.stockReleaseFlavor(release3.getId())
+        self.stockReleaseFlavor(db, release3.getId())
         job4 = client.startImageJob(release3.getId())
 
         # protect this release from being auto-deleted
         cu.execute("UPDATE Releases SET troveLastChanged=1")
-        self.db.commit()
+        db.commit()
 
         self.failIf(job4.statusMessage != 'Number 4 in line for processing',
                     "Cook before release caused wrong queue count")
@@ -394,7 +1039,7 @@ class JobsTest(MintRepositoryHelper):
         for job in allJobs:
             cu.execute("UPDATE Jobs SET status=?, owner=1", jobstatus.FINISHED)
 
-        self.db.commit()
+        db.commit()
 
         # regenerate jobs
         job1 = client.startImageJob(release.getId())
@@ -410,12 +1055,8 @@ class JobsTest(MintRepositoryHelper):
                         "Improperly reported status of job as next-in-line")
 
     def testJobData(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        projectId = client.newProject("Foo", "foo", "rpath.org")
-
-        release = client.newRelease(projectId, "Test Release")
-
-        self.stockReleaseFlavor(release.getId())
+        db, client, data = self.loadFixture("Release")
+        release = client.getRelease(data['releaseId'])
 
         job = client.startImageJob(release.getId())
         job.setDataValue("mystring", "testing", RDT_STRING)
@@ -425,8 +1066,8 @@ class JobsTest(MintRepositoryHelper):
         assert(int(job.getDataValue("myint")) == 123)
 
     def testStartCookJob(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        projectId = client.newProject("Foo", "foo", "rpath.org")
+        db, client, data = self.loadFixture("Release")
+        projectId = data['projectId']
 
         groupTrove = client.createGroupTrove(projectId, 'group-test', '1.0.0',
                                              'No Description', False)
@@ -460,14 +1101,10 @@ class JobsTest(MintRepositoryHelper):
                     "job-server is not multi-instance safe")
 
     def testStartReleaseJob(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        projectId = client.newProject("Foo", "foo", "rpath.org")
+        db, client, data = self.loadFixture("Release")
 
-        release = client.newRelease(projectId, "Test Release")
+        release = client.getRelease(data['releaseId'])
         release.setImageTypes([releasetypes.STUB_IMAGE])
-
-        self.stockReleaseFlavor(release.getId())
-
         relJob = client.startImageJob(release.getId())
 
         # normally called from job-server
@@ -487,10 +1124,9 @@ class JobsTest(MintRepositoryHelper):
                     "job-server is not multi-instance safe")
 
     def testJobRaceCondition(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        projectId = client.newProject("Foo", "foo", "rpath.org")
+        db, client, data = self.loadFixture("Release")
 
-        groupTrove = client.createGroupTrove(projectId, 'group-test', '1.0.0',
+        groupTrove = client.createGroupTrove(data['projectId'], 'group-test', '1.0.0',
                                              'No Description', False)
 
         groupTroveId = groupTrove.getId()
@@ -506,9 +1142,9 @@ class JobsTest(MintRepositoryHelper):
 
         cookJobId = groupTrove.startCookJob("1#x86")
 
-        cu = self.db.cursor()
+        cu = db.cursor()
         cu.execute("UPDATE Jobs set owner=1")
-        self.db.commit()
+        db.commit()
 
         job = client.startNextJob(["1#x86", "1#x86_64"],
                                   {'cookTypes' : [cooktypes.GROUP_BUILDER]},
@@ -517,16 +1153,16 @@ class JobsTest(MintRepositoryHelper):
         self.failIf(job is not None, "job-server is not multi-instance safe")
 
         cu.execute("UPDATE Jobs set owner=NULL")
-        self.db.commit()
+        db.commit()
 
         job = client.startNextJob(["1#x86", "1#x86_64"],
                                   {'cookTypes' : [cooktypes.GROUP_BUILDER]},
                                   jsversion.getDefaultVersion())
 
     def testStartJobLocking(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        projectId = client.newProject("Foo", "foo", "rpath.org")
+        db, client, data = self.loadFixture("Release")
 
+        projectId = data['projectId']
         for i in range(5):
             groupTrove = client.createGroupTrove(projectId, 'group-test',
                                                  '1.0.0', '', False)
@@ -543,12 +1179,12 @@ class JobsTest(MintRepositoryHelper):
 
             cookJobId = groupTrove.startCookJob("1#x86")
 
-        cu = self.db.cursor()
+        cu = db.cursor()
         # make a job unavailable
         cu.execute("UPDATE Jobs SET status=4 WHERE jobId=2")
         # make a job taken
         cu.execute("UPDATE Jobs SET owner=4 WHERE jobId=4")
-        self.db.commit()
+        db.commit()
 
         job = client.startNextJob(["1#x86"],
                                   {'cookTypes' : [cooktypes.GROUP_BUILDER]},
@@ -569,10 +1205,9 @@ class JobsTest(MintRepositoryHelper):
         self.failIf(job.id != 5, "owned job was selected")
 
     def testStartJobLockRelease(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        projectId = client.newProject("Foo", "foo", "rpath.org")
+        db, client, data = self.loadFixture("Release")
 
-        groupTrove = client.createGroupTrove(projectId, 'group-test',
+        groupTrove = client.createGroupTrove(data['projectId'], 'group-test',
                                              '1.0.0', '', False)
 
         groupTroveId = groupTrove.getId()
@@ -587,7 +1222,7 @@ class JobsTest(MintRepositoryHelper):
 
         cookJobId = groupTrove.startCookJob("1#x86_64")
 
-        cu = self.db.cursor()
+        cu = db.cursor()
 
         cu.execute("SELECT owner FROM Jobs")
 
@@ -595,17 +1230,14 @@ class JobsTest(MintRepositoryHelper):
                     "Lock on job of incompatible type was not released")
 
     def testRegenerateRelease(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        projectId = client.newProject("Foo", "foo", "rpath.org")
+        db, client, data = self.loadFixture("Release")
 
-        release = client.newRelease(projectId, "Test Release")
+        release = client.getRelease(data['releaseId'])
         release.setImageTypes([releasetypes.STUB_IMAGE])
-
-        self.stockReleaseFlavor(release.getId())
 
         relJob = client.startImageJob(release.getId())
 
-        cu = self.db.cursor()
+        cu = db.cursor()
 
         cu.execute("SELECT name, value FROM JobData")
 
@@ -613,8 +1245,7 @@ class JobsTest(MintRepositoryHelper):
                     "architecture information missing for release")
 
         cu.execute("UPDATE Jobs SET status=?, owner=1", jobstatus.FINISHED)
-
-        self.db.commit()
+        db.commit()
 
         relJob = client.startImageJob(release.getId())
 
@@ -624,7 +1255,7 @@ class JobsTest(MintRepositoryHelper):
                     "Job not regenerated properly. will never run")
 
     def testRegenerateCook(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
+        db, client, data = self.loadFixture("Empty")
         projectId = client.newProject("Foo", "foo", "rpath.org")
 
         groupTrove = client.createGroupTrove(projectId, 'group-test', '1.0.0',
@@ -643,7 +1274,7 @@ class JobsTest(MintRepositoryHelper):
 
         cookJobId = groupTrove.startCookJob("1#x86")
 
-        cu = self.db.cursor()
+        cu = db.cursor()
 
         cu.execute("SELECT name, value FROM JobData")
 
@@ -651,8 +1282,7 @@ class JobsTest(MintRepositoryHelper):
                     "architecture information missing for cook")
 
         cu.execute("UPDATE Jobs SET status=?, owner=1", jobstatus.FINISHED)
-
-        self.db.commit()
+        db.commit()
 
         cookJob = groupTrove.startCookJob("1#x86")
 
@@ -665,8 +1295,8 @@ class JobsTest(MintRepositoryHelper):
         def listActiveJobs(client, filter):
             return [x['jobId'] for x in client.listActiveJobs(filter)]
 
-        client, userId = self.quickMintUser('foouser', 'foopass')
-        projectId = self.newProject(client)
+        db, client, data = self.loadFixture("Release")
+        projectId = data['projectId']
 
         jobIds = []
 
@@ -696,9 +1326,9 @@ class JobsTest(MintRepositoryHelper):
         self.failIf(listActiveJobs(client, False) != jobIds,
                     "listActiveJobs should have listed %s" % str(jobIds))
 
-        cu = self.db.cursor()
+        cu = db.cursor()
         cu.execute("UPDATE Jobs SET timeSubmitted=0 WHERE jobId=?", jobIds[0])
-        self.db.commit()
+        db.commit()
 
         self.failIf(listActiveJobs(client, True) != jobIds,
                     "listActiveJobs should have listed %s" % str(jobIds))
@@ -708,7 +1338,7 @@ class JobsTest(MintRepositoryHelper):
 
         cu.execute("UPDATE Jobs SET status=? WHERE jobId=?",
                    jobstatus.FINISHED, jobIds[-1])
-        self.db.commit()
+        db.commit()
 
         self.failIf(listActiveJobs(client, True) != jobIds[:-1],
                     "listActiveJobs should have listed %s" % str(jobIds[:-1]))
@@ -718,7 +1348,7 @@ class JobsTest(MintRepositoryHelper):
 
         cu.execute("UPDATE Jobs SET status=? WHERE jobId=?",
                    jobstatus.FINISHED, jobIds[0])
-        self.db.commit()
+        db.commit()
 
         self.failIf(listActiveJobs(client, True) != [jobIds[1]],
                     "listActiveJobs should have listed %s" % str([jobIds[1]]))
@@ -727,760 +1357,6 @@ class JobsTest(MintRepositoryHelper):
                     "listActiveJobs should have listed %s" % str(jobIds[1:]))
 
         self.failIf(client.listActiveJobs(False)[0]['hostname'] != '127.0.0.1')
-
-
-    #####
-    # setup for testing startNextJob
-    #####
-
-    def setUpCookJob(self, client):
-        projectId = client.newProject("Foo", "foo", "rpath.org")
-
-        groupTrove = client.createGroupTrove(projectId, 'group-test', '1.0.0',
-                                             'No Description', False)
-
-        groupTroveId = groupTrove.getId()
-
-        trvName = 'testtrove'
-        trvVersion = '/testproject.' + MINT_PROJECT_DOMAIN + \
-                '@rpl:devel/1.0-1-1'
-        trvFlavor = '1#x86|5#use:~!kernel.debug:~kernel.smp'
-        subGroup = ''
-
-        trvid = groupTrove.addTrove(trvName, trvVersion, trvFlavor,
-                                    subGroup, False, False, False)
-
-        cookJobId = groupTrove.startCookJob("1#x86")
-        return cookJobId
-
-    def setUpImageJob(self, client):
-        projectId = client.newProject("Foo", "foo", "rpath.org")
-
-        release = client.newRelease(projectId, "Test Release")
-        release.setImageTypes([releasetypes.STUB_IMAGE])
-
-        self.stockReleaseFlavor(release.getId())
-
-        relJob = client.startImageJob(release.getId())
-        return relJob
-
-    def setUpBothJobs(self, client):
-        projectId = client.newProject("Foo", "foo", "rpath.org")
-
-        release = client.newRelease(projectId, "Test Release")
-        release.setImageTypes([releasetypes.STUB_IMAGE])
-
-        self.stockReleaseFlavor(release.getId())
-
-        relJob = client.startImageJob(release.getId())
-
-        groupTrove = client.createGroupTrove(projectId, 'group-test', '1.0.0',
-                                             'No Description', False)
-
-        groupTroveId = groupTrove.getId()
-
-        trvName = 'testtrove'
-        trvVersion = '/testproject.' + MINT_PROJECT_DOMAIN + \
-                '@rpl:devel/1.0-1-1'
-        trvFlavor = '1#x86|5#use:~!kernel.debug:~kernel.smp'
-        subGroup = ''
-
-        trvid = groupTrove.addTrove(trvName, trvVersion, trvFlavor,
-                                    subGroup, False, False, False)
-
-        cookJobId = groupTrove.startCookJob("1#x86")
-        return relJob, cookJobId
-
-    #####
-    # test startNextJob for just images
-    #####
-
-    def testStartImageNoJobType(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        self.setUpImageJob(client)
-
-        # ask for no job types
-        job = client.startNextJob(["1#x86_64"], {},
-                                  jsversion.getDefaultVersion())
-
-        self.failIf(job, "startNextJob returned something when nothing wanted")
-
-    def testStartImageNoType(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        self.setUpImageJob(client)
-
-        # ask for no arch type or job types
-        job = client.startNextJob([], {},
-                                  jsversion.getDefaultVersion())
-
-        self.failIf(job, "startNextJob returned something when nothing wanted")
-
-    def testStartImageNoArch(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        self.setUpImageJob(client)
-
-        # ask for no arch
-        job = client.startNextJob([],
-                                  {'imageTypes' : [releasetypes.STUB_IMAGE]},
-                                  jsversion.getDefaultVersion())
-
-        self.failIf(job, "startNextJob returned the wrong image type")
-
-    def testStartImageWrongType(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        self.setUpImageJob(client)
-
-        # ask for a different image type
-        job = client.startNextJob(["1#x86_64"],
-                                  {'imageTypes' : [releasetypes.RAW_HD_IMAGE]},
-                                  jsversion.getDefaultVersion())
-
-        self.failIf(job, "startNextJob returned the wrong image type")
-
-    def testStartImageWrongArch(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        self.setUpImageJob(client)
-
-        # ask for a different architecture
-        job = client.startNextJob(["1#x86"],
-                                  {'imageTypes' : [releasetypes.STUB_IMAGE]},
-                                  jsversion.getDefaultVersion())
-
-        self.failIf(job, "startNextJob matched the wrong architecture")
-
-    def testStartImageCookArch(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        self.setUpImageJob(client)
-
-        # ask for a cook job with wrong arch
-        job = client.startNextJob(["1#x86"],
-                                  {'cookTypes' : [cooktypes.GROUP_BUILDER]},
-                                  jsversion.getDefaultVersion())
-
-        self.failIf(job, "startNextJob erroneously matched cook "
-                    "job for wrong arch")
-
-    def testStartImageCook(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        self.setUpImageJob(client)
-
-        # ask for a cook job with right arch
-        job = client.startNextJob(["1#x86"],
-                                  {'cookTypes' : [cooktypes.GROUP_BUILDER]},
-                                  jsversion.getDefaultVersion())
-
-        self.failIf(job, "startNextJob erreneously matched cook job")
-
-    def testStartImage(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        self.setUpImageJob(client)
-
-        # ask for the right parameters
-        job = client.startNextJob(["1#x86_64"],
-                                  {'imageTypes' : [releasetypes.STUB_IMAGE]},
-                                  jsversion.getDefaultVersion())
-
-        self.failIf(not job, "startNext job didn't match for correct values")
-
-    #####
-    # test startNextJob for just cooks
-    #####
-
-    def testStartCookWrongArch(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        self.setUpCookJob(client)
-
-        # ask for a cook job with wrong arch
-        job = client.startNextJob(["1#x86_64"],
-                                  {'cookTypes' : [cooktypes.GROUP_BUILDER]},
-                                  jsversion.getDefaultVersion())
-
-        self.failIf(job, "startNextJob matched cook job for wrong arch")
-
-    def testStartCook(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        self.setUpCookJob(client)
-
-        # ask for a cook job with right arch
-        job = client.startNextJob(["1#x86"],
-                                  {'cookTypes' : [cooktypes.GROUP_BUILDER]},
-                                  jsversion.getDefaultVersion())
-
-        self.failIf(not job, "startNextJob matched cook job for wrong arch")
-
-    def testStartCookImageArch(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        self.setUpCookJob(client)
-
-        # ask for a image job with wrong arch
-        job = client.startNextJob(["1#x86_64"],
-                                  {'imageTypes' : [releasetypes.STUB_IMAGE]},
-                                  jsversion.getDefaultVersion())
-
-        self.failIf(job, "startNextJob matched cook job when asked for image")
-
-    def testStartCookImage(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        self.setUpCookJob(client)
-
-        # ask for a image job with right arch
-        job = client.startNextJob(["1#x86"],
-                                  {'imageTypes' : [releasetypes.STUB_IMAGE]},
-                                  jsversion.getDefaultVersion())
-
-        self.failIf(job, "startNextJob matched cook job when asked for image")
-
-    def testStartCookNoJobType(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        self.setUpCookJob(client)
-
-        # ask for a no job with right arch
-        job = client.startNextJob(["1#x86"], {},
-                                  jsversion.getDefaultVersion())
-
-        self.failIf(job, "startNextJob matched cook job but asked for nothing")
-
-    def testStartCookNoJobType2(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        self.setUpCookJob(client)
-
-        # ask for no job with wrong arch
-        job = client.startNextJob(["1#x86_64"], {},
-                                  jsversion.getDefaultVersion())
-
-        self.failIf(job, "startNextJob matched cook job but asked for nothing")
-
-    def testStartCookNoJob(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        self.setUpCookJob(client)
-
-        # ask for no job with no arch
-        job = client.startNextJob([], {},
-                                  jsversion.getDefaultVersion())
-
-        self.failIf(job, "startNextJob matched cook job but asked for nothing")
-
-    def testStartCookNoJobArch(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        self.setUpCookJob(client)
-
-        # ask for an image job with no arch
-        job = client.startNextJob([],
-                                  {'imageTypes' : [releasetypes.STUB_IMAGE]},
-                                  jsversion.getDefaultVersion())
-
-        self.failIf(job, "startNextJob matched cook job but asked for nothing")
-
-    #####
-    # test startNextJob for cooks and images together
-    #####
-
-    def testStartCompImage(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        self.setUpBothJobs(client)
-
-        # ask for an image job with right arch
-        job = client.startNextJob(['1#x86_64'],
-                                  {'imageTypes' : [releasetypes.STUB_IMAGE]},
-                                  jsversion.getDefaultVersion())
-
-        self.failIf(not job, "startNextJob ignored an image job")
-
-    def testStartCompCook(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        self.setUpBothJobs(client)
-
-        # ask for an image job with right arch
-        job = client.startNextJob(['1#x86'],
-                                  {'cookTypes' : [cooktypes.GROUP_BUILDER]},
-                                  jsversion.getDefaultVersion())
-
-        self.failIf(not job, "startNextJob ignored a cook job")
-
-    def testStartCompImageArch(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        self.setUpBothJobs(client)
-
-        # ask for an image job with wrong arch
-        job = client.startNextJob(['1#x86'],
-                                  {'imageTypes' : [releasetypes.STUB_IMAGE]},
-                                  jsversion.getDefaultVersion())
-
-        self.failIf(job, "startNextJob matched image job wrong arch")
-
-    def testStartCompCookArch(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        self.setUpBothJobs(client)
-
-        # ask for an image job with wrong arch
-        job = client.startNextJob(['1#x86_64'],
-                                  {'cookTypes' : [cooktypes.GROUP_BUILDER]},
-                                  jsversion.getDefaultVersion())
-
-        self.failIf(job, "startNextJob matched cook job wrong arch")
-
-
-    def testStartCompImageNoArch(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        self.setUpBothJobs(client)
-
-        # ask for an image job with no arch
-        job = client.startNextJob([],
-                                  {'imageTypes' : [releasetypes.STUB_IMAGE]},
-                                  jsversion.getDefaultVersion())
-
-        self.failIf(job, "startNextJob matched image job no arch")
-
-    def testStartCompCookNoArch(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        self.setUpBothJobs(client)
-
-        # ask for an image job with wrong arch
-        job = client.startNextJob([],
-                                  {'cookTypes' : [cooktypes.GROUP_BUILDER]},
-                                  jsversion.getDefaultVersion())
-
-        self.failIf(job, "startNextJob matched cook job no arch")
-
-    def testStartCompNoArch(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        self.setUpBothJobs(client)
-
-        # ask for an image job with wrong arch
-        job = client.startNextJob([], {},
-                                  jsversion.getDefaultVersion())
-
-        self.failIf(job, "startNextJob matched job no arch and no type")
-
-    def testStartCompArch(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        self.setUpBothJobs(client)
-
-        # ask for an image job with wrong arch
-        job = client.startNextJob(['1#x86'], {},
-                                  jsversion.getDefaultVersion())
-
-        self.failIf(job, "startNextJob matched job no type")
-
-    def testStartCompArch2(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        self.setUpBothJobs(client)
-
-        # ask for an image job with wrong arch
-        job = client.startNextJob(['1#x86_64'], {},
-                                  jsversion.getDefaultVersion())
-
-        self.failIf(job, "startNextJob matched job no type")
-
-    #####
-    # test both cooks and images while asking for both
-    #####
-
-    def testStartCompBothCook(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        self.setUpBothJobs(client)
-
-        # ask for all jobs with x86 arch (will match cook)
-        job = client.startNextJob(['1#x86'],
-                                  {'imageTypes' : [releasetypes.STUB_IMAGE],
-                                   'cookTypes' : [cooktypes.GROUP_BUILDER]},
-                                  jsversion.getDefaultVersion())
-
-        self.failIf(not (job and job.groupTroveId),
-                    "startNextJob ignored a cook job")
-
-    def testStartCompBothImage(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        self.setUpBothJobs(client)
-
-        # ask for all jobs with x86_64 arch (will match image)
-        job = client.startNextJob(['1#x86_64'],
-                                  {'imageTypes' : [releasetypes.STUB_IMAGE],
-                                   'cookTypes' : [cooktypes.GROUP_BUILDER]},
-                                  jsversion.getDefaultVersion())
-
-        self.failIf(not (job and job.releaseId),
-                    "startNextJob ignored an image job")
-
-    def testStartCompBothNoArch(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        self.setUpBothJobs(client)
-
-        # ask for all jobs no arch
-        job = client.startNextJob([],
-                                  {'imageTypes' : [releasetypes.STUB_IMAGE],
-                                   'cookTypes' : [cooktypes.GROUP_BUILDER]},
-                                  jsversion.getDefaultVersion())
-
-        self.failIf(job, "startNextJob matched for no arch")
-
-    def testStartCompBothArch(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        self.setUpBothJobs(client)
-
-        # ask for all jobs
-        job = client.startNextJob(['1#x86_64', '1#x86'],
-                                  {'imageTypes' : [releasetypes.STUB_IMAGE],
-                                   'cookTypes' : [cooktypes.GROUP_BUILDER]},
-                                  jsversion.getDefaultVersion())
-
-        self.failIf(not (job and job.releaseId),
-                    "startNextJob didn't match image job")
-
-        # ask for all jobs
-        job = client.startNextJob(['1#x86_64', '1#x86'],
-                                  {'imageTypes' : [releasetypes.STUB_IMAGE],
-                                   'cookTypes' : [cooktypes.GROUP_BUILDER]},
-                                  jsversion.getDefaultVersion())
-
-        self.failIf(not (job and job.groupTroveId),
-                    "startNextJob didn't match group trove")
-
-    def testStartCompImageType(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        self.setUpBothJobs(client)
-
-        # ask for all jobs but wrong image type
-        job = client.startNextJob(['1#x86_64', '1#x86'],
-                                  {'imageTypes' : [releasetypes.RAW_HD_IMAGE],
-                                   'cookTypes' : [cooktypes.GROUP_BUILDER]},
-                                  jsversion.getDefaultVersion())
-
-        self.failIf(not (job and job.groupTroveId),
-                    "startNextJob didn't match cook")
-
-    #####
-    # and just to round it out, test for bad parmaeters
-    #####
-
-    def testStartBadArch(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-
-        self.assertRaises(ParameterError,
-                          client.startNextJob, ['this is not a frozen flavor'],
-                          {'imageTypes' : [releasetypes.RAW_HD_IMAGE],
-                           'cookTypes' : [cooktypes.GROUP_BUILDER]},
-                          jsversion.getDefaultVersion())
-
-    def testStartBadImage(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-
-        self.assertRaises(ParameterError,
-                          client.startNextJob, ['1#x86'],
-                          {'imageTypes' : [9999],
-                           'cookTypes' : [cooktypes.GROUP_BUILDER]},
-                          jsversion.getDefaultVersion())
-
-    def testStartBadCook(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-
-        self.assertRaises(ParameterError,
-                          client.startNextJob, ['1#x86'],
-                          {'imageTypes' : [releasetypes.RAW_HD_IMAGE],
-                           'cookTypes' : [9999]},
-                          jsversion.getDefaultVersion())
-
-    def testStartLegalImage(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        self.setUpImageJob(client)
-
-        # ask for an image type that's technically in the list, but not served
-        # by this server. historically this raised permission denied.
-        job = client.startNextJob(['1#x86_64', '1#x86'],
-                                  {'imageTypes' : [releasetypes.NETBOOT_IMAGE],
-                                   'cookTypes' : [cooktypes.GROUP_BUILDER]},
-                                  jsversion.getDefaultVersion())
-
-        self.failIf(job, "startNextJob erroneously matched image")
-
-    #####
-    # ensure jobs do not get inadverdently respwaned
-    #####
-
-    def testStartCookFinished(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        self.setUpCookJob(client)
-
-        # mark job as finished
-        cu = self.db.cursor()
-        cu.execute("UPDATE Jobs SET status=?, statusMessage='Finished'",
-                   jobstatus.FINISHED)
-        self.db.commit()
-
-        job = client.startNextJob(['1#x86'],
-                                  {'cookTypes' : [cooktypes.GROUP_BUILDER]},
-                                  jsversion.getDefaultVersion())
-
-        self.failIf(job, "startNextJob returned a finished cook")
-
-    def testStartCookFinished2(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        self.setUpCookJob(client)
-
-        # mark job as finished
-        cu = self.db.cursor()
-        cu.execute("UPDATE Jobs SET status=?, statusMessage='Finished'",
-                   jobstatus.FINISHED)
-        self.db.commit()
-
-        job = client.startNextJob(['1#x86'],
-                                  {'cookTypes' : [cooktypes.GROUP_BUILDER],
-                                   'imageTypes': [releasetypes.RAW_HD_IMAGE]},
-                                  jsversion.getDefaultVersion())
-
-        self.failIf(job, "startNextJob returned a finished cook")
-
-    def testStartCookFinished3(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        self.setUpCookJob(client)
-
-        # mark job as finished
-        cu = self.db.cursor()
-        cu.execute("UPDATE Jobs SET status=?, statusMessage='Finished'",
-                   jobstatus.FINISHED)
-        self.db.commit()
-
-        job = client.startNextJob(['1#x86'],
-                                  {'imageTypes': [releasetypes.RAW_HD_IMAGE]},
-                                  jsversion.getDefaultVersion())
-
-        self.failIf(job, "startNextJob returned a finished cook")
-
-    def testStartImageFinished(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        self.setUpImageJob(client)
-
-        # mark job as finished
-        cu = self.db.cursor()
-        cu.execute("UPDATE Jobs SET status=?, statusMessage='Finished'",
-                   jobstatus.FINISHED)
-        self.db.commit()
-
-        job = client.startNextJob(['1#x86_64'],
-                                  {'cookTypes' : [cooktypes.GROUP_BUILDER]},
-                                  jsversion.getDefaultVersion())
-
-        self.failIf(job, "startNextJob returned a finished image")
-
-    def testStartImageFinished2(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        self.setUpImageJob(client)
-
-        # mark job as finished
-        cu = self.db.cursor()
-        cu.execute("UPDATE Jobs SET status=?, statusMessage='Finished'",
-                   jobstatus.FINISHED)
-        self.db.commit()
-
-        job = client.startNextJob(['1#x86_64'],
-                                  {'cookTypes' : [cooktypes.GROUP_BUILDER],
-                                   'imageTypes': [releasetypes.RAW_HD_IMAGE]},
-                                  jsversion.getDefaultVersion())
-
-        self.failIf(job, "startNextJob returned a finished image")
-
-    def testStartImageFinished3(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        self.setUpImageJob(client)
-
-        # mark job as finished
-        cu = self.db.cursor()
-        cu.execute("UPDATE Jobs SET status=?, statusMessage='Finished'",
-                   jobstatus.FINISHED)
-        self.db.commit()
-
-        job = client.startNextJob(['1#x86_64'],
-                                  {'imageTypes': [releasetypes.RAW_HD_IMAGE]},
-                                  jsversion.getDefaultVersion())
-
-        self.failIf(job, "startNextJob returned a finished image")
-
-    def testStartCookOwned(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        self.setUpCookJob(client)
-
-        # mark job as finished
-        cu = self.db.cursor()
-        cu.execute("UPDATE Jobs SET owner=1")
-        self.db.commit()
-
-        job = client.startNextJob(['1#x86'],
-                                  {'cookTypes' : [cooktypes.GROUP_BUILDER]},
-                                  jsversion.getDefaultVersion())
-
-        self.failIf(job, "startNextJob returned an owned cook")
-
-    def testStartCookOwned2(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        self.setUpCookJob(client)
-
-        # mark job as finished
-        cu = self.db.cursor()
-        cu.execute("UPDATE Jobs SET owner=1")
-        self.db.commit()
-
-        job = client.startNextJob(['1#x86'],
-                                  {'cookTypes' : [cooktypes.GROUP_BUILDER],
-                                   'imageTypes': [releasetypes.RAW_HD_IMAGE]},
-                                  jsversion.getDefaultVersion())
-
-        self.failIf(job, "startNextJob returned an owned cook")
-
-    def testStartCookOwned3(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        self.setUpCookJob(client)
-
-        # mark job as finished
-        cu = self.db.cursor()
-        cu.execute("UPDATE Jobs SET owner=1")
-        self.db.commit()
-
-        job = client.startNextJob(['1#x86'],
-                                  {'imageTypes': [releasetypes.RAW_HD_IMAGE]},
-                                  jsversion.getDefaultVersion())
-
-        self.failIf(job, "startNextJob returned an owned cook")
-
-    def testStartImageOwned(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        self.setUpImageJob(client)
-
-        # mark job as finished
-        cu = self.db.cursor()
-        cu.execute("UPDATE Jobs SET owner=1")
-        self.db.commit()
-
-        job = client.startNextJob(['1#x86_64'],
-                                  {'cookTypes' : [cooktypes.GROUP_BUILDER]},
-                                  jsversion.getDefaultVersion())
-
-        self.failIf(job, "startNextJob returned an owned image")
-
-    def testStartImageOwned2(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        self.setUpImageJob(client)
-
-        # mark job as finished
-        cu = self.db.cursor()
-        cu.execute("UPDATE Jobs SET owner=1")
-        self.db.commit()
-
-        job = client.startNextJob(['1#x86_64'],
-                                  {'cookTypes' : [cooktypes.GROUP_BUILDER],
-                                   'imageTypes': [releasetypes.RAW_HD_IMAGE]},
-                                  jsversion.getDefaultVersion())
-
-        self.failIf(job, "startNextJob returned an owned image")
-
-    def testStartImageOwned3(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        self.setUpImageJob(client)
-
-        # mark job as finished
-        cu = self.db.cursor()
-        cu.execute("UPDATE Jobs SET owner=1")
-        self.db.commit()
-
-        job = client.startNextJob(['1#x86_64'],
-                                  {'imageTypes': [releasetypes.RAW_HD_IMAGE]},
-                                  jsversion.getDefaultVersion())
-
-        self.failIf(job, "startNextJob returned an owned image")
-
-    def testMimicJobServer(self):
-        client = self.openMintClient((self.mintCfg.authUser,
-                                      self.mintCfg.authPass))
-
-        # historically this always failed with permission denied, but it
-        # definitely needs to be allowed. return value doesn't matter
-        job = client.startNextJob(['1#x86_64'],
-                                  {'imageTypes': [releasetypes.RAW_HD_IMAGE]},
-                                  jsversion.getDefaultVersion())
-
-    #####
-    # test jobserver version
-    #####
-
-    def testImageJSVersion(self):
-        # ensure an image job cannot be started for a mismatched job server.
-        client, userId = self.quickMintUser("testuser", "testpass")
-        projectId = self.newProject(client)
-
-        release = client.newRelease(projectId, "Test Release")
-
-        self.stockReleaseFlavor(release.getId())
-
-        cu = self.db.cursor()
-        cu.execute("""UPDATE ReleaseData SET value='illegal'
-                          WHERE name='jsversion'""")
-        self.db.commit()
-
-        self.assertRaises(mint_error.JobserverVersionMismatch,
-                          client.startImageJob, release.id)
-
-    def testStartImageJobJSV(self):
-        # masquerading as a job server version that server doesn't support
-        # raises parameter error.
-        client, userId = self.quickMintUser("testuser", "testpass")
-        self.setUpImageJob(client)
-
-        self.assertRaises(ParameterError, client.startNextJob,
-                          ['1#x86', '1#x86_64'],
-                          {'imageTypes': [releasetypes.RAW_HD_IMAGE]},
-                          'wackyversion')
-
-    def testStartImageJobJSV2(self):
-        # ensure image jobs cannot be selected for mismatched job server type
-        # using only image types defined
-        client, userId = self.quickMintUser("testuser", "testpass")
-        self.setUpImageJob(client)
-
-        cu = self.db.cursor()
-        cu.execute("""UPDATE ReleaseData SET value='1.0.0'
-                          WHERE name='jsversion'""")
-        self.db.commit()
-
-        job = client.startNextJob(['1#x86', '1#x86_64'],
-                                  {'imageTypes': [releasetypes.STUB_IMAGE]},
-                                  jsversion.getDefaultVersion())
-
-        self.failIf(job, "startNextJob returned a mismatched jobserver image")
-
-    def testStartImageJobJSV3(self):
-        # ensure image jobs cannot be selected for mismatched job server type
-        # using composite job request
-        client, userId = self.quickMintUser("testuser", "testpass")
-        self.setUpImageJob(client)
-
-        cu = self.db.cursor()
-        cu.execute("""UPDATE ReleaseData SET value='1.0.0'
-                          WHERE name='jsversion'""")
-        self.db.commit()
-
-        job = client.startNextJob(['1#x86', '1#x86_64'],
-                                  {'imageTypes': [releasetypes.STUB_IMAGE],
-                                   'cookTypes' : [cooktypes.GROUP_BUILDER]},
-                                  jsversion.getDefaultVersion())
-
-        self.failIf(job, "startNextJob returned a mismatched jobserver image")
-
-    def testStartCookJobJSV(self):
-        # ensure cook jobs don't interact badly with job server version
-        client, userId = self.quickMintUser("testuser", "testpass")
-        self.setUpBothJobs(client)
-
-        cu = self.db.cursor()
-        cu.execute("""UPDATE ReleaseData SET value='1.0.0'
-                          WHERE name='jsversion'""")
-        self.db.commit()
-
-        job = client.startNextJob(['1#x86', '1#x86_64'],
-                                  {'imageTypes': [releasetypes.STUB_IMAGE],
-                                   'cookTypes' : [cooktypes.GROUP_BUILDER]},
-                                  jsversion.getDefaultVersion())
-
-        self.failIf(not (job and job.groupTroveId),
-                    "startNextJob ignored a cook job")
 
 
 if __name__ == "__main__":
