@@ -45,4 +45,5 @@ class Tarball(bootable_image.BootableImage):
         self.freespace = 0
         self.addJournal = False
         self.makeBootable = False
+        self.swapSize = self.release.getDataValue("swapSize") * 1048576
         return res

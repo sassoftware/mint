@@ -168,7 +168,10 @@ class LiveIso(bootable_image.BootableImage):
             os.path.join(self.fakeroot, 'lib', 'modules'), modName)
             if modPath:
                 util.copyfile(modPath, os.path.join(initRdDir, 'lib', modName))
-                macros['modules'] += '\n/bin/insmod /lib/%s' % modName
+                if modName == 'loop.ko':
+                    macros['modules'] += '\n/bin/insmod /lib/%s max_loop=256' % modName
+                else:
+                    macros['modules'] += '\n/bin/insmod /lib/%s' % modName
             else:
                 raise AssertionError('Missing required Module: %s' % modName)
 
@@ -314,6 +317,7 @@ mount -o defaults --ro -t iso9660 /dev/loop0 /sysroot
         self.liveDir = None
         self.liveISO = None
         self.freespace = 0
+        self.swapSize = 0
         self.fallback = os.path.join(self.imgcfg.fallbackDir,
                                      self.release.getArch())
         self.addJournal = False
