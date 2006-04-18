@@ -134,12 +134,12 @@ class MaintenanceTest(mint_rephelp.WebRepositoryHelper):
         self.failIf(os.path.exists(self.mintCfg.maintenanceLockPath),
                     "lock existed before test started")
         page.postForm(1, self.post, {'operation' :
-                                     'toggle_maintenance_lock'})
+                                     'toggleMaintLock'})
         self.failIf(maintenance.getMaintenanceMode(self.mintCfg) != \
                     maintenance.LOCKED_MODE,
                     "lock wasn't created by admin interface")
         page.postForm(1, self.post, {'operation' :
-                                     'toggle_maintenance_lock'})
+                                     'toggleMaintLock'})
         self.failIf(maintenance.getMaintenanceMode(self.mintCfg) != \
                     maintenance.NORMAL_MODE,
                     "lock wasn't removed by admin interface")
