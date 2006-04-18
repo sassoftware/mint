@@ -198,5 +198,5 @@ class SqliteFixtureCache(FixtureCache):
         return ((tmp, "sqlite"), data)
 
     def __del__(self):
-        for f in self.fixtures:
+        for f in self.fixtures.values():
             os.unlink(f[0])
