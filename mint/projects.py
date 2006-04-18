@@ -669,6 +669,7 @@ class SqliteRepositoryDatabase(RepositoryDatabase):
     def create(self, name):
         if os.path.exists(self.cfg.reposDBPath % name):
             os.unlink(self.cfg.reposDBPath % name)
+        util.mkdirChain(os.path.dirname(self.cfg.reposDBPath % name))
         RepositoryDatabase.create(self, name)
 
     def getRepositoryDB(self, name):
