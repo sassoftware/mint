@@ -246,7 +246,7 @@ def _orderValidTroves(changeSetList, valid):
                     continue
 
             if entry in valid and not entry in handled:
-                finalCsList.append((entry, []))
+                finalCsList.append((entry, valid[entry]))
                 handled.add(entry)
 
     return finalCsList
