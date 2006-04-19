@@ -157,7 +157,7 @@ class SiteHandler(WebHandler):
         self.session['visited'] = { }
         self.session['visited'][self.req.hostname] = True
         nexthop = self._getNextHop()
-        if nexthop:
+        if nexthop and isinstance(self.session, SqlSession):
             c = self.session.make_cookie()
             c.expires = 0
             self.req.err_headers_out.add('Set-Cookie', str(c))

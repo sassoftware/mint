@@ -174,6 +174,15 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.failIf('Set-Cookie:' in page.headers,
                 "Cookies should not be set in headers after logout")
 
+    def testLogoutWithNoSession(self):
+        self.quickMintUser('foouser', 'foopass')
+
+        page = self.fetch('/')
+        page = page.fetchWithRedirect('/logout')
+
+        self.failUnless('processLogin' in page.body,
+                "Should have redirected to the front page.")
+
     def testCookieBeforeLogin(self):
         page = self.fetchWithRedirect('/')
         self.failIf('Set-Cookie:' in page.headers,
