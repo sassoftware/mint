@@ -6,13 +6,17 @@ import inspect
 import unittest
 import tempfile
 from mint_rephelp import MINT_PROJECT_DOMAIN
+import mysqlharness
+import random
+import string
+import subprocess
 import os
 
 from mint import shimclient
 from mint import config
 from mint import releasetypes
 from mint.distro.flavors import stockFlavors
-from mint.server import MintServer
+from mint import server
 
 from conary import dbstore
 from conary.deps import deps
@@ -78,7 +82,7 @@ class FixtureCache(object):
         """Contains one user: ('testauth', 'testpass')"""
         cfg = self.getMintCfg()
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
-        ms = MintServer(cfg, db, alwaysReload = True)
+        ms = server.MintServer(cfg, db, alwaysReload = True)
         client = shimclient.ShimMintClient(cfg, self.authToken)
         self.setUpUser(cfg, db)
 
@@ -87,7 +91,7 @@ class FixtureCache(object):
     def fixtureRelease(self):
         cfg = self.getMintCfg()
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
-        ms = MintServer(cfg, db, alwaysReload = True)
+        ms = server.MintServer(cfg, db, alwaysReload = True)
         client = shimclient.ShimMintClient(cfg, self.authToken)
         self.setUpUser(cfg, db)
 
@@ -102,7 +106,7 @@ class FixtureCache(object):
     def fixtureCookJob(self):
         cfg = self.getMintCfg()
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
-        ms = MintServer(cfg, db, alwaysReload = True)
+        ms = server.MintServer(cfg, db, alwaysReload = True)
         self.setUpUser(cfg, db)
         client = shimclient.ShimMintClient(cfg, self.authToken)
 
@@ -128,7 +132,7 @@ class FixtureCache(object):
     def fixtureImageJob(self):
         cfg = self.getMintCfg()
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
-        ms = MintServer(cfg, db, alwaysReload = True)
+        ms = server.MintServer(cfg, db, alwaysReload = True)
         self.setUpUser(cfg, db)
 
         client = shimclient.ShimMintClient(cfg, self.authToken)
@@ -146,7 +150,7 @@ class FixtureCache(object):
     def fixtureBothJobs(self):
         cfg = self.getMintCfg()
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
-        ms = MintServer(cfg, db, alwaysReload = True)
+        ms = server.MintServer(cfg, db, alwaysReload = True)
         self.setUpUser(cfg, db)
 
         client = shimclient.ShimMintClient(cfg, ('testuser', 'testpass'))
@@ -204,6 +208,76 @@ class SqliteFixtureCache(FixtureCache):
         for f in self._fixtures.values():
             os.unlink(f[0])
 
+
+class MySqlFixtureCache(FixtureCache, mysqlharness.MySqlHarness):
+    keepDbs = ['mysql', 'test', 'information_schema', 'testdb']
+    db = None
+
+    def randomName(self):
+        return "".join(random.sample(string.lowercase, 10))
+
+    def __init__(self):
+        mysqlharness.MySqlHarness.__init__(self)
+        self.start()
+
+    def _connect(self):
+        if not self.db:
+            self.db = dbstore.connect("root@localhost.localdomain:%d/mysql" % self.port, "mysql")
+
+    def _newDb(self, name):
+        self._connect()
+        cu = self.db.cursor()
+        cu.execute("CREATE DATABASE %s" % name)
+        self.db.commit()
+
+    def _dropDb(self, name):
+        self._connect()
+        cu = self.db.cursor()
+        cu.execute("DROP DATABASE %s" % name)
+        self.db.commit()
+
+    def getMintCfg(self):
+        cfg = FixtureCache.getMintCfg(self)
+
+        newName = self.randomName()
+        self._newDb(newName)
+        cfg.dbPath = "root@localhost.localdomain:%d/%s" % (self.port, newName)
+        cfg.dbDriver = "mysql"
+        cfg.reposDBPath = "root@localhost.localdomain:%d/%%s" % self.port
+        cfg.reposDBDriver = "mysql"
+
+        return cfg
+
+    def loadFixture(self, name):
+        ret = FixtureCache.loadFixture(self, name)
+        self._connect()
+
+        # drop stray repository tables
+        cu = self.db.cursor()
+        cu.execute("SHOW DATABASES")
+        for table in [x[0] for x in cu.fetchall() if x[0] not in self.keepDbs]:
+            if '_' in table:
+                self._dropDb(table)
+        return ret
+
+    def load(self, name):
+        dbPath, data = self.loadFixture(name)
+        dbName = dbPath.split("/")[1]
+
+        newName = name + self.randomName()
+        self._newDb(newName)
+        output = ["mysqldump", "-u", "root", "-S", "%s/socket" % self.dir, dbName]
+        input = ["mysql", "-u", "root", "-S", "%s/socket" % self.dir, newName]
+        dump = subprocess.Popen(output, stdout = subprocess.PIPE)
+        load = subprocess.Popen(input, stdin = dump.stdout)
+        load.communicate()
+
+        return (("root@localhost.localdomain:%d/%s" % (self.port, newName), "mysql"), data)
+
+    def __del__(self):
+        self.stop()
+
+
 class FixturedUnitTest(unittest.TestCase):
     def listFixtures(self):
         return fixtureCache.list()
@@ -216,6 +290,7 @@ class FixturedUnitTest(unittest.TestCase):
         self.cfg.dbPath = db[0]
         self.cfg.dbDriver = db[1]
         db = dbstore.connect(self.cfg.dbPath, self.cfg.dbDriver)
+        server.dbConnection = None # reset the cached db connection
         client = shimclient.ShimMintClient(self.cfg, ('testuser', 'testpass'))
 
         self.imagePath = getDataDir() + "/images/"
@@ -228,7 +303,13 @@ class FixturedUnitTest(unittest.TestCase):
         except OSError:
             pass
 
-fixtureCache = SqliteFixtureCache()
+driver = os.environ.get("CONARY_REPOS_DB", "sqlite")
+if driver == "sqlite":
+    fixtureCache = SqliteFixtureCache()
+elif driver == "mysql":
+    fixtureCache = MySqlFixtureCache()
+else:
+    raise RuntimeError, "Invalid database driver specified"
 
 # test case decorator
 def fixture(arg):
