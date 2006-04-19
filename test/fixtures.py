@@ -23,6 +23,12 @@ class FixtureCache(object):
     fixtures = {}
     authToken = ('testuser', 'testpass')
 
+    def list(self):
+        fixtureNames = [x for x in self.__class__.__base__.__dict__ \
+                        if x.startswith('fixture') and x != 'fixtures']
+        return dict([(x.replace('fixture', ''),
+                      self.__getattribute__(x).__doc__) for x in fixtureNames])
+
     def getDataDir(self):
         return '/tmp/mint-test-%s/' % pwd.getpwuid(os.getuid())[0]
 
@@ -61,6 +67,7 @@ class FixtureCache(object):
         db.commit()
 
     def fixtureEmpty(self):
+        """Contains one user: ('testauth', 'testpass')"""
         cfg = self.getMintCfg()
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
         ms = MintServer(cfg, db, alwaysReload = True)
@@ -197,6 +204,9 @@ class SqliteFixtureCache(FixtureCache):
             os.unlink(f[0])
 
 class FixturedUnitTest(unittest.TestCase):
+    def listFixtures(self):
+        return fixtureCache.list()
+
     def loadFixture(self, name):
         db, fixtureData = fixtureCache.load(name)
 
@@ -222,3 +232,14 @@ class FixturedUnitTest(unittest.TestCase):
             pass
 
 fixtureCache = SqliteFixtureCache()
+
+# test case decorator
+def fixture(arg):
+    def deco(func):
+        def wrapper(self):
+            db, client, data = self.loadFixture(arg)
+            return func(self, db, client, data)
+        wrapper.__name__ = func.__name__
+        wrapper.__dict__.update(func.__dict__)
+        return wrapper
+    return deco
