@@ -549,7 +549,17 @@ class UpgradePathTest(MintRepositoryHelper):
         self.db.commit()
 
         # do only one iteration of version check
-        client.server._server.projects.versionCheck()
+        try:
+            fd = os.open(os.devnull, os.W_OK)
+            oldStdOut = os.dup(sys.stdout.fileno())
+            oldStdErr = os.dup(sys.stderr.fileno())
+            os.dup2(fd, sys.stdout.fileno())
+            os.dup2(fd, sys.stderr.fileno())
+            os.close(fd)
+            client.server._server.projects.versionCheck()
+        finally:
+            os.dup2(oldStdOut, sys.stdout.fileno())
+            os.dup2(oldStdErr, sys.stderr.fileno())
 
         assert(self.getMirrorAcl(project, self.mintCfg.authUser) == 1)
         self.failIf(self.getMirrorAcl(project2, self.mintCfg.authUser) != 1,

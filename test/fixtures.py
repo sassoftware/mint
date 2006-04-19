@@ -211,7 +211,6 @@ class FixturedUnitTest(unittest.TestCase):
         db, fixtureData = fixtureCache.load(name)
 
         self.cfg = fixtureCache.getMintCfg()
-        self.cfg = config.MintConfig()
         self.cfg.authUser = 'mintauth'
         self.cfg.authPass = 'mintpass'
         self.cfg.postCfg()

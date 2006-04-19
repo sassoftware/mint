@@ -5,6 +5,8 @@
 #
 arch_files = arch/ppc arch/x86 arch/x86_64
 
+python_files =  rogueReportForTesting.py
+
 use_files =	use/bootstrap\
 		use/builddocs\
 		use/buildtests\
