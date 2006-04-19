@@ -472,7 +472,7 @@ title %(name)s (%(kversion)s)
     @timeMe
     def runTagScripts(self, target = 'ext3'):
         if target == 'ext3':
-            cmd = '%s root=/dev/ubda1 init=/tmp/init.sh ubd0=%s' % \
+            cmd = '%s root=/dev/ubda1 init=/tmp/init.sh ubd0=%s mem=1024M' % \
                   (self.imgcfg.umlKernel[self.arch], self.outfile)
             if not self.imgcfg.debug:
                 cmd += " > /dev/null"
@@ -483,7 +483,7 @@ title %(name)s (%(kversion)s)
             # new filesystem format...
             tmpFile = self.createSparseFile()
             cmd = '%s root=/dev/ubda1 init=/sbin/target_inits/%s_init.sh ' \
-                  'ubd0=%s ubd1=%s ubd2=%s' % \
+                  'ubd0=%s ubd1=%s ubd2=%s mem=1024M' % \
                   (self.imgcfg.umlKernel[self.arch], target,
                    self.imgcfg.toolkitImage, self.outfile, tmpFile)
             if target == 'zisofs':
