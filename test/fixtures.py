@@ -20,12 +20,12 @@ from conary.lib import util
 import pwd
 
 class FixtureCache(object):
-    fixtures = {}
+    _fixtures = {}
     authToken = ('testuser', 'testpass')
 
     def list(self):
         fixtureNames = [x for x in self.__class__.__base__.__dict__ \
-                        if x.startswith('fixture') and x != 'fixtures']
+                        if x.startswith('fixture')]
         return dict([(x.replace('fixture', ''),
                       self.__getattribute__(x).__doc__) for x in fixtureNames])
 
@@ -34,15 +34,15 @@ class FixtureCache(object):
 
     def loadFixture(self, key):
         name = 'fixture' + key
-        if key not in self.fixtures:
+        if key not in self._fixtures:
             fixture = self.__getattribute__(name)
-            self.fixtures[key] = fixture()
+            self._fixtures[key] = fixture()
         try:
             util.rmtree(self.getDataDir())
         except OSError:
             pass
 
-        return self.fixtures[key]
+        return self._fixtures[key]
 
     def load(self, name):
         raise NotImplementedError
@@ -200,7 +200,7 @@ class SqliteFixtureCache(FixtureCache):
         return ((tmp, "sqlite"), data)
 
     def __del__(self):
-        for f in self.fixtures.values():
+        for f in self._fixtures.values():
             os.unlink(f[0])
 
 class FixturedUnitTest(unittest.TestCase):
