@@ -19,6 +19,13 @@ from conary.deps import deps
 from conary.lib import util
 import pwd
 
+def stockReleaseFlavor(db, releaseId, arch = "x86_64"):
+    cu = db.cursor()
+    flavor = deps.parseFlavor(stockFlavors['1#' + arch]).freeze()
+    cu.execute("UPDATE Releases set troveFlavor=? WHERE releaseId=?", flavor, releaseId)
+    db.commit()
+
+
 class FixtureCache(object):
     _fixtures = {}
     authToken = ('testuser', 'testpass')
@@ -29,16 +36,13 @@ class FixtureCache(object):
         return dict([(x.replace('fixture', ''),
                       self.__getattribute__(x).__doc__) for x in fixtureNames])
 
-    def getDataDir(self):
-        return '/tmp/mint-test-%s/' % pwd.getpwuid(os.getuid())[0]
-
     def loadFixture(self, key):
         name = 'fixture' + key
         if key not in self._fixtures:
             fixture = self.__getattribute__(name)
             self._fixtures[key] = fixture()
         try:
-            util.rmtree(self.getDataDir())
+            util.rmtree(getDataDir())
         except OSError:
             pass
 
@@ -48,13 +52,17 @@ class FixtureCache(object):
         raise NotImplementedError
 
     def getMintCfg(self):
-        raise NotImplementedError
+        dataDir = getDataDir()
+        cfg = config.MintConfig()
+        cfg.authUser = 'mintauth'
+        cfg.authPass = 'mintpass'
+        cfg.reposPath = dataDir + "/repos/"
+        cfg.reposContentsDir = [dataDir + "/contents1/%s/", dataDir + "/contents2/%s/"]
+        cfg.dataPath = dataDir
+        cfg.imagesPath = dataDir + '/images/'
 
-    def stockReleaseFlavor(self, db, releaseId, arch = "x86_64"):
-        cu = db.cursor()
-        flavor = deps.parseFlavor(stockFlavors['1#' + arch]).freeze()
-        cu.execute("UPDATE Releases set troveFlavor=? WHERE releaseId=?", flavor, releaseId)
-        db.commit()
+        cfg.postCfg()
+        return cfg
 
     def setUpUser(self, cfg, db):
         client = shimclient.ShimMintClient(cfg, (cfg.authUser, cfg.authPass))
@@ -86,7 +94,7 @@ class FixtureCache(object):
         projectId = client.newProject("Foo", "foo", "rpath.org")
         release = client.newRelease(projectId, "Test Release")
 
-        self.stockReleaseFlavor(db, release.id)
+        stockReleaseFlavor(db, release.id)
 
         return cfg.dbPath, {'projectId': projectId, 'releaseId': release.id}
 
@@ -130,7 +138,7 @@ class FixtureCache(object):
         release = client.newRelease(projectId, "Test Release")
         release.setImageTypes([releasetypes.STUB_IMAGE])
 
-        self.stockReleaseFlavor(db, release.getId())
+        stockReleaseFlavor(db, release.getId())
 
         relJob = client.startImageJob(release.getId())
         return cfg.dbPath, {}
@@ -147,7 +155,7 @@ class FixtureCache(object):
         release = client.newRelease(projectId, "Test Release")
         release.setImageTypes([releasetypes.STUB_IMAGE])
 
-        self.stockReleaseFlavor(db, release.getId())
+        stockReleaseFlavor(db, release.getId())
 
         relJob = client.startImageJob(release.getId())
 
@@ -171,25 +179,18 @@ class FixtureCache(object):
         return cfg.dbPath, {}
 
 
+def getDataDir():
+    return '/tmp/mint-test-%s/' % pwd.getpwuid(os.getuid())[0]
+
 class SqliteFixtureCache(FixtureCache):
     def getMintCfg(self):
-        dataDir = self.getDataDir()
-        cfg = config.MintConfig()
-        cfg.authUser = 'mintauth'
-        cfg.authPass = 'mintpass'
-        cfg.reposPath = dataDir + "/repos/"
-        cfg.reposContentsDir = [dataDir + "/contents1/%s/", dataDir + "/contents2/%s/"]
-        cfg.reposDBPath = dataDir + "/repos/%s/sqldb"
-        cfg.reposDBDriver = "sqlite"
-
-        cfg.dataPath = dataDir
-        cfg.imagesPath = dataDir + '/images/'
-
-        cfg.postCfg()
-
+        cfg = FixtureCache.getMintCfg(self)
         tmp = tempfile.mktemp(prefix = 'fixture', suffix = '.sqlite')
+
         cfg.dbPath = tmp
         cfg.dbDriver = "sqlite"
+        cfg.reposDBPath = cfg.dataPath + "/repos/%s/sqldb"
+        cfg.reposDBDriver = "sqlite"
 
         return cfg
 
@@ -211,22 +212,19 @@ class FixturedUnitTest(unittest.TestCase):
         db, fixtureData = fixtureCache.load(name)
 
         self.cfg = fixtureCache.getMintCfg()
-        self.cfg.authUser = 'mintauth'
-        self.cfg.authPass = 'mintpass'
-        self.cfg.postCfg()
 
         self.cfg.dbPath = db[0]
         self.cfg.dbDriver = db[1]
         db = dbstore.connect(self.cfg.dbPath, self.cfg.dbDriver)
         client = shimclient.ShimMintClient(self.cfg, ('testuser', 'testpass'))
 
-        self.imagePath = fixtureCache.getDataDir() + "/images/"
+        self.imagePath = getDataDir() + "/images/"
         util.mkdirChain(self.imagePath)
         return db, client, fixtureData
 
     def tearDown(self):
         try:
-            util.rmtree(fixtureCache.getDataDir())
+            util.rmtree(getDataDir())
         except OSError:
             pass
 
