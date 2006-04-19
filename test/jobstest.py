@@ -623,9 +623,6 @@ class JobsTest(fixtures.FixturedUnitTest):
         self.failIf(not (job and job.groupTroveId),
                     "startNextJob ignored a cook job")
 
-# ############################################################################
-##############################################################################
-
     @fixture('Release')
     def testJobs(self, db, client, data):
         release = client.getRelease(data['releaseId'])
