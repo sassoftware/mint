@@ -24,12 +24,13 @@ from mint.server import deriveBaseFunc, ParameterError
 from conary.lib import util
 from conary.repository.errors import TroveNotFound
 
-class ReleaseTest(MintRepositoryHelper):
-    def testBasicAttributes(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        projectId = client.newProject("Foo", "foo", "rpath.org")
+import fixtures
+from fixtures import fixture
 
-        release = client.newRelease(projectId, "Test Release")
+class ReleaseTest(fixtures.FixturedUnitTest):
+    @fixture("Release")
+    def testBasicAttributes(self, db, client, data):
+        release = client.getRelease(data['releaseId'])
         assert(release.getName() == "Test Release")
         release.setTrove("group-trove",
                          "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
@@ -58,11 +59,9 @@ class ReleaseTest(MintRepositoryHelper):
         release.refresh()
         assert desc == release.getDesc()
 
-    def testReleaseData(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        projectId = client.newProject("Foo", "foo", "rpath.org")
-        release = client.newRelease(projectId, "Test Release")
-
+    @fixture("Release")
+    def testReleaseData(self, db, client, data):
+        release = client.getRelease(data['releaseId'])
         imageTypes = [releasetypes.INSTALLABLE_ISO]
         release.setImageTypes(imageTypes)
         assert(imageTypes == release.imageTypes)
@@ -117,10 +116,9 @@ class ReleaseTest(MintRepositoryHelper):
         # ensure invalid enum values are not accepted.
         self.assertRaises(ParameterError, release.setDataValue, 'enumArg', '5')
 
-    def testMaxIsoSize(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        projectId = client.newProject("Foo", "foo", "rpath.org")
-        release = client.newRelease(projectId, "Test Release")
+    @fixture("Release")
+    def testMaxIsoSize(self, db, client, data):
+        release = client.getRelease(data['releaseId'])
         imageTypes = [releasetypes.INSTALLABLE_ISO]
         release.setImageTypes(imageTypes)
 
@@ -137,14 +135,13 @@ class ReleaseTest(MintRepositoryHelper):
                     "Data dict contained %s of %s but expected %s of type str"\
                     % (str(maxIsoSize), str(type(maxIsoSize)), '8500000000'))
 
-    def testMissingReleaseData(self):
+    @fixture("Release")
+    def testMissingReleaseData(self, db, client, data):
         # make sure releasedata properly returns the default value
         # if the row is missing. this will handle the case of a modified
         # releasedata template with old releases in the database.
 
-        client, userId = self.quickMintUser("testuser", "testpass")
-        projectId = client.newProject("Foo", "foo", "rpath.org")
-        release = client.newRelease(projectId, "Test Release")
+        release = client.getRelease(data['releaseId'])
         release.setImageTypes([releasetypes.INSTALLABLE_ISO])
         assert(release.getImageTypes() == [releasetypes.INSTALLABLE_ISO])
         assert(release.getDataTemplate()['showMediaCheck'])
@@ -156,17 +153,14 @@ class ReleaseTest(MintRepositoryHelper):
         else:
             self.fail("getDataTemplate returned bogus template data")
 
-        self.db.cursor().execute("DELETE FROM ReleaseData WHERE name='bugsUrl'")
-        self.db.commit()
+        db.cursor().execute("DELETE FROM ReleaseData WHERE name='bugsUrl'")
+        db.commit()
 
         assert(release.getDataValue("bugsUrl") == "http://bugs.rpath.com/")
 
-    def testPublished(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        projectId = client.newProject("Foo", "foo", "rpath.org")
-
-        release = client.newRelease(projectId, "Test Release")
-
+    @fixture("Release")
+    def testPublished(self, db, client, data):
+        release = client.getRelease(data['releaseId'])
         release.setImageTypes([releasetypes.STUB_IMAGE])
         release.setFiles([["file1", "File Title 1"]])
         release.setPublished(True)
@@ -192,20 +186,15 @@ class ReleaseTest(MintRepositoryHelper):
 
         self.assertRaises(ReleasePublished, release.setPublished, False)
 
-        self.stockReleaseFlavor(release.getId())
-
         self.assertRaises(ReleasePublished, client.startImageJob,
                           release.getId())
 
         self.failIf(release.getPublished() is not True,
                     "Result of getPublished is not boolean")
 
-    def testDeleteRelease(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        projectId = client.newProject("Foo", "foo", "rpath.org")
-
-        release = client.newRelease(projectId, "Test Release")
-
+    @fixture("Release")
+    def testDeleteRelease(self, db, client, data):
+        release = client.getRelease(data['releaseId'])
         release.setImageTypes([releasetypes.STUB_IMAGE])
         release.setFiles([["file1", "File Title 1"]])
         release.setPublished(True)
@@ -216,13 +205,12 @@ class ReleaseTest(MintRepositoryHelper):
         except ReleasePublished:
             pass
 
-    def testMissingRelease(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        projectId = client.newProject("Foo", "foo", "rpath.org")
+    @fixture("Release")
+    def testMissingRelease(self, db, client, data):
+        release = client.getRelease(data['releaseId'])
 
         # make a release and delete it, to emulate a race condition
         # from the web UI
-        release = client.newRelease(projectId, "Test Release")
         releaseId = release.getId()
         release.deleteRelease()
 
@@ -242,10 +230,10 @@ class ReleaseTest(MintRepositoryHelper):
 
         # nasty hack. unwrap the release data value so that we can attack
         # codepaths not normally allowed by client code.
-        setReleaseDataValue = deriveBaseFunc(self.mintServer.setReleaseDataValue)
+        setReleaseDataValue = deriveBaseFunc(client.server._server.setReleaseDataValue)
 
         try:
-            setReleaseDataValue(self.mintServer, releaseId, 'someKey', 'someVal', RDT_STRING)
+            setReleaseDataValue(client.server._server, releaseId, 'someKey', 'someVal', RDT_STRING)
             self.fail("Allowed to set data for a deleted release")
         except ReleaseMissing:
             pass
@@ -256,7 +244,7 @@ class ReleaseTest(MintRepositoryHelper):
         except ReleaseMissing:
             pass
 
-        self.stockReleaseFlavor(release.getId())
+        fixtures.stockReleaseFlavor(db, release.getId())
 
         try:
             client.startImageJob(releaseId)
@@ -264,19 +252,16 @@ class ReleaseTest(MintRepositoryHelper):
         except ReleaseMissing:
             pass
 
-    def testDownloadIncrementing(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        projectId = client.newProject("Foo", "foo", "rpath.org")
-
-        release = client.newRelease(projectId, "Test Release")
-
+    @fixture("Release")
+    def testDownloadIncrementing(self, db, client, data):
+        release = client.getRelease(data['releaseId'])
         assert(release.getDownloads() == 0)
         release.incDownloads()
         release.refresh()
         assert(release.getDownloads() == 1)
 
-    def testUnfinishedRelease(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
+    @fixture("Empty")
+    def testUnfinishedRelease(self, db, client, data):
         projectId = client.newProject("Foo", "foo", "rpath.org")
 
         brokenRelease = client.newRelease(projectId, "Test Release")
@@ -286,13 +271,13 @@ class ReleaseTest(MintRepositoryHelper):
         release = client.newRelease(projectId, "Test Release")
         releaseId = release.getId()
 
-        cu = self.db.cursor()
+        cu = db.cursor()
         cu.execute("SELECT COUNT(*) FROM Releases")
         if cu.fetchone()[0] != 1:
             self.fail("Previous unfinished releases should be removed")
 
         cu.execute("UPDATE Releases SET troveLastChanged=1")
-        self.db.commit()
+        db.commit()
 
         release = client.newRelease(projectId, "Test Release")
 
@@ -300,13 +285,12 @@ class ReleaseTest(MintRepositoryHelper):
         if cu.fetchone()[0] != 2:
             self.fail("Finished release was deleted")
 
-    def testUnfinishedReleaseData(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
+    @fixture("Empty")
+    def testUnfinishedReleaseData(self, db, client, data):
         projectId = client.newProject("Foo", "foo", "rpath.org")
-
         brokenRelease = client.newRelease(projectId, "Test Release")
 
-        cu = self.db.cursor()
+        cu = db.cursor()
         assert(brokenRelease.getDataValue('jsversion') == \
                jsversion.getDefaultVersion())
         # because the first release is not yet finished, creating a new
@@ -317,18 +301,85 @@ class ReleaseTest(MintRepositoryHelper):
         self.assertRaises(ReleaseDataNameError,
                           brokenRelease.getDataValue, 'jsversion')
 
-    def testReleaseStatus(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        projectId = client.newProject("Foo", "foo", "rpath.org")
-
-        release = client.newRelease(projectId, "Test Release")
-        releaseId = release.getId()
+    @fixture("Release")
+    def testReleaseStatus(self, db, client, data):
+        releaseId = data['releaseId']
 
         if client.server.getReleaseStatus(releaseId) != {'status': 5,
                                                          'message': 'No Job',
                                                          'queueLen': 0}:
             self.fail("getReleaseStatus returned unknown values")
 
+    @fixture("Empty")
+    def testGetReleasesForProjectOrder(self, db, client, data):
+        projectId = client.newProject("Foo", "foo", "rpath.org")
+
+        release = client.newRelease(projectId, 'release 1')
+        release.setTrove("group-trove",
+                         "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
+        release.setFiles([["file1", "File Title 1"]])
+        release.setPublished(True)
+
+        # ugly hack. mysql does not distinguish sub-second time resolution
+        time.sleep(1)
+
+        release = client.newRelease(projectId, 'release 2')
+        release.setTrove("group-trove",
+                         "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
+        release.setFiles([["file1", "File Title 1"]])
+        release.setPublished(True)
+
+        self.failIf([x.id for x in \
+                     client.server.getReleasesForProject(projectId)] != [2, 1],
+                    "getReleasesForProject is not ordered by "
+                    "'most recent first'")
+
+    @fixture("Release")
+    def testPublishEmptyRelease(self, db, client, data):
+        release = client.getRelease(data['releaseId'])
+
+        try:
+            release.setPublished(True)
+        except ReleaseEmpty:
+            pass
+        else:
+            self.fail("mint_error.ReleaseEmpty exception expected")
+
+        release.setFiles([["file1", "File Title 1"]])
+        release.setPublished(True)
+
+    @fixture("Release")
+    def testHasVMwareImage(self, db, client, data):
+        release = client.getRelease(data['releaseId'])
+
+        assert(release.hasVMwareImage() == False)
+
+        release.setFiles([["test.vmware.zip", "Test Image"]])
+        assert(release.hasVMwareImage() == True)
+
+    @fixture("Release")
+    def testGetDisplayTemplates(self, db, client, data):
+        release = client.getRelease(data['releaseId'])
+
+        self.failIf([(x[0], x[2]) for x in release.getDisplayTemplates()] != \
+                    [x for x in releasetemplates.dataTemplates.iteritems()],
+                    "dataTemplates lost in display translation")
+
+    @fixture("Release")
+    def testFreespace(self, db, client, data):
+        release = client.getRelease(data['releaseId'])
+
+        release.setImageTypes([releasetypes.RAW_FS_IMAGE])
+
+        self.failIf(not isinstance(release.getDataValue('freespace'), int),
+                    "freespace is not an integer")
+
+        release.setDataValue('freespace', 10, RDT_INT)
+
+        self.failIf(not isinstance(release.getDataValue('freespace'), int),
+                    "freespace is not an integer")
+
+class OldReleaseTest(MintRepositoryHelper):
     def testReleaseList(self):
         client, userId = self.quickMintUser("testuser", "testpass")
         adminClient, adminuserId = self.quickMintAdmin("adminauth", "adminpass")
@@ -378,29 +429,6 @@ class ReleaseTest(MintRepositoryHelper):
         rel = adminClient.server.getReleasesForProject(project3Id)
         if len(rel) != 1:
             self.fail("getReleasesForProject did not return hidden releases for admin")
-
-    def testGetReleasesForProjectOrder(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        projectId = client.newProject("Foo", "foo", "rpath.org")
-        release = client.newRelease(projectId, 'release 1')
-        release.setTrove("group-trove",
-                         "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
-        release.setFiles([["file1", "File Title 1"]])
-        release.setPublished(True)
-
-        # ugly hack. mysql does not distinguish sub-second time resolution
-        time.sleep(1)
-
-        release = client.newRelease(projectId, 'release 2')
-        release.setTrove("group-trove",
-                         "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
-        release.setFiles([["file1", "File Title 1"]])
-        release.setPublished(True)
-
-        self.failIf([x.id for x in \
-                     client.server.getReleasesForProject(projectId)] != [2, 1],
-                    "getReleasesForProject is not ordered by "
-                    "'most recent first'")
 
     def makeInstallableIsoCfg(self):
         mintDir = os.environ['MINT_PATH']
@@ -473,57 +501,6 @@ class ReleaseTest(MintRepositoryHelper):
             os.dup2(oldFd, sys.stderr.fileno())
             os.close(oldFd)
             os.chdir(cwd)
-
-    def testPublishEmptyRelease(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        projectId = client.newProject("Foo", "foo", "rpath.org")
-
-        release = client.newRelease(projectId, "Test Release")
-
-        try:
-            release.setPublished(True)
-        except ReleaseEmpty:
-            pass
-        else:
-            self.fail("mint_error.ReleaseEmpty exception expected")
-
-        release.setFiles([["file1", "File Title 1"]])
-        release.setPublished(True)
-
-    def testHasVMwareImage(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        projectId = client.newProject("Foo", "foo", "rpath.org")
-
-        release = client.newRelease(projectId, "Test Release")
-        assert(release.hasVMwareImage() == False)
-
-        release.setFiles([["test.vmware.zip", "Test Image"]])
-        assert(release.hasVMwareImage() == True)
-
-    def testGetDisplayTemplates(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        projectId = client.newProject("Foo", "foo", "rpath.org")
-
-        release = client.newRelease(projectId, "Test Release")
-
-        self.failIf([(x[0], x[2]) for x in release.getDisplayTemplates()] != \
-                    [x for x in releasetemplates.dataTemplates.iteritems()],
-                    "dataTemplates lost in display translation")
-
-    def testFreespace(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        projectId = client.newProject("Foo", "foo", "rpath.org")
-
-        release = client.newRelease(projectId, "Test Release")
-        release.setImageTypes([releasetypes.RAW_FS_IMAGE])
-
-        self.failIf(not isinstance(release.getDataValue('freespace'), int),
-                    "freespace is not an integer")
-
-        release.setDataValue('freespace', 10, RDT_INT)
-
-        self.failIf(not isinstance(release.getDataValue('freespace'), int),
-                    "freespace is not an integer")
 
 
 if __name__ == "__main__":
