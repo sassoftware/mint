@@ -68,14 +68,38 @@ class FixtureCache(object):
         cfg.postCfg()
         return cfg
 
-    def setUpUser(self, cfg, db):
+    def setUpUser(self, cfg, db, username ='testuser', password = 'testpass'):
         client = shimclient.ShimMintClient(cfg, (cfg.authUser, cfg.authPass))
 
-        userId = client.registerNewUser('testuser', 'testpass', "Test User",
+        userId = client.registerNewUser(username, password, "Test User",
             "test@example.com", "test at example.com", "", active=True)
 
         cu = db.cursor()
         cu.execute("DELETE FROM Confirmations WHERE userId=?", userId)
+        db.commit()
+
+    def adminUser(self, db, username):
+        cu = db.cursor()
+
+        cu.execute("""SELECT COUNT(*) FROM UserGroups
+                          WHERE UserGroup = 'MintAdmin'""")
+        if cu.fetchone()[0] == 0:
+            cu.execute("""SELECT IFNULL(MAX(userGroupId) + 1, 1)
+                             FROM UserGroups""")
+            groupId = cu.fetchone()[0]
+            cu.execute("INSERT INTO UserGroups VALUES(?, 'MintAdmin')",
+                       groupId)
+            db.commit()
+        else:
+            cu.execute("""SELECT userGroupId FROM UserGroups
+                              WHERE UserGroup = 'MintAdmin'""")
+            groupId = cu.fetchone()[0]
+
+        cu.execute("SELECT userId from Users where username=?", username)
+        authUserId = cu.fetchone()[0]
+
+        cu.execute("INSERT INTO UserGroupMembers VALUES(?, ?)",
+                   groupId, authUserId)
         db.commit()
 
     def fixtureEmpty(self):
@@ -85,6 +109,17 @@ class FixtureCache(object):
         ms = server.MintServer(cfg, db, alwaysReload = True)
         client = shimclient.ShimMintClient(cfg, self.authToken)
         self.setUpUser(cfg, db)
+
+        return cfg.dbPath, {}
+
+    def fixtureAdmin(self):
+        """Contains one admin user: ('testauth', 'testpass')"""
+        cfg = self.getMintCfg()
+        db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
+        ms = server.MintServer(cfg, db, alwaysReload = True)
+        client = shimclient.ShimMintClient(cfg, self.authToken)
+        self.setUpUser(cfg, db)
+        self.adminUser(db, 'testuser')
 
         return cfg.dbPath, {}
 

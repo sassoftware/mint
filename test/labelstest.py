@@ -14,12 +14,13 @@ from mint import server
 from mint import users
 from mint.projects import LabelMissing
 
-class LabelsTest(MintRepositoryHelper):
-    def testBasicAttributes(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
+import fixtures
+from fixtures import fixture
 
-        projectId = client.newProject("Foo", "foo", "rpath.org")
-        project = client.getProject(projectId)
+class LabelsTest(fixtures.FixturedUnitTest):
+    @fixture("Release")
+    def testBasicAttributes(self, db, client, data):
+        project = client.getProject(data['projectId'])
 
         newLabelId = project.addLabel("bar.rpath.org@rpl:devel",
             "http://rpath.org/repos/bar/", "user1", "pass1")
@@ -42,14 +43,12 @@ class LabelsTest(MintRepositoryHelper):
         except LabelMissing:
             pass
 
-    def testSSL(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-
-        projectId = client.newProject("Test Project", "test", "localhost")
-        project = client.getProject(projectId)
+    @fixture("Release")
+    def testSSL(self, db, client, data):
+        project = client.getProject(data['projectId'])
 
         ccfg = project.getConaryConfig()
-        if self.mintCfg.SSL:
+        if client.server._server.cfg.SSL:
             assert(ccfg.repositoryMap.values()[0].startswith("https://"))
         else:
             assert(ccfg.repositoryMap.values()[0].startswith("http://"))
@@ -57,25 +56,22 @@ class LabelsTest(MintRepositoryHelper):
         extProjectId = client.newProject("External Project", "external",
                 "localhost")
 
-        cu = self.db.cursor()
+        cu = db.cursor()
         cu.execute("UPDATE Projects SET external=1 WHERE projectId=?",
                 extProjectId)
-        self.db.commit()
+        db.commit()
 
         extProject = client.getProject(extProjectId)
         ccfg = extProject.getConaryConfig()
         assert(ccfg.repositoryMap.values()[0].startswith("http://"))
 
-
-    def testExternalVersions(self):
+    @fixture("Empty")
+    def testExternalVersions(self, db, client, data):
         def addLabel(projectId, label, url = 'http://none'):
             cu.execute("""INSERT INTO Labels
                               (projectId, label, url, username, password)
                               VALUES(?, ?, ?, 'none', 'none')""",
                        projectId, label, url)
-
-        client, userId = self.quickMintUser("testuser", "testpass")
-        client2, userId = self.quickMintUser("foouser", "foopass")
 
         projectId = client.newProject("Test Project", "test", "localhost")
         project = client.getProject(projectId)
@@ -83,7 +79,7 @@ class LabelsTest(MintRepositoryHelper):
         projectId2 = client.newProject("Foo Project", "foo", "localhost")
         project = client.getProject(projectId2)
 
-        cu = self.db.cursor()
+        cu = db.cursor()
 
         cu.execute("UPDATE Projects SET external=1 WHERE projectId=?",
                    projectId2)
@@ -92,7 +88,7 @@ class LabelsTest(MintRepositoryHelper):
         addLabel(projectId, '/bar.rpath.org@rpl:devel')
         addLabel(projectId2, '/baz.rpath.org@rpl:devel')
         addLabel(projectId, '/foo.rpath.org@diff:label')
-        self.db.commit()
+        db.commit()
 
         # a local project returns False
         self.failIf(client.versionIsExternal( \
@@ -123,9 +119,9 @@ class LabelsTest(MintRepositoryHelper):
         #self.assertRaises(database.ItemNotFound, client2.versionIsExternal,
         #                  '/just.not.there@rpl:devel//1/1.0.0-1-0.1')
 
-    def testInboundLabel(self):
-        client, userId = self.quickMintAdmin("testuser", "testpass")
-        projectId = self.newProject(client)
+    @fixture("Admin")
+    def testInboundLabel(self, db, client, data):
+        projectId = client.newProject("Foo", "foo", "rpath.org")
         client.addInboundLabel(projectId, projectId, "http://www.example.com/conary/",
                                "mirror", "mirrorpass")
 
@@ -133,9 +129,9 @@ class LabelsTest(MintRepositoryHelper):
         assert(labels == [[projectId, projectId, 'http://www.example.com/conary/',
                            'mirror', 'mirrorpass']])
 
-    def testOutboundLabel(self):
-        client, userId = self.quickMintAdmin("testuser", "testpass")
-        projectId = self.newProject(client)
+    @fixture("Admin")
+    def testOutboundLabel(self, db, client, data):
+        projectId = client.newProject("Foo", "foo", "rpath.org")
         client.addOutboundLabel(projectId, projectId, "http://www.example.com/conary/",
                                 "mirror", "mirrorpass")
 
