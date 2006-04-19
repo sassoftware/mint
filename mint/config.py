@@ -96,6 +96,8 @@ class MintConfig(ConfigFile):
     maintenanceLockPath     = os.path.join(dataPath, 'maintenance.lock')
     announceLink            = ''
 
+    googleAnalyticsTracker  = (cfgtypes.CfgBool, False)
+
     def read(self, path, exception = False):
         ConfigFile.read(self, path, exception)
 

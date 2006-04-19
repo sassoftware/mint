@@ -104,11 +104,13 @@ onload = "javascript:;"
                 <p id="mintVersionString">${cfg.productName} version ${constants.mintVersion}</p>
             </div>
         </div>
+        <div py:if="cfg.googleAnalyticsTracker" py:strip="True">
 <script src="http://www.google-analytics.com/urchin.js" type="text/javascript">
 </script>
 <script type="text/javascript">
 _uacct = "UA-284172-1";
 urchinTracker();
 </script>
+        </div>
     </body>
 </html>
