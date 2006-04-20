@@ -1,0 +1,205 @@
+#!/usr/bin/python2.4
+#
+# Copyright (c) 2006 rPath, Inc.
+#
+# All Rights Reserved
+#
+
+# This script will compile an sqlite mirror of a repository and split the
+# contents into ISO's of user definable size.
+
+import os, sys
+import tempfile
+import signal
+import time
+import socket
+from math import ceil
+
+from conary.conaryclient import mirror
+from conary import versions
+from conary.repository import netclient
+from conary.repository.netrepos import netserver
+from conary.lib import util, log
+from conary.server import schema
+from conary.server import server
+from conary import dbstore
+
+from mint import client
+from mint.scriptlibrary import SingletonScript
+
+log.setVerbosity(log.DEBUG)
+#sys.excepthook = util.genExcepthook(debug=True)
+
+MAX_FILESIZE = 1000000000
+
+class MirrorOffline(SingletonScript):
+
+    def handle_args(self):
+        if len(sys.argv) < 3:
+            return False
+        return True
+
+    def usage(self):
+        print "usage: %s <url to repository> <label> <username> <password> [ISO size]" % self.name
+        return 1
+
+    def action(self):
+        try:
+            pid = 0
+            baseDir = tempfile.mkdtemp()
+            outputDir = tempfile.mkdtemp()
+            if len(sys.argv) < 5:
+                return self.usage()
+            mc = client.MintClient(sys.argv[1])
+            cfg = mirror.MirrorConfiguration()
+
+            sourceUrl, labelStr, userName, userPass = sys.argv[1:5]
+
+            labelStr = sys.argv[2]
+            if len(sys.argv) > 5:
+                if sys.argv[5][-1].isalpha():
+                    sizeBase = float(sys.argv[3][:-1])
+                    mult = {'B' : 1,
+                            'b' : 1,
+                            'K' : 1024,
+                            'k' : 1000,
+                            'M' : 1048576,
+                            'm' : 1000000,
+                            'G' : 1073741824,
+                            'g' : 1000000000}[sys.argv[3][-1]]
+                else:
+                    sizeBase = float(sys.argv[3])
+                    mult = 1048576
+                isoSize = int(mult * sizeBase)
+            else:
+                # default is a 650MB CD
+                isoSize = 681574400
+            # round down to an iso-block sized limit.
+            # adjust for disc formatting data
+            isoSize -= isoSize % 2048
+            # 174 iso blocks plus 3/4 of an isoblock per file, rounded up.
+            resBlocks = 174 + ceil((isoSize / (MAX_FILESIZE * 1.0)) * 0.75)
+            isoSize -= resBlocks * 2048
+
+            openPort = 21213
+            while True:
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                try:
+                    sock.connect((("127.0.0.1"), openPort))
+                    openPort += 1
+                except:
+                    break;
+            sock.close()
+
+            # instantiate a target repository right here.
+            targCfg = netserver.ServerConfig()
+            targCfg.serverName = versions.Label(labelStr).getHost()
+            targCfg.port = openPort
+            targetUrl="http://%s:%d/" % ('127.0.0.1', targCfg.port)
+            targCfg.contentsDir = os.path.join(baseDir, 'contents')
+            targCfg.repositoryDB = ('sqlite', os.path.join(baseDir, 'sqldb'))
+            db = dbstore.connect(targCfg.repositoryDB[1],
+                                 targCfg.repositoryDB[0])
+            schema.loadSchema(db)
+            netRepos = netserver.NetworkRepositoryServer(targCfg, targetUrl)
+
+            netRepos.auth.addUser(userName, userPass)
+            netRepos.auth.addAcl(userName, None, None, True, False, True)
+            netRepos.auth.setMirror(userName, True)
+
+            pid = os.fork()
+            if not pid:
+                fd = os.open(os.devnull, os.W_OK)
+                os.dup2(fd, sys.stdout.fileno())
+                os.dup2(fd, sys.stderr.fileno())
+                os.close(fd)
+                os.system("python %s --contents-dir %s --db '%s %s' --port %d"
+                          " --server-name %s"
+                          % (server.__file__, targCfg.contentsDir,
+                             targCfg.repositoryDB[0], targCfg.repositoryDB[1],
+                             targCfg.port, targCfg.serverName))
+
+            sock = socket.socket()
+            count = 500;
+            while count:
+                try:
+                    sock.connect((("127.0.0.1"), targCfg.port))
+                    break
+                except:
+                    time.sleep(0.01)
+                count -= 1
+            if not count:
+                raise SystemError, "unable to contact repository server"
+            else:
+                sock.close()
+
+            reposHost = versions.Label(labelStr).getHost()
+
+            cfg.target.repositoryMap = {reposHost: targetUrl}
+            cfg.target.user.addServerGlob(reposHost, userName, userPass)
+
+            cfg.source.repositoryMap = {reposHost: sourceUrl}
+            cfg.source.user.addServerGlob(reposHost, userName, userPass)
+
+            cfg.host = reposHost
+            cfg.labels = [versions.Label(labelStr)]
+
+            targetRepos = netclient.NetworkRepositoryClient( \
+                cfg.target.repositoryMap, cfg.target.user,
+                entitlementDir = cfg.entitlementDirectory)
+
+            sourceRepos = netclient.NetworkRepositoryClient( \
+                cfg.source.repositoryMap, cfg.source.user,
+                entitlementDir = cfg.entitlementDirectory)
+
+            while mirror.mirrorRepository(sourceRepos, targetRepos, cfg,
+                                          False, False, False):
+                pass
+
+            # clear the account we just used.
+            targetRepos.deleteUserByName(versions.Label(labelStr), userName)
+
+            # bundle the results
+            util.execute('tar -C %s -cpPsv -O ./ | gzip -9 | '
+                         'split -a 3 -d -b %d - %s' % \
+                         (baseDir, isoSize,
+                          os.path.join(outputDir, targCfg.serverName + '.tgz')))
+            # break DVD's into multi-part files. to comply with ISO-9660/UDF
+            # filesystem constraints
+            if isoSize > MAX_FILESIZE:
+                for fn in os.listdir(outputDir):
+                    util.execute("split -a 3 -d -b %d %s %s" % \
+                                 (MAX_FILESIZE, os.path.join(outputDir, fn),
+                                  os.path.join(outputDir, fn + '_')))
+                    os.unlink(os.path.join(outputDir, fn))
+                    files = " ".join([os.path.join(outputDir, x) \
+                                      for x in os.listdir(outputDir) \
+                                      if x.startswith(fn + '_')])
+                    util.execute("mkisofs -o %s -r -U %s" % \
+                                 (os.path.join( \
+                        outputDir, fn.replace('.tgz', '') + '.iso'), files))
+                    for mFn in [x for x in os.listdir(outputDir) \
+                                if x.startswith(fn + '_')]:
+                        os.unlink(os.path.join(outputDir, mFn))
+            else:
+                for fn in os.listdir(outputDir):
+                    util.execute("mkisofs -o %s -r -U %s" % \
+                                 (os.path.join( \
+                        outputDir, fn.replace('.tgz', '') + '.iso'),
+                                  os.path.join(outputDir, fn)))
+                    os.unlink(os.path.join(outputDir, fn))
+            for isoFile in os.listdir(outputDir):
+                os.rename(os.path.join(outputDir, isoFile),
+                          os.path.join('.', isoFile))
+        finally:
+            for kDir in (baseDir, outputDir):
+                try:
+                    util.rmtree(kDir)
+                except:
+                    pass
+        return 0
+
+if __name__ == "__main__":
+    mo = MirrorOffline()
+    os._exit(mo.run())
