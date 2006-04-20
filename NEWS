@@ -1,4 +1,12 @@
 Changes in (tip):
+* Swap file size on bootable images is now configurable.
+* You are now not required to have a kernel in your bootable image group,
+  if you know what you're doing.
+* The group cook "stock flavors" were updated to "prefer" almost every use flag,
+  to avoid problems where a package cooked with a ! or !~ flavor would not be
+  found by the group cook system.
+* Gencslist now supports duplicated changeset filenames by appending a count to
+  the end of the filename.
 * Google Analytics code is now disabled by default. Enable it by specifying
   "googleAnalyticsTracker True" in the mint configuration file.
 * Refactoring of code; removed relative imports from the main codebase (save
