@@ -99,7 +99,7 @@ class FixtureCache(object):
         return userId
 
     def fixtureEmpty(self):
-        """Contains one user: ('testauth', 'testpass')"""
+        """Contains one user: ('testuser', 'testpass')"""
         cfg = self.getMintCfg()
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
         ms = server.MintServer(cfg, db, alwaysReload = True)
@@ -109,12 +109,12 @@ class FixtureCache(object):
         return cfg.dbPath, { 'userId': userId }
 
     def fixtureAdmin(self):
-        """Contains one admin user: ('testauth', 'testpass')"""
+        """Contains one admin user: ('testuser', 'testpass')"""
         cfg = self.getMintCfg()
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
         ms = server.MintServer(cfg, db, alwaysReload = True)
-        client = shimclient.ShimMintClient(cfg, self.authToken)
-        authUserId = self.createUser(cfg, db, username = 'testauth', password = 'testpass', isAdmin = True)
+        client = shimclient.ShimMintClient(cfg, ('testuser', 'testpass'))
+        authUserId = self.createUser(cfg, db, username = 'testuser', password = 'testpass', isAdmin = True)
 
         return cfg.dbPath, { 'authUserId': authUserId }
 
