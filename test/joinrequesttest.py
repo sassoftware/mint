@@ -7,14 +7,14 @@ import testsuite
 testsuite.setup()
 
 from mint_rephelp import MintRepositoryHelper
-
 from mint import userlevels
 
-class JoinRequestTest(MintRepositoryHelper):
-    def testSetComments(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        projectId = client.newProject("Foo", "foo", "rpath.org")
+from fixtures import FixturedUnitTest, fixture
 
+class JoinRequestTest(FixturedUnitTest):
+    @fixture("Release")
+    def testSetComments(self, db, client, data):
+        projectId = data['projectId']
         # abandon the old user. you can't make requests against
         # projects you're a member of, so that one's useless for testing
         client, userId = self.quickMintUser("seconduser", "testpass")
@@ -35,9 +35,9 @@ class JoinRequestTest(MintRepositoryHelper):
         # request should no longer be present
         assert(not client.userHasRequested(projectId, userId))
 
-    def testMembershipEffects(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        projectId = client.newProject("Foo", "foo", "rpath.org")
+    @fixture("Release")
+    def testMembershipEffects(self, db, client, data):
+        projectId = data['projectId']
 
         # uses original client -- meaning has auth tokens for project owner
         project = client.getProject(projectId)
@@ -89,10 +89,10 @@ class JoinRequestTest(MintRepositoryHelper):
         # writing member status should clear a join request
         assert(not client.userHasRequested(projectId, userId))
 
-    def testCancelAcctEffects(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        projectId = client.newProject("Foo", "foo", "rpath.org")
-
+    @fixture("Release")
+    def testCancelAcctEffects(self, db, client, data):
+        projectId = data['projectId']
+        userId = data['userId']
         newClient, newUserId = self.quickMintUser("member", "memberpass")
 
         user = newClient.getUser(newUserId)
@@ -103,9 +103,9 @@ class JoinRequestTest(MintRepositoryHelper):
         assert(not client.userHasRequested(projectId, userId))
 
     # FIXME. need to exercise listJoinRequests
-    def testListJoinRequests(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        projectId = client.newProject("Foo", "foo", "rpath.org")
+    @fixture("Release")
+    def testListJoinRequests(self, db, client, data):
+        projectId = data['projectId']
 
         for i in range(2, 7):
             newClient, newUserId = self.quickMintUser('newUser_%d' %i,'testpass')
