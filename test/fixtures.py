@@ -114,7 +114,7 @@ class FixtureCache(object):
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
         ms = server.MintServer(cfg, db, alwaysReload = True)
         client = shimclient.ShimMintClient(cfg, self.authToken)
-        authUserId = self.createUser(cfg, db, isAdmin = True)
+        authUserId = self.createUser(cfg, db, username = 'testauth', password = 'testpass', isAdmin = True)
 
         return cfg.dbPath, { 'authUserId': authUserId }
 
