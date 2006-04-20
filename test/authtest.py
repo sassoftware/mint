@@ -10,28 +10,31 @@ from mint_rephelp import MintRepositoryHelper
 
 from mint import server
 from mint import users
+from mint import shimclient
 
-class AuthTest(MintRepositoryHelper):
-    def testNewUser(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
+from fixtures import FixturedUnitTest, fixture
+
+class AuthTest(FixturedUnitTest):
+    @fixture("Empty")
+    def testNewUser(self, db, client, data):
         auth = client.checkAuth()
         assert(auth.authorized)
 
-    def testBadUser(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-
-        client = self.openMintClient(("testuser", "badpass"))
+    @fixture("Empty")
+    def testBadUser(self, db, client, data):
+        client = shimclient.ShimMintClient(client._cfg, ("testuser", "badpass"))
         auth = client.checkAuth()
         assert(not auth.authorized)
 
         # ensure capitalization typos in username aren't allowed either
-        client = self.openMintClient(("testUser","testpass"))
+        client = shimclient.ShimMintClient(client._cfg, ("testUser","testpass"))
         auth = client.checkAuth()
         assert(not auth.authorized)
 
+    @fixture("Empty")
+    def testConflictingUser(self, db, client, data):
+        client = self._getAdminClient()
 
-    def testConflictingUser(self):
-        client = self.openMintClient()
         # make two accounts with a case sensitive clash.
         userId = client.registerNewUser("member", "memberpass", "Test Member",
                                         "test@example.com", "test at example.com", "", active=True)
@@ -44,20 +47,20 @@ class AuthTest(MintRepositoryHelper):
         userId = client.registerNewUser("different", "memberpass", "Test Member",
                                         "test@example.com", "test at example.com", "", active=True)
 
-    def testRequiresAuth(self):
-        client = self.openMintClient(('anonymous', 'anonymous'))
+    @fixture("Empty")
+    def testRequiresAuth(self, db, client, data):
+        anonClient = shimclient.ShimMintClient(client._cfg, ('anonymous', 'anonymous'))
 
         try:
-            client.getUserSearchResults('Any String Will Do')
+            anonClient.getUserSearchResults('Any String Will Do')
             self.fail("Not-logged-in client was allowed to perform a function requiring authorization")
         except server.PermissionDenied:
             pass
 
-        client, userid = self.quickMintUser('testuser','testpass')
         client.getUserSearchResults('Any String Will Do')
 
-    def testRequiresAdmin(self):
-        client, userId = self.quickMintUser('testuser', 'testpass')
+    @fixture("Empty")
+    def testRequiresAdmin(self, db, client, data):
         projectId = client.newProject('Foo', 'foo', 'localhost')
 
         try:
