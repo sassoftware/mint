@@ -13,6 +13,9 @@ Changes in (tip):
   for tests and scripts).
 * Refactored admin backend, url changed to /admin/ from /administer/ (the latter
   still works, to preserve bookmarks).
+* Extended characters in the group trove description no longer break the cook
+  process with an "invalid type for set" error. Extended characters are converted
+  to '?' when passed into Conary.
 
 Changes in 1.6.1:
 
