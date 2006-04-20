@@ -64,6 +64,7 @@ class FixtureCache(object):
         cfg.reposContentsDir = [dataDir + "/contents1/%s/", dataDir + "/contents2/%s/"]
         cfg.dataPath = dataDir
         cfg.imagesPath = dataDir + '/images/'
+        cfg.sendNotificationEmails = False
 
         cfg.postCfg()
         return cfg
@@ -73,9 +74,6 @@ class FixtureCache(object):
 
         userId = client.registerNewUser(username, password, "Test User",
             "test@example.com", "test at example.com", "", active=True)
-
-        cu = db.cursor()
-        cu.execute("DELETE FROM Confirmations WHERE userId=?", userId)
 
         if isAdmin:
             cu.execute("""SELECT COUNT(*) FROM UserGroups
@@ -94,8 +92,8 @@ class FixtureCache(object):
 
             cu.execute("INSERT INTO UserGroupMembers VALUES(?, ?)",
                        groupId, userId)
+            db.commit()
 
-        db.commit()
         return userId
 
     def fixtureEmpty(self):
@@ -309,6 +307,8 @@ class MySqlFixtureCache(FixtureCache, mysqlharness.MySqlHarness):
 
 
 class FixturedUnitTest(unittest.TestCase):
+    adminClient = None
+
     def listFixtures(self):
         return fixtureCache.list()
 
@@ -326,6 +326,18 @@ class FixturedUnitTest(unittest.TestCase):
         self.imagePath = getDataDir() + "/images/"
         util.mkdirChain(self.imagePath)
         return db, client, fixtureData
+
+    def _getAdminClient(self):
+        if not self.adminClient:
+            self.adminClient = shimclient.ShimMintClient(self.cfg, ('mintauth', 'mintpass'))
+        return self.adminClient
+
+    def quickMintUser(self, username, password, email = "test@example.com"):
+        client = self._getAdminClient()
+        userId = client.registerNewUser(username, password, "Test User",
+            email, "test at example.com", "", active=True)
+        client = shimclient.ShimMintClient(self.cfg, (username, password))
+        return client, userId
 
     def tearDown(self):
         try:
