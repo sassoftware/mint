@@ -136,7 +136,7 @@ class GroupTroveCook(Generator):
                 # commit recipe as changeset
                 message = "Auto generated commit from %s.\n%s" % \
                           (cfg.name, groupTrove.description)
-                checkin.commit(repos, cfg, message)
+                checkin.commit(repos, cfg, message.encode('ascii', 'replace'))
 
                 troveSpec = "%s[%s]" % (groupTrove.recipeName, str(arch))
                 removeTroves = []
