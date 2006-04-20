@@ -68,7 +68,7 @@ class FixtureCache(object):
         cfg.postCfg()
         return cfg
 
-    def setUpUser(self, cfg, db, username ='testuser', password = 'testpass'):
+    def createUser(self, cfg, db, username = 'testuser', password = 'testpass', isAdmin = False):
         client = shimclient.ShimMintClient(cfg, (cfg.authUser, cfg.authPass))
 
         userId = client.registerNewUser(username, password, "Test User",
@@ -76,31 +76,27 @@ class FixtureCache(object):
 
         cu = db.cursor()
         cu.execute("DELETE FROM Confirmations WHERE userId=?", userId)
-        db.commit()
 
-    def adminUser(self, db, username):
-        cu = db.cursor()
-
-        cu.execute("""SELECT COUNT(*) FROM UserGroups
-                          WHERE UserGroup = 'MintAdmin'""")
-        if cu.fetchone()[0] == 0:
-            cu.execute("""SELECT IFNULL(MAX(userGroupId) + 1, 1)
-                             FROM UserGroups""")
-            groupId = cu.fetchone()[0]
-            cu.execute("INSERT INTO UserGroups VALUES(?, 'MintAdmin')",
-                       groupId)
-            db.commit()
-        else:
-            cu.execute("""SELECT userGroupId FROM UserGroups
+        if isAdmin:
+            cu.execute("""SELECT COUNT(*) FROM UserGroups
                               WHERE UserGroup = 'MintAdmin'""")
-            groupId = cu.fetchone()[0]
+            if cu.fetchone()[0] == 0:
+                cu.execute("""SELECT IFNULL(MAX(userGroupId) + 1, 1)
+                                 FROM UserGroups""")
+                groupId = cu.fetchone()[0]
+                cu.execute("INSERT INTO UserGroups VALUES(?, 'MintAdmin')",
+                           groupId)
+                db.commit()
+            else:
+                cu.execute("""SELECT userGroupId FROM UserGroups
+                                  WHERE UserGroup = 'MintAdmin'""")
+                groupId = cu.fetchone()[0]
 
-        cu.execute("SELECT userId from Users where username=?", username)
-        authUserId = cu.fetchone()[0]
+            cu.execute("INSERT INTO UserGroupMembers VALUES(?, ?)",
+                       groupId, userId)
 
-        cu.execute("INSERT INTO UserGroupMembers VALUES(?, ?)",
-                   groupId, authUserId)
         db.commit()
+        return userId
 
     def fixtureEmpty(self):
         """Contains one user: ('testauth', 'testpass')"""
@@ -108,9 +104,9 @@ class FixtureCache(object):
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
         ms = server.MintServer(cfg, db, alwaysReload = True)
         client = shimclient.ShimMintClient(cfg, self.authToken)
-        self.setUpUser(cfg, db)
+        userId = self.createUser(cfg, db)
 
-        return cfg.dbPath, {}
+        return cfg.dbPath, { 'userId': userId }
 
     def fixtureAdmin(self):
         """Contains one admin user: ('testauth', 'testpass')"""
@@ -118,31 +114,30 @@ class FixtureCache(object):
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
         ms = server.MintServer(cfg, db, alwaysReload = True)
         client = shimclient.ShimMintClient(cfg, self.authToken)
-        self.setUpUser(cfg, db)
-        self.adminUser(db, 'testuser')
+        authUserId = self.createUser(cfg, db, isAdmin = True)
 
-        return cfg.dbPath, {}
+        return cfg.dbPath, { 'authUserId': authUserId }
 
     def fixtureRelease(self):
         cfg = self.getMintCfg()
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
         ms = server.MintServer(cfg, db, alwaysReload = True)
         client = shimclient.ShimMintClient(cfg, self.authToken)
-        self.setUpUser(cfg, db)
+        userId = self.createUser(cfg, db)
 
         projectId = client.newProject("Foo", "foo", "rpath.org")
         release = client.newRelease(projectId, "Test Release")
 
         stockReleaseFlavor(db, release.id)
 
-        return cfg.dbPath, {'projectId': projectId, 'releaseId': release.id}
+        return cfg.dbPath, {'userId': userId, 'projectId': projectId, 'releaseId': release.id}
 
     # job fixtures
     def fixtureCookJob(self):
         cfg = self.getMintCfg()
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
         ms = server.MintServer(cfg, db, alwaysReload = True)
-        self.setUpUser(cfg, db)
+        userId = self.createUser(cfg, db)
         client = shimclient.ShimMintClient(cfg, self.authToken)
 
         projectId = client.newProject("Foo", "foo", "rpath.org")
@@ -162,13 +157,13 @@ class FixtureCache(object):
                                     subGroup, False, False, False)
 
         cookJobId = groupTrove.startCookJob("1#x86")
-        return cfg.dbPath, {}
+        return cfg.dbPath, { 'userId': userId }
 
     def fixtureImageJob(self):
         cfg = self.getMintCfg()
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
         ms = server.MintServer(cfg, db, alwaysReload = True)
-        self.setUpUser(cfg, db)
+        userId = self.createUser(cfg, db)
 
         client = shimclient.ShimMintClient(cfg, self.authToken)
 
@@ -180,13 +175,13 @@ class FixtureCache(object):
         stockReleaseFlavor(db, release.getId())
 
         relJob = client.startImageJob(release.getId())
-        return cfg.dbPath, {}
+        return cfg.dbPath, { 'userId': userId }
 
     def fixtureBothJobs(self):
         cfg = self.getMintCfg()
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
         ms = server.MintServer(cfg, db, alwaysReload = True)
-        self.setUpUser(cfg, db)
+        userId = self.createUser(cfg, db)
 
         client = shimclient.ShimMintClient(cfg, ('testuser', 'testpass'))
         projectId = client.newProject("Foo", "foo", "rpath.org")
@@ -215,7 +210,7 @@ class FixtureCache(object):
         cookJobId = groupTrove.startCookJob("1#x86")
 
         db.commit()
-        return cfg.dbPath, {}
+        return cfg.dbPath, { 'userId': userId }
 
 
 def getDataDir():
