@@ -60,6 +60,7 @@ class FixtureCache(object):
         cfg.reposPath = os.path.join(cfg.dataPath, 'repos')
         cfg.reposContentsDir = [os.path.join(cfg.dataPath, 'contents1', '%s'), os.path.join(cfg.dataPath, 'contents2', '%s')]
         cfg.imagesPath = os.path.join(cfg.dataPath, 'images')
+        util.mkdirChain(cfg.imagesPath)
         cfg.sendNotificationEmails = False
         cfg.postCfg()
         return cfg
@@ -118,14 +119,26 @@ class FixtureCache(object):
         ms = server.MintServer(cfg, db, alwaysReload = True)
         client = shimclient.ShimMintClient(cfg, self.authToken)
         userId = self.createUser(cfg, db)
-        otherUserId = self.createUser(cfg, db, username = 'member', password = 'memberpass', fullname = 'Test Member', email = 'member@example.com', blurb = 'member at example.com')
 
         projectId = client.newProject("Foo", "foo", MINT_PROJECT_DOMAIN)
         release = client.newRelease(projectId, "Test Release")
 
         stockReleaseFlavor(db, release.id)
 
-        return cfg, {'userId': userId, 'otherUserId': otherUserId, 'projectId': projectId, 'releaseId': release.id}
+        return cfg, {'userId': userId, 'projectId': projectId, 'releaseId': release.id}
+
+    def fixtureMembers(self, cfg):
+        db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
+        ms = server.MintServer(cfg, db, alwaysReload = True)
+        client = shimclient.ShimMintClient(cfg, self.authToken)
+        userId = self.createUser(cfg, db)
+
+        projectId = client.newProject("Foo", "foo", MINT_PROJECT_DOMAIN)
+
+        memberId = self.createUser(cfg, db, username = 'member', password = 'memberpass', fullname = 'Test Member', email = 'member@example.com', blurb = 'member at example.com')
+        memberClient = shimclient.ShimMintClient(cfg, ('member', 'memberpass'))
+
+        return cfg, {'userId': userId, 'memberId': memberId, 'projectId': projectId, 'memberClient': memberClient}
 
     def fixtureCookJob(self, cfg):
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)

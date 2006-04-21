@@ -662,13 +662,13 @@ class JobsTest(fixtures.FixturedUnitTest):
 
         from mint.distro import jobserver
         isocfg = jobserver.IsoGenConfig()
-        isocfg.finishedPath = self.imagePath
+        isocfg.finishedPath = self.cfg.imagesPath
         imagegen = stub_image.StubImage(client, isocfg, job,
                                         release, project)
         imagegen.write()
-        release.setFiles([[self.imagePath + "/stub.iso", "Stub"]])
+        release.setFiles([[self.cfg.imagesPath + "/stub.iso", "Stub"]])
 
-        assert(os.path.exists(self.imagePath + "/stub.iso"))
+        assert(os.path.exists(self.cfg.imagesPath + "/stub.iso"))
 
         release.refresh()
         files = release.getFiles()
@@ -676,7 +676,7 @@ class JobsTest(fixtures.FixturedUnitTest):
                           'title': 'Stub', 'size': 13}])
 
         fileInfo = client.getFileInfo(files[0]['fileId'])
-        assert(fileInfo == (release.getId(), 0, self.imagePath + '/stub.iso',
+        assert(fileInfo == (release.getId(), 0, self.cfg.imagesPath + '/stub.iso',
                             'Stub'))
 
         try:
