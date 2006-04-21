@@ -317,7 +317,8 @@ mount -o defaults --ro -t iso9660 /dev/loop0 /sysroot
         self.liveDir = None
         self.liveISO = None
         self.freespace = 0
-        self.swapSize = 0
+        # swap will be removed by toolkit_init
+        self.swapSize = 134217728
         self.fallback = os.path.join(self.imgcfg.fallbackDir,
                                      self.release.getArch())
         self.addJournal = False
