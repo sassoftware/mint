@@ -61,12 +61,14 @@ class JobRunner:
         self.job = job
 
     def run(self):
-        
         # ensure each job thread has it's own process space
         pid = os.fork()
         if not pid:
-            self.doWork()
-            os._exit(0)
+            try:
+                self.doWork()
+            finally:
+                # always die here, no matter what.
+                os._exit(0)
         else:
             return pid
 
