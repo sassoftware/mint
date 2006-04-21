@@ -54,6 +54,9 @@ SUPPORTED_ARCHS = ('x86', 'x86_64')
 # JOB_IDLE_INTERVAL: interval is in seconds. format is (min, max)
 JOB_IDLE_INTERVAL = (5, 10)
 
+global parent
+parent = True
+
 class JobRunner:
     def __init__(self, cfg, client, job):
         self.cfg = cfg
@@ -64,6 +67,8 @@ class JobRunner:
         # ensure each job thread has it's own process space
         pid = os.fork()
         if not pid:
+            global parent
+            parent = False
             try:
                 self.doWork()
             finally:
@@ -161,6 +166,7 @@ class JobDaemon:
         slog = scriptlibrary.getScriptLogger()
 
         def stopJobs(signalNum, frame):
+            global parent
             slog = scriptlibrary.getScriptLogger()
             self.takingJobs = False
             if signalNum == signal.SIGTERM:
@@ -169,10 +175,16 @@ class JobDaemon:
                 signalName = 'SIGINT'
             else:
                 signalName = 'UNKNOWN'
-            slog.info("Caught %s signal. No more jobs will be requested." % \
-                     signalName)
+            if parent:
+                slog.info("Caught %s signal. Not taking jobs." % signalName)
+            else:
+                slog.info("Caught %s signal." % signalName)
             signal.signal(signal.SIGTERM, self.origTerm)
             signal.signal(signal.SIGINT, self.origInt)
+            if not parent:
+                # worker threads also have this signal handler enabled, but
+                # shouldn't be reporting global status.
+                return
             # alter the lock file
             try:
                 stats = os.stat(cfg.lockFile)
