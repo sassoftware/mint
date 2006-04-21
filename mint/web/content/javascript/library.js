@@ -610,9 +610,9 @@ function handleReleaseTypes(aSelectedArch) {
     forEach(one, function (x) {
         var el = $('imagetype_'+x);
         if (aSelectedArch == "x86_64") {
-            el.disable = true;
+            el.disabled = true;
         } else {
-            el.disable = false;
+            el.disabled = false;
         }
     });
 
