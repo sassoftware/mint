@@ -184,6 +184,8 @@ class RepositoryTest(MintRepositoryHelper):
                    "\('/testproject.rpath.local2@rpl:devel/1.0-1-1', "\
                    "'/testproject.rpath.local2@rpl:devel/\d+\.\d+:1.0-1-1', "\
                    "'1#x86'\)\]\}"
+        expectedRE = expectedRE.replace("rpath.local2", MINT_PROJECT_DOMAIN)
+        expectedRE = expectedRE.replace("rpath\.local2", MINT_PROJECT_DOMAIN)
 
         repos = self.openRepository()
         client, userId = self.quickMintUser("testuser", "testpass")
