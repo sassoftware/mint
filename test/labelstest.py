@@ -22,20 +22,20 @@ class LabelsTest(fixtures.FixturedUnitTest):
     def testBasicAttributes(self, db, client, data):
         project = client.getProject(data['projectId'])
 
-        newLabelId = project.addLabel("bar.rpath.org@rpl:devel",
-            "http://rpath.org/repos/bar/", "user1", "pass1")
+        newLabelId = project.addLabel("bar.%s@rpl:devel" % MINT_PROJECT_DOMAIN,
+            "http://%s/repos/bar/" % MINT_PROJECT_DOMAIN, "user1", "pass1")
 
         assert(project.getLabelIdMap() ==\
-            {'bar.rpath.org@rpl:devel': newLabelId,
-             'foo.rpath.org@rpl:devel': 1})
+            {'bar.%s@rpl:devel' % MINT_PROJECT_DOMAIN: newLabelId,
+             'foo.%s@rpl:devel' % MINT_PROJECT_DOMAIN: 1})
 
-        project.editLabel(newLabelId, "bar.rpath.org@rpl:testbranch",
-            "http://bar.rpath.org/conary/", "user1", "pass1")
-        assert client.server.getLabel(newLabelId) == ('bar.rpath.org@rpl:testbranch', 'http://bar.rpath.org/conary/', 'user1', 'pass1')
+        project.editLabel(newLabelId, "bar.%s@rpl:testbranch" % MINT_PROJECT_DOMAIN,
+            "http://bar.%s/conary/" % MINT_PROJECT_DOMAIN, "user1", "pass1")
+        assert client.server.getLabel(newLabelId) == ('bar.%s@rpl:testbranch' % MINT_PROJECT_DOMAIN, 'http://bar.%s/conary/' % MINT_PROJECT_DOMAIN, 'user1', 'pass1')
 
         project.removeLabel(newLabelId)
         assert(project.getLabelIdMap() ==\
-            {"foo.rpath.org@rpl:devel": 1})
+            {"foo.%s@rpl:devel" % MINT_PROJECT_DOMAIN: 1})
 
         try:
             client.server.getLabel(newLabelId)

@@ -2,15 +2,18 @@
 # Copyright (c) 2004-2006 rPath, Inc.
 # All Rights Reserved
 #
+import copy
 import inspect
 import unittest
 import tempfile
-from mint_rephelp import MINT_PROJECT_DOMAIN
 import mysqlharness
 import random
 import string
 import subprocess
 import os
+import pwd
+
+from mint_rephelp import MINT_PROJECT_DOMAIN
 
 from mint import shimclient
 from mint import config
@@ -21,7 +24,6 @@ from mint import server
 from conary import dbstore
 from conary.deps import deps
 from conary.lib import util
-import pwd
 
 def stockReleaseFlavor(db, releaseId, arch = "x86_64"):
     cu = db.cursor()
@@ -44,36 +46,32 @@ class FixtureCache(object):
         name = 'fixture' + key
         if key not in self._fixtures:
             fixture = self.__getattribute__(name)
-            self._fixtures[key] = fixture()
-        try:
-            util.rmtree(getDataDir())
-        except OSError:
-            pass
-
+            self._fixtures[key] = fixture(self.newMintCfg(key))
         return self._fixtures[key]
 
     def load(self, name):
         raise NotImplementedError
 
-    def getMintCfg(self):
-        dataDir = getDataDir()
+    def newMintCfg(self, name):
         cfg = config.MintConfig()
         cfg.authUser = 'mintauth'
         cfg.authPass = 'mintpass'
-        cfg.reposPath = dataDir + "/repos/"
-        cfg.reposContentsDir = [dataDir + "/contents1/%s/", dataDir + "/contents2/%s/"]
-        cfg.dataPath = dataDir
-        cfg.imagesPath = dataDir + '/images/'
+        cfg.dataPath = tempfile.mkdtemp(prefix = "fixture%s" % name)
+        cfg.reposPath = os.path.join(cfg.dataPath, 'repos')
+        cfg.reposContentsDir = [os.path.join(cfg.dataPath, 'contents1', '%s'), os.path.join(cfg.dataPath, 'contents2', '%s')]
+        cfg.imagesPath = os.path.join(cfg.dataPath, 'images')
         cfg.sendNotificationEmails = False
-
         cfg.postCfg()
         return cfg
 
-    def createUser(self, cfg, db, username = 'testuser', password = 'testpass', isAdmin = False):
+    def delRepos(self):
+        raise NotImplementedError
+
+    def createUser(self, cfg, db, username = 'testuser', password = 'testpass', fullname = 'Test User', email = 'test@example.com', blurb = 'test at example.com', isAdmin = False):
         client = shimclient.ShimMintClient(cfg, (cfg.authUser, cfg.authPass))
 
-        userId = client.registerNewUser(username, password, "Test User",
-            "test@example.com", "test at example.com", "", active=True)
+        userId = client.registerNewUser(username, password, fullname,
+            email, blurb, "", active=True)
 
         if isAdmin:
             cu = db.cursor()
@@ -97,43 +95,39 @@ class FixtureCache(object):
 
         return userId
 
-    def fixtureEmpty(self):
+    def fixtureEmpty(self, cfg):
         """Contains one user: ('testuser', 'testpass')"""
-        cfg = self.getMintCfg()
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
         ms = server.MintServer(cfg, db, alwaysReload = True)
         client = shimclient.ShimMintClient(cfg, self.authToken)
         userId = self.createUser(cfg, db)
 
-        return cfg.dbPath, { 'userId': userId }
+        return cfg, { 'userId': userId }
 
-    def fixtureAdmin(self):
+    def fixtureAdmin(self, cfg):
         """Contains one admin user: ('testuser', 'testpass')"""
-        cfg = self.getMintCfg()
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
         ms = server.MintServer(cfg, db, alwaysReload = True)
         client = shimclient.ShimMintClient(cfg, ('testuser', 'testpass'))
         authUserId = self.createUser(cfg, db, username = 'testuser', password = 'testpass', isAdmin = True)
 
-        return cfg.dbPath, { 'authUserId': authUserId }
+        return cfg, { 'authUserId': authUserId }
 
-    def fixtureRelease(self):
-        cfg = self.getMintCfg()
+    def fixtureRelease(self, cfg):
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
         ms = server.MintServer(cfg, db, alwaysReload = True)
         client = shimclient.ShimMintClient(cfg, self.authToken)
         userId = self.createUser(cfg, db)
+        otherUserId = self.createUser(cfg, db, username = 'member', password = 'memberpass', fullname = 'Test Member', email = 'member@example.com', blurb = 'member at example.com')
 
-        projectId = client.newProject("Foo", "foo", "rpath.org")
+        projectId = client.newProject("Foo", "foo", MINT_PROJECT_DOMAIN)
         release = client.newRelease(projectId, "Test Release")
 
         stockReleaseFlavor(db, release.id)
 
-        return cfg.dbPath, {'userId': userId, 'projectId': projectId, 'releaseId': release.id}
+        return cfg, {'userId': userId, 'otherUserId': otherUserId, 'projectId': projectId, 'releaseId': release.id}
 
-    # job fixtures
-    def fixtureCookJob(self):
-        cfg = self.getMintCfg()
+    def fixtureCookJob(self, cfg):
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
         ms = server.MintServer(cfg, db, alwaysReload = True)
         userId = self.createUser(cfg, db)
@@ -156,10 +150,9 @@ class FixtureCache(object):
                                     subGroup, False, False, False)
 
         cookJobId = groupTrove.startCookJob("1#x86")
-        return cfg.dbPath, { 'userId': userId }
+        return cfg, { 'userId': userId }
 
-    def fixtureImageJob(self):
-        cfg = self.getMintCfg()
+    def fixtureImageJob(self, cfg):
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
         ms = server.MintServer(cfg, db, alwaysReload = True)
         userId = self.createUser(cfg, db)
@@ -174,10 +167,9 @@ class FixtureCache(object):
         stockReleaseFlavor(db, release.getId())
 
         relJob = client.startImageJob(release.getId())
-        return cfg.dbPath, { 'userId': userId }
+        return cfg, { 'userId': userId }
 
-    def fixtureBothJobs(self):
-        cfg = self.getMintCfg()
+    def fixtureBothJobs(self, cfg):
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
         ms = server.MintServer(cfg, db, alwaysReload = True)
         userId = self.createUser(cfg, db)
@@ -209,53 +201,70 @@ class FixtureCache(object):
         cookJobId = groupTrove.startCookJob("1#x86")
 
         db.commit()
-        return cfg.dbPath, { 'userId': userId }
+        return cfg, { 'userId': userId }
 
-
-def getDataDir():
-    return '/tmp/mint-test-%s/' % pwd.getpwuid(os.getuid())[0]
 
 class SqliteFixtureCache(FixtureCache):
-    def getMintCfg(self):
-        cfg = FixtureCache.getMintCfg(self)
-        tmp = tempfile.mktemp(prefix = 'fixture', suffix = '.sqlite')
-
-        cfg.dbPath = tmp
-        cfg.dbDriver = "sqlite"
-        cfg.reposDBPath = cfg.dataPath + "/repos/%s/sqldb"
-        cfg.reposDBDriver = "sqlite"
-
+    def newMintCfg(self, name):
+        cfg = FixtureCache.newMintCfg(self, name)
+        cfg.dbDriver = cfg.reposDBDriver = 'sqlite'
+        cfg.dbPath = os.path.join(cfg.dataPath, 'mintdb')
+        cfg.reposDBPath = os.path.join(cfg.dataPath, 'repos', '%s', 'sqldb')
         return cfg
 
     def load(self, name):
-        dbPath, data = self.loadFixture(name)
-        tmp = tempfile.mktemp(prefix = 'fixture', suffix = '.sqlite')
-        util.copyfile(dbPath, tmp)
-        return ((tmp, "sqlite"), data)
+        cfg, data = self.loadFixture(name)
+
+        # make a copy of the data directory and update the cfg
+        testDataPath = tempfile.mkdtemp(prefix = "fixture%s" % name, suffix = '.copy')
+        util.copytree(os.path.join(cfg.dataPath,'*'), testDataPath)
+        testCfg = copy.deepcopy(cfg)
+        testCfg.dataPath = testDataPath
+        testCfg.dbPath = os.path.join(testCfg.dataPath, 'mintdb')
+        testCfg.imagesPath = os.path.join(testCfg.dataPath, 'images')
+        testCfg.reposContentsDir = [os.path.join(testCfg.dataPath, 'contents1', '%s'), os.path.join(cfg.dataPath, 'contents2', '%s')]
+        testCfg.reposDBPath = os.path.join(testCfg.dataPath, 'repos', '%s', 'sqldb')
+        testCfg.reposPath = os.path.join(testCfg.dataPath, 'repos')
+
+        return testCfg, data
+
+    def delRepos(self):
+        pass # this space left intentionally blank
 
     def __del__(self):
         for f in self._fixtures.values():
-            os.unlink(f[0])
+            util.rmtree(f[0].dataPath)
+
 
 
 class MySqlFixtureCache(FixtureCache, mysqlharness.MySqlHarness):
     keepDbs = ['mysql', 'test', 'information_schema', 'testdb']
     db = None
 
-    def randomName(self):
-        return "".join(random.sample(string.lowercase, 10))
-
     def __init__(self):
         mysqlharness.MySqlHarness.__init__(self)
         self.start()
 
+    def _randomName(self):
+        return "".join(random.sample(string.lowercase, 5))
+
+    def _getConnectStringForDb(self, dbName = None):
+        if dbName:
+            return "root@localhost.localdomain:%d/%s" % (self.port, dbName)
+        else:
+            return "root@localhost.localdomain:%d/%%s" % self.port
+
     def _connect(self):
         if not self.db:
-            self.db = dbstore.connect("root@localhost.localdomain:%d/mysql" % self.port, "mysql")
+            self.db = dbstore.connect(self._getConnectStringForDb('mysql'), 'mysql')
 
     def _newDb(self, name):
         self._connect()
         cu = self.db.cursor()
+        try:
+            cu.execute("DROP DATABASE %s" % name)
+        except:
+            pass
         cu.execute("CREATE DATABASE %s" % name)
         self.db.commit()
 
@@ -265,43 +274,78 @@ class MySqlFixtureCache(FixtureCache, mysqlharness.MySqlHarness):
         cu.execute("DROP DATABASE %s" % name)
         self.db.commit()
 
-    def getMintCfg(self):
-        cfg = FixtureCache.getMintCfg(self)
-
-        newName = self.randomName()
-        self._newDb(newName)
-        cfg.dbPath = "root@localhost.localdomain:%d/%s" % (self.port, newName)
-        cfg.dbDriver = "mysql"
-        cfg.reposDBPath = "root@localhost.localdomain:%d/%%s" % self.port
-        cfg.reposDBDriver = "mysql"
-
-        return cfg
-
-    def loadFixture(self, name):
-        ret = FixtureCache.loadFixture(self, name)
-        self._connect()
-
-        # drop stray repository tables
-        cu = self.db.cursor()
-        cu.execute("SHOW DATABASES")
-        for table in [x[0] for x in cu.fetchall() if x[0] not in self.keepDbs]:
-            if '_' in table:
-                self._dropDb(table)
-        return ret
-
-    def load(self, name):
-        dbPath, data = self.loadFixture(name)
-        dbName = dbPath.split("/")[1]
-
-        newName = name + self.randomName()
-        self._newDb(newName)
-        output = ["mysqldump", "-u", "root", "-S", "%s/socket" % self.dir, dbName]
-        input = ["mysql", "-u", "root", "-S", "%s/socket" % self.dir, newName]
+    def _dupDb(self, srcDb, destDb):
+        self._newDb(destDb)
+        output = ["mysqldump", "-u", "root", "-S", "%s/socket" % self.dir, srcDb]
+        input = ["mysql", "-u", "root", "-S", "%s/socket" % self.dir, destDb]
         dump = subprocess.Popen(output, stdout = subprocess.PIPE)
         load = subprocess.Popen(input, stdin = dump.stdout)
         load.communicate()
 
-        return (("root@localhost.localdomain:%d/%s" % (self.port, newName), "mysql"), data)
+    def newMintCfg(self, name):
+        cfg = FixtureCache.newMintCfg(self, name)
+        dbName = "mf%s" % name
+        self.keepDbs.append(dbName.lower())
+        self._newDb(dbName)
+        cfg.dbDriver = cfg.reposDBDriver = "mysql"
+        cfg.dbPath = self._getConnectStringForDb(dbName)
+        cfg.reposDBPath = self._getConnectStringForDb()
+        return cfg
+
+    def loadFixture(self, name):
+        ret = FixtureCache.loadFixture(self, name)
+
+        # save repos tables off for later
+        self._connect()
+        cu = self.db.cursor()
+        cu.execute("SHOW DATABASES")
+        for table in [x[0] for x in cu.fetchall() if x[0] not in self.keepDbs]:
+            if '_' in table and not table.startswith('cr'):
+                newName = "cr%s%s" % (name, table)
+                self._dupDb(table, newName)
+                self._dropDb(table)
+                self.keepDbs.append(newName.lower())
+        return ret
+
+    def load(self, name):
+        cfg, data = self.loadFixture(name)
+
+        # get a random name for this particular instance of the fixture
+        # in order to create unique copies
+        randomDbName = self._randomName()
+
+        # make a copy of the data directory and update the cfg
+        testDataPath = tempfile.mkdtemp(prefix = "fixture%s" % name, suffix = '.copy')
+        util.copytree(os.path.join(cfg.dataPath,'*'), testDataPath)
+        testCfg = copy.deepcopy(cfg)
+        testCfg.dataPath = testDataPath
+        testCfg.imagesPath = os.path.join(testCfg.dataPath, 'images')
+        testCfg.reposContentsDir = [os.path.join(testCfg.dataPath, 'contents1', '%s'), os.path.join(testCfg.dataPath, 'contents2', '%s')]
+        testCfg.reposPath = os.path.join(testCfg.dataPath, 'repos')
+
+        # restore the mint db into a unique copy
+        fixtureMintDbName = "mf%s" % name
+        fixtureCopyMintDbName = "cmf%s%s" % (name, randomDbName)
+        self._dupDb(fixtureMintDbName, fixtureCopyMintDbName)
+        testCfg.dbPath = self._getConnectStringForDb(fixtureCopyMintDbName)
+
+        # restore the repos dbs
+        self._connect()
+        cu = self.db.cursor()
+        cu.execute("SHOW DATABASES LIKE 'cr%s%%'" % name.lower())
+        for table in [x[0] for x in cu.fetchall()]:
+            fixtureCopyReposDbName = table[2+len(name):]
+            self._dupDb(table, fixtureCopyReposDbName)
+
+        return testCfg, data
+
+    def delRepos(self):
+        self._connect()
+        cu = self.db.cursor()
+        cu.execute("SHOW DATABASES")
+        for table in [x[0] for x in cu.fetchall() if x[0] not in self.keepDbs]:
+           if '_' in table and not table.startswith('cr'):
+               self._dropDb(table)
 
     def __del__(self):
         self.stop()
@@ -314,18 +358,12 @@ class FixturedUnitTest(unittest.TestCase):
         return fixtureCache.list()
 
     def loadFixture(self, name):
-        db, fixtureData = fixtureCache.load(name)
+        self.cfg, fixtureData = fixtureCache.load(name)
 
-        self.cfg = fixtureCache.getMintCfg()
-
-        self.cfg.dbPath = db[0]
-        self.cfg.dbDriver = db[1]
         db = dbstore.connect(self.cfg.dbPath, self.cfg.dbDriver)
         server.dbConnection = None # reset the cached db connection
         client = shimclient.ShimMintClient(self.cfg, ('testuser', 'testpass'))
 
-        self.imagePath = getDataDir() + "/images/"
-        util.mkdirChain(self.imagePath)
         return db, client, fixtureData
 
     def _getAdminClient(self):
@@ -342,9 +380,11 @@ class FixturedUnitTest(unittest.TestCase):
 
     def tearDown(self):
         try:
-            util.rmtree(getDataDir())
+            fixtureCache.delRepos()
+            util.rmtree(self.cfg.dataPath)
         except OSError:
             pass
+
 
 driver = os.environ.get("CONARY_REPOS_DB", "sqlite")
 if driver == "sqlite":

@@ -2547,10 +2547,12 @@ class MintServer(object):
 
             for table in tables:
                 tables[table].db = self.db
+                tables[table].cfg = self.cfg
                 self.__dict__[table] = tables[table]
 
             self.users.confirm_table.db = self.db
             self.newsCache.ageTable.db = self.db
+            self.projects.reposDB.cfg = self.cfg
 
             #Now it's safe to commit
             self.db.commit()
