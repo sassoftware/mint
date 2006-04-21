@@ -76,6 +76,7 @@ class FixtureCache(object):
             "test@example.com", "test at example.com", "", active=True)
 
         if isAdmin:
+            cu = db.cursor()
             cu.execute("""SELECT COUNT(*) FROM UserGroups
                               WHERE UserGroup = 'MintAdmin'""")
             if cu.fetchone()[0] == 0:
