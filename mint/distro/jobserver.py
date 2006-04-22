@@ -54,25 +54,39 @@ SUPPORTED_ARCHS = ('x86', 'x86_64')
 # JOB_IDLE_INTERVAL: interval is in seconds. format is (min, max)
 JOB_IDLE_INTERVAL = (5, 10)
 
-global parent
-parent = True
-
 class JobRunner:
     def __init__(self, cfg, client, job):
         self.cfg = cfg
         self.client = client
         self.job = job
 
+    def getSignalName(self, signalNum):
+        if signalNum == signal.SIGTERM:
+            return 'SIGTERM'
+        elif signalNum == signal.SIGINT:
+            return 'SIGINT'
+        else:
+            return 'UNKNOWN'
+
+    def sigHandler(self, signalNum, frame):
+        sigName = self.getSignalName(signalNum)
+        slog = scriptlibrary.getScriptLogger()
+        slog.error('Job was killed by %s signal' % sigName)
+        self.job.setStatus(jobstatus.ERROR, 'Job was killed by %s signal' % \
+                           sigName)
+        os._exit(1)
+
     def run(self):
         # ensure each job thread has it's own process space
         pid = os.fork()
         if not pid:
-            global parent
-            parent = False
+            signal.signal(signal.SIGTERM, self.sigHandler)
+            signal.signal(signal.SIGINT, self.sigHandler)
             try:
                 self.doWork()
-            finally:
-                # always die here, no matter what.
+            except:
+                os._exit(1)
+            else:
                 os._exit(0)
         else:
             return pid
@@ -166,7 +180,6 @@ class JobDaemon:
         slog = scriptlibrary.getScriptLogger()
 
         def stopJobs(signalNum, frame):
-            global parent
             slog = scriptlibrary.getScriptLogger()
             self.takingJobs = False
             if signalNum == signal.SIGTERM:
@@ -175,16 +188,9 @@ class JobDaemon:
                 signalName = 'SIGINT'
             else:
                 signalName = 'UNKNOWN'
-            if parent:
-                slog.info("Caught %s signal. Not taking jobs." % signalName)
-            else:
-                slog.info("Caught %s signal." % signalName)
+            slog.info("Caught %s signal. Not taking jobs." % signalName)
             signal.signal(signal.SIGTERM, self.origTerm)
             signal.signal(signal.SIGINT, self.origInt)
-            if not parent:
-                # worker threads also have this signal handler enabled, but
-                # shouldn't be reporting global status.
-                return
             # alter the lock file
             try:
                 stats = os.stat(cfg.lockFile)
