@@ -1207,6 +1207,10 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.assertRaises(AssertionError, 
             self.webLogin, 'testuser', 'testpass')
 
+    def testBogusParameters(self):
+        page = self.assertContent("/search?search=wobble&type=Packages&comment=imadirtyspammer",
+            code = [200], content = "search() got an unexpected keyword argument 'comment'")
+
 
 if __name__ == "__main__":
     testsuite.main()

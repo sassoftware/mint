@@ -157,6 +157,8 @@ class MintApp(WebHandler):
             output = self._write("error", shortError = "Missing Parameter", error = str(e))
         except fields.BadParameterError, e:
             output = self._write("error", shortError = "Bad Parameter", error = str(e))
+        except TypeError, e: # this trap should probably move to fields.py in Conary someday...
+            output = self._write("error", shortError = "Bad Parameter", error = str(e))
 
         self.req.write(output)
         return apache.OK
