@@ -12,6 +12,9 @@ from conary.lib import util
 tarThread = None
 copyThread = None
 
+sourcePath = "/mnt/"
+tmpPath = "/tmp/"
+needsMount = False
 
 class JsonRPCHandler(BaseHTTPServer.BaseHTTPRequestHandler, object):
     def do_GET(self):
@@ -57,11 +60,18 @@ class JsonRPCHandler(BaseHTTPServer.BaseHTTPRequestHandler, object):
 
         print args[1]
         resp = simplejson.dumps(method(*args[1]))
-        print "returning",  resp
         self.wfile.write(resp)
+
 
 class CopyThread(threading.Thread):
     def __init__(self, *args, **kwargs):
+        self.tmpPath = kwargs['tmpPath']
+        self.sourcePath = kwargs['sourcePath']
+        self.needsMount = kwargs['needsMount']
+        del kwargs['tmpPath']
+        del kwargs['sourcePath']
+        del kwargs['needsMount']
+
         threading.Thread.__init__(self, *args, **kwargs)
         self.status = {"bytesTotal": 0, "bytesRead": 0, "done": False}
         self.lastTotal = 0
@@ -74,15 +84,15 @@ class CopyThread(threading.Thread):
 
 class ConcatThread(CopyThread):
     def run(self):
-        files = [x for x in os.listdir("/tmp/") if x.startswith("mirror-") and "tgz" in x and not x.endswith('tgz')]
-        bytesTotal = sum(os.stat(os.path.join("/tmp", x))[stat.ST_SIZE] for x in files)
+        files = [x for x in os.listdir(self.tmpPath) if x.startswith("mirror-") and "tgz" in x and not x.endswith('tgz')]
+        bytesTotal = sum(os.stat(os.path.join(self.tmpPath, x))[stat.ST_SIZE] for x in files)
         self.status['bytesTotal'] = bytesTotal
         print "concatting: ", files, bytesTotal
 
         baseName = files[0].split(".tgz")[0]
-        output = file("/tmp/" + baseName + ".tgz", "w")
+        output = file(self.tmpPath + baseName + ".tgz", "w")
         for f in files:
-            input = file("/tmp/" + f)
+            input = file(self.tmpPath + f)
             util.copyfileobj(input, output, self.copyCallback)
             input.close()
             self.lastTotal = 0
@@ -92,16 +102,16 @@ class ConcatThread(CopyThread):
 
 class CopyFromDiscThread(CopyThread):
     def run(self):
-        files = os.listdir("/mnt/")
-        files = [x for x in files if x != 'MIRROR-INFO' and os.path.isfile("/mnt/" + x)]
+        files = os.listdir(self.sourcePath)
+        files = [x for x in files if x != 'MIRROR-INFO' and os.path.isfile(self.sourcePath + x)]
         print "files", files
 
-        bytesTotal = sum(os.stat(os.path.join("/mnt", x))[stat.ST_SIZE] for x in files)
+        bytesTotal = sum(os.stat(os.path.join(self.sourcePath, x))[stat.ST_SIZE] for x in files)
         self.status['bytesTotal'] = bytesTotal
 
         for f in files:
-            fromF = file("/mnt/" + f)
-            toF = file("/tmp/" + f, "w")
+            fromF = file(self.sourcePath + f)
+            toF = file(self.tmpPath + f, "w")
             util.copyfileobj(fromF, toF, self.copyCallback)
             toF.close()
             fromF.close()
@@ -110,13 +120,23 @@ class CopyFromDiscThread(CopyThread):
 
 
 class TarHandler(JsonRPCHandler):
+    def __init__(self, *args, **kwargs):
+        JsonRPCHandler.__init__(self, *args, **kwargs)
+        global sourcePath, tmpPath, needsMount
+        self.sourcePath = sourcePath
+        self.tmpPath = tmpPath
+        self.needsMount = needsMount
+
     def copyfiles(self):
         global copyThread
         if copyThread and not copyThread.isAlive():
             copyThread = None
 
         if not copyThread:
-            copyThread = CopyFromDiscThread()
+            copyThread = CopyFromDiscThread(
+                tmpPath = self.tmpPath,
+                sourcePath = self.sourcePath,
+                needsMount = self.needsMount)
             copyThread.start()
 
     def concatfiles(self):
@@ -125,13 +145,17 @@ class TarHandler(JsonRPCHandler):
             copyThread = None
 
         if not copyThread:
-            copyThread = ConcatThread()
+            copyThread = ConcatThread(
+                tmpPath = self.tmpPath,
+                sourcePath = self.sourcePath,
+                needsMount = self.needsMount)
             copyThread.start()
 
     def getDiscInfo(self):
-#        os.system("sudo mount /cdrom")
+        if self.needsMount:
+            os.system("sudo mount /cdrom")
         try:
-            keyFile = open("/mnt/MIRROR-INFO")
+            keyFile = open(os.path.join(self.tmpPath, "MIRROR-INFO"))
             serverName = keyFile.readline().strip()
             curDisc, count = keyFile.readline().strip().split("/")
 
@@ -150,7 +174,8 @@ class TarHandler(JsonRPCHandler):
                 "count": 0,
                 "serverName": ""
             }
-#        os.system("sudo umount /cdrom")
+        if self.needsMount:
+            os.system("sudo umount /cdrom")
 
     def startTar(self):
         global tarThread
