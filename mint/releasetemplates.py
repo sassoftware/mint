@@ -65,7 +65,7 @@ dataHeadings = {
     releasetypes.INSTALLABLE_ISO  : 'Installable CD/DVD Settings',
     releasetypes.RAW_HD_IMAGE     : 'Raw Hard Disk Settings',
     releasetypes.RAW_FS_IMAGE     : 'Raw Filesystem Settings',
-    releasetypes.TARBALL          : 'Tarball Settings',
+    releasetypes.TARBALL          : 'Tar Archive Settings',
     releasetypes.VMWARE_IMAGE     : 'VMware Image Settings',
     releasetypes.LIVE_ISO         : 'Live CD/DVD Settings',
     releasetypes.STUB_IMAGE       : 'Stub Image Settings',
