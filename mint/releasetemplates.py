@@ -40,6 +40,7 @@ vmwareImageTemplate = bootableImageTemplate.copy()
 vmwareImageTemplate.update({
     'vmMemory':         (RDT_INT, 256, 'How much memory should VMware use when running this image?')
     })
+vmwareImageTemplate.update(swapSize)
 
 liveIsoTemplate = imageGenTemplate.copy()
 liveIsoTemplate.update({
