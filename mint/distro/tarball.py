@@ -27,7 +27,6 @@ class Tarball(bootable_image.BootableImage):
             self.createFileTree()
             # and instantiate the image itself
             self.createImage('tarball')
-            self.status('Compressing taball')
             newExt = self.outfile.replace('.img', '.tgz')
             os.rename(self.outfile, newExt)
             imagesList = [(newExt, self.fileType)]
