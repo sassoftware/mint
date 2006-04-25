@@ -51,6 +51,8 @@ liveIsoTemplate.update({
 tarballTemplate = imageGenTemplate.copy()
 tarballTemplate.update(swapSize)
 
+netbootTemplate = imageGenTemplate.copy()
+
 stubImageTemplate = {
     'boolArg'   : (RDT_BOOL, False, 'Garbage Boolean'),
     'stringArg' : (RDT_STRING, '', 'Garbage String'),
@@ -63,10 +65,11 @@ dataHeadings = {
     releasetypes.INSTALLABLE_ISO  : 'Installable CD/DVD Settings',
     releasetypes.RAW_HD_IMAGE     : 'Raw Hard Disk Settings',
     releasetypes.RAW_FS_IMAGE     : 'Raw Filesystem Settings',
-    releasetypes.TARBALL          : 'Tarball Settings',
+    releasetypes.TARBALL          : 'Tar Archive Settings',
     releasetypes.VMWARE_IMAGE     : 'VMware Image Settings',
     releasetypes.LIVE_ISO         : 'Live CD/DVD Settings',
     releasetypes.STUB_IMAGE       : 'Stub Image Settings',
+    releasetypes.NETBOOT_IMAGE    : 'Netboot Image Settings',
     }
 
 dataTemplates = {
@@ -77,4 +80,5 @@ dataTemplates = {
     releasetypes.LIVE_ISO         : liveIsoTemplate,
     releasetypes.TARBALL          : tarballTemplate,
     releasetypes.STUB_IMAGE       : stubImageTemplate,
+    releasetypes.NETBOOT_IMAGE    : netbootTemplate,
     }

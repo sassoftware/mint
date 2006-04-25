@@ -48,6 +48,7 @@ generators = {
     releasetypes.VMWARE_IMAGE:      VMwareImage,
     releasetypes.RAW_FS_IMAGE:      RawFsImage,
     releasetypes.TARBALL:           Tarball,
+    releasetypes.NETBOOT_IMAGE:     NetbootImage,
 }
 
 SUPPORTED_ARCHS = ('x86', 'x86_64')

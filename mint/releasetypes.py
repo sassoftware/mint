@@ -38,7 +38,7 @@ typeNames = {
     RAW_HD_IMAGE:       "Raw Hard Disk Image",
     VMWARE_IMAGE:       "VMware Player Image",
     LIVE_ISO:           "Live CD/DVD",
-    TARBALL:            "Tarball"
+    TARBALL:            "Tar Archive"
 }
 
 typeNamesShort = {

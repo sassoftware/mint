@@ -85,28 +85,24 @@ isolinuxCfg= '\n'.join(('say Welcome to %s.',
 
 
 class LiveIso(bootable_image.BootableImage):
-    def findFile(self, baseDir, fileName):
-        for base, dirs, files in os.walk(baseDir):
-            matches = [x for x in files if re.match(fileName, x)]
-            if matches:
-                print >> sys.stderr, "match found for %s" % os.path.join(base, matches[0])
-                return os.path.join(base, matches[0])
-        return None
-
     def iterFiles(self, baseDir, fileName):
         for base, dirs, files in os.walk(baseDir):
             for match in [x for x in files if re.match(fileName, x)]:
                 yield os.path.join(base, match)
 
     def copyFallback(self, src, dest):
-        tFile = os.path.basename(src)
-        # FIXME: some of the files we actually want are there, but have -static
-        # appended to their name
-        pFile = os.popen('file %s' % src)
-        fileStr = pFile.read()
-        pFile.close()
-        fallback = not ('statically' in fileStr or \
-                        fileStr.endswith(': data\n'))
+        # some binaries are statically linked with a ".static" suffix. attempt
+        # to locate a file by that name if src doesn't appear to be suitable.
+        for src in (src, src + ".static"):
+            tFile = os.path.basename(src)
+            pFile = os.popen('file %s' % src)
+            fileStr = pFile.read()
+            pFile.close()
+            fallback = not ('statically' in fileStr or \
+                            fileStr.endswith(': data\n'))
+            if not fallback:
+                break
+
         if fallback:
             print >> sys.stderr, "Using fallback for: %s" % tFile
             # named executable isn't suitable, use precompiled static one

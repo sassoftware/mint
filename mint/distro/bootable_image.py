@@ -8,6 +8,7 @@
 import errno
 from math import ceil
 import os
+import sys
 import re
 import time
 import tempfile
@@ -230,6 +231,15 @@ title %(name)s (%(kversion)s)
         #create the appropriate links
         os.symlink('grub.conf', os.path.join(self.fakeroot, 'boot', 'grub', 'menu.lst'))
         os.symlink('../boot/grub/grub.conf', os.path.join(self.fakeroot, 'etc', 'grub.conf'))
+
+    def findFile(self, baseDir, fileName):
+        for base, dirs, files in os.walk(baseDir):
+            matches = [x for x in files if re.match(fileName, x)]
+            if matches:
+                print >> sys.stderr, "match found for %s" % \
+                      os.path.join(base, matches[0])
+                return os.path.join(base, matches[0])
+        return None
 
     @timeMe
     def createTemporaryRoot(self, basedir = os.getcwd()):
