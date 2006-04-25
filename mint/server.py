@@ -724,7 +724,7 @@ class MintServer(object):
                           userlevelname, projectUrl)
                         }
 
-
+        message = adminMessage = None
         if self.auth.userId != user['userId']:
             message = 'Your %s account "%s" ' % (self.cfg.productName, 
                                               user['username'])
@@ -747,26 +747,28 @@ class MintServer(object):
                                                          user['username'])
                 adminMessage += actionText[action] + ' by the project owner "%s".' % (self.auth.username)
                 adminMessage += adminHelpText[action]
-            
+
         if self.cfg.sendNotificationEmails:
-            users.sendMail(self.cfg.adminMail, self.cfg.productName,
-                           user['email'],
-                           "Your %s account" % \
-                           self.cfg.productName,
-                           '\n\n'.join((greeting, message, closing)))
-            members = project.getMembers()
-            adminUsers = []
-            for level in [userlevels.OWNER]:
-                for admnUsr in [self.getUser(x[0]) for x in members \
-                             if x[2] == level]:
-                    adminUsers.append(admnUsr)
-            for usr in adminUsers:
-                if usr['username'] != user['username']:
-                    users.sendMail(self.cfg.adminMail, self.cfg.productName,
-                                   usr['email'],
-                                   "%s project membership modification" % \
-                                   self.cfg.productName,
-                                   '\n\n'.join((greeting, adminMessage)))
+            if message:
+                users.sendMail(self.cfg.adminMail, self.cfg.productName,
+                               user['email'],
+                               "Your %s account" % \
+                               self.cfg.productName,
+                               '\n\n'.join((greeting, message, closing)))
+            if adminMessage:
+                members = project.getMembers()
+                adminUsers = []
+                for level in [userlevels.OWNER]:
+                    for admnUsr in [self.getUser(x[0]) for x in members \
+                                 if x[2] == level]:
+                        adminUsers.append(admnUsr)
+                for usr in adminUsers:
+                    if usr['username'] != user['username']:
+                        users.sendMail(self.cfg.adminMail, self.cfg.productName,
+                                       usr['email'],
+                                       "%s project membership modification" % \
+                                       self.cfg.productName,
+                                       '\n\n'.join((greeting, adminMessage)))
 
     @typeCheck(str, str)
     @requiresAdmin
