@@ -10,30 +10,39 @@ if [ $# -lt 2 ]; then
     exit 1
 fi
 
+if [ $UID != 0 ]; then
+    echo "this script must be run as root" >&2
+    exit 1
+fi
+
 upstreamVer=$1
 troveSpec=$2
 ROOT=/srv/mint/jobserver/$upstreamVer/
 
 echo "Installing chroot"
 conary update --root $ROOT $troveSpec
+if [ $? != 0 ]; then
+    echo "Software installation failed" >&2
+    exit 1
+fi
+
 echo "Creating mtab and device nodes"
 touch $ROOT/etc/mtab
 mknod $ROOT/dev/random c 1 8
 mknod $ROOT/dev/urandom c 1 9
 mkdir $ROOT/srv/mint/finished-images/
 
-echo "add the following lines to /etc/fstab:"
-echo "--------------------------------------"
+cp /etc/fstab /etc/fstab.backup
+COMMENT = "#JSROOT$upstreamVer"
+echo "Modifying /etc/fstab -- saving backup to /etc/fstab.backup"
 for x in '/proc' '/dev/pts' '/srv/mint/finished-images'; do   
-    echo -e "$x\\t$ROOT$x\\tnone\\tbind\\t0\\t0"
+    echo -e "$x\\t$ROOT$x\\tnone\\tbind\\t0\\t0 $COMMENT" >> /etc/fstab
 done
-echo /export/mint/local-images              $ROOT/srv/mint/images       none    bind    0 0
-echo /srv/mint/changesets                   $ROOT/srv/mint/changesets   none    bind    0 0
-echo /srv/mint/templates                    $ROOT/srv/mint/templates    none    bind    0 0
+echo /export/mint/local-images              $ROOT/srv/mint/images       none    bind    0 0 $COMMENT >> /etc/fstab
+echo /srv/mint/changesets                   $ROOT/srv/mint/changesets   none    bind    0 0 $COMMENT >> /etc/fstab
+echo /srv/mint/templates                    $ROOT/srv/mint/templates    none    bind    0 0 $COMMENT >> /etc/fstab
 
-echo "--------------------------------------"
-
-echo "Copying /etc/nsswitch.conf /etc/hosts and /etc/resolv.conf to chroot"
+echo "Copying network configuration files to chroot"
 for x in '/etc/nsswitch.conf' '/etc/hosts' '/etc/resolv.conf'; do
     cp $x $ROOT/etc/
 done
