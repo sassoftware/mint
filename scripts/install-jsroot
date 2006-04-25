@@ -27,6 +27,10 @@ echo "--------------------------------------"
 for x in '/proc' '/dev/pts' '/srv/mint/finished-images'; do   
     echo -e "$x\\t$ROOT$x\\tnone\\tbind\\t0\\t0"
 done
+echo /export/mint/local-images              $ROOT/srv/mint/images       none    bind    0 0
+echo /srv/mint/changesets                   $ROOT/srv/mint/changesets   none    bind    0 0
+echo /srv/mint/templates                    $ROOT/srv/mint/templates    none    bind    0 0
+
 echo "--------------------------------------"
 
 echo "Copying /etc/nsswitch.conf /etc/hosts and /etc/resolv.conf to chroot"
