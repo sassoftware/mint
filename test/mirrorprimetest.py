@@ -10,7 +10,9 @@ import tempfile
 import unittest
 import signal
 import simplejson
+import stat
 import urllib
+import time
 import BaseHTTPServer
 testsuite.setup()
 
@@ -68,6 +70,12 @@ class MirrorPrimeTest(unittest.TestCase):
         print >> f, "%d/%d" % (curDisc, count)
         f.close()
 
+    def writeMirrorFiles(self, dest, count = 2):
+        for x in range(count):
+            f = file(dest + "/mirror-test.rpath.local.tgz%03d" % x, "w")
+            f.write("Hello World\n")
+            f.close()
+
     def testGetDiscInfo(self):
         self.writeMirrorInfo()
         r = self.fetch('getDiscInfo')
@@ -75,6 +83,39 @@ class MirrorPrimeTest(unittest.TestCase):
         assert(r[1]['serverName'] == 'test.rpath.local')
         assert(r[1]['count'] == 2)
         assert(r[1]['curDisc'] == 1)
+
+    def testCopy(self):
+        self.writeMirrorInfo()
+        self.writeMirrorFiles(dest = self.sourcePath)
+        r = self.fetch('copyfiles')
+        assert(r[0] == (200, 'OK'))
+
+        done = False
+        tries = 0
+        while not done and tries < 10:
+            r = self.fetch('copyStatus')
+            done = r[1]['done']
+            time.sleep(0.5)
+            tries += 1
+
+        assert(os.path.isfile(os.path.join(self.tmpPath, "mirror-test.rpath.local.tgz000")))
+        assert(os.path.isfile(os.path.join(self.tmpPath, "mirror-test.rpath.local.tgz001")))
+
+    def testConcat(self):
+        self.writeMirrorFiles(dest = self.tmpPath)
+
+        r = self.fetch('concatfiles')
+        assert(r[0] == (200, 'OK'))
+
+        done = False
+        tries = 0
+        while not done and tries < 10:
+            r = self.fetch('copyStatus')
+            done = r[1]['done']
+            time.sleep(0.5)
+            tries += 1
+
+        assert(os.stat(os.path.join(self.tmpPath, "mirror-test.rpath.local.tgz"))[stat.ST_SIZE] == 24)
 
 
 if __name__ == "__main__":
