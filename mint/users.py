@@ -209,7 +209,7 @@ class UsersTable(database.KeyedTable):
 
             if username in groups:
                 auth = {'authorized':   True,
-                        'userId':       r[0],
+                        'userId':       int(r[0]),
                         'username':     username,
                         'email':        r[1],
                         'displayEmail': r[2],
@@ -388,7 +388,8 @@ class UsersTable(database.KeyedTable):
 
         cu.execute(SQL)
 
-        results = cu.fetchall()
+        # results must be a built in type
+        results = [tuple(x) for x in cu.fetchall()]
         for index, (userId, userName, active) in enumerate(results[:]):
             cu.execute("""SELECT COUNT(*) FROM UserGroupMembers
                               LEFT JOIN UserGroups

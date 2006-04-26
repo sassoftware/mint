@@ -316,7 +316,8 @@ class MintClient:
         @param limit: The number of releases to display
         @param offset: List @limit starting at item @offset
         """
-        return self.server.getReleaseList(limit, offset)
+        return [(x[0], x[1], self.getRelease(x[2])) for x in \
+                self.server.getReleaseList(limit, offset)]
 
     def startImageJob(self, releaseId):
         """

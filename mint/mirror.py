@@ -68,3 +68,4 @@ class RepNameMapTable(database.DatabaseTable):
 
         cu.execute("INSERT INTO RepNameMap VALUES (?, ?)", fromName, toName)
         self.db.commit()
+        return cu._cursor.lastrowid

@@ -17,6 +17,7 @@ import tempfile
 import time
 import types
 import unittest
+import __builtin__
 
 archivePath = None
 testPath = None
@@ -44,6 +45,33 @@ def findPorts(num = 1):
 
     if not foundport:
         raise socket.error, "Cannot find open port to run server on"
+
+def enforceBuiltin(result):
+    failure = False
+    if isinstance(result, (list, tuple)):
+        for item in result:
+            failure = failure or enforceBuiltin(item)
+    elif isinstance(result, dict):
+        for item in result.values():
+            failure = failure or enforceBuiltin(item)
+    failure =  failure or (result.__class__.__name__ \
+                           not in __builtin__.__dict__)
+    return failure
+
+def filteredCall(self, *args, **kwargs):
+    isException, result = self._server.callWrapper(self._name,
+                                                   self._authToken, args)
+
+    if not isException:
+        if enforceBuiltin(result):
+            # if the return type appears to be correct, check the types
+            # some items get cast to look like built-ins for str()
+            # an extremely common example is sql result rows.
+            raise AssertionError('XML cannot marshall return value: %s '
+                                 'for method %s' % (str(result), self._name))
+        return result
+    else:
+        self.handleError(result)
 
 def context(*contexts):
     def deco(func):
@@ -197,6 +225,10 @@ def setup():
 
     from conary.lib import util
     sys.excepthook = util.genExcepthook(True)
+
+    # ensure shim client errors on types that can't be sent over xml-rpc
+    from mint import shimclient
+    shimclient._ShimMethod.__call__ = filteredCall
 
     # import debugger now that we have the path for it
     global debugger

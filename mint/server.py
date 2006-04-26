@@ -541,7 +541,8 @@ class MintServer(object):
     @requiresAuth
     def deleteJoinRequest(self, projectId, userId):
         self._filterProjectAccess(projectId)
-        return self.membershipRequests.deleteRequest(projectId, userId)
+        self.membershipRequests.deleteRequest(projectId, userId)
+        return True
 
     @typeCheck(int)
     @private
@@ -562,7 +563,7 @@ class MintServer(object):
         if userId in [x[0] for x in memberList]:
             # in other words, filter emails for alterations to a join request
             if (userId, userlevels.USER) not in [(x[0], x[2]) for x in memberList]:
-                return
+                return False
         if self.cfg.sendNotificationEmails and \
                not self.membershipRequests.userHasRequested(projectId, userId):
             projectName = self.getProject(projectId)['hostname']
@@ -582,7 +583,8 @@ class MintServer(object):
                                           displayEmail = self.auth.displayEmail,
                                           name = name)
                 users.sendMailWithChecks(self.cfg.adminMail, self.cfg.productName, email, subject, message)
-        return self.membershipRequests.setComments(projectId, userId, comments)
+        self.membershipRequests.setComments(projectId, userId, comments)
+        return True
 
     @typeCheck(int, int)
     @private
@@ -691,6 +693,7 @@ class MintServer(object):
             repos.deleteUserByName(project.getLabel(), user['username'])
         if notify:
             self._notifyUser('Removed', user, project)
+        return True
 
     def _notifyUser(self, action, user, project, userlevel=None):
         userlevelname = ((userlevel >=0) and userlevels.names[userlevel] or\
@@ -812,7 +815,8 @@ class MintServer(object):
         repos = self._getProjectRepo(project)
         repos.deleteUserByName(project.getLabel(), 'anonymous')
 
-        return self.projects.hide(projectId)
+        self.projects.hide(projectId)
+        return True
 
     @typeCheck(int)
     @requiresAdmin
@@ -823,19 +827,22 @@ class MintServer(object):
         userId = repos.addUser(project.getLabel(), 'anonymous', 'anonymous')
         repos.addAcl(project.getLabel(), 'anonymous', None, None, False, False, False)
 
-        return self.projects.unhide(projectId)
+        self.projects.unhide(projectId)
+        return True
 
     @typeCheck(int)
     @requiresAdmin
     @private
     def disableProject(self, projectId):
-        return self.projects.disable(projectId, self.cfg.reposPath)
+        self.projects.disable(projectId, self.cfg.reposPath)
+        return True
 
     @typeCheck(int)
     @requiresAdmin
     @private
     def enableProject(self, projectId):
-        return self.projects.enable(projectId, self.cfg.reposPath)
+        self.projects.enable(projectId, self.cfg.reposPath)
+        return True
 
     # user methods
     @typeCheck(int)
@@ -893,6 +900,7 @@ class MintServer(object):
         self.db.commit()
 
         self._notifyUser('Changed', user, project, level)
+        return True
 
     @typeCheck(int)
     @private
@@ -924,7 +932,12 @@ class MintServer(object):
     @typeCheck()
     @private
     def checkAuth(self):
-        return self.auth.getDict()
+        res = self.auth.getDict()
+        # we can't marshall None, but Auth objects are smart enough to cope
+        for key, val in self.auth.getDict().iteritems():
+            if val is None:
+                del res[key]
+        return res
 
     @typeCheck(int)
     @requiresAuth
@@ -966,7 +979,8 @@ class MintServer(object):
         repos = self._getProjectRepo(project)
 
         #Call the repository's addKey function
-        return repos.addNewAsciiPGPKey(project.getLabel(), username, keydata)
+        repos.addNewAsciiPGPKey(project.getLabel(), username, keydata)
+        return True
 
     @typeCheck(int, str)
     @requiresAuth
@@ -1007,7 +1021,8 @@ class MintServer(object):
 
         self.membershipRequests.userAccountCanceled(userId)
 
-        return self.removeUserAccount(userId)
+        self.removeUserAccount(userId)
+        return True
 
     @typeCheck(int)
     @requiresAuth
@@ -1069,6 +1084,7 @@ class MintServer(object):
             raise
         else:
             self.db.commit()
+        return True
 
     @typeCheck(str)
     @private
@@ -1221,6 +1237,7 @@ class MintServer(object):
         cu.execute('INSERT INTO UserGroupMembers VALUES(?, ?)',
                 mintAdminId, userId)
         self.db.commit()
+        return True
 
     @typeCheck(int)
     @requiresAdmin
@@ -1243,6 +1260,7 @@ class MintServer(object):
         cu.execute("""DELETE FROM UserGroupMembers WHERE userId=?
                           AND userGroupId=?""", userId, mintAdminId)
         self.db.commit()
+        return True
 
     @typeCheck()
     @private
@@ -1289,7 +1307,8 @@ class MintServer(object):
     @private
     def editLabel(self, labelId, label, url, username, password):
         self._filterLabelAccess(labelId)
-        return self.labels.editLabel(labelId, label, url, username, password)
+        self.labels.editLabel(labelId, label, url, username, password)
+        return True
 
     @typeCheck(int, int)
     @requiresAuth
@@ -1342,7 +1361,8 @@ class MintServer(object):
     @private
     def getReleasesForProject(self, projectId, showUnpublished = False):
         self._filterProjectAccess(projectId)
-        return [releases.Release(self, x) for x in self.releases.iterReleasesForProject(projectId, showUnpublished)]
+        return [x for x in self.releases.iterReleasesForProject( \
+            projectId, showUnpublished)]
 
     @typeCheck(int, int)
     @private
@@ -1352,7 +1372,7 @@ class MintServer(object):
                          FROM Releases LEFT JOIN Projects ON Projects.projectId = Releases.projectId
                          WHERE Projects.hidden=0 AND Projects.disabled=0 and published=1
                          ORDER BY timePublished DESC LIMIT ? OFFSET ?""", limit, offset)
-        return [(x[0], x[1], releases.Release(self, x[2])) for x in cu.fetchall()]
+        return [(x[0], x[1], int(x[2])) for x in cu.fetchall()]
 
     @typeCheck(str, str, str, str)
     @private
@@ -1400,7 +1420,8 @@ class MintServer(object):
             raise ReleaseMissing()
         if self.releases.getPublished(releaseId):
             raise ReleasePublished()
-        return self.releases.deleteRelease(releaseId)
+        self.releases.deleteRelease(releaseId)
+        return True
 
     # release data calls
     @typeCheck(int, str, ((str, int, bool),), int)
@@ -2084,19 +2105,23 @@ class MintServer(object):
     # session management
     @private
     def loadSession(self, sid):
-        return self.sessions.load(sid)
+        res = self.sessions.load(sid)
+        return res
 
     @private
     def saveSession(self, sid, data):
         self.sessions.save(sid, data)
+        return True
 
     @private
     def deleteSession(self, sid):
         self.sessions.delete(sid)
+        return True
 
     @private
     def cleanupSessions(self):
         self.sessions.cleanup()
+        return True
 
     # group trove specific functions
     @private
@@ -2237,6 +2262,7 @@ class MintServer(object):
         self._filterProjectAccess(projectId)
         self._requireProjectDeveloper(projectId)
         self.groupTroves.setAutoResolve(groupTroveId, resolve)
+        return True
 
     @private
     @requiresAuth
@@ -2284,6 +2310,7 @@ class MintServer(object):
         self._requireProjectDeveloper(projectId)
         self.groupTroves.update(groupTroveId, description = description,
                                 timeModified = time.time())
+        return True
 
     @private
     @typeCheck(int, str)
@@ -2293,6 +2320,7 @@ class MintServer(object):
         self._filterProjectAccess(projectId)
         self._requireProjectDeveloper(projectId)
         self.groupTroves.setUpstreamVersion(groupTroveId, vers)
+        return True
 
     #group trove item specific functions
 
@@ -2420,6 +2448,7 @@ class MintServer(object):
         self._filterProjectAccess(projectId)
         self._requireProjectDeveloper(projectId)
         self.groupTroveItems.update(groupTroveItemId, subGroup = subGroup)
+        return True
 
     ### Site reports ###
     @private
@@ -2493,7 +2522,8 @@ class MintServer(object):
     @typeCheck(int, str)
     @requiresAdmin
     def delOutboundLabel(self, labelId, url):
-        return self.outboundLabels.delete(labelId, url)
+        self.outboundLabels.delete(labelId, url)
+        return True
 
     @private
     @typeCheck()

@@ -15,6 +15,7 @@ from mint import mailinglists
 from mint import projectlisting
 from mint import searcher
 from mint import userlevels
+from mint import releases
 from mint.mint_error import MintError
 
 from conary import dbstore
@@ -92,7 +93,8 @@ class Project(database.TableObject):
         return self.server.getMembersByProjectId(self.id)
 
     def getReleases(self, showUnpublished = False):
-        return self.server.getReleasesForProject(self.id, showUnpublished)
+        return [releases.Release(self.server, x) for x \
+                in self.server.getReleasesForProject(self.id, showUnpublished)]
 
     def getCommits(self):
         return self.server.getCommitsForProject(self.id)

@@ -329,8 +329,7 @@ class ReleaseTest(fixtures.FixturedUnitTest):
         release.setFiles([["file1", "File Title 1"]])
         release.setPublished(True)
 
-        self.failIf([x.id for x in \
-                     client.server.getReleasesForProject(projectId)] != [2, 1],
+        self.failIf(client.server.getReleasesForProject(projectId) != [2, 1],
                     "getReleasesForProject is not ordered by "
                     "'most recent first'")
 
@@ -404,7 +403,7 @@ class OldReleaseTest(MintRepositoryHelper):
                 release.setFiles([["file1", "File Title 1"]])
                 release.setPublished(True)
             time.sleep(1) # hack: let the timestamp increment since mysql doesn't do sub-second resolution
-        releaseList = client.server.getReleaseList(20, 0)
+        releaseList = client.getReleaseList(20, 0)
         releasesToMake.reverse()
         hostnames = [x[1] for x in releasesToMake]
         if len(releaseList) != 5:
@@ -415,7 +414,8 @@ class OldReleaseTest(MintRepositoryHelper):
             if releaseList[i][2].projectId == project3Id:
                 self.fail("Should not have listed hidden release")
 
-        for rel in client.server.getReleasesForProject(projectId):
+        project = client.getProject(projectId)
+        for rel in project.getReleases():
             if rel.getId() not in (3, 4, 7):
                 self.fail("getReleasesForProject returned incorrect results")
 
@@ -426,7 +426,8 @@ class OldReleaseTest(MintRepositoryHelper):
         else:
             self.fail("getReleasesForProject returned hidden releases in non-admin context when it shouldn't have")
 
-        rel = adminClient.server.getReleasesForProject(project3Id)
+        project = adminClient.getProject(project3Id)
+        rel = project.getReleases()
         if len(rel) != 1:
             self.fail("getReleasesForProject did not return hidden releases for admin")
 
