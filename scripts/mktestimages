@@ -1,0 +1,64 @@
+#!/usr/bin/python
+
+import os, sys
+import time
+
+from mint.scriptlibrary import SingletonScript
+
+from mint import client
+from mint.distro import jsversion
+from mint.jobs import DuplicateJob
+
+class MakeTestImages(SingletonScript):
+    def usage(self):
+        print "Usage: %s <URL> <project name>" % sys.argv[0]
+        return 1
+
+    def handle_args(self):
+        if len(sys.argv) < 3:
+            return False
+        self.url = sys.argv[1]
+        self.projectName = sys.argv[2]
+        return True
+
+    def action(self):
+        mc = client.MintClient(self.url)
+        project = mc.getProjectByHostname(self.projectName)
+        releaseList = project.getReleases(True)
+
+        # the list of targets we need to produce against
+        publishedList = [x for x in releaseList if x.published]
+
+        currentList = [x for x in releaseList if x.getDataValue('jsversion') \
+                          == jsversion.getDefaultVersion() \
+                          and x in publishedList \
+                          and not x.published]
+
+        # these are not the actual release objects. we need to make new ones
+        # and clone the settings from this list.
+        newTargetsNeeded = [x for x in publishedList if x not in currentList]
+
+        for targ in newTargetsNeeded:
+            release = mc.newRelease(project.id, targ.name)
+            release.setImageTypes(targ.getImageTypes())
+            release.setName(targ.getName())
+            release.setDesc(targ.getDesc())
+            release.setTrove(*targ.getTrove())
+            currentList.append(release)
+            for key, val in targ.getDataDict().iteritems():
+                if key != 'jsversion':
+                    release.setDataValue(key, val)
+
+        for release in currentList:
+            try:
+                mc.startImageJob(release.id)
+            except DuplicateJob:
+                pass
+            # sleep for 15 minutes to lessen server load
+            if currentList.index(release) < len(currentList) - 1:
+                time.sleep(900)
+        return 0
+
+if __name__ == "__main__":
+    mti = MakeTestImages()
+    os._exit(mti.run())

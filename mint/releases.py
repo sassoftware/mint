@@ -226,7 +226,15 @@ class ReleasesTable(database.KeyedTable):
         return cu.fetchone()[0]
 
 class Release(database.TableObject):
-    __slots__ = [ReleasesTable.key] + ReleasesTable.fields + ['imageTypes']
+    __slots__ = ReleasesTable.fields + ['imageTypes']
+
+    def __eq__(self, val):
+        for item in [x for x in self.__slots__ if x not in \
+                     ('published', 'releaseId', 'troveLastChanged',
+                      'timePublished')]:
+            if self.__getattribute__(item) != val.__getattribute__(item):
+                return False
+        return self.getDataDict() == val.getDataDict()
 
     def getItem(self, id):
         return self.server.getRelease(id)
