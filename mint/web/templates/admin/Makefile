@@ -8,7 +8,7 @@ kid_files =			\
 	add_outbound.kid	\
 	frontPage.kid		\
 	external.kid		\
-        maintenance.kid         \
+	maintenance.kid		\
 	notify.kid		\
 	project.kid		\
 	report.kid		\
@@ -16,7 +16,8 @@ kid_files =			\
 	user.kid		\
 	newUser.kid		\
 	jobs.kid		\
-	external.kid
+	external.kid		\
+	primeMirror.kid
 
 
 python_files =

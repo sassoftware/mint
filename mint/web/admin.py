@@ -171,10 +171,10 @@ class AdminHandler(WebHandler):
 
     @strFields(name = None, hostname = None, label = None, url = '',\
         mirrorUser = '', mirrorPass = '', mirrorEnt = '')
-    @boolFields(useMirror = False)
+    @boolFields(useMirror = False, primeMirror = False)
     def processExternal(self, name, hostname, label, url,
                                 mirrorUser, mirrorPass, mirrorEnt,
-                                useMirror, *args, **kwargs):
+                                useMirror, primeMirror, *args, **kwargs):
         projectId = self.client.newExternalProject(name, hostname,
             self.cfg.projectDomainName, label, url, useMirror)
         project = self.client.getProject(projectId)
@@ -190,9 +190,13 @@ class AdminHandler(WebHandler):
             self.client.addInboundLabel(projectId, labelId, url, mirrorUser, mirrorPass)
             self.client.addRemappedRepository(hostname + "." + self.cfg.siteDomainName, extLabel.getHost())
 
-        self._redirect(self._redirect("http://%s%sproject/%s/" % \
-                                      (self.cfg.projectSiteHost,
-                                       self.cfg.basePath, hostname)))
+        if primeMirror:
+            # XXX start the mirror prime server now
+            return self._write("admin/primeMirror", serverName = extLabel.getHost())
+        else:
+            self._redirect("http://%s%sproject/%s/" % \
+                (self.cfg.projectSiteHost,
+                 self.cfg.basePath, hostname))
 
     def external(self, *args, **kwargs):
         from mint import database

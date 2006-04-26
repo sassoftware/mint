@@ -1,0 +1,29 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:py="http://purl.org/kid/ns#"
+      py:extends="'../layout.kid'">
+<!--
+    Copyright (c) 2005-2006 rPath, Inc.
+    All Rights Reserved
+-->
+    <head>
+        <title>${formatTitle('Preload Mirror')}</title>
+        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/mirror.js" />
+    </head>
+    <body>
+        <div class="layout">
+            <a href ="${cfg.basePath}admin/">Return to Administrator Page</a>
+
+            <p>Please follow the instructions below to pre-load your mirror.</p>
+
+            <div id="statusMessage" style="color: red; border 2px solid black; padding 5px;">This is a test</div>
+
+            <div id="errorMessage" style="color: red; border 2px solid black; padding 5px;"></div>
+
+            <p>
+                <button onclick="getDiscInfo('${serverName}');" id="goButton">Start Import</button>
+            </p>
+
+        </div>
+    </body>
+</html>
