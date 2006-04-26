@@ -55,8 +55,7 @@ class MakeTestImages(SingletonScript):
             except DuplicateJob:
                 pass
             # sleep for 15 minutes to lessen server load
-            if currentList.index(release) < len(currentList) - 1:
-                time.sleep(900)
+            time.sleep(900)
         return 0
 
 if __name__ == "__main__":
