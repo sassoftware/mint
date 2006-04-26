@@ -28,6 +28,7 @@ python_files = \
                maintenancetest.py \
                mint_rephelp.py \
                mirrortest.py \
+	       mirrorprimetest.py \
                projecttest.py \
                recipes.py \
                releasetest.py \
