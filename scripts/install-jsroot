@@ -46,3 +46,6 @@ echo "Copying network configuration files to chroot"
 for x in '/etc/nsswitch.conf' '/etc/hosts' '/etc/resolv.conf'; do
     cp $x $ROOT/etc/
 done
+
+echo "Activating new bind mounts"
+mount -a
