@@ -90,9 +90,9 @@ class ConcatThread(CopyThread):
         print "concatting: ", files, bytesTotal
 
         baseName = files[0].split(".tgz")[0]
-        output = file(self.tmpPath + baseName + ".tgz", "w")
+        output = file(os.path.join(self.tmpPath, baseName + ".tgz"), "w")
         for f in files:
-            input = file(self.tmpPath + f)
+            input = file(os.path.join(self.tmpPath, f))
             util.copyfileobj(input, output, self.copyCallback)
             input.close()
             self.lastTotal = 0
@@ -102,16 +102,17 @@ class ConcatThread(CopyThread):
 
 class CopyFromDiscThread(CopyThread):
     def run(self):
+        print "sourcePath:", self.sourcePath
         files = os.listdir(self.sourcePath)
-        files = [x for x in files if x != 'MIRROR-INFO' and os.path.isfile(self.sourcePath + x)]
+        files = [x for x in files if x != 'MIRROR-INFO' and os.path.isfile(os.path.join(self.sourcePath, x))]
         print "files", files
 
         bytesTotal = sum(os.stat(os.path.join(self.sourcePath, x))[stat.ST_SIZE] for x in files)
         self.status['bytesTotal'] = bytesTotal
 
         for f in files:
-            fromF = file(self.sourcePath + f)
-            toF = file(self.tmpPath + f, "w")
+            fromF = file(os.path.join(self.sourcePath, f))
+            toF = file(os.path.join(self.tmpPath, f), "w")
             util.copyfileobj(fromF, toF, self.copyCallback)
             toF.close()
             fromF.close()
@@ -120,12 +121,12 @@ class CopyFromDiscThread(CopyThread):
 
 
 class TarHandler(JsonRPCHandler):
-    def __init__(self, *args, **kwargs):
-        JsonRPCHandler.__init__(self, *args, **kwargs)
+    def handle_one_request(self):
         global sourcePath, tmpPath, needsMount
         self.sourcePath = sourcePath
         self.tmpPath = tmpPath
         self.needsMount = needsMount
+        JsonRPCHandler.handle_one_request(self)
 
     def copyfiles(self):
         global copyThread
@@ -155,7 +156,7 @@ class TarHandler(JsonRPCHandler):
         if self.needsMount:
             os.system("sudo mount /cdrom")
         try:
-            keyFile = open(os.path.join(self.tmpPath, "MIRROR-INFO"))
+            keyFile = open(os.path.join(self.sourcePath, "MIRROR-INFO"))
             serverName = keyFile.readline().strip()
             curDisc, count = keyFile.readline().strip().split("/")
 
