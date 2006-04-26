@@ -120,12 +120,12 @@ class CopyFromDiscThread(CopyThread):
 
 
 class TarHandler(JsonRPCHandler):
-    def __init__(self, *args, **kwargs):
-        JsonRPCHandler.__init__(self, *args, **kwargs)
+    def handle_one_request(self):
         global sourcePath, tmpPath, needsMount
         self.sourcePath = sourcePath
         self.tmpPath = tmpPath
         self.needsMount = needsMount
+        JsonRPCHandler.handle_one_request(self)
 
     def copyfiles(self):
         global copyThread
@@ -155,7 +155,7 @@ class TarHandler(JsonRPCHandler):
         if self.needsMount:
             os.system("sudo mount /cdrom")
         try:
-            keyFile = open(os.path.join(self.tmpPath, "MIRROR-INFO"))
+            keyFile = open(os.path.join(self.sourcePath, "MIRROR-INFO"))
             serverName = keyFile.readline().strip()
             curDisc, count = keyFile.readline().strip().split("/")
 
