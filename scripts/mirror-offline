@@ -24,11 +24,9 @@ from conary.server import schema
 from conary.server import server
 from conary import dbstore
 
-from mint import client
 from mint.scriptlibrary import SingletonScript
 
 log.setVerbosity(log.DEBUG)
-#sys.excepthook = util.genExcepthook(debug=True)
 
 MAX_FILESIZE = 1000000000
 
@@ -50,7 +48,6 @@ class MirrorOffline(SingletonScript):
             outputDir = tempfile.mkdtemp()
             if len(sys.argv) < 5:
                 return self.usage()
-            mc = client.MintClient(sys.argv[1])
             cfg = mirror.MirrorConfiguration()
 
             sourceUrl, labelStr, userName, userPass = sys.argv[1:5]
@@ -58,7 +55,7 @@ class MirrorOffline(SingletonScript):
             labelStr = sys.argv[2]
             if len(sys.argv) > 5:
                 if sys.argv[5][-1].isalpha():
-                    sizeBase = float(sys.argv[3][:-1])
+                    sizeBase = float(sys.argv[5][:-1])
                     mult = {'B' : 1,
                             'b' : 1,
                             'K' : 1024,
@@ -66,9 +63,9 @@ class MirrorOffline(SingletonScript):
                             'M' : 1048576,
                             'm' : 1000000,
                             'G' : 1073741824,
-                            'g' : 1000000000}[sys.argv[3][-1]]
+                            'g' : 1000000000}[sys.argv[5][-1]]
                 else:
-                    sizeBase = float(sys.argv[3])
+                    sizeBase = float(sys.argv[5])
                     mult = 1048576
                 isoSize = int(mult * sizeBase)
             else:
@@ -164,11 +161,14 @@ class MirrorOffline(SingletonScript):
             util.execute('tar -C %s -cpPsv -O ./ | gzip -9 | '
                          'split -a 3 -d -b %d - %s' % \
                          (baseDir, isoSize,
-                          os.path.join(outputDir, targCfg.serverName + '.tgz')))
+                          os.path.join(outputDir, "mirror-" + targCfg.serverName + '.tgz')))
             # break DVD's into multi-part files. to comply with ISO-9660/UDF
             # filesystem constraints
             if isoSize > MAX_FILESIZE:
+                splitFiles = os.listdir(outputDir)
+                curDisc = 1
                 for fn in os.listdir(outputDir):
+                    createKeyFile(targCfg.serverName, curDisc, outputDir)
                     util.execute("split -a 3 -d -b %d %s %s" % \
                                  (MAX_FILESIZE, os.path.join(outputDir, fn),
                                   os.path.join(outputDir, fn + '_')))
@@ -176,19 +176,25 @@ class MirrorOffline(SingletonScript):
                     files = " ".join([os.path.join(outputDir, x) \
                                       for x in os.listdir(outputDir) \
                                       if x.startswith(fn + '_')])
+                    file += " " + os.path.join(outputDir, "MIRROR-INFO")
                     util.execute("mkisofs -o %s -r -U %s" % \
                                  (os.path.join( \
                         outputDir, fn.replace('.tgz', '') + '.iso'), files))
                     for mFn in [x for x in os.listdir(outputDir) \
                                 if x.startswith(fn + '_')]:
                         os.unlink(os.path.join(outputDir, mFn))
+                    curDisc += 1
             else:
+                curDisc = 1
                 for fn in os.listdir(outputDir):
+                    createKeyFile(targCfg.serverName, curDisc, outputDir)
+                    files = [fn, "MIRROR-INFO"]
                     util.execute("mkisofs -o %s -r -U %s" % \
                                  (os.path.join( \
                         outputDir, fn.replace('.tgz', '') + '.iso'),
-                                  os.path.join(outputDir, fn)))
+                                  " ".join(os.path.join(outputDir, x) for x in files)))
                     os.unlink(os.path.join(outputDir, fn))
+                    curDisc += 1
             for isoFile in os.listdir(outputDir):
                 os.rename(os.path.join(outputDir, isoFile),
                           os.path.join('.', isoFile))
@@ -199,6 +205,17 @@ class MirrorOffline(SingletonScript):
                 except:
                     pass
         return 0
+
+
+def createKeyFile(serverName, curDisc, outputDir):
+    splitFiles = os.listdir(outputDir)
+    count = len(splitFiles)
+
+    keyFile = open(os.path.join(outputDir, "MIRROR-INFO"), "w")
+    print >> keyFile, "%s" % serverName
+    print >> keyFile, "%d/%d" % (curDisc, count)
+    keyFile.close()
+
 
 if __name__ == "__main__":
     mo = MirrorOffline()

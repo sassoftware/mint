@@ -1,0 +1,18 @@
+#!/usr/bin/python
+import BaseHTTPServer
+import simplejson
+import threading
+import os
+import stat
+
+from conary.lib import util
+from mint.mirrorprime import TarHandler
+
+def run(server_class=BaseHTTPServer.HTTPServer,
+        handler_class=TarHandler):
+    server_address = ('', 8000)
+    httpd = server_class(server_address, handler_class)
+    httpd.serve_forever()
+
+if __name__ == "__main__":
+    run()
