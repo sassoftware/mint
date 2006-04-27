@@ -12,28 +12,31 @@ from mint import server
 from mint import users
 from mint import shimclient
 
-from fixtures import FixturedUnitTest, fixture
+import fixtures
 
-class AuthTest(FixturedUnitTest):
-    @fixture("Empty")
-    def testNewUser(self, db, client, data):
+class AuthTest(fixtures.FixturedUnitTest):
+    @fixtures.fixture("Empty")
+    def testNewUser(self, db, data):
+        client = self.getClient("test")
         auth = client.checkAuth()
         assert(auth.authorized)
 
-    @fixture("Empty")
-    def testBadUser(self, db, client, data):
-        client = shimclient.ShimMintClient(client._cfg, ("testuser", "badpass"))
+    @fixtures.fixture("Empty")
+    def testBadUser(self, db, data):
+        throwaway = self.getClient("test")
+        cfg = throwaway._cfg
+        client = shimclient.ShimMintClient(cfg, ("test", "badpass"))
         auth = client.checkAuth()
         assert(not auth.authorized)
 
         # ensure capitalization typos in username aren't allowed either
-        client = shimclient.ShimMintClient(client._cfg, ("testUser","testpass"))
+        client = shimclient.ShimMintClient(cfg, ("tEsT","testpass"))
         auth = client.checkAuth()
         assert(not auth.authorized)
 
-    @fixture("Empty")
-    def testConflictingUser(self, db, client, data):
-        client = self._getAdminClient()
+    @fixtures.fixture("Empty")
+    def testConflictingUser(self, db, data):
+        client = self.getClient('admin')
 
         # make two accounts with a case sensitive clash.
         userId = client.registerNewUser("member", "memberpass", "Test Member",
@@ -47,9 +50,11 @@ class AuthTest(FixturedUnitTest):
         userId = client.registerNewUser("different", "memberpass", "Test Member",
                                         "test@example.com", "test at example.com", "", active=True)
 
-    @fixture("Empty")
-    def testRequiresAuth(self, db, client, data):
-        anonClient = shimclient.ShimMintClient(client._cfg, ('anonymous', 'anonymous'))
+    @fixtures.fixture("Empty")
+    def testRequiresAuth(self, db, data):
+        client = self.getClient("test")
+        cfg = client._cfg
+        anonClient = shimclient.ShimMintClient(cfg, ('anonymous', 'anonymous'))
 
         try:
             anonClient.getUserSearchResults('Any String Will Do')
@@ -59,12 +64,12 @@ class AuthTest(FixturedUnitTest):
 
         client.getUserSearchResults('Any String Will Do')
 
-    @fixture("Empty")
-    def testRequiresAdmin(self, db, client, data):
-        projectId = client.newProject('Foo', 'foo', 'localhost')
+    @fixtures.fixture("Full")
+    def testRequiresAdmin(self, db, data):
+        client = self.getClient("owner")
 
         try:
-            client.hideProject(projectId)
+            client.hideProject(data['projectId'])
             self.fail("User was allowed to perform an admin only function")
         except server.PermissionDenied:
             pass

@@ -25,11 +25,11 @@ from conary.lib import util
 from conary.repository.errors import TroveNotFound
 
 import fixtures
-from fixtures import fixture
 
 class ReleaseTest(fixtures.FixturedUnitTest):
-    @fixture("Release")
-    def testBasicAttributes(self, db, client, data):
+    @fixtures.fixture("Full")
+    def testBasicAttributes(self, db, data):
+        client = self.getClient("owner")
         release = client.getRelease(data['releaseId'])
         assert(release.getName() == "Test Release")
         release.setTrove("group-trove",
@@ -59,8 +59,9 @@ class ReleaseTest(fixtures.FixturedUnitTest):
         release.refresh()
         assert desc == release.getDesc()
 
-    @fixture("Release")
-    def testReleaseData(self, db, client, data):
+    @fixtures.fixture("Full")
+    def testReleaseData(self, db, data):
+        client = self.getClient("owner")
         release = client.getRelease(data['releaseId'])
         imageTypes = [releasetypes.INSTALLABLE_ISO]
         release.setImageTypes(imageTypes)
@@ -116,8 +117,9 @@ class ReleaseTest(fixtures.FixturedUnitTest):
         # ensure invalid enum values are not accepted.
         self.assertRaises(ParameterError, release.setDataValue, 'enumArg', '5')
 
-    @fixture("Release")
-    def testMaxIsoSize(self, db, client, data):
+    @fixtures.fixture("Full")
+    def testMaxIsoSize(self, db, data):
+        client = self.getClient("owner")
         release = client.getRelease(data['releaseId'])
         imageTypes = [releasetypes.INSTALLABLE_ISO]
         release.setImageTypes(imageTypes)
@@ -135,12 +137,13 @@ class ReleaseTest(fixtures.FixturedUnitTest):
                     "Data dict contained %s of %s but expected %s of type str"\
                     % (str(maxIsoSize), str(type(maxIsoSize)), '8500000000'))
 
-    @fixture("Release")
-    def testMissingReleaseData(self, db, client, data):
+    @fixtures.fixture("Full")
+    def testMissingReleaseData(self, db, data):
         # make sure releasedata properly returns the default value
         # if the row is missing. this will handle the case of a modified
         # releasedata template with old releases in the database.
 
+        client = self.getClient("owner")
         release = client.getRelease(data['releaseId'])
         release.setImageTypes([releasetypes.INSTALLABLE_ISO])
         assert(release.getImageTypes() == [releasetypes.INSTALLABLE_ISO])
@@ -158,8 +161,9 @@ class ReleaseTest(fixtures.FixturedUnitTest):
 
         assert(release.getDataValue("bugsUrl") == "http://bugs.rpath.com/")
 
-    @fixture("Release")
-    def testPublished(self, db, client, data):
+    @fixtures.fixture("Full")
+    def testPublished(self, db, data):
+        client = self.getClient("owner")
         release = client.getRelease(data['releaseId'])
         release.setImageTypes([releasetypes.STUB_IMAGE])
         release.setFiles([["file1", "File Title 1"]])
@@ -192,8 +196,9 @@ class ReleaseTest(fixtures.FixturedUnitTest):
         self.failIf(release.getPublished() is not True,
                     "Result of getPublished is not boolean")
 
-    @fixture("Release")
-    def testDeleteRelease(self, db, client, data):
+    @fixtures.fixture("Full")
+    def testDeleteRelease(self, db, data):
+        client = self.getClient("owner")
         release = client.getRelease(data['releaseId'])
         release.setImageTypes([releasetypes.STUB_IMAGE])
         release.setFiles([["file1", "File Title 1"]])
@@ -205,8 +210,9 @@ class ReleaseTest(fixtures.FixturedUnitTest):
         except ReleasePublished:
             pass
 
-    @fixture("Release")
-    def testMissingRelease(self, db, client, data):
+    @fixtures.fixture("Full")
+    def testMissingRelease(self, db, data):
+        client = self.getClient("owner")
         release = client.getRelease(data['releaseId'])
 
         # make a release and delete it, to emulate a race condition
@@ -252,16 +258,18 @@ class ReleaseTest(fixtures.FixturedUnitTest):
         except ReleaseMissing:
             pass
 
-    @fixture("Release")
-    def testDownloadIncrementing(self, db, client, data):
+    @fixtures.fixture("Full")
+    def testDownloadIncrementing(self, db, data):
+        client = self.getClient("owner")
         release = client.getRelease(data['releaseId'])
         assert(release.getDownloads() == 0)
         release.incDownloads()
         release.refresh()
         assert(release.getDownloads() == 1)
 
-    @fixture("Empty")
-    def testUnfinishedRelease(self, db, client, data):
+    @fixtures.fixture("Empty")
+    def testUnfinishedRelease(self, db, data):
+        client = self.getClient("test")
         projectId = client.newProject("Foo", "foo", "rpath.org")
 
         brokenRelease = client.newRelease(projectId, "Test Release")
@@ -285,8 +293,9 @@ class ReleaseTest(fixtures.FixturedUnitTest):
         if cu.fetchone()[0] != 2:
             self.fail("Finished release was deleted")
 
-    @fixture("Empty")
-    def testUnfinishedReleaseData(self, db, client, data):
+    @fixtures.fixture("Empty")
+    def testUnfinishedReleaseData(self, db, data):
+        client = self.getClient("test")
         projectId = client.newProject("Foo", "foo", "rpath.org")
         brokenRelease = client.newRelease(projectId, "Test Release")
 
@@ -301,8 +310,9 @@ class ReleaseTest(fixtures.FixturedUnitTest):
         self.assertRaises(ReleaseDataNameError,
                           brokenRelease.getDataValue, 'jsversion')
 
-    @fixture("Release")
-    def testReleaseStatus(self, db, client, data):
+    @fixtures.fixture("Full")
+    def testReleaseStatus(self, db, data):
+        client = self.getClient("owner")
         releaseId = data['releaseId']
 
         if client.server.getReleaseStatus(releaseId) != {'status': 5,
@@ -310,8 +320,9 @@ class ReleaseTest(fixtures.FixturedUnitTest):
                                                          'queueLen': 0}:
             self.fail("getReleaseStatus returned unknown values")
 
-    @fixture("Empty")
-    def testGetReleasesForProjectOrder(self, db, client, data):
+    @fixtures.fixture("Empty")
+    def testGetReleasesForProjectOrder(self, db, data):
+        client = self.getClient("test")
         projectId = client.newProject("Foo", "foo", "rpath.org")
 
         release = client.newRelease(projectId, 'release 1')
@@ -333,8 +344,9 @@ class ReleaseTest(fixtures.FixturedUnitTest):
                     "getReleasesForProject is not ordered by "
                     "'most recent first'")
 
-    @fixture("Release")
-    def testPublishEmptyRelease(self, db, client, data):
+    @fixtures.fixture("Full")
+    def testPublishEmptyRelease(self, db, data):
+        client = self.getClient("owner")
         release = client.getRelease(data['releaseId'])
 
         try:
@@ -347,8 +359,9 @@ class ReleaseTest(fixtures.FixturedUnitTest):
         release.setFiles([["file1", "File Title 1"]])
         release.setPublished(True)
 
-    @fixture("Release")
-    def testHasVMwareImage(self, db, client, data):
+    @fixtures.fixture("Full")
+    def testHasVMwareImage(self, db, data):
+        client = self.getClient("owner")
         release = client.getRelease(data['releaseId'])
 
         assert(release.hasVMwareImage() == False)
@@ -356,16 +369,18 @@ class ReleaseTest(fixtures.FixturedUnitTest):
         release.setFiles([["test.vmware.zip", "Test Image"]])
         assert(release.hasVMwareImage() == True)
 
-    @fixture("Release")
-    def testGetDisplayTemplates(self, db, client, data):
+    @fixtures.fixture("Full")
+    def testGetDisplayTemplates(self, db, data):
+        client = self.getClient("owner")
         release = client.getRelease(data['releaseId'])
 
         self.failIf([(x[0], x[2]) for x in release.getDisplayTemplates()] != \
                     [x for x in releasetemplates.dataTemplates.iteritems()],
                     "dataTemplates lost in display translation")
 
-    @fixture("Release")
-    def testFreespace(self, db, client, data):
+    @fixtures.fixture("Full")
+    def testFreespace(self, db, data):
+        client = self.getClient("owner")
         release = client.getRelease(data['releaseId'])
 
         release.setImageTypes([releasetypes.RAW_FS_IMAGE])

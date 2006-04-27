@@ -13,13 +13,14 @@ import subprocess
 import os
 import pwd
 
-from mint_rephelp import MINT_PROJECT_DOMAIN
+from mint_rephelp import MINT_HOST, MINT_DOMAIN, MINT_PROJECT_DOMAIN
 
 from mint import shimclient
 from mint import config
 from mint import releasetypes
 from mint.distro.flavors import stockFlavors
 from mint import server
+from mint import userlevels
 
 from conary import dbstore
 from conary.deps import deps
@@ -34,7 +35,6 @@ def stockReleaseFlavor(db, releaseId, arch = "x86_64"):
 
 class FixtureCache(object):
     _fixtures = {}
-    authToken = ('testuser', 'testpass')
 
     def list(self):
         fixtureNames = [x for x in self.__class__.__base__.__dict__ \
@@ -56,6 +56,10 @@ class FixtureCache(object):
         cfg = config.MintConfig()
         cfg.authUser = 'mintauth'
         cfg.authPass = 'mintpass'
+        cfg.hostName = MINT_HOST
+        cfg.projectDomainName = MINT_PROJECT_DOMAIN
+        cfg.externalDomainName = MINT_DOMAIN
+        cfg.secureHostName = "%s.%s" % (MINT_HOST, MINT_PROJECT_DOMAIN)
         cfg.dataPath = tempfile.mkdtemp(prefix = "fixture%s" % name)
         cfg.reposPath = os.path.join(cfg.dataPath, 'repos')
         cfg.reposContentsDir = [os.path.join(cfg.dataPath, 'contents1', '%s'), os.path.join(cfg.dataPath, 'contents2', '%s')]
@@ -68,11 +72,29 @@ class FixtureCache(object):
     def delRepos(self):
         raise NotImplementedError
 
-    def createUser(self, cfg, db, username = 'testuser', password = 'testpass', fullname = 'Test User', email = 'test@example.com', blurb = 'test at example.com', isAdmin = False):
+    def createUser(self, cfg, db, username, isAdmin = False):
+        """
+        Creates a user named "username" filled with the following data:
+        password -> "<username>pass"
+        fullname -> "A User Named <username>"
+        email    -> "<username>@example.com"
+        contactInfo -> "<username> at example.com"
+
+        If isAdmin is True, then the user will be given admin privileges.
+
+        Returns the user id of the user.
+        """
+
         client = shimclient.ShimMintClient(cfg, (cfg.authUser, cfg.authPass))
 
+        assert(username)
+        password = "%spass" % username
+        fullname = "A User Named %s" % username
+        email = "%s@example.com" % username
+        contactInfo = "%s at example.com" % username
+
         userId = client.registerNewUser(username, password, fullname,
-            email, blurb, "", active=True)
+            email, contactInfo, "", active=True)
 
         if isAdmin:
             cu = db.cursor()
@@ -97,54 +119,119 @@ class FixtureCache(object):
         return userId
 
     def fixtureEmpty(self, cfg):
-        """Contains one user: ('testuser', 'testpass')"""
+        """
+        Empty fixture. Should be used when you want a (mostly) blank setup
+        for testing.
+
+        Creates the following setup:
+            - Two users:
+                - test (a basic user with no special privileges)
+                - admin (a user wih admin privileges)
+
+        @param cfg: The current effective Mint configuration.
+        @return: A 2-tuple consisting of the current Mint configuration and a
+            a dictionary containing the following:
+                - C{test} - the id of the user "test"
+                - C{admin} - the id of the user "admin"
+        """
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
         ms = server.MintServer(cfg, db, alwaysReload = True)
-        client = shimclient.ShimMintClient(cfg, self.authToken)
-        userId = self.createUser(cfg, db)
 
-        return cfg, { 'userId': userId }
+        testId = self.createUser(cfg, db, "test")
+        adminId = self.createUser(cfg, db, "admin", isAdmin=True)
 
-    def fixtureAdmin(self, cfg):
-        """Contains one admin user: ('testuser', 'testpass')"""
+        return cfg, { 'test': testId, 'admin': adminId }
+
+    def fixtureFull(self, cfg):
+        """
+        Full (featured) fixture. This fixture should be good enough for
+        90% of the tests written and should be used UNLESS the absence of
+        data provided by this fixture is needed.
+
+        Creates the following setup:
+            - One project called "foo"
+            - Six users
+                - admin (a user with admin privileges)
+                - owner (who owns the "foo" project)
+                - developer (who is a developer in the "foo" project)
+                - user (a user or watcher of the "foo" project
+                - nobody (a user with no allegiance to any project)
+            - A single release inside the "foo" project.
+        @param cfg: The current effective Mint configuration.
+        @return: A 2-tuple consisting of the current Mint configuration and a
+            a dictionary containing the following:
+                - C{test} - the id of the user "test"
+                - C{user} - the id of the user "user"
+                - C{admin} - the id of the user "admin"
+                - C{owner} - the id of the user "owner"
+                - C{developer} - the id of the user "developer"
+                - C{nobody} - the id of the user "nobody"
+                - C{projectId} - the id of the "Foo" project
+                - C{releaseId} - the id of the release in the "Foo" project
+        """
+
+        # connect to the database and open a MintServer instance
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
         ms = server.MintServer(cfg, db, alwaysReload = True)
-        client = shimclient.ShimMintClient(cfg, ('testuser', 'testpass'))
-        authUserId = self.createUser(cfg, db, username = 'testuser', password = 'testpass', isAdmin = True)
 
-        return cfg, { 'authUserId': authUserId }
+        # create the users
+        adminId = self.createUser(cfg, db, username = "admin", isAdmin = True)
+        ownerId = self.createUser(cfg, db, username = "owner")
+        developerId = self.createUser(cfg, db, username = "developer")
+        userId = self.createUser(cfg, db, username = "user")
+        nobodyId = self.createUser(cfg, db, username = "nobody")
 
-    def fixtureRelease(self, cfg):
-        db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
-        ms = server.MintServer(cfg, db, alwaysReload = True)
-        client = shimclient.ShimMintClient(cfg, self.authToken)
-        userId = self.createUser(cfg, db)
-
+        # create the project
+        client = shimclient.ShimMintClient(cfg, ("owner", "ownerpass"))
         projectId = client.newProject("Foo", "foo", MINT_PROJECT_DOMAIN)
-        release = client.newRelease(projectId, "Test Release")
+        project = client.getProject(projectId)
 
+        # add the developer
+        project.addMemberById(developerId, userlevels.DEVELOPER)
+
+        # add the watcher
+        # (note: you have to use a separate client with the watcher's
+        # credentials to add the watcher)
+        userClient = shimclient.ShimMintClient(cfg, ("user", "userpass"))
+        userProject = userClient.getProject(projectId)
+        userProject.addMemberById(userId, userlevels.USER)
+
+        # create a release for the "foo" project called "Test Release"
+        release = client.newRelease(projectId, "Test Release")
         stockReleaseFlavor(db, release.id)
 
-        return cfg, {'userId': userId, 'projectId': projectId, 'releaseId': release.id}
+        return cfg, { 'projectId': projectId, \
+                     'admin': adminId, \
+                     'owner': ownerId, \
+                     'developer': developerId, \
+                     'user': userId, \
+                     'nobody': nobodyId, \
+                     'releaseId': release.id }
 
-    def fixtureMembers(self, cfg):
-        db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
-        ms = server.MintServer(cfg, db, alwaysReload = True)
-        client = shimclient.ShimMintClient(cfg, self.authToken)
-        userId = self.createUser(cfg, db)
-
-        projectId = client.newProject("Foo", "foo", MINT_PROJECT_DOMAIN)
-
-        memberId = self.createUser(cfg, db, username = 'member', password = 'memberpass', fullname = 'Test Member', email = 'member@example.com', blurb = 'member at example.com')
-        memberClient = shimclient.ShimMintClient(cfg, ('member', 'memberpass'))
-
-        return cfg, {'userId': userId, 'memberId': memberId, 'projectId': projectId, 'memberClient': memberClient}
 
     def fixtureCookJob(self, cfg):
+        """
+        CookJob fixture.
+
+        Creates the following setup:
+            - One user:
+                - test (a basic user with no special privileges)
+            - A project called "foo"
+                - "test" is a member of "foo"
+                - A release called "Test Release"
+                - A group trove called "testtrove"
+                - A single group trove cook job, in the "started" state
+
+        @param cfg: The current effective Mint configuration.
+        @return: A 2-tuple consisting of the current Mint configuration and a
+            a dictionary containing the following:
+                - C{test} - the id of the user "test"
+        """
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
         ms = server.MintServer(cfg, db, alwaysReload = True)
-        userId = self.createUser(cfg, db)
-        client = shimclient.ShimMintClient(cfg, self.authToken)
+
+        userId = self.createUser(cfg, db, 'test')
+        client = shimclient.ShimMintClient(cfg, ('test', 'testpass'))
 
         projectId = client.newProject("Foo", "foo", "rpath.org")
 
@@ -166,11 +253,27 @@ class FixtureCache(object):
         return cfg, { 'userId': userId }
 
     def fixtureImageJob(self, cfg):
+        """
+        ImageJob fixture.
+
+        Creates the following setup:
+            - One user:
+                - test (a basic user with no special privileges)
+            - A project called "foo"
+                - "test" is a member of "foo"
+                - A release called "Test Release"
+                - A single image job, in the "started" state
+
+        @param cfg: The current effective Mint configuration.
+        @return: A 2-tuple consisting of the current Mint configuration and a
+            a dictionary containing the following:
+                - C{test} - the id of the user "test"
+        """
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
         ms = server.MintServer(cfg, db, alwaysReload = True)
-        userId = self.createUser(cfg, db)
+        testId = self.createUser(cfg, db, 'test')
 
-        client = shimclient.ShimMintClient(cfg, self.authToken)
+        client = shimclient.ShimMintClient(cfg, ('test', 'testpass'))
 
         projectId = client.newProject("Foo", "foo", "rpath.org")
 
@@ -180,14 +283,33 @@ class FixtureCache(object):
         stockReleaseFlavor(db, release.getId())
 
         relJob = client.startImageJob(release.getId())
-        return cfg, { 'userId': userId }
+        return cfg, { 'test': testId }
 
     def fixtureBothJobs(self, cfg):
+        """
+        BothJobs fixture.
+
+        Creates the following setup:
+            - One user:
+                - test (a basic user with no special privileges)
+            - A project called "foo"
+                - "test" is a member of "foo"
+                - A group trove called "testtrove"
+                - A release called "Test Release"
+                - A single image job, in the "started" state
+                - A single group trove cook job, in the "started" state
+
+        @param cfg: The current effective Mint configuration.
+        @return: A 2-tuple consisting of the current Mint configuration and a
+            a dictionary containing the following:
+                - C{test} - the id of the user "test"
+        """
         db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
         ms = server.MintServer(cfg, db, alwaysReload = True)
-        userId = self.createUser(cfg, db)
 
-        client = shimclient.ShimMintClient(cfg, ('testuser', 'testpass'))
+        testId = self.createUser(cfg, db, 'test')
+
+        client = shimclient.ShimMintClient(cfg, ('test', 'testpass'))
         projectId = client.newProject("Foo", "foo", "rpath.org")
 
         release = client.newRelease(projectId, "Test Release")
@@ -214,7 +336,7 @@ class FixtureCache(object):
         cookJobId = groupTrove.startCookJob("1#x86")
 
         db.commit()
-        return cfg, { 'userId': userId }
+        return cfg, { 'test': testId }
 
 
 class SqliteFixtureCache(FixtureCache):
@@ -247,7 +369,6 @@ class SqliteFixtureCache(FixtureCache):
     def __del__(self):
         for f in self._fixtures.values():
             util.rmtree(f[0].dataPath)
-
 
 
 class MySqlFixtureCache(FixtureCache, mysqlharness.MySqlHarness):
@@ -371,18 +492,27 @@ class FixturedUnitTest(unittest.TestCase):
         return fixtureCache.list()
 
     def loadFixture(self, name):
-        self.cfg, fixtureData = fixtureCache.load(name)
+        """
+        Loads the fixture for the unit test.
+        @param name: the name of the fixture (e.g. "Full")
+        @returns: A 3-typle consisting of a database connection,
+           a Mint client with admin credentials, and a dictionary of 
+           fixture data (may be empty).
+        """
 
+        self.cfg, fixtureData = fixtureCache.load(name)
         db = dbstore.connect(self.cfg.dbPath, self.cfg.dbDriver)
         server.dbConnection = None # reset the cached db connection
-        client = shimclient.ShimMintClient(self.cfg, ('testuser', 'testpass'))
 
-        return db, client, fixtureData
+        return db, fixtureData
 
     def _getAdminClient(self):
         if not self.adminClient:
             self.adminClient = shimclient.ShimMintClient(self.cfg, ('mintauth', 'mintpass'))
         return self.adminClient
+
+    def getClient(self, username):
+        return shimclient.ShimMintClient(self.cfg, (username, '%spass' % username))
 
     def quickMintUser(self, username, password, email = "test@example.com"):
         client = self._getAdminClient()
@@ -390,6 +520,37 @@ class FixturedUnitTest(unittest.TestCase):
             email, "test at example.com", "", active=True)
         client = shimclient.ShimMintClient(self.cfg, (username, password))
         return client, userId
+
+    def getMirrorAcl(self, project, username):
+        """
+        Given a project and a username, will determine whether or not the
+        user has the ability to mirror.
+        @param project: the project to check against
+        @param username: the user whose credentials should be checked
+        @returns: C{True} if C{username} can mirror C{project}; C{False}
+            otherwise.
+        """
+        dbCon = project.server._server.projects.reposDB.getRepositoryDB( \
+            project.getFQDN())
+        db = dbstore.connect(dbCon[1], dbCon[0])
+
+        cu = db.cursor()
+
+        cu.execute("""SELECT canMirror
+                          FROM Users
+                          LEFT JOIN UserGroupMembers ON Users.userId =
+                                  UserGroupMembers.userId
+                          LEFT JOIN UserGroups ON UserGroups.userGroupId =
+                                  UserGroupMembers.userGroupId
+                          WHERE Users.username=?""", username)
+
+        try:
+            # nonexistent results trigger value error
+            canMirror = max([x[0] for x in cu.fetchall()])
+        except ValueError:
+            canMirror = None
+        db.close()
+        return canMirror
 
     def tearDown(self):
         try:
@@ -411,8 +572,8 @@ else:
 def fixture(arg):
     def deco(func):
         def wrapper(self):
-            db, client, data = self.loadFixture(arg)
-            return func(self, db, client, data)
+            db, data = self.loadFixture(arg)
+            return func(self, db, data)
         wrapper.__name__ = func.__name__
         wrapper.__dict__.update(func.__dict__)
         return wrapper

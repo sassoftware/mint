@@ -15,12 +15,12 @@ from mint import users
 from mint.projects import LabelMissing
 
 import fixtures
-from fixtures import fixture
 
 class LabelsTest(fixtures.FixturedUnitTest):
-    @fixture("Release")
-    def testBasicAttributes(self, db, client, data):
-        project = client.getProject(data['projectId'])
+    @fixtures.fixture("Full")
+    def testBasicAttributes(self, db, data):
+        adminClient = self.getClient("admin")
+        project = adminClient.getProject(data['projectId'])
 
         newLabelId = project.addLabel("bar.%s@rpl:devel" % MINT_PROJECT_DOMAIN,
             "http://%s/repos/bar/" % MINT_PROJECT_DOMAIN, "user1", "pass1")
@@ -31,29 +31,30 @@ class LabelsTest(fixtures.FixturedUnitTest):
 
         project.editLabel(newLabelId, "bar.%s@rpl:testbranch" % MINT_PROJECT_DOMAIN,
             "http://bar.%s/conary/" % MINT_PROJECT_DOMAIN, "user1", "pass1")
-        assert client.server.getLabel(newLabelId) == ('bar.%s@rpl:testbranch' % MINT_PROJECT_DOMAIN, 'http://bar.%s/conary/' % MINT_PROJECT_DOMAIN, 'user1', 'pass1')
+        assert adminClient.server.getLabel(newLabelId) == ('bar.%s@rpl:testbranch' % MINT_PROJECT_DOMAIN, 'http://bar.%s/conary/' % MINT_PROJECT_DOMAIN, 'user1', 'pass1')
 
         project.removeLabel(newLabelId)
         assert(project.getLabelIdMap() ==\
             {"foo.%s@rpl:devel" % MINT_PROJECT_DOMAIN: 1})
 
         try:
-            client.server.getLabel(newLabelId)
+            adminClient.server.getLabel(newLabelId)
             self.fail("label should not exist")
         except LabelMissing:
             pass
 
-    @fixture("Release")
-    def testSSL(self, db, client, data):
-        project = client.getProject(data['projectId'])
+    @fixtures.fixture("Full")
+    def testSSL(self, db, data):
+        adminClient = self.getClient("admin")
+        project = adminClient.getProject(data['projectId'])
 
         ccfg = project.getConaryConfig()
-        if client.server._server.cfg.SSL:
+        if adminClient.server._server.cfg.SSL:
             assert(ccfg.repositoryMap.values()[0].startswith("https://"))
         else:
             assert(ccfg.repositoryMap.values()[0].startswith("http://"))
 
-        extProjectId = client.newProject("External Project", "external",
+        extProjectId = adminClient.newProject("External Project", "external",
                 "localhost")
 
         cu = db.cursor()
@@ -61,23 +62,26 @@ class LabelsTest(fixtures.FixturedUnitTest):
                 extProjectId)
         db.commit()
 
-        extProject = client.getProject(extProjectId)
+        extProject = adminClient.getProject(extProjectId)
         ccfg = extProject.getConaryConfig()
         assert(ccfg.repositoryMap.values()[0].startswith("http://"))
 
-    @fixture("Empty")
-    def testExternalVersions(self, db, client, data):
+    @fixtures.fixture("Full")
+    def testExternalVersions(self, db, data):
         def addLabel(projectId, label, url = 'http://none'):
             cu.execute("""INSERT INTO Labels
                               (projectId, label, url, username, password)
                               VALUES(?, ?, ?, 'none', 'none')""",
                        projectId, label, url)
 
-        projectId = client.newProject("Test Project", "test", "localhost")
-        project = client.getProject(projectId)
+        adminClient = self.getClient("admin")
 
-        projectId2 = client.newProject("Foo Project", "foo", "localhost")
-        project = client.getProject(projectId2)
+        # foo project is given to us by the fixture
+        projectId = data['projectId']
+        project = adminClient.getProject(data['projectId'])
+
+        projectId2 = adminClient.newProject("Bar Project", "bar", "localhost")
+        project2 = adminClient.getProject(projectId2)
 
         cu = db.cursor()
 
@@ -91,18 +95,18 @@ class LabelsTest(fixtures.FixturedUnitTest):
         db.commit()
 
         # a local project returns False
-        self.failIf(client.versionIsExternal( \
+        self.failIf(adminClient.versionIsExternal( \
             '/foo.rpath.org@rpl:devel//1/1.0.0-1-0.1'),
                     "internal version appeared external")
 
         # an external project returns True
-        self.failIf(not client.versionIsExternal( \
+        self.failIf(not adminClient.versionIsExternal( \
             '/baz.rpath.org@rpl:devel//1/1.0.0-1-0.1'),
                     "external version appeared internal")
 
         # missing item raises ItemNotFound
         # FIXME: re-enable once versionIsExternal raises an exception
-        #self.assertRaises(database.ItemNotFound, client.versionIsExternal,
+        #self.assertRaises(database.ItemNotFound, adminClient.versionIsExternal,
         #                  '/just.not.there@rpl:devel//1/1.0.0-1-0.1')
 
 
@@ -110,37 +114,44 @@ class LabelsTest(fixtures.FixturedUnitTest):
                    projectId2)
 
         # legal reference to local hidden project returns False
-        self.failIf(client.versionIsExternal( \
+        self.failIf(adminClient.versionIsExternal( \
             '/foo.rpath.org@rpl:devel//1/1.0.0-1-0.1'),
                     "internal version appeared external")
 
         # illegal reference to local hidden project raises ItemNotFound
         # FIXME: re-enable once versionIsExternal raises an exception
-        #self.assertRaises(database.ItemNotFound, client2.versionIsExternal,
+        #self.assertRaises(database.ItemNotFound, adminClient2.versionIsExternal,
         #                  '/just.not.there@rpl:devel//1/1.0.0-1-0.1')
 
-    @fixture("Admin")
-    def testInboundLabel(self, db, client, data):
-        projectId = client.newProject("Foo", "foo", "rpath.org")
-        client.addInboundLabel(projectId, projectId, "http://www.example.com/conary/",
-                               "mirror", "mirrorpass")
+    @fixtures.fixture("Full")
+    def testInboundLabel(self, db, data):
+        projectId = data['projectId']
+        adminClient = self.getClient("admin")
+        adminClient.addInboundLabel(projectId, projectId,
+                "http://www.example.com/conary/",
+                "mirror", "mirrorpass")
 
-        labels = client.getInboundLabels()
-        assert(labels == [[projectId, projectId, 'http://www.example.com/conary/',
-                           'mirror', 'mirrorpass']])
+        labels = adminClient.getInboundLabels()
+        assert(labels == \
+                [[projectId, projectId, 'http://www.example.com/conary/', \
+                  'mirror', 'mirrorpass']])
 
-    @fixture("Admin")
-    def testOutboundLabel(self, db, client, data):
-        projectId = client.newProject("Foo", "foo", "rpath.org")
-        client.addOutboundLabel(projectId, projectId, "http://www.example.com/conary/",
-                                "mirror", "mirrorpass")
+    @fixtures.fixture("Full")
+    def testOutboundLabel(self, db, data):
+        projectId = data['projectId']
+        adminClient = self.getClient("admin")
+        adminClient.addOutboundLabel(projectId, projectId, 
+                "http://www.example.com/conary/",
+                "mirror", "mirrorpass")
 
-        labels = client.getOutboundLabels()
-        assert(labels == [[projectId, projectId, 'http://www.example.com/conary/',
-                           'mirror', 'mirrorpass']])
+        labels = adminClient.getOutboundLabels()
+        assert(labels == \
+                [[projectId, projectId, 'http://www.example.com/conary/', \
+                  'mirror', 'mirrorpass']])
 
-        client.delOutboundLabel(projectId, 'http://www.example.com/conary/')
-        labels = client.getOutboundLabels()
+        adminClient.delOutboundLabel(projectId,
+                'http://www.example.com/conary/')
+        labels = adminClient.getOutboundLabels()
         assert(labels == [])
 
 

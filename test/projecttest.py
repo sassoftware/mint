@@ -19,47 +19,48 @@ from mint.server import ParameterError, PermissionDenied
 from conary import dbstore
 from conary.conaryclient import ConaryClient
 
-class ProjectTest(MintRepositoryHelper):
-    def testBasicAttributes(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        projectId = client.newProject("Foo", "foo", "rpath.org")
+import fixtures
 
-        project = client.getProject(projectId)
+class ProjectTest(fixtures.FixturedUnitTest):
 
-        project = client.getProject(projectId)
-        assert(project.getFQDN() == "foo.rpath.org")
+    def _checkMembership(self, project, expectedUserId, expectedAcl):
+        return [expectedUserId, expectedAcl] in \
+                [[x[0], x[2]] for x in project.getMembers()]
+
+    @fixtures.fixture("Full")
+    def testBasicAttributes(self, db, data):
+        client = self.getClient("owner")
+        project = client.getProject(data['projectId'])
+
+        assert(project.getFQDN() == "foo.%s" % MINT_PROJECT_DOMAIN)
         assert(project.getHostname() == "foo")
-        assert(project.getDomainname() == "rpath.org")
+        assert(project.getDomainname() == MINT_PROJECT_DOMAIN)
         assert(project.getName() == "Foo")
-        assert(project.getMembers() ==\
-            [[userId, 'testuser', userlevels.OWNER]])
-
+        assert(project.getMembers() == [ \
+                [data['owner'], 'owner', userlevels.OWNER], \
+                [data['developer'], 'developer', userlevels.DEVELOPER], \
+                [data['user'], 'user', userlevels.USER] ])
         assert(project.hidden == 0)
         assert(project.external == 0)
         assert(project.disabled == 0)
 
-    def testEditProject(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        projectId = client.newProject("Foo", "foo", "rpath.org")
-
-        project = client.getProject(projectId)
+    @fixtures.fixture("Full")
+    def testEditProject(self, db, data):
+        client = self.getClient("owner")
+        project = client.getProject(data['projectId'])
         project.editProject("http://example.com/", "Description", "Foo Title")
         project.refresh()
-        
+
         assert(project.getName() == "Foo Title")
         assert(project.getDesc() == "Description")
         assert(project.getProjectUrl() == "http://example.com/")
-  
+
         # create a new project to conflict with
-        newProjectId = client.newProject("Foo2", "foo2", "rpath.org")
-        
-        try:
-            project.editProject("http://example.com/", "Description", "Foo2")
-        except DuplicateItem: # XXX this shouldn't be generic
-            pass
-        else:
-            self.fail("expected DuplicateItem exception")
-   
+        newProjectId = client.newProject("Foo2", "foo2", MINT_PROJECT_DOMAIN)
+
+        self.failUnlessRaises(DuplicateItem, project.editProject,
+                "http://example.com/", "Description", "Foo2")
+
         # test automatic prepending of http://
         project.editProject("www.example.com", "Description", "Foo Title")
         project.refresh()
@@ -69,90 +70,72 @@ class ProjectTest(MintRepositoryHelper):
         project.editProject("", "Description", "Foo Title")
         project.refresh()
         assert(project.getProjectUrl() == "")
-        
-    def testGetProjects(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        projectId = self.newProject(client, hostname = "test1")
 
-        project = client.getProjectByHostname("test1")
-        assert(projectId == project.getId())
+    @fixtures.fixture("Full")
+    def testGetProjects(self, db, data):
+        client = self.getClient("owner")
+        project = client.getProjectByHostname("foo")
+        assert(data['projectId'] == project.getId())
 
-        project = client.getProjectByFQDN("test1." + MINT_PROJECT_DOMAIN)
-        assert(projectId == project.getId())
-   
-    def testMembers(self):
-        client = self.openMintClient()
-        otherUserId = client.registerNewUser("member", "memberpass",
-                                             "Test Member",
-                        "test@example.com", "test at example.com", "",
-                                             active=True)
- 
-        client, userId = self.quickMintUser("testuser", "testpass")
+        project = client.getProjectByFQDN("foo.%s" % MINT_PROJECT_DOMAIN)
+        assert(data['projectId'] == project.getId())
 
-        projectId = client.newProject("Foo", "foo", "localhost")
-        project = client.getProject(projectId)
+    @fixtures.fixture("Full")
+    def testMembers(self, db, data):
+        client = self.getClient("owner")
+        project = client.getProject(data['projectId'])
 
-        project.addMemberById(otherUserId, userlevels.DEVELOPER)
-        assert(project.getMembers() == [[userId, 'testuser', userlevels.OWNER],
-                                        [otherUserId, 'member',
-                                         userlevels.DEVELOPER]])
+        project.addMemberById(data['nobody'], userlevels.DEVELOPER)
+        self.failUnless(self._checkMembership(project, data['nobody'], \
+                userlevels.DEVELOPER))
 
-        project.delMemberById(otherUserId)
-        assert(project.getMembers() == [[userId, 'testuser',
-                                         userlevels.OWNER]])
+        project.delMemberById(data['nobody'])
+        self.failIf(self._checkMembership(project, data['nobody'], \
+                userlevels.DEVELOPER))
 
-        project.addMemberByName('member', userlevels.OWNER)
-        assert(project.getMembers() == [[otherUserId, 'member',
-                                         userlevels.OWNER],
-                                        [userId, 'testuser',
-                                         userlevels.OWNER]])
+        project.addMemberByName('nobody', userlevels.OWNER)
+        self.failUnless(self._checkMembership(project, data['nobody'], \
+                userlevels.OWNER))
 
-        project.updateUserLevel(otherUserId, userlevels.DEVELOPER)
-        assert(project.getMembers() == [[userId, 'testuser', userlevels.OWNER],
-                                        [otherUserId, 'member',
-                                         userlevels.DEVELOPER]])
+        project.updateUserLevel(data['nobody'], userlevels.DEVELOPER)
+        self.failUnless(self._checkMembership(project, data['nobody'], \
+                userlevels.DEVELOPER))
 
-    def testWatcher(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        otherClient, otherUserId = self.quickMintUser("another", "testpass")
+    @fixtures.fixture("Full")
+    def testWatcher(self, db, data):
+        nobodyClient = self.getClient('nobody')
+        project = nobodyClient.getProject(data['projectId'])
 
-        projectId = client.newProject("Test", "test", "rpath.local")
-        project = otherClient.getProject(projectId)
-        project.addMemberByName("another", userlevels.USER)
+        project.addMemberByName("nobody", userlevels.USER)
+        self.failUnless(self._checkMembership(project, data['nobody'], \
+                userlevels.USER))
 
-        assert(project.getMembers() == [[userId, 'testuser', userlevels.OWNER],
-                                        [otherUserId, 'another',
-                                         userlevels.USER]])
+        assert([x[0].id for x in nobodyClient.getProjectsByMember(data['nobody'])] == [data['projectId']])
 
-        assert([x[0].id for x in otherClient.getProjectsByMember(otherUserId)]\
-               == [projectId])
-
-    def testDuplicateMembers(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        newClient, newUserId = self.quickMintUser("newuser", "testpass")
-        projectId = client.newProject("Foo", "foo", "localhost")
-        project = client.getProject(projectId)
-        project.addMemberById(newUserId, userlevels.DEVELOPER)
+    @fixtures.fixture("Full")
+    def testDuplicateMembers(self, db, data):
+        client = self.getClient("owner")
+        project = client.getProject(data['projectId'])
+        project.addMemberById(data['nobody'], userlevels.DEVELOPER)
         # a consecutive addMember should run properly--just becomes an update
-        project.addMemberById(newUserId, userlevels.OWNER)
+        project.addMemberById(data['nobody'], userlevels.OWNER)
 
-    def testMissingUser(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        newUsername = "newuser"
-        newClient, newUserId = self.quickMintUser("newuser", "testpass")
-        cu = self.db.cursor()
-        cu.execute("DELETE FROM Users WHERE username=?", newUsername)
-        self.db.commit()
-        projectId = client.newProject("Foo", "foo", "localhost")
-        project = client.getProject(projectId)
-        self.assertRaises(ItemNotFound, project.addMemberById, newUserId,
+    @fixtures.fixture("Full")
+    def testMissingUser(self, db, data):
+        client = self.getClient("owner")
+        project = client.getProject(data['projectId'])
+        cu = db.cursor()
+        cu.execute("DELETE FROM Users WHERE username='nobody'")
+        db.commit()
+        self.assertRaises(ItemNotFound, project.addMemberById, data['nobody'],
                           userlevels.DEVELOPER)
 
-    def testBadHostname(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
+    @fixtures.fixture("Full")
+    def testBadHostname(self, db, data):
+        client = self.getClient("owner")
         for hostname in ('admin', 'a bad name', '', 'a_bad_name', 'a.bad.name'):
             try:
-                projectId = client.newProject("Foo", hostname, 'localhost')
+                projectId = client.newProject("Quux", hostname, 'localhost')
                 self.fail("allowed to create a project with a bad name")
             except InvalidHostname:
                 pass
@@ -161,25 +144,9 @@ class ProjectTest(MintRepositoryHelper):
                 if str(exc_value).split(' ')[0] != 'ParameterError':
                     raise
 
-    def testTranslatedProjectName(self):
-        # make sure we can properly translate a hostname with a dash in it
-        # all the way to the conary handler.
-        client, userId = self.quickMintUser("testuser", "testpass")
-        projectId = client.newProject("Foo", "test-project",
-                MINT_PROJECT_DOMAIN)
-
-        project = client.getProject(projectId)
-        cfg = project.getConaryConfig()
-        assert(ConaryClient(cfg).getRepos().troveNamesOnServer("test-project." \
-                + MINT_PROJECT_DOMAIN) == [])
-
-    def testUnconfirmedMembers(self):
-        client = self.openMintClient()
-        otherUserId = client.registerNewUser("member", "memberpass",
-                                             "Test Member",
-                                             "test@example.com",
-                                             "test at example.com", "",
-                                             active=True)
+    @fixtures.fixture("Full")
+    def testUnconfirmedMembers(self, db, data):
+        client = self.getClient("owner")
         unconfirmedUserId = client.registerNewUser("unconfirmed",
                                                    "memberpass",
                                                    "Unconfirmed Member",
@@ -187,10 +154,7 @@ class ProjectTest(MintRepositoryHelper):
                                                    "test at example.com",
                                                    "", active=False)
  
-        client, userId = self.quickMintUser("testuser", "testpass")
-        
-        projectId = client.newProject("Foo", "foo", "localhost")
-        project = client.getProject(projectId)
+        project = client.getProject(data['projectId'])
 
         #Try to add an unconfirmed member to the project by userName
         try:
@@ -208,166 +172,156 @@ class ProjectTest(MintRepositoryHelper):
         else:
             self.fail("ItemNotFound Exception expected")
 
-    def testGetProjectsByMember(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        projectId = client.newProject("Test Project", "test", "localhost")
-
-        projects = client.getProjectsByMember(userId)
-        assert(projects[0][0].getId() == projectId)
+    @fixtures.fixture("Full")
+    def testGetProjectsByMember(self, db, data):
+        # create a new project with the nobody client
+        client = self.getClient("owner")
+        nobodyClient = self.getClient('nobody')
+        newProjectId = nobodyClient.newProject("Quux", "quux", "localhost")
+        projects = client.getProjectsByMember(data['nobody'])
+        assert(projects[0][0].getId() == newProjectId)
         assert(projects[0][1] == userlevels.OWNER)
 
-        if client.server.getProjectsByUser(userId) !=  [['test.localhost',
-                                                         'Test Project', 0]]:
+        if client.server.getProjectsByUser(data['nobody']) != \
+                [['quux.localhost', 'Quux', 0]]:
             self.fail("getProjectsByUser returned incorrect results")
 
-    def testHideProject(self):
-        adminClient, adminUserId = self.quickMintAdmin("adminuser", "testpass")
-        client, userId = self.quickMintUser("testuser", "testpass")
-        memberClient, memberId = self.quickMintUser("memberuser","testpass")
-        watcherClient, watcherId = self.quickMintUser("watcher","testpass")
-        #client.server.auth.admin = True
-        projectId = adminClient.newProject("Test Project", "test", "localhost")
-        project = adminClient.getProject(projectId)
-        project.addMemberById(memberId, userlevels.OWNER)
-        watcherProject = watcherClient.getProject(projectId)
-        watcherProject.addMemberById(watcherId, userlevels.USER)
-        project = client.getProject(projectId)
-        adminClient.hideProject(projectId)
+    @fixtures.fixture("Full")
+    def testHideProject(self, db, data):
+        adminClient = self.getClient("admin")
+        ownerClient = self.getClient("owner")
+        developerClient = self.getClient("developer")
+        watcherClient = self.getClient("user")
+        nobodyClient = self.getClient("nobody")
+
+        project = ownerClient.getProject(data['projectId'])
+        nobodyProject = nobodyClient.getProject(data['projectId'])
+
+        # hide the project
+        adminClient.hideProject(data['projectId'])
 
         # try getting the project from various levels
-        memberClient.getProject(projectId)
-        adminClient.getProject(projectId)
+        developerClient.getProject(data['projectId'])
+        adminClient.getProject(data['projectId'])
 
-        self.assertRaises(ItemNotFound, client.getProject, projectId)
-        self.assertRaises(ItemNotFound, watcherClient.getProject, projectId)
+        self.assertRaises(ItemNotFound, nobodyClient.getProject, data['projectId'])
+        self.assertRaises(ItemNotFound, watcherClient.getProject, data['projectId'])
+        self.assertRaises(ItemNotFound, nobodyClient.server.getProjectIdByFQDN,
+                          "foo.%s" % MINT_PROJECT_DOMAIN)
+        self.assertRaises(ItemNotFound, nobodyClient.server.getProjectIdByHostname,
+                          "foo")
 
-        self.assertRaises(ItemNotFound, client.server.getProjectIdByFQDN,
-                          "test.localhost")
-        self.assertRaises(ItemNotFound, client.server.getProjectIdByHostname,
-                          "test")
-
-        self.failIf(client.server.getProjectIdsByMember(watcherId),
+        self.failIf(nobodyClient.server.getProjectIdsByMember(data['owner']),
                     "Nonmember found hidden project (getProjectIdsByMember)")
 
-        self.failIf(not adminClient.server.getProjectIdsByMember(adminUserId),
+        self.failUnless(adminClient.server.getProjectIdsByMember(data['owner']),
                     "Admin missed hidden project (getProjectIdsByMember)")
 
-        self.failIf(not memberClient.server.getProjectIdsByMember(memberId),
+        self.failUnless(ownerClient.server.getProjectIdsByMember(data['owner']),
                     "Owner missed hidden project (getProjectIdsByMember)")
 
-        self.failIf(watcherClient.server.getProjectIdsByMember(watcherId),
+        self.failIf(watcherClient.server.getProjectIdsByMember(data['owner']),
                     "Watcher saw hidden project (getProjectIdsByMember)")
 
-        self.assertRaises(ItemNotFound, client.server.getMembersByProjectId,
-                          projectId)
+        self.assertRaises(ItemNotFound, nobodyClient.server.getMembersByProjectId,
+                          data['projectId'])
 
         adminClient.server.getOwnersByProjectName(project.getName())
 
-        self.assertRaises(ItemNotFound, client.userHasRequested, projectId,
-                          userId)
+        self.assertRaises(ItemNotFound, nobodyClient.userHasRequested,
+                data['projectId'], data['owner'])
 
-        self.assertRaises(ItemNotFound, client.setJoinReqComments,
-                          projectId, "foo")
-        self.assertRaises(ItemNotFound, client.getJoinReqComments,
-                          projectId, userId)
-        self.assertRaises(ItemNotFound, client.deleteJoinRequest,
-                          projectId, userId)
-        self.assertRaises(ItemNotFound, client.listJoinRequests, projectId)
+        self.assertRaises(ItemNotFound, nobodyClient.setJoinReqComments,
+                data['projectId'], "foo")
+        self.assertRaises(ItemNotFound, nobodyClient.getJoinReqComments,
+                data['projectId'], data['user'])
+        self.assertRaises(ItemNotFound, nobodyClient.deleteJoinRequest,
+                data['projectId'], data['owner'])
+        self.assertRaises(ItemNotFound, nobodyClient.listJoinRequests,
+                data['projectId'])
 
+        self.assertRaises(ItemNotFound, nobodyProject.addMemberById,
+                          data['nobody'], userlevels.USER)
 
-        self.assertRaises(ItemNotFound, project.addMemberById,
-                         userId, userlevels.USER)
-
-        self.assertRaises(ItemNotFound, client.server.lastOwner,
-                          projectId, adminUserId)
-        self.assertRaises(ItemNotFound, client.server.onlyOwner,
-                          projectId, adminUserId)
+        self.assertRaises(ItemNotFound, nobodyClient.server.lastOwner,
+                          data['projectId'], data['owner'])
+        self.assertRaises(ItemNotFound, nobodyClient.server.onlyOwner,
+                          data['projectId'], data['owner'])
         self.assertRaises(ItemNotFound,
-                          watcherClient.server.delMember, projectId, watcherId,
-                                                         False)
+                          watcherClient.server.delMember, data['projectId'],
+                          data['user'], False)
 
-        memberClient.server.getUserLevel(watcherId, projectId)
+        ownerClient.server.getUserLevel(data['user'], data['projectId'])
 
-        adminClient.unhideProject(projectId)
+        adminClient.unhideProject(data['projectId'])
 
-    def testDisableProject(self):
-        adminClient, adminUserId = self.quickMintAdmin("adminuser", "testpass")
-        client, userId = self.quickMintUser("testuser", "testpass")
-        memberClient, memberId = self.quickMintUser("memberuser","testpass")
-        watcherClient, watcherId = self.quickMintUser("watcher","testpass")
-        #client.server.auth.admin = True
-        projectId = adminClient.newProject("Test Project", "test", "localhost")
-        project = adminClient.getProject(projectId)
-        project.addMemberById(memberId, userlevels.OWNER)
-        watcherProject = watcherClient.getProject(projectId)
-        watcherProject.addMemberById(watcherId, userlevels.USER)
-        project = client.getProject(projectId)
-        adminClient.disableProject(projectId)
+    @fixtures.fixture("Full")
+    def testDisableProject(self, db, data):
+
+        adminClient = self.getClient("admin")
+        ownerClient = self.getClient("owner")
+        developerClient = self.getClient("developer")
+        watcherClient = self.getClient("user")
+        nobodyClient = self.getClient("nobody")
+
+        adminClient.disableProject(data['projectId'])
 
         # try getting the project from various levels
-        adminClient.getProject(projectId)
+        adminClient.getProject(data['projectId'])
 
-        try:
-            memberClient.getProject(projectId)
-            self.fail("getProject: Members should not be able to see disabled projects")
-        except ItemNotFound:
-            pass
+        self.assertRaises(ItemNotFound, ownerClient.getProject,
+                data['projectId'])
 
-        try:
-            client.getProject(projectId)
-            self.fail("getProject: Project should appear to not exist to non-members")
-        except ItemNotFound:
-            pass
+        self.assertRaises(ItemNotFound, nobodyClient.getProject,
+                data['projectId'])
 
-        try:
-            watcherClient.getProject(projectId)
-            self.fail("getProject: Project should appear to not exist to user-members")
-        except ItemNotFound:
-            pass
+        self.assertRaises(ItemNotFound, watcherClient.getProject,
+                data['projectId'])
 
-        adminClient.enableProject(projectId)
-        adminClient.getProject(projectId)
-        memberClient.getProject(projectId)
-        client.getProject(projectId)
-        watcherClient.getProject(projectId)
+        adminClient.enableProject(data['projectId'])
+        adminClient.getProject(data['projectId'])
+        ownerClient.getProject(data['projectId'])
+        nobodyClient.getProject(data['projectId'])
+        watcherClient.getProject(data['projectId'])
 
-    def testCreateExternalProject(self):
+    @fixtures.fixture("Full")
+    def testCreateExternalProject(self, db, data):
         # ensure only site admins can create external projects
-        client, userId = self.quickMintUser("testuser", "testpass")
-        self.assertRaises(PermissionDenied, client.newExternalProject,
+        nobodyClient = self.getClient("nobody")
+        self.assertRaises(PermissionDenied, nobodyClient.newExternalProject,
                           'rPath Linux', 'rpath', 'rpath.local',
                           'conary.rpath.com@rpl:devel', '')
 
-        client, userId = self.quickMintAdmin("adminuser", "adminpass")
-        projectId = client.newExternalProject('rPath Linux', 'rpath',
-                                              'rpath.local',
-                                              'conary.rpath.com@rpl:devel', '')
+        adminClient = self.getClient("admin")
+        projectId = adminClient.newExternalProject('rPath Linux', 'rpath',
+                          'rpath.local',
+                          'conary.rpath.com@rpl:devel', '')
 
-        project = client.getProject(projectId)
-        self.failIf(not project.external, "created project was not external")
+        project = adminClient.getProject(projectId)
+        self.failUnless(project.external, "created project was not external")
 
         # ensure project users table was populated.
-        assert(project.onlyOwner(userId))
-        assert(not project.lastOwner(userId))
+        assert(project.onlyOwner(data['admin']))
+        assert(not project.lastOwner(data['admin']))
 
         # ensure labels table was populated.
         self.failIf(project.getLabel() != 'conary.rpath.com@rpl:devel',
                     "Improper labels table entry for external project")
 
-    def testBlankExtProjectUrl(self):
-        client, userId = self.quickMintAdmin("adminuser", "adminpass")
+    @fixtures.fixture("Full")
+    def testBlankExtProjectUrl(self, db, data):
 
-        reposUrl = 'http://foo.rpath.local/conary/'
+        reposUrl = 'http://bar.rpath.local/conary/'
+        adminClient = self.getClient('admin')
 
         # let system set url by leaving it blank
-        projectId = client.newExternalProject('Foo', 'foo',
-                                              'rpath.local',
-                                              'foo.rpath.local@rpl:devel', '')
+        projectId = adminClient.newExternalProject('Bar', 'bar',
+               'rpath.local', 'bar.rpath.local@rpl:devel', '')
 
-        project = client.getProject(projectId)
-        labelId = project.getLabelIdMap()['foo.rpath.local@rpl:devel']
+        project = adminClient.getProject(projectId)
+        labelId = project.getLabelIdMap()['bar.rpath.local@rpl:devel']
 
-        cu = self.db.cursor()
+        cu = db.cursor()
         cu.execute("SELECT url FROM Labels WHERE labelId=?", labelId)
         url = cu.fetchall()[0][0]
 
@@ -375,21 +329,22 @@ class ProjectTest(MintRepositoryHelper):
                     "repos url was lost in translation. expected %s, got %s" %\
                     (reposUrl, url))
 
-    def testSetExtProjectUrl(self):
-        client, userId = self.quickMintAdmin("adminuser", "adminpass")
+    @fixtures.fixture("Full")
+    def testSetExtProjectUrl(self, db, data):
+        adminClient = self.getClient("admin")
 
         reposUrl = 'http://some.repos/conary'
 
         # set url manually
-        projectId = client.newExternalProject('Foo', 'foo',
+        projectId = adminClient.newExternalProject('Bar', 'bar',
                                               'rpath.local',
-                                              'foo.rpath.local@rpl:devel',
+                                              'bar.rpath.local@rpl:devel',
                                               reposUrl)
 
-        project = client.getProject(projectId)
-        labelId = project.getLabelIdMap()['foo.rpath.local@rpl:devel']
+        project = adminClient.getProject(projectId)
+        labelId = project.getLabelIdMap()['bar.rpath.local@rpl:devel']
 
-        cu = self.db.cursor()
+        cu = db.cursor()
         cu.execute("SELECT url FROM Labels WHERE labelId=?", labelId)
         url = cu.fetchall()[0][0]
 
@@ -397,85 +352,90 @@ class ProjectTest(MintRepositoryHelper):
                     "repos url was lost in translation. expected %s, got %s" %\
                     (reposUrl, url))
 
-    def testDuplicateProjects(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-
-        projectId = client.newProject("Foo", "foo", "localhost")
-
+    @fixtures.fixture("Full")
+    def testDuplicateProjects(self, db, data):
+        # fixture already has a foo project, so we try to create duplicates
+        client = self.getClient("owner")
         self.assertRaises(DuplicateHostname,
             client.newProject, "Hello World", "foo", "localhost")
         self.assertRaises(DuplicateName,
             client.newProject, "Foo", "another", "localhost")
 
-    def testOwnerMirror(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
+    @fixtures.fixture("Full")
+    def testOwnerMirror(self, db, data):
+        ownerClient = self.getClient('owner')
+        project = ownerClient.getProject(data['projectId'])
+        canMirror = self.getMirrorAcl(project, 'owner')
 
-        projectId = client.newProject("Foo", "foo", "localhost")
-        project = client.getProject(projectId)
-        canMirror = self.getMirrorAcl(project, 'testuser')
+        self.failUnless(canMirror, "Project owner does not have mirror ACL.")
 
-        self.failIf(not canMirror, "Project owner does not have mirror ACL.")
+    @fixtures.fixture("Full")
+    def testRemovedMirror(self, db, data):
+        ownerClient = self.getClient('owner')
 
-    def testRemovedMirror(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
+        project = ownerClient.getProject(data['projectId'])
+        project.delMemberById(data['developer'])
+        project.delMemberById(data['owner'])
 
-        projectId = client.newProject("Foo", "foo", "localhost")
-        project = client.getProject(projectId)
-        project.delMemberById(userId)
-
-        canMirror = self.getMirrorAcl(project, 'testuser')
+        canMirror = self.getMirrorAcl(project, 'owner')
 
         self.failIf(canMirror is not None,
                     "Project owner's ACL outlived membership.")
 
-    def testDevelMirror(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-
-        projectId = client.newProject("Foo", "foo", "localhost")
-        project = client.getProject(projectId)
-
-        client, userId = self.quickMintUser("newuser", "newpass")
-        project.addMemberById(userId, userlevels.DEVELOPER)
-        canMirror = self.getMirrorAcl(project, 'newuser')
+    @fixtures.fixture("Full")
+    def testDevelMirror(self, db, data):
+        client = self.getClient("owner")
+        project = client.getProject(data['projectId'])
+        canMirror = self.getMirrorAcl(project, 'developer')
 
         self.failIf(canMirror, "Project developer has mirror ACL.")
 
-    def testPromotedMirror(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
+    @fixtures.fixture("Full")
+    def testPromotedMirror(self, db, data):
+        client = self.getClient("owner")
+        project = client.getProject(data['projectId'])
 
-        projectId = client.newProject("Foo", "foo", "localhost")
-        project = client.getProject(projectId)
-
-        client, userId = self.quickMintUser("newuser", "newpass")
         # ensure a promoted member gets same treatment as others
-        project.addMemberById(userId, userlevels.DEVELOPER)
-        project.addMemberById(userId, userlevels.OWNER)
-        canMirror = self.getMirrorAcl(project, 'newuser')
+        project.addMemberById(data['developer'], userlevels.OWNER)
+        canMirror = self.getMirrorAcl(project, 'developer')
 
-        self.failIf(not canMirror, "Promoted owner does not have mirror ACL.")
+        self.failUnless(canMirror, "Promoted owner does not have mirror ACL.")
 
-    def testDemotedMirror(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
+    @fixtures.fixture("Full")
+    def testDemotedMirror(self, db, data):
+        client = self.getClient("owner")
+        project = client.getProject(data['projectId'])
 
-        projectId = client.newProject("Foo", "foo", "localhost")
-        project = client.getProject(projectId)
-
-        client, userId = self.quickMintUser("newuser", "newpass")
         # ensure a demoted member gets same treatment as others
-        project.addMemberById(userId, userlevels.OWNER)
-        project.addMemberById(userId, userlevels.DEVELOPER)
-        canMirror = self.getMirrorAcl(project, 'newuser')
+        project.addMemberById(data['admin'], userlevels.OWNER)
+        project.addMemberById(data['owner'], userlevels.DEVELOPER)
+        canMirror = self.getMirrorAcl(project, 'owner')
 
         self.failIf(canMirror, "Demoted project developer has mirror ACL.")
 
-    def testAuthUserMirror(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
+    @fixtures.fixture("Full")
+    def testAuthUserMirror(self, db, data):
+        client = self.getClient("owner")
+        project = client.getProject(data['projectId'])
+        canMirror = self.getMirrorAcl(project, self.cfg.authUser)
 
-        projectId = client.newProject("Foo", "foo", "localhost")
-        project = client.getProject(projectId)
-        canMirror = self.getMirrorAcl(project, self.mintCfg.authUser)
+        self.failUnless(canMirror, "Auth user does not have mirror ACL.")
 
-        self.failIf(not canMirror, "Auth user does not have mirror ACL.")
+
+class ProjectTestConaryRepository(MintRepositoryHelper):
+
+    def testTranslatedProjectName(self):
+        client, userid = self.quickMintUser("test", "testpass")
+
+        # make sure we can properly translate a hostname with a dash in it
+        # all the way to the conary handler.
+        newProjectId = client.newProject("Quux", "quux-project",
+                MINT_PROJECT_DOMAIN)
+
+        project = client.getProject(newProjectId)
+        cfg = project.getConaryConfig()
+        assert(ConaryClient(cfg).getRepos().troveNamesOnServer("quux-project." \
+                + MINT_PROJECT_DOMAIN) == [])
 
 
 if __name__ == "__main__":

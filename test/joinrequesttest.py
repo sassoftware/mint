@@ -10,14 +10,15 @@ from mint_rephelp import MintRepositoryHelper
 from mint import userlevels
 
 from fixtures import FixturedUnitTest, fixture
+import fixtures
 
-class JoinRequestTest(FixturedUnitTest):
-    @fixture("Release")
-    def testSetComments(self, db, client, data):
+class JoinRequestTest(fixtures.FixturedUnitTest):
+
+    @fixtures.fixture("Full")
+    def testSetComments(self, db, data):
+        client = self.getClient("nobody")
         projectId = data['projectId']
-        # abandon the old user. you can't make requests against
-        # projects you're a member of, so that one's useless for testing
-        client, userId = self.quickMintUser("seconduser", "testpass")
+        userId = data['nobody']
 
         # initially the request should not be present
         assert(not client.userHasRequested(projectId, userId))
@@ -35,46 +36,47 @@ class JoinRequestTest(FixturedUnitTest):
         # request should no longer be present
         assert(not client.userHasRequested(projectId, userId))
 
-    @fixture("Release")
-    def testMembershipEffects(self, db, client, data):
-        projectId = data['projectId']
-
+    @fixtures.fixture("Full")
+    def testMembershipEffects(self, db, data):
         # uses original client -- meaning has auth tokens for project owner
+        client = self.getClient("owner")
+        projectId = data['projectId']
         project = client.getProject(projectId)
 
         # abandon the old user so we can make join reqs
-        client, userId = self.quickMintUser("newuser", "testpass")
-        client.setJoinReqComments(projectId, '')
+        nobodyClient = self.getClient("nobody")
+        nobodyUserId = data['nobody']
+        nobodyClient.setJoinReqComments(projectId, '')
 
         # request should now be present
-        assert(client.userHasRequested(projectId, userId))
+        assert(nobodyClient.userHasRequested(projectId, nobodyUserId))
 
-        project.addMemberById(userId, userlevels.DEVELOPER)
+        project.addMemberById(nobodyUserId, userlevels.DEVELOPER)
 
         # request should no longer be present
-        assert(not client.userHasRequested(projectId, userId))
+        assert(not nobodyClient.userHasRequested(projectId, nobodyUserId))
 
-        client.setJoinReqComments(projectId, 'foo')
+        nobodyClient.setJoinReqComments(projectId, 'foo')
 
         # request should not have been added -- user is already a member
-        assert(not client.userHasRequested(projectId, userId))
+        assert(not nobodyClient.userHasRequested(projectId, nobodyUserId))
 
         # exercise addMemberByName code path. same as adopting project
-        project.delMemberById(userId)
-        client.setJoinReqComments(projectId, 'foo')
-        for memberId, x, y in project.getMembers():
-            project.delMemberById(memberId)
-        project.addMemberByName('newuser', userlevels.OWNER)
+        project.delMemberById(nobodyUserId)
+        nobodyClient.setJoinReqComments(projectId, 'foo')
+        project.delMemberById(data['developer'])
+        project.delMemberById(data['owner'])
+        project.addMemberByName('nobody', userlevels.OWNER)
         # request should no longer be present
-        assert(not client.userHasRequested(projectId, userId))
+        assert(not nobodyClient.userHasRequested(projectId, nobodyUserId))
 
-    def testUserEffects(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        projectId = client.newProject("Foo", "foo", "rpath.org")
-
+    @fixtures.fixture("Full")
+    def testUserEffects(self, db, data):
+        client = self.getClient("nobody")
+        projectId = data['projectId']
         project = client.getProject(projectId)
+        userId = data['nobody']
 
-        project.delMemberById(userId)
         project.addMemberById(userId, userlevels.USER)
 
         client.setJoinReqComments(projectId, '')
@@ -89,23 +91,24 @@ class JoinRequestTest(FixturedUnitTest):
         # writing member status should clear a join request
         assert(not client.userHasRequested(projectId, userId))
 
-    @fixture("Release")
-    def testCancelAcctEffects(self, db, client, data):
-        projectId = data['projectId']
-        userId = data['userId']
-        newClient, newUserId = self.quickMintUser("member", "memberpass")
+    @fixtures.fixture("Full")
+    def testCancelAcctEffects(self, db, data):
+        ownerClient = self.getClient("owner")
+        nobodyClient = self.getClient("nobody")
 
-        user = newClient.getUser(newUserId)
-        newClient.setJoinReqComments(projectId, 'foo')
+        nobodyUser = nobodyClient.getUser(data['nobody'])
+        nobodyClient.setJoinReqComments(data['projectId'], 'foo')
         # cancel account and check again
-        user.cancelUserAccount()
+        nobodyUser.cancelUserAccount()
         # request should no longer be present
-        assert(not client.userHasRequested(projectId, userId))
+        assert(not ownerClient.userHasRequested(data['projectId'],
+            data['owner']))
 
     # FIXME. need to exercise listJoinRequests
-    @fixture("Release")
-    def testListJoinRequests(self, db, client, data):
-        projectId = data['projectId']
+    @fixtures.fixture("Empty")
+    def testListJoinRequests(self, db, data):
+        client = self.getClient("test")
+        projectId = client.newProject("Foo", "foo", "localhost")
 
         for i in range(2, 7):
             newClient, newUserId = self.quickMintUser('newUser_%d' %i,'testpass')
@@ -115,7 +118,7 @@ class JoinRequestTest(FixturedUnitTest):
                 self.fail("listJoinRequest returned wrong number of results")
         for req in  joinReqs:
             #if (len(req) != 2)  or (type(req[1]) != str):
-            if (len(req) != 2) or (req[0] not in range(2,7)) or (type(req[1]) != str):
+            if (len(req) != 2) or (req[0] not in range(3,8)) or (type(req[1]) != str):
                 self.fail("join Request returned improper format")
 
 if __name__ == "__main__":

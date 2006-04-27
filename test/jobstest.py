@@ -11,7 +11,6 @@ import time
 import os
 
 import fixtures
-from fixtures import fixture
 
 from mint import shimclient
 from mint import config
@@ -41,52 +40,58 @@ class JobsTest(fixtures.FixturedUnitTest):
     # test startNextJob for just images
     #####
 
-    @fixture('ImageJob')
-    def testStartImageNoJobType(self, db, client, data):
+    @fixtures.fixture('ImageJob')
+    def testStartImageNoJobType(self, db, data):
         # ask for no job types
+        client = self.getClient('test')
         job = client.startNextJob(["1#x86_64"], {},
                                   jsversion.getDefaultVersion())
 
         self.failIf(job, "startNextJob returned something when nothing wanted")
 
-    @fixture('ImageJob')
-    def testStartImageNoType(self, db, client, data):
+    @fixtures.fixture('ImageJob')
+    def testStartImageNoType(self, db, data):
         # ask for no arch type or job types
+        client = self.getClient('test')
         job = client.startNextJob([], {},
                                   jsversion.getDefaultVersion())
 
         self.failIf(job, "startNextJob returned something when nothing wanted")
 
-    @fixture('ImageJob')
-    def testStartImageNoArch(self, db, client, data):
+    @fixtures.fixture('ImageJob')
+    def testStartImageNoArch(self, db, data):
         # ask for no arch
+        client = self.getClient('test')
         job = client.startNextJob([],
                                   {'imageTypes' : [releasetypes.STUB_IMAGE]},
                                   jsversion.getDefaultVersion())
 
         self.failIf(job, "startNextJob returned the wrong image type")
 
-    @fixture('ImageJob')
-    def testStartImageWrongType(self, db, client, data):
+    @fixtures.fixture('ImageJob')
+    def testStartImageWrongType(self, db, data):
         # ask for a different image type
+        client = self.getClient('test')
         job = client.startNextJob(["1#x86_64"],
                                   {'imageTypes' : [releasetypes.RAW_HD_IMAGE]},
                                   jsversion.getDefaultVersion())
 
         self.failIf(job, "startNextJob returned the wrong image type")
 
-    @fixture('ImageJob')
-    def testStartImageWrongArch(self, db, client, data):
+    @fixtures.fixture('ImageJob')
+    def testStartImageWrongArch(self, db, data):
         # ask for a different architecture
+        client = self.getClient('test')
         job = client.startNextJob(["1#x86"],
                                   {'imageTypes' : [releasetypes.STUB_IMAGE]},
                                   jsversion.getDefaultVersion())
 
         self.failIf(job, "startNextJob matched the wrong architecture")
 
-    @fixture('ImageJob')
-    def testStartImageCookArch(self, db, client, data):
+    @fixtures.fixture('ImageJob')
+    def testStartImageCookArch(self, db, data):
         # ask for a cook job with wrong arch
+        client = self.getClient('test')
         job = client.startNextJob(["1#x86"],
                                   {'cookTypes' : [cooktypes.GROUP_BUILDER]},
                                   jsversion.getDefaultVersion())
@@ -94,18 +99,20 @@ class JobsTest(fixtures.FixturedUnitTest):
         self.failIf(job, "startNextJob erroneously matched cook "
                     "job for wrong arch")
 
-    @fixture('ImageJob')
-    def testStartImageCook(self, db, client, data):
+    @fixtures.fixture('ImageJob')
+    def testStartImageCook(self, db, data):
         # ask for a cook job with right arch
+        client = self.getClient('test')
         job = client.startNextJob(["1#x86"],
                                   {'cookTypes' : [cooktypes.GROUP_BUILDER]},
                                   jsversion.getDefaultVersion())
 
         self.failIf(job, "startNextJob erreneously matched cook job")
 
-    @fixture('ImageJob')
-    def testStartImage(self, db, client, data):
+    @fixtures.fixture('ImageJob')
+    def testStartImage(self, db, data):
         # ask for the right parameters
+        client = self.getClient('test')
         job = client.startNextJob(["1#x86_64"],
                                   {'imageTypes' : [releasetypes.STUB_IMAGE]},
                                   jsversion.getDefaultVersion())
@@ -116,69 +123,77 @@ class JobsTest(fixtures.FixturedUnitTest):
     # test startNextJob for just cooks
     #####
 
-    @fixture('CookJob')
-    def testStartCookWrongArch(self, db, client, data):
+    @fixtures.fixture('CookJob')
+    def testStartCookWrongArch(self, db, data):
         # ask for a cook job with wrong arch
+        client = self.getClient('test')
         job = client.startNextJob(["1#x86_64"],
                                   {'cookTypes' : [cooktypes.GROUP_BUILDER]},
                                   jsversion.getDefaultVersion())
 
         self.failIf(job, "startNextJob matched cook job for wrong arch")
 
-    @fixture('CookJob')
-    def testStartCook(self, db, client, data):
+    @fixtures.fixture('CookJob')
+    def testStartCook(self, db, data):
         # ask for a cook job with right arch
+        client = self.getClient('test')
         job = client.startNextJob(["1#x86"],
                                   {'cookTypes' : [cooktypes.GROUP_BUILDER]},
                                   jsversion.getDefaultVersion())
 
         self.failIf(not job, "startNextJob matched cook job for wrong arch")
 
-    @fixture('CookJob')
-    def testStartCookImageArch(self, db, client, data):
+    @fixtures.fixture('CookJob')
+    def testStartCookImageArch(self, db, data):
         # ask for a image job with wrong arch
+        client = self.getClient('test')
         job = client.startNextJob(["1#x86_64"],
                                   {'imageTypes' : [releasetypes.STUB_IMAGE]},
                                   jsversion.getDefaultVersion())
 
         self.failIf(job, "startNextJob matched cook job when asked for image")
 
-    @fixture('CookJob')
-    def testStartCookImage(self, db, client, data):
+    @fixtures.fixture('CookJob')
+    def testStartCookImage(self, db, data):
         # ask for a image job with right arch
+        client = self.getClient('test')
         job = client.startNextJob(["1#x86"],
                                   {'imageTypes' : [releasetypes.STUB_IMAGE]},
                                   jsversion.getDefaultVersion())
 
         self.failIf(job, "startNextJob matched cook job when asked for image")
 
-    @fixture('CookJob')
-    def testStartCookNoJobType(self, db, client, data):
+    @fixtures.fixture('CookJob')
+    def testStartCookNoJobType(self, db, data):
         # ask for a no job with right arch
+        client = self.getClient('test')
         job = client.startNextJob(["1#x86"], {},
                                   jsversion.getDefaultVersion())
 
         self.failIf(job, "startNextJob matched cook job but asked for nothing")
 
-    @fixture('CookJob')
-    def testStartCookNoJobType2(self, db, client, data):
+    @fixtures.fixture('CookJob')
+    def testStartCookNoJobType2(self, db, data):
         # ask for no job with wrong arch
+        client = self.getClient('test')
         job = client.startNextJob(["1#x86_64"], {},
                                   jsversion.getDefaultVersion())
 
         self.failIf(job, "startNextJob matched cook job but asked for nothing")
 
-    @fixture('CookJob')
-    def testStartCookNoJob(self, db, client, data):
+    @fixtures.fixture('CookJob')
+    def testStartCookNoJob(self, db, data):
         # ask for no job with no arch
+        client = self.getClient('test')
         job = client.startNextJob([], {},
                                   jsversion.getDefaultVersion())
 
         self.failIf(job, "startNextJob matched cook job but asked for nothing")
 
-    @fixture('CookJob')
-    def testStartCookNoJobArch(self, db, client, data):
+    @fixtures.fixture('CookJob')
+    def testStartCookNoJobArch(self, db, data):
         # ask for an image job with no arch
+        client = self.getClient('test')
         job = client.startNextJob([],
                                   {'imageTypes' : [releasetypes.STUB_IMAGE]},
                                   jsversion.getDefaultVersion())
@@ -189,36 +204,40 @@ class JobsTest(fixtures.FixturedUnitTest):
     # test startNextJob for cooks and images together
     #####
 
-    @fixture('BothJobs')
-    def testStartCompImage(self, db, client, data):
+    @fixtures.fixture('BothJobs')
+    def testStartCompImage(self, db, data):
         # ask for an image job with right arch
+        client = self.getClient('test')
         job = client.startNextJob(['1#x86_64'],
                                   {'imageTypes' : [releasetypes.STUB_IMAGE]},
                                   jsversion.getDefaultVersion())
 
         self.failIf(not job, "startNextJob ignored an image job")
 
-    @fixture('BothJobs')
-    def testStartCompCook(self, db, client, data):
+    @fixtures.fixture('BothJobs')
+    def testStartCompCook(self, db, data):
         # ask for an image job with right arch
+        client = self.getClient('test')
         job = client.startNextJob(['1#x86'],
                                   {'cookTypes' : [cooktypes.GROUP_BUILDER]},
                                   jsversion.getDefaultVersion())
 
         self.failIf(not job, "startNextJob ignored a cook job")
 
-    @fixture('BothJobs')
-    def testStartCompImageArch(self, db, client, data):
+    @fixtures.fixture('BothJobs')
+    def testStartCompImageArch(self, db, data):
         # ask for an image job with wrong arch
+        client = self.getClient('test')
         job = client.startNextJob(['1#x86'],
                                   {'imageTypes' : [releasetypes.STUB_IMAGE]},
                                   jsversion.getDefaultVersion())
 
         self.failIf(job, "startNextJob matched image job wrong arch")
 
-    @fixture('BothJobs')
-    def testStartCompCookArch(self, db, client, data):
+    @fixtures.fixture('BothJobs')
+    def testStartCompCookArch(self, db, data):
         # ask for an image job with wrong arch
+        client = self.getClient('test')
         job = client.startNextJob(['1#x86_64'],
                                   {'cookTypes' : [cooktypes.GROUP_BUILDER]},
                                   jsversion.getDefaultVersion())
@@ -226,43 +245,48 @@ class JobsTest(fixtures.FixturedUnitTest):
         self.failIf(job, "startNextJob matched cook job wrong arch")
 
 
-    @fixture('BothJobs')
-    def testStartCompImageNoArch(self, db, client, data):
+    @fixtures.fixture('BothJobs')
+    def testStartCompImageNoArch(self, db, data):
         # ask for an image job with no arch
+        client = self.getClient('test')
         job = client.startNextJob([],
                                   {'imageTypes' : [releasetypes.STUB_IMAGE]},
                                   jsversion.getDefaultVersion())
 
         self.failIf(job, "startNextJob matched image job no arch")
 
-    @fixture('BothJobs')
-    def testStartCompCookNoArch(self, db, client, data):
+    @fixtures.fixture('BothJobs')
+    def testStartCompCookNoArch(self, db, data):
         # ask for an image job with wrong arch
+        client = self.getClient('test')
         job = client.startNextJob([],
                                   {'cookTypes' : [cooktypes.GROUP_BUILDER]},
                                   jsversion.getDefaultVersion())
 
         self.failIf(job, "startNextJob matched cook job no arch")
 
-    @fixture('BothJobs')
-    def testStartCompNoArch(self, db, client, data):
+    @fixtures.fixture('BothJobs')
+    def testStartCompNoArch(self, db, data):
         # ask for an image job with wrong arch
+        client = self.getClient('test')
         job = client.startNextJob([], {},
                                   jsversion.getDefaultVersion())
 
         self.failIf(job, "startNextJob matched job no arch and no type")
 
-    @fixture('BothJobs')
-    def testStartCompArch(self, db, client, data):
+    @fixtures.fixture('BothJobs')
+    def testStartCompArch(self, db, data):
         # ask for an image job with wrong arch
+        client = self.getClient('test')
         job = client.startNextJob(['1#x86'], {},
                                   jsversion.getDefaultVersion())
 
         self.failIf(job, "startNextJob matched job no type")
 
-    @fixture('BothJobs')
-    def testStartCompArch2(self, db, client, data):
+    @fixtures.fixture('BothJobs')
+    def testStartCompArch2(self, db, data):
         # ask for an image job with wrong arch
+        client = self.getClient('test')
         job = client.startNextJob(['1#x86_64'], {},
                                   jsversion.getDefaultVersion())
 
@@ -272,9 +296,10 @@ class JobsTest(fixtures.FixturedUnitTest):
     # test both cooks and images while asking for both
     #####
 
-    @fixture('BothJobs')
-    def testStartCompBothCook(self, db, client, data):
+    @fixtures.fixture('BothJobs')
+    def testStartCompBothCook(self, db, data):
         # ask for all jobs with x86 arch (will match cook)
+        client = self.getClient('test')
         job = client.startNextJob(['1#x86'],
                                   {'imageTypes' : [releasetypes.STUB_IMAGE],
                                    'cookTypes' : [cooktypes.GROUP_BUILDER]},
@@ -283,8 +308,9 @@ class JobsTest(fixtures.FixturedUnitTest):
         self.failIf(not (job and job.groupTroveId),
                     "startNextJob ignored a cook job")
 
-    @fixture('BothJobs')
-    def testStartCompBothImage(self, db, client, data):
+    @fixtures.fixture('BothJobs')
+    def testStartCompBothImage(self, db, data):
+        client = self.getClient('test')
         # ask for all jobs with x86_64 arch (will match image)
         job = client.startNextJob(['1#x86_64'],
                                   {'imageTypes' : [releasetypes.STUB_IMAGE],
@@ -294,9 +320,10 @@ class JobsTest(fixtures.FixturedUnitTest):
         self.failIf(not (job and job.releaseId),
                     "startNextJob ignored an image job")
 
-    @fixture('BothJobs')
-    def testStartCompBothNoArch(self, db, client, data):
+    @fixtures.fixture('BothJobs')
+    def testStartCompBothNoArch(self, db, data):
         # ask for all jobs no arch
+        client = self.getClient('test')
         job = client.startNextJob([],
                                   {'imageTypes' : [releasetypes.STUB_IMAGE],
                                    'cookTypes' : [cooktypes.GROUP_BUILDER]},
@@ -304,9 +331,10 @@ class JobsTest(fixtures.FixturedUnitTest):
 
         self.failIf(job, "startNextJob matched for no arch")
 
-    @fixture('BothJobs')
-    def testStartCompBothArch(self, db, client, data):
+    @fixtures.fixture('BothJobs')
+    def testStartCompBothArch(self, db, data):
         # ask for all jobs
+        client = self.getClient('test')
         job = client.startNextJob(['1#x86_64', '1#x86'],
                                   {'imageTypes' : [releasetypes.STUB_IMAGE],
                                    'cookTypes' : [cooktypes.GROUP_BUILDER]},
@@ -324,9 +352,10 @@ class JobsTest(fixtures.FixturedUnitTest):
         self.failIf(not (job and job.groupTroveId),
                     "startNextJob didn't match group trove")
 
-    @fixture('BothJobs')
-    def testStartCompImageType(self, db, client, data):
+    @fixtures.fixture('BothJobs')
+    def testStartCompImageType(self, db, data):
         # ask for all jobs but wrong image type
+        client = self.getClient('test')
         job = client.startNextJob(['1#x86_64', '1#x86'],
                                   {'imageTypes' : [releasetypes.RAW_HD_IMAGE],
                                    'cookTypes' : [cooktypes.GROUP_BUILDER]},
@@ -339,34 +368,38 @@ class JobsTest(fixtures.FixturedUnitTest):
     # and just to round it out, test for bad parmaeters
     #####
 
-    @fixture('Empty')
-    def testStartBadArch(self, db, client, data):
+    @fixtures.fixture('Empty')
+    def testStartBadArch(self, db, data):
+        client = self.getClient('test')
         self.assertRaises(ParameterError,
                           client.startNextJob, ['this is not a frozen flavor'],
                           {'imageTypes' : [releasetypes.RAW_HD_IMAGE],
                            'cookTypes' : [cooktypes.GROUP_BUILDER]},
                           jsversion.getDefaultVersion())
 
-    @fixture('Empty')
-    def testStartBadImage(self, db, client, data):
+    @fixtures.fixture('Empty')
+    def testStartBadImage(self, db, data):
+        client = self.getClient('test')
         self.assertRaises(ParameterError,
                           client.startNextJob, ['1#x86'],
                           {'imageTypes' : [9999],
                            'cookTypes' : [cooktypes.GROUP_BUILDER]},
                           jsversion.getDefaultVersion())
 
-    @fixture('Empty')
-    def testStartBadCook(self, db, client, data):
+    @fixtures.fixture('Empty')
+    def testStartBadCook(self, db, data):
+        client = self.getClient('test')
         self.assertRaises(ParameterError,
                           client.startNextJob, ['1#x86'],
                           {'imageTypes' : [releasetypes.RAW_HD_IMAGE],
                            'cookTypes' : [9999]},
                           jsversion.getDefaultVersion())
 
-    @fixture('ImageJob')
-    def testStartLegalImage(self, db, client, data):
+    @fixtures.fixture('ImageJob')
+    def testStartLegalImage(self, db, data):
         # ask for an image type that's technically in the list, but not served
         # by this server. historically this raised permission denied.
+        client = self.getClient('test')
         job = client.startNextJob(['1#x86_64', '1#x86'],
                                   {'imageTypes' : [releasetypes.NETBOOT_IMAGE],
                                    'cookTypes' : [cooktypes.GROUP_BUILDER]},
@@ -378,8 +411,9 @@ class JobsTest(fixtures.FixturedUnitTest):
     # ensure jobs do not get inadverdently respwaned
     #####
 
-    @fixture('CookJob')
-    def testStartCookFinished(self, db, client, data):
+    @fixtures.fixture('CookJob')
+    def testStartCookFinished(self, db, data):
+        client = self.getClient('test')
         # mark job as finished
         cu = db.cursor()
         cu.execute("UPDATE Jobs SET status=?, statusMessage='Finished'",
@@ -392,9 +426,10 @@ class JobsTest(fixtures.FixturedUnitTest):
 
         self.failIf(job, "startNextJob returned a finished cook")
 
-    @fixture('CookJob')
-    def testStartCookFinished2(self, db, client, data):
+    @fixtures.fixture('CookJob')
+    def testStartCookFinished2(self, db, data):
         # mark job as finished
+        client = self.getClient('test')
         cu = db.cursor()
         cu.execute("UPDATE Jobs SET status=?, statusMessage='Finished'",
                    jobstatus.FINISHED)
@@ -407,9 +442,10 @@ class JobsTest(fixtures.FixturedUnitTest):
 
         self.failIf(job, "startNextJob returned a finished cook")
 
-    @fixture('CookJob')
-    def testStartCookFinished3(self, db, client, data):
+    @fixtures.fixture('CookJob')
+    def testStartCookFinished3(self, db, data):
         # mark job as finished
+        client = self.getClient('test')
         cu = db.cursor()
         cu.execute("UPDATE Jobs SET status=?, statusMessage='Finished'",
                    jobstatus.FINISHED)
@@ -421,9 +457,10 @@ class JobsTest(fixtures.FixturedUnitTest):
 
         self.failIf(job, "startNextJob returned a finished cook")
 
-    @fixture('ImageJob')
-    def testStartImageFinished(self, db, client, data):
+    @fixtures.fixture('ImageJob')
+    def testStartImageFinished(self, db, data):
         # mark job as finished
+        client = self.getClient('test')
         cu = db.cursor()
         cu.execute("UPDATE Jobs SET status=?, statusMessage='Finished'",
                    jobstatus.FINISHED)
@@ -435,9 +472,10 @@ class JobsTest(fixtures.FixturedUnitTest):
 
         self.failIf(job, "startNextJob returned a finished image")
 
-    @fixture('ImageJob')
-    def testStartImageFinished2(self, db, client, data):
+    @fixtures.fixture('ImageJob')
+    def testStartImageFinished2(self, db, data):
         # mark job as finished
+        client = self.getClient('test')
         cu = db.cursor()
         cu.execute("UPDATE Jobs SET status=?, statusMessage='Finished'",
                    jobstatus.FINISHED)
@@ -450,9 +488,10 @@ class JobsTest(fixtures.FixturedUnitTest):
 
         self.failIf(job, "startNextJob returned a finished image")
 
-    @fixture('ImageJob')
-    def testStartImageFinished3(self, db, client, data):
+    @fixtures.fixture('ImageJob')
+    def testStartImageFinished3(self, db, data):
         # mark job as finished
+        client = self.getClient('test')
         cu = db.cursor()
         cu.execute("UPDATE Jobs SET status=?, statusMessage='Finished'",
                    jobstatus.FINISHED)
@@ -464,9 +503,10 @@ class JobsTest(fixtures.FixturedUnitTest):
 
         self.failIf(job, "startNextJob returned a finished image")
 
-    @fixture('CookJob')
-    def testStartCookOwned(self, db, client, data):
+    @fixtures.fixture('CookJob')
+    def testStartCookOwned(self, db, data):
         # mark job as finished
+        client = self.getClient('test')
         cu = db.cursor()
         cu.execute("UPDATE Jobs SET owner=1")
         db.commit()
@@ -477,9 +517,10 @@ class JobsTest(fixtures.FixturedUnitTest):
 
         self.failIf(job, "startNextJob returned an owned cook")
 
-    @fixture('CookJob')
-    def testStartCookOwned2(self, db, client, data):
+    @fixtures.fixture('CookJob')
+    def testStartCookOwned2(self, db, data):
         # mark job as finished
+        client = self.getClient('test')
         cu = db.cursor()
         cu.execute("UPDATE Jobs SET owner=1")
         db.commit()
@@ -491,9 +532,10 @@ class JobsTest(fixtures.FixturedUnitTest):
 
         self.failIf(job, "startNextJob returned an owned cook")
 
-    @fixture('CookJob')
-    def testStartCookOwned3(self, db, client, data):
+    @fixtures.fixture('CookJob')
+    def testStartCookOwned3(self, db, data):
         # mark job as finished
+        client = self.getClient('test')
         cu = db.cursor()
         cu.execute("UPDATE Jobs SET owner=1")
         db.commit()
@@ -504,9 +546,10 @@ class JobsTest(fixtures.FixturedUnitTest):
 
         self.failIf(job, "startNextJob returned an owned cook")
 
-    @fixture('ImageJob')
-    def testStartImageOwned(self, db, client, data):
+    @fixtures.fixture('ImageJob')
+    def testStartImageOwned(self, db, data):
         # mark job as finished
+        client = self.getClient('test')
         cu = db.cursor()
         cu.execute("UPDATE Jobs SET owner=1")
         db.commit()
@@ -517,9 +560,10 @@ class JobsTest(fixtures.FixturedUnitTest):
 
         self.failIf(job, "startNextJob returned an owned image")
 
-    @fixture('ImageJob')
-    def testStartImageOwned2(self, db, client, data):
+    @fixtures.fixture('ImageJob')
+    def testStartImageOwned2(self, db, data):
         # mark job as finished
+        client = self.getClient('test')
         cu = db.cursor()
         cu.execute("UPDATE Jobs SET owner=1")
         db.commit()
@@ -531,9 +575,10 @@ class JobsTest(fixtures.FixturedUnitTest):
 
         self.failIf(job, "startNextJob returned an owned image")
 
-    @fixture('ImageJob')
-    def testStartImageOwned3(self, db, client, data):
+    @fixtures.fixture('ImageJob')
+    def testStartImageOwned3(self, db, data):
         # mark job as finished
+        client = self.getClient('test')
         cu = db.cursor()
         cu.execute("UPDATE Jobs SET owner=1")
         db.commit()
@@ -544,10 +589,11 @@ class JobsTest(fixtures.FixturedUnitTest):
 
         self.failIf(job, "startNextJob returned an owned image")
 
-    @fixture('Empty')
-    def testMimicJobServer(self, db, client, data):
+    @fixtures.fixture('Empty')
+    def testMimicJobServer(self, db, data):
         # historically this always failed with permission denied, but it
         # definitely needs to be allowed. return value doesn't matter
+        client = self.getClient('test')
         job = client.startNextJob(['1#x86_64'],
                                   {'imageTypes': [releasetypes.RAW_HD_IMAGE]},
                                   jsversion.getDefaultVersion())
@@ -556,9 +602,10 @@ class JobsTest(fixtures.FixturedUnitTest):
     # test jobserver version
     #####
 
-    @fixture('Release')
-    def testImageJSVersion(self, db, client, data):
+    @fixtures.fixture('Full')
+    def testImageJSVersion(self, db, data):
         # ensure an image job cannot be started for a mismatched job server.
+        client = self.getClient('admin')
         cu = db.cursor()
         cu.execute("""UPDATE ReleaseData SET value='illegal'
                           WHERE name='jsversion'""")
@@ -567,19 +614,21 @@ class JobsTest(fixtures.FixturedUnitTest):
         self.assertRaises(mint_error.JobserverVersionMismatch,
                           client.startImageJob, data['releaseId'])
 
-    @fixture('ImageJob')
-    def testStartImageJobJSV(self, db, client, data):
+    @fixtures.fixture('ImageJob')
+    def testStartImageJobJSV(self, db, data):
         # masquerading as a job server version that server doesn't support
         # raises parameter error.
+        client = self.getClient('test')
         self.assertRaises(ParameterError, client.startNextJob,
                           ['1#x86', '1#x86_64'],
                           {'imageTypes': [releasetypes.RAW_HD_IMAGE]},
                           'wackyversion')
 
-    @fixture('ImageJob')
-    def testStartImageJobJSV2(self, db, client, data):
+    @fixtures.fixture('ImageJob')
+    def testStartImageJobJSV2(self, db, data):
         # ensure image jobs cannot be selected for mismatched job server type
         # using only image types defined
+        client = self.getClient('test')
         cu = db.cursor()
         cu.execute("""UPDATE ReleaseData SET value='1.0.0'
                           WHERE name='jsversion'""")
@@ -591,10 +640,11 @@ class JobsTest(fixtures.FixturedUnitTest):
 
         self.failIf(job, "startNextJob returned a mismatched jobserver image")
 
-    @fixture('ImageJob')
-    def testStartImageJobJSV3(self, db, client, data):
+    @fixtures.fixture('ImageJob')
+    def testStartImageJobJSV3(self, db, data):
         # ensure image jobs cannot be selected for mismatched job server type
         # using composite job request
+        client = self.getClient('test')
         cu = db.cursor()
         cu.execute("""UPDATE ReleaseData SET value='1.0.0'
                           WHERE name='jsversion'""")
@@ -607,9 +657,10 @@ class JobsTest(fixtures.FixturedUnitTest):
 
         self.failIf(job, "startNextJob returned a mismatched jobserver image")
 
-    @fixture('BothJobs')
-    def testStartCookJobJSV(self, db, client, data):
+    @fixtures.fixture('BothJobs')
+    def testStartCookJobJSV(self, db, data):
         # ensure cook jobs don't interact badly with job server version
+        client = self.getClient('test')
         cu = db.cursor()
         cu.execute("""UPDATE ReleaseData SET value='1.0.0'
                           WHERE name='jsversion'""")
@@ -623,8 +674,9 @@ class JobsTest(fixtures.FixturedUnitTest):
         self.failIf(not (job and job.groupTroveId),
                     "startNextJob ignored a cook job")
 
-    @fixture('Release')
-    def testJobs(self, db, client, data):
+    @fixtures.fixture('Full')
+    def testJobs(self, db, data):
+        client = self.getClient('admin')
         release = client.getRelease(data['releaseId'])
 
         job = client.startImageJob(release.getId())
@@ -651,8 +703,9 @@ class JobsTest(fixtures.FixturedUnitTest):
         # follow-on SQL statements
         job.setStatus(jobstatus.FINISHED,"Finished")
 
-    @fixture('Release')
-    def testStubImage(self, db, client, data):
+    @fixtures.fixture('Full')
+    def testStubImage(self, db, data):
+        client = self.getClient('admin')
         release = client.getRelease(data['releaseId'])
         project = client.getProject(data['projectId'])
         release.setImageTypes([releasetypes.STUB_IMAGE])
@@ -685,8 +738,9 @@ class JobsTest(fixtures.FixturedUnitTest):
         except jobs.FileMissing:
             pass
 
-    @fixture('Release')
-    def testStubImageFileOrder(self, db, client, data):
+    @fixtures.fixture('Full')
+    def testStubImageFileOrder(self, db, data):
+        client = self.getClient('admin')
         release = client.getRelease(data['releaseId'])
         # make sure that the incoming ordering of files is preserved
         release.setFiles([['zaaa.iso', 'Zaaa'], ['aaaa.iso', 'Aaaa']])
@@ -695,22 +749,24 @@ class JobsTest(fixtures.FixturedUnitTest):
                                       {'size': 0, 'title': 'Aaaa',
                                        'filename': 'aaaa.iso', 'fileId': 2}])
 
-    @fixture('Release')
-    def testJobQueue(self, db, client, data):
-        release = client.getRelease(data['releaseId'])
+    @fixtures.fixture('Full')
+    def testJobQueue(self, db, data):
+        client = self.getClient('admin')
+        ownerClient = self.getClient('owner')
+        release = ownerClient.getRelease(data['releaseId'])
         release.setImageTypes([releasetypes.STUB_IMAGE])
         release.setDataValue('stringArg', 'Hello World!')
 
-        job = client.startImageJob(release.getId())
+        job = ownerClient.startImageJob(release.getId())
 
-        assert(client.server.getJobStatus(job.getId())['queueLen'] == 0)
-        assert(client.server.getReleaseStatus(release.getId())['queueLen'] == 0)
-        assert(client.server.getJobWaitMessage(job.getId()) == \
+        assert(ownerClient.server.getJobStatus(job.getId())['queueLen'] == 0)
+        assert(ownerClient.server.getReleaseStatus(release.getId())['queueLen'] == 0)
+        assert(ownerClient.server.getJobWaitMessage(job.getId()) == \
                'Next in line for processing')
 
-        project = client.getProject(data['projectId'])
+        project = ownerClient.getProject(data['projectId'])
 
-        groupTrove = client.createGroupTrove(data['projectId'], 'group-test', '1.0.0',
+        groupTrove = ownerClient.createGroupTrove(data['projectId'], 'group-test', '1.0.0',
                                              'No Description', False)
         groupTroveId = groupTrove.getId()
 
@@ -723,21 +779,22 @@ class JobsTest(fixtures.FixturedUnitTest):
         trvid = groupTrove.addTrove(trvName, trvVersion, trvFlavor,
                                     subGroup, False, False, False)
         cookJobId = groupTrove.startCookJob("1#x86")
-        assert(client.server.getJobStatus(cookJobId)['queueLen'] == 1)
-        assert(client.server.getJobWaitMessage(cookJobId) == \
+        assert(ownerClient.server.getJobStatus(cookJobId)['queueLen'] == 1)
+        assert(ownerClient.server.getJobWaitMessage(cookJobId) == \
                'Number 2 in line for processing')
 
         job.setStatus(jobstatus.FINISHED, 'Finished')
-        assert(client.server.getJobStatus(cookJobId)['queueLen'] == 0)
-        assert(client.server.getJobWaitMessage(cookJobId) == \
+        assert(ownerClient.server.getJobStatus(cookJobId)['queueLen'] == 0)
+        assert(ownerClient.server.getJobWaitMessage(cookJobId) == \
                'Next in line for processing')
 
-        job = client.startImageJob(release.getId())
-        assert(client.server.getJobStatus(cookJobId)['queueLen'] == 0)
-        assert(client.server.getJobStatus(job.getId())['queueLen'] == 1)
+        job = ownerClient.startImageJob(release.getId())
+        assert(ownerClient.server.getJobStatus(cookJobId)['queueLen'] == 0)
+        assert(ownerClient.server.getJobStatus(job.getId())['queueLen'] == 1)
 
-    @fixture('Release')
-    def testWaitStatus(self, db, client, data):
+    @fixtures.fixture('Full')
+    def testWaitStatus(self, db, data):
+        client = self.getClient('admin')
         release = client.getRelease(data['releaseId'])
         release.setImageTypes([releasetypes.STUB_IMAGE])
         release.setDataValue('stringArg', 'Hello World!')
@@ -767,8 +824,9 @@ class JobsTest(fixtures.FixturedUnitTest):
         self.failIf(cu.fetchone()[0] != newMessage,
                     "database status message was altered.")
 
-    @fixture('Release')
-    def testRunningStatus(self, db, client, data):
+    @fixtures.fixture('Full')
+    def testRunningStatus(self, db, data):
+        client = self.getClient('admin')
         release = client.getRelease(data['releaseId'])
         release.setImageTypes([releasetypes.STUB_IMAGE])
         release.setDataValue('stringArg', 'Hello World!')
@@ -784,8 +842,9 @@ class JobsTest(fixtures.FixturedUnitTest):
         self.failIf(job.getStatusMessage() == 'Next in line for processing',
                     "job mistook itself for waiting.")
 
-    @fixture('Release')
-    def testStartTimestamp(self, db, client, data):
+    @fixtures.fixture('Full')
+    def testStartTimestamp(self, db, data):
+        client = self.getClient('admin')
         release = client.getRelease(data['releaseId'])
         release.setImageTypes([releasetypes.STUB_IMAGE])
         release.setDataValue('stringArg', 'Hello World!')
@@ -816,8 +875,9 @@ class JobsTest(fixtures.FixturedUnitTest):
                     "Job's start timestamp wasn't adjusted. timing metrics "
                     "will be misleading")
 
-    @fixture('Empty')
-    def testTimestampInteraction(self, db, client, data):
+    @fixtures.fixture('Empty')
+    def testTimestampInteraction(self, db, data):
+        client = self.getClient('test')
         projectId = client.newProject("Foo", "foo", "rpath.org")
 
         cu = db.cursor()
@@ -885,28 +945,30 @@ class JobsTest(fixtures.FixturedUnitTest):
                 'message': 'Number 2 in line for processing',
                 'queueLen': 1})
 
-    @fixture('Empty')
-    def testJobQueueOrder(self, db, client, data):
+    @fixtures.fixture('Empty')
+    def testJobQueueOrder(self, db, data):
+        client = self.getClient('test')
         cu = db.cursor()
 
+        testUserClient = self.getClient("test")
         projectId = client.newProject("Foo", "foo", "rpath.org")
-        release = client.newRelease(projectId, "Test Release")
+        release = testUserClient.newRelease(projectId, "Test Release")
         release.setImageTypes([releasetypes.STUB_IMAGE])
         release.setDataValue('stringArg', 'Hello World!')
 
         self.stockReleaseFlavor(db, release.getId())
-        job1 = client.startImageJob(release.getId())
+        job1 = testUserClient.startImageJob(release.getId())
 
         # protect this release from being auto-deleted
         cu.execute("UPDATE Releases SET troveLastChanged=1")
         db.commit()
 
-        release2 = client.newRelease(projectId, "Test Release")
+        release2 = testUserClient.newRelease(projectId, "Test Release")
         release2.setImageTypes([releasetypes.STUB_IMAGE])
         release2.setDataValue('stringArg', 'Hello World!')
 
         self.stockReleaseFlavor(db, release2.getId())
-        job2 = client.startImageJob(release2.getId())
+        job2 = testUserClient.startImageJob(release2.getId())
 
         # protect this release from being auto-deleted
         cu.execute("UPDATE Releases SET troveLastChanged=1")
@@ -915,8 +977,8 @@ class JobsTest(fixtures.FixturedUnitTest):
         self.failIf(job2.statusMessage == 'Next in line for processing',
                     "Consecutive releases both show up as next.")
 
-        groupTrove = client.createGroupTrove(projectId, 'group-test', '1.0.0',
-                                             'No Description', False)
+        groupTrove = testUserClient.createGroupTrove(projectId, \
+                'group-test', '1.0.0', 'No Description', False)
 
         groupTroveId = groupTrove.getId()
 
@@ -931,17 +993,17 @@ class JobsTest(fixtures.FixturedUnitTest):
 
         cookJobId = groupTrove.startCookJob("1#x86")
 
-        job3 = client.getJob(3)
+        job3 = testUserClient.getJob(3)
 
         self.failIf(job3.statusMessage != 'Number 3 in line for processing',
                     "Release before cook caused wrong queue count")
 
-        release3 = client.newRelease(projectId, "Test Release")
+        release3 = testUserClient.newRelease(projectId, "Test Release")
         release3.setImageTypes([releasetypes.STUB_IMAGE])
         release3.setDataValue('stringArg', 'Hello World!')
 
         self.stockReleaseFlavor(db, release3.getId())
-        job4 = client.startImageJob(release3.getId())
+        job4 = testUserClient.startImageJob(release3.getId())
 
         # protect this release from being auto-deleted
         cu.execute("UPDATE Releases SET troveLastChanged=1")
@@ -958,10 +1020,10 @@ class JobsTest(fixtures.FixturedUnitTest):
         db.commit()
 
         # regenerate jobs
-        job1 = client.startImageJob(release.getId())
-        job2 = client.startImageJob(release2.getId())
-        job3 = client.getJob(groupTrove.startCookJob("1#x86"))
-        job4 = client.startImageJob(release3.getId())
+        job1 = testUserClient.startImageJob(release.getId())
+        job2 = testUserClient.startImageJob(release2.getId())
+        job3 = testUserClient.getJob(groupTrove.startCookJob("1#x86"))
+        job4 = testUserClient.startImageJob(release3.getId())
 
         self.failIf(job1.statusMessage != 'Next in line for processing',
                     "Didn't properly report status of next job")
@@ -970,8 +1032,9 @@ class JobsTest(fixtures.FixturedUnitTest):
             self.failIf(job.statusMessage == 'Next in line for processing',
                         "Improperly reported status of job as next-in-line")
 
-    @fixture('Release')
-    def testJobData(self, db, client, data):
+    @fixtures.fixture('Full')
+    def testJobData(self, db, data):
+        client = self.getClient('admin')
         release = client.getRelease(data['releaseId'])
 
         job = client.startImageJob(release.getId())
@@ -981,8 +1044,9 @@ class JobsTest(fixtures.FixturedUnitTest):
         assert(job.getDataValue("mystring") == "testing")
         assert(int(job.getDataValue("myint")) == 123)
 
-    @fixture('Release')
-    def testStartCookJob(self, db, client, data):
+    @fixtures.fixture('Full')
+    def testStartCookJob(self, db, data):
+        client = self.getClient('admin')
         projectId = data['projectId']
 
         groupTrove = client.createGroupTrove(projectId, 'group-test', '1.0.0',
@@ -1016,8 +1080,9 @@ class JobsTest(fixtures.FixturedUnitTest):
         self.failIf(job.status != jobstatus.RUNNING,
                     "job-server is not multi-instance safe")
 
-    @fixture('Release')
-    def testStartReleaseJob(self, db, client, data):
+    @fixtures.fixture('Full')
+    def testStartReleaseJob(self, db, data):
+        client = self.getClient('admin')
         release = client.getRelease(data['releaseId'])
         release.setImageTypes([releasetypes.STUB_IMAGE])
         relJob = client.startImageJob(release.getId())
@@ -1038,10 +1103,12 @@ class JobsTest(fixtures.FixturedUnitTest):
         self.failIf(job.status != jobstatus.RUNNING,
                     "job-server is not multi-instance safe")
 
-    @fixture('Release')
-    def testJobRaceCondition(self, db, client, data):
-        groupTrove = client.createGroupTrove(data['projectId'], 'group-test', '1.0.0',
-                                             'No Description', False)
+    @fixtures.fixture('Full')
+    def testJobRaceCondition(self, db, data):
+        client = self.getClient('admin')
+        ownerClient = self.getClient("owner")
+        groupTrove = ownerClient.createGroupTrove(data['projectId'], \
+                'group-test', '1.0.0', 'No Description', False)
 
         groupTroveId = groupTrove.getId()
 
@@ -1060,21 +1127,22 @@ class JobsTest(fixtures.FixturedUnitTest):
         cu.execute("UPDATE Jobs set owner=1")
         db.commit()
 
-        job = client.startNextJob(["1#x86", "1#x86_64"],
-                                  {'cookTypes' : [cooktypes.GROUP_BUILDER]},
-                                  jsversion.getDefaultVersion())
+        job = ownerClient.startNextJob(["1#x86", "1#x86_64"],
+                {'cookTypes' : [cooktypes.GROUP_BUILDER]},
+                jsversion.getDefaultVersion())
 
         self.failIf(job is not None, "job-server is not multi-instance safe")
 
         cu.execute("UPDATE Jobs set owner=NULL")
         db.commit()
 
-        job = client.startNextJob(["1#x86", "1#x86_64"],
-                                  {'cookTypes' : [cooktypes.GROUP_BUILDER]},
-                                  jsversion.getDefaultVersion())
+        job = ownerClient.startNextJob(["1#x86", "1#x86_64"],
+                {'cookTypes' : [cooktypes.GROUP_BUILDER]},
+                jsversion.getDefaultVersion())
 
-    @fixture('Release')
-    def testStartJobLocking(self, db, client, data):
+    @fixtures.fixture('Full')
+    def testStartJobLocking(self, db, data):
+        client = self.getClient('admin')
         projectId = data['projectId']
         for i in range(5):
             groupTrove = client.createGroupTrove(projectId, 'group-test',
@@ -1117,8 +1185,9 @@ class JobsTest(fixtures.FixturedUnitTest):
 
         self.failIf(job.id != 5, "owned job was selected")
 
-    @fixture('Release')
-    def testStartJobLockRelease(self, db, client, data):
+    @fixtures.fixture('Full')
+    def testStartJobLockRelease(self, db, data):
+        client = self.getClient('admin')
         groupTrove = client.createGroupTrove(data['projectId'], 'group-test',
                                              '1.0.0', '', False)
 
@@ -1141,8 +1210,9 @@ class JobsTest(fixtures.FixturedUnitTest):
         self.failIf(cu.fetchall()[0] != (None,),
                     "Lock on job of incompatible type was not released")
 
-    @fixture('Release')
-    def testRegenerateRelease(self, db, client, data):
+    @fixtures.fixture('Full')
+    def testRegenerateRelease(self, db, data):
+        client = self.getClient('admin')
         release = client.getRelease(data['releaseId'])
         release.setImageTypes([releasetypes.STUB_IMAGE])
 
@@ -1165,8 +1235,9 @@ class JobsTest(fixtures.FixturedUnitTest):
         self.failIf(cu.fetchone() != (jobstatus.WAITING, None),
                     "Job not regenerated properly. will never run")
 
-    @fixture('Empty')
-    def testRegenerateCook(self, db, client, data):
+    @fixtures.fixture('Empty')
+    def testRegenerateCook(self, db, data):
+        client = self.getClient('test')
         projectId = client.newProject("Foo", "foo", "rpath.org")
 
         groupTrove = client.createGroupTrove(projectId, 'group-test', '1.0.0',
@@ -1202,19 +1273,20 @@ class JobsTest(fixtures.FixturedUnitTest):
         self.failIf(cu.fetchone() != (jobstatus.WAITING, None),
                     "Job not regenerated properly. will never run")
 
-    @fixture('Release')
-    def testListActiveJobs(self, db, client, data):
+    @fixtures.fixture('Full')
+    def testListActiveJobs(self, db, data):
+        client = self.getClient('admin')
         def listActiveJobs(client, filter):
             return [x['jobId'] for x in client.listActiveJobs(filter)]
 
         projectId = data['projectId']
+        ownerClient = self.getClient("owner")
 
         jobIds = []
 
         for i in range(3):
-            groupTrove = client.createGroupTrove(projectId, 'group-test',
-                                                 '1.0.0', 'No Description',
-                                                 False)
+            groupTrove = ownerClient.createGroupTrove(projectId, 'group-test',
+                    '1.0.0', 'No Description', False)
 
             trvName = 'testtrove'
             trvVersion = '/testproject.' + MINT_PROJECT_DOMAIN + \
@@ -1226,48 +1298,48 @@ class JobsTest(fixtures.FixturedUnitTest):
                                 subGroup, False, False, False)
 
             jobIds.append(groupTrove.startCookJob("1#x86"))
-            job = client.getJob(jobIds[i])
+            job = ownerClient.getJob(jobIds[i])
             job.setDataValue("hostname", "127.0.0.1", RDT_STRING)
             # hack to ensure timestamps are different.
             time.sleep(1)
 
-        self.failIf(listActiveJobs(client, True) != jobIds,
+        self.failIf(listActiveJobs(ownerClient, True) != jobIds,
                     "listActiveJobs should have listed %s" % str(jobIds))
 
-        self.failIf(listActiveJobs(client, False) != jobIds,
+        self.failIf(listActiveJobs(ownerClient, False) != jobIds,
                     "listActiveJobs should have listed %s" % str(jobIds))
 
         cu = db.cursor()
         cu.execute("UPDATE Jobs SET timeSubmitted=0 WHERE jobId=?", jobIds[0])
         db.commit()
 
-        self.failIf(listActiveJobs(client, True) != jobIds,
+        self.failIf(listActiveJobs(ownerClient, True) != jobIds,
                     "listActiveJobs should have listed %s" % str(jobIds))
 
-        self.failIf(listActiveJobs(client, False) != jobIds,
+        self.failIf(listActiveJobs(ownerClient, False) != jobIds,
                     "listActiveJobs should have listed %s" % str(jobIds))
 
         cu.execute("UPDATE Jobs SET status=? WHERE jobId=?",
                    jobstatus.FINISHED, jobIds[-1])
         db.commit()
 
-        self.failIf(listActiveJobs(client, True) != jobIds[:-1],
+        self.failIf(listActiveJobs(ownerClient, True) != jobIds[:-1],
                     "listActiveJobs should have listed %s" % str(jobIds[:-1]))
 
-        self.failIf(listActiveJobs(client, False) != jobIds,
+        self.failIf(listActiveJobs(ownerClient, False) != jobIds,
                     "listActiveJobs should have listed %s" % str(jobIds))
 
         cu.execute("UPDATE Jobs SET status=? WHERE jobId=?",
                    jobstatus.FINISHED, jobIds[0])
         db.commit()
 
-        self.failIf(listActiveJobs(client, True) != [jobIds[1]],
+        self.failIf(listActiveJobs(ownerClient, True) != [jobIds[1]],
                     "listActiveJobs should have listed %s" % str([jobIds[1]]))
 
-        self.failIf(listActiveJobs(client, False) != jobIds[1:],
+        self.failIf(listActiveJobs(ownerClient, False) != jobIds[1:],
                     "listActiveJobs should have listed %s" % str(jobIds[1:]))
 
-        self.failIf(client.listActiveJobs(False)[0]['hostname'] != '127.0.0.1')
+        self.failIf(ownerClient.listActiveJobs(False)[0]['hostname'] != '127.0.0.1')
 
 
 if __name__ == "__main__":
