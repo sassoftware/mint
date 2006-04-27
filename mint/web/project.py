@@ -93,7 +93,7 @@ class ProjectHandler(WebHandler):
         try:
             dns.resolver.query(self.project.getFQDN())
         except dns.exception.DNSException:
-            canResolve = False
+            canResolve = self.project.external
         else:
             canResolve = True
 
