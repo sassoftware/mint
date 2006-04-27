@@ -128,7 +128,7 @@ def injectVersion(version):
                     Showing ${offset + 1}-${min(offset+limit, count)};
                 </span>
                 <span style="float: right;" py:if="count != 0">
-                    Showing page ${offset/limit+1} of ${(count+limit-1)/limit}
+                    Showing page ${limit and offset/limit+1 or 1} of ${limit and (count+limit-1)/limit or 1}
 
                     <a href="${urlbase};limit=${limit};offset=${max(offset-limit, 0)}" py:if="offset != 0">
                         <img src="${cfg.staticPath}/apps/mint/images/prev.gif" alt="Previous" title="Previous Page" width="11" height="11" class="noborder" />
