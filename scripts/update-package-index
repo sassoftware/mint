@@ -7,6 +7,7 @@
 from mint import config
 from mint.scriptlibrary import SingletonScript
 from conary import dbstore
+from conary import versions
 
 import os
 import os.path
@@ -34,16 +35,18 @@ class UpdatePackageIndex(SingletonScript):
             cu.execute("SELECT MAX(timestamp) FROM Commits")
             newMark = cu.fetchone()[0]
 
+            cu.execute("UPDATE PackageIndexMark SET mark=?", 0)
+
             # Clear out Package index if the timestamp in PackageIndexMark == 0
             cu.execute("""DELETE FROM PackageIndex WHERE
                               (SELECT mark FROM PackageIndexMark) = 0""")
 
-            # Get a list of the latest version of each package, excluding 
-            # hidden and disabled projects. Comparing version strings isn't 
-            # technically reliable, so we must use the latest timestamp to 
-            # verify grab only the packages that have been updated since 
+            # Get a list of the latest version of each package, excluding
+            # hidden and disabled projects. Comparing version strings isn't
+            # technically reliable, so we must use the latest timestamp to
+            # verify grab only the packages that have been updated since
             # the last time this script was run.
-            cu.execute("""SELECT Projects.projectId, troveName, max(timestamp)
+            cu.execute("""SELECT Projects.projectId, troveName, version, timestamp
                               FROM Commits
                               LEFT JOIN Projects
                                   ON Commits.projectId=Projects.projectId
@@ -53,11 +56,22 @@ class UpdatePackageIndex(SingletonScript):
                                   (SELECT mark FROM PackageIndexMark)
                               GROUP BY Projects.projectId, troveName""")
 
-            for projectId, troveName, maxTime in cu.fetchall():
-                cu.execute("""SELECT version FROM Commits
-                                  WHERE projectId=? AND troveName=?
-                                  AND timestamp=?""",
-                           projectId, troveName, maxTime)
+            packageDict = {}
+            labelMap = {}
+
+            for projectId, troveName, verStr, timeStamp in cu.fetchall():
+                troveEntry = packageDict.setdefault(troveName, {})
+                version = versions.VersionFromString(verStr)
+                label = str(version.branch().label())
+                versionList = troveEntry.setdefault(label, [])
+
+                version.resetTimeStamps(timeStamp)
+                versionList.append(version)
+                labelMap[label] = projectId
+                continue
+
+
+
 
                 # at least one result will always exist. 
                 # there should be only one.
@@ -79,7 +93,14 @@ class UpdatePackageIndex(SingletonScript):
                                           projectId=?, name=?, version=?
                                           WHERE pkgId=?""",
                                projectId, troveName, version, pkgId)
-            cu.execute("UPDATE PackageIndexMark SET mark=?", newMark)
+            packageIndex = []
+            for pkgName in packageDict:
+                for label in packageDict[pkgName]:
+                    packageIndex.append((max(packageDict[pkgName][label]), labelMap[label], pkgName))
+            cu.execute("DELETE FROM PackageIndex")
+            for version, projectId, pkgName in packageIndex:
+                cu.execute("INSERT INTO PackageIndex (projectId, name, version) VALUES(?, ?, ?)", projectId, pkgName, str(version))
+            cu.execute("UPDATE PackageIndexMark SET mark=?", 0)
 
         except:
             self.db.rollback()
