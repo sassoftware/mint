@@ -408,7 +408,7 @@ class MintClient:
 
     # session management
     def loadSession(self, sid):
-        return self.server.loadSession(sid)
+        return self.server.loadSession(sid) or None
 
     def saveSession(self, sid, data):
         self.server.saveSession(sid, data)

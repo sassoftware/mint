@@ -2105,8 +2105,7 @@ class MintServer(object):
     # session management
     @private
     def loadSession(self, sid):
-        res = self.sessions.load(sid)
-        return res
+        return self.sessions.load(sid)
 
     @private
     def saveSession(self, sid, data):

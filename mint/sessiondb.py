@@ -46,7 +46,7 @@ class SessionsTable(DatabaseTable):
         if r:
             return cPickle.loads(r[0])
         else:
-            return None
+            return False
 
     def save(self, sid, data):
         cu = self.db.cursor()
