@@ -2,83 +2,153 @@
 #
 # All Rights Reserved
 #
+
+import sys
 from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM
 from mint import releasetypes
 
+class ReleaseOption(tuple):
+    def __new__(self):
+        return tuple.__new__(tuple, (self.type, self.default, self.prompt))
+
+class StringOption(ReleaseOption):
+    type = RDT_STRING
+
+class IntegerOption(ReleaseOption):
+    type = RDT_INT
+
+class BooleanOption(ReleaseOption):
+    type = RDT_BOOL
+
+class EnumOption(ReleaseOption):
+    type = RDT_ENUM
+
+    def __new__(self):
+        return tuple.__new__(tuple, (self.type, self.default, self.prompt, self.options))
+
+class Template(dict):
+    def __init__(self):
+        for option in self.__slots__:
+            dict.__setitem__(self, option,
+                             sys.modules[__name__].__dict__[option]())
+
 # *** Extremely Important ***
-# Changing the names or semantic meanings of the keys to data templates is the
-# same thing as making a schema upgrade! do not do this lightly.
+# Changing the names or semantic meanings of option classes or templates is
+# the same thing as making a schema upgrade! do not do this lightly.
 
-imageGenTemplate = {
-    # XXX this is kind of a lousy description; a toggleable "override ILP option would be nicer
-    'installLabelPath': (RDT_STRING, '',  'Custom Conary installLabelPath setting (leave blank for default)'),
-    'autoResolve':      (RDT_BOOL, False, 'Automatically install required dependencies during updates'),
-    }
+###
+# Option Classes
+###
 
-installableIsoTemplate = imageGenTemplate.copy()
-installableIsoTemplate.update({
-    'showMediaCheck':   (RDT_BOOL, False, 'Prompt to verify CD/DVD images during install'),
-    'betaNag':          (RDT_BOOL, False, 'This release is considered a beta'),
-    'bugsUrl':          (RDT_STRING, 'http://bugs.rpath.com/', 'Bug report URL'),
-    'maxIsoSize':       (RDT_ENUM, '681574400', 'ISO Size',
-                         releasetypes.discSizes)
-    })
+class bugsUrl(StringOption):
+    default = 'http://bugs.rpath.com/'
+    prompt = 'Bug report URL'
 
-bootableImageTemplate = imageGenTemplate.copy()
-bootableImageTemplate.update({
-    'freespace':        (RDT_INT, 250, 'How many megabytes of free space should be allocated in the image?'),
-    })
+class installLabelPath(StringOption):
+    default = ''
+    prompt = 'Custom Conary installLabelPath setting (leave blank for default)'
 
-swapSize = {'swapSize': (RDT_INT, 128, 'How many megabytes swap space should be reserved in this image?')}
+class autoResolve(BooleanOption):
+    default = False
+    prompt = 'Automatically install required dependencies during updates'
 
-rawHdTemplate = bootableImageTemplate.copy()
-rawHdTemplate.update(swapSize)
-rawFsTemplate = bootableImageTemplate.copy()
-rawFsTemplate.update(swapSize)
+class showMediaCheck(BooleanOption):
+    default = False
+    prompt = 'Prompt to verify CD/DVD images during install'
 
-vmwareImageTemplate = bootableImageTemplate.copy()
-vmwareImageTemplate.update({
-    'vmMemory':         (RDT_INT, 256, 'How much memory should VMware use when running this image?')
-    })
-vmwareImageTemplate.update(swapSize)
+class betaNag(BooleanOption):
+    default = False
+    prompt = 'This release is considered a beta'
 
-liveIsoTemplate = imageGenTemplate.copy()
-liveIsoTemplate.update({
-    'unionfs':          (RDT_BOOL, True, 'Use unionfs (recommended)'),
-    'zisofs' :          (RDT_BOOL, True, 'Compress filesystem')
-    })
+class maxIsoSize(EnumOption):
+    default = '681574400'
+    prompt = 'ISO Size'
+    options = releasetypes.discSizes
 
-tarballTemplate = imageGenTemplate.copy()
-tarballTemplate.update(swapSize)
+class freespace(IntegerOption):
+    default = 250
+    prompt = 'How many MB of free space should be allocated in the image?'
 
-netbootTemplate = imageGenTemplate.copy()
+class swapSize(IntegerOption):
+    default = 128
+    prompt = 'How many MB swap space should be reserved in this image?'
 
-stubImageTemplate = {
-    'boolArg'   : (RDT_BOOL, False, 'Garbage Boolean'),
-    'stringArg' : (RDT_STRING, '', 'Garbage String'),
-    'intArg'    : (RDT_INT, 0, 'Garbage Integer'),
-    'enumArg'   : (RDT_ENUM, '2', 'Garbage Enum',
-                   {'foo' : '0', 'bar': '1', 'baz': '2'})
-    }
+class vmMemory(IntegerOption):
+    default = 256
+    prompt = 'How much memory should VMware use when running this image?'
 
-dataHeadings = {
-    releasetypes.INSTALLABLE_ISO  : 'Installable CD/DVD Settings',
-    releasetypes.RAW_HD_IMAGE     : 'Raw Hard Disk Settings',
-    releasetypes.RAW_FS_IMAGE     : 'Raw Filesystem Settings',
-    releasetypes.TARBALL          : 'Tar Archive Settings',
-    releasetypes.VMWARE_IMAGE     : 'VMware Image Settings',
-    releasetypes.LIVE_ISO         : 'Live CD/DVD Settings',
-    releasetypes.STUB_IMAGE       : 'Stub Image Settings',
-    releasetypes.NETBOOT_IMAGE    : 'Netboot Image Settings',
-    }
+class unionfs(BooleanOption):
+    default = False
+    prompt = "Enable copy-on-write for entire filesystem. To use this, your group must contain the unionfs kernel module. (unionfs is available in contrib (unsupported). The unionfs module you use must match your kernel version.)"
 
-dataTemplates = {
-    releasetypes.INSTALLABLE_ISO  : installableIsoTemplate,
-    releasetypes.RAW_HD_IMAGE     : rawHdTemplate,
-    releasetypes.RAW_FS_IMAGE     : rawFsTemplate,
-    releasetypes.VMWARE_IMAGE     : vmwareImageTemplate,
-    releasetypes.LIVE_ISO         : liveIsoTemplate,
-    releasetypes.TARBALL          : tarballTemplate,
-    releasetypes.STUB_IMAGE       : stubImageTemplate,
-    releasetypes.NETBOOT_IMAGE    : netbootTemplate,
-    }
+class zisofs(BooleanOption):
+    default = True
+    prompt = 'Compress filesystem'
+
+class boolArg(BooleanOption):
+    default = False
+    prompt = 'Garbage Boolean'
+
+class stringArg(StringOption):
+    default = ''
+    prompt = 'Garbage String'
+
+class intArg(IntegerOption):
+    default = 0
+    prompt = 'Garbage Integer'
+
+class enumArg(EnumOption):
+    default = '2'
+    prompt = 'Garbage Enum'
+    options = {'foo' : '0', 'bar': '1', 'baz': '2'}
+
+###
+# Templates
+# classes must end with 'Template' to be properly processed.
+###
+
+class StubImageTemplate(Template):
+    __slots__ = ['boolArg', 'stringArg', 'intArg', 'enumArg']
+    id = releasetypes.STUB_IMAGE
+
+class RawHdTemplate(Template):
+    __slots__ = ['autoResolve', 'freespace', 'installLabelPath', 'swapSize']
+    id = releasetypes.RAW_HD_IMAGE
+
+class RawFsTemplate(Template):
+    __slots__ = ['autoResolve', 'freespace', 'installLabelPath', 'swapSize']
+    id = releasetypes.RAW_FS_IMAGE
+
+class VmwareImageTemplate(Template):
+    __slots__ = ['autoResolve', 'freespace', 'vmMemory', 'installLabelPath',
+                 'swapSize']
+    id = releasetypes.VMWARE_IMAGE
+
+class InstallableIsoTemplate(Template):
+    __slots__ = ['autoResolve', 'maxIsoSize', 'bugsUrl', 'installLabelPath',
+                 'showMediaCheck', 'betaNag']
+    id = releasetypes.INSTALLABLE_ISO
+
+class NetbootTemplate(Template):
+    __slots__ = ['autoResolve', 'installLabelPath']
+    id = releasetypes.NETBOOT_IMAGE
+
+class LiveIsoTemplate(Template):
+    __slots__ = ['autoResolve', 'installLabelPath', 'zisofs', 'unionfs']
+    id = releasetypes.LIVE_ISO
+
+class TarballTemplate(Template):
+    __slots__ = ['autoResolve', 'installLabelPath', 'swapSize']
+    id = releasetypes.TARBALL
+
+########################
+
+dataHeadings = {}
+dataTemplates = {}
+
+for templateName in [x for x in sys.modules[__name__].__dict__.keys() \
+                     if x.endswith('Template') and x != 'Template']:
+    template = sys.modules[__name__].__dict__[templateName]()
+    dataHeadings[template.id] = releasetypes.typeNames[template.id] + \
+                                ' Settings'
+    dataTemplates[template.id] = template

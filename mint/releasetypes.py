@@ -34,7 +34,7 @@ typeNames = {
     NETBOOT_IMAGE:      "Netboot Image",
     INSTALLABLE_ISO:    "Installable CD/DVD",
     RAW_FS_IMAGE:       "Raw Filesystem Image",
-    STUB_IMAGE:         "Stub Image (for testing)",
+    STUB_IMAGE:         "Stub Image",
     RAW_HD_IMAGE:       "Raw Hard Disk Image",
     VMWARE_IMAGE:       "VMware Player Image",
     LIVE_ISO:           "Live CD/DVD",
