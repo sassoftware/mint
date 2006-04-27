@@ -53,8 +53,7 @@ class UpdatePackageIndex(SingletonScript):
                               WHERE troveName NOT LIKE '%:%'
                               AND hidden=0 AND disabled=0
                               AND timestamp >=
-                                  (SELECT mark FROM PackageIndexMark)
-                              GROUP BY Projects.projectId, troveName""")
+                                  (SELECT mark FROM PackageIndexMark)""")
 
             packageDict = {}
             labelMap = {}
