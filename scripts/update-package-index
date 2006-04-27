@@ -35,18 +35,12 @@ class UpdatePackageIndex(SingletonScript):
             cu.execute("SELECT MAX(timestamp) FROM Commits")
             newMark = cu.fetchone()[0]
 
-            cu.execute("UPDATE PackageIndexMark SET mark=?", 0)
-
             # Clear out Package index if the timestamp in PackageIndexMark == 0
             cu.execute("""DELETE FROM PackageIndex WHERE
                               (SELECT mark FROM PackageIndexMark) = 0""")
 
-            # Get a list of the latest version of each package, excluding
-            # hidden and disabled projects. Comparing version strings isn't
-            # technically reliable, so we must use the latest timestamp to
-            # verify grab only the packages that have been updated since
-            # the last time this script was run.
-            cu.execute("""SELECT Projects.projectId, troveName, version, timestamp
+            cu.execute("""SELECT Projects.projectId, troveName, version,
+                                 timestamp
                               FROM Commits
                               LEFT JOIN Projects
                                   ON Commits.projectId=Projects.projectId
@@ -57,7 +51,6 @@ class UpdatePackageIndex(SingletonScript):
 
             packageDict = {}
             labelMap = {}
-
             for projectId, troveName, verStr, timeStamp in cu.fetchall():
                 troveEntry = packageDict.setdefault(troveName, {})
                 version = versions.VersionFromString(verStr)
@@ -67,40 +60,36 @@ class UpdatePackageIndex(SingletonScript):
                 version.resetTimeStamps(timeStamp)
                 versionList.append(version)
                 labelMap[label] = projectId
-                continue
 
+            packageIndex = []
+            for troveName in packageDict:
+                for label in packageDict[troveName]:
+                    packageIndex.append((labelMap[label], troveName,
+                                         max(packageDict[troveName][label])))
 
-
-
-                # at least one result will always exist. 
-                # there should be only one.
-                version = cu.fetchone()[0]
-
-                cu.execute("""SELECT pkgId FROM PackageIndex
+            for projectId, troveName, version in packageIndex:
+                cu.execute("""SELECT pkgId, version FROM PackageIndex
                                   WHERE projectId=? AND name=?""",
                            projectId, troveName)
-                res = cu.fetchone()
+
+                res = [x[0] for x in cu.fetchall() if \
+                       versions.VersionFromString(x[1]).branch().label() == \
+                       version.branch().label()]
+
                 if not res:
-                    cu.execute("""INSERT INTO PackageIndex 
+                    cu.execute("""INSERT INTO PackageIndex
                                       (projectId, name, version)
                                       VALUES (?, ?, ?)""",
-                               projectId, troveName, version)
+                               projectId, troveName, str(version))
                     pass
                 else:
                     pkgId = res[0]
                     cu.execute("""UPDATE PackageIndex SET
                                           projectId=?, name=?, version=?
                                           WHERE pkgId=?""",
-                               projectId, troveName, version, pkgId)
-            packageIndex = []
-            for pkgName in packageDict:
-                for label in packageDict[pkgName]:
-                    packageIndex.append((max(packageDict[pkgName][label]), labelMap[label], pkgName))
-            cu.execute("DELETE FROM PackageIndex")
-            for version, projectId, pkgName in packageIndex:
-                cu.execute("INSERT INTO PackageIndex (projectId, name, version) VALUES(?, ?, ?)", projectId, pkgName, str(version))
-            cu.execute("UPDATE PackageIndexMark SET mark=?", 0)
+                               projectId, troveName, str(version), pkgId)
 
+            cu.execute("UPDATE PackageIndexMark SET mark=?", newMark)
         except:
             self.db.rollback()
             exitcode = 1
