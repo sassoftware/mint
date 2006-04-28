@@ -34,6 +34,7 @@ from conary import dbstore
 from conary.dbstore import sqlerrors
 from conary.lib import util as conaryutil
 from conary.lib import epdb, log
+from conary.lib import coveragehook
 from conary.repository import changeset
 from conary.repository import errors
 from conary.repository import shimclient
@@ -470,6 +471,7 @@ def handler(req):
                 break
     finally:
         prof.stopHttp(req.uri)
+        coveragehook.save()
     return ret
 
 repositories = {}
