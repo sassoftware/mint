@@ -13,6 +13,7 @@ import tempfile
 import signal
 import time
 import socket
+import subprocess
 from math import ceil
 
 from conary.conaryclient import mirror
@@ -75,7 +76,8 @@ class MirrorOffline(SingletonScript):
             # adjust for disc formatting data
             isoSize -= isoSize % 2048
             # 174 iso blocks plus 3/4 of an isoblock per file, rounded up.
-            resBlocks = 174 + ceil((isoSize / (MAX_FILESIZE * 1.0)) * 0.75)
+            numFiles = (isoSize / (MAX_FILESIZE * 1.0))
+            resBlocks = (174 + numFiles + 1) + ceil((numFiles * 2 + 1) * 0.75)
             isoSize -= resBlocks * 2048
 
             openPort = 21213
@@ -162,6 +164,11 @@ class MirrorOffline(SingletonScript):
                          'split -a 3 -d -b %d - %s' % \
                          (baseDir, isoSize,
                           os.path.join(outputDir, "mirror-" + targCfg.serverName + '.tgz')))
+            for f in os.listdir(outputDir):
+                output = open(os.path.join(outputDir, f) + ".sha1", "w")
+                subprocess.Popen(["sha1sum", os.path.join(outputDir, f)], stdout = output).communicate()
+                output.close()
+
             # break DVD's into multi-part files. to comply with ISO-9660/UDF
             # filesystem constraints
             if isoSize > MAX_FILESIZE:
@@ -172,7 +179,6 @@ class MirrorOffline(SingletonScript):
                     util.execute("split -a 3 -d -b %d %s %s" % \
                                  (MAX_FILESIZE, os.path.join(outputDir, fn),
                                   os.path.join(outputDir, fn + '_')))
-                    os.unlink(os.path.join(outputDir, fn))
                     files = " ".join([os.path.join(outputDir, x) \
                                       for x in os.listdir(outputDir) \
                                       if x.startswith(fn + '_')])
@@ -180,22 +186,18 @@ class MirrorOffline(SingletonScript):
                     util.execute("mkisofs -o %s -r -U %s" % \
                                  (os.path.join( \
                         outputDir, fn.replace('.tgz', '') + '.iso'), files))
-                    for mFn in [x for x in os.listdir(outputDir) \
-                                if x.startswith(fn + '_')]:
-                        os.unlink(os.path.join(outputDir, mFn))
                     curDisc += 1
             else:
                 curDisc = 1
-                for fn in os.listdir(outputDir):
+                for fn in [f for f in os.listdir(outputDir) if ".sha1" not in f]:
                     createKeyFile(targCfg.serverName, curDisc, outputDir)
-                    files = [fn, "MIRROR-INFO"]
+                    files = [fn, fn + ".sha1", "MIRROR-INFO"]
                     util.execute("mkisofs -o %s -r -U %s" % \
                                  (os.path.join( \
                         outputDir, fn.replace('.tgz', '') + '.iso'),
                                   " ".join(os.path.join(outputDir, x) for x in files)))
-                    os.unlink(os.path.join(outputDir, fn))
                     curDisc += 1
-            for isoFile in os.listdir(outputDir):
+            for isoFile in [f for f in os.listdir(outputDir) if f.endswith('.iso')]:
                 os.rename(os.path.join(outputDir, isoFile),
                           os.path.join('.', isoFile))
         finally:
@@ -208,7 +210,7 @@ class MirrorOffline(SingletonScript):
 
 
 def createKeyFile(serverName, curDisc, outputDir):
-    splitFiles = os.listdir(outputDir)
+    splitFiles = [x for x in os.listdir(outputDir) if ".sha1" not in x]
     count = len(splitFiles)
 
     keyFile = open(os.path.join(outputDir, "MIRROR-INFO"), "w")
