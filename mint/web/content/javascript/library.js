@@ -46,6 +46,18 @@ function toggle_display_by_name(elName) {
     }
 }
 
+function toggle_element_by_checkbox(elId, checkId) {
+    el = $(elId);
+    check = $(checkId);
+
+    logDebug("checked: ", check.checked);
+    if(check.checked) {
+        showElement(elId);
+    } else {
+        hideElement(elId);
+    }
+}
+
 // appends a new item to a select element
 function appendToSelect(select, value, content, title, className) {
     var o = document.createElement("option");

@@ -9,7 +9,7 @@
     <head>
         <title>${formatTitle('Add External Project')}</title>
     </head>
-    <body>
+    <body onload="javascript:hideElement('mirrorSettings');">
         <a href ="${cfg.basePath}admin/">Return to Administrator Page</a>
         <td id="main" class="spanall">
             <div class="pad">
@@ -86,11 +86,10 @@
                 </table>
 
                 <h2>Mirror Settings</h2>
-                <table class="mainformhorizontal">
-                  <tr>
-                    <th>Mirroring enabled:</th>
-                    <td><input type="checkbox" class="check" name="useMirror" value="1" /> Mirror this repository locally.</td>
-                  </tr>
+                <p><b><input onclick="javascript:toggle_element_by_checkbox('mirrorSettings', 'useMirror');" 
+                             type="checkbox" class="check" name="useMirror" value="1" id="useMirror" /> Mirror this repository locally 
+                    <img src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" /></b></p>
+                <table class="mainformhorizontal" id="mirrorSettings">
                   <tr>
                     <th>Preload this mirror:</th>
                     <td><input type="checkbox" class="check" name="primeMirror" value="1" /> Preload this mirror with a set of CDs or DVDs.</td>
