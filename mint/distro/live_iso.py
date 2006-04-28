@@ -104,6 +104,7 @@ class LiveIso(bootable_image.BootableImage):
                 break
 
         if fallback:
+            tFile = tFile.replace('.static', '')
             print >> sys.stderr, "Using fallback for: %s" % tFile
             # named executable isn't suitable, use precompiled static one
             util.copyfile(os.path.join(self.fallback, tFile), dest)
