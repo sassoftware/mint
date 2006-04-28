@@ -108,13 +108,14 @@ class SingletonScript(GenericScript):
                     os.unlink(self.lockFileName)
                 else:
                     print >> sys.stderr, "Looks like we're already running; exiting"
-                    return 1
+                    return False
                 procFile.close()
 
         # Create the lock file
         newLockFile = open(self.lockFileName, "w+")
         newLockFile.write(str(os.getpid()))
         newLockFile.close()
+        return True
 
     def _unlock(self):
         """
@@ -125,20 +126,21 @@ class SingletonScript(GenericScript):
 
     def _run(self):
         exitcode = -1
+        # check args
+        if not self.handle_args():
+            self.usage()
+            return exitcode
+
+        # create lockfile
         try:
-            # check args
-            if not self.handle_args():
-                self.usage()
-                raise
+            if not self._lock():
+                return exitcode
+        except:
+            print >> sys.stderr, "Failed to create lockfile %s" % \
+                    self.lockFileName
+            return exitcode
 
-            # lockfile
-            try:
-                self._lock()
-            except:
-                print >> sys.stderr, "Failed to create lockfile %s" % \
-                        self.lockFileName
-                raise
-
+        try:
             # run action, always running cleanup at the end
             try:
                 try:
