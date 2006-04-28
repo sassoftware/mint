@@ -19,17 +19,17 @@ class CoverageWrapper(object):
         self._executable = executable
         self._dataPath = dataPath
         self._annotatePath = annotatePath
-        os.environ['COVERAGE_FILE'] = dataPath # yuck
+        os.environ['COVERAGE_DIR'] = dataPath # yuck
+        util.mkdirChain(dataPath)
 
     def reset(self):
         if os.path.exists(self._dataPath):
-            os.remove(self._dataPath)
+            util.rmtree(self._dataPath)
         if os.path.exists(self._annotatePath):
             util.rmtree(self._annotatePath)
-            util.mkdirChain(self._annotatePath)
 
     def execute(self, testProgram):
-        util.execute('python2.4 %s -x %s' % (self._executable, testProgram))
+        util.execute('python2.4 %s' % testProgram)
 
     def displayReport(self, files, displayMissingLines=False):
         assert(not displayMissingLines)
@@ -99,7 +99,7 @@ def getFilesToAnnotate(baseDirs=[], filesToFind=[]):
     filesToFind = [ x for x in filesToFind if x not in allFiles ]
 
     posFilters = [r'\.py$']
-    negFilters = ['sqlite', 'test', 'web', 'scripts']
+    negFilters = ['sqlite', 'test', 'scripts']
     
 
     for baseDir in baseDirs:
