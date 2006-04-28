@@ -31,7 +31,7 @@
                 <h3>Request Status</h3>
                 <div>
                     <img src="${cfg.staticPath}apps/mint/images/circle-ball-dark-antialiased.gif" id="spinner" style="float: right;"/>
-                    <div id="releaseStatus" class="running" />
+                    <div id="statusMessage" class="running" />
                 </div>
 
 

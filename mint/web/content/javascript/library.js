@@ -207,12 +207,12 @@ makeJobRowData = function(aRow) {
 
 // RPC callbacks ------------------------------------------------------------
 function processGetReleaseStatus(aReq) {
-    var oldReleaseStatus = $("releaseStatus");
+    var oldReleaseStatus = $("statusMessage");
 
     logDebug("[JSON] response: ", aReq.responseText);
     releaseStatus = evalJSONRequest(aReq);
 
-    releaseStatusEl = DIV({ 'id': 'releaseStatus', 'class': 'running' }, null);
+    releaseStatusEl = DIV({ 'id': 'statusMessage', 'class': 'running' }, null);
     if (!releaseStatus) {
         status = STATUS_NOJOB;
     } else {
@@ -250,8 +250,8 @@ function processGetReleaseStatus(aReq) {
 }
 
 function processGetCookStatus(aReq) {
-    var oldEl = $("releaseStatus");
-    var el = DIV({ 'id': 'releaseStatus', 'class': 'running' }, null);
+    var oldEl = $("statusMessage");
+    var el = DIV({ 'id': 'statusMessage', 'class': 'running' }, null);
 
     logDebug("[JSON] response: ", aReq.responseText);
     cookStatus = evalJSONRequest(aReq);

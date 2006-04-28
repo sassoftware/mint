@@ -110,8 +110,9 @@ p.warningmessage {
 p.message {
     background: #f5e4ae;
     border: 2px solid #f7c86a;
-    font-weight: bold;
-    padding: 10px;
+    padding: 4px;
+    margin-left: 1em;
+    margin-right: 1em;
 }
 
 div.side#left {
@@ -743,19 +744,19 @@ div.palette div.boxBody {
 }
 
 /* job status colors */
-div#releaseStatus.error {
+div#statusMessage.error {
     background: #edc2c2;
     border: 2px solid #ed6464;
     padding: 4px;
 }
 
-div#releaseStatus.running {
+div#statusMessage.running {
     background: #eeeeff;
     border: 2px solid #8888ff;
     padding: 4px;
 }
 
-div#releaseStatus.finished {
+div#statusMessage.finished {
     background: #cdedc2;
     border: 2px solid #7bbb66;
     padding: 4px;
