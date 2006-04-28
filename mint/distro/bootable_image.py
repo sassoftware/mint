@@ -295,6 +295,9 @@ title %(name)s (%(kversion)s)
     def populateTemporaryRoot(self, callback = None):
         uJob = self.updateGroupChangeSet(callback)
         self.applyUpdate(uJob, callback, 'conary-tag-script')
+        if self.findFile(os.path.join(self.fakeroot, 'boot'), 'vmlinuz.*'):
+            log.info("kernel detected. skipping updateKernelChangeSet")
+            return
         try:
             kuJob = self.updateKernelChangeSet(callback)
         except conaryclient.NoNewTrovesError:
