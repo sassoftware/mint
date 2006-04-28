@@ -11,7 +11,7 @@ import os
 import stat
 
 from conary.lib import util
-
+from conary.lib import sha1helper
 
 # this global hack is to bypass the the inherent stateless nature of http.
 tarThread = None
@@ -78,7 +78,7 @@ class CopyThread(threading.Thread):
         del kwargs['needsMount']
 
         threading.Thread.__init__(self, *args, **kwargs)
-        self.status = {"bytesTotal": 0, "bytesRead": 0, "done": False}
+        self.status = {"bytesTotal": 0, "bytesRead": 0, "done": False, "checksumError": False}
         self.lastTotal = 0
 
     def copyCallback(self, total, rate):
@@ -89,7 +89,12 @@ class CopyThread(threading.Thread):
 
 class ConcatThread(CopyThread):
     def run(self):
-        files = [x for x in os.listdir(self.tmpPath) if x.startswith("mirror-") and "tgz" in x and not x.endswith('tgz')]
+        files = [x for x in os.listdir(self.tmpPath)
+            if x.startswith("mirror-")
+                and "tgz" in x
+                and not x.endswith('tgz')
+                and not x.endswith('.sha1')
+        ]
         bytesTotal = sum(os.stat(os.path.join(self.tmpPath, x))[stat.ST_SIZE] for x in files)
         self.status['bytesTotal'] = bytesTotal
         print "concatting: ", files, bytesTotal
@@ -109,7 +114,7 @@ class CopyFromDiscThread(CopyThread):
     def run(self):
         print "sourcePath:", self.sourcePath
         files = os.listdir(self.sourcePath)
-        files = [x for x in files if x != 'MIRROR-INFO' and os.path.isfile(os.path.join(self.sourcePath, x))]
+        files = [x for x in files if x != 'MIRROR-INFO' and not x.endswith('.sha1') and os.path.isfile(os.path.join(self.sourcePath, x))]
         print "files", files
 
         bytesTotal = sum(os.stat(os.path.join(self.sourcePath, x))[stat.ST_SIZE] for x in files)
@@ -121,6 +126,20 @@ class CopyFromDiscThread(CopyThread):
             util.copyfileobj(fromF, toF, self.copyCallback)
             toF.close()
             fromF.close()
+
+            try:
+                origSha1 = file(os.path.join(self.sourcePath, f) + ".sha1")
+                data = origSha1.read()
+                origSha1.close()
+                origSum = data.split(" ")[0]
+
+                newSum = sha1helper.sha1ToString(sha1helper.sha1FileBin(os.path.join(self.sourcePath, f)))
+                if origSum != newSum:
+                    self.status['checksumError'] = True
+                print "checksums: ", origSum, newSum
+            except IOError:
+                self.status['checksumError'] = True
+            print "checksumError:", self.status['checksumError']
 
         self.status['done'] = True
 
@@ -207,4 +226,4 @@ class TarHandler(JsonRPCHandler):
                copyThread = None
             return status
         else:
-            return {'bytesTotal': 0, 'bytesRead': 0, 'done': False}
+            return {'bytesTotal': 0, 'bytesRead': 0, 'done': False, 'checksumError': False}
