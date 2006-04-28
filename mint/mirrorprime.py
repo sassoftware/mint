@@ -9,6 +9,7 @@ import simplejson
 import threading
 import os
 import stat
+import subprocess
 
 from conary.lib import util
 from conary.lib import sha1helper
@@ -62,7 +63,6 @@ class JsonRPCHandler(BaseHTTPServer.BaseHTTPRequestHandler, object):
         self.send_header("Content-type", "application/x-json")
         self.end_headers()
 
-        print args[1]
         resp = simplejson.dumps(method(*args[1]))
         self.wfile.write(resp)
 
@@ -77,7 +77,8 @@ class CopyThread(threading.Thread):
         del kwargs['needsMount']
 
         threading.Thread.__init__(self, *args, **kwargs)
-        self.status = {"bytesTotal": 0, "bytesRead": 0, "done": False, "checksumError": False}
+        self.status = {"bytesTotal": 0, "bytesRead": 0, "done": False, "checksumError": False,
+            "error": False, "errorMessage": ""}
         self.lastTotal = 0
 
     def copyCallback(self, total, rate):
@@ -105,7 +106,32 @@ class ConcatThread(CopyThread):
             util.copyfileobj(input, output, self.copyCallback)
             input.close()
             self.lastTotal = 0
+            os.unlink(os.path.join(self.tmpPath, f))
         output.close()
+        self.status['done'] = True
+
+
+class TarThread(CopyThread):
+    def run(self):
+        file = [x for x in os.listdir(self.tmpPath)
+            if x.startswith("mirror-") and x.endswith(".tgz")][0]
+
+#        serverName = file[7:-4]
+#        if os.path.exists(os.path.join("/srv/mint/repos/", serverName)):
+#            self.status['error'] = True
+#            self.status['errorMessage'] = 'Repository directory already exists: not overwriting'
+#            return
+
+        cmd = ["tar", "zxvf", os.path.join(self.tmpPath, file), "-C", "/srv/mint/repos/"]
+        tar = subprocess.Popen(cmd, stdout = subprocess.PIPE)
+
+        lines = 100
+        d = tar.stdout.readlines(100)
+        while d:
+            d = tar.stdout.readlines(100)
+            lines += 100
+            self.status['bytesRead'] = lines
+
         self.status['done'] = True
 
 
@@ -136,8 +162,9 @@ class CopyFromDiscThread(CopyThread):
                 if origSum != newSum:
                     self.status['checksumError'] = True
                 print "checksums: ", origSum, newSum
-            except IOError:
+            except IOError, e:
                 self.status['checksumError'] = True
+                print e
             print "checksumError:", self.status['checksumError']
 
         self.status['done'] = True
@@ -170,6 +197,18 @@ class TarHandler(JsonRPCHandler):
 
         if not copyThread:
             copyThread = ConcatThread(
+                tmpPath = self.tmpPath,
+                sourcePath = self.sourcePath,
+                needsMount = self.needsMount)
+            copyThread.start()
+
+    def untar(self):
+        global copyThread
+        if copyThread and not copyThread.isAlive():
+            copyThread = None
+
+        if not copyThread:
+            copyThread = TarThread(
                 tmpPath = self.tmpPath,
                 sourcePath = self.sourcePath,
                 needsMount = self.needsMount)

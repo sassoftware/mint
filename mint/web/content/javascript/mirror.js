@@ -19,6 +19,34 @@ function normPath(path) {
     return path;
 }
 
+function readTarStatus(aReq) {
+    r = evalJSONRequest(aReq);
+    replaceChildNodes($('statusMessage'), "Untarring: " + r.bytesRead + "%");
+
+    if(!r.done && !r.error) {
+        setTimeout("getTarStatus()", 100);
+    } else if(r.error) {
+        replaceChildNodes($('statusMessage'), r.errorMessage);
+    } else {
+        replaceChildNodes($('statusMessage'), "Done.");
+        setElementClass($('statusMessage'), "finished");
+    }
+}
+
+function getTarStatus() {
+    var req = new JsonRpcRequest("/", "copyStatus");
+    req.setCallback(readTarStatus);
+    req.send(true, []);
+}
+
+function startUntar() {
+    var req = new JsonRpcRequest("/", "untar");
+    req.setCallback(getTarStatus);
+    req.send(true, []);
+}
+
+
+
 function readConcatStatus(aReq) {
     r = evalJSONRequest(aReq);
     percent = ((r.bytesRead / r.bytesTotal) * 100).toFixed(0);
@@ -27,7 +55,7 @@ function readConcatStatus(aReq) {
     if(!r.done) {
         setTimeout("getConcatStatus()", 100);
     } else {
-        alert("done concatting");
+        startUntar();
     }
 }
 
@@ -51,6 +79,9 @@ function readStatusCallback(aReq) {
 
     if(!r.done) {
         setTimeout("getCopyStatus()", 100);
+    } else if(r.checksumError) {
+        replaceChildNodes($('statusMessage'), "Checksum error reading disc " + curDisc + ". Please contact your vendor for replacement.");
+        setElementClass($('statusMessage'), 'error');
     } else {
         if(curDisc < countDiscs) {
             needsDisc = curDisc + 1;
@@ -58,7 +89,6 @@ function readStatusCallback(aReq) {
             $('goButton').removeAttribute('disabled');
             replaceChildNodes($('goButton'), "Continue");
         } else {
-            alert("ready to untar");
             startConcat();
         }
     }
@@ -81,11 +111,12 @@ function startCopy() {
 function getDiscInfoCallback(aReq) {
     r = evalJSONRequest(aReq);
 
+    setElementClass($("statusMessage"), "running");
+
     logDebug("response from json: " + r);
     if(r.error) {
-        var oldError = $('errorMessage');
-        var el = DIV({ 'id': 'errorMessage' }, r.message);
-        swapDOM(oldError, el);
+        replaceChildNodes($("statusMessage"), r.message);
+        setElementClass($("statusMessage"), "error");
     } else {
         if(r.curDisc != needsDisc || r.serverName != serverName) {
             replaceChildNodes($("statusMessage"), "Please insert disc " + needsDisc + " for " + serverName);

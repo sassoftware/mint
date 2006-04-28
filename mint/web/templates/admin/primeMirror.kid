@@ -16,9 +16,7 @@
 
             <p>Please follow the instructions below to pre-load your mirror.</p>
 
-            <div id="statusMessage" style="color: red; border 2px solid black; padding 5px;">This is a test</div>
-
-            <div id="errorMessage" style="color: red; border 2px solid black; padding 5px;"></div>
+            <div class="running" id="statusMessage">Insert the first mirror pre-loading disk and press the button below.</div>
 
             <p>
                 <button onclick="getDiscInfo('${serverName}');" id="goButton">Start Import</button>
