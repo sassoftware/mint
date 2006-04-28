@@ -39,6 +39,8 @@ class ConaryHandler(WebHandler, http.HttpHandler):
         self.serverName = self.req.hostname
 
         path = self.req.path_info.split("/")
+        if len(path) < 4:
+            raise HttpNotFound
         self.cmd = path[3]
         try:
             if path[1] == "repos":
