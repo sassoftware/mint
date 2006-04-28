@@ -54,8 +54,8 @@ class MakeTestImages(SingletonScript):
                 mc.startImageJob(release.id)
             except DuplicateJob:
                 pass
-            # sleep for 15 minutes to lessen server load
-            time.sleep(900)
+            # sleep for 30 minutes to lessen server load
+            time.sleep(1800)
         return 0
 
 if __name__ == "__main__":
