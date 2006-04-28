@@ -1,4 +1,9 @@
 #!/usr/bin/python
+#
+# Copyright (c) 2006 rPath, Inc.
+#
+# All Rights Reserved
+#
 import BaseHTTPServer
 import simplejson
 import threading
