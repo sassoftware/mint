@@ -299,7 +299,7 @@ class MintServer(object):
         maintenance.enforceMaintenanceMode( \
             self.cfg, auth = None, msg = "Repositories are currently offline.")
         # use a shimclient for mint-handled repositories; netclient if not
-        if project.external or project.domainname != self.cfg.projectDomainName:
+        if project.external:
             cfg = project.getConaryConfig()
             repo = conaryclient.ConaryClient(cfg).getRepos()
         else:

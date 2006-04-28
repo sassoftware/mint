@@ -13,7 +13,6 @@ import stat
 from conary.lib import util
 from conary.lib import sha1helper
 
-# this global hack is to bypass the the inherent stateless nature of http.
 tarThread = None
 copyThread = None
 
