@@ -216,7 +216,7 @@ class TarHandler(JsonRPCHandler):
 
     def getDiscInfo(self):
         if self.needsMount:
-            os.system("sudo mount /cdrom")
+            os.system("sudo mount /dev/cdrom /mnt")
         try:
             keyFile = open(os.path.join(self.sourcePath, "MIRROR-INFO"))
             serverName = keyFile.readline().strip()
@@ -238,7 +238,7 @@ class TarHandler(JsonRPCHandler):
                 "serverName": ""
             }
         if self.needsMount:
-            os.system("sudo umount /cdrom")
+            os.system("sudo umount /mnt")
 
     def startTar(self):
         global tarThread
