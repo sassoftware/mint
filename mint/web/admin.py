@@ -6,12 +6,14 @@
 
 import os
 import sys
+import BaseHTTPServer
 
 from mod_python import apache
 
 from mint import mint_error
 from mint import maintenance
 from mint.web.webhandler import normPath, WebHandler, HttpNotFound, HttpForbidden
+from mint.mirrorprime import TarHandler
 
 from conary import versions
 from conary.web.fields import strFields, intFields, listFields, boolFields
@@ -191,7 +193,7 @@ class AdminHandler(WebHandler):
             self.client.addRemappedRepository(hostname + "." + self.cfg.siteDomainName, extLabel.getHost())
 
         if primeMirror:
-            # XXX start the mirror prime server now
+            startPrimeServer()
             return self._write("admin/primeMirror", serverName = extLabel.getHost())
         else:
             self._redirect("http://%s%sproject/%s/" % \
@@ -264,3 +266,16 @@ class AdminHandler(WebHandler):
         mode = curMode ^ 1
         maintenance.setMaintenanceMode(self.cfg, mode)
         self._redirect("http://%s%sadmin/maintenance" % (self.cfg.siteHost, self.cfg.basePath))
+
+
+def startPrimeServer():
+    pid = os.fork()
+    if not pid:
+        fd = os.open("/tmp/rbuilder-mirror-preload.log", os.W_OK | os.O_CREAT | os.O_APPEND)
+        os.dup2(fd, sys.stdout.fileno())
+        os.dup2(fd, sys.stderr.fileno())
+
+        server_address = ('', 8006)
+        httpd = BaseHTTPServer.HTTPServer(server_address, TarHandler)
+        httpd.serve_forever()
+        os._exit(0)
