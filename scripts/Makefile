@@ -23,7 +23,6 @@ extra_dist = \
 	installable_iso.conf	\
 	iso_gen.conf		\
 	live_iso.conf		\
-	buildiso		\
 	buildtemplates		\
 	raw2vmdk.c		\
 	job-server.init.in	\
