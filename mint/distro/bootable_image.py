@@ -33,6 +33,7 @@ from conary.deps import deps
 from conary.lib import log, util
 from conary.repository import errors
 
+PARTITION_OFFSET = 512
 
 class KernelTroveRequired(mint_error.MintError):
     def __str__(self):
@@ -47,9 +48,6 @@ class BootableImageConfig(ConfigFile):
     cylindersize    = 516096
     sectors         = 63
     heads           = 16
-
-    #Offset at which to drop the file system in the raw disk image
-    partoffset0     = 512
 
     #directory containing the uml init script as well as fstab and other hooks
     dataDir         = '/usr/share/mint/DiskImageData/'
@@ -185,7 +183,7 @@ class BootableImage(ImageGenerator):
         #Do the partition table
         self.cylinders = self.imagesize / self.imgcfg.cylindersize
         cmd = '/sbin/sfdisk -C %d -S %d -H %d %s' % (self.cylinders, self.imgcfg.sectors, self.imgcfg.heads, self.outfile)
-        input = "0 %d L *\n" % (self.cylinders)
+        input = "0 %d L *\n" % self.cylinders
 
         if not self.imgcfg.debug:
             cmd += " >& /dev/null"
@@ -359,7 +357,7 @@ title %(name)s (%(kversion)s)
         util.execute("find %s -perm 0111 -exec chmod u+r {} \;" % self.fakeroot)
 
         cmd = '/usr/bin/e2fsimage -f %s -d %s -s %d %s %s' % (file,
-                self.fakeroot, (self.imagesize - self.imgcfg.partoffset0)/1024,
+                self.fakeroot, (self.imagesize - PARTITION_OFFSET)/1024,
                 flags, silence)
         util.execute(cmd)
         cmd = '/sbin/e2label %s / %s' % (file, silence)
@@ -376,7 +374,7 @@ title %(name)s (%(kversion)s)
         #Now write this FS image back to the original image
         fd = open(file, 'rb')
         fdo = open(self.outfile, 'r+b')
-        fdo.seek(self.imgcfg.partoffset0)
+        fdo.seek(PARTITION_OFFSET)
         util.copyfileobj(fd, fdo, bufSize=524288)
         fd.close()
         fdo.close()
@@ -391,7 +389,7 @@ title %(name)s (%(kversion)s)
             #How much space do we need?
             fd = os.popen('/usr/bin/du -B1 --max-depth=0 %s' % self.fakeroot, 'r')
             size = int(fd.read().strip().split()[0])
-            size += self.freespace + self.imgcfg.partoffset0
+            size += self.freespace + PARTITION_OFFSET
             # account for inodes and extra space for tag scripts and swap space
             # inodes are 8%.
             # super user reserved blocks are 5% of total
@@ -550,8 +548,9 @@ quit
         tempName = self.outfile + "nonstrip"
         # move outfile out of the way, then copy it back, minus boot block.
         os.rename(self.outfile, tempName)
-        os.system('dd if=%s of=%s skip=1 ibs=512' % \
-                  (tempName, self.outfile))
+        blocks = PARTITION_OFFSET / 512
+        os.system('dd if=%s of=%s skip=%d ibs=512' % \
+                  (tempName, self.outfile, blocks))
         os.unlink(tempName)
 
     @timeMe
