@@ -6,6 +6,7 @@
 
 script_dist =			\
 	buildtemplates		\
+	create-release		\
 	cvtmysql.py		\
 	deleteproject.py	\
 	install-jsroot		\
