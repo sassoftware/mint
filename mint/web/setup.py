@@ -43,13 +43,10 @@ class SetupHandler(WebHandler):
 
         # first-time setup; check for <sid>.txt
         if not self.cfg.configured:
-            if not self.session:    
+            if not self.session:
                 self._session_start()
 
             self.session.save()
-            # FIXME: parameterize /srv/mint/
-            if not os.path.exists(self.cfg.dataPath + "/%s.txt" % self.session.id()):
-                return self.secure
 
         if not cmd:
             return self.setup
@@ -150,9 +147,6 @@ class SetupHandler(WebHandler):
         os.system("sudo /sbin/service rbuilder-isogen restart")
         time.sleep(5)
         self._redirect("http://%s%s" % (self.cfg.siteHost, self.cfg.basePath))
-
-    def secure(self, auth):
-        return self._write("setup/secure", sid = self.session.id())
 
     def _write(self, template, templatePath = None, **values):
         if not templatePath:
