@@ -17,8 +17,8 @@
 
 blurbindex = 4
 blurbtrunclength = 300
-sqlbase = """SELECT userid, username, fullname, displayEmail, blurb, timeCreated, timeAccessed
-FROM Users WHERE active=1
+sqlbase = """SELECT userid, username, fullname, displayEmail, blurb, timeCreated, timeAccessed, active
+FROM Users %s
     ORDER BY %s
     LIMIT %d
     OFFSET %d"""

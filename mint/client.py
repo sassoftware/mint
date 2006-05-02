@@ -197,16 +197,17 @@ class MintClient:
         """
         return self.server.getUsersList()
 
-    def getUserSearchResults(self, terms, limit = 10, offset = 0):
+    def getUserSearchResults(self, terms, limit = 10, offset = 0, includeInactive=False):
         """
         Collect the results from a users search as requested by the search
         terms
         @param terms: Search terms
         @param limit:  Number of items to return
         @param offset: Count at which to begin listing
+        @param includeInactive: set True to include users needing confirmations
         @return:       dictionary of Items requested
         """
-        return self.server.searchUsers(terms, limit, offset)
+        return self.server.searchUsers(terms, limit, offset, includeInactive)
 
     def getProjectSearchResults(self, terms, modified = 0, limit = 10, offset = 0):
         """
@@ -250,14 +251,16 @@ class MintClient:
         return self.server.getLabelsForProject(projectId,
             overrideAuth, newUser, newPass)
 
-    def getUsers(self, sortOrder, limit, offset):
+    def getUsers(self, sortOrder, limit, offset, includeInactive=False):
         """
         Return a list of users unfiltered in any way
         @param sortOrder: Order in which to sort the results
         @param limit:     Number of items to return
         @param offset:    Begin listing at this offset
+        @param includeInactive: set True to include users needing confirmations
+        @return a list of user ids
         """
-        return self.server.getUsers(sortOrder, limit, offset)
+        return self.server.getUsers(sortOrder, limit, offset, includeInactive)
 
     def hideProject(self, projectId):
         """

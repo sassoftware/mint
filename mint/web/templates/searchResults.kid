@@ -17,7 +17,10 @@
         if searchType == "Projects":
             columns = ('Project', 'Last Commit')
         elif searchType == "Users":
-            columns = ('User Name', 'About', 'Last Accessed')
+            if auth.admin:
+                columns = ('User Name', 'Full Name', 'Account Created', 'Last Accessed', 'Status')
+            else:
+                columns = ('User Name', 'Full Name', 'Account Created', 'Last Accessed')
         elif searchType == "Packages":
             if groupTrove:
                 columns = ('Package', 'Project', '')
@@ -42,10 +45,13 @@
                 elif searchType == "Users":
                     formattedresults = [
                         (self.cfg.basePath + 'userInfo?id=%d' % resultset[0], resultset[1]),
-                        resultset[4],
-                        timeDelta(resultset[5])
+                        resultset[2],
+                        timeDelta(resultset[5]),
+                        timeDelta(resultset[6])
                     ]
-                    resultsetdesc = resultset[2]
+                    if auth.admin:
+                        formattedresults.append(resultset[7] and "Active" or "Inactive")
+                    resultsetdesc = resultset[4]
                 elif searchType == "Packages":
                     formattedresults = [
                         (resultset[2], resultset[0]),

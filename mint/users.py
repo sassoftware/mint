@@ -345,29 +345,37 @@ class UsersTable(database.KeyedTable):
 
             return r[0]
 
-    def search(self, terms, limit, offset):
+    def search(self, terms, limit, offset, includeInactive=False):
         """
         Returns a list of users matching L{terms} of length L{limit}
         starting with item L{offset}.
         @param terms: Search terms
         @param offset: Count at which to begin listing
         @param limit:  Number of items to return
+        @param includeInactive: set True to include users needing confirmations
         @return:       a list of the requested items.
-                       each entry will contain five bits of data:
+                       each entry will contain eight bits of data:
                         The userId for use in drilling down,
                         The user name,
                         The user's name
                         the display e-mail
                         the user's blurb
+                        time created
+                        time last accessed
+                        account active flag
         """
         columns = ['userId', 'userName', 'fullName', 'displayEmail', 'blurb',
-                   'timeAccessed']
+                   'timeCreated', 'timeAccessed', 'active']
         searchcols = ['userName', 'fullName', 'displayEmail', 'blurb']
 
+        if includeInactive:
+            whereClause = searcher.Searcher.where(terms, searchcols)
+        else:
+            whereClause = searcher.Searcher.where(terms, searchcols, "AND active=1")
+
         ids, count =  database.KeyedTable.search( \
-            self, columns, 'Users',
-            searcher.Searcher.where(terms, searchcols, "AND active=1"),
-            "userName", None, limit, offset)
+            self, columns, 'Users', whereClause, "userName", None,
+            limit, offset)
         for i, x in enumerate(ids[:]):
             ids[i] = list(x)
             ids[i][4] = searcher.Searcher.truncate(x[4], terms)
@@ -413,18 +421,24 @@ class UsersTable(database.KeyedTable):
         results = cu.fetchall()
         return results
 
-    def getUsers(self, sortOrder, limit, offset):
+    def getUsers(self, sortOrder, limit, offset, includeInactive=False):
         """
         Returns a list of users for browsing limited by L{limit}
         starting with item L{offset}.
         @param limit:  Number of items to return
         @param offset: Count at which to begin listing
+        @param includeInactive: set True to include users needing confirmations
         @return:       a list of the requested items.
         """
         cu = self.db.cursor()
 
-        SQL = userlisting.sqlbase % (userlisting.ordersql[sortOrder],
-            limit, offset)
+        if not includeInactive:
+            whereClause = "WHERE active=1"
+        else:
+            whereClause = ""
+
+        SQL = userlisting.sqlbase % (whereClause,
+                userlisting.ordersql[sortOrder], limit, offset)
 
         cu.execute(SQL)
 
@@ -436,13 +450,16 @@ class UsersTable(database.KeyedTable):
 
         return ids
 
-    def getNumUsers(self):
+    def getNumUsers(self, includeInactive=False):
         """
         Returns the count of Users
         """
         cu = self.db.cursor()
-        cu.execute( "SELECT count(userId) FROM Users WHERE active=1" )
-
+        if not includeInactive:
+            whereClause = "WHERE active=1"
+        else:
+            whereClause = ""
+        cu.execute( "SELECT count(userId) FROM Users " + whereClause )
         return cu.fetchone()[0]
 
 

@@ -1135,18 +1135,19 @@ class MintServer(object):
         else:
             raise PermissionDenied
 
-    @typeCheck(str, int, int)
+    @typeCheck(str, int, int, bool)
     @requiresAuth
     @private
-    def searchUsers(self, terms, limit, offset):
+    def searchUsers(self, terms, limit, offset, includeInactive=False):
         """
         Collect the results as requested by the search terms
         @param terms: Search terms
         @param limit:  Number of items to return
         @param offset: Count at which to begin listing
+        @param includeInactive: set True to include users needing confirmations
         @return:       dictionary of Items requested
         """
-        return self.users.search(terms, limit, offset)
+        return self.users.search(terms, limit, offset, includeInactive)
 
     @typeCheck(str, int, int, int)
     @private
@@ -1201,17 +1202,18 @@ class MintServer(object):
         """
         return self.users.getUsersList()
 
-    @typeCheck(int, int, int)
+    @typeCheck(int, int, int, bool)
     @requiresAdmin
     @private
-    def getUsers(self, sortOrder, limit, offset):
+    def getUsers(self, sortOrder, limit, offset, includeInactive=False):
         """
         Collect a list of users
         @param sortOrder: Order the users by this criteria
         @param limit:  Number of items to return
         @param offset: Count at which to begin listing
+        @param includeInactive: set True to include users needing confirmations
         """
-        return self.users.getUsers(sortOrder, limit, offset), self.users.getNumUsers()
+        return self.users.getUsers(sortOrder, limit, offset, includeInactive)
 
     @typeCheck(int)
     @requiresAdmin

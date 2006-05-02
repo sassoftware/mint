@@ -20,13 +20,14 @@ from mint.client import timeDelta
                 formattedresults = [
                     (cfg.basePath + 'userInfo?id=%s' % resultset[0], resultset[1]),
                     resultset[2],
-                    resultset[3],
-                    resultset[4],
                     timeDelta(resultset[5]),
-                    timeDelta(resultset[6]),
+                    timeDelta(resultset[6])
                 ]
+                if auth.admin:
+                    formattedresults.append(resultset[7] and "Active" or "Inactive")
+                resultsetdesc = resultset[4]
             ?>
-            ${resultRow(formattedresults)}
+            ${resultRow(formattedresults, resultsetdesc)}
         </div>
         <div py:def="sortOrderForm(sortOrder = 0)" py:strip="True">
             <form method="get" action="users">
@@ -44,7 +45,12 @@ from mint.client import timeDelta
             ${sortOrderForm(sortOrder)}
             ${navigation("users?sortOrder=%d"%(sortOrder), "all users", count, limit, offset)}
             <table class="results">
-                ${columnTitles(('User Name', 'Full Name', 'Contact Info', 'About', 'Created', 'Last Accessed'))}
+                <div py:if="auth.admin" py:strip="True">
+                    ${columnTitles(('User Name', 'Full Name', 'Account Created', 'Last Accessed', 'Status'))}
+                </div>
+                <div py:if="not auth.admin" py:strip="True">
+                    ${columnTitles(('User Name', 'Full Name', 'Account Created', 'Last Accessed'))}
+                </div>
                 ${searchResults(results)}
             </table>
             ${navigation("users?sortOrder=%d"%(sortOrder), "all users", count, limit, offset, True)}
