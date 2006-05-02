@@ -264,7 +264,8 @@ class SiteHandler(WebHandler):
         if sortOrder < 0:
             sortOrder = self.session.get('usersSortOrder', 0)
         self.session['usersSortOrder'] = sortOrder
-        results, count = self.client.getUsers(sortOrder, limit, offset)
+        results = self.client.getUsers(sortOrder, limit, offset, includeInactive=auth.admin)
+        count = len(results)
 
         return self._write("users", sortOrder=sortOrder, limit=limit, offset=offset, results=results, count=count)
 
@@ -432,7 +433,7 @@ class SiteHandler(WebHandler):
         if type == "Projects":
             return self._projectSearch(search, modified, limit, offset)
         elif type == "Users" and auth.authorized:
-            return self._userSearch(auth, search, limit, offset)
+            return self._userSearch(auth, search, limit, offset, includeInactive=auth.admin)
         elif type == "Packages":
             return self._packageSearch(search, limit, offset)
         else:
@@ -440,8 +441,8 @@ class SiteHandler(WebHandler):
             return self._write("error", shortError = "Invalid Search Type",
                 error = "Invalid search type specified.")
 
-    def _userSearch(self, auth, terms, limit, offset):
-        results, count = self.client.getUserSearchResults(terms, limit, offset)
+    def _userSearch(self, auth, terms, limit, offset, includeInactive):
+        results, count = self.client.getUserSearchResults(terms, limit, offset, includeInactive)
         return self._write("searchResults", searchType = "Users", terms = terms, results = results,
                                             count = count, limit = limit, offset = offset, modified = 0)
 
