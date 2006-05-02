@@ -200,13 +200,18 @@ class FixtureCache(object):
         release = client.newRelease(projectId, "Test Release")
         stockReleaseFlavor(db, release.id)
 
-        return cfg, { 'projectId': projectId, \
-                     'admin': adminId, \
-                     'owner': ownerId, \
-                     'developer': developerId, \
-                     'user': userId, \
-                     'nobody': nobodyId, \
-                     'releaseId': release.id }
+        # create a group trove for the "foo" project
+        groupTrove = client.createGroupTrove(projectId, 'group-test', '1.0.0',
+            'No Description', False)
+
+        return cfg, { 'projectId':      projectId,
+                      'admin':          adminId,
+                      'owner':          ownerId,
+                      'developer':      developerId,
+                      'user':           userId,
+                      'nobody':         nobodyId,
+                      'releaseId':      release.id,
+                      'groupTroveId':   groupTrove.id }
 
 
     def fixtureCookJob(self, cfg):
