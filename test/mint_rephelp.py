@@ -29,7 +29,7 @@ from conary import sqlite3
 from conary import versions
 from conary.callbacks import UpdateCallback, ChangesetCallback
 from conary.deps import deps
-from conary.lib import openpgpkey, util
+from conary.lib import util
 
 # NOTE: make sure that test.rpath.local and test.rpath.local2 is in your
 # system's /etc/hosts file (pointing to 127.0.0.1) before running this
@@ -361,19 +361,7 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
                    hostname = "testproject",
                    domainname = MINT_PROJECT_DOMAIN):
         """Create a new mint project and return that project ID."""
-        # save the current openpgpkey cache
-        keyCache = openpgpkey.getKeyCache()
-
         projectId = client.newProject(name, hostname, domainname)
-
-        # set a default signature key
-        project = client.getProject(projectId)
-        ascKey = open(testsuite.archivePath + '/key.asc', 'r').read()
-        project.addUserKey(client.server._server.authToken[0], ascKey)
-
-        # restore the key cache
-        openpgpkey.setKeyCache(keyCache)
-
         self.cfg.buildLabel = versions.Label("%s.%s@rpl:devel" % \
                                              (hostname, domainname))
         if self.mintCfg.SSL:
