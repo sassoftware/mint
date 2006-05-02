@@ -107,6 +107,7 @@ class MintApacheServer(rephelp.ApacheServer):
         self.mintPath = os.environ.get("MINT_PATH", "")
 
         rephelp.ApacheServer.__init__(self, name, reposDB, contents, server, serverDir, reposDir, conaryPath, repMap, useCache, requireSigs)
+        self.needsPGPKey = False
 
         self.sslDisabled = bool(os.environ.get("MINT_TEST_NOSSL", ""))
 
@@ -174,6 +175,7 @@ class MintApacheServer(rephelp.ApacheServer):
         if os.path.exists(self.reposDir + "/repos/"):
             util.rmtree(self.reposDir + "/repos/")
         rephelp.ApacheServer.reset(self)
+        self.needsPGPKey = False
         self.mintDb.reset()
 
     def getTestDir(self):
