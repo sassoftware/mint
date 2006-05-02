@@ -319,10 +319,6 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
         cu.execute("DELETE FROM Confirmations WHERE userId=?", userId)
         self.db.commit()
 
-        # add this user info to client config object
-        if ('*', username, password) not in self.cfg.user:
-            self.cfg.user.append(('*', username, password))
-
         return self.openMintClient((username, password)), userId
 
     def quickMintAdmin(self, username, password, email = "test@example.com"):
@@ -350,10 +346,6 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
         cu.execute("INSERT INTO UserGroupMembers VALUES(?, ?)",
                    groupId, authUserId)
         self.db.commit()
-
-        # add this user info to client config object
-        if ('*', username, password) not in self.cfg.user:
-            self.cfg.user.append(('*', username, password))
 
         return client, userId
 
