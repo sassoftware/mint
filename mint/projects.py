@@ -667,6 +667,10 @@ class RepositoryDatabase:
     def getRepositoryDB(self, name):
         raise NotImplementedError
 
+    def translate(self, x):
+        return x
+
+
 class SqliteRepositoryDatabase(RepositoryDatabase):
     def create(self, name):
         if os.path.exists(self.cfg.reposDBPath % name):
@@ -676,6 +680,7 @@ class SqliteRepositoryDatabase(RepositoryDatabase):
 
     def getRepositoryDB(self, name):
         return ('sqlite', self.cfg.reposDBPath % name)
+
 
 class MySqlRepositoryDatabase(RepositoryDatabase):
     def translate(self, x):
