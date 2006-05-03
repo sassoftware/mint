@@ -97,6 +97,7 @@ class MintConfig(ConfigFile):
     announceLink            = ''
 
     googleAnalyticsTracker  = (cfgtypes.CfgBool, False)
+    projectAdmin            = (cfgtypes.CfgBool, True)
 
     def read(self, path, exception = False):
         ConfigFile.read(self, path, exception)
