@@ -19,7 +19,7 @@ cfg.read(cfgPath)
 db = dbstore.connect(cfg.dbPath, driver = cfg.dbDriver)
 cu = db.cursor()
 
-cu.execute("SELECT hostname, domainname FROM Projects")
+cu.execute("SELECT hostname, domainname FROM Projects WHERE external=0")
 
 if cfg.reposDBDriver == 'sqlite':
     repos = projects.SqliteRepositoryDatabase(cfg)
