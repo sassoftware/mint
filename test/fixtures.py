@@ -557,6 +557,28 @@ class FixturedUnitTest(unittest.TestCase):
         db.close()
         return canMirror
 
+    def getWriteAcl(self, project, username):
+        return self.getPermission('canWrite', project, username)
+
+    def getAdminAcl(self, project, username):
+        return self.getPermission('admin', project, username)
+
+    def getPermission(self, column, project, username):
+        dbCon = project.server._server.projects.reposDB.getRepositoryDB( \
+            project.getFQDN())
+        db = dbstore.connect(dbCon[1], dbCon[0])
+
+        cu = db.cursor()
+
+        cu.execute("""SELECT MAX(%s)
+                          FROM Users
+                          LEFT JOIN UserGroupMembers ON Users.userId =
+                                  UserGroupMembers.userId
+                          LEFT JOIN Permissions ON Permissions.userGroupId =
+                                  UserGroupMembers.userGroupId
+                          WHERE Users.username=?""" % column, username)
+        return cu.fetchone()[0]
+
     def tearDown(self):
         try:
             fixtureCache.delRepos()
