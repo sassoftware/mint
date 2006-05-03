@@ -1868,6 +1868,15 @@ class MintServer(object):
                        jobstatus.RUNNING, 'Starting', time.time(), jobId)
             if self.req:
                 self.jobData.setDataValue(jobId, "hostname", self.req.connection.remote_ip, data.RDT_STRING)
+            cu.execute("SELECT jobId FROM Jobs WHERE status=?",
+                       jobstatus.WAITING)
+            # this is done inside the job lock. there is a small chance of race
+            # condition, but the consequence would be that jobs might not
+            # reflect the correct number on admin page. if this proves to be
+            # too costly, move it outside the lock
+            for ordJobId in [x[0] for x in cu.fetchall()]:
+                cu.execute("UPDATE Jobs SET statusMessage=? WHERE jobId=?",
+                           self.getJobWaitMessage(ordJobId), ordJobId)
 
         cu.execute("UPDATE Jobs SET owner=NULL WHERE owner=? AND status=?",
                    ownerId, jobstatus.WAITING)
