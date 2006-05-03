@@ -50,7 +50,7 @@ for x in '/proc' '/dev/pts' '/srv/mint/finished-images' '/srv/mint/changesets'; 
     echo -e "$x\\t$ROOT$x\\tnone\\tbind\\t0\\t0 $COMMENT" >> /etc/fstab
 done
 
-if [ $2 == '--extra-fstab' ]; then
+if [ $2 = '--extra-fstab' ]; then
     echo /export/mint/local-images              $ROOT/srv/mint/images       none    bind    0 0 $COMMENT >> /etc/fstab
     echo /srv/mint/templates                    $ROOT/srv/mint/templates    none    bind    0 0 $COMMENT >> /etc/fstab
 fi
