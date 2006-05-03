@@ -164,6 +164,9 @@ class Project(database.TableObject):
     def addUserKey(self, username, keydata):
         return self.server.addUserKey(self.id, username, keydata)
 
+    def projectAdmin(self, userName):
+        return self.server.projectAdmin(self.id, userName)
+
     def lastOwner(self, userId):
         return self.server.lastOwner(self.id, userId)
 
@@ -468,7 +471,8 @@ class ProjectsTable(database.KeyedTable):
 
         if username:
             repos.auth.addUser(username, password)
-            repos.auth.addAcl(username, None, None, True, False, True)
+            repos.auth.addAcl(username, None, None, True, False,
+                              self.cfg.projectAdmin)
 
         repos.auth.addUser("anonymous", "anonymous")
         repos.auth.addAcl("anonymous", None, None, False, False, False)
