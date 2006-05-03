@@ -4,9 +4,11 @@
 #
 # ./install-jsroot <upstream version> <trovespec of job server root trove>
 #
-if [ $# -lt 2 ]; then
+set -x
+if [ $# -lt 1 ]; then
     echo "not enough arguments: $0 $*" >&2
-    echo "usage: $0 <upstream version> <trovespec of job server root>" >&2
+    echo "usage: $0 <trovespec of job server root> [--extra-fstab]" >&2
+    echo "--extra-fstab adds 3 additional bind mounts for /srv/mint/images/ and /srv/mint/templates/"
     exit 1
 fi
 
@@ -15,12 +17,21 @@ if [ $UID != 0 ]; then
     exit 1
 fi
 
-upstreamVer=$1
-troveSpec=$2
+# parse a full trove spec from a partial spec by calling
+# conary rq on the partial. also extract an upstream version
+# from the resulting full trove spec.
+troveSpec=$1
+fullTroveSpec=$(conary rq "$troveSpec" --full-versions)
+upstreamVer=$(python -c "
+from conary.conaryclient import cmdline
+from conary import versions
+print str(versions.VersionFromString(cmdline.parseTroveSpec(\"$fullTroveSpec\")[1]).trailingRevision()).split('-')[0]
+")
+
 ROOT=/srv/mint/jobserver/$upstreamVer/
 
-echo "Installing chroot"
-conary update --root $ROOT $troveSpec
+echo "Installing chroot: $upstreamVer" 
+conary update --root $ROOT "$troveSpec"
 if [ $? != 0 ]; then
     echo "Software installation failed" >&2
     exit 1
@@ -30,17 +41,19 @@ echo "Creating mtab and device nodes"
 touch $ROOT/etc/mtab
 mknod $ROOT/dev/random c 1 8
 mknod $ROOT/dev/urandom c 1 9
-mkdir $ROOT/srv/mint/finished-images/
+mkdir -p $ROOT/srv/mint/finished-images/
 
 cp /etc/fstab /etc/fstab.backup
-COMMENT = "#JSROOT$upstreamVer"
+COMMENT="\#JSROOT$upstreamVer"
 echo "Modifying /etc/fstab -- saving backup to /etc/fstab.backup"
-for x in '/proc' '/dev/pts' '/srv/mint/finished-images'; do   
+for x in '/proc' '/dev/pts' '/srv/mint/finished-images' '/srv/mint/changesets'; do   
     echo -e "$x\\t$ROOT$x\\tnone\\tbind\\t0\\t0 $COMMENT" >> /etc/fstab
 done
-echo /export/mint/local-images              $ROOT/srv/mint/images       none    bind    0 0 $COMMENT >> /etc/fstab
-echo /srv/mint/changesets                   $ROOT/srv/mint/changesets   none    bind    0 0 $COMMENT >> /etc/fstab
-echo /srv/mint/templates                    $ROOT/srv/mint/templates    none    bind    0 0 $COMMENT >> /etc/fstab
+
+if [ "$2" = '--extra-fstab' ]; then
+    echo /export/mint/local-images              $ROOT/srv/mint/images       none    bind    0 0 $COMMENT >> /etc/fstab
+    echo /srv/mint/templates                    $ROOT/srv/mint/templates    none    bind    0 0 $COMMENT >> /etc/fstab
+fi
 
 echo "Copying network configuration files to chroot"
 for x in '/etc/nsswitch.conf' '/etc/hosts' '/etc/resolv.conf'; do

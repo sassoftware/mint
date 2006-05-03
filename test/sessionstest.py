@@ -9,14 +9,15 @@ testsuite.setup()
 import time
 
 import rephelp
-from mint_rephelp import MintRepositoryHelper
+import fixtures
 
 from mint import dbversion
 from mint import sessiondb
 
-class SessionTest(MintRepositoryHelper):
-    def testClientSessions(self):
-        client, userId = self.quickMintUser('testuser', 'testpass')
+class SessionTest(fixtures.FixturedUnitTest):
+    @fixtures.fixture("Empty")
+    def testClientSessions(self, db, data):
+        client = self.getClient("test")
         sid = "dae86825ca6c4681c68e173a18417f91"
 
         sessionData = {'_created':   0,
@@ -46,9 +47,9 @@ class SessionTest(MintRepositoryHelper):
         # now emulate a thread race condition...
         client.saveSession(sid, sessionData)
         client.loadSession(sid)
-        cu = self.db.cursor()
+        cu = db.cursor()
         cu.execute("DELETE FROM Sessions")
-        self.db.commit()
+        db.commit()
 
         d = client.loadSession(sid)
         self.failIf(d, "Session data improperly survived race condition")

@@ -11,19 +11,21 @@ import shutil
 import tempfile
 import time
 
-from mint_rephelp import MintRepositoryHelper
+import fixtures
 from mint.server import PermissionDenied
 
-class ReportTest(MintRepositoryHelper):
-    def testReportList(self):
-        client, userId = self.quickMintAdmin('adminuser', 'adminpass')
+class ReportTest(fixtures.FixturedUnitTest):
+    @fixtures.fixture("Full")
+    def testReportList(self, db, data):
+        client = self.getClient("admin")
         reports = client.server.listAvailableReports()
         for rep in reports.keys():
             client.server.getReport(rep)
         self.assertRaises(PermissionDenied, client.server.getReport, '')
 
-    def testReportPdf(self):
-        client, userId = self.quickMintAdmin('adminuser', 'adminpass')
+    @fixtures.fixture("Full")
+    def testReportPdf(self, db, data):
+        client = self.getClient("admin")
         reportPdf = client.getReportPdf('new_users')
         if not reportPdf.startswith('%PDF-') or not reportPdf.endswith('%%EOF\r\n'):
             self.fail('resulting data format was not a PDF.')
@@ -32,12 +34,16 @@ class ReportTest(MintRepositoryHelper):
         if reportPdf == newReportPdf:
             self.fail("Reports were not timestamped")
 
-    def testNewUsersReport(self):
-        client, userId = self.quickMintAdmin('adminuser', 'adminpass')
+    @fixtures.fixture("Full")
+    def testNewUsersReport(self, db, data):
+        client = self.getClient("admin")
         for i in range(3):
             report = client.server.getReport('new_users')
-            assert(len(report['data']) == i+1)
-            self.quickMintUser('foouser%d' % i, 'foopass')
+            assert(len(report['data']) == i+5)
+            client.registerNewUser("foouser%d" % i, "memberpass", "Test Member",
+                                   "test@example.com", "test at example.com", "",
+                                   active=False)
+
         client.registerNewUser("member", "memberpass", "Test Member",
                                "test@example.com", "test at example.com", "",
                                active=False)
@@ -45,34 +51,33 @@ class ReportTest(MintRepositoryHelper):
         assert ([x[4] for x in report['data'] if x[0] == 'member'] \
                 == [False]), "Confirmed column of new user report misfired"
 
-    def testNewProjectsReport(self):
-        client, userId = self.quickMintAdmin('adminuser', 'adminpass')
-        projectId = client.newProject('Foo Project', 'foo', 'rpath.local')
+    @fixtures.fixture("Full")
+    def testNewProjectsReport(self, db, data):
+        client = self.getClient("admin")
         report = client.server.getReport('new_projects')
-        if report['data'][0][:3] != ['foo', 'Foo Project', 'adminuser']:
+        if report['data'][0][:3] != ['foo', 'Foo', 'owner']:
             self.fail("New Projects report returned incorrect data")
 
-    def testSiteSummary(self):
-        client, userId = self.quickMintAdmin('adminuser', 'adminpass')
-        projectId = client.newProject('Foo Project', 'foo', 'rpath.local')
-        self.quickMintUser('foouser', 'foopass')
+    @fixtures.fixture("Full")
+    def testSiteSummary(self, db, data):
+        client = self.getClient("admin")
         report = client.server.getReport('site_summary')
 
-    def testExecSummary(self):
-        client, userId = self.quickMintAdmin('adminuser', 'adminpass')
-        projectId = client.newProject('Foo Project', 'foo', 'rpath.local')
-        self.quickMintUser('foouser', 'foopass')
+    @fixtures.fixture("Full")
+    def testExecSummary(self, db, data):
+        client = self.getClient("admin")
         report = client.server.getReport('exec_summary')
 
-    def testActiveUsersReport(self):
-        adminClient, adminId = self.quickMintAdmin('adminuser', 'adminpass')
-        projectId = adminClient.newProject('Foo Project', 'foo', 'rpath.local')
-        client, userId = self.quickMintUser('foouser', 'foopass')
+    @fixtures.fixture("Full")
+    def testActiveUsersReport(self, db, data):
+        adminClient = self.getClient("admin")
+        userId = data['owner']
+        adminId = data['admin']
         report = adminClient.server.getReport('active_users')
         self.failIf(report['data'] != [],
                     "active users report should have been empty")
 
-        cu = self.db.cursor()
+        cu = db.cursor()
         cu.execute("INSERT INTO Commits (timestamp, userId) VALUES(?,?)",
                    time.time(), userId)
         cu.execute("INSERT INTO Commits (timestamp, userId) VALUES(?,?)",
@@ -80,17 +85,17 @@ class ReportTest(MintRepositoryHelper):
         cu.execute("INSERT INTO Commits (timestamp, userId) VALUES(?,?)",
                    time.time(), adminId)
 
-        self.db.commit()
+        db.commit()
 
         report = adminClient.server.getReport('active_users')
 
         self.failIf(report['data'] != \
-                    [['adminuser', 'Test User', 'test@example.com', 2],
-                     ['foouser', 'Test User', 'test@example.com', 1]],
+                    [['admin', 'A User Named admin', 'admin@example.com', 2],
+                     ['owner', 'A User Named owner', 'owner@example.com', 1]],
                     "user activity report wasn't properly computed")
 
-    def testPrecompiledReports(self):
-
+    @fixtures.fixture("Full")
+    def testPrecompiledReports(self, db, data):
         # compile a test report
         mintDir = os.path.sep.join(os.path.abspath(__file__).split(os.path.sep)[:-2])
         testDir = os.path.sep.join(os.path.abspath(__file__).split(os.path.sep)[:-1])
@@ -113,7 +118,7 @@ class RogueReport(MintReport):
             rogueReport = os.path.join(reportsPath, 'rogueReportForTesting.pyc')
             shutil.move(pycPath, rogueReport)
 
-            client, userId = self.quickMintAdmin('adminuser', 'adminpass')
+            client = self.getClient("admin")
             try:
                 from mint import reports
                 reload(reports)
