@@ -421,6 +421,46 @@ class ProjectTest(fixtures.FixturedUnitTest):
 
         self.failUnless(canMirror, "Auth user does not have mirror ACL.")
 
+    @fixtures.fixture("Full")
+    def testDemotedWrite(self, db, data):
+        client = self.getClient('developer')
+        project = client.getProject(data['projectId'])
+        self.failIf(not self.getWriteAcl(project, 'developer'),
+                    "Developer does not have write access")
+        project.addMemberByName('developer', userlevels.USER)
+        self.failIf(self.getWriteAcl(project, 'developer'),
+                    "Demoted user has write access")
+
+    @fixtures.fixture("Full")
+    def testPromotedWrite(self, db, data):
+        client = self.getClient('owner')
+        project = client.getProject(data['projectId'])
+        self.failIf(self.getWriteAcl(project, 'user'),
+                    "User has write access")
+        project.addMemberByName('user', userlevels.DEVELOPER)
+        self.failIf(not self.getWriteAcl(project, 'user'),
+                    "Promoted developer does not have write access")
+
+    @fixtures.fixture("Full")
+    def testAdminAcl(self, db, data):
+        client = self.getClient('owner')
+        project = client.getProject(data['projectId'])
+        self.failIf(self.getAdminAcl(project, 'owner') != \
+                    self.cfg.projectAdmin,
+                    "Owner admin acl does not reflect site default")
+        projectAdmin = self.cfg.projectAdmin
+        try:
+            self.cfg.projectAdmin = False
+            project.addMemberByName('user', userlevels.OWNER)
+            self.failIf(self.getAdminAcl(project, 'user') != False,
+                    "Owner has admin access")
+            self.cfg.projectAdmin = True
+            project.addMemberByName('developer', userlevels.OWNER)
+            self.failIf(self.getAdminAcl(project, 'developer') != True,
+                    "Owner does not have admin access")
+        finally:
+            self.cfg.projectAdmin = projectAdmin
+
 
 class ProjectTestConaryRepository(MintRepositoryHelper):
 
