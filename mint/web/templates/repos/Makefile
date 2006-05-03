@@ -5,13 +5,16 @@
 #
 
 kid_files =			\
+        add_group.kid           \
 	browse.kid		\
 	error.kid		\
 	files.kid		\
 	group_contents.kid	\
 	notice.kid		\
+        permission.kid          \
 	pgp_admin.kid		\
-	trove_info.kid
+	trove_info.kid          \
+        user_admin.kid
 
 python_files = __init__.py
 
