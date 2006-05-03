@@ -6,7 +6,7 @@
 import testsuite
 testsuite.setup()
 
-from mint_rephelp import MintRepositoryHelper
+import fixtures
 
 from mint import userlevels
 from mint.server import deriveBaseFunc, checkParam, typeCheck, ParameterError
@@ -20,9 +20,9 @@ SKIP_PRIVATE = ('callWrapper', 'getReleaseStatus', 'getGroupTroves',
                 'getRelease', 'getUserPublic', 'listActiveJobs', 'delMember',
                 'setReleasePublished', 'deleteRelease', 'startImageJob')
 
-class XmlInterfaceTest(MintRepositoryHelper):
-    def _getMethods(self, skipSet):
-        keys = self.mintServer.__class__.__dict__.keys()
+class XmlInterfaceTest(fixtures.FixturedUnitTest):
+    def _getMethods(self, client, skipSet):
+        keys = client.server.__class__.__dict__.keys()
         methods = []
         for funcName in keys:
             if (funcName[0] != '_') and (funcName not in skipSet):
@@ -31,16 +31,18 @@ class XmlInterfaceTest(MintRepositoryHelper):
 
     # loop through every rpc call the server offers.
     # ensure each method has a typeCheck decorator
-    def testTypeCheck(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        methods = self._getMethods(SKIP_TYPE_CHECK)
+    @fixtures.fixture("Empty")
+    def testTypeCheck(self, db, data):
+        client = self.getClient("test")
+        methods = self._getMethods(client, SKIP_TYPE_CHECK)
         for method in methods:
             try:
                 method.__args_enforced__
             except AttributeError:
                 self.fail('XML-RPC Method: %s needs a typeCheck decorator' %method.func_name)
 
-    def testCheckParam(self):
+    @fixtures.fixture("Empty")
+    def testCheckParam(self, db, data):
         # test a single value for match
         param = 1
         paramType = int
@@ -101,7 +103,8 @@ class XmlInterfaceTest(MintRepositoryHelper):
         if checkParam(param, paramType):
             self.fail("False positive for checkparam choice of container mode")
 
-    def testTypeCheckBypass(self):
+    @fixtures.fixture("Empty")
+    def testTypeCheckBypass(self, db, data):
         class dummy:
             pass
 
@@ -115,21 +118,24 @@ class XmlInterfaceTest(MintRepositoryHelper):
             self.assertRaises(ParameterError, foo, self,
                               'This is not an int')
 
-    def testPrivate(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        methods = self._getMethods(SKIP_PRIVATE)
+    @fixtures.fixture("Empty")
+    def testPrivate(self, db, data):
+        client = self.getClient("test")
+        methods = self._getMethods(client, SKIP_PRIVATE)
         for method in methods:
             try:
                 method.__private_enforced__
             except AttributeError:
                 self.fail('XML-RPC Method: %s needs a private decorator' %method.func_name)
 
-    def testBadCall(self):
+    @fixtures.fixture("Empty")
+    def testBadCall(self, db, data):
+        client = self.getClient("test")
         funcName = "someRandomFunction"
-        if self.mintServer.callWrapper(funcName, ('username, userpass'), None) != (True, ("MethodNotSupported", funcName, "")):
+        if client.server.callWrapper(funcName, ('username, userpass'), None) != (True, ("MethodNotSupported", funcName, "")):
             self.fail("xml rpc server responded to bad method call")
         funcName = '_' + funcName
-        if self.mintServer.callWrapper(funcName, ('username, userpass'), None) != (True, ("MethodNotSupported", funcName, "")):
+        if client.server.callWrapper(funcName, ('username, userpass'), None) != (True, ("MethodNotSupported", funcName, "")):
             self.fail("xml rpc server responded to hidden method call")
 
 if __name__ == "__main__":
