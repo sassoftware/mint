@@ -38,9 +38,9 @@ for dbName, count in zip(dbNames, range(len(dbNames))):
 
         cu.execute("""UPDATE Permissions SET admin=0 
             WHERE userGroupId IN 
-            SELECT userGroupId 
+            (SELECT userGroupId 
                 FROM UserGroups 
-                WHERE userGroup != 'mintauth'""")
+                WHERE userGroup != 'mintauth')""")
         reposDb.commit()
 
         cu.execute("SELECT * from Users WHERE userName='anonymous'")
