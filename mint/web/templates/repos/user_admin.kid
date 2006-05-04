@@ -53,7 +53,7 @@
             <table class="user-admin" id="groups">
                 <thead><tr><td style="width: 25%;">Group Name</td><td>Mirror</td><td>Permissions</td><td style="text-align: right;">Options</td></tr></thead>
                 <tbody>
-                    <tr py:for="i, group in [x for x in enumerate(netAuth.getGroupList()) if x[1] != self.cfg.authUser]"
+                    <tr py:for="i, group in enumerate([x for x in netAuth.getGroupList() if x != self.cfg.authUser])"
                         class="${i % 2 and 'even' or 'odd'}">
                     <?python #
                     rows = list(enumerate(netAuth.iterPermsByGroup(group)))
