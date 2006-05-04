@@ -1080,13 +1080,13 @@ class MintServer(object):
         if not self.auth.admin:
             return
         cu = self.db.cursor()
-        cu.execute("""SELECT COUNT(*)
+        cu.execute("""SELECT userId
                           FROM UserGroups
                           LEFT JOIN UserGroupMembers
                           ON UserGroups.userGroupId =
                                  UserGroupMembers.userGroupId
                           WHERE userGroup='MintAdmin'""")
-        if cu.fetchone()[0] == 1:
+        if [x[0] for x in cu.fetchall()] == [userId]:
             # userId is admin, and there is only one admin => last admin
             raise LastAdmin("There are no more admin accounts. Your request "
                             "to close your account has been rejected to "
