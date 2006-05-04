@@ -43,6 +43,12 @@
     </head>
     <body>
         <div id="layout">
+            <div id="left" class="side">
+                ${projectResourcesMenu()}
+                ${releasesMenu(project.getReleases(), isOwner)}
+                ${commitsMenu(project.getCommits())}
+            </div>
+            <div id="spanright">
             <h2>Groups</h2>
             <table class="user-admin" id="groups">
                 <thead><tr><td style="width: 25%;">Group Name</td><td>Mirror</td><td>Permissions</td><td style="text-align: right;">Options</td></tr></thead>
@@ -68,6 +74,7 @@
             <p>
                 <a href="addGroupForm">Add Group</a>
             </p>
+            </div>
         </div>
     </body>
 </html>

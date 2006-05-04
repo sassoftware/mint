@@ -12,6 +12,12 @@
     </head>
     <body>
         <div id="layout">
+            <div id="left" class="side">
+                ${projectResourcesMenu()}
+                ${releasesMenu(project.getReleases(), isOwner)}
+                ${commitsMenu(project.getCommits())}
+            </div>
+            <div id="spanright">
             <h2 py:content="modify and 'Edit Group' or 'Add Group'"></h2>
 
             <form method="post" action="${modify and 'manageGroup' or 'addGroup'}">
@@ -47,6 +53,7 @@
                     <input py:if="modify" type="submit" value="Submit Group Changes" />
                 </p>
             </form>
+            </div>
         </div>
     </body>
 </html>

@@ -25,6 +25,12 @@
     </head>
     <body>
         <div id="layout">
+            <div id="left" class="side">
+                ${projectResourcesMenu()}
+                ${releasesMenu(project.getReleases(), isOwner)}
+                ${commitsMenu(project.getCommits())}
+            </div>
+            <div id="spanright">
             <h2>${operation} Permission</h2>
             <form method="post" action="${(operation == 'Edit') and 'editPerm' or 'addPerm'}">
                 <input py:if="operation=='Edit'" name="oldlabel" value="${label}" type="hidden" />
@@ -41,7 +47,9 @@
                     </tr>
                     <tr>
                         <td id="header">Trove:</td>
-                        <td py:content="makeSelect('trove', troves, trove)"/>
+                        <td>
+                            <input type="text" name="trove" value="${trove or 'ALL'}" />
+                        </td>
                     </tr>
                     <tr>
                         <td id="header" rowspan="2">Options:</td>
@@ -57,6 +65,7 @@
                 </table>
                 <p><input type="submit" value="${operation}"/></p>
             </form>
+            </div>
         </div>
     </body>
 </html>
