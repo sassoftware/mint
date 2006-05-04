@@ -98,6 +98,7 @@ class MintConfig(ConfigFile):
 
     googleAnalyticsTracker  = (cfgtypes.CfgBool, False)
     projectAdmin            = (cfgtypes.CfgBool, True)
+    adminNewProjects        = (cfgtypes.CfgBool, False)
 
     def read(self, path, exception = False):
         ConfigFile.read(self, path, exception)
