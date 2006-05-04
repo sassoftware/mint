@@ -12,6 +12,12 @@
     </head>
     <body>
         <div id="layout">
+            <div id="left" class="side">
+                ${projectResourcesMenu()}
+                ${releasesMenu(project.getReleases(), isOwner)}
+                ${commitsMenu(project.getCommits())}
+            </div>
+            <div id="spanright">
             <h2 py:content="modify and 'Edit Group' or 'Add Group'"></h2>
 
             <form method="post" action="${modify and 'manageGroup' or 'addGroup'}">
@@ -35,7 +41,7 @@
                         </td>
                     </tr>
                     <tr>
-                        <td id="header">User can mirror:</td>
+                        <td id="header">Group can mirror:</td>
                         <td>
                             <input type="radio" name="canMirror" value="1" py:attrs="{'checked' : canMirror and 'checked' or None }"/>Yes
                             <input type="radio" name="canMirror" value="0" py:attrs="{'checked' : (not canMirror) and 'checked' or None }"/>No
@@ -47,6 +53,7 @@
                     <input py:if="modify" type="submit" value="Submit Group Changes" />
                 </p>
             </form>
+            </div>
         </div>
     </body>
 </html>
