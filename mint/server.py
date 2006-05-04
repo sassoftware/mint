@@ -645,6 +645,10 @@ class MintServer(object):
         except database.DuplicateItem:
             project.updateUserLevel(userId, level)
             repos = self._getProjectRepo(project)
+            # edit vice/drop+add is intentional to honor acl tweaks by admins
+            repos.editAcl(project.getLabel(), username, None, None, None, None,
+                         level in userlevels.WRITERS, False,
+                         self.cfg.projectAdmin and level == userlevels.OWNER)
             repos.setUserGroupCanMirror(project.getLabel(), username,
                                         int(level == userlevels.OWNER))
             return True
@@ -662,13 +666,44 @@ class MintServer(object):
             repos.addUserByMD5(project.getLabel(), username, salt, password)
             repos.addAcl(project.getLabel(), username, None, None,
                          level in userlevels.WRITERS, False,
-                         level == userlevels.OWNER)
+                         self.cfg.projectAdmin and level == userlevels.OWNER)
             repos.setUserGroupCanMirror(project.getLabel(), username,
                                         int(level == userlevels.OWNER))
 
         self._notifyUser('Added', self.getUser(userId),
                          projects.Project(self,projectId), level)
         return True
+
+    typeCheck(int, int)
+    @private
+    def projectAdmin(self, projectId, userName):
+        from conary import dbstore
+        self._filterProjectAccess(projectId)
+        project = projects.Project(self, projectId)
+        if project.external:
+            return False
+        if self.auth.admin:
+            return True
+        repositoryDB = self.projects.reposDB.getRepositoryDB(project.getFQDN())
+        db = dbstore.connect(repositoryDB[1], repositoryDB[0])
+        cu = db.cursor()
+        cu.execute("SELECT labelId FROM Labels WHERE label = 'ALL'")
+        labelId = cu.fetchone()[0]
+        cu.execute("SELECT itemId FROM Items WHERE item = 'ALL'")
+        itemId = cu.fetchone()[0]
+        # aggregate with MAX in case user is member of multiple groups
+        cu.execute("""SELECT MAX(admin)
+                          FROM Users
+                          LEFT JOIN UserGroupMembers ON Users.userId =
+                                  UserGroupMembers.userId
+                          LEFT JOIN Permissions ON Permissions.userGroupId =
+                                  UserGroupMembers.userGroupId
+                          WHERE Users.username=? AND itemId=? and labelId=?""",
+                   userName, itemId, labelId)
+        res = cu.fetchone()
+        # acl in question can be non-existent
+        db.close()
+        return res and res[0] or False
 
     @typeCheck(int, int)
     @private
@@ -1191,6 +1226,7 @@ class MintServer(object):
         return self.pkgIndex.search(terms, limit, offset)
 
     @typeCheck()
+    @requiresAdmin
     @private
     def getProjectsList(self):
         """
@@ -1883,6 +1919,15 @@ class MintServer(object):
                        jobstatus.RUNNING, 'Starting', time.time(), jobId)
             if self.req:
                 self.jobData.setDataValue(jobId, "hostname", self.req.connection.remote_ip, data.RDT_STRING)
+            cu.execute("SELECT jobId FROM Jobs WHERE status=?",
+                       jobstatus.WAITING)
+            # this is done inside the job lock. there is a small chance of race
+            # condition, but the consequence would be that jobs might not
+            # reflect the correct number on admin page. if this proves to be
+            # too costly, move it outside the lock
+            for ordJobId in [x[0] for x in cu.fetchall()]:
+                cu.execute("UPDATE Jobs SET statusMessage=? WHERE jobId=?",
+                           self.getJobWaitMessage(ordJobId), ordJobId)
 
         cu.execute("UPDATE Jobs SET owner=NULL WHERE owner=? AND status=?",
                    ownerId, jobstatus.WAITING)

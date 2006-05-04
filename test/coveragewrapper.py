@@ -102,6 +102,7 @@ def getFilesToAnnotate(baseDirs=[], filesToFind=[]):
     negFilters = ['sqlite', 'test', 'scripts']
     
 
+    baseDirs = [ os.path.realpath(x) for x in baseDirs ]
     for baseDir in baseDirs:
         for root, dirs, pathList in os.walk(baseDir):
             for path in filesToFind:

@@ -29,7 +29,7 @@ from conary import sqlite3
 from conary import versions
 from conary.callbacks import UpdateCallback, ChangesetCallback
 from conary.deps import deps
-from conary.lib import openpgpkey, util
+from conary.lib import util
 
 # NOTE: make sure that test.rpath.local and test.rpath.local2 is in your
 # system's /etc/hosts file (pointing to 127.0.0.1) before running this
@@ -107,6 +107,7 @@ class MintApacheServer(rephelp.ApacheServer):
         self.mintPath = os.environ.get("MINT_PATH", "")
 
         rephelp.ApacheServer.__init__(self, name, reposDB, contents, server, serverDir, reposDir, conaryPath, repMap, useCache, requireSigs)
+        self.needsPGPKey = False
 
         self.sslDisabled = bool(os.environ.get("MINT_TEST_NOSSL", ""))
 
@@ -174,6 +175,7 @@ class MintApacheServer(rephelp.ApacheServer):
         if os.path.exists(self.reposDir + "/repos/"):
             util.rmtree(self.reposDir + "/repos/")
         rephelp.ApacheServer.reset(self)
+        self.needsPGPKey = False
         self.mintDb.reset()
 
     def getTestDir(self):
@@ -317,10 +319,6 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
         cu.execute("DELETE FROM Confirmations WHERE userId=?", userId)
         self.db.commit()
 
-        # add this user info to client config object
-        if ('*', username, password) not in self.cfg.user:
-            self.cfg.user.append(('*', username, password))
-
         return self.openMintClient((username, password)), userId
 
     def quickMintAdmin(self, username, password, email = "test@example.com"):
@@ -349,29 +347,13 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
                    groupId, authUserId)
         self.db.commit()
 
-        # add this user info to client config object
-        if ('*', username, password) not in self.cfg.user:
-            self.cfg.user.append(('*', username, password))
-
         return client, userId
 
     def newProject(self, client, name = "Test Project",
                    hostname = "testproject",
                    domainname = MINT_PROJECT_DOMAIN):
         """Create a new mint project and return that project ID."""
-        # save the current openpgpkey cache
-        keyCache = openpgpkey.getKeyCache()
-
         projectId = client.newProject(name, hostname, domainname)
-
-        # set a default signature key
-        project = client.getProject(projectId)
-        ascKey = open(testsuite.archivePath + '/key.asc', 'r').read()
-        project.addUserKey(client.server._server.authToken[0], ascKey)
-
-        # restore the key cache
-        openpgpkey.setKeyCache(keyCache)
-
         self.cfg.buildLabel = versions.Label("%s.%s@rpl:devel" % \
                                              (hostname, domainname))
         if self.mintCfg.SSL:

@@ -8,12 +8,12 @@
         <a href="#">PGP Key Browser</a>
     </div>
 
-    <div py:def="generateOwnerListForm(fingerprint, users, userid = None)" py:strip="True">
+    <div py:def="generateOwnerListForm(fingerprint, users, username = None)" py:strip="True">
       <form action="pgpChangeOwner" method="post">
         <input type="hidden" name="key" value="${fingerprint}"/>
         <select name="owner">
-            <option py:for="userId, userName in [x for x in users.items() if x[1] not in ('anonymous', 'mintauth')]" value="${userName}"
-                    py:attrs="{'selected': (userId==userid) and 'selected' or None}"
+            <option py:for="userName in [x for x in sorted(users) if x not in ('anonymous', 'mintauth')]" value="${userName}"
+                    py:attrs="{'selected': (userName==username) and 'selected' or None}"
                     py:content="userName" />
         </select>
         <button class="img" id="pgpChangeOwner" type="submit"><img src="${cfg.staticPath}/apps/mint/images/change_owner_button.png" alt="Change Owner" /></button>
@@ -29,14 +29,14 @@
         ${brokenkey}
     </div>
 
-    <div py:def="printKeyTableEntry(keyEntry, userId)" py:strip="True">
+    <div py:def="printKeyTableEntry(keyEntry, userName)" py:strip="True">
      <tr class="key-ids">
       <td>
         <div>pub: ${breakKey(keyEntry['fingerprint'])}</div>
         <div py:for="id in keyEntry['uids']"> uid: &#160; &#160; ${id}</div>
         <div py:for="subKey in keyEntry['subKeys']">sub: ${breakKey(subKey)}</div>
       </td>
-      <td py:if="auth.admin" style="text-align: right;">${generateOwnerListForm(keyEntry['fingerprint'], users, userId)}</td>
+      <td py:if="auth.admin" style="text-align: right;">${generateOwnerListForm(keyEntry['fingerprint'], users, userName)}</td>
      </tr>
     </div>
 
@@ -58,9 +58,9 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <div py:for="userId, userName in users.items()" py:strip="True">
-                      <div py:for="keyEntry in openPgpKeys[userId]" py:strip="True">
-                          ${printKeyTableEntry(keyEntry, userId)}
+                    <div py:for="userName in sorted(users)" py:strip="True">
+                      <div py:for="keyEntry in openPgpKeys[userName]" py:strip="True">
+                          ${printKeyTableEntry(keyEntry, userName)}
                       </div>
                     </div>
                 </tbody>

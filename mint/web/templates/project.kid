@@ -11,7 +11,6 @@
             return version.trailingRevision().asString()
         else:
             return up
-
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#">
@@ -22,6 +21,7 @@
             projectUrl = project.getUrl()
             isOwner = userLevel == userlevels.OWNER or auth.admin
             isDeveloper = userLevel in userlevels.WRITERS or auth.admin
+            projectAdmin = project.projectAdmin(auth.username)
         ?>
         <img class="left" src="${cfg.staticPath}apps/mint/images/header_blue_left.png" alt="" />
         <img class="right" src="${cfg.staticPath}apps/mint/images/header_blue_right.png" alt="" />
@@ -32,6 +32,7 @@
             <li><a href="${projectUrl}../../repos/${project.getHostname()}/browse"><strong py:strip="lastchunk not in ('browse', 'troveInfo')">Repository</strong></a></li>
             <li py:if="isDeveloper"><a href="${projectUrl}groups"><strong py:strip="lastchunk not in ('groups', 'editGroup', 'editGroup2', 'newGroup', 'pickArch', 'cookGroup')">Group Builder</strong></a></li>
             <li><a href="${projectUrl}members"><strong py:strip="lastchunk != 'members'">Members</strong></a></li>
+            <li py:if="projectAdmin"><a href="${projectUrl}../../repos/${project.getHostname()}/userlist"><strong py:strip="lastchunk not in ('browse', 'troveInfo')">Groups and Permissions</strong></a></li>
             <li><a href="${projectUrl}mailingLists"><strong py:strip="lastchunk != 'mailingLists'">Mailing Lists</strong></a></li>
             <li py:if="0"><a href="#"><strong py:strip="lastchunk != 'bugs'">Bug Tracking</strong></a></li>
             <li><a href="${projectUrl}help"><strong py:strip="lastchunk != 'help'">Help</strong></a></li>

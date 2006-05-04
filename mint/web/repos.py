@@ -22,6 +22,30 @@ from conary import conaryclient
 
 
 class ConaryHandler(WebHandler, http.HttpHandler):
+    def _filterAuth(self, **kwargs):
+        memberList = kwargs.get('memberList', [])
+        if isinstance(memberList, str):
+            memberList = [memberList]
+        if self.cfg.authUser in memberList:
+            return self._write("error", shortError="Invalid User Name",
+                    error = "A user name you have selected is invalid.")
+        if kwargs.get('userGroupName', None) == self.cfg.authUser:
+            return self._write("error", shortError="Invalid Group Name",
+                    error = "The group name you are attempting to edit is invalid.")
+        return None
+
+    def manageGroup(self, **kwargs):
+        return self._filterAuth(**kwargs) or \
+               http.HttpHandler.manageGroup(self, **kwargs)
+
+    def deleteGroup(self, **kwargs):
+        return self._filterAuth(**kwargs) or \
+               http.HttpHandler.deleteGroup(self, **kwargs)
+
+    def addGroup(self, **kwargs):
+        return self._filterAuth(**kwargs) or \
+               http.HttpHandler.addGroup(self, **kwargs)
+
     def __init__(self, req, cfg, repServer = None):
         protocol = 'http'
         port = 80
@@ -140,27 +164,19 @@ class ConaryHandler(WebHandler, http.HttpHandler):
     del http.HttpHandler.chooseBranch
     del http.HttpHandler.getMetadata
     del http.HttpHandler.updateMetadata
-    del http.HttpHandler.userlist
-    del http.HttpHandler.deleteGroup
     del http.HttpHandler.deleteUser
-    del http.HttpHandler.addPermForm
-    del http.HttpHandler.addPerm
-    del http.HttpHandler.addGroupForm
-    del http.HttpHandler.manageGroupForm
-    del http.HttpHandler.manageGroup
-    del http.HttpHandler.addGroup
-    del http.HttpHandler.deletePerm
     del http.HttpHandler.addUser
     del http.HttpHandler.chPassForm
     del http.HttpHandler.chPass
-    del http.HttpHandler.editPermForm
     del http.HttpHandler.addUserForm
     del http.HttpHandler.pgpNewKeyForm
-    del http.HttpHandler.editPerm
     del http.HttpHandler.submitPGPKey
 
     allowedMethods = ('getOpenPGPKey', 'pgpAdminForm', 'pgpChangeOwner',
-                      'files', 'troveInfo', 'browse', 'getFile')
+                      'files', 'troveInfo', 'browse', 'getFile', 'userlist',
+                      'deleteGroup', 'addPermForm', 'addPerm', 'addGroupForm',
+                      'manageGroupForm', 'manageGroup', 'addGroup',
+                      'deletePerm', 'editPermForm', 'editPerm')
 
     for method in http.HttpHandler.__dict__.keys():
         if not (method.startswith('_') or method in allowedMethods):

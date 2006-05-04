@@ -13,7 +13,7 @@ else
     export MINT_PATH=$TESTDIR/_ROOT_/usr/lib/python2.4/site-packages//
 fi
 
-numtests=2
+numtests=4
 curtest=1
 desc="sqlite backend"
 
@@ -24,5 +24,15 @@ desc="mysql backend"
 curtest=$(expr $curtest + 1)
 echo "$curtest/$numtests - $desc"
 MINT_SQL=mysql ./testsuite.py "$@"
+
+desc="sqlite backend: no ssl"
+curtest=$(expr $curtest + 1)
+echo "$curtest/$numtests - $desc"
+MINT_SQL=sqlite MINT_TEST_NOSSL=1 ./testsuite.py "$@"
+
+desc="mysql backend: no ssl"
+curtest=$(expr $curtest + 1)
+echo "$curtest/$numtests - $desc"
+MINT_SQL=mysql MINT_TEST_NOSSL=1 ./testsuite.py "$@"
 
 [ -d "$TESTDIR" -a "$TESTDIR" != / ] && rm -rf "$TESTDIR"

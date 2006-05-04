@@ -1,14 +1,15 @@
 #
-# Copyright (c) 2005 rpath, Inc.
+# Copyright (c) 2005 rPath, Inc.
 #
 # All Rights Reserved
 #
 
-kid_files = project.kid jobs.kid frontPage.kid
+kid_files =			\
+	setup.kid
 
 python_files =
 
-extra_dist =
+extra_dist = Makefile
 
 dist_files = $(extra_dist) $(kid_files) $(python_files)
 
@@ -27,5 +28,5 @@ dist: default-dist
 
 clean: default-clean
 
-include ../../../Make.rules
+include ../../../../Make.rules
 # vim: set sts=8 sw=8 noexpandtab :
