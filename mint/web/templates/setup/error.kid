@@ -7,11 +7,11 @@
     All Rights Reserved
 -->
     <head>
-        <title>${formatTitle('Error')}</title>
+        <title>rBuilder Setup Error</title>
     </head>
     <body>
         <div class="layout">
-            <p class="message">${error}</p>
+            <p class="message">${XML(error)}</p>
         </div>
     </body>
 </html>

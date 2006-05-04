@@ -12,7 +12,7 @@ from conary.lib.cfg import *
 -->
 
     <head>
-        <title>${formatTitle('rBuilder Configuration')}</title>
+        <title>rBuilder Configuration</title>
     </head>
     <body>
         <div class="layout">

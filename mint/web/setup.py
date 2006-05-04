@@ -57,7 +57,7 @@ class SetupHandler(WebHandler):
 
     def setup(self, auth):
         if '.' not in self.req.hostname:
-            return self._write("error", error = "You must access the rBuilder server as a fully-qualified domain name:"
+            return self._write("setup/error", error = "You must access the rBuilder server as a fully-qualified domain name:"
                                                 " eg., <strong>http://rbuilder.example.com/</strong>, not just <strong>http://rbuilder/</strong>")
 
         self.cfg.hostName = self.req.hostname.split(".")[0]
