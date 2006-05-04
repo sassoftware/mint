@@ -289,7 +289,7 @@ class InstallableIso(ImageGenerator):
                 raise RuntimeError, "ISO generation failed"
             else:
                 cmd = [self.isocfg.implantIsoMd5]
-                if showMediaCheck:
+                if not showMediaCheck:
                     cmd.append('--supported-iso')
                 cmd.append(iso)
                 call(*cmd)
