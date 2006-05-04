@@ -216,9 +216,6 @@ def injectVersion(version):
             </form>
             </p>
         </div>
-        <div py:if="auth.authorized">
-            Silly web programmer. logins are for anonymous users.
-        </div>
     </div>
 
     <div py:def="resourcePane()" py:strip="True">
