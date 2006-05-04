@@ -667,6 +667,7 @@ class MintServer(object):
     typeCheck(int, int)
     @private
     def projectAdmin(self, projectId, userName):
+        """Check for admin ACL in a given project repo."""
         from conary import dbstore
         self._filterProjectAccess(projectId)
         project = projects.Project(self, projectId)
@@ -677,10 +678,8 @@ class MintServer(object):
         repositoryDB = self.projects.reposDB.getRepositoryDB(project.getFQDN())
         db = dbstore.connect(repositoryDB[1], repositoryDB[0])
         cu = db.cursor()
-        cu.execute("SELECT labelId FROM Labels WHERE label = 'ALL'")
-        labelId = cu.fetchone()[0]
-        cu.execute("SELECT itemId FROM Items WHERE item = 'ALL'")
-        itemId = cu.fetchone()[0]
+        # id's guaranteed by schema definition.
+        labelId = itemId = 0
         # aggregate with MAX in case user is member of multiple groups
         cu.execute("""SELECT MAX(admin)
                           FROM Users
