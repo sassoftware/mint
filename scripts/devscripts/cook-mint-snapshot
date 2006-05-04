@@ -1,0 +1,17 @@
+#!/bin/sh
+set -x
+function carp {
+    nail -s 'Mint Snapshot Build Failed' tgerla@rpath.com << EOT
+The rBuilder appliance build failed:
+
+$(tail -n 30 /tmp/create-test-rba.log)
+EOT
+exit
+}
+
+RBATEST=/srv/mint/code/rba/
+
+pushd $RBATEST/mint/
+cvc cook mint >& /tmp/create-test-rba.log
+if [ $? != 0 ]; then carp; fi
+popd
