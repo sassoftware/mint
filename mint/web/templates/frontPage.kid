@@ -48,7 +48,7 @@ from mint.client import upstream
             </div>
         </div>
 
-        <div id="topten">
+        <div py:if="popularProjects or activeProjects or releases" id="topten">
             <div class="cssbox">
             <div class="cssbox_head"><h2>&nbsp;</h2></div>
             <div class="cssbox_body">
