@@ -17,9 +17,6 @@
             </div>
 
             <div id="spanleft">
-                <h2 py:if="errors">Project Details Error${len(errors) > 1 and 's' or ''}</h2>
-                <p py:for="error in errors" class="errormessage" py:content="error"/>
-
                 <h2>Edit Project Properties</h2>
                 <form method="post" action="${basePath}processEditProject">
                     <table border="0" cellspacing="0" cellpadding="0" class="mainformhorizontal">

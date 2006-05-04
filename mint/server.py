@@ -409,6 +409,16 @@ class MintServer(object):
         if self.auth.userId not in [x[0] for x in members]:
             raise PermissionDenied
 
+    def _isUserAdmin(self, userId):
+        mintAdminId = self.userGroups.getMintAdminId()
+        try:
+            if mintAdminId in self.userGroupMembers.getGroupsForUser(userId):
+                return True
+        except database.ItemNotFound:
+            pass
+
+        return False
+
     # project methods
     @typeCheck(str, str, str, str, str)
     @requiresAuth
@@ -1030,7 +1040,7 @@ class MintServer(object):
     def filterLastAdmin(self, userId):
         """Raises an exception if the last site admin attempts to cancel their
         account, to protect against not having any admins at all."""
-        if not self.auth.admin:
+        if not self._isUserAdmin(userId):
             return
         cu = self.db.cursor()
         cu.execute("""SELECT COUNT(*)
@@ -1085,6 +1095,12 @@ class MintServer(object):
         else:
             self.db.commit()
         return True
+
+    @typeCheck(int)
+    @requiresAdmin
+    @private
+    def isUserAdmin(self, userId):
+        return self._isUserAdmin(userId)
 
     @typeCheck(str)
     @private
@@ -1229,11 +1245,8 @@ class MintServer(object):
         @param userId: the userId to promote
         """
         mintAdminId = self.userGroups.getMintAdminId()
-        try:
-            if mintAdminId in self.userGroupMembers.getGroupsForUser(userId):
-                raise UserAlreadyAdmin
-        except database.ItemNotFound:
-            pass
+        if self._isUserAdmin(userId):
+            raise UserAlreadyAdmin
 
         cu = self.db.cursor()
         cu.execute('INSERT INTO UserGroupMembers VALUES(?, ?)',

@@ -21,8 +21,6 @@
                 ${stepsWidget(['Get Started', 'Sign Up', 'Confirm Email'], 1)}
             </div>
             <div id="spanleft">
-                <h2 py:if="errors">Account Creation Error${len(errors) > 1 and 's' or ''}</h2>
-                <p py:for="error in errors" class="errormessage" py:content="error"/>
                 <h2>Create an Account</h2>
                 <p>
                   Please read the ${legal('%slegal?page=tos' % cfg.basePath, 'Terms of Service')} before you create a new

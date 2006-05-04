@@ -66,6 +66,8 @@ class WebHandler(object):
                               isOwner = self.isOwner,
                               groupTrove = self.groupTrove,
                               groupProject = self.groupProject,
+                              infoMsg = self.infoMsg,
+                              errorMsgList = self.errorMsgList,
                               output = self.output,
                               **values)
 
@@ -201,6 +203,35 @@ class WebHandler(object):
                 break
         return nexthop
 
+    # Methods used to stash away info/error messages into the session.
+    # These variables are retrieved and deleted automatically by 
+    # mint/web/app.py when building the context for handling a request.
+    #
+    # NOTE: This requires a *real* persistent session to work properly.
+    # Currently, rBO only doles out a real session if a user is logged in.
+
+    def _setInfo(self, message):
+        self.session['infoMsg'] = message
+        if (isinstance(self.session, SqlSession)):
+            self.session.save()
+
+    def _getErrors(self):
+        return self.session.setdefault('errorMsgList', [])
+
+    def _addErrors(self, message):
+        errorMsgList = self._getErrors()
+        errorMsgList.append(message)
+        self.session['errorMsgList'] = errorMsgList
+        if (isinstance(self.session, SqlSession)):
+            self.session.save()
+
+    def _clearAllMessages(self):
+        if (isinstance(self.session, SqlSession)):
+            if self.session.has_key('infoMsg'):
+                del self.session['infoMsg']
+            if self.session.has_key('errorMsgList'):
+                del self.session['errorMsgList']
+            self.session.save()
 
 def normPath(path):
     """Normalize a web path by prepending a / if missing, and appending

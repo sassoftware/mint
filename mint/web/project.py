@@ -178,27 +178,26 @@ class ProjectHandler(WebHandler):
     def newGroup(self, auth):
         troves, troveDict, metadata = self._getBasicTroves()
 
-        return self._write("newGroup", errors = [], kwargs = {},
+        return self._write("newGroup", kwargs = {},
                            troves = troves, troveDict = troveDict,
                            metadata = metadata)
 
     @strFields(groupName = "", version = "", description = "")
     @listFields(str, initialTrove = [])
     def createGroup(self, auth, groupName, version, description, initialTrove):
-        errors = []
         fullGroupName = "group-" + groupName
 
         # validate version
         try:
             versions.Revision(version + "-1-1")
         except versions.ParseError, e:
-            errors.append("Error parsing version string: %s" % version)
+            self._addErrors("Error parsing version string: %s" % version)
 
         # validate group name
         if not re.match("group-[a-zA-Z0-9\-_]+$", fullGroupName):
-            errors.append("Invalid group trove name: %s" % fullGroupName)
+            self._addErrors("Invalid group trove name: %s" % fullGroupName)
 
-        if not errors:
+        if not self._getErrors():
             # do stuff
             gt = self.client.createGroupTrove(self.project.getId(), fullGroupName,
                 version, description, True)
@@ -212,7 +211,7 @@ class ProjectHandler(WebHandler):
             kwargs = {'groupName': groupName, 'version': version}
             troves, troveDict, metadata = self._getBasicTroves()
 
-            return self._write("newGroup", errors = errors, kwargs = kwargs,
+            return self._write("newGroup", kwargs = kwargs,
                 troves = troves, troveDict = troveDict, metadata = metadata)
 
     @intFields(id = None)
@@ -541,22 +540,21 @@ class ProjectHandler(WebHandler):
             'desc': self.project.getDesc(),
             'branch': self.project.getLabel().split('@')[1],
         }
-        return self._write("editProject", errors = [], kwargs = kwargs)
+        return self._write("editProject", kwargs = kwargs)
 
     @strFields(projecturl = '', desc = '', name = '', branch = '')
     @ownerOnly
     def processEditProject(self, auth, projecturl, desc, name, branch):
-        errors = []
         if not name:
-            errors.append("You must supply a project title")
+            self._addErrors("You must supply a project title")
         try:
             host = versions.Label(self.project.getLabel()).getHost()
             label = host + '@' + branch
             versions.Label(label)
         except versions.ParseError:
-            errors.append("Invalid branch name.")
+            self._addErrors("Invalid branch name")
 
-        if not errors:
+        if not self._getErrors():
             try:
                 self.project.editProject(projecturl, desc, name)
 
@@ -568,13 +566,14 @@ class ProjectHandler(WebHandler):
                     oldLabel, oldUrl, oldUser, oldPass = self.client.server.getLabel(labelId)
                     self.project.editLabel(labelId, label, oldUrl, oldUser, oldPass)
             except database.DuplicateItem:
-                errors.append("Project title conflicts with another project.")
+                self._addErrors("Project title conflicts with another project")
 
-        if errors:
+        if self._getErrors():
             kwargs = {'projecturl': projecturl, 'desc': desc, 'name': name,
                 'branch': self.project.getLabel().split('@')[1]}
-            return self._write("editProject", kwargs = kwargs, errors = errors)
+            return self._write("editProject", kwargs = kwargs)
         else:
+            self._setInfo("Updated project %s" % name)
             self._predirect()
 
     def members(self, auth):
@@ -590,6 +589,7 @@ class ProjectHandler(WebHandler):
     @requiresAuth
     def adopt(self, auth):
         self.project.adopt(auth, self.cfg.EnableMailLists, self.cfg.MailListBaseURL, self.cfg.MailListPass)
+        self._setInfo("You have successfully adopted %s" % self.project.getNameForDisplay())
         self._predirect("members")
 
     @strFields(username = None)
@@ -597,6 +597,7 @@ class ProjectHandler(WebHandler):
     @ownerOnly
     def addMember(self, auth, username, level):
         self.project.addMemberByName(username, level)
+        self._setInfo("User %s has been added to %s" % (username, self.project.getNameForDisplay()))
         self._predirect("members")
 
     @requiresAuth
@@ -604,12 +605,14 @@ class ProjectHandler(WebHandler):
         #some kind of check to make sure the user's not a member
         if self.userLevel == userlevels.NONMEMBER:
             self.project.addMemberByName(auth.username, userlevels.USER)
+            self._setInfo("You have are now watching %s" % self.project.getNameForDisplay())
         self._predirect("members")
 
     @requiresAuth
     def unwatch(self, auth):
         if self.userLevel == userlevels.USER:
             self.project.delMemberById(auth.userId)
+            self._setInfo("You have are no longer watching %s" % self.project.getNameForDisplay())
         self._predirect("members")
 
     @strFields(comments = '')
@@ -620,30 +623,39 @@ class ProjectHandler(WebHandler):
         userId = auth.userId
         if(keepReq):
             self.client.setJoinReqComments(projectId, comments)
+            self._setInfo("Join request for %s has been submitted" % self.project.getNameForDisplay())
         else:
             self.client.deleteJoinRequest(projectId, userId)
+            self._setInfo("Your join request for %s has been deleted" % self.project.getNameForDisplay())
         self._predirect("members")
 
     @requiresAuth
     @intFields(userId = None)
     def viewJoinRequest(self, auth, userId):
         user = self.client.getUser(userId)
-        return self._write('viewJoinRequest', userId = userId, username = user.getUsername(),
-            projectId = self.project.getId(), comments = self.client.getJoinReqComments(self.project.getId(), userId))
+        return self._write('viewJoinRequest', userId = userId,
+               username = user.getUsername(),
+               projectId = self.project.getId(),
+               comments = self.client.getJoinReqComments(self.project.getId(),
+                   userId))
 
     @requiresAuth
     @intFields(makeOwner = False, makeDevel = False, reject = False, userId = None)
     def acceptJoinRequest(self, auth, userId, makeOwner, makeDevel, reject):
         projectId = self.project.getId()
         user = self.client.getUser(userId)
-        if reject:
-            return self._write('rejectJoinRequest', userId = userId, username = user.getUsername())
-        user = self.client.getUser(userId)
         username = user.getUsername()
+        if reject:
+            return self._write('rejectJoinRequest', userId = userId,
+                    username = user.getUsername())
         if (makeOwner):
             self.project.addMemberByName(username, userlevels.OWNER)
+            self._setInfo("User %s has been added as an owner to %s" % \
+                    (username, self.project.getNameForDisplay()))
         elif (makeDevel):
             self.project.addMemberByName(username, userlevels.DEVELOPER)
+            self._setInfo("User %s has been added as a developer to %s" % \
+                    (username, self.project.getNameForDisplay()))
         self._predirect("members")
 
     @requiresAuth
@@ -662,6 +674,9 @@ class ProjectHandler(WebHandler):
             user = self.client.getUser(userId)
             sendMailWithChecks(self.cfg.adminMail, self.cfg.productName, user.getEmail(), subject, body)
         self.client.deleteJoinRequest(self.project.getId(), userId)
+        self._setInfo("Join request for user %s has been rejected " \
+                "for project %s" % (user.getUsername(), \
+                self.project.getNameForDisplay()))
         self._predirect("members")
 
     @requiresAuth
@@ -671,42 +686,57 @@ class ProjectHandler(WebHandler):
     @intFields(userId = None, level = None)
     @ownerOnly
     def editMember(self, auth, userId, level):
+        user = self.client.getUser(userId)
         self.project.updateUserLevel(userId, level)
+        self._setInfo("User %s has been updated for project %s" % \
+                (user.getUsername(), self.project.getNameForDisplay()))
         self._predirect("members")
 
     @intFields(userId = None)
     @ownerOnly
     def promoteMember(self, auth, userId):
         #USERS and DEVELOPERS can be promoted (see below)
+        user = self.client.getUser(userId)
         userDict = getUserDict(self.project.getMembers())
         for level in [userlevels.DEVELOPER, userlevels.USER]:
             for user in userDict[level]:
-                if user[0] == userId:
+                if u[0] == userId:
                     levelidx = userlevels.LEVELS.index(level)
                     self.project.updateUserLevel(userId, userlevels.LEVELS[levelidx - 1])
+                    self._setInfo("User %s promoted" % user.getUsername())
                     self._predirect("members")
+        self._addErrors("User %s not a member of project %s" % \
+                (user.getUsername(), self.project.getNameForDisplay()))
         self._predirect("members")
 
     @intFields(userId = None)
     @ownerOnly
     def demoteMember(self, auth, userId):
         #But only owners may be demoted.  Developers must be deleted. (see above)
+        user = self.client.getUser(userId)
         userDict = getUserDict(self.project.getMembers())
         for level in [userlevels.OWNER]:
-            for user in userDict[level]:
-                if user[0] == userId:
+            for u in userDict[level]:
+                if u[0] == userId:
                     levelidx = userlevels.LEVELS.index(level)
                     self.project.updateUserLevel(userId, userlevels.LEVELS[levelidx + 1])
+                    self._setInfo("User %s demoted" % user.getUsername())
                     self._predirect("members")
-
+        self._addErrors("User %s not a member of project %s" % \
+                (user.getUsername(), self.project.getNameForDisplay()))
         self._predirect("members")
 
     @intFields(id = None)
     @ownerOnly
     def delMember(self, auth, id):
+        user = self.client.getUser(id)
         self.project.delMemberById(id)
+        msg = "User %s deleted from project %s" % \
+                (user.getName(), self.project.getNameForDisplay())
         if self.project.getMembers() == []:
             self.project.orphan(self.cfg.EnableMailLists, self.cfg.MailListBaseURL, self.cfg.MailListPass)
+            msg += " (project has been orphaned)"
+        self._setInfo(msg)
         self._predirect("members")
 
     @requiresAuth
@@ -715,6 +745,8 @@ class ProjectHandler(WebHandler):
     def resign(self, auth, confirmed, **yesArgs):
         if confirmed:
             self.project.delMemberById(auth.userId)
+            self._setInfo("You have resigned from project %s" % \
+                    self.project.getNameForDisplay())
             self._redirect('http://%s%s' % (self.cfg.siteHost, self.cfg.basePath))
         else:
             return self._write("confirm", message = "Are you sure you want to resign from this project?",

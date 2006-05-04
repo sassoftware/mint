@@ -122,7 +122,7 @@ class SiteHandler(WebHandler):
                       'blurb': blurb,
                       'tos': tos,
                       'privacy': privacy}
-            return self._write("register", errors=errors, kwargs = kwargs)
+            return self._write("register", errors = errors, kwargs = kwargs)
 
     def registerComplete(self, auth):
         self.toUrl = self.cfg.basePath
@@ -312,7 +312,7 @@ class SiteHandler(WebHandler):
     @strFields(keydata = '')
     def uploadKey(self, auth, projects, keydata):
         if self.projectList:
-            return self._write("uploadKey", errors=[], kwargs={})
+            return self._write("uploadKey", kwargs={})
         else:
             return self._write("error", shortError="Not a project member",
                 error = "You may not upload a key as you are not a member of any projects. "
@@ -328,8 +328,10 @@ class SiteHandler(WebHandler):
                 try:
                     project.addUserKey(auth.username, keydata)
                 except Exception, e:
-                    return self._write("uploadKey", errors = ['Error uploading key: %s' % str(e)],
+                    self._addError('Error uploading key: %s' % str(e))
+                    return self._write("uploadKey",
                             kwargs={'projects': projects, 'keydata': keydata})
+        self._setInfo("Added key to project %s" % project.getNameForDisplay())
         self._redirect("http://%s%s" % (self.cfg.siteHost, self.cfg.basePath))
 
     @requiresAuth
@@ -364,18 +366,17 @@ class SiteHandler(WebHandler):
     @requiresAuth
     def createProject(self, auth, title, hostname, domainname, projecturl, blurb, optlists):
         hostname = hostname.lower()
-        errors = []
         if not title:
-            errors.append("You must supply a project title")
+            self._addErrors("You must supply a project title")
         if not hostname:
-            errors.append("You must supply a project hostname")
-        if not errors:
+            self._addErrors("You must supply a project hostname")
+        if not self._getErrors():
             try:
                 # attempt to create the project
                 projectId = self.client.newProject(title, hostname,
                     domainname, projecturl, blurb)
                 # now create the mailing lists
-                if self.cfg.EnableMailLists and not errors:
+                if self.cfg.EnableMailLists and not self._getErrors():
                     if not self._createProjectLists(auth=auth,
                                                     projectName=hostname,
                                                     optlists=optlists):
@@ -383,16 +384,17 @@ class SiteHandler(WebHandler):
             except mailinglists.MailingListException:
                 raise
             except projects.DuplicateHostname, e:
-                errors.append(str(e))
+                self._addErrors(str(e))
             except projects.DuplicateName, e:
-                errors.append(str(e))
+                self._addErrors(str(e))
             except mint_error.MintError, e:
-                errors.append(str(e))
-        if not errors:
+                self._addErrors(str(e))
+        if not self._getErrors():
+            self._setInfo("Project %s successfully created" % title)
             self._redirect("http://%s%sproject/%s/" % (self.cfg.projectSiteHost, self.cfg.basePath, hostname))
         else:
             kwargs = {'title': title, 'hostname': hostname, 'domainname': domainname, 'projecturl': projecturl, 'blurb': blurb, 'optlists': optlists}
-            return self._write("newProject", errors=errors, kwargs=kwargs)
+            return self._write("newProject", kwargs=kwargs)
 
     @intFields(userId = None, projectId = None, level = None)
     def addMemberById(self, auth, userId, projectId, level):
@@ -404,10 +406,11 @@ class SiteHandler(WebHandler):
         project.addMemberById(userId, level)
         self._redirect("http://%s%sproject/%s" % (self.cfg.projectSiteHost, self.cfg.basePath, project.getHostname()))
 
-    @intFields(id = None)
     @requiresAuth
+    @intFields(id = None)
     def userInfo(self, auth, id):
         user = self.client.getUser(id)
+        userIsAdmin = self.client.isUserAdmin(id)
         if user.active or auth.admin:
             userProjects = []
             if auth.userId == id:
@@ -421,7 +424,7 @@ class SiteHandler(WebHandler):
                             #not a member the project
                             continue
                     userProjects.append(x)
-            return self._write("userInfo", user = user, userProjects = userProjects)
+            return self._write("userInfo", user = user, userProjects = userProjects, userIsAdmin = userIsAdmin)
         else:
             raise database.ItemNotFound('userid')
 
@@ -562,6 +565,67 @@ class SiteHandler(WebHandler):
             raise HttpNotFound
 
         return self._writeRss(items = items, title = title, link = link, desc = desc)
+
+    @intFields(userId = None)
+    @strFields(operation = None)
+    @requiresAdmin
+    def processUserAction(self, auth, userId, operation):
+
+        user = self.client.getUser(userId)
+        deletedUser = False
+
+        if operation == "user_reset_password":
+            self._resetPasswordById(userId)
+            self._setInfo("Password successfully reset for user %s." % \
+                    user.username)
+        elif operation == "user_cancel":
+            if userId == self.auth.userId:
+                self._addErrors("You cannot close your account from this interface.")
+            else:
+                self.client.removeUserAccount(userId)
+                self._setInfo("Account deleted for user %s." % user.username)
+                deletedUser = True
+
+        elif operation == "user_promote_admin":
+            self.client.promoteUserToAdmin(userId)
+            self._setInfo("Promoted %s to administrator." % user.username)
+        elif operation == "user_demote_admin":
+            self.client.demoteUserFromAdmin(userId)
+            self._setInfo("Revoked administrative privileges for %s." % \
+                    user.username)
+        else:
+            self._addErrors("Please select a valid user adminstration action from the menu.")
+
+        if deletedUser:
+            return self._redirect("http://%s%s" % (self.cfg.siteHost, \
+                    self.cfg.basePath))
+        else:
+            return self._redirect("http://%s%suserInfo?id=%d" %
+                    (self.cfg.siteHost, self.cfg.basePath, userId))
+
+    @requiresAdmin
+    @intFields(projectId = None)
+    @strFields(operation = None)
+    def processProjectAction(self, projectId, operation, *args, **kwargs):
+        project = self.client.getProject(projectId)
+        if operation == "project_toggle_hide":
+            if project.hidden:
+                self.client.unhideProject(projectId)
+                kwargs['extraMsg'] = "Project is now visible"
+            else:
+                self.client.hideProject(projectId)
+                kwargs['extraMsg'] = "Project is now hidden"
+        elif operation == "project_toggle_disable":
+            if project.disabled:
+                self.client.enableProject(projectId)
+                kwargs['extraMsg'] = "Project enabled"
+            else:
+                self.client.disableProject(projectId)
+                kwargs['extraMsg'] = "Project disabled"
+        else:
+            raise HttpNotFound
+
+        return self.projects(*args, **kwargs)
 
 def legalDocument(page):
     templatePath = os.path.join(os.path.split(__file__)[0], 'templates/docs')

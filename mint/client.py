@@ -183,6 +183,14 @@ class MintClient:
         """
         return self.server.removeUserAccount(userId)
 
+    def isUserAdmin(self, userId):
+        """
+        Checks to see if a given user has administrative privileges.
+        @param userId: the userId to check
+        @return: True if the user whose id is userId is an admin
+        """
+        return self.server.isUserAdmin(userId)
+
     def getUserIdByName(self, username):
         """
         Fetch user id by username
@@ -587,9 +595,12 @@ def upstream(version):
 def flavorWrap(f):
     return str(f).replace(",", ", ")
 
-def timeDelta(t, currentTime=0):
+def timeDelta(t, currentTime=0, capitalized=True):
     if not t:
-        return "Never"
+        if capitalized:
+            return "Never"
+        else:
+            return "never"
     curTime = currentTime
     if not currentTime:
 	 curTime = time.time()
@@ -600,7 +611,10 @@ def timeDelta(t, currentTime=0):
         if delta < 3600:
             if delta < 60:
                 if not delta:
-                    return "This very second"
+                    if capitalized:
+                        return "This very second"
+                    else:
+                        return "this very second"
                 r = str(delta) + " second"
                 if (delta) != 1:
                     r +="s"
@@ -615,7 +629,10 @@ def timeDelta(t, currentTime=0):
                 r +="s"
             return r + " ago"
     if days == 1:
-        return 'Yesterday'
+        if capitalized:
+            return 'Yesterday'
+        else:
+            return 'yesterday'
     if days > 1 and days < 28:
         return '%d days ago' % days
     return time.strftime('%d-%b-%Y', time.localtime(t))

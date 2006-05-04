@@ -777,3 +777,21 @@ img#nameSpinner, img#archSpinner {
     font-size: xx-small;
     color: #c0c0c0 !important;
 }
+
+.status {
+    margin-bottom: 1.25em;
+    padding: 1em 1em 1em 2.75em;
+    text-align: left;
+    font-weight: bold;
+    font-size: smaller;
+    border: 1px solid black;
+}
+
+#info {
+    background: #ffc url(../images/icon_accept.gif) no-repeat 1em 1em;
+}
+
+#errors {
+    background: #ffc url(../images/action_stop.gif) no-repeat 1em 1em;
+}
+

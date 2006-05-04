@@ -161,6 +161,7 @@ class MintApp(WebHandler):
             output = self._write("error", shortError = "Bad Parameter", error = str(e))
 
         self.req.write(output)
+        self._clearAllMessages()
         return apache.OK
 
     def _getHandler(self, pathInfo):
@@ -224,6 +225,10 @@ class MintApp(WebHandler):
             self.groupTrove = None
             self.groupProject = None
 
+        # Handle messages stashed in the session
+        self.infoMsg = self.session.setdefault('infoMsg', "")
+        self.errorMsgList = self._getErrors()
+
         # a set of information to be passed into the next handler
         context = {
             'auth':             self.auth,
@@ -245,7 +250,9 @@ class MintApp(WebHandler):
             'isOwner':          self.isOwner,
             'groupTrove':       self.groupTrove,
             'groupProject':     self.groupProject,
-            'output':           self.output,
+            'infoMsg':          self.infoMsg,
+            'errorMsgList':     self.errorMsgList,
+            'output':           self.output
         }
 
         if self.auth.stagnant and ''.join(pathInfo.split('/')) not in ['editUserSettings','confirm','logout','continueLogout']:

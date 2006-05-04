@@ -16,8 +16,6 @@
     </head>
     <body>
         <div class="layout">
-            <h2 py:if="errors">Project Creation Error${len(errors) > 1 and 's' or ''}</h2>
-            <p py:for="error in errors" class="errormessage" py:content="error"/>
             <h2>Create a Project</h2>
             <p>Fields labeled with a <em class="required">red arrow</em> are required.</p>
             <form method="post" action="createProject" >
