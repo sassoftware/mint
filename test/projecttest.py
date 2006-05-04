@@ -461,6 +461,20 @@ class ProjectTest(fixtures.FixturedUnitTest):
         finally:
             self.cfg.projectAdmin = projectAdmin
 
+    @fixtures.fixture("Empty")
+    def testAdminNewProject(self, db, data):
+        client = self.getClient('test')
+        adminNewProjects = self.cfg.adminNewProjects
+        try:
+            self.cfg.adminNewProjects = False
+            # ensure no errors
+            client.newProject('Test', 'test', 'rpath.local')
+            self.cfg.adminNewProjects = True
+            self.assertRaises(PermissionDenied,
+                              client.newProject, 'Test', 'test', 'rpath.local')
+        finally:
+            self.cfg.adminNewProjects = adminNewProjects
+
 
 class ProjectTestConaryRepository(MintRepositoryHelper):
 
