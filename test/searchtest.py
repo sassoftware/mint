@@ -91,12 +91,17 @@ class BrowseTest(MintRepositoryHelper):
 
         sortOrderDict = self._sortOrderDict()
         for sortOrder in range(10):
+            # For admins, all projects should be returned
             results, count = client.getProjects(sortOrder, 30, 0)
+            if count != 5:
+                self.fail('getProjects returned the wrong project count (admin).')
+            # For non-admins, hidden/fledglings should be ignored
+            results, count = client2.getProjects(sortOrder, 30, 0)
             if count != 4:
                 self.fail('getProjects returned the wrong project count.')
             if [x[1] for x in results] != sortOrderDict[sortOrder]:
                 self.fail("sort problem during sort: %s. expected %s, but got %s"% (ordersql[sortOrder], sortOrderDict[sortOrder],[x[1] for x in results]))
-        if client.getProjectsList() != [(4, 0, 0, 'bal - Bal'), (2, 0, 0, 'bar - Bar'), (3, 0, 0, 'baz - Baz'), (5, 0, 0, 'biz - Biz'), (1, 0, 0, 'foo - Foo')]:
+        if client.getProjectsList() != [(4, 0, 'bal - Bal'), (2, 0, 'bar - Bar'), (3, 0, 'baz - Baz'), (5, 0, 'biz - Biz'), (1, 0, 'foo - Foo')]:
             self.fail("getProjectsList did not return alphabetical results")
 
     def testFledgling(self):
@@ -195,7 +200,8 @@ class BrowseTest(MintRepositoryHelper):
         client3, userId3 = self.quickMintUser("testuser3", "testpass")
         client4, userId4 = self.quickMintUser("testuser4", "testpass")
         assert(len(client.getUserSearchResults('test')[0]) == 4)
-        assert(client.getUserSearchResults('er3') == ([[3, 'testuser3', 'Test User', 'test at example.com', '', 0]], 1))
+        # XXX we do this because search results now returns timestamps
+        assert(client.getUserSearchResults('er3')[0][0][0:4] == [3, 'testuser3', 'Test User', 'test at example.com'])
         assert(client.getUserSearchResults('Sir Not Appearing In This Film') == ([], 0) )
 
     def testSearchPackages(self):

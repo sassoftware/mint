@@ -662,6 +662,7 @@ class ProjectHandler(WebHandler):
     @intFields(userId = None)
     @strFields(comments = '')
     def processJoinRejection(self, auth, userId, comments):
+        user = self.client.getUser(userId)
         if self.cfg.sendNotificationEmails:
             subject = "Membership Rejection Notice"
             body = "Your request to join the following project on %s:\n\n" % self.cfg.productName
@@ -671,7 +672,6 @@ class ProjectHandler(WebHandler):
                 body += "Owner's comments:\n%s" % comments
             else:
                 body += "The owner did not provide a reason for this rejection.\n"
-            user = self.client.getUser(userId)
             sendMailWithChecks(self.cfg.adminMail, self.cfg.productName, user.getEmail(), subject, body)
         self.client.deleteJoinRequest(self.project.getId(), userId)
         self._setInfo("Join request for user %s has been rejected " \
