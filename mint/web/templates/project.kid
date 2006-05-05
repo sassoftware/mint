@@ -27,15 +27,15 @@
         <img class="right" src="${cfg.staticPath}apps/mint/images/header_blue_right.png" alt="" />
         <div class="boxHeader">Project Resources</div>
         <ul>
-            <li><a href="$projectUrl"><strong py:strip="lastchunk != ''">Project Home</strong></a></li>
-            <li><a href="${projectUrl}releases"><strong py:strip="lastchunk not in ('release', 'releases', 'newRelease', 'editRelease')">Releases</strong></a></li>
-            <li><a href="${projectUrl}../../repos/${project.getHostname()}/browse"><strong py:strip="lastchunk not in ('browse', 'troveInfo')">Repository</strong></a></li>
-            <li py:if="isDeveloper"><a href="${projectUrl}groups"><strong py:strip="lastchunk not in ('groups', 'editGroup', 'editGroup2', 'newGroup', 'pickArch', 'cookGroup')">Group Builder</strong></a></li>
-            <li><a href="${projectUrl}members"><strong py:strip="lastchunk != 'members'">Members</strong></a></li>
-            <li py:if="projectAdmin"><a href="${projectUrl}../../repos/${project.getHostname()}/userlist"><strong py:strip="lastchunk not in ('browse', 'troveInfo')">Groups and Permissions</strong></a></li>
-            <li><a href="${projectUrl}mailingLists"><strong py:strip="lastchunk != 'mailingLists'">Mailing Lists</strong></a></li>
-            <li py:if="0"><a href="#"><strong py:strip="lastchunk != 'bugs'">Bug Tracking</strong></a></li>
-            <li><a href="${projectUrl}help"><strong py:strip="lastchunk != 'help'">Help</strong></a></li>
+            <li py:attrs="{'class': (lastchunk == '') and 'selectedItem' or None}"><a href="$projectUrl">Project Home</a></li>
+            <li py:attrs="{'class': (lastchunk in ('release', 'releases', 'newRelease', 'editRelease')) and 'selectedItem' or None}"><a href="${projectUrl}releases">Releases</a></li>
+            <li py:attrs="{'class': (lastchunk in ('browse', 'troveInfo')) and 'selectedItem' or None}"><a href="${projectUrl}../../repos/${project.getHostname()}/browse">Repository</a></li>
+            <li py:if="isDeveloper" py:attrs="{'class': (lastchunk in ('groups', 'editGroup', 'editGroup2', 'newGroup', 'pickArch', 'cookGroup')) and 'selectedItem' or None}"><a href="${projectUrl}groups">Group Builder</a></li>
+            <li py:attrs="{'class': (lastchunk == 'members') and 'selectedItem' or None}"><a href="${projectUrl}members">Members</a></li>
+            <li py:if="projectAdmin" py:attrs="{'class': (lastchunk in ('userlist', 'addGroupForm', 'addPermForm', 'manageGroupForm')) and 'selectedItem' or None}"><a href="${projectUrl}../../repos/${project.getHostname()}/userlist">Groups and Permissions</a></li>
+            <li py:attrs="{'class': (lastchunk == 'mailingLists') and 'selectedItem' or None}"><a href="${projectUrl}mailingLists">Mailing Lists</a></li>
+            <li py:if="0" py:attrs="{'class': (lastchunk == 'bugs') and 'selectedItem' or None}"><a href="#">Bug Tracking</a></li>
+            <li py:attrs="{'class': (lastchunk == 'help') and 'selectedItem' or None}"><a href="${projectUrl}help">Help</a></li>
         </ul>
     </div>
 

@@ -205,17 +205,16 @@ class MintClient:
         """
         return self.server.getUsersList()
 
-    def getUserSearchResults(self, terms, limit = 10, offset = 0, includeInactive=False):
+    def getUserSearchResults(self, terms, limit = 10, offset = 0):
         """
         Collect the results from a users search as requested by the search
         terms
         @param terms: Search terms
         @param limit:  Number of items to return
         @param offset: Count at which to begin listing
-        @param includeInactive: set True to include users needing confirmations
         @return:       dictionary of Items requested
         """
-        return self.server.searchUsers(terms, limit, offset, includeInactive)
+        return self.server.searchUsers(terms, limit, offset)
 
     def getProjectSearchResults(self, terms, modified = 0, limit = 10, offset = 0):
         """
@@ -259,16 +258,15 @@ class MintClient:
         return self.server.getLabelsForProject(projectId,
             overrideAuth, newUser, newPass)
 
-    def getUsers(self, sortOrder, limit, offset, includeInactive=False):
+    def getUsers(self, sortOrder, limit, offset):
         """
         Return a list of users unfiltered in any way
         @param sortOrder: Order in which to sort the results
         @param limit:     Number of items to return
         @param offset:    Begin listing at this offset
-        @param includeInactive: set True to include users needing confirmations
-        @return a list of user ids
+        @return a list of user ids and a count of the total number of users
         """
-        return self.server.getUsers(sortOrder, limit, offset, includeInactive)
+        return self.server.getUsers(sortOrder, limit, offset)
 
     def hideProject(self, projectId):
         """
@@ -284,21 +282,6 @@ class MintClient:
         access methods, and not just to project developers and owners.
         """
         return self.server.unhideProject(projectId)
-
-    def disableProject(self, projectId):
-        """
-        Mark a project as disabled so that it doesn't show up in any listing,
-        and is not accessible via any other access method.
-        """
-        return self.server.disableProject(projectId)
-
-    def enableProject(self, projectId):
-        """
-        Mark a project previously disabled as enabled so that it shows up in
-        browse and search listings, and becomes accessible through all other
-        access methods.
-        """
-        return self.server.enableProject(projectId)
 
     def getRelease(self, releaseId):
         """

@@ -264,9 +264,7 @@ class SiteHandler(WebHandler):
         if sortOrder < 0:
             sortOrder = self.session.get('usersSortOrder', 0)
         self.session['usersSortOrder'] = sortOrder
-        results = self.client.getUsers(sortOrder, limit, offset, includeInactive=auth.admin)
-        count = len(results)
-
+        results, count = self.client.getUsers(sortOrder, limit, offset)
         return self._write("users", sortOrder=sortOrder, limit=limit, offset=offset, results=results, count=count)
 
     @requiresAuth
@@ -436,7 +434,7 @@ class SiteHandler(WebHandler):
         if type == "Projects":
             return self._projectSearch(search, modified, limit, offset)
         elif type == "Users" and auth.authorized:
-            return self._userSearch(auth, search, limit, offset, includeInactive=auth.admin)
+            return self._userSearch(auth, search, limit, offset)
         elif type == "Packages":
             return self._packageSearch(search, limit, offset)
         else:
@@ -444,8 +442,8 @@ class SiteHandler(WebHandler):
             return self._write("error", shortError = "Invalid Search Type",
                 error = "Invalid search type specified.")
 
-    def _userSearch(self, auth, terms, limit, offset, includeInactive):
-        results, count = self.client.getUserSearchResults(terms, limit, offset, includeInactive)
+    def _userSearch(self, auth, terms, limit, offset):
+        results, count = self.client.getUserSearchResults(terms, limit, offset)
         return self._write("searchResults", searchType = "Users", terms = terms, results = results,
                                             count = count, limit = limit, offset = offset, modified = 0)
 
@@ -602,30 +600,6 @@ class SiteHandler(WebHandler):
         else:
             return self._redirect("http://%s%suserInfo?id=%d" %
                     (self.cfg.siteHost, self.cfg.basePath, userId))
-
-    @requiresAdmin
-    @intFields(projectId = None)
-    @strFields(operation = None)
-    def processProjectAction(self, projectId, operation, *args, **kwargs):
-        project = self.client.getProject(projectId)
-        if operation == "project_toggle_hide":
-            if project.hidden:
-                self.client.unhideProject(projectId)
-                kwargs['extraMsg'] = "Project is now visible"
-            else:
-                self.client.hideProject(projectId)
-                kwargs['extraMsg'] = "Project is now hidden"
-        elif operation == "project_toggle_disable":
-            if project.disabled:
-                self.client.enableProject(projectId)
-                kwargs['extraMsg'] = "Project enabled"
-            else:
-                self.client.disableProject(projectId)
-                kwargs['extraMsg'] = "Project disabled"
-        else:
-            raise HttpNotFound
-
-        return self.projects(*args, **kwargs)
 
 def legalDocument(page):
     templatePath = os.path.join(os.path.split(__file__)[0], 'templates/docs')

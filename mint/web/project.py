@@ -784,3 +784,26 @@ class ProjectHandler(WebHandler):
 
     def help(self, auth):
         return self._write("help")
+
+    @intFields(projectId = None)
+    @strFields(operation = None)
+    @requiresAdmin
+    def processProjectAction(self, auth, projectId, operation):
+        project = self.client.getProject(projectId)
+
+        if operation == "project_hide":
+            if not project.hidden:
+                self.client.hideProject(projectId)
+                self._setInfo("Project hidden")
+            else:
+                self._addErrors("Project is already hidden")
+        elif operation == "project_unhide":
+            if project.hidden:
+                self.client.unhideProject(projectId)
+                self._setInfo("Project is now visible")
+            else:
+                self._addErrors("Project is already visible")
+        else:
+            self._addErrors("Please select a valid project administration option from the menu")
+
+        return self._predirect()

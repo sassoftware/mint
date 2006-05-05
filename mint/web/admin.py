@@ -42,41 +42,36 @@ class AdminHandler(WebHandler):
     def _frontPage(self, *args, **kwargs):
         return self._write('admin/frontPage', kwargs = kwargs)
 
-    def users(self, *args, **kwargs):
-        userlist = self.client.getUsersList()
-        return self._write('admin/user', userlist = userlist, kwargs = kwargs)
-
     def newUser(self, *args, **kwargs):
-        return self._write('admin/newUser', kwargs = kwargs, errors=[])
+        return self._write('admin/newUser', kwargs = kwargs)
 
     @strFields(username = '', email = '', password = '', password2 = '',
                fullName = '', displayEmail = '', blurb = '')
     def processNewUser(self, username, fullName, email, password,
                              password2, displayEmail, blurb, *args, **kwargs):
-        errors = []
         if not username:
-            errors.append("You must supply a username.")
+            self._addErrors("You must supply a username.")
         if not email:
-            errors.append("You must supply a valid e-mail address.  This will be used to confirm your account.")
+            self._addErrors("You must supply a valid e-mail address.  This will be used to confirm your account.")
         if not password or not password2:
-            errors.append("Password field left blank.")
+            self._addErrors("Password field left blank.")
         if password != password2:
-            errors.append("Passwords do not match.")
+            self._addErrors("Passwords do not match.")
         if len(password) < 6:
-            errors.append("Password must be 6 characters or longer.")
-        if not errors:
+            self._addErrors("Password must be 6 characters or longer.")
+        if not self._getErrors():
             try:
                 self.client.registerNewUser(username, password, fullName, email,
                             displayEmail, blurb, active=True)
             except users.UserAlreadyExists:
-                errors.append("An account with that username already exists.")
+                self._addErrors("An account with that username already exists.")
             except users.GroupAlreadyExists:
-                errors.append("An account with that username already exists.")
+                self._addErrors("An account with that username already exists.")
             except users.MailError,e:
-                errors.append(e.context);
-        if not errors:
-            kwargs['extraMsg'] = "User account created"
-            return self.users(*args, **kwargs)
+                self._addErrors(e.context);
+        if not self._getErrors():
+            self._setInfo("User account created")
+            self._redirect(self.cfg.basePath + "admin")
         else:
             kwargs = {'username': username,
                       'email': email,
@@ -84,77 +79,23 @@ class AdminHandler(WebHandler):
                       'displayEmail': displayEmail,
                       'blurb': blurb
                      }
-            return self._write("admin/newUser", errors=errors, kwargs = kwargs)
+            return self._write("admin/newUser", kwargs = kwargs)
 
-    @intFields(userId = None)
-    @strFields(operation = None)
-    def processUserAction(self, userId, operation, *args, **kwargs):
-        errors = []
-        if operation == "user_reset_password":
-            self._resetPasswordById(userId)
-            extraMsg = "User password reset"
-        elif operation == "user_cancel":
-            if userId == self.auth.userId:
-                errors = ['You cannot close your account from this interface.']
-            self.client.removeUserAccount(userId)
-            extraMsg = "User account deleted"
-        elif operation == "user_promote_admin":
-            self.client.promoteUserToAdmin(userId)
-            extraMsg = 'User promoted to administrator.'
-        elif operation == "user_demote_admin":
-            self.client.demoteUserFromAdmin(userId)
-            extraMsg = 'Administrative privileges revoked'
-
-        if not errors:
-            kwargs['extraMsg'] = extraMsg
-        else:
-            kwargs['errors'] = errors
-        return self.users(*args, **kwargs)
-
-
-    def projects(self, *args, **kwargs):
-        projects = self.client.getProjectsList()
-        return self._write('admin/project', projects = projects, kwargs = kwargs)
-
-    @intFields(projectId = None)
-    @strFields(operation = None)
-    def processProjectAction(self, projectId, operation, *args, **kwargs):
-        project = self.client.getProject(projectId)
-
-        if operation == "project_toggle_hide":
-            if project.hidden:
-                self.client.unhideProject(projectId)
-                kwargs['extraMsg'] = "Project unhidden"
-            else:
-                self.client.hideProject(projectId)
-                kwargs['extraMsg'] = "Project hidden"
-        elif operation == "project_toggle_disable":
-            if project.disabled:
-                self.client.enableProject(projectId)
-                kwargs['extraMsg'] = "Project enabled"
-            else:
-                self.client.disableProject(projectId)
-                kwargs['extraMsg'] = "Project disabled"
-        else:
-            raise HttpNotFound
-
-        return self.projects(*args, **kwargs)
 
     def notify(self, *args, **kwargs):
         return self._write('admin/notify', kwargs=kwargs)
 
     def sendNotify(self, *args, **kwargs):
-        kwargs['errors'] = []
         if not kwargs.get('subject', None):
-            kwargs['errors'].append('You must supply a subject')
+            self._addErrors('You must supply a subject')
         if not kwargs.get('body', None):
-            kwargs['errors'].append('You must supply a message body')
-        if not kwargs['errors']:
+            self._addErrors('You must supply a message body')
+        if not self._getErrors():
             try:
                 returner = self.client.notifyUsers(str(kwargs['subject']), str(kwargs['body']))
-                kwargs['extraMsg'] = 'Message sent successfully'
+                self._setInfo('Message sent successfully')
             except Exception, e:
-                kwargs['errors'].append('An unknown error occurred: %s' % str(e))
+                self._addErrors('An unknown error occurred: %s' % str(e))
                 return self.notify(*args, **kwargs)
         else:
             return self.notify(*args, **kwargs)
@@ -228,10 +169,10 @@ class AdminHandler(WebHandler):
             raise HttpNotFound
         try:
             pipeFD = os.popen("sudo /sbin/service rbuilder-isogen %s" % operation)
-            kwargs['extraMsg'] = pipeFD.read()
+            self._setInfo(pipeFD.read())
             pipeFD.close()
         except:
-            kwargs['extraMsg'] = "Failed to %s the job server." % operation
+            self._setInfo("Failed to %s the job server" % operation)
         return self.jobs(*args, **kwargs)
 
     def outbound(self, *args, **kwargs):
@@ -266,7 +207,6 @@ class AdminHandler(WebHandler):
         mode = curMode ^ 1
         maintenance.setMaintenanceMode(self.cfg, mode)
         self._redirect("http://%s%sadmin/maintenance" % (self.cfg.siteHost, self.cfg.basePath))
-
 
 def startPrimeServer():
     pid = os.fork()

@@ -1,6 +1,7 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <?python
 from mint import userlevels
+from mint.client import timeDelta
 from mint.client import upstream
 from mint.helperfuncs import truncateForDisplay
 ?>
@@ -45,8 +46,32 @@ from mint.helperfuncs import truncateForDisplay
             <div id="middle">
                 <h1>${project.getNameForDisplay(maxWordLen = 25)} <span id="editProject" py:if="isOwner"><a href="${basePath}editProject">edit project</a></span></h1>
                 <h2 py:if="project.getProjectUrl()">Project Home Page &#160;</h2>
+                <div py:if="auth.admin" py:strip="True">
 
-                <p class="help" py:if="not (commits or project.external) and cfg.hideFledgling">
+                    <h3>Project Status</h3>
+
+                    <p>Project was created ${timeDelta(project.timeCreated, capitalized=False)}.</p>
+                    <p py:if="project.hidden">This project is hidden.</p>
+                    <p py:if="project.external">This project is externally managed.</p>
+                    <p py:if="not (commits or project.external)">This project is considered to be a fledgling (i.e. no software has been committed to its repository).</p>
+
+                    <h3>Administrative Options</h3>
+
+                    <p py:if="project.external">This project is externally managed and cannot be administered from this interface.</p>
+                    <form py:if="not project.external" action="${basePath}processProjectAction" method="post">
+                        <label for="projectAdminOptions">Choose an action:&nbsp;</label>
+                        <select id="projectAdminOptions" name="operation">
+                            <option value="project_noop" selected="selected">--</option>
+                            <option py:if="not project.hidden" value="project_hide">Hide Project</option>
+                            <option py:if="project.hidden" value="project_unhide">Unhide Project</option>
+                        </select>
+                        
+                        <button id="projectAdminSubmitButton" type="submit">Go</button>
+                        <input type="hidden" value="${project.getId()}" name="projectId" />
+                    </form>
+                </div>
+
+                <p class="help" py:if="not (commits or project.external) and cfg.hideFledgling and not auth.admin">
                     This is a fledgling project. The developers of this project
                     have not yet committed software into the project's repository.
                     To give the project's developers time to get started before

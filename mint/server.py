@@ -350,8 +350,6 @@ class MintServer(object):
     def _filterProjectAccess(self, projectId):
         if list(self.authToken) == [self.cfg.authUser, self.cfg.authPass] or self.auth.admin:
             return
-        if self.projects.isDisabled(projectId):
-            raise database.ItemNotFound()
         if not self.projects.isHidden(projectId):
             return
         members = self.projectUsers.getMembersByProjectId(projectId)
@@ -956,7 +954,7 @@ class MintServer(object):
         cu.execute("""SELECT %s, name, level
                       FROM Projects, ProjectUsers
                       WHERE Projects.projectId=ProjectUsers.projectId AND
-                            ProjectUsers.userId=? AND Projects.disabled=0
+                            ProjectUsers.userId=?
                       ORDER BY level, name""" % fqdnConcat, userId)
 
         rows = []
@@ -1185,32 +1183,42 @@ class MintServer(object):
         else:
             raise PermissionDenied
 
-    @typeCheck(str, int, int, bool)
+    @typeCheck(str, int, int)
     @requiresAuth
     @private
-    def searchUsers(self, terms, limit, offset, includeInactive=False):
+    def searchUsers(self, terms, limit, offset):
         """
-        Collect the results as requested by the search terms
+        Collect the results as requested by the search terms.
+        NOTE: admins can see everything including unconfirmed users.
         @param terms: Search terms
         @param limit:  Number of items to return
         @param offset: Count at which to begin listing
-        @param includeInactive: set True to include users needing confirmations
         @return:       dictionary of Items requested
         """
+        if self.auth and self.auth.admin:
+            includeInactive = True
+        else:
+            includeInactive = False
         return self.users.search(terms, limit, offset, includeInactive)
 
     @typeCheck(str, int, int, int)
     @private
     def searchProjects(self, terms, modified, limit, offset):
         """
-        Collect the results as requested by the search terms
+        Collect the results as requested by the search terms.
+        NOTE: admins can see everything including hidden and fledgling
+        projects regardless of the value of self.cfg.hideFledgling.
         @param terms: Search terms
         @param modified: Code for the lastModified filter
         @param limit:  Number of items to return
         @param offset: Count at which to begin listing
         @return:       dictionary of Items requested
         """
-        return self.projects.search(terms, modified, limit, offset)
+        if self.auth and self.auth.admin:
+            includeInactive = True
+        else:
+            includeInactive = False
+        return self.projects.search(terms, modified, limit, offset, includeInactive)
 
     @typeCheck(str, int, int)
     @private
@@ -1237,12 +1245,19 @@ class MintServer(object):
     @private
     def getProjects(self, sortOrder, limit, offset):
         """
-        Collect a list of projects
+        Collect a list of projects.
+        NOTE: admins can see everything including hidden and fledgling
+        projects regardless of the value of self.cfg.hideFledgling.
         @param sortOrder: Order the projects by this criteria
         @param limit:  Number of items to return
         @param offset: Count at which to begin listing
+        @return: a 2-tuple (list of projects, total number of projects)
         """
-        return self.projects.getProjects(sortOrder, limit, offset), self.projects.getNumProjects()
+        if self.auth and self.auth.admin:
+            includeInactive = True
+        else:
+            includeInactive = False
+        return self.projects.getProjects(sortOrder, limit, offset, includeInactive), self.projects.getNumProjects(includeInactive)
 
     @typeCheck()
     @requiresAdmin
@@ -1253,18 +1268,22 @@ class MintServer(object):
         """
         return self.users.getUsersList()
 
-    @typeCheck(int, int, int, bool)
+    @typeCheck(int, int, int)
     @requiresAdmin
     @private
-    def getUsers(self, sortOrder, limit, offset, includeInactive=False):
+    def getUsers(self, sortOrder, limit, offset):
         """
-        Collect a list of users
+        Collect a list of users.
+        NOTE: admins can see everything including unconfirmed users.
         @param sortOrder: Order the users by this criteria
         @param limit:  Number of items to return
         @param offset: Count at which to begin listing
-        @param includeInactive: set True to include users needing confirmations
         """
-        return self.users.getUsers(sortOrder, limit, offset, includeInactive)
+        if self.auth and self.auth.admin:
+            includeInactive = True
+        else:
+            includeInactive = False
+        return self.users.getUsers(sortOrder, limit, offset, includeInactive), self.users.getNumUsers(includeInactive)
 
     @typeCheck(int)
     @requiresAdmin
@@ -1390,7 +1409,7 @@ class MintServer(object):
 
         projectId = res[0]
 
-        # remember to filter access to hidden and disabled projects
+        # remember to filter access to hidden projects
         # we couldn't do it right away because we didn't have the projectId
         self._filterProjectAccess(projectId)
 
@@ -1420,7 +1439,7 @@ class MintServer(object):
         cu = self.db.cursor()
         cu.execute("""SELECT Projects.name, Projects.hostname, releaseId
                          FROM Releases LEFT JOIN Projects ON Projects.projectId = Releases.projectId
-                         WHERE Projects.hidden=0 AND Projects.disabled=0 and published=1
+                         WHERE Projects.hidden=0 and published=1
                          ORDER BY timePublished DESC LIMIT ? OFFSET ?""", limit, offset)
         return [(x[0], x[1], int(x[2])) for x in cu.fetchall()]
 

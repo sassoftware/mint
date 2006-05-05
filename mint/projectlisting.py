@@ -27,7 +27,7 @@ desctrunclength = 300
 #    Projects
 #        LEFT JOIN Commits ON
 #    Projects.projectId=Commits.projectId
-#        WHERE Projects.disabled=0 AND Projects.hidden=0
+#        WHERE Projects.hidden=0
 #        GROUP BY Projects.projectId
 #        ORDER BY %s
 #        LIMIT %d
@@ -53,12 +53,13 @@ sqlbase = """
                      (SELECT COUNT(userId) AS numDevs FROM ProjectUsers
                           WHERE ProjectUsers.projectId=Projects.projectId)
                      AS numDevs,
-                     Projects.external AS external
+                     Projects.external AS external,
+                     Projects.hidden AS hidden
                      FROM
                          Projects
                      LEFT JOIN Commits ON
                          Projects.projectId=Commits.projectId
-                     WHERE Projects.disabled=0 AND Projects.hidden=0
+                     %s
                      GROUP BY Projects.projectId) as P
     %s
     ORDER BY %s

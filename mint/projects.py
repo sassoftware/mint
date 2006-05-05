@@ -45,6 +45,7 @@ class LabelMissing(MintError):
 mysqlTransTable = string.maketrans("-.:", "___")
 
 class Project(database.TableObject):
+    # XXX: disabled is slated for removal next schema upgrade --sgp
     __slots__ = ('projectId', 'creatorId', 'name',
                  'description', 'hostname', 'domainname', 'projecturl', 
                  'hidden', 'external', 'disabled',
@@ -198,6 +199,7 @@ class Project(database.TableObject):
 class ProjectsTable(database.KeyedTable):
     name = 'Projects'
     key = 'projectId'
+    # XXX: disabled is slated for removal next schema upgrade --sgp
     createSQL= """CREATE TABLE Projects (
                     projectId       %(PRIMARYKEY)s,
                     creatorId       INT,
@@ -213,6 +215,7 @@ class ProjectsTable(database.KeyedTable):
                     timeModified    INT DEFAULT 0
                 )"""
 
+    # XXX: disabled is slated for removal next schema upgrade --sgp
     fields = ['projectId', 'creatorId', 'name', 'hostname', 'domainname', 'projecturl', 
               'description', 'disabled', 'hidden', 'external', 'timeCreated', 'timeModified']
     indexes = { "ProjectsHostnameIdx": "CREATE INDEX ProjectsHostnameIdx ON Projects(hostname)",
@@ -321,7 +324,7 @@ class ProjectsTable(database.KeyedTable):
 
         # audited for SQL injection.
         sql = """
-            SELECT projectId, disabled, hidden, %s
+            SELECT projectId, hidden, %s
             FROM Projects
             ORDER BY hostname
         """ % database.concat(self.db, "hostname", "' - '", "name")
@@ -336,7 +339,7 @@ class ProjectsTable(database.KeyedTable):
         # audited for SQL injection.
         fqdnConcat = database.concat(self.db, "hostname", "'.'", "domainname")
         cu.execute("""SELECT projectId FROM Projects
-                      WHERE %s=? AND disabled=0""" % fqdnConcat, fqdn)
+                      WHERE %s=?""" % fqdnConcat, fqdn)
 
         r = cu.fetchone()
         if not r:
@@ -347,7 +350,7 @@ class ProjectsTable(database.KeyedTable):
     def getProjectIdByHostname(self, hostname):
         cu = self.db.cursor()
 
-        cu.execute("SELECT projectId FROM Projects WHERE hostname=? AND disabled=0", hostname)
+        cu.execute("SELECT projectId FROM Projects WHERE hostname=?", hostname)
 
         r = cu.fetchone()
         if not r:
@@ -361,7 +364,7 @@ class ProjectsTable(database.KeyedTable):
         stmt = """SELECT ProjectUsers.projectId, level FROM ProjectUsers
                     LEFT JOIN Projects
                         ON Projects.projectId=ProjectUsers.projectId
-                    WHERE ProjectUsers.userId=? AND disabled=0 AND
+                    WHERE ProjectUsers.userId=? AND
                     NOT (hidden=1 AND level not in %s)""" % \
             str(tuple(userlevels.WRITERS))
         if filter:
@@ -370,34 +373,45 @@ class ProjectsTable(database.KeyedTable):
 
         return [tuple(x) for x in cu.fetchall()]
 
-    def getNumProjects(self):
+    def getNumProjects(self, includeInactive=False):
         cu = self.db.cursor()
-        cmd = """SELECT COUNT(name)
-                              FROM Projects
-                              WHERE disabled=0 AND hidden=0"""
-        if self.cfg.hideFledgling:
-            cmd += """
-                              AND (EXISTS(SELECT *
-                                              FROM Commits
-                                              WHERE Commits.projectId =
+        whereClause = ""
+        if not includeInactive:
+            whereClause += "hidden=0 "
+        if self.cfg.hideFledgling and not includeInactive:
+            whereClause += "%s %s" % ((whereClause and "AND" or ""),
+                """(EXISTS(SELECT * FROM Commits WHERE Commits.projectId =
                                                     Projects.projectId)
-                                   OR external=1)"""
+                    OR external=1)""")
+        if whereClause:
+            whereClause = "WHERE " + whereClause
+
+        cmd = """SELECT COUNT(name) FROM Projects %s """ % whereClause
+
         cu.execute(cmd)
+
         return cu.fetchone()[0]
 
-    def getProjects(self, sortOrder, limit, offset):
+    def getProjects(self, sortOrder, limit, offset, includeInactive=False):
         """ Return a list of projects with no filtering whatsoever
         @param sortOrder: Order the projects by this criteria
         @param limit:  Number of items to return
         @param offset: Count at which to begin listing
+        @param includeInactive: Include hidden projects and fledglings
         """
         cu = self.db.cursor()
 
+        # XXX: This is intimately tied together to the ridiculous ball of SQL
+        # inside mint/projectlisting.py. Here there be dragons. --sgp
+        innerWhereClause = outerWhereClause = ""
+        if not includeInactive:
+            innerWhereClause = "WHERE hidden=0"
+        if self.cfg.hideFledgling and not includeInactive:
+            outerWhereClause = "WHERE (fledgling=0 OR external=1)"
+
         # audited for sql injection. this is safe only because the params to
         # this function are ensured to be ints by mintServer typeChecking.
-        SQL = projectlisting.sqlbase % (\
-            self.cfg.hideFledgling \
-            and "WHERE (fledgling=0 OR external=1)" or "",
+        SQL = projectlisting.sqlbase % (innerWhereClause, outerWhereClause,
             projectlisting.ordersql[sortOrder])
         cu.execute(SQL, limit, offset)
 
@@ -413,7 +427,7 @@ class ProjectsTable(database.KeyedTable):
 
         return ids
 
-    def search(self, terms, modified, limit, offset):
+    def search(self, terms, modified, limit, offset, includeInactive=False):
         """
         Returns a list of projects matching L{terms} of length L{limit}
         starting with item L{offset}.
@@ -421,6 +435,7 @@ class ProjectsTable(database.KeyedTable):
         @param modified: Code for the period within which the project must have been modified to include in the search results.
         @param offset: Count at which to begin listing
         @param limit:  Number of items to return
+        @param includeInactive:  Include hidden and fledgling projects
         @return:       a dictionary of the requested items.
                        each entry will contain four bits of data:
                         The hostname for use with linking,
@@ -434,10 +449,16 @@ class ProjectsTable(database.KeyedTable):
                        WHERE Commits.projectId=Projects.projectId),
                    Projects.timeCreated) AS timeModified"""]
         searchcols = ['name', 'description']
-        ids, count = database.KeyedTable.search(self, columns, 'Projects', 
-            searcher.Searcher.where(terms, searchcols, 'AND disabled=0 AND hidden=0'),
-            'NAME', searcher.Searcher.lastModified('timeModified', modified),
-            limit, offset)
+
+        if includeInactive:
+            whereClause = searcher.Searcher.where(terms, searchcols)
+        else:
+            whereClause = searcher.Searcher.where(terms, searchcols, "AND hidden=0")
+
+        ids, count = database.KeyedTable.search(self, columns, 'Projects',
+                whereClause, 'NAME',
+                searcher.Searcher.lastModified('timeModified', modified),
+                limit, offset)
         for i, x in enumerate(ids[:]):
             ids[i] = list(x)
             ids[i][2] = searcher.Searcher.truncate(x[2], terms)
@@ -503,34 +524,6 @@ class ProjectsTable(database.KeyedTable):
     def isHidden(self, projectId):
         cu = self.db.cursor()
         cu.execute("SELECT IFNULL(hidden, 0) from Projects WHERE projectId=?", projectId)
-        return cu.fetchone()[0]
-
-    def disable(self, projectId, reposPath):
-        cu = self.db.cursor()
-
-        # now move the repository out of the way
-        project = self.get(projectId)
-        path = os.path.join(reposPath, project['hostname'] + '.' + project['domainname'])
-        os.rename(path, path+'.disabled')
-
-        cu.execute("UPDATE Projects SET disabled=1, timeModified=? WHERE projectId=?", time.time(), projectId)
-        cu.execute("DELETE FROM PackageIndex WHERE projectId=?", projectId)
-        self.db.commit()
-
-    def enable(self, projectId, reposPath):
-        cu = self.db.cursor()
-
-        # now move the repository back
-        project = self.get(projectId)
-        path = os.path.join(reposPath, project['hostname'] + '.' + project['domainname'])
-        os.rename(path+'.disabled', path)
-
-        cu.execute("UPDATE Projects SET disabled=0, timeModified=? WHERE projectId=?", time.time(), projectId)
-        self.db.commit()
-
-    def isDisabled(self, projectId):
-        cu = self.db.cursor()
-        cu.execute("SELECT IFNULL(disabled, 0) from Projects WHERE projectId=?", projectId)
         return cu.fetchone()[0]
 
 class LabelsTable(database.KeyedTable):

@@ -42,7 +42,6 @@ class ProjectTest(fixtures.FixturedUnitTest):
                 [data['user'], 'user', userlevels.USER] ])
         assert(project.hidden == 0)
         assert(project.external == 0)
-        assert(project.disabled == 0)
 
     @fixtures.fixture("Full")
     def testEditProject(self, db, data):
@@ -254,35 +253,6 @@ class ProjectTest(fixtures.FixturedUnitTest):
         ownerClient.server.getUserLevel(data['user'], data['projectId'])
 
         adminClient.unhideProject(data['projectId'])
-
-    @fixtures.fixture("Full")
-    def testDisableProject(self, db, data):
-
-        adminClient = self.getClient("admin")
-        ownerClient = self.getClient("owner")
-        developerClient = self.getClient("developer")
-        watcherClient = self.getClient("user")
-        nobodyClient = self.getClient("nobody")
-
-        adminClient.disableProject(data['projectId'])
-
-        # try getting the project from various levels
-        adminClient.getProject(data['projectId'])
-
-        self.assertRaises(ItemNotFound, ownerClient.getProject,
-                data['projectId'])
-
-        self.assertRaises(ItemNotFound, nobodyClient.getProject,
-                data['projectId'])
-
-        self.assertRaises(ItemNotFound, watcherClient.getProject,
-                data['projectId'])
-
-        adminClient.enableProject(data['projectId'])
-        adminClient.getProject(data['projectId'])
-        ownerClient.getProject(data['projectId'])
-        nobodyClient.getProject(data['projectId'])
-        watcherClient.getProject(data['projectId'])
 
     @fixtures.fixture("Full")
     def testCreateExternalProject(self, db, data):
