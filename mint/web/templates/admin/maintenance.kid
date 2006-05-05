@@ -24,7 +24,7 @@
               <form action="${cfg.basePath}admin/toggleMaintLock" method="post">
                 <p>
                     <button type="submit">${maintenance.getMaintenanceMode(cfg)==maintenance.LOCKED_MODE and "Restore Normal Operation" or "Invoke Maintenance Mode"}</button>
-                    <input type="hidden" name="curMode" value="maintenance.getMaintenanceMode(cfg)" />
+                    <input type="hidden" name="curMode" value="${maintenance.getMaintenanceMode(cfg)}" />
                 </p>
               </form>
             </div>
