@@ -850,3 +850,7 @@ table.add-form td#header {
     font-size: 105%;
     font-weight: bold;
 }
+
+li.selectedItem {
+    font-weight: bold;
+}

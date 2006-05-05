@@ -10,15 +10,13 @@ kid_files =			\
 	external.kid		\
 	maintenance.kid		\
 	notify.kid		\
-	project.kid		\
 	report.kid		\
 	outbound.kid		\
-	user.kid		\
 	newUser.kid		\
 	jobs.kid		\
 	external.kid		\
-	primeMirror.kid
-
+	primeMirror.kid		\
+	admin.kid
 
 python_files =
 
