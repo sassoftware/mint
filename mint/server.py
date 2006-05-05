@@ -13,6 +13,7 @@ import simplejson
 import string
 import sys
 import time
+import tempfile
 from urlparse import urlparse
 
 from mint import data
@@ -470,6 +471,8 @@ class MintServer(object):
                                   hostname, domainname, self.authToken[0],
                                   self.authToken[1])
 
+        if self.cfg.createConaryRcFile:
+            self._generateConaryRcFile()
         return projectId
 
     @typeCheck(str, str, str, str, str, bool)
@@ -1435,6 +1438,21 @@ class MintServer(object):
             return True
 
         return bool(res[0])
+
+    def _generateConaryRcFile(self):
+        projs = self.projects.getProjectsList()
+        repoMaps = {}
+        for x in projs:
+            proj = projects.Project(self, x[0])
+            if not proj.hidden and not proj.disabled:
+                repoMaps.update(proj.getConaryConfig().repositoryMap)
+        fd, fname = tempfile.mkstemp()
+        os.close(fd)
+        f = open(fname, 'w')
+        for host, url in repoMaps.iteritems():
+            f.write('repositoryMap %s %s\n' % (host, url))
+        f.close()
+        os.rename(fname, self.cfg.conaryRcFile)
 
     #
     # RELEASE STUFF

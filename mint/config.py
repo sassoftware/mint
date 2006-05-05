@@ -100,6 +100,10 @@ class MintConfig(ConfigFile):
     projectAdmin            = (cfgtypes.CfgBool, True)
     adminNewProjects        = (cfgtypes.CfgBool, False)
 
+    conaryRcFile            = os.path.join(os.path.sep, 'srv', 'mint', 'run',
+                                            'conaryrc')
+    createConaryRcFile      = (cfgtypes.CfgBool, True)
+
     def read(self, path, exception = False):
         ConfigFile.read(self, path, exception)
 
