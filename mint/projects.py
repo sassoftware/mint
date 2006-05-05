@@ -433,7 +433,7 @@ class ProjectsTable(database.KeyedTable):
                        (SELECT MAX(Commits.timestamp) FROM Commits
                        WHERE Commits.projectId=Projects.projectId),
                    Projects.timeCreated) AS timeModified"""]
-        searchcols = ['name', 'description']
+        searchcols = ['name', 'description', 'hostname']
         ids, count = database.KeyedTable.search(self, columns, 'Projects', 
             searcher.Searcher.where(terms, searchcols, 'AND disabled=0 AND hidden=0'),
             'NAME', searcher.Searcher.lastModified('timeModified', modified),
