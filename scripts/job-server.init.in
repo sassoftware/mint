@@ -13,7 +13,7 @@
 . /etc/init.d/functions
 
 # Configuration options
-DEBUG_MODE=0    # set to non-zero to turn debug mode logging on
+DEBUG_MODE=1    # set to non-zero to turn debug mode logging on
 
 CONFIG_FILE='@DESTDIR@/srv/mint/iso_gen.conf'
 SCRIPT_PATH='@DESTDIR@/usr/share/mint/scripts'
@@ -32,7 +32,7 @@ if [ ! -r "$CONFIG_FILE" ]; then
 fi
 
 # Check for debug mode and add to args if necessary
-[ -z $DEBUG_MODE ] && EXTRA_ARGS="--debug $EXTRA_ARGS"
+[ $DEBUG_MODE -gt 0 ] && EXTRA_ARGS="--debug $EXTRA_ARGS"
 
 start() {
     echo -n "Starting $LONGNAME:"
