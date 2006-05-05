@@ -28,7 +28,7 @@ from conary.repository import errors
 from conary.build import use
 from conary.conarycfg import ConfigFile
 from conary.conaryclient.cmdline import parseTroveSpec
-from conary.lib import util
+from conary.lib import util, sha1helper
 
 
 class IsoConfig(ConfigFile):
@@ -128,14 +128,17 @@ class InstallableIso(ImageGenerator):
             return None
         return uJob
 
-    def _storeUpdateJob(self, uJob):
-        """Stores the version and flavor of an update job in the ReleaseData tables"""
-        jobs = uJob.getPrimaryJobs()
+    def _getTroveSpec(self, uJob):
+        """returns the specstring of an update job"""
         for job in uJob.getPrimaryJobs():
             trvName, trvVersion, trvFlavor = job[0], str(job[2][0]), str(job[2][1])
-            troveSpec = "%s=%s[%s]" % (trvName, trvVersion, trvFlavor)
-            self.release.setDataValue(trvName, troveSpec,
-                dataType = RDT_STRING, validate = False)
+            return "%s=%s[%s]" % (trvName, trvVersion, trvFlavor)
+
+    def _storeUpdateJob(self, uJob):
+        """Stores the version and flavor of an update job in the ReleaseData tables"""
+        troveSpec = self._getTroveSpec(uJob)
+        self.release.setDataValue(trvName, troveSpec,
+                                  dataType = RDT_STRING, validate = False)
 
     def getConaryClient(self, tmpRoot, arch):
         cfg = self.project.getConaryConfig()
@@ -289,7 +292,7 @@ class InstallableIso(ImageGenerator):
                 raise RuntimeError, "ISO generation failed"
             else:
                 cmd = [self.isocfg.implantIsoMd5]
-                if showMediaCheck:
+                if not showMediaCheck:
                     cmd.append('--supported-iso')
                 cmd.append(iso)
                 call(*cmd)
@@ -311,9 +314,34 @@ class InstallableIso(ImageGenerator):
             os.system("sed -i '0,/append/s/append.*$/& ks=cdrom/' %s" % \
                       os.path.join(topdir, 'isolinux', 'isolinux.cfg'))
 
+    def _makeTemplate(self, templateDir, tmpDir, uJob):
+        pass
+
+    def _getTemplatePath(self):
+        tmpDir = tempfile.mkdtemp()
+        try:
+            cclient = self.getConaryClient(tmpDir,
+                                           '1#' + self.release.getArch())
+            uJob = self._getUpdateJob(cclient, 'anaconda-template')
+            assert uJob, "No anaconda template could be found."
+            self._storeUpdateJob(uJob)
+            troveSpec = self._getTroveSpec(uJob)
+            hash = sha1helper.md5ToString(sha1helper.md5String(troveSpec))
+            templateDir = os.path.join(self.isocfg.templatePath, hash)
+            if not os.path.exists(templateDir):
+                self._makeTemplate(templateDir, tmpDir, uJob)
+            return templateDir
+        finally:
+            try:
+                util.rmtree(tmpDir)
+            except:
+                pass
+
     def prepareTemplates(self, topdir):
         # hardlink template files to topdir
-        templateDir = os.path.join(self.isocfg.templatePath, self.release.getArch())
+        import epdb
+        epdb.st()
+        templateDir = self._getTemplatePath
         if not os.path.exists(os.path.join(templateDir, 'PRODUCTNAME')):
             raise AnacondaTemplateMissing(self.release.getArch())
 
@@ -375,7 +403,6 @@ class InstallableIso(ImageGenerator):
 
         groupName, groupVer, groupFlavor = trvList[0]
 
-        self.callback = Callback(self.status)
         rc = gencslist.extractChangeSets(client, client.cfg, csdir, groupName,
                                          groupVer, groupFlavor,
                                          oldFiles = existingChangesets,
@@ -388,6 +415,7 @@ class InstallableIso(ImageGenerator):
 
     def write(self):
         self.isocfg = self.getConfig()
+        self.callback = Callback(self.status)
 
         # set up the topdir
         topdir = os.path.join(self.cfg.imagesPath, self.project.getHostname(),

@@ -12,7 +12,7 @@ from conary.lib.cfg import *
 -->
 
     <head>
-        <title>${formatTitle('rBuilder Configuration')}</title>
+        <title>rBuilder Configuration</title>
     </head>
     <body>
         <div class="layout">
@@ -78,19 +78,6 @@ from conary.lib.cfg import *
                         <td>Administrator's email address:</td>
                         <td>
                             <input type="text" name="new_email" />
-                        </td>
-                    </tr>
-                </table>
-                <h2>Entitlements</h2>
-                <table class="setup">
-                    <tr>
-                        <td>
-                            If you received an entitlement string from rPath, please paste it here:
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>
-                            <textarea name="entitlement" rows="10" cols="72"></textarea>
                         </td>
                     </tr>
                 </table>

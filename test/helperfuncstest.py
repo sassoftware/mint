@@ -348,6 +348,26 @@ Much like Powdermilk Biscuits[tm]."""
                     "Javascript syntax may be broken. "
                     "check lines: %s" % str(brokenLines))
 
+    def testReposMethods(self):
+        allowedMethods = ('getOpenPGPKey', 'pgpAdminForm', 'pgpChangeOwner',
+                      'files', 'troveInfo', 'browse', 'getFile', 'userlist',
+                      'deleteGroup', 'addPermForm', 'addPerm', 'addGroupForm',
+                      'manageGroupForm', 'manageGroup', 'addGroup',
+                      'deletePerm', 'editPermForm', 'editPerm')
+
+        # the order of these imports matters.
+        from mint.web.repos import ConaryHandler
+        from conary.server import http
+
+        methods = []
+        for method in http.HttpHandler.__dict__.keys():
+            if not (method.startswith('_') or method in allowedMethods):
+                if callable(http.HttpHandler.__dict__[method]):
+                    methods.append(method)
+        self.failIf(methods,
+                    "The following methods are not explicitly allowed or deleted: %s. please update repos.py" %\
+                    ' '.join(methods))
+
 
 if __name__ == "__main__":
     testsuite.main()

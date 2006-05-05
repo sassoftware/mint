@@ -448,7 +448,7 @@ class ProjectsTable(database.KeyedTable):
                        (SELECT MAX(Commits.timestamp) FROM Commits
                        WHERE Commits.projectId=Projects.projectId),
                    Projects.timeCreated) AS timeModified"""]
-        searchcols = ['name', 'description']
+        searchcols = ['name', 'description', 'hostname']
 
         if includeInactive:
             whereClause = searcher.Searcher.where(terms, searchcols)

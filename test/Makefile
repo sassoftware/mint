@@ -6,6 +6,7 @@
 SUBDIRS = server archive
 
 python_files = \
+               _apache.py \
                accounttest.py \
                acltest.py \
                authtest.py \

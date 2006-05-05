@@ -38,7 +38,7 @@
                 <table class="add-form">
                     <tr>
                         <td id="header">Group:</td>
-                        <td py:if="operation!='Edit'" py:content="makeSelect('group', groups, group)"/>
+                        <td py:if="operation!='Edit'" py:content="makeSelect('group', [x for x in groups if x != cfg.authUser], group)"/>
                         <td py:if="operation=='Edit'"><input name="group" value="${group}" readonly="readonly" type="text" /></td>
                     </tr>
                     <tr>

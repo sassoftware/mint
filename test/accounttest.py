@@ -475,6 +475,12 @@ class AccountTest(MintRepositoryHelper):
         # this should succeed
         client.removeUserAccount(userId);
 
+    def testLastAdmin2(self):
+        client, userId = self.quickMintAdmin('foouser', 'foopass')
+        client2, userId2 = self.quickMintUser('foouser1', 'foopass1')
+        # this should succeed
+        client.removeUserAccount(userId2);
+
 
 if __name__ == "__main__":
     testsuite.main()

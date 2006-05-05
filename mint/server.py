@@ -87,6 +87,19 @@ def requiresAuth(func):
     wrapper.__wrapped_func__ = func
     return wrapper
 
+def requiresCfgAdmin(cond):
+    def deco(func):
+        def wrapper(self, *args):
+            if (list(self.authToken) == \
+                [self.cfg.authUser, self.cfg.authPass]) or self.auth.admin or \
+                 (not self.cfg.__getitem__(cond) and self.auth.authorized):
+                    return func(self, *args)
+            else:
+                raise PermissionDenied
+        wrapper.__wrapped_func__ = func
+        return wrapper
+    return deco
+
 def private(func):
     """Mark a method as callable only if self._allowPrivate is set
     to mask out functions not callable via XMLRPC over the web."""
@@ -419,7 +432,7 @@ class MintServer(object):
 
     # project methods
     @typeCheck(str, str, str, str, str)
-    @requiresAuth
+    @requiresCfgAdmin('adminNewProjects')
     @private
     def newProject(self, projectName, hostname, domainname, projecturl, desc):
         maintenance.enforceMaintenanceMode( \
@@ -1075,13 +1088,13 @@ class MintServer(object):
         if not self._isUserAdmin(userId):
             return
         cu = self.db.cursor()
-        cu.execute("""SELECT COUNT(*)
+        cu.execute("""SELECT userId
                           FROM UserGroups
                           LEFT JOIN UserGroupMembers
                           ON UserGroups.userGroupId =
                                  UserGroupMembers.userGroupId
                           WHERE userGroup='MintAdmin'""")
-        if cu.fetchone()[0] == 1:
+        if [x[0] for x in cu.fetchall()] == [userId]:
             # userId is admin, and there is only one admin => last admin
             raise LastAdmin("There are no more admin accounts. Your request "
                             "to close your account has been rejected to "
@@ -2095,7 +2108,7 @@ class MintServer(object):
         cfg = project.getConaryConfig()
 
         nc = conaryclient.ConaryClient(cfg).getRepos()
-        versionList = nc.getTroveVersionList(cfg.repositoryMap.keys()[0], {None:None})
+        versionList = nc.getTroveVersionList(cfg.repositoryMap.keys()[0], {trove: None})
 
         # group trove by major architecture
         return dictByArch(versionList, trove)

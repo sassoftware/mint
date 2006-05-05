@@ -46,7 +46,7 @@ class BrowseTest(MintRepositoryHelper):
             }
 
     def testBrowse(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
+        client, userId = self.quickMintAdmin("testuser", "testpass")
         client2, userId2 = self.quickMintUser("testuser2", "testpass")
         client3, userId3 = self.quickMintUser("testuser3", "testpass")
         client4, userId4 = self.quickMintUser("testuser4", "testpass")

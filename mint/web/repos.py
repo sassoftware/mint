@@ -171,15 +171,3 @@ class ConaryHandler(WebHandler, http.HttpHandler):
     del http.HttpHandler.addUserForm
     del http.HttpHandler.pgpNewKeyForm
     del http.HttpHandler.submitPGPKey
-
-    allowedMethods = ('getOpenPGPKey', 'pgpAdminForm', 'pgpChangeOwner',
-                      'files', 'troveInfo', 'browse', 'getFile', 'userlist',
-                      'deleteGroup', 'addPermForm', 'addPerm', 'addGroupForm',
-                      'manageGroupForm', 'manageGroup', 'addGroup',
-                      'deletePerm', 'editPermForm', 'editPerm')
-
-    for method in http.HttpHandler.__dict__.keys():
-        if not (method.startswith('_') or method in allowedMethods):
-            if callable(http.HttpHandler.__dict__[method]):
-                print >> sys.stderr, "Warning: conary handler method is not explicitly allowed: %s\n please update repos.py" % method
-
