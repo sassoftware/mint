@@ -331,7 +331,7 @@ class ProjectsTable(database.KeyedTable):
         cu.execute(sql)
 
         results = cu.fetchall()
-        return [(int(x[0]), x[1], x[2], x[3]) for x in results]
+        return [(int(x[0]), x[1], x[2]) for x in results]
 
     def getProjectIdByFQDN(self, fqdn):
         cu = self.db.cursor()

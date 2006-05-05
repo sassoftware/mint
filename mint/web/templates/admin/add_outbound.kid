@@ -22,7 +22,7 @@
                         <th><em class="required">Project to mirror:</em></th>
                         <td>
                             <select name="projectId">
-                                <option py:for="project in projects" value="${project[0]}">${project[3]}</option>
+                                <option py:for="project in projects" value="${project[0]}">${project[2]}</option>
                             </select>
                         </td>
                     </tr>
