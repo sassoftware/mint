@@ -2074,7 +2074,7 @@ class MintServer(object):
         cfg = project.getConaryConfig()
 
         nc = conaryclient.ConaryClient(cfg).getRepos()
-        versionList = nc.getTroveVersionList(cfg.repositoryMap.keys()[0], {None:None})
+        versionList = nc.getTroveVersionList(cfg.repositoryMap.keys()[0], {trove: None})
 
         # group trove by major architecture
         return dictByArch(versionList, trove)
