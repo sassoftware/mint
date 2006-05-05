@@ -74,6 +74,7 @@ from mint.client import upstream
                             </ol>
                         </td>
                         <td>
+                            <p py:if="not releases">No releases have been published yet.</p>
                             <ol py:if="releases">
 
                                 <li py:for="release in releases">
