@@ -41,10 +41,13 @@ def _handleKernelPackage(cs, name, version, flavor):
         compName = name
     compCs = cs.getNewTroveVersion(compName, version, flavor)
     provides = compCs.provides()
+    kernelVersion = version.trailingRevision().getVersion()
     if deps.DEP_CLASS_TROVES in provides.members:
+        # FIXME: this assumes that the only Trove: Provides is the right one
         kernelProv = provides.members[deps.DEP_CLASS_TROVES].members.values()[0]
-        kernelStr = " ".join(sorted(kernelProv.flags.keys()))
 
+        # first kernel provides flag that starts with the kernel version
+        kernelStr = [x for x in kernelProv.flags.keys() if x.startswith(kernelVersion)][0]
     name = name.split(':')[0]
     # other kernel types should be handled here, such as numa.
     if 'smp' in kernelStr:
