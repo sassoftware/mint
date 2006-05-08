@@ -3,12 +3,7 @@
 from urllib import quote
 from conary import versions
 from mint.helperfuncs import truncateForDisplay
-import time
-
-def injectVersion(version):
-    parts = version.split('/')
-    parts[-1] = str(time.time()) + ':' + parts[-1]
-    return '/'.join(parts)
+from mint.web.templatesupport import injectVersion
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"

@@ -7,9 +7,8 @@
 from mint import jobstatus
 from mint import releasetypes
 from mint import userlevels
-from mint.client import upstream
 from mint.helperfuncs import truncateForDisplay
-import time
+from mint.web.templatesupport import downloadTracker
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
@@ -97,7 +96,10 @@ import time
                     <div py:strip="True" py:if="files">
                     <ul>
                         <li py:for="i, file in enumerate(files)">
-                            <a href="http://${cfg.siteHost}${cfg.basePath}downloadImage/${file['fileId']}/${file['filename']}"> Download ${file['title'] and file['title'] or "Disc " + str(i+1)}</a> (${file['size']/1048576}&nbsp;MB)
+                            <?py fileUrl = cfg.basePath + "downloadImage/" + str(file['fileId']) + "/" + file['filename'] ?>
+                            <a py:attrs="downloadTracker(cfg, fileUrl)" href="http://${cfg.siteHost}${fileUrl}">
+                                Download ${file['title'] and file['title'] or "Disc " + str(i+1)}
+                            </a> (${file['size']/1048576}&nbsp;MB)
                         </li>
                     </ul>
                     <div py:if="releasetypes.INSTALLABLE_ISO in release.imageTypes">

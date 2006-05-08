@@ -1,16 +1,12 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <?python
-import time
 from mint import searcher
 from urllib import quote
 from mint import userlevels
 from mint import maintenance
 from mint.helperfuncs import truncateForDisplay
 
-def injectVersion(version):
-    parts = version.split('/')
-    parts[-1] = str(time.time()) + ':' + parts[-1]
-    return '/'.join(parts)
+from mint.web.templatesupport import injectVersion
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#">
@@ -69,10 +65,6 @@ def injectVersion(version):
               </thead>
               <tbody class="group-builder" id="groupbuilder-tbody">
                 <tr><td></td></tr>
-                <?python
-                    from conary import versions
-                    import time
-                ?>
                 <tr py:for="item in groupTrove.listTroves()" id="groupbuilder-item-${item['groupTroveItemId']}">
                     <td py:if="item['versionLock']"><img alt="Lock" class="lockicon" id="groupbuilder-item-lockicon-${item['groupTroveItemId']}" src="${cfg.staticPath}apps/mint/images/locked.gif" title="Version is locked" /></td>
                     <td py:if="not item['versionLock']"><img alt="Lock" class="lockicon" id="groupbuilder-item-lockicon-${item['groupTroveItemId']}" src="${cfg.staticPath}apps/mint/images/unlocked.gif" title="Version is unlocked"/></td>
@@ -245,5 +237,4 @@ def injectVersion(version):
             </div>
         </div>
     </div>
-
 </html>

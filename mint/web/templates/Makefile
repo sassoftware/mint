@@ -12,7 +12,6 @@ kid_files = \
 	confirmEmail.kid	\
 	confirm.kid		\
 	cookGroup.kid		\
-	download.kid		\
 	editGroup.kid		\
 	editProject.kid		\
 	editRelease.kid		\

@@ -492,7 +492,7 @@ class SiteHandler(WebHandler):
             project = self.client.getProject(release.projectId)
 
             fileUrl = "http://%s/images/%s/%d/%s" % (self.cfg.siteHost, project.hostname, release.id, reqFilename)
-            return self._write("download", url = fileUrl)
+            self._redirect(fileUrl)
         except OSError, e:
             return self._write("error", shortError = "File error",
                 error = "An error has occurred opening the image file: %s" % e)

@@ -18,7 +18,8 @@ python_files = \
 	project.py	\
 	setup.py	\
 	site.py		\
-	webhandler.py
+	webhandler.py	\
+	templatesupport.py
 
 extra_dist = Makefile
 
