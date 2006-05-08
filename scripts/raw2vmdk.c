@@ -90,9 +90,7 @@ void SparseExtentHeader_init(SparseExtentHeader *hd, off_t outsize) {
     u_int32_t metadatasize =      gt0offset + numgts*4;
     hd->gdOffset  =         hd->rgdOffset + metadatasize;
     /* The overHead is grain aligned */
-    hd->overHead =          ((2 * metadatasize / hd->grainSize) +
-                            (((2 * metadatasize) % hd->grainSize) ? 1: 0)) *
-                            hd->grainSize;
+    hd->overHead = ceil((hd->gdOffset + metadatasize) / (float) hd->grainSize) * hd->grainSize;
     hd->uncleanShutdown =   0;
     hd->singleEndLineChar = SELC;
     hd->nonEndLineChar =    NELC;
@@ -148,7 +146,7 @@ int writeGrainDirectory(const size_t offset, const off_t outsize, FILE * of) {
 
 int writeGrainTables(const size_t offset, const off_t outsize, FILE * of) {
     size_t returner = 0;
-    size_t i, numGrains = outsize / GRAINSIZE;
+    size_t i, numGrains = (outsize / GRAINSIZE) + ((outsize % GRAINSIZE) ? 1 : 0);
     size_t grainSize = SECTORS(GRAINSIZE);
     size_t cur;
     for (i = 0; i < numGrains; i++) {
