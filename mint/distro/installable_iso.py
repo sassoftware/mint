@@ -137,7 +137,7 @@ class InstallableIso(ImageGenerator):
     def _storeUpdateJob(self, uJob):
         """Stores the version and flavor of an update job in the ReleaseData tables"""
         troveSpec = self._getTroveSpec(uJob)
-        self.release.setDataValue(trvName, troveSpec,
+        self.release.setDataValue(troveSpec.split("=")[0], troveSpec,
                                   dataType = RDT_STRING, validate = False)
 
     def getConaryClient(self, tmpRoot, arch):
