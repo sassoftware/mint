@@ -314,8 +314,63 @@ class InstallableIso(ImageGenerator):
             os.system("sed -i '0,/append/s/append.*$/& ks=cdrom/' %s" % \
                       os.path.join(topdir, 'isolinux', 'isolinux.cfg'))
 
-    def _makeTemplate(self, templateDir, tmpDir, uJob):
-        pass
+    def _makeTemplate(self, templateDir, tmpDir, uJob, cclient):
+        def cpiogz(inputDir, output):
+            fileList = ['find', inputDir]
+            cpioCmd = ['cpio', '-o']
+            gzip = ['gzip']
+
+            outputFile = file(output, "w")
+            files = subprocess.Popen(fileList, stdout = subprocess.PIPE)
+            gzip = subprocess.Popen(['gzip'], stdin = subprocess.PIPE, stdout = outputFile)
+            cpio = subprocess.Popen(['cpio', '-o'], stdin = files.stdout, stdout = gzip.stdin)
+
+            cpio.communicate()
+            outputFile.close()
+
+        def mkisofs(inputDir, output):
+            cmd = ['mkisofs', '-quiet', '-o', output,
+                '-b', 'isolinux/isolinux.bin',
+                '-c', 'isolinux/boot.cat',
+                '-no-emul-boot',
+                '-boot-load-size', '4',
+                '-boot-info-table',
+                '-R', '-J', '-T',
+                '-V', 'rPath Linux',
+                inputDir]
+            call(cmd)
+
+        def mkcramfs(inputDir, output):
+            cmd = ['mkcramfs', inputDir, output]
+            call(cmd)
+
+        def mkdosfs(inputDir, output):
+            pass # creation method TBD
+
+        cclient.applyUpdate(uJob)
+
+        cmdMap = {
+            'cpiogz': cpiogz,
+            'mkisofs': mkisofs,
+            'syslinux': syslinux,
+            'mkcramfs': mkcramfs,
+            'mkdosfs': mkdosfs,
+        }
+
+        manifest = open(os.path.join(tmpDir, "MANIFEST"))
+        for l in manifest.xreadlines():
+            cmd, input, output, mode = l.split(',')
+
+            if cmd not in cmdMap:
+                raise RuntimeError, "Invalid command in anaconda-templates MANIFEST: %s" % (cmd)
+
+            templateFunc = cmdMap[cmd]
+            util.mkdirChain(os.path.dirname(output))
+            templateFunc(input, output)
+            call(['chmod', mode, output])
+
+
+
 
     def _getTemplatePath(self):
         tmpDir = tempfile.mkdtemp()
@@ -329,7 +384,7 @@ class InstallableIso(ImageGenerator):
             hash = sha1helper.md5ToString(sha1helper.md5String(troveSpec))
             templateDir = os.path.join(self.isocfg.templatePath, hash)
             if not os.path.exists(templateDir):
-                self._makeTemplate(templateDir, tmpDir, uJob)
+                self._makeTemplate(templateDir, tmpDir, uJob, cclient)
             return templateDir
         finally:
             try:
