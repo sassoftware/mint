@@ -67,7 +67,7 @@ class FixtureCache(object):
         util.mkdirChain(cfg.imagesPath)
         cfg.sendNotificationEmails = False
         cfg.conaryRcFile = os.path.join(cfg.dataPath, 'run', 'conaryrc')
-        os.mkdir(os.path.join(cfg.dataPath, 'run'))
+        util.mkdirChain(os.path.join(cfg.dataPath, 'run'))
         f = open(cfg.conaryRcFile, 'w')
         f.close()
         cfg.postCfg()
