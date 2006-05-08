@@ -43,7 +43,7 @@ def _handleKernelPackage(cs, name, version, flavor):
     provides = compCs.provides()
     if deps.DEP_CLASS_TROVES in provides.members:
         kernelProv = provides.members[deps.DEP_CLASS_TROVES].members.values()[0]
-        kernelStr = " ".join(kernelProv.flags.keys())
+        kernelStr = " ".join(sorted(kernelProv.flags.keys()))
 
     name = name.split(':')[0]
     # other kernel types should be handled here, such as numa.
