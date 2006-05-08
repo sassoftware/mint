@@ -253,10 +253,10 @@ class MintApacheServer(rephelp.ApacheServer):
         cfg.maintenanceLockPath  = os.path.join(cfg.dataPath,
                                                 'maintenance.lock')
 
-        self.cfg.conaryRcFile = os.path.join(self.cfg.dataPath, 'run', 'conaryrc')
-        os.mkdir(os.path.join(self.cfg.dataPath, 'run'))
+        cfg.conaryRcFile = os.path.join(cfg.dataPath, 'run', 'conaryrc')
+        util.mkdirChain(os.path.join(cfg.dataPath, 'run'))
 
-        f = open(self.cfg.conaryRcFile, 'w')
+        f = open(cfg.conaryRcFile, 'w')
         f.close()
         self.mintCfg = cfg
 
