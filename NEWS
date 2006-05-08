@@ -1,5 +1,13 @@
 Changes in (tip):
-* Users with admin privileges on project repositories can now alter groups and permissions.
+* A bug in raw2vmdk which caused occasional miscalculation of the disk
+  metadata size has been fixed.
+* The download landing page has been removed, and an alternate method for
+  download tracking using Google Analytics has been implemented.
+* The "show media check" option for installable ISOs now behaves correctly.
+  The sense used to be backwards: selecting "show media check" would skip
+  the media check, and vice-versa.
+* Users with admin privileges on project repositories can now alter
+  groups and permissions.
 * Swap file size on bootable images is now configurable.
 * You are now not required to have a kernel in your bootable image group,
   if you know what you're doing.
