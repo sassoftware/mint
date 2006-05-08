@@ -1443,8 +1443,9 @@ class MintServer(object):
         projs = self.projects.getProjectsList()
         repoMaps = {}
         for x in projs:
-            proj = projects.Project(self, x[0])
-            if not proj.hidden and not proj.disabled:
+            projDict = self.projects.get(x[0])
+            if not (projDict['hidden'] or projDict['disabled']):
+                proj = projects.Project(self, x[0])
                 repoMaps.update(proj.getConaryConfig().repositoryMap)
         fd, fname = tempfile.mkstemp()
         os.close(fd)
