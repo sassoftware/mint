@@ -461,6 +461,12 @@ class MintServer(object):
                               projectId = projectId,
                               level = userlevels.OWNER)
 
+        # add to RepNameMap if projectDomainName != domainname
+        projectDomainName = self.cfg.projectDomainName.split(':')[0]
+        if (domainname != projectDomainName):
+            self.addRemappedRepository('%s.%s' % \
+                    (hostname, projectDomainName), fqdn)
+
         project = projects.Project(self, projectId)
 
         project.addLabel(fqdn.split(':')[0] + "@%s" % self.cfg.defaultBranch,
