@@ -445,6 +445,35 @@ class ProjectTest(fixtures.FixturedUnitTest):
         finally:
             self.cfg.adminNewProjects = adminNewProjects
 
+    def _checkRepoMap(self, contents):
+        f = open(self.cfg.conaryRcFile)
+        x = f.read()
+        f.close()
+        return x == contents
+
+    @fixtures.fixture("Empty")
+    def testConaryRc(self, db, data):
+        client = self.getClient('test')
+        adminClient = self.getClient('admin')
+
+        hideProjId = client.newProject('Proj', 'proj', 'rpath.local')
+        assert(self._checkRepoMap('repositoryMap proj.rpath.local http://test.rpath.local2/repos/proj/\n'))
+
+        adminClient.hideProject(hideProjId)
+        assert(self._checkRepoMap(''))
+
+        client.newProject('Baz', 'baz', 'rpath.local')
+        assert(self._checkRepoMap('repositoryMap baz.rpath.local http://test.rpath.local2/repos/baz/\n'))
+
+        reposUrl = 'http://bar.rpath.local/conary/'
+        exProjectId = adminClient.newExternalProject('Bar', 'bar',
+                                                   'rpath.local',
+                                                   'bar.rpath.local@rpl:devel',
+                                                    reposUrl)
+        assert(self._checkRepoMap('repositoryMap baz.rpath.local http://test.rpath.local2/repos/baz/\nrepositoryMap bar.rpath.local http://bar.rpath.local/conary/\n'))
+
+        adminClient.unhideProject(hideProjId)
+        assert(self._checkRepoMap('repositoryMap baz.rpath.local http://test.rpath.local2/repos/baz/\nrepositoryMap proj.rpath.local http://test.rpath.local2/repos/proj/\nrepositoryMap bar.rpath.local http://bar.rpath.local/conary/\n'))
 
 class ProjectTestConaryRepository(MintRepositoryHelper):
 
