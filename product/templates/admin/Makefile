@@ -4,7 +4,7 @@
 # All Rights Reserved
 #
 
-kid_files = project.kid jobs.kid frontPage.kid
+kid_files = jobs.kid admin.kid
 
 python_files =
 
