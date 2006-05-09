@@ -50,6 +50,7 @@ from conary import conaryclient
 from conary import sqlite3
 from conary import versions
 from conary.deps import deps
+from conary.lib import util
 from conary.repository.errors import TroveNotFound
 from conary.repository import netclient
 from conary.repository import shimclient
@@ -460,6 +461,12 @@ class MintServer(object):
         self.projectUsers.new(userId = self.auth.userId,
                               projectId = projectId,
                               level = userlevels.OWNER)
+
+        # add to RepNameMap if projectDomainName != domainname
+        projectDomainName = self.cfg.projectDomainName.split(':')[0]
+        if (domainname != projectDomainName):
+            self.addRemappedRepository('%s.%s' % \
+                    (hostname, projectDomainName), fqdn)
 
         project = projects.Project(self, projectId)
 
@@ -1458,6 +1465,7 @@ class MintServer(object):
         for host, url in repoMaps.iteritems():
             f.write('repositoryMap %s %s\n' % (host, url))
         f.close()
+        util.mkdirChain(os.path.join(self.cfg.dataPath, 'run'))
         os.rename(fname, self.cfg.conaryRcFile)
 
     #

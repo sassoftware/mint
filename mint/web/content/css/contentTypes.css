@@ -107,6 +107,9 @@ div.releases_release {
 .mainformhorizontal p.help {
 	position:relative; width:70%;
 }
+.mainformhorizontal table {
+    width: 70%;
+}
 .required {
 	padding-left:0.7em; color:#c00; font-style:italic;
 	background:url(../images/required.gif) no-repeat 0.2em 0.45em;

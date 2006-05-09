@@ -134,7 +134,7 @@ class SiteHandler(WebHandler):
 
     @strFields(page = 'legal')
     def legal(self, auth, page):
-        if not legalDocument(page):
+        if not helpDocument(page):
             raise HttpNotFound
         return self._write("docs/" + page)
 
@@ -148,7 +148,7 @@ class SiteHandler(WebHandler):
     @strFields(page = "")
     @intFields(step = 1)
     def help(self, auth, page, step):
-        if not legalDocument(page):
+        if not helpDocument(page):
             return self._write("docs/overview")
         return self._write("docs/" + page, step = step)
 
@@ -368,6 +368,8 @@ class SiteHandler(WebHandler):
             self._addErrors("You must supply a project title")
         if not hostname:
             self._addErrors("You must supply a project hostname")
+        if not domainname:
+            self._addErrors("You must supply a project domain name")
         if not self._getErrors():
             try:
                 # attempt to create the project
@@ -603,7 +605,7 @@ class SiteHandler(WebHandler):
             return self._redirect("http://%s%suserInfo?id=%d" %
                     (self.cfg.siteHost, self.cfg.basePath, userId))
 
-def legalDocument(page):
+def helpDocument(page):
     templatePath = os.path.join(os.path.split(__file__)[0], 'templates/docs')
     return page in [x.split('.kid')[0] for x in os.listdir(templatePath) \
                     if x.endswith('.kid')]

@@ -854,3 +854,14 @@ table.add-form td#header {
 li.selectedItem {
     font-weight: bold;
 }
+
+.learnmore {
+    font-size: smaller;
+}
+
+#helpclose {
+    margin-top: 2em;
+    text-align: right;
+    font-size: smaller;
+}
+
