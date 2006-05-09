@@ -282,7 +282,7 @@ class KeyedTable(DatabaseTable):
         count = 0
 
         if modified:
-            where += " AND " + modified
+            where = where[0] + " AND " + modified, where[1]
 
         #First get the search result count
         query = "SELECT count(%s) FROM %s " % (columns[0], table) + where[0]

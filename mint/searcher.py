@@ -50,7 +50,7 @@ class Searcher :
         if modcode == NEVER:
             return ''
         else:
-            comparator = datesql[modcode].replace('EPOCH', str(time.time()))
+            comparator = datesql.get(modcode, '0').replace('EPOCH', str(time.time()))
             return "%s > %s" % (column, comparator)
 
     @classmethod

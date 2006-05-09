@@ -429,6 +429,8 @@ class SiteHandler(WebHandler):
     @strFields(search = "", type = None)
     @intFields(limit = 10, offset = 0, modified = 0)
     def search(self, auth, type, search, modified, limit, offset):
+        limit = max(limit, 0)
+        offset = max(offset, 0)
         limit = limit or 10
         self.session['searchType'] = type
         if type == "Projects":
