@@ -6,6 +6,7 @@
 
 python_files = \
 	anaconda_images.py	\
+	anaconda_templates.py	\
 	flavors.py		\
 	gencslist.py		\
 	group_trove.py		\
