@@ -316,17 +316,28 @@ class InstallableIso(ImageGenerator):
 
     def _makeTemplate(self, templateDir, tmpDir, uJob, cclient):
         def cpiogz(inputDir, output):
-            fileList = ['find', inputDir]
-            cpioCmd = ['cpio', '-o']
-            gzip = ['gzip']
+            cwd = os.getcwd()
+            try:
+                os.chdir(inputDir)
+                cpioCmd = ['cpio', '-o']
+                gzip = ['gzip']
 
-            outputFile = file(output, "w")
-            files = subprocess.Popen(fileList, stdout = subprocess.PIPE)
-            gzip = subprocess.Popen(['gzip'], stdin = subprocess.PIPE, stdout = outputFile)
-            cpio = subprocess.Popen(['cpio', '-o'], stdin = files.stdout, stdout = gzip.stdin)
+                outputFile = file(output, "w")
+                files = subprocess.Popen(['find', '.', '-print', '-depth'],
+                                         stdout = subprocess.PIPE)
+                gzip = subprocess.Popen(['gzip'], stdin = subprocess.PIPE,
+                                        stdout = outputFile)
+                cpio = subprocess.Popen(['cpio', '-o'],
+                                        stdin = files.stdout,
+                                        stdout = gzip.stdin)
 
-            cpio.communicate()
-            outputFile.close()
+                cpio.communicate()
+                outputFile.close()
+            finally:
+                try:
+                    os.chdir(cwd)
+                except:
+                    pass
 
         def mkisofs(inputDir, output):
             cmd = ['mkisofs', '-quiet', '-o', output,
@@ -347,6 +358,9 @@ class InstallableIso(ImageGenerator):
         def mkdosfs(inputDir, output):
             pass # creation method TBD
 
+        def syslinux(inputDir, output):
+            pass # creation method TBD
+
         cclient.applyUpdate(uJob)
 
         cmdMap = {
@@ -359,7 +373,7 @@ class InstallableIso(ImageGenerator):
 
         manifest = open(os.path.join(tmpDir, "MANIFEST"))
         for l in manifest.xreadlines():
-            cmd, input, output, mode = l.split(',')
+            cmd, input, output, mode = [x.strip() for x in l.split(',')]
 
             if cmd not in cmdMap:
                 raise RuntimeError, "Invalid command in anaconda-templates MANIFEST: %s" % (cmd)
