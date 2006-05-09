@@ -23,7 +23,7 @@ from mint import grouptrove
 from mint import server
 from mint import userlevels
 from mint.database import ItemNotFound, DuplicateItem
-from mint.mint_error import PermissionDenied
+from mint.mint_error import PermissionDenied, ParameterError
 from mint.distro import group_trove
 from mint.jobs import DuplicateJob
 
@@ -37,6 +37,17 @@ refRecipe = """class GroupTest(GroupRecipe):
         r.setLabelPath('testproject.%s@rpl:devel')
         r.add('testcase', 'testproject.%s@rpl:devel', '', groupName = 'group-test')
 """ % ((MINT_PROJECT_DOMAIN,) * 2)
+
+refCompRecipe = """class GroupTest(GroupRecipe):
+    name = 'group-test'
+    version = '1.0.0'
+
+    autoResolve = False
+
+    def setup(r):
+        r.setLabelPath('foo.rpath.local2@rpl:devel')
+        r.removeComponents('devel', 'doc')
+"""
 
 groupsRecipe = """class GroupTest(GroupRecipe):
     name = 'group-test'
@@ -540,6 +551,53 @@ class GroupTroveTest(fixtures.FixturedUnitTest):
             "testcase", '/testproject.' + MINT_PROJECT_DOMAIN +
             '@rpl:devel/1.0-1-1', '5#use:~!kernel.debug:kernel.smp'),
                      "Group Trove didn't identify mismatched locked use flags")
+
+    @fixtures.fixture('Full')
+    def testComponentRemoval(self, db, data):
+        ownerId = data['owner']
+        projectId = data['projectId']
+        groupTroveId = data['groupTroveId']
+        client = self.getClient('owner')
+        groupTrove = client.getGroupTrove(groupTroveId)
+        self.failIf(groupTrove.listRemovedComponents() != [],
+                    "Initial set of removed components not empty")
+        groupTrove.removeComponents(['devel', 'doc'])
+        self.failIf(groupTrove.listRemovedComponents() != ['devel', 'doc'],
+                    "components didn't get removed")
+        groupTrove.allowComponents(['devel'])
+        self.failIf(groupTrove.listRemovedComponents() != ['doc'],
+                    "component didn't get re-added")
+
+    @fixtures.fixture('Full')
+    def testMissingComponentAllow(self, db, data):
+        ownerId = data['owner']
+        projectId = data['projectId']
+        groupTroveId = data['groupTroveId']
+        client = self.getClient('owner')
+        groupTrove = client.getGroupTrove(groupTroveId)
+        self.assertRaises(ItemNotFound, groupTrove.allowComponents, ['devel'])
+
+    @fixtures.fixture('Full')
+    def testRemovedComponentRecipe(self, db, data):
+        ownerId = data['owner']
+        projectId = data['projectId']
+        groupTroveId = data['groupTroveId']
+        client = self.getClient('owner')
+        groupTrove = client.getGroupTrove(groupTroveId)
+        groupTrove.removeComponents(['devel', 'doc'])
+        self.failIf(groupTrove.getRecipe() != refCompRecipe,
+                    "Recipe with removed components isn't correct.")
+
+    @fixtures.fixture('Full')
+    def testIllegalRemoval(self, db, data):
+        ownerId = data['owner']
+        projectId = data['projectId']
+        groupTroveId = data['groupTroveId']
+        client = self.getClient('owner')
+        groupTrove = client.getGroupTrove(groupTroveId)
+        self.assertRaises(ParameterError,
+                          groupTrove.removeComponents, ['notarealcomponent'])
+
 
 class GroupTroveTestConary(MintRepositoryHelper):
     def makeCookedTrove(self, branch = 'rpl:devel', hostname = 'testproject'):
