@@ -1,4 +1,15 @@
 Changes in (tip):
+* Projects created using rBA may use a custom domain name.
+* rBA administrator interface now has a link to rAA for managing
+  entitlements, etc.
+* Projects and users are now administered via the project home page and
+  user information page, respectively instead of the administrator page.
+* Administrative interface now matches the site layout.
+* Browse/search users exposed for administrators only.
+* Project and user browse/search will include hidden projects and unconfirmed
+  users if the client has administrative privileges.
+* The ability to disable projects has been removed. The "disabled" column,
+  however, still exists in the Projects table, but is ignored.
 * A bug in raw2vmdk which caused occasional miscalculation of the disk
   metadata size has been fixed.
 * The download landing page has been removed, and an alternate method for
@@ -11,20 +22,20 @@ Changes in (tip):
 * Swap file size on bootable images is now configurable.
 * You are now not required to have a kernel in your bootable image group,
   if you know what you're doing.
-* The group cook "stock flavors" were updated to "prefer" almost every use flag,
-  to avoid problems where a package cooked with a ! or !~ flavor would not be
-  found by the group cook system.
+* The group cook "stock flavors" were updated to "prefer" almost every use 
+  flag, to avoid problems where a package cooked with a ! or !~ flavor 
+  would not be found by the group cook system.
 * Gencslist now supports duplicated changeset filenames by appending a count to
   the end of the filename.
 * Google Analytics code is now disabled by default. Enable it by specifying
   "googleAnalyticsTracker True" in the mint configuration file.
 * Refactoring of code; removed relative imports from the main codebase (save
   for tests and scripts).
-* Refactored admin backend, url changed to /admin/ from /administer/ (the latter
-  still works, to preserve bookmarks).
+* Refactored admin backend, url changed to /admin/ from /administer/ 
+  (the latter still works, to preserve bookmarks).
 * Extended characters in the group trove description no longer break the cook
-  process with an "invalid type for set" error. Extended characters are converted
-  to '?' when passed into Conary.
+  process with an "invalid type for set" error. Extended characters are
+  converted to '?' when passed into Conary.
 
 Changes in 1.6.1:
 
@@ -37,7 +48,8 @@ Changes in 1.6.1:
 * "Remember me on this computer" now functions as expected.
 * Search results have a better UI.
 * The projects pane expands to fit the contents.
-* The IP address of the job server is now correctly recorded in the JobData table.
+* The IP address of the job server is now correctly recorded in the JobData
+  table.
 * The group cook page uses the new status dialog.
 
 Changes in 1.6.0:
@@ -300,7 +312,8 @@ Changes in 0.5.1:
 Changes in 0.5.0:
 
 * Lots of documentation added.
-* News is displayed as HTML, not plain text, mainly so links and paragraph breaks are preserved.
+* News is displayed as HTML, not plain text, mainly so links and paragraph
+  breaks are preserved.
 * constants.py stores the current version of Mint code.
 * Hidden projects are now suppressed where necessary from userInfo page.
 * HTML output degrades to HTML 4.0 for browsers that don't support XHTML.
@@ -350,11 +363,12 @@ Changes in 0.4.1:
 
 Changes in 0.4.0:
 
-* Projects are now accessible under the main site: http://hostname/project/<projectname>
+* Projects are now accessible under the main site: 
+  http://hostname/project/<projectname>
 * Repositories are now accessible under a specified repository hostname:
     http://repos.mint.org/projname/
-* User login is now handled using mod_python sessions instead of a simple base64-encoded
-  authentication token on the client side.
+* User login is now handled using mod_python sessions instead of a simple
+  base64-encoded authentication token on the client side.
 * More features have been added to the administrative interface.
 * Fixed some email reverification logic problems. 
 * Fixed "forgotten password" functionality.
@@ -378,22 +392,25 @@ Changes in 0.3.7:
 
 * News entries are now ordered correctly: publication date descending 
 * Cancel account works.
-* Pending users who are not confirmed yet don't show up in search/browse results.
+* Pending users who are not confirmed yet don't show up in 
+  search/browse results.
 * A bug that created new project repositories in the wrong path has been fixed.
 * Moved the developer "resign" link to the bottom of the project page.
 * Users may not cancel their account if they are the sole owner of any projects.
 * An "rpath Products" palette has been added.
-* The privacy policy and terms of service links have been moved to the bottom of the page.
-* The "add <foo> to your project" palette has been disabled if you are not an owner
-  of any projects, or if you are viewing your own user account.
+* The privacy policy and terms of service links have been moved to the bottom 
+  of the page.
+* The "add <foo> to your project" palette has been disabled if you are
+  not an owner of any projects, or if you are viewing your own user account.
 * A nicer error message is raised on an incorrect password.
-* The login page has been eliminated, replaced with a "forgot password" page and 
-  a "account confirmed" message page.
+* The login page has been eliminated, replaced with a "forgot password" 
+  page and an "account confirmed" message page.
 * Privacy Policy exists, Terms of Service exists in Latin. Translator needed.
 * RSSv2 feed of project releases exists.
-* Search and browse users has been removed from the interface (and disabled in code)
-* Some checks have been added to prevent an owner of a project from leaving the project
-  in a "headless" state with developers, but no owners.
+* Search and browse users has been removed from the interface (and
+  disabled in code)
+* Some checks have been added to prevent an owner of a project from leaving
+  the project in a "headless" state with developers, but no owners.
 
 Changes in 0.3.6:
 
