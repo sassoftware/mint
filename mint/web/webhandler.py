@@ -44,10 +44,10 @@ class WebHandler(object):
             global kidCache
             #TODO Refresh if it's changed
             if templateName not in kidCache:
-                kidCache[templateName] = kid.load_template(path)
+                kidCache[path] = kid.load_template(path)
             else:
                 wasCacheHit = True
-            template = kidCache[templateName]
+            template = kidCache[path]
         else:
             template = kid.load_template(path)
 
