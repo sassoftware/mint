@@ -15,6 +15,7 @@ from mint.client import upstream
 from mint.data import RDT_STRING
 from mint.distro import gencslist
 from mint.distro import splitdistro
+from mint.distro import anaconda_templates
 from mint.distro.anaconda_images import AnacondaImages
 from mint.distro.flavors import stockFlavors
 from mint.distro.imagegen import ImageGenerator, MSG_INTERVAL
@@ -315,62 +316,36 @@ class InstallableIso(ImageGenerator):
                       os.path.join(topdir, 'isolinux', 'isolinux.cfg'))
 
     def _makeTemplate(self, templateDir, tmpDir, uJob, cclient):
-        def cpiogz(inputDir, output):
-            fileList = ['find', inputDir]
-            cpioCmd = ['cpio', '-o']
-            gzip = ['gzip']
+        # templateData is something that the template commands can
+        # modify so that we can use the information later on down the
+        # road.
+        self.templateData = {}
 
-            outputFile = file(output, "w")
-            files = subprocess.Popen(fileList, stdout = subprocess.PIPE)
-            gzip = subprocess.Popen(['gzip'], stdin = subprocess.PIPE, stdout = outputFile)
-            cpio = subprocess.Popen(['cpio', '-o'], stdin = files.stdout, stdout = gzip.stdin)
+        def setInfo(key, data):
+            self.templateData[key] = data
 
-            cpio.communicate()
-            outputFile.close()
+        def syslinux(self, input):
+            return call(['syslinux', input])
 
-        def mkisofs(inputDir, output):
-            cmd = ['mkisofs', '-quiet', '-o', output,
-                '-b', 'isolinux/isolinux.bin',
-                '-c', 'isolinux/boot.cat',
-                '-no-emul-boot',
-                '-boot-load-size', '4',
-                '-boot-info-table',
-                '-R', '-J', '-T',
-                '-V', 'rPath Linux',
-                inputDir]
-            call(cmd)
-
-        def mkcramfs(inputDir, output):
-            cmd = ['mkcramfs', inputDir, output]
-            call(cmd)
-
-        def mkdosfs(inputDir, output):
-            pass # creation method TBD
-
-        cclient.applyUpdate(uJob)
+        image = anaconda_templates.Image()
 
         cmdMap = {
-            'cpiogz': cpiogz,
-            'mkisofs': mkisofs,
+            'image':    image.run,
+            'set':      setInfo,
             'syslinux': syslinux,
-            'mkcramfs': mkcramfs,
-            'mkdosfs': mkdosfs,
         }
 
+        cclient.applyUpdate(uJob)
         manifest = open(os.path.join(tmpDir, "MANIFEST"))
         for l in manifest.xreadlines():
-            cmd, input, output, mode = l.split(',')
+            cmds = [x.strip() for x in l.split(',')]
 
+            cmd = cmds.pop()
             if cmd not in cmdMap:
                 raise RuntimeError, "Invalid command in anaconda-templates MANIFEST: %s" % (cmd)
 
-            templateFunc = cmdMap[cmd]
-            util.mkdirChain(os.path.dirname(output))
-            templateFunc(input, output)
-            call(['chmod', mode, output])
-
-
-
+            func = cmdMap[cmd]
+            ret = func(*cmds)
 
     def _getTemplatePath(self):
         tmpDir = tempfile.mkdtemp()
