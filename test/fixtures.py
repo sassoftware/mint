@@ -498,6 +498,7 @@ class MySqlFixtureCache(FixtureCache, mysqlharness.MySqlHarness):
 
 class FixturedUnitTest(unittest.TestCase):
     adminClient = None
+    cfg = None
 
     def listFixtures(self):
         return fixtureCache.list()
@@ -588,7 +589,7 @@ class FixturedUnitTest(unittest.TestCase):
     def tearDown(self):
         try:
             fixtureCache.delRepos()
-            util.rmtree(self.cfg.dataPath)
+            self.cfg and util.rmtree(self.cfg.dataPath)
         except OSError:
             pass
 
