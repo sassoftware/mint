@@ -264,10 +264,8 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         page = page.assertCode('/newProject', code = 200)
 
-        # explicit redirect expected
-        page = page.fetch('/createProject', postdata =
-                          {'title': 'Test Project',
-                           'hostname': 'test'})
+        page = page.postForm(1, self.fetchWithRedirect,
+                {'title': 'Test Project', 'hostname': 'test'})
 
         project = client.getProjectByHostname("test")
         assert(project.getName() == 'Test Project')
