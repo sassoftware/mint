@@ -197,6 +197,8 @@ def getTables(db, cfg):
     d['releaseData'] = data.ReleaseDataTable(db)
     d['groupTroves'] = grouptrove.GroupTroveTable(db, cfg)
     d['groupTroveItems'] = grouptrove.GroupTroveItemsTable(db, cfg)
+    d['conaryComponents'] = grouptrove.ConaryComponentsTable(db)
+    d['groupTroveRemovedComponents'] = grouptrove.GroupTroveRemovedComponentsTable(db)
     d['jobData'] = data.JobDataTable(db)
     d['releaseImageTypes'] = releases.ReleaseImageTypesTable(db)
     d['inboundLabels'] = mirror.InboundLabelsTable(db)
@@ -465,8 +467,8 @@ class MintServer(object):
         # add to RepNameMap if projectDomainName != domainname
         projectDomainName = self.cfg.projectDomainName.split(':')[0]
         if (domainname != projectDomainName):
-            self.addRemappedRepository('%s.%s' % \
-                    (hostname, projectDomainName), fqdn)
+            self._addRemappedRepository('%s.%s' % \
+                                        (hostname, projectDomainName), fqdn)
 
         project = projects.Project(self, projectId)
 
@@ -2295,6 +2297,7 @@ class MintServer(object):
     def _getRecipe(self, groupTroveId):
         groupTrove = self.groupTroves.get(groupTroveId)
         groupTroveItems = self.groupTroveItems.listByGroupTroveId(groupTroveId)
+        removedComponents = self.groupTroveRemovedComponents.list(groupTroveId)
 
         recipe = ""
         name = ''.join((string.capwords(
@@ -2312,6 +2315,10 @@ class MintServer(object):
         recipeLabels = self.getGroupTroveLabelPath(groupTroveId)
         recipe += indent + "r.setLabelPath(%s)\n" % \
                   str(recipeLabels).split('[')[1].split(']')[0]
+
+        if removedComponents:
+            recipe += indent + "r.removeComponents('" + \
+                      "', '".join(removedComponents) + "')\n"
 
         for trv in groupTroveItems:
             ver = trv['versionLock'] and trv['trvVersion'] or trv['trvLabel']
@@ -2442,6 +2449,29 @@ class MintServer(object):
         self._filterProjectAccess(projectId)
         self._requireProjectDeveloper(projectId)
         self.groupTroves.setUpstreamVersion(groupTroveId, vers)
+        return True
+
+    #group trove component reomval specific functions
+    @private
+    @typeCheck(int)
+    @requiresAuth
+    def listGroupTroveRemovedComponents(self, groupTroveId):
+        return self.groupTroveRemovedComponents.list(groupTroveId)
+
+    @private
+    @typeCheck(int, (list, str))
+    @requiresAuth
+    def removeGroupTroveComponents(self, groupTroveId, components):
+        self.groupTroveRemovedComponents.removeComponents(groupTroveId,
+                                                          components)
+        return True
+
+    @private
+    @typeCheck(int, (list, str))
+    @requiresAuth
+    def allowGroupTroveComponents(self, groupTroveId, components):
+        self.groupTroveRemovedComponents.allowComponents(groupTroveId,
+                                                         components)
         return True
 
     #group trove item specific functions
@@ -2661,6 +2691,9 @@ class MintServer(object):
     @typeCheck(str, str)
     @requiresAdmin
     def addRemappedRepository(self, fromName, toName):
+        return self._addRemappedRepository(fromName, toName)
+
+    def _addRemappedRepository(self, fromName, toName):
         return self.repNameMap.new(fromName = fromName, toName = toName)
 
     def __init__(self, cfg, allowPrivate = False, alwaysReload = False, db = None, req = None):
