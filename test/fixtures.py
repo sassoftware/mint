@@ -369,6 +369,7 @@ class SqliteFixtureCache(FixtureCache):
         testCfg.reposContentsDir = [os.path.join(testCfg.dataPath, 'contents1', '%s'), os.path.join(cfg.dataPath, 'contents2', '%s')]
         testCfg.reposDBPath = os.path.join(testCfg.dataPath, 'repos', '%s', 'sqldb')
         testCfg.reposPath = os.path.join(testCfg.dataPath, 'repos')
+        testCfg.conaryRcFile = os.path.join(testCfg.dataPath, 'run', 'conaryrc')
 
         return testCfg, data
 
@@ -465,6 +466,7 @@ class MySqlFixtureCache(FixtureCache, mysqlharness.MySqlHarness):
         testCfg.imagesPath = os.path.join(testCfg.dataPath, 'images')
         testCfg.reposContentsDir = [os.path.join(testCfg.dataPath, 'contents1', '%s'), os.path.join(testCfg.dataPath, 'contents2', '%s')]
         testCfg.reposPath = os.path.join(testCfg.dataPath, 'repos')
+        testCfg.conaryRcFile = os.path.join(testCfg.dataPath, 'run', 'conaryrc')
 
         # restore the mint db into a unique copy
         fixtureMintDbName = "mf%s" % name
