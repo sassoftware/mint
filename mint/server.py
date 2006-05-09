@@ -520,6 +520,7 @@ class MintServer(object):
             self.projects.createRepos(self.cfg.reposPath, self.cfg.reposContentsDir,
                 hostname, domainname, None, None)
 
+        self._generateConaryRcFile()
         return projectId
 
     @typeCheck(int)
@@ -874,6 +875,7 @@ class MintServer(object):
         repos.deleteUserByName(project.getLabel(), 'anonymous')
 
         self.projects.hide(projectId)
+        self._generateConaryRcFile()
         return True
 
     @typeCheck(int)
@@ -886,6 +888,7 @@ class MintServer(object):
         repos.addAcl(project.getLabel(), 'anonymous', None, None, False, False, False)
 
         self.projects.unhide(projectId)
+        self._generateConaryRcFile()
         return True
 
     @typeCheck(int)
@@ -893,6 +896,7 @@ class MintServer(object):
     @private
     def disableProject(self, projectId):
         self.projects.disable(projectId, self.cfg.reposPath)
+        self._generateConaryRcFile()
         return True
 
     @typeCheck(int)
@@ -900,6 +904,7 @@ class MintServer(object):
     @private
     def enableProject(self, projectId):
         self.projects.enable(projectId, self.cfg.reposPath)
+        self._generateConaryRcFile()
         return True
 
     # user methods
@@ -1440,13 +1445,13 @@ class MintServer(object):
         return bool(res[0])
 
     def _generateConaryRcFile(self):
-        projs = self.projects.getProjectsList()
+        cu = self.db.cursor()
+        res = cu.execute("""SELECT ProjectId from Projects 
+                            WHERE hidden=0 AND disabled=0""")
+        projs = cu.fetchall()
         repoMaps = {}
         for x in projs:
-            projDict = self.projects.get(x[0])
-            if not (projDict['hidden'] or projDict['disabled']):
-                proj = projects.Project(self, x[0])
-                repoMaps.update(proj.getConaryConfig().repositoryMap)
+            repoMaps.update(self.labels.getLabelsForProject(x[0])[1])
         fd, fname = tempfile.mkstemp()
         os.close(fd)
         f = open(fname, 'w')
