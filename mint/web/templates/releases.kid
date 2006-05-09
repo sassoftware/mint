@@ -1,11 +1,15 @@
 <?xml version='1.0' encoding='UTF-8'?>
+<?python
+#
+# Copyright (c) 2005-2006 rPath, Inc.
+# All Rights Reserved
+#
+from mint.web.templatesupport import downloadTracker
+?>
+
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'layout.kid'">
-<!--
-    Copyright (c) 2005-2006 rPath, Inc.
-    All Rights Reserved
--->
     <head>
         <title>${formatTitle('Releases: %s' % project.getNameForDisplay())}</title>
         <link py:if="releases" rel="alternate" type="application/rss+xml"
@@ -33,7 +37,10 @@
             </td>
             <td py:if="release.getPublished()">
                 <div py:strip="True" py:for="i, file in enumerate(files)">
-                    <a href="http://${cfg.siteHost}${cfg.basePath}downloadImage/${file['fileId']}/${file['filename']}">${file['title'] and file['title'] or "Disc " + str(i+1)}</a> (${file['size']/1048576}&nbsp;MB)<br />
+                    <?py fileUrl = cfg.basePath + "downloadImage/" + str(file['fileId']) + "/" + file['filename'] ?>
+                    <a py:attrs="downloadTracker(cfg, fileUrl)" href="http://${cfg.siteHost}${fileUrl}">
+                        ${file['title'] and file['title'] or "Disc " + str(i+1)}
+                    </a> (${file['size']/1048576}&nbsp;MB)<br />
                 </div>
                 <span py:if="not files">N/A</span>
             </td>
