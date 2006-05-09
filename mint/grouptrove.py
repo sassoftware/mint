@@ -336,6 +336,77 @@ class GroupTroveItemsTable(database.KeyedTable):
                    groupTroveItemId)
         return cu.fetchone()[0]
 
+KNOWN_COMPONENTS = ('build-tree', 'config', 'configs', 'data', 'debuginfo', 'devel', 'devellib', 'doc', 'emacs', 'lib', 'locale', 'perl', 'python', 'runtime', 'tcl', 'tk')
+
+class ConaryComponentsTable(database.KeyedTable):
+    name = "ConaryComponents"
+    key = "componentId"
+
+    createSQL = """
+        CREATE TABLE ConaryComponents(
+             componentId %(PRIMARYKEY)s,
+             component CHAR(128)
+         )"""
+
+    fields = [ 'componentId', 'component']
+
+class GroupTroveRemovedComponentsTable(database.DatabaseTable):
+    name = "GroupTroveRemovedComponents"
+
+    createSQL = """
+        CREATE TABLE GroupTroveRemovedComponents(
+             groupTroveId INT,
+             componentId INT
+         )"""
+
+    fields = [ 'groupTroveId', 'componentId']
+
+    def list(self, groupTroveId):
+        cu = self.db.cursor()
+        cu.execute("""SELECT component
+                          FROM GroupTroveRemovedComponents
+                          LEFT JOIN ConaryComponents
+                              ON GroupTroveRemovedComponents.componentId =
+                                     ConaryComponents.componentId
+                          WHERE groupTroveId=?""", groupTroveId)
+        return [x[0] for x in cu.fetchall()]
+
+
+    def removeComponents(self, groupTroveId, components):
+        cu = self.db.cursor()
+        for comp in components:
+            if comp not in KNOWN_COMPONENTS:
+                raise mint_error.ParameterError( \
+                    "Unkown component specified: %s" % comp)
+
+            cu.execute("""SELECT componentId
+                              FROM ConaryComponents
+                              WHERE component=?""", comp)
+            res = cu.fetchone()
+            if not res:
+                cu.execute("""INSERT INTO ConaryComponents (component)
+                                  VALUES(?)""",
+                           comp)
+                compId = cu.lastid()
+            else:
+                compId = res[0]
+            cu.execute("""INSERT INTO GroupTroveRemovedComponents
+                              (groupTroveId, componentId) VALUES(?, ?)""",
+                       groupTroveId, compId)
+
+    def allowComponents(self, groupTroveId, components):
+        cu = self.db.cursor()
+        for comp in components:
+            cu.execute("""SELECT componentId
+                              FROM ConaryComponents
+                              WHERE component=?""", comp)
+            res = cu.fetchone()
+            if not res:
+                raise database.ItemNotFound
+            cu.execute("""DELETE FROM GroupTroveRemovedComponents
+                              WHERE groupTroveId=? AND componentId=?""",
+                       groupTroveId, res[0])
+
 ############ Client Side ##############
 
 class GroupTrove(database.TableObject):
@@ -411,4 +482,13 @@ class GroupTrove(database.TableObject):
             return None
 
     def getLabelPath(self):
-        return self.server.getGroupTroveLabelPath(self.getId())
+        return self.server.getGroupTroveLabelPath(self.id)
+
+    def listRemovedComponents(self):
+        return self.server.listGroupTroveRemovedComponents(self.id)
+
+    def removeComponents(self, components):
+        return self.server.removeGroupTroveComponents(self.id, components)
+
+    def allowComponents(self, components):
+        return self.server.allowGroupTroveComponents(self.id, components)
