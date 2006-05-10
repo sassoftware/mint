@@ -394,6 +394,12 @@ class GroupTroveRemovedComponentsTable(database.DatabaseTable):
                           WHERE groupTroveId=?""", groupTroveId)
         return [x[0] for x in cu.fetchall()]
 
+    def setRemovedComponents(self, groupTroveId, components):
+        cu = self.db.cursor()
+        cu.execute("""DELETE FROM GroupTroveRemovedComponents
+                          WHERE groupTroveId=?""", groupTroveId)
+        self.removeComponents(groupTroveId, components)
+        self.db.commit()
 
     def removeComponents(self, groupTroveId, components):
         cu = self.db.cursor()
@@ -422,6 +428,7 @@ class GroupTroveRemovedComponentsTable(database.DatabaseTable):
                 cu.execute("""INSERT INTO GroupTroveRemovedComponents
                                   (groupTroveId, componentId) VALUES(?, ?)""",
                            groupTroveId, compId)
+        self.db.commit()
 
     def allowComponents(self, groupTroveId, components):
         cu = self.db.cursor()
@@ -435,6 +442,7 @@ class GroupTroveRemovedComponentsTable(database.DatabaseTable):
             cu.execute("""DELETE FROM GroupTroveRemovedComponents
                               WHERE groupTroveId=? AND componentId=?""",
                        groupTroveId, res[0])
+        self.db.commit()
 
 ############ Client Side ##############
 
@@ -521,3 +529,6 @@ class GroupTrove(database.TableObject):
 
     def allowComponents(self, components):
         return self.server.allowGroupTroveComponents(self.id, components)
+
+    def setRemovedComponents(self, components):
+        return self.server.setGroupTroveRemovedComponents(self.id, components)
