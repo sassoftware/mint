@@ -2474,6 +2474,14 @@ class MintServer(object):
                                                          components)
         return True
 
+    @private
+    @typeCheck(int, (list, str))
+    @requiresAuth
+    def setGroupTroveRemovedComponents(self, groupTroveId, components):
+        self.groupTroveRemovedComponents.setRemovedComponents(groupTroveId,
+                                                              components)
+        return True
+
     #group trove item specific functions
 
     @private
