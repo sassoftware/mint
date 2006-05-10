@@ -569,6 +569,41 @@ class GroupTroveTest(fixtures.FixturedUnitTest):
                     "component didn't get re-added")
 
     @fixtures.fixture('Full')
+    def testComponentSetRemoved(self, db, data):
+        ownerId = data['owner']
+        projectId = data['projectId']
+        groupTroveId = data['groupTroveId']
+        client = self.getClient('owner')
+        groupTrove = client.getGroupTrove(groupTroveId)
+        self.failIf(groupTrove.listRemovedComponents() != [],
+                    "Initial set of removed components not empty")
+        groupTrove.removeComponents(['devel', 'doc'])
+        self.failIf(groupTrove.listRemovedComponents() != ['devel', 'doc'],
+                    "components didn't get removed")
+        groupTrove.setRemovedComponents(['devel'])
+        self.failIf(groupTrove.listRemovedComponents() != ['devel'],
+                    "component didn't get properly set")
+
+    @fixtures.fixture('Full')
+    def testComponentSetRemovedAtomic(self, db, data):
+        ownerId = data['owner']
+        projectId = data['projectId']
+        groupTroveId = data['groupTroveId']
+        client = self.getClient('owner')
+        groupTrove = client.getGroupTrove(groupTroveId)
+        self.failIf(groupTrove.listRemovedComponents() != [],
+                    "Initial set of removed components not empty")
+        groupTrove.removeComponents(['devel', 'doc'])
+        self.failIf(groupTrove.listRemovedComponents() != ['devel', 'doc'],
+                    "components didn't get removed")
+        # the point isn't the exception, it's the effect on the db.
+        self.assertRaises(ParameterError,
+                          groupTrove.setRemovedComponents,
+                          ['sirnotappearinginthislist'])
+        self.failIf(groupTrove.listRemovedComponents() != ['devel', 'doc'],
+                    "setRemovedComponents is not atomic")
+
+    @fixtures.fixture('Full')
     def testMissingComponentAllow(self, db, data):
         ownerId = data['owner']
         projectId = data['projectId']
