@@ -575,7 +575,11 @@ class GroupTroveTest(fixtures.FixturedUnitTest):
         groupTroveId = data['groupTroveId']
         client = self.getClient('owner')
         groupTrove = client.getGroupTrove(groupTroveId)
-        self.assertRaises(ItemNotFound, groupTrove.allowComponents, ['devel'])
+        self.failIf(groupTrove.listRemovedComponents() != [],
+                    "Initial set of removed components not empty")
+        groupTrove.allowComponents(['devel'])
+        self.failIf(groupTrove.listRemovedComponents() != [],
+                    "Incorrect results from spurious removal")
 
     @fixtures.fixture('Full')
     def testDoubleComponentRemove(self, db, data):
