@@ -336,7 +336,21 @@ class GroupTroveItemsTable(database.KeyedTable):
                    groupTroveItemId)
         return cu.fetchone()[0]
 
-KNOWN_COMPONENTS = ('build-tree', 'config', 'configs', 'data', 'debuginfo', 'devel', 'devellib', 'doc', 'emacs', 'lib', 'locale', 'perl', 'python', 'runtime', 'tcl', 'tk')
+KNOWN_COMPONENTS = {'build-tree' : "STUB DESCRIPTION",
+                    'config' : "STUB DESCRIPTION",
+                    'configs' : "STUB DESCRIPTION",
+                    'data' : "STUB DESCRIPTION",
+                    'devel' : "STUB DESCRIPTION",
+                    'devellib' : "STUB DESCRIPTION",
+                    'doc' : "STUB DESCRIPTION",
+                    'emacs': "STUB DESCRIPTION",
+                    'lib': "STUB DESCRIPTION",
+                    'locale' : "STUB DESCRIPTION",
+                    'perl' : "STUB DESCRIPTION",
+                    'python' : "STUB DESCRIPTION",
+                    'runtime' : "STUB DESCRIPTION",
+                    'tcl' : "STUB DESCRIPTION",
+                    'tk' : "STUB DESCRIPTION"}
 
 class ConaryComponentsTable(database.KeyedTable):
     name = "ConaryComponents"
@@ -350,6 +364,10 @@ class ConaryComponentsTable(database.KeyedTable):
 
     fields = [ 'componentId', 'component']
 
+    indexes = {'ConaryComponentsIdx': """CREATE UNIQUE INDEX
+                                             ConaryComponentsIdx
+                                             ON ConaryComponents(component)"""}
+
 class GroupTroveRemovedComponentsTable(database.DatabaseTable):
     name = "GroupTroveRemovedComponents"
 
@@ -360,6 +378,11 @@ class GroupTroveRemovedComponentsTable(database.DatabaseTable):
          )"""
 
     fields = [ 'groupTroveId', 'componentId']
+
+    indexes = {'GroupTroveRemovedComponentIdx':
+               """CREATE UNIQUE INDEX GroupTroveRemovedComponentIdx
+                      ON GroupTroveRemovedComponents
+                          (groupTroveId, componentId)"""}
 
     def list(self, groupTroveId):
         cu = self.db.cursor()
@@ -390,9 +413,15 @@ class GroupTroveRemovedComponentsTable(database.DatabaseTable):
                 compId = cu.lastid()
             else:
                 compId = res[0]
-            cu.execute("""INSERT INTO GroupTroveRemovedComponents
-                              (groupTroveId, componentId) VALUES(?, ?)""",
+            cu.execute("""SELECT COUNT(*)
+                              FROM GroupTroveRemovedComponents
+                              WHERE groupTroveId=? AND componentId=?""",
                        groupTroveId, compId)
+            if not cu.fetchone()[0]:
+                # only add component if it wasn't already there
+                cu.execute("""INSERT INTO GroupTroveRemovedComponents
+                                  (groupTroveId, componentId) VALUES(?, ?)""",
+                           groupTroveId, compId)
 
     def allowComponents(self, groupTroveId, components):
         cu = self.db.cursor()
