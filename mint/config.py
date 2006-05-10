@@ -52,10 +52,10 @@ class MintConfig(ConfigFile):
     authPass                = None
     authDbPath              = None
     templatePath            = os.path.join(templatePath, 'web', 'templates')
-    dataPath                = os.path.join(os.path.sep, 'srv', 'mint', '')
+    dataPath                = os.path.join(os.path.sep, 'srv', 'rbuilder', '')
     reposPath               = None
     reposContentsDir        = (cfgtypes.CfgPathList,
-                               [os.path.join(os.path.sep, 'srv', 'mint',
+                               [os.path.join(os.path.sep, 'srv', 'rbuilder',
                                              'repos', '%s', 'contents', '')])
     dbPath                  = None
     dbDriver                = 'sqlite'
@@ -91,7 +91,7 @@ class MintConfig(ConfigFile):
     hideFledgling           = (cfgtypes.CfgBool, False)
 
     reposDBDriver           = 'sqlite'
-    reposDBPath             = os.path.join(os.path.sep, 'srv', 'mint',
+    reposDBPath             = os.path.join(os.path.sep, 'srv', 'rbuilder',
                                            'repos', '%s', 'sqldb')
     visibleImageTypes       = (cfgtypes.CfgList(CfgImageEnum))
     maintenanceLockPath     = os.path.join(dataPath, 'maintenance.lock')
@@ -101,7 +101,7 @@ class MintConfig(ConfigFile):
     projectAdmin            = (cfgtypes.CfgBool, True)
     adminNewProjects        = (cfgtypes.CfgBool, False)
 
-    conaryRcFile            = os.path.join(os.path.sep, 'srv', 'mint', 'run',
+    conaryRcFile            = os.path.join(os.path.sep, 'srv', 'rbuilder', 'run',
                                             'conaryrc')
     createConaryRcFile      = (cfgtypes.CfgBool, True)
 
