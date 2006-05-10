@@ -13,7 +13,7 @@ start() {
     set -x
     if [ ! -f /etc/sysconfig/first-jsroot ]; then
         cat /srv/mint/jobserver/versions | while read troveSpec; do
-            ./install-jsroot "$troveSpec" # /usr/share/mint/scripts/install-jsroot $troveSpec
+            /usr/share/mint/scripts/install-jsroot "$troveSpec"
         done;
 
         if [ ! $? ]; then
