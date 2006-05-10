@@ -46,7 +46,7 @@ refCompRecipe = """class GroupTest(GroupRecipe):
 
     def setup(r):
         r.setLabelPath('foo.rpath.local2@rpl:devel')
-        r.removeComponents('devel', 'doc')
+        r.removeComponents(('devel', 'doc'))
 """
 
 groupsRecipe = """class GroupTest(GroupRecipe):
@@ -576,6 +576,21 @@ class GroupTroveTest(fixtures.FixturedUnitTest):
         client = self.getClient('owner')
         groupTrove = client.getGroupTrove(groupTroveId)
         self.assertRaises(ItemNotFound, groupTrove.allowComponents, ['devel'])
+
+    @fixtures.fixture('Full')
+    def testDoubleComponentRemove(self, db, data):
+        ownerId = data['owner']
+        projectId = data['projectId']
+        groupTroveId = data['groupTroveId']
+        client = self.getClient('owner')
+        groupTrove = client.getGroupTrove(groupTroveId)
+        groupTrove.removeComponents(['devel'])
+        # remove twice
+        groupTrove.removeComponents(['devel'])
+        cu = db.cursor()
+        cu.execute("SELECT COUNT(*) FROM GroupTroveRemovedComponents")
+        self.failIf(cu.fetchone()[0] != 1,
+                    "Group Trove allowed double removal of component")
 
     @fixtures.fixture('Full')
     def testRemovedComponentRecipe(self, db, data):
