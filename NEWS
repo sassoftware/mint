@@ -36,6 +36,7 @@ Changes in (tip):
 * Extended characters in the group trove description no longer break the cook
   process with an "invalid type for set" error. Extended characters are
   converted to '?' when passed into Conary.
+* Component Removal from Group Builder now exists. For now it is hidden away on the edit projects page.
 
 Changes in 1.6.1:
 
