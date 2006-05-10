@@ -431,7 +431,7 @@ class GroupTroveRemovedComponentsTable(database.DatabaseTable):
                               WHERE component=?""", comp)
             res = cu.fetchone()
             if not res:
-                raise database.ItemNotFound
+                continue
             cu.execute("""DELETE FROM GroupTroveRemovedComponents
                               WHERE groupTroveId=? AND componentId=?""",
                        groupTroveId, res[0])

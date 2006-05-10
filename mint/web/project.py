@@ -19,6 +19,7 @@ from mint import releases
 from mint import releasetypes
 from mint import userlevels
 from mint import users
+from mint import grouptrove
 
 from mint.releases import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM
 from mint.users import sendMailWithChecks
@@ -242,6 +243,9 @@ class ProjectHandler(WebHandler):
 
         curGroupTrove.refresh()
         curGroupTrove.removeComponents(components)
+        allowedComponents = [x for x in grouptrove.KNOWN_COMPONENTS.keys() \
+                             if x not in components]
+        curGroupTrove.allowComponents(allowedComponents)
         return self._write("editGroup", message='Changes saved successfully', curGroupTrove = curGroupTrove)
 
     @strFields(referer = None)
