@@ -242,6 +242,7 @@ class ProjectHandler(WebHandler):
 
         curGroupTrove.refresh()
         curGroupTrove.setRemovedComponents(components)
+        self._setInfo('Changes saved successfully')
         self._predirect("editGroup?id=%d" % id)
 
     @strFields(referer = None)
