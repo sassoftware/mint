@@ -117,12 +117,12 @@ class TarThread(CopyThread):
             if x.startswith("mirror-") and x.endswith(".tgz")][0]
 
 #        serverName = file[7:-4]
-#        if os.path.exists(os.path.join("/srv/mint/repos/", serverName)):
+#        if os.path.exists(os.path.join("/srv/rbuilder/repos/", serverName)):
 #            self.status['error'] = True
 #            self.status['errorMessage'] = 'Repository directory already exists: not overwriting'
 #            return
 
-        cmd = ["tar", "zxvf", os.path.join(self.tmpPath, file), "-C", "/srv/mint/repos/"]
+        cmd = ["tar", "zxvf", os.path.join(self.tmpPath, file), "-C", "/srv/rbuilder/repos/"]
         tar = subprocess.Popen(cmd, stdout = subprocess.PIPE)
 
         lines = 100

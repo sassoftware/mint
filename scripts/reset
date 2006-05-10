@@ -5,7 +5,7 @@
 
 CONARY_PATH=/usr/lib/python2.4/site-packages/
 
-MINT_DATA=/srv/mint
+MINT_DATA=/srv/rbuilder
 AUTH_REPO=/srv/authrepo
 if [ -n "$SUDO_USER" ] ; then
     USERNAME=$SUDO_USER

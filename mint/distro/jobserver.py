@@ -311,12 +311,12 @@ class IsoGenConfig(ConfigFile):
     imageTypes      = CfgList(CfgImageEnum)
     serverUrl       = None
     SSL             = (CfgBool, False)
-    logPath         = '/srv/mint/logs'
-    imagesPath      = '/srv/mint/images/'
-    finishedPath    = '/srv/mint/finished-images/'
+    logPath         = '/srv/rbuilder/logs'
+    imagesPath      = '/srv/rbuilder/images/'
+    finishedPath    = '/srv/rbuilder/finished-images/'
     lockFile        = '/var/run/mint-jobdaemon.pid'
     maxThreads      = (CfgInt, 5)
-    configPath      = '/srv/mint/'
+    configPath      = '/srv/rbuilder/'
 
     def read(cfg, path, exception = False):
         slog = scriptlibrary.getScriptLogger()

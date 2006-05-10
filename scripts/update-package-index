@@ -15,7 +15,7 @@ import sys
 
 class UpdatePackageIndex(SingletonScript):
 
-    cfgPath = "/srv/mint/mint.conf"
+    cfgPath = config.RBUILDER_CONFIG
     db = None
 
     def handle_args(self):

@@ -9,7 +9,7 @@ EOT
 exit
 }
 
-RBATEST=/srv/mint/code/rba/
+RBATEST=/srv/rbuilder/code/rba/
 
 pushd $RBATEST/mint/
 cvc cook mint >& /tmp/create-test-rba.log

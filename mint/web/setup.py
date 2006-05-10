@@ -15,6 +15,7 @@ from mod_python import apache
 
 from mint import mint_error
 from mint import shimclient
+from mint.config import RBUILDER_CONFIG
 from mint.session import SqlSession
 from mint.web.webhandler import WebHandler, normPath, HttpNotFound, HttpForbidden
 
@@ -107,9 +108,9 @@ class SetupHandler(WebHandler):
         mintClient.promoteUserToAdmin(userId)
         self.req.log_error("promoted %d to admin" % userId)
 
-        cfg = file('/srv/mint/mint.conf', 'w')
+        cfg = file(RBUILDER_CONFIG, 'w')
         newCfg.display(out = cfg)
-        self.req.log_error("writing new configuration to /srv/mint/mint.conf")
+        self.req.log_error("writing new configuration to %s" % RBUILDER_CONFIG)
         self.req.log_error("+ sudo killall -USR1 httpd")
         os.system("sudo killall -USR1 httpd")
         return self._write("setup/saved")
@@ -124,9 +125,9 @@ class SetupHandler(WebHandler):
     def restart(self, auth):
         self.cfg.configured = True
 
-        cfg = file('/srv/mint/mint.conf', 'w')
+        cfg = file(RBUILDER_CONFIG, 'w')
         self.cfg.display(out = cfg)
-        self.req.log_error("writing new configuration to /srv/mint/mint.conf")
+        self.req.log_error("writing new configuration to %s" % RBUILDER_CONFIG)
         self.req.log_error("+ sudo killall -USR1 httpd")
         self.req.log_error("+ sudo /sbin/service rbuilder-isogen restart")
 

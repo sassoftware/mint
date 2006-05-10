@@ -15,10 +15,10 @@
 # Configuration options
 DEBUG_MODE=1    # set to non-zero to turn debug mode logging on
 
-CONFIG_FILE='@DESTDIR@/srv/mint/iso_gen.conf'
+CONFIG_FILE='@DESTDIR@/srv/rbuilder/iso_gen.conf'
 SCRIPT_PATH='@DESTDIR@/usr/share/mint/scripts'
 JOBSERVER_USER='isogen'
-JOBSERVER_HOME='/srv/mint/images'
+JOBSERVER_HOME='/srv/rbuilder/images'
 JOBSERVER_SCRIPT="$SCRIPT_PATH/job-server"
 
 LONGNAME="rBuilder ISO Generation Server"

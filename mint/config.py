@@ -13,8 +13,9 @@ from conary import conarycfg
 from conary.conarycfg import ConfigFile
 from conary.lib import cfgtypes
 
-templatePath = os.path.dirname(sys.modules['mint'].__file__)
+RBUILDER_CONFIG = "/srv/rbuilder/rbuilder.conf"
 
+templatePath = os.path.dirname(sys.modules['mint'].__file__)
 
 class CfgImageEnum(cfgtypes.CfgEnum):
     validValues = releasetypes.validImageTypes

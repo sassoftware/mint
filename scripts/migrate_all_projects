@@ -7,15 +7,13 @@
 
 import os, sys
 
-cfgPath = "/srv/mint/mint.conf"
-
-from mint import config
+from mint import config, RBUILDER_CONFIG
 from mint import maintenance
 from conary import dbstore
 from conary.server import schema
 
 cfg = config.MintConfig()
-cfg.read(cfgPath)
+cfg.read(RBUILDER_CONFIG)
 
 if maintenance.getMaintenanceMode(cfg)==maintenance.NORMAL_MODE:
     print >> sys.stderr, "rBuilder repositories are not locked. rBuilder"

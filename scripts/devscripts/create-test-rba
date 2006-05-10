@@ -9,12 +9,12 @@ EOT
 exit
 }
 
-RBATEST=/srv/mint/code/rba/
+RBATEST=/srv/rbuilder/code/rba/
 
 DATE=$(date +%Y_%m_%d)
 X86_FLAVOR='~X, ~!alternatives, !bootstrap, ~builddocs,~buildtests, ~desktop, ~dietlibc, ~emacs, ~gcj,~gnome, ~gtk, ~ipv6, ~kde, ~krb, ~ldap, ~nptl,pam, ~pcre, ~perl, ~!pie, ~python, ~qt,~readline, ~!sasl, ~!selinux, ssl, ~tcl,tcpwrappers, ~tk, ~!xen, ~!xfce is: x86(~cmov,~i486, ~i586, ~i686, ~mmx, ~sse, ~sse2)'
 
-cd /srv/mint/code/mint/
+cd /srv/rbuilder/code/mint/
 
 popd
 pushd $RBATEST/group-rbuilder-dist/
@@ -26,8 +26,8 @@ if [ $? != 0 ]; then carp; fi
 cvc cook group-rbuilder-dist >& /tmp/create-test-rba.log
 if [ $? != 0 ]; then carp; fi
 
-export PYTHONPATH=/srv/mint/code/mint/:/srv/mint/code/conary/
+export PYTHONPATH=/srv/rbuilder/code/mint/:/srv/rbuilder/code/conary/
 TROVESPEC=$(conary rq group-rbuilder-dist --config "flavor $X86_FLAVOR" --full-versions --flavors)
-/srv/mint/code/mint/scripts/create-release rbabeta "$TROVESPEC" installable_iso
+/srv/rbuilder/code/mint/scripts/create-release rbabeta "$TROVESPEC" installable_iso
 TROVESPEC=$(conary rq group-rbuilder-dist --full-versions --flavors)
-/srv/mint/code/mint/scripts/create-release rbabeta "$TROVESPEC" installable_iso
+/srv/rbuilder/code/mint/scripts/create-release rbabeta "$TROVESPEC" installable_iso

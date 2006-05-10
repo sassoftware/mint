@@ -2,14 +2,12 @@
 
 import os, sys
 
-cfgPath = "/srv/mint/mint.conf"
-
 if os.getuid():
     print >> sys.stderr, "Error: %s must be run as root" % sys.argv[0]
     sys.stderr.flush()
     sys.exit(1)
 
-from mint import config
+from mint import config, RBUILDER_CONFIG
 from mint import database
 from conary import dbstore
 from conary.lib import util
@@ -135,7 +133,7 @@ def deleteProject(projectName):
 
 global cfg
 cfg = config.MintConfig()
-cfg.read(cfgPath)
+cfg.read(RBUILDER_CONFIG)
 
 if not sys.argv[1:]:
     print >> sys.stderr, "Usage: %s project [project] [project] ..." % \

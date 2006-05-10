@@ -7,14 +7,12 @@
 
 import os, sys
 
-cfgPath = "/srv/mint/mint.conf"
-
-from mint import config
+from mint import config, RBUILDER_CONFIG
 from mint import projects
 from conary import dbstore
 
 cfg = config.MintConfig()
-cfg.read(cfgPath)
+cfg.read(RBUILDER_CONFIG)
 
 db = dbstore.connect(cfg.dbPath, driver = cfg.dbDriver)
 cu = db.cursor()

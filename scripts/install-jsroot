@@ -8,7 +8,7 @@ set -x
 if [ $# -lt 1 ]; then
     echo "not enough arguments: $0 $*" >&2
     echo "usage: $0 <trovespec of job server root> [--extra-fstab]" >&2
-    echo "--extra-fstab adds 3 additional bind mounts for /srv/mint/images/ and /srv/mint/templates/"
+    echo "--extra-fstab adds 3 additional bind mounts for /srv/rbuilder/images/ and /srv/rbuilder/templates/"
     exit 1
 fi
 
@@ -28,7 +28,7 @@ from conary import versions
 print str(versions.VersionFromString(cmdline.parseTroveSpec(\"$fullTroveSpec\")[1]).trailingRevision()).split('-')[0]
 ")
 
-ROOT=/srv/mint/jobserver/$upstreamVer/
+ROOT=/srv/rbuilder/jobserver/$upstreamVer/
 
 echo "Installing chroot: $upstreamVer" 
 conary update --root $ROOT "$troveSpec"
@@ -37,22 +37,28 @@ if [ $? != 0 ]; then
     exit 1
 fi
 
+if [ -d $ROOT/srv/mint ]; then
+    echo "Link $ROOT/srv/mint to $ROOT/srv/rbuilder (backwards compatibility)"
+    (cd $ROOT/srv; ln -s mint rbuilder)
+fi
+
 echo "Creating mtab and device nodes"
 touch $ROOT/etc/mtab
 mknod $ROOT/dev/random c 1 8
 mknod $ROOT/dev/urandom c 1 9
-mkdir -p $ROOT/srv/mint/finished-images/
+mkdir -p $ROOT/srv/rbuilder/finished-images/
+
 
 cp /etc/fstab /etc/fstab.backup
 COMMENT="\#JSROOT$upstreamVer"
 echo "Modifying /etc/fstab -- saving backup to /etc/fstab.backup"
-for x in '/proc' '/dev/pts' '/srv/mint/finished-images' '/srv/mint/changesets'; do   
+for x in '/proc' '/dev/pts' '/srv/rbuilder/finished-images' '/srv/rbuilder/changesets'; do   
     echo -e "$x\\t$ROOT$x\\tnone\\tbind\\t0\\t0 $COMMENT" >> /etc/fstab
 done
 
 if [ "$2" = '--extra-fstab' ]; then
-    echo /export/mint/local-images              $ROOT/srv/mint/images       none    bind    0 0 $COMMENT >> /etc/fstab
-    echo /srv/mint/templates                    $ROOT/srv/mint/templates    none    bind    0 0 $COMMENT >> /etc/fstab
+    echo /export/rbuilder/local-images              $ROOT/srv/rbuilder/images       none    bind    0 0 $COMMENT >> /etc/fstab
+    echo /srv/rbuilder/templates                    $ROOT/srv/rbuilder/templates    none    bind    0 0 $COMMENT >> /etc/fstab
 fi
 
 echo "Copying network configuration files to chroot"

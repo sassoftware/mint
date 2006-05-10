@@ -161,19 +161,19 @@ system environment.  This requires the following steps:
 
     o Perform the following commands:
 
-# cd /srv/mint
-# cp mint.conf.dist mint.conf
+# cd /srv/rbuilder
+# cp rbuilder.conf.dist rbuilder.conf
 # cp iso_gen.conf.dist iso_gen.conf
 # cp installable_iso.conf.dist installable_iso.conf
 # cp live_iso.conf.dist live_iso.conf
 
-    o Edit /srv/mint/iso_gen.conf and change serverUrl to reflect your
+    o Edit /srv/rbuilder/iso_gen.conf and change serverUrl to reflect your
       site's hostname (Note that the username and password in this URL must
       reflect the username and password of an rBuilder account that you
       will be creating later in this document.)
 
-    o Using the comments in mint.conf as a guide, edit /srv/mint/mint.conf
-      as appropriate for your site.
+    o Using the comments in rbuilder.conf as a guide, edit
+      /srv/rbuilder/rbuilder.conf as appropriate for your site.
 
     o Copy /srv/authrepo/authrepo.cnr.dist to /srv/authrepo/authrepo.cnr:
 
@@ -190,7 +190,7 @@ Password: <password>
 Reenter password: <password>
 
     (Where <user> and <password> is the same as the username and password
-    reflected in the authRepoMap URL setting in /srv/mint/mint.conf.)
+    reflected in the authRepoMap URL setting in /srv/rbuilder/rbuilder.conf.)
 
     o Issue the following commands:
 
@@ -199,23 +199,23 @@ Reenter password: <password>
 
     o If you want to address your projects' repositories as
       <hostname>.<domain-name>/repos/<project>, copy
-      /etc/httpd/conf.d/mint.conf.dist to /etc/httpd/conf.d/mint.conf:
+      /etc/httpd/conf.d/rbuilder.conf.dist to /etc/httpd/conf.d/rbuilder.conf:
 
 # cd /etc/httpd/conf.d
-# cp mint.conf.dist mint.conf
+# cp rbuilder.conf.dist rbuilder.conf
 
     o If you want to address your projects' repositories using
       <project>.<domain-name>, perform the following steps:
 
-        - Copy /etc/httpd/conf.d/mint.conf.dist to
-          /etc/httpd/conf.d/mint.conf.last:
+        - Copy /etc/httpd/conf.d/rbuilder.conf.dist to
+          /etc/httpd/conf.d/rbuilder.conf.last:
 
 # cd /etc/httpd/conf.d
-# cp mint.conf.dist mint.conf.last
+# cp rbuilder.conf.dist rbuilder.conf.last
 
 
         - Uncomment the following lines in
-          /etc/httpd/conf.d/mint.conf.last, and change ServerName to
+          /etc/httpd/conf.d/rbuilder.conf.last, and change ServerName to
           reflect your site's hostname:
 
             * ServerName
@@ -253,10 +253,10 @@ http://<hostName>.<siteDomainName>/ *** FIXME -- describe ***
 
       (Where <hostName>, <siteDomainName>, and <basePath> are the settings
       for the hostName, siteDomainName, and basePath configuration options
-      specified in /srv/mint/mint.conf.)
+      specified in /srv/rbuilder/rbuilder.conf.)
 
     o Create an rBuilder account using the same name and password as
-      referenced in the serverURL setting in /srv/mint/iso_gen.conf.
+      referenced in the serverURL setting in /srv/rbuilder/iso_gen.conf.
 
       (NOTE: Make sure you have access to read email directed to the email
       address you provide, as you will receive a confirmation email from

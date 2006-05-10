@@ -55,8 +55,8 @@ class BootableImageConfig(ConfigFile):
     debug           = (CfgBool, 0)
 
     # where to look for tools needed to boot a live ISO.
-    fallbackDir     = '/srv/mint/fallback'
-    toolkitImage     = '/srv/mint/toolkit/image_maker.img'
+    fallbackDir     = '/srv/rbuilder/fallback'
+    toolkitImage     = '/srv/rbuilder/toolkit/image_maker.img'
 
 class Journal:
     def lchown(self, root, target, user, group):

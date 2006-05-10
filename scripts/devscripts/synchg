@@ -1,28 +1,16 @@
 #!/bin/sh
 
+SYNCDIRS="/srv/rbuilder/code/mint /srv/rbuilder/code/conary /srv/www/html/web/"
+
 # disable temporarily by touching /tmp/.nosynchg
 if [ -f /tmp/.nosynchg ]; then
    exit 0
 fi
 
-# save dir
-pushd .
-
-# sync mint
-cd /srv/mint/code/mint
-hg pull
-hg update
-
-cd /srv/mint/code/conary
-hg pull
-hg update
-
-cd /srv/www/html/web/
-hg pull
-hg update
-
-# restore dir
-popd
+# sync
+for d in $SYNCDIRS; do
+    (cd $i; hg pull && hg update)
+done
 
 # restart web server
 sudo killall -USR1 httpd

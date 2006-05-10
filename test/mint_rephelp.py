@@ -156,7 +156,7 @@ class MintApacheServer(rephelp.ApacheServer):
         else:
             self.mintCfg = mintCfg
 
-        f = file(self.serverRoot + "/mint.conf", "w")
+        f = file(self.serverRoot + "/rbuilder.conf", "w")
         self.mintCfg.display(f)
         f.close()
 
