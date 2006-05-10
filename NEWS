@@ -1,4 +1,4 @@
-Changes in (tip):
+Changes in 1.6.3:
 * Installation paths changed: /srv/mint is now /srv/rbuilder; configuration is
   now in /srv/rbuilder/rbuilder.conf.
 * Projects created using rBA may use a custom domain name.
