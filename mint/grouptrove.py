@@ -336,21 +336,21 @@ class GroupTroveItemsTable(database.KeyedTable):
                    groupTroveItemId)
         return cu.fetchone()[0]
 
-KNOWN_COMPONENTS = {'build-tree' : "STUB DESCRIPTION",
-                    'config' : "STUB DESCRIPTION",
-                    'configs' : "STUB DESCRIPTION",
-                    'data' : "STUB DESCRIPTION",
-                    'devel' : "STUB DESCRIPTION",
-                    'devellib' : "STUB DESCRIPTION",
-                    'doc' : "STUB DESCRIPTION",
-                    'emacs': "STUB DESCRIPTION",
-                    'lib': "STUB DESCRIPTION",
-                    'locale' : "STUB DESCRIPTION",
-                    'perl' : "STUB DESCRIPTION",
-                    'python' : "STUB DESCRIPTION",
-                    'runtime' : "STUB DESCRIPTION",
-                    'tcl' : "STUB DESCRIPTION",
-                    'tk' : "STUB DESCRIPTION"}
+KNOWN_COMPONENTS = {'build-tree' : "Kernel build environment",
+                    'config' : "Package-specific configuration files",
+                    'configs' : "Kernel build configuration files",
+                    'data' : "Package-specific data",
+                    'devel' : "Developer-specific support",
+                    'devellib' : "Developer-specific libraries",
+                    'doc' : "Package-specific documentation",
+                    'emacs': "Package-specific extensions for Emacs",
+                    'lib': "Libraries",
+                    'locale' : "Package-specific localization",
+                    'perl' : "Package-specific Perl modules",
+                    'python' : "Package-specific Python code",
+                    'runtime' : "Package-specific runtime environment",
+                    'tcl' : "Package-specific Tcl support",
+                    'tk' : "Package-specific Tk support"}
 
 class ConaryComponentsTable(database.KeyedTable):
     name = "ConaryComponents"
