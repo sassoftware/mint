@@ -33,6 +33,8 @@ for f in $CONFIGFILES; do
     fi
 done
 
+find /srv/rbuilder/repos/ -name cache.sql | xargs rm -f
+
 # restart the webserver
 killall -USR1 httpd > /dev/null 2>&1
 
