@@ -2317,8 +2317,8 @@ class MintServer(object):
                   str(recipeLabels).split('[')[1].split(']')[0]
 
         if removedComponents:
-            recipe += indent + "r.removeComponents('" + \
-                      "', '".join(removedComponents) + "')\n"
+            recipe += indent + "r.removeComponents(('" + \
+                      "', '".join(removedComponents) + "'))\n"
 
         for trv in groupTroveItems:
             ver = trv['versionLock'] and trv['trvVersion'] or trv['trvLabel']
