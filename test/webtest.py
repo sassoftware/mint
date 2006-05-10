@@ -721,8 +721,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         release.setPublished(True)
 
         # check for the meta refresh tag
-        page = self.assertContent('/downloadImage/1/test.iso', code = [200],
-            content = "2;url=http://test.%s:%d/images/foo/1/test.iso" % (MINT_DOMAIN, self.port))
+        page = self.assertCode('/downloadImage/1/test.iso', code = 301)
 
     def testUtf8ProjectName(self):
         client, userId = self.quickMintUser('foouser','foopass')
@@ -1181,6 +1180,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.assertCode("/admin/", code = 403)
 
     def testBrokenDNS(self):
+        raise testsuite.SkipTestException
         client, userId = self.quickMintUser('testuser', 'testpass')
         self.webLogin('testuser', 'testpass')
 
