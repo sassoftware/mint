@@ -4,6 +4,7 @@ from urllib import quote
 from conary import versions
 from mint.helperfuncs import truncateForDisplay
 from mint.web.templatesupport import injectVersion
+from mint.grouptrove import KNOWN_COMPONENTS
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
@@ -31,7 +32,7 @@ from mint.web.templatesupport import injectVersion
             <form method="post" action="editGroup2?id=${curGroupTrove.id}">
                 <table class="groupTroveItems">
                     <tr><td colspan="4">
-                        <div style="float:left">${curGroupTrove.recipeName} version ${True and truncateForDisplay(curGroupTrove.upstreamVersion) or 'Latest'}</div>
+                        <div style="float:left">${curGroupTrove.recipeName} version ${curGroupTrove.upstreamVersion}</div>
                         <div style="float:right"><a onclick="javascript:toggle_display('editGTDropdown');" href="#">Edit
                             <img  id="editGTDropdown_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" /></a></div>
                     </td></tr>
@@ -45,6 +46,36 @@ from mint.web.templatesupport import injectVersion
                                 <tr>
                                     <td>Description</td>
                                     <td colspan="3"><textarea rows="10" name="description" py:content="curGroupTrove.description"/></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="4">
+                                        <div style="float:right">
+                                            <a onclick="javascript:toggle_display('componentGTDropdown');" href="#">Manage Components
+                                                <img  id="componentGTDropdown_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" />
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr id="componentGTDropdown" style="display:none;">
+                                    <td colspan="2">
+                                        <table style="padding: 0.75em; background: #eeeeee;">
+                                            <tr>
+                                                <td colspan="2">
+                                                    Remove the following components
+                                                </td>
+                                            </tr>
+                                            <?python
+                                                removedComponents = curGroupTrove.listRemovedComponents()
+                                            ?>
+
+				            <tr py:for="component, desc in sorted(KNOWN_COMPONENTS.iteritems())">
+                                                <td>
+                                                    <input type="checkbox" class="check" name="components" value="${component}" py:attrs="{'checked': component in removedComponents and 'checked' or None}"/> ${component}
+                                                </td>
+                                                <td>${desc}</td>
+                                            </tr>
+                                        </table>
+                                    </td>
                                 </tr>
                             </table>
                         </td>
@@ -91,7 +122,7 @@ from mint.web.templatesupport import injectVersion
             <h3 style="color:#FF7001;">Step 1: Add Packages To Your Group</h3>
             <p>You have a group. Now add packages to it from any
             ${cfg.productName} project. To add a package, search or browse for
-            the desired package, and click on its "Add to &lt;group-name&gt;"
+            the desired package, and click on its "Add to ${curGroupTrove.recipeName}"
             link.</p>
 
             <h3 style="color:#FF7001;">Step 2: Cook Your Group</h3>
