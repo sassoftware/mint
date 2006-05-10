@@ -242,9 +242,9 @@ class RepositoryTest(MintRepositoryHelper):
         client, userId = self.quickMintAdmin("testuser", "testpass")
 
         projectId = self.newProject(client, domainname = 'other.host')
+        # NOTE: addRemappedRepository happens automatically when
+        #       domainname != cfg.projectDomainName
 
-        client.addRemappedRepository('testproject.' + MINT_PROJECT_DOMAIN,
-                'testproject.other.host')
         self.makeSourceTrove("testcase", testRecipe)
 
         project = client.getProject(projectId)
