@@ -131,3 +131,5 @@ repositoryMap <proj>.example.com http://rbuilder.example.com/repos/<proj>/
 are your server's hostname and domain name, respectively.)
 
 *** END FIXME ***
+
+*** FIXME -- add mention of inclusion of nano ***
