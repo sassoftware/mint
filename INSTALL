@@ -1,0 +1,125 @@
+From nobody Thu May 11 13:34:18 2006
+X-From-Line: nobody Thu Feb 16 17:28:42 2006
+To: Tim Gerla <tgerla@rpath.com>
+Subject: Appliance installation Docs...
+Reply-To: Edward C. Bailey <ed@rpath.com>
+X-Attribution: Ed
+From: Edward C. Bailey <ed@rpath.com>
+Date: Thu, 16 Feb 2006 17:28:42 -0500
+X-Gnus-Mail-Source: file:~/Mail/spool/sent-mail.spool
+Message-ID: <7s7j7vrl9h.fsf@lambchop.rdu.rpath.com>
+User-Agent: Gnus/5.1002 (Gnus v5.10.2) Emacs/21.4 (gnu/linux)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Lines: 109
+Xref: lambchop.rdu.rpath.com mail.unfiled:2441
+
+rBuilder Installation Quick Start Guide
+
+    This document describes the steps necessary to install the rBuilder
+software appliance on the hardware you've provided.
+
+Prerequisites
+-------------
+
+    Before you begin, make sure you have the necessary hardware and network
+connectivity in place, namely:
+
+    o A network-connected dedicated x86 server with local storage at
+      least 40GB in size, a CD-ROM drive, configured to boot from CD-ROM
+
+      NOTE: rBuilder is packaged as a software appliance.  As such, it is
+      configured to run on dedicated hardware, including all disk storage.
+      DO NOT INSTALL ON HARDWARE CONTAINING DATA YOU WISH TO KEEP -- IT
+      WILL WIPE ALL LOCAL STORAGE!
+
+    o A network connection for the server with either a static or dynamic
+      IP address accessible by an unchanging fully-qualified domain name
+      (for example, rbuilder.example.com)
+
+      NOTE: rPath recommends that the server be set up to receive a
+      DHCP-provided hostname and IP address before installation.
+
+    o A network-connected system capable of running a Web browser
+
+Installation Procedure
+------------ ---------
+
+1. Insert the rPath rBuilder CD-ROM into the server's CD-ROM drive and boot
+   the computer. The installer will erase ALL partitions on the server. You
+   will be prompted before this happens.
+
+2. Follow the on-screen instructions during the installation.
+
+3. When the installation finishes, reboot (making sure to configure the
+   system to boot from its primary disk drive).
+
+4. When the server has finished booting, use a Web browser to access the
+   server.  Use a URL in the form "http://rbuilder.example.com", replacing
+   "rbuilder.example.com" with the fully-qualified domain name specified
+   for the server.
+
+   NOTE: you MUST use the fully-qualified domain name to access the server!
+
+5. The server will display a page directing you to log into the rBuilder
+   server via ssh as root and create a file on the filesystem.  This
+   verifies that you have physical access to the server and are the person
+   that will be given access to rBuilder Web-based configuration dialog.
+   Follow the instructions on the screen, and reload the web page.
+
+6. After the page reloads, the rBuilder configuration dialog appears.  Fill
+   in the fields in the "Branding" section with values that are appropriate
+   to your organization.  The fields in the "Server Setup" section contain
+   values for hostname and domain extracted from the rBuilder server's
+   network configuration; change them if necessary.
+
+   The field in the "Repository Setup" section should be set to a value
+   appropriate for your intended Conary usage.  For example, the rPath
+   Linux development branch is "rpl:devel", while the rPath Linux 1 branch
+   is "rpl:1"
+
+   Finally, fill in the fields in the "Initial Administrator Account"
+   section.  And account with this information will be created that will
+   have complete access to the rBuilder environment.
+
+7. Click on the "Save Changes" button to save your configuration.
+
+8. Once the configuration process is complete, a new page will be
+   displayed.  Click on the "Launch" button to start rBuilder, making it
+   available to your users.  After a short delay you will be directed to
+   the main rBuilder home page.
+
+8. Log in using the username and password you specified for in the
+configuration dialog's "Initial Administrator Account" section. Click on
+the "Administer rBuilder" link at the bottom of the orange box on the right
+(You may have to scroll that box).
+
+9. On the "Available operations" page, you'll find a link entitled "Add
+   External Project".  Click on it.
+
+10. The "Add External Project" page will then appear.  The fields will be
+    pre-populated to add rPath Linux as an external project, which is
+    necessary if your organization plans to use rPath Linux as the basis
+    for the software appliances it develops.  Click on the "Create" button.
+
+11: You will then be directed to your rBuilder server's local rPath Linux
+    project page.  Note that you are listed as a project owner; however,
+    given that the rPath Linux project is external, some links (such as
+    Group Builder) are not fully functional, given the read-only nature of
+    the rPath Linux repository.
+
+    NOTE: The rPath Linux repository will not be fully integrated into your
+    rBuilder server's environment immediately; however, functions such as
+    package search will work within the hour, as the local repository index
+    is populated.
+
+12. You can now create a new rBuilder project by clicking on the "Create a
+    new project" link and following the instructions. Once your project has
+    been created, the project's repository will be accessible using this
+    configuration line in your conaryrc file:
+
+repositoryMap <proj>.example.com http://rbuilder.example.com/repos/<proj>/
+
+(Where "<proj>" is your project's name, and "rbuilder" and "example.com"
+are your server's hostname and domain name, respectively.)
+
