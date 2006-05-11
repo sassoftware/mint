@@ -4,6 +4,7 @@
 # All Rights Reserved
 #
 import os
+import pwd
 import re
 import string
 import subprocess
@@ -252,8 +253,13 @@ class InstallableIso(ImageGenerator):
 
     def buildIsos(self, topdir):
         showMediaCheck = self.release.getDataValue('showMediaCheck')
+        isogenUid = os.geteuid()
+        apacheGid = pwd.getpwnam('apache')[3]
         outputDir = os.path.normpath(os.path.join(self.cfg.finishedPath, self.project.getHostname(), str(self.release.getId())))
         util.mkdirChain(outputDir)
+        # add the group writeable bit and assign group ownership to apache
+        os.chmod(outputDir, os.stat(outputDir)[0] & 0777 | 0020)
+        os.chown(outputDir, isogenUid, apacheGid)
 
         isoList = []
         isoNameTemplate = "%s-%s-%s-" % (self.project.getHostname(),
@@ -308,12 +314,24 @@ class InstallableIso(ImageGenerator):
                     cmd.append('--supported-iso')
                 cmd.append(iso)
                 call(*cmd)
+                # and hand off ownership to apache
+                os.chown(iso, isogenUid, apacheGid)
 
         # add the netboot images
         bootDest = os.path.join(outputDir, 'boot.iso')
         diskbootDest = os.path.join(outputDir, 'diskboot.img')
         gencslist._linkOrCopyFile(os.path.join(topdir, 'images', 'boot.iso'), bootDest)
         gencslist._linkOrCopyFile(os.path.join(topdir, 'images', 'diskboot.img'), diskbootDest)
+        for outFile in (bootDest, diskbootDest):
+            try:
+                os.chown(outFile, isogenUid, apacheGid)
+            except OSError, e:
+                if e.errno != 1:
+                    raise
+                # it's not a problem if we get here, since the file in question
+                # was already owned by apache--we couldn't re-assign it.
+                print >> sys.stderr, "couldn't assign permission for %s to " \
+                      "apache." % outFile
         isoList += ( (bootDest, "boot.iso"),
                      (diskbootDest, "diskboot.img"), )
 
