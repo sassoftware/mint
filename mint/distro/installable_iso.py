@@ -209,7 +209,6 @@ class InstallableIso(ImageGenerator):
         print >> sys.stderr, "checking for artwork from anaconda-custom=%s" % cclient.cfg.installLabelPath[0].asString()
         uJob = self._getUpdateJob(cclient, "anaconda-custom")
 
-        util.mkdirChain(tmpPath + '/pixmaps')
         if uJob:
             print >> sys.stderr, "custom artwork found. applying on top of generated artwork"
             self._storeUpdateJob(uJob)
@@ -217,10 +216,21 @@ class InstallableIso(ImageGenerator):
                                 replaceFiles = True)
             print >> sys.stderr, "success."
             sys.stderr.flush()
+        else:
+            # do this here because we know we don't have custom artwork.
+            # modify isolinux message colors to match default splash palette.
+            for msgFile in [x for x in os.listdir( \
+                os.path.join(topdir, 'isolinux')) if x.endswith('.msg')]:
+
+                call('sed', '-i', 's/07/0a/g;s/02/0e/g',
+                     os.path.join(topdir, 'isolinux', msgFile))
 
         # copy pixmaps and scripts into cramfs root
-        util.copytree(os.path.join(tmpRoot, 'usr', 'share', 'anaconda'),
-                      tmpPath)
+        tmpTar = tempfile.mktemp(suffix = '.tar')
+        call('tar', 'cf', tmpTar, '-C',
+             os.path.join(tmpRoot, 'usr', 'share', 'anaconda'), '.')
+        call('tar', 'xf', tmpTar, '-C', tmpPath)
+        call('rm', tmpTar)
 
         self.convertSplash(topdir, tmpPath)
         self.writeConaryRc(tmpPath, cclient)
@@ -411,6 +421,10 @@ class InstallableIso(ImageGenerator):
         # replace isolinux.bin with a real copy, since it's modified
         call('cp', '--remove-destination', '-a',
             templateDir + '/isolinux/isolinux.bin', topdir + '/isolinux/isolinux.bin')
+        for msgFile in [x for x in os.listdir(os.path.join(templateDir, 'isolinux')) if x.endswith('.msg')]:
+            call('cp', '--remove-destination', '-a',
+                 os.path.join(templateDir, 'isolinux', msgFile),
+                 os.path.join(topdir, 'isolinux', msgFile))
 
         csdir = os.path.join(topdir, self.productDir, 'changesets')
         util.mkdirChain(csdir)
