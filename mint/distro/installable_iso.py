@@ -192,33 +192,35 @@ class InstallableIso(ImageGenerator):
 
         # extract anaconda-images from repository, if exists
         tmpRoot = tempfile.mkdtemp()
+        util.mkdirChain(os.path.join(tmpRoot, 'usr', 'share', 'anaconda',
+                                     'pixmaps'))
         cclient = self.getConaryClient(tmpRoot, arch)
 
+        print >> sys.stderr, "generating anaconda artwork."
+        ai = AnacondaImages( \
+            self.project.getName(),
+            indir = self.isocfg.anacondaImagesPath,
+            outdir = os.path.join(tmpRoot, 'usr', 'share', 'anaconda',
+                                  'pixmaps'),
+            fontfile = '/usr/share/fonts/bitstream-vera/Vera.ttf')
+        ai.processImages()
+
         uJob = None
-        print >> sys.stderr, "extracting artwork from anaconda-custom=%s" % cclient.cfg.installLabelPath[0].asString()
+        print >> sys.stderr, "checking for artwork from anaconda-custom=%s" % cclient.cfg.installLabelPath[0].asString()
         uJob = self._getUpdateJob(cclient, "anaconda-custom")
-        if not uJob:
-            print >> sys.stderr, "anaconda-custom not found on repository, falling back to anaconda-images"
-            uJob = self._getUpdateJob(cclient, "anaconda-images")
 
         util.mkdirChain(tmpPath + '/pixmaps')
         if uJob:
+            print >> sys.stderr, "custom artwork found. applying on top of generated artwork"
             self._storeUpdateJob(uJob)
-            cclient.applyUpdate(uJob, callback = self.callback)
+            cclient.applyUpdate(uJob, callback = self.callback,
+                                replaceFiles = True)
             print >> sys.stderr, "success."
             sys.stderr.flush()
 
-            # copy pixmaps and scripts into cramfs root
-            tmpTar = tempfile.mktemp(suffix = '.tar')
-            call('tar', 'cf', tmpTar, '-C', tmpRoot + '/usr/share/anaconda/', './')
-            call('tar', 'xf', tmpTar, '-C', tmpPath)
-            call('rm', tmpTar)
-        else:
-            print >> sys.stderr, "anaconda-images not found on repository either, using generated artwork."
-            ai = AnacondaImages(self.project.getName(), indir = self.isocfg.anacondaImagesPath,
-                    outdir = tmpPath + '/pixmaps',
-                    fontfile = '/usr/share/fonts/bitstream-vera/Vera.ttf')
-            ai.processImages()
+        # copy pixmaps and scripts into cramfs root
+        util.copytree(os.path.join(tmpRoot, 'usr', 'share', 'anaconda'),
+                      tmpPath)
 
         self.convertSplash(topdir, tmpPath)
         self.writeConaryRc(tmpPath, cclient)
