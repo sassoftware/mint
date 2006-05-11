@@ -30,8 +30,8 @@ def getVersions(basePath = None):
     except:
         return getVersionsOnDisk(basePath)
     try:
-        troveSpecs = [x.strip() for x in f.readlines() if x]
-        vers = [versions.VersionFromString(parseTroveSpec(x)[1]) for x in troveSpecs]
+        troveSpecs = [x.strip() for x in f.readlines()]
+        vers = [versions.VersionFromString(parseTroveSpec(x)[1]) for x in troveSpecs if x]
         ret = [str(x.trailingRevision()).split('-')[0] for x in vers]
         return ret and ret or [constants.mintVersion]
     finally:
