@@ -7,7 +7,7 @@ if os.getuid():
     sys.stderr.flush()
     sys.exit(1)
 
-from mint import config, RBUILDER_CONFIG
+from mint import config
 from mint import database
 from conary import dbstore
 from conary.lib import util
@@ -133,7 +133,7 @@ def deleteProject(projectName):
 
 global cfg
 cfg = config.MintConfig()
-cfg.read(RBUILDER_CONFIG)
+cfg.read(config.RBUILDER_CONFIG)
 
 if not sys.argv[1:]:
     print >> sys.stderr, "Usage: %s project [project] [project] ..." % \
