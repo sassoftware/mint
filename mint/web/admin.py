@@ -45,10 +45,13 @@ class AdminHandler(WebHandler):
     def newUser(self, *args, **kwargs):
         return self._write('admin/newUser', kwargs = kwargs)
 
-    @strFields(username = '', email = '', password = '', password2 = '',
+    @strFields(newUsername = '', email = '', password = '', password2 = '',
                fullName = '', displayEmail = '', blurb = '')
-    def processNewUser(self, username, fullName, email, password,
+    def processNewUser(self, newUsername, fullName, email, password,
                              password2, displayEmail, blurb, *args, **kwargs):
+        # newUsername was only used to prevent browsers from supplying a
+        # remembered value
+        username = newUsername
         if not username:
             self._addErrors("You must supply a username.")
         if not email:

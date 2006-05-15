@@ -29,7 +29,7 @@
                     <tr>
                         <th><em class="required">URL of target repository:</em></th>
                         <td>
-                            <input type="text" name="targetUrl" maxlength="255" value=""/>
+                            <input type="text" autocomplete="off" name="targetUrl" maxlength="255" value=""/>
                             <p class="help">Use the full URL of the target repository.
                                 If the target repository requires the use of SSL, be sure to use https://.
                             </p>
@@ -38,11 +38,11 @@
 
                     <tr>
                         <th><em class="required">Username:</em></th>
-                        <td><input type="text" name="mirrorUser" style="width: 25%;" /></td>
+                        <td><input autocomplete="off" type="text" name="mirrorUser" style="width: 25%;" /></td>
                     </tr>
                     <tr>
                         <th><em class="required">Password:</em></th>
-                        <td><input type="password" name="mirrorPass" style="width: 25%;" /></td>
+                        <td><input autocomplete="off" type="password" name="mirrorPass" style="width: 25%;" /></td>
                     </tr>
                 </table>
                 <button class="img" type="submit">

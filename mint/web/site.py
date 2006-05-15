@@ -73,15 +73,17 @@ class SiteHandler(WebHandler):
         self.toUrl = self.cfg.basePath
         return self._write("register", errors=[], kwargs={})
 
-    @strFields(username = '', email = '', email2 = '',
+    @strFields(newUsername = '', email = '', email2 = '',
                password = '', password2 = '',
                fullName = '', displayEmail = '',
                blurb = '', tos='', privacy='')
     @requiresHttps
-    def processRegister(self, auth, username,
+    def processRegister(self, auth, newUsername,
                         fullName, email, email2, password,
                         password2, displayEmail,
                         blurb, tos, privacy):
+        # newUsername only used to prevent browser value caching.
+        username = newUsername
         self.toUrl = self.cfg.basePath
 
         errors = []

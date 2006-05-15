@@ -24,6 +24,7 @@ from conary.lib import util, log
 from conary.server import schema
 from conary.server import server
 from conary import dbstore
+from conary import error
 
 from mint.scriptlibrary import SingletonScript
 
@@ -103,9 +104,14 @@ class MirrorOffline(SingletonScript):
             schema.loadSchema(db)
             netRepos = netserver.NetworkRepositoryServer(targCfg, targetUrl)
 
-            netRepos.auth.addUser(userName, userPass)
-            netRepos.auth.addAcl(userName, None, None, True, False, True)
-            netRepos.auth.setMirror(userName, True)
+            try:
+                netRepos.auth.addUser(userName, userPass)
+                netRepos.auth.addAcl(userName, None, None, True, False, True)
+                netRepos.auth.setMirror(userName, True)
+            except errors.GroupAlreadyExists:
+                # assume user is already present--probably due to a previous
+                # run being aborted.
+                pass
 
             pid = os.fork()
             if not pid:

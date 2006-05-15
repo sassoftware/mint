@@ -20,7 +20,7 @@
                 <table style="width: 50%; margin-bottom: 1em;">
                     <tr>
                         <td><b>Username:</b></td>
-                        <td><input type="text" name="username" /></td>
+                        <td><input type="text" autocomplete="off" name="username" /></td>
                     </tr>
                 </table>
                 <p>
