@@ -18,11 +18,11 @@ cd /srv/rbuilder/code/mint/
 make product >& /tmp/create-test-rba.log
 if [ $? != 0 ]; then carp; fi
 
-mv mint-$MINT_VERSION.tar.bz2 $RBATEST/mint/mint-$DATE.tar.bz2
-sed -ri "s/version\ \=\ '.+'/version\ \=\ \'$DATE\'/" $RBATEST/mint/mint.recipe
+mv rbuilder-$MINT_VERSION.tar.bz2 $RBATEST/rbuilder/rbuilder-$DATE.tar.bz2
+sed -ri "s/version\ \=\ '.+'/version\ \=\ \'$DATE\'/" $RBATEST/rbuilder/rbuilder.recipe
 
-pushd $RBATEST/mint/
-cvc add mint-$DATE.tar.bz2
+pushd $RBATEST/rbuilder/
+cvc add rbuilder-$DATE.tar.bz2
 
 cvc commit --message "automated commit for $DATE snapshot" >& /tmp/create-test-rba.log
 if [ $? != 0 ]; then carp; fi
