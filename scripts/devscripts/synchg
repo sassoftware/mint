@@ -8,7 +8,7 @@ if [ -f /tmp/.nosynchg ]; then
 fi
 
 # sync
-for d in $SYNCDIRS; do
+for i in $SYNCDIRS; do
     (cd $i; hg pull && hg update)
 done
 
