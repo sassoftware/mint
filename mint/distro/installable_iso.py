@@ -36,11 +36,11 @@ class IsoConfig(ConfigFile):
     filename = 'installable_iso.conf'
 
     imagesPath          = None
-    scriptPath          = '/usr/share/mint/scripts/'
+    scriptPath          = '/usr/share/rbuilder/scripts/'
     cachePath           = '/srv/rbuilder/changesets/'
     templatePath        = '/srv/rbuilder/templates/'
     implantIsoMd5       = '/usr/bin/implantisomd5'
-    anacondaImagesPath  = '/usr/share/mint/pixmaps'
+    anacondaImagesPath  = '/usr/share/rbuilder/pixmaps'
 
 
 class AnacondaTemplateMissing(Exception):

@@ -51,7 +51,7 @@ class BootableImageConfig(ConfigFile):
     heads           = 16
 
     #directory containing the uml init script as well as fstab and other hooks
-    dataDir         = '/usr/share/mint/DiskImageData/'
+    dataDir         = '/usr/share/rbuilder/DiskImageData/'
     umlKernel       = CfgDict(CfgString)
     debug           = (CfgBool, 0)
 
