@@ -14,9 +14,6 @@ RBATEST=/srv/rbuilder/code/rba/
 DATE=$(date +%Y_%m_%d)
 X86_FLAVOR='~X, ~!alternatives, !bootstrap, ~builddocs,~buildtests, ~desktop, ~dietlibc, ~emacs, ~gcj,~gnome, ~gtk, ~ipv6, ~kde, ~krb, ~ldap, ~nptl,pam, ~pcre, ~perl, ~!pie, ~python, ~qt,~readline, ~!sasl, ~!selinux, ssl, ~tcl,tcpwrappers, ~tk, ~!xen, ~!xfce is: x86(~cmov,~i486, ~i586, ~i686, ~mmx, ~sse, ~sse2)'
 
-cd /srv/rbuilder/code/mint/
-
-popd
 pushd $RBATEST/group-rbuilder-dist/
 sed -ri "s/version\ \=\ '.+'/version\ \=\ \'$DATE\'/" group-rbuilder-dist.recipe
 cvc merge
