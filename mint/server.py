@@ -1536,6 +1536,16 @@ class MintServer(object):
             raise ReleaseMissing()
         if self.releases.getPublished(releaseId):
             raise ReleasePublished()
+        cu = self.db.cursor()
+        cu.execute("SELECT filename FROM ImageFiles WHERE releaseId=?",
+                   releaseId)
+        for fileName in [x[0] for x in cu.fetchall()]:
+            try:
+                os.unlink(fileName)
+            except:
+                print >> sys.stderr, "Couldn't delete release image: %s" % \
+                      fileName
+                sys.stderr.flush()
         self.releases.deleteRelease(releaseId)
         return True
 

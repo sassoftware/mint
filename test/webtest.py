@@ -224,7 +224,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         page = self.fetchWithRedirect('/register')
         page = page.postForm(1, page.post,
-                {'username':  'foouser',
+                {'newUsername':  'foouser',
                  'password':  'foopass',
                  'password2': 'foopass',
                  'email':     'foo@localhost',

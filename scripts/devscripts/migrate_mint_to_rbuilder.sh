@@ -1,7 +1,7 @@
 #!/bin/sh
 # migrate mint -> rbuilder
 
-CONFIGFILES="/srv/rbuilder/rbuilder.conf /srv/rbuilder/iso_gen.conf /srv/rbuilder/installable_iso.conf /etc/httpd/conf.d/00mint.conf /etc/httpd/conf.d/mint.include /etc/fstab"
+CONFIGFILES="/srv/rbuilder/rbuilder.conf /srv/rbuilder/iso_gen.conf /srv/rbuilder/installable_iso.conf /etc/httpd/conf.d/mint.conf /etc/httpd/conf.d/00mint.conf /etc/httpd/conf.d/mint.include"
 
 if [ `whoami` != 'root' ]; then
     echo "Migration script must be run as root."
@@ -32,6 +32,8 @@ for f in $CONFIGFILES; do
         echo "warning: failed to update file $f (may not exist)"
     fi
 done
+
+find /srv/rbuilder/repos/ -name cache.sql | xargs rm -f
 
 # restart the webserver
 killall -USR1 httpd > /dev/null 2>&1

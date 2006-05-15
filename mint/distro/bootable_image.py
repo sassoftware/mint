@@ -10,6 +10,7 @@ from math import ceil
 import os
 import sys
 import re
+import pwd
 import time
 import tempfile
 import zipfile
@@ -50,7 +51,7 @@ class BootableImageConfig(ConfigFile):
     heads           = 16
 
     #directory containing the uml init script as well as fstab and other hooks
-    dataDir         = '/usr/share/mint/DiskImageData/'
+    dataDir         = '/usr/share/rbuilder/DiskImageData/'
     umlKernel       = CfgDict(CfgString)
     debug           = (CfgBool, 0)
 
@@ -564,6 +565,9 @@ quit
     def moveToFinal(self, filelist, finaldir):
         returnlist = []
         util.mkdirChain( finaldir )
+        isogenUid = os.geteuid()
+        apacheGid = pwd.getpwnam('apache')[3]
+        os.chown(finaldir, isogenUid, apacheGid)
         for file, name in filelist:
             base, ext = os.path.basename(file).split(os.path.extsep, 1)
             newfile = os.path.join(finaldir, self.basefilename + "." + ext)
@@ -572,6 +576,7 @@ quit
             import gencslist
             gencslist._linkOrCopyFile(file, newfile)
             os.unlink(file)
+            os.chown(newfile, isogenUid, apacheGid)
             returnlist.append((newfile, name,))
         return returnlist
 

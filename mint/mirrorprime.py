@@ -137,10 +137,8 @@ class TarThread(CopyThread):
 
 class CopyFromDiscThread(CopyThread):
     def run(self):
-        print "sourcePath:", self.sourcePath
         files = os.listdir(self.sourcePath)
         files = [x for x in files if x != 'MIRROR-INFO' and not x.endswith('.sha1') and os.path.isfile(os.path.join(self.sourcePath, x))]
-        print "files", files
 
         bytesTotal = sum(os.stat(os.path.join(self.sourcePath, x))[stat.ST_SIZE] for x in files)
         self.status['bytesTotal'] = bytesTotal
@@ -161,7 +159,6 @@ class CopyFromDiscThread(CopyThread):
                 newSum = sha1helper.sha1ToString(sha1helper.sha1FileBin(os.path.join(self.sourcePath, f)))
                 if origSum != newSum:
                     self.status['checksumError'] = True
-                print "checksums: ", origSum, newSum
             except IOError, e:
                 self.status['checksumError'] = True
                 print e
