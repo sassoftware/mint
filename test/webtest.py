@@ -69,6 +69,59 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         if '/processLogin' not in page.body:
             self.fail("Login form did not appear on page")
 
+    def testLoginBlockCookie(self):
+        self.quickMintUser('foouser', 'foopass')
+
+        self.accept_cookies = False
+        page = self.fetch('/')
+        page = page.postForm(1, self.fetchWithRedirect,
+                {'username': 'foouser', 'password': 'foopass'})
+        self.failIf('You cannot log in' not in page.body,
+                    "Browser blocked cookies and didn't go to error page.")
+
+    def testLoginBlockOneCookie(self):
+        if os.environ.get('MINT_TEST_SAMEDOMAINS', ""):
+            raise testsuite.SkipTestException( \
+                "Test only applies when both domains are being used.")
+
+        self.quickMintUser('foouser', 'foopass')
+
+        siteUrl = 'http://' + mint_rephelp.MINT_HOST + '.' + \
+                  mint_rephelp.MINT_DOMAIN + ":" + str(self.port) + \
+                  self.mintCfg.basePath
+
+        projectUrl = 'http://' + mint_rephelp.MINT_HOST + '.' + \
+                  mint_rephelp.MINT_PROJECT_DOMAIN + ":" + str(self.port) + \
+                  self.mintCfg.basePath
+
+        siteHost = mint_rephelp.MINT_HOST + '.' + mint_rephelp.MINT_DOMAIN
+        projectHost = mint_rephelp.MINT_HOST + '.' + \
+                      mint_rephelp.MINT_PROJECT_DOMAIN
+
+        import urlparse
+
+        for url in (siteUrl, projectUrl):
+            for host in (siteHost, projectHost):
+                page = self.fetchWithRedirect(url)
+
+                page = page.postForm(1, self.fetch,
+                                     {'username': 'foouser',
+                                      'password': 'foopass'})
+
+                while page.code in (301, 302):
+                    if host in self.cookies:
+                        # delete only one of two cookies.
+                        del self.cookies[host]
+                    page = self.fetch( \
+                        urlparse.urljoin(url, page.headers['Location']))
+
+                self.failIf('You cannot log in' not in page.body,
+                            "user hit %s and deleted cookie: %s, but "
+                            "didn't trigger error" % (url, host))
+
+                self.fetch('/logout')
+                self.cookies.clear()
+
     def testLoginWrongUser(self):
         page = self.fetch('/')
 

@@ -24,7 +24,7 @@ from conary.lib import util, log
 from conary.server import schema
 from conary.server import server
 from conary import dbstore
-from conary import error
+from conary import errors
 
 from mint.scriptlibrary import SingletonScript
 
