@@ -4,7 +4,6 @@
 #
 # ./install-jsroot <upstream version> <trovespec of job server root trove>
 #
-set -x
 if [ $# -lt 1 ]; then
     echo "not enough arguments: $0 $*" >&2
     echo "usage: $0 <trovespec of job server root> [--extra-fstab]" >&2
@@ -17,24 +16,32 @@ if [ $UID != 0 ]; then
     exit 1
 fi
 
-# parse a full trove spec from a partial spec by calling
-# conary rq on the partial. also extract an upstream version
-# from the resulting full trove spec.
 troveSpec=$1
-fullTroveSpec=$(conary rq "$troveSpec" --full-versions)
-upstreamVer=$(python -c "
-from conary.conaryclient import cmdline
-from conary import versions
-print str(versions.VersionFromString(cmdline.parseTroveSpec(\"$fullTroveSpec\")[1]).trailingRevision()).split('-')[0]
-")
 
-ROOT=/srv/rbuilder/jobserver/$upstreamVer/
+if [ -f $troveSpec ]; then
+    upstreamVer=$(cat /tmp/upstream)
+    echo "Installing chroot from tarball: $upstreamVer" 
+    ROOT=/srv/rbuilder/jobserver/$upstreamVer/
+    mkdir -p $ROOT
+    tar zxf $troveSpec -C $ROOT
+else
+    # parse a full trove spec from a partial spec by calling
+    # conary rq on the partial. also extract an upstream version
+    # from the resulting full trove spec.
+    fullTroveSpec=$(conary rq "$troveSpec" --full-versions)
+    upstreamVer=$(python -c "
+    from conary.conaryclient import cmdline
+    from conary import versions
+    print str(versions.VersionFromString(cmdline.parseTroveSpec(\"$fullTroveSpec\")[1]).trailingRevision()).split('-')[0]
+    ")
 
-echo "Installing chroot: $upstreamVer" 
-conary update --root $ROOT "$troveSpec"
-if [ $? != 0 ]; then
-    echo "Software installation failed" >&2
-    exit 1
+    ROOT=/srv/rbuilder/jobserver/$upstreamVer/
+    echo "Installing chroot from repository: $upstreamVer" 
+    conary update --root $ROOT "$troveSpec"
+    if [ $? != 0 ]; then
+        echo "Software installation failed" >&2
+        exit 1
+    fi
 fi
 
 if [ -d $ROOT/srv/mint ]; then
@@ -50,7 +57,7 @@ mkdir -p $ROOT/srv/rbuilder/finished-images/
 
 
 cp /etc/fstab /etc/fstab.backup
-COMMENT="\#JSROOT$upstreamVer"
+COMMENT=\#JSROOT$upstreamVer
 echo "Modifying /etc/fstab -- saving backup to /etc/fstab.backup"
 for x in '/proc' '/dev/pts' '/srv/rbuilder/finished-images' '/srv/rbuilder/changesets'; do   
     echo -e "$x\\t$ROOT$x\\tnone\\tbind\\t0\\t0 $COMMENT" >> /etc/fstab
