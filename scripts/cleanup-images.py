@@ -14,13 +14,13 @@ apacheGid = pwd.getpwnam('apache')[3]
 isogenUid = pwd.getpwnam('isogen')[2]
 
 cfg = config.MintConfig()
-cfg.read('/srv/rbuilder/rbuilder.conf')
+cfg.read(config.RBUILDER_CONFIG)
 db = dbstore.connect(cfg.dbPath, cfg.dbDriver)
 cu = db.cursor()
 cu.execute('SELECT filename FROM ImageFiles')
 imageFiles = [x[0] for x in cu.fetchall()]
 
-for baseDir, dirs, files in os.walk('/srv/rbuilder/finished-images'):
+for baseDir, dirs, files in os.walk(cfg.imagesPath):
     if len(baseDir.split(os.path.sep)) == 6:
         os.chown(baseDir, isogenUid, apacheGid)
         os.chmod(baseDir, os.stat(baseDir)[0] & 0777 | 0020)
