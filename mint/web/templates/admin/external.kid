@@ -87,9 +87,9 @@
             </table>
 
             <h2>Mirror Settings</h2>
-            <p><b><input onclick="javascript:toggle_element_by_checkbox('mirrorSettings', 'useMirror');" 
-                         type="checkbox" class="check" name="useMirror" value="1" id="useMirror" /> Mirror this repository locally 
-                <img src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" /></b></p>
+            <p><b>
+                <input onclick="javascript:toggle_element_by_checkbox('mirrorSettings', 'useMirror');" type="checkbox" class="check" name="useMirror" value="1" id="useMirror" /> Mirror this repository locally
+            </b></p>
             <table class="mainformhorizontal" id="mirrorSettings">
               <tr>
                 <th>Preload this mirror:</th>
