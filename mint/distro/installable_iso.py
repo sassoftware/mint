@@ -415,7 +415,10 @@ class InstallableIso(ImageGenerator):
     def prepareTemplates(self, topdir):
         # hardlink template files to topdir
         templateDir = os.path.join(self.isocfg.templatePath, self.release.getArch())
-        # templateDir = self._getTemplatePath
+
+        # XXX enable the dynamic templates here
+        # templateDir = self._getTemplatePath()
+
         if not os.path.exists(os.path.join(templateDir, 'PRODUCTNAME')):
             raise AnacondaTemplateMissing(self.release.getArch())
 
