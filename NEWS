@@ -1,4 +1,6 @@
-Changes in (tip):
+Changes in 1.6.3:
+* Installation paths changed: /srv/mint is now /srv/rbuilder; configuration is
+  now in /srv/rbuilder/rbuilder.conf.
 * Projects created using rBA may use a custom domain name.
 * rBA administrator interface now has a link to rAA for managing
   entitlements, etc.
@@ -36,6 +38,7 @@ Changes in (tip):
 * Extended characters in the group trove description no longer break the cook
   process with an "invalid type for set" error. Extended characters are
   converted to '?' when passed into Conary.
+* Component Removal from Group Builder now exists. For now it is hidden away on the edit projects page.
 
 Changes in 1.6.1:
 

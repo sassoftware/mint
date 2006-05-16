@@ -42,26 +42,26 @@
                         <tr>
                             <th><em class="required">Username:</em></th>
                             <td>
-                                <input type="text" name="username" maxlength="16" value="${kwargs['username']}"/>
+                                <input type="text" autocomplete="off" name="newUsername" maxlength="16" value="${kwargs['username']}"/>
                                  <p class="help">Please limit to 16 characters</p>
                             </td>
                         </tr>
                         <tr>
                             <th><em class="required">New Password:</em></th>
                             <td>
-                                <input type="password" name="password" value="" />
+                                <input type="password" autocomplete="off" name="password" value="" />
                                 <p class="help">Must be at least 6 characters</p>
 
                             </td>
                         </tr>
                         <tr>
                             <th><em class="required">Confirm Password:</em></th>
-                            <td><input type="password" name="password2" value="" /></td>
+                            <td><input type="password" autocomplete="off" name="password2" value="" /></td>
                         </tr>
                         <tr>
                             <th><em class="required">Email Address:</em></th>
                             <td>
-                                <input type="text" name="email" value="${kwargs['email']}"/>
+                                <input type="text" autocomplete="off" name="email" value="${kwargs['email']}"/>
 
                                 <p class="help">A confirmation message will be sent to this address for verification
                                     You may need to enable email from ${cfg.adminMail} in your spam filtering software.
@@ -76,7 +76,7 @@
                         <tr>
                             <th><em class="required">Confirm Email:</em></th>
                             <td>
-                                <input type="text" name="email2" value="${kwargs['email2']}"/>
+                                <input type="text" autocomplete="off" name="email2" value="${kwargs['email2']}"/>
                             </td>
                         </tr>
                     </table>
@@ -88,7 +88,7 @@
                     <table border="0" cellspacing="0" cellpadding="0" class="mainformhorizontal">
                         <tr>
                             <th>Full Name:</th>
-                            <td><input type="text" name="fullName" value="${kwargs['fullName']}" /></td>
+                            <td><input type="text" autocomplete="off" name="fullName" value="${kwargs['fullName']}" /></td>
                         </tr>
                         <tr>
                             <th>Contact Information:</th>

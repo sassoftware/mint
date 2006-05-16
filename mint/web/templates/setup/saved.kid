@@ -28,9 +28,9 @@ from conary.lib.cfg import *
                 page, where you can login and create the project(s) your
                 users require.</p>
 
-                <div><img id="spinner" src="${cfg.staticPath}apps/mint/images/circle-ball-dark-antialiased.gif" /></div>
+                <div><img id="setupSpinner" src="${cfg.staticPath}apps/mint/images/circle-ball-dark-antialiased.gif" /></div>
                 <p>
-                    <a href="restart" onclick="javascript:$('spinner').style.visibility = 'visible';">
+                    <a href="restart" onclick="javascript:$('setupSpinner').style.visibility = 'visible';">
                         <img src="${cfg.staticPath}apps/mint/images/launch_button.png" alt="Launch" />
                     </a>
                 </p>

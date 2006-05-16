@@ -46,7 +46,7 @@ refCompRecipe = """class GroupTest(GroupRecipe):
 
     def setup(r):
         r.setLabelPath('foo.rpath.local2@rpl:devel')
-        r.removeComponents('devel', 'doc')
+        r.removeComponents(('devel', 'doc'))
 """
 
 groupsRecipe = """class GroupTest(GroupRecipe):
@@ -569,13 +569,67 @@ class GroupTroveTest(fixtures.FixturedUnitTest):
                     "component didn't get re-added")
 
     @fixtures.fixture('Full')
+    def testComponentSetRemoved(self, db, data):
+        ownerId = data['owner']
+        projectId = data['projectId']
+        groupTroveId = data['groupTroveId']
+        client = self.getClient('owner')
+        groupTrove = client.getGroupTrove(groupTroveId)
+        self.failIf(groupTrove.listRemovedComponents() != [],
+                    "Initial set of removed components not empty")
+        groupTrove.removeComponents(['devel', 'doc'])
+        self.failIf(groupTrove.listRemovedComponents() != ['devel', 'doc'],
+                    "components didn't get removed")
+        groupTrove.setRemovedComponents(['devel'])
+        self.failIf(groupTrove.listRemovedComponents() != ['devel'],
+                    "component didn't get properly set")
+
+    @fixtures.fixture('Full')
+    def testComponentSetRemovedAtomic(self, db, data):
+        ownerId = data['owner']
+        projectId = data['projectId']
+        groupTroveId = data['groupTroveId']
+        client = self.getClient('owner')
+        groupTrove = client.getGroupTrove(groupTroveId)
+        self.failIf(groupTrove.listRemovedComponents() != [],
+                    "Initial set of removed components not empty")
+        groupTrove.removeComponents(['devel', 'doc'])
+        self.failIf(groupTrove.listRemovedComponents() != ['devel', 'doc'],
+                    "components didn't get removed")
+        # the point isn't the exception, it's the effect on the db.
+        self.assertRaises(ParameterError,
+                          groupTrove.setRemovedComponents,
+                          ['sirnotappearinginthislist'])
+        self.failIf(groupTrove.listRemovedComponents() != ['devel', 'doc'],
+                    "setRemovedComponents is not atomic")
+
+    @fixtures.fixture('Full')
     def testMissingComponentAllow(self, db, data):
         ownerId = data['owner']
         projectId = data['projectId']
         groupTroveId = data['groupTroveId']
         client = self.getClient('owner')
         groupTrove = client.getGroupTrove(groupTroveId)
-        self.assertRaises(ItemNotFound, groupTrove.allowComponents, ['devel'])
+        self.failIf(groupTrove.listRemovedComponents() != [],
+                    "Initial set of removed components not empty")
+        groupTrove.allowComponents(['devel'])
+        self.failIf(groupTrove.listRemovedComponents() != [],
+                    "Incorrect results from spurious removal")
+
+    @fixtures.fixture('Full')
+    def testDoubleComponentRemove(self, db, data):
+        ownerId = data['owner']
+        projectId = data['projectId']
+        groupTroveId = data['groupTroveId']
+        client = self.getClient('owner')
+        groupTrove = client.getGroupTrove(groupTroveId)
+        groupTrove.removeComponents(['devel'])
+        # remove twice
+        groupTrove.removeComponents(['devel'])
+        cu = db.cursor()
+        cu.execute("SELECT COUNT(*) FROM GroupTroveRemovedComponents")
+        self.failIf(cu.fetchone()[0] != 1,
+                    "Group Trove allowed double removal of component")
 
     @fixtures.fixture('Full')
     def testRemovedComponentRecipe(self, db, data):

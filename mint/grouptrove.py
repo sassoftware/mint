@@ -336,7 +336,21 @@ class GroupTroveItemsTable(database.KeyedTable):
                    groupTroveItemId)
         return cu.fetchone()[0]
 
-KNOWN_COMPONENTS = ('build-tree', 'config', 'configs', 'data', 'debuginfo', 'devel', 'devellib', 'doc', 'emacs', 'lib', 'locale', 'perl', 'python', 'runtime', 'tcl', 'tk')
+KNOWN_COMPONENTS = {'build-tree' : "Kernel build environment",
+                    'config' : "Configuration-related files",
+                    'configs' : "Kernel build configuration files",
+                    'data' : "Data files",
+                    'devel' : "Developer-related support files",
+                    'devellib' : "Developer-related libraries",
+                    'doc' : "Documentation-related files",
+                    'emacs': "Emacs-related extensions",
+                    'lib': "Libraries",
+                    'locale' : "Localization-related files",
+                    'perl' : "Perl-related files",
+                    'python' : "Python-related files",
+                    'runtime' : "Files required for runtime environment",
+                    'tcl' : "Tcl-related support files",
+                    'tk' : "Tk-related support files"}
 
 class ConaryComponentsTable(database.KeyedTable):
     name = "ConaryComponents"
@@ -350,6 +364,10 @@ class ConaryComponentsTable(database.KeyedTable):
 
     fields = [ 'componentId', 'component']
 
+    indexes = {'ConaryComponentsIdx': """CREATE UNIQUE INDEX
+                                             ConaryComponentsIdx
+                                             ON ConaryComponents(component)"""}
+
 class GroupTroveRemovedComponentsTable(database.DatabaseTable):
     name = "GroupTroveRemovedComponents"
 
@@ -361,6 +379,11 @@ class GroupTroveRemovedComponentsTable(database.DatabaseTable):
 
     fields = [ 'groupTroveId', 'componentId']
 
+    indexes = {'GroupTroveRemovedComponentIdx':
+               """CREATE UNIQUE INDEX GroupTroveRemovedComponentIdx
+                      ON GroupTroveRemovedComponents
+                          (groupTroveId, componentId)"""}
+
     def list(self, groupTroveId):
         cu = self.db.cursor()
         cu.execute("""SELECT component
@@ -371,6 +394,12 @@ class GroupTroveRemovedComponentsTable(database.DatabaseTable):
                           WHERE groupTroveId=?""", groupTroveId)
         return [x[0] for x in cu.fetchall()]
 
+    def setRemovedComponents(self, groupTroveId, components):
+        cu = self.db.cursor()
+        cu.execute("""DELETE FROM GroupTroveRemovedComponents
+                          WHERE groupTroveId=?""", groupTroveId)
+        self.removeComponents(groupTroveId, components)
+        self.db.commit()
 
     def removeComponents(self, groupTroveId, components):
         cu = self.db.cursor()
@@ -390,9 +419,16 @@ class GroupTroveRemovedComponentsTable(database.DatabaseTable):
                 compId = cu.lastid()
             else:
                 compId = res[0]
-            cu.execute("""INSERT INTO GroupTroveRemovedComponents
-                              (groupTroveId, componentId) VALUES(?, ?)""",
+            cu.execute("""SELECT COUNT(*)
+                              FROM GroupTroveRemovedComponents
+                              WHERE groupTroveId=? AND componentId=?""",
                        groupTroveId, compId)
+            if not cu.fetchone()[0]:
+                # only add component if it wasn't already there
+                cu.execute("""INSERT INTO GroupTroveRemovedComponents
+                                  (groupTroveId, componentId) VALUES(?, ?)""",
+                           groupTroveId, compId)
+        self.db.commit()
 
     def allowComponents(self, groupTroveId, components):
         cu = self.db.cursor()
@@ -402,10 +438,11 @@ class GroupTroveRemovedComponentsTable(database.DatabaseTable):
                               WHERE component=?""", comp)
             res = cu.fetchone()
             if not res:
-                raise database.ItemNotFound
+                continue
             cu.execute("""DELETE FROM GroupTroveRemovedComponents
                               WHERE groupTroveId=? AND componentId=?""",
                        groupTroveId, res[0])
+        self.db.commit()
 
 ############ Client Side ##############
 
@@ -492,3 +529,6 @@ class GroupTrove(database.TableObject):
 
     def allowComponents(self, components):
         return self.server.allowGroupTroveComponents(self.id, components)
+
+    def setRemovedComponents(self, components):
+        return self.server.setGroupTroveRemovedComponents(self.id, components)

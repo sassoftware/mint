@@ -11,7 +11,7 @@ data_files = fstab \
 	     xorg.conf \
 	     keyboard
 
-datadir = /usr/share/mint
+datadir = /usr/share/rbuilder
 
 dist_files = Makefile $(data_files) $(bin_files)
 

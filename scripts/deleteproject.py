@@ -2,8 +2,6 @@
 
 import os, sys
 
-cfgPath = "/srv/mint/mint.conf"
-
 if os.getuid():
     print >> sys.stderr, "Error: %s must be run as root" % sys.argv[0]
     sys.stderr.flush()
@@ -135,7 +133,7 @@ def deleteProject(projectName):
 
 global cfg
 cfg = config.MintConfig()
-cfg.read(cfgPath)
+cfg.read(config.RBUILDER_CONFIG)
 
 if not sys.argv[1:]:
     print >> sys.stderr, "Usage: %s project [project] [project] ..." % \

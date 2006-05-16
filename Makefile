@@ -4,16 +4,16 @@
 
 all: subdirs
 
-product=mint
+product=rbuilder
 export DESTDIR=
 installdir=
-export VERSION=1.6.1
+export VERSION=1.6.3
 export TOPDIR = $(shell pwd)
 export DISTDIR = $(TOPDIR)/$(product)$(productqualifier)-$(VERSION)
 export prefix = /usr
 export sysconfdir = /etc
 export servicedir= /srv
-export confdir = $(servicedir)/mint/
+export confdir = $(servicedir)/rbuilder/
 export datadir = $(prefix)/share
 export contentdir = $(datadir)/conary/web-common/apps/mint/
 export libdir = $(prefix)/lib
@@ -26,7 +26,7 @@ export maillistdir = /var/mailman
 
 SUBDIRS = mint test scripts mailman
 
-extra_files = Makefile Make.rules mint.conf httpd.conf
+extra_files = Makefile Make.rules rbuilder.conf httpd.conf
 
 doc_files = NEWS
 
@@ -54,14 +54,14 @@ dist: main-dist tarball
 product: main-dist product-dist tarball
 
 install: all install-subdirs
-	mkdir -p $(DESTDIR)$(datadir)/mint/
+	mkdir -p $(DESTDIR)$(datadir)/rbuilder/
 	mkdir -p $(DESTDIR)$(confdir)
-	install -m 644 mint.conf $(DESTDIR)$(confdir)/mint.conf.dist
-	sed -i "s,@DESTDIR@,$(installdir),g" $(DESTDIR)$(confdir)/mint.conf.dist
+	install -m 644 rbuilder.conf $(DESTDIR)$(confdir)/rbuilder.conf.dist
+	sed -i "s,@DESTDIR@,$(installdir),g" $(DESTDIR)$(confdir)/rbuilder.conf.dist
 	mkdir -p $(DESTDIR)$(httpddir)
-	install httpd.conf $(DESTDIR)$(httpddir)/mint.conf.dist
-	sed -i "s,@DATADIR@,$(installdir)$(datadir),g" $(DESTDIR)$(httpddir)/mint.conf.dist
-	sed -i "s,@DESTDIR@,$(installdir),g" $(DESTDIR)$(httpddir)/mint.conf.dist
+	install httpd.conf $(DESTDIR)$(httpddir)/rbuilder.conf.dist
+	sed -i "s,@DATADIR@,$(installdir)$(datadir),g" $(DESTDIR)$(httpddir)/rbuilder.conf.dist
+	sed -i "s,@DESTDIR@,$(installdir),g" $(DESTDIR)$(httpddir)/rbuilder.conf.dist
 
 doc:
 	PYTHONPATH=.:../conary/: epydoc -o mintdoc mint

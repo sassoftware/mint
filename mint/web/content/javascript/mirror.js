@@ -21,7 +21,7 @@ function normPath(path) {
 
 function readTarStatus(aReq) {
     r = evalJSONRequest(aReq);
-    replaceChildNodes($('statusMessage'), "Untarring: " + r.bytesRead + "%");
+    replaceChildNodes($('statusMessage'), "Untarred " + r.bytesRead + " files");
 
     if(!r.done && !r.error) {
         setTimeout("getTarStatus()", 100);

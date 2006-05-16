@@ -1,6 +1,6 @@
 image_files = *.png
 
-datadir = /usr/share/mint
+datadir = /usr/share/rbuilder
 
 dist_files = Makefile $(image_files)
 

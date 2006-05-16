@@ -26,6 +26,7 @@ extra_dist = \
 	live_iso.conf		\
 	buildtemplates		\
 	raw2vmdk.c		\
+	first-jsroot.init	\
 	job-server.init.in	\
 	multi-jobserver.init.in
 
@@ -42,9 +43,9 @@ all: default-all bin
 bin: raw2vmdk
 
 install: install-subdirs
-	mkdir -p $(DESTDIR)/$(datadir)/mint/scripts/
+	mkdir -p $(DESTDIR)/$(datadir)/rbuilder/scripts/
 	for f in $(script_dist); do \
-		install -m 755 $$f $(DESTDIR)/$(datadir)/mint/scripts/$$f; \
+		install -m 755 $$f $(DESTDIR)/$(datadir)/rbuilder/scripts/$$f; \
 	done;
 	mkdir -p $(DESTDIR)/$(confdir)
 	install -m 644 installable_iso.conf $(DESTDIR)/$(confdir)/installable_iso.conf.dist

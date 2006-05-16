@@ -1468,7 +1468,8 @@ class MintServer(object):
             f.write('repositoryMap %s %s\n' % (host, url))
         f.close()
         util.mkdirChain(os.path.join(self.cfg.dataPath, 'run'))
-        os.rename(fname, self.cfg.conaryRcFile)
+        util.copyfile(fname, self.cfg.conaryRcFile)
+        os.unlink(fname)
 
     #
     # RELEASE STUFF
@@ -1536,6 +1537,16 @@ class MintServer(object):
             raise ReleaseMissing()
         if self.releases.getPublished(releaseId):
             raise ReleasePublished()
+        cu = self.db.cursor()
+        cu.execute("SELECT filename FROM ImageFiles WHERE releaseId=?",
+                   releaseId)
+        for fileName in [x[0] for x in cu.fetchall()]:
+            try:
+                os.unlink(fileName)
+            except:
+                print >> sys.stderr, "Couldn't delete release image: %s" % \
+                      fileName
+                sys.stderr.flush()
         self.releases.deleteRelease(releaseId)
         return True
 
@@ -2317,8 +2328,8 @@ class MintServer(object):
                   str(recipeLabels).split('[')[1].split(']')[0]
 
         if removedComponents:
-            recipe += indent + "r.removeComponents('" + \
-                      "', '".join(removedComponents) + "')\n"
+            recipe += indent + "r.removeComponents(('" + \
+                      "', '".join(removedComponents) + "'))\n"
 
         for trv in groupTroveItems:
             ver = trv['versionLock'] and trv['trvVersion'] or trv['trvLabel']
@@ -2472,6 +2483,14 @@ class MintServer(object):
     def allowGroupTroveComponents(self, groupTroveId, components):
         self.groupTroveRemovedComponents.allowComponents(groupTroveId,
                                                          components)
+        return True
+
+    @private
+    @typeCheck(int, (list, str))
+    @requiresAuth
+    def setGroupTroveRemovedComponents(self, groupTroveId, components):
+        self.groupTroveRemovedComponents.setRemovedComponents(groupTroveId,
+                                                              components)
         return True
 
     #group trove item specific functions

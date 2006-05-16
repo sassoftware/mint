@@ -29,7 +29,7 @@ def _getTrove(cs, name, version, flavor):
     t = trove.Trove(troveCs)
     return t
 
-def _handleKernelPackage(cs, name, version, flavor):
+def _handleKernelPackage(cs, name, version, flavor, upKernel):
     # pull the kernel version string out of the trove Provides on
     # kernel:runtime
     #
@@ -50,8 +50,10 @@ def _handleKernelPackage(cs, name, version, flavor):
         kernelStr = [x for x in kernelProv.flags.keys() if x.startswith(kernelVersion)][0]
     name = name.split(':')[0]
     # other kernel types should be handled here, such as numa.
-    if 'smp' in kernelStr:
-        name = name + '-smp'
+   # Special casing for groups with SMP kernels only
+    if upKernel:
+        if 'smp' in kernelStr:
+            name = name + '-smp'
     return name, kernelStr
 
 def _findValidTroves(cs, groupName, groupVersion, groupFlavor,
@@ -100,7 +102,7 @@ def _findValidTroves(cs, groupName, groupVersion, groupFlavor,
                              skipNotByDefault, childTopTrove, valid)
     return valid
 
-def _makeEntry(groupCs, name, version, flavor, components, csFiles):
+def _makeEntry(groupCs, name, version, flavor, components, csFiles, upKernel):
     # set up the base name, version, release that we'll use for anaconda
     base = name
     trailing = version.trailingRevision().asString()
@@ -113,7 +115,7 @@ def _makeEntry(groupCs, name, version, flavor, components, csFiles):
     kernelSpec = "none"
     if name == 'kernel' or name == 'kernel:runtime':
         base, kernelVer = _handleKernelPackage(groupCs, name, version,
-                                               flavor)
+                                               flavor, upKernel)
         kernelSpec = '='.join((base, kernelVer))
 
     if deps.DEP_CLASS_IS in flavor.members:
@@ -324,11 +326,32 @@ def extractChangeSets(client, cfg, csdir, groupName, groupVer, groupFlavor,
         needsFile = True
 
     total = len(orderedList)
+
+    # Special casing for ISOs with SMP kernels only.  Anaconda needs trove
+    # with name 'kernel'
+    upKernel = False
+
+    for num, ((name, version, flavor), compNames) in enumerate(orderedList):
+        if name == 'kernel' or name == 'kernel:runtime':
+            if not name.endswith(':runtime'):
+                compName = name + ':runtime'
+            else:
+                compName = name
+            compCs = group.getNewTroveVersion(compName, version, flavor)
+            provides = compCs.provides()
+            if deps.DEP_CLASS_TROVES in provides.members:
+                kernelProv = provides.members[deps.DEP_CLASS_TROVES].members.values()[0]
+                kernelStr = kernelProv.flags.keys()[0]
+
+            if not 'smp' in kernelStr:
+                upKernel = True
+
+
     # use the order to extract changesets from the repository
     for num, ((name, version, flavor), compNames) in enumerate(orderedList):
         components = [ (x, version, flavor) for x in compNames ]
         csfile, entry = _makeEntry(group, name, version, flavor, components,
-                                   csFiles)
+                                   csFiles, upKernel)
         csFiles.add(csfile)
         path = '%s/%s' % (csdir, csfile)
         keep = False

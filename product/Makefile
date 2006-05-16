@@ -6,7 +6,7 @@
 
 SUBDIRS = content templates
 
-dist_files = mint.conf httpd.conf
+dist_files = rbuilder.conf httpd.conf
 
 all: default-subdirs
 

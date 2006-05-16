@@ -15,6 +15,7 @@ from mod_python import apache
 
 from mint import mint_error
 from mint import shimclient
+from mint.config import RBUILDER_CONFIG
 from mint.session import SqlSession
 from mint.web.webhandler import WebHandler, normPath, HttpNotFound, HttpForbidden
 
@@ -40,13 +41,6 @@ class SetupHandler(WebHandler):
         # only admins are allowed here
         if not self.auth.admin and self.cfg.configured:
             raise HttpForbidden
-
-        # first-time setup; check for <sid>.txt
-        if not self.cfg.configured:
-            if not self.session:
-                self._session_start()
-
-            self.session.save()
 
         if not cmd:
             return self.setup
@@ -74,10 +68,12 @@ class SetupHandler(WebHandler):
         if '.' in kwargs['hostName']:
             errors.append("""The hostname of the rBuilder server must not contain periods. The
                 hostname is only the first part of the fully-qualified domain name.""")
+        if 'siteDomainName' not in kwargs or not kwargs['siteDomainName']:
+            errors.append("""You must specify a domain name for this installation.""")
         if 'new_username' not in kwargs:
             errors.append("You must enter a username to be created")
         if 'new_email' not in kwargs:
-            errors.append("You must enter a username to be created")
+            errors.append("You must enter an administrator email address")
         if 'new_password' not in kwargs or 'new_password2' not in kwargs:
             errors.append("You must enter initial passwords")
         elif kwargs['new_password'] != kwargs['new_password2']:
@@ -112,17 +108,9 @@ class SetupHandler(WebHandler):
         mintClient.promoteUserToAdmin(userId)
         self.req.log_error("promoted %d to admin" % userId)
 
-        # save entitlements
-        if 'entitlement' in kwargs:
-            for ent in ["conary.rpath.com", "products.rpath.com"]:
-                f = open("/etc/conary/entitlements/%s" % ent, "w")
-                f.write(kwargs['entitlement'])
-                f.close()
-                self.req.log_error("wrote entitlement to /etc/conary/entitlements/%s" % ent)
-
-        cfg = file('/srv/mint/mint.conf', 'w')
+        cfg = file(RBUILDER_CONFIG, 'w')
         newCfg.display(out = cfg)
-        self.req.log_error("writing new configuration to /srv/mint/mint.conf")
+        self.req.log_error("writing new configuration to %s" % RBUILDER_CONFIG)
         self.req.log_error("+ sudo killall -USR1 httpd")
         os.system("sudo killall -USR1 httpd")
         return self._write("setup/saved")
@@ -137,9 +125,9 @@ class SetupHandler(WebHandler):
     def restart(self, auth):
         self.cfg.configured = True
 
-        cfg = file('/srv/mint/mint.conf', 'w')
+        cfg = file(RBUILDER_CONFIG, 'w')
         self.cfg.display(out = cfg)
-        self.req.log_error("writing new configuration to /srv/mint/mint.conf")
+        self.req.log_error("writing new configuration to %s" % RBUILDER_CONFIG)
         self.req.log_error("+ sudo killall -USR1 httpd")
         self.req.log_error("+ sudo /sbin/service rbuilder-isogen restart")
 

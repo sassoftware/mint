@@ -224,7 +224,8 @@ class ProjectHandler(WebHandler):
 
     @intFields(id = None)
     @strFields(version = None, description = '')
-    def editGroup2(self, auth, id, version, description, **kwargs):
+    @listFields(str, components = [])
+    def editGroup2(self, auth, id, version, description, components, **kwargs):
         curGroupTrove = self.client.getGroupTrove(id)
 
         # Set the new version and description
@@ -240,7 +241,9 @@ class ProjectHandler(WebHandler):
                 curGroupTrove.setTroveVersionLock(t['groupTroveItemId'], cvalue == 'on')
 
         curGroupTrove.refresh()
-        return self._write("editGroup", message='Changes saved successfully', curGroupTrove = curGroupTrove)
+        curGroupTrove.setRemovedComponents(components)
+        self._setInfo('Changes saved successfully')
+        self._predirect("editGroup?id=%d" % id)
 
     @strFields(referer = None)
     def closeCurrentGroup(self, auth, referer):

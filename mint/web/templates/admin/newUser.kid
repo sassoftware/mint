@@ -26,19 +26,19 @@
                     <tr>
                         <th><em class="required">Username:</em></th>
                         <td>
-                            <input type="text" name="username" maxlength="16" value="${kwargs['username']}"/>
+                            <input type="text" autocomplete="off" name="newUsername" maxlength="16" value="${kwargs['username']}"/>
                              <p class="help">please limit to 16 characters</p>
                         </td>
                     </tr>
 
                     <tr>
                         <th>Full Name:</th>
-                        <td><input type="text" name="fullName" value="${kwargs['fullName']}" /></td>
+                        <td><input type="text" autocomplete="off" name="fullName" value="${kwargs['fullName']}" /></td>
                     </tr>
                     <tr>
                         <th><em class="required">Email Address:</em></th>
                         <td>
-                            <input type="text" name="email" value="${kwargs['email']}"/>
+                            <input type="text" autocomplete="off" name="email" value="${kwargs['email']}"/>
 
                             <p class="help">This email address will not be displayed on the ${cfg.companyName} website.</p>
                         </td>
@@ -66,14 +66,14 @@
                     <tr>
                         <th><em class="required">New Password:</em></th>
                         <td>
-                            <input type="password" name="password" value="" />
+                            <input type="password" autocomplete="off" name="password" value="" />
                             <p class="help">must be at least 6 characters</p>
 
                         </td>
                     </tr>
                     <tr>
                         <th><em class="required">Confirm Password:</em></th>
-                        <td><input type="password" name="password2" value="" /></td>
+                        <td><input type="password" autocomplete="off" name="password2" value="" /></td>
                     </tr>
                 </table>
                 <p><button type="submit">Create New User</button></p>

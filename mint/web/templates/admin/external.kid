@@ -37,7 +37,7 @@
               <tr>
                 <th><em class="required">Project Name:</em></th>
                 <td>
-                  <input type="text" name="hostname" maxlength="16" value="${firstTime and 'rpath' or ''}"/>
+                  <input type="text" autocomplete="off" name="hostname" maxlength="16" value="${firstTime and 'rpath' or ''}"/>
                   <p class="help">Enter a local name for this
                   project. The local name will be used as the hostname
                   for this project's site and repository
@@ -53,7 +53,7 @@
               <tr>
                   <th><em class="required">Project Title:</em></th>
                   <td>
-                    <input type="text" name="name" value="${firstTime and 'rPath Linux' or ''}"/>
+                    <input type="text" autocomplete="off" name="name" value="${firstTime and 'rPath Linux' or ''}"/>
                     <p class="help">Enter a local title for this
                     project.  The title is a longer, more descriptive
                     name for the project. For example, <strong>My
@@ -66,7 +66,7 @@
               <tr>
                 <th><em class="required">Project Label:</em></th>
                 <td>
-                  <input type="text" name="label" value="${firstTime and 'conary.rpath.com@rpl:1' or ''}"/>
+                  <input type="text" autocomplete="off" name="label" value="${firstTime and 'conary.rpath.com@rpl:1' or ''}"/>
                   <p class="help">Enter this project's label.  For
                   example, <strong>conary.example.com@rpl:1</strong></p>
                 </td>
@@ -74,7 +74,7 @@
               <tr>
                 <th>Repository URL:</th>
                 <td>
-                  <input type="text" name="url" value="${firstTime and 'http://conary.rpath.com/conary/' or ''}"/>
+                  <input type="text" autocomplete="off" name="url" value="${firstTime and 'http://conary.rpath.com/conary/' or ''}"/>
                   <p class="help">Enter the URL for this project's
                   repository.  If a URL is not provided, the standard
                   URL format will be derived from the project's label
@@ -87,9 +87,9 @@
             </table>
 
             <h2>Mirror Settings</h2>
-            <p><b><input onclick="javascript:toggle_element_by_checkbox('mirrorSettings', 'useMirror');" 
-                         type="checkbox" class="check" name="useMirror" value="1" id="useMirror" /> Mirror this repository locally 
-                <img src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" /></b></p>
+            <p><b>
+                <input onclick="javascript:toggle_element_by_checkbox('mirrorSettings', 'useMirror');" type="checkbox" class="check" name="useMirror" value="1" id="useMirror" /> Mirror this repository locally
+            </b></p>
             <table class="mainformhorizontal" id="mirrorSettings">
               <tr>
                 <th>Preload this mirror:</th>
@@ -97,11 +97,11 @@
               </tr>
               <tr>
                 <th>Authorization:</th>
-                <td>Username: <input type="text" name="mirrorUser" style="width: 25%;" /></td>
+                <td>Username: <input type="text" autocomplete="off" name="mirrorUser" style="width: 25%;" /></td>
               </tr>
               <tr>
                 <th></th>
-                <td>Password: <input type="password" name="mirrorPass" style="width: 25%;" />
+                <td>Password: <input type="password" autocomplete="off" name="mirrorPass" style="width: 25%;" />
                   <p class="help">
                       Enter the username and password of a user authorized to mirror this repository.
                   </p>

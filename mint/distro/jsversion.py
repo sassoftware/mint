@@ -12,7 +12,7 @@ from mint import mint_error
 from conary import versions
 from conary.conaryclient.cmdline import parseTroveSpec
 
-DEFAULT_BASEPATH = os.path.join(os.path.sep, 'srv', 'mint', 'jobserver')
+DEFAULT_BASEPATH = os.path.join(os.path.sep, 'srv', 'rbuilder', 'jobserver')
 
 def getVersionsOnDisk(basePath = None):
     if basePath is None:
@@ -30,7 +30,8 @@ def getVersions(basePath = None):
     except:
         return getVersionsOnDisk(basePath)
     try:
-        vers = [versions.VersionFromString(parseTroveSpec(x.strip())[1]) for x in f.readlines()]
+        troveSpecs = [x.strip() for x in f.readlines()]
+        vers = [versions.VersionFromString(parseTroveSpec(x)[1]) for x in troveSpecs if x]
         ret = [str(x.trailingRevision()).split('-')[0] for x in vers]
         return ret and ret or [constants.mintVersion]
     finally:

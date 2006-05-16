@@ -9,7 +9,7 @@ import os
 import stat
 import sys
 import re
-from urllib import quote, unquote, quote_plus
+from urllib import quote, unquote, quote_plus, urlencode
 
 from mod_python import apache
 
@@ -73,15 +73,17 @@ class SiteHandler(WebHandler):
         self.toUrl = self.cfg.basePath
         return self._write("register", errors=[], kwargs={})
 
-    @strFields(username = '', email = '', email2 = '',
+    @strFields(newUsername = '', email = '', email2 = '',
                password = '', password2 = '',
                fullName = '', displayEmail = '',
                blurb = '', tos='', privacy='')
     @requiresHttps
-    def processRegister(self, auth, username,
+    def processRegister(self, auth, newUsername,
                         fullName, email, email2, password,
                         password2, displayEmail,
                         blurb, tos, privacy):
+        # newUsername only used to prevent browser value caching.
+        username = newUsername
         self.toUrl = self.cfg.basePath
 
         errors = []
@@ -215,19 +217,30 @@ class SiteHandler(WebHandler):
                 # redirect storm if needed
                 nexthop = self._getNextHop()
                 if nexthop:
-                    self._redirect("http://%s%scontinueLogin?sid=%s" % \
-                        (nexthop, self.cfg.basePath, self.session.id()))
+                    self._redirect('validateSession?%s' % urlencode((('nextHop', "http://%s%scontinueLogin?sid=%s" % (nexthop, self.cfg.basePath, self.session.id())),)))
+                    #self._redirect('validateSession?nextHop=%s' % \
+                    #               ("http://%s%scontinueLogin?sid=%s" % \
+                    #    (nexthop, self.cfg.basePath, self.session.id())))
                 else:
-                    self._redirect(self.session['firstPage'])
+                    self._redirect('validateSession?%s' % urlencode((('nextHop', self.session['firstPage']),)))
+
         else:
             raise HttpNotFound
 
     def continueLogin(self, auth, sid = None):
         if sid:
             self._session_start()
-            self._redirect(self.session['firstPage'])
+            self._redirect('validateSession?%s' % urlencode((('nextHop', self.session['firstPage']),)))
         else:
             raise HttpNotFound
+
+    def validateSession(self, auth, nextHop):
+        nextHop = unquote(nextHop)
+        if 'firstPage' not in self.session:
+            return self._write('error', shortError = "Login Failed",
+                               error = 'You cannot log in because your browser is blocking cookies to this site.')
+
+        self._redirect(nextHop)
 
     @strFields(id = None)
     def confirm(self, auth, id):

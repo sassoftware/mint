@@ -117,12 +117,12 @@ class TarThread(CopyThread):
             if x.startswith("mirror-") and x.endswith(".tgz")][0]
 
 #        serverName = file[7:-4]
-#        if os.path.exists(os.path.join("/srv/mint/repos/", serverName)):
+#        if os.path.exists(os.path.join("/srv/rbuilder/repos/", serverName)):
 #            self.status['error'] = True
 #            self.status['errorMessage'] = 'Repository directory already exists: not overwriting'
 #            return
 
-        cmd = ["tar", "zxvf", os.path.join(self.tmpPath, file), "-C", "/srv/mint/repos/"]
+        cmd = ["tar", "zxvf", os.path.join(self.tmpPath, file), "-C", "/srv/rbuilder/repos/"]
         tar = subprocess.Popen(cmd, stdout = subprocess.PIPE)
 
         lines = 100
@@ -137,10 +137,8 @@ class TarThread(CopyThread):
 
 class CopyFromDiscThread(CopyThread):
     def run(self):
-        print "sourcePath:", self.sourcePath
         files = os.listdir(self.sourcePath)
         files = [x for x in files if x != 'MIRROR-INFO' and not x.endswith('.sha1') and os.path.isfile(os.path.join(self.sourcePath, x))]
-        print "files", files
 
         bytesTotal = sum(os.stat(os.path.join(self.sourcePath, x))[stat.ST_SIZE] for x in files)
         self.status['bytesTotal'] = bytesTotal
@@ -161,7 +159,6 @@ class CopyFromDiscThread(CopyThread):
                 newSum = sha1helper.sha1ToString(sha1helper.sha1FileBin(os.path.join(self.sourcePath, f)))
                 if origSum != newSum:
                     self.status['checksumError'] = True
-                print "checksums: ", origSum, newSum
             except IOError, e:
                 self.status['checksumError'] = True
                 print e

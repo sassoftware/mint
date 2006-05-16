@@ -24,6 +24,7 @@ from conary.lib import util, log
 from conary.server import schema
 from conary.server import server
 from conary import dbstore
+from conary import errors
 
 from mint.scriptlibrary import SingletonScript
 
@@ -39,24 +40,24 @@ class MirrorOffline(SingletonScript):
         return True
 
     def usage(self):
-        print "usage: %s <url to repository> <label> <username> <password> [ISO size]" % self.name
+        print "usage: %s <url to repository> <label> <mirrorDir> <username> <password> [ISO size]" % self.name
         return 1
 
     def action(self):
         try:
             pid = 0
-            baseDir = tempfile.mkdtemp()
             outputDir = tempfile.mkdtemp()
-            if len(sys.argv) < 5:
+            if len(sys.argv) < 6:
                 return self.usage()
             cfg = mirror.MirrorConfiguration()
 
-            sourceUrl, labelStr, userName, userPass = sys.argv[1:5]
+            sourceUrl, labelStr, baseDir, userName, userPass = sys.argv[1:6]
+            util.mkdirChain(baseDir)
 
             labelStr = sys.argv[2]
-            if len(sys.argv) > 5:
-                if sys.argv[5][-1].isalpha():
-                    sizeBase = float(sys.argv[5][:-1])
+            if len(sys.argv) > 6:
+                if sys.argv[6][-1].isalpha():
+                    sizeBase = float(sys.argv[6][:-1])
                     mult = {'B' : 1,
                             'b' : 1,
                             'K' : 1024,
@@ -64,9 +65,9 @@ class MirrorOffline(SingletonScript):
                             'M' : 1048576,
                             'm' : 1000000,
                             'G' : 1073741824,
-                            'g' : 1000000000}[sys.argv[5][-1]]
+                            'g' : 1000000000}[sys.argv[6][-1]]
                 else:
-                    sizeBase = float(sys.argv[5])
+                    sizeBase = float(sys.argv[6])
                     mult = 1048576
                 isoSize = int(mult * sizeBase)
             else:
@@ -103,9 +104,14 @@ class MirrorOffline(SingletonScript):
             schema.loadSchema(db)
             netRepos = netserver.NetworkRepositoryServer(targCfg, targetUrl)
 
-            netRepos.auth.addUser(userName, userPass)
-            netRepos.auth.addAcl(userName, None, None, True, False, True)
-            netRepos.auth.setMirror(userName, True)
+            try:
+                netRepos.auth.addUser(userName, userPass)
+                netRepos.auth.addAcl(userName, None, None, True, False, True)
+                netRepos.auth.setMirror(userName, True)
+            except errors.GroupAlreadyExists:
+                # assume user is already present--probably due to a previous
+                # run being aborted.
+                pass
 
             pid = os.fork()
             if not pid:
@@ -201,11 +207,16 @@ class MirrorOffline(SingletonScript):
                 os.rename(os.path.join(outputDir, isoFile),
                           os.path.join('.', isoFile))
         finally:
-            for kDir in (baseDir, outputDir):
-                try:
-                    util.rmtree(kDir)
-                except:
-                    pass
+	    try:
+                util.rmtree(kDir)
+            except:
+                pass
+            try:
+                # attempt to clear the account in case an exception occured
+                targetRepos.deleteUserByName(versions.Label(labelStr),
+                                             userName)
+            except:
+                pass
         return 0
 
 

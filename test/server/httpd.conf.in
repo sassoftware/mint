@@ -66,11 +66,11 @@ DocumentRoot "@DOCROOT@"
 
 Alias /conary/ "@DOCROOT@/test.cnr/"
 
-Alias /jsonrpc/             "@DOCROOT@/mint.conf/"
-Alias /xmlrpc/              "@DOCROOT@/mint.conf/"
-Alias /xmlrpc-private/      "@DOCROOT@/mint.conf/"
+Alias /jsonrpc/             "@DOCROOT@/rbuilder.conf/"
+Alias /xmlrpc/              "@DOCROOT@/rbuilder.conf/"
+Alias /xmlrpc-private/      "@DOCROOT@/rbuilder.conf/"
 Alias /images/              "@IMAGESPATH/"
-Alias /                     "@DOCROOT@/mint.conf/"
+Alias /                     "@DOCROOT@/rbuilder.conf/"
 
 <Location />
     AddHandler python-program .conf

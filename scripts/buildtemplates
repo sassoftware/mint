@@ -6,9 +6,9 @@
 
 conary=conary
 
-scriptdir=/usr/lib/anaconda-runtime/                  # directory to run anaconda scripts from
+scriptdir=/usr/lib/anaconda-runtime/           # directory to run anaconda scripts from
 arch=i386                   # architecture of the distro
-topdir=/srv/mint/templates/$arch/             # top directory of the CD image
+topdir=/srv/rbuilder/templates/$arch/          # top directory of the CD image
 subdir=rPath                # directory under $topdir that contains base/
 distroname="rPath Linux"    # name of the distro
 distroversion=0.50          # version of the distro
@@ -58,9 +58,5 @@ $scriptdir/makestamp.py --releasestr="$distroname" --arch="$arch" --discNum="1" 
 rm -rf $anacondadir $instroot $instrootgr
 rm -f $topdir/$subdir/changesets/*.ccs
 chmod 0664 $topdir/isolinux/isolinux.*
-
-# modify isolinux message colors to match
-# our default splash palette.
-sed -i "s/07/0a/g;s/02/0e/g" $topdir/isolinux/*.msg
 
 mv $topdir/$subdir $topdir/PRODUCTNAME

@@ -5,18 +5,18 @@ import sys
 from conary import dbstore
 from conary.lib import util
 
-from mint.config import MintConfig
+from mint.config import MintConfig, RBUILDER_CONFIG
 
 reload(sys)
 sys.setdefaultencoding("utf-8")
 
 sys.excepthook = util.genExcepthook()
 
-srcDb = dbstore.connect("/srv/mint/data/db", "sqlite")
+srcDb = dbstore.connect("/srv/rbuilder/data/db", "sqlite")
 destDb = dbstore.connect("mintdb:mintdbpass@localhost.localdomain/mint", "mysql")
 
 cfg = MintConfig()
-cfg.read('/srv/mint/mint.conf')
+cfg.read(RBUILDER_CONFIG)
 
 fieldExceptions = {}
 
