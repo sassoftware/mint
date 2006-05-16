@@ -11,23 +11,25 @@ from conary.lib import util
 
 
 def call(*cmds):
-    print >> sys.stderr, " ".join(cmds)
+    print >> sys.stderr, "+ " + " ".join(cmds)
     sys.stderr.flush()
     subprocess.call(cmds)
 
 
 class Image(object):
     def run(self, cmd, *args):
+        args = list(args)
         try:
             func = self.__getattribute__(cmd)
         except AttributeError:
             raise RuntimeError, "Invalid anaconda templates manifest image command: %s" % (cmd)
 
         if len(args) == 3:
-            mode = args.pop(-1)
+            mode = int(args.pop(-1), 8)
         else:
             mode = 0644
 
+        args[1] = os.path.join(self.templateDir, args[1])
         output = args[1]
         util.mkdirChain(os.path.dirname(output))
         retcode = func(*args)
@@ -68,11 +70,11 @@ class Image(object):
             '-R', '-J', '-T',
             '-V', 'rPath Linux',
             inputDir]
-        call(cmd)
+        call(*cmd)
 
     def mkcramfs(self, inputDir, output):
         cmd = ['mkcramfs', inputDir, output]
-        call(cmd)
+        call(*cmd)
 
     def mkdosfs(self, inputDir, output):
         call('dd', 'if=/dev/zero', 'of=%s' % output, 'bs=1M', 'count=8')
@@ -81,3 +83,6 @@ class Image(object):
         files = [os.path.join(inputDir, x) for x in os.listdir(inputDir)]
         cmds = ['mcopy', '-i', output] + files + ['::']
         call(*cmds)
+
+    def __init__(self, templateDir):
+        self.templateDir = templateDir

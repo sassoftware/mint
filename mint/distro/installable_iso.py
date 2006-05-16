@@ -370,7 +370,7 @@ class InstallableIso(ImageGenerator):
         def syslinux(self, input):
             return call(['syslinux', input])
 
-        image = anaconda_templates.Image()
+        image = anaconda_templates.Image(templateDir)
 
         cmdMap = {
             'image':    image.run,
@@ -378,12 +378,14 @@ class InstallableIso(ImageGenerator):
             'syslinux': syslinux,
         }
 
-        cclient.applyUpdate(uJob)
+        if uJob:
+            cclient.applyUpdate(uJob)
+
         manifest = open(os.path.join(tmpDir, "MANIFEST"))
         for l in manifest.xreadlines():
             cmds = [x.strip() for x in l.split(',')]
 
-            cmd = cmds.pop()
+            cmd = cmds.pop(0)
             if cmd not in cmdMap:
                 raise RuntimeError, "Invalid command in anaconda-templates MANIFEST: %s" % (cmd)
 
