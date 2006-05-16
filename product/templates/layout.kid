@@ -19,7 +19,13 @@ onload = "javascript:;"
 
         <script type="text/javascript" src="${cfg.staticPath}apps/MochiKit/MochiKit.js" />
         <script type="text/javascript">
-            var BaseUrl = '${cfg.basePath}';
+            <![CDATA[
+                var BaseUrl = '${cfg.basePath}';
+
+                // Configured visible image types; required for library.js
+                var VisibleImageTypes = ${str(cfg.visibleImageTypes)};
+                var VisibleBootableImageTypes = ${str([x for x in (3, 4, 5, 6, 7, 8) if x in cfg.visibleImageTypes])};
+            ]]>
         </script>
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/generic.js" />
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/releasetypes.js" />
