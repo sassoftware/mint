@@ -1468,7 +1468,8 @@ class MintServer(object):
             f.write('repositoryMap %s %s\n' % (host, url))
         f.close()
         util.mkdirChain(os.path.join(self.cfg.dataPath, 'run'))
-        os.rename(fname, self.cfg.conaryRcFile)
+        util.copyfile(fname, self.cfg.conaryRcFile)
+        os.unlink(fname)
 
     #
     # RELEASE STUFF
