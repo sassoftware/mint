@@ -44,7 +44,7 @@ class Image(object):
             gzip = ['gzip']
 
             outputFile = file(output, "w")
-            files = subprocess.Popen(['find', '.', '-print', '-depth'],
+            files = subprocess.Popen(['find', '.', '-depth', '-print'],
                                      stdout = subprocess.PIPE)
             gzip = subprocess.Popen(['gzip'], stdin = subprocess.PIPE,
                                     stdout = outputFile)
