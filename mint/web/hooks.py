@@ -404,11 +404,13 @@ def handler(req):
 
     # only reload the configuration file if it's changed
     # since our last read
+    cfgPath = req.get_options().get("rbuilderConfig", config.RBUILDER_CONFIG)
+
     global cfg, cfgMTime
-    mtime = os.stat(req.filename)[stat.ST_MTIME]
+    mtime = os.stat(cfgPath)[stat.ST_MTIME]
     if mtime > cfgMTime:
         cfg = config.MintConfig()
-        cfg.read(req.filename)
+        cfg.read(cfgPath)
         cfgMTime = mtime
 
     if "basePath" not in req.get_options():

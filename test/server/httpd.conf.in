@@ -70,27 +70,31 @@ Alias /jsonrpc/             "@DOCROOT@/rbuilder.conf/"
 Alias /xmlrpc/              "@DOCROOT@/rbuilder.conf/"
 Alias /xmlrpc-private/      "@DOCROOT@/rbuilder.conf/"
 Alias /images/              "@IMAGESPATH/"
-Alias /                     "@DOCROOT@/rbuilder.conf/"
+Alias /                      "@DOCROOT@/rbuilder.conf/"
 
 <Location />
     AddHandler python-program .conf
     PythonHandler mint.web.hooks
+    PythonOption rbuilderConfig "@DOCROOT@/rbuilder.conf"
     PythonDebug Off
 </Location>
 
 <Location /xmlrpc/>
     AddHandler python-program .conf
+    PythonOption rbuilderConfig "@DOCROOT@/rbuilder.conf"
     PythonHandler mint.web.rpchooks
 </Location>
 
 <Location /xmlrpc-private/>
     AddHandler python-program .conf
     PythonHandler mint.web.rpchooks
+    PythonOption rbuilderConfig "@DOCROOT@/rbuilder.conf"
     PythonOption allowPrivate True
 </Location>
 
 <Location /jsonrpc/>
     AddHandler python-program .conf
+    PythonOption rbuilderConfig "@DOCROOT@/rbuilder.conf"
     PythonHandler mint.web.rpchooks
 </Location>
 
