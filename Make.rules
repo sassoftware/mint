@@ -8,6 +8,13 @@ PYTHON = $(shell [ -x /usr/bin/python2.4 ] && echo /usr/bin/python2.4 || echo /u
 PYVERSION = $(shell $(PYTHON) -c 'import os, sys; print sys.version[:3]')
 PYINCLUDE = $(shell $(PYTHON) -c 'import os, sys; print os.sep.join((sys.prefix, "include", "python" + sys.version[:3]))')
 
+raaplugins-install:
+	mkdir -p $(DESTDIR)$(raapluginsdir)
+	for f in $(python_files) $(bin_files) $(extra_inst); do \
+		mkdir -p `dirname "$(DESTDIR)/$(raapluginsdir)/\`echo "$(DIR)" | sed "s|/raa-plugins||"\`/$$f"`; \
+		cp -a $$f $(DESTDIR)/$(raapluginsdir)/`echo "$(DIR)" | sed "s|/raa-plugins||"`/$$f; \
+	done
+
 pyfiles-install:
 	mkdir -p $(DESTDIR)$(mintdir)
 	for f in $(python_files) $(bin_files) $(extra_inst); do \
