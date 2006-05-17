@@ -10,6 +10,7 @@ import BaseHTTPServer
 
 from mod_python import apache
 
+from mint import users
 from mint import mint_error
 from mint import maintenance
 from mint.web.webhandler import normPath, WebHandler, HttpNotFound, HttpForbidden
