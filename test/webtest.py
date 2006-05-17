@@ -10,6 +10,7 @@ testsuite.setup()
 
 import cPickle
 import os
+import urlparse
 
 import mint_rephelp
 from mint_rephelp import MINT_PROJECT_DOMAIN, MINT_DOMAIN
@@ -80,47 +81,46 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                     "Browser blocked cookies and didn't go to error page.")
 
     def testLoginBlockOneCookie(self):
-        if os.environ.get('MINT_TEST_SAMEDOMAINS', ""):
-            raise testsuite.SkipTestException( \
-                "Test only applies when both domains are being used.")
+        client, userId = self.quickMintUser('foouser', 'foopass')
+        projectId = self.newProject(client)
+        project = client.getProject(projectId)
 
-        self.quickMintUser('foouser', 'foopass')
-
-        siteUrl = 'http://' + mint_rephelp.MINT_HOST + '.' + \
-                  mint_rephelp.MINT_DOMAIN + ":" + str(self.port) + \
-                  self.mintCfg.basePath
-
-        projectUrl = 'http://' + mint_rephelp.MINT_HOST + '.' + \
-                  mint_rephelp.MINT_PROJECT_DOMAIN + ":" + str(self.port) + \
-                  self.mintCfg.basePath
+        siteUrl = 'http://' + self.mintCfg.siteHost + self.mintCfg.basePath
+        projectUrl = 'http://' +  mint_rephelp.MINT_HOST + '.' + \
+                      mint_rephelp.MINT_PROJECT_DOMAIN + ":" + str(self.port) \
+                      + self.mintCfg.basePath
 
         siteHost = mint_rephelp.MINT_HOST + '.' + mint_rephelp.MINT_DOMAIN
         projectHost = mint_rephelp.MINT_HOST + '.' + \
                       mint_rephelp.MINT_PROJECT_DOMAIN
 
-        import urlparse
-
         for url in (siteUrl, projectUrl):
             for host in (siteHost, projectHost):
+                self.cookies.clear()
                 page = self.fetchWithRedirect(url)
 
                 page = page.postForm(1, self.fetch,
                                      {'username': 'foouser',
                                       'password': 'foopass'})
 
+                depth = 0
                 while page.code in (301, 302):
+                    assert (depth < 20), 'Max Depth Exceeded'
                     if host in self.cookies:
                         # delete only one of two cookies.
                         del self.cookies[host]
                     page = self.fetch( \
                         urlparse.urljoin(url, page.headers['Location']))
+                    depth += 1
 
                 self.failIf('You cannot log in' not in page.body,
                             "user hit %s and deleted cookie: %s, but "
                             "didn't trigger error" % (url, host))
 
-                self.fetch('/logout')
-                self.cookies.clear()
+                # ensure project page is not logged in (project domain cookie)
+                self.assertNotContent("%sproject/%s" % (self.mintCfg.basePath, project.hostname), '/logout')
+                # ensure front page is not logged in. (site domain cookie)
+                self.assertNotContent(self.mintCfg.basePath, '/logout')
 
     def testLoginWrongUser(self):
         page = self.fetch('/')
