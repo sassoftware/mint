@@ -76,6 +76,7 @@ Alias /                      "@DOCROOT@/rbuilder.conf/"
     AddHandler python-program .conf
     PythonHandler mint.web.hooks
     PythonOption rbuilderConfig "@DOCROOT@/rbuilder.conf"
+    PythonOption basePath "/"
     PythonDebug Off
 </Location>
 
