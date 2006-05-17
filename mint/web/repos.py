@@ -62,7 +62,7 @@ class ConaryHandler(WebHandler, http.HttpHandler):
         # set up the netclient
         self.serverName = self.req.hostname
 
-        path = self.req.path_info.split("/")
+        path = self.req.uri.split("/")
         if len(path) < 4:
             raise HttpNotFound
         self.cmd = path[3]
