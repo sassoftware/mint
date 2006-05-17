@@ -30,9 +30,9 @@ else
     # from the resulting full trove spec.
     fullTroveSpec=$(conary rq "$troveSpec" --full-versions)
     upstreamVer=$(python -c "
-    from conary.conaryclient import cmdline
-    from conary import versions
-    print str(versions.VersionFromString(cmdline.parseTroveSpec(\"$fullTroveSpec\")[1]).trailingRevision()).split('-')[0]
+from conary.conaryclient import cmdline
+from conary import versions
+print str(versions.VersionFromString(cmdline.parseTroveSpec(\"$fullTroveSpec\")[1]).trailingRevision()).split('-')[0]
     ")
 
     ROOT=/srv/rbuilder/jobserver/$upstreamVer/
