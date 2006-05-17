@@ -2,7 +2,7 @@
 # Helper script to install a jobserver root and set up
 # a little bit of the chroot environment.
 #
-# ./install-jsroot <upstream version> <trovespec of job server root trove>
+# ./install-jsroot <trovespec of job server root trove|path to jsroot tarball> [--extra-fstab]
 #
 if [ $# -lt 1 ]; then
     echo "not enough arguments: $0 $*" >&2
