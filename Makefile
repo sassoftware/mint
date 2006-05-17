@@ -21,10 +21,11 @@ export bindir = $(prefix)/bin
 export mintdir = $(libdir)/python$(PYVERSION)/site-packages/
 export httpddir = $(sysconfdir)/httpd/conf.d/
 export maillistdir = /var/mailman
+export raapluginsdir = $(libdir)/raa/rPath/
 
 .PHONY: doc
 
-SUBDIRS = mint test scripts mailman
+SUBDIRS = mint test scripts mailman raa-plugins
 
 extra_files = Makefile Make.rules rbuilder.conf httpd.conf
 
