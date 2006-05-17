@@ -55,6 +55,7 @@ from conary.repository.errors import TroveNotFound
 from conary.repository import netclient
 from conary.repository import shimclient
 from conary.repository.netrepos import netserver
+from conary import errors as conary_errors
 
 validHost = re.compile('^[a-zA-Z][a-zA-Z0-9\-]*$')
 reservedHosts = ['admin', 'mail', 'mint', 'www', 'web', 'rpath', 'wiki', 'conary', 'lists']
