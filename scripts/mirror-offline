@@ -46,7 +46,8 @@ class MirrorOffline(SingletonScript):
     def action(self):
         try:
             pid = 0
-            outputDir = tempfile.mkdtemp()
+            outputDir = tempfile.mkdtemp(prefix = os.path.join(os.getcwd(),
+                                                               'tmp'))
             if len(sys.argv) < 6:
                 return self.usage()
             cfg = mirror.MirrorConfiguration()
