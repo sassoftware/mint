@@ -26,7 +26,6 @@ extra_dist = \
 	live_iso.conf		\
 	buildtemplates		\
 	raw2vmdk.c		\
-	first-jsroot.init	\
 	job-server.init.in	\
 	multi-jobserver.init.in
 
