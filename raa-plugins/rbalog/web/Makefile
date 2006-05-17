@@ -10,7 +10,7 @@ SUBDIRS =
 
 python_files = rbalog.py __init__.py
 
-extra_files = 
+extra_files = Makefile
 
 dist_files = $(python_files) $(extra_files)
 

@@ -12,7 +12,7 @@ python_files = __init__.py
 
 kid_files = log.kid
 
-extra_files = 
+extra_files = Makefile
 
 dist_files = $(python_files) $(extra_files) $(kid_files)
 
