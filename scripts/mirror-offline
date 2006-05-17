@@ -189,7 +189,7 @@ class MirrorOffline(SingletonScript):
                     files = " ".join([os.path.join(outputDir, x) \
                                       for x in os.listdir(outputDir) \
                                       if x.startswith(fn + '_')])
-                    file += " " + os.path.join(outputDir, "MIRROR-INFO")
+                    files += " " + os.path.join(outputDir, "MIRROR-INFO")
                     util.execute("mkisofs -o %s -r -U %s" % \
                                  (os.path.join( \
                         outputDir, fn.replace('.tgz', '') + '.iso'), files))
