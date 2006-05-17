@@ -10,7 +10,7 @@
 # All rights reserved
 #
 
-from mint import config, RBUILDER_CONFIG
+from mint import config
 from mint import pkgindex
 from mint import projects
 from mint.scriptlibrary import SingletonScript
@@ -32,7 +32,7 @@ class UpdatePackageIndexExternal(SingletonScript):
 
     def action(self):
         cfg = config.MintConfig()
-        cfg.read(RBUILDER_CONFIG)
+        cfg.read(config.RBUILDER_CONFIG)
 
         self.db = dbstore.connect(cfg.dbPath, driver = cfg.dbDriver)
         self.db.connect()
