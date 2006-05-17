@@ -129,10 +129,10 @@ class SetupHandler(WebHandler):
         self.cfg.display(out = cfg)
         self.req.log_error("writing new configuration to %s" % RBUILDER_CONFIG)
         self.req.log_error("+ sudo killall -USR1 httpd")
-        self.req.log_error("+ sudo /sbin/service rbuilder-isogen restart")
+        self.req.log_error("+ sudo /sbin/service multi-jobserver restart")
 
         os.system("sudo killall -USR1 httpd")
-        os.system("sudo /sbin/service rbuilder-isogen restart")
+        os.system("sudo /sbin/service multi-jobserver restart")
         time.sleep(5)
         self._redirect("http://%s%s" % (self.cfg.siteHost, self.cfg.basePath))
 

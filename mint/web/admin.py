@@ -172,7 +172,7 @@ class AdminHandler(WebHandler):
         if operation not in ('start', 'stop'):
             raise HttpNotFound
         try:
-            pipeFD = os.popen("sudo /sbin/service rbuilder-isogen %s" % operation)
+            pipeFD = os.popen("sudo /sbin/service multi-jobserver %s" % operation)
             self._setInfo(pipeFD.read())
             pipeFD.close()
         except:
