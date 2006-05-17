@@ -1,26 +1,35 @@
 #!/bin/sh
 # Helper script to install a jobserver root and set up
 # a little bit of the chroot environment.
-#
-# ./install-jsroot <trovespec of job server root trove|path to jsroot tarball> [--extra-fstab]
-#
-if [ $# -lt 1 ]; then
-    echo "not enough arguments: $0 $*" >&2
-    echo "usage: $0 <trovespec of job server root> [--extra-fstab]" >&2
-    echo "--extra-fstab adds 3 additional bind mounts for /srv/rbuilder/images/ and /srv/rbuilder/templates/"
+
+MYNAME=`basename $0`
+
+function usage() {
+    echo "Error: $1" >&2
+    cat - <<EOUSAGE >&2
+
+usage: $MYNAME <trovespec of job server root> [--extra-fstab]
+
+   --extra-fstab   add three additional bind mounts for /srv/rbuilder/images/
+                      and /srv/rbuilder/templates/
+
+EOUSAGE
     exit 1
+}
+
+if [ $# -lt 1 ]; then
+    usage "Not enough arguments: $0 $*"
 fi
 
 if [ $UID != 0 ]; then
-    echo "this script must be run as root" >&2
-    exit 1
+    usage "This script must be run as root"
 fi
 
 troveSpec=$1
 
 if [ -f $troveSpec ]; then
     upstreamVer=$(cat /tmp/upstream)
-    echo "Installing chroot from tarball: $upstreamVer" 
+    echo "Installing chroot from tarball: $upstreamVer"
     ROOT=/srv/rbuilder/jobserver/$upstreamVer/
     mkdir -p $ROOT
     tar zxf $troveSpec -C $ROOT
@@ -73,5 +82,34 @@ for x in '/etc/nsswitch.conf' '/etc/hosts' '/etc/resolv.conf'; do
     cp $x $ROOT/etc/
 done
 
+echo "Creating cleanup script additions (logrotate, tmpwatch)"
+
+# Install logrotate job in logrotate.d for chroot
+cat <<EOLOGROTATE > /etc/logrotate.d/rbuilder-jobserver-$upstreamver
+$ROOT/srv/rbuilder/logs/job-server.log
+$ROOT/srv/rbuilder/logs/profiling {
+    missingok
+    notifempty
+    compress
+    compresscmd /usr/bin/bzip2
+    size 10M
+}
+EOLOGROTATE
+
+# Install tmpwatch job in cron.daily for chroot
+# NOTE: cached changesets are handled in /etc/cron.daily/rbuilder.tmpwatch
+#       as they are bind-mounted.
+cat <<EOTMPWATCH > /etc/cron.daily/rbuilder-jobserver-$upstreamver.tmpwatch
+# tmpwatch for rBuilder appliance (chrooted jobserver $upstreamver)
+
+# dump temporary images after two days
+/usr/sbin/tmpwatch 48 $ROOT/srv/rbuilder/images
+
+# dump joboutput (debug) data after two weeks
+/usr/sbin/tmpwatch 336 $ROOT/srv/rbuilder/logs/joboutput
+EOTMPWATCH
+chmod 754 /etc/cron.daily/rbuilder-jobserver-$upstreamver.tmpwatch
+
 echo "Activating new bind mounts"
 mount -a
+
