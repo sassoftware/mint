@@ -216,13 +216,11 @@ class SiteHandler(WebHandler):
 
                 # redirect storm if needed
                 nexthop = self._getNextHop()
+                prefix = 'http%s://' % (self.cfg.SSL and 's' or '')
                 if nexthop:
-                    self._redirect('validateSession?%s' % urlencode((('nextHop', "http://%s%scontinueLogin?sid=%s" % (nexthop, self.cfg.basePath, self.session.id())),)))
-                    #self._redirect('validateSession?nextHop=%s' % \
-                    #               ("http://%s%scontinueLogin?sid=%s" % \
-                    #    (nexthop, self.cfg.basePath, self.session.id())))
+                    self._redirect('%s%s%svalidateSession?%s' % (prefix, self.req.headers_in['Host'], self.cfg.basePath, urlencode((('nextHop', "http://%s%scontinueLogin?sid=%s" % (nexthop, self.cfg.basePath, self.session.id())),))))
                 else:
-                    self._redirect('validateSession?%s' % urlencode((('nextHop', self.session['firstPage']),)))
+                    self._redirect('%s%s%svalidateSession?%s' % (prefix, self.req.headers_in['Host'], self.cfg.basePath, urlencode((('nextHop', self.session['firstPage']),))))
 
         else:
             raise HttpNotFound
@@ -230,17 +228,36 @@ class SiteHandler(WebHandler):
     def continueLogin(self, auth, sid = None):
         if sid:
             self._session_start()
-            self._redirect('validateSession?%s' % urlencode((('nextHop', self.session['firstPage']),)))
+            self._redirect('http://%s%svalidateSession?%s' % (self.req.headers_in['Host'], self.cfg.basePath, urlencode((('nextHop', self.session['firstPage']),))))
         else:
             raise HttpNotFound
 
     def validateSession(self, auth, nextHop):
         nextHop = unquote(nextHop)
-        if 'firstPage' not in self.session:
-            return self._write('error', shortError = "Login Failed",
-                               error = 'You cannot log in because your browser is blocking cookies to this site.')
+        if type(self.session) is dict:
+            if 'continueLogin' in nextHop or \
+                   self.cfg.siteDomainName.split(':')[0] == \
+                   self.cfg.projectDomainName.split(':')[0]:
+                return self._write('error', shortError = "Login Failed",
+                                   error = 'You cannot log in because your browser is blocking cookies to this site.')
+            else:
+                # the only time we ever need to redirect is if we're not on the
+                # secure host. secure host is first of two hops.
+                prefix = 'http%s://' % (self.cfg.SSL and 's' or '')
+                self._redirect("%s%s%sloginFailed" % \
+                               (prefix, self.cfg.secureHost,
+                                self.cfg.basePath))
+        else:
+            self._redirect(nextHop)
 
-        self._redirect(nextHop)
+    def loginFailed(self, auth):
+        c = self.session.make_cookie()
+        c.expires = 0
+        self.req.err_headers_out.add('Set-Cookie', str(c))
+        self.req.err_headers_out.add('Cache-Control',
+                                     'no-cache="set-cookie"')
+        return self._write('error', shortError = "Login Failed",
+                           error = 'You cannot log in because your browser is blocking cookies to this site.')
 
     @strFields(id = None)
     def confirm(self, auth, id):
