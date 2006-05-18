@@ -441,9 +441,8 @@ def handler(req):
     try:
         for match, urlHandler in urls:
             if re.match(match, pathInfo):
-                newPath = normPath(pathInfo[len(match)-1:])
                 try:
-                    ret = urlHandler(req, cfg, newPath)
+                    ret = urlHandler(req, cfg, pathInfo)
                 except HttpError, e:
                     raise apache.SERVER_RETURN, e.code
                 except apache.SERVER_RETURN, e:

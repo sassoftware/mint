@@ -62,13 +62,13 @@ class ConaryHandler(WebHandler, http.HttpHandler):
         # set up the netclient
         self.serverName = self.req.hostname
 
-        path = self.req.uri.split("/")
-        if len(path) < 4:
+        path = self.req.uri[len(self.cfg.basePath):].split("/")
+        if len(path) < 3:
             raise HttpNotFound
-        self.cmd = path[3]
+        self.cmd = path[2]
         try:
-            if path[1] == "repos":
-                self.project = self.client.getProjectByHostname(path[2])
+            if path[0] == "repos":
+                self.project = self.client.getProjectByHostname(path[1])
                 self.serverName = self.project.getLabel().split("@")[0]
             else:
                 self.project = self.client.getProjectByFQDN(self.serverName)
