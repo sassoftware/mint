@@ -4,6 +4,7 @@
 # to version 1.6.3.
 
 # Full install label to products repository
+# TODO update final final install label to reflect release branch
 INSTALL_LABEL_PATH="products.rpath.com@rpl:devel"
 JOBSERVER_VERSION="1.6.3"
 
@@ -37,10 +38,11 @@ if [ ! -d ${OLD_ROOT} -a -d ${NEW_ROOT} ]; then
 fi
 
 # Don't run this on a system where Conary isn't managing the product.
+echo "Updating Conary"
 if [ -d ${OLD_ROOT} ]; then
     conary q mint > /dev/null 2>&1
     if [ $? -ne 0 ]; then
-        echo <<EONOTE
+        cat - <<EONOTE
 Found ${OLD_ROOT}, but rBuilder doesn't appear to be managed
 by Conary. You will need to migrate this system manually.
 EONOTE
@@ -70,10 +72,19 @@ done
 echo "Stopping the rBuilder jobserver"
 service rbuilder-isogen stop
 
+# shutdown the webserver
+echo "Stopping Apache"
+service httpd stop
+sleep 3
+# make sure it's dead
+killall httpd > /dev/null 2>&1
+sleep 3
+killall -9 httpd > /dev/null 2>&1
+
 # update using conary 
 # (NOTE: we have to use the mint redirect trove to get to rbuilder)
 echo "Updating rBuilder via Conary"
-conary update {mint,mint-web,mint-mailman,mint-isogen,info-isogen}=$INSTALL_LABEL_PATH
+conary update group-rbuilder-dist=$INSTALL_LABEL_PATH --resolve
 if [ $? -ne 0 ]; then
     echo "Problems occurred when updating rBuilder via Conary; exiting"
     exit 1
@@ -132,13 +143,16 @@ EOSCRIPT
 echo "Removing stale SQL caches from Conary repositories"
 find ${NEW_ROOT}/repos -name cache.sql -exec rm -f {} \;
 
-# update isogen UID
-echo "Updating isogen user ID"
+# update isogen UID/GID
+echo "Updating isogen user ID and group ID"
 old_isogen_uid=`id -u isogen`
 new_isogen_uid=104
-usermod -u $new_isogen_uid -d /srv/rbuilder/images isogen
+groupmod -g $new_isogen_uid isogen
+usermod -u $new_isogen_uid -g $new_isogen_uid -d ${NEW_ROOT}/images isogen
 find $NEW_ROOT -uid $old_isogen_uid \
     -exec chown $new_isogen_uid {} \; > /dev/null 2>&1
+find $NEW_ROOT -gid $old_isogen_uid \
+    -exec chgrp $new_isogen_uid {} \; > /dev/null 2>&1
 
 # install chrooted jobserver and start it up
 echo "Installing a new chrooted jobserver instance"
@@ -152,8 +166,8 @@ else
 fi
 
 # restart the webserver
-echo "Restarting Apache"
-killall -USR1 httpd
+echo "Starting Apache"
+service httpd start
 
 echo "Done."
 exit 0
