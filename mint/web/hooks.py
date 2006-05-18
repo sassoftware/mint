@@ -107,7 +107,7 @@ def post(port, isSecure, repos, cfg, req):
         return apache.OK
     else:
         webfe = app.MintApp(req, cfg, repServer = shimRepo)
-        return webfe._handle(req.uri)
+        return webfe._handle(normPath(req.uri[len(cfg.basePath):]))
 
 def get(port, isSecure, repos, cfg, req):
     repos, shimRepo = repos
@@ -187,7 +187,7 @@ def get(port, isSecure, repos, cfg, req):
         return apache.OK
     else:
         webfe = app.MintApp(req, cfg, repServer = shimRepo)
-        return webfe._handle(req.uri)
+        return webfe._handle(normPath(req.uri[len(cfg.basePath):]))
 
 def putFile(port, isSecure, repos, req):
     if not isSecure and repos.forceSecure:
