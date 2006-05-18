@@ -176,9 +176,11 @@ class MirrorOffline(SingletonScript):
             # filesystem constraints
             if isoSize > MAX_FILESIZE:
                 splitFiles = os.listdir(outputDir)
+                numDiscs = len(splitFiles)
                 for curDisc, fn in [(x[0] + 1, x[1]) for x in \
-                                    enumerate(os.listdir(outputDir))]:
-                    createKeyFile(targCfg.serverName, curDisc, outputDir)
+                                    enumerate(sorted(os.listdir(outputDir)))]:
+                    createKeyFile(targCfg.serverName, curDisc, numDiscs,
+                                  outputDir)
                     util.execute("split -a 3 -d -b %d %s %s" % \
                                  (MAX_FILESIZE, os.path.join(outputDir, fn),
                                   os.path.join(outputDir, fn + '_')))
@@ -201,14 +203,16 @@ class MirrorOffline(SingletonScript):
                                  (os.path.join( \
                         outputDir, fn.replace('.tgz', '') + '.iso'), files))
             else:
+                numDiscs = len(os.listdir(outputDir))
                 for curDisc, fn in [(x[0] + 1, x[1]) for x in \
-                                    enumerate(os.listdir(outputDir))]:
+                                    enumerate(sorted(os.listdir(outputDir)))]:
                     shaFile = open(os.path.join(outputDir, fn) + ".sha1", "w")
                     pipe = os.popen('sha1sum %s' % \
                                     os.path.join(outputDir, fn))
                     shaFile.write(pipe.read().split()[0])
                     shaFile.close()
-                    createKeyFile(targCfg.serverName, curDisc, outputDir)
+                    createKeyFile(targCfg.serverName, curDisc, numDiscs,
+                                  outputDir)
                     files = [fn, fn + ".sha1", "MIRROR-INFO"]
                     util.execute("mkisofs -o %s -r -U %s" % \
                                  (os.path.join( \
@@ -231,13 +235,10 @@ class MirrorOffline(SingletonScript):
         return 0
 
 
-def createKeyFile(serverName, curDisc, outputDir):
-    splitFiles = [x for x in os.listdir(outputDir) if ".sha1" not in x]
-    count = len(splitFiles)
-
+def createKeyFile(serverName, curDisc, numDiscs, outputDir):
     keyFile = open(os.path.join(outputDir, "MIRROR-INFO"), "w")
     print >> keyFile, "%s" % serverName
-    print >> keyFile, "%d/%d" % (curDisc, count)
+    print >> keyFile, "%d/%d" % (curDisc, numDiscs)
     keyFile.close()
 
 
