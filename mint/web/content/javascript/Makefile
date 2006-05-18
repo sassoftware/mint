@@ -2,6 +2,7 @@ javascript_files =\
 	generic.js \
 	groupbuilder.js \
 	library.js \
+	mirror.js \
 	rpc.js
 
 generated_files =\
