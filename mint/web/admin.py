@@ -215,11 +215,5 @@ class AdminHandler(WebHandler):
 def startPrimeServer():
     pid = os.fork()
     if not pid:
-        fd = os.open("/tmp/rbuilder-mirror-preload.log", os.W_OK | os.O_CREAT | os.O_APPEND)
-        os.dup2(fd, sys.stdout.fileno())
-        os.dup2(fd, sys.stderr.fileno())
-
-        server_address = ('', 8006)
-        httpd = BaseHTTPServer.HTTPServer(server_address, TarHandler)
-        httpd.serve_forever()
+        os.system("/usr/share/rbuilder/scripts/mirror-prime-server")
         os._exit(0)
