@@ -30,6 +30,7 @@ function readTarStatus(aReq) {
     } else {
         replaceChildNodes($('statusMessage'), "Done.");
         setElementClass($('statusMessage'), "finished");
+        $('goButton').removeAttribute('disabled');
     }
 }
 

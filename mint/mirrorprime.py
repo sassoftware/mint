@@ -19,7 +19,7 @@ copyThread = None
 
 sourcePath = "/mnt/"
 tmpPath = "/tmp/"
-needsMount = False
+needsMount = True 
 
 class JsonRPCHandler(BaseHTTPServer.BaseHTTPRequestHandler, object):
     def do_GET(self):
@@ -86,6 +86,15 @@ class CopyThread(threading.Thread):
         self.status['bytesRead'] += bytes
         self.lastTotal = total
 
+    def mount(self):
+        if self.needsMount:
+            os.system("sudo mount /dev/cdrom /mnt")
+    
+    def umount(self):
+        if self.needsMount:
+            os.system("sudo umount /mnt")
+
+
 
 class ConcatThread(CopyThread):
     def run(self):
@@ -101,7 +110,7 @@ class ConcatThread(CopyThread):
 
         baseName = files[0].split(".tgz")[0]
         output = file(os.path.join(self.tmpPath, baseName + ".tgz"), "w")
-        for f in files:
+        for f in sorted(files):
             input = file(os.path.join(self.tmpPath, f))
             util.copyfileobj(input, output, self.copyCallback)
             input.close()
@@ -116,13 +125,8 @@ class TarThread(CopyThread):
         file = [x for x in os.listdir(self.tmpPath)
             if x.startswith("mirror-") and x.endswith(".tgz")][0]
 
-#        serverName = file[7:-4]
-#        if os.path.exists(os.path.join("/srv/rbuilder/repos/", serverName)):
-#            self.status['error'] = True
-#            self.status['errorMessage'] = 'Repository directory already exists: not overwriting'
-#            return
-
-        cmd = ["tar", "zxvf", os.path.join(self.tmpPath, file), "-C", "/srv/rbuilder/repos/"]
+        serverName = file[7:-4]
+        cmd = ["tar", "zxvf", os.path.join(self.tmpPath, file), "-C", "/srv/rbuilder/repos/%s" % serverName]
         tar = subprocess.Popen(cmd, stdout = subprocess.PIPE)
 
         lines = 100
@@ -132,11 +136,15 @@ class TarThread(CopyThread):
             lines += 100
             self.status['bytesRead'] = lines
 
+        os.system("chmod -R apache.apache /srv/rbuilder/repos/%s/*")
+
         self.status['done'] = True
 
 
 class CopyFromDiscThread(CopyThread):
     def run(self):
+        self.umount()
+        self.mount()
         files = os.listdir(self.sourcePath)
         files = [x for x in files if x != 'MIRROR-INFO' and not x.endswith('.sha1') and os.path.isfile(os.path.join(self.sourcePath, x))]
 
@@ -165,6 +173,7 @@ class CopyFromDiscThread(CopyThread):
             print "checksumError:", self.status['checksumError']
 
         self.status['done'] = True
+        self.umount()
 
 
 class TarHandler(JsonRPCHandler):

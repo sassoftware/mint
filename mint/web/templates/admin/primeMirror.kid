@@ -11,7 +11,7 @@
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/mirror.js" />
     </head>
     <body>
-        <div id="spanright">
+        <div>
             <p>Please follow the instructions below to pre-load your mirror.</p>
 
             <div class="running" id="statusMessage">Insert the first mirror pre-loading disk and press the button below.</div>
