@@ -4,8 +4,9 @@
 # Copyright (c) 2005-2006 rPath, Inc.
 # All Rights Reserved
 #
-from mint import userlevels
 from mint import constants
+from mint import maintenance
+from mint import userlevels
 from urllib import quote
 onload = "javascript:;"
 ?>
@@ -60,7 +61,13 @@ onload = "javascript:;"
                     </a>
                 </div>
                 <div id="topRight">
-                    <div class="about"><a href="${cfg.corpSite}">About ${cfg.companyName}</a>
+                    <div class="about">
+                        <a href="${cfg.basePath}admin/maintenance" py:if="auth.admin and maintenance.getMaintenanceMode(cfg)==maintenance.LOCKED_MODE">
+                          <b style="color: red;">
+                          Maintenance Mode&nbsp;
+                          </b>
+                        </a>
+                        <a href="${cfg.corpSite}">About ${cfg.companyName}</a>
                         <span py:omit="True" py:if="not auth.authorized and req.uri != cfg.basePath"> | <a href="http://${SITE}">Sign In</a></span>
                     </div>
                     <form action="http://${cfg.siteHost}${cfg.basePath}search" method="get" id="searchForm">
@@ -68,14 +75,26 @@ onload = "javascript:;"
                             <label class="search" for="searchLabel">I'm looking for a...</label>
                             <input class="search" name="search" id="searchLabel" type="text" />
                             <button class="img" id="searchSubmit" type="submit"><img src="${cfg.staticPath}/apps/mint/images/search.png" alt="Search" /></button><br />
-                            <input id="typeProject" type="radio" name="type" value="Projects" checked="checked" />
+                            <input id="typeProject" type="radio" name="type" value="Projects" py:attrs="{'checked': self.session.get('searchType', 'Projects') == 'Projects' and 'checked' or None}" />
                             <label for="typeProject">Project</label>
-                            <input id="typePackage" type="radio" name="type" value="Packages" />
+                            <input id="typePackage" type="radio" name="type" value="Packages" py:attrs="{'checked': self.session.get('searchType', 'Projects') == 'Packages' and 'checked' or None}" />
                             <label for="typePackage">Package</label>
-                            <span id="browseText">&nbsp;&nbsp;&nbsp;Or you can <a href="http://${cfg.siteHost}${cfg.basePath}projects">browse</a>.</span>
+                            <div py:strip="True" py:if="auth.admin">
+                            <input id="typeUser" type="radio" name="type" value="Users" py:attrs="{'checked': self.session.get('searchType', 'Projects') == 'Users' and 'checked' or None}" />
+                            <label for="typeUser">User</label>
+                            </div>
+                            <span id="browseText">&nbsp;&nbsp;&nbsp;Browse&nbsp;<a href="http://${cfg.siteHost}${cfg.basePath}projects">projects</a><span py:strip="True" py:if="auth.admin">&nbsp;or&nbsp;<a href="http://${cfg.siteHost}${cfg.basePath}users">users</a></span></span>
                         </div>
                     </form>
                 </div>
+            </div>
+            <?python
+                if 'errors' in locals():
+                    errorMsgList = errors
+            ?>
+            <div py:if="infoMsg" id="info" class="status" py:content="infoMsg" />
+            <div py:if="errorMsgList" id="errors" class="status">The following ${(len(errorMsgList) == 1) and "error" or "errors"} occurred:
+                <p py:for="e in errorMsgList" py:content="e" />
             </div>
             <div class="layout" py:replace="item[:]" />
 

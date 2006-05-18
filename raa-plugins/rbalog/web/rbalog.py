@@ -17,7 +17,7 @@ class RBALog(rAAWebPlugin):
     logPath = 'srv/mint/logs/job-server.log'
     jsrvPath = '/srv/rbuilder/jobserver/'
 
-    @turbogears.expose(html="raa.modules.rbalog.log")
+    @turbogears.expose(html="rPath.rbalog.log")
     @turbogears.identity.require(turbogears.identity.not_anonymous())
     def index(self):
         return dict(logText=self.getLog())
