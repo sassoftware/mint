@@ -116,7 +116,7 @@ class GroupTroveCook(Generator):
 
             os.chdir(path)
             if trvLeaves:
-                checkin.checkout(repos, cfg, path, groupTrove.recipeName)
+                checkin.checkout(repos, cfg, path, [groupTrove.recipeName])
                 added = True
             else:
                 checkin.newTrove(repos, cfg, groupTrove.recipeName, path)
