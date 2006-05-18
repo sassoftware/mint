@@ -13,6 +13,7 @@ script_dist =			\
 	job-server		\
 	mirror-inbound		\
 	mirror-outbound		\
+	mirror-prime-server	\
 	mklivecd		\
 	reset			\
 	update-package-index	\
