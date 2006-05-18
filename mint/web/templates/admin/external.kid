@@ -88,7 +88,9 @@
 
             <h2>Mirror Settings</h2>
             <p><b>
-                <input onclick="javascript:toggle_element_by_checkbox('mirrorSettings', 'useMirror');" type="checkbox" class="check" name="useMirror" value="1" id="useMirror" /> Mirror this repository locally
+                <input onclick="javascript:toggle_element_by_checkbox('mirrorSettings', 'useMirror');"
+                       type="checkbox" class="check" name="useMirror" value="1" id="useMirror" />
+                <label for="useMirror">Mirror this repository locally</label>
             </b></p>
             <table class="mainformhorizontal" id="mirrorSettings">
               <tr>
