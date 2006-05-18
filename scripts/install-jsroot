@@ -85,7 +85,7 @@ done
 echo "Creating cleanup script additions (logrotate, tmpwatch)"
 
 # Install logrotate job in logrotate.d for chroot
-cat <<EOLOGROTATE > /etc/logrotate.d/rbuilder-jobserver-$upstreamver
+cat <<EOLOGROTATE > /etc/logrotate.d/rbuilder-jobserver-$upstreamVer
 $ROOT/srv/rbuilder/logs/job-server.log
 $ROOT/srv/rbuilder/logs/profiling {
     missingok
@@ -99,8 +99,8 @@ EOLOGROTATE
 # Install tmpwatch job in cron.daily for chroot
 # NOTE: cached changesets are handled in /etc/cron.daily/rbuilder.tmpwatch
 #       as they are bind-mounted.
-cat <<EOTMPWATCH > /etc/cron.daily/rbuilder-jobserver-$upstreamver.tmpwatch
-# tmpwatch for rBuilder appliance (chrooted jobserver $upstreamver)
+cat <<EOTMPWATCH > /etc/cron.daily/rbuilder-jobserver-$upstreamVer.tmpwatch
+# tmpwatch for rBuilder appliance (chrooted jobserver $upstreamVer)
 
 # dump temporary images after two days
 /usr/sbin/tmpwatch 48 $ROOT/srv/rbuilder/images
@@ -108,7 +108,7 @@ cat <<EOTMPWATCH > /etc/cron.daily/rbuilder-jobserver-$upstreamver.tmpwatch
 # dump joboutput (debug) data after two weeks
 /usr/sbin/tmpwatch 336 $ROOT/srv/rbuilder/logs/joboutput
 EOTMPWATCH
-chmod 754 /etc/cron.daily/rbuilder-jobserver-$upstreamver.tmpwatch
+chmod 754 /etc/cron.daily/rbuilder-jobserver-$upstreamVer.tmpwatch
 
 echo "Activating new bind mounts"
 mount -a
