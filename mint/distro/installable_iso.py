@@ -432,10 +432,11 @@ class InstallableIso(ImageGenerator):
         # replace isolinux.bin with a real copy, since it's modified
         call('cp', '--remove-destination', '-a',
             templateDir + '/isolinux/isolinux.bin', topdir + '/isolinux/isolinux.bin')
-        for msgFile in [x for x in os.listdir(os.path.join(templateDir, 'isolinux')) if x.endswith('.msg')]:
-            call('cp', '--remove-destination', '-a',
-                 os.path.join(templateDir, 'isolinux', msgFile),
-                 os.path.join(topdir, 'isolinux', msgFile))
+        if os.path.exists(os.path.join(templateDir, 'isolinux')):
+            for msgFile in [x for x in os.listdir(os.path.join(templateDir, 'isolinux')) if x.endswith('.msg')]:
+                call('cp', '--remove-destination', '-a',
+                     os.path.join(templateDir, 'isolinux', msgFile),
+                     os.path.join(topdir, 'isolinux', msgFile))
 
         csdir = os.path.join(topdir, self.productDir, 'changesets')
         util.mkdirChain(csdir)
