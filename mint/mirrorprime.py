@@ -136,7 +136,13 @@ class TarThread(CopyThread):
             lines += 100
             self.status['bytesRead'] = lines
 
+        # do a few post-mirror config items
         os.system("chown -R apache.apache /srv/rbuilder/repos/%s/*" % serverName)
+
+        # XXX: this could be done more reasonably in Python code rather than
+        # shelling to the system.
+        os.system("""echo mintpass | /usr/lib/python2.4/site-packages/conary/server/server.py --db "sqlite /srv/rbuilder/repos/%s/sqldb" --add-user mintauth --admin""" % serverName)
+        os.system("""echo anonymous | /usr/lib/python2.4/site-packages/conary/server/server.py --db "sqlite /srv/rbuilder/repos/%s/sqldb" --add-user anonymous""" % serverName)
 
         self.status['done'] = True
 
