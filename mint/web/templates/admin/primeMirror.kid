@@ -18,7 +18,7 @@
 
             <p>
                 <button onclick="getDiscInfo('${serverName}');" id="goButton">Start Import</button>
-                <a style="display: hidden;" id="finishLink" href="/">Finish</a>
+                <a style="display: none;" id="finishLink" href="/">Finish</a>
             </p>
 
         </div>

@@ -136,7 +136,7 @@ class TarThread(CopyThread):
             lines += 100
             self.status['bytesRead'] = lines
 
-        os.system("chmod -R apache.apache /srv/rbuilder/repos/%s/*")
+        os.system("chown -R apache.apache /srv/rbuilder/repos/%s/*" % serverName)
 
         self.status['done'] = True
 
