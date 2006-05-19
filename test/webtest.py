@@ -17,6 +17,7 @@ from mint_rephelp import MINT_PROJECT_DOMAIN, MINT_DOMAIN
 import rephelp
 
 from mint import mint_error
+from mint import database
 from mint import releasetypes
 from mint import jobstatus
 from mint.distro import jsversion
@@ -1211,7 +1212,11 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
             content = '<a href="/userInfo?id=%d"' % userId)
 
     def testNotifyAllUsers(self):
-        client, userId = self.quickMintAdmin('adminuser', 'adminpass', email = "test@NONE")
+        self.quickMintUser('localuser', 'localpass', email = 'test@localhost')
+        self.quickMintUser('otheruser', 'otherpass', email = 'test@NONE')
+        client, userId = self.quickMintAdmin('adminuser', 'adminpass',
+                                             email = "test@NONE")
+
         self.webLogin('adminuser', 'adminpass')
 
         page = self.assertContent("/admin/notify",
@@ -1222,8 +1227,13 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
              'body':        'This is my body.',
              'operation':  'notify_send'})
 
-        # make sure that our user was invalidated properly
-        assert(client.server._server.getConfirmation('adminuser'))
+        # make sure that our users were invalidated properly. admins and users
+        # at localhost are expempted from invalidation
+        self.assertRaises(database.ItemNotFound,
+                          client.server._server.getConfirmation, 'adminuser')
+        self.assertRaises(database.ItemNotFound,
+                          client.server._server.getConfirmation, 'localuser')
+        assert(client.server._server.getConfirmation('otheruser'))
 
     def testBrokenDownloadUrl(self):
         # for some reason lots of people do this and used to trigger a traceback:
