@@ -75,7 +75,7 @@ class AdminHandler(WebHandler):
                 self._addErrors(e.context);
         if not self._getErrors():
             self._setInfo("User account created")
-            self._redirect(self.cfg.basePath + "admin")
+            self._redirect(self.cfg.basePath + "admin/")
         else:
             kwargs = {'username': username,
                       'email': email,
