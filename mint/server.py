@@ -852,6 +852,13 @@ class MintServer(object):
         """
         #First get a list of the users
         userlist = self.users.getUsersWithEmail()
+        # record the MintAdmin userGroupId
+        cu = self.db.cursor()
+        cu.execute("""SELECT userGroupId
+                          FROM UserGroups
+                          WHERE userGroup='MintAdmin'""");
+        adminGroupId = cu.fetchone()[0]
+
         for user in userlist:
             #Figure out the user's full name and e-mail address
             email = "%s<%s>" % (user[1], user[2])
@@ -863,7 +870,13 @@ class MintServer(object):
             except users.MailError, e:
                 # Invalidate the user, so he/she must change his/her address at
                 # the next login
-                self.users.invalidateUser(user[0])
+                cu.execute("""SELECT COUNT(*)
+                                  FROM UserGroupMembers
+                                  WHERE userId=? and userGroupId=?""",
+                           user[0], adminGroupId)
+                if not (cu.fetchone()[0] or user[2].endswith('@localhost')):
+                    self.users.invalidateUser(user[0])
+        return True
 
     @typeCheck(int, str, str, str)
     @requiresAuth
