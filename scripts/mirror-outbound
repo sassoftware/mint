@@ -46,10 +46,10 @@ class MirrorOutbound(SingletonScript):
             sourceLabelId = int(sourceLabelId)
             project = client.getProject(projectId)
 
-            labelStr, sourceUrl, sourceUser, sourcePass  = \
+            labelStr, _, sourceUser, sourcePass  = \
                       client.getLabel(sourceLabelId)
-
             reposHost = versions.Label(labelStr).getHost()
+            sourceUrl = project.getConaryConfig().repositoryMap[reposHost]
 
             cfg.target.repositoryMap = {reposHost: targetUrl}
             cfg.target.user.addServerGlob(reposHost, targetUser, targetPass)
