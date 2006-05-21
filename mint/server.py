@@ -204,6 +204,7 @@ def getTables(db, cfg):
     d['releaseImageTypes'] = releases.ReleaseImageTypesTable(db)
     d['inboundLabels'] = mirror.InboundLabelsTable(db)
     d['outboundLabels'] = mirror.OutboundLabelsTable(db)
+    d['outboundExcluded'] = mirror.OutboundExcludedTrovesTable(db)
     d['repNameMap'] = mirror.RepNameMapTable(db)
     if not min([x.upToDate for x in d.values()]):
         d['version'].bumpVersion()
@@ -2709,6 +2710,30 @@ class MintServer(object):
     def delOutboundLabel(self, labelId, url):
         self.outboundLabels.delete(labelId, url)
         return True
+
+    @private
+    @typeCheck(int, int, str)
+    @requiresAdmin
+    def addOutboundExcludedTrove(self, projectId, labelId, exclude):
+        return self.outboundExcluded.new(projectId = projectId,
+                                       labelId = labelId,
+                                       exclude = exclude)
+
+    @private
+    @typeCheck(int, str)
+    @requiresAdmin
+    def delOutboundExcludedTrove(self, labelId, exclude):
+        self.outboundExcluded.delete(labelId, exclude)
+        return True
+
+    @private
+    @typeCheck(int)
+    @requiresAdmin
+    def getOutboundExcludedTroves(self, labelId):
+        cu = self.db.cursor()
+
+        cu.execute("SELECT exclude FROM OutboundExcludedTroves WHERE labelid=?", labelId)
+        return [x[0] for x in cu.fetchall()]
 
     @private
     @typeCheck()

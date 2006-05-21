@@ -51,6 +51,30 @@ class OutboundLabelsTable(database.KeyedTable):
         self.db.commit()
 
 
+class OutboundExcludedTrovesTable(database.KeyedTable):
+    name = 'OutboundExcludedTroves'
+    key = 'labelId'
+    createSQL= """CREATE TABLE OutboundExcludedTroves (
+        projectId       INT NOT NULL,
+        labelId         INT NOT NULL,
+        exclude         VARCHAR(255),
+        CONSTRAINT OutboundExcludeTroves_projectId_fk
+            FOREIGN KEY (projectId) REFERENCES Projects(projectId)
+            ON DELETE RESTRICT ON UPDATE CASCADE,
+        CONSTRAINT OutboundExcludeTroves_labelId_fk
+            FOREIGN KEY (labelId) REFERENCES Labels(labelId)
+            ON DELETE RESTRICT ON UPDATE CASCADE
+    ) %(TABLEOPTS)s"""
+
+    fields = ['projectId', 'labelId', 'exclude']
+
+    def delete(self, labelId, exclude):
+        cu = self.db.cursor()
+
+        cu.execute("DELETE FROM OutboundExcludeTroves WHERE labelId=? AND exclude=?", labelId, exclude)
+        self.db.commit()
+
+
 class RepNameMapTable(database.DatabaseTable):
     name = "RepNameMap"
     createSQL = """CREATE TABLE RepNameMap (

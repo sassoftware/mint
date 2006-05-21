@@ -154,6 +154,20 @@ class LabelsTest(fixtures.FixturedUnitTest):
         labels = adminClient.getOutboundLabels()
         assert(labels == [])
 
+    @fixtures.fixture("Full")
+    def testOutboundLabel(self, db, data):
+        projectId = data['projectId']
+        labelId = projectId
+        adminClient = self.getClient("admin")
+        adminClient.addOutboundLabel(projectId, labelId, 
+                "http://www.example.com/conary/",
+                "mirror", "mirrorpass")
+
+        adminClient.addOutboundExcludedTrove(projectId,
+            labelId, ".*:source$")
+
+        assert(adminClient.getOutboundExcludedTroves(labelId) == [".*:source$"])
+
 
 if __name__ == "__main__":
     testsuite.main()
