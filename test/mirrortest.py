@@ -18,7 +18,6 @@ from conary.build import signtrove
 from conary.lib import openpgpfile, openpgpkey
 
 runTest = False
-
 scriptPath = os.path.join(os.path.split(os.path.split(os.path.realpath(__file__))[0])[0], 'scripts')
 
 class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
@@ -42,7 +41,6 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
 
         mirrorScript = os.path.join(scriptPath , 'mirror-inbound')
         assert(os.access(mirrorScript, os.X_OK))
-        self.hideOutput()
         try:
             os.system("%s %s" % (mirrorScript, url))
         finally:
@@ -71,6 +69,7 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
 
             return l
 
+        self.cfg.user.remove(("*", "test", "foo"))
         troveD1 = repos1.getTroveVersionList(base, { None : None })
         troveD2 = repos2.getTroveVersionList(base, { None : None })
 
@@ -102,9 +101,8 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
         project = client.getProject(projectId)
         labelId = project.getLabelIdMap().values()[0]
         project.editLabel(labelId, "localhost.other.host@rpl:linux",
-            "http://test.rpath.local2:%d/repos/localhost/" % self.port, "mintauth", "mintpass")
+            "https://test.rpath.local2:%d/repos/localhost/" % self.securePort, "mintauth", "mintpass")
         client.addInboundLabel(projectId, labelId, "http://localhost:%s/conary/" % sourcePort, "mirror", "mirror")
-        client.addRemappedRepository('localhost.rpath.local2', 'localhost.other.host')
 
         cu = self.db.cursor()
         cu.execute("UPDATE Projects SET external=1 WHERE projectId=?", projectId)
@@ -129,7 +127,6 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
         targetRepos = self.openRepository(1,
                                           serverName = "localhost.rpath.local2")
         targetPort = self.servers.getServer(1).port
-        map = dict(self.cfg.repositoryMap)
         self.createMirrorUser(targetRepos, "localhost.rpath.local2@rpl:linux")
         self.cfg.buildLabel = versions.Label("localhost.rpath.local2@rpl:linux")
 
