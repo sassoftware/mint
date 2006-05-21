@@ -41,6 +41,7 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
 
         mirrorScript = os.path.join(scriptPath , 'mirror-inbound')
         assert(os.access(mirrorScript, os.X_OK))
+        self.hideOutput()
         try:
             os.system("%s %s" % (mirrorScript, url))
         finally:
