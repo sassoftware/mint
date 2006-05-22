@@ -121,5 +121,16 @@ class JoinRequestTest(fixtures.FixturedUnitTest):
             if (len(req) != 2) or (req[0] not in range(3,8)) or (type(req[1]) != str):
                 self.fail("join Request returned improper format")
 
+    @fixtures.fixture("Full")
+    def testWatchHonorsRequest(self, db, data):
+        client = self.getClient("nobody")
+        projectId = data['projectId']
+        project = client.getProject(projectId)
+        client.setJoinReqComments(projectId, 'foo')
+        project.addMemberByName('nobody', userlevels.USER)
+        self.failIf(not client.getJoinReqComments(projectId, data['nobody']),
+                    "User watching a project killed join request.")
+
+
 if __name__ == "__main__":
     testsuite.main()
