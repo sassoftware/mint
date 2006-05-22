@@ -104,6 +104,7 @@ class MintConfig(ConfigFile):
     conaryRcFile            = os.path.join(os.path.sep, 'srv', 'rbuilder', 'run',
                                             'conaryrc')
     createConaryRcFile      = (cfgtypes.CfgBool, True)
+    reposLog                = (cfgtypes.CfgBool, True)
 
     def read(self, path, exception = False):
         ConfigFile.read(self, path, exception)

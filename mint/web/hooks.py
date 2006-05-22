@@ -257,6 +257,9 @@ def conaryHandler(req, cfg, pathInfo):
 
         nscfg.serverName = repName
         nscfg.tmpDir = os.path.join(cfg.reposPath, repName, "tmp")
+        nscfg.logFile = cfg.reposLog and \
+                        os.path.join(cfg.dataPath, 'logs', 'repository.log') \
+                        or None
 
         if os.path.basename(req.uri) == "changeset":
            rest = os.path.dirname(req.uri) + "/"
