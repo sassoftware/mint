@@ -665,7 +665,8 @@ class MintServer(object):
         if (self.auth.userId != userId) and level == userlevels.USER:
             raise users.UserInduction()
 
-        self.membershipRequests.deleteRequest(projectId, userId)
+        if level != userlevels.USER:
+            self.membershipRequests.deleteRequest(projectId, userId)
         try:
             self.projectUsers.new(projectId, userId, level)
         except database.DuplicateItem:
