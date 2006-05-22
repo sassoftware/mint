@@ -170,7 +170,7 @@ class CopyFromDiscThread(CopyThread):
                 origSha1.close()
                 origSum = data.split(" ")[0]
 
-                newSum = sha1helper.sha1ToString(sha1helper.sha1FileBin(os.path.join(self.sourcePath, f)))
+                newSum = sha1helper.sha1ToString(sha1helper.sha1FileBin(os.path.join(self.tmpPath, f)))
                 if origSum != newSum:
                     self.status['checksumError'] = True
             except IOError, e:
