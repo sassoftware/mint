@@ -5,6 +5,7 @@
 # All rights reserved
 #
 
+import re
 import os
 import testsuite
 testsuite.setup()
@@ -60,7 +61,8 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
             self.showOutput()
 
     def compareRepositories(self, repos1, repos2,
-                            base = "localhost.other.host"):
+                            base = "localhost.other.host",
+                            exclude = None):
 
         def _flatten(d):
             l = []
@@ -74,10 +76,15 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
         troveD1 = repos1.getTroveVersionList(base, { None : None })
         troveD2 = repos2.getTroveVersionList(base, { None : None })
 
+        if exclude:
+            troveD1 = dict(x for x in troveD1.items() if not exclude.match(x[0]))
         assert(troveD1 == troveD2)
 
         troves1 = repos1.getTroves(_flatten(troveD1))
         troves2 = repos2.getTroves(_flatten(troveD2))
+
+        if exclude:
+            troves1 = [x for x in troves1 if not exclude.match(x.getName())]
         assert(troves1 == troves2)
 
         assert(troveD1)
@@ -142,12 +149,16 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
         sourceRepos = ConaryClient(project.getConaryConfig()).getRepos()
         self.createTroves(sourceRepos, 0, 2)
 
+        client.addOutboundExcludedTrove(projectId, labelId, "test0")
+        exclude = re.compile("test0")
+
         # do the mirror
         self.outboundMirror()
 
         # compare
         self.compareRepositories(sourceRepos, targetRepos,
-                                 base = "localhost.rpath.local2")
+                                 base = "localhost.rpath.local2",
+                                 exclude = exclude)
         self.stopRepository(1)
 
 

@@ -60,6 +60,8 @@ class MirrorOutbound(SingletonScript):
             cfg.host = reposHost
             cfg.labels = [versions.Label(project.getLabel())]
 
+            [cfg.excludeTroves.addExp(x) for x in client.getOutboundExcludedTroves(sourceLabelId)]
+
             targetRepos = netclient.NetworkRepositoryClient(cfg.target.repositoryMap,
                                   cfg.target.user,
                                   entitlementDir = cfg.entitlementDirectory)
