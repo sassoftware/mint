@@ -48,6 +48,7 @@ class OutboundLabelsTable(database.KeyedTable):
         cu = self.db.cursor()
 
         cu.execute("DELETE FROM OutboundLabels WHERE labelId=? AND url=?", labelId, url)
+        cu.execute("DELETE FROM OutboundExcludedTroves WHERE labelId=?", labelId)
         self.db.commit()
 
 

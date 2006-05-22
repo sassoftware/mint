@@ -44,6 +44,16 @@
                         <th><em class="required">Password:</em></th>
                         <td><input autocomplete="off" type="password" name="mirrorPass" style="width: 25%;" /></td>
                     </tr>
+                    <tr>
+                        <td colspan="2"><hr /></td>
+                    </tr>
+                    <tr>
+                        <th>Mirroring options:</th>
+                        <td>
+                            <input class="check" type="checkbox" name="mirrorSources" value="0" id="mirrorSources" />
+                            <label for="mirrorSources">Mirror source components to target repository.</label>
+                        </td>
+                    </tr>
                 </table>
                 <button class="img" type="submit">
                     <img src="${cfg.staticPath}/apps/mint/images/add_button.png" alt="Add" />

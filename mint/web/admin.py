@@ -189,10 +189,16 @@ class AdminHandler(WebHandler):
 
     @intFields(projectId = None)
     @strFields(targetUrl = None, mirrorUser = None, mirrorPass = None)
-    def processAddOutbound(self, projectId, targetUrl, mirrorUser, mirrorPass, *args, **kwargs):
+    @boolFields(mirrorSources = False)
+    def processAddOutbound(self, projectId,
+            targetUrl, mirrorUser,
+            mirrorPass, mirrorSources,
+            *args, **kwargs):
         project = self.client.getProject(projectId)
         labelId = project.getLabelIdMap().values()[0]
         self.client.addOutboundLabel(projectId, labelId, targetUrl, mirrorUser, mirrorPass)
+        if not mirrorSources:
+            self.client.addOutboundExcludedTrove(projectId, labelId, ".*:source")
 
         self._redirect("http://%s%sadmin/outbound" % (self.cfg.siteHost, self.cfg.basePath))
 
