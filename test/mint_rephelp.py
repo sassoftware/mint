@@ -259,6 +259,8 @@ class MintApacheServer(rephelp.ApacheServer):
         cfg.conaryRcFile = os.path.join(cfg.dataPath, 'run', 'conaryrc')
         util.mkdirChain(os.path.join(cfg.dataPath, 'run'))
 
+        cfg.reposLog = False
+
         f = open(cfg.conaryRcFile, 'w')
         f.close()
         self.mintCfg = cfg
