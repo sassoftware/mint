@@ -31,7 +31,7 @@ class LabelsTest(fixtures.FixturedUnitTest):
 
         project.editLabel(newLabelId, "bar.%s@rpl:testbranch" % MINT_PROJECT_DOMAIN,
             "http://bar.%s/conary/" % MINT_PROJECT_DOMAIN, "user1", "pass1")
-        assert adminClient.server.getLabel(newLabelId) == 
+        assert adminClient.server.getLabel(newLabelId) == \
             ('bar.%s@rpl:testbranch' % MINT_PROJECT_DOMAIN,
              'http://bar.%s/conary/' % MINT_PROJECT_DOMAIN,
              'user1', 'pass1')
