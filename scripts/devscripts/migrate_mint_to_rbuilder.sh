@@ -173,5 +173,9 @@ fi
 echo "Starting Apache"
 service httpd start
 
-echo "Done."
+# move the vestigial remains of /srv/mint to the migration tempdir
+echo "Storing leftovers from the migration in $BACKUPDIR/mint.old"
+mv $OLD_ROOT $BACKUPDIR/mint.old
+
+echo "Done"
 exit 0
