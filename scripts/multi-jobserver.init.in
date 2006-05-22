@@ -10,7 +10,7 @@
 JOBSERVER_BASEPATH='/srv/rbuilder/jobserver'
 
 case "$1" in
-  start|stop|restart)
+  start|stop|restart|status)
 	for js in `ls $JOBSERVER_BASEPATH`
 	  do
 	  if [ -d "$JOBSERVER_BASEPATH/$js" ]
@@ -20,12 +20,14 @@ case "$1" in
 		  cp /etc/hosts "$JOBSERVER_BASEPATH/$js/etc/hosts"
 		  cp /etc/resolv.conf "$JOBSERVER_BASEPATH/$js/etc/resolv.conf"
 		  cp /etc/nsswitch.conf "$JOBSERVER_BASEPATH/$js/etc/nsswitch.conf"
+              elif [ "$1" == "status" ]; then
+                  echo -n "Chrooted jobserver version $js: "
 	      fi
 	      /usr/sbin/chroot "$JOBSERVER_BASEPATH/$js" /etc/init.d/rbuilder-isogen $1
 	  fi
 	done
 	;;
     *)
-	echo "Usage: `basename $0` {start|stop|restart}"
+	echo "Usage: `basename $0` {start|stop|restart|status}"
 	;;
 esac
