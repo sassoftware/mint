@@ -104,9 +104,12 @@ class DatabaseTable(object):
         # create missing tables
         if self.name not in self.db.tables:
             cu.execute(self.createSQL % self.db.keywords)
+            self.initialCreation = True
+        else:
+            self.initialCreation = False
 
-        #Don't commit here.  Commits must be handled up stream to enable
-        #upgrading
+        # Don't commit here.  Commits must be handled up stream to enable
+        # upgrading
         self.upToDate = self.versionCheck()
 
         # create missing indexes, but only after upgrading.  Missing indeces
@@ -156,7 +159,7 @@ class DatabaseTable(object):
             if dbversion == 0:
                 # Do version specific updating in this section
                 # do NOT mask exceptions.
-                return (dbversion + 1) == self.schemaVersion
+                return dbversion >= 0
         return True
 
 class KeyedTable(DatabaseTable):

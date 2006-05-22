@@ -95,13 +95,12 @@ class JobDataTable(GenericDataTable):
     def versionCheck(self):
         dbversion = self.getDBVersion()
         if dbversion != self.schemaVersion:
-            if dbversion == 7:
+            if dbversion == 7 and not self.initialCreation:
                 cu = self.db.cursor()
                 #Need to drop the JobData Table.  It's not compatible
                 #with the new genericdatatable
                 cu.execute('DROP TABLE JobData')
                 cu.execute(self.createSQL)
-                return (dbversion + 1) == self.schemaVersion
             if dbversion == 13:
                 cu = self.db.cursor()
                 # replace all skipMediaCheck calls with showMediaCheck
@@ -113,7 +112,7 @@ class JobDataTable(GenericDataTable):
                                    WHERE name='skipMediaCheck'""")
                 cu.execute("""DELETE FROM ReleaseData
                                   WHERE name='skipMediaCheck'""")
-                return (dbversion + 1) == self.schemaVersion
+            return dbversion >= 13
         return True
 
 class UserDataTable(GenericDataTable):

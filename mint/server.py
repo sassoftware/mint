@@ -206,9 +206,13 @@ def getTables(db, cfg):
     d['outboundLabels'] = mirror.OutboundLabelsTable(db)
     d['outboundExcluded'] = mirror.OutboundExcludedTrovesTable(db)
     d['repNameMap'] = mirror.RepNameMapTable(db)
-    if not min([x.upToDate for x in d.values()]):
+    outDatedTables = [x for x in d.values() if not x.upToDate]
+    while outDatedTables[:]:
         d['version'].bumpVersion()
-        return getTables(db, cfg)
+        for table in outDatedTables:
+            upToDate = table.versionCheck()
+            if upToDate:
+                outDatedTables.remove(table)
     if d['version'].getDBVersion() != d['version'].schemaVersion:
         d['version'].bumpVersion()
     return d

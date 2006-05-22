@@ -145,7 +145,7 @@ class UsersTable(database.KeyedTable):
                     cu.execute("""UPDATE Users SET salt=?, passwd=?
                                       WHERE username=?""",
                                salt, passwd, username)
-                return (dbversion + 1) == self.schemaVersion
+            return dbversion >= 8
         return True
 
     def changePassword(self, username, password):
@@ -676,7 +676,7 @@ class UserGroupsTable(database.KeyedTable):
                 for userId, userName in aCu.fetchall():
                     cu.execute("""INSERT INTO UserGroups (userGroup)
                                       VALUES('%s')""" % userName)
-                return (dbversion + 1) == self.schemaVersion
+            return dbversion >= 9
         return True
 
     def getMintAdminId(self):
@@ -767,7 +767,7 @@ class UserGroupMembersTable(database.DatabaseTable):
                 for userId in [x[0] for x in cu.fetchall()]:
                     cu.execute("INSERT INTO UserGroupMembers VALUES(?, ?)",
                                groupId, userId)
-                return (dbversion + 1) == self.schemaVersion
+            return dbversion >= 10
         return True
 
     def getGroupsForUser(self, userId):

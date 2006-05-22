@@ -25,7 +25,7 @@ class SessionsTable(DatabaseTable):
     def versionCheck(self):
         dbversion = self.getDBVersion()
         if dbversion != self.schemaVersion:
-            if dbversion == 6:
+            if dbversion == 6 and not self.initialCreation:
                 cu = self.db.cursor()
                 # dropping and re-making is by far the best choice.
                 cu.execute("DROP TABLE Sessions")
@@ -36,7 +36,7 @@ class SessionsTable(DatabaseTable):
                 else:
                     raise AssertionError("INVALID DATABASE TYPE: " + \
                                          self.db.driver)
-                return (dbversion + 1) == self.schemaVersion
+            return dbversion >= 6
         return True
 
     def load(self, sid):

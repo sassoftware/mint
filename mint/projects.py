@@ -237,19 +237,16 @@ class ProjectsTable(database.KeyedTable):
         dbversion = self.getDBVersion()
         if dbversion != self.schemaVersion:
             cu = self.db.cursor()
-            if dbversion == 0:
+            if dbversion == 0 and not self.initialCreation:
                 cu.execute("""ALTER TABLE Projects
                              ADD COLUMN hidden INT DEFAULT 0""")
-                return (dbversion + 1) == self.schemaVersion
-            if dbversion == 2:
+            if dbversion == 2 and not self.initialCreation:
                 cu.execute("""ALTER TABLE Projects
                                 ADD COLUMN external INT DEFAULT 0""")
                 cu.execute("UPDATE Projects SET external=0")
-                return (dbversion + 1) == self.schemaVersion
-            if dbversion == 4:
+            if dbversion == 4 and not self.initialCreation:
                 cu.execute("ALTER TABLE Projects ADD COLUMN description STR")
                 cu.execute("UPDATE Projects SET description=desc")
-                return (dbversion + 1) == self.schemaVersion
             if dbversion == 15:
                 # logic to upgrade mirror ACLs in project repos
                 cu = self.db.cursor()
@@ -301,7 +298,7 @@ class ProjectsTable(database.KeyedTable):
                         rDb.close()
                 if rDb:
                     rDb.close()
-                return (dbversion + 1) == self.schemaVersion
+            return dbversion >= 15
         return True
 
     def new(self, **kwargs):

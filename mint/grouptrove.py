@@ -59,7 +59,7 @@ class GroupTroveTable(database.KeyedTable):
     def versionCheck(self):
         dbversion = self.getDBVersion()
         if dbversion != self.schemaVersion:
-            if dbversion == 16:
+            if dbversion == 16 and not self.initialCreation:
                 cu = self.db.cursor()
                 if self.cfg.dbDriver == 'sqlite':
                     cu.execute("""CREATE TABLE %s_backup AS
@@ -72,7 +72,7 @@ class GroupTroveTable(database.KeyedTable):
                 else:
                     cu.execute("""ALTER TABLE GroupTroves
                                       MODIFY COLUMN recipeName CHAR(200)""")
-                return (dbversion + 1) == self.schemaVersion
+            return dbversion >= 16
         return True
 
     def listGroupTrovesByProject(self, projectId):

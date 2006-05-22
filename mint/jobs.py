@@ -48,18 +48,16 @@ class JobsTable(database.KeyedTable):
     def versionCheck(self):
         dbversion = self.getDBVersion()
         if dbversion != self.schemaVersion:
-            if dbversion == 5:
+            if dbversion == 5 and not self.initialCreation:
                 cu = self.db.cursor()
                 cu.execute("ALTER TABLE Jobs ADD COLUMN groupTroveId INT")
-                return (dbversion + 1) == self.schemaVersion
-            if dbversion == 11:
+            if dbversion == 11 and not self.initialCreation:
                 cu = self.db.cursor()
                 cu.execute("ALTER TABLE Jobs ADD COLUMN owner INT")
-                return (dbversion + 1) == self.schemaVersion
-            if dbversion == 12:
+            if dbversion == 12 and not self.initialCreation:
                 cu = self.db.cursor()
                 cu.execute("ALTER TABLE Jobs ADD COLUMN timeSubmitted DOUBLE")
-                return (dbversion + 1) == self.schemaVersion
+            return dbversion >= 12
         return True
 
     def get(self, id):
@@ -131,9 +129,9 @@ class ImageFilesTable(database.KeyedTable):
     def versionCheck(self):
         dbversion = self.getDBVersion()
         if dbversion != self.schemaVersion:
-            if dbversion == 1:
+            if dbversion == 1 and not self.initialCreation:
                 sql = """ALTER TABLE ImageFiles ADD COLUMN title STR DEFAULT ''"""
                 cu = self.db.cursor()
                 cu.execute(sql)
-                return (dbversion + 1) == self.schemaVersion
+            return dbversion >= 1
         return True

@@ -49,9 +49,9 @@ class OutboundLabelsTable(database.KeyedTable):
         dbversion = self.getDBVersion()
         if dbversion != self.schemaVersion:
             cu = self.db.cursor()
-            if dbversion == 17:
+            if dbversion == 17 and not self.initialCreation:
                 cu.execute("ALTER TABLE OutboundLabels ADD COLUMN allLabels INT DEFAULT 0")
-                return (dbversion + 1) == self.schemaVersion
+            return dbversion >= 17
         return True
 
     def delete(self, labelId, url):

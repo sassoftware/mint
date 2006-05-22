@@ -64,16 +64,14 @@ class ReleasesTable(database.KeyedTable):
     def versionCheck(self):
         dbversion = self.getDBVersion()
         if dbversion != self.schemaVersion:
-            if dbversion == 3:
+            if dbversion == 3 and not self.initialCreation:
                 cu = self.db.cursor()
                 cu.execute("ALTER TABLE Releases ADD COLUMN timePublished INT DEFAULT 0")
                 cu.execute("UPDATE Releases SET timePublished=0")
-                return (dbversion + 1) == self.schemaVersion
-            if dbversion == 4:
+            if dbversion == 4 and not self.initialCreation:
                 cu = self.db.cursor()
                 cu.execute("ALTER TABLE Releases ADD COLUMN description STR")
                 cu.execute("UPDATE Releases SET description=desc")
-                return (dbversion + 1) == self.schemaVersion
             if dbversion == 14:
                 from mint.distro import jsversion
                 cu = self.db.cursor()
@@ -86,7 +84,7 @@ class ReleasesTable(database.KeyedTable):
                                                FROM ReleaseData
                                                WHERE name='jsversion')""" % \
                            jsversion.getDefaultVersion())
-                return (dbversion + 1) == self.schemaVersion
+            return dbversion >= 14
         return True
 
     def new(self, **kwargs):
