@@ -200,6 +200,7 @@ class AdminHandler(WebHandler):
         self.client.addOutboundLabel(projectId, labelId, targetUrl, mirrorUser, mirrorPass, allLabels)
         if not mirrorSources:
             self.client.addOutboundExcludedTrove(projectId, labelId, ".*:source")
+            self.client.addOutboundExcludedTrove(projectId, labelId, ".*:debuginfo")
 
         self._redirect("http://%s%sadmin/outbound" % (self.cfg.siteHost, self.cfg.basePath))
 
