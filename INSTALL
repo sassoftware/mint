@@ -82,6 +82,35 @@ Installation Procedure
    the "Site Administration" link at the bottom of the orange box on the
    right.
 
+*** FIXME -- Put initial rAA access stuff here ***
+
+9. In the "Administration Menu" page, you'll find a link entitled
+   "Entitlements, Updates, and Other System Operations".  Click on it.
+
+10. You are then prompted to enter a username and password.  Due to the
+    system-level nature of these operations, separate account information
+    is required.  Enter the following:
+
+    Username: admin
+    Password: password
+
+    The "Initiating rPath Appliance Agent Wizard" screen is then displayed
+    in a new browser window.  Click on the "Ok" button to proceed.  You
+    will then be guided through the following dialogs:
+
+        o New password dialog
+
+        o Email configuration dialog
+
+        o Email notification addresses dialog
+
+        o Entitlement management dialog
+
+    Once you have completed each dialog, the main *** FIXME -- need term
+    for main rAA interface page *** is displayed.
+
+*** END FIXME ***
+
 9. In the "Administration Menu" page, you'll find a link entitled "Add
    Externally-Managed Project".  Click on it.
 
