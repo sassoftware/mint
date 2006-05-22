@@ -38,7 +38,6 @@ if [ ! -d ${OLD_ROOT} -a -d ${NEW_ROOT} ]; then
 fi
 
 # Don't run this on a system where Conary isn't managing the product.
-echo "Updating Conary"
 if [ -d ${OLD_ROOT} ]; then
     conary q mint > /dev/null 2>&1
     if [ $? -ne 0 ]; then
@@ -53,6 +52,7 @@ fi
 # start the migration here ####################################################
 
 # update conary (the old school way)
+echo "Updating Conary"
 conary update conary conary-repository conary-build conary-policy --resolve
 if [ $? -ne 0 ]; then
     echo "WARNING: Conary not updated, you'll have to do this again manually."
@@ -80,6 +80,10 @@ sleep 3
 killall httpd > /dev/null 2>&1
 sleep 3
 killall -9 httpd > /dev/null 2>&1
+
+# whack all precompiled python files
+echo "Cleaning out stale .pyc/.pyo files"
+find /usr/lib/python2.4/site-packages/mint -name \*.py[co] -exec rm -f {} \;
 
 # update using conary 
 # (NOTE: we have to use the mint redirect trove to get to rbuilder)

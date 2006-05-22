@@ -48,10 +48,17 @@
                         <td colspan="2"><hr /></td>
                     </tr>
                     <tr>
-                        <th>Mirroring options:</th>
+                        <th rowspan="2">Mirroring options:</th>
                         <td>
-                            <input class="check" type="checkbox" name="mirrorSources" value="0" id="mirrorSources" />
+                            <input class="check" type="checkbox" name="mirrorSources" value="1" id="mirrorSources" />
                             <label for="mirrorSources">Mirror source components to target repository.</label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <input class="check" type="checkbox" name="allLabels" value="1" id="allLabels" />
+                            <label for="allLabels">Mirror all labels to the target repository,
+                                rather than only the default project label.</label>
                         </td>
                     </tr>
                 </table>
