@@ -62,7 +62,8 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
 
     def compareRepositories(self, repos1, repos2,
                             base = "localhost.other.host",
-                            exclude = None):
+                            exclude = None,
+                            onlyLabel = None):
 
         def _flatten(d):
             l = []
@@ -74,10 +75,14 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
 
         self.cfg.user.remove(("*", "test", "foo"))
         troveD1 = repos1.getTroveVersionList(base, { None : None })
+
         troveD2 = repos2.getTroveVersionList(base, { None : None })
 
         if exclude:
             troveD1 = dict(x for x in troveD1.items() if not exclude.match(x[0]))
+        if onlyLabel:
+            troveD1 = dict(x for x in troveD1.items() if str(x[1].keys()[0].branch().label()) == 'localhost.rpath.local2@rpl:devel')
+
         assert(troveD1 == troveD2)
 
         troves1 = repos1.getTroves(_flatten(troveD1))
@@ -144,10 +149,15 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
         labelId = project.getLabelIdMap().values()[0]
         client.addOutboundLabel(projectId, labelId,
                                 "http://localhost:%s/conary/" % targetPort,
-                                "mirror", "mirror")
+                                "mirror", "mirror", allLabels = True)
 
+        # create troves on rpl:linux
         sourceRepos = ConaryClient(project.getConaryConfig()).getRepos()
         self.createTroves(sourceRepos, 0, 2)
+
+        # create some troves on a different label
+        self.cfg.buildLabel = versions.Label("localhost.rpath.local2@rpl:other")
+        self.createTroves(sourceRepos, 3, 5)
 
         client.addOutboundExcludedTrove(projectId, labelId, "test0")
         exclude = re.compile("test0")
@@ -159,6 +169,45 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
         self.compareRepositories(sourceRepos, targetRepos,
                                  base = "localhost.rpath.local2",
                                  exclude = exclude)
+        self.stopRepository(1)
+
+    def testOutboundMirrorAllLabels(self):
+        global runTest
+        if not runTest:
+            raise testsuite.SkipTestException
+
+        client, userId = self.quickMintAdmin("testuser", "testpass")
+
+        # set up the target repository
+        targetRepos = self.openRepository(1,
+                                          serverName = "localhost.rpath.local2")
+        targetPort = self.servers.getServer(1).port
+        self.createMirrorUser(targetRepos, "localhost.rpath.local2@rpl:linux")
+        self.cfg.buildLabel = versions.Label("localhost.rpath.local2@rpl:linux")
+
+        # set up the source repository
+        projectId = self.newProject(client, "Mirrored Project", "localhost")
+        project = client.getProject(projectId)
+        labelId = project.getLabelIdMap().values()[0]
+        client.addOutboundLabel(projectId, labelId,
+                                "http://localhost:%s/conary/" % targetPort,
+                                "mirror", "mirror", allLabels = False)
+
+        # create troves on rpl:linux
+        sourceRepos = ConaryClient(project.getConaryConfig()).getRepos()
+        self.createTroves(sourceRepos, 0, 2)
+
+        # create some troves on a different label
+        self.cfg.buildLabel = versions.Label("localhost.rpath.local2@rpl:other")
+        self.createTroves(sourceRepos, 3, 5)
+
+        # do the mirror
+        self.outboundMirror()
+
+        # compare -- only troves from rpl:linux should exist on the target
+        self.compareRepositories(sourceRepos, targetRepos,
+                                 base = "localhost.rpath.local2",
+                                 onlyLabel = "localhost.rpath.local2@rpl:linux")
         self.stopRepository(1)
 
 

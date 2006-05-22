@@ -34,6 +34,7 @@ class OutboundLabelsTable(database.KeyedTable):
         url             VARCHAR(255),
         username        VARCHAR(255),
         password        VARCHAR(255),
+        allLabels       INT DEFAULT 0,
         CONSTRAINT OutboundLabels_projectId_fk
             FOREIGN KEY (projectId) REFERENCES Projects(projectId)
             ON DELETE RESTRICT ON UPDATE CASCADE,
@@ -42,7 +43,16 @@ class OutboundLabelsTable(database.KeyedTable):
             ON DELETE RESTRICT ON UPDATE CASCADE
     ) %(TABLEOPTS)s"""
 
-    fields = ['projectId', 'labelId', 'url', 'username', 'password']
+    fields = ['projectId', 'labelId', 'url', 'username', 'password', 'allLabels']
+
+    def versionCheck(self):
+        dbversion = self.getDBVersion()
+        if dbversion != self.schemaVersion:
+            cu = self.db.cursor()
+            if dbversion == 17:
+                cu.execute("ALTER TABLE OutboundLabels ADD COLUMN allLabels INT DEFAULT 0")
+                return (dbversion + 1) == self.schemaVersion
+        return True
 
     def delete(self, labelId, url):
         cu = self.db.cursor()
@@ -50,6 +60,12 @@ class OutboundLabelsTable(database.KeyedTable):
         cu.execute("DELETE FROM OutboundLabels WHERE labelId=? AND url=?", labelId, url)
         cu.execute("DELETE FROM OutboundExcludedTroves WHERE labelId=?", labelId)
         self.db.commit()
+
+    def getMirrorAllLabels(self, labelId):
+        cu = self.db.cursor()
+
+        cu.execute("SELECT allLabels FROM OutboundLabels WHERE labelId=?", labelId)
+        return cu.fetchone()[0]
 
 
 class OutboundExcludedTrovesTable(database.KeyedTable):

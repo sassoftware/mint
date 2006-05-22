@@ -2696,13 +2696,14 @@ class MintServer(object):
         return [list(x) for x in cu.fetchall()]
 
     @private
-    @typeCheck(int, int, str, str, str)
+    @typeCheck(int, int, str, str, str, bool)
     @requiresAdmin
-    def addOutboundLabel(self, projectId, labelId, url, username, password):
+    def addOutboundLabel(self, projectId, labelId, url, username, password, allLabels):
         return self.outboundLabels.new(projectId = projectId,
                                        labelId = labelId, url = url,
                                        username = username,
-                                       password = password)
+                                       password = password,
+                                       allLabels = allLabels)
 
     @private
     @typeCheck(int, str)
@@ -2725,6 +2726,12 @@ class MintServer(object):
     def delOutboundExcludedTrove(self, labelId, exclude):
         self.outboundExcluded.delete(labelId, exclude)
         return True
+
+    @typeCheck(int)
+    @private
+    @requiresAdmin
+    def getOutboundMirrorAllLabels(self, labelId):
+        return self.outboundLabels.getMirrorAllLabels(labelId)
 
     @private
     @typeCheck(int)

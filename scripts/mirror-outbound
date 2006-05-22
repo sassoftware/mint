@@ -58,7 +58,11 @@ class MirrorOutbound(SingletonScript):
             cfg.source.user.addServerGlob(reposHost, sourceUser, sourcePass)
 
             cfg.host = reposHost
-            cfg.labels = [versions.Label(project.getLabel())]
+
+            if client.getOutboundMirrorAllLabels(sourceLabelId):
+                cfg.labels = []
+            else:
+                cfg.labels = [versions.Label(project.getLabel())]
 
             [cfg.excludeTroves.addExp(x) for x in client.getOutboundExcludedTroves(sourceLabelId)]
 

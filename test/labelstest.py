@@ -31,7 +31,10 @@ class LabelsTest(fixtures.FixturedUnitTest):
 
         project.editLabel(newLabelId, "bar.%s@rpl:testbranch" % MINT_PROJECT_DOMAIN,
             "http://bar.%s/conary/" % MINT_PROJECT_DOMAIN, "user1", "pass1")
-        assert adminClient.server.getLabel(newLabelId) == ('bar.%s@rpl:testbranch' % MINT_PROJECT_DOMAIN, 'http://bar.%s/conary/' % MINT_PROJECT_DOMAIN, 'user1', 'pass1')
+        assert adminClient.server.getLabel(newLabelId) == 
+            ('bar.%s@rpl:testbranch' % MINT_PROJECT_DOMAIN,
+             'http://bar.%s/conary/' % MINT_PROJECT_DOMAIN,
+             'user1', 'pass1')
 
         project.removeLabel(newLabelId)
         assert(project.getLabelIdMap() ==\
@@ -132,8 +135,8 @@ class LabelsTest(fixtures.FixturedUnitTest):
                 "mirror", "mirrorpass")
 
         labels = adminClient.getInboundLabels()
-        assert(labels == \
-                [[projectId, projectId, 'http://www.example.com/conary/', \
+        assert(labels ==
+                [[projectId, projectId, 'http://www.example.com/conary/',
                   'mirror', 'mirrorpass']])
 
     @fixtures.fixture("Full")
@@ -145,8 +148,8 @@ class LabelsTest(fixtures.FixturedUnitTest):
                 "mirror", "mirrorpass")
 
         labels = adminClient.getOutboundLabels()
-        assert(labels == \
-                [[projectId, projectId, 'http://www.example.com/conary/', \
+        assert(labels ==
+                [[projectId, projectId, 'http://www.example.com/conary/',
                   'mirror', 'mirrorpass']])
 
         adminClient.delOutboundLabel(projectId,
@@ -167,6 +170,7 @@ class LabelsTest(fixtures.FixturedUnitTest):
             labelId, ".*:source$")
 
         assert(adminClient.getOutboundExcludedTroves(labelId) == [".*:source$"])
+        assert(adminClient.getOutboundMirrorAllLabels(labelId) == False)
 
 
 if __name__ == "__main__":
