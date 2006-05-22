@@ -95,7 +95,10 @@
             <table class="mainformhorizontal" id="mirrorSettings">
               <tr>
                 <th>Preload this mirror:</th>
-                <td><input type="checkbox" class="check" name="primeMirror" value="1" /> Preload this mirror with a set of CDs or DVDs.</td>
+                <td>
+                    <input type="checkbox" class="check" name="primeMirror" id="primeMirror" value="1" />
+                    <label for="primeMirror">Preload this mirror with a set of CDs or DVDs.</label>
+                </td>
               </tr>
               <tr>
                 <th>Authorization:</th>
