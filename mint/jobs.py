@@ -63,6 +63,7 @@ class JobsTable(database.KeyedTable):
     def get(self, id):
         res = database.KeyedTable.get(self, id)
         del res['owner']
+        res['status'] = int(res['status'])
         return res
 
 class Job(database.TableObject):

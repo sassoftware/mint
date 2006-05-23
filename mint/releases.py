@@ -124,7 +124,7 @@ class ReleasesTable(database.KeyedTable):
         imageTypes = []
         for row in rows:
             if row[-1] is not None:
-                imageTypes.append(row[-1])
+                imageTypes.append(int(row[-1]))
 
         row = rows[-1]
         res = {}

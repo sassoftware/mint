@@ -357,8 +357,14 @@ class ProjectHandler(WebHandler):
     @strFields(trove = None, version = None, desc = "")
     def saveRelease(self, auth, releaseId, trove, version, desc, name,
                     **kwargs):
-
         release = self.client.getRelease(releaseId)
+
+        job = release.getJob()
+        if job.status in (jobstatus.WAITING, jobstatus.RUNNING):
+            self._addErrors("You cannot alter this release because a "
+                            "conflicting image is currently being generated.")
+            self._predirect("release?id=%d" % releaseId)
+            return
 
         trove, label = trove.split("=")
         version, flavor = version.split(" ")
