@@ -628,7 +628,7 @@ quit
         self.runTagScripts(target = target)
 
         if self.makeBootable:
-            self.status('Making image bootable')
+            self.status('Installing bootloader')
             self.makeBootBlock()
         else:
             # don't try and strip boot blocks from iso images.
