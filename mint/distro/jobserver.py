@@ -15,7 +15,7 @@ from xmlrpclib import ProtocolError
 
 # conary imports
 from conary import conaryclient
-from conary.conarycfg import ConfigFile, ConaryConfiguration
+from conary.conarycfg import ConfigFile
 from conary.conarycfg import CfgList, CfgString, CfgBool, CfgInt, CfgDict, \
      CfgEnum
 
