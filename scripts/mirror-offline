@@ -166,9 +166,14 @@ class MirrorOffline(SingletonScript):
             # clear the account we just used.
             targetRepos.deleteUserByName(versions.Label(labelStr), userName)
 
+            #count the target files on the disc
+            numFilePipe = os.popen('find %s -not -type d | grep -c ""' % \
+                                   baseDir, 'r')
+            numFiles = int(numFilePipe.read().strip())
+            numFilePipe.close()
+
             # bundle the results
-            util.execute('tar -C %s -cpPsv -O ./ | gzip -9 | '
-                         'split -a 3 -d -b %d - %s' % \
+            util.execute('tar -C %s -cpPsv -O ./ | split -a 3 -d -b %d - %s' %\
                          (baseDir, isoSize,
                           os.path.join(outputDir, "mirror-" + targCfg.serverName + '.tgz')))
 
@@ -180,7 +185,7 @@ class MirrorOffline(SingletonScript):
                 for curDisc, fn in [(x[0] + 1, x[1]) for x in \
                                     enumerate(sorted(os.listdir(outputDir)))]:
                     createKeyFile(targCfg.serverName, curDisc, numDiscs,
-                                  outputDir)
+                                  numFiles, outputDir)
                     util.execute("split -a 3 -d -b %d %s %s" % \
                                  (MAX_FILESIZE, os.path.join(outputDir, fn),
                                   os.path.join(outputDir, fn + '_')))
@@ -212,7 +217,7 @@ class MirrorOffline(SingletonScript):
                     shaFile.write(pipe.read().split()[0])
                     shaFile.close()
                     createKeyFile(targCfg.serverName, curDisc, numDiscs,
-                                  outputDir)
+                                  numFiles, outputDir)
                     files = [fn, fn + ".sha1", "MIRROR-INFO"]
                     util.execute("mkisofs -o %s -r -U %s" % \
                                  (os.path.join( \
@@ -235,10 +240,11 @@ class MirrorOffline(SingletonScript):
         return 0
 
 
-def createKeyFile(serverName, curDisc, numDiscs, outputDir):
+def createKeyFile(serverName, curDisc, numDiscs, numFiles, outputDir):
     keyFile = open(os.path.join(outputDir, "MIRROR-INFO"), "w")
     print >> keyFile, "%s" % serverName
     print >> keyFile, "%d/%d" % (curDisc, numDiscs)
+    print >> keyFile, "%d" % numFiles
     keyFile.close()
 
 
