@@ -143,10 +143,6 @@ for id, fn in rs.fetchall():
 db.commit()
 EOSCRIPT
 
-# remove the SQL caches from repos
-echo "Removing stale SQL caches from Conary repositories"
-find ${NEW_ROOT}/repos -name cache.sql -exec rm -f {} \;
-
 # update isogen UID/GID
 echo "Updating isogen user ID and group ID"
 old_isogen_uid=`id -u isogen`
