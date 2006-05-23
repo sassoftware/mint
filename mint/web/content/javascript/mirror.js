@@ -24,7 +24,7 @@ function readTarStatus(aReq) {
     replaceChildNodes($('statusMessage'), "Untarred " + r.bytesRead + " files");
 
     if(!r.done && !r.error) {
-        setTimeout("getTarStatus()", 100);
+        setTimeout("getTarStatus()", 250);
     } else if(r.error) {
         replaceChildNodes($('statusMessage'), r.errorMessage);
     } else {
@@ -55,7 +55,7 @@ function readConcatStatus(aReq) {
     replaceChildNodes($('statusMessage'), "Concatenating: " + percent + "%");
 
     if(!r.done) {
-        setTimeout("getConcatStatus()", 100);
+        setTimeout("getConcatStatus()", 250);
     } else {
         startUntar();
     }
@@ -76,11 +76,15 @@ function startConcat() {
 function readStatusCallback(aReq) {
     r = evalJSONRequest(aReq);
     percent = ((r.bytesRead / r.bytesTotal) * 100).toFixed(0);
-    replaceChildNodes($('statusMessage'), "Copying: " + percent + "%");
-    logDebug(percent);
+
+    if(percent == "100") {
+        replaceChildNodes($('statusMessage'), "Verifying checksum...");
+    } else {
+        replaceChildNodes($('statusMessage'), "Copying: " + percent + "%");
+    }
 
     if(!r.done) {
-        setTimeout("getCopyStatus()", 100);
+        setTimeout("getCopyStatus()", 250);
     } else if(r.checksumError) {
         replaceChildNodes($('statusMessage'), "Checksum error reading disc " + curDisc + ". Please contact your vendor for replacement.");
         setElementClass($('statusMessage'), 'error');

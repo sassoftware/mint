@@ -13,6 +13,7 @@ import subprocess
 
 from conary.lib import util
 from conary.lib import sha1helper
+from conary.repository.netrepos import netserver
 
 tarThread = None
 copyThread = None
@@ -120,6 +121,22 @@ class ConcatThread(CopyThread):
         self.status['done'] = True
 
 
+def setupUsers(cfg, serverName, dbPath):
+    nscfg = netserver.ServerConfig()
+    nscfg.serverName = serverName
+    nscfg.repositoryDB = dbPath
+    nscfg.contentsDir = " ".join(x % serverName for x in cfg.reposContentsDir)
+
+    repos = netserver.NetworkRepositoryServer(nscfg, '')
+
+    repos.auth.addUser(cfg.authUser, cfg.authPass)
+    repos.auth.addAcl(cfg.authUser, None, None, True, False, True)
+    repos.auth.setMirror(cfg.authUser, True)
+
+    repos.auth.addUser('anonymous', 'anonymous')
+    repos.auth.addAcl('anonymous', None, None, False, False, False)
+
+
 class TarThread(CopyThread):
     def run(self):
         file = [x for x in os.listdir(self.tmpPath)
@@ -137,13 +154,17 @@ class TarThread(CopyThread):
             self.status['bytesRead'] = lines
 
         # do a few post-mirror config items
+        #
+        # o Chown the files to apache.apache
+        # o Add mintauth and anonymous users
+        #
         os.system("chown -R apache.apache /srv/rbuilder/repos/%s/*" % serverName)
+        from mint import config
+        cfg = config.MintConfig()
+        cfg.read(config.RBUILDER_CONFIG)
+        dbPath = ('sqlite', cfg.reposDBPath % serverName)
 
-        # XXX: this could be done more reasonably in Python code rather than
-        # shelling to the system.
-        os.system("""echo mintpass | /usr/lib/python2.4/site-packages/conary/server/server.py --db "sqlite /srv/rbuilder/repos/%s/sqldb" --add-user mintauth --admin""" % serverName)
-        os.system("""echo anonymous | /usr/lib/python2.4/site-packages/conary/server/server.py --db "sqlite /srv/rbuilder/repos/%s/sqldb" --add-user anonymous""" % serverName)
-
+        setupUsers(cfg, serverName, dbPath)
         self.status['done'] = True
 
 
@@ -170,7 +191,7 @@ class CopyFromDiscThread(CopyThread):
                 origSha1.close()
                 origSum = data.split(" ")[0]
 
-                newSum = sha1helper.sha1ToString(sha1helper.sha1FileBin(os.path.join(self.sourcePath, f)))
+                newSum = sha1helper.sha1ToString(sha1helper.sha1FileBin(os.path.join(self.tmpPath, f)))
                 if origSum != newSum:
                     self.status['checksumError'] = True
             except IOError, e:
