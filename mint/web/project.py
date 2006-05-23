@@ -360,7 +360,7 @@ class ProjectHandler(WebHandler):
         release = self.client.getRelease(releaseId)
 
         job = release.getJob()
-        if job.status in (jobstatus.WAITING, jobstatus.RUNNING):
+        if job and job.status in (jobstatus.WAITING, jobstatus.RUNNING):
             self._addErrors("You cannot alter this release because a "
                             "conflicting image is currently being generated.")
             self._predirect("release?id=%d" % releaseId)
