@@ -9,7 +9,7 @@
     <head>
         <title>${formatTitle('Add External Project')}</title>
     </head>
-    <body onload="javascript:hideElement('mirrorSettings');">
+    <body onload="javascript:hideElement('mirrorSettings'); hideElement('authSettings')">
         <div id="left" class="side">
             ${adminResourcesMenu()}
         </div>
@@ -86,6 +86,44 @@
               </tr>
             </table>
 
+
+            <h2>Authentication</h2>
+            <p><b>
+                <input onclick="javascript:toggle_element_by_checkbox('authSettings', 'externalAuth');"
+                       type="checkbox" class="check" name="externalAuth" value="1" id="externalAuth" />
+                <label for="externalAuth">External repository requires authentication</label>
+            </b></p>
+            <table class="mainformhorizontal" id="authSettings">
+                <tr>
+                    <td colspan="2">
+                        <p class="help">
+                            Please provide either a username and a password or an entitlement
+                            if required. If these fields are not provided, the external repository
+                            will be accessed anonymously.
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Username:</th>
+                    <td><input type="text" autocomplete="off" name="externalUser" style="width: 25%;" /></td>
+                </tr>
+                <tr>
+                    <th>Password:</th>
+                    <td><input type="password" autocomplete="off" name="externalPass" style="width: 25%;" /></td>
+                </tr>
+                <tr>
+                    <th>Entitlement:</th>
+                    <td>
+                        <p class="help">
+                            If you have a mirroring entitlement instead of a username and
+                            password, please paste it here:
+                        </p>
+                        <textarea rows="5" cols="50" name="externalEnt" />
+                    </td>
+                </tr>
+            </table>
+
+
             <h2>Mirror Settings</h2>
             <p><b>
                 <input onclick="javascript:toggle_element_by_checkbox('mirrorSettings', 'useMirror');"
@@ -93,33 +131,16 @@
                 <label for="useMirror">Mirror this repository locally</label>
             </b></p>
             <table class="mainformhorizontal" id="mirrorSettings">
-              <tr>
-                <th>Preload this mirror:</th>
-                <td>
-                    <input type="checkbox" class="check" name="primeMirror" id="primeMirror" value="1" />
-                    <label for="primeMirror">Preload this mirror with a set of CDs or DVDs.</label>
-                </td>
-              </tr>
-              <tr>
-                <th>Authorization:</th>
-                <td>Username: <input type="text" autocomplete="off" name="mirrorUser" style="width: 25%;" /></td>
-              </tr>
-              <tr>
-                <th></th>
-                <td>Password: <input type="password" autocomplete="off" name="mirrorPass" style="width: 25%;" />
-                  <p class="help">
-                      Enter the username and password of a user authorized to mirror this repository.
-                  </p>
-                  <p class="help">
-                      If you have a mirroring entitlement instead of a username and
-                      password, please paste it here:
-                  </p>
-                  <textarea rows="5" cols="50" name="mirrorEnt" />
-                </td>
-              </tr>
-              </table>
-              <button class="img" type="submit"><img src="${cfg.staticPath}/apps/mint/images/add_button.png" alt="Add" /></button>
-          </form>
+                <tr>
+                    <th>Preload this mirror:</th>
+                    <td>
+                        <input type="checkbox" class="check" name="primeMirror" id="primeMirror" value="1" />
+                        <label for="primeMirror">Preload this mirror with a set of CDs or DVDs.</label>
+                    </td>
+                </tr>
+            </table>
+            <button class="img" type="submit"><img src="${cfg.staticPath}/apps/mint/images/add_button.png" alt="Add" /></button>
+        </form>
         </div>
     </body>
 </html>

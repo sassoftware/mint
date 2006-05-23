@@ -117,24 +117,41 @@ class AdminHandler(WebHandler):
         return pdfData
 
     @strFields(name = None, hostname = None, label = None, url = '',\
-        mirrorUser = '', mirrorPass = '', mirrorEnt = '')
-    @boolFields(useMirror = False, primeMirror = False)
+        externalUser = '', externalPass = '', externalEnt = '')
+    @boolFields(useMirror = False, primeMirror = False, externalAuth = False)
     def processExternal(self, name, hostname, label, url,
-                                mirrorUser, mirrorPass, mirrorEnt,
-                                useMirror, primeMirror, *args, **kwargs):
+                        externalUser, externalPass, externalEnt,
+                        useMirror, primeMirror, externalAuth, *args, **kwargs):
         projectId = self.client.newExternalProject(name, hostname,
             self.cfg.projectDomainName, label, url, useMirror)
         project = self.client.getProject(projectId)
 
         extLabel = versions.Label(label)
+        labelIdMap, _, _ = self.client.getLabelsForProject(projectId)
+        label, labelId = labelIdMap.items()[0]
+
+        print >> sys.stderr, "externalAuth:", externalAuth
+        sys.stderr.flush()
+        if not url and not externalAuth:
+            url = "http://%s/conary/" % extLabel.getHost()
+        elif not url and externalAuth:
+            url = "https://%s/conary/" % extLabel.getHost()
+
+        # set up the authentication
+        if externalAuth:
+            project.editLabel(labelId, label, url, externalUser, externalPass)
+        if externalAuth and externalEnt:
+            entF = file(os.path.join(self.cfg.dataPath, "entitlements", extLabel.getHost()), "w")
+            entF.write(externalEnt)
+            entF.close()
+
         # set up the mirror, if requested
         if useMirror:
-            labelIdMap, _, _ = self.client.getLabelsForProject(projectId)
-            label, labelId = labelIdMap.items()[0]
             localUrl = "http://%s%srepos/%s/" % (self.cfg.projectSiteHost, self.cfg.basePath, hostname)
 
+            # set the internal label to our authUser and authPass
             project.editLabel(labelId, label, localUrl, self.cfg.authUser, self.cfg.authPass)
-            self.client.addInboundLabel(projectId, labelId, url, mirrorUser, mirrorPass)
+            self.client.addInboundLabel(projectId, labelId, url, externalUser, externalPass)
             self.client.addRemappedRepository(hostname + "." + self.cfg.siteDomainName, extLabel.getHost())
 
         if primeMirror:
