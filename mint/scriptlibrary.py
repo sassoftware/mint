@@ -9,6 +9,7 @@ import os
 import os.path
 import sys
 import traceback
+import fcntl
 
 
 class GenericScript:
@@ -76,53 +77,46 @@ class GenericScript:
 DEFAULT_LOCKPATH = '/var/tmp'
 
 class SingletonScript(GenericScript):
-    """ 
+    """
     Class for scripts which need to run serially.
     """
 
     def __init__(self, aLockpath = DEFAULT_LOCKPATH):
         GenericScript.__init__(self)
         self.lockFileName = '%s/%s.lck' % (aLockpath, self.name)
+        self.lockFile = None
 
     def _lock(self):
-        """ 
-        Checks for the existence of a lockfile. If it exists, will 
-        make an effort to see if the PID in the lockfile is still running.
-        If it is, the script will abort with a message warning the user;
-        otherwise, the lock will be considered to be stale.
-        If no lockfile exists, or if a stale lockfile is found, then
-        the lockfile is created/overritten with new information and
-        the script's action() method will be called.
         """
-
-        # Check for a lockfile here
-        if os.path.exists(self.lockFileName):
-            lockFile = open(self.lockFileName,"r")
-            lockPid = int(lockFile.readline().strip())
-            procFilePath = '/proc/%d/cmdline' % (lockPid, )
-            if os.path.exists(procFilePath):
-                procFile = open(procFilePath,"r")
-                if procFile.readline().find(self.name) < 0:
-                    print >> sys.stderr, "Deleting stale lockfile"
-                    lockFile.close()
-                    os.unlink(self.lockFileName)
-                else:
-                    print >> sys.stderr, "Looks like we're already running; exiting"
-                    return False
-                procFile.close()
-
-        # Create the lock file
-        newLockFile = open(self.lockFileName, "w+")
-        newLockFile.write(str(os.getpid()))
-        newLockFile.close()
+        Attempts to control a lockfile via fcntl. If the lock can be obtained,
+        the current PID will be written into the file. If another script holds
+        the fcntl lock, the script will abort with a message warning the user;
+        if this instance of the script obtains the fcntl lock, then the
+        lockfile is created/overritten with new information and the script's
+        action() method will be called.
+        """
+        self.lockFile = open(self.lockFileName, "w+")
+        try:
+            fcntl.lockf(self.lockFile.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except IOError, e:
+            if e.errno == 11:
+                print >> sys.stderr, \
+                      "Looks like we're already running; exiting"
+                return False
+            raise
+        # placing the PID into this file is simply for readability since the
+        # fcntl is absolute proof of ownership.
+        self.lockFile.write(str(os.getpid()))
+        self.lockFile.flush()
         return True
 
     def _unlock(self):
         """
         Unlocks the lockfile if it exists.
         """
-        if os.path.exists(self.lockFileName):
-            os.unlink(self.lockFileName)
+        if self.lockFile:
+            self.lockFile.close()
+            self.lockFile = None
 
     def _run(self):
         exitcode = -1

@@ -2079,7 +2079,7 @@ class MintServer(object):
     def getJobServerStatus(self):
         # Handling the job server in this manner is temporary
         # This is only useful in an appliance context at this time.
-        pipeFD = os.popen("/sbin/service rbuilder-isogen status")
+        pipeFD = os.popen("sudo /sbin/service multi-jobserver status")
         res = pipeFD.read()
         pipeFD.close()
         return res
