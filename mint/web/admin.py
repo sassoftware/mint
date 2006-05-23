@@ -130,8 +130,6 @@ class AdminHandler(WebHandler):
         labelIdMap, _, _ = self.client.getLabelsForProject(projectId)
         label, labelId = labelIdMap.items()[0]
 
-        print >> sys.stderr, "externalAuth:", externalAuth
-        sys.stderr.flush()
         if not url and not externalAuth:
             url = "http://%s/conary/" % extLabel.getHost()
         elif not url and externalAuth:
