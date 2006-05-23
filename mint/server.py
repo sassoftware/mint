@@ -359,6 +359,9 @@ class MintServer(object):
             server = shimclient.NetworkRepositoryServer(cfg, '')
 
             cfg = conarycfg.ConaryConfiguration()
+            conarycfgFile = os.path.join(self.cfg.dataPath, 'conaryrc')
+            if os.path.exists(conarycfgFile):
+                cfg.read(conarycfgFile)
             cfg.repositoryMap = authRepo
             cfg.user.addServerGlob(versions.Label(authLabel).getHost(),
                                    self.cfg.authUser, self.cfg.authPass)

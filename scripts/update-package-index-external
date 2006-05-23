@@ -63,6 +63,9 @@ class UpdatePackageIndexExternal(SingletonScript):
             projectIds[hostname] = projectId
 
             ccfg = conarycfg.ConaryConfiguration()
+            conarycfgFile = os.path.join(cfg.dataPath, 'conaryrc')
+            if os.path.exists(conarycfgFile):
+                ccfg.read(conarycfgFile)
             ccfg.root = ccfg.dbPath = ':memory:'
             ccfg.repositoryMap = repMap
             repos = conaryclient.ConaryClient(ccfg).getRepos()
