@@ -77,10 +77,12 @@ class MirrorOffline(SingletonScript):
             # round down to an iso-block sized limit.
             # adjust for disc formatting data
             isoSize -= isoSize % 2048
-            # 174 iso blocks plus 3/4 of an isoblock per file, rounded up.
-            numFiles = (isoSize / (MAX_FILESIZE * 1.0))
-            resBlocks = (174 + numFiles + 1) + ceil((numFiles * 2 + 1) * 0.75)
-            isoSize -= resBlocks * 2048
+            numFiles = ceil(isoSize / (MAX_FILESIZE * 1.0))
+            resBlocks = (173 + numFiles + 1) + ceil((numFiles * 2 + 1) * 0.50)
+            # above equation overcompensates 1 isoblock for DVDs
+            if numFiles != 1:
+                resBlocks -= 1
+            isoSize -= int(resBlocks) * 2048
 
             openPort = 21213
             while True:
