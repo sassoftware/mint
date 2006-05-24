@@ -6,6 +6,11 @@
     Copyright (c) 2005-2006 rPath, Inc.
     All Rights Reserved
 -->
+
+<?python
+    for var in ['name', 'hostname', 'label', 'url', 'externalUser', 'externalPass', 'externalEntKey', 'externalEntClass', 'authType', 'useMirror', 'primeMirror', 'externalAuth', 'authType']:
+        kwargs[var] = kwargs.get(var, '')
+?>
     <head>
         <title>${formatTitle('Add External Project')}</title>
     </head>
@@ -37,7 +42,7 @@
               <tr>
                 <th><em class="required">Project Name:</em></th>
                 <td>
-                  <input type="text" autocomplete="off" name="hostname" maxlength="16" value="${firstTime and 'rpath' or ''}"/>
+                  <input type="text" autocomplete="off" name="hostname" maxlength="16" value="${kwargs['hostname']}"/>
                   <p class="help">Enter a local name for this
                   project. The local name will be used as the hostname
                   for this project's site and repository
@@ -53,7 +58,7 @@
               <tr>
                   <th><em class="required">Project Title:</em></th>
                   <td>
-                    <input type="text" autocomplete="off" name="name" value="${firstTime and 'rPath Linux' or ''}"/>
+                    <input type="text" autocomplete="off" name="name" value="${kwargs['name']}"/>
                     <p class="help">Enter a local title for this
                     project.  The title is a longer, more descriptive
                     name for the project. For example, <strong>My
@@ -66,7 +71,7 @@
               <tr>
                 <th><em class="required">Project Label:</em></th>
                 <td>
-                  <input type="text" autocomplete="off" name="label" value="${firstTime and 'conary.rpath.com@rpl:1' or ''}"/>
+                  <input type="text" autocomplete="off" name="label" value="${kwargs['label']}" />
                   <p class="help">Enter this project's label.  For
                   example, <strong>conary.example.com@rpl:1</strong></p>
                 </td>
@@ -74,7 +79,7 @@
               <tr>
                 <th>Repository URL:</th>
                 <td>
-                  <input type="text" autocomplete="off" name="url" value="${firstTime and 'http://conary.rpath.com/conary/' or ''}"/>
+                  <input type="text" autocomplete="off" name="url" value="${kwargs['url']}"/>
                   <p class="help">Enter the URL for this project's
                   repository.  If a URL is not provided, the standard
                   URL format will be derived from the project's label
@@ -90,35 +95,36 @@
             <h2>Authentication</h2>
             <p><b>
                 <input onclick="javascript:toggle_element_by_checkbox('authSettings', 'externalAuth');"
-                       type="checkbox" class="check" name="externalAuth" value="1" id="externalAuth" />
+                    type="checkbox" class="check" name="externalAuth" value="1" id="externalAuth" py:attrs="{'checked': kwargs['externalAuth'] and 'checked' or None}" />
                 <label for="externalAuth">External repository requires authentication</label>
             </b></p>
             <table class="mainformhorizontal" id="authSettings">
                 <tr>
-                    <td colspan="2">
-                        <p class="help">
-                            Please provide either a username and a password or an entitlement
-                            if required. If these fields are not provided, the external repository
-                            will be accessed anonymously.
-                        </p>
+                    <td><input id="authTypeUserPass" type="radio" class="check" name="authType" value="userpass" py:attrs="{'checked': (kwargs['authType'] == 'userpass') and 'checked' or None}"/><label for="authTypeUserPass">Use username/password</label>
                     </td>
                 </tr>
                 <tr>
-                    <th>Username:</th>
-                    <td><input type="text" autocomplete="off" name="externalUser" style="width: 25%;" /></td>
+                    <th style="padding-left: 3em;">Username:</th>
+                    <td><input type="text" autocomplete="off" name="externalUser" style="width: 25%;" value="${kwargs['externalUser']}" /></td>
                 </tr>
                 <tr>
-                    <th>Password:</th>
-                    <td><input type="password" autocomplete="off" name="externalPass" style="width: 25%;" /></td>
+                    <th style="padding-left: 3em;">Password:</th>
+                    <td><input type="password" autocomplete="off" name="externalPass" style="width: 25%;" value="${kwargs['externalPass']}" /></td>
                 </tr>
                 <tr>
-                    <th>Entitlement:</th>
+                    <td><input id="authTypeEnt" type="radio" class="check" name="authType" value="entitlement" py:attrs="{'checked': (kwargs['authType'] == 'entitlement') and 'checked' or None}" /><label for="authTypeEnt">Use an entitlement</label>
+                    </td>
+                </tr>
+                <tr>
+                    <th style="padding-left: 3em;">Entitlement Class:</th>
                     <td>
-                        <p class="help">
-                            If you have a mirroring entitlement instead of a username and
-                            password, please paste it here:
-                        </p>
-                        <textarea rows="5" cols="50" name="externalEnt" />
+                        <input type="text" autocompelete="off" name="externalEntClass" value="${kwargs['externalEntClass']}" />
+                    </td>
+                </tr>
+                <tr>
+                    <th style="padding-left: 3em;">Entitlement Key:</th>
+                    <td>
+                        <textarea rows="5" cols="50" name="externalEntKey"  py:content="kwargs['externalEntKey']" />
                     </td>
                 </tr>
             </table>
@@ -127,15 +133,15 @@
             <h2>Mirror Settings</h2>
             <p><b>
                 <input onclick="javascript:toggle_element_by_checkbox('mirrorSettings', 'useMirror');"
-                       type="checkbox" class="check" name="useMirror" value="1" id="useMirror" />
+                    type="checkbox" class="check" name="useMirror" value="1" id="useMirror" py:attrs="{'checked': kwargs['useMirror'] and 'checked' or None}" />
                 <label for="useMirror">Mirror this repository locally</label>
             </b></p>
             <table class="mainformhorizontal" id="mirrorSettings">
                 <tr>
                     <th>Preload this mirror:</th>
                     <td>
-                        <input type="checkbox" class="check" name="primeMirror" id="primeMirror" value="1" />
-                        <label for="primeMirror">Preload this mirror with a set of CDs or DVDs.</label>
+                        <input type="checkbox" class="check" name="primeMirror" id="primeMirror" value="1" py:attrs="{'checked': kwargs['primeMirror'] and 'checked' or None}" />
+                        <label for="primeMirror">Preload this mirror with a set of CDs or DVDs</label>
                     </td>
                 </tr>
             </table>

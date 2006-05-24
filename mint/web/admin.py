@@ -16,7 +16,7 @@ from mint import maintenance
 from mint.web.webhandler import normPath, WebHandler, HttpNotFound, HttpForbidden
 from mint.mirrorprime import TarHandler
 
-from conary import versions
+from conary import conarycfg, versions
 from conary.web.fields import strFields, intFields, listFields, boolFields
 
 class AdminHandler(WebHandler):
@@ -116,60 +116,117 @@ class AdminHandler(WebHandler):
         self.req.content_type = "application/x-pdf"
         return pdfData
 
-    @strFields(name = None, hostname = None, label = None, url = '',\
-        externalUser = '', externalPass = '', externalEnt = '')
+    @strFields(name = '', hostname = '', label = '', url = '',\
+        externalUser = '', externalPass = '', externalEntKey = '',\
+        externalEntClass = '', authType = 'username')
     @boolFields(useMirror = False, primeMirror = False, externalAuth = False)
     def processExternal(self, name, hostname, label, url,
-                        externalUser, externalPass, externalEnt,
-                        useMirror, primeMirror, externalAuth, *args, **kwargs):
-        projectId = self.client.newExternalProject(name, hostname,
-            self.cfg.projectDomainName, label, url, useMirror)
-        project = self.client.getProject(projectId)
+                        externalUser, externalPass,
+                        externalEntClass, externalEntKey,
+                        useMirror, primeMirror, externalAuth, authType,
+                        *args, **kwargs):
 
-        extLabel = versions.Label(label)
-        labelIdMap, _, _ = self.client.getLabelsForProject(projectId)
-        label, labelId = labelIdMap.items()[0]
-
-        if not url and not externalAuth:
-            url = "http://%s/conary/" % extLabel.getHost()
-        elif not url and externalAuth:
-            url = "https://%s/conary/" % extLabel.getHost()
-
-        # set up the authentication
-        if externalAuth:
-            project.editLabel(labelId, label, url, externalUser, externalPass)
-        if externalAuth and externalEnt:
-            entF = file(os.path.join(self.cfg.dataPath, "entitlements", extLabel.getHost()), "w")
-            entF.write(externalEnt)
-            entF.close()
-
-        # set up the mirror, if requested
-        if useMirror:
-            localUrl = "http://%s%srepos/%s/" % (self.cfg.projectSiteHost, self.cfg.basePath, hostname)
-
-            # set the internal label to our authUser and authPass
-            project.editLabel(labelId, label, localUrl, self.cfg.authUser, self.cfg.authPass)
-            self.client.addInboundLabel(projectId, labelId, url, externalUser, externalPass)
-            self.client.addRemappedRepository(hostname + "." + self.cfg.siteDomainName, extLabel.getHost())
-
-        if primeMirror:
-            startPrimeServer()
-            return self._write("admin/primeMirror", serverName = extLabel.getHost())
+        if not name:
+            self._addErrors("Missing project title")
+        if not hostname:
+            self._addErrors("Missing project name")
+        if not label:
+            self._addErrors("Missing project label")
         else:
-            self._redirect("http://%s%sproject/%s/" % \
-                (self.cfg.projectSiteHost,
-                 self.cfg.basePath, hostname))
+            try:
+                extLabel = versions.Label(label)
+            except versions.ParseError:
+                self._addErrors("Invalid label %s" % label)
+        if externalAuth:
+            if authType == 'userpass':
+                if not externalUser:
+                    self._addErrors("Missing username for local mirror authentication")
+                if not externalPass:
+                    self._addErrors("Missing password for local mirror authentication")
+            elif authType == 'entitlement':
+                if not externalEntKey:
+                    self._addErrors('Missing entitlement class for local mirror authentication')
+                if not externalEntClass:
+                    self._addErrors('Missing entitlement key for local mirror authentication')
 
+        if not self._getErrors():
+
+            projectId = self.client.newExternalProject(name, hostname,
+                self.cfg.projectDomainName, label, url, useMirror)
+            project = self.client.getProject(projectId)
+
+            labelIdMap, _, _ = self.client.getLabelsForProject(projectId)
+            label, labelId = labelIdMap.items()[0]
+
+            if not url and not externalAuth:
+                url = "http://%s/conary/" % extLabel.getHost()
+            elif not url and externalAuth:
+                url = "https://%s/conary/" % extLabel.getHost()
+
+            # set up the authentication
+            if externalAuth:
+                if authType == 'userpass':
+                    project.editLabel(labelId, label, url,
+                            externalUser, externalPass)
+                elif authType == 'entitlement':
+                    externalEnt = conarycfg.emitEntitlement(extLabel.getHost(), externalEntClass, externalEntKey)
+                    entF = file(os.path.join(self.cfg.dataPath, "entitlements", extLabel.getHost()), "w")
+                    entF.write(externalEnt)
+                    entF.close()
+                    project.editLabel(labelId, label, url,
+                            self.cfg.authUser, self.cfg.authPass)
+
+            # set up the mirror, if requested
+            if useMirror:
+                localUrl = "http://%s%srepos/%s/" % (self.cfg.projectSiteHost, self.cfg.basePath, hostname)
+
+                # set the internal label to our authUser and authPass
+                project.editLabel(labelId, label, localUrl, self.cfg.authUser, self.cfg.authPass)
+                self.client.addInboundLabel(projectId, labelId, url, externalUser, externalPass)
+                self.client.addRemappedRepository(hostname + "." + self.cfg.siteDomainName, extLabel.getHost())
+
+
+            if primeMirror:
+                startPrimeServer()
+                return self._write("admin/primeMirror", serverName = extLabel.getHost())
+            else:
+                self._setInfo("Added external project %s" % name)
+                self._redirect("http://%s%sproject/%s/" % \
+                    (self.cfg.projectSiteHost,
+                     self.cfg.basePath, hostname))
+        else:
+            kwargs = {'name': name, 'hostname': hostname, 'label': label,
+                'url': url, 'externalAuth': externalAuth,
+                'authType': authType, 'externalUser': externalUser,
+                'externalPass': externalPass,
+                'externalEntKey': externalEntKey,
+                'externalEntClass': externalEntClass,
+                'useMirror': useMirror, 'primeMirror': primeMirror}
+            return self.external(name = name, hostname = hostname,
+                    label = label, url = url, externalAuth = externalAuth,
+                    externalUser = externalUser, externalPass = externalPass,
+                    externalEntKey = externalEntKey,
+                    externalEntClass = externalEntClass,
+                    useMirror = useMirror, primeMirror = primeMirror,
+                    authType = authType)
+
+    @strFields(authType = 'userpass')
     def external(self, *args, **kwargs):
         from mint import database
+        kwargs.setdefault('authtype', 'userpass')
         try:
             self.client.getProjectByHostname('rpath')
         except database.ItemNotFound:
             firstTime = True
+            kwargs.setdefault('name', 'rPath Linux')
+            kwargs.setdefault('hostname', 'rpath')
+            kwargs.setdefault('url', 'http://conary.rpath.com/conary/')
+            kwargs.setdefault('label', 'conary.rpath.com@rpl:1')
         else:
             firstTime = False
-        return self._write('admin/external', kwargs = kwargs,
-                           firstTime = firstTime)
+
+        return self._write('admin/external', firstTime = firstTime,
+                kwargs = kwargs)
 
     def jobs(self, *args, **kwargs):
         try:
