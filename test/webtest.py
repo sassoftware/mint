@@ -1159,8 +1159,9 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                               'label' : 'conary.rpath.com@rpl:devel',
                               'url' : '',
                               'useMirror': '1',
-                              'mirrorUser': 'mirror',
-                              'mirrorPass': 'mirrorpass',
+                              'externalAuth': '1',
+                              'externalUser': 'mirror',
+                              'externalPass': 'mirrorpass',
                               'operation' : 'process_external'})
 
         # ensure "first time" content does not appear on page
@@ -1168,10 +1169,35 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                                      'name="hostname" value="rpath"')
 
         # and make sure that the appropriate database entries are created
-        assert(client.getInboundLabels() == [[1, 1, '', 'mirror', 'mirrorpass']])
+        assert(client.getInboundLabels() == [[1, 1, 'https://conary.rpath.com/conary/', 'mirror', 'mirrorpass']])
 
         # and make sure that the 'shell' repository was created
         assert(os.path.exists(os.path.join(self.reposDir, 'repos', 'conary.rpath.com')))
+
+    def testCreateExternalProjectNoAuth(self):
+        client, userId = self.quickMintAdmin('adminuser', 'adminpass')
+
+        self.webLogin('adminuser', 'adminpass')
+
+        # ensure "first time" content appears on page
+        page = self.assertContent("/admin/external",
+                                  'name="hostname" value="rpath"')
+
+        page = page.postForm(1, self.post,
+                             {'hostname' : 'rpath',
+                              'name' : 'rPath Linux',
+                              'label' : 'conary.rpath.com@rpl:devel',
+                              'url' : '',
+                              'operation' : 'process_external'})
+
+        # ensure "first time" content does not appear on page
+        page = self.assertNotContent("/admin/external",
+                                     'name="hostname" value="rpath"')
+
+        # and make sure that the appropriate database entries are created
+        assert(client.getLabelsForProject(1) == ({'conary.rpath.com@rpl:devel': 1},
+                                                 {'conary.rpath.com': 'http://conary.rpath.com/conary/'},
+                                                 {'conary.rpath.com': ('anonymous', 'anonymous')}))
 
     def testCreateOutboundMirror(self):
         client, userId = self.quickMintAdmin('adminuser', 'adminpass')
