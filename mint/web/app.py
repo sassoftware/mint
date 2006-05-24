@@ -255,7 +255,7 @@ class MintApp(WebHandler):
             'output':           self.output
         }
 
-        if self.auth.stagnant and ''.join(pathInfo.split('/')) not in ['editUserSettings','confirm','logout','continueLogout']:
+        if self.auth.stagnant and ''.join(pathInfo.split('/')) not in ['editUserSettings','confirm','logout', 'continueLogout', 'validateSession']:
             context['cmd'] = 'confirmEmail'
             return self.siteHandler.handle(context)
 
