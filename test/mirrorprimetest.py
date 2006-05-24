@@ -81,6 +81,7 @@ class MirrorPrimeTest(unittest.TestCase):
         f = file(self.sourcePath + "/MIRROR-INFO", "w")
         print >> f, serverName
         print >> f, "%d/%d" % (curDisc, count)
+        print >> f, "123"
         f.close()
 
     def writeMirrorFiles(self, dest, count = 2, sums = True):
@@ -101,6 +102,7 @@ class MirrorPrimeTest(unittest.TestCase):
         assert(r[1]['serverName'] == 'test.rpath.local')
         assert(r[1]['count'] == 2)
         assert(r[1]['curDisc'] == 1)
+        assert(r[1]['numFiles'] == 123)
 
     def testCopy(self):
         self.writeMirrorInfo()
