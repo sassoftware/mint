@@ -11,8 +11,7 @@ kid_files =			\
         privacy.kid             \
         tos.kid                 \
 	user-tutorial.kid	\
-	legal.kid		\
-	lm-project-naming.kid
+	legal.kid
 
 python_files =
 

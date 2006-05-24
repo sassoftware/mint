@@ -44,7 +44,7 @@
                                 </tr>
                             </table>
                             <p class="help">The two fields above, when combined, will form the hostname portion of your project repository's label.  In the first field, enter a string that reflects your project's identity (for example, <tt>custlinux</tt>).  It must start with a letter and contain only letters and numbers, and be less than or equal to 16 characters long.</p>
-                            <p class="help">The second field has been prepopulated with the domain used to access ${cfg.productName}. Although your project's repository will be accessible using this default value, there are circumstances where a different setting may be desirable. <a class="learnmore" href="${cfg.basePath}/help?page=lm-project-naming" onclick="javascript:window.open(this.href,'rbohelp','width=400,height=400,scrollbars,resizable');return false;">Learn more</a></p>
+                            <p class="help">The second field has been prepopulated with the domain used to access ${cfg.productName}. Although your project's repository will be accessible using this default value, there are circumstances where a different setting may be desirable. <a class="learnmore" href="http://${SITE}help?page=lm-project-naming" onclick="javascript:window.open(this.href,'rbohelp','width=400,height=400,scrollbars,resizable');return false;">Learn more</a></p>
                         </td>
                     </tr>
 
