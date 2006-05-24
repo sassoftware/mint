@@ -68,7 +68,7 @@ mkdir -p $ROOT/srv/rbuilder/finished-images/
 cp /etc/fstab /etc/fstab.backup
 COMMENT=\#JSROOT$upstreamVer
 echo "Modifying /etc/fstab -- saving backup to /etc/fstab.backup"
-for x in '/proc' '/dev/pts' '/srv/rbuilder/finished-images' '/srv/rbuilder/changesets'; do   
+for x in '/proc' '/dev/pts' '/srv/rbuilder/finished-images' '/srv/rbuilder/changesets' '/srv/rbuilder/entitlements'; do
     echo -e "$x\\t$ROOT$x\\tnone\\tbind\\t0\\t0 $COMMENT" >> /etc/fstab
 done
 
