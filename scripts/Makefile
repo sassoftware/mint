@@ -27,6 +27,7 @@ extra_dist = \
 	live_iso.conf		\
 	buildtemplates		\
 	raw2vmdk.c		\
+        rootstat_wrapper.c	\
 	job-server.init.in	\
 	multi-jobserver.init.in
 
