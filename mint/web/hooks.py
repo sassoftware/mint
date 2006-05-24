@@ -86,8 +86,9 @@ def post(port, isSecure, repos, cfg, req):
         wrapper = repos.callWrapper
         authToken = (authToken[0], authToken[1], None, None)
         params = [protocol, port, method, authToken, params]
+        kwargs = {'remoteIp': req.connection.remote_ip}
         try:
-            result = wrapper(*params)
+            result = wrapper(*params, **kwargs)
         except (errors.InsufficientPermission):
             sys.stderr.flush()
             return apache.HTTP_FORBIDDEN
