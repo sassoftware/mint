@@ -133,7 +133,7 @@
             </ul>
 
             <p>To join an existing project, use the browse or search boxes
-            in the left sidebar to find a project that interests you.
+            in header to find a project that interests you.
             Then, click on the project name, and click on the "Request to join"
             link to submit your request to the project's owners.</p>
             <div id="userSettings"><a href="http://${SITE}userSettings"><strong>Edit my account</strong></a></div>
