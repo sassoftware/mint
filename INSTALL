@@ -10,7 +10,9 @@ Prerequisites
 connectivity in place, namely:
 
     o A network-connected dedicated x86 server with local storage at
-      least 40GB in size, a CD-ROM drive, configured to boot from CD-ROM
+      least 40GB in size, a CD-ROM drive (or a DVD-ROM drive, if you intend
+      to locally mirror rPath Linux 1 and prime it from DVDs).  The server
+      must be configured to boot from the CD-ROM/DVD-ROM.
 
       NOTE: rBuilder is packaged as a software appliance.  As such, it is
       configured to run on dedicated hardware, including all disk storage.
