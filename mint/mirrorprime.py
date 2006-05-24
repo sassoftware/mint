@@ -20,7 +20,7 @@ copyThread = None
 
 sourcePath = "/mnt/"
 tmpPath = "/tmp/"
-needsMount = True 
+needsMount = False
 
 class JsonRPCHandler(BaseHTTPServer.BaseHTTPRequestHandler, object):
     def do_GET(self):
@@ -158,7 +158,7 @@ class TarThread(CopyThread):
         # o Chown the files to apache.apache
         # o Add mintauth and anonymous users
         #
-        os.system("chown -R apache.apache /srv/rbuilder/repos/%s/*" % serverName)
+        os.system("chown -R apache.apache /srv/rbuilder/repos/%s/" % serverName)
         from mint import config
         cfg = config.MintConfig()
         cfg.read(config.RBUILDER_CONFIG)
@@ -254,12 +254,14 @@ class TarHandler(JsonRPCHandler):
             keyFile = open(os.path.join(self.sourcePath, "MIRROR-INFO"))
             serverName = keyFile.readline().strip()
             curDisc, count = keyFile.readline().strip().split("/")
+            numFiles = keyFile.readline()
 
             return {
                 "error": False,
                 "message": "Success",
                 "curDisc": int(curDisc),
                 "count": int(count),
+                "numFiles": int(numFiles),
                 "serverName": serverName
             }
         except IOError, e:
@@ -268,6 +270,7 @@ class TarHandler(JsonRPCHandler):
                 "message": "Error: " + str(e),
                 "curDisc": 0,
                 "count": 0,
+                "numFiles": 0,
                 "serverName": ""
             }
         if self.needsMount:

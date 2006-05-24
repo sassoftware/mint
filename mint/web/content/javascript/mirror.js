@@ -2,6 +2,7 @@ var BaseUrl = "/tarrpc";
 var curDisc = 0;
 var needsDisc = 1;
 var countDiscs = 0;
+var numFiles = 0;
 var serverName = "";
 
 // Normalize a web path by prepending a / if missing, and appending
@@ -21,7 +22,8 @@ function normPath(path) {
 
 function readTarStatus(aReq) {
     r = evalJSONRequest(aReq);
-    replaceChildNodes($('statusMessage'), "Untarred " + r.bytesRead + " files");
+    percent = ((r.bytesRead / numFiles) * 100).toFixed(0);
+    replaceChildNodes($('statusMessage'), "Extracting: " + percent + "%");
 
     if(!r.done && !r.error) {
         setTimeout("getTarStatus()", 250);
@@ -130,6 +132,7 @@ function getDiscInfoCallback(aReq) {
             replaceChildNodes($("statusMessage"), "Mirror for " + r.serverName + ", disc " + r.curDisc + " of " + r.count + ".");
             curDisc = r.curDisc;
             countDiscs = r.count;
+            numFiles = r.numFiles;
             startCopy();
         }
     }
