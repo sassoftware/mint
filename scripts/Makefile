@@ -73,7 +73,7 @@ raw2vmdk: raw2vmdk.c
 	$(CC) $(CFLAGS) -lm -o raw2vmdk raw2vmdk.c
 
 rootstat_wrapper.o: rootstat_wrapper.c
-	$(CC) $(CFLAGS) -fPIC -rdynamic -c rootstat_wrapper.c
+	$(CC) -Wall -O2 -s -fPIC -rdynamic -c rootstat_wrapper.c
 
 rootstat_wrapper.so: rootstat_wrapper.o
 	$(CC) -s -shared -rdynamic -o rootstat_wrapper.so rootstat_wrapper.o -lc -ldl
