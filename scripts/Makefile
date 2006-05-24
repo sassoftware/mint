@@ -32,7 +32,7 @@ extra_dist = \
 
 SUBDIRS = data DiskImageData
 
-CFLAGS=-Wall -g -O2 -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64
+CFLAGS=-Wall -s -O2 -D_GNU_SOURCE -D_FILE_OFFSET_BITS=64
 LDFLAGS=
 CC=gcc
 
@@ -40,7 +40,7 @@ dist_files = $(script_dist) $(extra_dist)
 
 all: default-all bin
 
-bin: raw2vmdk
+bin: raw2vmdk rootstat_wrapper.so
 
 install: install-subdirs
 	mkdir -p $(DESTDIR)/$(datadir)/rbuilder/scripts/
@@ -61,7 +61,8 @@ install: install-subdirs
 
 	mkdir -p $(DESTDIR)/$(bindir)/
 	install -m 755 raw2vmdk	$(DESTDIR)/$(bindir)/
-
+	mkdir -p $(DESTDIR)/$(libdir)/rbuilder/
+	install -m 755 rootstat_wrapper.so $(DESTDIR)/$(libdir)/rbuilder/
 
 dist: default-dist
 
@@ -70,6 +71,12 @@ clean: default-clean
 
 raw2vmdk: raw2vmdk.c
 	$(CC) $(CFLAGS) -lm -o raw2vmdk raw2vmdk.c
+
+rootstat_wrapper.o: rootstat_wrapper.c
+	$(CC) $(CFLAGS) -fPIC -rdynamic -c rootstat_wrapper.c
+
+rootstat_wrapper.so: rootstat_wrapper.o
+	$(CC) -s -shared -rdynamic -o rootstat_wrapper.so rootstat_wrapper.o -lc -ldl
 
 include ../Make.rules
 # vim: set sts=8 sw=8 noexpandtab :
