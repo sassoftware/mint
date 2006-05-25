@@ -4,6 +4,7 @@ var needsDisc = 1;
 var countDiscs = 0;
 var numFiles = 0;
 var serverName = "";
+var statusTimeout = 1000;
 
 // Normalize a web path by prepending a / if missing, and appending
 // a / if missing
@@ -26,7 +27,7 @@ function readTarStatus(aReq) {
     replaceChildNodes($('statusMessage'), "Extracting: " + percent + "%");
 
     if(!r.done && !r.error) {
-        setTimeout("getTarStatus()", 250);
+        setTimeout("getTarStatus()", statusTimeout);
     } else if(r.error) {
         replaceChildNodes($('statusMessage'), r.errorMessage);
     } else {
@@ -57,7 +58,7 @@ function readConcatStatus(aReq) {
     replaceChildNodes($('statusMessage'), "Concatenating: " + percent + "%");
 
     if(!r.done) {
-        setTimeout("getConcatStatus()", 250);
+        setTimeout("getConcatStatus()", statusTimeout);
     } else {
         startUntar();
     }
@@ -86,7 +87,7 @@ function readStatusCallback(aReq) {
     }
 
     if(!r.done) {
-        setTimeout("getCopyStatus()", 250);
+        setTimeout("getCopyStatus()", statusTimeout);
     } else if(r.checksumError) {
         replaceChildNodes($('statusMessage'), "Checksum error reading disc " + curDisc + ". Please contact your vendor for replacement.");
         setElementClass($('statusMessage'), 'error');
