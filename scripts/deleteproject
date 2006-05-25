@@ -87,6 +87,9 @@ def deleteProject(projectName):
         # now delete all group trove items for that group trove
         cu.execute("DELETE FROM GroupTroveItems WHERE groupTroveId=?",
                    groupTroveId)
+        cu.execute("""DELETE FROM GroupTroveRemovedComponents
+                          WHERE groupTroveId=?""",
+                   groupTroveId)
     status("Deleting Group Trove Items")
     # then delete all group troves for this project
     cu.execute("DELETE FROM GroupTroves WHERE projectId=?", projectId)
@@ -117,6 +120,11 @@ def deleteProject(projectName):
     status("Deleting Labels")
     # delete from all other tables that refer to projectId directly
     cu.execute("DELETE FROM Labels WHERE projectId=?", projectId)
+    cu.execute("DELETE FROM InboundLabels WHERE projectId=?", projectId)
+    cu.execute("DELETE FROM OutboundLabels WHERE projectId=?", projectId)
+    cu.execute("DELETE FROM OutboundExcludedTroves WHERE projectId=?",
+               projectId)
+
     status("Deleting Membership requests")
     cu.execute("DELETE FROM MembershipRequests WHERE projectId=?",
                projectId)
