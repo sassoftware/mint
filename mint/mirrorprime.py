@@ -192,7 +192,7 @@ class CopyFromDiscThread(CopyThread):
                 origSha1 = file(os.path.join(self.sourcePath, f) + ".sha1")
                 data = origSha1.read()
                 origSha1.close()
-                origSum = data.split(" ")[0]
+                origSum = data.split()[0]
 
                 newSum = sha1helper.sha1ToString(sha1helper.sha1FileBin(os.path.join(self.tmpPath, f)))
                 if origSum != newSum:
