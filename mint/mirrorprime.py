@@ -83,7 +83,10 @@ class CopyThread(threading.Thread):
         self.lastTotal = 0
 
     def copyCallback(self, total, rate):
-        bytes = total - self.lastTotal
+        if total - self.lastTotal > 0:
+            bytes = total - self.lastTotal
+        else:
+            bytes = 0
         self.status['bytesRead'] += bytes
         self.lastTotal = total
 
