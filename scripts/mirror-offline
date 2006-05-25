@@ -174,7 +174,7 @@ class MirrorOffline(SingletonScript):
             # bundle the results
             util.execute('tar -C %s -cpPsv -O ./ | split -a 3 -d -b %d - %s' %\
                          (baseDir, isoSize,
-                          os.path.join(outputDir, "mirror-" + targCfg.serverName + '.tgz')))
+                          os.path.join(outputDir, "mirror-" + targCfg.serverName + '.tar')))
 
             # break DVD's into multi-part files. to comply with ISO-9660/UDF
             # filesystem constraints
@@ -205,7 +205,7 @@ class MirrorOffline(SingletonScript):
                     files += " " + os.path.join(outputDir, "MIRROR-INFO")
                     util.execute("mkisofs -o %s -r -U %s" % \
                                  (os.path.join( \
-                        outputDir, fn.replace('.tgz', '') + '.iso'), files))
+                        outputDir, fn.replace('.tar', '') + '.iso'), files))
             else:
                 numDiscs = len(os.listdir(outputDir))
                 for curDisc, fn in [(x[0] + 1, x[1]) for x in \
@@ -220,7 +220,7 @@ class MirrorOffline(SingletonScript):
                     files = [fn, fn + ".sha1", "MIRROR-INFO"]
                     util.execute("mkisofs -o %s -r -U %s" % \
                                  (os.path.join( \
-                        outputDir, fn.replace('.tgz', '') + '.iso'),
+                        outputDir, fn.replace('.tar', '') + '.iso'),
                                   " ".join(os.path.join(outputDir, x) for x in files)))
             for isoFile in [f for f in os.listdir(outputDir) if f.endswith('.iso')]:
                 os.rename(os.path.join(outputDir, isoFile),

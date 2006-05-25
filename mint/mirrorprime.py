@@ -104,16 +104,16 @@ class ConcatThread(CopyThread):
     def run(self):
         files = [x for x in os.listdir(self.tmpPath)
             if x.startswith("mirror-")
-                and "tgz" in x
-                and not x.endswith('tgz')
+                and "tar" in x
+                and not x.endswith('tar')
                 and not x.endswith('.sha1')
         ]
         bytesTotal = sum(os.stat(os.path.join(self.tmpPath, x))[stat.ST_SIZE] for x in files)
         self.status['bytesTotal'] = bytesTotal
         print "concatting: ", files, bytesTotal
 
-        baseName = files[0].split(".tgz")[0]
-        output = file(os.path.join(self.tmpPath, baseName + ".tgz"), "w")
+        baseName = files[0].split(".tar")[0]
+        output = file(os.path.join(self.tmpPath, baseName + ".tar"), "w")
         for f in sorted(files):
             input = file(os.path.join(self.tmpPath, f))
             util.copyfileobj(input, output, self.copyCallback)
@@ -143,7 +143,7 @@ def setupUsers(cfg, serverName, dbPath):
 class TarThread(CopyThread):
     def run(self):
         file = [x for x in os.listdir(self.tmpPath)
-            if x.startswith("mirror-") and x.endswith(".tgz")][0]
+            if x.startswith("mirror-") and x.endswith(".tar")][0]
 
         serverName = file[7:-4]
         cmd = ["tar", "xvf", os.path.join(self.tmpPath, file), "-C", "/srv/rbuilder/repos/%s" % serverName]
