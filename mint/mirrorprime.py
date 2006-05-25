@@ -19,8 +19,13 @@ tarThread = None
 copyThread = None
 
 sourcePath = "/mnt/"
-tmpPath = "/tmp/"
 needsMount = False
+
+# derive tmp path via config file
+from mint import config
+mc = config.MintConfig()
+mc.read(config.RBUILDER_CONFIG)
+tmpPath = os.path.join(mc.dataPath, 'tmp', '')
 
 class JsonRPCHandler(BaseHTTPServer.BaseHTTPRequestHandler, object):
     def do_GET(self):
