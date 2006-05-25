@@ -7,15 +7,12 @@
 script_dist =			\
 	buildtemplates		\
 	create-release		\
-	cvtmysql.py		\
-	deleteproject.py	\
+	deleteproject		\
 	install-jsroot		\
 	job-server		\
 	mirror-inbound		\
 	mirror-outbound		\
 	mirror-prime-server	\
-	mklivecd		\
-	reset			\
 	update-package-index	\
 	update-package-index-external
 
