@@ -42,13 +42,24 @@ Installation Procedure
 2. Follow the on-screen instructions during the installation.
 
     NOTE: During installation, you can choose to automatically or manually
-    partition the system.  If you automatically partition the system, ***
-    FIXME -- Describe how the system is partitioned ***; if you manually
-    partition the system, make sure you have sufficient storage allocated
-    to /srv/, as the rBuilder Appliance stores all its data there.
+    partition the system.  In most cases, you should choose the default
+    (which is to automatically partition) -- you will be given the
+    opportunity to review and, if necessary, modify the the default
+    partitions.
+
+    NOTE: ALL PRE-EXISTING DATA ON THIS SYSTEM WILL BE DELETED!
+
+    NOTE: The rBuilder Appliance stores all its data under /srv; a
+    dedicated filesystem with sufficient storage must be allocated for this
+    purpose.  Note that the default partitioning settings do this for you.
 
 3. When the installation finishes, reboot (making sure to configure the
    system to boot from its primary disk drive).
+
+First-Web Configuration  *** FIXME -- yucky name ***
+--------- -------------
+
+*** FIXME -- Pick up  from here ***
 
 4. When the server has finished booting, use a Web browser to access the
    server.  Use a URL in the form "http://rbuilder.example.com/", replacing
