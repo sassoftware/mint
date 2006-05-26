@@ -159,7 +159,7 @@
             </div>
             <div id="newProject" py:if="auth.admin or not cfg.adminNewProjects"><a href="http://${SITE}newProject"><strong>Create a new project</strong></a></div>
             <div id="userSettings"><a href="http://${SITE}userSettings"><strong>Edit my account</strong></a></div>
-            <div id="administer" py:if="auth.admin"><a href="http://${SITE}admin/"><strong>Site Administration</strong></a></div>
+            <div id="administer" py:if="auth.admin"><a href="http://${SITE}admin/"><strong>Site administration</strong></a></div>
         </div>
     </div>
 </html>
