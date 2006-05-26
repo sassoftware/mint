@@ -146,7 +146,7 @@ class InstallableIso(ImageGenerator):
         cfg = self.project.getConaryConfig()
         cfg.root = tmpRoot
         cfg.dbPath = tmpRoot + "/var/lib/conarydb"
-        cfg.installLabelPath = [self.troveVersion.branch().label()]
+        cfg.installLabelPath = [self.troveVersion.branch().label(), versions.Label('templates.devel.org.rpath@rpl:devel')]
         cfg.buildFlavor = deps.deps.parseFlavor(stockFlavors[arch])
         cfg.flavor = [cfg.buildFlavor]
         cfg.initializeFlavors()
@@ -396,8 +396,10 @@ class InstallableIso(ImageGenerator):
         tmpDir = tempfile.mkdtemp()
         try:
             cclient = self.getConaryClient(tmpDir,
-                                           '1#' + self.release.getArch())
-            uJob = self._getUpdateJob(cclient, 'anaconda-template')
+                '1#' + self.release.getArch())
+            uJob = self._getUpdateJob(cclient, 'anaconda-templates')
+            import epdb
+            epdb.st()
             assert uJob, "No anaconda template could be found."
             self._storeUpdateJob(uJob)
             troveSpec = self._getTroveSpec(uJob)
@@ -414,10 +416,10 @@ class InstallableIso(ImageGenerator):
 
     def prepareTemplates(self, topdir):
         # hardlink template files to topdir
-        templateDir = os.path.join(self.isocfg.templatePath, self.release.getArch())
+        # templateDir = os.path.join(self.isocfg.templatePath, self.release.getArch())
 
         # XXX enable the dynamic templates here
-        # templateDir = self._getTemplatePath()
+        templateDir = self._getTemplatePath()
 
         if not os.path.exists(os.path.join(templateDir, 'PRODUCTNAME')):
             raise AnacondaTemplateMissing(self.release.getArch())
