@@ -45,17 +45,16 @@ from mint.helperfuncs import truncateForDisplay
             </div>
             <div id="middle">
                 <h1>${project.getNameForDisplay(maxWordLen = 25)} <span id="editProject" py:if="isOwner"><a href="${basePath}editProject">edit project</a></span></h1>
-                <h2 py:if="project.getProjectUrl()">Project Home Page &#160;</h2>
                 <div py:if="auth.admin" py:strip="True">
 
-                    <h3>Project Status</h3>
+                    <h2>Project Status</h2>
 
                     <p>Project was created ${timeDelta(project.timeCreated, capitalized=False)}.</p>
                     <p py:if="project.hidden">This project is hidden.</p>
                     <p py:if="project.external">This project is externally managed.</p>
                     <p py:if="not (commits or project.external)">This project is considered to be a fledgling (i.e. no software has been committed to its repository).</p>
 
-                    <h3>Administrative Options</h3>
+                    <h2>Administrative Options</h2>
 
                     <p py:if="project.external">This project is externally managed and cannot be administered from this interface.</p>
                     <form py:if="not project.external" action="${basePath}processProjectAction" method="post">
@@ -82,15 +81,18 @@ from mint.helperfuncs import truncateForDisplay
                     considered fledgling, and will appear on "Browse Projects" pages.
                 </p>
 
-                <p py:if="project.getProjectUrl()"><a href="${project.getProjectUrl()}" py:content="truncateForDisplay(project.getProjectUrl(), maxWordLen=60)" />
-                </p>
-                <h3>Description</h3>
+                <div py:if="project.getProjectUrl()" py:strip="True">
+                <h2 py:if="project.getProjectUrl()">Project Home Page &#160;</h2>
+                <p><a href="${project.getProjectUrl()}" py:content="truncateForDisplay(project.getProjectUrl(), maxWordLen=60)" /></p>
+                </div>
+
+                <h2>Description</h2>
                 <p py:for="line in project.getDesc().splitlines()">
 		    ${truncateForDisplay(line, 10000000, 70)}
                 </p>
                 <p py:if="not project.getDesc()">The project owner has not entered a description.</p>
                 <hr />
-                <h3>What can I do with this project?</h3>
+                <h2>What can I do with this project?</h2>
 
                 <p>This is ${isOwner and "your" or "the"} project's home page.
                         <span py:strip="True" py:if="isOwner">Here, you can communicate
