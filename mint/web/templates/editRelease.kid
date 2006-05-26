@@ -100,7 +100,7 @@ from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM
                     <div class="formgroupTitle">Image Types</div>
                     <div class="formgroup">
                         <div py:strip="True" py:for="key in self.cfg.visibleImageTypes">
-                            <input class="reversed" id="imagetype_${key}" name="imagetype" value="${key}" onchange="javascript:onImageChange('formgroup_${key}');" type="radio" py:attrs="{'checked': key in imageTypes and 'checked' or None}" />
+                            <input class="reversed" id="imagetype_${key}" name="imagetype" value="${key}" onclick="javascript:onImageChange('formgroup_${key}');" type="radio" py:attrs="{'checked': key in imageTypes and 'checked' or None}" />
                             <label class="reversed" for="imagetype_${key}">${typeNames[key]}</label><div class="clearleft">&nbsp;</div>
                         </div>
                     </div>
