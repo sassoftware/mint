@@ -541,9 +541,9 @@ div#projectsPane div.boxHeader span {
     float: left;
 }
 
-div#projectsPane div.boxHeader span + a {
+div#projectsPane a.signout {
     float: right;
-    font-size: 75%;
+    font-size: small;
     color: white;
 }
 
@@ -557,6 +557,16 @@ div#projectsPane div#userSettings {
 div#projectsPane div#administer {
     text-align: center;
 }
+
+div#projectsPane h4 {
+    padding-bottom: 0;
+    margin-bottom: 0;
+}
+
+div#projectsPane ul {
+    margin-top: 0.5em;
+}
+
 /* Group Builder */
 
 div#groupBuilder {
