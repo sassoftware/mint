@@ -138,7 +138,8 @@ First-Web Configuration  *** FIXME -- yucky name ***
     part of the repository represented by the contents of the "Project
     Label" field) being created on your rBuilder Appliance.  Doing this
     requires a significant commitment of disk space; currently, this takes
-    *** FIXME -- get size estimate ***.
+    12GB (plus another 12GB temporarily during the priming operation, if
+    you choose to prime the mirror from DVDs).
 
     If you decide to locally mirror the rPath Linux repository, you have
     the option of starting the "preloading" the mirror from rPath-supplied
