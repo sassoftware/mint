@@ -94,7 +94,7 @@ class MintConfig(ConfigFile):
     reposDBPath             = os.path.join(os.path.sep, 'srv', 'rbuilder',
                                            'repos', '%s', 'sqldb')
     visibleImageTypes       = (cfgtypes.CfgList(CfgImageEnum))
-    maintenanceLockPath     = os.path.join(dataPath, 'maintenance.lock')
+    maintenanceLockPath     = os.path.join(dataPath, 'run', 'maintenance.lock')
     announceLink            = ''
 
     googleAnalyticsTracker  = (cfgtypes.CfgBool, False)
