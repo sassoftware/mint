@@ -21,7 +21,22 @@
 
             <p>
                 <button onclick="getDiscInfo('${serverName}');" id="goButton">Start Import</button>
-                <a style="display: none;" id="finishLink" href="/">Finish</a>
+            </p>
+
+            <p id="finishForm">
+                <?python
+                    kwargs = {'name': name, 'hostname': hostname, 'label': label,
+                        'url': url, 'externalAuth': int(externalAuth),
+                        'authType': authType, 'externalUser': externalUser,
+                        'externalPass': externalPass,
+                        'externalEntKey': externalEntKey,
+                        'externalEntClass': externalEntClass,
+                        'useMirror': int(useMirror), 'primeMirror': int(primeMirror)}
+                ?>
+                <form method="post" action="processExternal">
+                    <button type="submit" style="display: none;" id="finishLink">Finish</button>
+                    <input type="hidden" py:for="key, val in kwargs.items()" name="${key}" value="${val}" />
+                </form>
             </p>
 
         </div>

@@ -150,6 +150,16 @@ class AdminHandler(WebHandler):
                     self._addErrors('Missing entitlement key for local mirror authentication')
 
         if not self._getErrors():
+            if primeMirror and useMirror:
+                startPrimeServer()
+                # return the prime mirror page loaded with enough information to create the
+                # project once the priming was successful
+                serverName = extLabel.getHost()
+                return self._write("admin/primeMirror", name = name, hostname = hostname,
+                    label = label, url = url, externalUser = externalUser, serverName = serverName,
+                    externalPass = externalPass, externalEntKey = externalEntKey,
+                    externalEntClass = externalEntClass, authType = authType,
+                    useMirror = True, primeMirror = False, externalAuth = externalAuth)
 
             projectId = self.client.newExternalProject(name, hostname,
                 self.cfg.projectDomainName, label, url, useMirror)
@@ -185,15 +195,10 @@ class AdminHandler(WebHandler):
                 self.client.addInboundLabel(projectId, labelId, url, externalUser, externalPass)
                 self.client.addRemappedRepository(hostname + "." + self.cfg.siteDomainName, extLabel.getHost())
 
-
-            if primeMirror:
-                startPrimeServer()
-                return self._write("admin/primeMirror", serverName = extLabel.getHost())
-            else:
-                self._setInfo("Added external project %s" % name)
-                self._redirect("http://%s%sproject/%s/" % \
-                    (self.cfg.projectSiteHost,
-                     self.cfg.basePath, hostname))
+            self._setInfo("Added external project %s" % name)
+            self._redirect("http://%s%sproject/%s/" % \
+                (self.cfg.projectSiteHost,
+                 self.cfg.basePath, hostname))
         else:
             kwargs = {'name': name, 'hostname': hostname, 'label': label,
                 'url': url, 'externalAuth': externalAuth,
