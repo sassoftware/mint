@@ -368,28 +368,6 @@ Much like Powdermilk Biscuits[tm]."""
                     "The following methods are not explicitly allowed or deleted: %s. please update repos.py" %\
                     ' '.join(methods))
 
-    def testMirrorPrimeAuthFix(self):
-        from conary.server.schema import loadSchema
-        from conary import dbstore
-        from mint import mirrorprime, config
-        import tempfile
-
-        fd, fn = tempfile.mkstemp()
-        try:
-            db = dbstore.connect(fn)
-
-            loadSchema(db)
-            cfg = config.MintConfig()
-            cfg.authUser = 'mintauth'
-            cfg.authPass = 'mintpass'
-            mirrorprime.setupUsers(cfg, "testproject." + MINT_PROJECT_DOMAIN, ("sqlite", fn))
-
-            cu = db.cursor()
-            cu.execute("SELECT username FROM Users")
-            assert(set(x[0] for x in cu.fetchall()) == set(['mintauth', 'anonymous']))
-        finally:
-            os.unlink(fn)
-
 
 if __name__ == "__main__":
     testsuite.main()
