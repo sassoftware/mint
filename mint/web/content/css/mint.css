@@ -64,7 +64,7 @@ div#spanright {
     margin-left: 240px;
 }
 
-div.layout {
+div#layout {
     width: 955px;
     padding-left: 0px;
     padding-right: 0px;
@@ -72,12 +72,11 @@ div.layout {
     margin-top: 0;
 }
 
-div.layout #help {
+div#layout #help {
     width: 600px;
     margin-right: 25%;
     margin-left: 15%;
 }
-
 
 table {
     width: 100%;
@@ -295,7 +294,7 @@ div#noAccount {
 /* footer */
 
 div#footer {
-    background: #909090 url(../images/footer_bg.png);
+    background: white url(../images/footer_bg.png) no-repeat;
     color: white;
     text-align: left;
     width: 942px;
@@ -776,6 +775,7 @@ img#nameSpinner, img#archSpinner {
 }
 
 #mintVersionString {
+    margin-top: 2em;
     text-align: center;
     font-size: xx-small;
     color: #c0c0c0 !important;

@@ -96,8 +96,7 @@ onload = "javascript:;"
             <div py:if="errorMsgList" id="errors" class="status">The following ${(len(errorMsgList) == 1) and "error" or "errors"} occurred:
                 <p py:for="e in errorMsgList" py:content="e" />
             </div>
-            <div class="layout" py:replace="item[:]" />
-
+            <div id="layout" py:replace="item[:]" />
             <div id="footer">
                 <div>
                     <span id="topOfPage"><a href="#top">Top of Page</a></span>
@@ -111,8 +110,8 @@ onload = "javascript:;"
                     <span id="copyright">Copyright &copy; 2005-2006 rPath. All Rights Reserved.</span>
                     <span id="tagline">rPath. The Software Appliance Company.</span>
                 </div>
-                <p id="mintVersionString">${cfg.productName} version ${constants.mintVersion}</p>
             </div>
+            <p id="mintVersionString">${cfg.productName} version ${constants.mintVersion}</p>
         </div>
     </body>
 </html>
