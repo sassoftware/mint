@@ -10,7 +10,7 @@
         <title>${formatTitle('Project Settings: %s'%project.getNameForDisplay())}</title>
     </head>
     <body>
-        <div class="layout">
+        <div id="layout">
             <div id="right" class="side">
                 ${resourcePane()}
                 ${groupTroveBuilder()}

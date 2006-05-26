@@ -18,7 +18,7 @@ from mint.grouptrove import KNOWN_COMPONENTS
     </head>
 
     <body>
-        <div class="layout">
+        <div id="layout">
             <div id="left" class="side">
                 ${projectResourcesMenu()}
             </div>

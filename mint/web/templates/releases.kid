@@ -93,7 +93,7 @@ from mint.web.templatesupport import downloadTracker
     </div>
 
     <body>
-        <div class="layout">
+        <div id="layout">
             <div id="left" class="side">
                 ${projectResourcesMenu()}
                 ${releasesMenu(publishedReleases, isOwner)}

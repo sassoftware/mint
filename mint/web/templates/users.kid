@@ -40,7 +40,7 @@ from mint.client import timeDelta
             </form>
         </div>
 
-        <div class="layout">
+        <div id="layout">
             <h2>Browse Users</h2>
             ${sortOrderForm(sortOrder)}
             ${navigation("users?sortOrder=%d"%(sortOrder), "all users", count, limit, offset)}

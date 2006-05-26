@@ -18,7 +18,7 @@ from mint import userlevels
         <title>${formatTitle('Upload a Key')}</title>
     </head>
     <body>
-        <div class="layout">
+        <div id="layout">
             <h2>Upload a Package Signing Key</h2>
             <p>Fields labeled with a <em class="required">red arrow</em> are required.</p>
             <form method="post" action="processKey">

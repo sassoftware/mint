@@ -15,7 +15,7 @@
         <title>${formatTitle('Create a Group')}</title>
     </head>
     <body>
-        <div class="layout">
+        <div id="layout">
             <div id="left" class="side">
                 ${projectResourcesMenu()}
             </div>

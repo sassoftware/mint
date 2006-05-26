@@ -15,7 +15,7 @@ if 'traceback' not in locals():
         <title>${formatTitle('Error')}</title>
     </head>
     <body>
-        <div class="layout">
+        <div id="layout">
             <h2>Error:</h2>
             <p class="errormessage">${error}</p>
             <p>

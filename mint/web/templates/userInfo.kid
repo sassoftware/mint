@@ -25,7 +25,7 @@
     </head>
 
     <body>
-        <div class="layout">
+        <div id="layout">
             <div id="right" class="side">
                 ${resourcePane()}
 		${groupTroveBuilder()}

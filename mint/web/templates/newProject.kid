@@ -15,7 +15,7 @@
         <title>${formatTitle('Create a Project')}</title>
     </head>
     <body>
-        <div class="layout">
+        <div id="layout">
             <h2>Create a Project</h2>
             <p>Fields labeled with a <em class="required">red arrow</em> are required.</p>
             <form method="post" action="createProject" >

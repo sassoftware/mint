@@ -96,8 +96,7 @@ onload = "javascript:;"
             <div py:if="errorMsgList" id="errors" class="status">The following ${(len(errorMsgList) == 1) and "error" or "errors"} occurred:
                 <p py:for="e in errorMsgList" py:content="e" />
             </div>
-            <div class="layout" py:replace="item[:]" />
-
+            <div id="layout" py:replace="item[:]" />
             <div id="footer">
                 <div>
                     <span id="topOfPage"><a href="#top">Top of Page</a></span>

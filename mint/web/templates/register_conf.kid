@@ -16,7 +16,7 @@
     </div>
 
     <body>
-        <div class="layout">
+        <div id="layout">
             <div id="right" class="side">
                 ${stepsWidget(['Get Started', 'Sign Up', 'Confirm Email'], 2)}
             </div>

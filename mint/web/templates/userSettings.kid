@@ -10,7 +10,7 @@
         <title>${formatTitle('Edit Account Information: %s'%auth.fullName)}</title>
     </head>
     <body>
-        <div class="layout">
+        <div id="layout">
             <div id="right" class="side">
                 ${resourcePane()}
 		${groupTroveBuilder()}
