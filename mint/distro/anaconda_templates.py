@@ -29,6 +29,7 @@ class Image(object):
         else:
             mode = 0644
 
+        args[0] = os.path.join(self.tmpDir, args[0])
         args[1] = os.path.join(self.templateDir, args[1])
         output = args[1]
         util.mkdirChain(os.path.dirname(output))
@@ -40,8 +41,8 @@ class Image(object):
         cwd = os.getcwd()
         try:
             os.chdir(inputDir)
-            cpioCmd = ['cpio', '-o']
-            gzip = ['gzip']
+            cpioCmd = ['cpio', '-o', '-c']
+            gzip = ['gzip', '-9']
 
             outputFile = file(output, "w")
             files = subprocess.Popen(['find', '.', '-depth', '-print'],
@@ -84,5 +85,6 @@ class Image(object):
         cmds = ['mcopy', '-i', output] + files + ['::']
         call(*cmds)
 
-    def __init__(self, templateDir):
+    def __init__(self, templateDir, tmpDir):
         self.templateDir = templateDir
+        self.tmpDir = tmpDir
