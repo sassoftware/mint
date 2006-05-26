@@ -22,7 +22,7 @@ from mint.helperfuncs import truncateForDisplay
         <title>${formatTitle("Project Page: %s"%project.getNameForDisplay())}</title>
     </head>
     <body>
-        <div class="layout">
+        <div id="layout">
             <div id="left" class="side">
                 ${projectResourcesMenu()}
                 ${releasesMenu(releases, isOwner)}

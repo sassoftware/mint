@@ -40,7 +40,7 @@ from mint.web.templatesupport import downloadTracker
                 editOptionsDisabledStyle = "color: gray; font-style: italic;"
 
         ?>
-        <div class="layout">
+        <div id="layout">
             <div id="left" class="side">
                 ${projectResourcesMenu()}
                 ${releasesMenu(publishedReleases, isOwner)}

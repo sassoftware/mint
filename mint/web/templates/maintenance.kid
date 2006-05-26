@@ -17,7 +17,7 @@ defaultConfig = config.MintConfig()
         <title>${formatTitle('Maintenance')}</title>
     </head>
     <body>
-        <div class="layout">
+        <div id="layout">
             <div id="right" class="side">
                 ${resourcePane()}
             </div>

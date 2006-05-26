@@ -64,7 +64,7 @@
             ${resultRow(formattedresults, resultsetdesc)}
         </div>
 
-        <div class="layout">
+        <div id="layout">
             <div id="right" class="side">
                 ${resourcePane()}
                 ${groupTroveBuilder()}

@@ -36,7 +36,7 @@ from mint.client import timeDelta
             </form>
         </p>
 
-        <div class="layout">
+        <div id="layout">
             <div class="pad">
                 <h2>Browse Projects</h2>
                 ${sortOrderForm(sortOrder)}

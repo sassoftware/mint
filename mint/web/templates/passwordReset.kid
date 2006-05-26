@@ -11,7 +11,7 @@
         <title>${formatTitle('Password Reset')}</title>
     </head>
     <body>
-        <div class="layout">
+        <div id="layout">
             <h2>Your password has been reset.</h2>
             <p>An email with a new password has been sent to <strong>${email}</strong>.</p>
         </div>

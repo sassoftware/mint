@@ -10,7 +10,7 @@
         <title>${formatTitle('Email Confirmation Required')}</title>
     </head>
     <body>
-        <div class="layout">
+        <div id="layout">
             <h2>Email Confirmation Required:</h2>
             <p class="errormessage">You have been redirected to this page because you have not yet confirmed your email address</p>
 

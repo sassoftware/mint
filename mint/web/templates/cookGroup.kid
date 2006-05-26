@@ -11,7 +11,7 @@
     </head>
 
     <body onload="getCookStatus(${jobId});">
-        <div class="layout">
+        <div id="layout">
             <div id="left" class="side">
                 ${projectResourcesMenu()}
             </div>

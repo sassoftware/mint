@@ -51,6 +51,8 @@ div#middle {
     margin-left: 235px;
     margin-right: 235px;
     margin-bottom: 24px;
+    margin-top: 0;
+    padding-top: 0;
 }
 
 div#spanleft {
@@ -62,6 +64,21 @@ div#spanright {
     margin-left: 240px;
 }
 
+div.layout {
+    width: 955px;
+    padding-left: 0px;
+    padding-right: 0px;
+    padding-top: 0;
+    margin-top: 0;
+}
+
+div.layout #help {
+    width: 600px;
+    margin-right: 25%;
+    margin-left: 15%;
+}
+
+
 table {
     width: 100%;
 }
@@ -72,20 +89,6 @@ td, th {
 }
 th {
     white-space:nowrap;
-}
-
-div.layout {
-    width: 955px;
-    float: left;
-    padding-left: 0px;
-    padding-right: 0px;
-    margin-top: 0;
-}
-
-div.layout#help {
-    width: 600px;
-    margin-right: 25%;
-    margin-left: 15%;
 }
 
 /* serious errors */

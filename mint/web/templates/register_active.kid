@@ -11,7 +11,7 @@
         <title>${formatTitle('Account Confirmed')}</title>
     </head>
     <body>
-        <div class="layout">
+        <div id="layout">
             <div id="right" class="side">
                 ${stepsWidget(['Get Started', 'Sign Up', 'Confirm Email'], 3)}
             </div>

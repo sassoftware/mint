@@ -29,7 +29,7 @@ from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM
             jsonload = "javascript:handleReleaseTypes(\""+ arch +"\");"
     ?>
     <body py:attrs="{'onload': jsonload }">
-        <div class="layout">
+        <div id="layout">
             <div id="left" class="side">
                 ${projectResourcesMenu()}
             </div>
