@@ -414,6 +414,7 @@ class InstallableIso(ImageGenerator):
             templateDir = os.path.join(self.isocfg.templatePath, hash)
             templateDirTemp = templateDir + "-temp"
             if not os.path.exists(templateDir):
+                util.rmtree(templateDirTemp)
                 print >> sys.stderr, "template package not cached, creating"
                 util.mkdirChain(templateDirTemp)
                 self._makeTemplate(templateDirTemp, tmpDir, uJob, cclient)
