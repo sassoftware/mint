@@ -1,155 +1,220 @@
 rBuilder Appliance Installation Quick Start Guide
 
-    This document describes the steps necessary to install the rBuilder
+This document describes the steps necessary to install the rBuilder
 software appliance on the hardware you've provided.
 
 Prerequisites
 -------------
 
-    Before you begin, make sure you have the necessary hardware and network
+Before you begin, make sure you have the necessary hardware and network
 connectivity in place, namely:
 
-    o A network-connected dedicated x86 server with local storage at
-      least 40GB in size, a CD-ROM drive (or a DVD-ROM drive, if you intend
-      to locally mirror rPath Linux 1 and prime it from DVDs).  The server
-      must be configured to boot from the CD-ROM/DVD-ROM.
+    o A network-connected dedicated x86 server with at least 40GB of local
+      storage, a CD-ROM or DVD-ROM drive (You will need a DVD-ROM drive if
+      you intend to locally mirror rPath Linux 1 and preload the mirror
+      from DVDs).  The server must be configured to boot from the
+      CD-ROM/DVD-ROM.
 
       NOTE: rBuilder is packaged as a software appliance.  As such, it is
-      configured to run on dedicated hardware, including all disk storage.
-      DO NOT INSTALL ON HARDWARE CONTAINING DATA YOU WISH TO KEEP -- IT
-      WILL WIPE ALL LOCAL STORAGE!
-
-*** FIXME -- Should discuss wildcard DNS issues? ***
+      configured to run on dedicated hardware, including all
+      locally-attached disk storage.  DO NOT INSTALL ON HARDWARE CONTAINING
+      DATA YOU WISH TO KEEP -- THIS INSTALLATION WILL WIPE ALL LOCAL
+      STORAGE!
 
     o A network connection for the server with either a static or dynamic
       IP address accessible by an unchanging fully-qualified domain name
-      (for example, rbuilder.example.com)
+      (the FQDN we will use throughout this document is
+      rbuilder.example.com)
 
       NOTE: rPath recommends that the server be set up to receive a
       DHCP-provided hostname and IP address before installation.
 
-*** END FIXME ***
-
     o A network-connected system capable of running a Web browser
+
+    o A set of rPath Linux 1 mirror priming DVDs (if you intend to locally
+      mirror rPath Linux 1 and preload the mirror)
 
 Installation Procedure
 ------------ ---------
 
+Now that you have the necessary materials available, it is time to install
+the rBuilder Appliance:
+
 1. Insert the rPath rBuilder Appliance CD-ROM into the server's CD-ROM
-   drive and boot the computer. The installer will erase ALL partitions on
-   the server. You will be prompted before this happens.
+   drive and boot the computer, ensuring that it boots from the CD-ROM.
 
-2. Follow the on-screen instructions during the installation.
+    WARNING: PERFORMING THIS INSTALLATION WILL DELETE ALL PRE-EXISTING DATA
+    ON THIS SYSTEM!
 
-    NOTE: During installation, you can choose to automatically or manually
-    partition the system.  In most cases, you should choose the default
-    (which is to automatically partition) -- you will be given the
-    opportunity to review and, if necessary, modify the the default
-    partitions.
+2. Follow the on-screen instructions during the installation, taking care
+   to note the following points related to filesystem creation:
 
-    NOTE: ALL PRE-EXISTING DATA ON THIS SYSTEM WILL BE DELETED!
+    o During installation, you can choose to automatically or manually
+      partition the system.  In most cases, you should choose the default
+      (which is to automatically partition) -- you will be given the
+      opportunity to review and, if necessary, modify the the default
+      partitions.
 
-    NOTE: The rBuilder Appliance stores all its data under /srv; a
-    dedicated filesystem with sufficient storage must be allocated for this
-    purpose.  Note that the default partitioning settings do this for you.
+    o The rBuilder Appliance stores all its data under /srv/; a dedicated
+      filesystem with sufficient storage must be allocated for this
+      purpose.  Note that the default partitioning settings allocate the
+      bulk of the system's local storage to /srv/ for you.  However, should
+      you wish to place the rBuilder-specific data on network-attached
+      storage that more easily integrates with your organization's IT
+      infrastructure, you can modify the settings so that /srv/ is an
+      NFS-mounted filesystem.
 
 3. When the installation finishes, reboot (making sure to configure the
    system to boot from its primary disk drive).
 
-First-Web Configuration  *** FIXME -- yucky name ***
---------- -------------
+Initial Configuration
+------- -------------
 
-*** FIXME -- Pick up  from here ***
+Next, you must configure the rBuilder Appliance to reflect your
+organization's environment:
 
-4. When the server has finished booting, use a Web browser to access the
+1. When the server has finished booting, use a Web browser to access the
    server.  Use a URL in the form "http://rbuilder.example.com/", replacing
-   "rbuilder.example.com" with the fully-qualified domain name specified
-   for the server.
+   "rbuilder.example.com" with your server's fully-qualified domain name.
 
    NOTE: you MUST use the fully-qualified domain name to access the server!
 
-5. Next, the rBuilder Appliance configuration dialog appears.  Fill in the
-   fields in the "Branding" section with values that are appropriate to
-   your organization.  The fields in the "Server Setup" section contain
-   values for hostname and domain extracted from the rBuilder Appliance's
-   network configuration; change them if necessary.
+2. Next, the rBuilder Appliance configuration dialog appears.  Fill in
+   following fields as appropriate for your organization:
 
-   The field in the "Repository Setup" section should be set to a value
-   appropriate for your intended Conary usage.  For example, the rPath
-   Linux development branch is "rpl:devel", while the rPath Linux 1 branch
-   is "rpl:1".  rPath strongly recommends entering "rpl:1".
+    o Branding -- The fields in the "Branding" section are used to both
+      identify the rBuilder Appliance in communications with its users, and
+      to link the appliance to your organization's website.
 
-   Finally, fill in the fields in the "Initial Administrator Account"
-   section.  An account with this information will be created that will
-   have complete access to the rBuilder Appliance environment.
+    o Server Setup -- These fields, when combined, form the fully-qualified
+      domain name for the rBuilder Appliance.  Initially, these fields
+      contain values for hostname and domain extracted from the rBuilder
+      Appliance's network configuration; change them if necessary (for
+      example, if you are performing the initial installation and
+      configuration on a network different from the one where the appliance
+      will be deployed).
 
-6. Click on the "Save Changes" button to save your configuration.
+    o Repository Setup -- This field should be set to a value appropriate
+      for your intended Conary usage.  For example, the rPath Linux
+      development branch is "rpl:devel", while the rPath Linux 1 branch is
+      "rpl:1".  rPath strongly recommends entering "rpl:1" here.
 
-7. Once the configuration process is complete, a new page will be
+      *** FIXME -- Do we still strongly recommend rpl:1? ***
+
+    o Initial Administrator Account -- These fields define the username,
+      password, and email address of the rBuilder Appliance's first
+      administrator.  An account with this information will be created that
+      will have complete access to the rBuilder Appliance environment.
+
+      NOTE: Additional accounts with administrative privileges can be
+      created later.
+
+3. Click on the "Save Changes" button to save your configuration.
+
+4. Once the configuration process is complete, a new page will be
    displayed.  Click on the "Launch" button to start the rBuilder
    Appliance, making it available to your users.  After a short delay you
    will be directed to the main rBuilder Appliance home page.
 
-8. Log in using the username and password you specified for in the
+rAA Configuration
+--- -------------
+
+Now that the rBuilder Appliance is up and running, it is time to configure
+it from a system-level perspective.  For that, it is necessary to use the
+Appliance's rAA (rPath Appliance Agent) interface  rAA makes it possible
+for your rBuilder Appliance to receive updated software, and perform other
+system-level tasks:
+
+1. Log in using the username and password you specified for in the
    configuration dialog's "Initial Administrator Account" section. Click on
    the "Site Administration" link at the bottom of the orange box on the
    right.
 
-*** FIXME -- Put initial rAA access stuff here ***
+2. The rBuilder Appliance administration menu is now displayed.  Click on
+   the "Entitlements, Updates, and Other System Operations" link to launch
+   the system-level administrative interface.
 
-9. In the "Administration Menu" page, you'll find a link entitled
-   "Entitlements, Updates, and Other System Operations".  Click on it.
+3. A new browser window will be launched.  You may see warning messages
+   about the certificate being used not being created by a recognized
+   Certificate Authority; this is normal.
 
-10. You are then prompted to enter a username and password.  Due to the
-    system-level nature of these operations, separate account information
-    is required.  Enter the following:
+4. The rAA "sign in" box appears in the new window.  Sign in using the
+   following information (you will be changing the password in a moment):
 
-    Username: admin
-    Password: password
+    o Username: admin
+    o Password: password
 
-    The "Initiating rPath Appliance Agent Wizard" screen is then displayed
-    in a new browser window.  Click on the "Ok" button to proceed.  You
-    will then be guided through the following dialogs:
+5. The rAA interface is now displayed.  Because this is the first time rAA
+   has been used on your rBuilder Appliance, you will be directed through
+   the rAA Wizard to perform the necessary first-time configuration.  Click
+   on the "OK" button.
 
-        o New password dialog
+6. Next, the rAA Wizard steps your through the following configuration
+   dialogs:
 
-        o Email configuration dialog
+    o Change Password -- Enter the current rAA administrator password and
+      the new password.  Click on the "Change Password" button.
 
-        o Email notification addresses dialog
+    o Email Configuration -- Enter the FQDN of the system that accepts
+      email sent within your organization, and an email address should be
+      used as the "from" address for all email sent by rAA.  Click on the
+      "OK" button.
 
-        o Entitlement management dialog
+    o Email Notification Addresses -- Follow the on-screen instructions to
+      add one or more email addresses that should receive email
+      notifications from rAA.  When finished, click on the "OK" button.
 
-    Once you have completed each dialog, the main *** FIXME -- need term
-    for main rAA interface page *** is displayed.
+    o Entitlement Management -- Entitlements control access to software
+      updates for the rBuilder Appliance.  Enter the rBuilder Appliance
+      entitlement you've received, and click on the "Apply" button.
 
-*** END FIXME ***
+7. No further rAA configuration is necessary at this time.  Click on the
+   "logout" link on the right side of the upper navigation bar, and close
+   this browser window.
 
-9. In the "Administration Menu" page, you'll find a link entitled "Add
+Adding an Externally-Managed Project
+------ -- ------------------ -------
+
+The final step before your developers can begin to use your rBuilder
+Appliance is to create a project that makes the rPath Linux development
+environment available.  This is known as an externally-managed project, as
+the project does not originate on your rBuilder Appliance, but is external
+to it:
+
+1. In the "Administration Menu" page, you'll find a link entitled "Add
    Externally-Managed Project".  Click on it.
 
-10. The "Add External Project" page will then appear.  The fields will be
-    pre-populated to add rPath Linux as an external project, which is
-    necessary if your organization plans to use rPath Linux as the basis
-    for the software appliances it develops.
+2. The "Add External Project" page will then appear.  The fields will be
+   pre-populated to add rPath Linux as an external project.  At the bottom
+   of the page are two checkboxes:
 
-    NOTE: You have the option of creating a local mirror of the rPath Linux
-    repository.  Clicking on the "Mirror this repository locally" checkbox
-    will result in a copy of the rPath Linux repository (specifically that
-    part of the repository represented by the contents of the "Project
-    Label" field) being created on your rBuilder Appliance.  Doing this
-    requires a significant commitment of disk space; currently, this takes
-    12GB (plus another 12GB temporarily during the priming operation, if
-    you choose to prime the mirror from DVDs).
+    o External repository requires authentication -- *** FIXME -- Will we
+      require rpl:1 to be entitled one first release? *** Checking this box
+      indicates that the repository in question requires authentication for
+      access.  It also exposes controls that allow the entry of a username
+      and password or an entitlement.  Check the radio button appropriate
+      for your repository, and input the required information.
 
-    If you decide to locally mirror the rPath Linux repository, you have
-    the option of starting the "preloading" the mirror from rPath-supplied
-    media.  If you have this media available, check the "Preload this
-    mirror with a set of CDs or DVDs" checkbox.  You must also enter
-    appropriate authentication information (either in the form of a
-    username and password, or an entitlement).  *** FIXME -- This interface
-    is going to change ***
+    o Mirror this repository locally -- Checking this box indicates that
+      you want your rBuilder Appliance to have a local copy of the rPath
+      Linux 1 repository instead of accessing it remotely when needed.  The
+      local mirror will be updated at regular intervals *** FIXME -- what's
+      the interval? ***.  It also exposes controls that allow you to use
+      preload the mirror with a set of CDs/DVDs.  Check the checkbox if you
+      have a set of mirror preload media.  Click on the "Add" button.
 
-12: You will then be directed to your rBuilder Appliance's local rPath
+      NOTE: Mirroring rPath Linux 1 requires a significant commitment of
+      disk space; currently, this takes 12GB (plus another 12GB temporarily
+      during the priming operation, if you choose to preload the mirror
+      from DVDs).
+
+3. If you selected a local mirror and choose to preload it using preload
+   media, you will be prompted to insert the first disc, and click on the
+   "Start Import" button.  Regularly-updated progress messages will be
+   displayed as the preload media is copied and verified, and you will be
+   prompted to change media as required.
+
+4: You will then be directed to your rBuilder Appliance's local rPath
     Linux project page.  Note that you are listed as a project owner;
     however, given that the rPath Linux project is external, some links
     (such as Group Builder) are not fully functional, given the read-only
@@ -160,20 +225,41 @@ First-Web Configuration  *** FIXME -- yucky name ***
     as package search will work within the hour, as the local repository
     index is populated.
 
-*** FIXME -- revamp to address the centralized conaryrc support, and
-    entering a "non-standard" label for the project's repository ***
+Creating a New Project
+-------- - --- -------
 
-13. You can now create a new project by clicking on the "Create a new
-    project" link and following the instructions. Take special note of the
-    "Project Name" fields -- the values you use here have long-term
-    implications for the eventual deployment of software developed in this
-    project.  The "learn more" link has additional details.
+Your rBuilder Appliance is now completely configured for development.  At
+this point, you can either let your organization's developers create the
+project(s) they require, or do it for them.  The following instructions
+apply to either approach (once a valid rBuilder Appliance account has been
+created in logged in):
 
-Text Editor
----- ------
+1. From the rBuilder Appliance front page, click on the "Create a new
+   project" link in the account information tile on the right.
 
-The nano text editor has been added to rBuilder Appliance.  In normal
-circumstances it should not be necessary to directly edit files (all normal
-configuration is done via the Web-based administrative interface), but
-should the need arise the editor can be launched by entering the "nano"
-command.
+2. The "Create a Project" page is displayed.  The following fields must be
+   filled in:
+
+    o Project Title -- The project title should be a short, descriptive
+      phrase that describes your title.
+
+    o Project Name -- The project name is a short string that is used to
+      identify your project throughout the rBuilder Appliance.  It also
+      acts as the hostname part of your project's Conary repository label.
+
+   The remaining fields do not require any additional input.  However, you
+   should carefully consider the value of the "domainname" field.  The
+   guide text (and associated "learn more" link) has additional
+   information to help you decide on the settings appropriate for your
+   situation.
+
+Additional Notes
+---------- -----
+
+The following notes contain information about your rBuilder Appliance:
+
+    Text editor -- Your rBuilder Appliance includes the nano text editor.
+    Under normal circumstances it should not be necessary to directly edit
+    files (all normal configuration is done via the Web-based
+    administrative interface), but should the need arise the editor can be
+    launched by entering the "nano" command.
