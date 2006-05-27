@@ -34,7 +34,7 @@
                 <p><tt>includeConfigFile http://${cfg.hostName}.${cfg.siteDomainName}/conaryrc</tt></p>
             </li>
 
-            <li>If the systems that will be installing software from this project do not have connectivity to the project's repository, a repository must be installed and configured in such a way that it can be mirrored from this project's repository, and is accessible to the systems that will be installing this software.  An rPath Conary Repository Appliance can be used for this purpose.</li>
+            <li>If the systems that will be installing software from this project do not have connectivity to the project's repository, a repository must be installed and configured in such a way that it can be mirrored from this project's repository, and is accessible to the systems that will be installing this software.  An rBuilder Mirror can be used for this purpose.</li>
 
         </ul>
     </body>
