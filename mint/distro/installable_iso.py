@@ -403,7 +403,7 @@ class InstallableIso(ImageGenerator):
 
             # this is a hardcoded extension to the label path so that we always have
             # a working anaconda-templates package to use.
-            cclient.cfg.installLabelPath.append(versions.Label("conary.rpath.com@rpl:1"))
+            cclient.cfg.installLabelPath.append(versions.Label("templates.devel.org.rpath@rpl:devel"))
 
             uJob = self._getUpdateJob(cclient, 'anaconda-templates')
             if not uJob:
