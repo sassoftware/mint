@@ -450,9 +450,10 @@ div.palette img.right {
     width: 225px;
 }
 .palette div.boxHeader {
+    margin-left: 0;
     color: white;
     background: url(../images/header_blue_bg.png);
-    padding:4px 11px 6px 11px;
+    padding:4px 11px 6px 0px;
     margin-bottom: 0px;
     font-size: 120%;
     font-weight: bold;
@@ -460,13 +461,13 @@ div.palette img.right {
 }
 
 .palette ul {
+    margin-left: 0;
     border-width:0px 1px 0px 1px;
-    padding:0px 0px 4px 0px; font-size:110%;
+    padding:0px 0px 4px 0px;
     list-style-type: none;
-    font-size: 95%;
 }
 .palette li {
-    padding:4px 0px 4px 11px; margin:0px 11px 0px 11px;
+    padding:4px 0px 4px 0px; margin:0px 11px 0px 11px;
 }
 .palette dt {
     padding:0px 0px 0px 0px; margin:0px 11px 0px 11px;
@@ -540,9 +541,9 @@ div#projectsPane div.boxHeader span {
     float: left;
 }
 
-div#projectsPane div.boxHeader span + a {
+div#projectsPane a.signout {
     float: right;
-    font-size: 75%;
+    font-size: small;
     color: white;
 }
 
@@ -556,6 +557,16 @@ div#projectsPane div#userSettings {
 div#projectsPane div#administer {
     text-align: center;
 }
+
+div#projectsPane h4 {
+    padding-bottom: 0;
+    margin-bottom: 0;
+}
+
+div#projectsPane ul {
+    margin-top: 0.5em;
+}
+
 /* Group Builder */
 
 div#groupBuilder {

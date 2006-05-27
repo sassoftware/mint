@@ -113,7 +113,7 @@
         <div class="boxHeader">
             <div class="boxHeaderText">
                 <span>${auth.username}</span>
-                <a style="float: right; font-size: 75%;" href="http://${cfg.siteHost}${cfg.basePath}logout">
+                <a class="signout" href="http://${cfg.siteHost}${cfg.basePath}logout">
                     Sign Out
                 </a>
             </div>
@@ -137,7 +137,7 @@
             Then, click on the project name, and click on the "Request to join"
             link to submit your request to the project's owners.</p>
             <div id="userSettings"><a href="http://${SITE}userSettings"><strong>Edit my account</strong></a></div>
-	    <div id="administer" py:if="auth.admin"><a href="http://${SITE}admin/"><strong>Site Administration</strong></a></div>
+	    <div id="administer" py:if="auth.admin"><a href="http://${SITE}admin/"><strong>Site administration</strong></a></div>
         </div>
         <div class="boxBody" id="boxBody" py:if="projectList">
             <div py:for="level, title in [(userlevels.OWNER, 'Projects I Own'),
@@ -159,7 +159,7 @@
             </div>
             <div id="newProject" py:if="auth.admin or not cfg.adminNewProjects"><a href="http://${SITE}newProject"><strong>Create a new project</strong></a></div>
             <div id="userSettings"><a href="http://${SITE}userSettings"><strong>Edit my account</strong></a></div>
-            <div id="administer" py:if="auth.admin"><a href="http://${SITE}admin/"><strong>Site Administration</strong></a></div>
+            <div id="administer" py:if="auth.admin"><a href="http://${SITE}admin/"><strong>Site administration</strong></a></div>
         </div>
     </div>
 </html>
