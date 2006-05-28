@@ -7,6 +7,7 @@ import testsuite
 testsuite.setup()
 
 import os
+import stat
 import sys
 import tempfile
 
@@ -304,6 +305,7 @@ class DistroTest(MintRepositoryHelper):
         job = uJob.getPrimaryJobs().pop()
         assert(job == ('test', (None, None), (VFS('/testproject.' + \
                 MINT_PROJECT_DOMAIN + '@rpl:devel/1.0-1-1'), Flavor('')), True))
+
     def testSameFilename(self):
         csdir = tempfile.mkdtemp(dir=self.workDir)
         savedCsdir = tempfile.mkdtemp(dir=self.workDir)
@@ -391,6 +393,27 @@ class DistroTest(MintRepositoryHelper):
             util.rmtree(csdir)
             util.rmtree(savedCsdir)
 
+    def testAnacondaTemplates(self):
+        from mint.distro import installable_iso
+
+        testDir = self.servers.getServer(0).getTestDir()
+        templateDir = tempfile.mkdtemp()
+        tmpDir = tempfile.mkdtemp()
+
+        self.hideOutput()
+        try:
+            util.copytree(os.path.join(testDir, 'archive', 'anaconda'), tmpDir)
+            ii = installable_iso.InstallableIso(None, None, None, None, None)
+            ii.isocfg = installable_iso.IsoConfig()
+            ii.isocfg.rootstatWrapper = os.path.abspath(testDir + "../scripts/rootstat_wrapper.so")
+
+            ii._makeTemplate(templateDir, tmpDir + '/anaconda', None, None)
+            for f in 'cpiogz.out', 'cramfs.img', 'isofs.iso':
+                assert(os.stat(os.path.join(templateDir, f))[stat.ST_SIZE])
+        finally:
+            self.showOutput()
+            util.rmtree(templateDir)
+            util.rmtree(tmpDir)
 
 if __name__ == "__main__":
     testsuite.main()
