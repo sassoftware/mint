@@ -149,16 +149,16 @@ system-level tasks:
    the rAA Wizard to perform the necessary first-time configuration.  Click
    on the "OK" button.
 
-6. Next, the rAA Wizard steps your through the following configuration
+6. Next, the rAA Wizard steps you through the following configuration
    dialogs:
 
     o Change Password -- Enter the current rAA administrator password and
       the new password.  Click on the "Change Password" button.
 
     o Email Configuration -- Enter the FQDN of the system that accepts
-      email sent within your organization, and an email address should be
-      used as the "from" address for all email sent by rAA.  Click on the
-      "OK" button.
+      email sent within your organization, and an email address that should
+      be used as the "from" address for all email sent by rAA.  Click on
+      the "OK" button.
 
     o Email Notification Addresses -- Follow the on-screen instructions to
       add one or more email addresses that should receive email
