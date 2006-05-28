@@ -333,23 +333,21 @@ class InstallableIso(ImageGenerator):
                 os.chown(iso, isogenUid, apacheGid)
 
         # add the netboot images
-        bootDest = os.path.join(outputDir, 'boot.iso')
-        diskbootDest = os.path.join(outputDir, 'diskboot.img')
-        gencslist._linkOrCopyFile(os.path.join(topdir, 'images', 'boot.iso'), bootDest)
-        gencslist._linkOrCopyFile(os.path.join(topdir, 'images', 'diskboot.img'), diskbootDest)
-        for outFile in (bootDest, diskbootDest):
-            try:
-                os.chown(outFile, isogenUid, apacheGid)
-            except OSError, e:
-                if e.errno != 1:
-                    raise
-                # it's not a problem if we get here, since the file in question
-                # was already owned by apache--we couldn't re-assign it.
-                print >> sys.stderr, "couldn't assign permission for %s to " \
-                      "apache." % outFile
-        isoList += ( (bootDest, "boot.iso"),
-                     (diskbootDest, "diskboot.img"), )
-
+        for f in ('boot.iso', 'diskboot.img'):
+            inF = os.path.join(topdir, 'images', f)
+            outF = os.path.join(outputDir, f)
+            if os.path.exists(inF):
+                gencslist._linkOrCopyFile(inF, outF)
+                try:
+                    os.chown(outF, isogenUid, apacheGid)
+                except OSError, e:
+                    if e.errno != 1:
+                        raise
+                    # it's not a problem if we get here, since the file in question
+                    # was already owned by apache--we couldn't re-assign it.
+                    print >> sys.stderr, "couldn't assign permission for %s to " \
+                          "apache." % outF
+                isoList += ( (outF, f), )
         return isoList
 
     def setupKickstart(self, topdir):
