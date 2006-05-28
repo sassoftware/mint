@@ -13,7 +13,8 @@ from conary.lib import util
 def call(cmds, env = None):
     print >> sys.stderr, "+ " + " ".join(cmds)
     sys.stderr.flush()
-    subprocess.call(*cmds, env = env)
+    kwargs = {'env': env}
+    subprocess.call(*cmds, **kwargs)
 
 
 class Image(object):
