@@ -40,8 +40,8 @@ Installation Procedure
 Now that you have the necessary materials available, it is time to install
 the rBuilder Appliance:
 
-1. Insert the rPath rBuilder Appliance CD-ROM into the server's CD-ROM
-   drive and boot the computer, ensuring that it boots from the CD-ROM.
+1. Insert the rBuilder Appliance CD-ROM into the server's CD-ROM drive and
+   boot the computer, ensuring that it boots from the CD-ROM.
 
     WARNING: PERFORMING THIS INSTALLATION WILL DELETE ALL PRE-EXISTING DATA
     ON THIS SYSTEM!
@@ -60,7 +60,7 @@ the rBuilder Appliance:
       purpose.  Note that the default partitioning settings allocate the
       bulk of the system's local storage to /srv/ for you.  However, should
       you wish to place the rBuilder-specific data on network-attached
-      storage that more easily integrates with your organization's IT
+      storage that more directly integrates with your organization's IT
       infrastructure, you can modify the settings so that /srv/ is an
       NFS-mounted filesystem.
 
