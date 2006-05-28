@@ -10,10 +10,10 @@ import sys
 from conary.lib import util
 
 
-def call(*cmds):
+def call(cmds, env = None):
     print >> sys.stderr, "+ " + " ".join(cmds)
     sys.stderr.flush()
-    subprocess.call(cmds)
+    subprocess.call(*cmds, env = env)
 
 
 class Image(object):
@@ -51,7 +51,8 @@ class Image(object):
                                     stdout = outputFile)
             cpio = subprocess.Popen(['cpio', '-o'],
                                     stdin = files.stdout,
-                                    stdout = gzip.stdin)
+                                    stdout = gzip.stdin,
+                                    env = self.rootstatWrapper)
 
             cpio.communicate()
             outputFile.close()
@@ -71,20 +72,23 @@ class Image(object):
             '-R', '-J', '-T',
             '-V', 'rPath Linux',
             inputDir]
-        call(*cmd)
+        call(cmd)
 
     def mkcramfs(self, inputDir, output):
         cmd = ['mkcramfs', inputDir, output]
-        call(*cmd)
+        call(cmd, env = self.rootstatWrapper)
 
     def mkdosfs(self, inputDir, output):
-        call('dd', 'if=/dev/zero', 'of=%s' % output, 'bs=1M', 'count=8')
-        call('/sbin/mkdosfs', output)
+        call(['dd', 'if=/dev/zero', 'of=%s' % output, 'bs=1M', 'count=8'])
+        call(['/sbin/mkdosfs', output])
 
         files = [os.path.join(inputDir, x) for x in os.listdir(inputDir)]
         cmds = ['mcopy', '-i', output] + files + ['::']
-        call(*cmds)
+        call(cmds)
 
-    def __init__(self, templateDir, tmpDir):
+    def __init__(self, isocfg, templateDir, tmpDir):
+        self.isocfg = isocfg
         self.templateDir = templateDir
         self.tmpDir = tmpDir
+
+        self.rootstatWrapper = {'LD_PRELOAD': self.isocfg.rootstatWrapper}

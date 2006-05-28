@@ -42,6 +42,7 @@ class IsoConfig(ConfigFile):
     templatePath        = '/srv/rbuilder/templates/'
     implantIsoMd5       = '/usr/bin/implantisomd5'
     anacondaImagesPath  = '/usr/share/rbuilder/pixmaps'
+    rootstatWrapper     = '/usr/lib/rbuilder/rootstat_wrapper.so'
 
 
 class AnacondaTemplateMissing(Exception):
@@ -369,7 +370,7 @@ class InstallableIso(ImageGenerator):
         def syslinux(self, input):
             return call(['syslinux', input])
 
-        image = anaconda_templates.Image(templateDir, tmpDir)
+        image = anaconda_templates.Image(self.isocfg, templateDir, tmpDir)
 
         cmdMap = {
             'image':    image.run,
