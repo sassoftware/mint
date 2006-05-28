@@ -39,27 +39,25 @@ class Image(object):
         return retcode
 
     def cpiogz(self, inputDir, output):
-        cwd = os.getcwd()
+        oldCwd = os.getcwd()
+        os.chdir(inputDir)
         try:
-            os.chdir(inputDir)
-            cpioCmd = ['cpio', '-o', '-c']
-            gzip = ['gzip', '-9']
 
             outputFile = file(output, "w")
             files = subprocess.Popen(['find', '.', '-depth', '-print'],
                                      stdout = subprocess.PIPE)
-            gzip = subprocess.Popen(['gzip'], stdin = subprocess.PIPE,
-                                    stdout = outputFile)
-            cpio = subprocess.Popen(['cpio', '-o'],
+            cpio = subprocess.Popen(['cpio', '-o', '-c'],
                                     stdin = files.stdout,
-                                    stdout = gzip.stdin,
+                                    stdout = subprocess.PIPE,
                                     env = self.rootstatWrapper)
+            gzip = subprocess.Popen(['gzip', '-9'], stdin = cpio.stdout,
+                                    stdout = outputFile)
 
             cpio.communicate()
             outputFile.close()
         finally:
             try:
-                os.chdir(cwd)
+                os.chdir(oldCwd)
             except:
                 pass
 
