@@ -14,7 +14,7 @@ def call(cmds, env = None):
     print >> sys.stderr, "+ " + " ".join(cmds)
     sys.stderr.flush()
     kwargs = {'env': env}
-    subprocess.call(*cmds, **kwargs)
+    subprocess.call(cmds, **kwargs)
 
 
 class Image(object):
