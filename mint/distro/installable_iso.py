@@ -211,7 +211,9 @@ class InstallableIso(ImageGenerator):
         uJob = None
         print >> sys.stderr, "checking for artwork from anaconda-custom=%s" % cclient.cfg.installLabelPath[0].asString()
         uJob = self._getUpdateJob(cclient, "anaconda-custom")
-
+        if not uJob:
+            print >> sys.stderr, "anaconda-custom not found, falling back to legacy anaconda-images trove"
+            uJob = self._getUpdateJob(cclient, "anaconda-images")
         if uJob:
             print >> sys.stderr, "custom artwork found. applying on top of generated artwork"
             self._storeUpdateJob(uJob)
