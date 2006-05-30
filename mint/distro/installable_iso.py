@@ -363,7 +363,7 @@ class InstallableIso(ImageGenerator):
         # modify so that we can use the information later on down the
         # road.
         self.templateData = {}
-        self.status("Preparing uncached anaconda templates...")
+        self.status("Preparing and caching new anaconda template...")
 
         def setInfo(key, data):
             self.templateData[key] = data
