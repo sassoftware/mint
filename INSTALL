@@ -31,14 +31,14 @@ connectivity in place, namely:
 
     o A network-connected system capable of running a Web browser
 
-    o A set of rPath Linux 1 mirror priming DVDs (if you intend to locally
-      mirror rPath Linux 1 and preload the mirror)
+    o A set of rPath Linux 1 mirror DVDs (if you intend to locally mirror
+      rPath Linux 1 and preload the mirror)
 
 Installation Procedure
 ------------ ---------
 
-Now that you have the necessary materials available, it is time to install
-the rBuilder Appliance:
+Once you have the necessary materials available, it is time to install the
+rBuilder Appliance:
 
 1. Insert the rBuilder Appliance CD-ROM into the server's CD-ROM drive and
    boot the computer, ensuring that it boots from the CD-ROM.
@@ -86,20 +86,34 @@ organization's environment:
       identify the rBuilder Appliance in communications with its users, and
       to link the appliance to your organization's website.
 
-    o Server Setup -- These fields, when combined, form the fully-qualified
-      domain name for the rBuilder Appliance.  Initially, these fields
-      contain values for hostname and domain extracted from the rBuilder
-      Appliance's network configuration; change them if necessary (for
-      example, if you are performing the initial installation and
-      configuration on a network different from the one where the appliance
-      will be deployed).
+    o Server Setup -- The fields in this section, when combined, form the
+      fully-qualified domain name for the rBuilder Appliance.  Initially,
+      these fields contain values for hostname and domain extracted from
+      the rBuilder Appliance's network configuration; change them if
+      necessary (for example, if you are performing the initial
+      installation and configuration on a network different from the one
+      where the appliance will be deployed).
 
     o Repository Setup -- This field should be set to a value appropriate
-      for your intended Conary usage.  For example, the rPath Linux
-      development branch is "rpl:devel", while the rPath Linux 1 branch is
-      "rpl:1".  rPath strongly recommends entering "rpl:1" here.
+      for your intended usage of the rBuilder Appliance.  rPath recommends
+      using the following format:
 
-      *** FIXME -- Do we still strongly recommend rpl:1? ***
+        <organization>:<product>-<version>-<stage>
+
+      Where:
+
+        - <organization> is a string representing your organization's
+          identity.
+
+        - <product> is a string representing the product being developed.
+
+        - <version> is a string representing the product's major revision
+          (for example, 1, 2, etc).
+
+        - <stage> is string representing stages within your organization's
+          development process (for example, devel, test, etc.)  It may be
+          omitted in all cases, or for specific stages only (included for
+          development code, omitted for shipping code, for example).
 
     o Initial Administrator Account -- These fields define the username,
       password, and email address of the rBuilder Appliance's first
@@ -131,8 +145,8 @@ system-level tasks:
    right.
 
 2. The rBuilder Appliance administration menu is now displayed.  Click on
-   the "Entitlements, Updates, and Other System Operations" link to launch
-   the system-level administrative interface.
+   the "Enter rPath Appliance Agent" link to launch the system-level
+   administrative interface.
 
 3. A new browser window will be launched.  You may see warning messages
    about the certificate being used not being created by a recognized
@@ -164,9 +178,9 @@ system-level tasks:
       add one or more email addresses that should receive email
       notifications from rAA.  When finished, click on the "OK" button.
 
-    o Entitlement Management -- Entitlements control access to software
-      updates for the rBuilder Appliance.  Enter the rBuilder Appliance
-      entitlement you've received, and click on the "Apply" button.
+    o Entitlement Management -- Entitlements control access to rBuilder
+      Appliance software updates.  Enter the rBuilder Appliance entitlement
+      you've received, and click on the "Apply" button.
 
 7. No further rAA configuration is necessary at this time.  Click on the
    "logout" link on the right side of the upper navigation bar, and close
@@ -184,24 +198,30 @@ to it:
 1. In the "Administration Menu" page, you'll find a link entitled "Add
    Externally-Managed Project".  Click on it.
 
-2. The "Add External Project" page will then appear.  The fields will be
-   pre-populated to add rPath Linux as an external project.  At the bottom
-   of the page are two checkboxes:
+2. The "Add External Project" page will then appear.  The fields on this
+   page are pre-populated to add rPath Linux as an external project.  At
+   the bottom of the page are two checkboxes:
 
-    o External repository requires authentication -- *** FIXME -- Will we
-      require rpl:1 to be entitled one first release? *** Checking this box
+    o External repository requires authentication -- Checking this box
       indicates that the repository in question requires authentication for
-      access.  It also exposes controls that allow the entry of a username
-      and password or an entitlement.  Check the radio button appropriate
-      for your repository, and input the required information.
+      access.  It also exposes controls that allow the entry of an
+      entitlement or a username and password.
+
+      NOTE: The repository containing rPath Linux requires
+      entitlement-level authentication for access.  Therefore, check the
+      "External repository requires authentication" checkbox, the "Use an
+      entitlement" radio button, and fill in the "Entitlement Class" and
+      Entitlement Key" fields with the values from your rPath-provided
+      entitlement.
 
     o Mirror this repository locally -- Checking this box indicates that
       you want your rBuilder Appliance to have a local copy of the rPath
       Linux 1 repository instead of accessing it remotely when needed.  The
-      local mirror will be updated at regular intervals *** FIXME -- what's
-      the interval? ***.  It also exposes controls that allow you to use
-      preload the mirror with a set of CDs/DVDs.  Check the checkbox if you
-      have a set of mirror preload media.  Click on the "Add" button.
+      rPath Linux 1 repository will be checked for updates (and the local
+      mirror updated) once an hour.  It also exposes controls that allow
+      you to use preload the mirror with a set of CDs/DVDs.  Check the
+      checkbox if you have a set of mirror preload media.  Click on the
+      "Add" button.
 
       NOTE: Mirroring rPath Linux 1 requires a significant commitment of
       disk space; currently, this takes 12GB (plus another 12GB temporarily
@@ -232,7 +252,7 @@ Your rBuilder Appliance is now completely configured for development.  At
 this point, you can either let your organization's developers create the
 project(s) they require, or do it for them.  The following instructions
 apply to either approach (once a valid rBuilder Appliance account has been
-created in logged in):
+created and logged in):
 
 1. From the rBuilder Appliance front page, click on the "Create a new
    project" link in the account information tile on the right.
@@ -256,7 +276,8 @@ created in logged in):
 Additional Notes
 ---------- -----
 
-The following notes contain information about your rBuilder Appliance:
+The following notes contain additional information about your rBuilder
+Appliance:
 
     Text editor -- Your rBuilder Appliance includes the nano text editor.
     Under normal circumstances it should not be necessary to directly edit
