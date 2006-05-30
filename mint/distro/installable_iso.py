@@ -416,10 +416,8 @@ class InstallableIso(ImageGenerator):
             templateDir = os.path.join(self.isocfg.templatePath, hash)
             templateDirTemp = templateDir + "-temp"
             if not os.path.exists(templateDir):
-                try:
-                    util.rmtree(templateDirTemp)
-                except:
-                    pass
+                if os.path.exists(templateDirTemp):
+                    raise RuntimeError, "Anaconda template caching currently in progress; job must abort. Recreate release when previous job finishes."
                 print >> sys.stderr, "template package not cached, creating"
                 util.mkdirChain(templateDirTemp)
                 self._makeTemplate(templateDirTemp, tmpDir, uJob, cclient)
