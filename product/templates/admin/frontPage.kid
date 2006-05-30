@@ -27,6 +27,7 @@
                     <li>Add projects that reference remote repositories</li>
                     <li>Control the projects that can be mirrored to remote repositories</li>
                     <li>Put ${cfg.productName} into or out of maintenance mode</li>
+                    <li>Use rPath Appliance Agent to perform system-level maintenance of ${cfg.productName}</li>
                 </ul>
 
                 <p>Note: Administrative operations for existing users and projects 

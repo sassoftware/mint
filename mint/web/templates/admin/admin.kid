@@ -11,12 +11,12 @@
         <div class="boxHeader">Administration Menu</div>
         <ul>
             <li py:attrs="{'class': (lastchunk in ('', 'admin')) and 'selectedItem' or None}"><a href="${cfg.basePath}admin/">Administration Home</a></li>
+            <li py:attrs="{'class': (lastchunk == 'jobs') and 'selectedItem' or None}"><a href="${cfg.basePath}admin/jobs">Manage Jobs</a></li>
+            <li py:attrs="{'class': (lastchunk == 'reports') and 'selectedItem' or None}"><a href="${cfg.basePath}admin/reports">View Reports</a></li>
             <li py:attrs="{'class': (lastchunk in ('newUser', 'processNewUser')) and 'selectedItem' or None}"><a href="${cfg.basePath}admin/newUser">Create User Account</a></li>
             <li py:attrs="{'class': (lastchunk in ('sendNotify', 'notify')) and 'selectedItem' or None}"><a href="${cfg.basePath}admin/notify">Notify All Users</a></li>
-            <li py:attrs="{'class': (lastchunk == 'reports') and 'selectedItem' or None}"><a href="${cfg.basePath}admin/reports">View Reports</a></li>
             <li py:attrs="{'class': (lastchunk in ('external', 'processExternal')) and 'selectedItem' or None}"><a href="${cfg.basePath}admin/external">Add Externally-Managed Project</a></li>
-            <li py:attrs="{'class': (lastchunk in ('outbound', 'addOutbound')) and 'selectedItem' or None}"><a href="${cfg.basePath}admin/outbound">Outbound Mirror Settings</a></li>
-            <li py:attrs="{'class': (lastchunk == 'jobs') and 'selectedItem' or None}"><a href="${cfg.basePath}admin/jobs">Manage Jobs</a></li>
+            <li py:attrs="{'class': (lastchunk in ('outbound', 'addOutbound')) and 'selectedItem' or None}"><a href="${cfg.basePath}admin/outbound">Configure Outbound Mirroring</a></li>
             <li py:attrs="{'class': (lastchunk == 'maintenance') and 'selectedItem' or None}"><a href="${cfg.basePath}admin/maintenance">Manage Maintenance Mode</a></li>
         </ul>
     </div>
