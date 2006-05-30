@@ -171,3 +171,4 @@ class ConaryHandler(WebHandler, http.HttpHandler):
     del http.HttpHandler.addUserForm
     del http.HttpHandler.pgpNewKeyForm
     del http.HttpHandler.submitPGPKey
+    del http.HttpHandler.login
