@@ -159,7 +159,7 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
         self.cfg.buildLabel = versions.Label("localhost.rpath.local2@rpl:other")
         self.createTroves(sourceRepos, 3, 5)
 
-        client.addOutboundExcludedTrove(projectId, labelId, "test0")
+        client.setOutboundMatchTroves(projectId, labelId, ["-test0", '+.*'])
         exclude = re.compile("test0")
 
         # do the mirror

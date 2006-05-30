@@ -1222,7 +1222,8 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
             content = "testproject." + MINT_PROJECT_DOMAIN + "@rpl:devel")
         assert(client.getOutboundLabels() == \
             [[projectId, 1, 'http://www.example.com/conary/', 'mirror', 'mirrorpass']])
-        assert(client.getOutboundExcludedTroves(projectId) == ['.*:source', '.*:debuginfo'])
+        assert(client.getOutboundMatchTroves(projectId) == \
+               ['-.*:source', '-.*:debuginfo', '+.*'])
 
         page = self.fetch("/admin/outbound")
         page = page.postForm(1, self.post,
@@ -1230,7 +1231,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
              'operation':   'remove_outbound'})
 
         assert(client.getOutboundLabels() == [])
-        assert(client.getOutboundExcludedTroves(projectId) == [])
+        assert(client.getOutboundMatchTroves(projectId) == [])
 
     def testCreateOutboundMirrorSources(self):
         client, userId = self.quickMintAdmin('adminuser', 'adminpass')
@@ -1250,7 +1251,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
             content = "testproject." + MINT_PROJECT_DOMAIN + "@rpl:devel")
         assert(client.getOutboundLabels() == \
             [[projectId, 1, 'http://www.example.com/conary/', 'mirror', 'mirrorpass']])
-        assert(client.getOutboundExcludedTroves(projectId) == [])
+        assert(client.getOutboundMatchTroves(projectId) == [])
 
     def testBrowseUsers(self):
         client, userId = self.quickMintAdmin('adminuser', 'adminpass')

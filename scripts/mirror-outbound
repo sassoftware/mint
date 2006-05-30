@@ -64,7 +64,7 @@ class MirrorOutbound(SingletonScript):
             else:
                 cfg.labels = [versions.Label(project.getLabel())]
 
-            [cfg.excludeTroves.addExp(x) for x in client.getOutboundExcludedTroves(sourceLabelId)]
+            cfg.configLine('matchTroves ' + ' '.join(client.getOutboundMatchTroves(sourceLabelId)))
 
             targetRepos = netclient.NetworkRepositoryClient(cfg.target.repositoryMap,
                                   cfg.target.user,
