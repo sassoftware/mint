@@ -40,6 +40,7 @@ Changes in 1.6.3:
   converted to '?' when passed into Conary.
 * Component Removal from Group Builder now exists. For now it is hidden away on the edit projects page.
 * Cookie rejection is tested at login instead of silently failing.
+* Outbound mirroring uses matchTroves vice excludedTroves. ***VERSION_WARNING*** This change requires rBO/A to use conary 1.0.17 or later.
 
 Changes in 1.6.1:
 

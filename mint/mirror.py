@@ -57,40 +57,57 @@ class OutboundLabelsTable(database.KeyedTable):
     def delete(self, labelId, url):
         cu = self.db.cursor()
 
-        cu.execute("DELETE FROM OutboundLabels WHERE labelId=? AND url=?", labelId, url)
-        cu.execute("DELETE FROM OutboundExcludedTroves WHERE labelId=?", labelId)
+        cu.execute("DELETE FROM OutboundLabels WHERE labelId=? AND url=?",
+                   labelId, url)
+        cu.execute("DELETE FROM OutboundMatchTroves WHERE labelId=?", labelId)
         self.db.commit()
 
     def getMirrorAllLabels(self, labelId):
         cu = self.db.cursor()
 
-        cu.execute("SELECT allLabels FROM OutboundLabels WHERE labelId=?", labelId)
+        cu.execute("SELECT allLabels FROM OutboundLabels WHERE labelId=?",
+                   labelId)
         return cu.fetchone()[0]
 
 
-class OutboundExcludedTrovesTable(database.KeyedTable):
-    name = 'OutboundExcludedTroves'
+class OutboundMatchTrovesTable(database.KeyedTable):
+    name = 'OutboundMatchTroves'
     key = 'labelId'
-    createSQL= """CREATE TABLE OutboundExcludedTroves (
+    createSQL= """CREATE TABLE OutboundMatchTroves (
         projectId       INT NOT NULL,
         labelId         INT NOT NULL,
-        exclude         VARCHAR(255),
-        CONSTRAINT OutboundExcludeTroves_projectId_fk
+        idx             INT NOT NULL,
+        matchStr         VARCHAR(255),
+        CONSTRAINT OutboundMatchTroves_projectId_fk
             FOREIGN KEY (projectId) REFERENCES Projects(projectId)
             ON DELETE RESTRICT ON UPDATE CASCADE,
-        CONSTRAINT OutboundExcludeTroves_labelId_fk
+        CONSTRAINT OutboundMatchTroves_labelId_fk
             FOREIGN KEY (labelId) REFERENCES Labels(labelId)
             ON DELETE RESTRICT ON UPDATE CASCADE
     ) %(TABLEOPTS)s"""
 
-    fields = ['projectId', 'labelId', 'exclude']
+    fields = ['projectId', 'labelId', 'matchStr']
 
-    def delete(self, labelId, exclude):
+    def set(self, projectId, labelId, matchList):
         cu = self.db.cursor()
-
-        cu.execute("DELETE FROM OutboundExcludeTroves WHERE labelId=? AND exclude=?", labelId, exclude)
+        cu.execute("""DELETE FROM OutboundMatchTroves
+                          WHERE projectId=? AND labelId=?""",
+                   projectId, labelId)
+        for idx, matchStr in enumerate(matchList):
+            cu.execute("""INSERT INTO OutboundMatchTroves
+                              (projectId, labelId, idx, matchStr)
+                              VALUES(?, ?, ?, ?)""",
+                       projectId, labelId, idx, matchStr)
         self.db.commit()
 
+    def listMatches(self, labelId):
+        cu = self.db.cursor()
+        cu.execute("""SELECT matchStr
+                          FROM OutboundMatchTroves
+                          WHERE labelId=?
+                          ORDER BY idx""",
+                   labelId)
+        return [x[0] for x in cu.fetchall()]
 
 class RepNameMapTable(database.DatabaseTable):
     name = "RepNameMap"
