@@ -415,9 +415,18 @@ class InstallableIso(ImageGenerator):
             hash = sha1helper.md5ToString(sha1helper.md5String(troveSpec))
             templateDir = os.path.join(self.isocfg.templatePath, hash)
             templateDirTemp = templateDir + "-temp"
+
+            # check to see if someone else is already creating the cache
+            tries = 0
+            while os.path.exists(templateDirTemp):
+                time.sleep(10)
+                print >> sys.stderr, "someone else is creating templates in %s -- sleeping 10 seconds"
+                tries += 1
+
+                if tries > 360:
+                    raise RuntimeError, "Waited 1 hour for anaconda templates from another job to appear: giving up."
+
             if not os.path.exists(templateDir):
-                if os.path.exists(templateDirTemp):
-                    raise RuntimeError, "Anaconda template caching currently in progress; job must abort. Recreate release when previous job finishes."
                 print >> sys.stderr, "template package not cached, creating"
                 util.mkdirChain(templateDirTemp)
                 self._makeTemplate(templateDirTemp, tmpDir, uJob, cclient)
