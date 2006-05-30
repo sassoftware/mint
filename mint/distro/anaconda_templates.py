@@ -52,8 +52,7 @@ class Image(object):
                                     env = self.rootstatWrapper)
             gzip = subprocess.Popen(['gzip', '-9'], stdin = cpio.stdout,
                                     stdout = outputFile)
-
-            cpio.communicate()
+            gzip.communicate()
             outputFile.close()
         finally:
             try:
