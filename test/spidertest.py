@@ -110,6 +110,9 @@ class SpiderPageTest(mint_rephelp.WebRepositoryHelper):
     def spiderLink(self, link, page = None):
         self.checked.append(link)
         #print "link:", link
+        if link.endswith('logout'):
+            # we don't want to log out. just short circuit this link
+            return False
         if page is None:
             try:
                 page = self.fetch(link)
