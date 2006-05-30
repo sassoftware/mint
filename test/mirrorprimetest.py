@@ -86,12 +86,12 @@ class MirrorPrimeTest(unittest.TestCase):
 
     def writeMirrorFiles(self, dest, count = 2, sums = True):
         for x in range(count):
-            f = file(dest + "/mirror-test.rpath.local.tgz%03d" % x, "w")
+            f = file(dest + "/mirror-test.rpath.local.tar%03d" % x, "w")
             f.write("Hello World\n")
             f.close()
 
             if sums:
-                f = file(dest + "//mirror-test.rpath.local.tgz%03d.sha1" % x, "w")
+                f = file(dest + "//mirror-test.rpath.local.tar%03d.sha1" % x, "w")
                 f.write("648a6a6ffffdaa0badb23b8baf90b6168dd16b3a  helloworld")
                 f.close()
 
@@ -119,8 +119,8 @@ class MirrorPrimeTest(unittest.TestCase):
             tries += 1
         self.failIf(not done, "copy never completed")
 
-        assert(os.path.isfile(os.path.join(self.tmpPath, "mirror-test.rpath.local.tgz000")))
-        assert(os.path.isfile(os.path.join(self.tmpPath, "mirror-test.rpath.local.tgz001")))
+        assert(os.path.isfile(os.path.join(self.tmpPath, "mirror-test.rpath.local.tar000")))
+        assert(os.path.isfile(os.path.join(self.tmpPath, "mirror-test.rpath.local.tar001")))
         assert(not r[1]['checksumError'])
 
     def testCopyBadChecksum(self):
@@ -154,7 +154,7 @@ class MirrorPrimeTest(unittest.TestCase):
             time.sleep(0.5)
             tries += 1
 
-        assert(os.stat(os.path.join(self.tmpPath, "mirror-test.rpath.local.tgz"))[stat.ST_SIZE] == 24)
+        assert(os.stat(os.path.join(self.tmpPath, "mirror-test.rpath.local.tar"))[stat.ST_SIZE] == 24)
 
 
 if __name__ == "__main__":
