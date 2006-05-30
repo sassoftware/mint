@@ -54,7 +54,6 @@ generators = {
 SUPPORTED_ARCHS = ('x86', 'x86_64')
 # JOB_IDLE_INTERVAL: interval is in seconds. format is (min, max)
 JOB_IDLE_INTERVAL = (5, 10)
-STUCK_JOB_TIMEOUT = 3600
 
 class JobRunner:
     def __init__(self, cfg, client, job):
@@ -234,18 +233,11 @@ class JobDaemon:
         while(self.takingJobs or runningJobs):
             for jobPid, jobId in runningJobs[:]:
                 job = client.getJob(jobId)
-                if (time.time() - job.timeStarted) > STUCK_JOB_TIMEOUT:
-                    # job has taken too long--kill it.
-                    os.kill(jobPid, signal.SIGINT)
-                    os.waitpid(jobPid, 0)
+                # collect jobs that have ended normally.
+                try:
+                    os.waitpid(jobPid, os.WNOHANG)
+                except OSError:
                     runningJobs.remove((jobPid, jobId))
-                    slog.error("Killed stuck job with PID: %d." % jobPid)
-                else:
-                    # collect jobs that have ended normally.
-                    try:
-                        os.waitpid(jobPid, os.WNOHANG)
-                    except OSError:
-                        runningJobs.remove((jobPid, jobId))
 
             if len(runningJobs) < cfg.maxThreads:
                 try:
