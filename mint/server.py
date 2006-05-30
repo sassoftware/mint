@@ -204,7 +204,7 @@ def getTables(db, cfg):
     d['releaseImageTypes'] = releases.ReleaseImageTypesTable(db)
     d['inboundLabels'] = mirror.InboundLabelsTable(db)
     d['outboundLabels'] = mirror.OutboundLabelsTable(db)
-    d['outboundExcluded'] = mirror.OutboundExcludedTrovesTable(db)
+    d['outboundMatchTroves'] = mirror.OutboundMatchTrovesTable(db)
     d['repNameMap'] = mirror.RepNameMapTable(db)
     outDatedTables = [x for x in d.values() if not x.upToDate]
     while outDatedTables[:]:
@@ -2721,34 +2721,25 @@ class MintServer(object):
         return True
 
     @private
-    @typeCheck(int, int, str)
+    @typeCheck(int, int, (list, str))
     @requiresAdmin
-    def addOutboundExcludedTrove(self, projectId, labelId, exclude):
-        return self.outboundExcluded.new(projectId = projectId,
-                                       labelId = labelId,
-                                       exclude = exclude)
+    def setOutboundMatchTroves(self, projectId, labelId, matchList):
+        if [x for x in matchList if x[0] not in ('-', '+')]:
+            raise ParameterError("First character of matchStr must be + or -")
+        self.outboundMatchTroves.set(projectId, labelId, matchList)
+        return True
 
     @private
-    @typeCheck(int, str)
+    @typeCheck(int)
     @requiresAdmin
-    def delOutboundExcludedTrove(self, labelId, exclude):
-        self.outboundExcluded.delete(labelId, exclude)
-        return True
+    def getOutboundMatchTroves(self, labelId):
+        return self.outboundMatchTroves.listMatches(labelId)
 
     @typeCheck(int)
     @private
     @requiresAdmin
     def getOutboundMirrorAllLabels(self, labelId):
         return self.outboundLabels.getMirrorAllLabels(labelId)
-
-    @private
-    @typeCheck(int)
-    @requiresAdmin
-    def getOutboundExcludedTroves(self, labelId):
-        cu = self.db.cursor()
-
-        cu.execute("SELECT exclude FROM OutboundExcludedTroves WHERE labelid=?", labelId)
-        return [x[0] for x in cu.fetchall()]
 
     @private
     @typeCheck()

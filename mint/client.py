@@ -471,14 +471,12 @@ class MintClient:
     def addRemappedRepository(self, fromName, toName):
         return self.server.addRemappedRepository(fromName, toName)
 
-    def addOutboundExcludedTrove(self, projectId, labelId, exclude):
-        return self.server.addOutboundExcludedTrove(projectId, labelId, exclude)
+    def setOutboundMatchTroves(self, projectId, labelId, matchList):
+        return self.server.setOutboundMatchTroves(projectId, labelId,
+                                                  matchList)
 
-    def delOutboundExcludedTrove(self, labelId, exclude):
-        return self.server.delOutboundExcludedTrove(labelId, exclude)
-
-    def getOutboundExcludedTroves(self, labelId):
-        return self.server.getOutboundExcludedTroves(labelId)
+    def getOutboundMatchTroves(self, labelId):
+        return self.server.getOutboundMatchTroves(labelId)
 
 
 class ServerProxy(xmlrpclib.ServerProxy):

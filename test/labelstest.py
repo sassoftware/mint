@@ -162,15 +162,57 @@ class LabelsTest(fixtures.FixturedUnitTest):
         projectId = data['projectId']
         labelId = projectId
         adminClient = self.getClient("admin")
-        adminClient.addOutboundLabel(projectId, labelId, 
+        adminClient.addOutboundLabel(projectId, labelId,
                 "http://www.example.com/conary/",
                 "mirror", "mirrorpass")
-
-        adminClient.addOutboundExcludedTrove(projectId,
-            labelId, ".*:source$")
-
-        assert(adminClient.getOutboundExcludedTroves(labelId) == [".*:source$"])
         assert(adminClient.getOutboundMirrorAllLabels(labelId) == False)
+
+    @fixtures.fixture("Full")
+    def testOutboundMatchInitial(self, db, data):
+        projectId = data['projectId']
+        labelId = projectId
+        adminClient = self.getClient("admin")
+
+        # ensure this doesn't raise ItemNotFound
+        self.failIf(adminClient.getOutboundMatchTroves(labelId) != [],
+                    "Listing empty matchTroves failed")
+
+    @fixtures.fixture("Full")
+    def testOutboundMatchBasic(self, db, data):
+        projectId = data['projectId']
+        labelId = projectId
+        adminClient = self.getClient("admin")
+
+        adminClient.setOutboundMatchTroves(projectId, labelId, ["-.*:source$"])
+        assert(adminClient.getOutboundMatchTroves(labelId) == ["-.*:source$"])
+
+    @fixtures.fixture("Full")
+    def testOutboundMatchComposite(self, db, data):
+        projectId = data['projectId']
+        labelId = projectId
+        adminClient = self.getClient("admin")
+
+        adminClient.setOutboundMatchTroves(projectId, labelId,
+                                           ['-.*:source$', '-.*:debuginfo$'])
+        assert(adminClient.getOutboundMatchTroves(labelId) == \
+               ['-.*:source$', '-.*:debuginfo$'])
+
+    @fixtures.fixture("Full")
+    def testOutboundMatchReordered(self, db, data):
+        projectId = data['projectId']
+        labelId = projectId
+        adminClient = self.getClient("admin")
+
+        adminClient.setOutboundMatchTroves(projectId, labelId,
+                                           ['-.*:source$', '-.*:debuginfo$'])
+        assert(adminClient.getOutboundMatchTroves(labelId) == \
+               ['-.*:source$', '-.*:debuginfo$'])
+
+        adminClient.setOutboundMatchTroves(projectId, labelId,
+                                           ['-.*:source$', '-.*:debuginfo$'])
+        assert(adminClient.getOutboundMatchTroves(labelId) == \
+               ['-.*:source$', '-.*:debuginfo$'])
+
 
 
 if __name__ == "__main__":
