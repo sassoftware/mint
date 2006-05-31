@@ -15,7 +15,7 @@ case "$1" in
 	  do
 	  if [ -d "$JOBSERVER_BASEPATH/$js" ]
 	      then
-	      if [ "$1" == "start" ]
+	      if [ "$1" == "start" ] || [ "$1" == "restart" ]
 		  then
 		  cp /etc/hosts "$JOBSERVER_BASEPATH/$js/etc/hosts"
 		  cp /etc/resolv.conf "$JOBSERVER_BASEPATH/$js/etc/resolv.conf"
