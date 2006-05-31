@@ -13,6 +13,7 @@ from mint import database
 from mint import server
 from mint import users
 from mint.projects import LabelMissing
+from mint import mint_error
 
 import fixtures
 
@@ -213,6 +214,36 @@ class LabelsTest(fixtures.FixturedUnitTest):
         assert(adminClient.getOutboundMatchTroves(labelId) == \
                ['-.*:source$', '-.*:debuginfo$'])
 
+
+    @fixtures.fixture("Full")
+    def testOutboundMatchEnumerate(self, db, data):
+        projectId = data['projectId']
+        labelId = projectId
+        adminClient = self.getClient("admin")
+
+        cu = db.cursor()
+        for order in ['-a', '-b', '+c', '-d'], ['+d', '-a'], ['+c']:
+
+            adminClient.setOutboundMatchTroves(projectId, labelId, order)
+
+            cu.execute("SELECT idx, matchStr FROM OutboundMatchTroves")
+            self.failIf([x for x in cu.fetchall()] != \
+                        [x for x in enumerate(order)],
+                        "order of troves was mangled")
+
+    @fixtures.fixture("Full")
+    def testOutboundMatchParams(self, db, data):
+        projectId = data['projectId']
+        labelId = projectId
+        adminClient = self.getClient("admin")
+
+        self.assertRaises(mint_error.ParameterError,
+                          adminClient.setOutboundMatchTroves,
+                          projectId, labelId, 'wrong')
+
+        for matchStr in ('+right', '-right'):
+            # esnure no error is raised for properly formed params
+            adminClient.setOutboundMatchTroves(projectId, labelId, [matchStr])
 
 
 if __name__ == "__main__":
