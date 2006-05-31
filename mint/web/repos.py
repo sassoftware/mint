@@ -60,7 +60,8 @@ class ConaryHandler(WebHandler, http.HttpHandler):
         self.__dict__.update(**context)
 
         # set up the netclient
-        self.serverName = self.req.hostname
+        serverName = self.req.hostname
+        self.serverNameList = [serverName]
 
         path = self.req.uri[len(self.cfg.basePath):].split("/")
         if len(path) < 3:
@@ -69,9 +70,9 @@ class ConaryHandler(WebHandler, http.HttpHandler):
         try:
             if path[0] == "repos":
                 self.project = self.client.getProjectByHostname(path[1])
-                self.serverName = self.project.getLabel().split("@")[0]
+                serverName = self.project.getLabel().split("@")[0]
             else:
-                self.project = self.client.getProjectByFQDN(self.serverName)
+                self.project = self.client.getProjectByFQDN(serverName)
         except database.ItemNotFound:
             raise HttpNotFound
 
@@ -123,13 +124,13 @@ class ConaryHandler(WebHandler, http.HttpHandler):
 
         ### end hack. ###
 
-
         if self.project.external or needsExternal:
             self.repos = conaryclient.ConaryClient(cfg).getRepos()
         else:
             self.repos = ShimNetClient(self.repServer, 'http', 80,
                                        self.authToken, cfg.repositoryMap,
                                        cfg.user)
+        self.serverNameList = cfg.repositoryMap.keys()
 
         try:
             method = self.__getattribute__(self.cmd)
