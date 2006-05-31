@@ -455,7 +455,7 @@ class LocalRepository(netserver.NetworkRepositoryServer):
         return (tmpFile, [size], [], [])
 
     def commitChangeSet(self, cs):
-        self.repos.commitChangeSet(cs, self.name)
+        self.repos.commitChangeSet(cs, self.serverName)
 
     def __init__(self, serverName, dbpath):
         cfg = netserver.ServerConfig()
