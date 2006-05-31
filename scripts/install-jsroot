@@ -63,6 +63,7 @@ touch $ROOT/etc/mtab
 mknod $ROOT/dev/random c 1 8
 mknod $ROOT/dev/urandom c 1 9
 mkdir -p $ROOT/srv/rbuilder/finished-images/
+mkdir -p $ROOT/srv/rbuilder/entitlements/
 
 
 cp /etc/fstab /etc/fstab.backup
