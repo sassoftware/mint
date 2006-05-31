@@ -101,8 +101,8 @@ class MintConfig(ConfigFile):
     projectAdmin            = (cfgtypes.CfgBool, True)
     adminNewProjects        = (cfgtypes.CfgBool, False)
 
-    conaryRcFile            = os.path.join(os.path.sep, 'srv', 'rbuilder', 'run',
-                                            'conaryrc')
+    conaryRcFile            = os.path.join(os.path.sep, 'srv', 'rbuilder', 'config',
+                                            'conaryrc.generated')
     createConaryRcFile      = (cfgtypes.CfgBool, True)
     reposLog                = (cfgtypes.CfgBool, True)
 
