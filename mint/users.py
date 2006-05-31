@@ -374,7 +374,8 @@ class UsersTable(database.KeyedTable):
             whereClause = searcher.Searcher.where(terms, searchcols, "AND active=1")
 
         ids, count =  database.KeyedTable.search( \
-            self, columns, 'Users', whereClause, "userName", None,
+            self, columns, 'Users', whereClause,
+            searcher.Searcher.order(terms, searchcols, 'userName'), None,
             limit, offset)
         for i, x in enumerate(ids[:]):
             ids[i] = list(x)
