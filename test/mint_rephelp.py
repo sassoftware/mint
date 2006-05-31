@@ -419,6 +419,18 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
         os.dup2(self.oldFd, sys.stderr.fileno())
         os.close(self.oldFd)
 
+    def captureAllOutput(self, func, *args, **kwargs):
+        oldErr = os.dup(sys.stderr.fileno())
+        oldOut = os.dup(sys.stdout.fileno())
+        fd = os.open(os.devnull, os.W_OK)
+        os.dup2(fd, sys.stderr.fileno())
+        os.dup2(fd, sys.stdout.fileno())
+        try:
+            return func(*args, **kwargs)
+        finally:
+            os.dup2(oldErr, sys.stderr.fileno())
+            os.dup2(oldOut, sys.stdout.fileno())
+
     def getMirrorAcl(self, project, username):
         dbCon = project.server._server.projects.reposDB.getRepositoryDB( \
             project.getFQDN())

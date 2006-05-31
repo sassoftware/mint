@@ -467,6 +467,7 @@ class OldReleaseTest(MintRepositoryHelper):
         return cfg
 
     def testHiddenIsoGen(self):
+        raise testsuite.SkipTestException("needs to be reworked or abandoned")
         # set up a dummy isogen cfg to avoid importing from
         # job-server (the job-server code should be put elsewhere someday...)
         from conary.conarycfg import ConfigFile

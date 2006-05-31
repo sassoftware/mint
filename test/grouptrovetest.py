@@ -737,7 +737,7 @@ class GroupTroveTestConary(MintRepositoryHelper):
             refTrvVersion = '/testproject.%s@%s/1.0-1-1' % \
                     (MINT_PROJECT_DOMAIN, branch)
 
-            self.makeCookedTrove(branch)
+            self.captureAllOutput(self.makeCookedTrove, branch)
 
             trvId, trvName, trvVersion = \
                    groupTrove.addTroveByProject('testcase', 'testproject', '',
