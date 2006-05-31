@@ -1430,6 +1430,9 @@ class MintServer(object):
     def editLabel(self, labelId, label, url, username, password):
         self._filterLabelAccess(labelId)
         self.labels.editLabel(labelId, label, url, username, password)
+        if self.cfg.createConaryRcFile:
+            self._generateConaryRcFile()
+
         return True
 
     @typeCheck(int, int)
