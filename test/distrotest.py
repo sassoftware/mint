@@ -395,6 +395,15 @@ class DistroTest(MintRepositoryHelper):
 
     def testAnacondaTemplates(self):
         from mint.distro import installable_iso
+        client, userId = self.quickMintUser("testuser", "testpass")
+
+        projectId = self.newProject(client)
+        project = client.getProject(projectId)
+
+        release = client.newRelease(projectId, "Test Release")
+        release.setTrove("group-dist", "/testproject." + \
+            MINT_PROJECT_DOMAIN + "@rpl:devel/1.0-1-1", "1#x86")
+        job = client.startImageJob(release.id)
 
         testDir = self.servers.getServer(0).getTestDir()
         templateDir = tempfile.mkdtemp()
@@ -403,7 +412,7 @@ class DistroTest(MintRepositoryHelper):
         self.hideOutput()
         try:
             util.copytree(os.path.join(testDir, 'archive', 'anaconda'), tmpDir)
-            ii = installable_iso.InstallableIso(None, None, None, None, None)
+            ii = installable_iso.InstallableIso(None, None, job, None, None)
             ii.isocfg = installable_iso.IsoConfig()
             ii.isocfg.rootstatWrapper = os.path.abspath(testDir + "../scripts/rootstat_wrapper.so")
 
