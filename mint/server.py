@@ -1496,6 +1496,7 @@ class MintServer(object):
         util.mkdirChain(os.path.join(self.cfg.dataPath, 'run'))
         util.copyfile(fname, self.cfg.conaryRcFile)
         os.unlink(fname)
+        os.chmod(self.cfg.conaryRcFile, 0644)
 
     #
     # RELEASE STUFF
