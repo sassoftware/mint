@@ -135,6 +135,7 @@ class TarThread(CopyThread):
             if x.startswith("mirror-") and x.endswith(".tar")][0]
 
         serverName = file[7:-4]
+        util.mkdirChain("/srv/rbuilder/repos/%s" % serverName)
         cmd = ["tar", "xvf", os.path.join(self.tmpPath, file), "-C", "/srv/rbuilder/repos/%s" % serverName]
         tar = subprocess.Popen(cmd, stdout = subprocess.PIPE)
 
