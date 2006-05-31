@@ -98,7 +98,7 @@ class CopyThread(threading.Thread):
     def mount(self):
         if self.needsMount:
             os.system("sudo mount /dev/cdrom /mnt")
-    
+
     def umount(self):
         if self.needsMount:
             os.system("sudo umount /mnt")
@@ -236,30 +236,32 @@ class TarHandler(JsonRPCHandler):
         if self.needsMount:
             os.system("sudo mount /dev/cdrom /mnt")
         try:
-            keyFile = open(os.path.join(self.sourcePath, "MIRROR-INFO"))
-            serverName = keyFile.readline().strip()
-            curDisc, count = keyFile.readline().strip().split("/")
-            numFiles = keyFile.readline()
+            try:
+                keyFile = open(os.path.join(self.sourcePath, "MIRROR-INFO"))
+                serverName = keyFile.readline().strip()
+                curDisc, count = keyFile.readline().strip().split("/")
+                numFiles = keyFile.readline()
 
-            return {
-                "error": False,
-                "message": "Success",
-                "curDisc": int(curDisc),
-                "count": int(count),
-                "numFiles": int(numFiles),
-                "serverName": serverName
-            }
-        except IOError, e:
-            return {
-                "error": True,
-                "message": "Error: " + str(e),
-                "curDisc": 0,
-                "count": 0,
-                "numFiles": 0,
-                "serverName": ""
-            }
-        if self.needsMount:
-            os.system("sudo umount /mnt")
+                return {
+                    "error": False,
+                    "message": "Success",
+                    "curDisc": int(curDisc),
+                    "count": int(count),
+                    "numFiles": int(numFiles),
+                    "serverName": serverName
+                }
+            except IOError, e:
+                return {
+                    "error": True,
+                    "message": "Error: " + str(e),
+                    "curDisc": 0,
+                    "count": 0,
+                    "numFiles": 0,
+                    "serverName": ""
+                }
+        finally:
+            if self.needsMount:
+                os.system("sudo umount /mnt")
 
     def startTar(self):
         global tarThread
