@@ -30,7 +30,9 @@ class PackageIndexTable(database.KeyedTable):
         searchcols = ['name']
 
         ids, count = database.KeyedTable.search(self, columns, 'PackageIndex',
-            searcher.Searcher.where(terms, searchcols), 'name', None, limit, offset)
+            searcher.Searcher.where(terms, searchcols),
+            searcher.Searcher.order(terms, searchcols, 'name'),
+            None, limit, offset)
 
         for i, x in enumerate(ids[:]):
             ids[i] = list(x)

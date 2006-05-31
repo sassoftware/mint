@@ -222,11 +222,36 @@ class BrowseTest(MintRepositoryHelper):
         self.assertRaises(searcher.SearchTermsError,
                           search.where, '', ['foo', 'bar'])
 
-    def testSearchDefuntToken(self):
+    def testSearchDefunctToken(self):
         search = searcher.Searcher()
         # empty token
         self.assertRaises(searcher.SearchTermsError,
                           search.where, '""', ['foo', 'bar'])
+
+    def testExactResults(self):
+        search = searcher.Searcher()
+        self.failIf(search.order('foo OR bar', ['name']) != \
+                    "UPPER(name)<>'BAR', UPPER(name)<>'FOO'",
+                    "order is incorrect")
+
+    def testOrderFilter(self):
+        search = searcher.Searcher()
+        self.failIf(search.order(';8 or a', ['name']) != "UPPER(name)<>'A'",
+                    "invalid token was allowed")
+
+    def testFilterAllTokens(self):
+        search = searcher.Searcher()
+        self.failIf(search.order(';', ['name']) != "",
+                    "empty token and extra parsing combined incorrectly")
+        self.failIf(search.order(';', ['name'], 'name') != "name",
+                    "token and extra parsing combined incorrectly")
+
+    def testExtraOrder(self):
+        search = searcher.Searcher()
+        self.failIf(search.order('a', ['name'], 'name') != \
+                    "UPPER(name)<>'A', name",
+                    "extra term disregaded")
+
 
 if __name__ == "__main__":
     testsuite.main()
