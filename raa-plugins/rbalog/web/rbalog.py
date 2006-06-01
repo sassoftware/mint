@@ -14,7 +14,7 @@ class RBALog(rAAWebPlugin):
     '''
     displayName = _("View rBuilder Log")
 
-    logPath = 'srv/mint/logs/job-server.log'
+    logPath = 'srv/rbuilder/logs/job-server.log'
     jsrvPath = '/srv/rbuilder/jobserver/'
 
     @turbogears.expose(html="rPath.rbalog.log")
