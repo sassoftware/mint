@@ -62,14 +62,16 @@ echo "Creating mtab and device nodes"
 touch $ROOT/etc/mtab
 mknod $ROOT/dev/random c 1 8
 mknod $ROOT/dev/urandom c 1 9
+mkdir -p $ROOT/dev/pts
 mkdir -p $ROOT/srv/rbuilder/finished-images/
 mkdir -p $ROOT/srv/rbuilder/entitlements/
+mkdir -p $ROOT/srv/rbuilder/config/
 
 
 cp /etc/fstab /etc/fstab.backup
 COMMENT=\#JSROOT$upstreamVer
 echo "Modifying /etc/fstab -- saving backup to /etc/fstab.backup"
-for x in '/proc' '/dev/pts' '/srv/rbuilder/finished-images' '/srv/rbuilder/changesets' '/srv/rbuilder/entitlements'; do
+for x in '/proc' '/dev/pts' '/srv/rbuilder/finished-images' '/srv/rbuilder/changesets' '/srv/rbuilder/entitlements' '/srv/rbuilder/config'; do
     echo -e "$x\\t$ROOT$x\\tnone\\tbind\\t0\\t0 $COMMENT" >> /etc/fstab
 done
 

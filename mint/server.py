@@ -359,7 +359,7 @@ class MintServer(object):
             server = shimclient.NetworkRepositoryServer(cfg, '')
 
             cfg = conarycfg.ConaryConfiguration()
-            conarycfgFile = os.path.join(self.cfg.dataPath, 'conaryrc')
+            conarycfgFile = os.path.join(self.cfg.dataPath, 'config', 'conaryrc')
             if os.path.exists(conarycfgFile):
                 cfg.read(conarycfgFile)
             cfg.repositoryMap = authRepo
@@ -1496,6 +1496,7 @@ class MintServer(object):
         util.mkdirChain(os.path.join(self.cfg.dataPath, 'run'))
         util.copyfile(fname, self.cfg.conaryRcFile)
         os.unlink(fname)
+        os.chmod(self.cfg.conaryRcFile, 0644)
 
     #
     # RELEASE STUFF
