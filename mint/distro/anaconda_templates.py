@@ -41,20 +41,12 @@ class Image(object):
     def cpiogz(self, inputDir, output):
         oldCwd = os.getcwd()
         os.chdir(inputDir)
+        oldEnviron = os.environ['LD_PRELOAD']
         try:
-
-            outputFile = file(output, "w")
-            files = subprocess.Popen(['find', '.', '-depth', '-print'],
-                                     stdout = subprocess.PIPE)
-            cpio = subprocess.Popen(['cpio', '-o', '-c'],
-                                    stdin = files.stdout,
-                                    stdout = subprocess.PIPE,
-                                    env = self.rootstatWrapper)
-            gzip = subprocess.Popen(['gzip', '-9'], stdin = cpio.stdout,
-                                    stdout = outputFile)
-            gzip.communicate()
-            outputFile.close()
+            os.environ['LD_PRELOAD'] = self.rootstatWrapper
+            os.system("find . | cpio --quiet -c -o | gzip -9 > %s" % output)
         finally:
+            os.environ['LD_PRELOAD'] = oldEnviron
             try:
                 os.chdir(oldCwd)
             except:
