@@ -2708,14 +2708,15 @@ class MintServer(object):
         return [list(x) for x in cu.fetchall()]
 
     @private
-    @typeCheck(int, int, str, str, str, bool)
+    @typeCheck(int, int, str, str, str, bool, bool)
     @requiresAdmin
-    def addOutboundLabel(self, projectId, labelId, url, username, password, allLabels):
+    def addOutboundLabel(self, projectId, labelId, url, username, password, allLabels, recurse):
         return self.outboundLabels.new(projectId = projectId,
                                        labelId = labelId, url = url,
                                        username = username,
                                        password = password,
-                                       allLabels = allLabels)
+                                       allLabels = allLabels,
+                                       recurse = recurse)
 
     @private
     @typeCheck(int, str)
@@ -2739,21 +2740,16 @@ class MintServer(object):
     def getOutboundMatchTroves(self, labelId):
         return self.outboundMatchTroves.listMatches(labelId)
 
-    @typeCheck(int)
-    @private
-    @requiresAdmin
-    def getOutboundMirrorAllLabels(self, labelId):
-        return self.outboundLabels.getMirrorAllLabels(labelId)
-
     @private
     @typeCheck()
     @requiresAdmin
     def getOutboundLabels(self):
         cu = self.db.cursor()
 
-        cu.execute("""SELECT projectId, labelId, url, username, password
+        cu.execute("""SELECT projectId, labelId, url, username, password,
+                             allLabels, recurse
                           FROM OutboundLabels""")
-        return [list(x) for x in cu.fetchall()]
+        return [list(x[:5]) + [bool(x[5]), bool(x[6])] for x in cu.fetchall()]
 
     @private
     @typeCheck(str, str)
