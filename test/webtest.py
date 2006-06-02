@@ -1221,7 +1221,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.assertContent("/admin/outbound",
             content = "testproject." + MINT_PROJECT_DOMAIN + "@rpl:devel")
         assert(client.getOutboundLabels() == \
-            [[projectId, 1, 'http://www.example.com/conary/', 'mirror', 'mirrorpass']])
+            [[projectId, 1, 'http://www.example.com/conary/', 'mirror', 'mirrorpass', False, False]])
         assert(client.getOutboundMatchTroves(projectId) == \
                ['-.*:source', '-.*:debuginfo', '+.*'])
 
@@ -1250,7 +1250,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.assertContent("/admin/outbound",
             content = "testproject." + MINT_PROJECT_DOMAIN + "@rpl:devel")
         assert(client.getOutboundLabels() == \
-            [[projectId, 1, 'http://www.example.com/conary/', 'mirror', 'mirrorpass']])
+            [[projectId, 1, 'http://www.example.com/conary/', 'mirror', 'mirrorpass', False, False]])
         assert(client.getOutboundMatchTroves(projectId) == [])
 
     def testBrowseUsers(self):
