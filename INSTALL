@@ -58,11 +58,7 @@ rBuilder Appliance:
     o The rBuilder Appliance stores all its data under /srv/; a dedicated
       filesystem with sufficient storage must be allocated for this
       purpose.  Note that the default partitioning settings allocate the
-      bulk of the system's local storage to /srv/ for you.  However, should
-      you wish to place the rBuilder-specific data on network-attached
-      storage that more directly integrates with your organization's IT
-      infrastructure, you can modify the settings so that /srv/ is an
-      NFS-mounted filesystem.
+      bulk of the system's local storage to /srv/ for you.
 
 3. When the installation finishes, reboot (making sure to configure the
    system to boot from its primary disk drive).
