@@ -449,9 +449,10 @@ class MintClient:
                                            username, password)
 
     def addOutboundLabel(self, projectId, labelId,
-            url, username, password, allLabels = False):
+            url, username, password, allLabels = False, recurse = False):
         return self.server.addOutboundLabel(projectId, labelId, url,
-                                            username, password, allLabels)
+                                            username, password, allLabels,
+                                            recurse)
 
     def delOutboundLabel(self, labelId, url):
         return self.server.delOutboundLabel(labelId, url)
@@ -461,9 +462,6 @@ class MintClient:
 
     def getOutboundLabels(self):
         return self.server.getOutboundLabels()
-
-    def getOutboundMirrorAllLabels(self, labelId):
-        return self.server.getOutboundMirrorAllLabels(labelId)
 
     def getLabel(self, labelId):
         return self.server.getLabel(labelId)
