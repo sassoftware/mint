@@ -43,7 +43,7 @@ class Image(object):
         os.chdir(inputDir)
         oldEnviron = os.environ.get('LD_PRELOAD', None)
         try:
-            os.environ['LD_PRELOAD'] = self.rootstatWrapper
+            os.environ['LD_PRELOAD'] = self.rootstatWrapper['LD_PRELOAD']
             os.system("find . | cpio --quiet -c -o | gzip -9 > %s" % output)
         finally:
             if oldEnviron:
