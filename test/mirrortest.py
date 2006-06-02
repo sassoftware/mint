@@ -10,6 +10,8 @@ import os
 import testsuite
 testsuite.setup()
 
+import tempfile
+
 import rephelp, sigtest
 import mint_rephelp
 
@@ -42,11 +44,7 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
 
         mirrorScript = os.path.join(scriptPath , 'mirror-inbound')
         assert(os.access(mirrorScript, os.X_OK))
-        self.hideOutput()
-        try:
-            os.system("%s %s" % (mirrorScript, url))
-        finally:
-            self.showOutput()
+        self.captureAllOutput( os.system, "%s %s" % (mirrorScript, url))
 
     def outboundMirror(self):
         url = "http://mintauth:mintpass@localhost:%d/xmlrpc-private/" % \
@@ -54,11 +52,28 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
 
         mirrorScript = os.path.join(scriptPath , 'mirror-outbound')
         assert(os.access(mirrorScript, os.X_OK))
-        self.hideOutput()
+        self.captureAllOutput( os.system, "%s %s" % (mirrorScript, url))
+
+    def mirrorOffline(self):
+        if self.mintCfg.SSL:
+            url = "https://test.rpath.local:%d/repos/localhost/" % \
+                  self.securePort
+        else:
+            url = "http://test.rpath.local:%d/repos/localhost/" % self.port
+        branchName = "localhost.rpath.local2@rpl:linux"
+        mirrorScript = os.path.join(scriptPath , 'mirror-offline')
+        assert(os.access(mirrorScript, os.X_OK))
+        mirrorWorkDir = tempfile.mkdtemp()
+        curDir = os.getcwd()
         try:
-            os.system("%s %s" % (mirrorScript, url))
+            os.chdir(mirrorWorkDir)
+            self.captureAllOutput(os.system, "%s %s %s %s %s %s" % \
+                                  (mirrorScript, url, branchName, 'mirror',
+                                   self.mintCfg.authUser,
+                                   self.mintCfg.authPass))
         finally:
-            self.showOutput()
+            os.chdir(curDir)
+        return mirrorWorkDir
 
     def compareRepositories(self, repos1, repos2,
                             base = "localhost.other.host",
@@ -209,6 +224,42 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
                                  base = "localhost.rpath.local2",
                                  onlyLabel = "localhost.rpath.local2@rpl:linux")
         self.stopRepository(1)
+
+    def testMirrorOffline(self):
+        raise testsuite.SkipTestException("This test case passes, but causes a memory leak until such time as conary's server.py is fixed. execute at your own risk.")
+        global runTest
+        if not runTest:
+            raise testsuite.SkipTestException
+
+        client, userId = self.quickMintAdmin("testuser", "testpass")
+        # set up the source repository
+        projectId = self.newProject(client, "Mirrored Project", "localhost")
+        project = client.getProject(projectId)
+        labelId = project.getLabelIdMap().values()[0]
+
+        # create troves on rpl:linux
+        sourceRepos = ConaryClient(project.getConaryConfig()).getRepos()
+        self.createTroves(sourceRepos, 0, 3)
+
+        try:
+            workDir = self.mirrorOffline()
+            assert (sorted(os.listdir(workDir)) == \
+                    ['mirror', 'mirror-localhost.rpath.local2000.iso']), \
+                    "mirror-offline script failed to run"
+            assert (sorted(os.listdir(os.path.join(workDir, 'mirror'))) == \
+                    ['contents', 'sqldb'])
+            f = open(os.path.join(workDir, 'mirror-localhost.rpath.local2000.iso'))
+            f.seek(51200)
+            assert(f.read(30) == 'localhost.rpath.local2\n1/1\n1\n\x00')
+        finally:
+            try:
+                util.rmtree(workDir)
+            except:
+                pass
+            try:
+                f.close()
+            except:
+                pass
 
 
 if __name__ == "__main__":

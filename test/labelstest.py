@@ -151,7 +151,7 @@ class LabelsTest(fixtures.FixturedUnitTest):
         labels = adminClient.getOutboundLabels()
         assert(labels ==
                 [[projectId, projectId, 'http://www.example.com/conary/',
-                  'mirror', 'mirrorpass']])
+                  'mirror', 'mirrorpass', False, False]])
 
         adminClient.delOutboundLabel(projectId,
                 'http://www.example.com/conary/')
@@ -159,14 +159,48 @@ class LabelsTest(fixtures.FixturedUnitTest):
         assert(labels == [])
 
     @fixtures.fixture("Full")
-    def testOutboundLabel(self, db, data):
+    def testOutboundLabelAllLabels(self, db, data):
         projectId = data['projectId']
         labelId = projectId
         adminClient = self.getClient("admin")
         adminClient.addOutboundLabel(projectId, labelId,
                 "http://www.example.com/conary/",
                 "mirror", "mirrorpass")
-        assert(adminClient.getOutboundMirrorAllLabels(labelId) == False)
+        assert(adminClient.getOutboundLabels()[0][5] is False)
+        cu = db.cursor()
+        cu.execute("UPDATE OutboundLabels SET allLabels = 1")
+        db.commit()
+        assert(adminClient.getOutboundLabels()[0][5] is True)
+
+        cu.execute("DELETE FROM OutboundLabels")
+        db.commit()
+
+        adminClient.addOutboundLabel(projectId, labelId,
+                "http://www.example.com/conary/",
+                "mirror", "mirrorpass", allLabels = True)
+        assert(adminClient.getOutboundLabels()[0][5] is True)
+
+    @fixtures.fixture("Full")
+    def testOutboundLabelRecurse(self, db, data):
+        projectId = data['projectId']
+        labelId = projectId
+        adminClient = self.getClient("admin")
+        adminClient.addOutboundLabel(projectId, labelId,
+                "http://www.example.com/conary/",
+                "mirror", "mirrorpass")
+        assert(adminClient.getOutboundLabels()[0][6] is False)
+        cu = db.cursor()
+        cu.execute("UPDATE OutboundLabels SET recurse = 1")
+        db.commit()
+        assert(adminClient.getOutboundLabels()[0][6] is True)
+
+        cu.execute("DELETE FROM OutboundLabels")
+        db.commit()
+
+        adminClient.addOutboundLabel(projectId, labelId,
+                "http://www.example.com/conary/",
+                "mirror", "mirrorpass", recurse = True)
+        assert(adminClient.getOutboundLabels()[0][6] is True)
 
     @fixtures.fixture("Full")
     def testOutboundMatchInitial(self, db, data):
@@ -242,7 +276,7 @@ class LabelsTest(fixtures.FixturedUnitTest):
                           projectId, labelId, 'wrong')
 
         for matchStr in ('+right', '-right'):
-            # esnure no error is raised for properly formed params
+            # ensure no error is raised for properly formed params
             adminClient.setOutboundMatchTroves(projectId, labelId, [matchStr])
 
 
