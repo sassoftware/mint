@@ -453,14 +453,15 @@ class ProjectsTable(database.KeyedTable):
             whereClause = searcher.Searcher.where(terms, searchcols, "AND hidden=0")
 
         ids, count = database.KeyedTable.search(self, columns, 'Projects',
-                whereClause, 'NAME',
+                whereClause,
+                searcher.Searcher.order(terms, searchcols, 'UPPER(name)'),
                 searcher.Searcher.lastModified('timeModified', modified),
                 limit, offset)
         for i, x in enumerate(ids[:]):
             ids[i] = list(x)
             ids[i][2] = searcher.Searcher.truncate(x[2], terms)
 
-        return [x[1] for x in sorted([(x[2].lower(),x) for x in ids])], count
+        return [x[1] for x in [(x[2].lower(),x) for x in ids]], count
 
     def createRepos(self, reposPath, contentsDirs, hostname, domainname, username = None, password = None):
         dbPath = os.path.join(reposPath, hostname + "." + domainname)

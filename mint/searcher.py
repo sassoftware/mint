@@ -168,3 +168,19 @@ class Searcher :
         where += ') '
         return where, subs
 
+    @classmethod
+    def order(self, terms, searchcols, extra = ''):
+        """build SQL for exact match ordering."""
+        # throw away *any* search term that is not completely alpha-numeric
+        # to prevent sql injection
+        tokens = [x for x in terms.split() \
+                  if x.upper() not in ('OR', 'AND') and x.isalnum()]
+        tokenStr = ', '.join(["UPPER(%s)<>'%s'" % (x, y.upper()) \
+                              for x in sorted(searchcols) \
+                              for y in sorted(tokens)])
+        if tokenStr and extra:
+            return ', '.join((tokenStr, extra))
+        elif tokenStr:
+            return tokenStr
+        else:
+            return extra
