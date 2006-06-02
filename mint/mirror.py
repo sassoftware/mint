@@ -35,6 +35,7 @@ class OutboundLabelsTable(database.KeyedTable):
         username        VARCHAR(255),
         password        VARCHAR(255),
         allLabels       INT DEFAULT 0,
+        recurse         INT DEFAULT 0,
         CONSTRAINT OutboundLabels_projectId_fk
             FOREIGN KEY (projectId) REFERENCES Projects(projectId)
             ON DELETE RESTRICT ON UPDATE CASCADE,
@@ -43,7 +44,8 @@ class OutboundLabelsTable(database.KeyedTable):
             ON DELETE RESTRICT ON UPDATE CASCADE
     ) %(TABLEOPTS)s"""
 
-    fields = ['projectId', 'labelId', 'url', 'username', 'password', 'allLabels']
+    fields = ['projectId', 'labelId', 'url', 'username', 'password',
+              'allLabels', 'recurse']
 
     def versionCheck(self):
         dbversion = self.getDBVersion()
@@ -51,8 +53,16 @@ class OutboundLabelsTable(database.KeyedTable):
             cu = self.db.cursor()
             if dbversion == 17 and not self.initialCreation:
                 cu.execute("ALTER TABLE OutboundLabels ADD COLUMN allLabels INT DEFAULT 0")
-            return dbversion >= 17
+            if dbversion == 18 and not self.initialCreation:
+                cu.execute("ALTER TABLE OutboundLabels ADD COLUMN recurse INT DEFAULT 0")
+            return dbversion >= 18
         return True
+
+    def get(self, *args, **kwargs):
+        res = database.KeyedTable.get(self, *args, **kwargs)
+        res['allLabels'] = bool(res['allLabels'])
+        res['recurse'] = bool(res['recurse'])
+        return res
 
     def delete(self, labelId, url):
         cu = self.db.cursor()
@@ -61,13 +71,6 @@ class OutboundLabelsTable(database.KeyedTable):
                    labelId, url)
         cu.execute("DELETE FROM OutboundMatchTroves WHERE labelId=?", labelId)
         self.db.commit()
-
-    def getMirrorAllLabels(self, labelId):
-        cu = self.db.cursor()
-
-        cu.execute("SELECT allLabels FROM OutboundLabels WHERE labelId=?",
-                   labelId)
-        return cu.fetchone()[0]
 
 
 class OutboundMatchTrovesTable(database.KeyedTable):
