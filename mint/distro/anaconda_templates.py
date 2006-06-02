@@ -41,12 +41,13 @@ class Image(object):
     def cpiogz(self, inputDir, output):
         oldCwd = os.getcwd()
         os.chdir(inputDir)
-        oldEnviron = os.environ['LD_PRELOAD']
+        oldEnviron = os.environ.get('LD_PRELOAD', None)
         try:
             os.environ['LD_PRELOAD'] = self.rootstatWrapper
             os.system("find . | cpio --quiet -c -o | gzip -9 > %s" % output)
         finally:
-            os.environ['LD_PRELOAD'] = oldEnviron
+            if oldEnviron:
+                os.environ['LD_PRELOAD'] = oldEnviron
             try:
                 os.chdir(oldCwd)
             except:
