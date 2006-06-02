@@ -420,7 +420,7 @@ class InstallableIso(ImageGenerator):
             tries = 0
             while os.path.exists(templateDirTemp):
                 time.sleep(10)
-                print >> sys.stderr, "someone else is creating templates in %s -- sleeping 10 seconds"
+                print >> sys.stderr, "someone else is creating templates in %s -- sleeping 10 seconds" % templateDirTemp
                 tries += 1
 
                 if tries > 360:
