@@ -41,7 +41,8 @@ class MirrorOutbound(SingletonScript):
         mirroredLabels = client.getOutboundLabels()
 
         for label in mirroredLabels:
-            projectId, sourceLabelId, targetUrl, targetUser, targetPass = label
+            projectId, sourceLabelId, targetUrl, targetUser, targetPass, \
+                mirrorAll, recurse = label
             projectId = int(projectId)
             sourceLabelId = int(sourceLabelId)
             project = client.getProject(projectId)
@@ -59,7 +60,7 @@ class MirrorOutbound(SingletonScript):
 
             cfg.host = reposHost
 
-            if client.getOutboundMirrorAllLabels(sourceLabelId):
+            if mirrorAll:
                 cfg.labels = []
             else:
                 cfg.labels = [versions.Label(project.getLabel())]
