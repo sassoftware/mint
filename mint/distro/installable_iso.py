@@ -427,10 +427,14 @@ class InstallableIso(ImageGenerator):
                     raise RuntimeError, "Waited 1 hour for anaconda templates from another job to appear: giving up."
 
             if not os.path.exists(templateDir):
-                print >> sys.stderr, "template package not cached, creating"
-                util.mkdirChain(templateDirTemp)
-                self._makeTemplate(templateDirTemp, tmpDir, uJob, cclient)
-                os.rename(templateDirTemp, templateDir)
+                try:
+                    print >> sys.stderr, "template package not cached, creating"
+                    util.mkdirChain(templateDirTemp)
+                    self._makeTemplate(templateDirTemp, tmpDir, uJob, cclient)
+                    os.rename(templateDirTemp, templateDir)
+                finally:
+                    if os.path.exists(templateDirTemp):
+                        util.rmtree(templateDirTemp)
             print >> sys.stderr, "templates found:", templateDir
 
             return templateDir
