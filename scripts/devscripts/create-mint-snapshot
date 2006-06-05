@@ -20,7 +20,7 @@ make product >& /tmp/create-test-rba.log
 if [ $? != 0 ]; then carp; fi
 
 mv rbuilder-$MINT_VERSION.tar.bz2 $RBATEST/rbuilder/rbuilder-$DATE.tar.bz2
-sed -ri "s/version\ \=\ '.+'/version\ \=\ \'$DATE\'/" $RBATEST/rbuilder/rbuilder.recipe
+sed -ri "s/^version\ \=\ '.+'/version\ \=\ \'$DATE\'/" $RBATEST/rbuilder/rbuilder.recipe
 
 pushd $RBATEST/rbuilder/
 cvc add rbuilder-$DATE.tar.bz2

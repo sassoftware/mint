@@ -22,9 +22,19 @@ from mint import userlevels
     </head>
     <body>
         <div id="layout" class="helpPage">
-            <h1>${project.getNameForDisplay(maxWordLen = 50)}</h1>
-            <h2>Using Conary</h2>
-            <h3>Setting up Your Conary Development Environment</h3>
+            <div id="left" class="side">
+                ${projectResourcesMenu()}
+                ${releasesMenu(releases, isOwner)}
+                ${commitsMenu(commits)}
+            </div>
+            <div id="right" class="side">
+                ${resourcePane()}
+                ${groupTroveBuilder()}
+            </div>
+            <div id="middle">
+                <h1>${project.getNameForDisplay(maxWordLen = 50)}</h1>
+                <h2>Using Conary</h2>
+                <h3>Setting up Your Conary Development Environment</h3>
 
                 <p>NOTE: You will need the following pieces of
                 information in order to start building packages for
@@ -261,6 +271,7 @@ from mint import userlevels
                 file, of course).  In this way, the settings for all
                 the keys Conary is configured to use are in one
                 place.</p>
+            </div>
         </div>
     </body>
 </html>
