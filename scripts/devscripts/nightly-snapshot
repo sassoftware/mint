@@ -1,0 +1,8 @@
+#!/bin/sh
+pushd /srv/rbuilder/code/mint/scripts/devscripts/
+
+./synchg
+./create-mint-snapshot
+./cook-mint-snapshot
+
+popd

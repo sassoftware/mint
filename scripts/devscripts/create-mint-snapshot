@@ -15,7 +15,6 @@ DATE=$(date +%Y_%m_%d)
 MINT_VERSION=$(python -c 'import sys; sys.path.append("/srv/rbuilder/code/mint/"); from mint import constants; print constants.mintVersion')
 
 cd /srv/rbuilder/code/mint/
-scripts/devscripts/synchg
 make product >& /tmp/create-test-rba.log
 if [ $? != 0 ]; then carp; fi
 
