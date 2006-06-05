@@ -19,10 +19,11 @@ scripts/devscripts/synchg
 make product >& /tmp/create-test-rba.log
 if [ $? != 0 ]; then carp; fi
 
-mv rbuilder-$MINT_VERSION.tar.bz2 $RBATEST/rbuilder/rbuilder-$DATE.tar.bz2
 sed -ri "s/^version\ \=\ '.+'/version\ \=\ \'$DATE\'/" $RBATEST/rbuilder/rbuilder.recipe
 
 pushd $RBATEST/rbuilder/
+cvc remove rbuilder-*.tar.bz2
+mv /srv/rbuilder/code/mint/rbuilder-$MINT_VERSION.tar.bz2 rbuilder-$DATE.tar.bz2
 cvc add rbuilder-$DATE.tar.bz2
 
 cvc commit --message "automated commit for $DATE snapshot" >& /tmp/create-test-rba.log
