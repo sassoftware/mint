@@ -43,6 +43,7 @@ class IsoConfig(ConfigFile):
     implantIsoMd5       = '/usr/bin/implantisomd5'
     anacondaImagesPath  = '/usr/share/rbuilder/pixmaps'
     rootstatWrapper     = '/usr/lib/rbuilder/rootstat_wrapper.so'
+    templatesLabel      = 'conary.rpath.com@rpl:1'
 
 
 class AnacondaTemplateMissing(Exception):
@@ -147,7 +148,7 @@ class InstallableIso(ImageGenerator):
         cfg = self.project.getConaryConfig()
         cfg.root = tmpRoot
         cfg.dbPath = tmpRoot + "/var/lib/conarydb"
-        cfg.installLabelPath = [self.troveVersion.branch().label(), versions.Label('templates.devel.org.rpath@rpl:devel')]
+        cfg.installLabelPath = [self.troveVersion.branch().label()]
         cfg.buildFlavor = deps.deps.parseFlavor(stockFlavors[arch])
         cfg.flavor = [cfg.buildFlavor]
         cfg.initializeFlavors()
@@ -403,9 +404,7 @@ class InstallableIso(ImageGenerator):
             cclient = self.getConaryClient(tmpDir,
                 '1#' + self.release.getArch())
 
-            # this is a hardcoded extension to the label path so that we always have
-            # a working anaconda-templates package to use.
-            cclient.cfg.installLabelPath.append(versions.Label("templates.devel.org.rpath@rpl:devel"))
+            cclient.cfg.installLabelPath.append(versions.Label(self.isocfg.templatesLabel))
 
             uJob = self._getUpdateJob(cclient, 'anaconda-templates')
             if not uJob:
