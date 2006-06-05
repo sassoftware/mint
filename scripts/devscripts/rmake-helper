@@ -1,0 +1,39 @@
+#!/bin/env python2.4
+
+from conary.lib import util
+
+from rmake.cmdline import helper
+from rmake.build import buildtrove
+
+import optparse
+import os
+import sys
+import time
+
+sys.excepthook = util.genExcepthook()
+
+parser = optparse.OptionParser()
+parser.add_option("-t", "--trove",
+    action="store", type="string", dest="trove")
+parser.add_option("-c", "--context",
+    action="store", type="string", dest="context")
+parser.add_option("--commit", action = "store_true",
+    default = False, dest = "commit")
+
+(options, args) = parser.parse_args()
+
+rm = helper.rMakeHelper(context = options.context)
+
+jobId = rm.buildTroves([(options.trove, None, None)])
+job = rm.client.getJob(jobId)
+while not job.isFinished():
+    time.sleep(2)
+    job = rm.client.getJob(jobId)
+
+if job.isBuilt():
+    print "Trove built successfully"
+    if options.commit:
+        rm.commitJob(jobId)
+else:
+    print "Trove cook failed!"
+    sys.exit(status)
