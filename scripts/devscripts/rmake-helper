@@ -34,6 +34,7 @@ if job.isBuilt():
     print "Trove built successfully"
     if options.commit:
         rm.commitJob(jobId)
+    sys.exit(0)
 else:
     print "Trove cook failed!"
-    sys.exit(status)
+    sys.exit(jobId)
