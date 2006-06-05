@@ -1750,7 +1750,7 @@ class MintServer(object):
             cu.execute('SELECT troveFlavor FROM Releases WHERE releaseId=?',
                        releaseId)
             flavorString = cu.fetchone()[0]
-            flavor = deps.ThawDependencySet(flavorString)
+            flavor = deps.ThawFlavor(flavorString)
             arch = "1#" + flavor.members[deps.DEP_CLASS_IS].members.keys()[0]
             cu.execute("INSERT INTO JobData VALUES(?, 'arch', ?, 0)", retval,
                        arch)
@@ -2302,7 +2302,7 @@ class MintServer(object):
 
         res = {}
         for arch, flavor in stockFlavors.items():
-            flavor = deps.ThawDependencySet(arch)
+            flavor = deps.ThawFlavor(arch)
 
             cfg.flavor = [flavor]
             cfg.buildFlavor = flavor
