@@ -250,18 +250,18 @@ class GroupTroveItemsTable(database.KeyedTable):
         if not trvDicts:
             return False
         for trvDict in trvDicts:
-            flav = deps.ThawFlavor(flavor)
+            flav = deps.ThawDependencySet(flavor)
             if not (trvDict['useLock'] or trvDict['instSetLock']):
                 flavor = ''
             elif (trvDict['useLock'] and trvDict['instSetLock']):
                 flavor = str(flav)
             elif trvDict['useLock']:
-                depSet = deps.Flavor()
+                depSet = deps.DependencySet()
                 depSet.addDeps(deps.UseDependency,
                                flav.iterDepsByClass(deps.UseDependency))
                 flavor = str(depSet)
             else:
-                depSet = deps.Flavor()
+                depSet = deps.DependencySet()
                 depSet.addDeps(deps.InstructionSetDependency,
                                flav.iterDepsByClass(deps.InstructionSetDependency))
                 flavor = str(depSet)
@@ -301,18 +301,18 @@ class GroupTroveItemsTable(database.KeyedTable):
 
         ret['baseUrl'] = self.cfg.basePath + 'repos/' + ret['shortHost'] + '/'
 
-        flav = deps.ThawFlavor(ret['trvFlavor'])
+        flav = deps.ThawDependencySet(ret['trvFlavor'])
         if not (ret['useLock'] or ret['instSetLock']):
             flavStr = ''
         elif (ret['useLock'] and ret['instSetLock']):
             flavStr = str(flav)
         elif ret['useLock']:
-            depSet = deps.Flavor()
+            depSet = deps.DependencySet()
             depSet.addDeps(deps.UseDependency,
                            flav.iterDepsByClass(deps.UseDependency))
             flavStr = str(depSet)
         else:
-            depSet = deps.Flavor()
+            depSet = deps.DependencySet()
             depSet.addDeps(deps.InstructionSetDependency,
                            flav.iterDepsByClass(deps.InstructionSetDependency))
             flavStr = str(depSet)
