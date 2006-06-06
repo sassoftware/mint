@@ -164,7 +164,7 @@ class JobRunner:
 
         if error:
             slog.error("Job %d failed: %s (%s)", jobId, error[0].__name__, error[1])
-            self.job.setStatus(jobstatus.ERROR, str(e))
+            self.job.setStatus(jobstatus.ERROR, "%s (%s)" % (error[0].__name__, error[1]))
             raise error
         else:
             self.job.setStatus(jobstatus.FINISHED, "Finished")
