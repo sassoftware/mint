@@ -41,7 +41,7 @@ class Template(dict):
 ###
 
 class bugsUrl(StringOption):
-    default = 'http://bugs.rpath.com/'
+    default = 'http://issues.rpath.com/'
     prompt = 'Bug report URL'
 
 class installLabelPath(StringOption):
