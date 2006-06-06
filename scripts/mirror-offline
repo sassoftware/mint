@@ -119,11 +119,13 @@ class MirrorOffline(SingletonScript):
                 os.dup2(fd, sys.stdout.fileno())
                 os.dup2(fd, sys.stderr.fileno())
                 os.close(fd)
-                os.system("python %s --contents-dir %s --db '%s %s' --port %d"
-                          " --server-name %s"
-                          % (server.__file__, targCfg.contentsDir,
-                             targCfg.repositoryDB[0], targCfg.repositoryDB[1],
-                             targCfg.port, targCfg.serverName))
+                os.execlp("python", "python", server.__file__,
+                          "--contents-dir",
+                          targCfg.contentsDir, "--db",
+                          '%s %s' % (targCfg.repositoryDB[0],
+                                     targCfg.repositoryDB[1]),
+                          "--port", str(targCfg.port),
+                          "--server-name", targCfg.serverName)
 
             sock = socket.socket()
             count = 500;
@@ -236,6 +238,9 @@ class MirrorOffline(SingletonScript):
                                              userName)
             except:
                 pass
+            if pid:
+                os.kill(pid, signal.SIGTERM)
+                os.waitpid(pid, 0)
         return 0
 
 
