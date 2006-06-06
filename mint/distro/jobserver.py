@@ -141,7 +141,7 @@ class JobRunner:
             except Exception, e:
                 traceback.print_exc()
                 sys.stdout.flush()
-                error = e
+                error = sys.exc_info()
             else:
                 release.setFiles(imageFilenames)
                 slog.info("Job %d finished: %s", jobId, str(imageFilenames))
@@ -158,12 +158,12 @@ class JobRunner:
             except Exception, e:
                 traceback.print_exc()
                 sys.stdout.flush()
-                error = e
+                error = sys.exc_info()
             else:
                 slog.info("Job %d succeeded: %s" % (jobId, str(ret)))
 
         if error:
-            slog.error("Job %d failed: %s", jobId, str(error))
+            slog.error("Job %d failed: %s (%s)", jobId, error[0].__name__, error[1])
             self.job.setStatus(jobstatus.ERROR, str(e))
             raise error
         else:
