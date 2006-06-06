@@ -159,7 +159,7 @@ class ReleaseTest(fixtures.FixturedUnitTest):
         db.cursor().execute("DELETE FROM ReleaseData WHERE name='bugsUrl'")
         db.commit()
 
-        assert(release.getDataValue("bugsUrl") == "http://bugs.rpath.com/")
+        assert(release.getDataValue("bugsUrl") == "http://issues.rpath.com/")
 
     @fixtures.fixture("Full")
     def testPublished(self, db, data):
