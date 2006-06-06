@@ -54,7 +54,7 @@ from conary.lib import util
 from conary.repository.errors import TroveNotFound
 from conary.repository import netclient
 from conary.repository import shimclient
-from conary.repository.netrepos import netserver
+from conary.repository.netrepos import netserver, calllog
 from conary import errors as conary_errors
 
 validHost = re.compile('^[a-zA-Z][a-zA-Z0-9\-]*$')
@@ -272,42 +272,46 @@ class MintServer(object):
 
                 # let inner private-only calls pass
                 self._allowPrivate = True
+
                 r = method(*args)
+                if self.callLog:
+                    self.callLog.log(self.remoteIp, list(authToken) + [None, None], methodName, args)
+
             except users.UserAlreadyExists, e:
-                self.db.rollback()
+                self._handleError(e, authToken, methodName, args)
                 return (True, ("UserAlreadyExists", str(e)))
             except database.DuplicateItem, e:
-                self.db.rollback()
+                self._handleError(e, authToken, methodName, args)
                 return (True, ("DuplicateItem", e.item))
             except database.ItemNotFound, e:
-                self.db.rollback()
+                self._handleError(e, authToken, methodName, args)
                 return (True, ("ItemNotFound", e.item))
             except SearchTermsError, e:
-                self.db.rollback()
+                self._handleError(e, authToken, methodName, args)
                 return (True, ("SearchTermsError", str(e)))
             except users.AuthRepoError, e:
-                self.db.rollback()
+                self._handleError(e, authToken, methodName, args)
                 return (True, ("AuthRepoError", str(e)))
             except jobs.DuplicateJob, e:
-                self.db.rollback()
+                self._handleError(e, authToken, methodName, args)
                 return (True, ("DuplicateJob", str(e)))
             except UserAlreadyAdmin, e:
-                self.db.rollback()
+                self._handleError(e, authToken, methodName, args)
                 return (True, ("UserAlreadyAdmin", str(e)))
             except AdminSelfDemotion, e:
-                self.db.rollback()
+                self._handleError(e, authToken, methodName, args)
                 return (True, ("AdminSelfDemotion" , str(e)))
             except JobserverVersionMismatch, e:
-                self.db.rollback()
+                self._handleError(e, authToken, methodName, args)
                 return (True, ("JobserverVersionMismatch", str(e)))
             except MaintenanceMode, e:
-                self.db.rollback()
+                self._handleError(e, authToken, methodName, args)
                 return (True, ("MaintenanceMode", str(e)))
             except ParameterError, e:
-                self.db.rollback()
+                self._handleError(e, authToken, methodName, args)
                 return (True, ("ParameterError", str(e)))
-            except:
-                self.db.rollback()
+            except Exception, e:
+                self._handleError(e, authToken, methodName, args)
                 raise
             #except Exception, error:
             #   exc_name = sys.exc_info()[0].__name__
@@ -317,6 +321,12 @@ class MintServer(object):
                 return (False, r)
         finally:
             prof.stopXml(methodName)
+
+    def _handleError(self, e, authToken, methodName, args):
+        self.db.rollback()
+        if self.callLog:
+            self.callLog.log(self.remoteIp, list(authToken) + [None, None],
+                methodName, args, exception = e)
 
     def _getProjectRepo(self, project):
         maintenance.enforceMaintenanceMode( \
@@ -2763,6 +2773,14 @@ class MintServer(object):
     def __init__(self, cfg, allowPrivate = False, alwaysReload = False, db = None, req = None):
         self.cfg = cfg
         self.req = req
+        self.callLog = None
+
+        if self.cfg.xmlrpcLogFile:
+            self.callLog = calllog.CallLogger(self.cfg.xmlrpcLogFile, [self.cfg.siteHost])
+        if self.req:
+            self.remoteIp = self.req.connection.remote_ip
+        else:
+            self.remoteIp = "0.0.0.0"
 
         # all methods are private (not callable via XMLRPC)
         # except the ones specifically decorated with @public.
