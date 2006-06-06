@@ -1,13 +1,18 @@
+Changes in tip:
+* Added XMLRPC call logging similar to Conary's, controlled by the 
+  xmlrpcLogFile config entry.
+
 Changes in 1.6.3:
 * Installation paths changed: /srv/mint is now /srv/rbuilder; configuration is
   now in /srv/rbuilder/rbuilder.conf.
 * Projects created using rBA may use a custom domain name.
 * rBA administrator interface now has a link to rAA for managing
-  entitlements, etc.
+  system updates, entitlements, etc.
 * Projects and users are now administered via the project home page and
-  user information page, respectively instead of the administrator page.
+  user information page respectively, instead of the administrator page.
 * Administrative interface now matches the site layout.
-* Browse/search users exposed for administrators only.
+* The ability to browse and search for users has been exposed for
+  administrators only.
 * Project and user browse/search will include hidden projects and unconfirmed
   users if the client has administrative privileges.
 * The ability to disable projects has been removed. The "disabled" column,
@@ -20,27 +25,30 @@ Changes in 1.6.3:
   The sense used to be backwards: selecting "show media check" would skip
   the media check, and vice-versa.
 * Users with admin privileges on project repositories can now alter
-  groups and permissions.
+  low-level Conary groups and permissions.
 * Swap file size on bootable images is now configurable.
-* You are now not required to have a kernel in your bootable image group,
-  if you know what you're doing.
+* A kernel is not required when building a bootable image. This can be
+  for certain image types and applications.
 * The group cook "stock flavors" were updated to "prefer" almost every use 
   flag, to avoid problems where a package cooked with a ! or !~ flavor 
   would not be found by the group cook system.
-* Gencslist now supports duplicated changeset filenames by appending a count to
-  the end of the filename.
+* The installable CD now supports duplicated changeset filenames by
+  appending a count to the end of the filename. This fixes a bug when
+  including two troves of the same name and version, but different flavor.
 * Google Analytics code is now disabled by default. Enable it by specifying
   "googleAnalyticsTracker True" in the mint configuration file.
-* Refactoring of code; removed relative imports from the main codebase (save
+* Refactoring of code; removed relative imports from the main codebase (except
   for tests and scripts).
 * Refactored admin backend, url changed to /admin/ from /administer/ 
   (the latter still works, to preserve bookmarks).
 * Extended characters in the group trove description no longer break the cook
   process with an "invalid type for set" error. Extended characters are
   converted to '?' when passed into Conary.
-* Component Removal from Group Builder now exists. For now it is hidden away on the edit projects page.
-* Cookie rejection is tested at login instead of silently failing.
-* Outbound mirroring uses matchTroves vice excludedTroves. ***VERSION_WARNING*** This change requires rBO/A to use conary 1.0.17 or later.
+* Component Removal from Group Builder now exists. For now the settings are in
+  the 'Edit Group' dialog. The location may change.
+* Client cookie settings are tested at login instead of silently failing.
+* Outbound mirroring uses matchTroves instead of excludedTroves:
+    NOTE: This change requires rBO/A to use conary 1.0.17 or later.
 
 Changes in 1.6.1:
 
