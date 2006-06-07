@@ -173,3 +173,12 @@ class ConaryHandler(WebHandler, http.HttpHandler):
     del http.HttpHandler.pgpNewKeyForm
     del http.HttpHandler.submitPGPKey
     del http.HttpHandler.login
+    del http.HttpHandler.addEntitlement
+    del http.HttpHandler.addEntClassForm
+    del http.HttpHandler.manageEntitlementForm
+    del http.HttpHandler.deleteEntClass
+    del http.HttpHandler.entSetOwner
+    del http.HttpHandler.addEntClass
+    del http.HttpHandler.addEntitlementForm
+    del http.HttpHandler.deleteEntitlement
+    del http.HttpHandler.manageEntitlements
