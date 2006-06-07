@@ -4,8 +4,7 @@
 # to version 1.6.3.
 
 # Full install label to products repository
-# TODO update final final install label to reflect release branch
-INSTALL_LABEL_PATH="products.rpath.com@rpl:devel"
+INSTALL_LABEL_PATH="products.rpath.com@rpath:rba-1.6"
 JOBSERVER_VERSION="1.6.3"
 
 OLD_ROOT="/srv/mint"
@@ -13,6 +12,10 @@ OLD_CONF="mint.conf"
 NEW_ROOT="/srv/rbuilder"
 NEW_CONF="rbuilder.conf"
 BACKUPDIR="/tmp/rBA-migration.$$"
+
+# apache uid/gid
+APACHE_UID=`id -u apache`
+APACHE_GID=`id -g apache`
 
 # sane path for this script
 PATH="/bin:/usr/bin:/sbin:/usr/sbin"
@@ -86,16 +89,15 @@ echo "Cleaning out stale .pyc/.pyo files"
 find /usr/lib/python2.4/site-packages/mint -name \*.py[co] -exec rm -f {} \;
 
 # update using conary 
-# (NOTE: we have to use the mint redirect trove to get to rbuilder)
+# use conary migrate to break branch affinity and start fresh
 echo "Updating rBuilder via Conary"
-conary update group-rbuilder-dist=$INSTALL_LABEL_PATH --resolve
+conary migrate group-rbuilder-dist=$INSTALL_LABEL_PATH --resolve
 if [ $? -ne 0 ]; then
     echo "Problems occurred when updating rBuilder via Conary; exiting"
     exit 1
 fi
 
 echo "Updating rbuilder.conf, preserving changes"
-# TODO FIXME: we probably need to update the supported image types here
 python - <<EOSCRIPT
 from mint import config
 
@@ -119,6 +121,9 @@ for k in newCfg.iterkeys():
                 pass
         newCfg[k] = v
 
+# tarball and raw FS image added in this release
+newCfg.visibleImageTypes.extend([3, 5])
+
 newCfgFile = open('${NEW_ROOT}/${NEW_CONF}', 'w')
 newCfg.display(out = newCfgFile)
 newCfgFile.close()
@@ -127,8 +132,24 @@ EOSCRIPT
 # restore bits from /srv/mint
 echo "Restoring old databases, images, and Conary repositories"
 for d in data repos finished-images; do
-    mv -u ${OLD_ROOT}/$d/* ${NEW_ROOT}/$d > /dev/null 2>&1
+    mv ${OLD_ROOT}/$d/* ${NEW_ROOT}/$d > /dev/null 2>&1
 done
+sync
+
+# prime the cache.sql files in each repository
+python - <<EOSCRIPT
+import os
+from conary.repository.netrepos import cacheset
+for r in os.listdir('${NEW_ROOT}/repos'):
+    if os.path.isdir(os.path.join('${NEW_ROOT}', 'repos', r)):
+        if not os.path.exists(os.path.join('${NEW_ROOT}', 'repos', \
+            r, 'cache.sql')):
+            cacheset.CacheSet(('sqlite', os.path.join('${NEW_ROOT}', \
+                'repos', r, 'cache.sql')), None)
+	    os.chown(os.path.join('${NEW_ROOT}', 'repos', r, 'cache.sql'),
+		${APACHE_UID}, ${APACHE_GID})
+            print "Created CacheSet for %s\n" % r
+EOSCRIPT
 
 # updating rbuilder imagefiles table
 echo "Fixing ImageFiles table"
@@ -154,16 +175,14 @@ find $NEW_ROOT -uid $old_isogen_uid \
 find $NEW_ROOT -gid $old_isogen_uid \
     -exec chgrp $new_isogen_uid {} \; > /dev/null 2>&1
 
-# install chrooted jobserver and start it up
-echo "Installing a new chrooted jobserver instance"
-/usr/share/rbuilder/scripts/install-jsroot \
-    group-jobserver-root=${INSTALL_LABEL_PATH}/${JOBSERVER_VERSION}
-if [ $? -ne 0 ]; then
-    echo "WARNING: rBuilder jobserver was not installed"
-else
-    echo "Starting up the rBuilder jobserver"
-    service multi-jobserver start
-fi
+# JS Root was installed by group-rbuilder-dist via jobserver-root trove
+# that trove can be deleted; future updates should be done via
+# conary update group-jobserver-root
+echo "Erasing jobserver install remnants"
+conary erase jobserver-root
+
+echo "Starting up the rBuilder jobserver"
+service multi-jobserver start
 
 # restart the webserver
 echo "Starting Apache"
