@@ -660,7 +660,7 @@ quit
         self.baseversion = version.asString()
 
         #Thaw the flavor string
-        self.baseflavor = deps.ThawDependencySet(flavorStr)
+        self.baseflavor = deps.ThawFlavor(flavorStr)
 
         # set up configuration
         self.conarycfg = self.project.getConaryConfig()

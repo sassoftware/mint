@@ -275,7 +275,7 @@ class Release(database.TableObject):
         return versions.ThawVersion(self.troveVersion)
 
     def getTroveFlavor(self):
-        return deps.ThawDependencySet(self.troveFlavor)
+        return deps.ThawFlavor(self.troveFlavor)
 
     def getChangedTime(self):
         return self.troveLastChanged
@@ -319,7 +319,7 @@ class Release(database.TableObject):
         return self.server.setImageFilenames(self.releaseId, filenames)
 
     def getArch(self):
-        flavor = deps.ThawDependencySet(self.getTrove()[2])
+        flavor = deps.ThawFlavor(self.getTrove()[2])
         if flavor.members:
             return flavor.members[deps.DEP_CLASS_IS].members.keys()[0]
         else:

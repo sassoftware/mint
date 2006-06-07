@@ -570,7 +570,7 @@ def extractIs(flavor):
     """
     Returns just the instruction set of a given flavor.
     @param flavor: the full flavor
-    @type flavor: L{conary.deps.deps.DependencySet}
+    @type flavor: L{conary.deps.deps.Flavor}
     @rtype: str
     """
     return flavor.members[deps.DEP_CLASS_IS].members.keys()[0]

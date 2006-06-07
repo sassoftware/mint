@@ -33,7 +33,7 @@ class GroupTroveCook(Generator):
             path = tempfile.mkdtemp()
             recipe = groupTrove.getRecipe()
             sourceName = groupTrove.recipeName + ".recipe"
-            arch = deps.ThawDependencySet(self.job.getDataValue("arch"))
+            arch = deps.ThawFlavor(self.job.getDataValue("arch"))
 
             cfg = conarycfg.ConaryConfiguration()
 
@@ -97,7 +97,7 @@ class GroupTroveCook(Generator):
             path = tempfile.mkdtemp()
             recipe = groupTrove.getRecipe()
             sourceName = groupTrove.recipeName + ":source"
-            arch = deps.ThawDependencySet(self.job.getDataValue("arch"))
+            arch = deps.ThawFlavor(self.job.getDataValue("arch"))
 
             project = self.client.getProject(projectId)
 

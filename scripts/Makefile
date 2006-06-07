@@ -6,7 +6,6 @@
 
 script_dist =			\
 	buildtemplates		\
-	create-release		\
 	deleteproject		\
 	install-jsroot		\
 	job-server		\

@@ -532,7 +532,7 @@ class InstallableIso(ImageGenerator):
         troveName, versionStr, flavorStr = self.release.getTrove()
         self.troveName = troveName
         self.troveVersion = versions.ThawVersion(versionStr)
-        self.troveFlavor = deps.deps.ThawDependencySet(flavorStr)
+        self.troveFlavor = deps.deps.ThawFlavor(flavorStr)
 
         maxIsoSize = int(self.release.getDataValue('maxIsoSize'))
 

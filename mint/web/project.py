@@ -337,7 +337,7 @@ class ProjectHandler(WebHandler):
         versionStr = versions.ThawVersion(version)
         label = versionStr.branch().label()
 
-        thawedFlavor = deps.ThawDependencySet(flavor)
+        thawedFlavor = deps.ThawFlavor(flavor)
         arch = thawedFlavor.members[deps.DEP_CLASS_IS].members.keys()[0]
 
         return self._write("editRelease", isNewRelease = False,
@@ -372,7 +372,7 @@ class ProjectHandler(WebHandler):
         release.setName(name)
         release.setDesc(desc)
 
-        flavor = deps.ThawDependencySet(flavor)
+        flavor = deps.ThawFlavor(flavor)
         jobArch = flavor.members[deps.DEP_CLASS_IS].members.keys()[0]
         assert(jobArch in ('x86', 'x86_64'))
 
@@ -438,7 +438,7 @@ class ProjectHandler(WebHandler):
                 name = release.getName(),
                 isPublished = release.getPublished(),
                 trove = trove, version = versions.ThawVersion(version),
-                flavor = deps.ThawDependencySet(flavor),
+                flavor = deps.ThawFlavor(flavor),
                 releaseId = id, projectId = self.project.getId(),
                 publishedReleases = publishedReleases,
                 files = files,
