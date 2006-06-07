@@ -275,7 +275,7 @@ def extractChangeSets(client, cfg, csdir, groupName, groupVer, groupFlavor,
     @param groupVer: version of group to extract changesets from
     @type groupVer: Version instance
     @param groupFlavor: flavor of group to extract changesets from
-    @type groupFlavor: DependencySet instance
+    @type groupFlavor: Flavor instance
     @param callback: Callback instance for progress.
 
     @param oldFiles: a set of changeset filenames that already exist
