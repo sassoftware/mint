@@ -12,6 +12,7 @@ python_files = \
                authtest.py \
 	       bootabletest.py \
                cachetest.py \
+	       cmdlinetest.py \
                configtest.py \
                coverage.py \
                coveragewrapper.py \

@@ -85,7 +85,7 @@ class HelperFunctionsTest(unittest.TestCase):
         skipDirs = ('.hg', 'test/archive/arch', 'test/archive/use',
                     'mint/web/content', 'scripts', 'test/templates',
                     'test/annotate', 'test/coverage', 'test/.coverage',
-                    'test/archive/anaconda')
+                    'test/archive/anaconda', 'bin')
         mint_path = os.getenv('MINT_PATH')
 
         # tweak skipdirs to be fully qualified path
