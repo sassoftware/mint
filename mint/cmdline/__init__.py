@@ -1,13 +1,20 @@
 #!/usr/bin/python
+#
+# Copyright (c) 2005-2006 rPath, Inc.
+#
+# All Rights Reserved
+#
 import os
 import sys
 
 from conary.lib import options, util, log
 from conary.conarycfg import ConfigFile
-from conary.conaryclient import cmdline
 
 from mint import constants
 from mint.client import MintClient
+
+from mint.cmdline import releases
+from mint.cmdline import commands
 
 sys.excepthook = util.genExcepthook()
 
@@ -20,36 +27,12 @@ class RBuilderShellConfig(ConfigFile):
             self.read(os.environ["HOME"] + "/" + ".rbuilderrc", exception=False)
 
 
-(NO_PARAM,  ONE_PARAM)  = (options.NO_PARAM, options.ONE_PARAM)
-(OPT_PARAM, MULT_PARAM) = (options.OPT_PARAM, options.MULT_PARAM)
-
-class RBuilderCommand(options.AbstractCommand):
-    docs = {'config'             : ("Set config KEY to VALUE", "'KEY VALUE'"),
-            'config-file'        : ("Read PATH config file", "PATH"),
-            'skip-default-config': "Don't read default config file (~/.rbuilderrc)",
-            'server'             : ("Set rBuilder server url to URL", "URL"),
-           }
-
-    def addParameters(self, argDef):
-        d = {}
-        d["config"] = MULT_PARAM
-        d["config-file"] = MULT_PARAM
-        d["skip-default-config"] = NO_PARAM
-        d["server"] = ONE_PARAM
-        argDef[self.defaultGroup] = d
-
-
-_commands = []
-def register(cmd):
-    _commands.append(cmd)
-
-
-class ConfigCommand(RBuilderCommand):
+class ConfigCommand(commands.RBuilderCommand):
     commands = ['config']
     docs = {'show-passwords' : 'do not mask passwords'}
 
     def addParameters(self, argDef):
-         RBuilderCommand.addParameters(self, argDef)
+         commands.RBuilderCommand.addParameters(self, argDef)
          argDef["show-passwords"] = NO_PARAM
 
     def runCommand(self, client, cfg, argSet, args):
@@ -64,7 +47,7 @@ class ConfigCommand(RBuilderCommand):
         client.cfg.setDisplayOptions(hidePassword = not showPasswords,
             prettyPrint = prettyPrint)
         client.cfg.display()
-register(ConfigCommand)
+commands.register(ConfigCommand)
 
 
 class RBuilderClient(MintClient):
@@ -79,10 +62,10 @@ class RBuilderMain(options.MainHandler):
     name = 'rbuilder'
     version = constants.mintVersion
 
-    commandList = _commands
+    commandList = commands._commands
     configClass = RBuilderShellConfig
 
-    abstractCommand = RBuilderCommand
+    abstractCommand = commands.RBuilderCommand
 
     @classmethod
     def usage(class_, rc = 1):
@@ -100,4 +83,5 @@ class RBuilderMain(options.MainHandler):
                                        args[1:])
 
 def main():
-    RBuilderMain().main()
+    rb = RBuilderMain()
+    rb.main()

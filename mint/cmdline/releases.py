@@ -7,9 +7,11 @@ import time
 
 from mint import releasetypes
 from mint import jobstatus
-from mint import cmdline
+from mint.cmdline import commands
 
-from conary.util import log
+from conary import versions
+from conary.lib import options, log
+from conary.conaryclient.cmdline import parseTroveSpec
 
 
 def waitForRelease(client, releaseId, interval = 5):
@@ -23,15 +25,15 @@ def waitForRelease(client, releaseId, interval = 5):
     log.info("Job ended with '%s' status: %s" % (jobstatus.statusNames[job.status], job.statusMessage))
 
 
-class ReleaseCreateCommand(cmdline.RBuilderCommand):
+class ReleaseCreateCommand(commands.RBuilderCommand):
     commands = ['release-create']
     paramHelp = "<project name> <troveSpec> <image type>"
 
     docs = {'wait' : 'wait until a release job finishes'}
 
     def addParameters(self, argDef):
-         RBuilderCommand.addParameters(self, argDef)
-         argDef["wait"] = NO_PARAM
+         commands.RBuilderCommand.addParameters(self, argDef)
+         argDef["wait"] = options.NO_PARAM
 
     def runCommand(self, client, cfg, argSet, args):
         wait = argSet.pop('wait', False)
@@ -43,7 +45,7 @@ class ReleaseCreateCommand(cmdline.RBuilderCommand):
         project = client.getProjectByHostname(projectName)
         release = client.newRelease(project.id, project.name)
 
-        n, v, f = cmdline.parseTroveSpec(troveSpec)
+        n, v, f = parseTroveSpec(troveSpec)
         assert(n and v and f is not None)
         v = versions.VersionFromString(v)
         v.resetTimeStamps(0)
@@ -57,10 +59,10 @@ class ReleaseCreateCommand(cmdline.RBuilderCommand):
         if wait:
             waitForRelease(client, release.id)
         return release.id
-cmdline.register(ReleaseCreateCommand)
+commands.register(ReleaseCreateCommand)
 
 
-class ReleaseWaitCommand(cmdline.RBuilderCommand):
+class ReleaseWaitCommand(commands.RBuilderCommand):
     commands = ['release-wait']
     paramHelp = "<release id>"
 
@@ -71,4 +73,4 @@ class ReleaseWaitCommand(cmdline.RBuilderCommand):
 
         releaseId = int(args[0])
         waitForRelease(client, releaseId)
-cmdline.register(ReleaseWaitCommand)
+commands.register(ReleaseWaitCommand)

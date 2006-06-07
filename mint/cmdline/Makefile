@@ -6,6 +6,7 @@
 
 python_files =		\
 	__init__.py	\
+	commands.py	\
 	releases.py
 
 extra_dist = Makefile
