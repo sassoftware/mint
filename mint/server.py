@@ -2312,7 +2312,7 @@ class MintServer(object):
 
         res = {}
         for arch, flavor in stockFlavors.items():
-            flavor = deps.ThawDependencySet(arch)
+            flavor = deps.ThawFlavor(arch)
 
             cfg.flavor = [flavor]
             cfg.buildFlavor = flavor
