@@ -12,11 +12,9 @@ from conary.conarycfg import ConfigFile
 
 from mint import constants
 from mint.client import MintClient
-
 from mint.cmdline import releases
 from mint.cmdline import commands
 
-sys.excepthook = util.genExcepthook()
 
 class RBuilderShellConfig(ConfigFile):
     serverUrl = None
