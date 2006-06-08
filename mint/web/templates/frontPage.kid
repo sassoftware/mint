@@ -28,16 +28,18 @@ from mint.client import upstream
         <div id="right" class="side">
             ${resourcePane()}
         </div>
-        <div id="steps">
-            <span>
-                <span id="findit" onclick="javascript:window.location='${cfg.basePath}help?page=user-tutorial'">
-                    Check out the software appliances others have made.
-                </span>
-                <span id="buildit" onclick="javascript:window.location='${cfg.basePath}help?page=dev-tutorial'">
-                    Make your own software appliance in three easy steps.
-                </span>
-            </span>
-
+        <div onclick="location.href='http://www.rpath.org/rbuilder/project/port25/'" id="spotlight">
+        <div id="logoBox">
+            <img id="applianceLogo" src="${cfg.staticPath}apps/mint/images/port25round.png"/>
+        </div>
+        <div id="textBox">
+            <div id="spotlightTitle">Virtual Appliance Spotlight</div>
+            <div id="applianceTitle">Port25 Mail Appliance</div>
+            <div id="applianceText">The Port25 appliance is an out of the box distribution for deploying mail servers that are secure, manageable, scalable, and fast.  Uses the best Open Source spam and virus protection available.</div>
+            <div onclick="getElementById('spotlight').onclick=null; alert('spotlight archive'); location.reload();" class="archiveLink">Spotlight Archive</div>
+        </div>
+        </div>
+        <div id="steps"> 
             <div id="threeEasySteps">
                 <a href="${cfg.basePath}help?page=dev-tutorial">
                     <img id="getStarted" src="${cfg.staticPath}apps/mint/images/getting_started.png" width="147" height="37" alt="Get Started" />

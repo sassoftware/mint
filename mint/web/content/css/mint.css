@@ -256,30 +256,64 @@ div#stepsText {
     padding: 8px 0px 24px 0px;
 }
 
-span#buildit {
+div#spotlight {
     cursor: pointer;
-    background: url(../images/build_it.png);
+    background: url(../images/spotlight.png);
     text-align: left;
-    width: 326px;
-    height: 81px;
-    float: left;
-    padding-top: 48px;
-    padding-left: 24px;
-    padding-right: 3px;
-    margin-right: 3px;
-}
-
-span#findit {
-    cursor: pointer;
-    float: right;
-    background: url(../images/find_it.png);
-    text-align: left;
-    width: 326px;
-    height: 59px;
-    padding-top: 48px;
+    width: 715px;
+    height: 110px;
+    padding-top: 4px;
     padding-left: 24px;
     margin-left: 3px;
     margin-right: 3px;
+    background-repeat: no-repeat;
+}
+
+div#spotlightTitle {
+    font-size: 11pt;
+    color: #ffa814;
+    text-align: center;
+}
+
+div#applianceTitle {
+    font-size: 10pt;
+    text-align: center;
+    font-weight: bold;
+}
+
+div#applianceText {
+    padding-top: 4px;
+    font-size: 9pt;
+    line-height: 120%;
+    text-align: justify;
+}
+
+div.archiveLink {
+    font-size: 9pt;
+    text-align: right;
+    color: #ffa814;
+    text-decoration: none;
+    width: 17%;
+    float: right;
+    
+}
+
+div.archiveLink:hover {
+    text-decoration: underline;
+}
+
+img#applianceLogo {
+    vertical-align: middle;
+}
+
+div#logoBox {
+    float: left;
+    padding-top: 12px;
+}
+
+div#textBox {
+    padding-right: 45px;
+    padding-left: 110px;
 }
 
 button#signInSubmit {
