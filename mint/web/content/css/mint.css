@@ -263,9 +263,6 @@ div#spotlight {
     width: 715px;
     height: 110px;
     padding-top: 4px;
-    padding-left: 24px;
-    margin-left: 3px;
-    margin-right: 3px;
     background-repeat: no-repeat;
 }
 
@@ -290,11 +287,12 @@ div#applianceText {
 
 div.archiveLink {
     font-size: 9pt;
-    text-align: right;
+    text-align: center;
     color: #ffa814;
     text-decoration: none;
-    width: 17%;
+    width: 19%;
     float: right;
+    padding-top: 4px;
     
 }
 
@@ -309,11 +307,12 @@ img#applianceLogo {
 div#logoBox {
     float: left;
     padding-top: 12px;
+    padding-left: 24px;
 }
 
 div#textBox {
-    padding-right: 45px;
-    padding-left: 110px;
+    padding-right: 24px;
+    padding-left: 134px;
 }
 
 button#signInSubmit {
