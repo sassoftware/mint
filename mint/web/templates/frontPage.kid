@@ -36,6 +36,7 @@ from mint.client import upstream
             <div id="spotlightTitle">Virtual Appliance Spotlight</div>
             <div id="applianceTitle">Port25 Mail Appliance</div>
             <div id="applianceText">The Port25 appliance is an out of the box distribution for deploying mail servers that are secure, manageable, scalable, and fast.  Uses the best Open Source spam and virus protection available.</div>
+            <div id="applianceInfo">Click for more information.</div>
             <div onclick="getElementById('spotlight').onclick=null; alert('spotlight archive'); location.reload();" class="archiveLink">Spotlight Archive</div>
         </div>
         </div>
