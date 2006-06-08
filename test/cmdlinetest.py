@@ -5,6 +5,7 @@
 import os
 
 import testsuite
+import unittest
 testsuite.setup()
 
 import rephelp
@@ -17,13 +18,13 @@ from mint_rephelp import MINT_HOST, MINT_PROJECT_DOMAIN
 
 # if RepositoryHelper.checkCommand were a classmethod, this test
 # wouldn't have to be a RepositoryHelper class and could be faster.
-class CmdLineTest(rephelp.RepositoryHelper):
+class CmdLineTest(unittest.TestCase):
     def checkRBuilder(self, cmd, fn, expectedArgs, cfgValues={},
                   returnVal=None, ignoreKeywords=False, **expectedKw):
         main = RBuilderMain()
         cmd += ' --skip-default-config'
 
-        return self.checkCommand(main.main, 'rbuilder ' + cmd, fn,
+        return rephelp.RepositoryHelper.checkCommand(main.main, 'rbuilder ' + cmd, fn,
                                  expectedArgs, cfgValues, returnVal,
                                  ignoreKeywords, **expectedKw)
 
