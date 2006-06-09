@@ -43,6 +43,7 @@ product-dist:
 strip-raa:
 	rm -rf $(DISTDIR)/raa-plugins/*
 	echo "all: " > $(DISTDIR)/raa-plugins/Makefile
+	echo "install: " >> $(DISTDIR)/raa-plugins/Makefile
 
 main-dist: $(dist_files)
 	rm -rf $(DISTDIR)
