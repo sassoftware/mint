@@ -60,7 +60,7 @@ class SiteHandler(WebHandler):
 
     @cache
     @redirectHttp
-    def _frontPage(self, auth):
+    def _frontPage(self, auth, *args, **kwargs):
         releases = self.client.getReleaseList()
         popularProjects, _ = self.client.getProjects(projectlisting.NUMDEVELOPERS_DES, 10, 0)
         activeProjects, _  = self.client.getProjects(projectlisting.ACTIVITY_DES, 10, 0)
