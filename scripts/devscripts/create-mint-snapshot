@@ -18,7 +18,7 @@ cd /srv/rbuilder/code/mint/
 make product >& /tmp/create-test-rba.log
 if [ $? != 0 ]; then carp; fi
 
-sed -ri "s/^version\ \=\ '.+'/version\ \=\ \'$DATE\'/" $RBATEST/rbuilder/rbuilder.recipe
+sed -ri 's/(\s+)version\ \=\ '\''.+'\''/\1version\ \=\ \'\''$DATE\'\''/' $RBATEST/rbuilder/rbuilder.recipe
 
 pushd $RBATEST/rbuilder/
 cvc remove rbuilder-*.tar.bz2
