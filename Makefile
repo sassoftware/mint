@@ -40,6 +40,10 @@ tarball:
 product-dist:
 	make -C product DIR=mint/web dist || exit 1;
 
+strip-raa:
+	rm -rf $(DISTDIR)/raa-plugins/*
+	echo "all: " > $(DISTDIR)/raa-plugins/Makefile
+
 main-dist: $(dist_files)
 	rm -rf $(DISTDIR)
 	mkdir $(DISTDIR)
@@ -50,7 +54,7 @@ main-dist: $(dist_files)
 	done;
 
 dist: productqualifier=-online
-dist: main-dist tarball
+dist: main-dist strip-raa tarball
 
 product: main-dist product-dist tarball
 
