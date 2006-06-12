@@ -129,35 +129,56 @@ class LogFilter:
 	if len(records) != len(self.records):
 	    raise AssertionError, "expected log message count does not match"
 
+	    
         for num, record in enumerate(records):
             if self.records[num] != record:
                 raise AssertionError, "expected log messages do not match: '%s' != '%s'" %(self.records[num], record)
         self.records = []
 
-    def compare(self, records):
+    def _compare(self, desiredList, cmpFn, allowMissing = False):
         """
         compares stored log messages against a sequence of messages and
         resets the filter.  order does not matter.
         """
 	if self.records == None or self.records == []:
-	    if records:
+	    if desiredList:
 		raise AssertionError, "unexpected log messages"
 	    return
+        if not allowMissing and len(desiredList) != len(self.records):
+	    raise AssertionError, "expected log message count does not match"
+
+        matched = [ False ] * len(self.records)
+        for desired in desiredList:
+            match = False
+            for i, record in enumerate(self.records):
+                if cmpFn(record, desired):
+                    match = True
+                    matched[i] = True
+
+            if not match:
+                raise AssertionError, \
+                        "expected log message not found: '%s'" % record
+
+        if not allowMissing and False in matched:
+            record = self.records[matched.index(False)]
+            raise AssertionError, "unexpected log message found: '%s'" %record
+
+        self.records = []
+
+    def compare(self, records, allowMissing = False):
         if type(records) is str:
             records = (records,)
 
-	if len(records) != len(self.records):
-	    raise AssertionError, "expected log message count does not match"
+        return self._compare(records, lambda actual, desired: actual == desired,
+                             allowMissing = allowMissing)
 
-        for record in records:
-            if not record in self.records:
-                raise AssertionError, "expected log message not found: '%s'" %record
+    def regexpCompare(self, records):
+        if type(records) is str:
+            records = (records,)
 
-        for record in self.records:
-            if not record in records:
-                raise AssertionError, "unexpected log message not found: '%s'" %record
-
-        self.records = []
+        regexps = [ re.compile(x) for x in records ]
+        return self._compare(regexps,
+                 lambda actual, regexp: regexp.match(actual) is not None)
 
 conaryDir = None
 _setupPath = None
@@ -318,14 +339,14 @@ class TestCase(unittest.TestCase):
         from conary.lib import log
         log.setVerbosity(self._logLevel)
 
-    def captureOutput(self, fn, *args, **namedArgs):
+    def captureOutput(self, func, *args, **kwargs):
 	sys.stdout.flush()
-	(fd, file) = tempfile.mkstemp()
-	os.unlink(file)
+	(fd, fn) = tempfile.mkstemp()
+	os.unlink(fn)
 	stdout = os.dup(sys.stdout.fileno())
 	os.dup2(fd, sys.stdout.fileno())
 	try:
-	    fnRc = fn(*args, **namedArgs)
+	    ret = func(*args, **kwargs)
 	    sys.stdout.flush()
 	except:
 	    os.dup2(stdout, sys.stdout.fileno())
@@ -333,23 +354,42 @@ class TestCase(unittest.TestCase):
 	    raise
 
 	os.dup2(stdout, sys.stdout.fileno())
+        os.close(stdout)
 
+        # rewind and read in what was captured
 	os.lseek(fd, 0, 0)
-	str = ""
-	rc = os.read(fd, 1024)
-	while (rc):
-	    str += rc
-	    rc = os.read(fd, 1024)
+        f = os.fdopen(fd, 'r')
+        s = f.read()
+        # this closes the underlying fd
+        f.close()
 
-	os.close(fd)
+	return (ret, s)
 
-	return (fnRc, str)
+    def discardOutput(self, func, *args, **kwargs):
+	sys.stdout.flush()
+	stdout = os.dup(sys.stdout.fileno())
+        null = os.open('/dev/null', os.W_OK)
+	os.dup2(null, sys.stdout.fileno())
+	try:
+	    ret = func(*args, **kwargs)
+	    sys.stdout.flush()
+	except:
+	    os.dup2(stdout, sys.stdout.fileno())
+	    os.close(null)
+	    raise
 
-    def logCheck(self, fn, args, log, kwargs={}):
+	os.dup2(stdout, sys.stdout.fileno())
+        os.close(null)
+	return ret
+
+    def logCheck(self, fn, args, log, kwargs={}, regExp = False):
 	self.logFilter.add()
 	rc = fn(*args, **kwargs)
 	try:
-	    self.logFilter.compare(log)
+            if regExp:
+                self.logFilter.regexpCompare(log)
+            else:
+                self.logFilter.compare(log)
 	finally:
 	    self.logFilter.remove()
 	return rc
@@ -468,7 +508,8 @@ class TestTimer(object):
 
 
 class SkipTestException(Exception):
-    pass
+    def __init__(self, args=''):
+        self.args = args
 
 class SkipTestResultMixin:
     def __init__(self):
@@ -496,30 +537,37 @@ class SkipTestResultMixin:
 class TestCallback:
 
     def _message(self, msg):
-        self.out.write("\r")
-        self.out.write(msg)
-        if len(msg) < self.last:
-            i = self.last - len(msg)
-            self.out.write(" " * i + "\b" * i)
-        self.out.flush()
-        self.last = len(msg)
+        if self.oneLine:
+            self.out.write("\r")
+            self.out.write(msg)
+            if len(msg) < self.last:
+                i = self.last - len(msg)
+                self.out.write(" " * i + "\b" * i)
+            self.out.flush()
+            self.last = len(msg)
+        else:
+            self.out.write(msg)
+            self.out.write('\n')
+            self.out.flush()
 
     def __del__(self):
-        if self.last:
+        if self.last and self.oneLine:
             self._message("")
             print "\r",
             self.out.flush()
 
     def clear(self):
-        self._message("")
-        print "\r",
+        if self.oneLine:
+            self._message("")
+            print "\r",
 
-    def __init__(self, f = sys.stdout):
+    def __init__(self, f = sys.stdout, oneLine = True):
+        self.oneLine = oneLine
         self.last = 0
         self.out = f
 
     def totals(self, run, passed, failed, errored, skipped, total, 
-                timePassed, estTotal, test=None):
+               timePassed, estTotal, test=None):
         totals = (failed +  errored, skipped, timePassed / 60, 
                   timePassed % 60, estTotal / 60, estTotal % 60, run, total)
         msg = 'Fail: %s Skip: %s - %0d:%02d/%0d:%02d - %s/%s' % totals
@@ -527,10 +575,14 @@ class TestCallback:
         if test:
             # append end of test to message
             id = test.id()
-            cutoff = max((len(id) + len(msg)) - 76, 0)
+            if self.oneLine:
+                cutoff = max((len(id) + len(msg)) - 76, 0)
+            else:
+                cutoff = 0
             msg = msg + ' - ' + id[cutoff:]
 
-        self._message(msg)
+        if test or self.oneLine:
+            self._message(msg)
 
 
 class SkipTestTextResult(unittest._TextTestResult, SkipTestResultMixin):
@@ -539,22 +591,28 @@ class SkipTestTextResult(unittest._TextTestResult, SkipTestResultMixin):
         test = kw.pop('test')
         self.debug = kw.pop('debug', False)
         self.useCallback = kw.pop('useCallback', True)
+        oneLine = kw.pop('oneLine', False)
         self.passedTests = 0
         self.failedTests = 0
         self.erroredTests = 0
         self.skippedTests = 0
         self.total = test.countTestCases()
-        self.callback = TestCallback()
+        self.callback = TestCallback(oneLine=oneLine)
         unittest._TextTestResult.__init__(self, *args, **kw)
         SkipTestResultMixin.__init__(self)
         self.timer = TestTimer('.times', test)
+        self.stderr = os.fdopen(os.dup(sys.stderr.fileno()), 'w', 0)
 
     def addSkipped(self, test, err):
         self.skippedTests += 1
         SkipTestResultMixin.addSkipped(self, test, err)
         if self.useCallback:
             self.callback.clear()
-            print 'SKIPPED:', test.id()
+            if err[1].args:
+                msg = '(%s)' %err[1].args
+            else:
+                msg = ''
+            print 'SKIPPED:', test.id(), msg
 
     def addError(self, test, err):
         if isinstance(err[1], bdb.BdbQuit):
@@ -563,13 +621,13 @@ class SkipTestTextResult(unittest._TextTestResult, SkipTestResultMixin):
         if self.checkForSkipException(test, err):
             return
 
-        if not self.useCallback:
-            unittest._TextTestResult.addError(self, test, err)
-        else:
-            unittest.TestResult.addError(self, test, err)
+        unittest.TestResult.addError(self, test, err)
+        if self.useCallback:
             self.callback.clear()
-            desc = self._exc_info_to_string(err, test)
-            self.printErrorList('ERROR', [(test, desc)])
+        else:
+            print
+        desc = self._exc_info_to_string(err, test)
+        self.printErrorList('ERROR', [(test, desc)])
 
         if self.debug:
             debugger.post_mortem(err[2], err[1], err[0])
@@ -578,13 +636,13 @@ class SkipTestTextResult(unittest._TextTestResult, SkipTestResultMixin):
 
 
     def addFailure(self, test, err):
-        if not self.useCallback:
-            unittest._TextTestResult.addFailure(self, test, err)
-        else:
-            unittest.TestResult.addFailure(self, test, err)
+        unittest.TestResult.addFailure(self, test, err)
+        if self.useCallback:
             self.callback.clear()
-            desc = self._exc_info_to_string(err, test)
-            self.printErrorList('FAILURE', [(test, desc)])
+        else:
+            print
+        desc = self._exc_info_to_string(err, test)
+        self.printErrorList('FAILURE', [(test, desc)])
 
         if self.debug:
             debugger.post_mortem(err[2], err[1], err[0])
@@ -617,11 +675,22 @@ class SkipTestTextResult(unittest._TextTestResult, SkipTestResultMixin):
                                  self.erroredTests, self.skippedTests, 
                                  self.total, timePassed, totalTime, test)
 
+    def printErrorList(self, flavour, errors):
+        for test, err in errors:
+            self.stderr.write(self.separator1)
+            self.stderr.write('\n')
+            self.stderr.write("%s: %s" % (flavour,self.getDescription(test)))
+            self.stderr.write('\n')
+            self.stderr.write(self.separator2)
+            self.stderr.write('\n')
+            self.stderr.write(str(err))
+            self.stderr.write('\n')
 
 class DebugTestRunner(unittest.TextTestRunner):
     def __init__(self, *args, **kwargs):
         self.debug = kwargs.pop('debug', False)
         self.useCallback = kwargs.pop('useCallback', False)
+        self.oneLine = kwargs.pop('oneLine', True)
         unittest.TextTestRunner.__init__(self, *args, **kwargs)
 
     def run(self, test):
@@ -639,9 +708,10 @@ class DebugTestRunner(unittest.TextTestRunner):
 
     def _makeResult(self):
         return SkipTestTextResult(self.stream, self.descriptions,
-                                  self.verbosity, test=self.test, 
+                                  0, test=self.test, 
                                   debug=self.debug,
-                                  useCallback=self.useCallback)
+                                  useCallback=self.useCallback,
+                                  oneLine=self.oneLine)
 
 
 _individual = False
@@ -676,27 +746,29 @@ def main(*args, **keywords):
 
     loader = Loader(context = context)
 
-    verbosity=1
+    oneLine = True
     dots = False
 
     if '-v' in sys.argv:
-        verbosity=2
+        oneLine = False
         sys.argv.remove('-v')
-        dots = True
 
     if '--dots' in sys.argv:
         sys.argv.remove('--dots')
         dots = True
 
-        
     if '--debug' in sys.argv:
         debug = True
         sys.argv.remove('--debug')
     else:
         debug=False
 
-    runner = DebugTestRunner(verbosity=verbosity, debug=debug, 
-                             useCallback=not dots)
+    # output to stdout, not stderr.  reopen because we do some mucking
+    # with sys.stdout. Run unbuffered for immediate output.
+    stream = os.fdopen(os.dup(sys.stdout.fileno()), 'w', 0)
+    runner = DebugTestRunner(debug=debug, useCallback=not dots,
+                             oneLine=oneLine, stream=stream)
+
     try:
         unittest.main(testRunner=runner, testLoader=loader, *args, **keywords)
     finally:
@@ -710,7 +782,7 @@ def outputStats(results, outFile):
 tests run: %s
 skipped:   %s
 failed:    %s
-''' % (results.testsRun, results.skippedTests,
+''' % (results.testsRun, results.skippedTests, 
       (results.erroredTests + results.failedTests)))
 
 
@@ -798,11 +870,10 @@ if __name__ == '__main__':
 	debug = True
 	sys.argv.remove('--debug')
 
-    verbosity = 1
+    oneLine = True
     if '-v' in sys.argv:
-        verbosity = 2
+        oneLine = False
         sys.argv.remove('-v')
-        dots = True
 
     if '--dots' in sys.argv:
         dots = True
@@ -851,8 +922,11 @@ if __name__ == '__main__':
         testcase = loader.loadTestsFromName(test)
         suite.addTest(testcase)
 
-    runner = DebugTestRunner(verbosity=verbosity, debug=debug, 
-                             useCallback=not dots)
+    # output to stdout, not stderr.  reopen because we do some mucking
+    # with sys.stdout. Run unbuffered for immediate output.
+    stream = os.fdopen(os.dup(sys.stdout.fileno()), 'w', 0)
+    runner = DebugTestRunner(debug=debug, useCallback=not dots,
+                             oneLine=oneLine, stream=stream)
     results = runner.run(suite)
 
     if statFile:
@@ -860,3 +934,4 @@ if __name__ == '__main__':
 
     if profiling:
         prof.stop()
+    sys.exit(not results.wasSuccessful())
