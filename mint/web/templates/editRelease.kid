@@ -35,7 +35,7 @@ from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM
             </div>
             <div id="right" class="side">
                 ${projectsPane()}
-                ${groupTroveBuilder()}
+                ${builderPane()}
             </div>
 
             <div id="middle">

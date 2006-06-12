@@ -48,7 +48,7 @@ from mint.web.templatesupport import downloadTracker
             </div>
             <div id="right" class="side">
                 ${resourcePane()}
-                ${groupTroveBuilder()}
+                ${builderPane()}
             </div>
             <div id="middle">
                 <h1>${project.getNameForDisplay(maxWordLen=30)}</h1>

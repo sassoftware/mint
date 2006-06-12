@@ -56,7 +56,7 @@ from mint import userlevels
             </div>
             <div id="right" class="side">
                 ${resourcePane()}
-                ${groupTroveBuilder()}
+                ${builderPane()}
             </div>
             <div id="middle">
                 <?python

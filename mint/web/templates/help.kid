@@ -30,7 +30,7 @@ from mint.helperfuncs import truncateForDisplay
             </div>
             <div id="right" class="side">
                 ${resourcePane()}
-                ${groupTroveBuilder()}
+                ${builderPane()}
             </div>
             <div id="middle">
                 <h1>${project.getNameForDisplay(maxWordLen = 25)}</h1>

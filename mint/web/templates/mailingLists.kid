@@ -26,7 +26,7 @@
             </div>
             <div id="right" class="side">
                 ${resourcePane()}
-                ${groupTroveBuilder()}
+                ${builderPane()}
             </div>
             <div id="middle">
                 <p class="message" py:for='msg in messages' py:content="msg"/>

@@ -101,7 +101,7 @@ from mint.web.templatesupport import downloadTracker
             </div>
             <div id="right" class="side">
                 ${resourcePane()}
-                ${groupTroveBuilder()}
+                ${builderPane()}
             </div>
             <div id="middle">
                 <?python hasVMwareImage = True in [ x.hasVMwareImage() for x in publishedReleases ] ?>

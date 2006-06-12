@@ -13,7 +13,7 @@
         <div id="layout">
             <div id="right" class="side">
                 ${resourcePane()}
-                ${groupTroveBuilder()}
+                ${builderPane()}
             </div>
 
             <div id="spanleft">

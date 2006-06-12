@@ -29,7 +29,7 @@ from mint import userlevels
             </div>
             <div id="right" class="side">
                 ${resourcePane()}
-                ${groupTroveBuilder()}
+                ${builderPane()}
             </div>
             <div id="middle">
                 <h1>${project.getNameForDisplay(maxWordLen = 50)}</h1>

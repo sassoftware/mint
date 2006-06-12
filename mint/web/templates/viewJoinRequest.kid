@@ -25,7 +25,7 @@ from mint import userlevels
             </div>
             <div id="right" class="side">
                 ${resourcePane()}
-                ${groupTroveBuilder()}
+                ${builderPane()}
             </div>
             <div id="middle">
                 <h3><a href="http://$SITE/userInfo?id=${userId}">${username}</a>
