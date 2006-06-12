@@ -20,13 +20,12 @@ class UnknownException(Exception):
         self.eName = eName
         self.eArgs = eArgs
 
-def usage(exitcode=1):
-    sys.stderr.write("\n".join((
+def usage():
+    return "\n".join((
      "Usage: commitaction [commitaction args] ",
      "         --module '/path/to/statsaction --user <user>' --url <xmlrpc url>",
      ""
-    )))
-    return exitcode
+    ))
 
 class _Method(xmlrpclib._Method):
     def __repr__(self):
@@ -60,7 +59,8 @@ class ServerProxy(xmlrpclib.ServerProxy):
 
 def process(repos, cfg, commitList, srcMap, pkgMap, grpMap, argv, otherArgs):
     if not len(argv) and not len(otherArgs):
-        return usage()
+        usage()
+        return 1
     
     argDef = {
         'url' : options.ONE_PARAM,
@@ -123,4 +123,5 @@ def process(repos, cfg, commitList, srcMap, pkgMap, grpMap, argv, otherArgs):
     return 0
 
 if __name__ == "__main__":
-    sys.exit(usage())
+    print usage()
+    sys.exit(1)
