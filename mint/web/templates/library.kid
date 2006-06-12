@@ -5,6 +5,7 @@ from urllib import quote
 from mint import userlevels
 from mint import maintenance
 from mint.helperfuncs import truncateForDisplay
+from rmake.build import buildtrove, buildjob
 
 from mint.web.templatesupport import injectVersion
 ?>
@@ -38,6 +39,49 @@ from mint.web.templatesupport import injectVersion
                 ${resultsetdesc}
             </td>
         </tr>
+    </div>
+
+    <div id="rMakeBuilder" py:def="rMakeBuilder" py:if="rMakeBuild">
+        <?python
+            statusIcons = {buildtrove.TROVE_STATE_FAILED : cfg.staticPath + "apps/mint/images/action_stop.gif",
+                           buildtrove.TROVE_STATE_BUILDABLE : cfg.staticPath + "apps/mint/images/circle-ball-dark-antialiased.gif",
+                           buildtrove.TROVE_STATE_BUILDING : cfg.staticPath + "apps/mint/images/circle-ball-dark-antialiased.gif",
+                           buildtrove.TROVE_STATE_BUILT : cfg.staticPath + "apps/mint/images/icon_accept.gif",}
+            if rMakeBuild.status:
+                statusIcons[buildtrove.TROVE_STATE_INIT] = cfg.staticPath + "apps/mint/images/next.gif"
+
+        ?>
+        <img class="left" src="${cfg.staticPath}apps/mint/images/header_orange_left.png" alt="" />
+        <img class="right" src="${cfg.staticPath}apps/mint/images/header_orange_right.png" alt="" />
+        <div class="boxHeader">
+            <a href="${cfg.basePath}closeCurrentrMake?referer=${quote(req.unparsed_uri)}" title="Close"><img id="rmake_items_close" src="${cfg.staticPath}/apps/mint/images/BUTTON_close.gif" alt="X" class="noborder" /></a>
+            rMake Builder
+        </div>
+        <div id="rMakeBuilderItems">
+            <div><a href="${cfg.basePath}${rMakeBuild.status and 'rMakeStatus' or 'editrMake?id=%d' % rMakeBuild.id}" title="${rMakeBuild.title}">Current rMake Build: ${truncateForDisplay(rMakeBuild.title, maxWordLen = 30)}</a></div>
+            <table>
+                <thead>
+                    <tr>
+                        <th colspan="2">Trove</th>
+                        <th>Project</th>
+                        <th py:if="not rMakeBuild.status">Del</th>
+                    </tr>
+                </thead>
+                <tbody class="rmake-builder" id="rmakebuilder-tbody">
+                    <tr><td></td></tr>
+                    <tr py:for="item in rMakeBuild.listTroves()" id="rmakebuilder-item-${item['rMakeBuildItemId']}">
+                        <td><img py:if="item['status'] in statusIcons" src="${statusIcons[item['status']]}"/></td>
+                        <td><a href="${cfg.basePath + 'repos/' + item['shortHost'] + '/troveInfo?t=' + item['trvName']}">${item['trvName']}</a></td>
+                        <td><a href="${cfg.basePath + 'repos/' + item['shortHost']}/browse">${item['shortHost']}</a></td>
+                        <td py:if="not rMakeBuild.status"><a href="${cfg.basePath}deleterMakeTrove?troveId=${item['rMakeBuildItemId']};referer=${quote(req.unparsed_uri)}">X</a></td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="rMakeBuildBuild" style="padding: 10px 0; text-align: center;" py:if="not rMakeBuild.status"><a class="option" style="display: inline;" href="${cfg.basePath}commandrMake?command=build">Build</a></div>
+            <div class="rMakeBuildStop" style="padding: 10px 0; text-align: center;" py:if="rMakeBuild.status not in (buildjob.STATE_INIT, buildjob.STATE_FINISHED, buildjob.STATE_FAILED)"><a class="option" style="display: inline;" href="${cfg.basePath}commandrMake?command=stop">Stop</a></div>
+            <div class="rMakeBuildStop" style="padding: 10px 0; text-align: center;" py:if="rMakeBuild.status == buildjob.STATE_FINISHED"><a class="option" style="display: inline;" href="${cfg.basePath}commandrMake?command=commit">Commit</a></div>
+
+        </div>
     </div>
 
     <div id="groupBuilder" py:def="groupTroveBuilder" py:if="groupTrove">
@@ -85,6 +129,14 @@ from mint.web.templatesupport import injectVersion
         </div>
     </div>
 
+    <div id="builderPane" py:def="builderPane">
+        <div py:if="groupTrove">
+            ${groupTroveBuilder()}
+        </div>
+        <div py:if="rMakeBuild">
+            ${rMakeBuilder()}
+        </div>
+    </div>
 
     <div py:def="recentReleasesMenu(releases, display='none')" py:strip="True">
       <div id="releases" class="palette" py:if="releases">
