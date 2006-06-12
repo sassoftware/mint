@@ -16,6 +16,7 @@ python_files = \
 	decorators.py	\
 	hooks.py	\
 	project.py	\
+        rmakehandler.py \
 	setup.py	\
 	site.py		\
 	webhandler.py	\
