@@ -443,11 +443,11 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
     def testPgpAdminPage(self):
         client, userId = self.quickMintUser('foouser','foopass')
-        projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
+        projectId = self.newProject(client)
         page = self.webLogin('foouser', 'foopass')
 
-        page = page.fetch('/repos/foo/pgpAdminForm',
-                                  ok_codes = [200])
+        page = page.fetchWithRedirect('/repos/testproject/pgpAdminForm',
+            server = self.getProjectServerHostname())
 
     def testPgpAdminLink(self):
         # Ideally this test will change in the future. all users of the site
