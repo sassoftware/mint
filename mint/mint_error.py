@@ -79,3 +79,20 @@ class GroupTroveEmpty(MintError):
     def __init__(self, reason = "Group Trove cannot be empty"):
         self.reason = reason
 
+class rMakeBuildEmpty(MintError):
+    def __str__(self):
+        return self.reason
+    def __init__(self, reason = "rMake Build cannot be empty"):
+        self.reason = reason
+
+class rMakeBuildCollision(MintError):
+    def __str__(self):
+        return self.reason
+    def __init__(self, reason = "rMake Build already underway"):
+        self.reason = reason
+
+class rMakeBuildOrder(MintError):
+    def __str__(self):
+        return self.reason
+    def __init__(self, reason = "rMake Build commands submitted out of order"):
+        self.reason = reason
