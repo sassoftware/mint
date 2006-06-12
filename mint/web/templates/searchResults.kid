@@ -4,6 +4,8 @@
     from urllib import quote
     from mint import searcher
     from mint.client import timeDelta
+    from mint import userlevels
+    from conary import versions
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
@@ -22,7 +24,7 @@
             else:
                 columns = ('User Name', 'Full Name', 'Account Created', 'Last Accessed')
         elif searchType == "Packages":
-            if groupTrove:
+            if groupTrove or rMakeBuild:
                 columns = ('Package', 'Project', '')
             else:
                 columns = ('Package', 'Project')
@@ -34,6 +36,7 @@
     <body>
         <div py:def="formatResults(resultset = [])" py:strip="True">
             <?python
+                projectHosts = [x[0].hostname for x in projectList if x[1] in userlevels.WRITERS]
                 formattedresults = []
                 if searchType == "Projects":
                     formattedresults = [
@@ -60,6 +63,8 @@
                     resultsetdesc = resultset[1]
                     if groupTrove and not groupTrove.troveInGroup(resultset[0]):
                         formattedresults.append((self.cfg.basePath + 'project/%s/addGroupTrove?id=%d;trove=%s;version=%s;referer=%s' % (groupTrove.projectName, groupTrove.getId(), quote(resultset[0]), resultset[1], quote(req.unparsed_uri)) , 'Add to %s' % groupTrove.recipeName))
+                    if rMakeBuild and not rMakeBuild.status and resultset[4].split('/')[2] in projectHosts:
+                        formattedresults.append((self.cfg.basePath + 'addrMakeTrove?trvName=%s;label=%s;referer=%s' % (quote(resultset[0]), str(versions.VersionFromString(resultset[1]).branch().label()), quote(req.unparsed_uri)), 'Add to %s' % rMakeBuild.title))
             ?>
             ${resultRow(formattedresults, resultsetdesc)}
         </div>
@@ -67,7 +72,7 @@
         <div id="layout">
             <div id="right" class="side">
                 ${resourcePane()}
-                ${groupTroveBuilder()}
+                ${builderPane()}
             </div>
             <div id="spanleft">
                 <h2>Search Results: ${searchType}</h2>

@@ -31,6 +31,13 @@ from mint.helperfuncs import truncateForDisplay
         </a>
     </span>
 
+    <span py:def="adder(package, component='')" style="float: right;" py:if="userLevel in userlevels.WRITERS and rMakeBuild and not rMakeBuild.status">
+        <?python
+            from mint.helperfuncs import truncateForDisplay
+        ?>
+        <a href="${cfg.basePath}addrMakeTrove?trvName=${quote(package.split(':source')[0])};referer=${quote(req.unparsed_uri)};projectName=${project.hostname}" title="Add to ${rMakeBuild.title}">Add to ${truncateForDisplay(rMakeBuild.title, maxWordLen = 10)}</a>
+    </span>
+
     <head>
         <title>${formatTitle('Repository Browser: %s'% project.getNameForDisplay(maxWordLen = 50))}</title>
     </head>
@@ -43,7 +50,7 @@ from mint.helperfuncs import truncateForDisplay
             </div>
             <div id="right" class="side">
                 ${resourcePane()}
-                ${groupTroveBuilder()}
+                ${builderPane()}
             </div>
 
             <div id="middle">

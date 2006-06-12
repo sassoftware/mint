@@ -45,6 +45,12 @@ isOwner = (userLevel == userlevels.OWNER or auth.admin)
         </a>
     </span>
 
+    <span py:def="adder(trove)" style="float: right;"
+        py:if="rMakeBuild and not rMakeBuild.status and userLevel in userlevels.WRITERS and ':' not in trove.getName()">
+        <a href="${cfg.basePath}addrMakeTrove?trvName=${quote(trove.getName())};label=${quote(str(trove.getVersion().branch().label()))};referer=${quote(req.unparsed_uri)}" title="Add to ${rMakeBuild.title}">
+            Add to ${truncateForDisplay(rMakeBuild.title, maxWordLen = 10)}
+        </a>
+    </span>
 
     <table py:def="binaryTroveInfo(troves)" class="troveinfo">
         <?python
@@ -99,7 +105,7 @@ isOwner = (userLevel == userlevels.OWNER or auth.admin)
             </div>
             <div id="right" class="side">
                 ${resourcePane()}
-                ${groupTroveBuilder()}
+                ${builderPane()}
             </div>
             <div id="middle">
                 <h2 title="${troveName}">${project.getNameForDisplay(maxWordLen = 50)}<br />Repository Browser<br />Trove information for ${truncateForDisplay(troveName, maxWordLen = 45)}</h2>
