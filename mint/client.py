@@ -15,6 +15,7 @@ from mint import jobs
 from mint import projects
 from mint import releases
 from mint import users
+from mint import rmakebuild
 from mint.mint_error import MintError, UnknownException, PermissionDenied, \
     ReleasePublished, ReleaseMissing, ReleaseEmpty, UserAlreadyAdmin, \
     AdminSelfDemotion, JobserverVersionMismatch, MaintenanceMode, \
@@ -429,6 +430,26 @@ class MintClient:
 
     def listGroupTrovesByProject(self, projectId):
         return self.server.listGroupTrovesByProject(projectId)
+
+    # rMake build functions
+    def getrMakeBuild(self, rMakeBuildId):
+        return rmakebuild.rMakeBuild(self.server, rMakeBuildId)
+
+    def getrMakeBuildTrove(self, rMakeBuildItemId):
+        return self.server.getrMakeBuildTrove(rMakeBuildItemId)
+
+    def delrMakeBuildTrove(self, rMakeBuildItemId):
+        return self.server.delrMakeBuildTrove(rMakeBuildItemId)
+
+    def createrMakeBuild(self, title):
+        return self.getrMakeBuild(self.server.createrMakeBuild(title))
+
+    def setrMakeBuildStatus(self, UUID, status, statusMessage):
+        return self.server.setrMakeBuildStatus(UUID, status, statusMessage)
+
+    def listrMakeBuilds(self):
+        return sorted([self.getrMakeBuild(x) for x in \
+                       self.server.listrMakeBuilds()], key = lambda x:x.title)
 
     # report functions
     def listAvailableReports(self):
