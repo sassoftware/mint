@@ -31,6 +31,8 @@ from mint.web.webhandler import WebHandler, normPath, HttpNotFound, HttpPartialC
 import conary.versions
 from conary.web.fields import boolFields, dictFields, intFields, listFields, strFields
 
+from rmake.build import buildjob
+
 class SiteHandler(WebHandler):
     def handle(self, context):
         self.__dict__.update(**context)
@@ -634,6 +636,169 @@ class SiteHandler(WebHandler):
         else:
             return self._redirect("http://%s%suserInfo?id=%d" %
                     (self.cfg.siteHost, self.cfg.basePath, userId))
+
+    @requiresAuth
+    def rMake(self, auth):
+        return self._write('rMake',
+                           rMakeBuilds = self.client.listrMakeBuilds())
+
+    @requiresAuth
+    def newrMake(self, auth):
+        return self._write('newrMake')
+
+    @strFields(title = None)
+    @requiresAuth
+    def createrMake(self, auth, title):
+        if not re.match("[a-zA-Z0-9\-_ ]+$", title):
+            self._addErrors("Invalid rMake Build name: %s" % title)
+        rMakeBuild = self.client.createrMakeBuild(title)
+        if self._getErrors():
+            return self._write('newrMake')
+        else:
+            return self._redirect(self.cfg.basePath + 'editrMake?id=%d' % \
+                                  rMakeBuild.id)
+
+    @intFields(id = None)
+    @requiresAuth
+    def editrMake(self, auth, id):
+        self.session['rMakeBuildId'] = id
+        self.rMakeBuild = self.client.getrMakeBuild(id)
+        # rMake Builder and Group Builder are mutually exclusive
+        if 'groupTroveId' in self.session:
+            del self.session['groupTroveId']
+        self.session.save()
+        self.groupTrove = None
+        self.groupProject = None
+        return self._write('editrMake')
+
+    @strFields(title = None)
+    @requiresAuth
+    def editrMake2(self, auth, title):
+        if not re.match("[a-zA-Z0-9\-_ ]+$", title):
+            self._addErrors("Invalid rMake Build name: %s" % title)
+        else:
+            self.rMakeBuild.rename(title)
+            self._setInfo('name successfully changed to: %s' % title)
+        return self._redirect(self.cfg.basePath + 'editrMake?id=%d' % \
+                                  self.rMakeBuild.id)
+
+    @strFields(referer = '')
+    @requiresAuth
+    def closeCurrentrMake(self, auth, referer):
+        self.rMakeBuild = None
+        if 'rMakeBuildId' in self.session:
+            del self.session['rMakeBuildId']
+            self.session.save()
+        if not referer:
+            referrer = self.cfg.basePath
+        self._redirect(referer)
+
+    @dictFields(yesArgs = {})
+    @boolFields(confirmed=False)
+    @requiresAuth
+    def deleterMakeBuild(self, auth, confirmed, **yesArgs):
+        if confirmed:
+            try:
+                self.rMakeBuild.delete()
+            except:
+                self._addErrors("Unable to delete rMake Build: %s" % \
+                                self.rMakeBuild.title)
+            else:
+                self._setInfo("Successfully deleted rMake Build: %s" % \
+                              self.rMakeBuild.title)
+                self.rMakeBuild = None
+                if 'rMakeBuildId' in self.session:
+                    del self.session['rMakeBuildId']
+                    self.session.save
+            return self._redirect(self.cfg.basePath)
+        else:
+            return self._write('confirm',
+                               message = "Are you sure you want to delete " \
+                               "this rMake Build: %s?" % self.rMakeBuild.title,
+                               yesArgs = {'func':'deleterMakeBuild',
+                                          'confirmed':'1'},
+                               noLink = "rMake")
+
+    @strFields(trvName = None, label = '', projectName = '', referer = '')
+    def addrMakeTrove(self, auth, trvName, projectName, referer, label):
+        if not self.rMakeBuild:
+            self._addErrors("No rMake Build underway.")
+        elif not label and not projectName:
+            self._addErrors("No reference to trove origins given.")
+        else:
+            if label:
+                self.rMakeBuild.addTrove(trvName, label)
+            else:
+                self.rMakeBuild.addTroveByProject(trvName, projectName)
+            self._setInfo("Added %s" % trvName)
+        if not referer:
+            referer = self.cfg.basePath
+        self._redirect(referer)
+
+    @intFields(troveId = None)
+    @strFields(referer = '')
+    def deleterMakeTrove(self, auth, troveId, referer):
+        if not self.rMakeBuild:
+            self._addErrors("No rMake Build underway.")
+        else:
+            trvDict = self.client.getrMakeBuildTrove(troveId)
+            self.client.delrMakeBuildTrove(troveId)
+            self._setInfo('Successfully deleted %s' % trvDict['trvName'])
+        if not referer:
+            referer = self.cfg.basePath
+        self._redirect(referer)
+
+    strFields(command = None)
+    def commandrMake(self, auth, command):
+        if not self.rMakeBuild:
+            self._addErrors("No rMake Build underway.")
+            self._redirect(self.cfg.basePath)
+        elif command not in ('build', 'stop', 'commit'):
+            self._addErrors("Illegal rMake Command.")
+            self._redirect(self.cfg.basePath)
+        else:
+            self._setInlineMime(self.cfg.basePath + \
+                                "rMakeCommand", command = command)
+            if command == 'build':
+                self._setInfo("Starting rMake Build")
+            elif command == 'stop':
+                self._setInfo("Stopping rMake Build")
+            elif command == 'commit':
+                self._setInfo("Committing rMake Build")
+            self._redirect(self.cfg.basePath + 'rMakeStatus')
+
+    strFields(command = None)
+    def rMakeCommand(self, auth, command):
+        command = str(command)
+        if not self.rMakeBuild:
+            return self._write('error', 'error', "No rMake Build underway.")
+        else:
+            self.req.content_type = "application/x-rmake"
+            return self.rMakeBuild.getXML(command)
+
+    @requiresAuth
+    def rMakeStatus(self, auth):
+        if not self.rMakeBuild:
+            return self._write('error', 'error', "No rMake Build underway.")
+        else:
+            return self._write('rMakeStatus',
+                               troveList = self.rMakeBuild.listTroves())
+
+    @requiresAuth
+    @dictFields(yesArgs = {})
+    @boolFields(confirmed = False)
+    def resetrMakeStatus(self, auth, confirmed, **yesArgs):
+        if not self.rMakeBuild:
+            return self._write('error', 'error', "No rMake Build underway.")
+        if confirmed or self.rMakeBuild.status in \
+               (buildjob.STATE_INIT, buildjob.STATE_FAILED):
+            self.rMakeBuild.resetStatus()
+            self._redirect(self.cfg.basePath)
+        else:
+            return self._write("confirm", message = "rMake Server will continue to service this rMake build but you will not be able to track it from rBuilder. Are you sure?",
+                               yesArgs = {'func':'resetrMakeStatus',
+                                          'confirmed':'1'},
+                               noLink = self.cfg.basePath)
 
 def helpDocument(page):
     templatePath = os.path.join(os.path.split(__file__)[0], 'templates/docs')
