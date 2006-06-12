@@ -4,6 +4,7 @@
 #
 import os
 
+import tempfile
 import testsuite
 import unittest
 testsuite.setup()
@@ -24,9 +25,19 @@ class CmdLineTest(unittest.TestCase):
         main = RBuilderMain()
         cmd += ' --skip-default-config'
 
-        return rephelp.RepositoryHelper.checkCommand(main.main, 'rbuilder ' + cmd, fn,
-                                 expectedArgs, cfgValues, returnVal,
-                                 ignoreKeywords, **expectedKw)
+        cfgFd, cfgFn = tempfile.mkstemp()
+        try:
+            cfgF = os.fdopen(cfgFd, "w")
+            # this value doesn't really matter--just needs to be a parseable url
+            cfgF.write("serverUrl http://testuser:testpass@mint.rpath.local/xmlrpc-private")
+            cfgF.close()
+
+            cmd += " --config-file=%s" % cfgFn
+            return rephelp.RepositoryHelper.checkCommand(main.main, 'rbuilder ' + cmd, fn,
+                                     expectedArgs, cfgValues, returnVal,
+                                     ignoreKeywords, **expectedKw)
+        finally:
+            os.unlink(cfgFn)
 
     def testReleaseCreate(self):
         troveSpec = 'group-test=/testproject.%s@rpl:devel/1.0-1-1[is:x86]' % MINT_PROJECT_DOMAIN
