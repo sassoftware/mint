@@ -17,9 +17,12 @@ DEFAULT_BASEPATH = os.path.join(os.path.sep, 'srv', 'rbuilder', 'jobserver')
 def getVersionsOnDisk(basePath = None):
     if basePath is None:
         basePath = DEFAULT_BASEPATH
-    ret = sorted([x for x in os.listdir(basePath) \
-                   if re.match('\d*(\.\d*)+.*', x) \
-                   and os.path.isdir(os.path.join(basePath, x))])
+    if os.path.exists(basePath):
+        ret = sorted([x for x in os.listdir(basePath) \
+                       if re.match('\d*(\.\d*)+.*', x) \
+                       and os.path.isdir(os.path.join(basePath, x))])
+    else:
+        ret = None
     return ret and ret or [constants.mintVersion]
 
 def getVersions(basePath = None):
