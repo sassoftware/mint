@@ -65,7 +65,9 @@ class WebHandler(object):
                               SITE = self.SITE,
                               isOwner = self.isOwner,
                               groupTrove = self.groupTrove,
+                              rMakeBuild = self.rMakeBuild,
                               groupProject = self.groupProject,
+                              inlineMime = self.inlineMime,
                               infoMsg = self.infoMsg,
                               errorMsgList = self.errorMsgList,
                               output = self.output,
@@ -204,11 +206,17 @@ class WebHandler(object):
         return nexthop
 
     # Methods used to stash away info/error messages into the session.
-    # These variables are retrieved and deleted automatically by 
+    # These variables are retrieved and deleted automatically by
     # mint/web/app.py when building the context for handling a request.
     #
     # NOTE: This requires a *real* persistent session to work properly.
     # Currently, rBO only doles out a real session if a user is logged in.
+
+    def _setInlineMime(self, src, **kwargs):
+        inlineMime = (src, [x for x in kwargs.iteritems()])
+        self.session['inlineMime'] = inlineMime
+        if (isinstance(self.session, SqlSession)):
+            self.session.save()
 
     def _setInfo(self, message):
         self.session['infoMsg'] = message
@@ -227,10 +235,9 @@ class WebHandler(object):
 
     def _clearAllMessages(self):
         if (isinstance(self.session, SqlSession)):
-            if self.session.has_key('infoMsg'):
-                del self.session['infoMsg']
-            if self.session.has_key('errorMsgList'):
-                del self.session['errorMsgList']
+            for key in ('infoMsg', 'errorMsgList', 'inlineMime'):
+                if self.session.has_key(key):
+                    del self.session[key]
             self.session.save()
 
 def normPath(path):
