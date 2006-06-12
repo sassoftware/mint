@@ -403,6 +403,7 @@ def getRepNameMap(db):
     return d
 
 def handler(req):
+    coveragehook.install()
     if not req.hostname:
         return apache.HTTP_BAD_REQUEST
 
