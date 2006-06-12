@@ -219,6 +219,11 @@ class ProjectHandler(WebHandler):
         curGroupTrove = self.client.getGroupTrove(id)
         self.session['groupTroveId'] = id
         self.groupTrove = curGroupTrove
+        # these are mutually exclusive
+        if 'rMakeBuildId' in self.session:
+            del self.session['rMakeBuildId']
+        self.rMakeBuild = None
+
         self.groupProject = self.client.getProject(self.groupTrove.projectId)
         return self._write("editGroup", message = None, curGroupTrove = curGroupTrove)
 
