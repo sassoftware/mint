@@ -7,6 +7,8 @@ import testsuite
 import unittest
 testsuite.setup()
 
+import fixtures
+
 import kid
 import os
 import re
@@ -16,6 +18,7 @@ import time
 
 from mint import constants
 from mint import templates
+from mint import server
 from mint.helperfuncs import truncateForDisplay, extractBasePath, \
         hostPortParse, rewriteUrlProtocolPort
 from mint.client import timeDelta
@@ -368,6 +371,15 @@ Much like Powdermilk Biscuits[tm]."""
         self.failIf(methods,
                     "The following methods are not explicitly allowed or deleted: %s. please update repos.py" %\
                     ' '.join(methods))
+
+
+class FixturedHelpersTest(fixtures.FixturedUnitTest):
+    @fixtures.fixture('Full')
+    def testIndeces(self, db, data):
+        # the tables have already been loaded. doing an independent load in
+        # this manner will uncover table index dicts with a name mismatch
+        db.loadSchema()
+        tableObjs = server.getTables(db, self.cfg)
 
 
 if __name__ == "__main__":
