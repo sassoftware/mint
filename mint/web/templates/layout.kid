@@ -92,6 +92,19 @@ onload = "javascript:;"
                 if 'errors' in locals():
                     errorMsgList = errors
             ?>
+            <div py:if="inlineMime">
+                <?python
+                    mime, mimeArgs = inlineMime
+                ?>
+                <form method="post" action="${mime}" name="inlineMime">
+                    <input py:for="key, val in mimeArgs" type="hidden" name="${key}" value="${val}" />
+                    <script type="text/javascript">
+                        <![CDATA[
+                            callLater(1, function() { document.forms["inlineMime"].submit();});
+                        ]]>
+                    </script>
+                </form>
+            </div>
             <div py:if="infoMsg" id="info" class="status" py:content="infoMsg" />
             <div py:if="errorMsgList" id="errors" class="status">The following ${(len(errorMsgList) == 1) and "error" or "errors"} occurred:
                 <p py:for="e in errorMsgList" py:content="e" />
