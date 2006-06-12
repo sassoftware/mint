@@ -35,6 +35,7 @@ python_files =			\
 	releasetypes.py		\
 	releasetemplates.py	\
 	requests.py		\
+	rmakebuild.py           \
 	scriptlibrary.py	\
 	searcher.py		\
 	server.py		\

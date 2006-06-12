@@ -15,6 +15,7 @@ kid_files = \
 	editGroup.kid		\
 	editProject.kid		\
 	editRelease.kid		\
+        editrMake.kid           \
 	error.kid		\
 	forgotPassword.kid	\
 	frontPage.kid		\
@@ -28,6 +29,7 @@ kid_files = \
 	members.kid		\
 	newGroup.kid		\
 	newProject.kid		\
+	newrMake.kid            \
 	passwordReset.kid	\
 	pickArch.kid		\
 	project.kid		\
@@ -40,6 +42,8 @@ kid_files = \
 	rejectJoinRequest.kid   \
 	release.kid		\
 	releases.kid		\
+        rMake.kid               \
+        rMakeStatus.kid         \
 	rss20.kid		\
 	searchResults.kid	\
 	uploadKey.kid		\

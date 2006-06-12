@@ -37,6 +37,7 @@ python_files = \
                releasetest.py \
                repostest.py \
                reportstest.py \
+               rmakebuildtest.py \
                schematest.py \
                searchtest.py \
                sessionstest.py \
