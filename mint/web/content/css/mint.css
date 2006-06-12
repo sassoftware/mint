@@ -598,8 +598,10 @@ div#projectsPane div#newProject {
 div#projectsPane div#userSettings {
     text-align: center;
 }
-
 div#projectsPane div#administer {
+    text-align: center;
+}
+div#projectsPane div#rMake {
     text-align: center;
 }
 
@@ -664,6 +666,42 @@ table.groupTroveItems > tr:first-child td {
 
 table.groupTroveItems textarea {
     width: 100%;
+}
+
+/* rMake Builder */
+
+div#rMakeBuilder {
+    clear: right;
+    width: 224px;
+    margin: 8px 3px 12px 3px;
+    background: url(../images/box_body_r.png) no-repeat bottom left;
+}
+
+div#rMakeBuilder img.left {
+    float: left;
+}
+
+div#rMakeBuilder img.right {
+    float: right;
+}
+
+div#rMakeBuilder div.boxHeader {
+    color: white;
+    background: url(../images/header_orange_bg.png);
+    padding: 4px 11px 6px 11px;
+    margin-bottom: 0px;
+    font-size: 120%;
+    font-weight: bold;
+    height: 22px;
+}
+
+div#rMakeBuilderItems {
+    padding: 4px;
+}
+
+div#rMakeBuilder table tr:first-child {
+    color: black;
+    font-weight: bold;
 }
 
 span#editProject {
@@ -815,6 +853,26 @@ div#statusMessage.running {
 }
 
 div#statusMessage.finished {
+    background: #cdedc2;
+    border: 2px solid #7bbb66;
+    padding: 4px;
+}
+
+/* general status -- refactor the job status to use these
+   these happen to be multi-instance per page.*/
+.statusError {
+    background: #edc2c2;
+    border: 2px solid #ed6464;
+    padding: 4px;
+}
+
+.statusRunning {
+    background: #eeeeff;
+    border: 2px solid #8888ff;
+    padding: 4px;
+}
+
+.statusFinished {
     background: #cdedc2;
     border: 2px solid #7bbb66;
     padding: 4px;
