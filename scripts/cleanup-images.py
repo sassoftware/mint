@@ -10,7 +10,7 @@ elif len(sys.argv) > 1:
     print "usage: cleanup-images.py [--dry-run]"
     sys.exit(1)
 
-if not dryRun and not os.geteuid():
+if not dryRun and os.geteuid():
     print >> sys.stderr, "Script not run as root: forcing --dry-run"
     dryRun = True
 
@@ -39,7 +39,7 @@ for baseDir, dirs, files in os.walk(cfg.imagesPath):
             path = os.path.join(baseDir, file)
             if file not in imageFiles:
                 if dryRun:
-                    print "rm %s" % path
+                    print "rm -f %s" % path
                 else:
                     os.unlink(path)
             else:
