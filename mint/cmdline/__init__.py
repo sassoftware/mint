@@ -75,11 +75,11 @@ class RBuilderMain(options.MainHandler):
         print '  config                                                  - dump configuration'
 
     def runCommand(self, thisCommand, cfg, argSet, args):
-        log.setVerbosity(log.INFO)
         client = RBuilderClient(cfg)
         options.MainHandler.runCommand(self, thisCommand, client, cfg, argSet,
                                        args[1:])
 
 def main():
+    log.setVerbosity(log.INFO)
     rb = RBuilderMain()
     rb.main()
