@@ -29,6 +29,7 @@ from mint.projects import mysqlTransTable
 from mint.web import app
 from mint.web.rpchooks import rpcHandler
 from mint.web.webhandler import normPath, HttpError, getHttpAuth
+from mint.web.rmakehandler import rMakeHandler
 
 from conary import dbstore
 from conary.dbstore import sqlerrors
@@ -331,6 +332,7 @@ urls = (
     (r'^/xmlrpc/',           rpcHandler),
     (r'^/jsonrpc/',          rpcHandler),
     (r'^/xmlrpc-private/',   rpcHandler),
+    (r'^/rmakesubscribe',    rMakeHandler),
     (r'^/',                  mintHandler),
 )
 
