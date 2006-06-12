@@ -107,14 +107,14 @@ def process(repos, cfg, commitList, srcMap, pkgMap, grpMap, argv, otherArgs):
                     rBuilderServer.registerCommit(hostname, user, t, vStr)
                 except Exception, e:
                     traceback.print_exc(file = sys.stderr)
-                    sys._exit(1)
-            sys._exit(0)
+                    os._exit(1)
+            os._exit(0)
         else:
             #parent 2
             pid2, status = os.waitpid(pid2, 0)
             if status:
                 sys.stderr.write("rBuilderAction failed with code %d" % status)
-            sys._exit(0)
+            os._exit(0)
 
 
     #parent 1
