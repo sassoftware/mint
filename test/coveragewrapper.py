@@ -78,7 +78,6 @@ def getEnviron():
     conaryPath = os.environ.get('CONARY_PATH', None)
     coveragePath = os.environ.get('COVERAGE_TOOL', None)
     mintPath = os.path.abspath("../") + "/"
-    print "mintPath: ", mintPath
     policyPath = os.environ.get('CONARY_POLICY_PATH', '/usr/lib/conary/policy')
     if not coveragePath:
         print "Please set COVERAGE_TOOL"
