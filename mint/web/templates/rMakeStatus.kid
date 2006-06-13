@@ -9,6 +9,7 @@
 
     <head>
         <title>${formatTitle('Edit rMake Build')}</title>
+        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/rmakebuilder.js"/>
     </head>
     <body>
         <div id="layout">
@@ -24,17 +25,25 @@
             </div>
 
             <div id="spanleft" py:if="rMakeBuild.status==buildjob.STATE_INIT">
-                This job has no yet been sent to rMake.
+                This job has not been sent to rMake yet.
             </div>
             <div id="spanleft" py:if="rMakeBuild.status!=buildjob.STATE_INIT">
+                <script type="text/javascript">
+                <![CDATA[
+                    trvStatusCodes = ${str(dict([(str(x[0]), x[1]) for x in trvStatusCodes.iteritems()]))};
+                    jobStatusCodes = ${str(dict([(str(x[0]), x[1]) for x in jobStatusCodes.iteritems()]))};
+                    stopStatusList = ${str([buildjob.STATE_FAILED, buildjob.STATE_FINISHED])};
+                    addLoadEvent(initrMakeManager(${rMakeBuild.id}));
+                ]]>
+                </script>
                 <h3>rMake Job ID: ${rMakeBuild.jobId or 'Unknown'}</h3>
-                <div class="${jobStatusCodes.get(rMakeBuild.status, 'statusRunning')}">
+                <div id="rmakebuilder-status" class="${jobStatusCodes.get(rMakeBuild.status, 'statusRunning')}">
                     ${rMakeBuild.statusMessage}
                 </div>
                 <table>
                     <tr py:for="trvDict in troveList">
                         <td>${trvDict['trvName']}: </td>
-                        <td class="${trvStatusCodes.get(trvDict['status'], 'statusRunning')}" width="100%">
+                        <td id="rmakebuilder-item-status-${trvDict['rMakeBuildItemId']}" class="${trvStatusCodes.get(trvDict['status'], 'statusRunning')}" width="100%">
                             ${trvDict['statusMessage']}
                         </td>
                     </tr>

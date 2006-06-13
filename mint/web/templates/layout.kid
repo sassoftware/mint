@@ -101,6 +101,7 @@ onload = "javascript:;"
                     <script type="text/javascript">
                         <![CDATA[
                             callLater(1, function() { document.forms["inlineMime"].submit();});
+                            callLater(5, function() { document.location.reload();});
                         ]]>
                     </script>
                 </form>
