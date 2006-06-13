@@ -19,7 +19,9 @@ isOwner = (userLevel == userlevels.OWNER or auth.admin)
 ?>
 
     <table py:def="sourceTroveInfo(trove)" class="troveinfo">
-        <tr><th>Trove name:</th><td title="${trove.getName()}">${truncateForDisplay(trove.getName(), maxWordLen=45)}</td></tr>
+        <tr>
+            <th>Trove name:</th><td title="${trove.getName()}"><a py:if="isRMakeLegal(rMakeBuild, userLevel, trove)" style="float: right;" title="Add to ${rMakeBuild.title}" href="${cfg.basePath}addrMakeTrove?trvName=${quote(trove.getName().replace(':source', ''))};label=${quote(str(trove.getVersion().branch().label()))};referer=${quote(req.unparsed_uri)}">Add to ${truncateForDisplay(rMakeBuild.title, maxWordLen = 10)}</a>${truncateForDisplay(trove.getName(), maxWordLen=45)}</td>
+        </tr>
         <tr><th>Change log:</th>
             <td>
                 <?python

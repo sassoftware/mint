@@ -653,6 +653,29 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
         self.assertRaises(mint_error.rMakeBuildOrder,
                           rMakeBuild.addTrove, trvName + '1', trvLabel)
 
+    @fixtures.fixture("Full")
+    def testSourceAdd(self, db, data):
+        client = self.getClient('nobody')
+        rMakeBuild = client.createrMakeBuild('foo')
+        trvName = 'foo'
+        trvLabel = 'test.rpath.local@rpl:devel'
+
+        itemId = rMakeBuild.addTrove(trvName + ':source', trvLabel)
+
+        self.failIf(rMakeBuild.listTroves()[0]['trvName'] != trvName,
+                    "rMakeBuild added source trove instead of package name")
+
+    @fixtures.fixture("Full")
+    def testBadAdd(self, db, data):
+        client = self.getClient('nobody')
+        rMakeBuild = client.createrMakeBuild('foo')
+        trvName = 'foo:devel'
+        trvLabel = 'test.rpath.local@rpl:devel'
+
+        self.assertRaises(mint_error.ParameterError,
+                          rMakeBuild.addTrove, trvName, trvLabel)
+
+
 class rMakeBuildTest(MintRepositoryHelper):
     def makeCookedTrove(self, branch = 'rpl:devel', hostname = 'testproject'):
         l = versions.Label("%s.%s@%s" % (hostname,
