@@ -2808,6 +2808,10 @@ class MintServer(object):
         rMakeBuildDict = self.rMakeBuild.get(rMakeBuildId)
         if rMakeBuildDict['status']:
             raise rMakeBuildOrder('Cannot add troves at this time.')
+        if trvName.endswith(':source'):
+            trvName = trvName.replace(':source', '')
+        if ':' in trvName:
+            raise ParameterError('Cannot add components to rMake Build')
         return self.rMakeBuildItems.new(rMakeBuildId = rMakeBuildId,
                                         trvName = trvName,
                                         trvLabel = trvLabel)
