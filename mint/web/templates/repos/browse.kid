@@ -7,7 +7,6 @@
 import string
 from urllib import quote
 from mint import userlevels
-
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
@@ -20,22 +19,20 @@ from mint.helperfuncs import truncateForDisplay
 ?>
 
     <span py:def="adder(package, component='')" style="float: right;"
-        py:if="groupTrove and not groupTrove.troveInGroup(package) and not package.endswith(':source')">
+        py:if="(groupTrove and not groupTrove.troveInGroup(package) and not package.endswith(':source')) or
+               (rMakeBuild and not rMakeBuild.status and userLevel in userlevels.WRITERS and not component)">
         <?python
             if component:
                 package += ":" + component
             from mint.helperfuncs import truncateForDisplay
         ?>
-        <a href="${groupProject.getUrl()}addGroupTrove?id=${groupTrove.id};trove=${quote(package)};referer=${quote(req.unparsed_uri)};projectName=${project.hostname}" title="Add to ${groupTrove.recipeName}">
+        <a py:if="groupTrove and not groupTrove.troveInGroup(package) and not package.endswith(':source')" href="${groupProject.getUrl()}addGroupTrove?id=${groupTrove.id};trove=${quote(package)};referer=${quote(req.unparsed_uri)};projectName=${project.hostname}" title="Add to ${groupTrove.recipeName}">
             Add to ${truncateForDisplay(groupTrove.recipeName, maxWordLen = 10)}
         </a>
-    </span>
-
-    <span py:def="adder(package, component='')" style="float: right;" py:if="userLevel in userlevels.WRITERS and rMakeBuild and not rMakeBuild.status">
-        <?python
-            from mint.helperfuncs import truncateForDisplay
-        ?>
-        <a href="${cfg.basePath}addrMakeTrove?trvName=${quote(package.split(':source')[0])};referer=${quote(req.unparsed_uri)};projectName=${project.hostname}" title="Add to ${rMakeBuild.title}">Add to ${truncateForDisplay(rMakeBuild.title, maxWordLen = 10)}</a>
+        <a py:if="rMakeBuild and not rMakeBuild.status and userLevel in userlevels.WRITERS and not component" 
+           href="${cfg.basePath}addrMakeTrove?trvName=${quote(package.split(':source')[0])};referer=${quote(req.unparsed_uri)};projectName=${project.hostname}" title="Add to ${rMakeBuild.title}">
+            Add to ${truncateForDisplay(rMakeBuild.title, maxWordLen = 10)}
+        </a>
     </span>
 
     <head>
