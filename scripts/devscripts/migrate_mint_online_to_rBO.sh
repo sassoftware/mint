@@ -12,7 +12,6 @@ NEW_ROOT="/srv/rbuilder"
 NEW_CONF="rbuilder.conf"
 BACKUPDIR="/tmp/mint-online-migration.$$"
 
-# TODO this should be changed based on where we're running this (shemp vs. live)
 DB_CONNECT_STR="rbuilder@db1.cogent-dca.rpath.com/mint"
 
 # apache uid/gid
@@ -44,7 +43,7 @@ fi
 
 # Don't run this on a system where Conary isn't managing the product.
 if [ -d ${OLD_ROOT} ]; then
-    conary q mint > /dev/null 2>&1
+    conary q mint-online > /dev/null 2>&1
     if [ $? -ne 0 ]; then
         cat - <<EONOTE
 Found ${OLD_ROOT}, but rBuilder doesn't appear to be managed
@@ -64,6 +63,12 @@ if [ $? -ne 0 ]; then
     echo "Current version of conary is $(conary --version)"
 fi
 
+# update MochiKit and kid
+echo "Updating MochiKit"
+conary update MochiKit
+echo "Updating kid"
+conary update kid=:1
+
 # backup the configuration files, as Conary may not keep them around
 echo "Backing up configuration files to $BACKUPDIR"
 [ ! -d $BACKUPDIR ] && mkdir $BACKUPDIR
@@ -73,23 +78,10 @@ for cfgfile in ${OLD_ROOT}/*.conf; do
     grep -Ev '^maintenanceMode' $cfgfile > ${BACKUPDIR}/${bn_cfgfile}
 done
 
-# shutdown the webserver
-echo "Stopping Apache"
-service httpd stop
-sleep 3
-# make sure it's dead
-killall httpd > /dev/null 2>&1
-sleep 3
-killall -9 httpd > /dev/null 2>&1
-
-# TODO test to see if this is necessary (probably not)
-# whack all precompiled python files
-#echo "Cleaning out stale .pyc/.pyo files"
-#find /usr/lib/python2.4/site-packages/mint -name \*.py[co] -exec rm -f {} \;
-
 # update using conary 
 echo "Updating rBuilder via Conary"
-conary update mint-online=$INSTALL_LABEL_PATH --resolve
+conary erase mint-online mint-online-web mint-online-isogen mint-online-mailman
+conary update mint-online=$INSTALL_LABEL_PATH --no-deps
 if [ $? -ne 0 ]; then
     echo "Problems occurred when updating rBuilder via Conary; exiting"
     exit 1
@@ -127,15 +119,12 @@ newCfg.display(out = newCfgFile)
 newCfgFile.close()
 EOSCRIPT
 
-# restore bits from /srv/mint
+# re-create links to repos
 
-rmdir ${NEW_ROOT}/changesets && ln -s /data/mint/images/changesets \
-    ${NEW_ROOT}/changesets
-rmdir ${NEW_ROOT}/contents   && ln -s /data/mint/repos-nas2-vol2 \
-    ${NEW_ROOT}/contents
-rmdir ${NEW_ROOT}/finished-images && ln -s /data/mint/images/finished-images \
-    ${NEW_ROOT}/finished-images
-rmdir ${NEW_ROOT}/images && ln -s /data/mint/images ${NEW_ROOT}/images
+ln -s /data/mint/images/changesets ${NEW_ROOT}/changesets
+ln -s /data/mint/repos-nas2-vol2 ${NEW_ROOT}/contents
+ln -s /data/mint/images/finished-images ${NEW_ROOT}/finished-images
+ln -s /data/mint/images ${NEW_ROOT}/images
 
 # prime the cache.sql files in each repository (if they don't exist)
 python - <<EOSCRIPT
@@ -164,9 +153,17 @@ for id, fn in rs.fetchall():
 db.commit()
 EOSCRIPT
 
-# restart the webserver
-#echo "Starting Apache"
-#service httpd start
+# clean images
+if [ -x cleanup-images.py ]; then
+   echo "Cleaning up images"
+   ./cleanup-images.py --dry-run > /tmp/cleanup-script.sh
+   chmod 700 /tmp/cleanup-script.sh
+fi
+
+# moving repositories to their new home
+echo "Put repositories back in place"
+[ -d "${NEW_ROOT}/repos" ] && rm -rf ${NEW_ROOT}/repos
+mv ${OLD_ROOT}/repos ${NEW_ROOT}
 
 # move the vestigial remains of /srv/mint to the migration tempdir
 echo "Storing leftovers from the migration in $BACKUPDIR/mint.old"
