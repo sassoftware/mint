@@ -1,6 +1,9 @@
 Changes in tip:
 * Added XMLRPC call logging similar to Conary's, controlled by the 
-  xmlrpcLogFile config entry.
+  xmlrpcLogFile config entry. (RBL-12)
+* Fixed a bug where a directory with a symlink pointing to it could
+  possibly be created with the wrong permissions in a bootable image.
+  (RBL-695)
 
 Changes in 1.6.3:
 * Installation paths changed: /srv/mint is now /srv/rbuilder; configuration is

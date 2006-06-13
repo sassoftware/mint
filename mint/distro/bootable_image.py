@@ -62,7 +62,7 @@ class BootableImageConfig(ConfigFile):
 class Journal:
     def lchown(self, root, target, user, group):
         # put UIDGID entries for directories on .
-        if os.path.isdir(target):
+        if os.path.isdir(target) and not os.path.islink(target):
             target = target[len(root):]
             filename = '.'
             f = open(os.sep.join((root, target, '.UIDGID')), 'a')
