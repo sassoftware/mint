@@ -207,6 +207,7 @@ def setup():
 	sys.exit(1)
     paths = (os.environ['MINT_PATH'], os.environ['MINT_PATH'] + '/test',
              os.environ['CONARY_PATH'],
+             os.path.normpath(os.environ['CONARY_PATH'] + "/../rmake"),
              os.path.normpath(os.environ['CONARY_PATH'] + "/../conary-test"),)
     pythonPath = os.getenv('PYTHONPATH') or ""
     for p in reversed(paths):
