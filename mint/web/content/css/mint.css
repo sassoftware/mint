@@ -912,7 +912,7 @@ img#nameSpinner, img#archSpinner {
     background: #ffc url(../images/action_stop.gif) no-repeat 1em 1em;
 }
 
-// group/permission manipulation
+/* group/permission manipulation */
 
 table.user-admin {
     border: 1px solid black;
@@ -951,7 +951,7 @@ table.user-admin#permissions thead {
 .odd { background-color: white; }
 .even { background-color: #eaecef; }
 
-// add/edit permissions and groups
+/* add/edit permissions and groups */
 
 table.add-form {
     width: 40%;
