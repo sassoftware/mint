@@ -26,6 +26,7 @@ from mint import searcher
 from mint import userlisting
 from mint.mint_error import MintError
 from mint.mint_error import PermissionDenied
+from mint import usertemplates
 
 from conary import conaryclient
 from conary import repository
@@ -515,6 +516,28 @@ class User(database.TableObject):
 
     def cancelUserAccount(self):
         self.server.cancelUserAccount(self.id)
+
+    def setDataValue(self, name, value):
+        self.server.setUserDataValue(self.username, name, value)
+
+    def getDataValue(self, name):
+        return self.server.getUserDataValue(self.username, name)
+
+    def getDefaultedData(self):
+        return self.server.getUserDataDefaulted(self.username)
+
+    def getDataTemplate(self):
+        return usertemplates.userPrefsVisibleTemplate
+
+    def getDataDict(self):
+        dataDict = self.server.getUserDataDict(self.username)
+        template = self.getDataTemplate()
+        for name in template:
+            if name not in dataDict:
+                dataDict[name] = template[name][1]
+        return dataDict
+        return self.server.getUserDataTemplate()
+
 
 class ProjectUsersTable(database.DatabaseTable):
     name = "ProjectUsers"
