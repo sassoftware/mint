@@ -47,7 +47,8 @@ python_files =			\
 	stats.py		\
 	userlevels.py		\
 	userlisting.py		\
-	users.py
+	users.py                \
+        usertemplates.py
 
 extra_dist = Makefile constants.py.in
 

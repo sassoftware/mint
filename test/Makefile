@@ -43,6 +43,7 @@ python_files = \
                sessionstest.py \
                spidertest.py \
                testsuite.py \
+               usertest.py \
                xmltest.py \
                webtest.py \
                webmemberstest.py \
