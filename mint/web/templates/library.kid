@@ -48,15 +48,16 @@ from mint.web.templatesupport import injectVersion, dictToJS
                            buildtrove.TROVE_STATE_BUILDABLE : cfg.staticPath + "apps/mint/images/circle-ball-dark-antialiased.gif",
                            buildtrove.TROVE_STATE_BUILDING : cfg.staticPath + "apps/mint/images/circle-ball-dark-antialiased.gif",
                            buildtrove.TROVE_STATE_BUILT : cfg.staticPath + "apps/mint/images/icon_accept.gif",}
-            stopStatusList = [buildjob.STATE_FAILED, buildjob.STATE_FINISHED]
+            stopStatusList = [buildjob.STATE_FAILED, buildjob.STATE_FINISHED, buildjob.STATE_INIT]
+            jobStatusCodes = {buildjob.STATE_FAILED:   'statusError',
+                              buildjob.STATE_FINISHED: 'statusFinished'}
             if rMakeBuild.status:
                 statusIcons[buildtrove.TROVE_STATE_INIT] = cfg.staticPath + "apps/mint/images/clock.gif"
-                stopStatusList.append(buildjob.STATE_INIT)
-
         ?>
         <script type="text/javascript">
         <![CDATA[
             statusIcons = ${dictToJS(statusIcons)};
+            jobStatusCodes = ${dictToJS(jobStatusCodes)};
             stopStatusList = ${str(stopStatusList)};
             addLoadEvent(initrMakeManager(${rMakeBuild.id}));
         ]]>
@@ -87,10 +88,10 @@ from mint.web.templatesupport import injectVersion, dictToJS
                     </tr>
                 </tbody>
             </table>
-            <div class="rMakeBuildBuild" style="padding: 10px 0; text-align: center;" py:if="not rMakeBuild.status"><a id="rMakeNextAction" class="option" style="display: inline;" href="${cfg.basePath}commandrMake?command=build">Build</a></div>
-            <div class="rMakeBuildStop" style="padding: 10px 0; text-align: center;" py:if="rMakeBuild.status not in (buildjob.STATE_INIT, buildjob.STATE_FINISHED, buildjob.STATE_FAILED)"><a id="rMakeNextAction" class="option" style="display: inline;" href="${cfg.basePath}commandrMake?command=stop">Stop</a></div>
-            <div class="rMakeBuildStop" style="padding: 10px 0; text-align: center;" py:if="rMakeBuild.status == buildjob.STATE_FINISHED"><a id="rMakeNextAction" class="option" style="display: inline;" href="${cfg.basePath}commandrMake?command=commit">Commit</a></div>
-            <div class="rMakeBuildReset" style="padding: 10px 0; text-align: center;" py:if="rMakeBuild.status == buildjob.STATE_FAILED"><a id="rMakeNextAction" class="option" style="display: inline;" href="${cfg.basePath}resetrMakeStatus">Reset</a></div>
+            <div class="rMakeBuildBuild" style="padding: 10px 0; text-align: center;" py:if="not rMakeBuild.status"><a id="rMakeBuildNextAction" class="option" style="display: inline;" href="${cfg.basePath}commandrMake?command=build">Build</a></div>
+            <div class="rMakeBuildStop" style="padding: 10px 0; text-align: center;" py:if="rMakeBuild.status not in (buildjob.STATE_INIT, buildjob.STATE_FINISHED, buildjob.STATE_FAILED)"><a id="rMakeBuildNextAction" class="option" style="display: inline;" href="${cfg.basePath}commandrMake?command=stop">Stop</a></div>
+            <div class="rMakeBuildStop" style="padding: 10px 0; text-align: center;" py:if="rMakeBuild.status == buildjob.STATE_FINISHED"><a id="rMakeBuildNextAction" class="option" style="display: inline;" href="${cfg.basePath}commandrMake?command=commit">Commit</a></div>
+            <div class="rMakeBuildReset" style="padding: 10px 0; text-align: center;" py:if="rMakeBuild.status == buildjob.STATE_FAILED"><a id="rMakeBuildNextAction" class="option" style="display: inline;" href="${cfg.basePath}resetrMakeStatus">Reset</a></div>
         </div>
     </div>
 

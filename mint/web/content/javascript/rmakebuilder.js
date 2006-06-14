@@ -25,7 +25,6 @@ var savedTroveList = [];
 var savedrMakeBuild = null;
 
 function getrMakeBuild() {
-    logDebug("getrMakeBuild");
     var req = new JsonRpcRequest("jsonrpc/", "getrMakeBuild");
     req.setAuth(getCookieValue("pysid"));
     req.setCallback(processgetrMakeBuild);
@@ -45,23 +44,25 @@ function processgetrMakeBuild(aReq) {
     if ((rMakeBuild['statusMessage'] != savedrMakeBuild['statusMessage']) | (rMakeBuild['status'] != savedrMakeBuild['status'])) {
         var statusClass = 'statusRunning';
         for (var statusIndex in jobStatusCodes) {
-            if (statusIndex == rMakeBuild['status']) {
+            if (statusIndex == rMakeBuildStatus) {
                statusClass = jobStatusCodes[statusIndex];
             }
         }
-        swapDOM(rMakeBuilderStatus, DIV({id : 'rmakebuilder-status', class : statusClass}, rMakeBuild['statusMessage']));
+        if (rMakeBuilderStatus != null) {
+            swapDOM(rMakeBuilderStatus, DIV({id : 'rmakebuilder-status', class : statusClass}, rMakeBuild['statusMessage']));
+        }
     }
     for (var stopIndex in stopStatusList) {
         if (rMakeBuildStatus == stopStatusList[stopIndex]) {
             stop = 1;
-            if (rMakeBuildAction != null) {
-                if (rMakeBuildStatus == 99) {
-                    swapDOM(rMakeBuildAction, A({id: 'rMakeBuildNextAction', class : 'option', style : 'display: inline;', href : BasePath + 'commandrMake?command=commit'}, 'Commit'));
-                }
-                if (rMakeBuildStatus == -1) {
-                    swapDOM(rMakeBuildAction, A({id: 'rMakeBuildNextAction', class : 'option', style : 'display: inline;', href : BasePath + 'resetrMakeStatus'}, 'Reset'));
-                }
-            }
+        }
+    }
+    if (rMakeBuildAction != null) {
+        if (rMakeBuildStatus == 99) {
+            swapDOM(rMakeBuildAction, A({id: 'rMakeBuildNextAction', class : 'option', style : 'display: inline;', href : BaseUrl + 'commandrMake?command=commit'}, 'Commit'));
+        }
+        if (rMakeBuildStatus == -1) {
+            swapDOM(rMakeBuildAction, A({id: 'rMakeBuildNextAction', class : 'option', style : 'display: inline;', href : BaseUrl + 'resetrMakeStatus'}, 'Reset'));
         }
     }
     if (!stop) {
@@ -71,7 +72,6 @@ function processgetrMakeBuild(aReq) {
 }
 
 function listrMakeBuildTroves() {
-    logDebug("listrMakeBuildTroves");
     var req = new JsonRpcRequest("jsonrpc/", "listrMakeBuildTroves");
     req.setAuth(getCookieValue("pysid"));
     req.setCallback(processListrMakeBuildTroves);
@@ -95,7 +95,6 @@ function processListrMakeBuildTroves(aReq) {
         }
         if ((trvDict['statusMessage'] != savedTroveList[trvIndex]['statusMessage']) | (trvStatus != savedTroveList[trvIndex]['status'])) {
             var statusBox = document.getElementById("rmakebuilder-item-status-" + itemId);
-            logDebug("statusBox: " + statusBox)
             if(statusBox != null) {
                 var classCode = 'statusRunning';
                 for (var statusIndex in trvStatusCodes) {
