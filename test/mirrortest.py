@@ -226,7 +226,6 @@ class MintMirrorTest(mint_rephelp.MintRepositoryHelper):
         self.stopRepository(1)
 
     def testMirrorOffline(self):
-        raise testsuite.SkipTestException("This test case passes, but causes a memory leak until such time as conary's server.py is fixed. execute at your own risk.")
         global runTest
         if not runTest:
             raise testsuite.SkipTestException
