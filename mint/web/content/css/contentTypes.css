@@ -100,6 +100,12 @@ div.releases_release {
 .mainformhorizontal input.radio {
 	width:auto;
 }
+.mainformhorizontal tr.attention {
+        font-weight: bold;
+        color: #404040;
+        background: #ffa0a0;
+        width:auto;
+}
 .mainformhorizontal select {
 	width: 100%;
 }
