@@ -16,7 +16,9 @@ kid_files =			\
 	jobs.kid		\
 	external.kid		\
 	primeMirror.kid		\
-	admin.kid
+	admin.kid	\
+	spotlight.kid		\
+	preview.kid
 
 python_files =
 

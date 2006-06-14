@@ -7,6 +7,7 @@
 SUBDIRS = repos admin docs setup
 
 kid_files = \
+	applianceSpotlight.kid		\
 	conaryDevelCfg.kid	\
 	conaryUserCfg.kid	\
 	confirmEmail.kid	\
