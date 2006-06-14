@@ -14,6 +14,7 @@
     <body>
         <div id="layout">
             <?python
+                from mint.web.templatesupport import dictToJS
                 from rmake.build import buildjob, buildtrove
                 jobStatusCodes = {buildjob.STATE_FAILED:   'statusError',
                                   buildjob.STATE_FINISHED: 'statusFinished'}
@@ -30,8 +31,8 @@
             <div id="spanleft" py:if="rMakeBuild.status!=buildjob.STATE_INIT">
                 <script type="text/javascript">
                 <![CDATA[
-                    trvStatusCodes = ${str(dict([(str(x[0]), x[1]) for x in trvStatusCodes.iteritems()]))};
-                    jobStatusCodes = ${str(dict([(str(x[0]), x[1]) for x in jobStatusCodes.iteritems()]))};
+                    trvStatusCodes = ${dictToJS(trvStatusCodes)};
+                    jobStatusCodes = ${dictToJS(jobStatusCodes)};
                     stopStatusList = ${str([buildjob.STATE_FAILED, buildjob.STATE_FINISHED])};
                     addLoadEvent(initrMakeManager(${rMakeBuild.id}));
                 ]]>

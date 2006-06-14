@@ -7,7 +7,7 @@ from mint import maintenance
 from mint.helperfuncs import truncateForDisplay
 from rmake.build import buildtrove, buildjob
 
-from mint.web.templatesupport import injectVersion
+from mint.web.templatesupport import injectVersion, dictToJS
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#">
@@ -56,7 +56,7 @@ from mint.web.templatesupport import injectVersion
         ?>
         <script type="text/javascript">
         <![CDATA[
-            statusIcons = ${str(dict([(str(x[0]), x[1]) for x in statusIcons.iteritems()]))};
+            statusIcons = ${dictToJS(statusIcons)};
             stopStatusList = ${str(stopStatusList)};
             addLoadEvent(initrMakeManager(${rMakeBuild.id}));
         ]]>

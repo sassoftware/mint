@@ -25,6 +25,7 @@ from mint.client import timeDelta
 from mint.distro import jsversion
 from mint_rephelp import MINT_PROJECT_DOMAIN
 from mint.userlevels import myProjectCompare
+from mint.web import templatesupport
 
 from conary.lib import util
 
@@ -371,6 +372,12 @@ Much like Powdermilk Biscuits[tm]."""
         self.failIf(methods,
                     "The following methods are not explicitly allowed or deleted: %s. please update repos.py" %\
                     ' '.join(methods))
+
+    def testDictToJS(self):
+        self.failIf(templatesupport.dictToJS({3: 2}) != "{'3': 2}",
+                    "dict object with int keys converted incorrectly")
+        self.failIf(templatesupport.dictToJS({'foo': 2}) != "{'foo': 2}",
+                    "dict object with str keys converted incorrectly")
 
 
 class FixturedHelpersTest(fixtures.FixturedUnitTest):
