@@ -8,9 +8,15 @@
 -->
     <head>
         <title>${formatTitle('Edit Account Information: %s'%auth.fullName)}</title>
+        <?python
+            from mint import data
+        ?>
     </head>
     <body>
         <div id="layout">
+            <div py:if="defaultedData" class='statusError' style='margin-bottom: 1em;'>
+                Please review your preferences and address the hilited selections.
+            </div>
             <div id="right" class="side">
                 ${resourcePane()}
 		${builderPane()}
@@ -87,6 +93,17 @@
                                 <p><strong>Package Signing Keys:</strong>
                                 <a href="http://${SITE}uploadKey">Upload a package signing key</a></p>
                             </td>
+                        </tr>
+                    </table>
+                    <h3>Preferences</h3>
+                    <table class="mainformhorizontal">
+                        <tr py:for="key, (dType, default, prompt) in sorted(user.getDataTemplate().iteritems())" class="${key in defaultedData and 'attention' or None}">
+                            <div py:strip="True" py:if="dType == data.RDT_BOOL">
+                                <td colspan="2"><input type="checkbox" class='check' name="${key}" py:attrs="{'checked' : dataDict.get(key, default) and 'checked' or None}"/> ${prompt}</td>
+                            </div>
+                            <div py:strip="True" py:if="dType == data.RDT_INT">
+                                <td>${prompt}</td><td><input type="text" name="$key" value="${dataDict.get(key, default)}"/></td>
+                            </div>
                         </tr>
                     </table>
                     <button class="img" id="userSubmit" type="submit"><img src="${cfg.staticPath}/apps/mint/images/submit_button.png" alt="Submit" /></button>
