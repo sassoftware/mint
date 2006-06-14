@@ -14,6 +14,7 @@ from urllib import quote, unquote, quote_plus, urlencode
 from mod_python import apache
 
 from mint import database
+from mint import data
 from mint import mint_error
 from mint import maintenance
 from mint import mailinglists
@@ -215,6 +216,9 @@ class SiteHandler(WebHandler):
                 self.session['authToken'] = authToken
                 self.session['firstTimer'] = firstTimer
                 self.session['firstPage'] = unquote(to)
+                user = client.getUser(auth.userId)
+                if user.getDefaultedData():
+                    self.session['firstPage'] = self.cfg.basePath + "userSettings"
                 self.session.save()
 
                 # redirect storm if needed
@@ -303,7 +307,10 @@ class SiteHandler(WebHandler):
     @requiresAuth
     @redirectHttps
     def userSettings(self, auth):
-        return self._write("userSettings")
+        return self._write("userSettings",
+                           user = self.user,
+                           dataDict = self.user.getDataDict(),
+                           defaultedData = self.user.getDefaultedData())
 
     @strFields(email = "", displayEmail = "",
                password1 = "", password2 = "",
@@ -311,7 +318,7 @@ class SiteHandler(WebHandler):
     @requiresHttps
     @requiresAuth
     def editUserSettings(self, auth, email, displayEmail, fullName,
-                         password1, password2, blurb):
+                         password1, password2, blurb, **kwargs):
         if email != auth.email:
             self.user.validateNewEmail(email)
             self.user.setEmail(email)
@@ -324,6 +331,16 @@ class SiteHandler(WebHandler):
             self.user.setBlurb(blurb)
         if fullName != auth.fullName:
             self.user.setFullName(fullName)
+
+        for key, (dType, default, prompt) in \
+                self.user.getDataTemplate().iteritems():
+            if dType == data.RDT_BOOL:
+                val = bool(kwargs.get(key, False))
+            elif dType == data.RDT_INT:
+                val = int(kwargs.get(key, default))
+            else:
+                val = str(kwargs.get(key, default))
+            self.user.setDataValue(key, val)
 
         if password1 and password2:
             if password1 != password2:
@@ -359,7 +376,7 @@ class SiteHandler(WebHandler):
                 try:
                     project.addUserKey(auth.username, keydata)
                 except Exception, e:
-                    self._addError('Error uploading key: %s' % str(e))
+                    self._addErrors('Error uploading key: %s' % str(e))
                     return self._write("uploadKey",
                             kwargs={'projects': projects, 'keydata': keydata})
         self._setInfo("Added key to project %s" % project.getNameForDisplay())
@@ -462,15 +479,17 @@ class SiteHandler(WebHandler):
             raise database.ItemNotFound('userid')
 
     @strFields(search = "", type = None)
-    @intFields(limit = 10, offset = 0, modified = 0)
+    @intFields(limit = 0, offset = 0, modified = 0)
     def search(self, auth, type, search, modified, limit, offset):
         limit = max(limit, 0)
         offset = max(offset, 0)
-        limit = limit or 10
+        if not limit:
+            limit =  self.user and \
+                    self.user.getDataValue('searchResultsPerPage') or 10
         self.session['searchType'] = type
         if type == "Projects":
             return self._projectSearch(search, modified, limit, offset)
-        elif type == "Users" and auth.authorized:
+        elif type == "Users" and self.auth.authorized:
             return self._userSearch(auth, search, limit, offset)
         elif type == "Packages":
             return self._packageSearch(search, limit, offset)
