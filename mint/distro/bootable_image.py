@@ -277,6 +277,7 @@ title %(name)s (%(kversion)s)
         self.conarycfg.dbPath = '/var/lib/conarydb'
         self.conarycfg.installLabelPath = None
         self.readConaryRc(self.conarycfg)
+        self.conarycfg.configLine('pinTroves kernel.*')
 
         self.cclient = conaryclient.ConaryClient(self.conarycfg)
 
@@ -294,8 +295,11 @@ title %(name)s (%(kversion)s)
 
     @timeMe
     def applyUpdate(self, uJob, callback, tagScript):
-        self.cclient.applyUpdate(uJob, journal = Journal(), callback = callback,
-                tagScript=os.path.join(self.fakeroot, 'root', tagScript))
+        self.cclient.applyUpdate(uJob, journal = Journal(),
+                                 callback = callback,
+                                 tagScript=os.path.join(self.fakeroot,
+                                                        'root', tagScript),
+                                 autoPinList=self.conarycfg.pinTroves)
 
     @timeMe
     def updateKernelChangeSet(self, callback):
