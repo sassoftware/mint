@@ -13,6 +13,7 @@ from mod_python import apache
 from mint import users
 from mint import mint_error
 from mint import maintenance
+from mint import projectlisting
 from mint.web.webhandler import normPath, WebHandler, HttpNotFound, HttpForbidden
 from mint.mirrorprime import TarHandler
 
@@ -263,6 +264,52 @@ class AdminHandler(WebHandler):
     def addOutbound(self, *args, **kwargs):
         projects = self.client.getProjectsList()
         return self._write('admin/add_outbound', projects = projects)
+
+    def spotlight(self, *args, **kwargs):
+        return self._write('admin/spotlight',
+                           spotlightData=self.client.getSpotlightAll())
+
+    @strFields(title = None, text=None, link=None, logo=None, startDate=None, 
+               endDate=None, operation='preview')
+    @intFields(showArchive=0)
+    def addSpotlightItem(self, title, text, link, logo, showArchive, startDate,
+                                 endDate, operation, *args, **kwargs):
+        if not startDate or not endDate:
+            return self.spotlight()
+
+        if operation == 'preview':
+            return self.previewSpotlight(title=title, text=text, logo=logo,
+                                         showArchive=showArchive, link=link, 
+                                         startDate=startDate, endDate=endDate,
+                                         auth=kwargs['auth'])
+        elif operation == 'apply':
+            self.client.addSpotlightItem(title, text, link, logo,
+                                         showArchive, startDate, endDate)
+        return self.spotlight()
+
+    @intFields(itemId=None)
+    @strFields(title=None)
+    def deleteSpotlightItem(self, itemId, title, *args, **kwargs):
+        message = 'Delete Appliance Spotlight Entry "%s"?' % title
+        noLink = os.path.join(self.cfg.basePath, 'admin', 'spotlight') 
+        yesArgs = dict(func='delSpotlight', itemId=itemId)
+        return self._write('confirm', message=message, noLink=noLink, 
+                           yesArgs=yesArgs)
+    
+    @intFields(itemId=None)
+    def delSpotlight(self, itemId, *args, **kwargs):
+        self.client.deleteSpotlightItem(itemId)
+        return self.spotlight()
+
+    def previewSpotlight(self, auth, *args, **spotlightData):
+        releases = self.client.getReleaseList()
+        popularProjects, _ = self.client.getProjects(projectlisting.NUMDEVELOPERS_DES, 10, 0)
+        activeProjects, _  = self.client.getProjects(projectlisting.ACTIVITY_DES, 10, 0)
+
+        
+        return self._write("admin/preview", firstTime=self.session.get('firstTimer', False),
+            releases=releases, popularProjects = popularProjects, activeProjects = activeProjects, spotlightData=spotlightData)
+
 
     @intFields(projectId = None)
     @strFields(targetUrl = None, mirrorUser = None, mirrorPass = None)

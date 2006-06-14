@@ -66,9 +66,10 @@ class SiteHandler(WebHandler):
         releases = self.client.getReleaseList()
         popularProjects, _ = self.client.getProjects(projectlisting.NUMDEVELOPERS_DES, 10, 0)
         activeProjects, _  = self.client.getProjects(projectlisting.ACTIVITY_DES, 10, 0)
+        spotlightData = self.client.getCurrentSpotlight()
 
         return self._write("frontPage", firstTime=self.session.get('firstTimer', False),
-            releases=releases, popularProjects = popularProjects, activeProjects = activeProjects)
+            releases=releases, popularProjects = popularProjects, activeProjects = activeProjects, spotlightData=spotlightData)
 
     @redirectHttps
     def register(self, auth):

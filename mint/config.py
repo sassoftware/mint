@@ -106,6 +106,7 @@ class MintConfig(ConfigFile):
     createConaryRcFile      = (cfgtypes.CfgBool, True)
     reposLog                = (cfgtypes.CfgBool, True)
     xmlrpcLogFile           = ''
+    spotlightImagesDir      = os.path.join(os.path.sep, 'spotlight_images')
 
     def read(self, path, exception = False):
         ConfigFile.read(self, path, exception)

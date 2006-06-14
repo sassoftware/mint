@@ -10,13 +10,13 @@ from mint.client import upstream
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
-      py:extends="'layout.kid'">
+      py:extends="'../layout.kid'">
 <!--
     Copyright (c) 2005-2006 rPath, Inc.
     All Rights Reserved
 -->
     <head>
-        <title>${formatTitle('Front Page')}</title>
+        <title>${formatTitle('Preview')}</title>
         <link py:if="cfg.newsRssFeed" rel="alternate" type="application/rss+xml"
               title="${cfg.productName} Site Announcements" href="${cfg.newsRssFeed}" />
         <link rel="alternate" type="application/rss+xml"
@@ -24,21 +24,13 @@ from mint.client import upstream
         <link rel="alternate" type="application/rss+xml"
               title="New ${cfg.productName} Releases" href="http://${cfg.siteHost}${cfg.basePath}rss?feed=newReleases" />
     </head>
-    <body>
+    <body onload="roundElement('previewMessage')">
+	<div id="previewMessage" style="background-color: #EF6064; font-size: 14pt; color: white; text-align:center; margin-bottom: 20px;">Preview Mode.  To exit, click your browser's 'back' button.<div style="text-align: right; font-size: 9pt; margin-right: 5px; cursor: pointer;" onclick="var e = document.getElementById('previewMessage');e.parentNode.removeChild(e);">close</div></div>
         <div id="right" class="side">
             ${resourcePane()}
         </div>
-            <span py:if="not spotlightData">
-                <span id="findit" onclick="javascript:window.location='${cfg.basePath}help?page=user-tutorial'">
-                    Check out the software appliances others have made.
-                </span>
-                <span id="buildit" onclick="javascript:window.location='${cfg.basePath}help?page=dev-tutorial'">
-                    Make your own software appliance in three easy steps.
-                </span>
-            </span>
-
         <div py:if="spotlightData" onclick="location.href='${spotlightData['link']}'" id="spotlight">
-        <div py:if="spotlightData['logo']" id="logoBox">
+        <div id="logoBox">
             <img id="applianceLogo" src="${cfg.spotlightImagesDir}/${spotlightData['logo']}"/>
         </div>
         <div id="${spotlightData['logo'] and 'textBox' or 'textBoxWide'}">

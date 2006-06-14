@@ -497,6 +497,19 @@ class MintClient:
     def getOutboundMatchTroves(self, labelId):
         return self.server.getOutboundMatchTroves(labelId)
 
+    def getCurrentSpotlight(self):
+        return self.server.getCurrentSpotlight()
+
+    def getSpotlightAll(self):
+        return self.server.getSpotlightAll()
+
+    def addSpotlightItem(self, title, text, link, logo, showArchive, startDate,
+                         endDate):
+         return self.server.addSpotlightItem(title, text, link, logo,
+                                             showArchive, startDate, endDate)
+
+    def deleteSpotlightItem(self, itemId):
+        return self.server.deleteSpotlightItem(itemId)
 
 class ServerProxy(xmlrpclib.ServerProxy):
     def __getattr__(self, name):

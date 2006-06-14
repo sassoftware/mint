@@ -256,6 +256,32 @@ div#stepsText {
     padding: 8px 0px 24px 0px;
 }
 
+span#buildit {
+     cursor: pointer;
+     background: url(../images/build_it.png);
+     text-align: left;
+     width: 326px;
+     height: 81px;
+     float: left;
+     padding-top: 48px;
+     padding-left: 24px;
+     padding-right: 3px;
+     margin-right: 3px;
+}
+
+span#findit {
+    cursor: pointer;
+    float: right;
+    background: url(../images/find_it.png);
+    text-align: left;
+    width: 326px;
+    height: 59px;
+    padding-top: 48px;
+    padding-left: 24px;
+    margin-left: 3px;
+    margin-right: 3px;
+}
+
 div#spotlight {
     cursor: pointer;
     background: url(../images/spotlight.png);
@@ -326,6 +352,42 @@ div#textBox {
     padding-right: 24px;
     padding-left: 134px;
 }
+
+div#textBoxWide {
+    padding-right: 24px;
+    padding-left: 24px;
+}
+
+td#spotLabel {
+    text-align: right;
+}
+
+td#spotInput {
+}
+
+table#spotTable {
+    margin: 0;
+    padding: 0;
+    width: 99%;
+    border: 1px solid #CCC;
+}
+
+th#spotTh, td#spotTd {
+    font-size: 100%;
+    color: #444;
+    padding: 3px;
+    text-align: center;
+}
+
+th#spotTh {
+    background-color: #EEE;
+}
+
+tr.odd {
+    background-color: #EFEFEF;
+}
+
+
 
 button#signInSubmit {
     padding: 10px 0px 10px 0px;

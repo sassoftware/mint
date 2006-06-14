@@ -36,6 +36,7 @@ from mint import stats
 from mint import templates
 from mint import userlevels
 from mint import users
+from mint import applianceSpotlight
 from mint import rmakebuild
 from mint.distro import jsversion
 from mint.distro.flavors import stockFlavors
@@ -208,6 +209,8 @@ def getTables(db, cfg):
     d['outboundLabels'] = mirror.OutboundLabelsTable(db)
     d['outboundMatchTroves'] = mirror.OutboundMatchTrovesTable(db)
     d['repNameMap'] = mirror.RepNameMapTable(db)
+    d['applianceSpotlight'] = applianceSpotlight.ApplianceSpotlightTable(db,
+                                                                         cfg)
     d['rMakeBuild'] = rmakebuild.rMakeBuildTable(db)
     d['rMakeBuildItems'] = rmakebuild.rMakeBuildItemsTable(db)
     outDatedTables = [x for x in d.values() if not x.upToDate]
@@ -1426,6 +1429,31 @@ class MintServer(object):
     @private
     def getNewsLink(self):
         return self.newsCache.getNewsLink()
+
+    @typeCheck(str, str, str, str, int, str, str)
+    @requiresAdmin
+    @private
+    def addSpotlightItem(self, title, text, link, logo, showArchive, startDate,
+                         endDate):
+         return self.applianceSpotlight.addItem(title, text, link, logo,
+                                               showArchive, startDate, endDate)
+
+    @typeCheck()
+    @private
+    @requiresAdmin
+    def getSpotlightAll(self):
+        return self.applianceSpotlight.getAll()
+
+    @typeCheck()
+    @private
+    def getCurrentSpotlight(self):
+        return self.applianceSpotlight.getCurrent()
+
+    @typeCheck(int)
+    @private
+    @requiresAdmin
+    def deleteSpotlightItem(self, itemId):
+        return self.applianceSpotlight.deleteItem(itemId)
 
     #
     # LABEL STUFF
