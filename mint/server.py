@@ -36,6 +36,7 @@ from mint import stats
 from mint import templates
 from mint import userlevels
 from mint import users
+from mint import usertemplates
 from mint import applianceSpotlight
 from mint import rmakebuild
 from mint.distro import jsversion
@@ -191,6 +192,7 @@ def getTables(db, cfg):
     d['users'] = users.UsersTable(db, cfg)
     d['userGroups'] = users.UserGroupsTable(db, cfg)
     d['userGroupMembers'] = users.UserGroupMembersTable(db, cfg)
+    d['userData'] = data.UserDataTable(db)
     d['projectUsers'] = users.ProjectUsersTable(db)
     d['releases'] = releases.ReleasesTable(db)
     d['pkgIndex'] = pkgindex.PackageIndexTable(db)
@@ -1210,6 +1212,7 @@ class MintServer(object):
             cu.execute("DELETE FROM Confirmations WHERE userId=?", userId)
             cu.execute("DELETE FROM UserGroupMembers WHERE userId=?", userId)
             cu.execute("DELETE FROM Users WHERE userId=?", userId)
+            cu.execute("DELETE FROM UserData where userId=?", userId)
         except:
             self.db.rollback()
             raise
@@ -1252,6 +1255,55 @@ class MintServer(object):
     @private
     def getUserIdByName(self, username):
         return self.users.getIdByColumn("username", username)
+
+    @typeCheck(str, str, ((str, int, bool),), int)
+    @requiresAuth
+    @private
+    def setUserDataValue(self, username, name, value):
+        userId = self.getUserIdByName(username)
+        if userId != self.auth.userId and not self.auth.admin:
+            raise PermissionDenied
+        if name not in usertemplates.userPrefsTemplate:
+            raise ParameterError("Undefined data entry")
+        dataType = usertemplates.userPrefsTemplate[name][0]
+        self.userData.setDataValue(userId, name, value, dataType)
+        return True
+
+    @typeCheck(str, str)
+    @requiresAuth
+    @private
+    def getUserDataValue(self, username, name):
+        userId = self.getUserIdByName(username)
+        if userId != self.auth.userId and not self.auth.admin:
+            raise PermissionDenied
+        found, res = self.userData.getDataValue(userId, name)
+        if found:
+            return res
+        return usertemplates.userPrefsTemplate[name][1]
+
+    @typeCheck(str)
+    @requiresAuth
+    @private
+    def getUserDataDefaulted(self, username):
+        userId = self.getUserIdByName(username)
+        if userId != self.auth.userId and not self.auth.admin:
+            raise PermissionDenied
+
+        cu = self.db.cursor()
+        cu.execute("SELECT name FROM UserData WHERE userId=?", userId)
+        res = usertemplates.userPrefsAttTemplate.keys()
+        for ent in [x[0] for x in cu.fetchall() if x[0] in res]:
+            res.remove(ent)
+        return res
+
+    @typeCheck(str)
+    @requiresAuth
+    @private
+    def getUserDataDict(self, username):
+        userId = self.getUserIdByName(username)
+        if userId != self.auth.userId and not self.auth.admin:
+            raise PermissionDenied
+        return self.userData.getDataDict(userId)
 
     @typeCheck(int, str)
     @private
