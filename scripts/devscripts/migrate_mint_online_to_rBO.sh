@@ -57,7 +57,7 @@ fi
 
 # update conary (the old school way)
 echo "Updating Conary"
-conary update conary conary-repository conary-build conary-policy --resolve
+conary update {conary,conary-repository,conary-build}=:1/1.0.18 conary-policy --resolve
 if [ $? -ne 0 ]; then
     echo "WARNING: Conary not updated, you'll have to do this again manually."
     echo "Current version of conary is $(conary --version)"
@@ -81,7 +81,8 @@ done
 # update using conary 
 echo "Updating rBuilder via Conary"
 conary erase mint-online mint-online-web mint-online-isogen mint-online-mailman
-conary update mint-online=$INSTALL_LABEL_PATH --no-deps
+conary update {rbuilder,rbuilder-web,rbuilder-jobserver}=$INSTALL_LABEL_PATH --no-deps
+conary update rbuilder-mailman=$INSTALL_LABEL_PATH --no-deps --replace-files
 if [ $? -ne 0 ]; then
     echo "Problems occurred when updating rBuilder via Conary; exiting"
     exit 1
@@ -164,6 +165,14 @@ fi
 echo "Put repositories back in place"
 [ -d "${NEW_ROOT}/repos" ] && rm -rf ${NEW_ROOT}/repos
 mv ${OLD_ROOT}/repos ${NEW_ROOT}
+
+
+echo "Creating jobserver version directories"
+cp -rp ${OLD_ROOT}/jobserver/* ${NEW_ROOT}/jobserver
+mkdir -p ${NEW_ROOT}/jobserver/1.6.3
+cat - <<EOBLOB >> ${NEW_ROOT}/jobserver/versions
+group-jobserver-root=/products.rpath.com@rpath:rba-1.6-devel/1.6.3-2-6[~!bootstrap,~!builddocs,~buildtests,dietlibc,gcj,~glibc.tls,ipv6,krb,nptl,pam,pcre,~!pie,readline,~!selinux,~sqlite.threadsafe,ssl,tcl,tk,~!uml-kernel.debugdata,~uml-kernel.honeypotproc,~!uml-kernel.hostfs is: x86(cmov,i486,i586,i686,~!mmx,~!sse2)]
+EOBLOB
 
 # move the vestigial remains of /srv/mint to the migration tempdir
 echo "Storing leftovers from the migration in $BACKUPDIR/mint.old"
