@@ -1593,6 +1593,8 @@ class MintServer(object):
         return bool(res[0])
 
     def _generateConaryRcFile(self):
+        if not self.cfg.createConaryRcFile:
+            return
         cu = self.db.cursor()
         res = cu.execute("""SELECT ProjectId from Projects 
                             WHERE hidden=0 AND disabled=0""")
