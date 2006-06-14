@@ -6,7 +6,9 @@
     Copyright (c) 2005-2006 rPath, Inc.
     All Rights Reserved
 -->
-
+<?python
+    from rmake.build import buildjob
+?>
     <head>
         <title>${formatTitle('Edit rMake Build')}</title>
     </head>
@@ -50,10 +52,11 @@
             </div>
             <div id="spanleft" py:if="rMakeBuild.status">
                 <h3>This rMake Build cannot be edited because it is currently being processed.</h3>
-                <a href="${cfg.basePath}rMakeStatus">View Status</a>
-                <a href="${cfg.basePath}resetrMakeStatus">Reset rMake Status</a>
-                <a href="${cfg.basePath}commandrMake?command=stop">Stop rMake Build</a>
-                <a href="${cfg.basePath}commandrMake?command=commit">Commit rMake Build</a>
+                <div><a href="${cfg.basePath}rMakeStatus">View Status</a></div>
+                <p><strong>Possible Operations:</strong></p>
+                <div><a href="${cfg.basePath}resetrMakeStatus">Reset rMake Status</a></div>
+                <div py:if="rMakeBuild.status not in (buildjob.STATE_FAILED, buildjob.STATE_FINISHED, buildjob.STATE_INIT)"><a href="${cfg.basePath}commandrMake?command=stop">Stop rMake Build</a></div>
+                <div py:if="rMakeBuild.status == buildjob.STATE_FINISHED"><a href="${cfg.basePath}commandrMake?command=commit">Commit rMake Build</a></div>
             </div>
         </div>
     </body>
