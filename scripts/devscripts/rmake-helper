@@ -24,7 +24,7 @@ parser.add_option("--commit", action = "store_true",
 
 rm = helper.rMakeHelper(context = options.context)
 
-jobId = rm.buildTroves([(options.trove, None, None)])
+jobId = rm.buildTroves([options.trove])
 job = rm.client.getJob(jobId)
 while not job.isFinished():
     time.sleep(2)
