@@ -134,7 +134,7 @@ class rMakeBuildItemsTable(database.KeyedTable):
                                            ON rMakeBuildItems(rMakeBuildId)""",
                'rMakeBuildItemNameIdx' : \
                """CREATE UNIQUE INDEX rMakeBuildItemNameIdx
-               ON rMakeBuildItems(trvName, trvLabel)"""}
+               ON rMakeBuildItems(rMakeBuildId, trvName, trvLabel)"""}
 
     def delete(self, rMakeBuildItemId):
         cu = self.db.cursor()
