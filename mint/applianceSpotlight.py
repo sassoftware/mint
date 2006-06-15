@@ -36,8 +36,8 @@ class ApplianceSpotlightTable(database.KeyedTable):
 
         # Check to see if the end date is later than the start date
         # Be sure dates are not already scheduled
-        cu.execute("""SELECT COUNT() FROM %s WHERE startDate<=? AND endDate>? 
-                      OR startDate<? AND endDate>=?""" % self.name, 
+        cu.execute("""SELECT COUNT(*) FROM %s WHERE startDate<=? AND endDate>?
+                      OR startDate<? AND endDate>=?""" % self.name,
                       startDateSec, startDateSec, endDateSec, endDateSec)
         if cu.fetchone()[0]:
             return False
