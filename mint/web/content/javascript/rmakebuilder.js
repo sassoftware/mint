@@ -20,7 +20,6 @@ On pages that allow for rmake manipulation do the following:
 
 var rMakeBuildId = 0;
 var statusTimeout = 1000;
-var rMakeBuildStatus = 0;
 var savedTroveList = [];
 var savedrMakeBuild = null;
 
@@ -35,16 +34,22 @@ function processgetrMakeBuild(aReq) {
     var rMakeBuild = evalJSONRequest(aReq);
     if (savedrMakeBuild == null) {
         savedrMakeBuild = rMakeBuild;
+        savedrMakeBuild['jobId'] = 0;
     }
-    rMakeBuildStatus = rMakeBuild['status'];
     var rMakeBuildAction = document.getElementById('rMakeBuildNextAction');
     var rMakeBuilderStatus = document.getElementById('rmakebuilder-status');
+    var rMakeBuilderJobId = document.getElementById('rmakebuilder-jobid');
     listrMakeBuildTroves();
     var stop = 0;
-    if ((rMakeBuild['statusMessage'] != savedrMakeBuild['statusMessage']) | (rMakeBuild['status'] != savedrMakeBuild['status'])) {
+    if (rMakeBuild['jobId'] != savedrMakeBuild['jobId']) {
+        if ((rMakeBuilderJobId != null) && (rMakeBuild['jobId'] != 0)) {
+            swapDOM(rMakeBuilderJobId, H3({id : "rmakebuilder-jobid"}, "rMake Job ID: " + rMakeBuild['jobId']));
+        }
+    }
+    if ((rMakeBuild['statusMessage'] != savedrMakeBuild['statusMessage']) || (rMakeBuild['status'] != savedrMakeBuild['status'])) {
         var statusClass = 'statusRunning';
         for (var statusIndex in jobStatusCodes) {
-            if (statusIndex == rMakeBuildStatus) {
+            if (statusIndex == rMakeBuild['status']) {
                statusClass = jobStatusCodes[statusIndex];
             }
         }
@@ -53,15 +58,15 @@ function processgetrMakeBuild(aReq) {
         }
     }
     for (var stopIndex in stopStatusList) {
-        if (rMakeBuildStatus == stopStatusList[stopIndex]) {
+        if (rMakeBuild['status'] == stopStatusList[stopIndex]) {
             stop = 1;
         }
     }
     if (rMakeBuildAction != null) {
-        if (rMakeBuildStatus == 99) {
+        if (rMakeBuild['status'] == 99) {
             swapDOM(rMakeBuildAction, A({id: 'rMakeBuildNextAction', class : 'option', style : 'display: inline;', href : BaseUrl + 'commandrMake?command=commit'}, 'Commit'));
         }
-        if (rMakeBuildStatus == -1) {
+        if (rMakeBuild['status'] == -1) {
             swapDOM(rMakeBuildAction, A({id: 'rMakeBuildNextAction', class : 'option', style : 'display: inline;', href : BaseUrl + 'resetrMakeStatus'}, 'Reset'));
         }
     }

@@ -37,7 +37,7 @@
                     addLoadEvent(initrMakeManager(${rMakeBuild.id}));
                 ]]>
                 </script>
-                <h3>rMake Job ID: ${rMakeBuild.jobId or 'Unknown'}</h3>
+                <h3 id="rmakebuilder-jobid">rMake Job ID: ${rMakeBuild.jobId or 'Unknown'}</h3>
                 <div id="rmakebuilder-status" class="${jobStatusCodes.get(rMakeBuild.status, 'statusRunning')}">
                     ${rMakeBuild.statusMessage}
                 </div>
