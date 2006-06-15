@@ -12,6 +12,7 @@ from mod_python import apache
 
 from mint import config
 from mint import server
+from mint import maintenance
 from mint.web.webhandler import getHttpAuth
 
 from conary.repository import errors
