@@ -675,6 +675,30 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
         self.assertRaises(mint_error.ParameterError,
                           rMakeBuild.addTrove, trvName, trvLabel)
 
+    @fixtures.fixture("Full")
+    def testTroveSpanBuilds(self, db, data):
+        client = self.getClient('nobody')
+        rMakeBuild = client.createrMakeBuild('foo')
+        rMakeBuild2 = client.createrMakeBuild('bar')
+        trvName = 'foo'
+        trvLabel = 'test.rpath.local@rpl:devel'
+
+        rMakeBuild.addTrove(trvName, trvLabel)
+        # historical index incorrectly enforced uniqueness
+        rMakeBuild2.addTrove(trvName, trvLabel)
+
+    @fixtures.fixture("Full")
+    def testTroveSpanBranches(self, db, data):
+        client = self.getClient('nobody')
+        rMakeBuild = client.createrMakeBuild('foo')
+        trvName = 'foo'
+        trvLabel = 'test.rpath.local@rpl:devel'
+        trvLabel2 = 'test2.rpath.local@rpl:devel'
+
+        rMakeBuild.addTrove(trvName, trvLabel)
+        # ensure the same trove from two separate branches is legal
+        rMakeBuild.addTrove(trvName, trvLabel2)
+
 
 class rMakeBuildTest(MintRepositoryHelper):
     def makeCookedTrove(self, branch = 'rpl:devel', hostname = 'testproject'):
