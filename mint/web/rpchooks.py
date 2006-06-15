@@ -17,6 +17,7 @@ from mint.web.webhandler import getHttpAuth
 from conary.repository import errors
 
 def rpcHandler(req, cfg, pathInfo = None):
+    maintenance.enforceMaintenanceMode(cfg)
     isJSONrpc = isXMLrpc = allowPrivate = False
 
     # only handle POSTs

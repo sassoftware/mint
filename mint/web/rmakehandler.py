@@ -13,6 +13,7 @@ from mod_python import apache
 from mint import config
 from mint import server
 from mint.web.webhandler import getHttpAuth
+from mint import maintenance
 
 from rmake.build import buildjob, buildtrove
 
@@ -23,6 +24,8 @@ def makeXMLCall(srvr, method, XMLParams):
     return srvr.callWrapper(method, ('anonymous', 'anonymous'), XMLParams)
 
 def rMakeHandler(req, cfg, pathInfo = None):
+    maintenance.enforceMaintenanceMode(cfg)
+
     if req.method.upper() != 'POST':
         return apache.HTTP_METHOD_NOT_ALLOWED
     (paramList, method) = xmlrpclib.loads(req.read())
