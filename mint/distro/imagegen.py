@@ -18,8 +18,6 @@ class NoConfigFile(Exception):
         self._path = path
 
     def __str__(self):
-        import epdb
-        epdb.st()
         return "Unable to access configuration file: %s" % self._path
 
 class Generator:
