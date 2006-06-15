@@ -1,6 +1,6 @@
 #!/bin/sh
 
-SYNCDIRS="/srv/rbuilder/code/mint /srv/rbuilder/code/conary /srv/www/html/web/"
+SYNCDIRS="/srv/rbuilder/code/mint /srv/rbuilder/code/conary /srv/www/html/web/ /srv/rbuilder/code/conary-test"
 
 # disable temporarily by touching /tmp/.nosynchg
 if [ -f /tmp/.nosynchg ]; then
