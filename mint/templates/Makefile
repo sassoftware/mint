@@ -7,8 +7,7 @@
 kid_files = \
 	joinRequest.kid		\
 	registerNewUser.kid	\
-	validateNewEmail.kid    \
-	projectPage.kid
+	validateNewEmail.kid
 
 python_files = __init__.py
 
