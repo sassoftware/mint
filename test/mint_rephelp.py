@@ -576,7 +576,8 @@ class WebRepositoryHelper(MintRepositoryHelper, webunittest.WebTestCase):
         self.clearCookies()
         MintRepositoryHelper.tearDown(self)
         webunittest.WebTestCase.tearDown(self)
-        # tear down the running server...
+        webunittest.HTTPResponse.fetchWithRedirect = None
+        webunittest.HTTPResponse._TestCase__testMethodName = None
 
     def webLogin(self, username, password):
         page = self.fetch(self.mintCfg.basePath)
