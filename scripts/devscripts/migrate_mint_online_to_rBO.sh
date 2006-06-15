@@ -115,13 +115,18 @@ for k in newCfg.iterkeys():
 # tarball added in this release
 newCfg.visibleImageTypes.extend([3])
 
+# add createConaryRcFile and set it to False (not needed for rBO)
+newCfg.createConaryRcFile = False
+
 newCfgFile = open('${NEW_ROOT}/${NEW_CONF}', 'w')
 newCfg.display(out = newCfgFile)
 newCfgFile.close()
 EOSCRIPT
 
-# re-create links to repos
+# touch up the generated conf file and escape '#' chars
+sed --in-place='.bak' -e 's/\(.\)#/\1\\#/g' ${NEW_ROOT}/${NEW_CONF}
 
+# re-create links to repos
 ln -s /data/mint/images/changesets ${NEW_ROOT}/changesets
 ln -s /data/mint/repos-nas2-vol2 ${NEW_ROOT}/contents
 ln -s /data/mint/images/finished-images ${NEW_ROOT}/finished-images

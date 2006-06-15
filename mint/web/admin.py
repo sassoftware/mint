@@ -306,7 +306,8 @@ class AdminHandler(WebHandler):
         popularProjects, _ = self.client.getProjects(projectlisting.NUMDEVELOPERS_DES, 10, 0)
         activeProjects, _  = self.client.getProjects(projectlisting.ACTIVITY_DES, 10, 0)
 
-        
+        if not spotlightData.has_key('logo'):
+            spotlightData['logo'] = ''
         return self._write("admin/preview", firstTime=self.session.get('firstTimer', False),
             releases=releases, popularProjects = popularProjects, activeProjects = activeProjects, spotlightData=spotlightData)
 
