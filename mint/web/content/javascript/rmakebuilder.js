@@ -19,7 +19,7 @@ On pages that allow for rmake manipulation do the following:
 */
 
 var rMakeBuildId = 0;
-var statusTimeout = 1000;
+var statusTimeout = 1;
 var savedTroveList = [];
 var savedrMakeBuild = null;
 
@@ -66,12 +66,16 @@ function processgetrMakeBuild(aReq) {
         if (rMakeBuild['status'] == 99) {
             swapDOM(rMakeBuildAction, A({id: 'rMakeBuildNextAction', class : 'option', style : 'display: inline;', href : BaseUrl + 'commandrMake?command=commit'}, 'Commit'));
         }
+        if (rMakeBuild['status'] == 101) {
+            swapDOM(rMakeBuildAction, A({id: 'rMakeBuildNextAction', class : 'option', style : 'display: inline;', href : BaseUrl + 'resetrMakeStatus'}, 'Reset'));
+        }
         if (rMakeBuild['status'] == -1) {
             swapDOM(rMakeBuildAction, A({id: 'rMakeBuildNextAction', class : 'option', style : 'display: inline;', href : BaseUrl + 'resetrMakeStatus'}, 'Reset'));
         }
     }
     if (!stop) {
-        setTimeout("getrMakeBuild()", statusTimeout);
+        callLater(statusTimeout, getrMakeBuild);
+        /* setTimeout("getrMakeBuild()", statusTimeout); */
     }
     savedrMakeBuild = rMakeBuild;
 }
