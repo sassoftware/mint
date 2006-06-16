@@ -108,6 +108,20 @@
     </div>
 
     <div py:def="projectsPane()" id="projectsPane" >
+        <script type="text/javascript">
+        addLoadEvent(function() {
+            var rMakeMimeType = navigator.mimeTypes["application/x-rmake"];
+            if (rMakeMimeType) {
+                var rMake = document.getElementById("rMake");
+                if (rMake) {
+                    swapDOM(rMake, DIV({id : "rMake"},
+                                       A({href : BaseUrl + 'rMake?supported=1',
+                                          style: 'font-weight: bold;'},
+                                         'rMake Builder')));
+                }
+            }
+            });
+        </script>
         <img class="left" src="${cfg.staticPath}apps/mint/images/header_orange_left.png" alt="" />
         <img class="right" src="${cfg.staticPath}apps/mint/images/header_orange_right.png" alt="" />
         <div class="boxHeader">
@@ -138,7 +152,7 @@
             link to submit your request to the project's owners.</p>
             <div id="userSettings"><a href="http://${SITE}userSettings"><strong>Edit my account</strong></a></div>
 	    <div id="administer" py:if="auth.admin"><a href="http://${SITE}admin/"><strong>Site administration</strong></a></div>
-            <div id="rMake" py:if="True"><a href="http://${SITE}rMake/"><strong>rMake Builder</strong></a></div>
+            <div id="rMake"><a href="http://${SITE}rMake/" style="font-weight: bold;">rMake Builder</a></div>
         </div>
         <div class="boxBody" id="boxBody" py:if="projectList">
             <div py:for="level, title in [(userlevels.OWNER, 'Projects I Own'),
@@ -161,7 +175,7 @@
             <div id="newProject" py:if="auth.admin or not cfg.adminNewProjects"><a href="http://${SITE}newProject"><strong>Create a new project</strong></a></div>
             <div id="userSettings"><a href="http://${SITE}userSettings"><strong>Edit my account</strong></a></div>
             <div id="administer" py:if="auth.admin"><a href="http://${SITE}admin/"><strong>Site administration</strong></a></div>
-            <div id="rMake" py:if="True"><a href="http://${SITE}rMake/"><strong>rMake Builder</strong></a></div>
+            <div id="rMake"><a href="http://${SITE}rMake/" style="font-weight: bold;">rMake Builder</a></div>
         </div>
     </div>
 </html>
