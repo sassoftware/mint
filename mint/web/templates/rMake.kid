@@ -11,7 +11,7 @@
     </head>
 
     <body>
-        <div id="layout">
+        <div id="layout" py:if="supported">
             <div id="right" class="side">
                 ${resourcePane()}
                 ${builderPane()}
@@ -58,6 +58,15 @@
                     </li>
                 </ul>
                 <a href="${basePath}newrMake"><b>Create a new rMake Build</b></a>
+            </div>
+        </div>
+        <div id="layout" py:if="not supported">
+            <div id="right" class="side">
+                ${resourcePane()}
+                ${builderPane()}
+            </div>
+            <div id="spanleft">
+            __YELIAB__ Insert words about how to install rMake and what it's for...
             </div>
         </div>
     </body>
