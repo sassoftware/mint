@@ -503,6 +503,10 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
         cfg.configPath = self.tmpDir
         return cfg
 
+    def verifyContentsInFile(self, fileName, contents):
+        f = file(fileName)
+        assert(contents in f.read())
+
 
 class WebRepositoryHelper(MintRepositoryHelper, webunittest.WebTestCase):
     def __init__(self, methodName):

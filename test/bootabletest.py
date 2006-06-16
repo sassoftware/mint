@@ -109,6 +109,23 @@ class BootableImageTest(MintRepositoryHelper):
         self.assertRaises(bootable_image.KernelTroveRequired,
             bi.updateKernelChangeSet, EmptyCallback())
 
+    def testGrubSetup(self):
+        self.addComponent("test:runtime", "1.0")
+
+        trove = self.addCollection("group-dist", "1.0",
+             [("test:runtime", True)], defaultFlavor = "is: x86")
+
+        bi = self.setupBootableImage(trove)
+        for d in 'sbin', 'boot/grub', 'etc':
+            util.mkdirChain(os.path.join(bi.fakeroot, d))
+        file(os.path.join(bi.fakeroot, 'sbin', 'grub'), "w").close()
+
+        bi._setupGrub()
+        self.verifyContentsInFile(
+            os.path.join(bi.fakeroot, 'etc', 'grub.conf'),
+            "title Test (template)"
+        )
+
 
 if __name__ == "__main__":
     testsuite.main()
