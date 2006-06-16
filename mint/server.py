@@ -61,6 +61,8 @@ from conary.repository import shimclient
 from conary.repository.netrepos import netserver, calllog
 from conary import errors as conary_errors
 
+from rmake.build import buildjob
+
 validHost = re.compile('^[a-zA-Z][a-zA-Z0-9\-]*$')
 reservedHosts = ['admin', 'mail', 'mint', 'www', 'web', 'rpath', 'wiki', 'conary', 'lists']
 
@@ -2835,7 +2837,9 @@ class MintServer(object):
         if not trvList:
             raise rMakeBuildEmpty
         rMakeBuildDict = self.rMakeBuild.get(rMakeBuildId)
-        if command in ('commit', 'stop') and rMakeBuildDict['status'] == 0:
+        if (command == 'stop' and rMakeBuildDict['status'] == 0) or \
+               (command == 'commit' and rMakeBuildDict['status'] \
+                not in (buildjob.STATE_BUILT, buildjob.STATE_COMMITTING)):
             raise rMakeBuildOrder
         UUID = rMakeBuildDict['UUID']
         if command == 'build':
@@ -2857,8 +2861,10 @@ class MintServer(object):
                 res += makeTroveSpec(rMakeBuildItem['trvName'],
                                      rMakeBuildItem['trvLabel'])
             self.rMakeBuild.startBuild(rMakeBuildId)
-        elif command in ('stop', 'commit'):
+        elif command == 'stop':
             self.rMakeBuild.reset(rMakeBuildId)
+        elif command == 'commit':
+            self.rMakeBuild.commitBuild(rMakeBuildId)
         res += "</command></rmake>"
         return res
 
