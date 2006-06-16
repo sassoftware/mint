@@ -28,7 +28,7 @@
                     </button></p>
                 </form>
                 <p>
-                    <button class="img" onclick="javascript:window.location='buildrMake';" type="button">
+                    <button class="img" onclick="javascript:window.location='commandrMake?command=build';" type="button">
                         <img src="${cfg.staticPath}/apps/mint/images/build_rmake_button.png" alt="Build" />
                     </button>
                     <button class="img" onclick="javascript:window.location='deleterMakeBuild';" type="button">
