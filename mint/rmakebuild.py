@@ -10,7 +10,7 @@ import random
 
 from mint import database
 from conary import versions
-from rmake.build import buildjob
+from rmake.build import buildjob, buildtrove
 
 class rMakeBuildTable(database.KeyedTable):
     name = "rMakeBuild"
@@ -94,6 +94,17 @@ class rMakeBuildTable(database.KeyedTable):
                    buildjob.STATE_QUEUED, rMakeBuildId)
         self.db.commit()
 
+    def commitBuild(self, rMakeBuildId):
+        cu = self.db.cursor()
+        cu.execute("""UPDATE rMakeBuild SET status=?,
+                                 statusMessage='Waiting for rMake Server'
+                          WHERE rMakeBuildId=?""",
+                   buildjob.STATE_COMMITTING, rMakeBuildId)
+        cu.execute("""UPDATE rMakeBuildItems SET status=?, statusMessage=''
+                          WHERE rMakeBuildId=?""",
+                   buildtrove.TROVE_STATE_INIT, rMakeBuildId)
+        self.db.commit()
+
     def setStatus(self, UUID, status, statusMessage):
         cu = self.db.cursor()
         cu.execute("""UPDATE rMakeBuild
@@ -162,17 +173,13 @@ class rMakeBuildItemsTable(database.KeyedTable):
         except:
             trvLabel = trvVersion
         cu = self.db.cursor()
-        cu.execute("""SELECT UUID FROM rMakeBuildItems
-                          LEFT JOIN rMakeBuild ON
-                           rMakeBuildItems.rMakeBuildId=rMakeBuild.rMakeBuildId
-                          WHERE trvName=? AND trvLabel=?""",
-                   trvName, trvLabel)
+        cu.execute("SELECT rMakeBuildId FROM rMakeBuild WHERE UUID=?", UUID)
         res = cu.fetchone()
-        if not res or res[0] != UUID:
+        if not res:
             return
         cu.execute("""UPDATE rMakeBuildItems SET status=?, statusMessage=?
-                          WHERE trvName=? AND trvLabel=?""",
-                   status, statusMessage, trvName, trvLabel)
+                          WHERE trvName=? AND trvLabel=? and rMakeBuildId=?""",
+                   status, statusMessage, trvName, trvLabel, res[0])
         self.db.commit()
 
 class rMakeBuild(database.TableObject):
