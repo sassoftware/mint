@@ -29,10 +29,10 @@
                 </form>
                 <p>
                     <button class="img" onclick="javascript:window.location='buildrMake';" type="button">
-                        <img src="${cfg.staticPath}/apps/mint/images/cook_this_group_button.png" alt="Build" />
+                        <img src="${cfg.staticPath}/apps/mint/images/build_rmake_button.png" alt="Build" />
                     </button>
                     <button class="img" onclick="javascript:window.location='deleterMakeBuild';" type="button">
-                        <img src="${cfg.staticPath}/apps/mint/images/delete_this_group_button.png" alt="Delete rMake Build" />
+                        <img src="${cfg.staticPath}/apps/mint/images/delete_button.png" alt="Delete rMake Build" />
                     </button>
                 </p>
                 <h3 style="color:#FF7001;">Step 1: Add Packages To Your rMake Build</h3>
@@ -55,8 +55,8 @@
                 <div><a href="${cfg.basePath}rMakeStatus">View Status</a></div>
                 <p><strong>Possible Operations:</strong></p>
                 <div><a href="${cfg.basePath}resetrMakeStatus">Reset rMake Status</a></div>
-                <div py:if="rMakeBuild.status not in (buildjob.STATE_FAILED, buildjob.STATE_FINISHED, buildjob.STATE_INIT)"><a href="${cfg.basePath}commandrMake?command=stop">Stop rMake Build</a></div>
-                <div py:if="rMakeBuild.status == buildjob.STATE_FINISHED"><a href="${cfg.basePath}commandrMake?command=commit">Commit rMake Build</a></div>
+                <div py:if="rMakeBuild.status not in (buildjob.STATE_FAILED, buildjob.STATE_BUILT, buildjob.STATE_INIT)"><a href="${cfg.basePath}commandrMake?command=stop">Stop rMake Build</a></div>
+                <div py:if="rMakeBuild.status == buildjob.STATE_BUILT"><a href="${cfg.basePath}commandrMake?command=commit">Commit rMake Build</a></div>
             </div>
         </div>
     </body>
