@@ -205,7 +205,10 @@ class BootableImage(ImageGenerator):
             return
         util.copytree(os.path.join(self.fakeroot, 'usr', 'share', 'grub', '*', '*'), os.path.join(self.fakeroot, 'boot', 'grub'))
         #Create a stub grub.conf
-        name = open(os.path.join(self.fakeroot, 'etc', 'issue'), 'r').readlines()[0].strip()
+        if os.path.exists(os.path.join(self.fakeroot, 'etc', 'issue')):
+            name = open(os.path.join(self.fakeroot, 'etc', 'issue'), 'r').readlines()[0].strip()
+        else:
+            name = self.project.getName()
         # make initrd line in grub conf contingent on actually having one.
         macros = {'name': name, 'kversion': 'template', 'initrdCmd' : ''}
         bootDirFiles = os.listdir(os.path.join(self.fakeroot, 'boot'))
