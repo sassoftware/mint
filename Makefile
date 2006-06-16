@@ -25,7 +25,7 @@ export raapluginsdir = $(libdir)/raa/rPath/
 
 .PHONY: doc
 
-SUBDIRS = mint test scripts mailman raa-plugins commands
+SUBDIRS = mint test scripts mailman raa-plugins commands etc
 
 extra_files = Makefile Make.rules rbuilder.conf httpd.conf
 
