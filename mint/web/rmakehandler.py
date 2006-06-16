@@ -44,6 +44,10 @@ def rMakeHandler(req, cfg, pathInfo = None):
         # job level notifications
         if stateInfo[0] in ('JOB_STATE_UPDATED', 'JOB_LOG_UPDATED'):
             jobId, status, statusMessage = eventDetails
+            if status == buildjob.STATE_COMMITTING:
+                statusMessage = 'Committing...'
+            if status == buildjob.STATE_COMMITTED:
+                statusMessage = 'Successfully Committed'
             if stateInfo[1] == buildjob.STATE_STARTED:
                 # set the job ID
                 makeXMLCall(srvr, 'setrMakeBuildJobId',
@@ -51,7 +55,7 @@ def rMakeHandler(req, cfg, pathInfo = None):
             method = 'setrMakeBuildStatus'
             makeXMLCall(srvr, method, (UUID, status, statusMessage))
         # job troves notification. submit them all.
-        elif stateInfo[0] == 'JOB_TROVES_SET':
+        elif stateInfo[0] in ('JOB_TROVES_SET', 'JOB_COMMITTED'):
             method = 'setrMakeBuildTroveStatus'
             for trvName, trvVersion, trvFlavor in eventDetails[1]:
                 trvSpecVersion = str(versions.ThawVersion(trvVersion))
