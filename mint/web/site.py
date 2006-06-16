@@ -657,10 +657,12 @@ class SiteHandler(WebHandler):
             return self._redirect("http://%s%suserInfo?id=%d" %
                     (self.cfg.siteHost, self.cfg.basePath, userId))
 
+    @boolFields(supported = False)
     @requiresAuth
-    def rMake(self, auth):
+    def rMake(self, auth, supported):
         return self._write('rMake',
-                           rMakeBuilds = self.client.listrMakeBuilds())
+                           rMakeBuilds = self.client.listrMakeBuilds(),
+                           supported = supported)
 
     @requiresAuth
     def newrMake(self, auth):
@@ -811,7 +813,8 @@ class SiteHandler(WebHandler):
         if not self.rMakeBuild:
             return self._write('error', 'error', "No rMake Build underway.")
         if confirmed or self.rMakeBuild.status in \
-               (buildjob.STATE_INIT, buildjob.STATE_FAILED):
+               (buildjob.STATE_INIT, buildjob.STATE_FAILED,
+                buildjob.STATE_COMMITTED):
             self.rMakeBuild.resetStatus()
             self._redirect(self.cfg.basePath)
         else:
