@@ -17,7 +17,7 @@
                 from mint.web.templatesupport import dictToJS
                 from rmake.build import buildjob, buildtrove
                 jobStatusCodes = {buildjob.STATE_FAILED:   'statusError',
-                                  buildjob.STATE_FINISHED: 'statusFinished'}
+                                  buildjob.STATE_BUILT: 'statusFinished'}
                 trvStatusCodes = {buildtrove.TROVE_STATE_FAILED: 'statusError',
                                   buildtrove.TROVE_STATE_BUILT:  'statusFinished'}
             ?>
@@ -33,11 +33,11 @@
                 <![CDATA[
                     trvStatusCodes = ${dictToJS(trvStatusCodes)};
                     jobStatusCodes = ${dictToJS(jobStatusCodes)};
-                    stopStatusList = ${str([buildjob.STATE_FAILED, buildjob.STATE_FINISHED])};
+                    stopStatusList = ${str([buildjob.STATE_FAILED, buildjob.STATE_BUILT])};
                     addLoadEvent(initrMakeManager(${rMakeBuild.id}));
                 ]]>
                 </script>
-                <h3>rMake Job ID: ${rMakeBuild.jobId or 'Unknown'}</h3>
+                <h3 id="rmakebuilder-jobid">rMake Job ID: ${rMakeBuild.jobId or 'Unknown'}</h3>
                 <div id="rmakebuilder-status" class="${jobStatusCodes.get(rMakeBuild.status, 'statusRunning')}">
                     ${rMakeBuild.statusMessage}
                 </div>
