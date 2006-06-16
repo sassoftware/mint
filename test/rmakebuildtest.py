@@ -17,6 +17,7 @@ from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import MINT_PROJECT_DOMAIN
 
 import conary.repository.errors as repo_errors
+from rmake.build import buildjob, buildtrove
 
 class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
     @fixtures.fixture("Full")
@@ -183,26 +184,66 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
         rMakeBuild = client.createrMakeBuild('foo')
 
         itemId = rMakeBuild.addTrove('foo', 'test.rpath.local@rpl:devel')
-        xml = rMakeBuild.getXML()
-        xml = rMakeBuild.getXML('commit')
         cu = db.cursor()
+        cu.execute("""UPDATE rMakeBuild SET status=?, statusMessage='test'
+                          WHERE rMakeBuildId=?""",
+                   buildjob.STATE_BUILT, rMakeBuild.id)
+        db.commit()
+        xml = rMakeBuild.getXML('commit')
+
         cu.execute("""SELECT status, statusMessage
                           FROM rMakeBuild
                           WHERE rMakeBuildId=?""",
                    rMakeBuild.id)
         status, statusMessage = cu.fetchone()
 
-        self.failIf(status != 0, "status not reset")
-        self.failIf(statusMessage != '', "statusMessage not reset")
+        self.failIf(status != buildjob.STATE_COMMITTING,
+                    "status was not set to committing")
+        self.failIf(statusMessage != 'Waiting for rMake Server',
+                    "statusMessage was not updated")
+
+    @fixtures.fixture("Full")
+    def testCommitTroveStatus(self, db, data):
+        client = self.getClient('nobody')
+        rMakeBuild = client.createrMakeBuild('foo')
+
+        itemId = rMakeBuild.addTrove('foo', 'test.rpath.local@rpl:devel')
+
+        cu = db.cursor()
+        cu.execute("""UPDATE rMakeBuild SET status=?, statusMessage='test'
+                          WHERE rMakeBuildId=?""",
+                   buildjob.STATE_BUILT, rMakeBuild.id)
+        cu.execute("""UPDATE rMakeBuildItems SET status=?, statusMessage=?
+                          WHERE rMakeBuildItemId=?""",
+                   buildtrove.TROVE_STATE_BUILT, 'Trove Built', itemId)
+        db.commit()
+        xml = rMakeBuild.getXML('commit')
+
+        cu.execute("""SELECT status, statusMessage
+                          FROM rMakeBuildItems
+                          WHERE rMakeBuildItemId=?""",
+                   itemId)
+        status, statusMessage = cu.fetchone()
+
+        self.failIf(status != 0, "trove status not reset")
+        self.failIf(statusMessage != '', "trove status message not reset")
 
     @fixtures.fixture("Full")
     def testCommitOrder(self, db, data):
         client = self.getClient('nobody')
         rMakeBuild = client.createrMakeBuild('foo')
 
+        cu = db.cursor()
+
         itemId = rMakeBuild.addTrove('foo', 'test.rpath.local@rpl:devel')
-        self.assertRaises(mint_error.rMakeBuildOrder,
-                          rMakeBuild.getXML, 'commit')
+        for status in (buildjob.STATE_FAILED, buildjob.STATE_INIT,
+                       buildjob.STATE_QUEUED, buildjob.STATE_STARTED,
+                       buildjob.STATE_BUILD, buildjob.STATE_COMMITTED):
+            cu .execute("UPDATE rMakeBuild SET status=? WHERE rMakeBuildId=?",
+                        status, rMakeBuild.id)
+            db.commit()
+            self.assertRaises(mint_error.rMakeBuildOrder,
+                              rMakeBuild.getXML, 'commit')
 
     @fixtures.fixture("Full")
     def testStopOrder(self, db, data):
@@ -241,9 +282,9 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
         itemId = rMakeBuild.addTrove('foo', 'test.rpath.local@rpl:devel')
 
         cu = db.cursor()
-        cu.execute("""UPDATE rMakeBuild SET UUID=?, status=1
+        cu.execute("""UPDATE rMakeBuild SET UUID=?, status=?
                           WHERE rMakeBuildId=?""",
-                   32 * '0', rMakeBuild.id)
+                   32 * '0', buildjob.STATE_BUILT, rMakeBuild.id)
         db.commit()
         xml = rMakeBuild.getXML('commit')
 
@@ -251,7 +292,7 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
                    rMakeBuild.id)
         UUID = cu.fetchone()[0]
 
-        self.failIf(UUID == (32 * '0'), "UUID was not cleared by getting XML")
+        self.failIf(UUID != (32 * '0'), "UUID was not cleared by getting XML")
 
     @fixtures.fixture("Full")
     def testDoubleBuild(self, db, data):
@@ -325,11 +366,12 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
 
         itemId = rMakeBuild.addTrove(trvName, trvLabel)
 
-        xml = rMakeBuild.getXML()
+        UUID = 32 * '0'
         cu = db.cursor()
-        cu.execute("SELECT UUID FROM rMakeBuild WHERE rMakeBuildId=?",
+        cu.execute("""UPDATE rMakeBuild SET status=?, UUID=?
+                          WHERE rMakeBuildId=?""", buildjob.STATE_BUILT, UUID,
                    rMakeBuild.id)
-        UUID = cu.fetchone()[0]
+        db.commit()
 
         xml = rMakeBuild.getXML('commit')
         assert xml == "<rmake><version>1</version><buildConfig><option><name>includeConfigFile</name><value>http://%sconaryrc</value></option><option><name>subscribe</name><value>rBuilder xmlrpc http://%srmakesubscribe/%s</value></option><option><name>uuid</name><value>%s</value></option></buildConfig><command><name>commit</name></command></rmake>" % \
@@ -698,6 +740,112 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
         rMakeBuild.addTrove(trvName, trvLabel)
         # ensure the same trove from two separate branches is legal
         rMakeBuild.addTrove(trvName, trvLabel2)
+
+    @fixtures.fixture("Full")
+    def testCommitReset(self, db, data):
+        client = self.getClient('nobody')
+        rMakeBuild = client.createrMakeBuild('foo')
+        trvName = 'foo'
+        trvLabel = 'test.rpath.local@rpl:devel'
+
+        rMakeBuild.addTrove(trvName, trvLabel)
+
+        UUID = 32 * '0'
+
+        cu = db.cursor()
+        cu.execute("""UPDATE rMakeBuild SET UUID=?, status=?
+                          WHERE rMakeBuildId=?""",
+                   (UUID, buildjob.STATE_COMMITTING, rMakeBuild.id))
+        db.commit()
+
+        client.server.setrMakeBuildStatus(UUID, buildjob.STATE_COMMITTED,
+                                          'test message')
+        rMakeBuild.refresh()
+
+        self.failIf(rMakeBuild.status != buildjob.STATE_COMMITTED,
+                    "status was not set by commit")
+
+    @fixtures.fixture("Full")
+    def testCommitCommitting(self, db, data):
+        client = self.getClient('nobody')
+        rMakeBuild = client.createrMakeBuild('foo')
+        trvName = 'foo'
+        trvLabel = 'test.rpath.local@rpl:devel'
+
+        rMakeBuild.addTrove(trvName, trvLabel)
+
+        UUID = 32 * '0'
+
+        cu = db.cursor()
+        cu.execute("""UPDATE rMakeBuild SET UUID=?, status=?
+                          WHERE rMakeBuildId=?""",
+                   (UUID, buildjob.STATE_COMMITTING, rMakeBuild.id))
+        db.commit()
+
+        client.server.setrMakeBuildStatus(UUID, buildjob.STATE_COMMITTING,
+                                          'test message')
+
+        xml = rMakeBuild.getXML('commit')
+
+    @fixtures.fixture("Full")
+    def testCommitBuilt(self, db, data):
+        client = self.getClient('nobody')
+        rMakeBuild = client.createrMakeBuild('foo')
+        trvName = 'foo'
+        trvLabel = 'test.rpath.local@rpl:devel'
+
+        rMakeBuild.addTrove(trvName, trvLabel)
+
+        UUID = 32 * '0'
+
+        cu = db.cursor()
+        cu.execute("""UPDATE rMakeBuild SET UUID=?, status=?
+                          WHERE rMakeBuildId=?""",
+                   (UUID, buildjob.STATE_BUILT, rMakeBuild.id))
+        db.commit()
+
+        client.server.setrMakeBuildStatus(UUID, buildjob.STATE_COMMITTING,
+                                          'test message')
+
+        xml = rMakeBuild.getXML('commit')
+
+    @fixtures.fixture("Full")
+    def testCollidingTrvs(self, db, data):
+        client = self.getClient('nobody')
+        rMakeBuild = client.createrMakeBuild('foo')
+        rMakeBuild2 = client.createrMakeBuild('bar')
+        trvName = 'foo'
+        trvLabel = 'test.rpath.local@rpl:devel'
+
+        rMakeBuild.addTrove(trvName, trvLabel)
+        rMakeBuild2.addTrove(trvName, trvLabel)
+
+        UUID = 32 * '0'
+        UUID2 = 32 * '1'
+
+        cu = db.cursor()
+        cu.execute("""UPDATE rMakeBuild SET UUID=?
+                          WHERE rMakeBuildId=?""",
+                   (UUID, rMakeBuild.id))
+        cu.execute("""UPDATE rMakeBuild SET UUID=?
+                          WHERE rMakeBuildId=?""",
+                   (UUID2, rMakeBuild2.id))
+        db.commit()
+
+        client.server.setrMakeBuildTroveStatus(UUID2, trvName, trvLabel, 1,
+                                               'test')
+
+        trv = rMakeBuild.listTroves()[0]
+
+        self.failIf(trv['status'] != 0, "first job status is not 0")
+        self.failIf(trv['statusMessage'] != '',
+                    "first job statusMessage is not blank")
+
+        trv = rMakeBuild2.listTroves()[0]
+
+        self.failIf(trv['status'] != 1, 'second job status not set')
+        self.failIf(trv['statusMessage'] != 'test',
+                    'second job status message not set')
 
 
 class rMakeBuildTest(MintRepositoryHelper):
