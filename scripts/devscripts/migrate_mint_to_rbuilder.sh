@@ -175,6 +175,10 @@ find $NEW_ROOT -uid $old_isogen_uid \
 find $NEW_ROOT -gid $old_isogen_uid \
     -exec chgrp $new_isogen_uid {} \; > /dev/null 2>&1
 
+# remove old cached changesets
+echo "Remove old cached changesets"
+find ${NEW_ROOT}/repos -maxdepth 3 -type f -name \*ccs\* -print -exec rm -f {} \;
+
 # JS Root was installed by group-rbuilder-dist via jobserver-root trove
 # that trove can be deleted; future updates should be done via
 # conary update group-jobserver-root
