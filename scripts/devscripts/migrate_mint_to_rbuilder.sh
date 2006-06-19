@@ -54,9 +54,13 @@ fi
 
 # start the migration here ####################################################
 
+# whack products line from conaryrc
+echo "Updating conaryrc"
+sed -i.bak -e 's/products.rpath.com@.* //g' /etc/conaryrc
+
 # update conary (the old school way)
 echo "Updating Conary"
-conary update conary conary-repository conary-build conary-policy --resolve
+conary update {conary,conary-repository,conary-build}=1.0.18 conary-policy --resolve
 if [ $? -ne 0 ]; then
     echo "WARNING: Conary not updated, you'll have to do this again manually."
     echo "Current version of conary is $(conary --version)"
@@ -178,6 +182,13 @@ find $NEW_ROOT -gid $old_isogen_uid \
 # remove old cached changesets
 echo "Remove old cached changesets"
 find ${NEW_ROOT}/repos -maxdepth 3 -type f -name \*ccs\* -print -exec rm -f {} \;
+
+# migrate old conaryrc for rbuilder
+if [ -f ${OLD_ROOT}/conaryrc ]; then
+    echo "Migrating conaryrc for rbuilder"
+    [ ! -d ${NEW_ROOT}/config ] && mkdir ${NEW_ROOT}/config
+    cp ${OLD_ROOT}/conaryrc ${NEW_ROOT}/config/conaryrc
+fi
 
 # JS Root was installed by group-rbuilder-dist via jobserver-root trove
 # that trove can be deleted; future updates should be done via
