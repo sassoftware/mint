@@ -60,6 +60,7 @@ from mint.web.templatesupport import injectVersion, dictToJS
             statusIcons = ${dictToJS(statusIcons)};
             jobStatusCodes = ${dictToJS(jobStatusCodes)};
             stopStatusList = ${str(stopStatusList)};
+            buildjob = ${str(buildjob)};
             addLoadEvent(initrMakeManager(${rMakeBuild.id}));
         ]]>
         </script>

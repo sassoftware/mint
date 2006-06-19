@@ -63,13 +63,13 @@ function processgetrMakeBuild(aReq) {
         }
     }
     if (rMakeBuildAction != null) {
-        if (rMakeBuild['status'] == 99) {
+        if (rMakeBuild['status'] == buildjob['JOB_STATE_BUILT']) {
             swapDOM(rMakeBuildAction, A({id: 'rMakeBuildNextAction', class : 'option', style : 'display: inline;', href : BaseUrl + 'commandrMake?command=commit'}, 'Commit'));
         }
-        if (rMakeBuild['status'] == 101) {
+        if (rMakeBuild['status'] == buildjob['JOB_STATE_COMMITTED']) {
             swapDOM(rMakeBuildAction, A({id: 'rMakeBuildNextAction', class : 'option', style : 'display: inline;', href : BaseUrl + 'resetrMakeStatus'}, 'Reset'));
         }
-        if (rMakeBuild['status'] == -1) {
+        if (rMakeBuild['status'] == buildjob['JOB_STATE_FAILED']) {
             swapDOM(rMakeBuildAction, A({id: 'rMakeBuildNextAction', class : 'option', style : 'display: inline;', href : BaseUrl + 'resetrMakeStatus'}, 'Reset'));
         }
     }
