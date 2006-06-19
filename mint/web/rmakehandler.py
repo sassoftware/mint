@@ -15,7 +15,7 @@ from mint import server
 from mint.web.webhandler import getHttpAuth
 from mint import maintenance
 
-from rmake.build import buildjob, buildtrove
+from mint.rmakeconstants import buildjob, buildtrove
 
 from conary import versions
 from conary.deps import deps

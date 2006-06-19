@@ -61,7 +61,7 @@ from conary.repository import shimclient
 from conary.repository.netrepos import netserver, calllog
 from conary import errors as conary_errors
 
-from rmake.build import buildjob
+from mint.rmakeconstants import buildjob
 
 validHost = re.compile('^[a-zA-Z][a-zA-Z0-9\-]*$')
 reservedHosts = ['admin', 'mail', 'mint', 'www', 'web', 'rpath', 'wiki', 'conary', 'lists']

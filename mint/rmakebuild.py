@@ -10,7 +10,7 @@ import random
 
 from mint import database
 from conary import versions
-from rmake.build import buildjob, buildtrove
+from mint.rmakeconstants import buildjob, buildtrove
 
 class rMakeBuildTable(database.KeyedTable):
     name = "rMakeBuild"

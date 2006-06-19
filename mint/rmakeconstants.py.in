@@ -1,0 +1,13 @@
+#
+# Copyright (c) 2005-2006 rPath, Inc.
+#
+# All Rights Reserved
+#
+
+class Constants(dict):
+    def __getattribute__(self, item):
+        try:
+            return dict.__getattribute__(self, item)
+        except AttributeError:
+            return dict.__getitem__(self, item)
+

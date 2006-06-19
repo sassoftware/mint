@@ -17,7 +17,7 @@ from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import MINT_PROJECT_DOMAIN
 
 import conary.repository.errors as repo_errors
-from rmake.build import buildjob, buildtrove
+from mint.rmakeconstants import buildjob, buildtrove
 
 class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
     @fixtures.fixture("Full")

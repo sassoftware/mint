@@ -5,7 +5,7 @@ from urllib import quote
 from mint import userlevels
 from mint import maintenance
 from mint.helperfuncs import truncateForDisplay
-from rmake.build import buildtrove, buildjob
+from mint.rmakeconstants import buildtrove, buildjob
 
 from mint.web.templatesupport import injectVersion, dictToJS
 ?>

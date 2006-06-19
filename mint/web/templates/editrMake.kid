@@ -7,7 +7,7 @@
     All Rights Reserved
 -->
 <?python
-    from rmake.build import buildjob
+    from mint.rmakeconstants import buildjob
 ?>
     <head>
         <title>${formatTitle('Edit rMake Build')}</title>

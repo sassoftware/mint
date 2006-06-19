@@ -15,7 +15,7 @@
         <div id="layout">
             <?python
                 from mint.web.templatesupport import dictToJS
-                from rmake.build import buildjob, buildtrove
+                from mint.rmakeconstants import buildjob, buildtrove
                 jobStatusCodes = {buildjob.STATE_FAILED:   'statusError',
                                   buildjob.STATE_BUILT: 'statusFinished',
                                   buildjob.STATE_COMMITTED : 'statusFinished'}
