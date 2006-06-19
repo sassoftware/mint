@@ -11,3 +11,6 @@ class Constants(dict):
         except AttributeError:
             return dict.__getitem__(self, item)
 
+supportedApiVersions = (1,)
+currentApi = 1
+
