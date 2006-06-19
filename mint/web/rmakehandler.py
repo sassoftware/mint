@@ -44,11 +44,11 @@ def rMakeHandler(req, cfg, pathInfo = None):
         # job level notifications
         if stateInfo[0] in ('JOB_STATE_UPDATED', 'JOB_LOG_UPDATED'):
             jobId, status, statusMessage = eventDetails
-            if status == buildjob.STATE_COMMITTING:
+            if status == buildjob.JOB_STATE_COMMITTING:
                 statusMessage = 'Committing...'
-            if status == buildjob.STATE_COMMITTED:
+            if status == buildjob.JOB_STATE_COMMITTED:
                 statusMessage = 'Successfully Committed'
-            if stateInfo[1] == buildjob.STATE_STARTED:
+            if stateInfo[1] == buildjob.JOB_STATE_STARTED:
                 # set the job ID
                 makeXMLCall(srvr, 'setrMakeBuildJobId',
                             (UUID, jobId))

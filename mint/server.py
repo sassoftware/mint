@@ -2839,7 +2839,7 @@ class MintServer(object):
         rMakeBuildDict = self.rMakeBuild.get(rMakeBuildId)
         if (command == 'stop' and rMakeBuildDict['status'] == 0) or \
                (command == 'commit' and rMakeBuildDict['status'] \
-                not in (buildjob.STATE_BUILT, buildjob.STATE_COMMITTING)):
+                not in (buildjob.JOB_STATE_BUILT, buildjob.JOB_STATE_COMMITTING)):
             raise rMakeBuildOrder
         UUID = rMakeBuildDict['UUID']
         if command == 'build':

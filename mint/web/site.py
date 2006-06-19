@@ -813,8 +813,8 @@ class SiteHandler(WebHandler):
         if not self.rMakeBuild:
             return self._write('error', 'error', "No rMake Build underway.")
         if confirmed or self.rMakeBuild.status in \
-               (buildjob.STATE_INIT, buildjob.STATE_FAILED,
-                buildjob.STATE_COMMITTED):
+               (buildjob.JOB_STATE_INIT, buildjob.JOB_STATE_FAILED,
+                buildjob.JOB_STATE_COMMITTED):
             self.rMakeBuild.resetStatus()
             self._redirect(self.cfg.basePath)
         else:

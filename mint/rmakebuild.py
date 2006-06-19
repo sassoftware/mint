@@ -91,7 +91,7 @@ class rMakeBuildTable(database.KeyedTable):
         cu.execute("""UPDATE rMakeBuild SET status=?,
                                  statusMessage='Waiting for rMake Server'
                           WHERE rMakeBuildId=?""",
-                   buildjob.STATE_QUEUED, rMakeBuildId)
+                   buildjob.JOB_STATE_QUEUED, rMakeBuildId)
         self.db.commit()
 
     def commitBuild(self, rMakeBuildId):
@@ -99,7 +99,7 @@ class rMakeBuildTable(database.KeyedTable):
         cu.execute("""UPDATE rMakeBuild SET status=?,
                                  statusMessage='Waiting for rMake Server'
                           WHERE rMakeBuildId=?""",
-                   buildjob.STATE_COMMITTING, rMakeBuildId)
+                   buildjob.JOB_STATE_COMMITTING, rMakeBuildId)
         cu.execute("""UPDATE rMakeBuildItems SET status=?, statusMessage=''
                           WHERE rMakeBuildId=?""",
                    buildtrove.TROVE_STATE_INIT, rMakeBuildId)

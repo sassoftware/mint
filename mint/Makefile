@@ -69,8 +69,8 @@ constants.py: constants.py.in ../Makefile
 rmakeconstants.py: rmakeconstants.py.in
 	rm -f rmakeconstants.py
 	cp rmakeconstants.py.in rmakeconstants.py
-	python -c "from rmake.build import buildjob; print 'buildjob = Constants(' + str(dict([(x, buildjob.__dict__[x]) for x in buildjob.__dict__ if x.startswith('STATE_')])) + ')'; print ''" >> rmakeconstants.py
-	python -c "from rmake.build import buildtrove; print 'buildtrove = Constants(' + str(dict([(x, buildtrove.__dict__[x]) for x in buildtrove.__dict__ if x.startswith('TROVE_')])) + ')'" >> rmakeconstants.py
+	python -c "from rmake.build.buildjob import jobStates; print 'buildjob = Constants(' + ',\n'.join(str(jobStates).split(',')) + ')'; print ''" >> rmakeconstants.py
+	python -c "from rmake.build.buildtrove import troveStates; print 'buildtrove = Constants(' + ',\n'.join(str(troveStates).split(',')) + ')'" >> rmakeconstants.py
 
 install: all install-subdirs pyfiles-install
 	python -c "import compileall; compileall.compile_dir('$(DESTDIR)$(mintdir)', ddir='$(mintdir)', quiet=1)"
