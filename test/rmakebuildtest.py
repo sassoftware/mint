@@ -17,7 +17,7 @@ from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import MINT_PROJECT_DOMAIN
 
 import conary.repository.errors as repo_errors
-from mint.rmakeconstants import buildjob, buildtrove
+from mint.rmakeconstants import buildjob, buildtrove, currentApi
 
 class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
     @fixtures.fixture("Full")
@@ -349,10 +349,10 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
         cu.execute("SELECT UUID FROM rMakeBuild WHERE rMakeBuildId=?",
                    rMakeBuild.id)
         UUID = cu.fetchone()[0]
-        assert UUID in xml
-        assert xml == "<rmake><version>1</version><buildConfig><option><name>includeConfigFile</name><value>http://%sconaryrc</value></option><option><name>subscribe</name><value>rBuilder xmlrpc http://%srmakesubscribe/%s</value></option><option><name>uuid</name><value>%s</value></option></buildConfig><command><name>build</name><trove><troveName>foo</troveName><troveVersion>test.rpath.local@rpl:devel</troveVersion><troveFlavor></troveFlavor></trove></command></rmake>" % \
+
+        assert xml == "<rmake><version>1</version><buildConfig><option><name>includeConfigFile</name><value>http://%sconaryrc</value></option><option><name>subscribe</name><value>rBuilder xmlrpc http://%srmakesubscribe/%s</value></option><option><name>subscribe</name><value>rBuilder apiVersion %d</value></option><option><name>uuid</name><value>%s</value></option></buildConfig><command><name>build</name><trove><troveName>foo</troveName><troveVersion>test.rpath.local@rpl:devel</troveVersion><troveFlavor></troveFlavor></trove></command></rmake>" % \
                (self.cfg.siteHost + self.cfg.basePath,
-                self.cfg.siteHost + self.cfg.basePath, UUID, UUID)
+                self.cfg.siteHost + self.cfg.basePath, UUID, currentApi, UUID)
 
     @fixtures.fixture("Full")
     def testCommitXML(self, db, data):
@@ -374,9 +374,9 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
         db.commit()
 
         xml = rMakeBuild.getXML('commit')
-        assert xml == "<rmake><version>1</version><buildConfig><option><name>includeConfigFile</name><value>http://%sconaryrc</value></option><option><name>subscribe</name><value>rBuilder xmlrpc http://%srmakesubscribe/%s</value></option><option><name>uuid</name><value>%s</value></option></buildConfig><command><name>commit</name></command></rmake>" % \
+        assert xml == "<rmake><version>1</version><buildConfig><option><name>includeConfigFile</name><value>http://%sconaryrc</value></option><option><name>subscribe</name><value>rBuilder xmlrpc http://%srmakesubscribe/%s</value></option><option><name>subscribe</name><value>rBuilder apiVersion %d</value></option><option><name>uuid</name><value>%s</value></option></buildConfig><command><name>commit</name></command></rmake>" % \
                (self.cfg.siteHost + self.cfg.basePath,
-                self.cfg.siteHost + self.cfg.basePath, UUID, UUID)
+                self.cfg.siteHost + self.cfg.basePath, UUID, currentApi, UUID)
 
     @fixtures.fixture("Full")
     def testStopXML(self, db, data):
@@ -397,9 +397,9 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
         UUID = cu.fetchone()[0]
 
         xml = rMakeBuild.getXML('stop')
-        assert xml == "<rmake><version>1</version><buildConfig><option><name>includeConfigFile</name><value>http://%sconaryrc</value></option><option><name>subscribe</name><value>rBuilder xmlrpc http://%srmakesubscribe/%s</value></option><option><name>uuid</name><value>%s</value></option></buildConfig><command><name>stop</name></command></rmake>" % \
+        assert xml == "<rmake><version>1</version><buildConfig><option><name>includeConfigFile</name><value>http://%sconaryrc</value></option><option><name>subscribe</name><value>rBuilder xmlrpc http://%srmakesubscribe/%s</value></option><option><name>subscribe</name><value>rBuilder apiVersion %d</value></option><option><name>uuid</name><value>%s</value></option></buildConfig><command><name>stop</name></command></rmake>" % \
                (self.cfg.siteHost + self.cfg.basePath,
-                self.cfg.siteHost + self.cfg.basePath, UUID, UUID)
+                self.cfg.siteHost + self.cfg.basePath, UUID, currentApi, UUID)
 
     @fixtures.fixture("Full")
     def testInvalidXML(self, db, data):
