@@ -18,7 +18,7 @@ from mint.distro import gencslist
 from mint.distro import splitdistro
 from mint.distro import anaconda_templates
 from mint.distro.anaconda_images import AnacondaImages
-from mint.distro.flavors import stockFlavors
+from mint.distro.flavors import stockFlavors, stockFlavorPaths
 from mint.distro.imagegen import ImageGenerator, MSG_INTERVAL
 
 from conary import callbacks
@@ -150,7 +150,7 @@ class InstallableIso(ImageGenerator):
         cfg.dbPath = tmpRoot + "/var/lib/conarydb"
         cfg.installLabelPath = [self.troveVersion.branch().label()]
         cfg.buildFlavor = deps.deps.parseFlavor(stockFlavors[arch])
-        cfg.flavor = [cfg.buildFlavor]
+        cfg.flavor = [deps.deps.parseFlavor(x) for x in stockFlavorPaths[arch]]
         cfg.initializeFlavors()
         self.readConaryRc(cfg)
 
