@@ -15,10 +15,10 @@
         <div id="layout">
             <?python
                 from mint.web.templatesupport import dictToJS
-                from rmake.build import buildjob, buildtrove
-                jobStatusCodes = {buildjob.STATE_FAILED:   'statusError',
-                                  buildjob.STATE_BUILT: 'statusFinished',
-                                  buildjob.STATE_COMMITTED : 'statusFinished'}
+                from mint.rmakeconstants import buildjob, buildtrove
+                jobStatusCodes = {buildjob.JOB_STATE_FAILED:   'statusError',
+                                  buildjob.JOB_STATE_BUILT: 'statusFinished',
+                                  buildjob.JOB_STATE_COMMITTED : 'statusFinished'}
                 trvStatusCodes = {buildtrove.TROVE_STATE_FAILED: 'statusError',
                                   buildtrove.TROVE_STATE_BUILT:  'statusFinished'}
             ?>
@@ -26,15 +26,15 @@
                 ${resourcePane()}
             </div>
 
-            <div id="spanleft" py:if="rMakeBuild.status==buildjob.STATE_INIT">
+            <div id="spanleft" py:if="rMakeBuild.status==buildjob.JOB_STATE_INIT">
                 This job has not been sent to rMake yet.
             </div>
-            <div id="spanleft" py:if="rMakeBuild.status!=buildjob.STATE_INIT">
+            <div id="spanleft" py:if="rMakeBuild.status!=buildjob.JOB_STATE_INIT">
                 <script type="text/javascript">
                 <![CDATA[
                     trvStatusCodes = ${dictToJS(trvStatusCodes)};
                     jobStatusCodes = ${dictToJS(jobStatusCodes)};
-                    stopStatusList = ${str([buildjob.STATE_FAILED, buildjob.STATE_BUILT, buildjob.STATE_COMMITTED])};
+                    stopStatusList = ${str([buildjob.JOB_STATE_FAILED, buildjob.JOB_STATE_BUILT, buildjob.JOB_STATE_COMMITTED])};
                     addLoadEvent(initrMakeManager(${rMakeBuild.id}));
                 ]]>
                 </script>

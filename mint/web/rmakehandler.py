@@ -15,7 +15,7 @@ from mint import server
 from mint.web.webhandler import getHttpAuth
 from mint import maintenance
 
-from rmake.build import buildjob, buildtrove
+from mint.rmakeconstants import buildjob, buildtrove, supportedApiVersions
 
 from conary import versions
 from conary.deps import deps
@@ -38,41 +38,48 @@ def rMakeHandler(req, cfg, pathInfo = None):
     # instantiate a MintServer
     srvr = server.MintServer(cfg, allowPrivate = True, req = req)
 
-    eventList = paramList[0]
-    for event in eventList:
-        stateInfo, eventDetails = event
-        # job level notifications
-        if stateInfo[0] in ('JOB_STATE_UPDATED', 'JOB_LOG_UPDATED'):
-            jobId, status, statusMessage = eventDetails
-            if status == buildjob.STATE_COMMITTING:
-                statusMessage = 'Committing...'
-            if status == buildjob.STATE_COMMITTED:
-                statusMessage = 'Successfully Committed'
-            if stateInfo[1] == buildjob.STATE_STARTED:
-                # set the job ID
-                makeXMLCall(srvr, 'setrMakeBuildJobId',
-                            (UUID, jobId))
-            method = 'setrMakeBuildStatus'
-            makeXMLCall(srvr, method, (UUID, status, statusMessage))
-        # job troves notification. submit them all.
-        elif stateInfo[0] in ('JOB_TROVES_SET', 'JOB_COMMITTED'):
-            method = 'setrMakeBuildTroveStatus'
-            for trvName, trvVersion, trvFlavor in eventDetails[1]:
-                trvSpecVersion = str(versions.ThawVersion(trvVersion))
-                trvSpecFlavor = str(deps.ThawFlavor(trvFlavor))
-                statusMessage = trvName + '=' + trvSpecVersion + '[' + \
-                                trvSpecFlavor + ']'
-                status = buildtrove.TROVE_STATE_INIT
+    apiVersion, eventList = paramList
+    apiVersion = int(apiVersion) # fixme, this probably is unnecessary
+    if apiVersion not in supportedApiVersions:
+        print >> sys.stderr, "API Version:", type(apiVersion)
+        sys.stderr.flush()
+        return apache.HTTP_BAD_REQUEST
+
+    if apiVersion == 1:
+        for event in eventList:
+            stateInfo, eventDetails = event
+            # job level notifications
+            if stateInfo[0] in ('JOB_STATE_UPDATED', 'JOB_LOG_UPDATED'):
+                jobId, status, statusMessage = eventDetails
+                if status == buildjob.JOB_STATE_COMMITTING:
+                    statusMessage = 'Committing...'
+                if status == buildjob.JOB_STATE_COMMITTED:
+                    statusMessage = 'Successfully Committed'
+                if stateInfo[1] == buildjob.JOB_STATE_STARTED:
+                    # set the job ID
+                    makeXMLCall(srvr, 'setrMakeBuildJobId',
+                                (UUID, jobId))
+                method = 'setrMakeBuildStatus'
+                makeXMLCall(srvr, method, (UUID, status, statusMessage))
+            # job troves notification. submit them all.
+            elif stateInfo[0] in ('JOB_TROVES_SET', 'JOB_COMMITTED'):
+                method = 'setrMakeBuildTroveStatus'
+                for trvName, trvVersion, trvFlavor in eventDetails[1]:
+                    trvSpecVersion = str(versions.ThawVersion(trvVersion))
+                    trvSpecFlavor = str(deps.ThawFlavor(trvFlavor))
+                    statusMessage = trvName + '=' + trvSpecVersion + '[' + \
+                                    trvSpecFlavor + ']'
+                    status = buildtrove.TROVE_STATE_INIT
+                    makeXMLCall(srvr, method, (UUID, trvName, trvVersion,
+                                               status, statusMessage))
+            # trove level status functions
+            elif stateInfo[0] in ('TROVE_STATE_UPDATED', 'TROVE_LOG_UPDATED'):
+                jobId, troveTuple = eventDetails[0]
+                status, statusMessage = eventDetails[1:]
+                trvName, trvVersion, trvFlavor = troveTuple
+                method = 'setrMakeBuildTroveStatus'
                 makeXMLCall(srvr, method, (UUID, trvName, trvVersion,
                                            status, statusMessage))
-        # trove level status functions
-        elif stateInfo[0] in ('TROVE_STATE_UPDATED', 'TROVE_LOG_UPDATED'):
-            jobId, troveTuple = eventDetails[0]
-            status, statusMessage = eventDetails[1:]
-            trvName, trvVersion, trvFlavor = troveTuple
-            method = 'setrMakeBuildTroveStatus'
-            makeXMLCall(srvr, method, (UUID, trvName, trvVersion,
-                                       status, statusMessage))
 
     resp = xmlrpclib.dumps((False,), methodresponse=1)
     req.content_type = "text/xml"

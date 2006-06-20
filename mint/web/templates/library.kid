@@ -5,7 +5,7 @@ from urllib import quote
 from mint import userlevels
 from mint import maintenance
 from mint.helperfuncs import truncateForDisplay
-from rmake.build import buildtrove, buildjob
+from mint.rmakeconstants import buildtrove, buildjob
 
 from mint.web.templatesupport import injectVersion, dictToJS
 ?>
@@ -48,10 +48,10 @@ from mint.web.templatesupport import injectVersion, dictToJS
                            buildtrove.TROVE_STATE_BUILDABLE : cfg.staticPath + "apps/mint/images/circle-ball-dark-antialiased.gif",
                            buildtrove.TROVE_STATE_BUILDING : cfg.staticPath + "apps/mint/images/circle-ball-dark-antialiased.gif",
                            buildtrove.TROVE_STATE_BUILT : cfg.staticPath + "apps/mint/images/icon_accept.gif"}
-            stopStatusList = [buildjob.STATE_FAILED, buildjob.STATE_BUILT, buildjob.STATE_INIT, buildjob.STATE_COMMITTED]
-            jobStatusCodes = {buildjob.STATE_FAILED    : 'statusError',
-                              buildjob.STATE_BUILT     : 'statusFinished',
-                              buildjob.STATE_COMMITTED : 'statusFinished'}
+            stopStatusList = [buildjob.JOB_STATE_FAILED, buildjob.JOB_STATE_BUILT, buildjob.JOB_STATE_INIT, buildjob.JOB_STATE_COMMITTED]
+            jobStatusCodes = {buildjob.JOB_STATE_FAILED    : 'statusError',
+                              buildjob.JOB_STATE_BUILT     : 'statusFinished',
+                              buildjob.JOB_STATE_COMMITTED : 'statusFinished'}
             if rMakeBuild.status:
                 statusIcons[buildtrove.TROVE_STATE_INIT] = cfg.staticPath + "apps/mint/images/clock.gif"
         ?>
@@ -60,6 +60,7 @@ from mint.web.templatesupport import injectVersion, dictToJS
             statusIcons = ${dictToJS(statusIcons)};
             jobStatusCodes = ${dictToJS(jobStatusCodes)};
             stopStatusList = ${str(stopStatusList)};
+            buildjob = ${str(buildjob)};
             addLoadEvent(initrMakeManager(${rMakeBuild.id}));
         ]]>
         </script>
@@ -89,10 +90,10 @@ from mint.web.templatesupport import injectVersion, dictToJS
                     </tr>
                 </tbody>
             </table>
-            <div style="padding: 10px 0; text-align: center;" py:if="rMakeBuild.status == buildjob.STATE_INIT"><a id="rMakeBuildNextAction" class="option" style="display: inline;" href="${cfg.basePath}commandrMake?command=build">Build</a></div>
-            <div style="padding: 10px 0; text-align: center;" py:if="rMakeBuild.status not in (buildjob.STATE_INIT, buildjob.STATE_BUILT, buildjob.STATE_FAILED, buildjob.STATE_COMMITTED)"><a id="rMakeBuildNextAction" class="option" style="display: inline;" href="${cfg.basePath}commandrMake?command=stop">Stop</a></div>
-            <div style="padding: 10px 0; text-align: center;" py:if="rMakeBuild.status == buildjob.STATE_BUILT"><a id="rMakeBuildNextAction" class="option" style="display: inline;" href="${cfg.basePath}commandrMake?command=commit">Commit</a></div>
-            <div style="padding: 10px 0; text-align: center;" py:if="rMakeBuild.status in (buildjob.STATE_FAILED, buildjob.STATE_COMMITTED)"><a id="rMakeBuildNextAction" class="option" style="display: inline;" href="${cfg.basePath}resetrMakeStatus">Reset</a></div>
+            <div style="padding: 10px 0; text-align: center;" py:if="rMakeBuild.status == buildjob.JOB_STATE_INIT"><a id="rMakeBuildNextAction" class="option" style="display: inline;" href="${cfg.basePath}commandrMake?command=build">Build</a></div>
+            <div style="padding: 10px 0; text-align: center;" py:if="rMakeBuild.status not in (buildjob.JOB_STATE_INIT, buildjob.JOB_STATE_BUILT, buildjob.JOB_STATE_FAILED, buildjob.JOB_STATE_COMMITTED)"><a id="rMakeBuildNextAction" class="option" style="display: inline;" href="${cfg.basePath}commandrMake?command=stop">Stop</a></div>
+            <div style="padding: 10px 0; text-align: center;" py:if="rMakeBuild.status == buildjob.JOB_STATE_BUILT"><a id="rMakeBuildNextAction" class="option" style="display: inline;" href="${cfg.basePath}commandrMake?command=commit">Commit</a></div>
+            <div style="padding: 10px 0; text-align: center;" py:if="rMakeBuild.status in (buildjob.JOB_STATE_FAILED, buildjob.JOB_STATE_COMMITTED)"><a id="rMakeBuildNextAction" class="option" style="display: inline;" href="${cfg.basePath}resetrMakeStatus">Reset</a></div>
         </div>
     </div>
 

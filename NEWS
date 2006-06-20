@@ -4,6 +4,8 @@ Changes in tip:
 * Fixed a bug where a directory with a symlink pointing to it could
   possibly be created with the wrong permissions in a bootable image.
   (RBL-695)
+* Searching (all types) will prioritize exact matches above all other results.
+* rBuilder can command an rMake server local to the web browser's machine.
 
 Changes in 1.6.3:
 * Installation paths changed: /srv/mint is now /srv/rbuilder; configuration is

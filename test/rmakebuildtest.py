@@ -17,7 +17,7 @@ from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import MINT_PROJECT_DOMAIN
 
 import conary.repository.errors as repo_errors
-from rmake.build import buildjob, buildtrove
+from mint.rmakeconstants import buildjob, buildtrove, currentApi
 
 class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
     @fixtures.fixture("Full")
@@ -187,7 +187,7 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
         cu = db.cursor()
         cu.execute("""UPDATE rMakeBuild SET status=?, statusMessage='test'
                           WHERE rMakeBuildId=?""",
-                   buildjob.STATE_BUILT, rMakeBuild.id)
+                   buildjob.JOB_STATE_BUILT, rMakeBuild.id)
         db.commit()
         xml = rMakeBuild.getXML('commit')
 
@@ -197,7 +197,7 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
                    rMakeBuild.id)
         status, statusMessage = cu.fetchone()
 
-        self.failIf(status != buildjob.STATE_COMMITTING,
+        self.failIf(status != buildjob.JOB_STATE_COMMITTING,
                     "status was not set to committing")
         self.failIf(statusMessage != 'Waiting for rMake Server',
                     "statusMessage was not updated")
@@ -212,7 +212,7 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
         cu = db.cursor()
         cu.execute("""UPDATE rMakeBuild SET status=?, statusMessage='test'
                           WHERE rMakeBuildId=?""",
-                   buildjob.STATE_BUILT, rMakeBuild.id)
+                   buildjob.JOB_STATE_BUILT, rMakeBuild.id)
         cu.execute("""UPDATE rMakeBuildItems SET status=?, statusMessage=?
                           WHERE rMakeBuildItemId=?""",
                    buildtrove.TROVE_STATE_BUILT, 'Trove Built', itemId)
@@ -236,9 +236,9 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
         cu = db.cursor()
 
         itemId = rMakeBuild.addTrove('foo', 'test.rpath.local@rpl:devel')
-        for status in (buildjob.STATE_FAILED, buildjob.STATE_INIT,
-                       buildjob.STATE_QUEUED, buildjob.STATE_STARTED,
-                       buildjob.STATE_BUILD, buildjob.STATE_COMMITTED):
+        for status in (buildjob.JOB_STATE_FAILED, buildjob.JOB_STATE_INIT,
+                       buildjob.JOB_STATE_QUEUED, buildjob.JOB_STATE_STARTED,
+                       buildjob.JOB_STATE_BUILD, buildjob.JOB_STATE_COMMITTED):
             cu .execute("UPDATE rMakeBuild SET status=? WHERE rMakeBuildId=?",
                         status, rMakeBuild.id)
             db.commit()
@@ -284,7 +284,7 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
         cu = db.cursor()
         cu.execute("""UPDATE rMakeBuild SET UUID=?, status=?
                           WHERE rMakeBuildId=?""",
-                   32 * '0', buildjob.STATE_BUILT, rMakeBuild.id)
+                   32 * '0', buildjob.JOB_STATE_BUILT, rMakeBuild.id)
         db.commit()
         xml = rMakeBuild.getXML('commit')
 
@@ -349,10 +349,10 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
         cu.execute("SELECT UUID FROM rMakeBuild WHERE rMakeBuildId=?",
                    rMakeBuild.id)
         UUID = cu.fetchone()[0]
-        assert UUID in xml
-        assert xml == "<rmake><version>1</version><buildConfig><option><name>includeConfigFile</name><value>http://%sconaryrc</value></option><option><name>subscribe</name><value>rBuilder xmlrpc http://%srmakesubscribe/%s</value></option><option><name>uuid</name><value>%s</value></option></buildConfig><command><name>build</name><trove><troveName>foo</troveName><troveVersion>test.rpath.local@rpl:devel</troveVersion><troveFlavor></troveFlavor></trove></command></rmake>" % \
+
+        assert xml == "<rmake><version>1</version><buildConfig><option><name>includeConfigFile</name><value>http://%sconaryrc</value></option><option><name>subscribe</name><value>rBuilder xmlrpc http://%srmakesubscribe/%s</value></option><option><name>subscribe</name><value>rBuilder apiVersion %d</value></option><option><name>uuid</name><value>%s</value></option></buildConfig><command><name>build</name><trove><troveName>foo</troveName><troveVersion>test.rpath.local@rpl:devel</troveVersion><troveFlavor></troveFlavor></trove></command></rmake>" % \
                (self.cfg.siteHost + self.cfg.basePath,
-                self.cfg.siteHost + self.cfg.basePath, UUID, UUID)
+                self.cfg.siteHost + self.cfg.basePath, UUID, currentApi, UUID)
 
     @fixtures.fixture("Full")
     def testCommitXML(self, db, data):
@@ -369,14 +369,14 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
         UUID = 32 * '0'
         cu = db.cursor()
         cu.execute("""UPDATE rMakeBuild SET status=?, UUID=?
-                          WHERE rMakeBuildId=?""", buildjob.STATE_BUILT, UUID,
-                   rMakeBuild.id)
+                          WHERE rMakeBuildId=?""", buildjob.JOB_STATE_BUILT,
+                   UUID, rMakeBuild.id)
         db.commit()
 
         xml = rMakeBuild.getXML('commit')
-        assert xml == "<rmake><version>1</version><buildConfig><option><name>includeConfigFile</name><value>http://%sconaryrc</value></option><option><name>subscribe</name><value>rBuilder xmlrpc http://%srmakesubscribe/%s</value></option><option><name>uuid</name><value>%s</value></option></buildConfig><command><name>commit</name></command></rmake>" % \
+        assert xml == "<rmake><version>1</version><buildConfig><option><name>includeConfigFile</name><value>http://%sconaryrc</value></option><option><name>subscribe</name><value>rBuilder xmlrpc http://%srmakesubscribe/%s</value></option><option><name>subscribe</name><value>rBuilder apiVersion %d</value></option><option><name>uuid</name><value>%s</value></option></buildConfig><command><name>commit</name></command></rmake>" % \
                (self.cfg.siteHost + self.cfg.basePath,
-                self.cfg.siteHost + self.cfg.basePath, UUID, UUID)
+                self.cfg.siteHost + self.cfg.basePath, UUID, currentApi, UUID)
 
     @fixtures.fixture("Full")
     def testStopXML(self, db, data):
@@ -397,9 +397,9 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
         UUID = cu.fetchone()[0]
 
         xml = rMakeBuild.getXML('stop')
-        assert xml == "<rmake><version>1</version><buildConfig><option><name>includeConfigFile</name><value>http://%sconaryrc</value></option><option><name>subscribe</name><value>rBuilder xmlrpc http://%srmakesubscribe/%s</value></option><option><name>uuid</name><value>%s</value></option></buildConfig><command><name>stop</name></command></rmake>" % \
+        assert xml == "<rmake><version>1</version><buildConfig><option><name>includeConfigFile</name><value>http://%sconaryrc</value></option><option><name>subscribe</name><value>rBuilder xmlrpc http://%srmakesubscribe/%s</value></option><option><name>subscribe</name><value>rBuilder apiVersion %d</value></option><option><name>uuid</name><value>%s</value></option></buildConfig><command><name>stop</name></command></rmake>" % \
                (self.cfg.siteHost + self.cfg.basePath,
-                self.cfg.siteHost + self.cfg.basePath, UUID, UUID)
+                self.cfg.siteHost + self.cfg.basePath, UUID, currentApi, UUID)
 
     @fixtures.fixture("Full")
     def testInvalidXML(self, db, data):
@@ -755,14 +755,14 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
         cu = db.cursor()
         cu.execute("""UPDATE rMakeBuild SET UUID=?, status=?
                           WHERE rMakeBuildId=?""",
-                   (UUID, buildjob.STATE_COMMITTING, rMakeBuild.id))
+                   (UUID, buildjob.JOB_STATE_COMMITTING, rMakeBuild.id))
         db.commit()
 
-        client.server.setrMakeBuildStatus(UUID, buildjob.STATE_COMMITTED,
+        client.server.setrMakeBuildStatus(UUID, buildjob.JOB_STATE_COMMITTED,
                                           'test message')
         rMakeBuild.refresh()
 
-        self.failIf(rMakeBuild.status != buildjob.STATE_COMMITTED,
+        self.failIf(rMakeBuild.status != buildjob.JOB_STATE_COMMITTED,
                     "status was not set by commit")
 
     @fixtures.fixture("Full")
@@ -779,10 +779,10 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
         cu = db.cursor()
         cu.execute("""UPDATE rMakeBuild SET UUID=?, status=?
                           WHERE rMakeBuildId=?""",
-                   (UUID, buildjob.STATE_COMMITTING, rMakeBuild.id))
+                   (UUID, buildjob.JOB_STATE_COMMITTING, rMakeBuild.id))
         db.commit()
 
-        client.server.setrMakeBuildStatus(UUID, buildjob.STATE_COMMITTING,
+        client.server.setrMakeBuildStatus(UUID, buildjob.JOB_STATE_COMMITTING,
                                           'test message')
 
         xml = rMakeBuild.getXML('commit')
@@ -801,10 +801,10 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
         cu = db.cursor()
         cu.execute("""UPDATE rMakeBuild SET UUID=?, status=?
                           WHERE rMakeBuildId=?""",
-                   (UUID, buildjob.STATE_BUILT, rMakeBuild.id))
+                   (UUID, buildjob.JOB_STATE_BUILT, rMakeBuild.id))
         db.commit()
 
-        client.server.setrMakeBuildStatus(UUID, buildjob.STATE_COMMITTING,
+        client.server.setrMakeBuildStatus(UUID, buildjob.JOB_STATE_COMMITTING,
                                           'test message')
 
         xml = rMakeBuild.getXML('commit')

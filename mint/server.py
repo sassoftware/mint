@@ -61,7 +61,8 @@ from conary.repository import shimclient
 from conary.repository.netrepos import netserver, calllog
 from conary import errors as conary_errors
 
-from rmake.build import buildjob
+from mint.rmakeconstants import buildjob
+from mint.rmakeconstants import currentApi as currentrMakeApi
 
 validHost = re.compile('^[a-zA-Z][a-zA-Z0-9\-]*$')
 reservedHosts = ['admin', 'mail', 'mint', 'www', 'web', 'rpath', 'wiki', 'conary', 'lists']
@@ -2839,7 +2840,7 @@ class MintServer(object):
         rMakeBuildDict = self.rMakeBuild.get(rMakeBuildId)
         if (command == 'stop' and rMakeBuildDict['status'] == 0) or \
                (command == 'commit' and rMakeBuildDict['status'] \
-                not in (buildjob.STATE_BUILT, buildjob.STATE_COMMITTING)):
+                not in (buildjob.JOB_STATE_BUILT, buildjob.JOB_STATE_COMMITTING)):
             raise rMakeBuildOrder
         UUID = rMakeBuildDict['UUID']
         if command == 'build':
@@ -2854,6 +2855,8 @@ class MintServer(object):
         res += makeOption('subscribe', 'rBuilder xmlrpc ' \
                           'http://' + self.cfg.siteHost + self.cfg.basePath + \
                           'rmakesubscribe/' + UUID)
+        res += makeOption('subscribe', 'rBuilder apiVersion %d' % \
+                          currentrMakeApi)
         res += makeOption('uuid', UUID)
         res += "</buildConfig><command><name>%s</name>" % command
         if command == "build":

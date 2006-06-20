@@ -7,7 +7,7 @@
     All Rights Reserved
 -->
 <?python
-    from rmake.build import buildjob
+    from mint.rmakeconstants import buildjob
 ?>
     <head>
         <title>${formatTitle('Edit rMake Build')}</title>
@@ -55,8 +55,8 @@
                 <div><a href="${cfg.basePath}rMakeStatus">View Status</a></div>
                 <p><strong>Possible Operations:</strong></p>
                 <div><a href="${cfg.basePath}resetrMakeStatus">Reset rMake Status</a></div>
-                <div py:if="rMakeBuild.status not in (buildjob.STATE_FAILED, buildjob.STATE_BUILT, buildjob.STATE_INIT)"><a href="${cfg.basePath}commandrMake?command=stop">Stop rMake Build</a></div>
-                <div py:if="rMakeBuild.status == buildjob.STATE_BUILT"><a href="${cfg.basePath}commandrMake?command=commit">Commit rMake Build</a></div>
+                <div py:if="rMakeBuild.status not in (buildjob.JOB_STATE_FAILED, buildjob.JOB_STATE_BUILT, buildjob.JOB_STATE_INIT)"><a href="${cfg.basePath}commandrMake?command=stop">Stop rMake Build</a></div>
+                <div py:if="rMakeBuild.status == buildjob.JOB_STATE_BUILT"><a href="${cfg.basePath}commandrMake?command=commit">Commit rMake Build</a></div>
             </div>
         </div>
     </body>

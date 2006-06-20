@@ -10,7 +10,7 @@ import random
 
 from mint import database
 from conary import versions
-from rmake.build import buildjob, buildtrove
+from mint.rmakeconstants import buildjob, buildtrove
 
 class rMakeBuildTable(database.KeyedTable):
     name = "rMakeBuild"
@@ -91,7 +91,7 @@ class rMakeBuildTable(database.KeyedTable):
         cu.execute("""UPDATE rMakeBuild SET status=?,
                                  statusMessage='Waiting for rMake Server'
                           WHERE rMakeBuildId=?""",
-                   buildjob.STATE_QUEUED, rMakeBuildId)
+                   buildjob.JOB_STATE_QUEUED, rMakeBuildId)
         self.db.commit()
 
     def commitBuild(self, rMakeBuildId):
@@ -99,7 +99,7 @@ class rMakeBuildTable(database.KeyedTable):
         cu.execute("""UPDATE rMakeBuild SET status=?,
                                  statusMessage='Waiting for rMake Server'
                           WHERE rMakeBuildId=?""",
-                   buildjob.STATE_COMMITTING, rMakeBuildId)
+                   buildjob.JOB_STATE_COMMITTING, rMakeBuildId)
         cu.execute("""UPDATE rMakeBuildItems SET status=?, statusMessage=''
                           WHERE rMakeBuildId=?""",
                    buildtrove.TROVE_STATE_INIT, rMakeBuildId)

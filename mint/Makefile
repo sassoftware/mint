@@ -37,6 +37,7 @@ python_files =			\
 	releasetemplates.py	\
 	requests.py		\
 	rmakebuild.py           \
+	rmakeconstants.py       \
 	scriptlibrary.py	\
 	searcher.py		\
 	server.py		\
@@ -50,20 +51,26 @@ python_files =			\
 	users.py                \
         usertemplates.py
 
-extra_dist = Makefile constants.py.in
+extra_dist = Makefile constants.py.in rmakeconstants.py.in
 
 dist_files = $(python_files) $(extra_dist)
 
-all: default-all default-subdirs constants.py
+all: default-all default-subdirs constants.py rmakeconstants.py
 
 generated_files = *.pyo *.pyc
 
-.PHONY: clean dist install subdirs
+.PHONY: clean dist install subdirs rmakeconstants.py
 
 subdir: default-subdirs
 
 constants.py: constants.py.in ../Makefile
 	sed s,@version@,$(VERSION),g $< > $@
+
+rmakeconstants.py: rmakeconstants.py.in
+	rm -f rmakeconstants.py
+	cp rmakeconstants.py.in rmakeconstants.py
+	python -c "from rmake.build.buildjob import jobStates; print 'buildjob = Constants(' + ',\n'.join(str(jobStates).split(',')) + ')'; print ''" >> rmakeconstants.py
+	python -c "from rmake.build.buildtrove import troveStates; print 'buildtrove = Constants(' + ',\n'.join(str(troveStates).split(',')) + ')'" >> rmakeconstants.py
 
 install: all install-subdirs pyfiles-install
 	python -c "import compileall; compileall.compile_dir('$(DESTDIR)$(mintdir)', ddir='$(mintdir)', quiet=1)"
