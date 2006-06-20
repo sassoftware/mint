@@ -33,7 +33,7 @@ def rMakeHandler(req, cfg, pathInfo = None):
         return apache.HTTP_BAD_REQUEST
     if method != 'receiveEvents':
         return apache.HTTP_METHOD_NOT_ALLOWED
-    UUID = req.unparsed_uri.split('/')[2]
+    UUID = req.unparsed_uri.split('/')[-1]
 
     # instantiate a MintServer
     srvr = server.MintServer(cfg, allowPrivate = True, req = req)
