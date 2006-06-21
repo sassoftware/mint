@@ -39,7 +39,7 @@
             to support the development of:</p>
 
             <ul>
-                <li><a href="http://wiki.conary.com/">Conary</a>-based
+                <li><a href="http://wiki.rpath.com/wiki/Conary">Conary</a>-based
                 Linux distributions</li>
 
                 <li>Open source software packaged with Conary</li>

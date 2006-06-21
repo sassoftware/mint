@@ -156,7 +156,7 @@ from mint import userlevels
                         <p>Now you're ready to start packaging!  If
                         you're new to packaging with Conary, you can
                         find information on the <a
-                        href="http://wiki.conary.com/">Conary
+                        href="http://wiki.rpath.com/">Conary
                         Wiki</a>.</p>
 
             <h3>Signing Packages With OpenPGP Keys</h3>
