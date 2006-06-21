@@ -699,13 +699,13 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
     def testSourceAdd(self, db, data):
         client = self.getClient('nobody')
         rMakeBuild = client.createrMakeBuild('foo')
-        trvName = 'foo'
+        trvName = 'foo:source'
         trvLabel = 'test.rpath.local@rpl:devel'
 
-        itemId = rMakeBuild.addTrove(trvName + ':source', trvLabel)
+        itemId = rMakeBuild.addTrove(trvName, trvLabel)
 
         self.failIf(rMakeBuild.listTroves()[0]['trvName'] != trvName,
-                    "rMakeBuild added source trove instead of package name")
+                    "rMakeBuild added package name instead of source trove")
 
     @fixtures.fixture("Full")
     def testBadAdd(self, db, data):
@@ -892,6 +892,49 @@ class rMakeBuildTest(MintRepositoryHelper):
         self.assertRaises(database.DuplicateItem,
                           rMakeBuild.addTroveByProject,
                           'testcase', 'testproject')
+
+    def testAddSourceByProject(self):
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client)
+
+        project = client.getProject(projectId)
+
+        self.moveToServer(project, 1)
+        rMakeBuild = client.createrMakeBuild('foo')
+
+        l = versions.Label("%s.%s@%s" % ('testproject',
+                                         MINT_PROJECT_DOMAIN, 'rpl:devel'))
+
+        self.makeSourceTrove("testcase", testRecipe, l)
+
+        rMakeBuild.addTroveByProject('testcase:source', 'testproject')
+        cu = self.db.cursor()
+        cu.execute("""SELECT trvName, trvLabel
+                          FROM rMakeBuildItems
+                          WHERE rMakeBuildId=?""", rMakeBuild.id)
+        self.failIf([list(x) for x in cu.fetchall()] != \
+                    [['testcase:source',
+                      'testproject.rpath.local2@rpl:devel']],
+                    "rMake Build source component not stored correctly")
+
+    def testDoubleAddSourceByProject(self):
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client)
+
+        project = client.getProject(projectId)
+
+        self.moveToServer(project, 1)
+        rMakeBuild = client.createrMakeBuild('foo')
+
+        l = versions.Label("%s.%s@%s" % ('testproject',
+                                         MINT_PROJECT_DOMAIN, 'rpl:devel'))
+
+        self.makeSourceTrove("testcase", testRecipe, l)
+
+        rMakeBuild.addTroveByProject('testcase:source', 'testproject')
+        self.assertRaises(database.DuplicateItem,
+                          rMakeBuild.addTroveByProject,
+                          'testcase:source', 'testproject')
 
 
 if __name__ == "__main__":
