@@ -41,8 +41,6 @@ def rMakeHandler(req, cfg, pathInfo = None):
     apiVersion, eventList = paramList
     apiVersion = int(apiVersion) # fixme, this probably is unnecessary
     if apiVersion not in supportedApiVersions:
-        print >> sys.stderr, "API Version:", type(apiVersion)
-        sys.stderr.flush()
         return apache.HTTP_BAD_REQUEST
 
     if apiVersion == 1:
@@ -69,7 +67,10 @@ def rMakeHandler(req, cfg, pathInfo = None):
                     trvSpecFlavor = str(deps.ThawFlavor(trvFlavor))
                     statusMessage = trvName + '=' + trvSpecVersion + '[' + \
                                     trvSpecFlavor + ']'
-                    status = buildtrove.TROVE_STATE_INIT
+                    if stateInfo[0] == 'JOB_TROVES_SET':
+                        status = buildtrove.TROVE_STATE_INIT
+                    else:
+                        status = buildtrove.TROVE_STATE_BUILT
                     makeXMLCall(srvr, method, (UUID, trvName, trvVersion,
                                                status, statusMessage))
             # trove level status functions
