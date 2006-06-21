@@ -8,7 +8,7 @@ import time
 from urllib import quote
 from mint import userlevels
 from mint.helperfuncs import splitVersionForDisplay, truncateForDisplay
-from mint.web.templatesupport import isRMakeLegal, isGroupBuilderLegal
+from mint.web.templatesupport import isrMakeLegal, isGroupBuilderLegal
 ?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
@@ -20,7 +20,7 @@ isOwner = (userLevel == userlevels.OWNER or auth.admin)
 
     <table py:def="sourceTroveInfo(trove)" class="troveinfo">
         <tr>
-            <th>Trove name:</th><td title="${trove.getName()}"><a py:if="isRMakeLegal(rMakeBuild, userLevel, trove)" style="float: right;" title="Add to ${rMakeBuild.title}" href="${cfg.basePath}addrMakeTrove?trvName=${quote(trove.getName().replace(':source', ''))};label=${quote(str(trove.getVersion().branch().label()))};referer=${quote(req.unparsed_uri)}">Add to ${truncateForDisplay(rMakeBuild.title, maxWordLen = 10)}</a>${truncateForDisplay(trove.getName(), maxWordLen=45)}</td>
+            <th>Trove name:</th><td title="${trove.getName()}"><a py:if="isrMakeLegal(rMakeBuild, userLevel, trove.getName())" style="float: right;" title="Add to ${rMakeBuild.title}" href="${cfg.basePath}addrMakeTrove?trvName=${quote(trove.getName().replace(':source', ''))};label=${quote(str(trove.getVersion().branch().label()))};referer=${quote(req.unparsed_uri)}">Add to ${truncateForDisplay(rMakeBuild.title, maxWordLen = 10)}</a>${truncateForDisplay(trove.getName(), maxWordLen=45)}</td>
         </tr>
         <tr><th>Change log:</th>
             <td>
@@ -40,13 +40,13 @@ isOwner = (userLevel == userlevels.OWNER or auth.admin)
         </a>
     </span>
 
-    <span py:def="adder(trove)" style="float: right;" py:if="isGroupBuilderLegal(groupTrove, trove) or isRMakeLegal(rMakeBuild, userLevel, trove)">
+    <span py:def="adder(trove)" style="float: right;" py:if="isGroupBuilderLegal(groupTrove, trove) or isrMakeLegal(rMakeBuild, userLevel, trove.getName())">
         <a py:if="isGroupBuilderLegal(groupTrove, trove)"
            title="Add to ${groupTrove.recipeName}"
            href="${groupProject.getUrl()}addGroupTrove?id=${groupTrove.id};trove=${quote(trove.getName())};version=${quote(trove.getVersion().asString())};referer=${quote(req.unparsed_uri)}">
             Add to ${truncateForDisplay(groupTrove.recipeName, maxWordLen = 10)}
         </a>
-        <a py:if="isRMakeLegal(rMakeBuild, userLevel, trove)"
+        <a py:if="isrMakeLegal(rMakeBuild, userLevel, trove.getName())"
            title="Add to ${rMakeBuild.title}"
            href="${cfg.basePath}addrMakeTrove?trvName=${quote(trove.getName())};label=${quote(str(trove.getVersion().branch().label()))};referer=${quote(req.unparsed_uri)}">
             Add to ${truncateForDisplay(rMakeBuild.title, maxWordLen = 10)}

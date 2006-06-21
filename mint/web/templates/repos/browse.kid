@@ -20,7 +20,7 @@ from mint.helperfuncs import truncateForDisplay
 
     <span py:def="adder(package, component='')" style="float: right;"
         py:if="(groupTrove and not groupTrove.troveInGroup(package) and not package.endswith(':source')) or
-               (rMakeBuild and not rMakeBuild.status and userLevel in userlevels.WRITERS and not component)">
+               (rMakeBuild and not rMakeBuild.status and userLevel in userlevels.WRITERS and not component and not package.startswith('group-'))">
         <?python
             if component:
                 package += ":" + component
@@ -29,8 +29,8 @@ from mint.helperfuncs import truncateForDisplay
         <a py:if="groupTrove and not groupTrove.troveInGroup(package) and not package.endswith(':source')" href="${groupProject.getUrl()}addGroupTrove?id=${groupTrove.id};trove=${quote(package)};referer=${quote(req.unparsed_uri)};projectName=${project.hostname}" title="Add to ${groupTrove.recipeName}">
             Add to ${truncateForDisplay(groupTrove.recipeName, maxWordLen = 10)}
         </a>
-        <a py:if="rMakeBuild and not rMakeBuild.status and userLevel in userlevels.WRITERS and not component" 
-           href="${cfg.basePath}addrMakeTrove?trvName=${quote(package.split(':source')[0])};referer=${quote(req.unparsed_uri)};projectName=${project.hostname}" title="Add to ${rMakeBuild.title}">
+        <a py:if="rMakeBuild and not rMakeBuild.status and userLevel in userlevels.WRITERS and not component and not package.startswith('group-')"
+           href="${cfg.basePath}addrMakeTrove?trvName=${quote(package)};referer=${quote(req.unparsed_uri)};projectName=${project.hostname}" title="Add to ${rMakeBuild.title}">
             Add to ${truncateForDisplay(rMakeBuild.title, maxWordLen = 10)}
         </a>
     </span>
