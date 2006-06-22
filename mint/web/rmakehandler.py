@@ -18,6 +18,7 @@ from mint import maintenance
 from mint.rmakeconstants import buildjob, buildtrove, supportedApiVersions
 
 from conary import versions
+from conary.lib import coveragehook
 from conary.deps import deps
 
 def makeXMLCall(srvr, method, XMLParams):
@@ -88,6 +89,7 @@ def rMakeHandler(req, cfg, pathInfo = None):
     return apache.OK
 
 def handler(req):
+    coveragehook.install()
     cfg = config.MintConfig()
     cfg.read(req.filename)
 

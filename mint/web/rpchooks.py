@@ -15,6 +15,7 @@ from mint import server
 from mint import maintenance
 from mint.web.webhandler import getHttpAuth
 
+from conary.lib import coveragehook
 from conary.repository import errors
 
 def rpcHandler(req, cfg, pathInfo = None):
@@ -71,6 +72,7 @@ def rpcHandler(req, cfg, pathInfo = None):
     return apache.OK
 
 def handler(req):
+    coveragehook.install()
     cfg = config.MintConfig()
     cfg.read(req.filename)
 
