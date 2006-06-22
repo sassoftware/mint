@@ -477,7 +477,7 @@ class ProjectsTable(database.KeyedTable):
         cfg.tmpDir = tmpPath
         cfg.serverName = hostname + "." + domainname
         cfg.repositoryMap = {}
-        cfg.contentsDir = " ".join(x % name for x in contentsDirs)
+        cfg.contentsDir = " ".join(x % name for x in contentsDirs.split(" "))
 
         # create the initial repository schema
         db = dbstore.connect(cfg.repositoryDB[1], cfg.repositoryDB[0])

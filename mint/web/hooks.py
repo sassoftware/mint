@@ -255,7 +255,7 @@ def conaryHandler(req, cfg, pathInfo):
         nscfg.repositoryDB = (cfg.reposDBDriver, cfg.reposDBPath % dbName)
         nscfg.cacheDB = ('sqlite', repositoryDir + '/cache.sql')
 
-        nscfg.contentsDir = " ".join(x % repName for x in cfg.reposContentsDir)
+        nscfg.contentsDir = " ".join(x % repName for x in cfg.reposContentsDir.split(" "))
 
         nscfg.serverName = repName
         nscfg.tmpDir = os.path.join(cfg.reposPath, repName, "tmp")

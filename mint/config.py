@@ -54,9 +54,7 @@ class MintConfig(ConfigFile):
     templatePath            = os.path.join(templatePath, 'web', 'templates')
     dataPath                = os.path.join(os.path.sep, 'srv', 'rbuilder', '')
     reposPath               = None
-    reposContentsDir        = (cfgtypes.CfgPathList,
-                               [os.path.join(os.path.sep, 'srv', 'rbuilder',
-                                             'repos', '%s', 'contents', '')])
+    reposContentsDir        = os.path.join(os.path.sep, 'srv', 'rbuilder', 'repos', '%s', 'contents', '')
     dbPath                  = None
     dbDriver                = 'sqlite'
     imagesPath              = None
