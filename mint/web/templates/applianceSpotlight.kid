@@ -8,32 +8,18 @@
 -->
     <head>
         <title>${formatTitle("Appliance Spotlight")}</title>
-<link href="http://www.rpath.com/corp/css/mint.css" type="text/css" rel="stylesheet" />
-        <link href="http://www.rpath.com/corp/css/contentTypes.css" type="text/css" rel="stylesheet" />
-        <link href="http://www.rpath.com/corp/css/corp.css" type="text/css" rel="stylesheet" />
-        <link href="http://www.rpath.com/favicon.ico" rel="shortcut icon" />
-        <link href="http://www.rpath.com/favicon.ico" rel="icon" />
-
-        <style type="text/css">
-            div#applianceBox {
-                border-width: 4px;
-                border-style: solid;
-                border-color: #0033cc;
-                background:   #dddddd;
-                width:        615px;
-            }
-        </style>
+        <link href="${cfg.corpSite}css/corp.css" type="text/css" rel="stylesheet" />
     </head>
-    <body onload="roundElement('applianceBox', {border: true});">
+    <body>
                 <div id="right" class="side">
                     <!-- Try rBuilder -->
                     <div class="sidebox" id="tryitnow">
                         <a href="/rbuilder/">
-                        <div class="boxhead-orange"><span class="boxtitle">Free! Sign up now <img src="http://www.rpath.com/corp/images/small-arrow-orange.gif" alt="" width="11" height="10" /></span></div>
+                        <div class="boxhead-orange"><span class="boxtitle">Free! Sign up now <img src="${cfg.corpSite}images/small-arrow-orange.gif" alt="" width="11" height="10" /></span></div>
                         <div class="boxbody">
 
                             <br />
-                            <img src="http://www.rpath.com/corp/images/try-rBuilder-online.gif" alt="rBuilder" width="180" height="64" /><br />
+                            <img src="${cfg.corpSite}images/try-rBuilder-online.gif" alt="rBuilder" width="180" height="64" /><br />
                         </div>
                         </a>
                     </div>
@@ -46,7 +32,7 @@
                             <ul>
                                 <li>Brings the simplicity and value of Software as a Service (SaaS)
                                     to on-premise applications.<br />
-                                    <a href="products-software-appliance.html">Learn more</a></li>
+                                    <a href="${cfg.corpSite}products-software-appliance.html">Learn more</a></li>
                             </ul>
                         </div>
                     </div>
@@ -57,14 +43,14 @@
                         <div class="boxhead"><span class="boxtitle">Products</span></div>
                         <div class="boxbody">
                             <ul>
-                                <li><span class="prodtitle"><a href="products-rbuilder.html">rBuilder&trade;</a></span>
+                                <li><span class="prodtitle"><a href="${cfg.corpSite}products-rbuilder.html">rBuilder&trade;</a></span>
                                     rBuilder gives software developers the ability to turn their application into a Linux software
                                     appliance.<br />
 
-                                    <a href="products-rbuilder.html">Learn more</a></li>
-                                <li><span class="prodtitle"><a href="products-rpath-linux.html">rPath Linux&trade;</a></span>
+                                    <a href="${cfg.corpSite}products-rbuilder.html">Learn more</a></li>
+                                <li><span class="prodtitle"><a href="${cfg.corpSite}products-rpath-linux.html">rPath Linux&trade;</a></span>
                                     rPath Linux provides the stable foundation for building software appliances.<br />
-                                    <a href="products-rpath-linux.html">Learn more</a></li>
+                                    <a href="${cfg.corpSite}products-rpath-linux.html">Learn more</a></li>
                             </ul>
                         </div>
                     </div>
@@ -77,7 +63,7 @@
                             <ul>
                                 <li><div class="newsletterform">
 
-                                    <form action="newsletter.cgi" method="post" id="newsletter">
+                                    <form action="${cfg.corpSite}newsletter.cgi" method="post" id="newsletter">
                                     <p><label for="email">E-mail address: </label>
                                     <input type="text" name="email" value="" id="email" /></p>
 				    <table border="0" cellspacing="0" cellpadding="0">
@@ -96,7 +82,7 @@
                                     <div>
                                     <button type="submit" class="img" id="newsletterSubmit">
 
-                                        <img src="http://www.rpath.com/corp/images/submit_button.png" alt="Submit" />
+                                        <img src="${cfg.corpSite}images/submit_button.png" alt="Submit" />
                                     </button>
                                     </div>
                                     </form>
@@ -112,20 +98,25 @@
 
 
                 
-        <div align="center" style="width: 710px;">
-            <h3>rPath Virtual Appliance Winners.  More guide text to follow.</h3>
-            <div style="text-align: right; padding-right: 50px; font-style: italic;">June 6, 2006</div>
-            <div>
-                <img style="padding-top: 4px; padding-bottom: 20px;" src="${cfg.staticPath}apps/mint/images/port25.png" alt="Port25" />
-            </div>
-            <div style="text-align: right; padding-right: 50px; font-style: italic;">June 6, 2006</div>
-            <div>
-                <img style="padding-top: 4px; padding-bottom: 20px;" src="${cfg.staticPath}apps/mint/images/port25.png" alt="Port25" />
-            </div>
-            <div style="text-align: right; padding-right: 50px; font-style: italic;">June 6, 2006</div>
-            <div>
-                <img style="padding-top: 4px; padding-bottom: 20px;" src="${cfg.staticPath}apps/mint/images/port25.png" alt="Port25" />
-            </div>
+        <div style="width: 710px;" py:if="data">
+        <?python import time ?>
+            <h3 style="text-align: center;">rPath Virtual Appliance Spotlight Archive.  More guide text to follow.</h3>
+
+        <div py:for="spotlightData in data" py:if="time.time() > spotlightData['endDate']">
+        <p style="text-align: right; font-style: italic;">${time.strftime('%m/%d/%Y', time.localtime(spotlightData['startDate']))} - ${time.strftime('%m/%d/%Y', time.localtime(spotlightData['endDate']))}</p>
+        <div onclick="location.href='${spotlightData['link']}'" id="spotlight">
+        <div py:if="spotlightData['logo']" id="logoBox">
+            <img id="applianceLogo" src="${cfg.spotlightImagesDir}/${spotlightData['logo']}"/>
+        </div>
+        <div id="${spotlightData['logo'] and 'textBox' or 'textBoxWide'}">
+            <div id="spotlightTitle">Virtual Appliance Spotlight</div>
+            <div id="applianceTitle">${spotlightData['title']}</div>
+            <div id="applianceText">${spotlightData['text']}</div>
+            <div id="applianceInfo">Click for more information.</div>
+        </div>
+        </div>
+            <br/>
+        </div>
         </div>
     </body>
 </html>
