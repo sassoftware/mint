@@ -54,6 +54,7 @@ from mint.web.templatesupport import injectVersion, dictToJS
                               buildjob.JOB_STATE_COMMITTED : 'statusFinished'}
             if rMakeBuild.status:
                 statusIcons[buildtrove.TROVE_STATE_INIT] = cfg.staticPath + "apps/mint/images/clock.gif"
+            rMakeBuildTroveList = rMakeBuild.listTroves()
         ?>
         <script type="text/javascript">
         <![CDATA[
@@ -82,7 +83,7 @@ from mint.web.templatesupport import injectVersion, dictToJS
                 </thead>
                 <tbody class="rmake-builder" id="rmakebuilder-tbody">
                     <tr><td></td></tr>
-                    <tr py:for="item in rMakeBuild.listTroves()" id="rmakebuilder-item-${item['rMakeBuildItemId']}">
+                    <tr py:for="item in rMakeBuildTroveList" id="rmakebuilder-item-${item['rMakeBuildItemId']}">
                         <td><img id="rmakebuilder-statusicon-${item['rMakeBuildItemId']}" py:if="item['status'] in statusIcons" src="${statusIcons[item['status']]}"/></td>
                         <td><a href="${cfg.basePath + 'repos/' + item['shortHost'] + '/troveInfo?t=' + item['trvName']}">${item['trvName']}</a></td>
                         <td><a href="${cfg.basePath + 'repos/' + item['shortHost']}/browse">${item['shortHost']}</a></td>
@@ -90,10 +91,15 @@ from mint.web.templatesupport import injectVersion, dictToJS
                     </tr>
                 </tbody>
             </table>
-            <div style="padding: 10px 0; text-align: center;" py:if="rMakeBuild.status == buildjob.JOB_STATE_INIT"><a id="rMakeBuildNextAction" class="option" style="display: inline;" href="${cfg.basePath}commandrMake?command=build">Build</a></div>
-            <div style="padding: 10px 0; text-align: center;" py:if="rMakeBuild.status not in (buildjob.JOB_STATE_INIT, buildjob.JOB_STATE_BUILT, buildjob.JOB_STATE_FAILED, buildjob.JOB_STATE_COMMITTED)"><a id="rMakeBuildNextAction" class="option" style="display: inline;" href="${cfg.basePath}commandrMake?command=stop">Stop</a></div>
-            <div style="padding: 10px 0; text-align: center;" py:if="rMakeBuild.status == buildjob.JOB_STATE_BUILT"><a id="rMakeBuildNextAction" class="option" style="display: inline;" href="${cfg.basePath}commandrMake?command=commit">Commit</a></div>
-            <div style="padding: 10px 0; text-align: center;" py:if="rMakeBuild.status in (buildjob.JOB_STATE_FAILED, buildjob.JOB_STATE_COMMITTED)"><a id="rMakeBuildNextAction" class="option" style="display: inline;" href="${cfg.basePath}resetrMakeStatus">Reset</a></div>
+            <div py:strip="True" py:if="rMakeBuildTroveList">
+                <div style="padding: 10px 0; text-align: center;" py:if="rMakeBuild.status == buildjob.JOB_STATE_INIT"><a id="rMakeBuildNextAction" class="option" style="display: inline;" href="${cfg.basePath}commandrMake?command=build">Build</a></div>
+                <div style="padding: 10px 0; text-align: center;" py:if="rMakeBuild.status not in (buildjob.JOB_STATE_INIT, buildjob.JOB_STATE_BUILT, buildjob.JOB_STATE_FAILED, buildjob.JOB_STATE_COMMITTED)"><a id="rMakeBuildNextAction" class="option" style="display: inline;" href="${cfg.basePath}commandrMake?command=stop">Stop</a></div>
+                <div style="padding: 10px 0; text-align: center;" py:if="rMakeBuild.status == buildjob.JOB_STATE_BUILT"><a id="rMakeBuildNextAction" class="option" style="display: inline;" href="${cfg.basePath}commandrMake?command=commit">Commit</a></div>
+                <div style="padding: 10px 0; text-align: center;" py:if="rMakeBuild.status in (buildjob.JOB_STATE_FAILED, buildjob.JOB_STATE_COMMITTED)"><a id="rMakeBuildNextAction" class="option" style="display: inline;" href="${cfg.basePath}resetrMakeStatus">Reset</a></div>
+            </div>
+            <div py:strip="True" py:if="not rMakeBuildTroveList">
+                <div style="padding: 10px 0; text-align: center;"><a id="rMakeBuildNextAction" class="option" style="display: inline;" href="editrMake?id=${rMakeBuild.id}">Edit</a></div>
+            </div>
         </div>
     </div>
 

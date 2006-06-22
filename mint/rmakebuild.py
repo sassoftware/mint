@@ -125,6 +125,7 @@ class rMakeBuildTable(database.KeyedTable):
                    userId)
         return [x[0] for x in cu.fetchall()]
 
+
 class rMakeBuildItemsTable(database.KeyedTable):
     name = "rMakeBuildItems"
     key = "rMakeBuildItemId"
@@ -166,21 +167,54 @@ class rMakeBuildItemsTable(database.KeyedTable):
             ret['shortHost'] = 'rpath'
         return ret
 
+    def new(self, **kwargs):
+        if self.troveInBuild(kwargs['rMakeBuildId'], kwargs['trvName'],
+                             kwargs['trvLabel']):
+            raise database.DuplicateItem
+        # ensure we don't save full versions
+        kwargs['trvLabel'] = self._getLabel(kwargs['trvLabel'])
+        return database.KeyedTable.new(self, **kwargs)
+
     def setStatus(self, UUID, trvName, trvVersion, status, statusMessage):
-        trvName = trvName.split(':')[0]
-        try:
-            trvLabel = str(versions.ThawVersion(trvVersion).branch().label())
-        except:
-            trvLabel = trvVersion
         cu = self.db.cursor()
-        cu.execute("SELECT rMakeBuildId FROM rMakeBuild WHERE UUID=?", UUID)
-        res = cu.fetchone()
-        if not res:
+        for trvName in (trvName.split(':')[0],
+                        trvName.split(':')[0] + ':source'):
+            trvLabel = self._getLabel(trvVersion)
+            cu.execute("SELECT rMakeBuildId FROM rMakeBuild WHERE UUID=?",
+                       UUID)
+            res = cu.fetchone()
+            if not res:
+                continue
+            cu.execute("""UPDATE rMakeBuildItems SET status=?, statusMessage=?
+                              WHERE trvName=?
+                              AND trvLabel=?
+                              AND rMakeBuildId=?""",
+                       status, statusMessage, trvName, trvLabel, res[0])
+            self.db.commit()
             return
-        cu.execute("""UPDATE rMakeBuildItems SET status=?, statusMessage=?
-                          WHERE trvName=? AND trvLabel=? and rMakeBuildId=?""",
-                   status, statusMessage, trvName, trvLabel, res[0])
-        self.db.commit()
+
+    def troveInBuild(self, rMakeBuildId, trvName, trvVersion):
+        cu = self.db.cursor()
+        trvLabel = self._getLabel(trvVersion)
+        pkgName = trvName.split(':')[0]
+        cu.execute("""SELECT rMakeBuildItemId
+                          FROM rMakeBuildItems
+                          WHERE (trvName=? OR trvName=?)
+                          AND trvLabel=?
+                          AND rMakeBuildId=?""",
+                   pkgName, pkgName + ':source', trvLabel, rMakeBuildId)
+        return bool(cu.fetchall())
+
+    def _getLabel(self, trvVersion):
+        try:
+            return str(versions.ThawVersion(trvVersion).branch().label())
+        except:
+            try:
+                return str(versions.VersionFromString( \
+                    trvVersion).branch().label())
+            except:
+                return str(versions.Label(trvVersion))
+
 
 class rMakeBuild(database.TableObject):
     __slots__ = rMakeBuildTable.fields
