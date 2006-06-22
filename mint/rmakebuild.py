@@ -177,21 +177,19 @@ class rMakeBuildItemsTable(database.KeyedTable):
 
     def setStatus(self, UUID, trvName, trvVersion, status, statusMessage):
         cu = self.db.cursor()
+        cu.execute("SELECT rMakeBuildId FROM rMakeBuild WHERE UUID=?", UUID)
+        res = cu.fetchone()
+        if not res:
+                return
         for trvName in (trvName.split(':')[0],
                         trvName.split(':')[0] + ':source'):
             trvLabel = self._getLabel(trvVersion)
-            cu.execute("SELECT rMakeBuildId FROM rMakeBuild WHERE UUID=?",
-                       UUID)
-            res = cu.fetchone()
-            if not res:
-                continue
             cu.execute("""UPDATE rMakeBuildItems SET status=?, statusMessage=?
                               WHERE trvName=?
                               AND trvLabel=?
                               AND rMakeBuildId=?""",
                        status, statusMessage, trvName, trvLabel, res[0])
             self.db.commit()
-            return
 
     def troveInBuild(self, rMakeBuildId, trvName, trvVersion):
         cu = self.db.cursor()
