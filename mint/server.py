@@ -1497,7 +1497,6 @@ class MintServer(object):
 
     @typeCheck()
     @private
-    @requiresAdmin
     def getSpotlightAll(self):
         return self.applianceSpotlight.getAll()
 

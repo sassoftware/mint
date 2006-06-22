@@ -46,7 +46,7 @@ from mint.client import upstream
             <div id="applianceTitle">${spotlightData['title']}</div>
             <div id="applianceText">${spotlightData['text']}</div>
             <div id="applianceInfo">Click for more information.</div>
-            <div py:if="int(spotlightData['showArchive'])" onclick="getElementById('spotlight').onclick=null; alert('spotlight archive'); location.reload();" class="archiveLink">Spotlight Archive</div>
+            <div py:if="int(spotlightData['showArchive'])" onclick="getElementById('spotlight').onclick=null; location.href='${cfg.basePath}applianceSpotlight';" class="archiveLink">Spotlight Archive</div>
         </div>
         </div>
         <div id="steps"> 

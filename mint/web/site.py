@@ -73,6 +73,9 @@ class SiteHandler(WebHandler):
 
         return self._write("frontPage", firstTime=self.session.get('firstTimer', False), popularProjects=popularProjects, selectionData = selectionData, activeProjects = activeProjects, spotlightData=spotlightData)
 
+    def applianceSpotlight(self, *args, **kwargs):
+        return self._write("applianceSpotlight", 
+                    data=self.client.getSpotlightAll()) 
     @redirectHttps
     def register(self, auth):
         self.toUrl = self.cfg.basePath
