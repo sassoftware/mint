@@ -386,7 +386,7 @@ class MintServer(object):
             conarycfgFile = os.path.join(self.cfg.dataPath, 'config', 'conaryrc')
             if os.path.exists(conarycfgFile):
                 cfg.read(conarycfgFile)
-            cfg.repositoryMap = authRepo
+            cfg.repositoryMap.update(authRepo)
             cfg.user.addServerGlob(versions.Label(authLabel).getHost(),
                                    self.cfg.authUser, self.cfg.authPass)
             repo = shimclient.ShimNetClient(server, protocol, port,
@@ -2444,6 +2444,10 @@ class MintServer(object):
 
             cfg.root = cfg.dbPath = ":memory:"
             cfg.initializeFlavors()
+
+            conarycfgFile = os.path.join(self.cfg.dataPath, 'config', 'conaryrc')
+            if os.path.exists(conarycfgFile):
+                cfg.read(conarycfgFile)
 
             cclient = conaryclient.ConaryClient(cfg)
             repos = cclient.getRepos()
