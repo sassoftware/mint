@@ -847,6 +847,109 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
         self.failIf(trv['statusMessage'] != 'test',
                     'second job status message not set')
 
+    @fixtures.fixture("Full")
+    def testSrcStatusBySource(self, db, data):
+        client = self.getClient('nobody')
+        rMakeBuild = client.createrMakeBuild('foo')
+        trvName = 'foo:source'
+        trvLabel = 'test.rpath.local@rpl:devel'
+
+        rMakeBuild.addTrove(trvName, trvLabel)
+
+        UUID = 32 * '0'
+
+        cu = db.cursor()
+        cu.execute("""UPDATE rMakeBuild SET UUID=?
+                          WHERE rMakeBuildId=?""",
+                   (UUID, rMakeBuild.id))
+        db.commit()
+
+        client.server.setrMakeBuildTroveStatus(UUID, trvName, trvLabel, 1,
+                                               'test')
+
+        trvDict = rMakeBuild.listTroves()[0]
+        self.failIf(trvDict['status'] != 1,
+                    "source trove not updated by component name")
+        self.failIf(trvDict['statusMessage'] != 'test',
+                    "source trove not updated by component name")
+
+    @fixtures.fixture("Full")
+    def testSrcStatusByPkg(self, db, data):
+        client = self.getClient('nobody')
+        rMakeBuild = client.createrMakeBuild('foo')
+        trvName = 'foo:source'
+        trvLabel = 'test.rpath.local@rpl:devel'
+
+        rMakeBuild.addTrove(trvName, trvLabel)
+
+        UUID = 32 * '0'
+
+        cu = db.cursor()
+        cu.execute("""UPDATE rMakeBuild SET UUID=?
+                          WHERE rMakeBuildId=?""",
+                   (UUID, rMakeBuild.id))
+        db.commit()
+
+        client.server.setrMakeBuildTroveStatus(UUID, trvName.split(':')[0],
+                                               trvLabel, 1, 'test')
+
+        trvDict = rMakeBuild.listTroves()[0]
+        self.failIf(trvDict['status'] != 1,
+                    "source trove not updated by package name")
+        self.failIf(trvDict['statusMessage'] != 'test',
+                    "source trove not updated by package name")
+
+    @fixtures.fixture("Full")
+    def testCollidingAddSrc(self, db, data):
+        client = self.getClient('nobody')
+        rMakeBuild = client.createrMakeBuild('foo')
+        trvName = 'foo:source'
+        trvName2 = 'foo'
+        trvLabel = 'test.rpath.local@rpl:devel'
+
+        rMakeBuild.addTrove(trvName, trvLabel)
+        self.assertRaises(database.DuplicateItem, rMakeBuild.addTrove,
+                          trvName2, trvLabel)
+
+    @fixtures.fixture("Full")
+    def testCollidingAdd(self, db, data):
+        client = self.getClient('nobody')
+        rMakeBuild = client.createrMakeBuild('foo')
+        trvName = 'foo:source'
+        trvName2 = 'foo'
+        trvLabel = 'test.rpath.local@rpl:devel'
+
+        rMakeBuild.addTrove(trvName2, trvLabel)
+        self.assertRaises(database.DuplicateItem, rMakeBuild.addTrove,
+                          trvName, trvLabel)
+
+    @fixtures.fixture("Full")
+    def testAddFullVer(self, db, data):
+        client = self.getClient('nobody')
+        rMakeBuild = client.createrMakeBuild('foo')
+        trvName = 'foo:source'
+        trvName2 = 'foo'
+        trvLabel = 'test.rpath.local@rpl:devel'
+        trvVersion = '/test.rpath.local@rpl:devel/1.0.0-1-1'
+
+        rMakeBuild.addTrove(trvName2, trvVersion)
+        self.failIf(rMakeBuild.listTroves()[0]['trvLabel'] != trvLabel,
+                    "Version string was not translated to a label")
+
+
+    @fixtures.fixture("Full")
+    def testAddFrozenVer(self, db, data):
+        client = self.getClient('nobody')
+        rMakeBuild = client.createrMakeBuild('foo')
+        trvName = 'foo:source'
+        trvName2 = 'foo'
+        trvLabel = 'test.rpath.local@rpl:devel'
+        trvVersion = '/test.rpath.local@rpl:devel/0.0:1.0.0-1-1'
+
+        rMakeBuild.addTrove(trvName2, trvVersion)
+        self.failIf(rMakeBuild.listTroves()[0]['trvLabel'] != trvLabel,
+                    "Frozen version was not translated to a label")
+
 
 class rMakeBuildTest(MintRepositoryHelper):
     def makeCookedTrove(self, branch = 'rpl:devel', hostname = 'testproject'):
