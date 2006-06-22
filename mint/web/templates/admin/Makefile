@@ -18,7 +18,8 @@ kid_files =			\
 	primeMirror.kid		\
 	admin.kid	\
 	spotlight.kid		\
-	preview.kid
+	preview.kid	\
+	selections.kid
 
 python_files =
 
