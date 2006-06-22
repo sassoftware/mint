@@ -47,7 +47,7 @@
                         This tutorial steps you through the process of creating your own
                         software appliance from packages that already exist on rBuilder
                         Online.  If you would like to build and contribute your own packages,
-                        you should follow the <strong><a href="http://wiki.rpath.com/rpath.com/wiki/images/5/54/RBuilderOnlineTutorial.pdf"">steps to
+                        you should follow the <strong><a href="http://wiki.rpath.com/rpath.com/wiki/images/5/54/RBuilderOnlineTutorial.pdf">steps to
                         building packages with rBuilder Online</a></strong>.
                     </p>
 
