@@ -57,7 +57,7 @@
                     <td id="spotInput"><input size="50" type="text" name="link"/></td>
                 </tr>
                 <tr>
-                    <td id="spotLabel"><label>Appliance Logo (Enter file name.  Leak blank for none.):</label></td>
+                    <td id="spotLabel"><label>Appliance Logo (Enter file name.  Leave blank for none.):</label></td>
                     <td id="spotInput"><input type="text" size="50" name="logo"/></td>
                 </tr>
                 <tr>

@@ -52,7 +52,7 @@ from mint.client import upstream
             </div>
         </div>
 
-        <div py:if="popularProjects or activeProjects or releases" id="topten">
+        <div py:if="selectionData or activeProjects or releases" id="topten">
             <div class="cssbox">
             <div class="cssbox_head"><h2>&nbsp;</h2></div>
             <div class="cssbox_body">
@@ -65,8 +65,8 @@ from mint.client import upstream
                     <tr>
                         <td>
                             <ol>
-                                <li py:for="project in popularProjects">
-                                    <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${project[1]}/">${truncateForDisplay(project[2], maxWordLen=30)}</a>
+                                <li py:for="project in selectionData">
+                                    <a href="${project['link']}">${project['name']}</a>
                                 </li>
                             </ol>
                         </td>

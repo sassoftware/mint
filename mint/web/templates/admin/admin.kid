@@ -19,6 +19,7 @@
             <li py:attrs="{'class': (lastchunk in ('outbound', 'addOutbound')) and 'selectedItem' or None}"><a href="${cfg.basePath}admin/outbound">Configure Outbound Mirroring</a></li>
             <li py:attrs="{'class': (lastchunk == 'maintenance') and 'selectedItem' or None}"><a href="${cfg.basePath}admin/maintenance">Manage Maintenance Mode</a></li>
             <li py:attrs="{'class': (lastchunk == 'spotlight') and 'selectedItem' or None}"><a href="${cfg.basePath}admin/spotlight">Manage Appliance Spotlight</a></li>
+            <li py:attrs="{'class': (lastchunk == 'selections') and 'selectedItem' or None}"><a href="${cfg.basePath}admin/selections">Manage Front Page Selections</a></li>
         </ul>
     </div>
 

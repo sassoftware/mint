@@ -60,21 +60,21 @@ from mint.client import upstream
             </div>
         </div>
 
-        <div py:if="popularProjects or activeProjects or releases" id="topten">
+        <div py:if="selectionData or activeProjects or releases" id="topten">
             <div class="cssbox">
             <div class="cssbox_head"><h2>&nbsp;</h2></div>
             <div class="cssbox_body">
                 <table style="width: 100%;">
                     <tr>
-                        <th class="topten_header">Most Popular</th>
+                        <th class="topten_header">Recommended Appliances</th>
                         <th class="topten_header">Most Active</th>
                         <th class="topten_header">Recent Releases&nbsp;<a href="${basePath}rss?feed=newReleases"><img src="${cfg.staticPath}apps/mint/images/rss-inline.gif" alt="RSS" /></a></th>
                     </tr>
                     <tr>
                         <td>
                             <ol>
-                                <li py:for="project in popularProjects">
-                                    <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${project[1]}/">${truncateForDisplay(project[2], maxWordLen=30)}</a>
+                                <li py:for="project in selectionData">
+                                    <a href="${project['link']}">${project['name']}</a>
                                 </li>
                             </ol>
                         </td>

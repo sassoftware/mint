@@ -265,6 +265,32 @@ class AdminHandler(WebHandler):
         projects = self.client.getProjectsList()
         return self._write('admin/add_outbound', projects = projects)
 
+    def selections(self, *args, **kwargs):
+        return self._write('admin/selections',
+                           selectionData=self.client.getFrontPageSelection())
+
+    @strFields(name=None, link=None)
+    def addSelection(self, name, link, op, *args, **kwargs):
+        if op == 'preview':
+            return self.previewSelection(name, link)
+        self.client.addFrontPageSelection(name, link)
+        return self.selections()
+
+    @intFields(itemId=None)
+    def deleteSelection(self, itemId, *args, **kwargs):
+        self.client.deleteFrontPageSelection(itemId)
+        return self.selections()
+
+    def previewSelection(self, name, link, *args, **kwargs):
+        releases = self.client.getReleaseList()
+        spotlightData = self.client.getCurrentSpotlight()
+        selectionData = self.client.getFrontPageSelection()
+        selectionData.append({'name': name, 'link': link})
+        activeProjects, _  = self.client.getProjects(projectlisting.ACTIVITY_DES, 10, 0)
+
+        return self._write("admin/preview", firstTime=self.session.get('firstTimer', False),
+            releases=releases, selectionData = selectionData, activeProjects = activeProjects, spotlightData=spotlightData)
+
     def spotlight(self, *args, **kwargs):
         return self._write('admin/spotlight',
                            spotlightData=self.client.getSpotlightAll())
@@ -303,13 +329,13 @@ class AdminHandler(WebHandler):
 
     def previewSpotlight(self, auth, *args, **spotlightData):
         releases = self.client.getReleaseList()
-        popularProjects, _ = self.client.getProjects(projectlisting.NUMDEVELOPERS_DES, 10, 0)
+        selectionData = self.client.getFrontPageSelection()
         activeProjects, _  = self.client.getProjects(projectlisting.ACTIVITY_DES, 10, 0)
 
         if not spotlightData.has_key('logo'):
             spotlightData['logo'] = ''
         return self._write("admin/preview", firstTime=self.session.get('firstTimer', False),
-            releases=releases, popularProjects = popularProjects, activeProjects = activeProjects, spotlightData=spotlightData)
+            releases=releases, selectionData = selectionData, activeProjects = activeProjects, spotlightData=spotlightData)
 
 
     @intFields(projectId = None)

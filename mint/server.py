@@ -38,6 +38,7 @@ from mint import userlevels
 from mint import users
 from mint import usertemplates
 from mint import applianceSpotlight
+from mint import selections
 from mint import rmakebuild
 from mint.distro import jsversion
 from mint.distro.flavors import stockFlavors
@@ -216,6 +217,7 @@ def getTables(db, cfg):
     d['repNameMap'] = mirror.RepNameMapTable(db)
     d['applianceSpotlight'] = applianceSpotlight.ApplianceSpotlightTable(db,
                                                                          cfg)
+    d['selections'] = selections.FrontPageSelectionsTable(db, cfg)
     d['rMakeBuild'] = rmakebuild.rMakeBuildTable(db)
     d['rMakeBuildItems'] = rmakebuild.rMakeBuildItemsTable(db)
     outDatedTables = [x for x in d.values() if not x.upToDate]
@@ -1510,6 +1512,22 @@ class MintServer(object):
     def deleteSpotlightItem(self, itemId):
         return self.applianceSpotlight.deleteItem(itemId)
 
+    @typeCheck(str, str)
+    @private
+    @requiresAdmin
+    def addFrontPageSelection(self, name, link):
+        return self.selections.addItem(name, link)
+
+    @typeCheck(int)
+    @private
+    @requiresAdmin
+    def deleteFrontPageSelection(self, itemId):
+        return self.selections.deleteItem(itemId)
+
+    @typeCheck()
+    @private
+    def getFrontPageSelection(self):
+        return self.selections.getAll()
     #
     # LABEL STUFF
     #

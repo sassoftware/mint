@@ -511,6 +511,15 @@ class MintClient:
     def deleteSpotlightItem(self, itemId):
         return self.server.deleteSpotlightItem(itemId)
 
+    def addFrontPageSelection(self, name, link):
+        return self.server.addFrontPageSelection(name, link)
+
+    def deleteFrontPageSelection(self, itemId):
+        return self.server.deleteFrontPageSelection(itemId)
+
+    def getFrontPageSelection(self):
+        return self.server.getFrontPageSelection()
+
 class ServerProxy(xmlrpclib.ServerProxy):
     def __getattr__(self, name):
         return _Method(self.__request, name)
