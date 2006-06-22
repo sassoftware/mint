@@ -40,6 +40,7 @@ python_files =			\
 	rmakeconstants.py       \
 	scriptlibrary.py	\
 	searcher.py		\
+	selections.py		\
 	server.py		\
 	session.py		\
 	sessiondb.py		\
