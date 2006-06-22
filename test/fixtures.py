@@ -62,7 +62,7 @@ class FixtureCache(object):
         cfg.secureHostName = "%s.%s" % (MINT_HOST, MINT_PROJECT_DOMAIN)
         cfg.dataPath = tempfile.mkdtemp(prefix = "fixture%s" % name)
         cfg.reposPath = os.path.join(cfg.dataPath, 'repos')
-        cfg.reposContentsDir = [os.path.join(cfg.dataPath, 'contents1', '%s'), os.path.join(cfg.dataPath, 'contents2', '%s')]
+        cfg.reposContentsDir = "%s %s" % (os.path.join(cfg.dataPath, 'contents1', '%s'), os.path.join(cfg.dataPath, 'contents2', '%s'))
         cfg.imagesPath = os.path.join(cfg.dataPath, 'images')
         util.mkdirChain(cfg.imagesPath)
         cfg.sendNotificationEmails = False
@@ -367,7 +367,7 @@ class SqliteFixtureCache(FixtureCache):
         testCfg.dataPath = testDataPath
         testCfg.dbPath = os.path.join(testCfg.dataPath, 'mintdb')
         testCfg.imagesPath = os.path.join(testCfg.dataPath, 'images')
-        testCfg.reposContentsDir = [os.path.join(testCfg.dataPath, 'contents1', '%s'), os.path.join(cfg.dataPath, 'contents2', '%s')]
+        testCfg.reposContentsDir = "%s %s" % (os.path.join(testCfg.dataPath, 'contents1', '%s'), os.path.join(cfg.dataPath, 'contents2', '%s'))
         testCfg.reposDBPath = os.path.join(testCfg.dataPath, 'repos', '%s', 'sqldb')
         testCfg.reposPath = os.path.join(testCfg.dataPath, 'repos')
         testCfg.conaryRcFile = os.path.join(testCfg.dataPath, 'run', 'conaryrc')
