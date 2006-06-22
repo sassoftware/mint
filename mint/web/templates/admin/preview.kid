@@ -52,15 +52,15 @@ from mint.client import upstream
             </div>
         </div>
 
-        <div py:if="selectionData or activeProjects or releases" id="topten">
+        <div py:if="selectionData or activeProjects or popularProjects" id="topten">
             <div class="cssbox">
             <div class="cssbox_head"><h2>&nbsp;</h2></div>
             <div class="cssbox_body">
                 <table style="width: 100%;">
                     <tr>
+                        <th class="topten_header">Recommended Appliances</th>
                         <th class="topten_header">Most Popular</th>
                         <th class="topten_header">Most Active</th>
-                        <th class="topten_header">Recent Releases&nbsp;<a href="${basePath}rss?feed=newReleases"><img src="${cfg.staticPath}apps/mint/images/rss-inline.gif" alt="RSS" /></a></th>
                     </tr>
                     <tr>
                         <td>
@@ -72,26 +72,16 @@ from mint.client import upstream
                         </td>
                         <td>
                             <ol>
-                                <li py:for="project in activeProjects">
-                                    <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${project[1]}/">${truncateForDisplay(project[2], maxWordLen=30)}</a>
+                                <li py:for="project in popularProjects">
+                                 <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${project[1]}/">${truncateForDisplay(project[2], maxWordLen=30)}</a>
                                 </li>
                             </ol>
+
                         </td>
                         <td>
-                            <p py:if="not releases">No releases have been published yet.</p>
-                            <ol py:if="releases">
-
-                                <li py:for="release in releases">
-                                    <?python
-                                        projectName = release[0]
-                                        if projectName != release[2].getName():
-                                            releaseName = truncateForDisplay(release[2].getName(), maxWords=5)
-                                        else:
-                                            releaseName = upstream(release[2].getTroveVersion())
-                                        projectName = truncateForDisplay(projectName, maxWords=5)
-                                        trove = release[2].getTroveName() + "=" + release[2].getTroveVersion().trailingRevision().asString()
-                                    ?>
-                                    <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${release[1]}/release?id=${release[2].getId()}" title="${trove}">${projectName} <span style="font-size: smaller">${releaseName} (${release[2].getArch()} ${releasetypes.typeNamesShort[release[2].imageTypes[0]]})</span></a>
+                            <ol>
+                                <li py:for="project in activeProjects">
+                                    <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${project[1]}/">${truncateForDisplay(project[2], maxWordLen=30)}</a>
                                 </li>
                             </ol>
                         </td>

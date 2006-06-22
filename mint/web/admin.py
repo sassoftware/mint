@@ -282,14 +282,13 @@ class AdminHandler(WebHandler):
         return self.selections()
 
     def previewSelection(self, name, link, *args, **kwargs):
-        releases = self.client.getReleaseList()
+        popularProjects, _ = self.client.getProjects(projectlisting.NUMDEVELOPERS_DES, 10, 0)
         spotlightData = self.client.getCurrentSpotlight()
         selectionData = self.client.getFrontPageSelection()
         selectionData.append({'name': name, 'link': link})
         activeProjects, _  = self.client.getProjects(projectlisting.ACTIVITY_DES, 10, 0)
 
-        return self._write("admin/preview", firstTime=self.session.get('firstTimer', False),
-            releases=releases, selectionData = selectionData, activeProjects = activeProjects, spotlightData=spotlightData)
+        return self._write("admin/preview", firstTime=self.session.get('firstTimer', False), popularProjects=popularProjects, selectionData = selectionData, activeProjects = activeProjects, spotlightData=spotlightData)
 
     def spotlight(self, *args, **kwargs):
         return self._write('admin/spotlight',
@@ -328,14 +327,13 @@ class AdminHandler(WebHandler):
         return self.spotlight()
 
     def previewSpotlight(self, auth, *args, **spotlightData):
-        releases = self.client.getReleaseList()
+        popularProjects, _ = self.client.getProjects(projectlisting.NUMDEVELOPERS_DES, 10, 0)
         selectionData = self.client.getFrontPageSelection()
         activeProjects, _  = self.client.getProjects(projectlisting.ACTIVITY_DES, 10, 0)
 
         if not spotlightData.has_key('logo'):
             spotlightData['logo'] = ''
-        return self._write("admin/preview", firstTime=self.session.get('firstTimer', False),
-            releases=releases, selectionData = selectionData, activeProjects = activeProjects, spotlightData=spotlightData)
+        return self._write("admin/preview", firstTime=self.session.get('firstTimer', False), popularProjects=popularProjects, selectionData = selectionData, activeProjects = activeProjects, spotlightData=spotlightData)
 
 
     @intFields(projectId = None)

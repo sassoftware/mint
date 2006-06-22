@@ -64,13 +64,12 @@ class SiteHandler(WebHandler):
     @cache
     @redirectHttp
     def _frontPage(self, auth, *args, **kwargs):
-        releases = self.client.getReleaseList()
+        popularProjects, _ = self.client.getProjects(projectlisting.NUMDEVELOPERS_DES, 10, 0)
         selectionData  = self.client.getFrontPageSelection()
         activeProjects, _  = self.client.getProjects(projectlisting.ACTIVITY_DES, 10, 0)
         spotlightData = self.client.getCurrentSpotlight()
 
-        return self._write("frontPage", firstTime=self.session.get('firstTimer', False),
-            releases=releases, selectionData = selectionData, activeProjects = activeProjects, spotlightData=spotlightData)
+        return self._write("frontPage", firstTime=self.session.get('firstTimer', False), popularProjects=popularProjects, selectionData = selectionData, activeProjects = activeProjects, spotlightData=spotlightData)
 
     @redirectHttps
     def register(self, auth):
