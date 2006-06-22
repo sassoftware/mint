@@ -26,8 +26,10 @@ from mint import userlevels
 from mint.session import SqlSession
 
 from mint.web.cache import cache
-from mint.web.decorators import mailList, requiresAdmin, requiresAuth, requiresHttps, redirectHttps, redirectHttp
-from mint.web.webhandler import WebHandler, normPath, HttpNotFound, HttpPartialContent, HttpOK
+from mint.web.decorators import mailList, requiresAdmin, requiresAuth, \
+     requiresHttps, redirectHttps, redirectHttp
+from mint.web.webhandler import WebHandler, normPath, HttpNotFound, \
+     HttpPartialContent, HttpOK
 
 import conary.versions
 from conary.web.fields import boolFields, dictFields, intFields, listFields, strFields
@@ -793,10 +795,17 @@ class SiteHandler(WebHandler):
     def rMakeCommand(self, auth, command):
         command = str(command)
         if not self.rMakeBuild:
-            return self._write('error', 'error', "No rMake Build underway.")
+            self._addErrors("No rMake Build underway.")
+            self._redirect(self.cfg.basePath)
         else:
-            self.req.content_type = "application/x-rmake"
-            return self.rMakeBuild.getXML(command)
+            try:
+                xml = self.rMakeBuild.getXML(command)
+            except Exception, e:
+                self._addErrors(str(e))
+                self._redirect(self.cfg.basePath)
+            else:
+                self.req.content_type = "application/x-rmake"
+                return xml
 
     @requiresAuth
     def rMakeStatus(self, auth):
