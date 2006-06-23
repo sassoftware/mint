@@ -48,7 +48,8 @@ python_files = \
                webtest.py \
                webmemberstest.py \
 	       websetuptest.py \
-	       webrepostest.py
+	       webrepostest.py \
+	       webprojecttest.py
 
 extra_dist = Makefile
 
