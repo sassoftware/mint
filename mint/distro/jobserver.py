@@ -16,6 +16,7 @@ from xmlrpclib import ProtocolError
 # conary imports
 from conary import conaryclient
 from conary.conarycfg import ConfigFile
+from conary.lib import coveragehook
 from conary.conarycfg import CfgList, CfgString, CfgBool, CfgInt, CfgDict, \
      CfgEnum
 
@@ -84,6 +85,7 @@ class JobRunner:
             signal.signal(signal.SIGTERM, self.sigHandler)
             signal.signal(signal.SIGINT, self.sigHandler)
             try:
+                coveragehook.install()
                 self.doWork()
             except:
                 os._exit(1)
@@ -176,6 +178,7 @@ class JobRunner:
 
 class JobDaemon:
     def __init__(self, cfg):
+        coveragehook.install()
         client = MintClient(cfg.serverUrl)
 
         confirmedAlive = False

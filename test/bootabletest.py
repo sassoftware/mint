@@ -202,5 +202,6 @@ class BootableImageTest(MintRepositoryHelper):
         bi = self.setupBootableImage(subclass = raw_fs_image.RawFsImage)
         assert(not bi.makeBootable)
 
+
 if __name__ == "__main__":
     testsuite.main()
