@@ -1511,11 +1511,11 @@ class MintServer(object):
     def deleteSpotlightItem(self, itemId):
         return self.applianceSpotlight.deleteItem(itemId)
 
-    @typeCheck(str, str)
+    @typeCheck(str, str, int)
     @private
     @requiresAdmin
-    def addFrontPageSelection(self, name, link):
-        return self.selections.addItem(name, link)
+    def addFrontPageSelection(self, name, link, rank):
+        return self.selections.addItem(name, link, rank)
 
     @typeCheck(int)
     @private

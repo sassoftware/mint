@@ -12,25 +12,26 @@ class FrontPageSelectionsTable(database.KeyedTable):
     createSQL = """CREATE TABLE FrontPageSelections (
                     itemId          %(PRIMARYKEY)s,
                     name            CHAR(255),
-                    link            CHAR(255)
+                    link            CHAR(255),
+                    rank            INT
                 );
                 """
-    fields = ['itemId', 'name', 'link' ] 
+    fields = ['itemId', 'name', 'link', 'rank' ] 
 
     def __init__(self, db, cfg):
         database.DatabaseTable.__init__(self, db)
         self.cfg = cfg
 
-    def addItem(self, name, link):
+    def addItem(self, name, link, rank):
         cu = self.db.cursor()
-        cu.execute("INSERT INTO %s VALUES (NULL, ?, ?)" % \
-                    self.name, name, link)
+        cu.execute("INSERT INTO %s VALUES (NULL, ?, ?, ?)" % \
+                    self.name, name, link, rank)
         self.db.commit()
         return True
 
     def getAll(self):
         cu = self.db.cursor()
-        cu.execute("SELECT * FROM %s ORDER BY name" % self.name)
+        cu.execute("SELECT * FROM %s ORDER BY rank" % self.name)
         return cu.fetchall_dict()
 
     def deleteItem(self, itemId):

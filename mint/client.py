@@ -511,8 +511,8 @@ class MintClient:
     def deleteSpotlightItem(self, itemId):
         return self.server.deleteSpotlightItem(itemId)
 
-    def addFrontPageSelection(self, name, link):
-        return self.server.addFrontPageSelection(name, link)
+    def addFrontPageSelection(self, name, link, rank):
+        return self.server.addFrontPageSelection(name, link, rank)
 
     def deleteFrontPageSelection(self, itemId):
         return self.server.deleteFrontPageSelection(itemId)

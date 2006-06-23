@@ -270,10 +270,11 @@ class AdminHandler(WebHandler):
                            selectionData=self.client.getFrontPageSelection())
 
     @strFields(name=None, link=None)
-    def addSelection(self, name, link, op, *args, **kwargs):
+    @intFields(rank=0)
+    def addSelection(self, name, link, rank, op, *args, **kwargs):
         if op == 'preview':
-            return self.previewSelection(name, link)
-        self.client.addFrontPageSelection(name, link)
+            return self.previewSelection(name, link, rank)
+        self.client.addFrontPageSelection(name, link, rank)
         return self.selections()
 
     @intFields(itemId=None)
@@ -281,11 +282,12 @@ class AdminHandler(WebHandler):
         self.client.deleteFrontPageSelection(itemId)
         return self.selections()
 
-    def previewSelection(self, name, link, *args, **kwargs):
+    def previewSelection(self, name, link, rank, *args, **kwargs):
         popularProjects, _ = self.client.getProjects(projectlisting.NUMDEVELOPERS_DES, 10, 0)
         spotlightData = self.client.getCurrentSpotlight()
         selectionData = self.client.getFrontPageSelection()
-        selectionData.append({'name': name, 'link': link})
+        selectionData.append({'name': name, 'link': link, 'rank': rank})
+        selectionData.sort(lambda x,y: cmp(x['rank'], y['rank']))
         activeProjects, _  = self.client.getProjects(projectlisting.ACTIVITY_DES, 10, 0)
 
         return self._write("admin/preview", firstTime=self.session.get('firstTimer', False), popularProjects=popularProjects, selectionData = selectionData, activeProjects = activeProjects, spotlightData=spotlightData)
