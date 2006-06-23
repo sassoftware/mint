@@ -11,6 +11,7 @@ import xmlrpclib
 
 from conary import versions
 from conary.lib import options
+from conary.lib import coveragehook
 
 class UnknownException(Exception):
     def __str__(self):
@@ -58,6 +59,7 @@ class ServerProxy(xmlrpclib.ServerProxy):
         return _Method(self.__request, name)
 
 def process(repos, cfg, commitList, srcMap, pkgMap, grpMap, argv, otherArgs):
+    coveragehook.install()
     if not len(argv) and not len(otherArgs):
         usage()
         return 1
