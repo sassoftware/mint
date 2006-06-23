@@ -208,6 +208,13 @@ class MaintenanceTest(mint_rephelp.WebRepositoryHelper):
                     "maintenance landing page didn't redirect to admin page "
                     "for admin users.")
 
+    def testrMakeStatus(self):
+        # this call would fail on HTTP code 405 if not for maintenance mode
+        self.setMaintenanceMode(maintenance.LOCKED_MODE)
+        page = self.fetchWithRedirect('/rmakesubscribe/BOGUS_UUID')
+        self.failIf(page.url != self.mintCfg.basePath + 'maintenance',
+                    "rMake subscribe links don't end up on maintenance page")
+
 
 if __name__ == "__main__":
     testsuite.main()

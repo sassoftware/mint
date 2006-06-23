@@ -38,6 +38,7 @@ python_files = \
                repostest.py \
                reportstest.py \
                rmakebuildtest.py \
+               rmakestatustest.py \
                schematest.py \
                searchtest.py \
                sessionstest.py \
