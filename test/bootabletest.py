@@ -17,6 +17,7 @@ from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import MINT_PROJECT_DOMAIN
 
 from mint.distro import bootable_image
+from mint.distro import raw_fs_image, raw_hd_image
 from mint import data
 
 from conary import conarycfg, conaryclient
@@ -28,7 +29,7 @@ VFS = versions.VersionFromString
 Flavor = deps.parseFlavor
 
 class BootableImageTest(MintRepositoryHelper):
-    def setupBootableImage(self, trove = None):
+    def setupBootableImage(self, trove = None, subclass = bootable_image.BootableImage):
         if not trove:
             self.addComponent("test:runtime", "1.0")
             trove = self.addCollection("group-dist", "1.0",
@@ -46,10 +47,15 @@ class BootableImageTest(MintRepositoryHelper):
             dataType = data.RDT_STRING, validate = False)
         release.setDataValue("autoResolve", False,
             dataType = data.RDT_BOOL, validate = False)
+        release.setDataValue("freespace", 512, dataType = data.RDT_INT,
+            validate = False)
+        release.setDataValue("swapSize", 0, dataType = data.RDT_INT,
+            validate = False)
+
         job = client.startImageJob(release.id)
         isocfg = self.writeIsoGenCfg()
 
-        bi = bootable_image.BootableImage(client, isocfg, job, release, project)
+        bi = subclass(client, isocfg, job, release, project)
         bi.conarycfg = self.cfg
 
         bi.imgcfg.dataDir = os.path.normpath("../scripts/DiskImageData/")
@@ -188,6 +194,13 @@ class BootableImageTest(MintRepositoryHelper):
             os.unlink(fn + ".gz")
             os.unlink(fn + ".gz.out")
 
+    def testRawHdImageClass(self):
+        bi = self.setupBootableImage(subclass = raw_hd_image.RawHdImage)
+        assert(bi.makeBootable)
+
+    def testRawFsImageClass(self):
+        bi = self.setupBootableImage(subclass = raw_fs_image.RawFsImage)
+        assert(not bi.makeBootable)
 
 if __name__ == "__main__":
     testsuite.main()
