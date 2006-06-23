@@ -8,6 +8,8 @@ testsuite.setup()
 
 import os
 import sys
+import stat
+import tempfile
 
 import rephelp
 from mint_rephelp import EmptyCallback
@@ -15,6 +17,7 @@ from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import MINT_PROJECT_DOMAIN
 
 from mint.distro import bootable_image
+from mint import data
 
 from conary import conarycfg, conaryclient
 from conary import versions
@@ -25,7 +28,12 @@ VFS = versions.VersionFromString
 Flavor = deps.parseFlavor
 
 class BootableImageTest(MintRepositoryHelper):
-    def setupBootableImage(self, trove):
+    def setupBootableImage(self, trove = None):
+        if not trove:
+            self.addComponent("test:runtime", "1.0")
+            trove = self.addCollection("group-dist", "1.0",
+                 [("test:runtime", True)], defaultFlavor = "is: x86")
+
         client, userId = self.quickMintUser("testuser", "testpass")
 
         projectId = client.newProject("Test", "testproject",
@@ -34,11 +42,17 @@ class BootableImageTest(MintRepositoryHelper):
 
         release = client.newRelease(projectId, "Test Release")
         release.setTrove(trove.getName(), trove.getVersion().freeze(), trove.getFlavor().freeze())
+        release.setDataValue("installLabelPath", "conary.rpath.com@rpl:1",
+            dataType = data.RDT_STRING, validate = False)
+        release.setDataValue("autoResolve", False,
+            dataType = data.RDT_BOOL, validate = False)
         job = client.startImageJob(release.id)
         isocfg = self.writeIsoGenCfg()
 
         bi = bootable_image.BootableImage(client, isocfg, job, release, project)
         bi.conarycfg = self.cfg
+
+        bi.imgcfg.dataDir = os.path.normpath("../scripts/DiskImageData/")
         bi.setupConaryClient()
         util.mkdirChain(bi.fakeroot + "/tmp", bi.fakeroot + "/root")
 
@@ -99,23 +113,13 @@ class BootableImageTest(MintRepositoryHelper):
         assert(kuJob.getPrimaryJobs() == correctSet)
 
     def testNoKernel(self):
-        self.addComponent("test:runtime", "1.0")
-
-        trove = self.addCollection("group-dist", "1.0",
-             [("test:runtime", True)], defaultFlavor = "is: x86")
-
-        bi = self.setupBootableImage(trove)
+        bi = self.setupBootableImage()
 
         self.assertRaises(bootable_image.KernelTroveRequired,
             bi.updateKernelChangeSet, EmptyCallback())
 
     def testGrubSetup(self):
-        self.addComponent("test:runtime", "1.0")
-
-        trove = self.addCollection("group-dist", "1.0",
-             [("test:runtime", True)], defaultFlavor = "is: x86")
-
-        bi = self.setupBootableImage(trove)
+        bi = self.setupBootableImage()
         for d in 'sbin', 'boot/grub', 'etc':
             util.mkdirChain(os.path.join(bi.fakeroot, d))
         file(os.path.join(bi.fakeroot, 'sbin', 'grub'), "w").close()
@@ -125,6 +129,38 @@ class BootableImageTest(MintRepositoryHelper):
             os.path.join(bi.fakeroot, 'etc', 'grub.conf'),
             "title Test (template)"
         )
+
+    def testPrepareDiskImage(self):
+        bi = self.setupBootableImage()
+        _, bi.outfile = tempfile.mkstemp()
+        bi.imagesize = 1024 * 1024 * 2
+
+        try:
+            bi.prepareDiskImage()
+            assert(os.stat(bi.outfile)[stat.ST_SIZE] == bi.imagesize)
+        finally:
+            os.unlink(bi.outfile)
+
+    def testFindFile(self):
+        self.hideOutput()
+        try:
+            bi = self.setupBootableImage()
+        finally:
+            self.showOutput()
+        x = bi.findFile(".", "httpd.conf.in")
+        assert(x == "./server/httpd.conf.in")
+
+    def testFileSystemOddsNEnds(self):
+        bi = self.setupBootableImage()
+        bi.swapSize = 1024 * 1024
+        bi.createTemporaryRoot()
+
+        self.captureAllOutput(bi.fileSystemOddsNEnds)
+
+        assert(os.stat(os.path.join(bi.fakeroot, "var", "swap"))[stat.ST_SIZE] == 1024 * 1024)
+
+        for x in ['/etc/conaryrc', '/etc/fstab', '/var/lib/conarydb/conarydb']:
+            assert(os.path.exists(bi.fakeroot + x))
 
 
 if __name__ == "__main__":
