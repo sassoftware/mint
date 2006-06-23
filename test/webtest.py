@@ -40,6 +40,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
     def testRedirect(self):
         client, userId = self.quickMintUser('foouser', 'foopass')
+        self.setOptIns('foouser')
         projectId = self.newProject(client)
 
         # we are working with the project server right now
@@ -191,6 +192,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
     def testLogout(self):
         client, userid = self.quickMintUser('foouser', 'foopass')
+        self.setOptIns('foouser')
         self.newProject(client, 'Foo', 'foo')
 
         page = self.fetch('/')
@@ -213,6 +215,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
     def testLogoutNoCookie(self):
         self.quickMintUser('foouser', 'foopass')
+        self.setOptIns('foouser')
 
         page = self.fetch('/')
         page = page.postForm(1, self.fetchWithRedirect,
@@ -299,6 +302,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         # test to make sure that a login on one page
         # will redirect you back to that page after login
         client, userId = self.quickMintUser('foouser', 'foopass')
+        self.setOptIns('foouser')
 
         self.newProject(client)
 
@@ -824,7 +828,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         # XXX: workaround to solve nesting XML-RPC call in cookGroup
         project = client.getProject(projectId)
         self.moveToServer(project, 1)
-        
+
         groupTrove = self.createTestGroupTrove(client, projectId)
 
         self.addComponent("test:runtime", "1.0")
