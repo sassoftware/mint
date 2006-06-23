@@ -19,6 +19,7 @@ from mint import dbversion
 from mint import server
 from mint import shimclient
 from mint import releasetypes
+from mint import data
 
 from mint.distro import jobserver
 from mint.distro.flavors import stockFlavors
@@ -582,6 +583,29 @@ class WebRepositoryHelper(MintRepositoryHelper, webunittest.WebTestCase):
         webunittest.WebTestCase.tearDown(self)
         webunittest.HTTPResponse.fetchWithRedirect = None
         webunittest.HTTPResponse._TestCase__testMethodName = None
+
+    def setOptIns(self, username, newsletter = False, insider = False):
+        cu = self.db.cursor()
+        cu.execute("SELECT userId FROM Users WHERE username=?", username)
+        userId = cu.fetchone()[0]
+        for optIn in ('newsletter', 'insider'):
+            cu.execute("SELECT value FROM UserData WHERE name=? AND userId=?",
+                       optIn, userId)
+            if cu.fetchone():
+                cu.execute("""UPDATE UserData SET VALUE=?
+                                  WHERE userId=? AND name=?""",
+                           int(optIn == 'newsletter' \
+                               and newsletter or insider),
+                          userId, optIn)
+            else:
+                cu.execute("""INSERT INTO UserData
+                                  (userId, name, value, dataType)
+                                  VALUES (?, ?, ?, ?)""",
+                           userId, optIn,
+                           int(optIn == 'newsletter' \
+                               and newsletter or insider),
+                           data.RDT_BOOL)
+        self.db.commit()
 
     def webLogin(self, username, password):
         page = self.fetch(self.mintCfg.basePath)
