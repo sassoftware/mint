@@ -379,6 +379,18 @@ Much like Powdermilk Biscuits[tm]."""
         self.failIf(templatesupport.dictToJS({'foo': 2}) != "{'foo': 2}",
                     "dict object with str keys converted incorrectly")
 
+    def testCodeGeneration(self):
+        from mint import releasetypes
+        x = releasetypes.codegen()
+        for name in releasetypes.typeNames.values():
+            assert(name in x)
+
+        from mint import jobstatus 
+        x = jobstatus.codegen()
+        for name in jobstatus.statusNames.values() + jobstatus.statusCodeNames.values():
+            assert(name in x)
+
+
 
 class FixturedHelpersTest(fixtures.FixturedUnitTest):
     @fixtures.fixture('Full')
