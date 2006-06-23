@@ -69,6 +69,32 @@ class ReportTest(fixtures.FixturedUnitTest):
         report = client.server.getReport('exec_summary')
 
     @fixtures.fixture("Full")
+    def testNewsletterReport(self, db, data):
+        adminClient = self.getClient("admin")
+        report = adminClient.server.getReport('newsletter_users')
+        assert report['data'] == [], 'bad initial state'
+        client = self.getClient('owner')
+        user = client.getUser(data['owner'])
+        user.setDataValue('newsletter', True)
+        report = adminClient.server.getReport('newsletter_users')
+        self.failIf(report['data'] != \
+                    [['owner', 'A User Named owner', 'owner@example.com']],
+                    "newletter opt-in not reflected in report")
+
+    @fixtures.fixture("Full")
+    def testInsiderReport(self, db, data):
+        adminClient = self.getClient("admin")
+        report = adminClient.server.getReport('insider_users')
+        assert report['data'] == [], 'bad initial state'
+        client = self.getClient('owner')
+        user = client.getUser(data['owner'])
+        user.setDataValue('insider', True)
+        report = adminClient.server.getReport('insider_users')
+        self.failIf(report['data'] != \
+                    [['owner', 'A User Named owner', 'owner@example.com']],
+                    "insider opt-in not reflected in report")
+
+    @fixtures.fixture("Full")
     def testActiveUsersReport(self, db, data):
         adminClient = self.getClient("admin")
         userId = data['owner']
