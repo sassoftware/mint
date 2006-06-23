@@ -6,7 +6,9 @@
 
 SUBDIRS =
 
-dist_files = usertemplates.py
+dist_files =
+
+python_files = usertemplates.py
 
 all: default-subdirs
 
