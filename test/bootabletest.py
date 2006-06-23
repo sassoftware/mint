@@ -145,9 +145,9 @@ class BootableImageTest(MintRepositoryHelper):
         self.hideOutput()
         try:
             bi = self.setupBootableImage()
+            x = bi.findFile(".", "httpd.conf.in")
         finally:
             self.showOutput()
-        x = bi.findFile(".", "httpd.conf.in")
         assert(x == "./server/httpd.conf.in")
 
     def testFileSystemOddsNEnds(self):
@@ -161,6 +161,32 @@ class BootableImageTest(MintRepositoryHelper):
 
         for x in ['/etc/conaryrc', '/etc/fstab', '/var/lib/conarydb/conarydb']:
             assert(os.path.exists(bi.fakeroot + x))
+
+    def testSparse(self):
+        bi = self.setupBootableImage()
+
+        f = self.captureAllOutput(bi.createSparseFile, 5)
+        try:
+            s = self.captureAllOutput(bi.copySparse, f, f + "out")
+
+            assert(s == 0)
+        finally:
+            os.unlink(f)
+            os.unlink(f + "out")
+
+        fd, fn = tempfile.mkstemp()
+        try:
+            f = os.fdopen(fd, "w")
+            f.write('1' * 1024 * 1024 * 5)
+            f.close()
+
+            os.system("gzip %s" % fn)
+            s = bi.copySparse(fn + ".gz", fn + ".gz.out")
+
+            assert(s == 5133) # happens to be the compressed size of 5M of '1's
+        finally:
+            os.unlink(fn + ".gz")
+            os.unlink(fn + ".gz.out")
 
 
 if __name__ == "__main__":
