@@ -4,9 +4,9 @@
 # All Rights Reserved
 #
 
-SUBDIRS = content templates datatemplates
+SUBDIRS =
 
-dist_files = rbuilder.conf httpd.conf
+dist_files = usertemplates.py
 
 all: default-subdirs
 
@@ -16,13 +16,11 @@ subdirs: default-subdirs
 
 dist: defaultdist dist-subdirs
 
+# only datatemplates are allowed to override initial python files.
 defaultdist: $(dist_files)
-	mkdir -p $(DISTDIR)
-	for f in $(dist_files); do \
-		cp -a $$f $(DISTDIR); \
-	done
+	cp -a usertemplates.py $(DISTDIR)/mint/usertemplates.py
 
 clean: default-clean clean-subdirs
 
-include ../Make.rules
+include ../../Make.rules
 # vim: set sts=8 sw=8 noexpandtab :

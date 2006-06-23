@@ -40,13 +40,13 @@ class searchResultsPerPage(IntegerOption):
 ###
 
 class UserPrefsAttTemplate(Template):
-    __slots__ = ['newsletter', 'insider']
+    __slots__ = []
 
 class UserPrefsNoAttTemplate(Template):
     __slots__ = ['searchResultsPerPage']
 
 class UserPrefsInvisibleTemplate(Template):
-    __slots__ = []
+    __slots__ = ['newsletter', 'insider']
 
 # Base template for items that should be displayed for user.
 class UserPrefsVisibleTemplate(Template):
