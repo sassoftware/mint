@@ -390,6 +390,27 @@ Much like Powdermilk Biscuits[tm]."""
         for name in jobstatus.statusNames.values() + jobstatus.statusCodeNames.values():
             assert(name in x)
 
+    def testScriptLogger(self):
+        from mint import scriptlibrary
+        import logging
+        fd, fn = tempfile.mkstemp()
+
+        try:
+            scriptlibrary.setupScriptLogger(logfile = fn,
+                consoleLevel = logging.ERROR  + 1)
+            log = scriptlibrary.getScriptLogger()
+
+            log.debug("Debug")
+            log.info("Info")
+            log.warning("Warning")
+            log.error("Error")
+
+            f = os.fdopen(fd, "r")
+            logContents = f.read()
+            for x in "Info", "Warning", "Error":
+                assert(x in logContents)
+        finally:
+            os.unlink(fn)
 
 
 class FixturedHelpersTest(fixtures.FixturedUnitTest):
