@@ -1226,7 +1226,7 @@ class MintServer(object):
         return True
 
     @typeCheck(int)
-    @requiresAdmin
+    @requiresAuth
     @private
     def isUserAdmin(self, userId):
         return self._isUserAdmin(userId)
