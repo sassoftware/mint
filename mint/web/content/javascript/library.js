@@ -686,3 +686,47 @@ function getGroupTroveById(aId) {
     return groupTroveCache[aId];
 
 }
+
+// Front Page
+function buildIt() {
+    newRight = DIV({'id':'activeRight'}, 
+                   DIV({'id':'orangeTitle'}, 'Build It.'),
+                   'Make your own software appliance in three easy steps.');
+    newLeft = DIV({'id':'inactiveLeft'}, 
+                  DIV({'id':'inactiveOrangeTitle'}, 'Use It.'),
+                  'Check out the software appliances others have made.');
+    swapDOM('activeLeft', newLeft);
+    swapDOM('inactiveRight', newRight);
+    connect('inactiveLeft', 'onclick', useIt);
+    connect('inactiveLeft', 'onmouseover', underlineTitle);
+    connect('inactiveLeft', 'onmouseout', normalTitle);
+    hideElement('applianceLogos');
+    updateNodeAttributes('steps', {'style':{'visibility':'visible'}});
+    showElement('steps');
+}
+
+function useIt() {
+    newRight = DIV({'id':'inactiveRight'}, 
+                   DIV({'id':'inactiveOrangeTitle'}, 'Build It.'),
+                   'Make your own software appliance in three easy steps.');
+    newLeft = DIV({'id':'activeLeft'}, 
+                  DIV({'id':'orangeTitle'}, 'Use It.'),
+                  'Check out the software appliances others have made.');
+    swapDOM('inactiveLeft', newLeft);
+    swapDOM('activeRight', newRight);
+    connect('inactiveRight', 'onclick', buildIt);
+    connect('inactiveRight', 'onmouseover', underlineTitle);
+    connect('inactiveRight', 'onmouseout', normalTitle);
+    showElement('applianceLogos');
+    hideElement('steps');
+}
+
+function underlineTitle() {
+    updateNodeAttributes('inactiveOrangeTitle', 
+                         {'style':{'textDecoration':'underline'}});
+}
+
+function normalTitle() {
+    updateNodeAttributes('inactiveOrangeTitle', 
+                         {'style':{'textDecoration':'none'}});
+}
