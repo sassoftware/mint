@@ -70,8 +70,9 @@ class SiteHandler(WebHandler):
         selectionData  = self.client.getFrontPageSelection()
         activeProjects, _  = self.client.getProjects(projectlisting.ACTIVITY_DES, 10, 0)
         spotlightData = self.client.getCurrentSpotlight()
+        releases = self.client.getReleaseList()
 
-        return self._write("frontPage", firstTime=self.session.get('firstTimer', False), popularProjects=popularProjects, selectionData = selectionData, activeProjects = activeProjects, spotlightData=spotlightData)
+        return self._write("frontPage", firstTime=self.session.get('firstTimer', False), popularProjects=popularProjects, selectionData = selectionData, activeProjects = activeProjects, spotlightData=spotlightData, releases=releases)
 
     def applianceSpotlight(self, *args, **kwargs):
         return self._write("applianceSpotlight", 
