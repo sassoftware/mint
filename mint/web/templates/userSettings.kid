@@ -15,7 +15,7 @@
     <body>
         <div id="layout">
             <div py:if="defaultedData" class='statusError' style='margin-bottom: 1em;'>
-                Please review your preferences and address the hilited selections.
+                Please review your preferences and address the highlighted selections below.
             </div>
             <div id="right" class="side">
                 ${resourcePane()}
