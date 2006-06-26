@@ -236,6 +236,7 @@ button.img {
 }
 
 div#steps {
+    visibility: hidden;
     top: 130px;
     width: 720px;
 }
@@ -256,30 +257,67 @@ div#stepsText {
     padding: 8px 0px 24px 0px;
 }
 
-span#buildit {
-     cursor: pointer;
-     background: url(../images/build_it.png);
+div#applianceLogos {
+    width: 720px;
+    height: 200px;
+    text-align: center;
+}
+
+div#applianceLogo {
+    width: 33.33%;
+    float: left;
+    line-height: 200px;
+}
+
+div#orangeTitle, div#inactiveOrangeTitle {
+    font-size: 24pt;
+    color: #ffa814;
+    font-weight: bold;
+}
+
+div#activeLeft {
+     background: url(../images/activeBubble.png);
      text-align: left;
      width: 326px;
-     height: 81px;
-     float: left;
-     padding-top: 48px;
+     height: 129px;
      padding-left: 24px;
      padding-right: 3px;
      margin-right: 3px;
 }
 
-span#findit {
+div#inactiveLeft {
+     cursor: pointer;
+     background: url(../images/inactiveBubble.png);
+     text-align: left;
+     width: 327px;
+     height: 129px;
+     padding-left: 24px;
+     padding-right: 3px;
+     margin-right: 3px;
+     background-repeat: no-repeat;
+}
+
+div#activeRight {
+    float: right;
+    background: url(../images/activeBubble.png);
+    text-align: left;
+    width: 327px;
+    height: 129px;
+    padding-left: 24px;
+    margin-right: 8px;
+    background-repeat: no-repeat;
+}
+
+div#inactiveRight {
     cursor: pointer;
     float: right;
-    background: url(../images/find_it.png);
+    background: url(../images/inactiveBubble.png);
     text-align: left;
     width: 326px;
-    height: 59px;
-    padding-top: 48px;
+    height: 129px;
     padding-left: 24px;
-    margin-left: 3px;
-    margin-right: 3px;
+    margin-right: 8px;
+    background-repeat: no-repeat;
 }
 
 div#spotlight {
@@ -288,8 +326,8 @@ div#spotlight {
     text-align: left;
     width: 717px;
     height: 110px;
-    padding-top: 4px;
     background-repeat: no-repeat;
+    margin-bottom: 40px;
 }
 
 div#spotlightTitle {
@@ -298,20 +336,25 @@ div#spotlightTitle {
     font-weight: bold;
     text-align: center;
     line-height: 110%
+    padding-top: 4px;
 }
 
 div#applianceTitle {
     font-size: 11pt;
     text-align: center;
     font-weight: bold;
-    padding-top: 3px;
+    line-height: 110%;
 }
 
 div#applianceText {
-    padding-top: 3px;
     font-size: 9pt;
     line-height: 120%;
+    padding-top: 2px;
     text-align: justify;
+}
+
+img#applianceImg {
+    vertical-align: middle;
 }
 
 div.archiveLink {
@@ -338,14 +381,12 @@ div#applianceInfo {
     padding-top: 2px;
 }
 
-img#applianceLogo {
-    vertical-align: middle;
-}
-
 div#logoBox {
     float: left;
-    padding-top: 12px;
-    padding-left: 24px;
+    height: 110px;
+    width: 130px;
+    line-height: 100px;
+    text-align: center;
 }
 
 div#textBox {
