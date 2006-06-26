@@ -3,12 +3,14 @@
 ^state$
 ^state.journal$
 ~$
-\.(pyc|swp|swo|orig|rej)$
+\.(pyc|pyo|o|so|swp|swo|orig|rej)$
 \.times
+bin/rbuilder-wrapper
 test/\.(times|coverage)
 test/archive/macrosc
 test/logfile\.test\.*
 mint/constants\.py
+mint/rmakeconstants\.py
 mint/web/content/javascript/releasetypes\.js
 mint/web/content/javascript/jobstatus\.js
 scripts/raw2vmdk
