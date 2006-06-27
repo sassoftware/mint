@@ -36,9 +36,9 @@
 
 
                 <p>When the request status "Finished" appears, your group
-                has finished cooking. Click on the "Releases" link in the
+                has finished cooking. Click on the "Products" link in the
                 "Project Resources" sidebar, and select
-                ${curGroupTrove.recipeName} to create a release.</p>
+                ${curGroupTrove.recipeName} to create a product.</p>
             </div>
         </div>
     </body>

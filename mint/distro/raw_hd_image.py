@@ -6,13 +6,13 @@
 
 import os, sys
 
-from mint import releasetypes
+from mint import producttypes
 from mint.distro import bootable_image
 
 from conary.lib import util
 
 class RawHdImage(bootable_image.BootableImage):
-    fileType = releasetypes.typeNames[releasetypes.RAW_HD_IMAGE]
+    fileType = producttypes.typeNames[producttypes.RAW_HD_IMAGE]
 
     def write(self):
         try:
@@ -31,10 +31,10 @@ class RawHdImage(bootable_image.BootableImage):
         return self.moveToFinal(imagesList,
                                 os.path.join(self.cfg.finishedPath,
                                              self.project.getHostname(),
-                                             str(self.release.getId())))
+                                             str(self.product.getId())))
 
     def __init__(self, *args, **kwargs):
         res = bootable_image.BootableImage.__init__(self, *args, **kwargs)
-        self.freespace = self.release.getDataValue("freespace") * 1048576
-        self.swapSize = self.release.getDataValue("swapSize") * 1048576
+        self.freespace = self.product.getDataValue("freespace") * 1048576
+        self.swapSize = self.product.getDataValue("swapSize") * 1048576
         return res

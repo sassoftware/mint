@@ -10,52 +10,52 @@ testsuite.setup()
 from mint_rephelp import MintRepositoryHelper
 
 from mint import config
-from mint import releasetypes
+from mint import producttypes
 
 class ConfigTest(MintRepositoryHelper):
     # these tests should be fairly specific in nature, since testing cfg
     # in general terms will overlap conary.
-    def testImageTypes(self):
-        cEnum = config.CfgImageEnum()
+    def testProductTypes(self):
+        cEnum = config.CfgProductEnum()
 
         self.failIf(dict([(x[0].lower(), x[1]) for x in \
-                          releasetypes.validImageTypes.iteritems()]) != \
+                          producttypes.validProductTypes.iteritems()]) != \
                     cEnum.validValues,
                     "Base value list can't be compared. "
                     "results of this test will be invalid")
 
         self.failIf(dict([(x[1],x[0]) for x in cEnum.origName.iteritems()]) !=\
-                    releasetypes.validImageTypes,
+                    producttypes.validProductTypes,
                     "Original names are not correct, no basis for comparison")
 
-        for imageType in releasetypes.validImageTypes.keys():
-            # imageType is a string
-            self.failIf(cEnum.parseString(imageType) != \
-                        releasetypes.__dict__[imageType],
+        for productType in producttypes.validProductTypes.keys():
+            # productType is a string
+            self.failIf(cEnum.parseString(productType) != \
+                        producttypes.__dict__[productType],
                         "cfg parsing did not translate %s correctly" % \
-                        imageType)
+                        productType)
 
-        for enumVal in releasetypes.TYPES:
+        for enumVal in producttypes.TYPES:
             # enumVal is an int
             self.failIf(cEnum.parseString(cEnum.format(enumVal)) != enumVal,
                         "Enum format didn't divine correct name for %d" % \
                         enumVal)
 
-        # if we get here, there are no apparent issues with the CfgImageType
+        # if we get here, there are no apparent issues with the CfgProductType
         # class. errors with the cfg object manipulation generated elsewhere.
         cfg = config.MintConfig()
-        self.failIf(cfg.visibleImageTypes,
-                    "Image type illegally appeared as visible")
+        self.failIf(cfg.visibleProductTypes,
+                    "Product type illegally appeared as visible")
 
-        cfg.configLine("visibleImageTypes INSTALLABLE_ISO")
-        self.failIf(cfg.visibleImageTypes != [releasetypes.INSTALLABLE_ISO],
-                    "visibleImageTypes did not incorporate first release type")
+        cfg.configLine("visibleProductTypes INSTALLABLE_ISO")
+        self.failIf(cfg.visibleProductTypes != [producttypes.INSTALLABLE_ISO],
+                    "visibleProductTypes did not incorporate first product type")
 
-        cfg.configLine("visibleImageTypes RAW_HD_IMAGE")
-        self.failIf(cfg.visibleImageTypes != \
-                    [releasetypes.INSTALLABLE_ISO, releasetypes.RAW_HD_IMAGE],
-                    "visibleImageTypes did not properly incorporate "
-                    "a second release")
+        cfg.configLine("visibleProductTypes RAW_HD_IMAGE")
+        self.failIf(cfg.visibleProductTypes != \
+                    [producttypes.INSTALLABLE_ISO, producttypes.RAW_HD_IMAGE],
+                    "visibleProductTypes did not properly incorporate "
+                    "a second product")
 
 if __name__ == "__main__":
     testsuite.main()

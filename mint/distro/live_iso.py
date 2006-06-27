@@ -117,7 +117,7 @@ class LiveIso(bootable_image.BootableImage):
         return not fallback
 
     def getVolName(self):
-        name = self.release.getName()
+        name = self.product.getName()
         # srcub all non alphanumeric characters. we use this in a system call.
         # limit name to 32 chars--max volumne name for iso-9660
         return ''.join([x.isalnum() and x or '_' for x in name][:32])
@@ -159,7 +159,7 @@ class LiveIso(bootable_image.BootableImage):
             os.symlink('/sbin/nash', os.path.join(initRdDir, 'bin', tFile))
 
         kMods = ('loop',)
-        if self.release.getDataValue('unionfs'):
+        if self.product.getDataValue('unionfs'):
             kMods += ('unionfs',)
         for modName in kMods:
             modName += '.ko'
@@ -175,7 +175,7 @@ class LiveIso(bootable_image.BootableImage):
             else:
                 raise AssertionError('Missing required Module: %s' % modName)
 
-        if self.release.getDataValue('unionfs'):
+        if self.product.getDataValue('unionfs'):
             macros['mountCmd'] = """echo Making system mount points
 mkdir /sysroot1
 mkdir /sysroot2
@@ -221,7 +221,7 @@ mount -o defaults --ro -t iso9660 /dev/loop0 /sysroot
             os.path.join(self.fakeroot, 'boot'), 'vmlinuz.*')]
 
         if len(allKernels) > 1:
-            if self.release.getDataValue('unionfs'):
+            if self.product.getDataValue('unionfs'):
                 raise AssertionError("Multiple kernels detected. The most "
                                      "likely cause is a mismatch between the "
                                      "kernel in group-core and the kernel "
@@ -237,11 +237,11 @@ mount -o defaults --ro -t iso9660 /dev/loop0 /sysroot
                           os.path.join(self.liveDir, 'isolinux.bin'))
 
         f = open(os.path.join(self.liveDir, 'isolinux.cfg'), 'w')
-        f.write(isolinuxCfg % (self.release.getName(), self.getVolName()))
+        f.write(isolinuxCfg % (self.product.getName(), self.getVolName()))
         f.close()
 
         # tweaks to make read-only filesystem possible.
-        if not self.release.getDataValue('unionfs'):
+        if not self.product.getDataValue('unionfs'):
             util.mkdirChain(os.path.join(self.fakeroot, 'ramdisk'))
             util.mkdirChain(os.path.join(self.fakeroot, 'etc', 'sysconfig'))
             f = open(os.path.join(self.fakeroot, 'etc', 'sysconfig', 'readonly-root'), 'w')
@@ -272,7 +272,7 @@ mount -o defaults --ro -t iso9660 /dev/loop0 /sysroot
 
         isoName = self.isoName(self.liveISO)
         # zip the final product if the main image wasn't compressed already
-        if not self.release.getDataValue('zisofs'):
+        if not self.product.getDataValue('zisofs'):
             zippedImage = self.liveISO + '.gz'
             util.execute('gzip -9 < %s > %s' % (self.liveISO, zippedImage))
             os.unlink(self.liveISO)
@@ -297,7 +297,7 @@ mount -o defaults --ro -t iso9660 /dev/loop0 /sysroot
             self.makeLiveCdTree()
 
             # and instantiate the hard disk image
-            self.createImage(self.release.getDataValue('zisofs') and \
+            self.createImage(self.product.getDataValue('zisofs') and \
                              'zisofs' or 'isofs')
 
             # now merge them. the hard disk image must be inserted into the iso
@@ -309,7 +309,7 @@ mount -o defaults --ro -t iso9660 /dev/loop0 /sysroot
         return self.moveToFinal(imagesList,
                                 os.path.join(self.cfg.finishedPath,
                                              self.project.getHostname(),
-                                             str(self.release.getId())))
+                                             str(self.product.getId())))
 
     def __init__(self, *args, **kwargs):
         res = bootable_image.BootableImage.__init__(self, *args, **kwargs)
@@ -320,7 +320,7 @@ mount -o defaults --ro -t iso9660 /dev/loop0 /sysroot
         # swap will be removed by toolkit_init
         self.swapSize = 134217728
         self.fallback = os.path.join(self.imgcfg.fallbackDir,
-                                     self.release.getArch())
+                                     self.product.getArch())
         self.addJournal = False
         # the inner image does not need to be bootable
         self.makeBootable = False

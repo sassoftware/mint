@@ -84,7 +84,7 @@ class DatabaseTable(object):
     those indeces
     """
 
-    schemaVersion = 19
+    schemaVersion = 20
     name = "Table"
     fields = []
     createSQL = "CREATE TABLE Table ();"
@@ -257,6 +257,24 @@ class KeyedTable(DatabaseTable):
         except sqlerrors.ColumnNotUnique:
             self.db.rollback()
             raise DuplicateItem(self.name)
+        except:
+            self.db.rollback()
+            raise
+
+        return True
+
+    def delete(self, id):
+        """
+        Deletes a row in the database.
+        @param id: primary key of row to delete.
+        @return: True on success
+        @rtype: bool
+        """
+        stmt = "DELETE FROM %s WHERE %s=?" % (self.name, self.key)
+        cu = self.db.cursor()
+        try:
+            cu.execute(stmt, id)
+            self.db.commit()
         except:
             self.db.rollback()
             raise

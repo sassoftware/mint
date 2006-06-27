@@ -5,7 +5,7 @@
 
 import sys
 
-from mint.releasetemplates import BooleanOption, IntegerOption
+from mint.producttemplates import BooleanOption, IntegerOption
 
 # this must be redefined in each template module due to sys.modules[__name__]
 class Template(dict):

@@ -45,7 +45,7 @@
         <div id="layout">
             <div id="left" class="side">
                 ${projectResourcesMenu()}
-                ${releasesMenu(project.getReleases(), isOwner)}
+                ${productsMenu(project.getProducts(), isOwner)}
                 ${commitsMenu(project.getCommits())}
             </div>
             <div id="spanright">

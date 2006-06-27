@@ -24,7 +24,7 @@ class JobsTable(database.KeyedTable):
     createSQL = """
                 CREATE TABLE Jobs (
                     jobId           %(PRIMARYKEY)s,
-                    releaseId       INT,
+                    productId       INT,
                     groupTroveId    INT,
                     owner           BIGINT,
                     userId          INT,
@@ -32,15 +32,14 @@ class JobsTable(database.KeyedTable):
                     statusMessage   TEXT,
                     timeSubmitted   DOUBLE,
                     timeStarted     DOUBLE,
-                    timeFinished    DOUBLE
-                )"""
+                    timeFinished    DOUBLE)"""
 
-    fields = ['jobId', 'releaseId', 'groupTroveId', 'owner', 'userId',
+    fields = ['jobId', 'productId', 'groupTroveId', 'owner', 'userId',
               'status', 'statusMessage', 'timeSubmitted',
               'timeStarted', 'timeFinished']
 
-    indexes = {"JobsReleaseIdx": """CREATE INDEX JobsReleaseIdx
-                                        ON Jobs(releaseId)""",
+    indexes = {"JobsProductIdx": """CREATE INDEX JobsProductIdx
+                                        ON Jobs(productId)""",
                "JobsGroupTroveIdx": """CREATE INDEX JobsGroupTroveIdx
                                            ON Jobs(groupTroveId)""",
                "JobsUserIdx": "CREATE INDEX JobsUserIdx ON Jobs(userId)"}
@@ -57,7 +56,7 @@ class JobsTable(database.KeyedTable):
             if dbversion == 12 and not self.initialCreation:
                 cu = self.db.cursor()
                 cu.execute("ALTER TABLE Jobs ADD COLUMN timeSubmitted DOUBLE")
-            return dbversion >= 12
+            return dbversion >= 19
         return True
 
     def get(self, id):
@@ -75,8 +74,8 @@ class Job(database.TableObject):
     def getId(self):
         return self.id
 
-    def getReleaseId(self):
-        return self.releaseId
+    def getProductId(self):
+        return self.productId
 
     def getGroupTroveId(self):
         return self.groupTroveId
@@ -111,27 +110,27 @@ class Job(database.TableObject):
             val = None
         return val
 
-class ImageFilesTable(database.KeyedTable):
-    name = 'ImageFiles'
+class ProductFilesTable(database.KeyedTable):
+    name = 'ProductFiles'
     key = 'fileId'
     createSQL = """
-                CREATE TABLE ImageFiles (
+                CREATE TABLE ProductFiles (
                     fileId      %(PRIMARYKEY)s,
-                    releaseId   INT,
+                    productId   INT,
                     idx         INT,
                     filename    CHAR(255),
                     title       CHAR(255) DEFAULT ''
                 );"""
-    fields = ['fileId', 'releaseId', 'idx', 'filename', 'title']
+    fields = ['fileId', 'productId', 'idx', 'filename', 'title']
 
-    indexes = {"ImageFilesReleaseIdx": """CREATE INDEX ImageFilesReleaseIdx
-                                              ON ImageFiles(releaseId)"""}
+    indexes = {"ProductFilesProductIdx": """CREATE INDEX ProductFilesProductIdx
+                                              ON ProductFiles(productId)"""}
 
     def versionCheck(self):
         dbversion = self.getDBVersion()
         if dbversion != self.schemaVersion:
             if dbversion == 1 and not self.initialCreation:
-                sql = """ALTER TABLE ImageFiles ADD COLUMN title STR DEFAULT ''"""
+                sql = """ALTER TABLE ProductFiles ADD COLUMN title STR DEFAULT ''"""
                 cu = self.db.cursor()
                 cu.execute(sql)
             return dbversion >= 1

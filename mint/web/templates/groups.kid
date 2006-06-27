@@ -14,7 +14,7 @@
         <div id="layout">
             <div id="left" class="side">
                 ${projectResourcesMenu()}
-                ${releasesMenu(publishedReleases, isOwner)}
+                ${productsMenu(publishedProducts, isOwner)}
                 ${commitsMenu(project.getCommits())}
             </div>
             <div id="right" class="side">
@@ -34,7 +34,7 @@
                 them to the current group.  When you are done adding
                 packages, you can cook the group, which commits it into
                 your project's repository.  At that point, you can create a
-                release based on the group.</p>
+                product based on the group.</p>
 
                 <h2>Current Group</h2>
 

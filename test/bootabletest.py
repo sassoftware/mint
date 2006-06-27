@@ -41,21 +41,21 @@ class BootableImageTest(MintRepositoryHelper):
                 MINT_PROJECT_DOMAIN)
         project = client.getProject(projectId)
 
-        release = client.newRelease(projectId, "Test Release")
-        release.setTrove(trove.getName(), trove.getVersion().freeze(), trove.getFlavor().freeze())
-        release.setDataValue("installLabelPath", "conary.rpath.com@rpl:1",
+        product = client.newProduct(projectId, "Test Product")
+        product.setTrove(trove.getName(), trove.getVersion().freeze(), trove.getFlavor().freeze())
+        product.setDataValue("installLabelPath", "conary.rpath.com@rpl:1",
             dataType = data.RDT_STRING, validate = False)
-        release.setDataValue("autoResolve", False,
+        product.setDataValue("autoResolve", False,
             dataType = data.RDT_BOOL, validate = False)
-        release.setDataValue("freespace", 512, dataType = data.RDT_INT,
+        product.setDataValue("freespace", 512, dataType = data.RDT_INT,
             validate = False)
-        release.setDataValue("swapSize", 0, dataType = data.RDT_INT,
+        product.setDataValue("swapSize", 0, dataType = data.RDT_INT,
             validate = False)
 
-        job = client.startImageJob(release.id)
+        job = client.startImageJob(product.id)
         isocfg = self.writeIsoGenCfg()
 
-        bi = subclass(client, isocfg, job, release, project)
+        bi = subclass(client, isocfg, job, product, project)
         bi.conarycfg = self.cfg
 
         bi.imgcfg.dataDir = os.path.normpath("../scripts/DiskImageData/")

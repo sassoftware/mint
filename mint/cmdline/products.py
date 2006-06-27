@@ -5,7 +5,7 @@
 #
 import time
 
-from mint import releasetypes
+from mint import producttypes
 from mint import jobstatus
 from mint.cmdline import commands
 
@@ -14,9 +14,9 @@ from conary.lib import options, log
 from conary.conaryclient.cmdline import parseTroveSpec
 
 
-def waitForRelease(client, releaseId, interval = 5):
-    release = client.getRelease(releaseId)
-    job = release.getJob()
+def waitForProduct(client, productId, interval = 5):
+    product = client.getProduct(productId)
+    job = product.getJob()
 
     while job.status in (jobstatus.WAITING, jobstatus.RUNNING):
         time.sleep(interval)
@@ -25,11 +25,11 @@ def waitForRelease(client, releaseId, interval = 5):
     log.info("Job ended with '%s' status: %s" % (jobstatus.statusNames[job.status], job.statusMessage))
 
 
-class ReleaseCreateCommand(commands.RBuilderCommand):
-    commands = ['release-create']
+class ProductCreateCommand(commands.RBuilderCommand):
+    commands = ['product-create']
     paramHelp = "<project name> <troveSpec> <image type>"
 
-    docs = {'wait' : 'wait until a release job finishes'}
+    docs = {'wait' : 'wait until a product job finishes'}
 
     def addParameters(self, argDef):
          commands.RBuilderCommand.addParameters(self, argDef)
@@ -41,36 +41,36 @@ class ReleaseCreateCommand(commands.RBuilderCommand):
         if len(args) < 3:
             return self.usage()
 
-        projectName, troveSpec, imageType = args
+        projectName, troveSpec, productType = args
         project = client.getProjectByHostname(projectName)
-        release = client.newRelease(project.id, project.name)
+        product = client.newProduct(project.id, project.name)
 
         n, v, f = parseTroveSpec(troveSpec)
         assert(n and v and f is not None)
         v = versions.VersionFromString(v)
         v.resetTimeStamps(0)
-        release.setTrove(n, v.freeze(), f.freeze())
+        product.setTrove(n, v.freeze(), f.freeze())
 
-        assert(imageType.upper() in releasetypes.validImageTypes)
-        release.setImageTypes([releasetypes.validImageTypes[imageType.upper()]])
+        assert(productType.upper() in producttypes.validProductTypes)
+        product.setProductType(producttypes.validProductTypes[productType.upper()])
 
-        job = client.startImageJob(release.id)
-        log.info("Release %d job started (job id %d)." % (release.id, job.id))
+        job = client.startImageJob(product.id)
+        log.info("Product %d job started (job id %d)." % (product.id, job.id))
         if wait:
-            waitForRelease(client, release.id)
-        return release.id
-commands.register(ReleaseCreateCommand)
+            waitForProduct(client, product.id)
+        return product.id
+commands.register(ProductCreateCommand)
 
 
-class ReleaseWaitCommand(commands.RBuilderCommand):
-    commands = ['release-wait']
-    paramHelp = "<release id>"
+class ProductWaitCommand(commands.RBuilderCommand):
+    commands = ['product-wait']
+    paramHelp = "<product id>"
 
     def runCommand(self, client, cfg, argSet, args):
         args = args[1:]
         if len(args) < 1:
             return self.usage()
 
-        releaseId = int(args[0])
-        waitForRelease(client, releaseId)
-commands.register(ReleaseWaitCommand)
+        productId = int(args[0])
+        waitForProduct(client, productId)
+commands.register(ProductWaitCommand)

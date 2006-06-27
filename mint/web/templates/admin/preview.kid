@@ -3,7 +3,7 @@
 import time
 from mint import userlevels
 from mint import searcher
-from mint import releasetypes
+from mint import producttypes
 from mint.helperfuncs import truncateForDisplay
 from mint.client import upstream
 
@@ -22,7 +22,7 @@ from mint.client import upstream
         <link rel="alternate" type="application/rss+xml"
               title="New ${cfg.productName} Projects" href="http://${cfg.siteHost}${cfg.basePath}rss?feed=newProjects" />
         <link rel="alternate" type="application/rss+xml"
-              title="New ${cfg.productName} Releases" href="http://${cfg.siteHost}${cfg.basePath}rss?feed=newReleases" />
+              title="New ${cfg.productName} Products" href="http://${cfg.siteHost}${cfg.basePath}rss?feed=newProducts" />
     </head>
     <body onload="roundElement('previewMessage')">
 	<div id="previewMessage" style="background-color: #EF6064; font-size: 14pt; color: white; text-align:center; margin-bottom: 20px;">Preview Mode.  To exit, click your browser's 'back' button.<div style="text-align: right; font-size: 9pt; margin-right: 5px; cursor: pointer;" onclick="var e = document.getElementById('previewMessage');e.parentNode.removeChild(e);">close</div></div>

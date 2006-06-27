@@ -23,17 +23,17 @@ class UnknownException(Exception):
         self.eName = eName
         self.eArgs = eArgs
 
-class ReleasePublished(MintError):
+class ProductMissing(MintError):
     def __str__(self):
-        return "Cannot alter a release once it is published."
+        return "The referenced product does not exist."
 
-class ReleaseMissing(MintError):
+class ProductPublished(MintError):
     def __str__(self):
-        return "The referenced release does not exist."
+        return "The referenced product is already part of a published release."
 
-class ReleaseEmpty(MintError):
+class ProductEmpty(MintError):
     def __str__(self):
-        return "The referenced release has no files and cannot be published."
+        return "The referenced product has no files and cannot be published."
 
 class JobserverVersionMismatch(MintError):
     def __str__(self):

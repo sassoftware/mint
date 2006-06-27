@@ -11,7 +11,7 @@ from mint import userlevels
 -->
     <?python
         isOwner = (userLevel == userlevels.OWNER or auth.admin)
-        releases = project.getReleases(showUnpublished = False)
+        products = project.getProducts()
         commits = project.getCommits()
         protocol = 'http'
         if cfg.SSL:
@@ -24,7 +24,7 @@ from mint import userlevels
         <div id="layout" class="helpPage">
             <div id="left" class="side">
                 ${projectResourcesMenu()}
-                ${releasesMenu(releases, isOwner)}
+                ${productsMenu(products, isOwner)}
                 ${commitsMenu(commits)}
             </div>
             <div id="right" class="side">

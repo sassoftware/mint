@@ -17,7 +17,7 @@ from mint_rephelp import MINT_HOST, MINT_DOMAIN, MINT_PROJECT_DOMAIN
 
 from mint import shimclient
 from mint import config
-from mint import releasetypes
+from mint import producttypes
 from mint.distro.flavors import stockFlavors
 from mint import server
 from mint import userlevels
@@ -26,10 +26,10 @@ from conary import dbstore
 from conary.deps import deps
 from conary.lib import util
 
-def stockReleaseFlavor(db, releaseId, arch = "x86_64"):
+def stockProductFlavor(db, productId, arch = "x86_64"):
     cu = db.cursor()
     flavor = deps.parseFlavor(stockFlavors['1#' + arch]).freeze()
-    cu.execute("UPDATE Releases set troveFlavor=? WHERE releaseId=?", flavor, releaseId)
+    cu.execute("UPDATE Products set troveFlavor=? WHERE productId=?", flavor, productId)
     db.commit()
 
 
@@ -161,7 +161,10 @@ class FixtureCache(object):
                 - developer (who is a developer in the "foo" project)
                 - user (a user or watcher of the "foo" project
                 - nobody (a user with no allegiance to any project)
-            - A single release inside the "foo" project.
+            - A published release object containing one product (see below)
+            - Two products inside the "foo" project:
+                - one published
+                - one unpublished
         @param cfg: The current effective Mint configuration.
         @return: A 2-tuple consisting of the current Mint configuration and a
             a dictionary containing the following:
@@ -172,7 +175,7 @@ class FixtureCache(object):
                 - C{developer} - the id of the user "developer"
                 - C{nobody} - the id of the user "nobody"
                 - C{projectId} - the id of the "Foo" project
-                - C{releaseId} - the id of the release in the "Foo" project
+                - C{productId} - the id of the product in the "Foo" project
         """
 
         # connect to the database and open a MintServer instance
@@ -201,9 +204,21 @@ class FixtureCache(object):
         userProject = userClient.getProject(projectId)
         userProject.addMemberById(userId, userlevels.USER)
 
-        # create a release for the "foo" project called "Test Release"
-        release = client.newRelease(projectId, "Test Release")
-        stockReleaseFlavor(db, release.id)
+        # create a product for the "foo" project called "Test Product"
+        product = client.newProduct(projectId, "Test Product")
+        product.setTrove("group-dist", "/testproject." + \
+                MINT_PROJECT_DOMAIN + "@rpl:devel/1.0-1-1", "1#x86")
+        stockProductFlavor(db, product.id)
+
+        # create another product for the "foo" project and publish it
+        pubProduct = client.newProduct(projectId, "Test Published Product")
+        pubProduct.setProductType(producttypes.STUB_IMAGE)
+        pubProduct.setFiles([["file", "file title 1"]])
+        pubProduct.setTrove("group-dist", "/testproject." + \
+                MINT_PROJECT_DOMAIN + "@rpl:devel/1.0-2-1", "1#x86")
+        stockProductFlavor(db, pubProduct.id)
+        pubRelease = client.newPublishedRelease(projectId)
+        pubRelease.addProduct(pubProduct.id)
 
         # create a group trove for the "foo" project
         groupTrove = client.createGroupTrove(projectId, 'group-test', '1.0.0',
@@ -215,7 +230,9 @@ class FixtureCache(object):
                       'developer':      developerId,
                       'user':           userId,
                       'nobody':         nobodyId,
-                      'releaseId':      release.id,
+                      'productId':      product.id,
+                      'pubProductId':   pubProduct.id,
+                      'pubReleaseId':   pubRelease.id,
                       'groupTroveId':   groupTrove.id }
 
 
@@ -228,7 +245,7 @@ class FixtureCache(object):
                 - test (a basic user with no special privileges)
             - A project called "foo"
                 - "test" is a member of "foo"
-                - A release called "Test Release"
+                - A product called "Test Product"
                 - A group trove called "testtrove"
                 - A single group trove cook job, in the "started" state
 
@@ -271,7 +288,7 @@ class FixtureCache(object):
                 - test (a basic user with no special privileges)
             - A project called "foo"
                 - "test" is a member of "foo"
-                - A release called "Test Release"
+                - A product called "Test Product"
                 - A single image job, in the "started" state
 
         @param cfg: The current effective Mint configuration.
@@ -287,12 +304,12 @@ class FixtureCache(object):
 
         projectId = client.newProject("Foo", "foo", "rpath.org")
 
-        release = client.newRelease(projectId, "Test Release")
-        release.setImageTypes([releasetypes.STUB_IMAGE])
+        product = client.newProduct(projectId, "Test Product")
+        product.setProductType(producttypes.STUB_IMAGE)
 
-        stockReleaseFlavor(db, release.getId())
+        stockProductFlavor(db, product.getId())
 
-        relJob = client.startImageJob(release.getId())
+        prodJob = client.startImageJob(product.getId())
         return cfg, { 'test': testId }
 
     def fixtureBothJobs(self, cfg):
@@ -305,7 +322,7 @@ class FixtureCache(object):
             - A project called "foo"
                 - "test" is a member of "foo"
                 - A group trove called "testtrove"
-                - A release called "Test Release"
+                - A product called "Test Product"
                 - A single image job, in the "started" state
                 - A single group trove cook job, in the "started" state
 
@@ -322,12 +339,12 @@ class FixtureCache(object):
         client = shimclient.ShimMintClient(cfg, ('test', 'testpass'))
         projectId = client.newProject("Foo", "foo", "rpath.org")
 
-        release = client.newRelease(projectId, "Test Release")
-        release.setImageTypes([releasetypes.STUB_IMAGE])
+        product = client.newProduct(projectId, "Test Product")
+        product.setProductType(producttypes.STUB_IMAGE)
 
-        stockReleaseFlavor(db, release.getId())
+        stockProductFlavor(db, product.getId())
 
-        relJob = client.startImageJob(release.getId())
+        prodJob = client.startImageJob(product.getId())
 
         groupTrove = client.createGroupTrove(projectId, 'group-test', '1.0.0',
             'No Description', False)

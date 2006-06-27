@@ -15,11 +15,11 @@ from mint.distro import bootable_image
 from mint.distro import gencslist
 
 from conary.lib import util
-from mint import releasetypes
+from mint import producttypes
 
 
 class NetbootImage(bootable_image.BootableImage):
-    fileType = releasetypes.typeNames[releasetypes.NETBOOT_IMAGE]
+    fileType = producttypes.typeNames[producttypes.NETBOOT_IMAGE]
 
     def write(self):
         try:
@@ -40,7 +40,7 @@ class NetbootImage(bootable_image.BootableImage):
         return self.moveToFinal(imagesList,
                                 os.path.join(self.cfg.finishedPath,
                                              self.project.getHostname(),
-                                             str(self.release.getId())))
+                                             str(self.product.getId())))
 
     def __init__(self, *args, **kwargs):
         res = bootable_image.BootableImage.__init__(self, *args, **kwargs)

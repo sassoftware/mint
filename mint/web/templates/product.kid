@@ -5,7 +5,7 @@
 # All Rights Reserved
 #
 from mint import jobstatus
-from mint import releasetypes
+from mint import producttypes
 from mint import userlevels
 from mint.helperfuncs import truncateForDisplay
 from mint.web.templatesupport import downloadTracker
@@ -16,19 +16,19 @@ from mint.web.templatesupport import downloadTracker
     <?python
     isOwner = (userLevel == userlevels.OWNER or auth.admin)
     if isOwner:
-        onload = "getReleaseStatus(" + str(release.getId()) + ");"
+        onload = "getProductStatus(" + str(product.getId()) + ");"
     else:
         onload = None
 
     bodyAttrs = {'onload': onload}
     ?>
     <head>
-        <title>${formatTitle('Project Release')}</title>
+        <title>${formatTitle('Project Product')}</title>
     </head>
     <body py:attrs="bodyAttrs">
         <?python
             if isOwner:
-                job = release.getJob()
+                job = product.getJob()
             else:
                 job = None
 
@@ -43,7 +43,7 @@ from mint.web.templatesupport import downloadTracker
         <div id="layout">
             <div id="left" class="side">
                 ${projectResourcesMenu()}
-                ${releasesMenu(publishedReleases, isOwner)}
+                ${productsMenu(publishedProducts, isOwner)}
                 ${commitsMenu(project.getCommits())}
             </div>
             <div id="right" class="side">
@@ -52,20 +52,20 @@ from mint.web.templatesupport import downloadTracker
             </div>
             <div id="middle">
                 <h1>${project.getNameForDisplay(maxWordLen=30)}</h1>
-                <h2>Release: ${name}</h2>
+                <h2>Product: ${name}</h2>
 
-                <p>This release was created from version <b>${truncateForDisplay(str(version.trailingRevision()), maxWordLen=50)}</b>
-                    of <b>${trove}</b> for <b>${release.getArch()}</b>.</p>
-                <p>This release is currently <b>${release.getPublished() and "published" or "unpublished"}</b>.</p>
+                <p>This product was created from version <b>${truncateForDisplay(str(version.trailingRevision()), maxWordLen=50)}</b>
+                    of <b>${trove}</b> for <b>${product.getArch()}</b>.</p>
+                <p>This product is currently <b>${product.getPublished() and "published" or "unpublished"}</b>.</p>
 
                 <h3>Description</h3>
-                <p>${release.getDesc().strip() or "Release has no description."}</p>
+                <p>${product.getDesc().strip() or "Product has no description."}</p>
 
 
                 <div py:strip="True" py:if="isOwner">
                     <h3>Creation Status</h3>
 
-                    <div py:if="isOwner and not release.getPublished()" id="jobStatusDingus">
+                    <div py:if="isOwner and not product.getPublished()" id="jobStatusDingus">
                         <div>
                             <img src="${cfg.staticPath}apps/mint/images/circle-ball-dark-antialiased.gif" id="spinner" style="float: right;"/>
                             <div id="statusMessage" class="running" />
@@ -73,26 +73,26 @@ from mint.web.templatesupport import downloadTracker
 
                         <ul id="editOptions" py:attrs="{'style': editOptionsStyle}">
                             <li>
-                                <a href="${basePath}editRelease?releaseId=${release.getId()}">Edit Release</a>
+                                <a href="${basePath}editProduct?productId=${product.getId()}">Edit Product</a>
                             </li>
                             <li>
-                                <a onclick="javascript:startImageJob(${release.getId()});" href="#">Recreate Release</a>
+                                <a onclick="javascript:startImageJob(${product.getId()});" href="#">Recreate Product</a>
                             </li>
-                            <li py:if="not release.getPublished() and files">
-                                 <a onclick="javascript:setReleasePublished(${release.getId()});" href="#">Publish Release</a>
+                            <li py:if="not product.getPublished() and files">
+                                 <a onclick="javascript:setProductPublished(${product.getId()});" href="#">Publish Product</a>
                             </li>
                         </ul>
                         <ul id="editOptionsDisabled" py:attrs="{'style': editOptionsDisabledStyle}">
-                            <li>Edit Release</li>
-                            <li>Regenerate Release</li>
-                            <li>Publish Release</li>
+                            <li>Edit Product</li>
+                            <li>Regenerate Product</li>
+                            <li>Publish Product</li>
                         </ul>
                     </div>
                 </div>
 
 
-                <div id="downloads" py:if="not releaseInProgress">
-                    <h3><a py:if="release.hasVMwareImage()" title="Download VMware Player" href="http://www.vmware.com/download/player/"><img class="vmwarebutton" src="${cfg.staticPath}apps/mint/images/get_vmware_player.gif" alt="Download VMware Player" /></a>Downloads</h3>
+                <div id="downloads" py:if="not productInProgress">
+                    <h3><a py:if="product.hasVMwareImage()" title="Download VMware Player" href="http://www.vmware.com/download/player/"><img class="vmwarebutton" src="${cfg.staticPath}apps/mint/images/get_vmware_player.gif" alt="Download VMware Player" /></a>Downloads</h3>
                     <div py:strip="True" py:if="files">
                     <ul>
                         <li py:for="i, file in enumerate(files)">
@@ -102,13 +102,13 @@ from mint.web.templatesupport import downloadTracker
                             </a> (${file['size']/1048576}&nbsp;MB)
                         </li>
                     </ul>
-                    <div py:if="releasetypes.INSTALLABLE_ISO in release.imageTypes">
+                    <div py:if="producttypes.INSTALLABLE_ISO == product.productType">
                         <h4 onclick="javascript:toggle_display('file_help');" style="cursor: pointer;">What are these files?&nbsp;<img id="file_help_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" /></h4>
 
                         <div id="file_help" style="display: none;">
                             <p>The file(s) entitled <tt>Disc <em>N</em></tt>
                             represent the disc(s) required to install this
-                            release. These files are in ISO 9660 format, and can be
+                            product. These files are in ISO 9660 format, and can be
                             burned onto CD or DVD media using the CD/DVD burning
                             software of your choice. The installation process is
                             then started by booting your system from a disc
@@ -140,7 +140,7 @@ from mint.web.templatesupport import downloadTracker
                             </div>
 			</div>
 
-                        <div py:if="releasetypes.VMWARE_IMAGE in release.imageTypes">
+                        <div py:if="producttypes.VMWARE_IMAGE == product.productType">
                             <h4 onclick="javascript:toggle_display('file_help');" style="cursor: pointer;">What is this file?&nbsp;<img id="file_help_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" /></h4>
 
                             <div id="file_help" style="display: none;">
@@ -161,7 +161,7 @@ from mint.web.templatesupport import downloadTracker
                                 unzip files larger than 2GB.</p>
                             </div>
 			</div>
-			<div py:if="releasetypes.RAW_HD_IMAGE in release.imageTypes">
+			<div py:if="producttypes.RAW_HD_IMAGE == product.productType">
                             <h4 onclick="javascript:toggle_display('file_help');" style="cursor: pointer;">What is this file?&nbsp;<img id="file_help_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" /></h4>
 
                             <div id="file_help" style="display: none;">
@@ -178,7 +178,7 @@ from mint.web.templatesupport import downloadTracker
                                 command).</p>
                             </div>
                         </div>
-                        <div py:if="releasetypes.RAW_FS_IMAGE in release.imageTypes">
+                        <div py:if="producttypes.RAW_FS_IMAGE == product.productType">
                             <h4 onclick="javascript:toggle_display('file_help');" style="cursor: pointer;">What is this file?&nbsp;<img id="file_help_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" /></h4>
 
                             <div id="file_help" style="display: none;">
@@ -194,7 +194,7 @@ from mint.web.templatesupport import downloadTracker
                                 command).</p>
                             </div>
                         </div>
-                        <div py:if="releasetypes.TARBALL in release.imageTypes">
+                        <div py:if="producttypes.TARBALL == product.productType">
                             <h4 onclick="javascript:toggle_display('file_help');" style="cursor: pointer;">What is this file?&nbsp;<img id="file_help_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" /></h4>
 
                             <div id="file_help" style="display: none;">
@@ -205,7 +205,7 @@ from mint.web.templatesupport import downloadTracker
                                 command).</p>
                             </div>
                         </div>
-                        <div py:if="releasetypes.LIVE_ISO in release.imageTypes">
+                        <div py:if="producttypes.LIVE_ISO == product.productType">
                             <h4 onclick="javascript:toggle_display('file_help');" style="cursor: pointer;">What is this file?&nbsp;<img id="file_help_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" /></h4>
 
                             <div id="file_help" style="display: none;">
@@ -218,7 +218,7 @@ from mint.web.templatesupport import downloadTracker
                             </div>
                         </div>
                     </div>
-                    <p py:if="not files">Release has no downloadable files.</p>
+                    <p py:if="not files">Product has no downloadable files.</p>
                 </div>
 
             </div>

@@ -118,7 +118,7 @@ class InstallableIso(ImageGenerator):
     def _getUpdateJob(self, cclient, troveName):
         self.callback.setChangeSet(troveName)
         try:
-            dataDict = self.release.getDataDict()
+            dataDict = self.product.getDataDict()
             if troveName in dataDict:
                 spec = parseTroveSpec(dataDict[troveName])
             else:
@@ -139,9 +139,9 @@ class InstallableIso(ImageGenerator):
             return "%s=%s[%s]" % (trvName, trvVersion, trvFlavor)
 
     def _storeUpdateJob(self, uJob):
-        """Stores the version and flavor of an update job in the ReleaseData tables"""
+        """Stores the version and flavor of an update job in the ProductData tables"""
         troveSpec = self._getTroveSpec(uJob)
-        self.release.setDataValue(troveSpec.split("=")[0], troveSpec,
+        self.product.setDataValue(troveSpec.split("=")[0], troveSpec,
                                   dataType = RDT_STRING, validate = False)
 
     def getConaryClient(self, tmpRoot, arch):
@@ -178,12 +178,12 @@ class InstallableIso(ImageGenerator):
         bsFile = open(os.path.join(tmpPath, ".buildstamp"), "w")
         print >> bsFile, time.time()
         print >> bsFile, self.project.getName()
-        print >> bsFile, upstream(self.release.getTroveVersion())
+        print >> bsFile, upstream(self.product.getTroveVersion())
         print >> bsFile, self.productDir
-        print >> bsFile, self.release.getDataValue("bugsUrl")
-        print >> bsFile, "%s %s %s" % (self.release.getTroveName(),
-                                       self.release.getTroveVersion().asString(),
-                                       self.release.getTroveFlavor().freeze())
+        print >> bsFile, self.product.getDataValue("bugsUrl")
+        print >> bsFile, "%s %s %s" % (self.product.getTroveName(),
+                                       self.product.getTroveVersion().asString(),
+                                       self.product.getTroveFlavor().freeze())
         bsFile.close()
 
     def writeProductImage(self, topdir, arch):
@@ -258,7 +258,7 @@ class InstallableIso(ImageGenerator):
         stage2Path = tempfile.mkdtemp()
         call('/sbin/fsck.cramfs', topdir + '/rPath/base/stage2.img', '-x', stage2Path)
         call('cp', stage2Path + '/usr/lib/anaconda/constants.py', tmpPath)
-        betaNag = self.release.getDataValue('betaNag')
+        betaNag = self.product.getDataValue('betaNag')
         call('sed', '-i', 's/BETANAG = 1/BETANAG = %d/' % int(betaNag), tmpPath + '/constants.py')
         util.rmtree(stage2Path)
 
@@ -271,10 +271,10 @@ class InstallableIso(ImageGenerator):
         util.rmtree(autoGenPath)
 
     def buildIsos(self, topdir):
-        showMediaCheck = self.release.getDataValue('showMediaCheck')
+        showMediaCheck = self.product.getDataValue('showMediaCheck')
         isogenUid = os.geteuid()
         apacheGid = pwd.getpwnam('apache')[3]
-        outputDir = os.path.normpath(os.path.join(self.cfg.finishedPath, self.project.getHostname(), str(self.release.getId())))
+        outputDir = os.path.normpath(os.path.join(self.cfg.finishedPath, self.project.getHostname(), str(self.product.getId())))
         util.mkdirChain(outputDir)
         # add the group writeable bit and assign group ownership to apache
         os.chmod(outputDir, os.stat(outputDir)[0] & 0777 | 0020)
@@ -283,7 +283,7 @@ class InstallableIso(ImageGenerator):
         isoList = []
         isoNameTemplate = "%s-%s-%s-" % (self.project.getHostname(),
                                     upstream(self.troveVersion),
-                                    self.release.getArch())
+                                    self.product.getArch())
         sourceDir = os.path.normpath(topdir + "/../")
 
         for d in sorted(os.listdir(sourceDir)):
@@ -400,9 +400,9 @@ class InstallableIso(ImageGenerator):
     def _getTemplatePath(self):
         tmpDir = tempfile.mkdtemp()
         try:
-            print >> sys.stderr, "finding anaconda-templates for " + self.release.getArch()
+            print >> sys.stderr, "finding anaconda-templates for " + self.product.getArch()
             cclient = self.getConaryClient(tmpDir,
-                '1#' + self.release.getArch())
+                '1#' + self.product.getArch())
 
             cclient.cfg.installLabelPath.append(versions.Label(self.isocfg.templatesLabel))
 
@@ -445,7 +445,7 @@ class InstallableIso(ImageGenerator):
 
     def prepareTemplates(self, topdir):
         # hardlink template files to topdir
-        # templateDir = os.path.join(self.isocfg.templatePath, self.release.getArch())
+        # templateDir = os.path.join(self.isocfg.templatePath, self.product.getArch())
 
         # XXX enable the dynamic templates here
         templateDir = self._getTemplatePath() + "/unified"
@@ -470,7 +470,7 @@ class InstallableIso(ImageGenerator):
     def extractMediaTemplate(self, topdir):
         tmpRoot = tempfile.mkdtemp()
         try:
-            client = self.getConaryClient(tmpRoot, "1#" + self.release.getArch())
+            client = self.getConaryClient(tmpRoot, "1#" + self.product.getArch())
 
             print >> sys.stderr, "extracting ad-hoc content from " \
                   "media-template=%s" % client.cfg.installLabelPath[0].asString()
@@ -498,7 +498,7 @@ class InstallableIso(ImageGenerator):
             existingChangesets.add(path)
 
         tmpRoot = tempfile.mkdtemp()
-        client = self.getConaryClient(tmpRoot, "1#" + self.release.getArch())
+        client = self.getConaryClient(tmpRoot, "1#" + self.product.getArch())
         trvList = client.repos.findTrove(client.cfg.installLabelPath[0],\
                                  (self.troveName, str(self.troveVersion), self.troveFlavor),
                                  defaultFlavor = client.cfg.flavor)
@@ -526,15 +526,15 @@ class InstallableIso(ImageGenerator):
 
         # set up the topdir
         topdir = os.path.join(self.cfg.imagesPath, self.project.getHostname(),
-            self.release.getArch(), str(self.release.getId()), "unified")
+            self.product.getArch(), str(self.product.getId()), "unified")
         util.mkdirChain(topdir)
 
-        troveName, versionStr, flavorStr = self.release.getTrove()
+        troveName, versionStr, flavorStr = self.product.getTrove()
         self.troveName = troveName
         self.troveVersion = versions.ThawVersion(versionStr)
         self.troveFlavor = deps.deps.ThawFlavor(flavorStr)
 
-        maxIsoSize = int(self.release.getDataValue('maxIsoSize'))
+        maxIsoSize = int(self.product.getDataValue('maxIsoSize'))
 
         print >> sys.stderr, "Building ISOs of size: %d Mb" % \
               (maxIsoSize / 1048576)
@@ -548,7 +548,7 @@ class InstallableIso(ImageGenerator):
         csdir = self.prepareTemplates(topdir)
         cslist, groupcs = self.extractChangeSets(csdir)
 
-        arch = self.release.getArch()
+        arch = self.product.getArch()
         if arch == 'x86':
             anacondaArch = 'i386'
         else:
