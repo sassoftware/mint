@@ -254,6 +254,25 @@ class RepositoryTest(MintRepositoryHelper):
         troveNames = nc.troveNames(versions.Label("testproject.other.host@rpl:devel"))
         assert(troveNames == ['testcase:source'])
 
+    def testTroveHelpers(self):
+        self.openRepository()
+        client, userId = self.quickMintUser("testuser", "testpass")
+        projectId = self.newProject(client)
+
+        project = client.getProject(projectId)
+        self.makeSourceTrove("testcase", testRecipe)
+        labelStr = "testproject." + MINT_PROJECT_DOMAIN + "@rpl:devel"
+        self.cookFromRepository("testcase",
+            versions.Label(labelStr), ignoreDeps = True)
+
+        server = client.server._server
+
+        r = server.getAllTroveLabels(projectId, "testproject." + MINT_PROJECT_DOMAIN, "testcase")
+        assert(r == [labelStr])
+
+        r = server.getTroveVersions(projectId, labelStr, "testcase")
+        assert(r == {'/testproject.rpath.local2@rpl:devel/1.0-1-1': ['']})
+
 
 if __name__ == "__main__":
     testsuite.main()

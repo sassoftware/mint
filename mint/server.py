@@ -2320,6 +2320,34 @@ class MintServer(object):
         # group trove by major architecture
         return dictByArch(versionList, trove)
 
+    def _getConaryClient(self):
+        cfg = conarycfg.ConaryConfiguration(readConfigFiles = False)
+        if os.path.exists(os.path.join(self.cfg.dataPath, "config", "conaryrc")):
+            cfg.read(os.path.join(self.cfg.dataPath, "config", "conaryrc"))
+        return conaryclient.ConaryClient(cfg)
+
+    @typeCheck(int, ((str, unicode),), ((str, unicode),))
+    def getAllTroveLabels(self, projectId, serverName, troveName):
+        self._filterProjectAccess(projectId)
+
+        project = projects.Project(self, projectId)
+        cfg = project.getConaryConfig()
+        nc = conaryclient.ConaryClient(cfg).getRepos()
+
+        troves = nc.getAllTroveLeaves(str(serverName), {str(troveName): None})[troveName]
+        return list(set(str(x.branch().label()) for x in troves))
+
+    @typeCheck(int, ((str, unicode),), ((str, unicode),))
+    def getTroveVersions(self, projectId, labelStr, troveName):
+        self._filterProjectAccess(projectId)
+
+        project = projects.Project(self, projectId)
+        cfg = project.getConaryConfig()
+        nc = conaryclient.ConaryClient(cfg).getRepos()
+
+        troves = nc.getTroveVersionsByLabel({str(troveName): {versions.Label(str(labelStr)): None}})[troveName]
+        return dict((str(x), [y.freeze() for y in troves[x]]) for x in troves)
+
     @typeCheck(int)
     @requiresAuth
     def getGroupTroves(self, projectId):
