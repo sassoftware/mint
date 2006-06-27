@@ -96,7 +96,7 @@ class ProductTest(fixtures.FixturedUnitTest):
         self.assertRaises(ProductDataNameError,
             product.setDataValue, 'undefinedName', None, False)
 
-        product.setProductType([producttypes.STUB_IMAGE])
+        product.setProductType(producttypes.STUB_IMAGE)
 
         # test string behavior
         product.setDataValue('stringArg', 'foo')
@@ -145,7 +145,7 @@ class ProductTest(fixtures.FixturedUnitTest):
 
         client = self.getClient("owner")
         product = client.getProduct(data['productId'])
-        product.setProductType([producttypes.INSTALLABLE_ISO])
+        product.setProductType(producttypes.INSTALLABLE_ISO)
         assert(product.getProductType() == [producttypes.INSTALLABLE_ISO])
         assert(product.getDataTemplate()['showMediaCheck'])
         assert(product.getDataTemplate()['autoResolve'])
@@ -163,9 +163,10 @@ class ProductTest(fixtures.FixturedUnitTest):
 
     @fixtures.fixture("Full")
     def testPublished(self, db, data):
+        # FIXME: this is totally broken
         client = self.getClient("owner")
         product = client.getProduct(data['productId'])
-        product.setProductType([producttypes.STUB_IMAGE])
+        product.setProductType(producttypes.STUB_IMAGE)
         product.setFiles([["file1", "File Title 1"]])
         product.setPublished(True)
 
@@ -176,7 +177,7 @@ class ProductTest(fixtures.FixturedUnitTest):
                           'stringArg', 'bar')
 
         self.assertRaises(ProductPublished, product.setProductType,
-                          [producttypes.STUB_IMAGE])
+                          producttypes.STUB_IMAGE)
 
         self.assertRaises(ProductPublished, product.setFiles, list())
 
@@ -198,9 +199,10 @@ class ProductTest(fixtures.FixturedUnitTest):
 
     @fixtures.fixture("Full")
     def testDeleteProduct(self, db, data):
+        # FIXME: broken w/r/t new release arch
         client = self.getClient("owner")
         product = client.getProduct(data['productId'])
-        product.setProductType([producttypes.STUB_IMAGE])
+        product.setProductType(producttypes.STUB_IMAGE)
         product.setFiles([["file1", "File Title 1"]])
         product.setPublished(True)
 
@@ -223,7 +225,7 @@ class ProductTest(fixtures.FixturedUnitTest):
         # messing with that same product should now fail in a controlled
         # manner. no UnknownErrors allowed!
         try:
-            product.setProductType([producttypes.STUB_IMAGE])
+            product.setProductType(producttypes.STUB_IMAGE)
             self.fail("Allowed to set imgage type of a deleted product")
         except ProductMissing:
             pass
@@ -322,6 +324,7 @@ class ProductTest(fixtures.FixturedUnitTest):
 
     @fixtures.fixture("Empty")
     def testGetProductsForProjectOrder(self, db, data):
+        # FIXME broken w/r/t new release arch
         client = self.getClient("test")
         projectId = client.newProject("Foo", "foo", "rpath.org")
 
@@ -346,6 +349,7 @@ class ProductTest(fixtures.FixturedUnitTest):
 
     @fixtures.fixture("Full")
     def testPublishEmptyProduct(self, db, data):
+        # FIXME broken w/r/t new release arch
         client = self.getClient("owner")
         product = client.getProduct(data['productId'])
 
@@ -383,7 +387,7 @@ class ProductTest(fixtures.FixturedUnitTest):
         client = self.getClient("owner")
         product = client.getProduct(data['productId'])
 
-        product.setProductType([producttypes.RAW_FS_IMAGE])
+        product.setProductType(producttypes.RAW_FS_IMAGE)
 
         self.failIf(not isinstance(product.getDataValue('freespace'), int),
                     "freespace is not an integer")
@@ -395,6 +399,7 @@ class ProductTest(fixtures.FixturedUnitTest):
 
 class OldProductTest(MintRepositoryHelper):
     def testProductList(self):
+        # FIXME broken w/r/t new release arch
         client, userId = self.quickMintUser("testuser", "testpass")
         adminClient, adminuserId = self.quickMintAdmin("adminauth", "adminpass")
         projectId = client.newProject("Foo", "foo", "rpath.org")
@@ -484,7 +489,7 @@ class OldProductTest(MintRepositoryHelper):
         adminClient.hideProject(projectId)
 
         product = client.newProduct(projectId, 'product 1')
-        product.setProductType([producttypes.INSTALLABLE_ISO])
+        product.setProductType(producttypes.INSTALLABLE_ISO)
         product.setTrove("group-core",
                          "/testproject." + MINT_PROJECT_DOMAIN + \
                                  "@rpl:devel/0.0:1.0-1-1",

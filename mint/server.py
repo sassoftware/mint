@@ -29,6 +29,7 @@ from mint import pkgindex
 from mint import profile
 from mint import projects
 from mint import products
+from mint import pubreleases
 from mint import reports
 from mint import requests
 from mint import sessiondb
@@ -220,6 +221,7 @@ def getTables(db, cfg):
     d['selections'] = selections.FrontPageSelectionsTable(db, cfg)
     d['rMakeBuild'] = rmakebuild.rMakeBuildTable(db)
     d['rMakeBuildItems'] = rmakebuild.rMakeBuildItemsTable(db)
+    d['publishedReleases'] = pubreleases.PublishedReleasesTable(db)
     outDatedTables = [x for x in d.values() if not x.upToDate]
     while outDatedTables[:]:
         d['version'].bumpVersion()
@@ -412,6 +414,14 @@ class MintServer(object):
         cu = self.db.cursor()
         cu.execute("SELECT projectId FROM Products WHERE productId = ?",
                    productId)
+        res = cu.fetchall()
+        if len(res):
+            self._filterProjectAccess(res[0][0])
+
+    def _filterPublishedReleaseAccess(self, pubReleaseId):
+        cu = self.db.cursor()
+        cu.execute("""SELECT projectId FROM PublishedReleases
+                      WHERE pubReleaseId = ?""", pubReleaseId)
         res = cu.fetchall()
         if len(res):
             self._filterProjectAccess(res[0][0])
@@ -1710,6 +1720,16 @@ class MintServer(object):
         self.products.deleteProduct(productId)
         return True
 
+    @typeCheck(int, dict)
+    @requiresAuth
+    @private
+    def updateProduct(self, productId, valDict):
+        self._filterProductAccess(productId)
+        if len(valDict):
+            valDict.update({'timeUpdated': time.time(),
+                            'updatedBy':   self.auth.userId})
+            return self.products.update(productId, **valDict)
+
     # product data calls
     @typeCheck(int, str, ((str, int, bool),), int)
     @requiresAuth
@@ -1733,6 +1753,77 @@ class MintServer(object):
     def getProductDataDict(self, productId):
         self._filterProductAccess(productId)
         return self.productData.getDataDict(productId)
+
+    @typeCheck(int)
+    @requiresAuth
+    def newPublishedRelease(self, projectId):
+        self._filterProjectAccess(projectId)
+        timeCreated = time.time()
+        createdBy = self.auth.userId
+        return self.publishedReleases.new(projectId = projectId,
+                timeCreated = timeCreated, createdBy = createdBy,
+                visibility = pubreleases.VISIBILITY_PROJECT_ONLY)
+
+    @typeCheck(int)
+    @requiresAuth
+    def getPublishedRelease(self, pubReleaseId):
+        self._filterPublishedReleaseAccess(pubReleaseId)
+        return self.publishedReleases.get(pubReleaseId)
+
+    @typeCheck(int, dict)
+    @requiresAuth
+    @private
+    def updatePublishedRelease(self, pubReleaseId, valDict):
+        self._filterPublishedReleaseAccess(pubReleaseId)
+        if len(valDict):
+            valDict.update({'timeUpdated': time.time(),
+                            'updatedBy': self.auth.userId})
+            return self.publishedReleases.update(pubReleaseId, **valDict)
+
+    @typeCheck(int)
+    @requiresAuth
+    def deletePublishedRelease(self, pubReleaseId):
+        self._filterPublishedReleaseAccess(pubReleaseId)
+        cu = self.db.cursor()
+        cu.execute("""UPDATE Products SET pubReleaseId = NULL
+                      WHERE pubReleaseId = ?""", pubReleaseId)
+        self.db.commit()
+        self.publishedReleases.delete(pubReleaseId)
+        return True
+
+    @typeCheck(int)
+    @requiresAuth
+    @private
+    def getUnpublishedProductsForProject(self, projectId):
+        self._filterProjectAccess(projectId)
+        cu = self.db.cursor()
+        cu.execute("""SELECT productId FROM Products
+                      WHERE projectId = ? AND pubReleaseId IS NULL""",
+                      projectId)
+        res = cu.fetchall()
+        return [x[0] for x in res]
+
+    @typeCheck(int)
+    @requiresAuth
+    @private
+    def getProductsForPublishedRelease(self, pubReleaseId):
+        self._filterPublishedReleaseAccess(pubReleaseId)
+        cu = self.db.cursor()
+        cu.execute("""SELECT productId FROM Products
+                      WHERE pubReleaseId = ?""", pubReleaseId)
+        res = cu.fetchall()
+        return [x[0] for x in res]
+
+    @typeCheck(int)
+    @requiresAuth
+    @private
+    def getPublishedReleasesByProject(self, projectId):
+        self._filterProjectAccess(projectId)
+        cu = self.db.cursor()
+        cu.execute("""SELECT pubReleaseId FROM PublishedReleases
+                      WHERE projectId = ?""", projectId)
+        res = cu.fetchall()
+        return [x[0] for x in res]
 
     # job data calls
     @typeCheck(int, str, ((str, int, bool),), int)
@@ -1791,21 +1882,22 @@ class MintServer(object):
         self.products.update(productId, name = name)
         return True
 
-    @typeCheck(int, bool)
+    @typeCheck(int, int, bool)
     @requiresAuth
-    # FIXME -- not sure this exists like this, anymore
-    def setProductPublished(self, productId, published):
+    @private
+    def setProductPublished(self, productId, pubReleaseId, published):
         self._filterProductAccess(productId)
+        self._filterPublishedReleaseAccess(pubReleaseId)
+        # TODO check for existence of published release
         if not self.products.productExists(productId):
             raise ProductMissing()
         if published and not self.getProductFilenames(productId):
             raise ProductEmpty()
-        if self.products.getPublished(productId):
+        if published and self.products.getPublished(productId):
             raise ProductPublished()
-        timeStamp = time.time()
 
-        self.products.update(productId, published = int(published), timePublished = timeStamp)
-        return True
+        pubReleaseId = published and pubReleaseId or None
+        return self.updateProduct(productId, {'pubReleaseId': pubReleaseId })
 
     @typeCheck(int)
     @requiresAuth

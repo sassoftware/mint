@@ -14,6 +14,7 @@ from mint import grouptrove
 from mint import jobs
 from mint import projects
 from mint import products
+from mint import pubreleases
 from mint import users
 from mint import rmakebuild
 from mint.mint_error import MintError, UnknownException, PermissionDenied, \
@@ -313,6 +314,36 @@ class MintClient:
         """
         return [(x[0], x[1], self.getProduct(x[2])) for x in \
                 self.server.getProductList(limit, offset)]
+
+    def newPublishedRelease(self, projectId):
+        """
+        Create a new published release, which is a collection of 
+        products (images, group troves, etc.).
+        @param projectId: the project to be associated with the release
+        @returns: an object representing the new published release
+        @rtype: L{mint.pubreleases.PublishedRelease}
+        """
+        pubReleaseId = self.server.newPublishedRelease(projectId)
+        return self.getPublishedRelease(pubReleaseId)
+
+    def getPublishedRelease(self, pubReleaseId):
+        """
+        Get a published release by its id.
+        @param pubReleaseId: the id of the published release
+        @returns: an object representing the published release
+        @rtype: L{mint.pubreleases.PublishedRelease}
+        """
+        return pubreleases.PublishedRelease(self.server, pubReleaseId)
+
+    def deletePublishedRelease(self, pubReleaseId):
+        """
+        Delete a published release. This has the side effect of unlinking
+        any products associated with that release.
+        @param pubReleaseId: the id of the published release
+        @returns: True if successful, False otherwise
+        @rtype: bool
+        """
+        return self.server.deletePublishedRelease(pubReleaseId)
 
     def startImageJob(self, productId):
         """

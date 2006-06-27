@@ -34,6 +34,7 @@ python_files = \
 	       mirrorprimetest.py \
                producttest.py \
                projecttest.py \
+               pubreleasetest.py \
                recipes.py \
                repostest.py \
                reportstest.py \

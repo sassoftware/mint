@@ -263,6 +263,24 @@ class KeyedTable(DatabaseTable):
 
         return True
 
+    def delete(self, id):
+        """
+        Deletes a row in the database.
+        @param id: primary key of row to delete.
+        @return: True on success
+        @rtype: bool
+        """
+        stmt = "DELETE FROM %s WHERE %s=?" % (self.name, self.key)
+        cu = self.db.cursor()
+        try:
+            cu.execute(stmt, id)
+            self.db.commit()
+        except:
+            self.db.rollback()
+            raise
+
+        return True
+
     def search(self, columns, table, where, order, modified, limit, offset):
         """
         Returns a list of items as requested by L{columns} matching L{terms} of length L{limit} starting with item L{offset}.

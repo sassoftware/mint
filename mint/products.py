@@ -252,15 +252,13 @@ class Product(database.TableObject):
         else:
             return "none"
 
-    # FIXME
-    def setPublished(self, pubReleaseId):
-        return self.server.setProductPublished(self.productId, pubReleaseId)
+    def setPublished(self, pubReleaseId, published):
+        return self.server.setProductPublished(self.productId,
+                pubReleaseId, published)
 
-    # FIXME
     def getPublished(self):
-        return (self.pubReleaseId != null)
+        return self.pubReleaseId
 
-    # FIXME
     def getDataTemplate(self):
         if self.productType:
             return dataTemplates[self.productType]

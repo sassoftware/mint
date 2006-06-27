@@ -161,7 +161,10 @@ class FixtureCache(object):
                 - developer (who is a developer in the "foo" project)
                 - user (a user or watcher of the "foo" project
                 - nobody (a user with no allegiance to any project)
-            - A single product inside the "foo" project.
+            - A published release object containing one product (see below)
+            - Two products inside the "foo" project:
+                - one published
+                - one unpublished
         @param cfg: The current effective Mint configuration.
         @return: A 2-tuple consisting of the current Mint configuration and a
             a dictionary containing the following:
@@ -203,7 +206,19 @@ class FixtureCache(object):
 
         # create a product for the "foo" project called "Test Product"
         product = client.newProduct(projectId, "Test Product")
+        product.setTrove("group-dist", "/testproject." + \
+                MINT_PROJECT_DOMAIN + "@rpl:devel/1.0-1-1", "1#x86")
         stockProductFlavor(db, product.id)
+
+        # create another product for the "foo" project and publish it
+        pubProduct = client.newProduct(projectId, "Test Published Product")
+        pubProduct.setProductType(producttypes.STUB_IMAGE)
+        pubProduct.setFiles([["file", "file title 1"]])
+        pubProduct.setTrove("group-dist", "/testproject." + \
+                MINT_PROJECT_DOMAIN + "@rpl:devel/1.0-2-1", "1#x86")
+        stockProductFlavor(db, pubProduct.id)
+        pubRelease = client.newPublishedRelease(projectId)
+        pubRelease.addProduct(pubProduct.id)
 
         # create a group trove for the "foo" project
         groupTrove = client.createGroupTrove(projectId, 'group-test', '1.0.0',
@@ -216,6 +231,8 @@ class FixtureCache(object):
                       'user':           userId,
                       'nobody':         nobodyId,
                       'productId':      product.id,
+                      'pubProductId':   pubProduct.id,
+                      'pubReleaseId':   pubRelease.id,
                       'groupTroveId':   groupTrove.id }
 
 

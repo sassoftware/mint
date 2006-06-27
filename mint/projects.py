@@ -93,6 +93,7 @@ class Project(database.TableObject):
     def getMembers(self):
         return self.server.getMembersByProjectId(self.id)
 
+    # XXX is this needed anymore?  a: possibly...
     def getProducts(self):
         return [products.Product(self.server, x) for x \
                 in self.server.getProductsForProject(self.id)]
@@ -195,6 +196,11 @@ class Project(database.TableObject):
         else:
             return "http://%s%sproject/%s/" % (self.server._cfg.projectSiteHost, self.server._cfg.basePath, self.hostname)
 
+    def getUnpublishedProducts(self):
+        return self.server.getUnpublishedProductsForProject(self.id)
+
+    def getPublishedReleases(self):
+        return self.server.getPublishedReleasesByProject(self.id)
 
 class ProjectsTable(database.KeyedTable):
     name = 'Projects'
