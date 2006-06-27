@@ -1649,7 +1649,7 @@ class MintServer(object):
         cu.execute("""SELECT Projects.name, Projects.hostname, productId
                          FROM Products LEFT JOIN Projects ON Projects.projectId = Products.projectId
                          WHERE Projects.hidden=0
-                         ORDER BY timeCreated DESC LIMIT ? OFFSET ?""", limit, offset)
+                         ORDER BY Products.timeCreated DESC LIMIT ? OFFSET ?""", limit, offset)
         return [(x[0], x[1], int(x[2])) for x in cu.fetchall()]
 
     @typeCheck(str, str, str, str)
