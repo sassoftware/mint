@@ -662,8 +662,8 @@ class MintServer(object):
                     name = "%s (%s)" % (self.auth.username, self.auth.fullName)
                 else:
                     name = self.auth.username
-                import templates.joinRequest
-                message = templates.write(templates.joinRequest,
+                from mint.templates import joinRequest
+                message = templates.write(joinRequest,
                                           projectName = projectName, 
                                           comments = comments, cfg = self.cfg,
                                           displayEmail = self.auth.displayEmail,
@@ -2034,8 +2034,8 @@ class MintServer(object):
         @param jobserverVersion: string. version of the job server.
         @return: jobId of job to execute, or 0 for no job.
         """
-        import cooktypes
-        import producttypes
+        from mint import cooktypes
+        from mint import producttypes
         # scrub archTypes and jobTypes.
         maintenance.enforceMaintenanceMode( \
             self.cfg, auth = None, msg = "Repositories are currently offline.")
