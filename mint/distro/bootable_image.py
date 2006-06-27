@@ -17,7 +17,7 @@ import zipfile
 
 # mint imports
 from mint import mint_error
-from mint import releasetypes
+from mint import producttypes
 from mint.distro import gencslist
 from mint.distro.imagegen import ImageGenerator, MSG_INTERVAL
 from mint.client import upstream
@@ -646,8 +646,8 @@ quit
         util.rmtree(self.fakeroot)
         self.fakeroot = None
 
-    def __init__(self, client, cfg, job, release, project):
-        ImageGenerator.__init__(self, client, cfg, job, release, project)
+    def __init__(self, client, cfg, job, product, project):
+        ImageGenerator.__init__(self, client, cfg, job, product, project)
         # set default options for all bootable image types
         self.imgcfg = self.getConfig()
         self.addJournal = True
@@ -658,8 +658,8 @@ quit
         log.info('generating raw hd image with tmpdir %s', self.fakeroot)
 
         #Figure out what group trove to use
-        self.basetrove, versionStr, flavorStr = self.release.getTrove()
-        log.info('self.release.getTrove returned (%s, %s, %s)' % \
+        self.basetrove, versionStr, flavorStr = self.product.getTrove()
+        log.info('self.product.getTrove returned (%s, %s, %s)' % \
                  (self.basetrove, versionStr, flavorStr))
 
         #Thaw the version string
@@ -672,7 +672,7 @@ quit
         # set up configuration
         self.conarycfg = self.project.getConaryConfig()
 
-        self.arch = self.release.getArch()
+        self.arch = self.product.getArch()
         basefilename = "%(name)s-%(version)s-%(arch)s" % {
                 'name': self.project.getHostname(),
                 'version': upstream(version),

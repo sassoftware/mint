@@ -9,7 +9,7 @@ SUBDIRS = web distro reports templates cmdline
 python_files =			\
 	__init__.py		\
 	accesscontrol.py	\
-	applianceSpotlight.py		\
+	applianceSpotlight.py	\
 	checkhtml.py		\
 	client.py		\
 	config.py		\
@@ -31,13 +31,14 @@ python_files =			\
 	pkgindex.py		\
 	profile.py		\
 	projectlisting.py	\
+	products.py		\
 	projects.py		\
-	releases.py		\
-	releasetypes.py		\
-	releasetemplates.py	\
+	producttypes.py		\
+	producttemplates.py	\
+	pubreleases.py		\
 	requests.py		\
-	rmakebuild.py           \
-	rmakeconstants.py       \
+	rmakebuild.py		\
+	rmakeconstants.py	\
 	scriptlibrary.py	\
 	searcher.py		\
 	selections.py		\

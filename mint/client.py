@@ -13,11 +13,11 @@ from mint import database
 from mint import grouptrove
 from mint import jobs
 from mint import projects
-from mint import releases
+from mint import products
 from mint import users
 from mint import rmakebuild
 from mint.mint_error import MintError, UnknownException, PermissionDenied, \
-    ReleasePublished, ReleaseMissing, ReleaseEmpty, UserAlreadyAdmin, \
+    ProductPublished, ProductMissing, ProductEmpty, UserAlreadyAdmin, \
     AdminSelfDemotion, JobserverVersionMismatch, MaintenanceMode, \
     ParameterError, GroupTroveEmpty
 from mint.searcher import SearchTermsError
@@ -284,44 +284,44 @@ class MintClient:
         """
         return self.server.unhideProject(projectId)
 
-    def getRelease(self, releaseId):
+    def getProduct(self, productId):
         """
-        Retrieve a L{releases.Release} object by release id.
-        @param releaseId: the database id of the requested release.
-        @type releaseId: int
-        @returns: an object representing the requested release.
-        @rtype: L{releases.Release}
+        Retrieve a L{products.Product} object by product id.
+        @param productId: the database id of the requested product.
+        @type productId: int
+        @returns: an object representing the requested product.
+        @rtype: L{products.Product}
         """
-        return releases.Release(self.server, releaseId)
+        return products.Product(self.server, productId)
 
-    def newRelease(self, projectId, releaseName, published = False):
+    def newProduct(self, projectId, productName):
         """
-        Create a new release.
-        @param projectId: the project to be associated with the new release.
-        @param releaseName: name of the new release
-        @returns: an object representing the new release
-        @rtype: L{mint.releases.Release}
+        Create a new product.
+        @param projectId: the project to be associated with the new product.
+        @param productName: name of the new product
+        @returns: an object representing the new product
+        @rtype: L{mint.products.Product}
         """
-        releaseId = self.server.newRelease(projectId, releaseName, published)
-        return self.getRelease(releaseId)
+        productId = self.server.newProduct(projectId, productName)
+        return self.getProduct(productId)
 
-    def getReleaseList(self, limit=10, offset=0):
+    def getProductList(self, limit=10, offset=0):
         """
-        Get a list of the most recent releases as ordered by their published date.
-        @param limit: The number of releases to display
+        Get a list of the most recent products as ordered by their published date.
+        @param limit: The number of products to display
         @param offset: List @limit starting at item @offset
         """
-        return [(x[0], x[1], self.getRelease(x[2])) for x in \
-                self.server.getReleaseList(limit, offset)]
+        return [(x[0], x[1], self.getProduct(x[2])) for x in \
+                self.server.getProductList(limit, offset)]
 
-    def startImageJob(self, releaseId):
+    def startImageJob(self, productId):
         """
         Start a new image generation job.
-        @param releaseId: the release id which describes the image to be created.
+        @param productId: the product id which describes the image to be created.
         @return: an object representing the new job
         @rtype: L{mint.jobs.Job}
         """
-        jobId = self.server.startImageJob(releaseId)
+        jobId = self.server.startImageJob(productId)
         return self.getJob(jobId)
 
     def getJob(self, jobId):
@@ -579,12 +579,12 @@ class _Method(xmlrpclib._Method):
             raise users.UserInduction(exceptionArgs[0])
         elif exceptionName == "UserNotFound":
             raise UserNotFound(exceptionArgs[0])
-        elif exceptionName == "ReleasePublished":
-            raise ReleasePublished(exceptionArgs[0])
-        elif exceptionName == "ReleaseMissing":
-            raise ReleaseMissing(exceptionArgs[0])
-        elif exceptionName == "ReleaseEmpty":
-            raise ReleaseEmpty(exceptionArgs[0])
+        elif exceptionName == "ProductPublished":
+            raise ProductPublished(exceptionArgs[0])
+        elif exceptionName == "ProductMissing":
+            raise ProductMissing(exceptionArgs[0])
+        elif exceptionName == "ProductEmpty":
+            raise ProductEmpty(exceptionArgs[0])
         elif exceptionName == "AuthRepoError":
             raise users.AuthRepoError(exceptionArgs[0])
         elif exceptionName == "LabelMissing":

@@ -15,11 +15,11 @@ from mint.distro.imagegen import ImageGenerator, MSG_INTERVAL
 from mint.distro import bootable_image
 
 from conary.lib import util
-from mint import releasetypes
+from mint import producttypes
 
 
 class Tarball(bootable_image.BootableImage):
-    fileType = releasetypes.typeNames[releasetypes.TARBALL]
+    fileType = producttypes.typeNames[producttypes.TARBALL]
 
     def write(self):
         try:
@@ -37,12 +37,12 @@ class Tarball(bootable_image.BootableImage):
         return self.moveToFinal(imagesList,
                                 os.path.join(self.cfg.finishedPath,
                                              self.project.getHostname(),
-                                             str(self.release.getId())))
+                                             str(self.product.getId())))
 
     def __init__(self, *args, **kwargs):
         res = bootable_image.BootableImage.__init__(self, *args, **kwargs)
         self.freespace = 0
         self.addJournal = False
         self.makeBootable = False
-        self.swapSize = self.release.getDataValue("swapSize") * 1048576
+        self.swapSize = self.product.getDataValue("swapSize") * 1048576
         return res

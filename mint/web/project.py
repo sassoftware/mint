@@ -15,12 +15,12 @@ from mint import database
 from mint import mailinglists
 from mint import jobs
 from mint import jobstatus
-from mint import releases
-from mint import releasetypes
+from mint import products
+from mint import producttypes
 from mint import userlevels
 from mint import users
 
-from mint.releases import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM
+from mint.products import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM
 from mint.users import sendMailWithChecks
 from mint.web.webhandler import WebHandler, normPath, HttpNotFound
 from mint.web.decorators import ownerOnly, requiresAuth, requiresAdmin, \
@@ -105,37 +105,37 @@ class ProjectHandler(WebHandler):
     def conaryDevelCfg(self, auth):
         return self._write("conaryDevelCfg")
 
-    def releases(self, auth):
-        releases = self.project.getReleases(showUnpublished = True)
-        publishedReleases = [x for x in releases if x.getPublished()]
+    def products(self, auth):
+        products = self.project.getProducts()
+        publishedProducts = [x for x in products if x.getPublished()]
 
         # Group versions by name or default name (based on group trove).
-        # FIXME: this is a hack until we get a better way to do release
+        # FIXME: this is a hack until we get a better way to do product
         # management.
-        releasesByGroupTrove = {}
-        for r in releases:
+        productsByGroupTrove = {}
+        for r in products:
             k = r.getDefaultName()
-            releasesByVersion = releasesByGroupTrove.has_key(k) and releasesByGroupTrove[k] or []
-            releasesByVersion.append(r)
-            releasesByVersion.sort(key = lambda x: x.getArch())
-            releasesByGroupTrove[k] = releasesByVersion
+            productsByVersion = productsByGroupTrove.has_key(k) and productsByGroupTrove[k] or []
+            productsByVersion.append(r)
+            productsByVersion.sort(key = lambda x: x.getArch())
+            productsByGroupTrove[k] = productsByVersion
 
-        # return a list of items in releasesByGroupTrove for web display
-        releaseVersions = sorted(releasesByGroupTrove.items(),
-            key = lambda x: x[1][0], # first item in the releasesByVersion
+        # return a list of items in productsByGroupTrove for web display
+        productVersions = sorted(productsByGroupTrove.items(),
+            key = lambda x: x[1][0], # first item in the productsByVersion
             cmp = lambda x, y: cmp(x.getChangedTime(), y.getChangedTime()),
             reverse = True)
 
-        return self._write("releases", releases = releases,
-                publishedReleases = publishedReleases,
-                releaseVersions = releaseVersions)
+        return self._write("products", products = products,
+                publishedProducts = publishedProducts,
+                productVersions = productVersions)
 
     def groups(self, auth):
-        releases = self.project.getReleases(showUnpublished = True)
-        publishedReleases = [x for x in releases if x.getPublished()]
+        products = self.project.getProducts()
+        publishedProducts = [x for x in products if x.getPublished()]
         groupTrovesInProject = self.client.listGroupTrovesByProject(self.project.id)
 
-        return self._write("groups", publishedReleases = publishedReleases,
+        return self._write("groups", publishedProducts = publishedProducts,
             groupTrovesInProject = groupTrovesInProject)
 
     def _getBasicTroves(self):
@@ -317,27 +317,27 @@ class ProjectHandler(WebHandler):
             curGroupTrove = curGroupTrove)
 
     @ownerOnly
-    def newRelease(self, auth):
-        release = self.client.newRelease(self.project.getId(), self.project.getName())
+    def newProduct(self, auth):
+        product = self.client.newProduct(self.project.getId(), self.project.getName())
         # By default, Installable ISO images should be selected.
-        imageTypes = [ releasetypes.INSTALLABLE_ISO ]
-        release.setImageTypes(imageTypes)
+        productType = producttypes.INSTALLABLE_ISO
+        product.setProductType(productType)
 
-        return self._write("editRelease", isNewRelease = True,
-            release = release,
-            imageTypes = imageTypes,
+        return self._write("editProduct", isNewProduct = True,
+            product = product,
+            productType = productType,
             kwargs = {})
 
     @ownerOnly
-    @intFields(releaseId = -1)
+    @intFields(productId = -1)
     @strFields(trove = "")
-    def editRelease(self, auth, releaseId, trove):
+    def editProduct(self, auth, productId, trove):
 
-        release = self.client.getRelease(releaseId)
-        releaseName = release.getName()
-        imageTypes = release.getImageTypes()
+        product = self.client.getProduct(productId)
+        productName = product.getName()
+        productType = product.getProductType()
 
-        troveName, version, flavor = release.getTrove()
+        troveName, version, flavor = product.getTrove()
 
         versionStr = versions.ThawVersion(version)
         label = versionStr.branch().label()
@@ -345,8 +345,8 @@ class ProjectHandler(WebHandler):
         thawedFlavor = deps.ThawFlavor(flavor)
         arch = thawedFlavor.members[deps.DEP_CLASS_IS].members.keys()[0]
 
-        return self._write("editRelease", isNewRelease = False,
-            release = release,
+        return self._write("editProduct", isNewProduct = False,
+            product = product,
             trove = trove,
             troveName = troveName,
             label = label,
@@ -354,43 +354,41 @@ class ProjectHandler(WebHandler):
             version = version,
             flavor = flavor,
             arch = arch,
-            imageTypes = imageTypes,
+            productType = productType,
             kwargs = {})
 
     @requiresAuth
-    @intFields(releaseId = None)
+    @intFields(productId = None)
     @strFields(trove = None, version = None, desc = "")
-    def saveRelease(self, auth, releaseId, trove, version, desc, name,
+    def saveProduct(self, auth, productId, trove, version, desc, name,
                     **kwargs):
-        release = self.client.getRelease(releaseId)
+        product = self.client.getProduct(productId)
 
-        job = release.getJob()
+        job = product.getJob()
         if job and job.status in (jobstatus.WAITING, jobstatus.RUNNING):
-            self._addErrors("You cannot alter this release because a "
+            self._addErrors("You cannot alter this product because a "
                             "conflicting image is currently being generated.")
-            self._predirect("release?id=%d" % releaseId)
+            self._predirect("product?id=%d" % productId)
             return
 
         trove, label = trove.split("=")
         version, flavor = version.split(" ")
-        release.setTrove(trove, version, flavor)
-        release.setName(name)
-        release.setDesc(desc)
+        product.setTrove(trove, version, flavor)
+        product.setName(name)
+        product.setDesc(desc)
 
         flavor = deps.ThawFlavor(flavor)
         jobArch = flavor.members[deps.DEP_CLASS_IS].members.keys()[0]
         assert(jobArch in ('x86', 'x86_64'))
 
-        # handle imagetype check box state changes
-        imageTypes = []
+        # handle productType check box state changes
+        productType = int(kwargs['producttype'])
 
-        imageTypes.append(int(kwargs['imagetype']))
+        product.setProductType(productType)
 
-        release.setImageTypes(imageTypes)
-
-        # get the template from the release and handle any relevant args
+        # get the template from the product and handle any relevant args
         # remember that checkboxes don't pass args for unchecked boxxen
-        template = release.getDataTemplate()
+        template = product.getDataTemplate()
         for name in list(template):
             try:
                 val = kwargs[name]
@@ -405,64 +403,64 @@ class ProjectHandler(WebHandler):
                     val = False
                 else:
                     val = template[name][1]
-            release.setDataValue(name, val)
+            product.setDataValue(name, val)
 
         try:
-            job = self.client.startImageJob(releaseId)
+            job = self.client.startImageJob(productId)
         except jobs.DuplicateJob:
             pass
 
-        self._predirect("release?id=%d" % releaseId)
+        self._predirect("product?id=%d" % productId)
 
-    @intFields(releaseId = None)
+    @intFields(productId = None)
     @ownerOnly
-    def deleteRelease(self, auth, releaseId):
-        release = self.client.getRelease(releaseId)
-        release.deleteRelease()
-        self._predirect("release")
+    def deleteProduct(self, auth, productId):
+        product = self.client.getProduct(productId)
+        product.deleteProduct()
+        self._predirect("product")
 
     @intFields(id = None)
-    def release(self, auth, id):
-        releases = self.project.getReleases(showUnpublished = True)
-        publishedReleases = [x for x in releases if x.getPublished()]
-        release = self.client.getRelease(id)
-        releaseInProgress = False
+    def product(self, auth, id):
+        products = self.project.getProducts()
+        publishedProducts = [x for x in products if x.getPublished()]
+        product = self.client.getProduct(id)
+        productInProgress = False
         if auth.authorized:
-            releaseJob = release.getJob()
-            if releaseJob:
-                releaseInProgress = \
-                        (releaseJob.getStatus() <= jobstatus.RUNNING)
+            productJob = product.getJob()
+            if productJob:
+                productInProgress = \
+                        (productJob.getStatus() <= jobstatus.RUNNING)
 
         try:
-            trove, version, flavor = release.getTrove()
-            files = release.getFiles()
-        except releases.TroveNotSet:
-            self._predirect("editRelease?releaseId=%d" % release.id)
+            trove, version, flavor = product.getTrove()
+            files = product.getFiles()
+        except products.TroveNotSet:
+            self._predirect("editProduct?productId=%d" % product.id)
         else:
-            return self._write("release", release = release,
-                name = release.getName(),
-                isPublished = release.getPublished(),
+            return self._write("product", product = product,
+                name = product.getName(),
+                isPublished = product.getPublished(),
                 trove = trove, version = versions.ThawVersion(version),
                 flavor = deps.ThawFlavor(flavor),
-                releaseId = id, projectId = self.project.getId(),
-                publishedReleases = publishedReleases,
+                productId = id, projectId = self.project.getId(),
+                publishedProducts = publishedProducts,
                 files = files,
-                releaseInProgress = releaseInProgress)
+                productInProgress = productInProgress)
 
     @ownerOnly
-    @intFields(releaseId = None)
-    def publish(self, auth, releaseId):
-        release = self.client.getRelease(releaseId)
-        release.setPublished(True)
+    @intFields(productId = None)
+    def publish(self, auth, productId):
+        product = self.client.getProduct(productId)
+        product.setPublished(True)
 
-        self.predirect("release?id=%d" % releaseId)
+        self.predirect("product?id=%d" % productId)
 
     @ownerOnly
-    @intFields(releaseId = None)
-    def restartJob(self, auth, releaseId):
-        self.client.startImageJob(releaseId)
+    @intFields(productId = None)
+    def restartJob(self, auth, productId):
+        self.client.startImageJob(productId)
 
-        self._predirect("release?id=%d" % releaseId)
+        self._predirect("product?id=%d" % productId)
 
     def _mailingLists(self, auth, mlists, messages=[]):
         if not self.cfg.EnableMailLists:
@@ -766,26 +764,26 @@ class ProjectHandler(WebHandler):
             return self._write("confirm", message = "Are you sure you want to resign from this project?",
                 yesArgs = {'func':'resign', 'confirmed':'1'}, noLink = "/")
 
-    @strFields(feed= "releases")
+    @strFields(feed= "products")
     def rss(self, auth, feed):
-        if feed == "releases":
-            title = "%s releases" % self.project.getName()
-            link = "http://%s%sproject/%s/releases" % \
+        if feed == "products":
+            title = "%s products" % self.project.getName()
+            link = "http://%s%sproject/%s/products" % \
                 (self.cfg.siteHost, self.cfg.basePath, self.project.getHostname())
-            desc = "Current releases from %s" % self.project.getName()
+            desc = "Current products from %s" % self.project.getName()
 
-            releases = self.project.getReleases()
+            products = self.project.getProducts()
             items = []
-            for release in releases[:10]:
+            for product in products[:10]:
                 item = {}
-                item['title'] = "%s=%s" % (release.getTroveName(),
-                    release.getTroveVersion().trailingRevision().asString())
-                item['link'] = "http://%s%sproject/%s/release?id=%d" % \
-                    (self.cfg.siteHost, self.cfg.basePath, self.project.getHostname(), release.getId())
-                item['content'] = "A new version of %s has been released: %s version %s." % \
-                    (release.getName(), release.getTroveName(),
-                     release.getTroveVersion().trailingRevision().asString())
-                item['date_822'] = email.Utils.formatdate(release.getChangedTime())
+                item['title'] = "%s=%s" % (product.getTroveName(),
+                    product.getTroveVersion().trailingRevision().asString())
+                item['link'] = "http://%s%sproject/%s/product?id=%d" % \
+                    (self.cfg.siteHost, self.cfg.basePath, self.project.getHostname(), product.getId())
+                item['content'] = "A new version of %s has been productd: %s version %s." % \
+                    (product.getName(), product.getTroveName(),
+                     product.getTroveVersion().trailingRevision().asString())
+                item['date_822'] = email.Utils.formatdate(product.getChangedTime())
                 item['creator'] = "http://%s%s" % (self.siteHost, self.cfg.basePath)
                 items.append(item)
         else:

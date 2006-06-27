@@ -51,7 +51,7 @@ from mint import userlevels
                       </form>
                     </div>
                 </div>
-                ${releasesMenu(project.getReleases(), isOwner)}
+                ${productsMenu(project.getProducts(), isOwner)}
                 ${commitsMenu(project.getCommits())}
             </div>
             <div id="right" class="side">

@@ -12,7 +12,7 @@ testsuite.setup()
 import rephelp
 
 from mint.cmdline import RBuilderMain
-from mint.cmdline import releases
+from mint.cmdline import products
 
 from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import MINT_HOST, MINT_PROJECT_DOMAIN
@@ -39,36 +39,36 @@ class CmdLineTest(unittest.TestCase):
         finally:
             os.unlink(cfgFn)
 
-    def testReleaseCreate(self):
+    def testProductCreate(self):
         troveSpec = 'group-test=/testproject.%s@rpl:devel/1.0-1-1[is:x86]' % MINT_PROJECT_DOMAIN
-        self.checkRBuilder('release-create testproject %s installable_iso' % troveSpec,
-            'mint.cmdline.releases.ReleaseCreateCommand.runCommand',
-            [None, None, None, {}, ['release-create', 'testproject', troveSpec, 'installable_iso']])
+        self.checkRBuilder('product-create testproject %s installable_iso' % troveSpec,
+            'mint.cmdline.products.ProductCreateCommand.runCommand',
+            [None, None, None, {}, ['product-create', 'testproject', troveSpec, 'installable_iso']])
 
-        self.checkRBuilder('release-create testproject %s installable_iso --wait' % troveSpec,
-            'mint.cmdline.releases.ReleaseCreateCommand.runCommand',
-            [None, None, None, {'wait': True}, ['release-create', 'testproject', troveSpec, 'installable_iso']])
+        self.checkRBuilder('product-create testproject %s installable_iso --wait' % troveSpec,
+            'mint.cmdline.products.ProductCreateCommand.runCommand',
+            [None, None, None, {'wait': True}, ['product-create', 'testproject', troveSpec, 'installable_iso']])
 
-    def testReleaseWait(self):
-        self.checkRBuilder('release-wait 111',
-            'mint.cmdline.releases.ReleaseWaitCommand.runCommand',
-            [None, None, None, {}, ['release-wait', '111']])
+    def testProductWait(self):
+        self.checkRBuilder('product-wait 111',
+            'mint.cmdline.products.ProductWaitCommand.runCommand',
+            [None, None, None, {}, ['product-wait', '111']])
 
 
 class CmdLineFuncTest(MintRepositoryHelper):
-    def testReleaseCreate(self):
+    def testProductCreate(self):
         client, userId = self.quickMintUser("test", "testpass")
 
         projectId = client.newProject("Foo", "testproject", MINT_PROJECT_DOMAIN)
 
-        cmd = releases.ReleaseCreateCommand()
+        cmd = products.ProductCreateCommand()
         troveSpec = 'group-test=/testproject.%s@rpl:devel/1.0-1-1[is:x86]' % MINT_PROJECT_DOMAIN
-        cmd.runCommand(client, None, {}, ['release-create', 'testproject', troveSpec, 'installable_iso'])
+        cmd.runCommand(client, None, {}, ['product-create', 'testproject', troveSpec, 'installable_iso'])
 
         project = client.getProject(projectId)
-        release = project.getReleases(showUnpublished = True)[0]
-        assert(release.getTrove()[0] == 'group-test')
-        assert(release.getJob())
+        product = project.getProducts()[0]
+        assert(product.getTrove()[0] == 'group-test')
+        assert(product.getJob())
 
 
 if __name__ == "__main__":

@@ -16,7 +16,7 @@ import tempfile
 import mint_rephelp
 from mint_rephelp import MINT_PROJECT_DOMAIN, MINT_DOMAIN
 
-from mint import releasetypes
+from mint import producttypes
 
 from conary.lib import util
 
@@ -152,24 +152,24 @@ class SpiderPageTest(mint_rephelp.WebRepositoryHelper):
         finally:
             os.unlink(fn)
 
-        # make releases
+        # make products
         for i in range(2):
-            release = client.newRelease(projectId, "Test Release")
+            product = client.newProduct(projectId, "Test Product")
             # add timestamp field.
-            release.setTrove(trv.name(), trv.version.freeze(), "1#x86")
-            release.setFiles([["testimage.iso", "Test Image"]])
+            product.setTrove(trv.name(), trv.version.freeze(), "1#x86")
+            product.setFiles([["testimage.iso", "Test Image"]])
             imagePath = os.path.join(self.reposDir, "jobserver",
                                          "finished-images", project.hostname,
-                                         str(release.id))
+                                         str(product.id))
             util.mkdirChain(imagePath)
             f = open(os.path.join(imagePath, 'testimage.iso'), 'w')
             f.write('bogus image')
             f.close()
 
-            release.setDesc('')
-            release.setImageTypes([releasetypes.STUB_IMAGE])
+            product.setDesc('')
+            product.setProductType(producttypes.STUB_IMAGE)
             if not i:
-                release.setPublished(True)
+                product.setPublished(True)
 
         # compile regex expressions
         self.reLinks = re.compile("<a href=[^<>]*>", re.IGNORECASE)
