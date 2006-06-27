@@ -5,22 +5,22 @@
 
 import sys
 from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM
-from mint import releasetypes
+from mint import producttypes
 
-class ReleaseOption(tuple):
+class ProductOption(tuple):
     def __new__(self):
         return tuple.__new__(tuple, (self.type, self.default, self.prompt))
 
-class StringOption(ReleaseOption):
+class StringOption(ProductOption):
     type = RDT_STRING
 
-class IntegerOption(ReleaseOption):
+class IntegerOption(ProductOption):
     type = RDT_INT
 
-class BooleanOption(ReleaseOption):
+class BooleanOption(ProductOption):
     type = RDT_BOOL
 
-class EnumOption(ReleaseOption):
+class EnumOption(ProductOption):
     type = RDT_ENUM
 
     def __new__(self):
@@ -58,12 +58,12 @@ class showMediaCheck(BooleanOption):
 
 class betaNag(BooleanOption):
     default = False
-    prompt = 'This release is considered a beta'
+    prompt = 'This product is considered a beta'
 
 class maxIsoSize(EnumOption):
     default = '681574400'
     prompt = 'ISO Size'
-    options = releasetypes.discSizes
+    options = producttypes.discSizes
 
 class freespace(IntegerOption):
     default = 250
@@ -109,37 +109,37 @@ class enumArg(EnumOption):
 
 class StubImageTemplate(Template):
     __slots__ = ['boolArg', 'stringArg', 'intArg', 'enumArg']
-    id = releasetypes.STUB_IMAGE
+    id = producttypes.STUB_IMAGE
 
 class RawHdTemplate(Template):
     __slots__ = ['autoResolve', 'freespace', 'installLabelPath', 'swapSize']
-    id = releasetypes.RAW_HD_IMAGE
+    id = producttypes.RAW_HD_IMAGE
 
 class RawFsTemplate(Template):
     __slots__ = ['autoResolve', 'freespace', 'installLabelPath', 'swapSize']
-    id = releasetypes.RAW_FS_IMAGE
+    id = producttypes.RAW_FS_IMAGE
 
 class VmwareImageTemplate(Template):
     __slots__ = ['autoResolve', 'freespace', 'vmMemory', 'installLabelPath',
                  'swapSize']
-    id = releasetypes.VMWARE_IMAGE
+    id = producttypes.VMWARE_IMAGE
 
 class InstallableIsoTemplate(Template):
     __slots__ = ['autoResolve', 'maxIsoSize', 'bugsUrl', 'installLabelPath',
                  'showMediaCheck', 'betaNag']
-    id = releasetypes.INSTALLABLE_ISO
+    id = producttypes.INSTALLABLE_ISO
 
 class NetbootTemplate(Template):
     __slots__ = ['autoResolve', 'installLabelPath']
-    id = releasetypes.NETBOOT_IMAGE
+    id = producttypes.NETBOOT_IMAGE
 
 class LiveIsoTemplate(Template):
     __slots__ = ['autoResolve', 'installLabelPath', 'zisofs', 'unionfs']
-    id = releasetypes.LIVE_ISO
+    id = producttypes.LIVE_ISO
 
 class TarballTemplate(Template):
     __slots__ = ['autoResolve', 'installLabelPath', 'swapSize']
-    id = releasetypes.TARBALL
+    id = producttypes.TARBALL
 
 ########################
 
@@ -149,6 +149,6 @@ dataTemplates = {}
 for templateName in [x for x in sys.modules[__name__].__dict__.keys() \
                      if x.endswith('Template') and x != 'Template']:
     template = sys.modules[__name__].__dict__[templateName]()
-    dataHeadings[template.id] = releasetypes.typeNames[template.id] + \
+    dataHeadings[template.id] = producttypes.typeNames[template.id] + \
                                 ' Settings'
     dataTemplates[template.id] = template

@@ -15,7 +15,7 @@ from mint import mailinglists
 from mint import projectlisting
 from mint import searcher
 from mint import userlevels
-from mint import releases
+from mint import products
 from mint.mint_error import MintError
 
 from conary import dbstore
@@ -93,9 +93,9 @@ class Project(database.TableObject):
     def getMembers(self):
         return self.server.getMembersByProjectId(self.id)
 
-    def getReleases(self, showUnpublished = False):
-        return [releases.Release(self.server, x) for x \
-                in self.server.getReleasesForProject(self.id, showUnpublished)]
+    def getProducts(self):
+        return [products.Product(self.server, x) for x \
+                in self.server.getProductsForProject(self.id)]
 
     def getCommits(self):
         return self.server.getCommitsForProject(self.id)
@@ -632,7 +632,7 @@ class LabelsTable(database.KeyedTable):
         cu = self.db.cursor()
 
         cu.execute("""SELECT p.troveVersion, l.label
-                      FROM Releases p, Labels l
+                      FROM Products p, Labels l
                       WHERE p.projectId=?
                         AND l.projectId=p.projectId
                         AND l.labelId=?""",

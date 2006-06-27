@@ -77,7 +77,7 @@
                         The last step is to "cook" your software appliance.  Click "Cook this
                         Group" and watch as rBuilder Online assembles the packages you chose
                         into a complete system.  When the group is "Finished" cooking, you can
-                        go to the releases page to publish and share your work.
+                        go to the products page to publish and share your work.
                     </p>
                 </div>
             </div>

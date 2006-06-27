@@ -11,9 +11,9 @@ class StubImage(ImageGenerator):
     def write(self):
         f = os.path.join(self.cfg.finishedPath, "stub.iso")
 
-        releaseId = self.job.getReleaseId()
-        release = self.client.getRelease(releaseId)
-        stubContent = release.getDataValue('stringArg')
+        productId = self.job.getProductId()
+        product = self.client.getProduct(productId)
+        stubContent = product.getDataValue('stringArg')
         
         stub = file(f, "w")
         print >> stub, stubContent

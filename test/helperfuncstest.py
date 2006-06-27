@@ -380,9 +380,9 @@ Much like Powdermilk Biscuits[tm]."""
                     "dict object with str keys converted incorrectly")
 
     def testCodeGeneration(self):
-        from mint import releasetypes
-        x = releasetypes.codegen()
-        for name in releasetypes.typeNames.values():
+        from mint import producttypes
+        x = producttypes.codegen()
+        for name in producttypes.typeNames.values():
             assert(name in x)
 
         from mint import jobstatus 

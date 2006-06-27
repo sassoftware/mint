@@ -3,18 +3,18 @@ var refreshed = false;
 var oldStatus = -1;
 var cookStatusRefreshTime = 2000; /* 2 seconds */
 var cookStatusId;
-var releaseStatusRefreshTime = 5000; /* 5 seconds */
-var releaseStatusId;
+var productStatusRefreshTime = 5000; /* 5 seconds */
+var productStatusId;
 var jobsListRefreshTime = 10000; /* 10 seconds */
 var jobsListId;
 var jobsList = "global";
 var archDict = "global";
 var cookStatus = "global";
-var releaseStatus = "global";
+var productStatus = "global";
 var oldStatus = STATUS_UNKNOWN;
 var userCache = {};
 var groupTroveCache = {};
-var releaseCache = {};
+var productCache = {};
 
 // user interface helpers ---------------------------------------------------
 
@@ -139,9 +139,9 @@ function normPath(path) {
     return path;
 }
 
-// get release image type
-getReleaseImageTypeDesc = function(aTypeId) {
-    return releaseImageTypeNamesShort[aTypeId];
+// get product image type
+getProductTypeDesc = function(aTypeId) {
+    return productTypeNamesShort[aTypeId];
 };
 
 // function that generates a generic header table row
@@ -175,12 +175,12 @@ makeJobRowData = function(aRow) {
             jobDesc = "Group cook: " + groupTroveObj['recipeName'];
         }
     }
-    else if (aRow['releaseId']) {
-        var releaseObj = getReleaseById(aRow['releaseId']);
-        if (releaseObj) {
-            jobDesc = "Release build: " + releaseObj['name'];
-            if (releaseObj.imageTypes) {
-                jobDesc += " (" + map(getReleaseImageTypeDesc, releaseObj.imageTypes).join(", ") + ")";
+    else if (aRow['productId']) {
+        var productObj = getProductById(aRow['productId']);
+        if (productObj) {
+            jobDesc = "Product build: " + productObj['name'];
+            if (productObj.productType) {
+                jobDesc += " (" + map(getProductTypeDesc, productObj.productType).join(", ") + ")";
             }
         }
     }
@@ -206,24 +206,24 @@ makeJobRowData = function(aRow) {
 };
 
 // RPC callbacks ------------------------------------------------------------
-function processGetReleaseStatus(aReq) {
-    var oldReleaseStatus = $("statusMessage");
+function processGetProductStatus(aReq) {
+    var oldProductStatus = $("statusMessage");
 
     logDebug("[JSON] response: ", aReq.responseText);
-    releaseStatus = evalJSONRequest(aReq);
+    productStatus = evalJSONRequest(aReq);
 
-    releaseStatusEl = DIV({ 'id': 'statusMessage', 'class': 'running' }, null);
-    if (!releaseStatus) {
+    productStatusEl = DIV({ 'id': 'statusMessage', 'class': 'running' }, null);
+    if (!productStatus) {
         status = STATUS_NOJOB;
     } else {
-        status = releaseStatus.status;
+        status = productStatus.status;
         // FIXME: replace this with a status -> class name map or something
         if(status == STATUS_RUNNING)
-            setElementClass(releaseStatusEl, "running");
+            setElementClass(productStatusEl, "running");
         if(status == STATUS_FINISHED)
-            setElementClass(releaseStatusEl, "finished");
+            setElementClass(productStatusEl, "finished");
         if(status == STATUS_ERROR)
-            setElementClass(releaseStatusEl, "error");
+            setElementClass(productStatusEl, "error");
 
         // refresh page when job successfully completes
         // to get new download list
@@ -243,10 +243,10 @@ function processGetReleaseStatus(aReq) {
             showElement('editOptionsDisabled');
             hideElement('editOptions');
         }
-        replaceChildNodes(releaseStatusEl, SPAN({'style': 'font-weight: bold;'}, "Status: "), SPAN(null, releaseStatus.message));
+        replaceChildNodes(productStatusEl, SPAN({'style': 'font-weight: bold;'}, "Status: "), SPAN(null, productStatus.message));
         oldStatus = status;
     }
-    swapDOM(oldReleaseStatus, releaseStatusEl);
+    swapDOM(oldProductStatus, productStatusEl);
 }
 
 function processGetCookStatus(aReq) {
@@ -387,13 +387,13 @@ function processListActiveJobs(aReq) {
 
 // RPC calls ----------------------------------------------------------------
 
-function getReleaseStatus(releaseId) {
-    var req = new JsonRpcRequest("jsonrpc/", "getReleaseStatus");
+function getProductStatus(productId) {
+    var req = new JsonRpcRequest("jsonrpc/", "getProductStatus");
     req.setAuth(getCookieValue("pysid"));
-    req.setCallback(processGetReleaseStatus);
-    req.send(false, [releaseId]);
-    if (releaseStatus != null && releaseStatus.status < STATUS_FINISHED) {
-        releaseStatusId = setTimeout("getReleaseStatus("+releaseId+")", releaseStatusRefreshTime);
+    req.setCallback(processGetProductStatus);
+    req.send(false, [productId]);
+    if (productStatus != null && productStatus.status < STATUS_FINISHED) {
+        productStatusId = setTimeout("getProductStatus("+productId+")", productStatusRefreshTime);
     }
 }
 
@@ -458,25 +458,25 @@ function delMember(projectId, userId) {
     req.send(true, [projectId, userId, true]);
 }
 
-function deleteRelease(releaseId) {
-    var req = new JsonRpcRequest("jsonrpc/", "deleteRelease");
+function deleteProduct(productId) {
+    var req = new JsonRpcRequest("jsonrpc/", "deleteProduct");
     req.setAuth(getCookieValue("pysid"));
     req.setCallback(reloadCallback);
-    req.send(true, [releaseId]);
+    req.send(true, [productId]);
 }
 
-function setReleasePublished(releaseId) {
-    var req = new JsonRpcRequest("jsonrpc/", "setReleasePublished");
+function setProductPublished(productId) {
+    var req = new JsonRpcRequest("jsonrpc/", "setProductPublished");
     req.setAuth(getCookieValue("pysid"));
     req.setCallback(reloadCallback);
-    req.send(true, [releaseId, true]);
+    req.send(true, [productId, true]);
 }
 
-function startImageJob(releaseId) {
+function startImageJob(productId) {
     var req = new JsonRpcRequest("jsonrpc/", "startImageJob");
     req.setAuth(getCookieValue("pysid"));
     req.setCallback(reloadCallback);
-    req.send(true, [releaseId]);
+    req.send(true, [productId]);
 }
 // baton --------------------------------------------------------------------
 
@@ -496,7 +496,7 @@ function textWithBaton(text) {
 
 // event handlers -----------------------------------------------------------
 
-// called when a user selects a trove in the new/edit releases page
+// called when a user selects a trove in the new/edit products page
 function onTroveChange(projectId) {
     var sel = document.getElementById("trove");
     var vSel = document.getElementById("version");
@@ -558,7 +558,7 @@ function onArchChange() {
             appendToSelect(vSel, versionlist[i][1] + " " + versionlist[i][2], document.createTextNode(versionlist[i][0]), verTitle, "version");
         }
         vSel.disabled = false;
-        handleReleaseTypes(selectedArch);
+        handleProductTypes(selectedArch);
     }
 
     // Re-enable trove & arch selectors
@@ -593,8 +593,8 @@ function setDisabledByElem(elem, disable) {
     elem.disabled = disable;
 }
 
-function onImageChange(img) {
-    // beware of these boundary conditions, when we add more release targets...
+function onProductTypeChange(img) {
+    // beware of these boundary conditions, when we add more product targets...
     for (t = 1; t < 9; t++) {
         var targImg = "formgroup_" + t;
         // ensure we only tinker with elements that exist on the page
@@ -612,15 +612,15 @@ function onImageChange(img) {
     }
 }
 
-function handleReleaseTypes(aSelectedArch) {
+function handleProductTypes(aSelectedArch) {
 
-    // see layout.kid for definitions of VisibleBootableImageTypes, etc.
-    var one = iter(VisibleBootableImageTypes);
+    // see layout.kid for definitions of VisibleBootableProductTypes, etc.
+    var one = iter(VisibleBootableProductTypes);
 
-    // VisibleBootableImageTypes are not currently compatible with x86_64
+    // VisibleBootableProductTypes are not currently compatible with x86_64
     // so, if that arch was selected, disable it
     forEach(one, function (x) {
-        var el = $('imagetype_'+x);
+        var el = $('producttype_'+x);
         if (aSelectedArch == "x86_64") {
             el.disabled = true;
         } else {
@@ -632,22 +632,22 @@ function handleReleaseTypes(aSelectedArch) {
 
 // cache-y goodness
 
-function getReleaseById(aId) {
-    var releaseObj;
+function getProductById(aId) {
+    var productObj;
 
-    lclReleaseCallback = function(aReq) {
+    lclProductCallback = function(aReq) {
         logDebug("[JSON] response: ", aReq.responseText);
-        releaseCache[aId] = evalJSONRequest(aReq);
+        productCache[aId] = evalJSONRequest(aReq);
     };
 
-    if (!releaseCache[aId]) {
-        var req = new JsonRpcRequest('jsonrpc/', 'getRelease');
+    if (!productCache[aId]) {
+        var req = new JsonRpcRequest('jsonrpc/', 'getProduct');
         req.setAuth(getCookieValue("pysid"));
-        req.setCallback(lclReleaseCallback);
+        req.setCallback(lclProductCallback);
         req.send(false, [aId]);
     }
 
-    return releaseCache[aId];
+    return productCache[aId];
 
 }
 

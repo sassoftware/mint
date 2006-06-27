@@ -278,24 +278,24 @@ class DistroTest(MintRepositoryHelper):
         projectId = self.newProject(client)
         project = client.getProject(projectId)
 
-        release = client.newRelease(projectId, "Test Release")
-        release.setTrove("group-dist", "/testproject." + \
+        product = client.newProduct(projectId, "Test Product")
+        product.setTrove("group-dist", "/testproject." + \
                 MINT_PROJECT_DOMAIN + "@rpl:devel/1.0-1-1", "1#x86")
-        job = client.startImageJob(release.id)
+        job = client.startImageJob(product.id)
         isocfg = self.writeIsoGenCfg()
 
         self.addComponent("test:runtime", "1.0")
         self.addCollection("test", "1.0",
             [("test:runtime", True)])
 
-        iso = installable_iso.InstallableIso(client, isocfg, job, release, project)
+        iso = installable_iso.InstallableIso(client, isocfg, job, product, project)
         iso.callback = EmptyCallback()
 
         cclient = conaryclient.ConaryClient(project.getConaryConfig())
         uJob = iso._getUpdateJob(cclient, 'test')
         iso._storeUpdateJob(uJob)
 
-        data = release.getDataDict()
+        data = product.getDataDict()
         assert(data['test'] == 'test=/testproject.' + \
                 MINT_PROJECT_DOMAIN + '@rpl:devel/1.0-1-1[]')
 
@@ -400,10 +400,10 @@ class DistroTest(MintRepositoryHelper):
         projectId = self.newProject(client)
         project = client.getProject(projectId)
 
-        release = client.newRelease(projectId, "Test Release")
-        release.setTrove("group-dist", "/testproject." + \
+        product = client.newProduct(projectId, "Test Product")
+        product.setTrove("group-dist", "/testproject." + \
             MINT_PROJECT_DOMAIN + "@rpl:devel/1.0-1-1", "1#x86")
-        job = client.startImageJob(release.id)
+        job = client.startImageJob(product.id)
 
         testDir = self.servers.getServer(0).getTestDir()
         templateDir = tempfile.mkdtemp()
