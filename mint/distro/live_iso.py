@@ -11,6 +11,7 @@ import subprocess
 import tempfile
 
 # mint imports
+from mint import releasetypes
 from mint.distro import bootable_image
 from mint.distro.imagegen import ImageGenerator, MSG_INTERVAL
 
@@ -85,6 +86,8 @@ isolinuxCfg= '\n'.join(('say Welcome to %s.',
 
 
 class LiveIso(bootable_image.BootableImage):
+    fileType = releasetypes.typeNames[releasetypes.LIVE_ISO]
+
     def iterFiles(self, baseDir, fileName):
         for base, dirs, files in os.walk(baseDir):
             for match in [x for x in files if re.match(fileName, x)]:
@@ -250,9 +253,9 @@ mount -o defaults --ro -t iso9660 /dev/loop0 /sysroot
         size = int(f.read())
         f.close()
         if size > 734003200:
-            return 'Live DVD'
+            return self.fileType.replace('CD/DVD', 'DVD')
         else:
-            return 'Live CD'
+            return self.fileType.replace('CD/DVD', 'CD')
 
     def finalizeIso(self):
         # move the image into place

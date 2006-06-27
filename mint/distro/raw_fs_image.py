@@ -8,7 +8,7 @@ from mint import releasetypes
 from mint.distro import raw_hd_image
 
 class RawFsImage(raw_hd_image.RawHdImage):
-    fileType = fileType = releasetypes.typeNames[releasetypes.RAW_FS_IMAGE]
+    fileType = releasetypes.typeNames[releasetypes.RAW_FS_IMAGE]
 
     def __init__(self, *args, **kwargs):
         res = raw_hd_image.RawHdImage.__init__(self, *args, **kwargs)

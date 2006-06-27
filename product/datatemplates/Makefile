@@ -8,7 +8,8 @@ SUBDIRS =
 
 dist_files =
 
-python_files = usertemplates.py
+python_files = releasetypes.py \
+               usertemplates.py
 
 all: default-subdirs
 
@@ -21,6 +22,7 @@ dist: defaultdist dist-subdirs
 # only datatemplates are allowed to override initial python files.
 defaultdist: $(dist_files)
 	cp -a usertemplates.py $(DISTDIR)/mint/usertemplates.py
+	cp -a releasetypes.py $(DISTDIR)/mint/releasetypes.py
 
 clean: default-clean clean-subdirs
 
