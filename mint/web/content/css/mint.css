@@ -1150,7 +1150,7 @@ div.trovePicker {
     margin: 6px;
 }
 
-div.trovePicker span#prompt {
+div.trovePicker span.prompt {
     font-size: larger;
     font-weight: bold;
 }

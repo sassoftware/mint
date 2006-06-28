@@ -77,7 +77,7 @@ TrovePicker.prototype.buildTrovePicker = function() {
     spinner = UL({'id': this.elId + 'spinnerList'},
         LI(null, "Loading...", IMG({'src': staticPath + spinnerImg}))
     );
-    appendChildNodes(picker, SPAN({'id': this.elId + 'prompt'}),
+    appendChildNodes(picker, SPAN({'id': this.elId + 'prompt', 'class': 'prompt'}),
         P({'style': 'float: right;'},
             SPAN({'id': this.elId + 'next'}, null), 
             " ",
