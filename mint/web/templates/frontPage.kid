@@ -35,7 +35,7 @@ from mint.client import upstream
         <div class="cssbox_body2">
         <table>
         <tr>
-        <td style="vertical-align: middle;">
+        <td style="vertical-align: middle; width: 100px;">
             <img id="applianceImg" src="${cfg.spotlightImagesDir}/${spotlightData['logo']}"/>
         </td>
         <td>
