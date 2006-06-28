@@ -105,16 +105,34 @@
         <div py:for="spotlightData in data" py:if="time.time() > spotlightData['endDate']">
         <p style="text-align: right; font-style: italic;">${time.strftime('%m/%d/%Y', time.localtime(spotlightData['startDate']))} - ${time.strftime('%m/%d/%Y', time.localtime(spotlightData['endDate']))}</p>
         <div onclick="location.href='${spotlightData['link']}'" id="spotlight">
-        <div py:if="spotlightData['logo']" id="logoBox">
-            <img id="applianceLogo" src="${cfg.spotlightImagesDir}/${spotlightData['logo']}"/>
+ <div class="cssbox2">
+        <div class="cssbox_head2">
+            <div>&nbsp;</div>
         </div>
-        <div id="${spotlightData['logo'] and 'textBox' or 'textBoxWide'}">
-            <div id="spotlightTitle">Virtual Appliance Spotlight</div>
+        <div class="cssbox_body2">
+        <table>
+        <tr>
+        <td py:if="spotlightData['logo']" style="vertical-align: middle; width: 100px; text-align: center;" rowspan="3">
+            <img id="applianceImg" src="${cfg.spotlightImagesDir}/${spotlightData['logo']}"/>
+        </td>
+	<td id="spotlightTitle">Virtual Appliance Spotlight</td>
+	</tr>
+	<tr>
+        <td>
             <div id="applianceTitle">${spotlightData['title']}</div>
             <div id="applianceText">${spotlightData['text']}</div>
+	</td>
+	</tr>
+	<tr>
+	<td style="vertical-align: bottom;">
             <div id="applianceInfo">Click for more information.</div>
+        </td>
+        </tr>
+        </table>
         </div>
         </div>
+        </div>
+
             <br/>
         </div>
         </div>
