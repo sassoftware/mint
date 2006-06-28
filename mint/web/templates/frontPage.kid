@@ -29,18 +29,25 @@ from mint.client import upstream
             ${resourcePane()}
         </div>
         <div py:if="spotlightData" onclick="location.href='${spotlightData['link']}'" id="spotlight">
+        <div class="cssbox2">
+        <div class="cssbox_head2">
+            <div id="spotlightTitle" style="padding-left: ${spotlightData and '134px' or ''};">Virtual Appliance Spotlight</div>
+        </div>
+        <div class="cssbox_body2">
         <div py:if="spotlightData['logo']" id="logoBox">
             <img id="applianceImg" src="${cfg.spotlightImagesDir}/${spotlightData['logo']}"/>
         </div>
         <div id="${spotlightData['logo'] and 'textBox' or 'textBoxWide'}">
-            <div id="spotlightTitle">Virtual Appliance Spotlight</div>
             <div id="applianceTitle">${spotlightData['title']}</div>
             <div id="applianceText">${spotlightData['text']}</div>
             <div id="applianceInfo">Click for more information.</div>
             <div py:if="int(spotlightData['showArchive'])" onclick="getElementById('spotlight').onclick=null; location.href='${cfg.basePath}applianceSpotlight';" class="archiveLink">Spotlight Archive</div>
         </div>
         </div>
+        </div>
+        </div>
 
+        <br/><br/><br/>
                 <div id="inactiveRight" onmouseover="underlineTitle();" onmouseout="normalTitle();" onclick="buildIt();">
                     <div id="inactiveOrangeTitle">Build it.</div>
                         Make your own software appliance in three easy steps.
@@ -51,7 +58,7 @@ from mint.client import upstream
                 </div>
 
         <div id="applianceLogos">
-           <!-- <div id="applianceLogo">
+           <div id="applianceLogo">
                 <img id="applianceImg" src="${cfg.staticPath}apps/mint/images/img1.png"/>
             </div>
             <div id="applianceLogo">
@@ -59,7 +66,7 @@ from mint.client import upstream
             </div>
             <div id="applianceLogo">
                 <img id="applianceImg" src="${cfg.staticPath}apps/mint/images/img3.png"/>
-            </div> -->
+            </div>
         </div>
 
         <div id="steps"> 
