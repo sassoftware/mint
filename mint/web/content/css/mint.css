@@ -347,7 +347,7 @@ div#inactiveRight {
     margin: 0; /* reset main site styles*/
     border: 0; /* ditto */
     padding: 0 0 0 25px; /* padding-left = image gap + interior padding ... no padding-right */
-    height: auto !important;
+    height: 10px !important;
     height: 1%; /* IE Holly Hack */
 }
 
@@ -359,12 +359,12 @@ div#inactiveRight {
     padding: 0 0 0 25px; /* mirror .cssbox_head right/left */
 }
 
-div#spotlightTitle {
+td#spotlightTitle {
     font-size: 14pt;
     color: #ffa814;
     font-weight: bold;
     text-align: center;
-    padding-top: 4px;
+    line-height: 1.1em;
 }
 
 div#applianceTitle {
@@ -409,9 +409,9 @@ div#applianceText {
 
 img#applianceImg {
     vertical-align: middle;
-    margin-top: -25px;
+    /*margin-top: -25px;*/
     margin-right: 15px;
-    padding-bottom: 5px;
+    padding-bottom: 10px;
 }
 
 div.archiveLink {
@@ -436,7 +436,7 @@ div#applianceInfo {
     color: #ffa814;
     text-decoration: none;
     padding-top: 2px;
-    padding-bottom: 5px;
+    padding-bottom: 10px;
 }
 
 div#logoBox {
