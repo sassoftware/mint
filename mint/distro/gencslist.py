@@ -103,12 +103,12 @@ def _findValidTroves(cs, groupName, groupVersion, groupFlavor,
     return valid
 
 def _makeEntry(groupCs, name, version, flavor, components, csFiles, upKernel):
-    # set up the base name, version, release that we'll use for anaconda
+    # set up the base name, version, product that we'll use for anaconda
     base = name
     trailing = version.trailingRevision().asString()
     ver = trailing.split('-')
     verStr = '-'.join(ver[:-2])
-    release = '-'.join(ver[-2:])
+    product = '-'.join(ver[-2:])
 
     # handle kernel as a special case, so that anaconda can set up grub
     # entries and so on

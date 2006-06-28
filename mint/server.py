@@ -28,7 +28,8 @@ from mint import news
 from mint import pkgindex
 from mint import profile
 from mint import projects
-from mint import releases
+from mint import products
+from mint import pubreleases
 from mint import reports
 from mint import requests
 from mint import sessiondb
@@ -42,8 +43,8 @@ from mint import selections
 from mint import rmakebuild
 from mint.distro import jsversion
 from mint.distro.flavors import stockFlavors
-from mint.mint_error import PermissionDenied, ReleasePublished, \
-     ReleaseMissing, MintError, ReleaseEmpty, UserAlreadyAdmin, \
+from mint.mint_error import PermissionDenied, ProductPublished, \
+     ProductMissing, MintError, ProductEmpty, UserAlreadyAdmin, \
      AdminSelfDemotion, JobserverVersionMismatch, LastAdmin, \
      MaintenanceMode, ParameterError, GroupTroveEmpty, rMakeBuildCollision, \
      rMakeBuildEmpty, rMakeBuildOrder
@@ -192,25 +193,25 @@ def getTables(db, cfg):
     d['labels'] = projects.LabelsTable(db, cfg)
     d['projects'] = projects.ProjectsTable(db, cfg)
     d['jobs'] = jobs.JobsTable(db)
-    d['images'] = jobs.ImageFilesTable(db)
+    d['productFiles'] = jobs.ProductFilesTable(db)
     d['users'] = users.UsersTable(db, cfg)
     d['userGroups'] = users.UserGroupsTable(db, cfg)
     d['userGroupMembers'] = users.UserGroupMembersTable(db, cfg)
     d['userData'] = data.UserDataTable(db)
     d['projectUsers'] = users.ProjectUsersTable(db)
-    d['releases'] = releases.ReleasesTable(db)
+    d['products'] = products.ProductsTable(db)
     d['pkgIndex'] = pkgindex.PackageIndexTable(db)
     d['newsCache'] = news.NewsCacheTable(db, cfg)
     d['sessions'] = sessiondb.SessionsTable(db)
     d['membershipRequests'] = requests.MembershipRequestTable(db)
     d['commits'] = stats.CommitsTable(db)
-    d['releaseData'] = data.ReleaseDataTable(db)
+    d['productData'] = data.ProductDataTable(db)
+    d['projectData'] = data.ProjectDataTable(db)
     d['groupTroves'] = grouptrove.GroupTroveTable(db, cfg)
     d['groupTroveItems'] = grouptrove.GroupTroveItemsTable(db, cfg)
     d['conaryComponents'] = grouptrove.ConaryComponentsTable(db)
     d['groupTroveRemovedComponents'] = grouptrove.GroupTroveRemovedComponentsTable(db)
     d['jobData'] = data.JobDataTable(db)
-    d['releaseImageTypes'] = releases.ReleaseImageTypesTable(db)
     d['inboundLabels'] = mirror.InboundLabelsTable(db)
     d['outboundLabels'] = mirror.OutboundLabelsTable(db)
     d['outboundMatchTroves'] = mirror.OutboundMatchTrovesTable(db)
@@ -220,6 +221,7 @@ def getTables(db, cfg):
     d['selections'] = selections.FrontPageSelectionsTable(db, cfg)
     d['rMakeBuild'] = rmakebuild.rMakeBuildTable(db)
     d['rMakeBuildItems'] = rmakebuild.rMakeBuildItemsTable(db)
+    d['publishedReleases'] = pubreleases.PublishedReleasesTable(db)
     outDatedTables = [x for x in d.values() if not x.upToDate]
     while outDatedTables[:]:
         d['version'].bumpVersion()
@@ -408,10 +410,18 @@ class MintServer(object):
                 return
         raise database.ItemNotFound()
 
-    def _filterReleaseAccess(self, releaseId):
+    def _filterProductAccess(self, productId):
         cu = self.db.cursor()
-        cu.execute("SELECT projectId FROM Releases WHERE releaseId = ?",
-                   releaseId)
+        cu.execute("SELECT projectId FROM Products WHERE productId = ?",
+                   productId)
+        res = cu.fetchall()
+        if len(res):
+            self._filterProjectAccess(res[0][0])
+
+    def _filterPublishedReleaseAccess(self, pubReleaseId):
+        cu = self.db.cursor()
+        cu.execute("""SELECT projectId FROM PublishedReleases
+                      WHERE pubReleaseId = ?""", pubReleaseId)
         res = cu.fetchall()
         if len(res):
             self._filterProjectAccess(res[0][0])
@@ -426,7 +436,7 @@ class MintServer(object):
     def _filterJobAccess(self, jobId):
         cu = self.db.cursor()
         cu.execute("""SELECT projectId FROM Jobs
-                        JOIN Releases USING(releaseId)
+                        JOIN Products USING(productId)
                       WHERE jobId = ?
                         UNION SELECT projectId FROM Jobs
                                JOIN GroupTroves USING(groupTroveId)
@@ -436,11 +446,11 @@ class MintServer(object):
         if len(r) and r[0][0]:
             self._filterProjectAccess(r[0][0])
 
-    def _filterImageFileAccess(self, fileId):
+    def _filterProductFileAccess(self, fileId):
         cu = self.db.cursor()
-        cu.execute("""SELECT projectId FROM ImageFiles
-                          LEFT JOIN Releases
-                              ON Releases.releaseId = ImageFiles.releaseId
+        cu.execute("""SELECT projectId FROM ProductFiles 
+                          LEFT JOIN Products
+                              ON Products.productId = ProductFiles.productId
                           WHERE fileId=?""", fileId)
         r = cu.fetchall()
         if len(r):
@@ -662,8 +672,8 @@ class MintServer(object):
                     name = "%s (%s)" % (self.auth.username, self.auth.fullName)
                 else:
                     name = self.auth.username
-                import templates.joinRequest
-                message = templates.write(templates.joinRequest,
+                from mint.templates import joinRequest
+                message = templates.write(joinRequest,
                                           projectName = projectName, 
                                           comments = comments, cfg = self.cfg,
                                           displayEmail = self.auth.displayEmail,
@@ -1634,23 +1644,22 @@ class MintServer(object):
         os.chmod(self.cfg.conaryRcFile, 0644)
 
     #
-    # RELEASE STUFF
+    # PRODUCT STUFF
     #
-    @typeCheck(int, bool)
+    @typeCheck(int)
     @private
-    def getReleasesForProject(self, projectId, showUnpublished = False):
+    def getProductsForProject(self, projectId):
         self._filterProjectAccess(projectId)
-        return [x for x in self.releases.iterReleasesForProject( \
-            projectId, showUnpublished)]
+        return [x for x in self.products.iterProductsForProject(projectId)]
 
     @typeCheck(int, int)
     @private
-    def getReleaseList(self, limit, offset):
+    def getProductList(self, limit, offset):
         cu = self.db.cursor()
-        cu.execute("""SELECT Projects.name, Projects.hostname, releaseId
-                         FROM Releases LEFT JOIN Projects ON Projects.projectId = Releases.projectId
-                         WHERE Projects.hidden=0 and published=1
-                         ORDER BY timePublished DESC LIMIT ? OFFSET ?""", limit, offset)
+        cu.execute("""SELECT Projects.name, Projects.hostname, productId
+                         FROM Products LEFT JOIN Projects ON Projects.projectId = Products.projectId
+                         WHERE Projects.hidden=0
+                         ORDER BY Products.timeCreated DESC LIMIT ? OFFSET ?""", limit, offset)
         return [(x[0], x[1], int(x[2])) for x in cu.fetchall()]
 
     @typeCheck(str, str, str, str)
@@ -1672,69 +1681,149 @@ class MintServer(object):
         return self.commits.getCommitsByProject(projectId)
 
     @typeCheck(int)
-    def getRelease(self, releaseId):
-        self._filterReleaseAccess(releaseId)
-        return self.releases.get(releaseId)
+    def getProduct(self, productId):
+        self._filterProductAccess(productId)
+        return self.products.get(productId)
 
     @typeCheck(int, str, bool)
     @requiresAuth
     @private
-    def newRelease(self, projectId, releaseName, published):
+    def newProduct(self, projectId, productName):
         self._filterProjectAccess(projectId)
-        releaseId = self.releases.new(projectId = projectId,
-                                      name = releaseName,
-                                      published = published)
+        productId = self.products.new(projectId = projectId,
+                                      name = productName)
 
-        self.releaseData.setDataValue(releaseId, 'jsversion',
+        self.productData.setDataValue(productId, 'jsversion',
                                       jsversion.getDefaultVersion(),
                                       data.RDT_STRING)
 
-        return releaseId
+        return productId
 
     @typeCheck(int)
     @requiresAuth
-    def deleteRelease(self, releaseId):
-        self._filterReleaseAccess(releaseId)
-        if not self.releases.releaseExists(releaseId):
-            raise ReleaseMissing()
-        if self.releases.getPublished(releaseId):
-            raise ReleasePublished()
+    def deleteProduct(self, productId):
+        self._filterProductAccess(productId)
+        if not self.products.productExists(productId):
+            raise ProductMissing()
+        if self.products.getPublished(productId):
+            raise ProductPublished()
         cu = self.db.cursor()
-        cu.execute("SELECT filename FROM ImageFiles WHERE releaseId=?",
-                   releaseId)
+        cu.execute("SELECT filename FROM ProductFiles WHERE productId=?",
+                   productId)
         for fileName in [x[0] for x in cu.fetchall()]:
             try:
                 os.unlink(fileName)
             except:
-                print >> sys.stderr, "Couldn't delete release image: %s" % \
+                print >> sys.stderr, "Couldn't delete related file: %s" % \
                       fileName
                 sys.stderr.flush()
-        self.releases.deleteRelease(releaseId)
+        self.products.deleteProduct(productId)
         return True
 
-    # release data calls
+    @typeCheck(int, dict)
+    @requiresAuth
+    @private
+    def updateProduct(self, productId, valDict):
+        self._filterProductAccess(productId)
+        if len(valDict):
+            valDict.update({'timeUpdated': time.time(),
+                            'updatedBy':   self.auth.userId})
+            return self.products.update(productId, **valDict)
+
+    # product data calls
     @typeCheck(int, str, ((str, int, bool),), int)
     @requiresAuth
     @private
-    def setReleaseDataValue(self, releaseId, name, value, dataType):
-        self._filterReleaseAccess(releaseId)
-        if not self.releases.releaseExists(releaseId):
-            raise ReleaseMissing()
-        if self.releases.getPublished(releaseId):
-            raise ReleasePublished()
-        return self.releaseData.setDataValue(releaseId, name, value, dataType)
+    def setProductDataValue(self, productId, name, value, dataType):
+        self._filterProductAccess(productId)
+        if not self.products.productExists(productId):
+            raise ProductMissing()
+        if self.products.getPublished(productId):
+            raise ProductPublished()
+        return self.productData.setDataValue(productId, name, value, dataType)
 
     @typeCheck(int, str)
     @private
-    def getReleaseDataValue(self, releaseId, name):
-        self._filterReleaseAccess(releaseId)
-        return self.releaseData.getDataValue(releaseId, name)
+    def getProductDataValue(self, productId, name):
+        self._filterProductAccess(productId)
+        return self.productData.getDataValue(productId, name)
 
     @typeCheck(int)
     @private
-    def getReleaseDataDict(self, releaseId):
-        self._filterReleaseAccess(releaseId)
-        return self.releaseData.getDataDict(releaseId)
+    def getProductDataDict(self, productId):
+        self._filterProductAccess(productId)
+        return self.productData.getDataDict(productId)
+
+    @typeCheck(int)
+    @requiresAuth
+    def newPublishedRelease(self, projectId):
+        self._filterProjectAccess(projectId)
+        timeCreated = time.time()
+        createdBy = self.auth.userId
+        return self.publishedReleases.new(projectId = projectId,
+                timeCreated = timeCreated, createdBy = createdBy,
+                visibility = pubreleases.VISIBILITY_PROJECT_ONLY)
+
+    @typeCheck(int)
+    @requiresAuth
+    def getPublishedRelease(self, pubReleaseId):
+        self._filterPublishedReleaseAccess(pubReleaseId)
+        return self.publishedReleases.get(pubReleaseId)
+
+    @typeCheck(int, dict)
+    @requiresAuth
+    @private
+    def updatePublishedRelease(self, pubReleaseId, valDict):
+        self._filterPublishedReleaseAccess(pubReleaseId)
+        if len(valDict):
+            valDict.update({'timeUpdated': time.time(),
+                            'updatedBy': self.auth.userId})
+            return self.publishedReleases.update(pubReleaseId, **valDict)
+
+    @typeCheck(int)
+    @requiresAuth
+    def deletePublishedRelease(self, pubReleaseId):
+        self._filterPublishedReleaseAccess(pubReleaseId)
+        cu = self.db.cursor()
+        cu.execute("""UPDATE Products SET pubReleaseId = NULL
+                      WHERE pubReleaseId = ?""", pubReleaseId)
+        self.db.commit()
+        self.publishedReleases.delete(pubReleaseId)
+        return True
+
+    @typeCheck(int)
+    @requiresAuth
+    @private
+    def getUnpublishedProductsForProject(self, projectId):
+        self._filterProjectAccess(projectId)
+        cu = self.db.cursor()
+        cu.execute("""SELECT productId FROM Products
+                      WHERE projectId = ? AND pubReleaseId IS NULL""",
+                      projectId)
+        res = cu.fetchall()
+        return [x[0] for x in res]
+
+    @typeCheck(int)
+    @requiresAuth
+    @private
+    def getProductsForPublishedRelease(self, pubReleaseId):
+        self._filterPublishedReleaseAccess(pubReleaseId)
+        cu = self.db.cursor()
+        cu.execute("""SELECT productId FROM Products
+                      WHERE pubReleaseId = ?""", pubReleaseId)
+        res = cu.fetchall()
+        return [x[0] for x in res]
+
+    @typeCheck(int)
+    @requiresAuth
+    @private
+    def getPublishedReleasesByProject(self, projectId):
+        self._filterProjectAccess(projectId)
+        cu = self.db.cursor()
+        cu.execute("""SELECT pubReleaseId FROM PublishedReleases
+                      WHERE projectId = ?""", projectId)
+        res = cu.fetchall()
+        return [x[0] for x in res]
 
     # job data calls
     @typeCheck(int, str, ((str, int, bool),), int)
@@ -1752,117 +1841,108 @@ class MintServer(object):
 
     @typeCheck(int)
     @private
-    def getReleaseTrove(self, releaseId):
-        self._filterReleaseAccess(releaseId)
-        return self.releases.getTrove(releaseId)
+    def getProductTrove(self, productId):
+        self._filterProductAccess(productId)
+        return self.products.getTrove(productId)
 
     @typeCheck(int, str, str, str)
     @requiresAuth
     @private
-    def setReleaseTrove(self, releaseId, troveName, troveVersion, troveFlavor):
-        self._filterReleaseAccess(releaseId)
-        if not self.releases.releaseExists(releaseId):
-            raise ReleaseMissing()
-        if self.releases.getPublished(releaseId):
-            raise ReleasePublished()
-        return self.releases.setTrove(releaseId, troveName,
+    def setProductTrove(self, productId, troveName, troveVersion, troveFlavor):
+        self._filterProductAccess(productId)
+        if not self.products.productExists(productId):
+            raise ProductMissing()
+        if self.products.getPublished(productId):
+            raise ProductPublished()
+        return self.products.setTrove(productId, troveName,
                                                  troveVersion,
                                                  troveFlavor)
 
     @typeCheck(int, str)
     @requiresAuth
     @private
-    def setReleaseDesc(self, releaseId, desc):
-        self._filterReleaseAccess(releaseId)
-        if not self.releases.releaseExists(releaseId):
-            raise ReleaseMissing()
-        if self.releases.getPublished(releaseId):
-            raise ReleasePublished()
-        self.releases.update(releaseId, description = desc)
+    def setProductDesc(self, productId, desc):
+        self._filterProductAccess(productId)
+        if not self.products.productExists(productId):
+            raise ProductMissing()
+        if self.products.getPublished(productId):
+            raise ProductPublished()
+        self.products.update(productId, description = desc)
         return True
 
     @typeCheck(int, str)
     @requiresAuth
     @private
-    def setReleaseName(self, releaseId, name):
-        self._filterReleaseAccess(releaseId)
-        if not self.releases.releaseExists(releaseId):
-            raise ReleaseMissing()
-        if self.releases.getPublished(releaseId):
-            raise ReleasePublished()
-        self.releases.update(releaseId, name = name)
+    def setProductName(self, productId, name):
+        self._filterProductAccess(productId)
+        if not self.products.productExists(productId):
+            raise ProductMissing()
+        if self.products.getPublished(productId):
+            raise ProductPublished()
+        self.products.update(productId, name = name)
         return True
 
-    @typeCheck(int)
-    @private
-    def incReleaseDownloads(self, releaseId):
-        self._filterReleaseAccess(releaseId)
-        cu = self.db.cursor()
-        cu.execute("UPDATE Releases SET downloads = downloads + 1 WHERE releaseId=?",
-            releaseId)
-        self.db.commit()
-        return True
-
-    @typeCheck(int, bool)
+    @typeCheck(int, int, bool)
     @requiresAuth
-    def setReleasePublished(self, releaseId, published):
-        self._filterReleaseAccess(releaseId)
-        if not self.releases.releaseExists(releaseId):
-            raise ReleaseMissing()
-        if published and not self.getImageFilenames(releaseId):
-            raise ReleaseEmpty()
-        if self.releases.getPublished(releaseId):
-            raise ReleasePublished()
-        timeStamp = time.time()
+    @private
+    def setProductPublished(self, productId, pubReleaseId, published):
+        self._filterProductAccess(productId)
+        self._filterPublishedReleaseAccess(pubReleaseId)
+        # TODO check for existence of published release
+        if not self.products.productExists(productId):
+            raise ProductMissing()
+        if published and not self.getProductFilenames(productId):
+            raise ProductEmpty()
+        if published and self.products.getPublished(productId):
+            raise ProductPublished()
 
-        self.releases.update(releaseId, published = int(published), timePublished = timeStamp)
-        return True
+        pubReleaseId = published and pubReleaseId or None
+        return self.updateProduct(productId, {'pubReleaseId': pubReleaseId })
 
     @typeCheck(int)
     @requiresAuth
     @private
-    def getImageTypes(self, releaseId):
-        self._filterReleaseAccess(releaseId)
-        if not self.releases.releaseExists(releaseId):
-            raise ReleaseMissing()
+    def getProductType(self, productId):
+        self._filterProductAccess(productId)
+        if not self.products.productExists(productId):
+            raise ProductMissing()
         cu = self.db.cursor()
-        cu.execute('SELECT imageType from ReleaseImageTypes WHERE releaseId=?', releaseId)
-        return [x[0] for x in cu.fetchall()]
+        cu.execute("SELECT productType FROM Products WHERE productId = ?",
+                productId)
+        return cu.fetchone()[0]
 
-    @typeCheck(int, list)
+    @typeCheck(int, int)
     @requiresAuth
     @private
-    def setImageTypes(self, releaseId, imageTypes):
-        self._filterReleaseAccess(releaseId)
-        if not self.releases.releaseExists(releaseId):
-            raise ReleaseMissing()
-        if self.releases.getPublished(releaseId):
-            raise ReleasePublished()
+    def setProductType(self, productId, productType):
+        self._filterProductAccess(productId)
+        if not self.products.productExists(productId):
+            raise ProductMissing()
+        if self.products.getPublished(productId):
+            raise ProductPublished()
         cu = self.db.cursor()
-        cu.execute("DELETE FROM ReleaseImageTypes WHERE releaseId=?", releaseId)
-        for i in imageTypes:
-            cu.execute("INSERT INTO ReleaseImageTypes (releaseId, imageType)"
-                    "VALUES (?, ?)", releaseId, i)
+        cu.execute("UPDATE Products SET productType = ? WHERE productId = ?",
+                productType, productId)
         self.db.commit()
         return True
 
     @typeCheck()
     @private
-    def getAvailableImageTypes(self):
-        if self.cfg.visibleImageTypes:
-            return self.cfg.visibleImageTypes
+    def getAvailableProductTypes(self):
+        if self.cfg.visibleProductTypes:
+            return self.cfg.visibleProductTypes
         else:
             return []
 
     @typeCheck(int)
     @requiresAuth
-    def startImageJob(self, releaseId):
-        self._filterReleaseAccess(releaseId)
-        if not self.releases.releaseExists(releaseId):
-            raise ReleaseMissing()
-        if self.releases.getPublished(releaseId):
-            raise ReleasePublished()
-        found, jsVer = self.releaseData.getDataValue(releaseId, 'jsversion')
+    def startImageJob(self, productId):
+        self._filterProductAccess(productId)
+        if not self.products.productExists(productId):
+            raise ProductMissing()
+        if self.products.getPublished(productId):
+            raise ProductPublished()
+        found, jsVer = self.productData.getDataValue(productId, 'jsversion')
         if not found:
             raise JobserverVersionMismatch('No job server version available.')
         if jsVer not in jsversion.getVersions():
@@ -1871,19 +1951,19 @@ class MintServer(object):
         cu = self.db.cursor()
 
         cu.execute("""SELECT jobId, status FROM Jobs
-                          WHERE releaseId=? AND groupTroveId IS NULL""",
-                   releaseId)
+                          WHERE productId=? AND groupTroveId IS NULL""",
+                   productId)
         r = cu.fetchall()
         if len(r) == 0:
-            retval = self.jobs.new(releaseId = releaseId,
+            retval = self.jobs.new(productId = productId,
                                    userId = self.auth.userId,
                                    status = jobstatus.WAITING,
                                    statusMessage = self.getJobWaitMessage(0),
                                    timeSubmitted = time.time(),
                                    timeStarted = 0,
                                    timeFinished = 0)
-            cu.execute('SELECT troveFlavor FROM Releases WHERE releaseId=?',
-                       releaseId)
+            cu.execute('SELECT troveFlavor FROM Products WHERE productId=?',
+                       productId)
             flavorString = cu.fetchone()[0]
             flavor = deps.ThawFlavor(flavorString)
             arch = "1#" + flavor.members[deps.DEP_CLASS_IS].members.keys()[0]
@@ -1894,9 +1974,9 @@ class MintServer(object):
             if status in (jobstatus.WAITING, jobstatus.RUNNING):
                 raise jobs.DuplicateJob
             else:
-                # delete any files in the ImageFiles table prior to regeneration
-                cu.execute("DELETE FROM ImageFiles WHERE releaseId = ?",
-                        releaseId)
+                # delete any files in the ProductFiles table prior to regeneration
+                cu.execute("DELETE FROM ProductFiles WHERE productId = ?",
+                        productId)
 
                 # getJobWaitMessage orders by timeSubmitted, so update must
                 # occur in two steps
@@ -1923,7 +2003,7 @@ class MintServer(object):
 
         cu = self.db.cursor()
         cu.execute("""SELECT jobId, status FROM Jobs
-                          WHERE groupTroveId=? AND releaseId IS NULL""",
+                          WHERE groupTroveId=? AND productId IS NULL""",
                    groupTroveId)
         r = cu.fetchall()
         if len(r) == 0:
@@ -1968,7 +2048,7 @@ class MintServer(object):
         self._filterJobAccess(jobId)
         cu = self.db.cursor()
 
-        cu.execute("SELECT userId, releaseId, groupTroveId, status,"
+        cu.execute("SELECT userId, productId, groupTroveId, status,"
                    "  statusMessage, timeSubmitted, timeStarted, "
                    "  timeFinished FROM Jobs "
                    " WHERE jobId=?", jobId)
@@ -1977,13 +2057,13 @@ class MintServer(object):
         if not p:
             raise jobs.JobMissing
 
-        dataKeys = ['userId', 'releaseId', 'groupTroveId', 'status',
+        dataKeys = ['userId', 'productId', 'groupTroveId', 'status',
                     'statusMessage', 'timeSubmitted', 'timeStarted',
                     'timeFinished']
         data = {}
         for i, key in enumerate(dataKeys):
             # these keys can be NULL from the db
-            if key in ('releaseId', 'groupTroveId'):
+            if key in ('productId', 'groupTroveId'):
                 if p[i] is None:
                     data[key] = 0
                 else:
@@ -2046,8 +2126,8 @@ class MintServer(object):
         @param jobserverVersion: string. version of the job server.
         @return: jobId of job to execute, or 0 for no job.
         """
-        import cooktypes
-        import releasetypes
+        from mint import cooktypes
+        from mint import producttypes
         # scrub archTypes and jobTypes.
         maintenance.enforceMaintenanceMode( \
             self.cfg, auth = None, msg = "Repositories are currently offline.")
@@ -2055,12 +2135,12 @@ class MintServer(object):
             if arch not in ("1#x86", "1#x86_64"):
                 raise ParameterError("Not a legal architecture")
 
-        imageTypes = jobTypes.get('imageTypes', [])
+        productTypes = jobTypes.get('productTypes', [])
         cookTypes = jobTypes.get('cookTypes', [])
 
-        if sum([(x not in releasetypes.TYPES) \
-                for x in imageTypes]):
-            raise ParameterError("Not a legal Release Type")
+        if sum([(x not in producttypes.TYPES) \
+                for x in productTypes]):
+            raise ParameterError("Not a legal Product Type")
 
         if sum([(x != cooktypes.GROUP_BUILDER) for x in cookTypes]):
             raise ParameterError("Not a legal Cook Type")
@@ -2068,7 +2148,7 @@ class MintServer(object):
         if jobserverVersion not in jsversion.getVersions():
             raise ParameterError("Not a legal job server version: %s" % jobserverVersion)
         # client asked for nothing, client gets nothing.
-        if not (imageTypes or cookTypes) or (not archTypes):
+        if not (productTypes or cookTypes) or (not archTypes):
             return 0
 
         # the pid would suffice, except that fails to be good enough
@@ -2086,18 +2166,18 @@ class MintServer(object):
         archTypeQuery = archTypes and "(%s)" % \
                         ', '.join(['?' for x in archTypes]) or ''
 
-        imageTypeQuery = imageTypes and "(%s)" % \
-                        ', '.join(['?' for x in imageTypes]) or ''
+        productTypeQuery = productTypes and "(%s)" % \
+                        ', '.join(['?' for x in productTypes]) or ''
 
-        # at least one of releaseTypes or cookTypes will be defined,
+        # at least one of productTypes or cookTypes will be defined,
         # or this code would have already bailed out.
-        if not imageTypes:
+        if not productTypes:
             #client wants only cooks
             query = """SELECT Jobs.jobId FROM Jobs
                        LEFT JOIN JobData
                            ON Jobs.jobId=JobData.jobId
                        WHERE status=? AND JobData.name='arch'
-                           AND Jobs.releaseId IS NULL
+                           AND Jobs.productId IS NULL
                            AND owner=?
                            AND JobData.value IN %s
                        ORDER BY timeSubmitted
@@ -2109,41 +2189,41 @@ class MintServer(object):
                        LEFT JOIN JobData
                            ON Jobs.jobId=JobData.jobId
                                AND JobData.name='arch'
-                       LEFT JOIN ReleaseImageTypes
-                           ON ReleaseImageTypes.releaseId=Jobs.releaseId
-                       LEFT JOIN ReleaseData
-                           ON ReleaseData.releaseId=Jobs.releaseId
-                               AND ReleaseData.name='jsversion'
+                       LEFT JOIN Products
+                           ON Products.productId=Jobs.productId
+                       LEFT JOIN ProductData
+                           ON ProductData.productId=Jobs.productId
+                               AND ProductData.name='jsversion'
                        WHERE status=?
                            AND Jobs.groupTroveId IS NULL
                            AND owner=?
-                           AND ReleaseData.value=?
+                           AND ProductData.value=?
                            AND JobData.value IN %s
-                           AND ReleaseImageTypes.imageType IN %s
+                           AND Products.productType IN %s
                        ORDER BY timeSubmitted
-                       LIMIT 1""" % (archTypeQuery, imageTypeQuery)
+                       LIMIT 1""" % (archTypeQuery, productTypeQuery)
             cu.execute(query, jobstatus.WAITING, ownerId, jobserverVersion,
-                       *(archTypes + imageTypes))
+                       *(archTypes + productTypes))
         else:
             # client wants both cook and image jobs
             query = """SELECT Jobs.jobId FROM Jobs
                        LEFT JOIN JobData
                            ON Jobs.jobId=JobData.jobId AND JobData.name='arch'
-                       LEFT JOIN ReleaseImageTypes
-                           ON ReleaseImageTypes.releaseId=Jobs.releaseId
-                       LEFT JOIN ReleaseData
-                           ON ReleaseData.releaseId=Jobs.releaseId
-                               AND ReleaseData.name='jsversion'
+                       LEFT JOIN Products
+                           ON Products.productId=Jobs.productId
+                       LEFT JOIN ProductData
+                           ON ProductData.productId=Jobs.productId
+                               AND ProductData.name='jsversion'
                        WHERE status=? AND owner=?
-                           AND ((ReleaseData.value=? AND
-                               ReleaseImageTypes.imageType IN %s) OR
+                           AND ((ProductData.value=? AND
+                               Products.productType IN %s) OR
                                 (groupTroveId IS NOT NULL))
                            AND JobData.value IN %s
                        ORDER BY timeSubmitted
-                       LIMIT 1""" % (imageTypeQuery, archTypeQuery)
+                       LIMIT 1""" % (productTypeQuery, archTypeQuery)
 
             cu.execute(query, jobstatus.WAITING, ownerId, jobserverVersion,
-                       *(imageTypes + archTypes))
+                       *(productTypes + archTypes))
 
         res = cu.fetchone()
 
@@ -2177,11 +2257,11 @@ class MintServer(object):
     @typeCheck(int)
     @requiresAuth
     @private
-    def getJobIdForRelease(self, releaseId):
-        self._filterReleaseAccess(releaseId)
+    def getJobIdForProduct(self, productId):
+        self._filterProductAccess(productId)
         cu = self.db.cursor()
 
-        cu.execute("SELECT jobId FROM Jobs WHERE releaseId=?", releaseId)
+        cu.execute("SELECT jobId FROM Jobs WHERE productId=?", productId)
         r = cu.fetchone()
         if r:
             return r[0]
@@ -2229,20 +2309,20 @@ class MintServer(object):
     @typeCheck(int, (list, (list, str)))
     @requiresAuth
     @private
-    def setImageFilenames(self, releaseId, filenames):
-        self._filterReleaseAccess(releaseId)
-        if not self.releases.releaseExists(releaseId):
-            raise ReleaseMissing()
-        if self.releases.getPublished(releaseId):
-            raise ReleasePublished()
+    def setProductFilenames(self, productId, filenames):
+        self._filterProductAccess(productId)
+        if not self.products.productExists(productId):
+            raise ProductMissing()
+        if self.products.getPublished(productId):
+            raise ProductPublished()
 
         cu = self.db.transaction()
         try:
-            cu.execute("DELETE FROM ImageFiles WHERE releaseId=?", releaseId)
+            cu.execute("DELETE FROM ProductFiles WHERE productId=?", productId)
             for idx, file in enumerate(filenames):
                 fileName, title = file
-                cu.execute("INSERT INTO ImageFiles VALUES (NULL, ?, ?, ?, ?)",
-                           releaseId, idx, fileName, title)
+                cu.execute("INSERT INTO ProductFiles VALUES (NULL, ?, ?, ?, ?)",
+                           productId, idx, fileName, title)
         except:
             self.db.rollback()
             raise
@@ -2252,10 +2332,10 @@ class MintServer(object):
 
     @typeCheck(int)
     @private
-    def getImageFilenames(self, releaseId):
-        self._filterReleaseAccess(releaseId)
+    def getProductFilenames(self, productId):
+        self._filterProductAccess(productId)
         cu = self.db.cursor()
-        cu.execute("SELECT fileId, filename, title FROM ImageFiles WHERE releaseId=? ORDER BY idx", releaseId)
+        cu.execute("SELECT fileId, filename, title FROM ProductFiles WHERE productId=? ORDER BY idx", productId)
 
         results = cu.fetchall()
         if len(results) < 1:
@@ -2278,9 +2358,9 @@ class MintServer(object):
     @typeCheck(int)
     @private
     def getFileInfo(self, fileId):
-        self._filterImageFileAccess(fileId)
+        self._filterProductFileAccess(fileId)
         cu = self.db.cursor()
-        cu.execute("SELECT releaseId, idx, filename, title FROM ImageFiles WHERE fileId=?", fileId)
+        cu.execute("SELECT productId, idx, filename, title FROM ProductFiles WHERE fileId=?", fileId)
 
         r = cu.fetchone()
         if r:
@@ -2369,11 +2449,11 @@ class MintServer(object):
     # XXX refactor to getJobStatus instead of two functions
     @typeCheck(int)
     @requiresAuth
-    def getReleaseStatus(self, releaseId):
-        self._filterReleaseAccess(releaseId)
+    def getProductStatus(self, productId):
+        self._filterProductAccess(productId)
 
-        release = releases.Release(self, releaseId)
-        job = release.getJob()
+        product = products.Product(self, productId)
+        job = product.getJob()
 
         if not job:
             return {'status'  : jobstatus.NOJOB,

@@ -18,7 +18,7 @@ import rephelp
 
 from mint import mint_error
 from mint import database
-from mint import releasetypes
+from mint import producttypes
 from mint import jobstatus
 from mint.distro import jsversion
 
@@ -47,7 +47,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.setServer(self.getProjectServerHostname(), self.port)
 
         # pick a page to log in from
-        pageURI = '/project/testproject/releases'
+        pageURI = '/project/testproject/products'
         page = self.fetch(pageURI)
 
         page = page.postForm(1, self.fetchWithRedirect,
@@ -424,14 +424,14 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                                             'level' : 0})
 
 
-    def testReleasesPage(self):
+    def testProductsPage(self):
         client, userId = self.quickMintUser('foouser','foopass')
         projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
 
         # we are working with the project server right now
         self.setServer(self.getProjectServerHostname(), self.port)
 
-        page = self.assertContent('/project/foo/releases/',
+        page = self.assertContent('/project/foo/products/',
                                   content = 'has no published',
                                   code = [200])
 
@@ -769,14 +769,14 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
     def testDownloadISO(self):
         client, userId = self.quickMintUser("testuser", "testpass")
         projectId = client.newProject("Foo", "foo", MINT_PROJECT_DOMAIN)
-        release = client.newRelease(projectId, "Test Release")
-        release.setImageTypes([0])
+        product = client.newProduct(projectId, "Test Product")
+        product.setProductType(0)
 
         cu = self.db.cursor()
-        cu.execute("INSERT INTO ImageFiles VALUES (1, ?, 0, 'test.iso', 'Test Image')",
-                   release.id)
+        cu.execute("INSERT INTO ProductFiles VALUES (1, ?, 0, 'test.iso', 'Test Image')",
+                   product.id)
         self.db.commit()
-        release.setPublished(True)
+        product.setPublished(True)
 
         # check for the meta refresh tag
         page = self.assertCode('/downloadImage/1/test.iso', code = 301)
@@ -813,7 +813,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                           groupTrove.id)
 
         # go to a different page that so that the group box can show up
-        page = self.assertContent('/project/testproject/releases',
+        page = self.assertContent('/project/testproject/products',
                                   content = 'closeCurrentGroup')
 
         # then simulate clicking the close box to prove it closes properly
@@ -854,7 +854,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         page = page.postForm(1, self.post, {'arch': '1#x86'})
 
-        page = self.assertNotContent('/project/testproject/releases',
+        page = self.assertNotContent('/project/testproject/products',
                               content = 'closeCurrentGroup')
 
     def testGroupCookRespawn(self):
@@ -1080,7 +1080,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.failIf(page.body != refPage.body,
                     "Illegal page reference was not contained.")
 
-    def testRelease(self):
+    def testProduct(self):
         client, userId = self.quickMintUser('foouser', 'foopass')
         projectId = self.newProject(client)
 
@@ -1095,7 +1095,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         # we are working with the project server right now
         self.setServer(self.getProjectServerHostname(), self.port)
 
-        page = self.fetch('/project/testproject/newRelease')
+        page = self.fetch('/project/testproject/newProduct')
 
         page = page.postForm(1, self.post, \
                              {'name' : 'Foo',
@@ -1103,29 +1103,29 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                               'version': '/testproject.' + \
                                   MINT_PROJECT_DOMAIN + \
                                   '@rpl:devel/1.0-1-1 1#x86',
-                              'imagetype_1' : '1'})
+                              'producttype_1' : '1'})
 
         cu = self.db.cursor()
-        cu.execute("SELECT troveName FROM Releases")
+        cu.execute("SELECT troveName FROM Products")
 
         res = cu.fetchall()
-        self.failIf(not res, "No release was generated from a web click.")
+        self.failIf(not res, "No product was generated from a web click.")
         self.failIf(res[0][0] != 'group-test',
-                    "Trove name was malformed during release creation.")
+                    "Trove name was malformed during product creation.")
 
-    def testCantPublishReleasesWithoutFiles(self):
+    def testCantPublishProductsWithoutFiles(self):
         client, userId = self.quickMintUser('foouser', 'foopass')
         projectId = self.newProject(client)
 
-        release = client.newRelease(projectId, 'Test Release')
-        release.setImageTypes([1])
-        release.setTrove("group-trove",
+        product = client.newProduct(projectId, 'Test Product')
+        product.setProductType(1)
+        product.setTrove("group-trove",
             "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
 
         self.webLogin('foouser', 'foopass')
-        page = self.assertNotContent('/project/testproject/releases', 
+        page = self.assertNotContent('/project/testproject/products', 
             code = [200],
-            content = 'href="publish?releaseId',
+            content = 'href="publish?productId',
             server = self.getProjectServerHostname())
 
     def testCreateExternalProject(self):

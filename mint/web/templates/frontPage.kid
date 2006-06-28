@@ -3,7 +3,7 @@
 import time
 from mint import userlevels
 from mint import searcher
-from mint import releasetypes
+from mint import producttypes
 from mint.helperfuncs import truncateForDisplay
 from mint.client import upstream
 
@@ -21,7 +21,7 @@ from mint.client import upstream
         <link rel="alternate" type="application/rss+xml"
               title="New ${cfg.productName} Projects" href="http://${cfg.siteHost}${cfg.basePath}rss?feed=newProjects" />
         <link rel="alternate" type="application/rss+xml"
-              title="New ${cfg.productName} Releases" href="http://${cfg.siteHost}${cfg.basePath}rss?feed=newReleases" />
+              title="New ${cfg.productName} Products" href="http://${cfg.siteHost}${cfg.basePath}rss?feed=newProducts" />
     </head>
     <body onload="hideElement('steps');">
         <div id="right" class="side">
@@ -113,20 +113,20 @@ from mint.client import upstream
                             </ol>
                         </td>
                         <td py:if="not selectionData">
-                            <p py:if="not releases">No releases have been published yet.</p>
-                            <ol py:if="releases">
+                            <p py:if="not products">No products have been published yet.</p>
+                            <ol py:if="products">
 
-                                <li py:for="release in releases">
+                                <li py:for="product in products">
                                     <?python
-                                        projectName = release[0]
-                                        if projectName != release[2].getName():
-                                            releaseName = truncateForDisplay(release[2].getName(), maxWords=5)
+                                        projectName = product[0]
+                                        if projectName != product[2].getName():
+                                            productName = truncateForDisplay(product[2].getName(), maxWords=5)
                                         else:
-                                            releaseName = upstream(release[2].getTroveVersion())
+                                            productName = upstream(product[2].getTroveVersion())
                                         projectName = truncateForDisplay(projectName, maxWords=5)
-                                        trove = release[2].getTroveName() + "=" + release[2].getTroveVersion().trailingRevision().asString()
+                                        trove = product[2].getTroveName() + "=" + product[2].getTroveVersion().trailingRevision().asString()
                                     ?>
-                                    <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${release[1]}/release?id=${release[2].getId()}" title="${trove}">${projectName} <span style="font-size: smaller">${releaseName} (${release[2].getArch()} ${releasetypes.typeNamesShort[release[2].imageTypes[0]]})</span></a>
+                                    <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${product[1]}/product?id=${product[2].getId()}" title="${trove}">${projectName} <span style="font-size: smaller">${productName} (${product[2].getArch()} ${producttypes.typeNamesShort[product[2].productType]})</span></a>
                                  </li>
                              </ol>
                          </td>

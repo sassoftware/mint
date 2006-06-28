@@ -4,11 +4,11 @@
 # All Rights Reserved
 #
 
-from mint import releasetypes
+from mint import producttypes
 from mint.distro import raw_hd_image
 
 class RawFsImage(raw_hd_image.RawHdImage):
-    fileType = releasetypes.typeNames[releasetypes.RAW_FS_IMAGE]
+    fileType = producttypes.typeNames[producttypes.RAW_FS_IMAGE]
 
     def __init__(self, *args, **kwargs):
         res = raw_hd_image.RawHdImage.__init__(self, *args, **kwargs)

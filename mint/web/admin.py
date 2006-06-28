@@ -288,10 +288,10 @@ class AdminHandler(WebHandler):
         selectionData = self.client.getFrontPageSelection()
         selectionData.append({'name': name, 'link': link, 'rank': rank})
         selectionData.sort(lambda x,y: cmp(x['rank'], y['rank']))
-        releases = self.client.getReleaseList()
+        products = self.client.getProductList()
         activeProjects, _  = self.client.getProjects(projectlisting.ACTIVITY_DES, 10, 0)
 
-        return self._write("admin/preview", firstTime=self.session.get('firstTimer', False), popularProjects=popularProjects, selectionData = selectionData, activeProjects = activeProjects, spotlightData=spotlightData, releases=releases)
+        return self._write("admin/preview", firstTime=self.session.get('firstTimer', False), popularProjects=popularProjects, selectionData = selectionData, activeProjects = activeProjects, spotlightData=spotlightData, products=products)
 
     def spotlight(self, *args, **kwargs):
         return self._write('admin/spotlight',
@@ -333,11 +333,11 @@ class AdminHandler(WebHandler):
         popularProjects, _ = self.client.getProjects(projectlisting.NUMDEVELOPERS_DES, 10, 0)
         selectionData = self.client.getFrontPageSelection()
         activeProjects, _  = self.client.getProjects(projectlisting.ACTIVITY_DES, 10, 0)
-        releases = self.client.getReleaseList()
+        products = self.client.getProductsList()
 
         if not spotlightData.has_key('logo'):
             spotlightData['logo'] = ''
-        return self._write("admin/preview", firstTime=self.session.get('firstTimer', False), popularProjects=popularProjects, selectionData = selectionData, activeProjects = activeProjects, spotlightData=spotlightData, releases=releases)
+        return self._write("admin/preview", firstTime=self.session.get('firstTimer', False), popularProjects=popularProjects, selectionData = selectionData, activeProjects = activeProjects, spotlightData=spotlightData, products=products)
 
 
     @intFields(projectId = None)

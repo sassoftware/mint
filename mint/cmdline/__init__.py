@@ -12,7 +12,7 @@ from conary.conarycfg import ConfigFile
 
 from mint import constants
 from mint.client import MintClient
-from mint.cmdline import releases
+from mint.cmdline import products
 from mint.cmdline import commands
 
 
@@ -70,8 +70,8 @@ class RBuilderMain(options.MainHandler):
         print 'rbuilder: command-line interface to an rBuilder Server'
         print ''
         print 'usage:'
-        print '  release-create <project name> <trove spec> <image type> - create a new release'
-        print '  release-wait <release id>                               - wait for a release to finish building'
+        print '  product-create <project name> <trove spec> <image type> - create a new product'
+        print '  product-wait <product id>                               - wait for a product to finish building'
         print '  config                                                  - dump configuration'
 
     def runCommand(self, thisCommand, cfg, argSet, args):

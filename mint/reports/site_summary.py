@@ -5,7 +5,7 @@
 
 import time
 
-from mint import releasetypes
+from mint import producttypes
 from mint.reports.mint_reports import MintReport
 
 class SiteSummary(MintReport):
@@ -80,21 +80,21 @@ class SiteSummary(MintReport):
                    reportTime - 604800)
         data.append(('New Projects this week', cu.fetchone()[0]))
 
-        # count projects with releases
+        # count projects with products
         cu.execute("""SELECT COUNT(*) FROM
                           (SELECT DISTINCT projectId
-                            FROM Releases
+                            FROM Products
                             WHERE troveName IS NOT NULL)
-                          AS ProjectReleases""")
-        data.append(('Projects with releases', cu.fetchone()[0]))
+                          AS ProjectProducts""")
+        data.append(('Projects with products', cu.fetchone()[0]))
 
-        # count projects with releases this week
+        # count projects with products this week
         cu.execute("""SELECT COUNT(*) FROM
-                          (SELECT DISTINCT projectId FROM Releases
+                          (SELECT DISTINCT projectId FROM Products
                               WHERE timePublished > ?)
-                          AS ProjectReleases""",
+                          AS ProjectProducts""",
                    reportTime - 604800)
-        data.append(('Projects with releases this week', cu.fetchone()[0]))
+        data.append(('Projects with products this week', cu.fetchone()[0]))
 
         # count projects with commits
         cu.execute("""SELECT COUNT(*) FROM
@@ -139,28 +139,22 @@ class SiteSummary(MintReport):
         # spacer
         data.append(('',''))
 
-        countedReleases = (releasetypes.INSTALLABLE_ISO,
-                           releasetypes.RAW_HD_IMAGE,
-                            releasetypes.VMWARE_IMAGE)
-        queryStr = '(' + ', '.join([str(x) for x in countedReleases]) + ')'
-        # count the total releases
-        cu.execute("""SELECT COUNT(*) FROM Releases
-                              LEFT JOIN ReleaseImageTypes
-                                  ON ReleaseImageTypes.releaseId =
-                                      Releases.releaseId
-                          WHERE imageType IN %s""" % str(countedReleases))
+        countedProducts = (producttypes.INSTALLABLE_ISO,
+                           producttypes.RAW_HD_IMAGE,
+                            producttypes.VMWARE_IMAGE)
+        queryStr = '(' + ', '.join([str(x) for x in countedProducts]) + ')'
+        # count the total products
+        cu.execute("""SELECT COUNT(*) FROM Products
+                          WHERE productType IN %s""" % str(countedProducts))
 
         data.append(('Total Images', cu.fetchone()[0]))
 
-        # count releases for each image type
-        for releaseType in countedReleases:
-            cu.execute("""SELECT COUNT(*) FROM Releases
-                              LEFT JOIN ReleaseImageTypes
-                                  ON ReleaseImageTypes.releaseId =
-                                      Releases.releaseId
-                              WHERE ReleaseImageTypes.imageType=?""",
-                       releaseType)
-            data.append((releasetypes.typeNames[releaseType],
+        # count products for each image type
+        for productType in countedProducts:
+            cu.execute("""SELECT COUNT(*) FROM Products
+                              WHERE Product.productType=?""",
+                       productType)
+            data.append((producttypes.typeNames[productType],
                          cu.fetchone()[0]))
 
         # spacer
