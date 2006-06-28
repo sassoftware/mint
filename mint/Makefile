@@ -9,7 +9,7 @@ SUBDIRS = web distro reports templates cmdline
 python_files =			\
 	__init__.py		\
 	accesscontrol.py	\
-	applianceSpotlight.py		\
+	spotlight.py		\
 	checkhtml.py		\
 	client.py		\
 	config.py		\
