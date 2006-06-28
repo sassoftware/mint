@@ -8,8 +8,7 @@ from mint.helperfuncs import truncateForDisplay
 from mint.client import upstream
 
 ?>
-<html xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:py="http://purl.org/kid/ns#"
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:py="http://purl.org/kid/ns#"
       py:extends="'layout.kid'">
 <!--
     Copyright (c) 2005-2006 rPath, Inc.
@@ -31,7 +30,7 @@ from mint.client import upstream
         <div py:if="spotlightData" onclick="location.href='${spotlightData['link']}'" id="spotlight">
         <div class="cssbox2">
         <div class="cssbox_head2">
-            <div id="spotlightTitle" style="padding-left: ${spotlightData and '134px' or ''};">Virtual Appliance Spotlight</div>
+            <div id="spotlightTitle" style="padding-left: ${spotlightData['logo'] and '134px' or ''};">Virtual Appliance Spotlight</div>
         </div>
         <div class="cssbox_body2">
         <div py:if="spotlightData['logo']" id="logoBox">
@@ -40,8 +39,8 @@ from mint.client import upstream
         <div id="${spotlightData['logo'] and 'textBox' or 'textBoxWide'}">
             <div id="applianceTitle">${spotlightData['title']}</div>
             <div id="applianceText">${spotlightData['text']}</div>
-            <div id="applianceInfo">Click for more information.</div>
             <div py:if="int(spotlightData['showArchive'])" onclick="getElementById('spotlight').onclick=null; location.href='${cfg.basePath}applianceSpotlight';" class="archiveLink">Spotlight Archive</div>
+            <div id="applianceInfo">Click for more information.</div>
         </div>
         </div>
         </div>

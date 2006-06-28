@@ -236,7 +236,6 @@ button.img {
 }
 
 div#steps {
-    visibility: hidden;
     top: 130px;
     width: 720px;
 }
@@ -375,6 +374,32 @@ div#applianceTitle {
     line-height: 110%;
 }
 
+span#buildit {
+    cursor: pointer;
+    background: url(../images/build_it.png);
+    text-align: left;
+    width: 326px;
+    height: 81px;
+    float: left;
+    padding-top: 48px;
+    padding-left: 24px;
+    padding-right: 3px;
+    margin-right: 3px;
+}
+
+span#findit {
+    cursor: pointer;
+    float: right;
+    background: url(../images/find_it.png);
+    text-align: left;
+    width: 326px;
+    height: 59px;
+    padding-top: 48px;
+    padding-left: 24px;
+    margin-left: 3px;
+    margin-right: 3px;
+}
+
 div#applianceText {
     font-size: 9pt;
     line-height: 120%;
@@ -394,6 +419,7 @@ div.archiveLink {
     width: 19%;
     padding-top: 2px;
     padding-bottom: 5px;
+    float: left;
     
 }
 
@@ -406,8 +432,8 @@ div#applianceInfo {
     text-align: right;
     color: #ffa814;
     text-decoration: none;
-    float: right;
     padding-top: 2px;
+    padding-bottom: 5px;
 }
 
 div#logoBox {
