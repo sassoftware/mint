@@ -11,7 +11,7 @@ import subprocess
 import tempfile
 
 # mint imports
-from mint import releasetypes
+from mint import producttypes 
 from mint.distro import bootable_image
 from mint.distro.imagegen import ImageGenerator, MSG_INTERVAL
 
@@ -86,7 +86,7 @@ isolinuxCfg= '\n'.join(('say Welcome to %s.',
 
 
 class LiveIso(bootable_image.BootableImage):
-    fileType = releasetypes.typeNames[releasetypes.LIVE_ISO]
+    fileType = producttypes.typeNames[producttypes.LIVE_ISO]
 
     def iterFiles(self, baseDir, fileName):
         for base, dirs, files in os.walk(baseDir):

@@ -29,7 +29,7 @@ onload = "javascript:;"
             ]]>
         </script>
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/generic.js" />
-        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/releasetypes.js" />
+        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/producttypes.js" />
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/jobstatus.js" />
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/library.js" />
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/rpc.js" />
