@@ -37,7 +37,7 @@ from mint import templates
 from mint import userlevels
 from mint import users
 from mint import usertemplates
-from mint import applianceSpotlight
+from mint import spotlight
 from mint import selections
 from mint import rmakebuild
 from mint.distro import jsversion
@@ -215,7 +215,7 @@ def getTables(db, cfg):
     d['outboundLabels'] = mirror.OutboundLabelsTable(db)
     d['outboundMatchTroves'] = mirror.OutboundMatchTrovesTable(db)
     d['repNameMap'] = mirror.RepNameMapTable(db)
-    d['applianceSpotlight'] = applianceSpotlight.ApplianceSpotlightTable(db,
+    d['spotlight'] = spotlight.ApplianceSpotlightTable(db,
                                                                          cfg)
     d['selections'] = selections.FrontPageSelectionsTable(db, cfg)
     d['rMakeBuild'] = rmakebuild.rMakeBuildTable(db)
@@ -1492,24 +1492,24 @@ class MintServer(object):
     @private
     def addSpotlightItem(self, title, text, link, logo, showArchive, startDate,
                          endDate):
-         return self.applianceSpotlight.addItem(title, text, link, logo,
+         return self.spotlight.addItem(title, text, link, logo,
                                                showArchive, startDate, endDate)
 
     @typeCheck()
     @private
     def getSpotlightAll(self):
-        return self.applianceSpotlight.getAll()
+        return self.spotlight.getAll()
 
     @typeCheck()
     @private
     def getCurrentSpotlight(self):
-        return self.applianceSpotlight.getCurrent()
+        return self.spotlight.getCurrent()
 
     @typeCheck(int)
     @private
     @requiresAdmin
     def deleteSpotlightItem(self, itemId):
-        return self.applianceSpotlight.deleteItem(itemId)
+        return self.spotlight.deleteItem(itemId)
 
     @typeCheck(str, str, int)
     @private
