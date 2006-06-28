@@ -32,9 +32,10 @@ class FrontPageSelectionsTable(database.KeyedTable):
     def getAll(self):
         cu = self.db.cursor()
         cu.execute("SELECT * FROM %s ORDER BY rank" % self.name)
-        return cu.fetchall_dict()
+        return cu.fetchall_dict() or False
 
     def deleteItem(self, itemId):
         cu = self.db.cursor()
         cu.execute("DELETE FROM %s WHERE itemId=?" % self.name, itemId)
         self.db.commit()
+        return True
