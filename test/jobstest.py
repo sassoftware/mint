@@ -725,7 +725,7 @@ class JobsTest(fixtures.FixturedUnitTest):
 
         product.refresh()
         files = product.getFiles()
-        assert(files == [{'fileId': 1, 'filename': 'stub.iso',
+        assert(files == [{'fileId': 2, 'filename': 'stub.iso',
                           'title': 'Stub', 'size': 13}])
 
         fileInfo = client.getFileInfo(files[0]['fileId'])
@@ -745,9 +745,9 @@ class JobsTest(fixtures.FixturedUnitTest):
         # make sure that the incoming ordering of files is preserved
         product.setFiles([['zaaa.iso', 'Zaaa'], ['aaaa.iso', 'Aaaa']])
         assert(product.getFiles() == [{'size': 0, 'title': 'Zaaa',
-                                       'filename': 'zaaa.iso', 'fileId': 1},
+                                       'filename': 'zaaa.iso', 'fileId': 2},
                                       {'size': 0, 'title': 'Aaaa',
-                                       'filename': 'aaaa.iso', 'fileId': 2}])
+                                       'filename': 'aaaa.iso', 'fileId': 3}])
 
     @fixtures.fixture('Full')
     def testJobQueue(self, db, data):
