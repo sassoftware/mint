@@ -33,15 +33,19 @@ from mint.client import upstream
             <div id="spotlightTitle" style="padding-left: ${spotlightData['logo'] and '134px' or ''};">Virtual Appliance Spotlight</div>
         </div>
         <div class="cssbox_body2">
-        <div py:if="spotlightData['logo']" id="logoBox">
+        <table>
+        <tr>
+        <td style="vertical-align: middle;">
             <img id="applianceImg" src="${cfg.spotlightImagesDir}/${spotlightData['logo']}"/>
-        </div>
-        <div id="${spotlightData['logo'] and 'textBox' or 'textBoxWide'}">
+        </td>
+        <td>
             <div id="applianceTitle">${spotlightData['title']}</div>
             <div id="applianceText">${spotlightData['text']}</div>
             <div py:if="int(spotlightData['showArchive'])" onclick="getElementById('spotlight').onclick=null; location.href='${cfg.basePath}applianceSpotlight';" class="archiveLink">Spotlight Archive</div>
             <div id="applianceInfo">Click for more information.</div>
-        </div>
+        </td>
+        </tr>
+        </table>
         </div>
         </div>
         </div>
