@@ -320,14 +320,44 @@ div#inactiveRight {
     background-repeat: no-repeat;
 }
 
-div#spotlight {
+#spotlight .cssbox2,
+#spotlight .cssbox_body2,
+#spotlight .cssbox_head2,
+#spotlight .cssbox_head2 div {
+    background: transparent url(../images/spotlight.png) no-repeat bottom right;
     cursor: pointer;
-    background: url(../images/spotlight.png);
-    text-align: left;
-    width: 717px;
-    height: 110px;
-    background-repeat: no-repeat;
-    margin-bottom: 40px;
+}
+#spotlight .cssbox2 {
+    width: 716px !important; /* intended total box width - padding-right(next) */
+    width: 716px; /* IE Win = width - padding */
+    padding-right: 0px; /* the gap on the right edge of the image (not content padding) */
+    margin: 20px auto; /* use to position the box */
+    margin-left: 0;
+}
+
+/* set the top-right image */
+#spotlight .cssbox_head2 {
+    background-position: top right;
+    margin-right: 0; /* pull the right image over on top of border */
+    padding-right: 25px; /* right-image-gap + right-inside padding */
+}
+
+/* set the top-left image */
+#spotlight .cssbox_head2 div {
+    background-position: top left;
+    margin: 0; /* reset main site styles*/
+    border: 0; /* ditto */
+    padding: 0 0 0 25px; /* padding-left = image gap + interior padding ... no padding-right */
+    height: auto !important;
+    height: 1%; /* IE Holly Hack */
+}
+
+
+/* set the lower-left corner image */
+#spotlight .cssbox_body2 {
+    background-position: bottom left;
+    margin-right: 25px; /* interior-padding right */
+    padding: 0 0 0 25px; /* mirror .cssbox_head right/left */
 }
 
 div#spotlightTitle {
@@ -362,8 +392,8 @@ div.archiveLink {
     color: #ffa814;
     text-decoration: none;
     width: 19%;
-    float: left;
     padding-top: 2px;
+    padding-bottom: 5px;
     
 }
 
@@ -382,10 +412,10 @@ div#applianceInfo {
 
 div#logoBox {
     float: left;
-    height: 110px;
     width: 130px;
     line-height: 100px;
     text-align: center;
+    margin-top: -2.8em;
 }
 
 div#textBox {
