@@ -29,18 +29,34 @@ from mint.client import upstream
         <div id="right" class="side">
             ${resourcePane()}
         </div>
-        <div py:if="spotlightData" onclick="location.href='${spotlightData['link']}'" id="spotlight">
-        <div id="logoBox">
-            <img id="applianceLogo" src="${cfg.spotlightImagesDir}/${spotlightData['logo']}"/>
+        
+<div py:if="spotlightData" onclick="location.href='${spotlightData['link']}'" id="spotlight">
+        <div class="cssbox2">
+        <div class="cssbox_head2">
+            <div id="spotlightTitle" style="padding-left: ${spotlightData['logo'] and '134px' or ''};">Virtual Appliance Spotlight</div>
+        </div>
+        <div class="cssbox_body2">
+        <div py:if="spotlightData['logo']" id="logoBox">
+            <img id="applianceImg" src="${cfg.spotlightImagesDir}/${spotlightData['logo']}"/>
         </div>
         <div id="${spotlightData['logo'] and 'textBox' or 'textBoxWide'}">
-            <div id="spotlightTitle">Virtual Appliance Spotlight</div>
             <div id="applianceTitle">${spotlightData['title']}</div>
             <div id="applianceText">${spotlightData['text']}</div>
+            <div py:if="int(spotlightData['showArchive'])" onclick="getElementById('spotlight').onclick=null; location.href='${cfg.basePath}applianceSpotlight';" class="archiveLink">Spotlight Archive</div>
             <div id="applianceInfo">Click for more information.</div>
-            <div py:if="int(spotlightData['showArchive'])" onclick="getElementById('spotlight').onclick=null; alert('spotlight archive'); location.reload();" class="archiveLink">Spotlight Archive</div>
         </div>
         </div>
+        </div>
+        </div>
+            <span>
+                <span id="findit" onclick="javascript:window.location='${cfg.basePath}help?page=user-tutorial'">
+                    Check out the software appliances others have made.
+                </span>
+                <span id="buildit" onclick="javascript:window.location='${cfg.basePath}help?page=dev-tutorial'">
+                    Make your own software appliance in three easy steps.
+                </span>
+            </span>
+
         <div id="steps"> 
             <div id="threeEasySteps">
                 <a href="${cfg.basePath}help?page=dev-tutorial">
@@ -52,18 +68,19 @@ from mint.client import upstream
             </div>
         </div>
 
-        <div py:if="selectionData or activeProjects or popularProjects" id="topten">
+       <div py:if="selectionData or activeProjects or popularProjects" id="topten">
             <div class="cssbox">
             <div class="cssbox_head"><h2>&nbsp;</h2></div>
             <div class="cssbox_body">
                 <table style="width: 100%;">
                     <tr>
-                        <th class="topten_header">Recommended Appliances</th>
+                        <th py:if="selectionData" class="topten_header">Recommended Appliances</th>
                         <th class="topten_header">Most Popular</th>
                         <th class="topten_header">Most Active</th>
+                        <th py:if="not selectionData" class="topten_header">Recent Releases</th>
                     </tr>
                     <tr>
-                        <td>
+                        <td py:if="selectionData">
                             <ol>
                                 <li py:for="project in selectionData">
                                     <a href="${project['link']}">${project['name']}</a>
@@ -73,10 +90,9 @@ from mint.client import upstream
                         <td>
                             <ol>
                                 <li py:for="project in popularProjects">
-                                 <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${project[1]}/">${truncateForDisplay(project[2], maxWordLen=30)}</a>
+                                    <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${project[1]}/">${truncateForDisplay(project[2], maxWordLen=30)}</a>
                                 </li>
                             </ol>
-
                         </td>
                         <td>
                             <ol>
@@ -85,6 +101,24 @@ from mint.client import upstream
                                 </li>
                             </ol>
                         </td>
+                        <td py:if="not selectionData">
+                            <p py:if="not releases">No releases have been published yet.</p>
+                            <ol py:if="releases">
+
+                                <li py:for="release in releases">
+                                    <?python
+                                        projectName = release[0]
+                                        if projectName != release[2].getName():
+                                            releaseName = truncateForDisplay(release[2].getName(), maxWords=5)
+                                        else:
+                                            releaseName = upstream(release[2].getTroveVersion())
+                                        projectName = truncateForDisplay(projectName, maxWords=5)
+                                        trove = release[2].getTroveName() + "=" + release[2].getTroveVersion().trailingRevision().asString()
+                                    ?>
+                                    <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${release[1]}/release?id=${release[2].getId()}" title="${trove}">${projectName} <span style="font-size: smaller">${releaseName} (${release[2].getArch()} ${releasetypes.typeNamesShort[release[2].imageTypes[0]]})</span></a>
+                                 </li>
+                             </ol>
+                         </td>
                     </tr>
                 </table>
             </div>
