@@ -1,7 +1,7 @@
 #!/bin/sh
 set -x
 function carp {
-    nail -s 'rBuilder Appliance Build Failed' tgerla@rpath.com << EOT
+    nail -s 'rBuilder Appliance Build Failed' rbuilder-list@lambchop.rdu.rpath.com << EOT
 The rBuilder appliance build failed:
 
 $(tail -n 30 /tmp/create-test-rba.log)

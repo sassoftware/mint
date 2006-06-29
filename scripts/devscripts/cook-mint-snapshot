@@ -1,13 +1,14 @@
 #!/bin/sh
 set -x
 function carp {
-    nail -s 'Mint Snapshot Build Failed' tgerla@rpath.com << EOT
+    nail -s 'Mint Snapshot Build Failed' rbuilder-list@lambchop.rdu.rpath.com << EOT
 The rBuilder appliance build failed:
 
-$(rmake q $? --logs)
+$(cat /tmp/rmake.log)
 EOT
 exit
 }
 
-/srv/rbuilder/code/mint/scripts/devscripts/rmake-helper --trove rbuilder --context rba-nightly --commit
+/srv/rbuilder/code/mint/scripts/devscripts/rmake-helper --trove rbuilder --context rba-nightly --commit >& /tmp/rmake.log
+
 if [ $? != 0 ]; then carp; fi
