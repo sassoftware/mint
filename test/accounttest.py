@@ -100,11 +100,6 @@ class AccountTest(MintRepositoryHelper):
         user = client.getUser(userId)
         user.cancelUserAccount()
 
-    def testDuplicateUser(self):
-	self.quickMintUser("Foo", "bar")
-    	self.assertRaises(GroupAlreadyExists, self.quickMintUser,
-	                  "Foo", "bar")
-
     def testConfirmedTwice(self):
 	client = self.openMintClient(("anonymous", "anonymous"))
 	client.registerNewUser("Foo", "Bar", "Foo Bar",
