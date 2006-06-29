@@ -7,7 +7,8 @@
 python_files =		\
 	__init__.py	\
 	commands.py	\
-	releases.py
+	releases.py	\
+	users.py
 
 extra_dist = Makefile
 
