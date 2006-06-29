@@ -9,6 +9,7 @@ import os
 import stat
 import sys
 import re
+import time
 from urllib import quote, unquote, quote_plus, urlencode
 
 from mod_python import apache
@@ -75,8 +76,13 @@ class SiteHandler(WebHandler):
         return self._write("frontPage", firstTime=self.session.get('firstTimer', False), popularProjects=popularProjects, selectionData = selectionData, activeProjects = activeProjects, spotlightData=spotlightData, releases=releases)
 
     def applianceSpotlight(self, *args, **kwargs):
-        return self._write("applianceSpotlight", 
-                    data=self.client.getSpotlightAll()) 
+        spotlightData = self.client.getSpotlightAll()
+        if spotlightData:
+            data=[x for x in spotlightData if time.time() > x['endDate']]
+        else:
+            data = False
+        return self._write("applianceSpotlight", data=data)
+
     @redirectHttps
     def register(self, auth):
         self.toUrl = self.cfg.basePath
