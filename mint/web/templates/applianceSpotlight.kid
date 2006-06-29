@@ -24,20 +24,6 @@
                         </a>
                     </div>
                     <!-- /Try rBuilder -->
-                    <!-- Software Appliance -->
-                    <div class="sidebox">
-                        <div class="boxhead"><span class="boxtitle">Software Appliance</span></div>
-
-                        <div class="boxbody">
-                            <ul>
-                                <li>Brings the simplicity and value of Software as a Service (SaaS)
-                                    to on-premise applications.<br />
-                                    <a href="${cfg.corpSite}products-software-appliance.html">Learn more</a></li>
-                            </ul>
-                        </div>
-                    </div>
-                    <!-- /Software Appliance -->
-
                     <!-- Products -->
                     <div class="sidebox">
                         <div class="boxhead"><span class="boxtitle">Products</span></div>
@@ -98,11 +84,12 @@
 
 
                 
+        <p class="help" style="text-align: center;" py:if="not data">There are currently no appliances in the archive.  Please check back later.</p>
         <div style="width: 710px;" py:if="data">
         <?python import time ?>
             <h3 style="text-align: center;">rPath Virtual Appliance Spotlight Archive.  More guide text to follow.</h3>
 
-        <div py:for="spotlightData in data" py:if="time.time() > spotlightData['endDate']">
+        <div py:for="spotlightData in data">
         <p style="text-align: right; font-style: italic;">${time.strftime('%m/%d/%Y', time.localtime(spotlightData['startDate']))} - ${time.strftime('%m/%d/%Y', time.localtime(spotlightData['endDate']))}</p>
         <div onclick="location.href='${spotlightData['link']}'" id="spotlight">
  <div class="cssbox2">
