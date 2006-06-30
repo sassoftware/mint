@@ -256,16 +256,35 @@ div#stepsText {
     padding: 8px 0px 24px 0px;
 }
 
-div#applianceLogos {
-    width: 720px;
-    height: 200px;
-    text-align: center;
+img#useitImg {
+    vertical-align: middle;
 }
 
-div#applianceLogo {
-    width: 33.33%;
-    float: left;
-    line-height: 200px;
+table#singleTable {
+    width: 720px;
+    height: 234px;
+    border-spacing: 0;
+    top: 0;
+    bottom: 0;
+    margin: 0;
+    padding: 0;
+}
+
+table#doubleTable {
+    width: 720px;
+    height: 117px;
+    border-spacing: 0;
+    top: 0;
+    bottom: 0;
+    margin: 0;
+    padding: 0;
+}
+
+td#useIt {
+    vertical-align: middle;
+    text-align: center;
+    margin: 0;
+    padding: 0;
 }
 
 div#orangeTitle, div#inactiveOrangeTitle {
