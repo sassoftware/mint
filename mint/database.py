@@ -168,17 +168,22 @@ class KeyedTable(DatabaseTable):
     """
     key = "itemId"
 
-    def get(self, id):
+    def get(self, id, fields=None):
         """
         Fetches a single row in the database by primary key.
         @param id: database item primary key
+        @param fields: fields to retrieve when fetching; using None uses
+            default fields from KeyedTable object
         @return: map of column names to values
         @rtype: dict
         @raise ItemNotFound: row with requested key does not exist in the database.
         """
 
+        if not fields:
+            fields = self.fields
+
         cu = self.db.cursor()
-        stmt = "SELECT %s FROM %s WHERE %s=?" % (", ".join(self.fields), self.name, self.key)
+        stmt = "SELECT %s FROM %s WHERE %s=?" % (", ".join(fields), self.name, self.key)
         cu.execute(stmt, id)
 
         r = cu.fetchone()
@@ -186,7 +191,7 @@ class KeyedTable(DatabaseTable):
             raise ItemNotFound
 
         data = {}
-        for i, key in enumerate(self.fields):
+        for i, key in enumerate(fields):
             if r[i] != None:
                 data[key] = r[i]
             else:
