@@ -5,7 +5,7 @@
 #
 
 class MintError(Exception):
-    pass
+    args = []
 
 class PermissionDenied(MintError):
     def __str__(self):

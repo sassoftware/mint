@@ -597,6 +597,8 @@ class _Method(xmlrpclib._Method):
             raise JobserverVersionMismatch(exceptionArgs[0])
         elif exceptionName == "MaintenanceMode":
             raise MaintenanceMode(exceptionArgs[0])
+        elif exceptionName == "LastOwner":
+            raise users.LastOwner(exceptionArgs[0])
         elif exceptionName == "ParameterError":
             raise ParameterError(exceptionArgs[0])
         else:

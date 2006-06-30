@@ -111,11 +111,11 @@ class Project(database.TableObject):
 
     def addMemberById(self, userId, level):
         assert(level in userlevels.LEVELS)
-        return self.server.addMember(self.id, userId, None, level)
+        return self.server.addMember(self.id, userId, "", level)
 
     def addMemberByName(self, username, level):
         assert(level in userlevels.LEVELS)
-        return self.server.addMember(self.id, None, username, level)
+        return self.server.addMember(self.id, 0, username, level)
 
     def listJoinRequests(self):
         return self.server.listJoinRequests(self.id)

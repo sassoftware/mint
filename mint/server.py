@@ -321,6 +321,9 @@ class MintServer(object):
             except MaintenanceMode, e:
                 self._handleError(e, authToken, methodName, args)
                 return (True, ("MaintenanceMode", str(e)))
+            except users.LastOwner, e:
+                self._handleError(e, authToken, methodName, args)
+                return (True, ("LastOwner", str(e)))
             except ParameterError, e:
                 self._handleError(e, authToken, methodName, args)
                 return (True, ("ParameterError", str(e)))
@@ -1019,7 +1022,7 @@ class MintServer(object):
             raise users.UserInduction()
         if self.projectUsers.onlyOwner(projectId, userId) and \
                (level != userlevels.OWNER):
-            raise users.LastOwner()
+            raise users.LastOwner
         #update the level on the project
         project = projects.Project(self, projectId)
         user = self.getUser(userId)
