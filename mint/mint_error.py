@@ -35,6 +35,18 @@ class ProductEmpty(MintError):
     def __str__(self):
         return "The referenced product has no files and cannot be published."
 
+class PublishedReleaseEmpty(MintError):
+    def __str__(self):
+        return "The referenced published releases has no products and cannot be finalized."
+
+class PublishedReleaseFinalized(MintError):
+    def __str__(self):
+        return "Release has been finalized and cannot be modified."
+
+class PublishedReleaseMissing(MintError):
+    def __str__(self):
+        return "The referenced published release does not exist."
+
 class JobserverVersionMismatch(MintError):
     def __str__(self):
         return self.msg
