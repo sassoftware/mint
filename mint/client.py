@@ -306,6 +306,7 @@ class MintClient:
         productId = self.server.newProduct(projectId, productName)
         return self.getProduct(productId)
 
+    # XXX this probably needs to be getPublishedReleaseList, now
     def getProductList(self, limit=10, offset=0):
         """
         Get a list of the most recent products as ordered by their published date.
@@ -333,6 +334,8 @@ class MintClient:
         @returns: an object representing the published release
         @rtype: L{mint.pubreleases.PublishedRelease}
         """
+        # XXX broken
+        #return self.server.getPublishedRelease(pubReleaseId)
         return pubreleases.PublishedRelease(self.server, pubReleaseId)
 
     def deletePublishedRelease(self, pubReleaseId):

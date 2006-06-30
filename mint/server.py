@@ -47,7 +47,8 @@ from mint.mint_error import PermissionDenied, ProductPublished, \
      ProductMissing, MintError, ProductEmpty, UserAlreadyAdmin, \
      AdminSelfDemotion, JobserverVersionMismatch, LastAdmin, \
      MaintenanceMode, ParameterError, GroupTroveEmpty, rMakeBuildCollision, \
-     rMakeBuildEmpty, rMakeBuildOrder
+     rMakeBuildEmpty, rMakeBuildOrder, PublishedReleaseMissing, \
+     PublishedReleaseEmpty, PublishedReleaseFinalized
 from mint.reports import MintReport
 from mint.searcher import SearchTermsError
 
@@ -404,34 +405,45 @@ class MintServer(object):
             return
         if not self.projects.isHidden(projectId):
             return
-        members = self.projectUsers.getMembersByProjectId(projectId)
-        for userId, username, level in members:
-            if (userId == self.auth.userId) and (level in userlevels.WRITERS):
+        if (self.projectUsers.getUserlevelForProjectMember(projectId,
+            self.auth.userId) in userlevels.WRITERS):
                 return
         raise database.ItemNotFound()
 
     def _filterProductAccess(self, productId):
-        cu = self.db.cursor()
-        cu.execute("SELECT projectId FROM Products WHERE productId = ?",
-                   productId)
-        res = cu.fetchall()
-        if len(res):
-            self._filterProjectAccess(res[0][0])
+        try:
+            productRow = self.products.get(productId, fields=['projectId'])
+        except database.ItemNotFound:
+            return
+
+        self._filterProjectAccess(productRow['projectId'])
+
 
     def _filterPublishedReleaseAccess(self, pubReleaseId):
-        cu = self.db.cursor()
-        cu.execute("""SELECT projectId FROM PublishedReleases
-                      WHERE pubReleaseId = ?""", pubReleaseId)
-        res = cu.fetchall()
-        if len(res):
-            self._filterProjectAccess(res[0][0])
+        try:
+            pubReleaseRow = self.publishedReleases.get(pubReleaseId,
+                    fields=['projectId'])
+        except database.ItemNotFound:
+            return
+
+        isFinal = self.publishedReleases.isPublishedReleaseFinalized(pubReleaseId)
+        # if the release is not finalized, then only project members 
+        # with write access can see the published release
+        if not isFinal and not self._checkProjectAccess(pubReleaseRow['projectId'], userlevels.WRITERS):
+            raise database.ItemNotFound()
+        # if the published release is finalized, then anyone can see it
+        # unless the project is hidden and the user is not an admin
+        else:
+            self._filterProjectAccess(pubReleaseRow['projectId'])
 
     def _filterLabelAccess(self, labelId):
-        cu = self.db.cursor()
-        cu.execute("SELECT projectId FROM Labels WHERE labelId = ?", labelId)
-        r = cu.fetchall()
-        if len(r):
-            self._filterProjectAccess(r[0][0])
+        try:
+            labelRow = self.publishedReleases.get(labelId, fields=['projectId'])
+        except database.ItemNotFound:
+            return
+
+        self._filterProjectAccess(pubReleaseRow['projectId'])
+
 
     def _filterJobAccess(self, jobId):
         cu = self.db.cursor()
@@ -475,16 +487,16 @@ class MintServer(object):
             raise database.ItemNotFound
         return self._filterrMakeBuildAccess(res[0])
 
-    def _requireProjectDeveloper(self, projectId):
+    def _checkProjectAccess(self, projectId, allowedUserlevels):
         if list(self.authToken) == [self.cfg.authUser, self.cfg.authPass] or self.auth.admin:
-            return
-        members = self.projectUsers.getMembersByProjectId(projectId)
-        for userId, username, level in members:
-            if (userId == self.auth.userId) and \
-                   (level not in userlevels.WRITERS):
-                raise PermissionDenied
-        if self.auth.userId not in [x[0] for x in members]:
-            raise PermissionDenied
+            return True
+        try:
+            if (self.projectUsers.getUserlevelForProjectMember(projectId,
+                    self.auth.userId) in allowedUserlevels):
+                return True
+        except database.ItemNotFound:
+            pass
+        return False
 
     def _isUserAdmin(self, userId):
         mintAdminId = self.userGroups.getMintAdminId()
@@ -493,7 +505,6 @@ class MintServer(object):
                 return True
         except database.ItemNotFound:
             pass
-
         return False
 
     # project methods
@@ -1654,6 +1665,7 @@ class MintServer(object):
 
     @typeCheck(int, int)
     @private
+    # XXX this probably needs to be getPublishedReleases, now
     def getProductList(self, limit, offset):
         cu = self.db.cursor()
         cu.execute("""SELECT Projects.name, Projects.hostname, productId
@@ -1725,6 +1737,10 @@ class MintServer(object):
     @private
     def updateProduct(self, productId, valDict):
         self._filterProductAccess(productId)
+        if not self.products.productExists(productId):
+            raise ProductMissing()
+        if self.products.getPublished(productId):
+            raise ProductPublished()
         if len(valDict):
             valDict.update({'timeUpdated': time.time(),
                             'updatedBy':   self.auth.userId})
@@ -1754,18 +1770,21 @@ class MintServer(object):
         self._filterProductAccess(productId)
         return self.productData.getDataDict(productId)
 
+    #
+    # published releases 
+    #
     @typeCheck(int)
     @requiresAuth
     def newPublishedRelease(self, projectId):
         self._filterProjectAccess(projectId)
+        if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
+            raise PermissionDenied
         timeCreated = time.time()
         createdBy = self.auth.userId
         return self.publishedReleases.new(projectId = projectId,
-                timeCreated = timeCreated, createdBy = createdBy,
-                visibility = pubreleases.VISIBILITY_PROJECT_ONLY)
+                timeCreated = timeCreated, createdBy = createdBy)
 
     @typeCheck(int)
-    @requiresAuth
     def getPublishedRelease(self, pubReleaseId):
         self._filterPublishedReleaseAccess(pubReleaseId)
         return self.publishedReleases.get(pubReleaseId)
@@ -1775,55 +1794,73 @@ class MintServer(object):
     @private
     def updatePublishedRelease(self, pubReleaseId, valDict):
         self._filterPublishedReleaseAccess(pubReleaseId)
+        projectId = self.publishedReleases.getProject(pubReleaseId)
+        if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
+            raise PermissionDenied
+        if self.publishedReleases.isPublishedReleaseFinalized(pubReleaseId):
+            raise PublishedReleaseFinalized
         if len(valDict):
             valDict.update({'timeUpdated': time.time(),
                             'updatedBy': self.auth.userId})
             return self.publishedReleases.update(pubReleaseId, **valDict)
 
+    @typeCheck(int, dict)
+    @requiresAuth
+    @private
+    def finalizePublishedRelease(self, pubReleaseId):
+        self._filterPublishedReleaseAccess(pubReleaseId)
+        projectId = self.publishedReleases.getProject(pubReleaseId)
+        if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
+            raise PermissionDenied
+        if not len(self.publishedReleases.getProducts(pubReleaseId)):
+            raise PublishedReleaseEmpty
+        if self.publishedReleases.isPublishedReleaseFinalized(pubReleaseId):
+            raise PublishedReleaseFinalized
+        valDict = {'timePublished': time.time(),
+                   'publishedBy': self.auth.userId}
+        return self.publishedReleases.update(pubReleaseId, **valDict)
+
     @typeCheck(int)
     @requiresAuth
     def deletePublishedRelease(self, pubReleaseId):
         self._filterPublishedReleaseAccess(pubReleaseId)
-        cu = self.db.cursor()
-        cu.execute("""UPDATE Products SET pubReleaseId = NULL
-                      WHERE pubReleaseId = ?""", pubReleaseId)
-        self.db.commit()
+        projectId = self.publishedReleases.getProject(pubReleaseId)
+        if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
+            raise PermissionDenied
         self.publishedReleases.delete(pubReleaseId)
         return True
 
     @typeCheck(int)
     @requiresAuth
     @private
+    def isPublishedReleaseFinalized(self, pubReleaseId):
+        self._filterPublishedReleaseAccess(pubReleaseId)
+        return self.publishedReleases.isPublishedReleaseFinalized(pubReleaseId)
+
+    @typeCheck(int)
+    @requiresAuth
+    @private
     def getUnpublishedProductsForProject(self, projectId):
         self._filterProjectAccess(projectId)
-        cu = self.db.cursor()
-        cu.execute("""SELECT productId FROM Products
-                      WHERE projectId = ? AND pubReleaseId IS NULL""",
-                      projectId)
-        res = cu.fetchall()
-        return [x[0] for x in res]
+        return self.products.getUnpublishedProducts(projectId)
 
     @typeCheck(int)
     @requiresAuth
     @private
     def getProductsForPublishedRelease(self, pubReleaseId):
         self._filterPublishedReleaseAccess(pubReleaseId)
-        cu = self.db.cursor()
-        cu.execute("""SELECT productId FROM Products
-                      WHERE pubReleaseId = ?""", pubReleaseId)
-        res = cu.fetchall()
-        return [x[0] for x in res]
+        return self.publishedReleases.getProducts(pubReleaseId)
 
     @typeCheck(int)
     @requiresAuth
     @private
     def getPublishedReleasesByProject(self, projectId):
         self._filterProjectAccess(projectId)
-        cu = self.db.cursor()
-        cu.execute("""SELECT pubReleaseId FROM PublishedReleases
-                      WHERE projectId = ?""", projectId)
-        res = cu.fetchall()
-        return [x[0] for x in res]
+        finalizedOnly = False
+        if not self._checkProjectAccess(projectId, userlevels.WRITERS):
+            finalizedOnly = True
+        return self.publishedReleases.getPublishedReleases(projectId,
+                finalizedOnly)
 
     # job data calls
     @typeCheck(int, str, ((str, int, bool),), int)
@@ -1887,15 +1924,20 @@ class MintServer(object):
     @private
     def setProductPublished(self, productId, pubReleaseId, published):
         self._filterProductAccess(productId)
-        self._filterPublishedReleaseAccess(pubReleaseId)
-        # TODO check for existence of published release
+        productData = self.products.get(productId, fields=['projectId'])
+        if not self._checkProjectAccess(productData['projectId'],
+                [userlevels.OWNER]):
+            raise PermissionDenied()
+        if not self.publishedReleases.publishedReleaseExists(pubReleaseId):
+            raise PublishedReleaseMissing()
+        if self.isPublishedReleaseFinalized(pubReleaseId):
+            raise PublishedReleaseFinalized()
         if not self.products.productExists(productId):
             raise ProductMissing()
         if published and not self.getProductFilenames(productId):
             raise ProductEmpty()
         if published and self.products.getPublished(productId):
             raise ProductPublished()
-
         pubReleaseId = published and pubReleaseId or None
         return self.updateProduct(productId, {'pubReleaseId': pubReleaseId })
 
@@ -1996,8 +2038,8 @@ class MintServer(object):
     def startCookJob(self, groupTroveId, arch):
         projectId = self.groupTroves.getProjectId(groupTroveId)
         self._filterProjectAccess(projectId)
-        self._requireProjectDeveloper(projectId)
-
+        if not self._checkProjectAccess(projectId, userlevels.WRITERS):
+            raise PermissionDenied
         if not self.listGroupTroveItemsByGroupTrove(groupTroveId):
             raise GroupTroveEmpty
 
@@ -2274,7 +2316,8 @@ class MintServer(object):
     def getJobIdForCook(self, groupTroveId):
         projectId = self.groupTroves.getProjectId(groupTroveId)
         self._filterProjectAccess(projectId)
-        self._requireProjectDeveloper(projectId)
+        if not self._checkProjectAccess(projectId, userlevels.WRITERS):
+            raise PermissionDenied
 
         cu = self.db.cursor()
 
@@ -2636,7 +2679,8 @@ class MintServer(object):
     def getGroupTroveLabelPath(self, groupTroveId):
         projectId = self.groupTroves.getProjectId(groupTroveId)
         self._filterProjectAccess(projectId)
-        self._requireProjectDeveloper(projectId)
+        if not self._checkProjectAccess(projectId, userlevels.WRITERS):
+            raise PermissionDenied
 
         groupTrove = self.groupTroves.get(groupTroveId)
         groupTroveItems = self.groupTroveItems.listByGroupTroveId(groupTroveId)
@@ -2665,7 +2709,8 @@ class MintServer(object):
     def getRecipe(self, groupTroveId):
         projectId = self.groupTroves.getProjectId(groupTroveId)
         self._filterProjectAccess(projectId)
-        self._requireProjectDeveloper(projectId)
+        if not self._checkProjectAccess(projectId, userlevels.WRITERS):
+            raise PermissionDenied
         return self._getRecipe(groupTroveId)
 
     @private
@@ -2674,7 +2719,8 @@ class MintServer(object):
     def setGroupTroveAutoResolve(self, groupTroveId, resolve):
         projectId = self.groupTroves.getProjectId(groupTroveId)
         self._filterProjectAccess(projectId)
-        self._requireProjectDeveloper(projectId)
+        if not self._checkProjectAccess(projectId, userlevels.WRITERS):
+            raise PermissionDenied
         self.groupTroves.setAutoResolve(groupTroveId, resolve)
         return True
 
@@ -2683,7 +2729,8 @@ class MintServer(object):
     @typeCheck(int)
     def listGroupTrovesByProject(self, projectId):
         self._filterProjectAccess(projectId)
-        self._requireProjectDeveloper(projectId)
+        if not self._checkProjectAccess(projectId, userlevels.WRITERS):
+            raise PermissionDenied
         return self.groupTroves.listGroupTrovesByProject(projectId)
 
     @private
@@ -2692,7 +2739,8 @@ class MintServer(object):
     def createGroupTrove(self, projectId, recipeName, upstreamVersion,
                          description, autoResolve):
         self._filterProjectAccess(projectId)
-        self._requireProjectDeveloper(projectId)
+        if not self._checkProjectAccess(projectId, userlevels.WRITERS):
+            raise PermissionDenied
         creatorId = self.users.getIdByColumn("username", self.authToken[0])
         return self.groupTroves.createGroupTrove(projectId, creatorId,
                                                  recipeName, upstreamVersion,
@@ -2703,7 +2751,8 @@ class MintServer(object):
     def getGroupTrove(self, groupTroveId):
         projectId = self.groupTroves.getProjectId(groupTroveId)
         self._filterProjectAccess(projectId)
-        self._requireProjectDeveloper(projectId)
+        if not self._checkProjectAccess(projectId, userlevels.WRITERS):
+            raise PermissionDenied
         return self.groupTroves.get(groupTroveId)
 
     @private
@@ -2712,7 +2761,8 @@ class MintServer(object):
     def deleteGroupTrove(self, groupTroveId):
         projectId = self.groupTroves.getProjectId(groupTroveId)
         self._filterProjectAccess(projectId)
-        self._requireProjectDeveloper(projectId)
+        if not self._checkProjectAccess(projectId, userlevels.WRITERS):
+            raise PermissionDenied
         return self.groupTroves.delGroupTrove(groupTroveId)
 
     @private
@@ -2721,7 +2771,8 @@ class MintServer(object):
     def setGroupTroveDesc(self, groupTroveId, description):
         projectId = self.groupTroves.getProjectId(groupTroveId)
         self._filterProjectAccess(projectId)
-        self._requireProjectDeveloper(projectId)
+        if not self._checkProjectAccess(projectId, userlevels.WRITERS):
+            raise PermissionDenied
         self.groupTroves.update(groupTroveId, description = description,
                                 timeModified = time.time())
         return True
@@ -2732,7 +2783,8 @@ class MintServer(object):
     def setGroupTroveUpstreamVersion(self, groupTroveId, vers):
         projectId = self.groupTroves.getProjectId(groupTroveId)
         self._filterProjectAccess(projectId)
-        self._requireProjectDeveloper(projectId)
+        if not self._checkProjectAccess(projectId, userlevels.WRITERS):
+            raise PermissionDenied
         self.groupTroves.setUpstreamVersion(groupTroveId, vers)
         return True
 
@@ -2775,7 +2827,8 @@ class MintServer(object):
     def listGroupTroveItemsByGroupTrove(self, groupTroveId):
         projectId = self.groupTroves.getProjectId(groupTroveId)
         self._filterProjectAccess(projectId)
-        self._requireProjectDeveloper(projectId)
+        if not self._checkProjectAccess(projectId, userlevels.WRITERS):
+            raise PermissionDenied
         return self.groupTroveItems.listByGroupTroveId(groupTroveId)
 
     @private
@@ -2784,7 +2837,8 @@ class MintServer(object):
     def troveInGroupTroveItems(self, groupTroveId, name, version, flavor):
         projectId = self.groupTroves.getProjectId(groupTroveId)
         self._filterProjectAccess(projectId)
-        self._requireProjectDeveloper(projectId)
+        if not self._checkProjectAccess(projectId, userlevels.WRITERS):
+            raise PermissionDenied
         return self.groupTroveItems.troveInGroupTroveItems( \
             groupTroveId, name, version, flavor)
 
@@ -2793,7 +2847,8 @@ class MintServer(object):
     def setGroupTroveItemVersionLock(self, groupTroveItemId, lock):
         projectId = self.groupTroveItems.getProjectId(groupTroveItemId)
         self._filterProjectAccess(projectId)
-        self._requireProjectDeveloper(projectId)
+        if not self._checkProjectAccess(projectId, userlevels.WRITERS):
+            raise PermissionDenied
         self.groupTroveItems.setVersionLock(groupTroveItemId, lock)
         return self.groupTroveItems.get(groupTroveItemId)
 
@@ -2803,7 +2858,8 @@ class MintServer(object):
     def setGroupTroveItemUseLock(self, groupTroveItemId, lock):
         projectId = self.groupTroveItems.getProjectId(groupTroveItemId)
         self._filterProjectAccess(projectId)
-        self._requireProjectDeveloper(projectId)
+        if not self._checkProjectAccess(projectId, userlevels.WRITERS):
+            raise PermissionDenied
         self.groupTroveItems.setUseLock(groupTroveItemId, lock)
         return lock
 
@@ -2813,7 +2869,8 @@ class MintServer(object):
     def setGroupTroveItemInstSetLock(self, groupTroveItemId, lock):
         projectId = self.groupTroveItems.getProjectId(groupTroveItemId)
         self._filterProjectAccess(projectId)
-        self._requireProjectDeveloper(projectId)
+        if not self._checkProjectAccess(projectId, userlevels.WRITERS):
+            raise PermissionDenied
         self.groupTroveItems.setInstSetLock(groupTroveItemId, lock)
         return lock
 
@@ -2823,7 +2880,8 @@ class MintServer(object):
                      subGroup, versionLock, useLock, instSetLock):
         projectId = self.groupTroves.getProjectId(groupTroveId)
         self._filterProjectAccess(projectId)
-        self._requireProjectDeveloper(projectId)
+        if not self._checkProjectAccess(projectId, userlevels.WRITERS):
+            raise PermissionDenied
         creatorId = self.users.getIdByColumn("username", self.authToken[0])
         return self.groupTroveItems.addTroveItem(groupTroveId, creatorId,
                                                  trvName, trvVersion,
@@ -2874,7 +2932,8 @@ class MintServer(object):
     def delGroupTroveItem(self, groupTroveItemId):
         projectId = self.groupTroveItems.getProjectId(groupTroveItemId)
         self._filterProjectAccess(projectId)
-        self._requireProjectDeveloper(projectId)
+        if not self._checkProjectAccess(projectId, userlevels.WRITERS):
+            raise PermissionDenied
         return self.groupTroveItems.delGroupTroveItem(groupTroveItemId)
 
     @private
@@ -2883,7 +2942,8 @@ class MintServer(object):
     def getGroupTroveItem(self, groupTroveItemId):
         projectId = self.groupTroveItems.getProjectId(groupTroveItemId)
         self._filterProjectAccess(projectId)
-        self._requireProjectDeveloper(projectId)
+        if not self._checkProjectAccess(projectId, userlevels.WRITERS):
+            raise PermissionDenied
         return self.groupTroveItems.get(groupTroveItemId)
 
     @private
@@ -2892,7 +2952,8 @@ class MintServer(object):
     def setGroupTroveItemSubGroup(self, groupTroveItemId, subGroup):
         projectId = self.groupTroveItems.getProjectId(groupTroveItemId)
         self._filterProjectAccess(projectId)
-        self._requireProjectDeveloper(projectId)
+        if not self._checkProjectAccess(projectId, userlevels.WRITERS):
+            raise PermissionDenied
         self.groupTroveItems.update(groupTroveItemId, subGroup = subGroup)
         return True
 

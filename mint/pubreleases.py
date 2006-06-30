@@ -6,9 +6,6 @@
 
 from mint import database
 
-VISIBILITY_PUBLIC = 1
-VISIBILITY_PROJECT_ONLY = 0
-
 class PublishedReleasesTable(database.KeyedTable):
 
     name = "PublishedReleases"
@@ -19,21 +16,64 @@ class PublishedReleasesTable(database.KeyedTable):
                     pubReleaseId        %(PRIMARYKEY)s,
                     projectId           INTEGER,
                     name                VARCHAR(255),
+                    version             VARCHAR(32),
                     description         TEXT,
-                    visibility          SMALLINT,
                     timeCreated         DOUBLE,
                     createdBy           INTEGER,
                     timeUpdated         DOUBLE,
-                    updatedBy           INTEGER
+                    updatedBy           INTEGER,
+                    timePublished       DOUBLE,
+                    publishedBy         INTEGER
                 )"""
 
-    fields = [ 'pubReleaseId', 'projectId', 'name', 'description',
-               'visibility', 'timeCreated', 'createdBy', 'timeUpdated',
-               'updatedBy' ]
+    fields = [ 'pubReleaseId', 'projectId', 'name', 'version', 'description',
+               'timeCreated', 'createdBy', 'timeUpdated', 'updatedBy',
+               'timePublished', 'publishedBy' ]
 
     indexes = { "PubReleasesProjectIdIdx": \
                    """CREATE INDEX PubReleasesProjectIdIdx
                           ON PublishedReleases(projectId)""" }
+
+    def delete(self, id):
+        cu = self.db.cursor()
+        cu.execute("""UPDATE Products SET pubReleaseId = NULL
+                      WHERE pubReleaseId = ?""", id)
+        self.db.commit()
+        database.KeyedTable.delete(self, id)
+
+    def publishedReleaseExists(self, pubReleaseId):
+        try:
+            pubRelease = self.get(pubReleaseId, fields=['pubReleaseId'])
+        except ItemNotFound:
+            return False
+        return True
+
+    def isPublishedReleaseFinalized(self, pubReleaseId):
+        pubRelease = self.get(pubReleaseId, fields=['timePublished'])
+        return bool(pubRelease['timePublished'])
+
+    def getProducts(self, pubReleaseId):
+        cu = self.db.cursor()
+        cu.execute("""SELECT productId FROM Products
+                      WHERE pubReleaseId = ?""", pubReleaseId)
+        res = cu.fetchall()
+        return [x[0] for x in res]
+
+    def getPublishedReleases(self, projectId, finalizedOnly=False):
+        sql = """SELECT pubReleaseId FROM PublishedReleases
+                 WHERE projectId = ?"""
+
+        if finalizedOnly:
+            sql += " AND timePublished IS NOT NULL"
+
+        cu = self.db.cursor()
+        cu.execute(sql, projectId)
+        res = cu.fetchall()
+        return [x[0] for x in res]
+
+    def getProject(self, pubReleaseId):
+        data = self.get(pubReleaseId, ['projectId'])
+        return data['projectId']
 
 class PublishedRelease(database.TableObject):
 
@@ -51,13 +91,16 @@ class PublishedRelease(database.TableObject):
     def getProducts(self):
         return self.server.getProductsForPublishedRelease(self.id)
 
-    def isPublicallyVisible(self):
-        return self.visibility == VISIBILITY_PUBLIC
+    def isFinalized(self):
+        return self.server.isPublishedReleaseFinalized(self.id)
 
     def save(self):
         valDict = {'name': self.name,
-                   'description': self.description,
-                   'visibility': self.visibility}
+                   'version': self.version,
+                   'description': self.description}
         return self.server.updatePublishedRelease(self.pubReleaseId, valDict)
+
+    def finalize(self):
+        return self.server.finalizePublishedRelease(self.pubReleaseId)
 
 
