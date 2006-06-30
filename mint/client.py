@@ -497,6 +497,15 @@ class MintClient:
     def getOutboundMatchTroves(self, labelId):
         return self.server.getOutboundMatchTroves(labelId)
 
+    def getUseItIcons(self):
+        return self.server.getUseItIcons()
+    
+    def deleteUseItIcon(self, itemId):
+        return self.server.deleteUseItIcon(itemId)
+
+    def addUseItIcon(self, itemId, name, link):
+        return self.server.addUseItIcon(itemId, name, link)
+
     def getCurrentSpotlight(self):
         return self.server.getCurrentSpotlight()
 
