@@ -24,7 +24,7 @@ from mint.client import upstream
         <link rel="alternate" type="application/rss+xml"
               title="New ${cfg.productName} Releases" href="http://${cfg.siteHost}${cfg.basePath}rss?feed=newReleases" />
     </head>
-    <body onload="roundElement('previewMessage')">
+    <body onload="roundElement('previewMessage'); hideElement('steps');">
 	<div id="previewMessage" style="background-color: #EF6064; font-size: 14pt; color: white; text-align:center; margin-bottom: 20px;">Preview Mode.  To exit, click your browser's 'back' button.<div style="text-align: right; font-size: 9pt; margin-right: 5px; cursor: pointer;" onclick="var e = document.getElementById('previewMessage');e.parentNode.removeChild(e);">close</div></div>
         <div id="right" class="side">
             ${resourcePane()}
@@ -60,15 +60,31 @@ from mint.client import upstream
         </div>
         </div>
 
-        
-            <span>
-                <span id="findit" onclick="javascript:window.location='${cfg.basePath}help?page=user-tutorial'">
+           <div id="inactiveRight" onmouseover="underlineTitle();" onmouseout="normalTitle();" onclick="buildIt();">
+                    <div id="inactiveOrangeTitle">Build it.</div>
+                        Make your own software appliance in three easy steps.
+                </div>
+                <div id="activeLeft" >
+                    <div id="orangeTitle">Use It.</div>
                     Check out the software appliances others have made.
-                </span>
-                <span id="buildit" onclick="javascript:window.location='${cfg.basePath}help?page=dev-tutorial'">
-                    Make your own software appliance in three easy steps.
-                </span>
-            </span>
+                </div>
+
+           <div id="applianceLogos" style="width: 720px; height: 234px;">
+            <table py:if="table1Data" id="${table2Data and 'doubleTable' or 'singleTable'}">
+                <tr>
+                    <td id="useIt" py:for="td in table1Data">
+                        <a href="${td['link']}"><img id="useitImg" src="${cfg.spotlightImagesDir}/${td['name']}" alt="${td['link']}"/></a>
+                    </td>
+                </tr>
+            </table>
+            <table id="doubleTable" py:if="table2Data">
+                <tr>
+                    <td id="useIt" py:for="td in table2Data">
+                        <a href="${td['link']}"><img id="useitImg" src="${cfg.spotlightImagesDir}/${td['name']}" alt="${td['link']}"/></a>
+                    </td>
+                </tr>
+            </table>
+            </div>
 
         <div id="steps"> 
             <div id="threeEasySteps">
