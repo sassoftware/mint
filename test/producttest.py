@@ -46,9 +46,9 @@ class ProductTest(fixtures.FixturedUnitTest):
         product.setFiles([["file1", "File Title 1"],
                           ["file2", "File Title 2"]])
         assert(product.getFiles() ==\
-            [{'fileId': 1, 'filename': 'file1',
+            [{'fileId': 2, 'filename': 'file1',
               'title': 'File Title 1', 'size': 0,},
-             {'fileId': 2, 'filename': 'file2',
+             {'fileId': 3, 'filename': 'file2',
               'title': 'File Title 2', 'size': 0,}]
         )
 
@@ -146,7 +146,7 @@ class ProductTest(fixtures.FixturedUnitTest):
         client = self.getClient("owner")
         product = client.getProduct(data['productId'])
         product.setProductType(producttypes.INSTALLABLE_ISO)
-        assert(product.getProductType() == [producttypes.INSTALLABLE_ISO])
+        assert(product.getProductType() == producttypes.INSTALLABLE_ISO)
         assert(product.getDataTemplate()['showMediaCheck'])
         assert(product.getDataTemplate()['autoResolve'])
         try:
@@ -163,54 +163,28 @@ class ProductTest(fixtures.FixturedUnitTest):
 
     @fixtures.fixture("Full")
     def testPublished(self, db, data):
-        # FIXME: this is totally broken
         client = self.getClient("owner")
-        product = client.getProduct(data['productId'])
-        product.setProductType(producttypes.STUB_IMAGE)
-        product.setFiles([["file1", "File Title 1"]])
-        product.setPublished(True)
+        pubProduct = client.getProduct(data['pubProductId'])
 
-        # refresh
-        product = client.getProduct(product.id)
-
-        self.assertRaises(ProductPublished, product.setDataValue,
+        self.assertRaises(ProductPublished, pubProduct.setDataValue,
                           'stringArg', 'bar')
 
-        self.assertRaises(ProductPublished, product.setProductType,
+        self.assertRaises(ProductPublished, pubProduct.setProductType,
                           producttypes.STUB_IMAGE)
 
-        self.assertRaises(ProductPublished, product.setFiles, list())
+        self.assertRaises(ProductPublished, pubProduct.setFiles, list())
 
 
-        self.assertRaises(ProductPublished, product.setTrove,
+        self.assertRaises(ProductPublished, pubProduct.setTrove,
                           'Some','Dummy','Args')
 
-        self.assertRaises(ProductPublished, product.setDesc, 'Not allowed')
-
-        self.assertRaises(ProductPublished, product.setPublished, True)
-
-        self.assertRaises(ProductPublished, product.setPublished, False)
+        self.assertRaises(ProductPublished, pubProduct.setDesc, 'Not allowed')
 
         self.assertRaises(ProductPublished, client.startImageJob,
-                          product.getId())
+                          pubProduct.getId())
 
-        self.failIf(product.getPublished() is not True,
+        self.failIf(pubProduct.getPublished() is not True,
                     "Result of getPublished is not boolean")
-
-    @fixtures.fixture("Full")
-    def testDeleteProduct(self, db, data):
-        # FIXME: broken w/r/t new release arch
-        client = self.getClient("owner")
-        product = client.getProduct(data['productId'])
-        product.setProductType(producttypes.STUB_IMAGE)
-        product.setFiles([["file1", "File Title 1"]])
-        product.setPublished(True)
-
-        try:
-            product.deleteProduct()
-            self.fail("Product could be deleted after it was published")
-        except ProductPublished:
-            pass
 
     @fixtures.fixture("Full")
     def testMissingProduct(self, db, data):
@@ -224,50 +198,25 @@ class ProductTest(fixtures.FixturedUnitTest):
 
         # messing with that same product should now fail in a controlled
         # manner. no UnknownErrors allowed!
-        try:
-            product.setProductType(producttypes.STUB_IMAGE)
-            self.fail("Allowed to set imgage type of a deleted product")
-        except ProductMissing:
-            pass
+        self.assertRaises(ProductMissing, product.setProductType,
+                producttypes.STUB_IMAGE)
 
-        try:
-            product.deleteProduct()
-            self.fail("Allowed to delete a deleted product")
-        except ProductMissing:
-            pass
+        self.assertRaises(ProductMissing, product.deleteProduct)
 
         # nasty hack. unwrap the product data value so that we can attack
         # codepaths not normally allowed by client code.
         setProductDataValue = deriveBaseFunc(client.server._server.setProductDataValue)
 
-        try:
-            setProductDataValue(client.server._server, productId, 'someKey', 'someVal', RDT_STRING)
-            self.fail("Allowed to set data for a deleted product")
-        except ProductMissing:
-            pass
+        self.assertRaises(ProductMissing, setProductDataValue,
+                client.server._server, productId, 'someKey', 'someVal',
+                RDT_STRING)
 
-        try:
-            product.setDesc('some string')
-            self.fail("Allowed to set description for a deleted product")
-        except ProductMissing:
-            pass
+        self.assertRaises(ProductMissing, product.setDesc, 'some string')
 
         fixtures.stockProductFlavor(db, product.getId())
 
-        try:
-            client.startImageJob(productId)
-            self.fail("Allowed to start a job for a deleted product")
-        except ProductMissing:
-            pass
+        self.assertRaises(ProductMissing, client.startImageJob, productId)
 
-    @fixtures.fixture("Full")
-    def testDownloadIncrementing(self, db, data):
-        client = self.getClient("owner")
-        product = client.getProduct(data['productId'])
-        assert(product.getDownloads() == 0)
-        product.incDownloads()
-        product.refresh()
-        assert(product.getDownloads() == 1)
 
     @fixtures.fixture("Empty")
     def testUnfinishedProduct(self, db, data):
@@ -348,22 +297,6 @@ class ProductTest(fixtures.FixturedUnitTest):
                     "'most recent first'")
 
     @fixtures.fixture("Full")
-    def testPublishEmptyProduct(self, db, data):
-        # FIXME broken w/r/t new release arch
-        client = self.getClient("owner")
-        product = client.getProduct(data['productId'])
-
-        try:
-            product.setPublished(True)
-        except ProductEmpty:
-            pass
-        else:
-            self.fail("mint_error.ProductEmpty exception expected")
-
-        product.setFiles([["file1", "File Title 1"]])
-        product.setPublished(True)
-
-    @fixtures.fixture("Full")
     def testHasVMwareImage(self, db, data):
         client = self.getClient("owner")
         product = client.getProduct(data['productId'])
@@ -398,59 +331,6 @@ class ProductTest(fixtures.FixturedUnitTest):
                     "freespace is not an integer")
 
 class OldProductTest(MintRepositoryHelper):
-    def testProductList(self):
-        # FIXME broken w/r/t new release arch
-        client, userId = self.quickMintUser("testuser", "testpass")
-        adminClient, adminuserId = self.quickMintAdmin("adminauth", "adminpass")
-        projectId = client.newProject("Foo", "foo", "rpath.org")
-        project2Id = client.newProject("Bar", "bar", "rpath.org")
-        project3Id = adminClient.newProject("Hide", "hide", "rpath.org")
-        adminClient.hideProject(project3Id)
-        productsToMake = [ (int(projectId), "foo", "Foo Unpublished"),
-                           (int(project3Id), "hide", "Hide Product 1"),
-                           (int(projectId), "foo", "Foo Product"),
-                           (int(projectId), "foo", "Foo Product 2"),
-                           (int(project2Id), "bar", "Bar Product"),
-                           (int(project2Id), "bar", "Bar Product 2"),
-                           (int(projectId), "foo", "Foo Product 3")]
-        for projId, hostname, relName in productsToMake:
-            if "Hide" in relName:
-                product = adminClient.newProduct(projId, relName)
-            else:
-                product = client.newProduct(projId, relName)
-            product.setTrove("group-trove", "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
-            if "Unpublished" not in relName:
-                product.setFiles([["file1", "File Title 1"]])
-                product.setPublished(True)
-            time.sleep(1) # hack: let the timestamp increment since mysql doesn't do sub-second resolution
-        productList = client.getProductList(20, 0)
-        productsToMake.reverse()
-        hostnames = [x[1] for x in productsToMake]
-        if len(productList) != 5:
-            self.fail("getProductList returned the wrong number of results")
-        for i in range(len(productList)):
-            if tuple(productsToMake[i]) != (productList[i][2].projectId, hostnames[i], productList[i][2].name):
-                self.fail("Ordering of most recent products is broken.")
-            if productList[i][2].projectId == project3Id:
-                self.fail("Should not have listed hidden product")
-
-        project = client.getProject(projectId)
-        for rel in project.getProducts():
-            if rel.getId() not in (3, 4, 7):
-                self.fail("getProductsForProject returned incorrect results")
-
-        try:
-            client.server.getProductsForProject(project3Id)
-        except ItemNotFound, e:
-            pass
-        else:
-            self.fail("getProductsForProject returned hidden products in non-admin context when it shouldn't have")
-
-        project = adminClient.getProject(project3Id)
-        rel = project.getProducts()
-        if len(rel) != 1:
-            self.fail("getProductsForProject did not return hidden products for admin")
-
     def makeInstallableIsoCfg(self):
         mintDir = os.environ['MINT_PATH']
         os.mkdir("%s/changesets" % self.tmpDir)
