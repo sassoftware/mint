@@ -20,7 +20,7 @@
             <li py:attrs="{'class': (lastchunk == 'maintenance') and 'selectedItem' or None}"><a href="${cfg.basePath}admin/maintenance">Manage Maintenance Mode</a></li>
             <li py:attrs="{'class': (lastchunk == 'spotlight') and 'selectedItem' or None}"><a href="${cfg.basePath}admin/spotlight">Manage Appliance Spotlight</a></li>
             <li py:attrs="{'class': (lastchunk == 'selections') and 'selectedItem' or None}"><a href="${cfg.basePath}admin/selections">Manage Front Page Selections</a></li>
-            <li py:attrs="{'class': (lastchunk == 'selections') and 'selectedItem' or None}"><a href="${cfg.basePath}admin/useIt">Manage 'Use It' Icons</a></li>
+            <li py:attrs="{'class': (lastchunk == 'useIt') and 'selectedItem' or None}"><a href="${cfg.basePath}admin/useIt">Manage 'Use It' Icons</a></li>
         </ul>
     </div>
 
