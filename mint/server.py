@@ -2965,24 +2965,29 @@ class MintServer(object):
 
     ### rMake Build trove functions ###
     @private
-    @typeCheck(int, str, str)
+    @typeCheck(int, ((unicode, str),), ((unicode, str),))
     @requiresAuth
     def addrMakeBuildTrove(self, rMakeBuildId, trvName, trvLabel):
         self._filterrMakeBuildAccess(rMakeBuildId)
+        trvName = str(trvName)
+        trvLabel = str(trvLabel)
         rMakeBuildDict = self.rMakeBuild.get(rMakeBuildId)
         if rMakeBuildDict['status']:
             raise rMakeBuildOrder('Cannot add troves at this time.')
         if ':' in trvName and not trvName.endswith(':source'):
             raise ParameterError('Cannot add components to rMake Build')
-        return self.rMakeBuildItems.new(rMakeBuildId = rMakeBuildId,
-                                        trvName = trvName,
-                                        trvLabel = trvLabel)
+        rMakeBuildItemId = self.rMakeBuildItems.new( \
+            rMakeBuildId = rMakeBuildId, trvName = trvName,
+            trvLabel = trvLabel)
+        return self.rMakeBuildItems.get(rMakeBuildItemId)
 
     @private
-    @typeCheck(int, str, str)
+    @typeCheck(int, ((unicode, str),), ((unicode, str),))
     @requiresAuth
     def addrMakeBuildTroveByProject(self, rMakeBuildId, trvName, projectName):
         self._filterrMakeBuildAccess(rMakeBuildId)
+        trvName = str(trvName)
+        projectname = str(projectName)
         projectId = self.projects.getProjectIdByHostname(projectName)
         self._filterProjectAccess(projectId)
         project = projects.Project(self, projectId)
@@ -3012,15 +3017,14 @@ class MintServer(object):
         if rMakeBuildDict['status']:
             raise rMakeBuildOrder('Cannot delete troves at this time.')
         self.rMakeBuildItems.delete(rMakeBuildItemId)
-        return True
+        return rMakeBuildItemId
 
     @private
     @typeCheck(int)
     @requiresAuth
     def getrMakeBuildTrove(self, rMakeBuildItemId):
         self._filterrMakeBuildItemAccess(rMakeBuildItemId)
-        itemDict = self.rMakeBuildItems.get(rMakeBuildItemId)
-        return itemDict
+        return self.rMakeBuildItems.get(rMakeBuildItemId)
 
     @private
     @typeCheck(str, str, str, int, str)
