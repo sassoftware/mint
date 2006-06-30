@@ -39,6 +39,7 @@ from mint import users
 from mint import usertemplates
 from mint import spotlight
 from mint import selections
+from mint import useit
 from mint import rmakebuild
 from mint.distro import jsversion
 from mint.distro.flavors import stockFlavors
@@ -215,8 +216,8 @@ def getTables(db, cfg):
     d['outboundLabels'] = mirror.OutboundLabelsTable(db)
     d['outboundMatchTroves'] = mirror.OutboundMatchTrovesTable(db)
     d['repNameMap'] = mirror.RepNameMapTable(db)
-    d['spotlight'] = spotlight.ApplianceSpotlightTable(db,
-                                                                         cfg)
+    d['spotlight'] = spotlight.ApplianceSpotlightTable(db, cfg)
+    d['useit'] = useit.UseItTable(db, cfg)
     d['selections'] = selections.FrontPageSelectionsTable(db, cfg)
     d['rMakeBuild'] = rmakebuild.rMakeBuildTable(db)
     d['rMakeBuildItems'] = rmakebuild.rMakeBuildItemsTable(db)
@@ -1489,6 +1490,26 @@ class MintServer(object):
     @private
     def getNewsLink(self):
         return self.newsCache.getNewsLink()
+
+    @typeCheck()
+    @private
+    def getUseItIcons(self):
+        return self.useit.getIcons()
+
+    @typeCheck(int)
+    @private
+    @requiresAdmin
+    def deleteUseItIcon(self, itemId):
+        return self.useit.deleteIcon(itemId)
+
+    @typeCheck(int, str, str)
+    @private
+    @requiresAdmin
+    def addUseItIcon(self, itemId, name, link):
+        if name and link:
+            return self.useit.addIcon(itemId, name, link)
+        else:
+            return False
 
     @typeCheck(str, str, str, str, int, str, str)
     @requiresAdmin
