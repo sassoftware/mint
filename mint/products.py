@@ -139,9 +139,20 @@ class ProductsTable(database.KeyedTable):
 
     def getPublished(self, productId):
         cu = self.db.cursor()
-
         cu.execute("SELECT IFNULL((SELECT pubReleaseId FROM Products WHERE productId=?), 0)", productId)
-        return bool(cu.fetchone()[0])
+        pubReleaseId = cu.fetchone()[0]
+        if bool(pubReleaseId):
+            cu.execute("SELECT IFNULL(timePublished, 0) FROM PublishedReleases WHERE pubReleaseId = ?", pubReleaseId)
+            return bool(cu.fetchone()[0])
+        return False
+
+    def getUnpublishedProducts(self, projectId):
+        cu = self.db.cursor()
+        cu.execute("""SELECT productId FROM Products
+                      WHERE projectId = ? AND pubReleaseId IS NULL""",
+                      projectId)
+        res = cu.fetchall()
+        return [x[0] for x in res]
 
     def deleteProduct(self, productId):
         cu = self.db.transaction()
@@ -257,7 +268,7 @@ class Product(database.TableObject):
                 pubReleaseId, published)
 
     def getPublished(self):
-        return self.pubReleaseId
+        return bool(self.pubReleaseId)
 
     def getDataTemplate(self):
         if self.productType:
