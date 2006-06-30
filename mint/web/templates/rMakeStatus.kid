@@ -40,7 +40,7 @@
                     stopStatusList = ${str([buildjob.JOB_STATE_FAILED, buildjob.JOB_STATE_BUILT, buildjob.JOB_STATE_COMMITTED])};
                     buildjob = ${str(buildjob)};
                     buildtrove = ${str(buildtrove)};
-                    addLoadEvent(initrMakeManager(${rMakeBuild.id}));
+                    addLoadEvent(function () {initrMakeManager(${rMakeBuild.id})});
                 ]]>
                 </script>
                 <h3 id="rmakebuilder-jobid">rMake Job ID: ${rMakeBuild.jobId or 'Unknown'}</h3>
