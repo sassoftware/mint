@@ -29,6 +29,7 @@ python_files = \
                joinrequesttest.py \
                labelstest.py \
                maintenancetest.py \
+			   marketingtest.py	\
                mint_rephelp.py \
                mirrortest.py \
 	       mirrorprimetest.py \
