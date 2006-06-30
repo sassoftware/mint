@@ -53,28 +53,5 @@ class WebProjectTest(mint_rephelp.WebRepositoryHelper):
                                  self.cfg.buildLabel.asString(),
                         server=self.getProjectServerHostname())
 
-    def testReleases(self):
-        client, userId = self.quickMintUser("testuser", "testpass")
-        projectId = client.newProject("Foo", "foo", MINT_PROJECT_DOMAIN)
-        self.setOptIns('testuser')
-        page = self.webLogin('testuser', 'testpass')
-        release = client.newRelease(projectId, "Test Release")
-        release.setImageTypes([0])
-        release.setTrove("group-trove", "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
-        release.setFiles([["file1", "File Title 1"],  
-                          ["file2", "File Title 2"],
-                          ['file3', 'File Title 3']])
-        #cu = self.db.cursor()
-        #cu.execute("INSERT INTO ImageFiles VALUES (1, ?, 0, 'test.iso', 'Test Image')",
-        #           release.id)
-        #self.db.commit()
-        release.setPublished(True)
-        
-        import epdb
-        epdb.st()
-        #release2 = client.newRelease(projectId, "Another Release")
-        #release3 = client.newRelease(projectId, "Third Release")
-        page.fetch('/project/foo/releases', server=self.getProjectServerHostname()).body
-
 if __name__ == "__main__":
     testsuite.main()
