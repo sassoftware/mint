@@ -12,13 +12,11 @@ testsuite.setup()
 import rephelp
 
 from mint.cmdline import RBuilderMain
-from mint.cmdline import products
+from mint.cmdline import products, users
 
 from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import MINT_HOST, MINT_PROJECT_DOMAIN
 
-# if RepositoryHelper.checkCommand were a classmethod, this test
-# wouldn't have to be a RepositoryHelper class and could be faster.
 class CmdLineTest(unittest.TestCase):
     def checkRBuilder(self, cmd, fn, expectedArgs, cfgValues={},
                   returnVal=None, ignoreKeywords=False, **expectedKw):
@@ -54,6 +52,11 @@ class CmdLineTest(unittest.TestCase):
             'mint.cmdline.products.ProductWaitCommand.runCommand',
             [None, None, None, {}, ['product-wait', '111']])
 
+    def testUserCreate(self):
+        self.checkRBuilder('user-create testuser test@example.com --password password',
+            'mint.cmdline.users.UserCreateCommand.runCommand',
+            [None, None, None, {'password': 'password'}, ['user-create', 'testuser', 'test@example.com']])
+
 
 class CmdLineFuncTest(MintRepositoryHelper):
     def testProductCreate(self):
@@ -69,6 +72,15 @@ class CmdLineFuncTest(MintRepositoryHelper):
         product = project.getProducts()[0]
         assert(product.getTrove()[0] == 'group-test')
         assert(product.getJob())
+
+    def testUserCreate(self):
+        client, userId = self.quickMintAdmin("adminuser", "adminpass")
+
+        cmd = users.UserCreateCommand()
+        userId = cmd.runCommand(client, None, {'password': 'testpass'},
+            ['user-create', 'testuser', 'test@example.com'])
+        user = client.getUser(userId)
+        assert(user.email == 'test@example.com')
 
 
 if __name__ == "__main__":

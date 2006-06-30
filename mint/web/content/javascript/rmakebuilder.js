@@ -22,6 +22,7 @@ var rMakeBuildId = 0;
 var statusTimeout = 1;
 var savedTroveList = [];
 var savedrMakeBuild = null;
+var commitFailed = 0;
 
 function getrMakeBuild() {
     var req = new JsonRpcRequest("jsonrpc/", "getrMakeBuild");
@@ -39,6 +40,9 @@ function processgetrMakeBuild(aReq) {
     var rMakeBuildAction = document.getElementById('rMakeBuildNextAction');
     var rMakeBuilderStatus = document.getElementById('rmakebuilder-status');
     var rMakeBuilderJobId = document.getElementById('rmakebuilder-jobid');
+    if (rMakeBuild['statusMessage'].match('Commit failed.*')) {
+        commitFailed = 1;
+    }
     listrMakeBuildTroves();
     var stop = 0;
     if (rMakeBuild['jobId'] != savedrMakeBuild['jobId']) {
@@ -46,12 +50,15 @@ function processgetrMakeBuild(aReq) {
             swapDOM(rMakeBuilderJobId, H3({id : "rmakebuilder-jobid"}, "rMake Job ID: " + rMakeBuild['jobId']));
         }
     }
-    if ((rMakeBuild['statusMessage'] != savedrMakeBuild['statusMessage']) || (rMakeBuild['status'] != savedrMakeBuild['status'])) {
+    if ((rMakeBuild['statusMessage'] != savedrMakeBuild['statusMessage']) || (rMakeBuild['status'] != savedrMakeBuild['status']) || (commitFailed)) {
         var statusClass = 'statusRunning';
         for (var statusIndex in jobStatusCodes) {
             if (statusIndex == rMakeBuild['status']) {
-               statusClass = jobStatusCodes[statusIndex];
+                statusClass = jobStatusCodes[statusIndex];
             }
+        }
+        if (commitFailed) {
+            statusClass = jobStatusCodes[buildjob['JOB_STATE_FAILED']];
         }
         if (rMakeBuilderStatus != null) {
             swapDOM(rMakeBuilderStatus, DIV({id : 'rmakebuilder-status', class : statusClass}, rMakeBuild['statusMessage']));
@@ -102,7 +109,7 @@ function processListrMakeBuildTroves(aReq) {
                 swapDOM(statusIcon, IMG({src: statusIcons[trvStatus], id : 'rmakebuilder-statusicon-' + itemId}));
             }
         }
-        if ((trvDict['statusMessage'] != savedTroveList[trvIndex]['statusMessage']) | (trvStatus != savedTroveList[trvIndex]['status'])) {
+        if ((trvDict['statusMessage'] != savedTroveList[trvIndex]['statusMessage']) || (trvStatus != savedTroveList[trvIndex]['status']) || commitFailed) {
             var statusBox = document.getElementById("rmakebuilder-item-status-" + itemId);
             if(statusBox != null) {
                 var classCode = 'statusRunning';
@@ -110,6 +117,9 @@ function processListrMakeBuildTroves(aReq) {
                     if (statusIndex == trvStatus) {
                         classCode = trvStatusCodes[statusIndex];
                     }
+                }
+                if (commitFailed) {
+                    classCode = trvStatusCodes[buildtrove['TROVE_STATE_FAILED']];
                 }
                 swapDOM(statusBox, TD({id: "rmakebuilder-item-status-" + itemId, "class" : classCode, width : "100%"}, trvDict['statusMessage']));
             }

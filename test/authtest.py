@@ -45,7 +45,7 @@ class AuthTest(fixtures.FixturedUnitTest):
             userId = client.registerNewUser("Member", "memberpass", "Test Member",
                                             "test@example.com", "test at example.com", "", active=True)
             self.fail("conflicting usernames allowed to be created")
-        except users.GroupAlreadyExists:
+        except users.UserAlreadyExists:
             pass
         userId = client.registerNewUser("different", "memberpass", "Test Member",
                                         "test@example.com", "test at example.com", "", active=True)

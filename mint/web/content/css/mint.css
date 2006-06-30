@@ -347,7 +347,7 @@ div#inactiveRight {
     margin: 0; /* reset main site styles*/
     border: 0; /* ditto */
     padding: 0 0 0 25px; /* padding-left = image gap + interior padding ... no padding-right */
-    height: auto !important;
+    height: 10px !important;
     height: 1%; /* IE Holly Hack */
 }
 
@@ -359,19 +359,19 @@ div#inactiveRight {
     padding: 0 0 0 25px; /* mirror .cssbox_head right/left */
 }
 
-div#spotlightTitle {
+td#spotlightTitle {
     font-size: 14pt;
     color: #ffa814;
     font-weight: bold;
     text-align: center;
-    padding-top: 4px;
+    line-height: 1.1em;
 }
 
 div#applianceTitle {
     font-size: 11pt;
     text-align: center;
     font-weight: bold;
-    line-height: 110%;
+    line-height: 1.1em;
 }
 
 span#buildit {
@@ -402,13 +402,16 @@ span#findit {
 
 div#applianceText {
     font-size: 9pt;
-    line-height: 120%;
+    line-height: 1.2em;
     padding-top: 2px;
     text-align: justify;
 }
 
 img#applianceImg {
     vertical-align: middle;
+    /*margin-top: -25px;*/
+    margin-right: 15px;
+    padding-bottom: 10px;
 }
 
 div.archiveLink {
@@ -416,7 +419,7 @@ div.archiveLink {
     text-align: left;
     color: #ffa814;
     text-decoration: none;
-    width: 19%;
+    width: 50%;
     padding-top: 2px;
     padding-bottom: 5px;
     float: left;
@@ -433,7 +436,7 @@ div#applianceInfo {
     color: #ffa814;
     text-decoration: none;
     padding-top: 2px;
-    padding-bottom: 5px;
+    padding-bottom: 10px;
 }
 
 div#logoBox {
@@ -441,12 +444,11 @@ div#logoBox {
     width: 130px;
     line-height: 100px;
     text-align: center;
-    margin-top: -2.8em;
 }
 
 div#textBox {
     padding-right: 24px;
-    padding-left: 134px;
+    padding-left: 24px;
 }
 
 div#textBoxWide {
@@ -1148,7 +1150,7 @@ div.trovePicker {
     margin: 6px;
 }
 
-div.trovePicker span#prompt {
+div.trovePicker span.prompt {
     font-size: larger;
     font-weight: bold;
 }

@@ -24,20 +24,6 @@
                         </a>
                     </div>
                     <!-- /Try rBuilder -->
-                    <!-- Software Appliance -->
-                    <div class="sidebox">
-                        <div class="boxhead"><span class="boxtitle">Software Appliance</span></div>
-
-                        <div class="boxbody">
-                            <ul>
-                                <li>Brings the simplicity and value of Software as a Service (SaaS)
-                                    to on-premise applications.<br />
-                                    <a href="${cfg.corpSite}products-software-appliance.html">Learn more</a></li>
-                            </ul>
-                        </div>
-                    </div>
-                    <!-- /Software Appliance -->
-
                     <!-- Products -->
                     <div class="sidebox">
                         <div class="boxhead"><span class="boxtitle">Products</span></div>
@@ -98,23 +84,42 @@
 
 
                 
+        <p class="help" style="text-align: center;" py:if="not data">There are currently no appliances in the archive.  Please check back later.</p>
         <div style="width: 710px;" py:if="data">
         <?python import time ?>
             <h3 style="text-align: center;">rPath Virtual Appliance Spotlight Archive.  More guide text to follow.</h3>
 
-        <div py:for="spotlightData in data" py:if="time.time() > spotlightData['endDate']">
+        <div py:for="spotlightData in data">
         <p style="text-align: right; font-style: italic;">${time.strftime('%m/%d/%Y', time.localtime(spotlightData['startDate']))} - ${time.strftime('%m/%d/%Y', time.localtime(spotlightData['endDate']))}</p>
         <div onclick="location.href='${spotlightData['link']}'" id="spotlight">
-        <div py:if="spotlightData['logo']" id="logoBox">
-            <img id="applianceLogo" src="${cfg.spotlightImagesDir}/${spotlightData['logo']}"/>
+ <div class="cssbox2">
+        <div class="cssbox_head2">
+            <div>&nbsp;</div>
         </div>
-        <div id="${spotlightData['logo'] and 'textBox' or 'textBoxWide'}">
-            <div id="spotlightTitle">Virtual Appliance Spotlight</div>
+        <div class="cssbox_body2">
+        <table>
+        <tr>
+        <td py:if="spotlightData['logo']" style="vertical-align: middle; width: 100px; text-align: center;" rowspan="3">
+            <img id="applianceImg" src="${cfg.spotlightImagesDir}/${spotlightData['logo']}"/>
+        </td>
+	<td id="spotlightTitle">Virtual Appliance Spotlight</td>
+	</tr>
+	<tr>
+        <td>
             <div id="applianceTitle">${spotlightData['title']}</div>
             <div id="applianceText">${spotlightData['text']}</div>
+	</td>
+	</tr>
+	<tr>
+	<td style="vertical-align: bottom;">
             <div id="applianceInfo">Click for more information.</div>
+        </td>
+        </tr>
+        </table>
         </div>
         </div>
+        </div>
+
             <br/>
         </div>
         </div>

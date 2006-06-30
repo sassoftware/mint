@@ -30,22 +30,27 @@
                 This job has not been sent to rMake yet.
             </div>
             <div id="spanleft" py:if="rMakeBuild.status!=buildjob.JOB_STATE_INIT">
+                <?python
+                    commitFailed = rMakeBuild.statusMessage.startswith('Commit failed')
+                ?>
                 <script type="text/javascript">
                 <![CDATA[
                     trvStatusCodes = ${dictToJS(trvStatusCodes)};
                     jobStatusCodes = ${dictToJS(jobStatusCodes)};
                     stopStatusList = ${str([buildjob.JOB_STATE_FAILED, buildjob.JOB_STATE_BUILT, buildjob.JOB_STATE_COMMITTED])};
+                    buildjob = ${str(buildjob)};
+                    buildtrove = ${str(buildtrove)};
                     addLoadEvent(initrMakeManager(${rMakeBuild.id}));
                 ]]>
                 </script>
                 <h3 id="rmakebuilder-jobid">rMake Job ID: ${rMakeBuild.jobId or 'Unknown'}</h3>
-                <div id="rmakebuilder-status" class="${jobStatusCodes.get(rMakeBuild.status, 'statusRunning')}">
+                <div id="rmakebuilder-status" class="${jobStatusCodes.get(commitFailed and buildjob.JOB_STATE_FAILED or rMakeBuild.status, 'statusRunning')}">
                     ${rMakeBuild.statusMessage}
                 </div>
                 <table>
                     <tr py:for="trvDict in troveList">
                         <td>${trvDict['trvName']}: </td>
-                        <td id="rmakebuilder-item-status-${trvDict['rMakeBuildItemId']}" class="${trvStatusCodes.get(trvDict['status'], 'statusRunning')}" width="100%">
+                        <td id="rmakebuilder-item-status-${trvDict['rMakeBuildItemId']}" class="${trvStatusCodes.get(commitFailed and buildtrove.TROVE_STATE_FAILED or trvDict['status'], 'statusRunning')}" width="100%">
                             ${trvDict['statusMessage']}
                         </td>
                     </tr>

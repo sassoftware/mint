@@ -262,7 +262,7 @@ class UsersTable(database.KeyedTable):
                           WHERE UPPER(userGroup)=UPPER(?)""",
                    username)
         if cu.fetchone()[0]:
-            raise GroupAlreadyExists
+            raise UserAlreadyExists
 
         cu.execute("SELECT COUNT(*) FROM Users WHERE UPPER(username)=UPPER(?)",
                    username)
