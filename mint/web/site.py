@@ -72,8 +72,22 @@ class SiteHandler(WebHandler):
         activeProjects, _  = self.client.getProjects(projectlisting.ACTIVITY_DES, 10, 0)
         spotlightData = self.client.getCurrentSpotlight()
         releases = self.client.getReleaseList()
+        data = self.client.getUseItIcons()
+        if data:
+            if len(data) < 4:
+                table1Data = data
+                table2Data = False
+            elif len(data) == 4:
+                table1Data = data[:2]
+                table2Data = data[2:]
+            else:
+                table1Data = data[:3]
+                table2Data = data[3:]
+        else:
+            table1Data = False
+            table2Data = False
 
-        return self._write("frontPage", firstTime=self.session.get('firstTimer', False), popularProjects=popularProjects, selectionData = selectionData, activeProjects = activeProjects, spotlightData=spotlightData, releases=releases)
+        return self._write("frontPage", firstTime=self.session.get('firstTimer', False), popularProjects=popularProjects, selectionData = selectionData, activeProjects = activeProjects, spotlightData=spotlightData, releases=releases, table1Data=table1Data, table2Data=table2Data)
 
     def applianceSpotlight(self, *args, **kwargs):
         spotlightData = self.client.getSpotlightAll()
