@@ -55,7 +55,7 @@
                 <tr>
                     <td>Icon 6 Filename:</td>
                     <td><input type="text" name="name6" size="30"/></td>
-                    <td>Image 6 URL:</td>
+                    <td>Icon 6 URL:</td>
                     <td><input type="text" name="link6" size="30"/></td>
                 </tr>
                 <tr>
