@@ -70,6 +70,7 @@ class SiteHandler(WebHandler):
         selectionData  = self.client.getFrontPageSelection()
         activeProjects, _  = self.client.getProjects(projectlisting.ACTIVITY_DES, 10, 0)
         spotlightData = self.client.getCurrentSpotlight()
+        # XXX this probably needs to be getPublishedReleases, now
         products = self.client.getProductList()
 
         return self._write("frontPage", firstTime=self.session.get('firstTimer', False), popularProjects=popularProjects, selectionData = selectionData, activeProjects = activeProjects, spotlightData=spotlightData, products=products)
@@ -602,6 +603,7 @@ class SiteHandler(WebHandler):
                 item['creator'] = "http://%s%s" % (self.siteHost, self.cfg.basePath)
                 items.append(item)
         elif feed == "newProducts":
+            # XXX this probably needs to be getPublishedReleases, now
             results = self.client.getProductList()
             title = "New products on %s" % self.cfg.productName
             link = "http://%s%srss?feed=newProducts" % (self.cfg.siteHost, self.cfg.basePath)

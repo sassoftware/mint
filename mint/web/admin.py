@@ -288,6 +288,7 @@ class AdminHandler(WebHandler):
         selectionData = self.client.getFrontPageSelection()
         selectionData.append({'name': name, 'link': link, 'rank': rank})
         selectionData.sort(lambda x,y: cmp(x['rank'], y['rank']))
+        # XXX this probably needs to be getPublishedReleases, now
         products = self.client.getProductList()
         activeProjects, _  = self.client.getProjects(projectlisting.ACTIVITY_DES, 10, 0)
 
