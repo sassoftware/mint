@@ -57,6 +57,11 @@ class CmdLineTest(unittest.TestCase):
             'mint.cmdline.users.UserCreateCommand.runCommand',
             [None, None, None, {'password': 'password'}, ['user-create', 'testuser', 'test@example.com']])
 
+    def testUserMembership(self):
+            self.checkRBuilder('project-add testuser testproject developer',
+                'mint.cmdline.users.UserMembershipCommand.runCommand',
+                [None, None, None, {}, ['project-add', 'testuser', 'testproject', 'developer']])
+
 
 class CmdLineFuncTest(MintRepositoryHelper):
     def testReleaseCreate(self):
@@ -81,6 +86,20 @@ class CmdLineFuncTest(MintRepositoryHelper):
             ['user-create', 'testuser', 'test@example.com'])
         user = client.getUser(userId)
         assert(user.email == 'test@example.com')
+
+    def testUserMembership(self):
+        adminClient, userId = self.quickMintAdmin("adminuser", "adminpass")
+        newProjectId = adminClient.newProject("testproject", "testproject",
+            MINT_PROJECT_DOMAIN)
+
+        client, userId = self.quickMintUser("testuser", "testpass")
+
+        cmd = users.UserMembershipCommand()
+        cmd.runCommand(adminClient, None, {}, ['project-add', 'testuser', 'testproject', 'owner'])
+        cmd = users.UserCreateCommand()
+
+        project = client.getProject(newProjectId)
+        assert(project.getMembers() == [[1, 'adminuser', 0], [2, 'testuser', 0]])
 
 
 if __name__ == "__main__":

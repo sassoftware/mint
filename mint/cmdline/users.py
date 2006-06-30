@@ -8,6 +8,7 @@ import os
 import sys
 
 from mint import releasetypes
+from mint import userlevels
 from mint import jobstatus
 from mint.cmdline import commands
 
@@ -53,3 +54,34 @@ class UserCreateCommand(commands.RBuilderCommand):
         log.info("User %s created (id %d)" % (username, userId))
         return userId
 commands.register(UserCreateCommand)
+
+
+class UserMembershipCommand(commands.RBuilderCommand):  
+    commands = ['project-add']
+
+    paramHelp = "<username> <project hostname> <owner|developer>"
+
+    def runCommand(self, client, cfg, argSet, args):
+        args = args[1:]
+
+        if len(args) < 3:
+            return self.usage()
+
+        username, projectName, level = args
+        project = client.getProjectByHostname(projectName)
+        userId = client.getUserIdByName(username)
+
+        try:
+            levelId = userlevels.idsByName[level.lower()]
+        except AttributeError:
+            log.error("invalid user level: %s" % level)
+            sys.exit(1)
+
+        if project.getUserLevel(userId) == userlevels.NONMEMBER:
+            project.addMemberByName(username, levelId)
+            log.info("User %s added to project %s as a %s" % (username, projectName, level))
+        else:
+            project.updateUserLevel(userId, levelId)
+            log.info("User %s changed to %s on project %s" % (username, level,projectName))
+
+commands.register(UserMembershipCommand)
