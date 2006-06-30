@@ -542,7 +542,11 @@ class FixturedUnitTest(unittest.TestCase):
         return self.adminClient
 
     def getClient(self, username):
-        return shimclient.ShimMintClient(self.cfg, (username, '%spass' % username))
+        if username == 'anonymous':
+            password = 'anonymous'
+        else:
+            password = '%spass' % username
+        return shimclient.ShimMintClient(self.cfg, (username, password))
 
     def quickMintUser(self, username, password, email = "test@example.com"):
         client = self._getAdminClient()
