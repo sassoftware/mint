@@ -7,7 +7,7 @@ import time
 import os
 import sys
 
-from mint import releasetypes
+from mint import producttypes
 from mint import jobstatus
 from mint.cmdline import commands
 
