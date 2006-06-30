@@ -304,9 +304,10 @@ class AdminHandler(WebHandler):
             newData = []
             for icon in newIcons:
                 if not icon['name']:
-                    for item in data:
-                        if item['itemId'] == icon['itemId']:
-                            newData.append(item)
+                    if data:
+                        for item in data:
+                            if item['itemId'] == icon['itemId']:
+                                newData.append(item)
                 else:
                     newData.append(icon)
             return self.previewIcons(newData)
