@@ -365,5 +365,49 @@ class MarketingTest(fixtures.FixturedUnitTest):
             self.fail("Allowed to access restricted resource while not admin.")
         adminClient.deleteUseItIcon(1)
         
+        adminClient.addUseItIcon(1, 'test 1', 'link 1')
+        adminClient.addUseItIcon(2, 'test 2', 'link 2')
+        adminClient.addUseItIcon(5, 'test 5', 'link 5')
+
+        icons = nobodyClient.getUseItIcons()
+        icons.sort(lambda x,y: cmp(x['itemId'], y['itemId']))
+
+        self.failIf(icons != [{'itemId': 1, 'link': 'link 1', 'name': 'test 1'},
+                              {'itemId': 2, 'link': 'link 2', 'name': 'test 2'},
+                              {'itemId': 5, 'link': 'link 5', 'name': 'test 5'}
+                             ],
+                    "getUseItIcons returned the wrong data")
+
+        adminClient.addUseItIcon(3, 'test 3', 'link 3')
+        icons = nobodyClient.getUseItIcons()
+        icons.sort(lambda x,y: cmp(x['itemId'], y['itemId']))
+        
+        self.failIf(icons != [{'itemId': 1, 'link': 'link 1', 'name': 'test 1'},
+                              {'itemId': 2, 'link': 'link 2', 'name': 'test 2'},
+                              {'itemId': 3, 'link': 'link 3', 'name': 'test 3'},
+                              {'itemId': 5, 'link': 'link 5', 'name': 'test 5'}
+                             ],
+                    "getUseItIcons returned the wrong data")
+        adminClient.addUseItIcon(2, 'new 2', 'new link')
+
+        icons = nobodyClient.getUseItIcons()
+        icons.sort(lambda x,y: cmp(x['itemId'], y['itemId']))
+
+        self.failIf(icons != [{'itemId': 1, 'link': 'link 1', 'name': 'test 1'},
+                             {'itemId': 2, 'link': 'new link', 'name': 'new 2'},
+                             {'itemId': 3, 'link': 'link 3', 'name': 'test 3'},
+                             {'itemId': 5, 'link': 'link 5', 'name': 'test 5'}],
+                    "getUseItIcons returned the wrong data")
+
+        adminClient.deleteUseItIcon(3)
+        adminClient.deleteUseItIcon(1)
+
+        icons = nobodyClient.getUseItIcons()
+        icons.sort(lambda x,y: cmp(x['itemId'], y['itemId']))
+        self.failIf(icons != [{'itemId': 2, 'link': 'new link', 
+                               'name': 'new 2'}, {'itemId': 5, 'link': 'link 5',
+                                                  'name': 'test 5'}],
+                    "deleteUseItIcons functioning improperly")
+        
 if __name__ == "__main__":
     testsuite.main()
