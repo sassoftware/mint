@@ -5,7 +5,6 @@
 
 var labelsCache = {};
 var versionCache = {};
-var flavorCache = {};
 
 var staticPath = '';
 
@@ -29,7 +28,7 @@ function returnImg() {
 }
 
 function disabledReturn() {
-    return DIV(gray, IMG({'src': staticPath + prevImgDisabled}), " Return");
+    return DIV(gray, IMG({'src': staticPath + prevImgDisabled}), " Back");
 }
 
 // ctor
@@ -48,6 +47,8 @@ TrovePicker.prototype.troveName = null;
 TrovePicker.prototype.serverName = null;
 TrovePicker.prototype.label = null;
 TrovePicker.prototype.version = null;
+TrovePicker.prototype.flavorCache = null;
+TrovePicker.prototype.flavorDict = null;
 
 TrovePicker.prototype.working = function(isWorking) {
     if(isWorking) {
@@ -101,12 +102,12 @@ TrovePicker.prototype.showTroveFlavors = function(e) {
     oldList = $(this.elId + 'selectionList');
     ul = UL({ 'id': this.elId + 'selectionList' });
 
-    for(var i in flavorCache[this.version]) {
-        flavor = flavorCache[this.version][i];
-        appendChildNodes(ul, forwardLink(null, flavor));
+    for(var i in this.flavorCache[this.version]) {
+        flavor = this.flavorCache[this.version][i];
+        appendChildNodes(ul, forwardLink(null, this.flavorDict[flavor]));
 
         // return to getTroveVersions
-        returnLink = A(null, returnImg(), " Return");
+        returnLink = A(null, returnImg(), " Back");
         returnLink.label = this.label;
         connect(returnLink, "onclick", this, "getTroveVersions");
         replaceChildNodes($('return'), returnLink);
@@ -123,13 +124,17 @@ TrovePicker.prototype.getTroveVersions = function(e) {
     var key = this.label + "=" + this.troveName;
 
     var setupList = function(versionList) {
+        var versionDict = req[0];
+        var versionList = req[1];
         oldList = $(par.elId + 'selectionList');
         ul = UL({ 'id': par.elId + 'selectionList' });
 
-        flavorCache = versionList;
+        par.flavorCache = versionDict;
+        par.flavorDict = req[2];
+
         for(var i in versionList) {
-            link = forwardLink(null, i);
-            link.version = i;
+            link = forwardLink(null, versionList[i]);
+            link.version = versionList[i];
             connect(link, "onclick", par, "showTroveFlavors");
             appendChildNodes(ul, link);
         }
@@ -141,7 +146,7 @@ TrovePicker.prototype.getTroveVersions = function(e) {
             par.buildTroveSpec(par.troveName, par.label, ''));
 
         // return to getAllTroveLabels
-        returnLink = A(null, returnImg(), " Return");
+        returnLink = A(null, returnImg(), " Back");
         connect(returnLink, "onclick", par, "getAllTroveLabels");
         replaceChildNodes($('return'), returnLink);
     };
@@ -149,9 +154,9 @@ TrovePicker.prototype.getTroveVersions = function(e) {
     var callback = function(aReq) {
         logDebug("[JSON] response: ", aReq.responseText);
 
-        versionList = evalJSONRequest(aReq);
-        versionCache[key] = versionList;
-        setupList(versionList);
+        req = evalJSONRequest(aReq);
+        versionCache[key] = req;
+        setupList(req);
     };
 
     if(!versionCache[key]) {

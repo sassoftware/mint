@@ -1178,7 +1178,7 @@ div.trovePicker a {
     cursor: pointer;
 }
 
-div.trovePicker ul#selectionList, div.trovePicker ul#spinnerList {
+div.trovePicker ul, div.trovePicker ul {
     list-style-type: none;
     margin-left: 6px;
 }

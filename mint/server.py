@@ -2370,7 +2370,15 @@ class MintServer(object):
         nc = conaryclient.ConaryClient(cfg).getRepos()
 
         troves = nc.getTroveVersionsByLabel({str(troveName): {versions.Label(str(labelStr)): None}})[troveName]
-        return dict((str(x), [y.freeze() for y in troves[x]]) for x in troves)
+        versionDict = dict((str(x), [y.freeze() for y in troves[x]]) for x in troves)
+        versionList = sorted(versionDict.keys(), reverse = True)
+
+        # prepare a hash of frozen -> thawed flavors
+        flavorDict = set()
+        [flavorDict.update(set(x)) for x in versionDict.values()]
+        flavorDict = dict((x, str(deps.ThawFlavor(x)).replace(",", ", ")) for x in flavorDict)
+
+        return [versionDict, versionList, flavorDict]
 
     @typeCheck(int)
     @requiresAuth
