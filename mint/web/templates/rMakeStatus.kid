@@ -8,7 +8,7 @@
 -->
 
     <head>
-        <title>${formatTitle('Edit rMake Build')}</title>
+        <title>${formatTitle('rMake Build Status')}</title>
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/rmakebuilder.js"/>
     </head>
     <body>
