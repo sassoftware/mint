@@ -89,13 +89,31 @@ class SiteHandler(WebHandler):
 
         return self._write("frontPage", firstTime=self.session.get('firstTimer', False), popularProjects=popularProjects, selectionData = selectionData, activeProjects = activeProjects, spotlightData=spotlightData, releases=releases, table1Data=table1Data, table2Data=table2Data)
 
-    def applianceSpotlight(self, *args, **kwargs):
+    @intFields(pageId=1)
+    def applianceSpotlight(self, pageId, *args, **kwargs):
         spotlightData = self.client.getSpotlightAll()
         if spotlightData:
             data=[x for x in spotlightData if time.time() > x['endDate']]
+            pageCount = len(data)/self.cfg.bannersPerPage
+            if len(data)%self.cfg.bannersPerPage:
+                pageCount += 1
+            if pageId < pageCount:
+                showNext = True
+            else:
+                showNext = False
+            if pageId != 1:
+                showPrev = True
+            else:
+                showPrev = False
+            data = data[(pageId-1)*self.cfg.bannersPerPage:(pageId-1)*\
+                   self.cfg.bannersPerPage + self.cfg.bannersPerPage]
         else:
             data = False
-        return self._write("applianceSpotlight", data=data)
+            showNext = False
+            showPrev = False
+            pageCount = 0
+        return self._write("applianceSpotlight", data=data, pageCount=pageCount,
+                           showNext=showNext, showPrev=showPrev, pageId=pageId)
 
     @redirectHttps
     def register(self, auth):
