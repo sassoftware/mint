@@ -172,17 +172,21 @@ class CopyFromDiscThread(CopyThread):
             fromF.close()
 
             try:
+                self.status['verifying'] = True
                 origSha1 = file(os.path.join(self.sourcePath, f) + ".sha1")
                 data = origSha1.read()
                 origSha1.close()
                 origSum = data.split()[0]
 
-                newSum = sha1helper.sha1ToString(sha1helper.sha1FileBin(os.path.join(self.tmpPath, f)))
+                newSum = sha1helper.sha1ToString( \
+                    sha1helper.sha1FileBin(os.path.join(self.tmpPath, f)))
                 if origSum != newSum:
                     self.status['checksumError'] = True
             except IOError, e:
                 self.status['checksumError'] = True
                 print e
+            else:
+                self.status['verifying'] = False
             print "checksumError:", self.status['checksumError']
 
         self.status['done'] = True
@@ -288,4 +292,5 @@ class TarHandler(JsonRPCHandler):
                copyThread = None
             return status
         else:
-            return {'bytesTotal': 0, 'bytesRead': 0, 'done': False, 'checksumError': False}
+            return {'bytesTotal': 0, 'bytesRead': 0, 'done': False,
+                    'checksumError': False, 'verifying': False}

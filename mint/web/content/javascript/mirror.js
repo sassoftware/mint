@@ -78,12 +78,16 @@ function startConcat() {
 
 function readStatusCallback(aReq) {
     r = evalJSONRequest(aReq);
-    percent = ((r.bytesRead / r.bytesTotal) * 100).toFixed(0);
-
-    if(percent == "100") {
-        replaceChildNodes($('statusMessage'), "Verifying checksum...");
+    if (r.bytesTotal) {
+        percent = ((r.bytesRead / r.bytesTotal) * 100).toFixed(0);
     } else {
+        percent = 0;
+    }
+
+    if(!(r.verifying || r.checksumError)) {
         replaceChildNodes($('statusMessage'), "Copying: " + percent + "%");
+    } else if (r.verifying && ! r.checksumError) {
+        replaceChildNodes($('statusMessage'), "Verifying checksum...");
     }
 
     if(!r.done) {
@@ -122,7 +126,6 @@ function getDiscInfoCallback(aReq) {
 
     setElementClass($("statusMessage"), "running");
 
-    logDebug("response from json: " + r);
     if(r.error) {
         replaceChildNodes($("statusMessage"), r.message);
         setElementClass($("statusMessage"), "error");
