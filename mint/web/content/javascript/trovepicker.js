@@ -96,6 +96,7 @@ TrovePicker.prototype.buildTrovePicker = function() {
 // Show all flavors available for a given trove and version
 TrovePicker.prototype.showTroveFlavors = function(e) {
     this.version = e.src().version;
+    this.label = e.src().label;
 
     replaceChildNodes($(this.elId + 'troveSpec'),
         this.buildTroveSpec(this.troveName, this.version, ''));
@@ -105,13 +106,13 @@ TrovePicker.prototype.showTroveFlavors = function(e) {
     for(var i in this.flavorCache[this.version]) {
         flavor = this.flavorCache[this.version][i];
         appendChildNodes(ul, forwardLink(null, this.flavorDict[flavor]));
-
-        // return to getTroveVersions
-        returnLink = A(null, returnImg(), " Back");
-        returnLink.label = this.label;
-        connect(returnLink, "onclick", this, "getTroveVersions");
-        replaceChildNodes($('return'), returnLink);
     }
+    // return to getTroveVersions
+    returnLink = A(null, returnImg(), " Back");
+    returnLink.label = this.label;
+    connect(returnLink, "onclick", this, "getTroveVersions");
+    replaceChildNodes($('return'), returnLink);
+
     swapDOM(oldList, ul);
     this.working(false);
     replaceChildNodes($(this.elId + 'prompt'), "Please choose a flavor:");
@@ -123,7 +124,7 @@ TrovePicker.prototype.getTroveVersions = function(e) {
     var par = this;
     var key = this.label + "=" + this.troveName;
 
-    var setupList = function(versionList) {
+    var setupList = function(req) {
         var versionDict = req[0];
         var versionList = req[1];
         oldList = $(par.elId + 'selectionList');
@@ -135,6 +136,7 @@ TrovePicker.prototype.getTroveVersions = function(e) {
         for(var i in versionList) {
             link = forwardLink(null, versionList[i]);
             link.version = versionList[i];
+            link.label = par.label;
             connect(link, "onclick", par, "showTroveFlavors");
             appendChildNodes(ul, link);
         }
