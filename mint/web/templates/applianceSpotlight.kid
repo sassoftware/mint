@@ -101,11 +101,11 @@
         <div style="width: 710px;" py:if="data">
         <?python import time ?>
             <h2 style="text-align: center;">Virtual Appliance Spotlight</h2>
-            <p class="help" style="text-align: center;">This will be guide text.</p>
+            <p class="help" style="text-align: center; margin-bottom: 35px;">This will be guide text.</p>
 
-        <div py:for="spotlightData in data">
+        <div py:for="spotlightData in data" style="margin-top: -15px;">
         <div onclick="location.href='${spotlightData['link']}'" id="spotlight">
- <div class="cssbox2">
+ <div class="cssbox2_archive">
         <div class="cssbox_head2">
         <div style="text-align: right; font-style: italic;">${time.strftime('%m/%d/%Y', time.localtime(spotlightData['startDate']))} - ${time.strftime('%m/%d/%Y', time.localtime(spotlightData['endDate']))}</div>
         <!--    <div>&nbsp;</div> -->
@@ -132,8 +132,6 @@
         </div>
         </div>
         </div>
-
-            <br/>
         </div>
         </div>
     <div py:if="showNext or showPrev" style="text-align: center;">
