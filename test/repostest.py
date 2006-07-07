@@ -271,7 +271,9 @@ class RepositoryTest(MintRepositoryHelper):
         assert(r == [labelStr])
 
         r = server.getTroveVersions(projectId, labelStr, "testcase")
-        assert(r == {'/testproject.rpath.local2@rpl:devel/1.0-1-1': ['']})
+        assert(r == {'/testproject.rpath.local2@rpl:devel/1.0-1-1': ['']},
+                     ['/testproject.rpath.local2@rpl:devel/1.0-1-1'],
+                    {'': ''})
 
 
 if __name__ == "__main__":
