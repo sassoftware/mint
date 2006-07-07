@@ -339,6 +339,7 @@ div#inactiveRight {
 }
 
 #spotlight .cssbox2,
+#spotlight .cssbox2_archive,
 #spotlight .cssbox_body2,
 #spotlight .cssbox_head2,
 #spotlight .cssbox_head2 div {
@@ -348,6 +349,14 @@ div#inactiveRight {
 #spotlight .cssbox2 {
     width: 716px !important; /* intended total box width - padding-right(next) */
     width: 716px; /* IE Win = width - padding */
+    padding-right: 0px; /* the gap on the right edge of the image (not content padding) */
+    margin: 20px auto; /* use to position the box */
+    margin-left: 0;
+}
+
+#spotlight .cssbox2_archive {
+    width: 700px !important; /* intended total box width - padding-right(next) */
+    width: 700px; /* IE Win = width - padding */
     padding-right: 0px; /* the gap on the right edge of the image (not content padding) */
     margin: 20px auto; /* use to position the box */
     margin-left: 0;
