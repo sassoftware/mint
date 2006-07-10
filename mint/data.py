@@ -1,4 +1,4 @@
-#
+t#
 # Copyright (c) 2005-2006 rPath, Inc.
 #
 # All Rights Reserved
@@ -125,5 +125,3 @@ class ReleaseDataTable(GenericDataTable):
 class BuildDataTable(GenericDataTable):
     name = "BuildData"
 
-class ProjectDataTable(GenericDataTable):
-    name = "ProjectData"

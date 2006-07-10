@@ -208,7 +208,6 @@ def getTables(db, cfg):
     d['membershipRequests'] = requests.MembershipRequestTable(db)
     d['commits'] = stats.CommitsTable(db)
     d['buildData'] = data.BuildDataTable(db)
-    d['projectData'] = data.ProjectDataTable(db)
     d['groupTroves'] = grouptrove.GroupTroveTable(db, cfg)
     d['groupTroveItems'] = grouptrove.GroupTroveItemsTable(db, cfg)
     d['conaryComponents'] = grouptrove.ConaryComponentsTable(db)
