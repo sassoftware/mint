@@ -306,15 +306,15 @@ class MintClient:
         productId = self.server.newProduct(projectId, productName)
         return self.getProduct(productId)
 
-    # XXX this probably needs to be getPublishedReleaseList, now
-    def getProductList(self, limit=10, offset=0):
+    def getPublishedReleaseList(self, limit=10, offset=0):
         """
-        Get a list of the most recent products as ordered by their published date.
+        Get a list of the most recent published releases as ordered
+        by their published date.
         @param limit: The number of products to display
         @param offset: List @limit starting at item @offset
         """
         return [(x[0], x[1], self.getProduct(x[2])) for x in \
-                self.server.getProductList(limit, offset)]
+                self.server.getPublishedReleaseList(limit, offset)]
 
     def newPublishedRelease(self, projectId):
         """

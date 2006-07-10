@@ -1665,14 +1665,8 @@ class MintServer(object):
 
     @typeCheck(int, int)
     @private
-    # XXX this probably needs to be getPublishedReleases, now
-    def getProductList(self, limit, offset):
-        cu = self.db.cursor()
-        cu.execute("""SELECT Projects.name, Projects.hostname, productId
-                         FROM Products LEFT JOIN Projects ON Projects.projectId = Products.projectId
-                         WHERE Projects.hidden=0
-                         ORDER BY Products.timeCreated DESC LIMIT ? OFFSET ?""", limit, offset)
-        return [(x[0], x[1], int(x[2])) for x in cu.fetchall()]
+    def getPublishedReleaseList(self, limit, offset):
+        return self.publishedReleases.getPublishedReleaseList(limit, offset)
 
     @typeCheck(str, str, str, str)
     @private
@@ -1852,14 +1846,13 @@ class MintServer(object):
         return self.publishedReleases.getProducts(pubReleaseId)
 
     @typeCheck(int)
-    @requiresAuth
     @private
     def getPublishedReleasesByProject(self, projectId):
         self._filterProjectAccess(projectId)
         finalizedOnly = False
         if not self._checkProjectAccess(projectId, userlevels.WRITERS):
             finalizedOnly = True
-        return self.publishedReleases.getPublishedReleases(projectId,
+        return self.publishedReleases.getPublishedReleasesByProject(projectId,
                 finalizedOnly)
 
     # job data calls

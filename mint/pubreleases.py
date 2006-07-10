@@ -59,7 +59,18 @@ class PublishedReleasesTable(database.KeyedTable):
         res = cu.fetchall()
         return [x[0] for x in res]
 
-    def getPublishedReleases(self, projectId, finalizedOnly=False):
+    def getPublishedReleaseList(self, limit, offset):
+        cu = self.db.cursor()
+        cu.execute("""SELECT Proj.name, Proj.hostname, PubRel.pubReleaseId
+                      FROM Projects Proj LEFT JOIN PublishedReleases PubRel
+                         ON Proj.projectId = PubRel.projectId
+                      WHERE Proj.hidden = 0
+                         AND PubRel.timePublished IS NOT NULL
+                      ORDER BY PubRel.timePublished DESC LIMIT ? OFFSET ?""",
+                      limit, offset)
+        return [(x[0], x[1], int(x[2])) for x in cu.fetchall()]
+
+    def getPublishedReleasesByProject(self, projectId, finalizedOnly=False):
         sql = """SELECT pubReleaseId FROM PublishedReleases
                  WHERE projectId = ?"""
 
