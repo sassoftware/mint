@@ -1066,6 +1066,10 @@ class MintServer(object):
     @private
     def registerNewUser(self, username, password, fullName, email,
                         displayEmail, blurb, active):
+        if not ((list(self.authToken) == \
+                [self.cfg.authUser, self.cfg.authPass]) or self.auth.admin \
+                 or not self.cfg.adminNewUsers):
+            raise PermissionDenied
         if active and not (list(self.authToken) == [self.cfg.authUser, self.cfg.authPass] or self.auth.admin):
             raise PermissionDenied
         return self.users.registerNewUser(username, password, fullName, email,
