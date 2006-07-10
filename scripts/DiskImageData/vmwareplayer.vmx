@@ -43,7 +43,7 @@ ide0:0.redo = ""
 ide1:0.present = "TRUE"
 ide1:0.fileName = "auto detect"
 ide1:0.deviceType = "cdrom-raw"
-ide1:0.startConnected = "TRUE"
+ide1:0.startConnected = "FALSE"
 ide1:0.autodetect = "TRUE"
 
 #####
