@@ -105,6 +105,16 @@ class ProjectHandler(WebHandler):
     def conaryDevelCfg(self, auth):
         return self._write("conaryDevelCfg")
 
+    def releases(self, auth):
+        releases = [self.client.getPublishedRelease(x) for x in self.project.getPublishedReleases()]
+        return self._write("pubreleases", releases = releases)
+
+    def createRelease(self, auth):
+        release = self.client.newPublishedRelease(self.project.id)
+        release.name = self.project.name
+        return self._write("editPubrelease", release = release,
+                           isNewRelease = True)
+
     def products(self, auth):
         products = self.project.getProducts()
         publishedProducts = [x for x in products if x.getPublished()]

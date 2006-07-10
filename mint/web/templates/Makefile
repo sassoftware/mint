@@ -16,6 +16,7 @@ kid_files = \
 	editGroup.kid		\
 	editProject.kid		\
 	editProduct.kid		\
+	editPubrelease.kid	\
 	editrMake.kid		\
 	error.kid		\
 	forgotPassword.kid	\
@@ -43,6 +44,7 @@ kid_files = \
 	rejectJoinRequest.kid   \
 	product.kid		\
 	products.kid		\
+	pubreleases.kid		\
 	rMake.kid		\
 	rMakeStatus.kid		\
 	rss20.kid		\
