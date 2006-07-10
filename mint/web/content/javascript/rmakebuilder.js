@@ -4,18 +4,19 @@
 
 On pages that allow for rmake manipulation do the following:
     On page load:
-        Find the links (which currently add/delete via URLs) replace with javascript ajax commands
+        Find the links replace with javascript ajax commands
             addrMakeBuildTrove
             deleterMakeBuildTrove
     On link click:
         Post the xmlrpc request to add/delete the trove
         Wait for the return value
         Populate the box with the new data returned from the xmlrpc call
+            This includes changing the next action command if appropriate
 
     On rMake build:
         While rMake build is in progress, sleep periodically
         Post an xmlrpc request to update status
-        Populate the builder pane of the status boxes with the proper content
+        Populate the builder pane or the status boxes with the proper content
 */
 
 var rMakeBuildId = 0;
@@ -23,6 +24,7 @@ var statusTimeout = 1;
 var savedTroveList = [];
 var savedrMakeBuild = null;
 var commitFailed = 0;
+var numTroves = 0;
 
 function getrMakeBuild() {
     var req = new JsonRpcRequest("jsonrpc/", "getrMakeBuild");
@@ -99,6 +101,7 @@ function processListrMakeBuildTroves(aReq) {
     if (savedTroveList.length == 0) {
         savedTroveList = troveList;
     }
+    numTroves = troveList.length;
     for (var trvIndex in troveList) {
         var trvDict = troveList[trvIndex];
         var itemId = trvDict['rMakeBuildItemId'];
@@ -128,7 +131,102 @@ function processListrMakeBuildTroves(aReq) {
     savedTroveList = troveList;
 }
 
+function deleterMakeBuildTrove(troveId) {
+    var req = new JsonRpcRequest("jsonrpc/", 'delrMakeBuildTrove');
+    req.setAuth(getCookieValue("pysid"));
+    req.setCallback(rMakeTroveDeleted);
+    req.send(true, [troveId]);
+}
+
+function addrMakeBuildTroveByLabel(name, label) {
+    var req = new JsonRpcRequest("jsonrpc/", 'addrMakeBuildTrove');
+    req.setAuth(getCookieValue("pysid"));
+    req.setCallback(rMakeTroveAdded);
+    req.send(true, [rMakeBuildId, name, label])
+}
+
+function addrMakeBuildTroveByProject(name, project) {
+    var req = new JsonRpcRequest("jsonrpc/", 'addrMakeBuildTroveByProject');
+    req.setAuth(getCookieValue("pysid"));
+    req.setCallback(rMakeTroveAdded);
+    req.send(true, [rMakeBuildId, name, project])
+}
+
+function rMakeTroveAdded (aReq) {
+    var trvDict = evalJSONRequest(aReq);
+    if (trvDict['trvName']) {
+        newRow = TR({'id' : 'rmakebuilder-item-' + trvDict['rMakeBuildItemId']},
+                    TD({}, ''),
+                    TD({}, A({'href' : BaseUrl + 'repos/' + trvDict['shortHost'] + 'troveInfo?t=' + trvDict['trvName']}, trvDict['trvName'])),
+                    TD({}, A({'href' : BaseUrl + 'repos/' + trvDict['shortHost'] + '/browse'}, trvDict['shortHost'])),
+                    TD({}, A({'href' : 'javascript:deleterMakeBuildTrove(' + trvDict['rMakeBuildItemId'] + ');'},'X')));
+        var tableNode = document.getElementById('rmakebuilder-tbody');
+        tableNode.appendChild(newRow);
+        numTroves = numTroves + 1;
+        var rMakeBuildAction = document.getElementById('rMakeBuildNextAction');
+        if(rMakeBuildAction) {
+            swapDOM(rMakeBuildAction, A({id: 'rMakeBuildNextAction', class : 'option', style : 'display: inline;', href : BaseUrl + 'commandrMake?command=build'}, 'Build'));
+        }
+    }
+}
+
+function rMakeTroveDeleted(aReq) {
+    var rMakeBuildItemId = evalJSONRequest(aReq);
+    var trvRow = document.getElementById('rmakebuilder-item-' + rMakeBuildItemId);
+    if(trvRow) {
+        swapDOM('rmakebuilder-item-' + rMakeBuildItemId, null);
+        numTroves = numTroves - 1;
+        var rMakeBuildAction = document.getElementById('rMakeBuildNextAction');
+        if((!numTroves) && rMakeBuildAction) {
+            swapDOM(rMakeBuildAction, A({id: 'rMakeBuildNextAction', class : 'option', style : 'display: inline;', href : BaseUrl + 'editrMake?id=' + rMakeBuildId}, 'Edit'));
+        }
+    }
+}
+
+LinkManager.prototype.getUrlData = function(link) {
+    var ques = link.indexOf('?');
+    var args = new Object();
+    var argstr = link.substring(ques+1, link.length);
+    arglist = argstr.split(/;|&/);
+    for (var i=0; i < arglist.length; i++) {
+        var key, value;
+        var x = arglist[i].split('=');
+        args[x[0]] = x[1];
+    }
+    return args;
+}
+
+function LinkManager()
+{
+    bindMethods(this);
+}
+
+LinkManager.prototype.reworkLinks = function () {
+    anchors = document.getElementsByTagName("a");
+    for(var i=0; i < anchors.length; i++) {
+        var anchor = anchors[i];
+        var href = anchor.href;
+        if (href.indexOf('deleterMakeTrove') >= 0) {
+            var args = this.getUrlData(href);
+            anchor.href = "javascript:deleterMakeBuildTrove(" + args['troveId'] + ");";
+        }
+        else if (href.indexOf('addrMakeTrove') >= 0) {
+            var args = this.getUrlData(href);
+            if (args['label']) {
+                anchor.href = "javascript:addrMakeBuildTroveByLabel('" + args['trvName'] + "', '" + args['label'] + "');";
+            }
+            else if(true || args['projectName']){
+                anchor.href = "javascript:addrMakeBuildTroveByProject('" + args['trvName'] + "', '" + args['projectName'] + "');";
+            }
+        }
+    }
+}
+
+linkManager = null;
+
 function initrMakeManager(newrMakeBuildId) {
     rMakeBuildId = newrMakeBuildId;
+    linkManager = new LinkManager();
+    linkManager.reworkLinks();
     getrMakeBuild();
 }

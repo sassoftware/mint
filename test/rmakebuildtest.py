@@ -98,7 +98,8 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
     def testDelAccess(self, db, data):
         client = self.getClient('nobody')
         rMakeBuild = client.createrMakeBuild('foo')
-        itemId = rMakeBuild.addTrove('foo', 'test.rpath.local@rpl:devel')
+        itemId = rMakeBuild.addTrove( \
+            'foo', 'test.rpath.local@rpl:devel')['rMakeBuildItemId']
 
         client = self.getClient('user')
         self.assertRaises(database.ItemNotFound,
@@ -109,7 +110,8 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
         client = self.getClient('nobody')
         rMakeBuild = client.createrMakeBuild('foo')
 
-        itemId = rMakeBuild.addTrove('foo', 'test.rpath.local@rpl:devel')
+        itemId = rMakeBuild.addTrove( \
+            'foo', 'test.rpath.local@rpl:devel')['rMakeBuildItemId']
         client.delrMakeBuildTrove(itemId)
         cu = db.cursor()
         cu.execute("""SELECT trvName, trvLabel
@@ -122,7 +124,8 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
         client = self.getClient('nobody')
         rMakeBuild = client.createrMakeBuild('foo')
 
-        itemId = rMakeBuild.addTrove('foo', 'test.rpath.local@rpl:devel')
+        itemId = rMakeBuild.addTrove( \
+            'foo', 'test.rpath.local@rpl:devel')['rMakeBuildItemId']
         client = self.getClient('user')
         self.assertRaises(database.ItemNotFound, client.delrMakeBuildTrove,
                           itemId)
@@ -132,7 +135,8 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
         client = self.getClient('nobody')
         rMakeBuild = client.createrMakeBuild('foo')
 
-        itemId = rMakeBuild.addTrove('foo', 'test.rpath.local@rpl:devel')
+        itemId = rMakeBuild.addTrove( \
+            'foo', 'test.rpath.local@rpl:devel')['rMakeBuildItemId']
 
         xml = rMakeBuild.getXML()
 
@@ -149,7 +153,8 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
         client = self.getClient('nobody')
         rMakeBuild = client.createrMakeBuild('foo')
 
-        itemId = rMakeBuild.addTrove('foo', 'test.rpath.local@rpl:devel')
+        itemId = rMakeBuild.addTrove( \
+            'foo', 'test.rpath.local@rpl:devel')['rMakeBuildItemId']
         xml = rMakeBuild.getXML()
         cu = db.cursor()
         cu.execute("""SELECT status, statusMessage
@@ -165,7 +170,8 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
         client = self.getClient('nobody')
         rMakeBuild = client.createrMakeBuild('foo')
 
-        itemId = rMakeBuild.addTrove('foo', 'test.rpath.local@rpl:devel')
+        itemId = rMakeBuild.addTrove( \
+            'foo', 'test.rpath.local@rpl:devel')['rMakeBuildItemId']
         xml = rMakeBuild.getXML()
         xml = rMakeBuild.getXML('stop')
         cu = db.cursor()
@@ -183,7 +189,8 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
         client = self.getClient('nobody')
         rMakeBuild = client.createrMakeBuild('foo')
 
-        itemId = rMakeBuild.addTrove('foo', 'test.rpath.local@rpl:devel')
+        itemId = rMakeBuild.addTrove( \
+            'foo', 'test.rpath.local@rpl:devel')['rMakeBuildItemId']
         cu = db.cursor()
         cu.execute("""UPDATE rMakeBuild SET status=?, statusMessage='test'
                           WHERE rMakeBuildId=?""",
@@ -207,7 +214,8 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
         client = self.getClient('nobody')
         rMakeBuild = client.createrMakeBuild('foo')
 
-        itemId = rMakeBuild.addTrove('foo', 'test.rpath.local@rpl:devel')
+        itemId = rMakeBuild.addTrove( \
+            'foo', 'test.rpath.local@rpl:devel')['rMakeBuildItemId']
 
         cu = db.cursor()
         cu.execute("""UPDATE rMakeBuild SET status=?, statusMessage='test'
@@ -235,7 +243,8 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
 
         cu = db.cursor()
 
-        itemId = rMakeBuild.addTrove('foo', 'test.rpath.local@rpl:devel')
+        itemId = rMakeBuild.addTrove( \
+            'foo', 'test.rpath.local@rpl:devel')['rMakeBuildItemId']
         for status in (buildjob.JOB_STATE_FAILED, buildjob.JOB_STATE_INIT,
                        buildjob.JOB_STATE_QUEUED, buildjob.JOB_STATE_STARTED,
                        buildjob.JOB_STATE_BUILD, buildjob.JOB_STATE_COMMITTED):
@@ -250,7 +259,8 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
         client = self.getClient('nobody')
         rMakeBuild = client.createrMakeBuild('foo')
 
-        itemId = rMakeBuild.addTrove('foo', 'test.rpath.local@rpl:devel')
+        itemId = rMakeBuild.addTrove( \
+            'foo', 'test.rpath.local@rpl:devel')['rMakeBuildItemId']
         self.assertRaises(mint_error.rMakeBuildOrder,
                           rMakeBuild.getXML, 'stop')
 
@@ -259,7 +269,8 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
         client = self.getClient('nobody')
         rMakeBuild = client.createrMakeBuild('foo')
 
-        itemId = rMakeBuild.addTrove('foo', 'test.rpath.local@rpl:devel')
+        itemId = rMakeBuild.addTrove( \
+            'foo', 'test.rpath.local@rpl:devel')['rMakeBuildItemId']
 
         cu = db.cursor()
         cu.execute("""UPDATE rMakeBuild SET UUID=?, status=1
@@ -279,7 +290,8 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
         client = self.getClient('nobody')
         rMakeBuild = client.createrMakeBuild('foo')
 
-        itemId = rMakeBuild.addTrove('foo', 'test.rpath.local@rpl:devel')
+        itemId = rMakeBuild.addTrove( \
+            'foo', 'test.rpath.local@rpl:devel')['rMakeBuildItemId']
 
         cu = db.cursor()
         cu.execute("""UPDATE rMakeBuild SET UUID=?, status=?
@@ -299,7 +311,8 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
         client = self.getClient('nobody')
         rMakeBuild = client.createrMakeBuild('foo')
 
-        itemId = rMakeBuild.addTrove('foo', 'test.rpath.local@rpl:devel')
+        itemId = rMakeBuild.addTrove( \
+            'foo', 'test.rpath.local@rpl:devel')['rMakeBuildItemId']
 
         xml = rMakeBuild.getXML()
 
@@ -322,7 +335,7 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
         trvName = 'foo'
         trvLabel = 'test.rpath.local@rpl:devel'
 
-        itemId = rMakeBuild.addTrove(trvName, trvLabel)
+        itemId = rMakeBuild.addTrove(trvName, trvLabel)['rMakeBuildItemId']
 
         assert(rMakeBuild.listTroves() == [{'rMakeBuildItemId' : itemId,
                                             'rMakeBuildId' : rMakeBuild.id,
@@ -342,7 +355,7 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
         trvName = 'foo'
         trvLabel = 'test.rpath.local@rpl:devel'
 
-        itemId = rMakeBuild.addTrove(trvName, trvLabel)
+        itemId = rMakeBuild.addTrove(trvName, trvLabel)['rMakeBuildItemId']
 
         xml = rMakeBuild.getXML()
         cu = db.cursor()
@@ -364,7 +377,7 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
         trvName = 'foo'
         trvLabel = 'test.rpath.local@rpl:devel'
 
-        itemId = rMakeBuild.addTrove(trvName, trvLabel)
+        itemId = rMakeBuild.addTrove(trvName, trvLabel)['rMakeBuildItemId']
 
         UUID = 32 * '0'
         cu = db.cursor()
@@ -388,7 +401,7 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
         trvName = 'foo'
         trvLabel = 'test.rpath.local@rpl:devel'
 
-        itemId = rMakeBuild.addTrove(trvName, trvLabel)
+        itemId = rMakeBuild.addTrove(trvName, trvLabel)['rMakeBuildItemId']
 
         xml = rMakeBuild.getXML()
         cu = db.cursor()
@@ -409,7 +422,7 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
         trvName = 'foo'
         trvLabel = 'test.rpath.local@rpl:devel'
 
-        itemId = rMakeBuild.addTrove(trvName, trvLabel)
+        itemId = rMakeBuild.addTrove(trvName, trvLabel)['rMakeBuildItemId']
 
         self.assertRaises(mint_error.ParameterError, rMakeBuild.getXML,
                           'notavalidcommand')
@@ -438,7 +451,8 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
         client = self.getClient('nobody')
         rMakeBuild = client.createrMakeBuild('foo')
 
-        itemId = rMakeBuild.addTrove('foo', 'test.rpath.local@rpl:devel')
+        itemId = rMakeBuild.addTrove( \
+            'foo', 'test.rpath.local@rpl:devel')['rMakeBuildItemId']
 
         status = 0
         statusMessage = ''
@@ -466,7 +480,8 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
         client = self.getClient('nobody')
         rMakeBuild = client.createrMakeBuild('foo')
 
-        itemId = rMakeBuild.addTrove('foo', 'test.rpath.local@rpl:devel')
+        itemId = rMakeBuild.addTrove( \
+            'foo', 'test.rpath.local@rpl:devel')['rMakeBuildItemId']
 
         cu = db.cursor()
         cu.execute("SELECT * FROM rMakeBuildItems")
@@ -525,13 +540,13 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
         self.assertRaises(mint_error.ParameterError, rMakeBuild.rename, 'foo!')
 
     @fixtures.fixture("Full")
-    def testgetTrove(self, db, data):
+    def testGetTrove(self, db, data):
         client = self.getClient('nobody')
         rMakeBuild = client.createrMakeBuild('foo')
         trvName = 'foo'
         trvLabel = 'test.rpath.local@rpl:devel'
 
-        itemId = rMakeBuild.addTrove(trvName, trvLabel)
+        itemId = rMakeBuild.addTrove(trvName, trvLabel)['rMakeBuildItemId']
         itemDict = client.getrMakeBuildTrove(itemId)
 
         assert itemDict == {'status': 0,
@@ -549,7 +564,7 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
         trvName = 'foo'
         trvLabel = 'test.rpath.local@rpl:devel'
 
-        itemId = rMakeBuild.addTrove(trvName, trvLabel)
+        itemId = rMakeBuild.addTrove(trvName, trvLabel)['rMakeBuildItemId']
         client = self.getClient('user')
         self.assertRaises(database.ItemNotFound,
                           client.getrMakeBuildTrove, itemId)
@@ -561,7 +576,7 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
         trvName = 'foo'
         trvLabel = 'test.rpath.local@rpl:devel'
 
-        itemId = rMakeBuild.addTrove(trvName, trvLabel)
+        itemId = rMakeBuild.addTrove(trvName, trvLabel)['rMakeBuildItemId']
 
         cu = db.cursor()
         cu.execute("UPDATE rMakeBuild SET status=1, jobId=1")
@@ -578,7 +593,7 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
         trvName = 'foo'
         trvLabel = 'test.rpath.local@rpl:devel'
 
-        itemId = rMakeBuild.addTrove(trvName, trvLabel)
+        itemId = rMakeBuild.addTrove(trvName, trvLabel)['rMakeBuildItemId']
 
         cu = db.cursor()
         cu.execute("UPDATE rMakeBuild SET status=1, jobId=1")
@@ -597,7 +612,7 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
         trvName = 'foo'
         trvLabel = 'test.rpath.local@rpl:devel'
 
-        itemId = rMakeBuild.addTrove(trvName, trvLabel)
+        itemId = rMakeBuild.addTrove(trvName, trvLabel)['rMakeBuildItemId']
 
         cu = db.cursor()
         cu.execute("UPDATE rMakeBuild SET status=1, jobId=1, UUID=?", 32* '0')
@@ -620,7 +635,7 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
         trvName = 'foo'
         trvLabel = 'test.rpath.local@rpl:devel'
 
-        itemId = rMakeBuild.addTrove(trvName, trvLabel)
+        itemId = rMakeBuild.addTrove(trvName, trvLabel)['rMakeBuildItemId']
         UUID = 32 * '0'
         cu = db.cursor()
         cu.execute("UPDATE rMakeBuild SET UUID=?", UUID)
@@ -636,7 +651,7 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
         trvName = 'foo'
         trvLabel = 'test.rpath.local@rpl:devel'
 
-        itemId = rMakeBuild.addTrove(trvName, trvLabel)
+        itemId = rMakeBuild.addTrove(trvName, trvLabel)['rMakeBuildItemId']
         UUID = 32 * '0'
         cu = db.cursor()
         cu.execute("UPDATE rMakeBuild SET UUID=?", UUID)
@@ -656,7 +671,7 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
         trvName = 'foo'
         trvLabel = 'test.rpath.local@rpl:devel'
 
-        itemId = rMakeBuild.addTrove(trvName, trvLabel)
+        itemId = rMakeBuild.addTrove(trvName, trvLabel)['rMakeBuildItemId']
         UUID = 32 * '0'
         cu = db.cursor()
         cu.execute("UPDATE rMakeBuild SET UUID=?", UUID)
@@ -676,7 +691,7 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
         trvName = 'foo'
         trvLabel = 'test.rpath.local@rpl:devel'
 
-        itemId = rMakeBuild.addTrove(trvName, trvLabel)
+        itemId = rMakeBuild.addTrove(trvName, trvLabel)['rMakeBuildItemId']
         rMakeBuild.getXML()
 
         self.assertRaises(mint_error.rMakeBuildOrder,
@@ -689,7 +704,7 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
         trvName = 'foo'
         trvLabel = 'test.rpath.local@rpl:devel'
 
-        itemId = rMakeBuild.addTrove(trvName, trvLabel)
+        itemId = rMakeBuild.addTrove(trvName, trvLabel)['rMakeBuildItemId']
         rMakeBuild.getXML()
 
         self.assertRaises(mint_error.rMakeBuildOrder,
@@ -702,7 +717,7 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
         trvName = 'foo:source'
         trvLabel = 'test.rpath.local@rpl:devel'
 
-        itemId = rMakeBuild.addTrove(trvName, trvLabel)
+        itemId = rMakeBuild.addTrove(trvName, trvLabel)['rMakeBuildItemId']
 
         self.failIf(rMakeBuild.listTroves()[0]['trvName'] != trvName,
                     "rMakeBuild added package name instead of source trove")

@@ -7,6 +7,9 @@ Changes in tip:
 * Searching (all types) will prioritize exact matches above all other results.
 * rBuilder can command an rMake server local to the web browser's machine.
 
+--- affects job server on tip ---
+* vmware images now default to bridged mode.
+
 Changes in 1.6.3:
 * Installation paths changed: /srv/mint is now /srv/rbuilder; configuration is
   now in /srv/rbuilder/rbuilder.conf.

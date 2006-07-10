@@ -19,7 +19,8 @@ kid_files =			\
 	admin.kid	\
 	spotlight.kid		\
 	preview.kid	\
-	selections.kid
+	selections.kid		\
+	useit.kid
 
 python_files =
 

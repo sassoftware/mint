@@ -40,6 +40,7 @@ from mint import users
 from mint import usertemplates
 from mint import spotlight
 from mint import selections
+from mint import useit
 from mint import rmakebuild
 from mint.distro import jsversion
 from mint.distro.flavors import stockFlavors
@@ -217,8 +218,8 @@ def getTables(db, cfg):
     d['outboundLabels'] = mirror.OutboundLabelsTable(db)
     d['outboundMatchTroves'] = mirror.OutboundMatchTrovesTable(db)
     d['repNameMap'] = mirror.RepNameMapTable(db)
-    d['spotlight'] = spotlight.ApplianceSpotlightTable(db,
-                                                                         cfg)
+    d['spotlight'] = spotlight.ApplianceSpotlightTable(db, cfg)
+    d['useit'] = useit.UseItTable(db, cfg)
     d['selections'] = selections.FrontPageSelectionsTable(db, cfg)
     d['rMakeBuild'] = rmakebuild.rMakeBuildTable(db)
     d['rMakeBuildItems'] = rmakebuild.rMakeBuildItemsTable(db)
@@ -324,6 +325,9 @@ class MintServer(object):
             except MaintenanceMode, e:
                 self._handleError(e, authToken, methodName, args)
                 return (True, ("MaintenanceMode", str(e)))
+            except users.LastOwner, e:
+                self._handleError(e, authToken, methodName, args)
+                return (True, ("LastOwner", str(e)))
             except ParameterError, e:
                 self._handleError(e, authToken, methodName, args)
                 return (True, ("ParameterError", str(e)))
@@ -1040,7 +1044,7 @@ class MintServer(object):
             raise users.UserInduction()
         if self.projectUsers.onlyOwner(projectId, userId) and \
                (level != userlevels.OWNER):
-            raise users.LastOwner()
+            raise users.LastOwner
         #update the level on the project
         project = projects.Project(self, projectId)
         user = self.getUser(userId)
@@ -1507,6 +1511,26 @@ class MintServer(object):
     @private
     def getNewsLink(self):
         return self.newsCache.getNewsLink()
+
+    @typeCheck()
+    @private
+    def getUseItIcons(self):
+        return self.useit.getIcons()
+
+    @typeCheck(int)
+    @private
+    @requiresAdmin
+    def deleteUseItIcon(self, itemId):
+        return self.useit.deleteIcon(itemId)
+
+    @typeCheck(int, str, str)
+    @private
+    @requiresAdmin
+    def addUseItIcon(self, itemId, name, link):
+        if name and link:
+            return self.useit.addIcon(itemId, name, link)
+        else:
+            return False
 
     @typeCheck(str, str, str, str, int, str, str)
     @requiresAdmin
@@ -2462,7 +2486,15 @@ class MintServer(object):
         nc = conaryclient.ConaryClient(cfg).getRepos()
 
         troves = nc.getTroveVersionsByLabel({str(troveName): {versions.Label(str(labelStr)): None}})[troveName]
-        return dict((str(x), [y.freeze() for y in troves[x]]) for x in troves)
+        versionDict = dict((str(x), [y.freeze() for y in troves[x]]) for x in troves)
+        versionList = sorted(versionDict.keys(), reverse = True)
+
+        # prepare a hash of frozen -> thawed flavors
+        flavorDict = set()
+        [flavorDict.update(set(x)) for x in versionDict.values()]
+        flavorDict = dict((x, str(deps.ThawFlavor(x)).replace(",", ", ")) for x in flavorDict)
+
+        return [versionDict, versionList, flavorDict]
 
     @typeCheck(int)
     @requiresAuth
@@ -3075,24 +3107,29 @@ class MintServer(object):
 
     ### rMake Build trove functions ###
     @private
-    @typeCheck(int, str, str)
+    @typeCheck(int, ((unicode, str),), ((unicode, str),))
     @requiresAuth
     def addrMakeBuildTrove(self, rMakeBuildId, trvName, trvLabel):
         self._filterrMakeBuildAccess(rMakeBuildId)
+        trvName = str(trvName)
+        trvLabel = str(trvLabel)
         rMakeBuildDict = self.rMakeBuild.get(rMakeBuildId)
         if rMakeBuildDict['status']:
             raise rMakeBuildOrder('Cannot add troves at this time.')
         if ':' in trvName and not trvName.endswith(':source'):
             raise ParameterError('Cannot add components to rMake Build')
-        return self.rMakeBuildItems.new(rMakeBuildId = rMakeBuildId,
-                                        trvName = trvName,
-                                        trvLabel = trvLabel)
+        rMakeBuildItemId = self.rMakeBuildItems.new( \
+            rMakeBuildId = rMakeBuildId, trvName = trvName,
+            trvLabel = trvLabel)
+        return self.rMakeBuildItems.get(rMakeBuildItemId)
 
     @private
-    @typeCheck(int, str, str)
+    @typeCheck(int, ((unicode, str),), ((unicode, str),))
     @requiresAuth
     def addrMakeBuildTroveByProject(self, rMakeBuildId, trvName, projectName):
         self._filterrMakeBuildAccess(rMakeBuildId)
+        trvName = str(trvName)
+        projectname = str(projectName)
         projectId = self.projects.getProjectIdByHostname(projectName)
         self._filterProjectAccess(projectId)
         project = projects.Project(self, projectId)
@@ -3122,15 +3159,14 @@ class MintServer(object):
         if rMakeBuildDict['status']:
             raise rMakeBuildOrder('Cannot delete troves at this time.')
         self.rMakeBuildItems.delete(rMakeBuildItemId)
-        return True
+        return rMakeBuildItemId
 
     @private
     @typeCheck(int)
     @requiresAuth
     def getrMakeBuildTrove(self, rMakeBuildItemId):
         self._filterrMakeBuildItemAccess(rMakeBuildItemId)
-        itemDict = self.rMakeBuildItems.get(rMakeBuildItemId)
-        return itemDict
+        return self.rMakeBuildItems.get(rMakeBuildItemId)
 
     @private
     @typeCheck(str, str, str, int, str)

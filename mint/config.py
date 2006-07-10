@@ -105,6 +105,7 @@ class MintConfig(ConfigFile):
     reposLog                = (cfgtypes.CfgBool, True)
     xmlrpcLogFile           = ''
     spotlightImagesDir      = os.path.join(os.path.sep, 'spotlight_images')
+    bannersPerPage          = (cfgtypes.CfgInt, 5)
 
     def read(self, path, exception = False):
         ConfigFile.read(self, path, exception)

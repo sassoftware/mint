@@ -531,6 +531,15 @@ class MintClient:
     def getOutboundMatchTroves(self, labelId):
         return self.server.getOutboundMatchTroves(labelId)
 
+    def getUseItIcons(self):
+        return self.server.getUseItIcons()
+    
+    def deleteUseItIcon(self, itemId):
+        return self.server.deleteUseItIcon(itemId)
+
+    def addUseItIcon(self, itemId, name, link):
+        return self.server.addUseItIcon(itemId, name, link)
+
     def getCurrentSpotlight(self):
         return self.server.getCurrentSpotlight()
 
@@ -631,6 +640,8 @@ class _Method(xmlrpclib._Method):
             raise JobserverVersionMismatch(exceptionArgs[0])
         elif exceptionName == "MaintenanceMode":
             raise MaintenanceMode(exceptionArgs[0])
+        elif exceptionName == "LastOwner":
+            raise users.LastOwner(exceptionArgs[0])
         elif exceptionName == "ParameterError":
             raise ParameterError(exceptionArgs[0])
         else:

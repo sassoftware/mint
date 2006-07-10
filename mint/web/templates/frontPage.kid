@@ -55,9 +55,9 @@ from mint.client import upstream
         </table>
         </div>
         </div>
+        <br/>
         </div>
 
-        <br/><br/><br/>
                 <div id="inactiveRight" onmouseover="underlineTitle();" onmouseout="normalTitle();" onclick="buildIt();">
                     <div id="inactiveOrangeTitle">Build it.</div>
                         Make your own software appliance in three easy steps.
@@ -67,17 +67,22 @@ from mint.client import upstream
                     Check out the software appliances others have made.
                 </div>
 
-        <div id="applianceLogos">
-           <div id="applianceLogo">
-                <img id="applianceImg" src="${cfg.staticPath}apps/mint/images/img1.png"/>
+           <div id="applianceLogos" style="width: 720px; height: 234px;">
+            <table py:if="table1Data" id="${table2Data and 'doubleTable' or 'singleTable'}">
+                <tr>
+                    <td id="useIt" py:for="td in table1Data">
+                        <a href="${td['link']}"><img id="useitImg" src="${cfg.spotlightImagesDir}/${td['name']}" alt="${td['link']}"/></a>
+                    </td>
+                </tr>
+            </table>
+            <table id="doubleTable" py:if="table2Data">
+                <tr>
+                    <td id="useIt" py:for="td in table2Data">
+                        <a href="${td['link']}"><img id="useitImg" src="${cfg.spotlightImagesDir}/${td['name']}" alt="${td['link']}"/></a>
+                    </td>
+                </tr>
+            </table>
             </div>
-            <div id="applianceLogo">
-                <img id="applianceImg" src="${cfg.staticPath}apps/mint/images/img2.png"/>
-            </div>
-            <div id="applianceLogo">
-                <img id="applianceImg" src="${cfg.staticPath}apps/mint/images/img3.png"/>
-            </div>
-        </div>
 
         <div id="steps"> 
             <div id="threeEasySteps">

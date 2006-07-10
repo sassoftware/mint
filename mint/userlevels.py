@@ -21,6 +21,8 @@ names = {
     USER:       "User",
 }
 
+idsByName = dict((x[1].lower(), x[0]) for x in names.items())
+
 def myProjectCompare(x, y):
     """This function is for use with displaying the user's projects in his My Projects
     pane.  Sort first by "level", and then by project name.

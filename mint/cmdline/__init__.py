@@ -82,11 +82,7 @@ class RBuilderMain(options.MainHandler):
             options.MainHandler.runCommand(self,
                 thisCommand, client, cfg, argSet, args[1:])
         except MintError, e:
-            if e.args:
-                s = str(e.args)
-            else:
-                s = ""
-            log.error("response from rBuilder server: %s" % str(e) + s)
+            log.error("response from rBuilder server: %s" % str(e))
             sys.exit(0)
 
 def main():

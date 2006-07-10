@@ -62,7 +62,7 @@ from mint.web.templatesupport import injectVersion, dictToJS
             jobStatusCodes = ${dictToJS(jobStatusCodes)};
             stopStatusList = ${str(stopStatusList)};
             buildjob = ${str(buildjob)};
-            addLoadEvent(initrMakeManager(${rMakeBuild.id}));
+            addLoadEvent(function () {initrMakeManager(${rMakeBuild.id})});
         ]]>
         </script>
         <img class="left" src="${cfg.staticPath}apps/mint/images/header_orange_left.png" alt="" />
@@ -82,7 +82,7 @@ from mint.web.templatesupport import injectVersion, dictToJS
                     </tr>
                 </thead>
                 <tbody class="rmake-builder" id="rmakebuilder-tbody">
-                    <tr><td></td></tr>
+                    <tr/>
                     <tr py:for="item in rMakeBuildTroveList" id="rmakebuilder-item-${item['rMakeBuildItemId']}">
                         <td><img id="rmakebuilder-statusicon-${item['rMakeBuildItemId']}" py:if="item['status'] in statusIcons" src="${statusIcons[item['status']]}"/></td>
                         <td><a href="${cfg.basePath + 'repos/' + item['shortHost'] + '/troveInfo?t=' + item['trvName']}">${item['trvName']}</a></td>

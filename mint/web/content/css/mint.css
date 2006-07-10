@@ -256,16 +256,35 @@ div#stepsText {
     padding: 8px 0px 24px 0px;
 }
 
-div#applianceLogos {
-    width: 720px;
-    height: 200px;
-    text-align: center;
+img#useitImg {
+    vertical-align: middle;
 }
 
-div#applianceLogo {
-    width: 33.33%;
-    float: left;
-    line-height: 200px;
+table#singleTable {
+    width: 720px;
+    height: 234px;
+    border-spacing: 0;
+    top: 0;
+    bottom: 0;
+    margin: 0;
+    padding: 0;
+}
+
+table#doubleTable {
+    width: 720px;
+    height: 117px;
+    border-spacing: 0;
+    top: 0;
+    bottom: 0;
+    margin: 0;
+    padding: 0;
+}
+
+td#useIt {
+    vertical-align: middle;
+    text-align: center;
+    margin: 0;
+    padding: 0;
 }
 
 div#orangeTitle, div#inactiveOrangeTitle {
@@ -320,6 +339,7 @@ div#inactiveRight {
 }
 
 #spotlight .cssbox2,
+#spotlight .cssbox2_archive,
 #spotlight .cssbox_body2,
 #spotlight .cssbox_head2,
 #spotlight .cssbox_head2 div {
@@ -329,6 +349,14 @@ div#inactiveRight {
 #spotlight .cssbox2 {
     width: 716px !important; /* intended total box width - padding-right(next) */
     width: 716px; /* IE Win = width - padding */
+    padding-right: 0px; /* the gap on the right edge of the image (not content padding) */
+    margin: 20px auto; /* use to position the box */
+    margin-left: 0;
+}
+
+#spotlight .cssbox2_archive {
+    width: 700px !important; /* intended total box width - padding-right(next) */
+    width: 700px; /* IE Win = width - padding */
     padding-right: 0px; /* the gap on the right edge of the image (not content padding) */
     margin: 20px auto; /* use to position the box */
     margin-left: 0;
@@ -1159,7 +1187,7 @@ div.trovePicker a {
     cursor: pointer;
 }
 
-div.trovePicker ul#selectionList, div.trovePicker ul#spinnerList {
+div.trovePicker ul, div.trovePicker ul {
     list-style-type: none;
     margin-left: 6px;
 }

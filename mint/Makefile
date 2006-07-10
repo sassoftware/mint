@@ -51,7 +51,8 @@ python_files =			\
 	userlevels.py		\
 	userlisting.py		\
 	users.py                \
-        usertemplates.py
+    usertemplates.py	\
+	useit.py
 
 extra_dist = Makefile constants.py.in rmakeconstants.py.in
 
