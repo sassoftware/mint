@@ -476,6 +476,31 @@ class AccountTest(MintRepositoryHelper):
         # this should succeed
         client.removeUserAccount(userId2);
 
+    def testAdminNewUser(self):
+        anonClient = self.openMintClient(("anonymous", "anonymous"))
+        adminClient, adminId = self.quickMintAdmin("adminuser", "testpass")
 
+        anonClient.registerNewUser("Foo", "Bar", "Foo Bar",
+			                       "foo@localhost", "fooATlocalhost",
+			                       "blah, blah", False)
+
+        adminClient.registerNewUser("Foo2", "Bar2", "Foo Bar",
+			                        "foo@localhost", "fooATlocalhost",
+			                        "blah, blah", True)
+
+        anonClient._cfg.adminNewUsers = True
+        try:
+            anonClient.registerNewUser("Foo3", "Bar3", "Foo Bar",
+		    	                       "foo@localhost", "fooATlocalhost",
+    			                       "blah, blah", False)
+        except PermissionDenied:
+            pass
+        else:
+            fail('New account created without admin approval')
+
+        adminClient.registerNewUser("Foo3", "Bar3", "Foo Bar",
+			                        "foo@localhost", "fooATlocalhost",
+			                        "blah, blah", True)
+        adminClient._cfg.adminNewUsers = False
 if __name__ == "__main__":
     testsuite.main()
