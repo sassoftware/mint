@@ -714,7 +714,7 @@ class ProjectHandler(WebHandler):
         userDict = getUserDict(self.project.getMembers())
         for level in [userlevels.DEVELOPER, userlevels.USER]:
             for user in userDict[level]:
-                if u[0] == userId:
+                if user[0] == userId:
                     levelidx = userlevels.LEVELS.index(level)
                     self.project.updateUserLevel(userId, userlevels.LEVELS[levelidx - 1])
                     self._setInfo("User %s promoted" % user.getUsername())
