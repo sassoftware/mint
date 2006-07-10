@@ -288,11 +288,10 @@ class AdminHandler(WebHandler):
         selectionData = self.client.getFrontPageSelection()
         selectionData.append({'name': name, 'link': link, 'rank': rank})
         selectionData.sort(lambda x,y: cmp(x['rank'], y['rank']))
-        # XXX this probably needs to be getPublishedReleases, now
-        products = self.client.getProductList()
+        publishedReleases = self.client.getPublishedReleaseList()
         activeProjects, _  = self.client.getProjects(projectlisting.ACTIVITY_DES, 10, 0)
 
-        return self._write("admin/preview", firstTime=self.session.get('firstTimer', False), popularProjects=popularProjects, selectionData = selectionData, activeProjects = activeProjects, spotlightData=spotlightData, products=products)
+        return self._write("admin/preview", firstTime=self.session.get('firstTimer', False), popularProjects=popularProjects, selectionData = selectionData, activeProjects = activeProjects, spotlightData=spotlightData, publishedReleases=publishedReleases)
 
     def spotlight(self, *args, **kwargs):
         return self._write('admin/spotlight',

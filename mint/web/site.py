@@ -71,10 +71,9 @@ class SiteHandler(WebHandler):
         selectionData  = self.client.getFrontPageSelection()
         activeProjects, _  = self.client.getProjects(projectlisting.ACTIVITY_DES, 10, 0)
         spotlightData = self.client.getCurrentSpotlight()
-        # XXX this probably needs to be getPublishedReleases, now
-        products = self.client.getProductList()
+        publishedReleases = self.client.getPublishedReleaseList()
 
-        return self._write("frontPage", firstTime=self.session.get('firstTimer', False), popularProjects=popularProjects, selectionData = selectionData, activeProjects = activeProjects, spotlightData=spotlightData, products=products)
+        return self._write("frontPage", firstTime=self.session.get('firstTimer', False), popularProjects=popularProjects, selectionData = selectionData, activeProjects = activeProjects, spotlightData=spotlightData, publishedReleases=publishedReleases)
 
     def applianceSpotlight(self, *args, **kwargs):
         spotlightData = self.client.getSpotlightAll()
@@ -552,10 +551,11 @@ class SiteHandler(WebHandler):
         if reqFilename and os.path.basename(filename) != reqFilename:
             raise HttpNotFound
 
+        # XXX this is gone now; we need a better way to do this
         # only count downloads of the first ISO
-        product = self.client.getProduct(productId)
-        if idx == 0:
-            product.incDownloads()
+        #product = self.client.getProduct(productId)
+        #if idx == 0:
+        #    product.incDownloads()
         try:
             project = self.client.getProject(product.projectId)
 
@@ -608,24 +608,25 @@ class SiteHandler(WebHandler):
                 item['date_822'] = email.Utils.formatdate(project.getTimeCreated())
                 item['creator'] = "http://%s%s" % (self.siteHost, self.cfg.basePath)
                 items.append(item)
-        elif feed == "newProducts":
-            # XXX this probably needs to be getPublishedReleases, now
+        elif feed == "newReleases":
             results = self.client.getProductList()
-            title = "New products on %s" % self.cfg.productName
-            link = "http://%s%srss?feed=newProducts" % (self.cfg.siteHost, self.cfg.basePath)
-            desc = "New products published at %s" % self.cfg.productName
+            title = "New releases on %s" % self.cfg.productName
+            link = "http://%s%srss?feed=newReleases" % (self.cfg.siteHost, self.cfg.basePath)
+            desc = "New releases published at %s" % self.cfg.productName
 
             items = []
             for p in results:
                 item = {}
-                product = p[2]
+                publishedRelease = p[2]
                 item['title'] = p[0]
-                item['link'] = 'http://%s%sproject/%s/product?id=%d' % (self.cfg.projectSiteHost, self.cfg.basePath, p[1], product.getId())
-                item['content'] = "<p>A new product has been published by the <a href=\"http://%s%sproject/%s\">%s</a> project.</p>\n" % (self.cfg.projectSiteHost, self.cfg.basePath, p[1], p[0])
-                item['content'] += "<p><a href=\"http://%s%sproject/%s/product?id=%d\">" % (self.cfg.projectSiteHost, self.cfg.basePath, p[1], product.getId())
-                item['content'] += "%s=%s (%s)</a></p>" % (product.getTroveName(), product.getTroveVersion().trailingRevision().asString(), product.getArch())
+                item['link'] = 'http://%s%sproject/%s/release?id=%d' % (self.cfg.projectSiteHost, self.cfg.basePath, p[1], publishedRelease.getId())
+                item['content'] = "<p>A new release has been published by the <a href=\"http://%s%sproject/%s\">%s</a> project.</p>\n" % (self.cfg.projectSiteHost, self.cfg.basePath, p[1], p[0])
+                item['content'] += "<p><a href=\"http://%s%sproject/%s/release?id=%d\">" % (self.cfg.projectSiteHost, self.cfg.basePath, p[1], publishedRelease.getId())
+                # SGP XXX SGP FIXME
+                item['content'] += "FIX ME!"
+                #item['content'] += "%s=%s (%s)</a></p>" % (product.getTroveName(), product.getTroveVersion().trailingRevision().asString(), product.getArch())
 
-                item['date_822'] = email.Utils.formatdate(product.timePublished)
+                item['date_822'] = email.Utils.formatdate(publishedRelease.timePublished)
                 item['creator'] = "http://%s%s" % (self.siteHost, self.cfg.basePath)
                 items.append(item)
         else:

@@ -91,7 +91,7 @@ class SiteSummary(MintReport):
         # count projects with products this week
         cu.execute("""SELECT COUNT(*) FROM
                           (SELECT DISTINCT projectId FROM Products
-                              WHERE timePublished > ?)
+                              WHERE timeCreated > ?)
                           AS ProjectProducts""",
                    reportTime - 604800)
         data.append(('Projects with products this week', cu.fetchone()[0]))

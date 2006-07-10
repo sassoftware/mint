@@ -124,20 +124,17 @@ from mint.client import upstream
                             </ol>
                         </td>
                         <td py:if="not selectionData">
-                            <p py:if="not products">No products have been published yet.</p>
-                            <ol py:if="products">
+                            <p py:if="not publishedReleases">No releases have been published yet.</p>
+                            <ol py:if="publishedReleases">
 
-                                <li py:for="product in products">
+                                <li py:for="release in publishedReleases">
                                     <?python
-                                        projectName = product[0]
-                                        if projectName != product[2].getName():
-                                            productName = truncateForDisplay(product[2].getName(), maxWords=5)
-                                        else:
-                                            productName = upstream(product[2].getTroveVersion())
-                                        projectName = truncateForDisplay(projectName, maxWords=5)
-                                        trove = product[2].getTroveName() + "=" + product[2].getTroveVersion().trailingRevision().asString()
+                                        projectName = release[0]
+                                        shorterReleaseName = truncateForDisplay(release[2].name, maxWords=5)
+                                        if release[2].version:
+                                            shorterReleaseName += " (%s)" % release[2].version
                                     ?>
-                                    <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${product[1]}/product?id=${product[2].getId()}" title="${trove}">${projectName} <span style="font-size: smaller">${productName} (${product[2].getArch()} ${producttypes.typeNamesShort[product[2].productType]})</span></a>
+                                    <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${release[1]}/release?id=${release[2].id}" title="${release[2].name}">${projectName} <span style="font-size: smaller">${shorterReleaseName}</span></a>
                                  </li>
                              </ol>
                          </td>
