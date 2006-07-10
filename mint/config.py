@@ -98,6 +98,7 @@ class MintConfig(ConfigFile):
     googleAnalyticsTracker  = (cfgtypes.CfgBool, False)
     projectAdmin            = (cfgtypes.CfgBool, True)
     adminNewProjects        = (cfgtypes.CfgBool, False)
+    adminNewUsers           = (cfgtypes.CfgBool, False)
 
     conaryRcFile            = os.path.join(os.path.sep, 'srv', 'rbuilder', 'config',
                                             'conaryrc.generated')
