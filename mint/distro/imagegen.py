@@ -62,7 +62,7 @@ class Generator:
         os.dup2(self.logfd, sys.stdout.fileno())
         os.dup2(self.logfd, sys.stderr.fileno())
 
-    def productOutput(self):
+    def buildOutput(self):
         """Restore stdout and stderr to the original state before grabOutput"""
         sys.stdout.flush()
         sys.stderr.flush()
@@ -76,9 +76,9 @@ class Generator:
 
 
 class ImageGenerator(Generator):
-    def __init__(self, client, cfg, job, product, project):
+    def __init__(self, client, cfg, job, build, project):
         Generator.__init__(self, client, cfg, job)
-        self.product = product
+        self.build = build
         self.project = project
 
     def _getLabelPath(self, cclient, trove):
@@ -89,18 +89,18 @@ class ImageGenerator(Generator):
     def writeConaryRc(self, tmpPath, cclient):
         # write the conaryrc file
         conaryrcFile = open(os.path.join(tmpPath, "conaryrc"), "w")
-        ilp = self.product.getDataValue("installLabelPath")
-        if not ilp: # allow a ProductData ILP to override the group label path
-            ilp = self._getLabelPath(cclient, (self.product.getTroveName(),
-                                               self.product.getTroveVersion(),
-                                               self.product.getTroveFlavor()))
+        ilp = self.build.getDataValue("installLabelPath")
+        if not ilp: # allow a BuildData ILP to override the group label path
+            ilp = self._getLabelPath(cclient, (self.build.getTroveName(),
+                                               self.build.getTroveVersion(),
+                                               self.build.getTroveFlavor()))
         if not ilp: # fall back to a reasonable default if group trove was
-                    # cooked before conary0.90 and productdata is blank
+                    # cooked before conary0.90 and builddata is blank
             ilp = self.project.getLabel() + " conary.rpath.com@rpl:1 contrib.rpath.com@rpl:devel"
 
         print >> conaryrcFile, "installLabelPath " + ilp
         print >> conaryrcFile, "pinTroves kernel.*"
         print >> conaryrcFile, "includeConfigFile /etc/conary/config.d/*"
-        if self.product.getDataValue("autoResolve"):
+        if self.build.getDataValue("autoResolve"):
             print >> conaryrcFile, "autoResolve True"
         conaryrcFile.close()

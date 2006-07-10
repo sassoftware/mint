@@ -28,7 +28,7 @@ from mint import news
 from mint import pkgindex
 from mint import profile
 from mint import projects
-from mint import products
+from mint import builds
 from mint import pubreleases
 from mint import reports
 from mint import requests
@@ -43,8 +43,8 @@ from mint import selections
 from mint import rmakebuild
 from mint.distro import jsversion
 from mint.distro.flavors import stockFlavors
-from mint.mint_error import PermissionDenied, ProductPublished, \
-     ProductMissing, MintError, ProductEmpty, UserAlreadyAdmin, \
+from mint.mint_error import PermissionDenied, BuildPublished, \
+     BuildMissing, MintError, BuildEmpty, UserAlreadyAdmin, \
      AdminSelfDemotion, JobserverVersionMismatch, LastAdmin, \
      MaintenanceMode, ParameterError, GroupTroveEmpty, rMakeBuildCollision, \
      rMakeBuildEmpty, rMakeBuildOrder, PublishedReleaseMissing, \
@@ -194,19 +194,19 @@ def getTables(db, cfg):
     d['labels'] = projects.LabelsTable(db, cfg)
     d['projects'] = projects.ProjectsTable(db, cfg)
     d['jobs'] = jobs.JobsTable(db)
-    d['productFiles'] = jobs.ProductFilesTable(db)
+    d['buildFiles'] = jobs.BuildFilesTable(db)
     d['users'] = users.UsersTable(db, cfg)
     d['userGroups'] = users.UserGroupsTable(db, cfg)
     d['userGroupMembers'] = users.UserGroupMembersTable(db, cfg)
     d['userData'] = data.UserDataTable(db)
     d['projectUsers'] = users.ProjectUsersTable(db)
-    d['products'] = products.ProductsTable(db)
+    d['builds'] = builds.BuildsTable(db)
     d['pkgIndex'] = pkgindex.PackageIndexTable(db)
     d['newsCache'] = news.NewsCacheTable(db, cfg)
     d['sessions'] = sessiondb.SessionsTable(db)
     d['membershipRequests'] = requests.MembershipRequestTable(db)
     d['commits'] = stats.CommitsTable(db)
-    d['productData'] = data.ProductDataTable(db)
+    d['buildData'] = data.BuildDataTable(db)
     d['projectData'] = data.ProjectDataTable(db)
     d['groupTroves'] = grouptrove.GroupTroveTable(db, cfg)
     d['groupTroveItems'] = grouptrove.GroupTroveItemsTable(db, cfg)
@@ -410,13 +410,13 @@ class MintServer(object):
                 return
         raise database.ItemNotFound()
 
-    def _filterProductAccess(self, productId):
+    def _filterBuildAccess(self, buildId):
         try:
-            productRow = self.products.get(productId, fields=['projectId'])
+            buildRow = self.builds.get(buildId, fields=['projectId'])
         except database.ItemNotFound:
             return
 
-        self._filterProjectAccess(productRow['projectId'])
+        self._filterProjectAccess(buildRow['projectId'])
 
 
     def _filterPublishedReleaseAccess(self, pubReleaseId):
@@ -448,7 +448,7 @@ class MintServer(object):
     def _filterJobAccess(self, jobId):
         cu = self.db.cursor()
         cu.execute("""SELECT projectId FROM Jobs
-                        JOIN Products USING(productId)
+                        JOIN Builds USING(buildId)
                       WHERE jobId = ?
                         UNION SELECT projectId FROM Jobs
                                JOIN GroupTroves USING(groupTroveId)
@@ -458,11 +458,11 @@ class MintServer(object):
         if len(r) and r[0][0]:
             self._filterProjectAccess(r[0][0])
 
-    def _filterProductFileAccess(self, fileId):
+    def _filterBuildFileAccess(self, fileId):
         cu = self.db.cursor()
-        cu.execute("""SELECT projectId FROM ProductFiles 
-                          LEFT JOIN Products
-                              ON Products.productId = ProductFiles.productId
+        cu.execute("""SELECT projectId FROM BuildFiles 
+                          LEFT JOIN Builds
+                              ON Builds.buildId = BuildFiles.buildId
                           WHERE fileId=?""", fileId)
         r = cu.fetchall()
         if len(r):
@@ -1256,7 +1256,7 @@ class MintServer(object):
     @private
     def getConfirmation(self, username):
         # this function exists solely for server testing scripts and should
-        # not be used for any other purpose. Never enable in production mode.
+        # not be used for any other purpose. Never enable in buildion mode.
         if not self.cfg.debugMode:
             raise PermissionDenied
         cu = self.db.cursor()
@@ -1655,13 +1655,13 @@ class MintServer(object):
         os.chmod(self.cfg.conaryRcFile, 0644)
 
     #
-    # PRODUCT STUFF
+    # BUILD STUFF
     #
     @typeCheck(int)
     @private
-    def getProductsForProject(self, projectId):
+    def getBuildsForProject(self, projectId):
         self._filterProjectAccess(projectId)
-        return [x for x in self.products.iterProductsForProject(projectId)]
+        return [x for x in self.builds.iterBuildsForProject(projectId)]
 
     @typeCheck(int, int)
     @private
@@ -1687,35 +1687,35 @@ class MintServer(object):
         return self.commits.getCommitsByProject(projectId)
 
     @typeCheck(int)
-    def getProduct(self, productId):
-        self._filterProductAccess(productId)
-        return self.products.get(productId)
+    def getBuild(self, buildId):
+        self._filterBuildAccess(buildId)
+        return self.builds.get(buildId)
 
     @typeCheck(int, str, bool)
     @requiresAuth
     @private
-    def newProduct(self, projectId, productName):
+    def newBuild(self, projectId, productName):
         self._filterProjectAccess(projectId)
-        productId = self.products.new(projectId = projectId,
+        buildId = self.builds.new(projectId = projectId,
                                       name = productName)
 
-        self.productData.setDataValue(productId, 'jsversion',
+        self.buildData.setDataValue(buildId, 'jsversion',
                                       jsversion.getDefaultVersion(),
                                       data.RDT_STRING)
 
-        return productId
+        return buildId
 
     @typeCheck(int)
     @requiresAuth
-    def deleteProduct(self, productId):
-        self._filterProductAccess(productId)
-        if not self.products.productExists(productId):
-            raise ProductMissing()
-        if self.products.getPublished(productId):
-            raise ProductPublished()
+    def deleteBuild(self, buildId):
+        self._filterBuildAccess(buildId)
+        if not self.builds.buildExists(buildId):
+            raise BuildMissing()
+        if self.builds.getPublished(buildId):
+            raise BuildPublished()
         cu = self.db.cursor()
-        cu.execute("SELECT filename FROM ProductFiles WHERE productId=?",
-                   productId)
+        cu.execute("SELECT filename FROM BuildFiles WHERE buildId=?",
+                   buildId)
         for fileName in [x[0] for x in cu.fetchall()]:
             try:
                 os.unlink(fileName)
@@ -1723,46 +1723,46 @@ class MintServer(object):
                 print >> sys.stderr, "Couldn't delete related file: %s" % \
                       fileName
                 sys.stderr.flush()
-        self.products.deleteProduct(productId)
+        self.builds.deleteBuild(buildId)
         return True
 
     @typeCheck(int, dict)
     @requiresAuth
     @private
-    def updateProduct(self, productId, valDict):
-        self._filterProductAccess(productId)
-        if not self.products.productExists(productId):
-            raise ProductMissing()
-        if self.products.getPublished(productId):
-            raise ProductPublished()
+    def updateBuild(self, buildId, valDict):
+        self._filterBuildAccess(buildId)
+        if not self.builds.buildExists(buildId):
+            raise BuildMissing()
+        if self.builds.getPublished(buildId):
+            raise BuildPublished()
         if len(valDict):
             valDict.update({'timeUpdated': time.time(),
                             'updatedBy':   self.auth.userId})
-            return self.products.update(productId, **valDict)
+            return self.builds.update(buildId, **valDict)
 
-    # product data calls
+    # build data calls
     @typeCheck(int, str, ((str, int, bool),), int)
     @requiresAuth
     @private
-    def setProductDataValue(self, productId, name, value, dataType):
-        self._filterProductAccess(productId)
-        if not self.products.productExists(productId):
-            raise ProductMissing()
-        if self.products.getPublished(productId):
-            raise ProductPublished()
-        return self.productData.setDataValue(productId, name, value, dataType)
+    def setBuildDataValue(self, buildId, name, value, dataType):
+        self._filterBuildAccess(buildId)
+        if not self.builds.buildExists(buildId):
+            raise BuildMissing()
+        if self.builds.getPublished(buildId):
+            raise BuildPublished()
+        return self.buildData.setDataValue(buildId, name, value, dataType)
 
     @typeCheck(int, str)
     @private
-    def getProductDataValue(self, productId, name):
-        self._filterProductAccess(productId)
-        return self.productData.getDataValue(productId, name)
+    def getBuildDataValue(self, buildId, name):
+        self._filterBuildAccess(buildId)
+        return self.buildData.getDataValue(buildId, name)
 
     @typeCheck(int)
     @private
-    def getProductDataDict(self, productId):
-        self._filterProductAccess(productId)
-        return self.productData.getDataDict(productId)
+    def getBuildDataDict(self, buildId):
+        self._filterBuildAccess(buildId)
+        return self.buildData.getDataDict(buildId)
 
     #
     # published releases 
@@ -1806,7 +1806,7 @@ class MintServer(object):
         projectId = self.publishedReleases.getProject(pubReleaseId)
         if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
             raise PermissionDenied
-        if not len(self.publishedReleases.getProducts(pubReleaseId)):
+        if not len(self.publishedReleases.getBuilds(pubReleaseId)):
             raise PublishedReleaseEmpty
         if self.publishedReleases.isPublishedReleaseFinalized(pubReleaseId):
             raise PublishedReleaseFinalized
@@ -1834,16 +1834,16 @@ class MintServer(object):
     @typeCheck(int)
     @requiresAuth
     @private
-    def getUnpublishedProductsForProject(self, projectId):
+    def getUnpublishedBuildsForProject(self, projectId):
         self._filterProjectAccess(projectId)
-        return self.products.getUnpublishedProducts(projectId)
+        return self.builds.getUnpublishedBuilds(projectId)
 
     @typeCheck(int)
     @requiresAuth
     @private
-    def getProductsForPublishedRelease(self, pubReleaseId):
+    def getBuildsForPublishedRelease(self, pubReleaseId):
         self._filterPublishedReleaseAccess(pubReleaseId)
-        return self.publishedReleases.getProducts(pubReleaseId)
+        return self.publishedReleases.getBuilds(pubReleaseId)
 
     @typeCheck(int)
     @private
@@ -1871,113 +1871,113 @@ class MintServer(object):
 
     @typeCheck(int)
     @private
-    def getProductTrove(self, productId):
-        self._filterProductAccess(productId)
-        return self.products.getTrove(productId)
+    def getBuildTrove(self, buildId):
+        self._filterBuildAccess(buildId)
+        return self.builds.getTrove(buildId)
 
     @typeCheck(int, str, str, str)
     @requiresAuth
     @private
-    def setProductTrove(self, productId, troveName, troveVersion, troveFlavor):
-        self._filterProductAccess(productId)
-        if not self.products.productExists(productId):
-            raise ProductMissing()
-        if self.products.getPublished(productId):
-            raise ProductPublished()
-        return self.products.setTrove(productId, troveName,
+    def setBuildTrove(self, buildId, troveName, troveVersion, troveFlavor):
+        self._filterBuildAccess(buildId)
+        if not self.builds.buildExists(buildId):
+            raise BuildMissing()
+        if self.builds.getPublished(buildId):
+            raise BuildPublished()
+        return self.builds.setTrove(buildId, troveName,
                                                  troveVersion,
                                                  troveFlavor)
 
     @typeCheck(int, str)
     @requiresAuth
     @private
-    def setProductDesc(self, productId, desc):
-        self._filterProductAccess(productId)
-        if not self.products.productExists(productId):
-            raise ProductMissing()
-        if self.products.getPublished(productId):
-            raise ProductPublished()
-        self.products.update(productId, description = desc)
+    def setBuildDesc(self, buildId, desc):
+        self._filterBuildAccess(buildId)
+        if not self.builds.buildExists(buildId):
+            raise BuildMissing()
+        if self.builds.getPublished(buildId):
+            raise BuildPublished()
+        self.builds.update(buildId, description = desc)
         return True
 
     @typeCheck(int, str)
     @requiresAuth
     @private
-    def setProductName(self, productId, name):
-        self._filterProductAccess(productId)
-        if not self.products.productExists(productId):
-            raise ProductMissing()
-        if self.products.getPublished(productId):
-            raise ProductPublished()
-        self.products.update(productId, name = name)
+    def setBuildName(self, buildId, name):
+        self._filterBuildAccess(buildId)
+        if not self.builds.buildExists(buildId):
+            raise BuildMissing()
+        if self.builds.getPublished(buildId):
+            raise BuildPublished()
+        self.builds.update(buildId, name = name)
         return True
 
     @typeCheck(int, int, bool)
     @requiresAuth
     @private
-    def setProductPublished(self, productId, pubReleaseId, published):
-        self._filterProductAccess(productId)
-        productData = self.products.get(productId, fields=['projectId'])
-        if not self._checkProjectAccess(productData['projectId'],
+    def setBuildPublished(self, buildId, pubReleaseId, published):
+        self._filterBuildAccess(buildId)
+        buildData = self.builds.get(buildId, fields=['projectId'])
+        if not self._checkProjectAccess(buildData['projectId'],
                 [userlevels.OWNER]):
             raise PermissionDenied()
         if not self.publishedReleases.publishedReleaseExists(pubReleaseId):
             raise PublishedReleaseMissing()
         if self.isPublishedReleaseFinalized(pubReleaseId):
             raise PublishedReleaseFinalized()
-        if not self.products.productExists(productId):
-            raise ProductMissing()
-        if published and not self.getProductFilenames(productId):
-            raise ProductEmpty()
-        if published and self.products.getPublished(productId):
-            raise ProductPublished()
+        if not self.builds.buildExists(buildId):
+            raise BuildMissing()
+        if published and not self.getBuildFilenames(buildId):
+            raise BuildEmpty()
+        if published and self.builds.getPublished(buildId):
+            raise BuildPublished()
         pubReleaseId = published and pubReleaseId or None
-        return self.updateProduct(productId, {'pubReleaseId': pubReleaseId })
+        return self.updateBuild(buildId, {'pubReleaseId': pubReleaseId })
 
     @typeCheck(int)
     @requiresAuth
     @private
-    def getProductType(self, productId):
-        self._filterProductAccess(productId)
-        if not self.products.productExists(productId):
-            raise ProductMissing()
+    def getBuildType(self, buildId):
+        self._filterBuildAccess(buildId)
+        if not self.builds.buildExists(buildId):
+            raise BuildMissing()
         cu = self.db.cursor()
-        cu.execute("SELECT productType FROM Products WHERE productId = ?",
-                productId)
+        cu.execute("SELECT buildType FROM Builds WHERE buildId = ?",
+                buildId)
         return cu.fetchone()[0]
 
     @typeCheck(int, int)
     @requiresAuth
     @private
-    def setProductType(self, productId, productType):
-        self._filterProductAccess(productId)
-        if not self.products.productExists(productId):
-            raise ProductMissing()
-        if self.products.getPublished(productId):
-            raise ProductPublished()
+    def setBuildType(self, buildId, buildType):
+        self._filterBuildAccess(buildId)
+        if not self.builds.buildExists(buildId):
+            raise BuildMissing()
+        if self.builds.getPublished(buildId):
+            raise BuildPublished()
         cu = self.db.cursor()
-        cu.execute("UPDATE Products SET productType = ? WHERE productId = ?",
-                productType, productId)
+        cu.execute("UPDATE Builds SET buildType = ? WHERE buildId = ?",
+                buildType, buildId)
         self.db.commit()
         return True
 
     @typeCheck()
     @private
-    def getAvailableProductTypes(self):
-        if self.cfg.visibleProductTypes:
-            return self.cfg.visibleProductTypes
+    def getAvailableBuildTypes(self):
+        if self.cfg.visibleBuildTypes:
+            return self.cfg.visibleBuildTypes
         else:
             return []
 
     @typeCheck(int)
     @requiresAuth
-    def startImageJob(self, productId):
-        self._filterProductAccess(productId)
-        if not self.products.productExists(productId):
-            raise ProductMissing()
-        if self.products.getPublished(productId):
-            raise ProductPublished()
-        found, jsVer = self.productData.getDataValue(productId, 'jsversion')
+    def startImageJob(self, buildId):
+        self._filterBuildAccess(buildId)
+        if not self.builds.buildExists(buildId):
+            raise BuildMissing()
+        if self.builds.getPublished(buildId):
+            raise BuildPublished()
+        found, jsVer = self.buildData.getDataValue(buildId, 'jsversion')
         if not found:
             raise JobserverVersionMismatch('No job server version available.')
         if jsVer not in jsversion.getVersions():
@@ -1986,19 +1986,19 @@ class MintServer(object):
         cu = self.db.cursor()
 
         cu.execute("""SELECT jobId, status FROM Jobs
-                          WHERE productId=? AND groupTroveId IS NULL""",
-                   productId)
+                          WHERE buildId=? AND groupTroveId IS NULL""",
+                   buildId)
         r = cu.fetchall()
         if len(r) == 0:
-            retval = self.jobs.new(productId = productId,
+            retval = self.jobs.new(buildId = buildId,
                                    userId = self.auth.userId,
                                    status = jobstatus.WAITING,
                                    statusMessage = self.getJobWaitMessage(0),
                                    timeSubmitted = time.time(),
                                    timeStarted = 0,
                                    timeFinished = 0)
-            cu.execute('SELECT troveFlavor FROM Products WHERE productId=?',
-                       productId)
+            cu.execute('SELECT troveFlavor FROM Builds WHERE buildId=?',
+                       buildId)
             flavorString = cu.fetchone()[0]
             flavor = deps.ThawFlavor(flavorString)
             arch = "1#" + flavor.members[deps.DEP_CLASS_IS].members.keys()[0]
@@ -2009,9 +2009,9 @@ class MintServer(object):
             if status in (jobstatus.WAITING, jobstatus.RUNNING):
                 raise jobs.DuplicateJob
             else:
-                # delete any files in the ProductFiles table prior to regeneration
-                cu.execute("DELETE FROM ProductFiles WHERE productId = ?",
-                        productId)
+                # delete any files in the BuildFiles table prior to regeneration
+                cu.execute("DELETE FROM BuildFiles WHERE buildId = ?",
+                        buildId)
 
                 # getJobWaitMessage orders by timeSubmitted, so update must
                 # occur in two steps
@@ -2038,7 +2038,7 @@ class MintServer(object):
 
         cu = self.db.cursor()
         cu.execute("""SELECT jobId, status FROM Jobs
-                          WHERE groupTroveId=? AND productId IS NULL""",
+                          WHERE groupTroveId=? AND buildId IS NULL""",
                    groupTroveId)
         r = cu.fetchall()
         if len(r) == 0:
@@ -2083,7 +2083,7 @@ class MintServer(object):
         self._filterJobAccess(jobId)
         cu = self.db.cursor()
 
-        cu.execute("SELECT userId, productId, groupTroveId, status,"
+        cu.execute("SELECT userId, buildId, groupTroveId, status,"
                    "  statusMessage, timeSubmitted, timeStarted, "
                    "  timeFinished FROM Jobs "
                    " WHERE jobId=?", jobId)
@@ -2092,13 +2092,13 @@ class MintServer(object):
         if not p:
             raise jobs.JobMissing
 
-        dataKeys = ['userId', 'productId', 'groupTroveId', 'status',
+        dataKeys = ['userId', 'buildId', 'groupTroveId', 'status',
                     'statusMessage', 'timeSubmitted', 'timeStarted',
                     'timeFinished']
         data = {}
         for i, key in enumerate(dataKeys):
             # these keys can be NULL from the db
-            if key in ('productId', 'groupTroveId'):
+            if key in ('buildId', 'groupTroveId'):
                 if p[i] is None:
                     data[key] = 0
                 else:
@@ -2162,7 +2162,7 @@ class MintServer(object):
         @return: jobId of job to execute, or 0 for no job.
         """
         from mint import cooktypes
-        from mint import producttypes
+        from mint import buildtypes
         # scrub archTypes and jobTypes.
         maintenance.enforceMaintenanceMode( \
             self.cfg, auth = None, msg = "Repositories are currently offline.")
@@ -2170,12 +2170,12 @@ class MintServer(object):
             if arch not in ("1#x86", "1#x86_64"):
                 raise ParameterError("Not a legal architecture")
 
-        productTypes = jobTypes.get('productTypes', [])
+        buildTypes = jobTypes.get('buildTypes', [])
         cookTypes = jobTypes.get('cookTypes', [])
 
-        if sum([(x not in producttypes.TYPES) \
-                for x in productTypes]):
-            raise ParameterError("Not a legal Product Type")
+        if sum([(x not in buildtypes.TYPES) \
+                for x in buildTypes]):
+            raise ParameterError("Not a legal Build Type")
 
         if sum([(x != cooktypes.GROUP_BUILDER) for x in cookTypes]):
             raise ParameterError("Not a legal Cook Type")
@@ -2183,7 +2183,7 @@ class MintServer(object):
         if jobserverVersion not in jsversion.getVersions():
             raise ParameterError("Not a legal job server version: %s" % jobserverVersion)
         # client asked for nothing, client gets nothing.
-        if not (productTypes or cookTypes) or (not archTypes):
+        if not (buildTypes or cookTypes) or (not archTypes):
             return 0
 
         # the pid would suffice, except that fails to be good enough
@@ -2201,18 +2201,18 @@ class MintServer(object):
         archTypeQuery = archTypes and "(%s)" % \
                         ', '.join(['?' for x in archTypes]) or ''
 
-        productTypeQuery = productTypes and "(%s)" % \
-                        ', '.join(['?' for x in productTypes]) or ''
+        buildTypeQuery = buildTypes and "(%s)" % \
+                        ', '.join(['?' for x in buildTypes]) or ''
 
-        # at least one of productTypes or cookTypes will be defined,
+        # at least one of buildTypes or cookTypes will be defined,
         # or this code would have already bailed out.
-        if not productTypes:
+        if not buildTypes:
             #client wants only cooks
             query = """SELECT Jobs.jobId FROM Jobs
                        LEFT JOIN JobData
                            ON Jobs.jobId=JobData.jobId
                        WHERE status=? AND JobData.name='arch'
-                           AND Jobs.productId IS NULL
+                           AND Jobs.buildId IS NULL
                            AND owner=?
                            AND JobData.value IN %s
                        ORDER BY timeSubmitted
@@ -2224,41 +2224,41 @@ class MintServer(object):
                        LEFT JOIN JobData
                            ON Jobs.jobId=JobData.jobId
                                AND JobData.name='arch'
-                       LEFT JOIN Products
-                           ON Products.productId=Jobs.productId
-                       LEFT JOIN ProductData
-                           ON ProductData.productId=Jobs.productId
-                               AND ProductData.name='jsversion'
+                       LEFT JOIN Builds
+                           ON Builds.buildId=Jobs.buildId
+                       LEFT JOIN BuildData
+                           ON BuildData.buildId=Jobs.buildId
+                               AND BuildData.name='jsversion'
                        WHERE status=?
                            AND Jobs.groupTroveId IS NULL
                            AND owner=?
-                           AND ProductData.value=?
+                           AND BuildData.value=?
                            AND JobData.value IN %s
-                           AND Products.productType IN %s
+                           AND Builds.buildType IN %s
                        ORDER BY timeSubmitted
-                       LIMIT 1""" % (archTypeQuery, productTypeQuery)
+                       LIMIT 1""" % (archTypeQuery, buildTypeQuery)
             cu.execute(query, jobstatus.WAITING, ownerId, jobserverVersion,
-                       *(archTypes + productTypes))
+                       *(archTypes + buildTypes))
         else:
             # client wants both cook and image jobs
             query = """SELECT Jobs.jobId FROM Jobs
                        LEFT JOIN JobData
                            ON Jobs.jobId=JobData.jobId AND JobData.name='arch'
-                       LEFT JOIN Products
-                           ON Products.productId=Jobs.productId
-                       LEFT JOIN ProductData
-                           ON ProductData.productId=Jobs.productId
-                               AND ProductData.name='jsversion'
+                       LEFT JOIN Builds
+                           ON Builds.buildId=Jobs.buildId
+                       LEFT JOIN BuildData
+                           ON BuildData.buildId=Jobs.buildId
+                               AND BuildData.name='jsversion'
                        WHERE status=? AND owner=?
-                           AND ((ProductData.value=? AND
-                               Products.productType IN %s) OR
+                           AND ((BuildData.value=? AND
+                               Builds.buildType IN %s) OR
                                 (groupTroveId IS NOT NULL))
                            AND JobData.value IN %s
                        ORDER BY timeSubmitted
-                       LIMIT 1""" % (productTypeQuery, archTypeQuery)
+                       LIMIT 1""" % (buildTypeQuery, archTypeQuery)
 
             cu.execute(query, jobstatus.WAITING, ownerId, jobserverVersion,
-                       *(productTypes + archTypes))
+                       *(buildTypes + archTypes))
 
         res = cu.fetchone()
 
@@ -2292,11 +2292,11 @@ class MintServer(object):
     @typeCheck(int)
     @requiresAuth
     @private
-    def getJobIdForProduct(self, productId):
-        self._filterProductAccess(productId)
+    def getJobIdForBuild(self, buildId):
+        self._filterBuildAccess(buildId)
         cu = self.db.cursor()
 
-        cu.execute("SELECT jobId FROM Jobs WHERE productId=?", productId)
+        cu.execute("SELECT jobId FROM Jobs WHERE buildId=?", buildId)
         r = cu.fetchone()
         if r:
             return r[0]
@@ -2345,20 +2345,20 @@ class MintServer(object):
     @typeCheck(int, (list, (list, str)))
     @requiresAuth
     @private
-    def setProductFilenames(self, productId, filenames):
-        self._filterProductAccess(productId)
-        if not self.products.productExists(productId):
-            raise ProductMissing()
-        if self.products.getPublished(productId):
-            raise ProductPublished()
+    def setBuildFilenames(self, buildId, filenames):
+        self._filterBuildAccess(buildId)
+        if not self.builds.buildExists(buildId):
+            raise BuildMissing()
+        if self.builds.getPublished(buildId):
+            raise BuildPublished()
 
         cu = self.db.transaction()
         try:
-            cu.execute("DELETE FROM ProductFiles WHERE productId=?", productId)
+            cu.execute("DELETE FROM BuildFiles WHERE buildId=?", buildId)
             for idx, file in enumerate(filenames):
                 fileName, title = file
-                cu.execute("INSERT INTO ProductFiles VALUES (NULL, ?, ?, ?, ?)",
-                           productId, idx, fileName, title)
+                cu.execute("INSERT INTO BuildFiles VALUES (NULL, ?, ?, ?, ?)",
+                           buildId, idx, fileName, title)
         except:
             self.db.rollback()
             raise
@@ -2368,10 +2368,10 @@ class MintServer(object):
 
     @typeCheck(int)
     @private
-    def getProductFilenames(self, productId):
-        self._filterProductAccess(productId)
+    def getBuildFilenames(self, buildId):
+        self._filterBuildAccess(buildId)
         cu = self.db.cursor()
-        cu.execute("SELECT fileId, filename, title FROM ProductFiles WHERE productId=? ORDER BY idx", productId)
+        cu.execute("SELECT fileId, filename, title FROM BuildFiles WHERE buildId=? ORDER BY idx", buildId)
 
         results = cu.fetchall()
         if len(results) < 1:
@@ -2394,9 +2394,9 @@ class MintServer(object):
     @typeCheck(int)
     @private
     def getFileInfo(self, fileId):
-        self._filterProductFileAccess(fileId)
+        self._filterBuildFileAccess(fileId)
         cu = self.db.cursor()
-        cu.execute("SELECT productId, idx, filename, title FROM ProductFiles WHERE fileId=?", fileId)
+        cu.execute("SELECT buildId, idx, filename, title FROM BuildFiles WHERE fileId=?", fileId)
 
         r = cu.fetchone()
         if r:
@@ -2485,11 +2485,11 @@ class MintServer(object):
     # XXX refactor to getJobStatus instead of two functions
     @typeCheck(int)
     @requiresAuth
-    def getProductStatus(self, productId):
-        self._filterProductAccess(productId)
+    def getBuildStatus(self, buildId):
+        self._filterBuildAccess(buildId)
 
-        product = products.Product(self, productId)
-        job = product.getJob()
+        build = builds.Build(self, buildId)
+        job = build.getJob()
 
         if not job:
             return {'status'  : jobstatus.NOJOB,

@@ -24,7 +24,7 @@ class JobsTable(database.KeyedTable):
     createSQL = """
                 CREATE TABLE Jobs (
                     jobId           %(PRIMARYKEY)s,
-                    productId       INT,
+                    buildId       INT,
                     groupTroveId    INT,
                     owner           BIGINT,
                     userId          INT,
@@ -34,12 +34,12 @@ class JobsTable(database.KeyedTable):
                     timeStarted     DOUBLE,
                     timeFinished    DOUBLE)"""
 
-    fields = ['jobId', 'productId', 'groupTroveId', 'owner', 'userId',
+    fields = ['jobId', 'buildId', 'groupTroveId', 'owner', 'userId',
               'status', 'statusMessage', 'timeSubmitted',
               'timeStarted', 'timeFinished']
 
-    indexes = {"JobsProductIdx": """CREATE INDEX JobsProductIdx
-                                        ON Jobs(productId)""",
+    indexes = {"JobsBuildIdx": """CREATE INDEX JobsBuildIdx
+                                        ON Jobs(buildId)""",
                "JobsGroupTroveIdx": """CREATE INDEX JobsGroupTroveIdx
                                            ON Jobs(groupTroveId)""",
                "JobsUserIdx": "CREATE INDEX JobsUserIdx ON Jobs(userId)"}
@@ -74,8 +74,8 @@ class Job(database.TableObject):
     def getId(self):
         return self.id
 
-    def getProductId(self):
-        return self.productId
+    def getBuildId(self):
+        return self.buildId
 
     def getGroupTroveId(self):
         return self.groupTroveId
@@ -110,27 +110,27 @@ class Job(database.TableObject):
             val = None
         return val
 
-class ProductFilesTable(database.KeyedTable):
-    name = 'ProductFiles'
+class BuildFilesTable(database.KeyedTable):
+    name = 'BuildFiles'
     key = 'fileId'
     createSQL = """
-                CREATE TABLE ProductFiles (
+                CREATE TABLE BuildFiles (
                     fileId      %(PRIMARYKEY)s,
-                    productId   INT,
+                    buildId   INT,
                     idx         INT,
                     filename    CHAR(255),
                     title       CHAR(255) DEFAULT ''
                 );"""
-    fields = ['fileId', 'productId', 'idx', 'filename', 'title']
+    fields = ['fileId', 'buildId', 'idx', 'filename', 'title']
 
-    indexes = {"ProductFilesProductIdx": """CREATE INDEX ProductFilesProductIdx
-                                              ON ProductFiles(productId)"""}
+    indexes = {"BuildFilesBuildIdx": """CREATE INDEX BuildFilesBuildIdx
+                                              ON BuildFiles(buildId)"""}
 
     def versionCheck(self):
         dbversion = self.getDBVersion()
         if dbversion != self.schemaVersion:
             if dbversion == 1 and not self.initialCreation:
-                sql = """ALTER TABLE ProductFiles ADD COLUMN title STR DEFAULT ''"""
+                sql = """ALTER TABLE BuildFiles ADD COLUMN title STR DEFAULT ''"""
                 cu = self.db.cursor()
                 cu.execute(sql)
             return dbversion >= 1

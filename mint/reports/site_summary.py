@@ -5,7 +5,7 @@
 
 import time
 
-from mint import producttypes
+from mint import buildtypes
 from mint.reports.mint_reports import MintReport
 
 class SiteSummary(MintReport):
@@ -80,21 +80,21 @@ class SiteSummary(MintReport):
                    reportTime - 604800)
         data.append(('New Projects this week', cu.fetchone()[0]))
 
-        # count projects with products
+        # count projects with builds
         cu.execute("""SELECT COUNT(*) FROM
                           (SELECT DISTINCT projectId
-                            FROM Products
+                            FROM Builds
                             WHERE troveName IS NOT NULL)
-                          AS ProjectProducts""")
-        data.append(('Projects with products', cu.fetchone()[0]))
+                          AS ProjectBuilds""")
+        data.append(('Projects with builds', cu.fetchone()[0]))
 
-        # count projects with products this week
+        # count projects with builds this week
         cu.execute("""SELECT COUNT(*) FROM
-                          (SELECT DISTINCT projectId FROM Products
+                          (SELECT DISTINCT projectId FROM Builds
                               WHERE timeCreated > ?)
-                          AS ProjectProducts""",
+                          AS ProjectBuilds""",
                    reportTime - 604800)
-        data.append(('Projects with products this week', cu.fetchone()[0]))
+        data.append(('Projects with builds this week', cu.fetchone()[0]))
 
         # count projects with commits
         cu.execute("""SELECT COUNT(*) FROM
@@ -139,22 +139,22 @@ class SiteSummary(MintReport):
         # spacer
         data.append(('',''))
 
-        countedProducts = (producttypes.INSTALLABLE_ISO,
-                           producttypes.RAW_HD_IMAGE,
-                            producttypes.VMWARE_IMAGE)
-        queryStr = '(' + ', '.join([str(x) for x in countedProducts]) + ')'
-        # count the total products
-        cu.execute("""SELECT COUNT(*) FROM Products
-                          WHERE productType IN %s""" % str(countedProducts))
+        countedBuilds = (buildtypes.INSTALLABLE_ISO,
+                           buildtypes.RAW_HD_IMAGE,
+                            buildtypes.VMWARE_IMAGE)
+        queryStr = '(' + ', '.join([str(x) for x in countedBuilds]) + ')'
+        # count the total builds
+        cu.execute("""SELECT COUNT(*) FROM Builds
+                          WHERE buildType IN %s""" % str(countedBuilds))
 
         data.append(('Total Images', cu.fetchone()[0]))
 
-        # count products for each image type
-        for productType in countedProducts:
-            cu.execute("""SELECT COUNT(*) FROM Products
-                              WHERE Product.productType=?""",
-                       productType)
-            data.append((producttypes.typeNames[productType],
+        # count builds for each image type
+        for buildType in countedBuilds:
+            cu.execute("""SELECT COUNT(*) FROM Builds
+                              WHERE Build.buildType=?""",
+                       buildType)
+            data.append((buildtypes.typeNames[buildType],
                          cu.fetchone()[0]))
 
         # spacer

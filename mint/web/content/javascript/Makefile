@@ -6,15 +6,15 @@ javascript_files =\
 	rpc.js
 
 generated_files =\
-	producttypes.js \
+	buildtypes.js \
 	jobstatus.js
 
 dist_files = $(javascript_files) $(generated_files) Makefile
 
 all: $(javascript_files) $(generated_files)
 
-producttypes.js: ../../../producttypes.py
-	python ../../../producttypes.py --genjs > producttypes.js
+buildtypes.js: ../../../buildtypes.py
+	python ../../../buildtypes.py --genjs > buildtypes.js
 
 jobstatus.js: ../../../jobstatus.py
 	python ../../../jobstatus.py --genjs > jobstatus.js

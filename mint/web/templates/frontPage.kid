@@ -3,7 +3,7 @@
 import time
 from mint import userlevels
 from mint import searcher
-from mint import producttypes
+from mint import buildtypes
 from mint.helperfuncs import truncateForDisplay
 from mint.client import upstream
 
@@ -21,7 +21,7 @@ from mint.client import upstream
         <link rel="alternate" type="application/rss+xml"
               title="New ${cfg.productName} Projects" href="http://${cfg.siteHost}${cfg.basePath}rss?feed=newProjects" />
         <link rel="alternate" type="application/rss+xml"
-              title="New ${cfg.productName} Products" href="http://${cfg.siteHost}${cfg.basePath}rss?feed=newProducts" />
+              title="New ${cfg.productName} Builds" href="http://${cfg.siteHost}${cfg.basePath}rss?feed=newBuilds" />
     </head>
     <body onload="hideElement('steps');">
         <div id="right" class="side">

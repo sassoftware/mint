@@ -157,18 +157,18 @@ from mint.web.templatesupport import injectVersion, dictToJS
         </div>
     </div>
 
-    <div py:def="recentProductsMenu(products, display='none')" py:strip="True">
-      <div id="products" class="palette" py:if="products">
-        <h3 onclick="javascript:toggle_display('recentProduct_items');">
+    <div py:def="recentBuildsMenu(builds, display='none')" py:strip="True">
+      <div id="builds" class="palette" py:if="builds">
+        <h3 onclick="javascript:toggle_display('recentBuild_items');">
             <img id="browse_items_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_${display == 'block' and 'collapse' or 'expand'}.gif" class="noborder" />
-            Recently Published Products
+            Recently Published Builds
         </h3>
-        <div id="recentProduct_items" style="display: $display">
+        <div id="recentBuild_items" style="display: $display">
           <ul>
-            <li py:for="product in products">
-                <div class="products_project"><a class="products_project" href="http://${cfg.projectSiteHost}${cfg.basePath}project/${product[1]}/">${product[0]}</a></div>
-                <div class="products_product">
-                    <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${product[1]}/product?id=${product[2].getId()}">${product[2].getTroveName()}=${product[2].getTroveVersion().trailingRevision().asString()} (${product[2].getArch()})</a>
+            <li py:for="build in builds">
+                <div class="builds_project"><a class="builds_project" href="http://${cfg.projectSiteHost}${cfg.basePath}project/${build[1]}/">${build[0]}</a></div>
+                <div class="builds_build">
+                    <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${build[1]}/build?id=${build[2].getId()}">${build[2].getTroveName()}=${build[2].getTroveVersion().trailingRevision().asString()} (${build[2].getArch()})</a>
                 </div>
             </li>
           </ul>

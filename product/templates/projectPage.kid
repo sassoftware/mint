@@ -16,7 +16,7 @@ from mint.helperfuncs import truncateForDisplay
         isDeveloper = userLevel == userlevels.DEVELOPER
         memberList = project.getMembers()
 
-        products = project.getProducts()
+        builds = project.getBuilds()
         commits = project.getCommits()
 
         if cfg.SSL:

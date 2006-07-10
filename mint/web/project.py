@@ -15,12 +15,12 @@ from mint import database
 from mint import mailinglists
 from mint import jobs
 from mint import jobstatus
-from mint import products
-from mint import producttypes
+from mint import builds
+from mint import buildtypes
 from mint import userlevels
 from mint import users
 
-from mint.products import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM
+from mint.builds import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM
 from mint.users import sendMailWithChecks
 from mint.web.webhandler import WebHandler, normPath, HttpNotFound
 from mint.web.decorators import ownerOnly, requiresAuth, requiresAdmin, \
@@ -115,37 +115,37 @@ class ProjectHandler(WebHandler):
         return self._write("editPubrelease", release = release,
                            isNewRelease = True)
 
-    def products(self, auth):
-        products = self.project.getProducts()
-        publishedProducts = [x for x in products if x.getPublished()]
+    def builds(self, auth):
+        builds = self.project.getBuilds()
+        publishedBuilds = [x for x in builds if x.getPublished()]
 
         # Group versions by name or default name (based on group trove).
-        # FIXME: this is a hack until we get a better way to do product
+        # FIXME: this is a hack until we get a better way to do build
         # management.
-        productsByGroupTrove = {}
-        for r in products:
+        buildsByGroupTrove = {}
+        for r in builds:
             k = r.getDefaultName()
-            productsByVersion = productsByGroupTrove.has_key(k) and productsByGroupTrove[k] or []
-            productsByVersion.append(r)
-            productsByVersion.sort(key = lambda x: x.getArch())
-            productsByGroupTrove[k] = productsByVersion
+            buildsByVersion = buildsByGroupTrove.has_key(k) and buildsByGroupTrove[k] or []
+            buildsByVersion.append(r)
+            buildsByVersion.sort(key = lambda x: x.getArch())
+            buildsByGroupTrove[k] = buildsByVersion
 
-        # return a list of items in productsByGroupTrove for web display
-        productVersions = sorted(productsByGroupTrove.items(),
-            key = lambda x: x[1][0], # first item in the productsByVersion
+        # return a list of items in buildsByGroupTrove for web display
+        buildVersions = sorted(buildsByGroupTrove.items(),
+            key = lambda x: x[1][0], # first item in the buildsByVersion
             cmp = lambda x, y: cmp(x.getChangedTime(), y.getChangedTime()),
             reverse = True)
 
-        return self._write("products", products = products,
-                publishedProducts = publishedProducts,
-                productVersions = productVersions)
+        return self._write("builds", builds = builds,
+                publishedBuilds = publishedBuilds,
+                buildVersions = buildVersions)
 
     def groups(self, auth):
-        products = self.project.getProducts()
-        publishedProducts = [x for x in products if x.getPublished()]
+        builds = self.project.getBuilds()
+        publishedBuilds = [x for x in builds if x.getPublished()]
         groupTrovesInProject = self.client.listGroupTrovesByProject(self.project.id)
 
-        return self._write("groups", publishedProducts = publishedProducts,
+        return self._write("groups", publishedBuilds = publishedBuilds,
             groupTrovesInProject = groupTrovesInProject)
 
     def _getBasicTroves(self):
@@ -327,27 +327,27 @@ class ProjectHandler(WebHandler):
             curGroupTrove = curGroupTrove)
 
     @ownerOnly
-    def newProduct(self, auth):
-        product = self.client.newProduct(self.project.getId(), self.project.getName())
+    def newBuild(self, auth):
+        build = self.client.newBuild(self.project.getId(), self.project.getName())
         # By default, Installable ISO images should be selected.
-        productType = producttypes.INSTALLABLE_ISO
-        product.setProductType(productType)
+        buildType = buildtypes.INSTALLABLE_ISO
+        build.setBuildType(buildType)
 
-        return self._write("editProduct", isNewProduct = True,
-            product = product,
-            productType = productType,
+        return self._write("editBuild", isNewBuild = True,
+            build = build,
+            buildType = buildType,
             kwargs = {})
 
     @ownerOnly
-    @intFields(productId = -1)
+    @intFields(buildId = -1)
     @strFields(trove = "")
-    def editProduct(self, auth, productId, trove):
+    def editBuild(self, auth, buildId, trove):
 
-        product = self.client.getProduct(productId)
-        productName = product.getName()
-        productType = product.getProductType()
+        build = self.client.getBuild(buildId)
+        productName = build.getName()
+        buildType = build.getBuildType()
 
-        troveName, version, flavor = product.getTrove()
+        troveName, version, flavor = build.getTrove()
 
         versionStr = versions.ThawVersion(version)
         label = versionStr.branch().label()
@@ -355,8 +355,8 @@ class ProjectHandler(WebHandler):
         thawedFlavor = deps.ThawFlavor(flavor)
         arch = thawedFlavor.members[deps.DEP_CLASS_IS].members.keys()[0]
 
-        return self._write("editProduct", isNewProduct = False,
-            product = product,
+        return self._write("editBuild", isNewBuild = False,
+            build = build,
             trove = trove,
             troveName = troveName,
             label = label,
@@ -364,41 +364,41 @@ class ProjectHandler(WebHandler):
             version = version,
             flavor = flavor,
             arch = arch,
-            productType = productType,
+            buildType = buildType,
             kwargs = {})
 
     @requiresAuth
-    @intFields(productId = None)
+    @intFields(buildId = None)
     @strFields(trove = None, version = None, desc = "")
-    def saveProduct(self, auth, productId, trove, version, desc, name,
+    def saveBuild(self, auth, buildId, trove, version, desc, name,
                     **kwargs):
-        product = self.client.getProduct(productId)
+        build = self.client.getBuild(buildId)
 
-        job = product.getJob()
+        job = build.getJob()
         if job and job.status in (jobstatus.WAITING, jobstatus.RUNNING):
-            self._addErrors("You cannot alter this product because a "
+            self._addErrors("You cannot alter this build because a "
                             "conflicting image is currently being generated.")
-            self._predirect("product?id=%d" % productId)
+            self._predirect("build?id=%d" % buildId)
             return
 
         trove, label = trove.split("=")
         version, flavor = version.split(" ")
-        product.setTrove(trove, version, flavor)
-        product.setName(name)
-        product.setDesc(desc)
+        build.setTrove(trove, version, flavor)
+        build.setName(name)
+        build.setDesc(desc)
 
         flavor = deps.ThawFlavor(flavor)
         jobArch = flavor.members[deps.DEP_CLASS_IS].members.keys()[0]
         assert(jobArch in ('x86', 'x86_64'))
 
-        # handle productType check box state changes
-        productType = int(kwargs['producttype'])
+        # handle buildType check box state changes
+        buildType = int(kwargs['buildtype'])
 
-        product.setProductType(productType)
+        build.setBuildType(buildType)
 
-        # get the template from the product and handle any relevant args
+        # get the template from the build and handle any relevant args
         # remember that checkboxes don't pass args for unchecked boxxen
-        template = product.getDataTemplate()
+        template = build.getDataTemplate()
         for name in list(template):
             try:
                 val = kwargs[name]
@@ -413,64 +413,64 @@ class ProjectHandler(WebHandler):
                     val = False
                 else:
                     val = template[name][1]
-            product.setDataValue(name, val)
+            build.setDataValue(name, val)
 
         try:
-            job = self.client.startImageJob(productId)
+            job = self.client.startImageJob(buildId)
         except jobs.DuplicateJob:
             pass
 
-        self._predirect("product?id=%d" % productId)
+        self._predirect("build?id=%d" % buildId)
 
-    @intFields(productId = None)
+    @intFields(buildId = None)
     @ownerOnly
-    def deleteProduct(self, auth, productId):
-        product = self.client.getProduct(productId)
-        product.deleteProduct()
-        self._predirect("product")
+    def deleteBuild(self, auth, buildId):
+        build = self.client.getBuild(buildId)
+        build.deleteBuild()
+        self._predirect("build")
 
     @intFields(id = None)
-    def product(self, auth, id):
-        products = self.project.getProducts()
-        publishedProducts = [x for x in products if x.getPublished()]
-        product = self.client.getProduct(id)
-        productInProgress = False
+    def build(self, auth, id):
+        builds = self.project.getBuilds()
+        publishedBuilds = [x for x in builds if x.getPublished()]
+        build = self.client.getBuild(id)
+        buildInProgress = False
         if auth.authorized:
-            productJob = product.getJob()
-            if productJob:
-                productInProgress = \
-                        (productJob.getStatus() <= jobstatus.RUNNING)
+            buildJob = build.getJob()
+            if buildJob:
+                buildInProgress = \
+                        (buildJob.getStatus() <= jobstatus.RUNNING)
 
         try:
-            trove, version, flavor = product.getTrove()
-            files = product.getFiles()
-        except products.TroveNotSet:
-            self._predirect("editProduct?productId=%d" % product.id)
+            trove, version, flavor = build.getTrove()
+            files = build.getFiles()
+        except builds.TroveNotSet:
+            self._predirect("editBuild?buildId=%d" % build.id)
         else:
-            return self._write("product", product = product,
-                name = product.getName(),
-                isPublished = product.getPublished(),
+            return self._write("build", build = build,
+                name = build.getName(),
+                isPublished = build.getPublished(),
                 trove = trove, version = versions.ThawVersion(version),
                 flavor = deps.ThawFlavor(flavor),
-                productId = id, projectId = self.project.getId(),
-                publishedProducts = publishedProducts,
+                buildId = id, projectId = self.project.getId(),
+                publishedBuilds = publishedBuilds,
                 files = files,
-                productInProgress = productInProgress)
+                buildInProgress = buildInProgress)
 
     @ownerOnly
-    @intFields(productId = None)
-    def publish(self, auth, productId):
-        product = self.client.getProduct(productId)
-        product.setPublished(True)
+    @intFields(buildId = None)
+    def publish(self, auth, buildId):
+        build = self.client.getBuild(buildId)
+        build.setPublished(True)
 
-        self.predirect("product?id=%d" % productId)
+        self.predirect("build?id=%d" % buildId)
 
     @ownerOnly
-    @intFields(productId = None)
-    def restartJob(self, auth, productId):
-        self.client.startImageJob(productId)
+    @intFields(buildId = None)
+    def restartJob(self, auth, buildId):
+        self.client.startImageJob(buildId)
 
-        self._predirect("product?id=%d" % productId)
+        self._predirect("build?id=%d" % buildId)
 
     def _mailingLists(self, auth, mlists, messages=[]):
         if not self.cfg.EnableMailLists:
@@ -774,26 +774,26 @@ class ProjectHandler(WebHandler):
             return self._write("confirm", message = "Are you sure you want to resign from this project?",
                 yesArgs = {'func':'resign', 'confirmed':'1'}, noLink = "/")
 
-    @strFields(feed= "products")
+    @strFields(feed= "builds")
     def rss(self, auth, feed):
-        if feed == "products":
-            title = "%s products" % self.project.getName()
-            link = "http://%s%sproject/%s/products" % \
+        if feed == "builds":
+            title = "%s builds" % self.project.getName()
+            link = "http://%s%sproject/%s/builds" % \
                 (self.cfg.siteHost, self.cfg.basePath, self.project.getHostname())
-            desc = "Current products from %s" % self.project.getName()
+            desc = "Current builds from %s" % self.project.getName()
 
-            products = self.project.getProducts()
+            builds = self.project.getBuilds()
             items = []
-            for product in products[:10]:
+            for build in builds[:10]:
                 item = {}
-                item['title'] = "%s=%s" % (product.getTroveName(),
-                    product.getTroveVersion().trailingRevision().asString())
-                item['link'] = "http://%s%sproject/%s/product?id=%d" % \
-                    (self.cfg.siteHost, self.cfg.basePath, self.project.getHostname(), product.getId())
-                item['content'] = "A new version of %s has been productd: %s version %s." % \
-                    (product.getName(), product.getTroveName(),
-                     product.getTroveVersion().trailingRevision().asString())
-                item['date_822'] = email.Utils.formatdate(product.getChangedTime())
+                item['title'] = "%s=%s" % (build.getTroveName(),
+                    build.getTroveVersion().trailingRevision().asString())
+                item['link'] = "http://%s%sproject/%s/build?id=%d" % \
+                    (self.cfg.siteHost, self.cfg.basePath, self.project.getHostname(), build.getId())
+                item['content'] = "A new version of %s has been buildd: %s version %s." % \
+                    (build.getName(), build.getTroveName(),
+                     build.getTroveVersion().trailingRevision().asString())
+                item['date_822'] = email.Utils.formatdate(build.getChangedTime())
                 item['creator'] = "http://%s%s" % (self.siteHost, self.cfg.basePath)
                 items.append(item)
         else:

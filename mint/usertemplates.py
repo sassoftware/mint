@@ -5,7 +5,7 @@
 
 import sys
 
-from mint.producttemplates import BooleanOption, IntegerOption
+from mint.buildtemplates import BooleanOption, IntegerOption
 
 # this must be redefined in each template module due to sys.modules[__name__]
 class Template(dict):
@@ -28,7 +28,7 @@ class newsletter(BooleanOption):
 
 class insider(BooleanOption):
     default = False
-    prompt = "Would you like to participate in the \"rPath Insider's Group\" which reviews future releases and new product ideas?"
+    prompt = "Would you like to participate in the \"rPath Insider's Group\" which reviews future releases and new build ideas?"
 
 class searchResultsPerPage(IntegerOption):
     default = 10

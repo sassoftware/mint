@@ -98,7 +98,7 @@ def getFilesToAnnotate(baseDirs=[], filesToFind=[]):
     filesToFind = [ x for x in filesToFind if x not in allFiles ]
 
     posFilters = [r'\.py$']
-    negFilters = ['sqlite', 'test', 'scripts', 'product']
+    negFilters = ['sqlite', 'test', 'scripts', 'build']
     
 
     baseDirs = [ os.path.realpath(x) for x in baseDirs ]

@@ -5,7 +5,7 @@
 #
 import time
 
-from mint import producttypes
+from mint import buildtypes
 from mint import jobstatus
 from mint.cmdline import commands
 
@@ -14,9 +14,9 @@ from conary.lib import options, log
 from conary.conaryclient.cmdline import parseTroveSpec
 
 
-def waitForProduct(client, productId, interval = 5):
-    product = client.getProduct(productId)
-    job = product.getJob()
+def waitForBuild(client, buildId, interval = 5):
+    build = client.getBuild(buildId)
+    job = build.getJob()
 
     while job.status in (jobstatus.WAITING, jobstatus.RUNNING):
         time.sleep(interval)
@@ -25,11 +25,11 @@ def waitForProduct(client, productId, interval = 5):
     log.info("Job ended with '%s' status: %s" % (jobstatus.statusNames[job.status], job.statusMessage))
 
 
-class ProductCreateCommand(commands.RBuilderCommand):
-    commands = ['product-create']
+class BuildCreateCommand(commands.RBuilderCommand):
+    commands = ['build-create']
     paramHelp = "<project name> <troveSpec> <image type>"
 
-    docs = {'wait' : 'wait until a product job finishes'}
+    docs = {'wait' : 'wait until a build job finishes'}
 
     def addParameters(self, argDef):
          commands.RBuilderCommand.addParameters(self, argDef)
@@ -41,36 +41,36 @@ class ProductCreateCommand(commands.RBuilderCommand):
         if len(args) < 3:
             return self.usage()
 
-        projectName, troveSpec, productType = args
+        projectName, troveSpec, buildType = args
         project = client.getProjectByHostname(projectName)
-        product = client.newProduct(project.id, project.name)
+        build = client.newBuild(project.id, project.name)
 
         n, v, f = parseTroveSpec(troveSpec)
         assert(n and v and f is not None)
         v = versions.VersionFromString(v)
         v.resetTimeStamps(0)
-        product.setTrove(n, v.freeze(), f.freeze())
+        build.setTrove(n, v.freeze(), f.freeze())
 
-        assert(productType.upper() in producttypes.validProductTypes)
-        product.setProductType(producttypes.validProductTypes[productType.upper()])
+        assert(buildType.upper() in buildtypes.validBuildTypes)
+        build.setBuildType(buildtypes.validBuildTypes[buildType.upper()])
 
-        job = client.startImageJob(product.id)
-        log.info("Product %d job started (job id %d)." % (product.id, job.id))
+        job = client.startImageJob(build.id)
+        log.info("Build %d job started (job id %d)." % (build.id, job.id))
         if wait:
-            waitForProduct(client, product.id)
-        return product.id
-commands.register(ProductCreateCommand)
+            waitForBuild(client, build.id)
+        return build.id
+commands.register(BuildCreateCommand)
 
 
-class ProductWaitCommand(commands.RBuilderCommand):
-    commands = ['product-wait']
-    paramHelp = "<product id>"
+class BuildWaitCommand(commands.RBuilderCommand):
+    commands = ['build-wait']
+    paramHelp = "<build id>"
 
     def runCommand(self, client, cfg, argSet, args):
         args = args[1:]
         if len(args) < 1:
             return self.usage()
 
-        productId = int(args[0])
-        waitForProduct(client, productId)
-commands.register(ProductWaitCommand)
+        buildId = int(args[0])
+        waitForBuild(client, buildId)
+commands.register(BuildWaitCommand)

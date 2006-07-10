@@ -22,7 +22,7 @@
         <p>However, if either of these points is not true, you must change the domain name field.  The exact domain name you enter depends on the specific details of your organization's situation; however, here are some common examples:</p>
 
         <ul>
-            <li>An rBuilder project's repository is accessible via "project.devel.example.com", but the internal systems that will be installing software from the repository are part of the "production.example.com" network, and cannot resolve or access "project.devel.example.com".  In this case, enter "production.example.com" and refer to the note at the end of this page.</li>
+            <li>An rBuilder project's repository is accessible via "project.devel.example.com", but the internal systems that will be installing software from the repository are part of the "buildion.example.com" network, and cannot resolve or access "project.devel.example.com".  In this case, enter "buildion.example.com" and refer to the note at the end of this page.</li>
             <li>An rBuilder project's repository is accessible via "project.devel.example.com, but the systems that will be installing software from this repository are external to the example.com network, and cannot resolve or access "project.devel.example.com".  In this case, enter "example.com" and refer to the note at the end of this page.</li>
         </ul>
 

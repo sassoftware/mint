@@ -23,10 +23,10 @@ from conary.conarycfg import CfgList, CfgString, CfgBool, CfgInt, CfgDict, \
 # mint imports
 from mint import cooktypes
 from mint import jobstatus
-from mint import producttypes
+from mint import buildtypes
 from mint import scriptlibrary
 from mint.client import MintClient
-from mint.config import CfgProductEnum
+from mint.config import CfgBuildEnum
 from mint.constants import mintVersion
 
 # image generators
@@ -42,14 +42,14 @@ from mint.distro.raw_fs_image import RawFsImage
 from mint.distro.tarball import Tarball
 
 generators = {
-    producttypes.INSTALLABLE_ISO:   InstallableIso,
-    producttypes.STUB_IMAGE:        StubImage,
-    producttypes.LIVE_ISO:          LiveIso,
-    producttypes.RAW_HD_IMAGE:      RawHdImage,
-    producttypes.VMWARE_IMAGE:      VMwareImage,
-    producttypes.RAW_FS_IMAGE:      RawFsImage,
-    producttypes.TARBALL:           Tarball,
-    producttypes.NETBOOT_IMAGE:     NetbootImage,
+    buildtypes.INSTALLABLE_ISO:   InstallableIso,
+    buildtypes.STUB_IMAGE:        StubImage,
+    buildtypes.LIVE_ISO:          LiveIso,
+    buildtypes.RAW_HD_IMAGE:      RawHdImage,
+    buildtypes.VMWARE_IMAGE:      VMwareImage,
+    buildtypes.RAW_FS_IMAGE:      RawFsImage,
+    buildtypes.TARBALL:           Tarball,
+    buildtypes.NETBOOT_IMAGE:     NetbootImage,
 }
 
 SUPPORTED_ARCHS = ('x86', 'x86_64')
@@ -126,26 +126,26 @@ class JobRunner:
         from logging import INFO
         log.setVerbosity(INFO)
 
-        if self.job.productId:
-            product = self.client.getProduct(self.job.productId)
-            project = self.client.getProject(product.getProjectId())
+        if self.job.buildId:
+            build = self.client.getBuild(self.job.buildId)
+            project = self.client.getProject(build.getProjectId())
 
             # save the current working directory in case the generator
             # (or scripts that change the wd)
             cwd = os.getcwd()
             try:
                 # this line assumes that there's only one image per job.
-                generator = generators[product.getProductType()]
+                generator = generators[build.getBuildType()]
                 slog.info("%s job for %s started (id %d)" % \
                          (generator.__name__, project.getHostname(), jobId))
                 imageFilenames = generator(self.client, self.cfg, self.job,
-                                           product, project).write()
+                                           build, project).write()
             except Exception, e:
                 traceback.print_exc()
                 sys.stdout.flush()
                 error = sys.exc_info()
             else:
-                product.setFiles(imageFilenames)
+                build.setFiles(imageFilenames)
                 slog.info("Job %d finished: %s", jobId, str(imageFilenames))
 
             try:
@@ -225,10 +225,10 @@ class JobDaemon:
         # right now we only handle x86 and x86_64 images
         slog.info("rBuilder ISOgen Version: %s" % mintVersion)
         slog.info("handling jobs of architecture: %s", cfg.supportedArch)
-        if 'productTypes' in cfg.jobTypes:
+        if 'buildTypes' in cfg.jobTypes:
             slog.info("handling images: %s" \
-                     % str([producttypes.typeNamesShort[x] \
-                            for x in cfg.jobTypes['productTypes']]))
+                     % str([buildtypes.typeNamesShort[x] \
+                            for x in cfg.jobTypes['buildTypes']]))
         if 'cookTypes' in cfg.jobTypes:
             slog.info("handling cooks: %s" \
                      % str([cooktypes.typeNames[x] \
@@ -267,9 +267,9 @@ class JobDaemon:
                         time.sleep(random.uniform(*JOB_IDLE_INTERVAL))
                         continue
 
-                    if job.productId:
-                        product = client.getProduct(job.productId)
-                        if product.getArch() not in cfg.supportedArch:
+                    if job.buildId:
+                        build = client.getBuild(job.buildId)
+                        if build.getArch() not in cfg.supportedArch:
                             continue
 
                     job.setStatus(jobstatus.RUNNING, 'Starting')
@@ -307,7 +307,7 @@ class CfgCookEnum(CfgEnum):
 class IsoGenConfig(ConfigFile):
     supportedArch   = CfgList(CfgString)
     cookTypes       = CfgList(CfgCookEnum)
-    productTypes    = CfgList(CfgProductEnum)
+    buildTypes    = CfgList(CfgBuildEnum)
     serverUrl       = None
     SSL             = (CfgBool, False)
     logPath         = '/srv/rbuilder/logs'
@@ -328,8 +328,8 @@ class IsoGenConfig(ConfigFile):
         cfg.jobTypes = {}
         if 'cookTypes' in cfg.__dict__:
             cfg.jobTypes['cookTypes'] = cfg.cookTypes
-        if 'productTypes' in cfg.__dict__:
-            cfg.jobTypes['productTypes'] = cfg.productTypes
+        if 'buildTypes' in cfg.__dict__:
+            cfg.jobTypes['buildTypes'] = cfg.buildTypes
         if cfg.serverUrl is None:
             slog.error("A server URL must be specified in the config file. For example:")
             slog.error("    serverUrl http://username:userpass@www.example.com/xmlrpc-private/")

@@ -36,9 +36,9 @@
 
 
                 <p>When the request status "Finished" appears, your group
-                has finished cooking. Click on the "Products" link in the
+                has finished cooking. Click on the "Builds" link in the
                 "Project Resources" sidebar, and select
-                ${curGroupTrove.recipeName} to create a product.</p>
+                ${curGroupTrove.recipeName} to create a build.</p>
             </div>
         </div>
     </body>

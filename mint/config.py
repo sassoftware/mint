@@ -7,7 +7,7 @@ import os
 import sys
 
 from mint import client
-from mint import producttypes 
+from mint import buildtypes 
 
 from conary import conarycfg
 from conary.conarycfg import ConfigFile
@@ -17,9 +17,9 @@ RBUILDER_CONFIG = "/srv/rbuilder/rbuilder.conf"
 
 templatePath = os.path.dirname(sys.modules['mint'].__file__)
 
-class CfgProductEnum(cfgtypes.CfgEnum):
-    validValues = producttypes.validProductTypes
-    deprecatedValues = producttypes.deprecatedProductTypes
+class CfgBuildEnum(cfgtypes.CfgEnum):
+    validValues = buildtypes.validBuildTypes
+    deprecatedValues = buildtypes.deprecatedBuildTypes
 
     def parseString(self, val):
         if val in self.deprecatedValues:
@@ -91,7 +91,7 @@ class MintConfig(ConfigFile):
     reposDBDriver           = 'sqlite'
     reposDBPath             = os.path.join(os.path.sep, 'srv', 'rbuilder',
                                            'repos', '%s', 'sqldb')
-    visibleProductTypes     = (cfgtypes.CfgList(CfgProductEnum))
+    visibleBuildTypes     = (cfgtypes.CfgList(CfgBuildEnum))
     maintenanceLockPath     = os.path.join(dataPath, 'run', 'maintenance.lock')
     announceLink            = ''
 

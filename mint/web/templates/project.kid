@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <?python #need a comment?
-    from mint import userlevels, producttypes
+    from mint import userlevels, buildtypes
     from mint.client import timeDelta
     from mint.client import upstream
     from mint.helperfuncs import truncateForDisplay
@@ -28,7 +28,7 @@
         <div class="boxHeader">Project Resources</div>
         <ul>
             <li py:attrs="{'class': (lastchunk == '') and 'selectedItem' or None}"><a href="$projectUrl">Project Home</a></li>
-            <li py:attrs="{'class': (lastchunk in ('product', 'products', 'newProduct', 'editProduct')) and 'selectedItem' or None}"><a href="${projectUrl}products">Products</a></li>
+            <li py:attrs="{'class': (lastchunk in ('build', 'builds', 'newBuild', 'editBuild')) and 'selectedItem' or None}"><a href="${projectUrl}builds">Builds</a></li>
             <li py:attrs="{'class': (lastchunk in ('release', 'releases', 'newRelease', 'editRelease', 'deleteRelease')) and 'selectedItem' or None}"><a href="${projectUrl}releases">Releases</a></li>
             <li py:attrs="{'class': (lastchunk in ('browse', 'troveInfo')) and 'selectedItem' or None}"><a href="${projectUrl}../../repos/${project.getHostname()}/browse">Repository</a></li>
             <li py:if="isDeveloper and not project.external" py:attrs="{'class': (lastchunk in ('groups', 'editGroup', 'editGroup2', 'newGroup', 'pickArch', 'cookGroup')) and 'selectedItem' or None}"><a href="${projectUrl}groups">Group Builder</a></li>
@@ -40,52 +40,52 @@
         </ul>
     </div>
 
-    <div py:def="productsMenu(productList, isOwner=False, display='block')" py:strip="True">
+    <div py:def="buildsMenu(buildList, isOwner=False, display='block')" py:strip="True">
         <?python
             projectUrl = project.getUrl()
         ?>
-        <div py:if="isOwner or productList" class="palette" id="products">
+        <div py:if="isOwner or buildList" class="palette" id="builds">
             <img class="left" src="${cfg.staticPath}apps/mint/images/header_blue_left.png" alt="" />
             <img class="right" src="${cfg.staticPath}apps/mint/images/header_blue_right.png" alt="" />
 
             <div class="boxHeader">
-                Recent Products
+                Recent Builds
                 <a href="${projectUrl}rss">
                     <img class="noborder" alt="RSS"
                          style="margin-right:10px; vertical-align: middle;"
                          src="${cfg.staticPath}apps/mint/images/rss-inline.gif" />
                 </a>
             </div>
-            <div id="product_items" style="display: $display">
+            <div id="build_items" style="display: $display">
               <?python
-                  upstreamList = [upstream(x.getTroveVersion()) for x in productList[:5]]
+                  upstreamList = [upstream(x.getTroveVersion()) for x in buildList[:5]]
                   # create a dictionary with counts of duplicate upstream versions
                   counts = dict(zip(set(upstreamList), [upstreamList.count(x) for x in set(upstreamList)]))
               ?>
-              <dl py:if="productList">
+              <dl py:if="buildList">
                 <?python projectName = project.getName() ?>
-                <div py:strip="True" py:for="product in sorted(productList[:5], key=lambda x: x.getTroveVersion(), reverse=True)">
+                <div py:strip="True" py:for="build in sorted(buildList[:5], key=lambda x: x.getTroveVersion(), reverse=True)">
                   <?python
                       # XXX: this code should not be here after the new
-                      #      product metaphor is put in place.
-                      if projectName != product.getName():
-                          productName = truncateForDisplay(product.getName(), maxWords=5, maxWordLen=8)
+                      #      build metaphor is put in place.
+                      if projectName != build.getName():
+                          productName = truncateForDisplay(build.getName(), maxWords=5, maxWordLen=8)
                       else:
-                          productName = "Version " + condUpstream(counts, product.getTroveVersion())
-                      desc = "%s %s (%s)" % (product.getArch(), producttypes.typeNamesShort[product.productType], timeDelta(product.timeCreated))
+                          productName = "Version " + condUpstream(counts, build.getTroveVersion())
+                      desc = "%s %s (%s)" % (build.getArch(), buildtypes.typeNamesShort[build.buildType], timeDelta(build.timeCreated))
                   ?>
-                    <dt><a href="${projectUrl}product?id=${product.getId()}">${productName}</a></dt>
+                    <dt><a href="${projectUrl}build?id=${build.getId()}">${productName}</a></dt>
                     <dd>${desc}</dd>
                 </div>
               </dl>
-              <div py:if="not productList">
-                 <dl><dt>No Products</dt></dl>
+              <div py:if="not buildList">
+                 <dl><dt>No Builds</dt></dl>
               </div>
-              <div class="product" py:if="isOwner" style="text-align: right; padding-right:8px;">
-                  <a href="${projectUrl}newProduct"><strong>Create a new product</strong></a>
+              <div class="build" py:if="isOwner" style="text-align: right; padding-right:8px;">
+                  <a href="${projectUrl}newBuild"><strong>Create a new build</strong></a>
               </div>
-              <div class="product" py:if="not isOwner and len(productList) > 5" style="text-align: right; padding-right:8px;">
-                  <a href="${projectUrl}products"><strong>More...</strong></a>
+              <div class="build" py:if="not isOwner and len(buildList) > 5" style="text-align: right; padding-right:8px;">
+                  <a href="${projectUrl}builds"><strong>More...</strong></a>
               </div>
             </div>
         </div>

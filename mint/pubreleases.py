@@ -36,7 +36,7 @@ class PublishedReleasesTable(database.KeyedTable):
 
     def delete(self, id):
         cu = self.db.cursor()
-        cu.execute("""UPDATE Products SET pubReleaseId = NULL
+        cu.execute("""UPDATE Builds SET pubReleaseId = NULL
                       WHERE pubReleaseId = ?""", id)
         self.db.commit()
         database.KeyedTable.delete(self, id)
@@ -52,9 +52,9 @@ class PublishedReleasesTable(database.KeyedTable):
         pubRelease = self.get(pubReleaseId, fields=['timePublished'])
         return bool(pubRelease['timePublished'])
 
-    def getProducts(self, pubReleaseId):
+    def getBuilds(self, pubReleaseId):
         cu = self.db.cursor()
-        cu.execute("""SELECT productId FROM Products
+        cu.execute("""SELECT buildId FROM Builds
                       WHERE pubReleaseId = ?""", pubReleaseId)
         res = cu.fetchall()
         return [x[0] for x in res]
@@ -93,14 +93,14 @@ class PublishedRelease(database.TableObject):
     def getItem(self, id):
         return self.server.getPublishedRelease(id)
 
-    def addProduct(self, productId):
-        return self.server.setProductPublished(productId, self.id, True)
+    def addBuild(self, buildId):
+        return self.server.setBuildPublished(buildId, self.id, True)
 
-    def removeProduct(self, productId):
-        return self.server.setProductPublished(productId, self.id, False)
+    def removeBuild(self, buildId):
+        return self.server.setBuildPublished(buildId, self.id, False)
 
-    def getProducts(self):
-        return self.server.getProductsForPublishedRelease(self.id)
+    def getBuilds(self):
+        return self.server.getBuildsForPublishedRelease(self.id)
 
     def isFinalized(self):
         return self.server.isPublishedReleaseFinalized(self.id)

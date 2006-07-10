@@ -10,7 +10,7 @@ testsuite.setup()
 
 import jobserverharness
 
-from mint import producttypes
+from mint import buildtypes
 from mint import constants
 from mint.distro import jsversion
 
@@ -22,14 +22,14 @@ class JobServerTest(jobserverharness.JobServerHelper):
         projectId = client.newProject("Foo", "foo", "rpath.org")
         project = client.getProject(projectId)
 
-        product = client.newProduct(projectId, "Test Product")
-        product.setProductType(producttypes.STUB_IMAGE)
-        product.setDataValue('stringArg', 'Hello World!')
+        build = client.newBuild(projectId, "Test Build")
+        build.setBuildType(buildtypes.STUB_IMAGE)
+        build.setDataValue('stringArg', 'Hello World!')
 
-        product.setTrove("group-trove",
+        build.setTrove("group-trove",
             "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
 
-        job = client.startImageJob(product.getId())
+        job = client.startImageJob(build.getId())
 
         tries = 0
         while True:

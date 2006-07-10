@@ -23,13 +23,13 @@ onload = "javascript:;"
             <![CDATA[
                 var BaseUrl = '${cfg.basePath}';
 
-                // Configured visible product types; required for library.js
-                var VisibleProductTypes = ${str(cfg.visibleProductTypes)};
-                var VisibleBootableProductTypes = ${str([x for x in (3, 4, 5, 6, 7, 8) if x in cfg.visibleProductTypes])};
+                // Configured visible build types; required for library.js
+                var VisibleBuildTypes = ${str(cfg.visibleBuildTypes)};
+                var VisibleBootableBuildTypes = ${str([x for x in (3, 4, 5, 6, 7, 8) if x in cfg.visibleBuildTypes])};
             ]]>
         </script>
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/generic.js" />
-        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/producttypes.js" />
+        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/buildtypes.js" />
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/jobstatus.js" />
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/library.js" />
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/rpc.js" />

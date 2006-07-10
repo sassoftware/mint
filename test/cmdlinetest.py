@@ -12,7 +12,7 @@ testsuite.setup()
 import rephelp
 
 from mint.cmdline import RBuilderMain
-from mint.cmdline import products, users
+from mint.cmdline import builds, users
 
 from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import MINT_HOST, MINT_PROJECT_DOMAIN
@@ -37,20 +37,20 @@ class CmdLineTest(unittest.TestCase):
         finally:
             os.unlink(cfgFn)
 
-    def testProductCreate(self):
+    def testBuildCreate(self):
         troveSpec = 'group-test=/testproject.%s@rpl:devel/1.0-1-1[is:x86]' % MINT_PROJECT_DOMAIN
-        self.checkRBuilder('product-create testproject %s installable_iso' % troveSpec,
-            'mint.cmdline.products.ProductCreateCommand.runCommand',
-            [None, None, None, {}, ['product-create', 'testproject', troveSpec, 'installable_iso']])
+        self.checkRBuilder('build-create testproject %s installable_iso' % troveSpec,
+            'mint.cmdline.builds.BuildCreateCommand.runCommand',
+            [None, None, None, {}, ['build-create', 'testproject', troveSpec, 'installable_iso']])
 
-        self.checkRBuilder('product-create testproject %s installable_iso --wait' % troveSpec,
-            'mint.cmdline.products.ProductCreateCommand.runCommand',
-            [None, None, None, {'wait': True}, ['product-create', 'testproject', troveSpec, 'installable_iso']])
+        self.checkRBuilder('build-create testproject %s installable_iso --wait' % troveSpec,
+            'mint.cmdline.builds.BuildCreateCommand.runCommand',
+            [None, None, None, {'wait': True}, ['build-create', 'testproject', troveSpec, 'installable_iso']])
 
-    def testProductWait(self):
-        self.checkRBuilder('product-wait 111',
-            'mint.cmdline.products.ProductWaitCommand.runCommand',
-            [None, None, None, {}, ['product-wait', '111']])
+    def testBuildWait(self):
+        self.checkRBuilder('build-wait 111',
+            'mint.cmdline.builds.BuildWaitCommand.runCommand',
+            [None, None, None, {}, ['build-wait', '111']])
 
     def testUserCreate(self):
         self.checkRBuilder('user-create testuser test@example.com --password password',
@@ -59,19 +59,19 @@ class CmdLineTest(unittest.TestCase):
 
 
 class CmdLineFuncTest(MintRepositoryHelper):
-    def testProductCreate(self):
+    def testBuildCreate(self):
         client, userId = self.quickMintUser("test", "testpass")
 
         projectId = client.newProject("Foo", "testproject", MINT_PROJECT_DOMAIN)
 
-        cmd = products.ProductCreateCommand()
+        cmd = builds.BuildCreateCommand()
         troveSpec = 'group-test=/testproject.%s@rpl:devel/1.0-1-1[is:x86]' % MINT_PROJECT_DOMAIN
-        cmd.runCommand(client, None, {}, ['product-create', 'testproject', troveSpec, 'installable_iso'])
+        cmd.runCommand(client, None, {}, ['build-create', 'testproject', troveSpec, 'installable_iso'])
 
         project = client.getProject(projectId)
-        product = project.getProducts()[0]
-        assert(product.getTrove()[0] == 'group-test')
-        assert(product.getJob())
+        build = project.getBuilds()[0]
+        assert(build.getTrove()[0] == 'group-test')
+        assert(build.getJob())
 
     def testUserCreate(self):
         client, userId = self.quickMintAdmin("adminuser", "adminpass")

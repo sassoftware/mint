@@ -11,9 +11,9 @@ import time
 import fixtures
 from mint_rephelp import MINT_HOST, MINT_DOMAIN, MINT_PROJECT_DOMAIN
 
-from mint import producttypes
+from mint import buildtypes
 from mint import pubreleases
-from mint.mint_error import PermissionDenied, ProductPublished, ProductMissing, ProductEmpty
+from mint.mint_error import PermissionDenied, BuildPublished, BuildMissing, BuildEmpty
 from mint.database import ItemNotFound
 
 class PublishedReleaseTest(fixtures.FixturedUnitTest):
@@ -35,50 +35,50 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest):
         self.failUnless(pubRelease.createdBy == data['owner'])
 
     @fixtures.fixture("Full")
-    def testAddProductToPublishedRelease(self, db, data):
+    def testAddBuildToPublishedRelease(self, db, data):
 
         client = self.getClient("owner")
         pubRelease = client.getPublishedRelease(data['pubReleaseId'])
         project = client.getProject(data['projectId'])
-        product = client.getProduct(data['productId'])
-        product.setProductType(producttypes.STUB_IMAGE)
-        product.setFiles([["file", "file title 1"]])
+        build = client.getBuild(data['buildId'])
+        build.setBuildType(buildtypes.STUB_IMAGE)
+        build.setFiles([["file", "file title 1"]])
 
         # sanity checks
-        self.failIf(data['productId'] in pubRelease.getProducts(),
-                "Product is not published yet")
-        self.failUnless(data['productId'] in project.getUnpublishedProducts(),
-                "Product should be in the unpublished list")
+        self.failIf(data['buildId'] in pubRelease.getBuilds(),
+                "Build is not published yet")
+        self.failUnless(data['buildId'] in project.getUnpublishedBuilds(),
+                "Build should be in the unpublished list")
 
         # publish it now
-        pubRelease.addProduct(product.id)
+        pubRelease.addBuild(build.id)
 
         # check the state of the world after publishing
-        self.failUnless(data['productId'] in pubRelease.getProducts(),
-                "Product was not properly added to published releases")
-        self.failIf(data['productId'] in project.getUnpublishedProducts(),
-                "Product should no longer be considered unpublished")
+        self.failUnless(data['buildId'] in pubRelease.getBuilds(),
+                "Build was not properly added to published releases")
+        self.failIf(data['buildId'] in project.getUnpublishedBuilds(),
+                "Build should no longer be considered unpublished")
 
     @fixtures.fixture("Full")
-    def testRemoveProductFromPublishedRelease(self, db, data):
+    def testRemoveBuildFromPublishedRelease(self, db, data):
         client = self.getClient("owner")
         pubRelease = client.getPublishedRelease(data['pubReleaseId'])
         project = client.getProject(data['projectId'])
 
         # sanity checks
-        self.failUnless(data['pubProductId'] in pubRelease.getProducts(),
-                "Product should be published before beginning")
-        self.failIf(data['pubProductId'] in project.getUnpublishedProducts(),
-                "Product should not be in the unpublished list")
+        self.failUnless(data['pubBuildId'] in pubRelease.getBuilds(),
+                "Build should be published before beginning")
+        self.failIf(data['pubBuildId'] in project.getUnpublishedBuilds(),
+                "Build should not be in the unpublished list")
 
         # unpublish it now
-        pubRelease.removeProduct(data['pubProductId'])
+        pubRelease.removeBuild(data['pubBuildId'])
 
         # check the state of the world after publishing
-        self.failIf(data['productId'] in pubRelease.getProducts(),
-                "Product was not removed from published releases")
-        self.failUnless(data['productId'] in project.getUnpublishedProducts(),
-                "Product should be considered unpublished")
+        self.failIf(data['buildId'] in pubRelease.getBuilds(),
+                "Build was not removed from published releases")
+        self.failUnless(data['buildId'] in project.getUnpublishedBuilds(),
+                "Build should be considered unpublished")
 
     @fixtures.fixture("Full")
     def testUpdatePublishedRelease(self, db, data):
@@ -115,13 +115,13 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest):
         self.failUnless(pubRelease.updatedBy == data['owner'], "updatedBy should be set, now")
 
     @fixtures.fixture("Full")
-    def testIsProductPublished(self, db, data):
+    def testIsBuildPublished(self, db, data):
         client = self.getClient("owner")
-        product = client.getProduct(data['productId'])
-        pubProduct = client.getProduct(data['pubProductId'])
+        build = client.getBuild(data['buildId'])
+        pubBuild = client.getBuild(data['pubBuildId'])
 
-        self.failIf(product.getPublished(), "Release should be published")
-        self.failUnless(pubProduct.getPublished(), "Release should not be published")
+        self.failIf(build.getPublished(), "Release should be published")
+        self.failUnless(pubBuild.getPublished(), "Release should not be published")
 
     @fixtures.fixture("Full")
     def testGetPublishedReleasesByProject(self, db, data):
@@ -130,10 +130,10 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest):
         self.failUnlessEqual(project.getPublishedReleases(), [ data['pubReleaseId'] ])
 
     @fixtures.fixture("Full")
-    def testGetUnpublishedProductsByProject(self, db, data):
+    def testGetUnpublishedBuildsByProject(self, db, data):
         client = self.getClient("owner")
         project = client.getProject(data['projectId'])
-        self.failUnlessEqual(project.getUnpublishedProducts(), [ data['productId'] ])
+        self.failUnlessEqual(project.getUnpublishedBuilds(), [ data['buildId'] ])
 
     @fixtures.fixture("Full")
     def testDeletePublishedRelease(self, db, data):
@@ -144,12 +144,12 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest):
         self.failUnlessEqual(project.getPublishedReleases(), [],
                 "There should be no published releases in the project")
 
-        self.failUnless(data['pubProductId'] in project.getUnpublishedProducts(),
-                "Previously published products should now be unpublished")
+        self.failUnless(data['pubBuildId'] in project.getUnpublishedBuilds(),
+                "Previously published builds should now be unpublished")
 
-        product = client.getProduct(data['pubProductId'])
+        build = client.getBuild(data['pubBuildId'])
 
-        self.failIf(product.getPublished(), "Product still shows up as published")
+        self.failIf(build.getPublished(), "Build still shows up as published")
 
     @fixtures.fixture("Full")
     def testFinalizePublishedRelease(self, db, data):
@@ -171,25 +171,25 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest):
         self.failUnless(pubRelease.isFinalized())
 
     @fixtures.fixture("Full")
-    def testPublishEmptyProduct(self, db, data):
+    def testPublishEmptyBuild(self, db, data):
         client = self.getClient("owner")
         pubRelease = client.getPublishedRelease(data['pubReleaseId'])
-        self.assertRaises(ProductEmpty,
-                pubRelease.addProduct, data['productId'])
+        self.assertRaises(BuildEmpty,
+                pubRelease.addBuild, data['buildId'])
 
     @fixtures.fixture("Full")
-    def testDeleteProductFromPublishedRelease(self, db, data):
+    def testDeleteBuildFromPublishedRelease(self, db, data):
         client = self.getClient("owner")
-        pubProduct = client.getProduct(data['pubProductId'])
-        pubProduct.deleteProduct()
+        pubBuild = client.getBuild(data['pubBuildId'])
+        pubBuild.deleteBuild()
 
     @fixtures.fixture("Full")
-    def testDeleteProductFromFinalizedPublishedRelease(self, db, data):
+    def testDeleteBuildFromFinalizedPublishedRelease(self, db, data):
         client = self.getClient("owner")
-        pubProduct = client.getProduct(data['pubProductId'])
+        pubBuild = client.getBuild(data['pubBuildId'])
         pubRelease = client.getPublishedRelease(data['pubReleaseId'])
         pubRelease.finalize()
-        self.assertRaises(ProductPublished, pubProduct.deleteProduct)
+        self.assertRaises(BuildPublished, pubBuild.deleteBuild)
 
     @fixtures.fixture("Full")
     def testPublishedReleaseAccessCreate(self, db, data):
@@ -264,14 +264,14 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest):
         for user in users:
             # finalize the release before testing
             adminClient = self.getClient("admin")
-            newProduct = adminClient.newProduct(data['projectId'],
-                    "Test Published Product")
-            newProduct.setProductType(producttypes.STUB_IMAGE)
-            newProduct.setFiles([["file", "file title 1"]])
-            newProduct.setTrove("group-dist", "/testproject." + \
+            newBuild = adminClient.newBuild(data['projectId'],
+                    "Test Published Build")
+            newBuild.setBuildType(buildtypes.STUB_IMAGE)
+            newBuild.setFiles([["file", "file title 1"]])
+            newBuild.setTrove("group-dist", "/testproject." + \
                     MINT_PROJECT_DOMAIN + "@rpl:devel/1.0-2-1", "1#x86")
             newPubRelease = adminClient.newPublishedRelease(data['projectId'])
-            newPubRelease.addProduct(newProduct.id)
+            newPubRelease.addBuild(newBuild.id)
             newPubRelease.finalize()
 
             client = self.getClient(user)
@@ -305,18 +305,18 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest):
 
 
     @fixtures.fixture("Full")
-    def testPublishedReleaseAccessAddProduct(self, db, data):
+    def testPublishedReleaseAccessAddBuild(self, db, data):
         acls = { 'admin': (True, None),
                  'owner': (True, None),
                  'developer': (False, PermissionDenied) }
 
         for (user, (allowed, exc)) in acls.items():
             adminClient = self.getClient("admin")
-            newProduct = adminClient.newProduct(data['projectId'],
-                    "Test Published Product")
-            newProduct.setProductType(producttypes.STUB_IMAGE)
-            newProduct.setFiles([["file", "file title 1"]])
-            newProduct.setTrove("group-dist", "/testproject." + \
+            newBuild = adminClient.newBuild(data['projectId'],
+                    "Test Published Build")
+            newBuild.setBuildType(buildtypes.STUB_IMAGE)
+            newBuild.setFiles([["file", "file title 1"]])
+            newBuild.setTrove("group-dist", "/testproject." + \
                     MINT_PROJECT_DOMAIN + "@rpl:devel/1.0-2-1", "1#x86")
             newPubRelease = adminClient.newPublishedRelease(data['projectId'])
 
@@ -324,37 +324,37 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest):
             userPubRelease = client.getPublishedRelease(newPubRelease.id)
 
             if allowed:
-                userPubRelease.addProduct(newProduct.id)
+                userPubRelease.addBuild(newBuild.id)
             else:
                 self.assertRaises(exc,
-                        userPubRelease.addProduct, newProduct.id)
+                        userPubRelease.addBuild, newBuild.id)
 
 
     @fixtures.fixture("Full")
-    def testPublishedReleaseAccessRemoveProduct(self, db, data):
+    def testPublishedReleaseAccessRemoveBuild(self, db, data):
         acls = { 'admin': (True, None),
                  'owner': (True, None),
                  'developer': (False, PermissionDenied) }
 
         for (user, (allowed, exc)) in acls.items():
             adminClient = self.getClient("admin")
-            newProduct = adminClient.newProduct(data['projectId'],
-                    "Test Published Product")
-            newProduct.setProductType(producttypes.STUB_IMAGE)
-            newProduct.setFiles([["file", "file title 1"]])
-            newProduct.setTrove("group-dist", "/testproject." + \
+            newBuild = adminClient.newBuild(data['projectId'],
+                    "Test Published Build")
+            newBuild.setBuildType(buildtypes.STUB_IMAGE)
+            newBuild.setFiles([["file", "file title 1"]])
+            newBuild.setTrove("group-dist", "/testproject." + \
                     MINT_PROJECT_DOMAIN + "@rpl:devel/1.0-2-1", "1#x86")
             newPubRelease = adminClient.newPublishedRelease(data['projectId'])
-            newPubRelease.addProduct(newProduct.id)
+            newPubRelease.addBuild(newBuild.id)
 
             client = self.getClient(user)
             userPubRelease = client.getPublishedRelease(newPubRelease.id)
 
             if allowed:
-                userPubRelease.removeProduct(newProduct.id)
+                userPubRelease.removeBuild(newBuild.id)
             else:
                 self.assertRaises(exc,
-                        userPubRelease.removeProduct, newProduct.id)
+                        userPubRelease.removeBuild, newBuild.id)
 
 
     @fixtures.fixture("Full")
@@ -391,13 +391,13 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest):
         for (user, (allowed, exc)) in acls.items():
             adminClient = self.getClient("admin")
             newPubRelease = adminClient.newPublishedRelease(data['projectId'])
-            newProduct = adminClient.newProduct(data['projectId'],
-                    "Test Published Product")
-            newProduct.setProductType(producttypes.STUB_IMAGE)
-            newProduct.setFiles([["file", "file title 1"]])
-            newProduct.setTrove("group-dist", "/testproject." + \
+            newBuild = adminClient.newBuild(data['projectId'],
+                    "Test Published Build")
+            newBuild.setBuildType(buildtypes.STUB_IMAGE)
+            newBuild.setFiles([["file", "file title 1"]])
+            newBuild.setTrove("group-dist", "/testproject." + \
                     MINT_PROJECT_DOMAIN + "@rpl:devel/1.0-2-1", "1#x86")
-            newPubRelease.addProduct(newProduct.id)
+            newPubRelease.addBuild(newBuild.id)
             newPubRelease.finalize()
 
             client = self.getClient(user)
@@ -424,53 +424,53 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest):
         project2Id = client.newProject("Bar", "bar", "rpath.org")
         project3Id = adminClient.newProject("Hide", "hide", "rpath.org")
         adminClient.hideProject(project3Id)
-        productsToMake = [ (int(projectId), "foo", "Foo Unpublished"),
-                           (int(project3Id), "hide", "Hide Product 1"),
-                           (int(projectId), "foo", "Foo Product"),
-                           (int(projectId), "foo", "Foo Product 2"),
-                           (int(project2Id), "bar", "Bar Product"),
-                           (int(project2Id), "bar", "Bar Product 2"),
-                           (int(projectId), "foo", "Foo Product 3")]
-        for projId, hostname, relName in productsToMake:
+        buildsToMake = [ (int(projectId), "foo", "Foo Unpublished"),
+                           (int(project3Id), "hide", "Hide Build 1"),
+                           (int(projectId), "foo", "Foo Build"),
+                           (int(projectId), "foo", "Foo Build 2"),
+                           (int(project2Id), "bar", "Bar Build"),
+                           (int(project2Id), "bar", "Bar Build 2"),
+                           (int(projectId), "foo", "Foo Build 3")]
+        for projId, hostname, relName in buildsToMake:
             if "Hide" in relName:
-                product = adminClient.newProduct(projId, relName)
+                build = adminClient.newBuild(projId, relName)
             else:
-                product = client.newProduct(projId, relName)
-            product.setTrove("group-trove", "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
+                build = client.newBuild(projId, relName)
+            build.setTrove("group-trove", "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
             if "Unpublished" not in relName:
-                product.setFiles([["file1", "File Title 1"]])
-                product.setPublished(True)
+                build.setFiles([["file1", "File Title 1"]])
+                build.setPublished(True)
                 pubRelease = client.newPublishedRelease()
-                pubRelease.addProduct(product.id)
+                pubRelease.addBuild(build.id)
                 pubRelease.save()
             time.sleep(1) # hack: let the timestamp increment since mysql doesn't do sub-second resolution
-        productList = client.getProductList(20, 0)
-        productsToMake.reverse()
-        hostnames = [x[1] for x in productsToMake]
-        if len(productList) != 5:
-            self.fail("getProductList returned the wrong number of results")
-        for i in range(len(productList)):
-            if tuple(productsToMake[i]) != (productList[i][2].projectId, hostnames[i], productList[i][2].name):
-                self.fail("Ordering of most recent products is broken.")
-            if productList[i][2].projectId == project3Id:
-                self.fail("Should not have listed hidden product")
+        buildList = client.getBuildList(20, 0)
+        buildsToMake.reverse()
+        hostnames = [x[1] for x in buildsToMake]
+        if len(buildList) != 5:
+            self.fail("getBuildList returned the wrong number of results")
+        for i in range(len(buildList)):
+            if tuple(buildsToMake[i]) != (buildList[i][2].projectId, hostnames[i], buildList[i][2].name):
+                self.fail("Ordering of most recent builds is broken.")
+            if buildList[i][2].projectId == project3Id:
+                self.fail("Should not have listed hidden build")
 
         project = client.getProject(projectId)
-        for rel in project.getProducts():
+        for rel in project.getBuilds():
             if rel.getId() not in (3, 4, 7):
-                self.fail("getProductsForProject returned incorrect results")
+                self.fail("getBuildsForProject returned incorrect results")
 
         try:
-            client.server.getProductsForProject(project3Id)
+            client.server.getBuildsForProject(project3Id)
         except ItemNotFound, e:
             pass
         else:
-            self.fail("getProductsForProject returned hidden products in non-admin context when it shouldn't have")
+            self.fail("getBuildsForProject returned hidden builds in non-admin context when it shouldn't have")
 
         project = adminClient.getProject(project3Id)
-        rel = project.getProducts()
+        rel = project.getBuilds()
         if len(rel) != 1:
-            self.fail("getProductsForProject did not return hidden products for admin")
+            self.fail("getBuildsForProject did not return hidden builds for admin")
 
 
 if __name__ == "__main__":

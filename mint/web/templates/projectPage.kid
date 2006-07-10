@@ -17,7 +17,7 @@ from mint.helperfuncs import truncateForDisplay
         isDeveloper = userLevel == userlevels.DEVELOPER
         memberList = project.getMembers()
 
-        products = project.getProducts()
+        builds = project.getBuilds()
         commits = project.getCommits()
 
         if cfg.SSL:
@@ -27,8 +27,8 @@ from mint.helperfuncs import truncateForDisplay
     ?>
     <head>
         <title>${formatTitle("Project Page: %s"%project.getNameForDisplay())}</title>
-        <link py:if="products" rel="alternate" type="application/rss+xml"
-              title="${project.getName()} Products" href="${basePath}rss" />
+        <link py:if="builds" rel="alternate" type="application/rss+xml"
+              title="${project.getName()} Builds" href="${basePath}rss" />
 
     </head>
     <body>
@@ -36,7 +36,7 @@ from mint.helperfuncs import truncateForDisplay
 
             <div id="left" class="side">
                 ${projectResourcesMenu()}
-                ${productsMenu(products, isOwner)}
+                ${buildsMenu(builds, isOwner)}
                 ${commitsMenu(commits)}
             </div>
             <div id="right" class="side">
@@ -105,8 +105,8 @@ from mint.helperfuncs import truncateForDisplay
 
                 <p>From here you can use the left-hand tabs to:</p>
                 <ul>
-                        <li py:if="isOwner">Create, edit, and publish a project product</li>
-                        <li py:if="not isOwner">Download an official project product</li>
+                        <li py:if="isOwner">Create, edit, and publish a project build</li>
+                        <li py:if="not isOwner">Download an official project build</li>
                         <li>Browse the packages included in ${isOwner and "your" or "this"} project</li>
                         <li py:if="isOwner">Add or remove developers working on your project</li>
                         <li py:if="not isOwner">List the developers working on this project
@@ -115,7 +115,7 @@ from mint.helperfuncs import truncateForDisplay
                         <li py:if="isOwner">Create and manage your project's mailing lists</li>
                         <li py:if="not isOwner">Join the mailing lists for this project or browse their archives</li>
                         <li>
-                            Subscribe to product news
+                            Subscribe to build news
                             <a href="${basePath}rss">
                                 <img style="border: none; vertical-align: middle;"
                                      src="${cfg.staticPath}apps/mint/images/rss-inline.gif" />

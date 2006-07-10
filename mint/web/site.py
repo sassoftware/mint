@@ -547,19 +547,19 @@ class SiteHandler(WebHandler):
         except ValueError:
             raise HttpNotFound
 
-        productId, idx, filename, title = self.client.getFileInfo(fileId)
+        buildId, idx, filename, title = self.client.getFileInfo(fileId)
         if reqFilename and os.path.basename(filename) != reqFilename:
             raise HttpNotFound
 
         # XXX this is gone now; we need a better way to do this
         # only count downloads of the first ISO
-        #product = self.client.getProduct(productId)
+        #build = self.client.getBuild(buildId)
         #if idx == 0:
-        #    product.incDownloads()
+        #    build.incDownloads()
         try:
-            project = self.client.getProject(product.projectId)
+            project = self.client.getProject(build.projectId)
 
-            fileUrl = "http://%s/images/%s/%d/%s" % (self.cfg.siteHost, project.hostname, product.id, reqFilename)
+            fileUrl = "http://%s/images/%s/%d/%s" % (self.cfg.siteHost, project.hostname, build.id, reqFilename)
             self._redirect(fileUrl)
         except OSError, e:
             return self._write("error", shortError = "File error",
@@ -609,7 +609,7 @@ class SiteHandler(WebHandler):
                 item['creator'] = "http://%s%s" % (self.siteHost, self.cfg.basePath)
                 items.append(item)
         elif feed == "newReleases":
-            results = self.client.getProductList()
+            results = self.client.getBuildList()
             title = "New releases on %s" % self.cfg.productName
             link = "http://%s%srss?feed=newReleases" % (self.cfg.siteHost, self.cfg.basePath)
             desc = "New releases published at %s" % self.cfg.productName
@@ -624,7 +624,7 @@ class SiteHandler(WebHandler):
                 item['content'] += "<p><a href=\"http://%s%sproject/%s/release?id=%d\">" % (self.cfg.projectSiteHost, self.cfg.basePath, p[1], publishedRelease.getId())
                 # SGP XXX SGP FIXME
                 item['content'] += "FIX ME!"
-                #item['content'] += "%s=%s (%s)</a></p>" % (product.getTroveName(), product.getTroveVersion().trailingRevision().asString(), product.getArch())
+                #item['content'] += "%s=%s (%s)</a></p>" % (build.getTroveName(), build.getTroveVersion().trailingRevision().asString(), build.getArch())
 
                 item['date_822'] = email.Utils.formatdate(publishedRelease.timePublished)
                 item['creator'] = "http://%s%s" % (self.siteHost, self.cfg.basePath)

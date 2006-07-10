@@ -23,21 +23,21 @@ class UnknownException(Exception):
         self.eName = eName
         self.eArgs = eArgs
 
-class ProductMissing(MintError):
+class BuildMissing(MintError):
     def __str__(self):
-        return "The referenced product does not exist."
+        return "The referenced build does not exist."
 
-class ProductPublished(MintError):
+class BuildPublished(MintError):
     def __str__(self):
-        return "The referenced product is already part of a published release."
+        return "The referenced build is already part of a published release."
 
-class ProductEmpty(MintError):
+class BuildEmpty(MintError):
     def __str__(self):
-        return "The referenced product has no files and cannot be published."
+        return "The referenced build has no files and cannot be published."
 
 class PublishedReleaseEmpty(MintError):
     def __str__(self):
-        return "The referenced published releases has no products and cannot be finalized."
+        return "The referenced published releases has no builds and cannot be finalized."
 
 class PublishedReleaseFinalized(MintError):
     def __str__(self):

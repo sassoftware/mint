@@ -13,12 +13,12 @@ from mint import database
 from mint import grouptrove
 from mint import jobs
 from mint import projects
-from mint import products
+from mint import builds
 from mint import pubreleases
 from mint import users
 from mint import rmakebuild
 from mint.mint_error import MintError, UnknownException, PermissionDenied, \
-    ProductPublished, ProductMissing, ProductEmpty, UserAlreadyAdmin, \
+    BuildPublished, BuildMissing, BuildEmpty, UserAlreadyAdmin, \
     AdminSelfDemotion, JobserverVersionMismatch, MaintenanceMode, \
     ParameterError, GroupTroveEmpty
 from mint.searcher import SearchTermsError
@@ -285,41 +285,41 @@ class MintClient:
         """
         return self.server.unhideProject(projectId)
 
-    def getProduct(self, productId):
+    def getBuild(self, buildId):
         """
-        Retrieve a L{products.Product} object by product id.
-        @param productId: the database id of the requested product.
-        @type productId: int
-        @returns: an object representing the requested product.
-        @rtype: L{products.Product}
+        Retrieve a L{builds.Build} object by build id.
+        @param buildId: the database id of the requested build.
+        @type buildId: int
+        @returns: an object representing the requested build.
+        @rtype: L{builds.Build}
         """
-        return products.Product(self.server, productId)
+        return builds.Build(self.server, buildId)
 
-    def newProduct(self, projectId, productName):
+    def newBuild(self, projectId, productName):
         """
-        Create a new product.
-        @param projectId: the project to be associated with the new product.
-        @param productName: name of the new product
-        @returns: an object representing the new product
-        @rtype: L{mint.products.Product}
+        Create a new build.
+        @param projectId: the project to be associated with the new build.
+        @param productName: name of the new build
+        @returns: an object representing the new build
+        @rtype: L{mint.builds.Build}
         """
-        productId = self.server.newProduct(projectId, productName)
-        return self.getProduct(productId)
+        buildId = self.server.newBuild(projectId, productName)
+        return self.getBuild(buildId)
 
     def getPublishedReleaseList(self, limit=10, offset=0):
         """
         Get a list of the most recent published releases as ordered
         by their published date.
-        @param limit: The number of products to display
+        @param limit: The number of builds to display
         @param offset: List @limit starting at item @offset
         """
-        return [(x[0], x[1], self.getProduct(x[2])) for x in \
+        return [(x[0], x[1], self.getBuild(x[2])) for x in \
                 self.server.getPublishedReleaseList(limit, offset)]
 
     def newPublishedRelease(self, projectId):
         """
         Create a new published release, which is a collection of 
-        products (images, group troves, etc.).
+        builds (images, group troves, etc.).
         @param projectId: the project to be associated with the release
         @returns: an object representing the new published release
         @rtype: L{mint.pubreleases.PublishedRelease}
@@ -341,21 +341,21 @@ class MintClient:
     def deletePublishedRelease(self, pubReleaseId):
         """
         Delete a published release. This has the side effect of unlinking
-        any products associated with that release.
+        any builds associated with that release.
         @param pubReleaseId: the id of the published release
         @returns: True if successful, False otherwise
         @rtype: bool
         """
         return self.server.deletePublishedRelease(pubReleaseId)
 
-    def startImageJob(self, productId):
+    def startImageJob(self, buildId):
         """
         Start a new image generation job.
-        @param productId: the product id which describes the image to be created.
+        @param buildId: the build id which describes the image to be created.
         @return: an object representing the new job
         @rtype: L{mint.jobs.Job}
         """
-        jobId = self.server.startImageJob(productId)
+        jobId = self.server.startImageJob(buildId)
         return self.getJob(jobId)
 
     def getJob(self, jobId):
@@ -613,12 +613,12 @@ class _Method(xmlrpclib._Method):
             raise users.UserInduction(exceptionArgs[0])
         elif exceptionName == "UserNotFound":
             raise UserNotFound(exceptionArgs[0])
-        elif exceptionName == "ProductPublished":
-            raise ProductPublished(exceptionArgs[0])
-        elif exceptionName == "ProductMissing":
-            raise ProductMissing(exceptionArgs[0])
-        elif exceptionName == "ProductEmpty":
-            raise ProductEmpty(exceptionArgs[0])
+        elif exceptionName == "BuildPublished":
+            raise BuildPublished(exceptionArgs[0])
+        elif exceptionName == "BuildMissing":
+            raise BuildMissing(exceptionArgs[0])
+        elif exceptionName == "BuildEmpty":
+            raise BuildEmpty(exceptionArgs[0])
         elif exceptionName == "AuthRepoError":
             raise users.AuthRepoError(exceptionArgs[0])
         elif exceptionName == "LabelMissing":

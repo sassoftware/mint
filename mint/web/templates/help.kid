@@ -15,7 +15,7 @@ from mint.helperfuncs import truncateForDisplay
         isDeveloper = userLevel == userlevels.DEVELOPER
         memberList = project.getMembers()
 
-        products = project.getProducts()
+        builds = project.getBuilds()
         commits = project.getCommits()
     ?>
     <head>
@@ -25,7 +25,7 @@ from mint.helperfuncs import truncateForDisplay
         <div id="layout">
             <div id="left" class="side">
                 ${projectResourcesMenu()}
-                ${productsMenu(products, isOwner)}
+                ${buildsMenu(builds, isOwner)}
                 ${commitsMenu(commits)}
             </div>
             <div id="right" class="side">

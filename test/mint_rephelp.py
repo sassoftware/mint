@@ -14,11 +14,11 @@ import urlparse
 from webunit import webunittest
 
 from mint import config
-from mint import cooktypes, producttypes
+from mint import cooktypes, buildtypes
 from mint import dbversion
 from mint import server
 from mint import shimclient
-from mint import producttypes
+from mint import buildtypes
 from mint import data
 
 from mint.distro import jobserver
@@ -248,12 +248,12 @@ class MintApacheServer(rephelp.ApacheServer):
         cfg.secureHost = "%s.%s:%i" % (MINT_HOST, dom, port)
         cfg.SSL = (not self.sslDisabled)
 
-        cfg.visibleProductTypes = [producttypes.INSTALLABLE_ISO,
-                                   producttypes.RAW_HD_IMAGE,
-                                   producttypes.RAW_FS_IMAGE,
-                                   producttypes.LIVE_ISO,
-                                   producttypes.VMWARE_IMAGE,
-                                   producttypes.STUB_IMAGE]
+        cfg.visibleBuildTypes = [buildtypes.INSTALLABLE_ISO,
+                                   buildtypes.RAW_HD_IMAGE,
+                                   buildtypes.RAW_FS_IMAGE,
+                                   buildtypes.LIVE_ISO,
+                                   buildtypes.VMWARE_IMAGE,
+                                   buildtypes.STUB_IMAGE]
         cfg.maintenanceLockPath  = os.path.join(cfg.dataPath,
                                                 'maintenance.lock')
 
@@ -404,10 +404,10 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
         #self.servers.getServer().stop()
         rephelp.RepositoryHelper.tearDown(self)
 
-    def stockProductFlavor(self, productId, arch = "x86_64"):
+    def stockBuildFlavor(self, buildId, arch = "x86_64"):
         cu = self.db.cursor()
         flavor = deps.parseFlavor(stockFlavors['1#' + arch]).freeze()
-        cu.execute("UPDATE Products set troveFlavor=? WHERE productId=?", flavor, productId)
+        cu.execute("UPDATE Builds set troveFlavor=? WHERE buildId=?", flavor, buildId)
         self.db.commit()
 
     def hideOutput(self):
@@ -478,14 +478,14 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
         cfg.serverUrl       = "http://mintauth:mintpass@localhost:%d/xmlrpc-private/" % self.port
         cfg.supportedArch   = ['x86']
         cfg.cookTypes       = [cooktypes.GROUP_BUILDER]
-        cfg.productTypes    = [producttypes.STUB_IMAGE]
+        cfg.buildTypes    = [buildtypes.STUB_IMAGE]
         cfg.logPath         = os.path.join(self.reposDir, "jobserver", "logs")
         cfg.imagesPath      = os.path.join(self.reposDir, "jobserver", "images")
         cfg.finishedPath    = os.path.join(self.reposDir, "jobserver", "finished-images")
         cfg.lockFile        = os.path.join(self.reposDir, "jobserver", "jobserver.pid")
 
         cfg.jobTypes        = {'cookTypes' : cfg.cookTypes,
-                               'productTypes' : cfg.productTypes}
+                               'buildTypes' : cfg.buildTypes}
 
         for x in ["logs", "images", "finished-images"]:
             util.mkdirChain(os.path.join(self.reposDir, "jobserver", x))

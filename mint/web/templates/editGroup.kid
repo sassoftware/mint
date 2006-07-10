@@ -130,9 +130,9 @@ from mint.grouptrove import KNOWN_COMPONENTS
             library dependencies, and creates a binary representation of the group
             that is committed into your project's repository.</p>
 
-            <h3 style="color:#ff7001;">Step 3: Create A Product</h3>
+            <h3 style="color:#ff7001;">Step 3: Create A Build</h3>
             <p>Once your group has cooked successfully, create a
-            <a href="products"><b>New Product</b></a> by selecting the name of
+            <a href="builds"><b>New Build</b></a> by selecting the name of
             the group you just cooked. Select a version, architecture, and a
             handful of other options, and you will have an installable ISO-9660
             image in minutes!

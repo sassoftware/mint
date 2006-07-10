@@ -15,7 +15,7 @@ kid_files = \
 	cookGroup.kid		\
 	editGroup.kid		\
 	editProject.kid		\
-	editProduct.kid		\
+	editBuild.kid		\
 	editPubrelease.kid	\
 	editrMake.kid		\
 	error.kid		\
@@ -42,8 +42,8 @@ kid_files = \
 	register.kid		\
 	register_reconf.kid	\
 	rejectJoinRequest.kid   \
-	product.kid		\
-	products.kid		\
+	build.kid		\
+	builds.kid		\
 	pubreleases.kid		\
 	rMake.kid		\
 	rMakeStatus.kid		\

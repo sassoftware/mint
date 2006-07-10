@@ -12,7 +12,7 @@ from conary.conarycfg import ConfigFile
 
 from mint import constants
 from mint.client import MintClient
-from mint.cmdline import products
+from mint.cmdline import builds
 from mint.cmdline import users
 from mint.cmdline import commands
 from mint.mint_error import MintError
@@ -71,8 +71,8 @@ class RBuilderMain(options.MainHandler):
         print 'rbuilder: command-line interface to an rBuilder Server'
         print ''
         print 'usage:'
-        print '  product-create <project name> <trove spec> <image type> - create a new product'
-        print '  product-wait <product id>                               - wait for a product to finish building'
+        print '  build-create <project name> <trove spec> <image type> - create a new build'
+        print '  build-wait <build id>                               - wait for a build to finish building'
         print '  user-create <username> userId [-p <password>]           - create a new user'
         print '  config                                                  - dump configuration'
 

@@ -333,11 +333,11 @@ class AdminHandler(WebHandler):
         popularProjects, _ = self.client.getProjects(projectlisting.NUMDEVELOPERS_DES, 10, 0)
         selectionData = self.client.getFrontPageSelection()
         activeProjects, _  = self.client.getProjects(projectlisting.ACTIVITY_DES, 10, 0)
-        products = self.client.getProductsList()
+        builds = self.client.getBuildsList()
 
         if not spotlightData.has_key('logo'):
             spotlightData['logo'] = ''
-        return self._write("admin/preview", firstTime=self.session.get('firstTimer', False), popularProjects=popularProjects, selectionData = selectionData, activeProjects = activeProjects, spotlightData=spotlightData, products=products)
+        return self._write("admin/preview", firstTime=self.session.get('firstTimer', False), popularProjects=popularProjects, selectionData = selectionData, activeProjects = activeProjects, spotlightData=spotlightData, builds=builds)
 
 
     @intFields(projectId = None)

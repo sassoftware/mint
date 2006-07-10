@@ -5,7 +5,7 @@
 
 import time
 
-from mint import producttypes
+from mint import buildtypes
 from mint.reports.mint_reports import MintReport
 
 class ExecSummary(MintReport):
@@ -40,13 +40,13 @@ class ExecSummary(MintReport):
         numProj = cu.fetchone()[0]
         data.append(('Total Projects', numProj))
 
-        # count projects with products
+        # count projects with builds
         cu.execute("""SELECT COUNT(*) FROM
                           (SELECT DISTINCT projectId
-                            FROM Products
+                            FROM Builds
                             WHERE troveName IS NOT NULL)
-                          AS ProjectProducts""")
-        data.append(('Projects with products', cu.fetchone()[0]))
+                          AS ProjectBuilds""")
+        data.append(('Projects with builds', cu.fetchone()[0]))
 
         # count projects with commits
         cu.execute("""SELECT COUNT(*) FROM

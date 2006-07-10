@@ -31,10 +31,10 @@ python_files =			\
 	pkgindex.py		\
 	profile.py		\
 	projectlisting.py	\
-	products.py		\
+	builds.py		\
 	projects.py		\
-	producttypes.py		\
-	producttemplates.py	\
+	buildtypes.py		\
+	buildtemplates.py	\
 	pubreleases.py		\
 	requests.py		\
 	rmakebuild.py		\

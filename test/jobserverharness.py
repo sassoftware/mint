@@ -8,7 +8,7 @@ import time
 from conary.lib import util
 
 from mint import cooktypes
-from mint import producttypes
+from mint import buildtypes
 from mint.distro import jobserver
 
 from mint_rephelp import MintRepositoryHelper
