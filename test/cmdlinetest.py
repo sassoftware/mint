@@ -11,8 +11,9 @@ testsuite.setup()
 
 import rephelp
 
-from mint.cmdline import RBuilderMain
+from mint.cmdline import RBuilderMain, RBuilderShellConfig
 from mint.cmdline import releases, users
+from mint import releasetypes
 
 from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import MINT_HOST, MINT_PROJECT_DOMAIN
@@ -27,7 +28,7 @@ class CmdLineTest(unittest.TestCase):
         try:
             cfgF = os.fdopen(cfgFd, "w")
             # this value doesn't really matter--just needs to be a parseable url
-            cfgF.write("serverUrl http://testuser:testpass@mint.rpath.local/xmlrpc-private")
+            cfgF.write("serverUrl http://testuser:testpass@mint.rpath.local/xmlrpc-private/")
             cfgF.close()
 
             cmd += " --config-file=%s" % cfgFn
@@ -51,6 +52,11 @@ class CmdLineTest(unittest.TestCase):
         self.checkRBuilder('release-wait 111',
             'mint.cmdline.releases.ReleaseWaitCommand.runCommand',
             [None, None, None, {}, ['release-wait', '111']])
+
+    def testReleaseUrl(self):
+        self.checkRBuilder('release-url 111',
+            'mint.cmdline.releases.ReleaseUrlCommand.runCommand',
+            [None, None, None, {}, ['release-url', '111']])
 
     def testUserCreate(self):
         self.checkRBuilder('user-create testuser test@example.com --password password',
@@ -100,6 +106,23 @@ class CmdLineFuncTest(MintRepositoryHelper):
 
         project = client.getProject(newProjectId)
         assert(project.getMembers() == [[1, 'adminuser', 0], [2, 'testuser', 0]])
+
+    def testReleaseUrl(self):
+        client, userId = self.quickMintAdmin("adminuser", "adminpass")
+        cfg = RBuilderShellConfig(False)
+        cfg.serverUrl = 'http://testuser:testpass@mint.rpath.local/xmlrpc-private/'
+
+        projectId = client.newProject("Foo", "testproject", MINT_PROJECT_DOMAIN)
+        release = client.newRelease(projectId, 'release 1')
+        release.setImageTypes([releasetypes.INSTALLABLE_ISO])
+        release.setFiles([["file1", "File Title 1"],
+                          ["file2", "File Title 2"]])
+
+        cmd = releases.ReleaseUrlCommand()
+        rc, res = self.captureOutput(cmd.runCommand, client, cfg, {}, ['release-url', release.id])
+
+        assert(res == "http://mint.rpath.local//downloadImage/1/file1\n"
+                      "http://mint.rpath.local//downloadImage/2/file2\n")
 
 
 if __name__ == "__main__":

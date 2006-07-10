@@ -4,6 +4,8 @@
 # All rights reserved
 #
 import time
+import os
+import urlparse
 
 from mint import releasetypes
 from mint import jobstatus
@@ -74,3 +76,24 @@ class ReleaseWaitCommand(commands.RBuilderCommand):
         releaseId = int(args[0])
         waitForRelease(client, releaseId)
 commands.register(ReleaseWaitCommand)
+
+class ReleaseUrlCommand(commands.RBuilderCommand):
+    commands = ['release-url']
+    paramHelp = "<release id>"
+
+    def runCommand(self, client, cfg, argSet, args):
+        args = args[1:]
+        if len(args) < 1:
+            return self.usage()
+
+        releaseId = int(args[0])
+        release = client.getRelease(releaseId)
+
+        # extract the downloadImage url from the serverUrl configuration
+        parts = urlparse.urlparse(cfg.serverUrl)
+        urlBase = "http://%s/%s/downloadImage/%%d/%%s" % \
+            (parts[1].split('@')[1], os.path.normpath(parts[2] + "../")[1:])
+
+        for file in release.getFiles():
+            print urlBase % (file['fileId'], file['filename'])
+commands.register(ReleaseUrlCommand)

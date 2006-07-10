@@ -22,7 +22,7 @@ class RBuilderShellConfig(ConfigFile):
 
     def __init__(self, readConfigFiles = True):
         ConfigFile.__init__(self)
-        if os.environ.has_key("HOME"):
+        if os.environ.has_key("HOME") and readConfigFiles:
             self.read(os.environ["HOME"] + "/" + ".rbuilderrc", exception=False)
 
 
@@ -74,6 +74,7 @@ class RBuilderMain(options.MainHandler):
         print '  user-create <username> userId [-p <password>]           - create a new user'
         print '  release-create <project name> <trove spec> <image type> - create a new release'
         print '  release-wait <release id>                               - wait for a release to finish building'
+        print '  release-url <release id>                                - show all urls related to a release'
         print '  config                                                  - dump configuration'
 
     def runCommand(self, thisCommand, cfg, argSet, args):
