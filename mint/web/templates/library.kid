@@ -273,7 +273,7 @@ from mint.web.templatesupport import injectVersion, dictToJS
                 </button>
 
                 <div id="noAccount">
-                    <p><strong>Don't have an account?</strong> <a href="${cfg.basePath}register">Set one up.</a></p>
+                    <p py:if="not cfg.adminNewUsers"><strong>Don't have an account?</strong> <a href="${cfg.basePath}register">Set one up.</a></p>
                     <p><a href="${cfg.basePath}forgotPassword">Forgot your password?</a></p>
                 </div>
             </form>
