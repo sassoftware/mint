@@ -11,6 +11,6 @@ test/archive/macrosc
 test/logfile\.test\.*
 mint/constants\.py
 mint/rmakeconstants\.py
-mint/web/content/javascript/producttypes\.js
+mint/web/content/javascript/buildtypes\.js
 mint/web/content/javascript/jobstatus\.js
 scripts/raw2vmdk
