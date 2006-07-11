@@ -65,6 +65,7 @@ class JobsTable(database.KeyedTable):
                 else:
                     cu.execute("DROP TABLE Jobs")
                     cu.execute(self.createSQL % self.db.keywords)
+                    cu.execute('DELETE FROM JobData')
             return dbversion >= 19
         return True
 
