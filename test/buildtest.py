@@ -217,50 +217,6 @@ class BuildTest(fixtures.FixturedUnitTest):
 
         self.assertRaises(BuildMissing, client.startImageJob, buildId)
 
-
-    @fixtures.fixture("Empty")
-    def testUnfinishedBuild(self, db, data):
-        client = self.getClient("test")
-        projectId = client.newProject("Foo", "foo", "rpath.org")
-
-        brokenBuild = client.newBuild(projectId, "Test Build")
-        brokenBuildId = brokenBuild.getId()
-        # because the first build is not yet finished, creating a new
-        # build before finishing it should kill the first.
-        build = client.newBuild(projectId, "Test Build")
-        buildId = build.getId()
-
-        cu = db.cursor()
-        cu.execute("SELECT COUNT(*) FROM Builds")
-        if cu.fetchone()[0] != 1:
-            self.fail("Previous unfinished builds should be removed")
-
-        cu.execute("UPDATE Builds SET troveLastChanged=1")
-        db.commit()
-
-        build = client.newBuild(projectId, "Test Build")
-
-        cu.execute("SELECT COUNT(*) FROM Builds")
-        if cu.fetchone()[0] != 2:
-            self.fail("Finished build was deleted")
-
-    @fixtures.fixture("Empty")
-    def testUnfinishedBuildData(self, db, data):
-        client = self.getClient("test")
-        projectId = client.newProject("Foo", "foo", "rpath.org")
-        brokenBuild = client.newBuild(projectId, "Test Build")
-
-        cu = db.cursor()
-        assert(brokenBuild.getDataValue('jsversion') == \
-               jsversion.getDefaultVersion())
-        # because the first build is not yet finished, creating a new
-        # build before finishing it should kill the first.
-        build = client.newBuild(projectId, "Test Build")
-
-        # ensure build data gets cleaned up automatically too.
-        self.assertRaises(BuildDataNameError,
-                          brokenBuild.getDataValue, 'jsversion')
-
     @fixtures.fixture("Full")
     def testBuildStatus(self, db, data):
         client = self.getClient("owner")
