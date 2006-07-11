@@ -91,8 +91,8 @@ class SetupHandler(WebHandler):
             return self._write("setup/setup", configGroups = configGroups, newCfg = newCfg,
                 errors = errors)
 
-        # hack until we support SSL-rbuilder appliance
         newCfg.postCfg()
+        newCfg.SSL = True
         newCfg.secureHost = newCfg.siteHost
         newCfg.projectDomainName = newCfg.externalDomainName = newCfg.siteDomainName
         newCfg.bugsEmail = newCfg.adminMail = kwargs['new_email']
