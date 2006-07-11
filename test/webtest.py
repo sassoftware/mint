@@ -852,7 +852,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         page = self.fetch('/project/testproject/pickArch?id=%d' % \
                           groupTrove.id)
 
-        page = page.postForm(1, self.post, {'arch': '1#x86'})
+        page = page.postForm(1, self.post, {'flavor': ['1#x86']})
 
         page = self.assertNotContent('/project/testproject/releases',
                               content = 'closeCurrentGroup')
@@ -889,14 +889,14 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         page = self.fetch('/project/testproject/pickArch?id=%d' % \
                           groupTrove.id)
 
-        page.postForm(1, self.post, {"arch" : "1#x86"})
+        page.postForm(1, self.post, {"flavor" : ["1#x86"]})
 
         cu = self.db.cursor()
         cu.execute("UPDATE Jobs SET status=?, statusMessage='Finished'",
                    jobstatus.FINISHED)
         self.db.commit()
 
-        page = page.postForm(1, self.post, {"arch" : "1#x86"})
+        page = page.postForm(1, self.post, {"flavor" : ["1#x86"]})
 
         self.failIf('Error' in page.body,
                     "recooking triggered backtrace")
