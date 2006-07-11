@@ -295,15 +295,15 @@ class MintClient:
         """
         return builds.Build(self.server, buildId)
 
-    def newBuild(self, projectId, productName):
+    def newBuild(self, projectId, buildName):
         """
         Create a new build.
         @param projectId: the project to be associated with the new build.
-        @param productName: name of the new build
+        @param buildName: name of the new build
         @returns: an object representing the new build
         @rtype: L{mint.builds.Build}
         """
-        buildId = self.server.newBuild(projectId, productName)
+        buildId = self.server.newBuild(projectId, buildName)
         return self.getBuild(buildId)
 
     def getPublishedReleaseList(self, limit=10, offset=0):
