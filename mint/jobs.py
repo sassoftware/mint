@@ -24,7 +24,7 @@ class JobsTable(database.KeyedTable):
     createSQL = """
                 CREATE TABLE Jobs (
                     jobId           %(PRIMARYKEY)s,
-                    buildId       INT,
+                    buildId         INT,
                     groupTroveId    INT,
                     owner           BIGINT,
                     userId          INT,
@@ -52,10 +52,19 @@ class JobsTable(database.KeyedTable):
                 cu.execute("ALTER TABLE Jobs ADD COLUMN groupTroveId INT")
             if dbversion == 11 and not self.initialCreation:
                 cu = self.db.cursor()
-                cu.execute("ALTER TABLE Jobs ADD COLUMN owner INT")
+                cu.execute("ALTER TABLE Jobs ADD COLUMN owner BIGINT")
             if dbversion == 12 and not self.initialCreation:
                 cu = self.db.cursor()
                 cu.execute("ALTER TABLE Jobs ADD COLUMN timeSubmitted DOUBLE")
+            if dbversion == 19:
+                cu = self.db.cursor()
+                cu.execute("ALTER TABLE Jobs ADD COLUMN buildId INT")
+                cu.execute('UPDATE Jobs SET buildId = releaseId')
+                if self.db.driver == 'mysql':
+                    cu.execute("ALTER TABLE Jobs DROP COLUMN releaseId")
+                else:
+                    cu.execute("DROP TABLE Jobs")
+                    cu.execute(self.createSQL % self.db.keywords)
             return dbversion >= 19
         return True
 
