@@ -101,7 +101,8 @@ isOwner = (userLevel == userlevels.OWNER or auth.admin)
         <div id="layout">
             <div id="left" class="side">
                 ${projectResourcesMenu()}
-                ${buildsMenu(project.getBuilds(), isOwner)}
+                <!--FIXME: releases, not builds
+                ${buildsMenu(project.getBuilds(), isOwner)} -->
                 ${commitsMenu(project.getCommits())}
             </div>
             <div id="right" class="side">

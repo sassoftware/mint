@@ -43,7 +43,8 @@ from mint.web.templatesupport import downloadTracker
         <div id="layout">
             <div id="left" class="side">
                 ${projectResourcesMenu()}
-                ${buildsMenu(publishedBuilds, isOwner)}
+                <!-- FIXME: releases, not builds
+                ${buildsMenu(publishedBuilds, isOwner) -->
                 ${commitsMenu(project.getCommits())}
             </div>
             <div id="right" class="side">

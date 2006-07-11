@@ -51,7 +51,8 @@ from mint import userlevels
                       </form>
                     </div>
                 </div>
-                ${buildsMenu(project.getBuilds(), isOwner)}
+                <!-- FIXME: releases, not builds
+                ${buildsMenu(project.getBuilds(), isOwner)} -->
                 ${commitsMenu(project.getCommits())}
             </div>
             <div id="right" class="side">

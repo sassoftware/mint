@@ -17,6 +17,7 @@ from mint.helperfuncs import truncateForDisplay
         isDeveloper = userLevel == userlevels.DEVELOPER
         memberList = project.getMembers()
 
+        # FIXME -- this should be releases, not builds
         builds = project.getBuilds()
         commits = project.getCommits()
 
@@ -36,7 +37,8 @@ from mint.helperfuncs import truncateForDisplay
 
             <div id="left" class="side">
                 ${projectResourcesMenu()}
-                ${buildsMenu(builds, isOwner)}
+                <!-- FIXME - release, not builds
+                ${buildsMenu(builds, isOwner)} -->
                 ${commitsMenu(commits)}
             </div>
             <div id="right" class="side">

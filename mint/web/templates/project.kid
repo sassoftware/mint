@@ -40,6 +40,7 @@
         </ul>
     </div>
 
+    <!-- FIXME: this should be releases, not builds -->
     <div py:def="buildsMenu(buildList, isOwner=False, display='block')" py:strip="True">
         <?python
             projectUrl = project.getUrl()
