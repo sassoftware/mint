@@ -25,6 +25,6 @@ if [ $? != 0 ]; then carp; fi
 
 export PYTHONPATH=/srv/rbuilder/code/mint/:/srv/rbuilder/code/conary/
 TROVESPEC=$(conary rq group-rbuilder-dist --config "flavor $X86_FLAVOR" --full-versions --flavors)
-/srv/rbuilder/code/mint/bin/rbuilder create-release rbabeta "$TROVESPEC" installable_iso
+/srv/rbuilder/code/mint/bin/rbuilder create-build rbabeta "$TROVESPEC" installable_iso
 TROVESPEC=$(conary rq group-rbuilder-dist --full-versions --flavors)
-/srv/rbuilder/code/mint/bin/rbuilder create-release rbabeta "$TROVESPEC" installable_iso
+/srv/rbuilder/code/mint/bin/rbuilder create-build rbabeta "$TROVESPEC" installable_iso

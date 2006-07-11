@@ -23,17 +23,29 @@ class UnknownException(Exception):
         self.eName = eName
         self.eArgs = eArgs
 
-class ReleasePublished(MintError):
+class BuildMissing(MintError):
     def __str__(self):
-        return "Cannot alter a release once it is published."
+        return "The referenced build does not exist."
 
-class ReleaseMissing(MintError):
+class BuildPublished(MintError):
     def __str__(self):
-        return "The referenced release does not exist."
+        return "The referenced build is already part of a published release."
 
-class ReleaseEmpty(MintError):
+class BuildEmpty(MintError):
     def __str__(self):
-        return "The referenced release has no files and cannot be published."
+        return "The referenced build has no files and cannot be published."
+
+class PublishedReleaseEmpty(MintError):
+    def __str__(self):
+        return "The referenced published releases has no builds and cannot be finalized."
+
+class PublishedReleaseFinalized(MintError):
+    def __str__(self):
+        return "Release has been finalized and cannot be modified."
+
+class PublishedReleaseMissing(MintError):
+    def __str__(self):
+        return "The referenced published release does not exist."
 
 class JobserverVersionMismatch(MintError):
     def __str__(self):

@@ -15,7 +15,7 @@ from mint import mailinglists
 from mint import projectlisting
 from mint import searcher
 from mint import userlevels
-from mint import releases
+from mint import builds
 from mint.mint_error import MintError
 
 from conary import dbstore
@@ -93,9 +93,10 @@ class Project(database.TableObject):
     def getMembers(self):
         return self.server.getMembersByProjectId(self.id)
 
-    def getReleases(self, showUnpublished = False):
-        return [releases.Release(self.server, x) for x \
-                in self.server.getReleasesForProject(self.id, showUnpublished)]
+    # XXX is this needed anymore?  a: possibly...
+    def getBuilds(self):
+        return [builds.Build(self.server, x) for x \
+                in self.server.getBuildsForProject(self.id)]
 
     def getCommits(self):
         return self.server.getCommitsForProject(self.id)
@@ -195,6 +196,11 @@ class Project(database.TableObject):
         else:
             return "http://%s%sproject/%s/" % (self.server._cfg.projectSiteHost, self.server._cfg.basePath, self.hostname)
 
+    def getUnpublishedBuilds(self):
+        return self.server.getUnpublishedBuildsForProject(self.id)
+
+    def getPublishedReleases(self):
+        return self.server.getPublishedReleasesByProject(self.id)
 
 class ProjectsTable(database.KeyedTable):
     name = 'Projects'
@@ -632,7 +638,7 @@ class LabelsTable(database.KeyedTable):
         cu = self.db.cursor()
 
         cu.execute("""SELECT p.troveVersion, l.label
-                      FROM Releases p, Labels l
+                      FROM Builds p, Labels l
                       WHERE p.projectId=?
                         AND l.projectId=p.projectId
                         AND l.labelId=?""",
@@ -687,7 +693,7 @@ class MySqlRepositoryDatabase(RepositoryDatabase):
 
         cu = db.cursor()
         # this check should never be required outside of the test suite,
-        # and it could be kind of dangerous being called in production.
+        # and it could be kind of dangerous being called in buildion.
         # audited for SQL injection
         cu.execute("SHOW DATABASES")
         if dbName in [x[0] for x in cu.fetchall()]:

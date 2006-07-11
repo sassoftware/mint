@@ -118,5 +118,10 @@ class JobDataTable(GenericDataTable):
 class UserDataTable(GenericDataTable):
     name = "UserData"
 
+# XXX This table is deprecated in favor of BuildDataTable
 class ReleaseDataTable(GenericDataTable):
     name = "ReleaseData"
+
+class BuildDataTable(GenericDataTable):
+    name = "BuildData"
+

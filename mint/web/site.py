@@ -71,7 +71,7 @@ class SiteHandler(WebHandler):
         selectionData  = self.client.getFrontPageSelection()
         activeProjects, _  = self.client.getProjects(projectlisting.ACTIVITY_DES, 10, 0)
         spotlightData = self.client.getCurrentSpotlight()
-        releases = self.client.getReleaseList()
+        publishedReleases = self.client.getPublishedReleaseList()
         data = self.client.getUseItIcons()
         if data:
             if len(data) < 4:
@@ -87,7 +87,7 @@ class SiteHandler(WebHandler):
             table1Data = False
             table2Data = False
 
-        return self._write("frontPage", firstTime=self.session.get('firstTimer', False), popularProjects=popularProjects, selectionData = selectionData, activeProjects = activeProjects, spotlightData=spotlightData, releases=releases, table1Data=table1Data, table2Data=table2Data)
+        return self._write("frontPage", firstTime=self.session.get('firstTimer', False), popularProjects=popularProjects, selectionData = selectionData, activeProjects = activeProjects, spotlightData=spotlightData, publishedReleases=publishedReleases, table1Data=table1Data, table2Data=table2Data)
 
     @intFields(pageId=1)
     def applianceSpotlight(self, pageId, *args, **kwargs):
@@ -579,18 +579,19 @@ class SiteHandler(WebHandler):
         except ValueError:
             raise HttpNotFound
 
-        releaseId, idx, filename, title = self.client.getFileInfo(fileId)
+        buildId, idx, filename, title = self.client.getFileInfo(fileId)
         if reqFilename and os.path.basename(filename) != reqFilename:
             raise HttpNotFound
 
+        # XXX this is gone now; we need a better way to do this
         # only count downloads of the first ISO
-        release = self.client.getRelease(releaseId)
-        if idx == 0:
-            release.incDownloads()
+        #build = self.client.getBuild(buildId)
+        #if idx == 0:
+        #    build.incDownloads()
         try:
-            project = self.client.getProject(release.projectId)
+            project = self.client.getProject(build.projectId)
 
-            fileUrl = "http://%s/images/%s/%d/%s" % (self.cfg.siteHost, project.hostname, release.id, reqFilename)
+            fileUrl = "http://%s/images/%s/%d/%s" % (self.cfg.siteHost, project.hostname, build.id, reqFilename)
             self._redirect(fileUrl)
         except OSError, e:
             return self._write("error", shortError = "File error",
@@ -640,7 +641,7 @@ class SiteHandler(WebHandler):
                 item['creator'] = "http://%s%s" % (self.siteHost, self.cfg.basePath)
                 items.append(item)
         elif feed == "newReleases":
-            results = self.client.getReleaseList()
+            results = self.client.getBuildList()
             title = "New releases on %s" % self.cfg.productName
             link = "http://%s%srss?feed=newReleases" % (self.cfg.siteHost, self.cfg.basePath)
             desc = "New releases published at %s" % self.cfg.productName
@@ -648,14 +649,16 @@ class SiteHandler(WebHandler):
             items = []
             for p in results:
                 item = {}
-                release = p[2]
+                publishedRelease = p[2]
                 item['title'] = p[0]
-                item['link'] = 'http://%s%sproject/%s/release?id=%d' % (self.cfg.projectSiteHost, self.cfg.basePath, p[1], release.getId())
+                item['link'] = 'http://%s%sproject/%s/release?id=%d' % (self.cfg.projectSiteHost, self.cfg.basePath, p[1], publishedRelease.getId())
                 item['content'] = "<p>A new release has been published by the <a href=\"http://%s%sproject/%s\">%s</a> project.</p>\n" % (self.cfg.projectSiteHost, self.cfg.basePath, p[1], p[0])
-                item['content'] += "<p><a href=\"http://%s%sproject/%s/release?id=%d\">" % (self.cfg.projectSiteHost, self.cfg.basePath, p[1], release.getId())
-                item['content'] += "%s=%s (%s)</a></p>" % (release.getTroveName(), release.getTroveVersion().trailingRevision().asString(), release.getArch())
+                item['content'] += "<p><a href=\"http://%s%sproject/%s/release?id=%d\">" % (self.cfg.projectSiteHost, self.cfg.basePath, p[1], publishedRelease.getId())
+                # SGP XXX SGP FIXME
+                item['content'] += "FIX ME!"
+                #item['content'] += "%s=%s (%s)</a></p>" % (build.getTroveName(), build.getTroveVersion().trailingRevision().asString(), build.getArch())
 
-                item['date_822'] = email.Utils.formatdate(release.timePublished)
+                item['date_822'] = email.Utils.formatdate(publishedRelease.timePublished)
                 item['creator'] = "http://%s%s" % (self.siteHost, self.cfg.basePath)
                 items.append(item)
         else:

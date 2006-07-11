@@ -2,8 +2,8 @@
 #
 # Migration script used to migrate a rBuilder Online
 
-# Full install label to products repository
-INSTALL_LABEL_PATH="products.rpath.com@rpl:internal"
+# Full install label to builds repository
+INSTALL_LABEL_PATH="builds.rpath.com@rpl:internal"
 JOBSERVER_VERSION="1.6.3"
 
 OLD_ROOT="/srv/mint"
@@ -41,7 +41,7 @@ if [ ! -d ${OLD_ROOT} -a -d ${NEW_ROOT} ]; then
     exit 1
 fi
 
-# Don't run this on a system where Conary isn't managing the product.
+# Don't run this on a system where Conary isn't managing the build.
 if [ -d ${OLD_ROOT} ]; then
     conary q mint-online > /dev/null 2>&1
     if [ $? -ne 0 ]; then
@@ -176,7 +176,7 @@ echo "Creating jobserver version directories"
 cp -rp ${OLD_ROOT}/jobserver/* ${NEW_ROOT}/jobserver
 mkdir -p ${NEW_ROOT}/jobserver/1.6.3
 cat - <<EOBLOB >> ${NEW_ROOT}/jobserver/versions
-group-jobserver-root=/products.rpath.com@rpath:rba-1.6-devel/1.6.3-2-6[~!bootstrap,~!builddocs,~buildtests,dietlibc,gcj,~glibc.tls,ipv6,krb,nptl,pam,pcre,~!pie,readline,~!selinux,~sqlite.threadsafe,ssl,tcl,tk,~!uml-kernel.debugdata,~uml-kernel.honeypotproc,~!uml-kernel.hostfs is: x86(cmov,i486,i586,i686,~!mmx,~!sse2)]
+group-jobserver-root=/builds.rpath.com@rpath:rba-1.6-devel/1.6.3-2-6[~!bootstrap,~!builddocs,~buildtests,dietlibc,gcj,~glibc.tls,ipv6,krb,nptl,pam,pcre,~!pie,readline,~!selinux,~sqlite.threadsafe,ssl,tcl,tk,~!uml-kernel.debugdata,~uml-kernel.honeypotproc,~!uml-kernel.hostfs is: x86(cmov,i486,i586,i686,~!mmx,~!sse2)]
 EOBLOB
 
 # move the vestigial remains of /srv/mint to the migration tempdir

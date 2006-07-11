@@ -24,19 +24,19 @@
                         </a>
                     </div>
                     <!-- /Try rBuilder -->
-                    <!-- Products -->
+                    <!-- Builds -->
                     <div class="sidebox">
-                        <div class="boxhead"><span class="boxtitle">Products</span></div>
+                        <div class="boxhead"><span class="boxtitle">Builds</span></div>
                         <div class="boxbody">
                             <ul>
-                                <li><span class="prodtitle"><a href="${cfg.corpSite}products-rbuilder.html">rBuilder&trade;</a></span>
+                                <li><span class="prodtitle"><a href="${cfg.corpSite}builds-rbuilder.html">rBuilder&trade;</a></span>
                                     rBuilder gives software developers the ability to turn their application into a Linux software
                                     appliance.<br />
 
-                                    <a href="${cfg.corpSite}products-rbuilder.html">Learn more</a></li>
-                                <li><span class="prodtitle"><a href="${cfg.corpSite}products-rpath-linux.html">rPath Linux&trade;</a></span>
+                                    <a href="${cfg.corpSite}builds-rbuilder.html">Learn more</a></li>
+                                <li><span class="prodtitle"><a href="${cfg.corpSite}builds-rpath-linux.html">rPath Linux&trade;</a></span>
                                     rPath Linux provides the stable foundation for building software appliances.<br />
-                                    <a href="${cfg.corpSite}products-rpath-linux.html">Learn more</a></li>
+                                    <a href="${cfg.corpSite}builds-rpath-linux.html">Learn more</a></li>
                             </ul>
                         </div>
                     </div>
@@ -86,7 +86,6 @@
                                     <a href="${cfg.corpSite}docs/rPath_in_the_News.pdf">
                                         rPath in the News
                                     </a>
-
                                 </li>
                             </ul>
                         </div>

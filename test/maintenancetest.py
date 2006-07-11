@@ -16,7 +16,7 @@ from mint_rephelp import MINT_PROJECT_DOMAIN, MINT_DOMAIN
 from mint import config
 from mint import maintenance
 from mint import mint_error
-from mint import releasetypes
+from mint import buildtypes
 from mint import users
 from mint.distro import jsversion
 
@@ -108,7 +108,7 @@ class MaintenanceTest(mint_rephelp.WebRepositoryHelper):
         self.assertRaises(mint_error.MaintenanceMode,
                           client.startNextJob,
                           ['1#x86'],
-                          {'imageTypes' : [releasetypes.STUB_IMAGE]},
+                          {'buildTypes' : [buildtypes.STUB_IMAGE]},
                           jsversion.getDefaultVersion())
 
     def testRepos(self):

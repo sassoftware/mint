@@ -38,7 +38,7 @@
                 <div class="helpBlock">
                     <p>Use the Browse and Search boxes on the left hand side to find the projects 
                     or packages that suits your needs. If you are looking for a complete distribution, 
-                    look for the Recent Releases box on the left side of a project's home page.</p>
+                    look for the Recent Builds box on the left side of a project's home page.</p>
                 </div>
             </div>
 
@@ -57,7 +57,7 @@
                         from this project" link on the project's home page.</p>
 
                     <p>If you want to install a complete distribution, then select one of the Recent 
-                    Releases on the left hand side of the home page.  Download the ISO image, 
+                    Builds on the left hand side of the home page.  Download the ISO image, 
                     burn it to a CD, and use it to install your system.</p>
                 </div>
             </div>
@@ -88,7 +88,7 @@
                     <ul>
                         <li>Click "Watch this project" on the project's home page and you will get 
                             a quick link to the project's home page in your "My Projects" area.</li>
-                        <li>Subscribe to the project's RSS feed for release news.</li>
+                        <li>Subscribe to the project's RSS feed for build news.</li>
                         <li>Follow the developer discussions and code commits using the project's 
                             mailing lists.</li>
                     </ul>

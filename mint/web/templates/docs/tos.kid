@@ -141,7 +141,7 @@
         publicly display and publicly perform any materials and other
         information you submit via the Services or transmit to rPath,
         including, without limitation, ideas contained therein for new or
-        improved products and services.  You agree that you shall have no
+        improved builds and services.  You agree that you shall have no
         recourse against rPath for any alleged or actual infringement or
         misappropriation of any proprietary right in your submitted
         materials or other information.</p>
@@ -151,9 +151,9 @@
         <p>The Contents of the Services are protected by international
         copyright and trademark laws. The owner of the copyrights and
         trademarks are rPath, its affiliates or other third party
-        licensors.  Publications, products, content or services referenced
+        licensors.  Publications, builds, content or services referenced
         herein or in the Services are the exclusive trademarks or
-        servicemarks of rPath.  Other product and company names mentioned
+        servicemarks of rPath.  Other build and company names mentioned
         in the Services are the trademarks of their respective owners.</p>
 
         <h3>6. CHANGES TO THIS AGREEMENT</h3>

@@ -579,6 +579,17 @@ class ProjectUsersTable(database.DatabaseTable):
             data.append( [r[0], r[1], r[2]] )
         return data
 
+    def getUserlevelForProjectMember(self, projectId, userId):
+        cu = self.db.cursor()
+        cu.execute("""SELECT level FROM ProjectUsers
+                      WHERE projectId = ? AND userId = ?""",
+                      projectId, userId)
+        res = cu.fetchone()
+        if res:
+            return res[0]
+        else:
+            raise database.ItemNotFound()
+
     def new(self, projectId, userId, level):
         assert(level in userlevels.LEVELS)
         cu = self.db.cursor()

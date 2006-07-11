@@ -10,52 +10,52 @@ testsuite.setup()
 from mint_rephelp import MintRepositoryHelper
 
 from mint import config
-from mint import releasetypes
+from mint import buildtypes
 
 class ConfigTest(MintRepositoryHelper):
     # these tests should be fairly specific in nature, since testing cfg
     # in general terms will overlap conary.
-    def testImageTypes(self):
-        cEnum = config.CfgImageEnum()
+    def testBuildTypes(self):
+        cEnum = config.CfgBuildEnum()
 
         self.failIf(dict([(x[0].lower(), x[1]) for x in \
-                          releasetypes.validImageTypes.iteritems()]) != \
+                          buildtypes.validBuildTypes.iteritems()]) != \
                     cEnum.validValues,
                     "Base value list can't be compared. "
                     "results of this test will be invalid")
 
         self.failIf(dict([(x[1],x[0]) for x in cEnum.origName.iteritems()]) !=\
-                    releasetypes.validImageTypes,
+                    buildtypes.validBuildTypes,
                     "Original names are not correct, no basis for comparison")
 
-        for imageType in releasetypes.validImageTypes.keys():
-            # imageType is a string
-            self.failIf(cEnum.parseString(imageType) != \
-                        releasetypes.__dict__[imageType],
+        for buildType in buildtypes.validBuildTypes.keys():
+            # buildType is a string
+            self.failIf(cEnum.parseString(buildType) != \
+                        buildtypes.__dict__[buildType],
                         "cfg parsing did not translate %s correctly" % \
-                        imageType)
+                        buildType)
 
-        for enumVal in releasetypes.TYPES:
+        for enumVal in buildtypes.TYPES:
             # enumVal is an int
             self.failIf(cEnum.parseString(cEnum.format(enumVal)) != enumVal,
                         "Enum format didn't divine correct name for %d" % \
                         enumVal)
 
-        # if we get here, there are no apparent issues with the CfgImageType
+        # if we get here, there are no apparent issues with the CfgBuildType
         # class. errors with the cfg object manipulation generated elsewhere.
         cfg = config.MintConfig()
-        self.failIf(cfg.visibleImageTypes,
-                    "Image type illegally appeared as visible")
+        self.failIf(cfg.visibleBuildTypes,
+                    "Build type illegally appeared as visible")
 
-        cfg.configLine("visibleImageTypes INSTALLABLE_ISO")
-        self.failIf(cfg.visibleImageTypes != [releasetypes.INSTALLABLE_ISO],
-                    "visibleImageTypes did not incorporate first release type")
+        cfg.configLine("visibleBuildTypes INSTALLABLE_ISO")
+        self.failIf(cfg.visibleBuildTypes != [buildtypes.INSTALLABLE_ISO],
+                    "visibleBuildTypes did not incorporate first build type")
 
-        cfg.configLine("visibleImageTypes RAW_HD_IMAGE")
-        self.failIf(cfg.visibleImageTypes != \
-                    [releasetypes.INSTALLABLE_ISO, releasetypes.RAW_HD_IMAGE],
-                    "visibleImageTypes did not properly incorporate "
-                    "a second release")
+        cfg.configLine("visibleBuildTypes RAW_HD_IMAGE")
+        self.failIf(cfg.visibleBuildTypes != \
+                    [buildtypes.INSTALLABLE_ISO, buildtypes.RAW_HD_IMAGE],
+                    "visibleBuildTypes did not properly incorporate "
+                    "a second build")
 
 if __name__ == "__main__":
     testsuite.main()

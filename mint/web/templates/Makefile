@@ -7,7 +7,7 @@
 SUBDIRS = repos admin docs setup
 
 kid_files = \
-	applianceSpotlight.kid		\
+	applianceSpotlight.kid	\
 	conaryDevelCfg.kid	\
 	conaryUserCfg.kid	\
 	confirmEmail.kid	\
@@ -15,8 +15,9 @@ kid_files = \
 	cookGroup.kid		\
 	editGroup.kid		\
 	editProject.kid		\
-	editRelease.kid		\
-        editrMake.kid           \
+	editBuild.kid		\
+	editPubrelease.kid	\
+	editrMake.kid		\
 	error.kid		\
 	forgotPassword.kid	\
 	frontPage.kid		\
@@ -26,11 +27,11 @@ kid_files = \
 	layout.kid		\
 	library.kid		\
 	mailingLists.kid	\
-        maintenance.kid         \
+	maintenance.kid		\
 	members.kid		\
 	newGroup.kid		\
 	newProject.kid		\
-	newrMake.kid            \
+	newrMake.kid		\
 	passwordReset.kid	\
 	pickArch.kid		\
 	project.kid		\
@@ -41,10 +42,11 @@ kid_files = \
 	register.kid		\
 	register_reconf.kid	\
 	rejectJoinRequest.kid   \
-	release.kid		\
-	releases.kid		\
-        rMake.kid               \
-        rMakeStatus.kid         \
+	build.kid		\
+	builds.kid		\
+	pubreleases.kid		\
+	rMake.kid		\
+	rMakeStatus.kid		\
 	rss20.kid		\
 	searchResults.kid	\
 	uploadKey.kid		\

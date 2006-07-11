@@ -6,7 +6,10 @@ Changes in tip:
   (RBL-695)
 * Searching (all types) will prioritize exact matches above all other results.
 * rBuilder can command an rMake server local to the web browser's machine.
+* custom output filenames can now be specified for builds.
 * Xen support has been added to the group builder "cook group" dialog.
+* Fix for RBL-408: Opening two "create release" tabs at once gives "requested
+  item not found"
 
 --- affects job server on tip ---
 * vmware images now default to bridged mode.

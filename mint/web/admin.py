@@ -370,7 +370,7 @@ class AdminHandler(WebHandler):
             selectionData.sort(lambda x,y: cmp(x['rank'], y['rank']))
         else:
             selectionData = [{'name': name, 'link': link, 'rank': rank}]
-        releases = self.client.getReleaseList()
+        publishedReleases = self.client.getPublishedReleaseList()
         activeProjects, _  = self.client.getProjects(projectlisting.ACTIVITY_DES, 10, 0)
 
         newData = self.client.getUseItIcons()
@@ -388,7 +388,7 @@ class AdminHandler(WebHandler):
             table1Data = False
             table2Data = False
 
-        return self._write("admin/preview", firstTime=self.session.get('firstTimer', False), popularProjects=popularProjects, selectionData = selectionData, activeProjects = activeProjects, spotlightData=spotlightData, releases=releases, table1Data=table1Data, table2Data=table2Data)
+        return self._write("admin/preview", firstTime=self.session.get('firstTimer', False), popularProjects=popularProjects, selectionData = selectionData, activeProjects = activeProjects, spotlightData=spotlightData, publishedReleases=publishedReleases, table1Data=table1Data, table2Data=table2Data)
 
     def spotlight(self, *args, **kwargs):
         return self._write('admin/spotlight',
@@ -430,7 +430,7 @@ class AdminHandler(WebHandler):
         popularProjects, _ = self.client.getProjects(projectlisting.NUMDEVELOPERS_DES, 10, 0)
         selectionData = self.client.getFrontPageSelection()
         activeProjects, _  = self.client.getProjects(projectlisting.ACTIVITY_DES, 10, 0)
-        releases = self.client.getReleaseList()
+        builds = self.client.getBuildsList()
 
         newData = self.client.getUseItIcons()
         if newData:
@@ -450,8 +450,7 @@ class AdminHandler(WebHandler):
 
         if not spotlightData.has_key('logo'):
             spotlightData['logo'] = ''
-        return self._write("admin/preview", firstTime=self.session.get('firstTimer', False), popularProjects=popularProjects, selectionData = selectionData, activeProjects = activeProjects, spotlightData=spotlightData, releases=releases, table1Data=table1Data, table2Data=table2Data)
-
+        return self._write("admin/preview", firstTime=self.session.get('firstTimer', False), popularProjects=popularProjects, selectionData = selectionData, activeProjects = activeProjects, spotlightData=spotlightData, builds=builds, table1Data=table1Data, table2Data=table2Data)
 
     @intFields(projectId = None)
     @strFields(targetUrl = None, mirrorUser = None, mirrorPass = None)

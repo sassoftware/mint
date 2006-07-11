@@ -31,13 +31,14 @@ python_files =			\
 	pkgindex.py		\
 	profile.py		\
 	projectlisting.py	\
+	builds.py		\
 	projects.py		\
-	releases.py		\
-	releasetypes.py		\
-	releasetemplates.py	\
+	buildtypes.py		\
+	buildtemplates.py	\
+	pubreleases.py		\
 	requests.py		\
-	rmakebuild.py           \
-	rmakeconstants.py       \
+	rmakebuild.py		\
+	rmakeconstants.py	\
 	scriptlibrary.py	\
 	searcher.py		\
 	selections.py		\
