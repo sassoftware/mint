@@ -254,6 +254,36 @@ class WebMemberTest(mint_rephelp.WebRepositoryHelper):
                     not in project.getMembers(),
                     "user was not promoted to developer")
 
+    def testPromote(self):
+        client, userId = self.quickMintUser('user1', 'user1')
+        client2, userId2 = self.quickMintUser('user2', 'user2')
+
+        projectId = self.newProject(client)
+        project = client.getProject(projectId)
+
+        project.addMemberById(userId2, userlevels.DEVELOPER)
+        self.webLogin('user1', 'user1')
+        self.setServer(self.getProjectServerHostname(), self.port)
+
+        page = self.fetchWithRedirect('/project/testproject/promoteMember?userId=%d' % userId2)
+        assert(project.getMembers() == [[userId, 'user1', userlevels.OWNER],
+                                        [userId2, 'user2', userlevels.OWNER]])
+
+    def testDemote(self):
+        client, userId = self.quickMintUser('user1', 'user1')
+        client2, userId2 = self.quickMintUser('user2', 'user2')
+
+        projectId = self.newProject(client)
+        project = client.getProject(projectId)
+
+        project.addMemberById(userId2, userlevels.OWNER)
+        self.webLogin('user1', 'user1')
+        self.setServer(self.getProjectServerHostname(), self.port)
+
+        page = self.fetchWithRedirect('/project/testproject/demoteMember?userId=%d' % userId2)
+        assert(project.getMembers() == [[userId, 'user1', userlevels.OWNER],
+                                        [userId2, 'user2', userlevels.DEVELOPER]])
+
 
 if __name__ == '__main__':
     testsuite.main()
