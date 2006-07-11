@@ -281,9 +281,15 @@ class InstallableIso(ImageGenerator):
         os.chown(outputDir, isogenUid, apacheGid)
 
         isoList = []
-        isoNameTemplate = "%s-%s-%s-" % (self.project.getHostname(),
-                                    upstream(self.troveVersion),
-                                    self.build.getArch())
+        baseFileName = self.build.getDataValue('baseFileName')
+        baseFileName = ''.join([(x.isalnum() or x in ('-', '.')) and x or '_' \
+                                for x in baseFileName])
+        if baseFileName:
+            isoNameTemplate = baseFileName + '-'
+        else:
+            isoNameTemplate = "%s-%s-%s-" % (self.project.getHostname(),
+                                             upstream(self.troveVersion),
+                                             self.build.getArch())
         sourceDir = os.path.normpath(topdir + "/../")
 
         for d in sorted(os.listdir(sourceDir)):

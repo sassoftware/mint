@@ -52,6 +52,10 @@ class autoResolve(BooleanOption):
     default = False
     prompt = 'Automatically install required dependencies during updates'
 
+class baseFileName(StringOption):
+    default = ''
+    prompt = 'Custom output filename prefix (replaces name-version-arch)'
+
 class showMediaCheck(BooleanOption):
     default = False
     prompt = 'Prompt to verify CD/DVD images during install'
@@ -112,33 +116,36 @@ class StubImageTemplate(Template):
     id = buildtypes.STUB_IMAGE
 
 class RawHdTemplate(Template):
-    __slots__ = ['autoResolve', 'freespace', 'installLabelPath', 'swapSize']
+    __slots__ = ['autoResolve', 'freespace', 'baseFileName',
+                 'installLabelPath', 'swapSize']
     id = buildtypes.RAW_HD_IMAGE
 
 class RawFsTemplate(Template):
-    __slots__ = ['autoResolve', 'freespace', 'installLabelPath', 'swapSize']
+    __slots__ = ['autoResolve', 'freespace', 'baseFileName',
+                 'installLabelPath', 'swapSize']
     id = buildtypes.RAW_FS_IMAGE
 
 class VmwareImageTemplate(Template):
-    __slots__ = ['autoResolve', 'freespace', 'vmMemory', 'installLabelPath',
-                 'swapSize']
+    __slots__ = ['autoResolve', 'freespace', 'baseFileName', 'vmMemory',
+                 'installLabelPath', 'swapSize']
     id = buildtypes.VMWARE_IMAGE
 
 class InstallableIsoTemplate(Template):
-    __slots__ = ['autoResolve', 'maxIsoSize', 'bugsUrl', 'installLabelPath',
-                 'showMediaCheck', 'betaNag']
+    __slots__ = ['autoResolve', 'maxIsoSize', 'baseFileName', 'bugsUrl',
+                 'installLabelPath', 'showMediaCheck', 'betaNag']
     id = buildtypes.INSTALLABLE_ISO
 
 class NetbootTemplate(Template):
-    __slots__ = ['autoResolve', 'installLabelPath']
+    __slots__ = ['autoResolve', 'baseFileName', 'installLabelPath']
     id = buildtypes.NETBOOT_IMAGE
 
 class LiveIsoTemplate(Template):
-    __slots__ = ['autoResolve', 'installLabelPath', 'zisofs', 'unionfs']
+    __slots__ = ['autoResolve', 'baseFileName', 'installLabelPath', 'zisofs',
+                 'unionfs']
     id = buildtypes.LIVE_ISO
 
 class TarballTemplate(Template):
-    __slots__ = ['autoResolve', 'installLabelPath', 'swapSize']
+    __slots__ = ['autoResolve', 'baseFileName', 'installLabelPath', 'swapSize']
     id = buildtypes.TARBALL
 
 ########################

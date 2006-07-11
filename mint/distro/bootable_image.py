@@ -694,11 +694,14 @@ quit
         self.conarycfg = self.project.getConaryConfig()
 
         self.arch = self.build.getArch()
-        basefilename = "%(name)s-%(version)s-%(arch)s" % {
-                'name': self.project.getHostname(),
-                'version': upstream(version),
-                'arch': self.arch,
-            }
+        basefilename = build.getDataValue('baseFileName')
+        basefilename = ''.join([(x.isalnum() or x in ('-', '.')) and x or '_' \
+                                for x in basefilename])
+        basefilename = basefilename or \
+                       "%(name)s-%(version)s-%(arch)s" % {
+                           'name': self.project.getHostname(),
+                           'version': upstream(version),
+                           'arch': self.arch}
 
         #initialize some stuff
         self.basefilename = basefilename
