@@ -3,18 +3,18 @@ var refreshed = false;
 var oldStatus = -1;
 var cookStatusRefreshTime = 2000; /* 2 seconds */
 var cookStatusId;
-var productStatusRefreshTime = 5000; /* 5 seconds */
-var productStatusId;
+var buildStatusRefreshTime = 5000; /* 5 seconds */
+var buildStatusId;
 var jobsListRefreshTime = 10000; /* 10 seconds */
 var jobsListId;
 var jobsList = "global";
 var archDict = "global";
 var cookStatus = "global";
-var productStatus = "global";
+var buildStatus = "global";
 var oldStatus = STATUS_UNKNOWN;
 var userCache = {};
 var groupTroveCache = {};
-var productCache = {};
+var buildCache = {};
 
 // user interface helpers ---------------------------------------------------
 
@@ -139,9 +139,9 @@ function normPath(path) {
     return path;
 }
 
-// get product image type
-getProductTypeDesc = function(aTypeId) {
-    return productTypeNamesShort[aTypeId];
+// get build image type
+getBuildTypeDesc = function(aTypeId) {
+    return buildTypeNamesShort[aTypeId];
 };
 
 // function that generates a generic header table row
@@ -175,12 +175,12 @@ makeJobRowData = function(aRow) {
             jobDesc = "Group cook: " + groupTroveObj['recipeName'];
         }
     }
-    else if (aRow['productId']) {
-        var productObj = getProductById(aRow['productId']);
-        if (productObj) {
-            jobDesc = "Product build: " + productObj['name'];
-            if (productObj.productType) {
-                jobDesc += " (" + map(getProductTypeDesc, productObj.productType).join(", ") + ")";
+    else if (aRow['buildId']) {
+        var buildObj = getBuildById(aRow['buildId']);
+        if (buildObj) {
+            jobDesc = "Build build: " + buildObj['name'];
+            if (buildObj.buildType) {
+                jobDesc += " (" + map(getBuildTypeDesc, buildObj.buildType).join(", ") + ")";
             }
         }
     }
@@ -206,24 +206,24 @@ makeJobRowData = function(aRow) {
 };
 
 // RPC callbacks ------------------------------------------------------------
-function processGetProductStatus(aReq) {
-    var oldProductStatus = $("statusMessage");
+function processGetBuildStatus(aReq) {
+    var oldBuildStatus = $("statusMessage");
 
     logDebug("[JSON] response: ", aReq.responseText);
-    productStatus = evalJSONRequest(aReq);
+    buildStatus = evalJSONRequest(aReq);
 
-    productStatusEl = DIV({ 'id': 'statusMessage', 'class': 'running' }, null);
-    if (!productStatus) {
+    buildStatusEl = DIV({ 'id': 'statusMessage', 'class': 'running' }, null);
+    if (!buildStatus) {
         status = STATUS_NOJOB;
     } else {
-        status = productStatus.status;
+        status = buildStatus.status;
         // FIXME: replace this with a status -> class name map or something
         if(status == STATUS_RUNNING)
-            setElementClass(productStatusEl, "running");
+            setElementClass(buildStatusEl, "running");
         if(status == STATUS_FINISHED)
-            setElementClass(productStatusEl, "finished");
+            setElementClass(buildStatusEl, "finished");
         if(status == STATUS_ERROR)
-            setElementClass(productStatusEl, "error");
+            setElementClass(buildStatusEl, "error");
 
         // refresh page when job successfully completes
         // to get new download list
@@ -243,10 +243,10 @@ function processGetProductStatus(aReq) {
             showElement('editOptionsDisabled');
             hideElement('editOptions');
         }
-        replaceChildNodes(productStatusEl, SPAN({'style': 'font-weight: bold;'}, "Status: "), SPAN(null, productStatus.message));
+        replaceChildNodes(buildStatusEl, SPAN({'style': 'font-weight: bold;'}, "Status: "), SPAN(null, buildStatus.message));
         oldStatus = status;
     }
-    swapDOM(oldProductStatus, productStatusEl);
+    swapDOM(oldBuildStatus, buildStatusEl);
 }
 
 function processGetCookStatus(aReq) {
@@ -387,13 +387,13 @@ function processListActiveJobs(aReq) {
 
 // RPC calls ----------------------------------------------------------------
 
-function getProductStatus(productId) {
-    var req = new JsonRpcRequest("jsonrpc/", "getProductStatus");
+function getBuildStatus(buildId) {
+    var req = new JsonRpcRequest("jsonrpc/", "getBuildStatus");
     req.setAuth(getCookieValue("pysid"));
-    req.setCallback(processGetProductStatus);
-    req.send(false, [productId]);
-    if (productStatus != null && productStatus.status < STATUS_FINISHED) {
-        productStatusId = setTimeout("getProductStatus("+productId+")", productStatusRefreshTime);
+    req.setCallback(processGetBuildStatus);
+    req.send(false, [buildId]);
+    if (buildStatus != null && buildStatus.status < STATUS_FINISHED) {
+        buildStatusId = setTimeout("getBuildStatus("+buildId+")", buildStatusRefreshTime);
     }
 }
 
@@ -458,25 +458,25 @@ function delMember(projectId, userId) {
     req.send(true, [projectId, userId, true]);
 }
 
-function deleteProduct(productId) {
-    var req = new JsonRpcRequest("jsonrpc/", "deleteProduct");
+function deleteBuild(buildId) {
+    var req = new JsonRpcRequest("jsonrpc/", "deleteBuild");
     req.setAuth(getCookieValue("pysid"));
     req.setCallback(reloadCallback);
-    req.send(true, [productId]);
+    req.send(true, [buildId]);
 }
 
-function setProductPublished(productId) {
-    var req = new JsonRpcRequest("jsonrpc/", "setProductPublished");
+function setBuildPublished(buildId) {
+    var req = new JsonRpcRequest("jsonrpc/", "setBuildPublished");
     req.setAuth(getCookieValue("pysid"));
     req.setCallback(reloadCallback);
-    req.send(true, [productId, true]);
+    req.send(true, [buildId, true]);
 }
 
-function startImageJob(productId) {
+function startImageJob(buildId) {
     var req = new JsonRpcRequest("jsonrpc/", "startImageJob");
     req.setAuth(getCookieValue("pysid"));
     req.setCallback(reloadCallback);
-    req.send(true, [productId]);
+    req.send(true, [buildId]);
 }
 // baton --------------------------------------------------------------------
 
@@ -496,7 +496,7 @@ function textWithBaton(text) {
 
 // event handlers -----------------------------------------------------------
 
-// called when a user selects a trove in the new/edit products page
+// called when a user selects a trove in the new/edit builds page
 function onTroveChange(projectId) {
     var sel = document.getElementById("trove");
     var vSel = document.getElementById("version");
@@ -558,7 +558,7 @@ function onArchChange() {
             appendToSelect(vSel, versionlist[i][1] + " " + versionlist[i][2], document.createTextNode(versionlist[i][0]), verTitle, "version");
         }
         vSel.disabled = false;
-        handleProductTypes(selectedArch);
+        handleBuildTypes(selectedArch);
     }
 
     // Re-enable trove & arch selectors
@@ -593,8 +593,8 @@ function setDisabledByElem(elem, disable) {
     elem.disabled = disable;
 }
 
-function onProductTypeChange(img) {
-    // beware of these boundary conditions, when we add more product targets...
+function onBuildTypeChange(img) {
+    // beware of these boundary conditions, when we add more build targets...
     for (t = 1; t < 9; t++) {
         var targImg = "formgroup_" + t;
         // ensure we only tinker with elements that exist on the page
@@ -612,15 +612,15 @@ function onProductTypeChange(img) {
     }
 }
 
-function handleProductTypes(aSelectedArch) {
+function handleBuildTypes(aSelectedArch) {
 
-    // see layout.kid for definitions of VisibleBootableProductTypes, etc.
-    var one = iter(VisibleBootableProductTypes);
+    // see layout.kid for definitions of VisibleBootableBuildTypes, etc.
+    var one = iter(VisibleBootableBuildTypes);
 
-    // VisibleBootableProductTypes are not currently compatible with x86_64
+    // VisibleBootableBuildTypes are not currently compatible with x86_64
     // so, if that arch was selected, disable it
     forEach(one, function (x) {
-        var el = $('producttype_'+x);
+        var el = $('buildtype_'+x);
         if (aSelectedArch == "x86_64") {
             el.disabled = true;
         } else {
@@ -632,22 +632,22 @@ function handleProductTypes(aSelectedArch) {
 
 // cache-y goodness
 
-function getProductById(aId) {
-    var productObj;
+function getBuildById(aId) {
+    var buildObj;
 
-    lclProductCallback = function(aReq) {
+    lclBuildCallback = function(aReq) {
         logDebug("[JSON] response: ", aReq.responseText);
-        productCache[aId] = evalJSONRequest(aReq);
+        buildCache[aId] = evalJSONRequest(aReq);
     };
 
-    if (!productCache[aId]) {
-        var req = new JsonRpcRequest('jsonrpc/', 'getProduct');
+    if (!buildCache[aId]) {
+        var req = new JsonRpcRequest('jsonrpc/', 'getBuild');
         req.setAuth(getCookieValue("pysid"));
-        req.setCallback(lclProductCallback);
+        req.setCallback(lclBuildCallback);
         req.send(false, [aId]);
     }
 
-    return productCache[aId];
+    return buildCache[aId];
 
 }
 
