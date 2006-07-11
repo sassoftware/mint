@@ -42,10 +42,10 @@ class BuildsTable(database.KeyedTable):
 
     createSQL = """
                 CREATE TABLE Builds (
-                    buildId            %(PRIMARYKEY)s,
+                    buildId              %(PRIMARYKEY)s,
                     projectId            INTEGER NOT NULL,
                     pubReleaseId         INTEGER,
-                    buildType          INTEGER,
+                    buildType            INTEGER,
                     name                 VARCHAR(255),
                     description          TEXT,
                     troveName            VARCHAR(128),
@@ -58,7 +58,7 @@ class BuildsTable(database.KeyedTable):
                     updatedBy            INTEGER
                 )"""
 
-    fields = ['buildId', 'projectId', 'pubReleaseId', 
+    fields = ['buildId', 'projectId', 'pubReleaseId',
               'buildType', 'name', 'description',
               'troveName', 'troveVersion', 'troveFlavor', 'troveLastChanged',
               'timeCreated', 'createdBy', 'timeUpdated', 'updatedBy']
@@ -70,6 +70,61 @@ class BuildsTable(database.KeyedTable):
                  """CREATE INDEX BuildPubReleaseIdIdx
                         ON Builds(pubReleaseId)"""}
 
+    def versionCheck(self):
+        dbversion = self.getDBVersion()
+        if dbversion != self.schemaVersion:
+            if dbversion == 3 and not self.initialCreation:
+                cu = self.db.cursor()
+                cu.execute("""ALTER TABLE Releases
+                                 ADD COLUMN timePublished INT DEFAULT 0""")
+                cu.execute("UPDATE Releases SET timePublished=0")
+            if dbversion == 4 and not self.initialCreation:
+                cu = self.db.cursor()
+                cu.execute("ALTER TABLE Releases ADD COLUMN description STR")
+                cu.execute("UPDATE Releases SET description=desc")
+            if dbversion == 14:
+                from mint.distro import jsversion
+                cu = self.db.cursor()
+                cu.execute("""INSERT INTO ReleaseData
+                                  SELECT DISTINCT releaseId, 'jsversion',
+                                                  '%s', 0
+                                      FROM Releases
+                                      WHERE releaseId NOT IN
+                                          (SELECT DISTINCT releaseId
+                                               FROM ReleaseData
+                                               WHERE name='jsversion')""" % \
+                           jsversion.getDefaultVersion())
+            if dbversion == 20:
+                cu = self.db.cursor()
+                cu.execute("""INSERT INTO Builds
+                                  SELECT Releases.releaseId AS buildId,
+                                      projectId,
+                                      Releases.releaseId AS pubReleaseId,
+                                      ReleaseImageTypes.imageType AS buildType,
+                                      name, description,
+                                      troveName, troveVersion, troveFlavor,
+                                      troveLastChanged, NULL AS timeCreated,
+                                      NULL AS createdBy, NULL AS timeUpdated,
+                                      NULL as updatedBy
+                                  FROM Releases
+                                  LEFT JOIN ReleaseImageTypes
+                                  ON ReleaseImageTypes.releaseId=
+                                       Releases.releaseId""")
+                cu.execute("""INSERT INTO PublishedReleases
+                                  SELECT Releases.releaseId AS pubReleaseId,
+                                      projectId, troveName AS name,
+                                      troveVersion AS version,
+                                      description, NULL AS timeCreated,
+                                      NULL AS createdBy, NULL AS timeUpdated,
+                                      NULL AS updatedBy, timePublished,
+                                      NULL AS publishedBy
+                                  FROM Releases WHERE published=1""")
+                cu.execute("INSERT INTO BuildData SELECT * FROM ReleaseData")
+                cu.execute("DROP TABLE ReleaseImageTypes")
+                cu.execute("DROP TABLE Releases")
+                cu.execute("DROP TABLE ReleaseData")
+            return dbversion >= 20
+        return True
 
     def new(self, **kwargs):
         projectId = kwargs['projectId']

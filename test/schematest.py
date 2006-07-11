@@ -16,6 +16,10 @@ from conary import dbstore
 from conary import sqlite3
 from conary.lib import util
 
+# NOTE: ReleaseImageTypes was created much later than schema 8,
+# but was subsequently deleted during a schema upgrade. in order for
+# the upgrade to pass, we need to insert it.
+
 sqlite_schema8_tables = \
                       ["""CREATE TABLE DatabaseVersion (
                               version INTEGER PRIMARY KEY,
@@ -150,7 +154,11 @@ sqlite_schema8_tables = \
                               name             CHAR(32),
                               value            TEXT,
                               dataType         INTEGER,
-                              PRIMARY KEY(jobId, name))"""]
+                              PRIMARY KEY(jobId, name))""",
+                       """CREATE TABLE ReleaseImageTypes (
+                              releaseId   INT,
+                              imageType   INT,
+                              PRIMARY KEY (releaseId, imageType))"""]
 
 mysql_schema8_tables = ["""CREATE TABLE GroupTroveItems(
                               groupTroveItemId INTEGER,
@@ -287,7 +295,11 @@ mysql_schema8_tables = ["""CREATE TABLE GroupTroveItems(
                               timeCreated     DOUBLE,
                               timeAccessed    DOUBLE,
                               active          INT,
-                              blurb           VARCHAR(255) DEFAULT "")"""]
+                              blurb           VARCHAR(255) DEFAULT "")""",
+                        """CREATE TABLE ReleaseImageTypes (
+                              releaseId   INT,
+                              imageType   INT,
+                              PRIMARY KEY (releaseId, imageType))"""]
 
 schema8_indexes = ["""CREATE INDEX DatabaseVersionIdx
                           ON DatabaseVersion(version)""",
@@ -412,6 +424,8 @@ class UpgradePathTest(MintRepositoryHelper):
                    1, 1, '', '', 1, '', '', '', 0, 0, 3, 0)
         cu.execute("INSERT INTO Releases VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",
                    2, 2, '', '', 1, '', '', '', 0, 0, 3, 0)
+        cu.execute("INSERT INTO Releases VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",
+                   3, 2, 'pub', 'pub rel', 1, '', '', '', 0, 1, 3, 5000)
 
         # add some release data
         cu.execute("INSERT INTO ReleaseData VALUES(?, ?, ?, ?)",
@@ -477,23 +491,24 @@ class UpgradePathTest(MintRepositoryHelper):
                     client.server._server.version.schemaVersion,
                     "Schema failed to follow complete upgrade path")
 
-        cu.execute("""SELECT releaseId, value FROM ReleaseData
+        # schema upgrade 20 converted the name release to build
+        cu.execute("""SELECT buildId, value FROM BuildData
                           WHERE name='showMediaCheck'""")
 
         self.failIf(cu.fetchone() != (1, '0'),
                     "schema upgrade 14 failed for showMediaCheck.")
 
-        cu.execute("""SELECT releaseId, value FROM ReleaseData
+        cu.execute("""SELECT buildId, value FROM BuildData
                           WHERE name='skipMediaCheck'""")
 
         self.failIf(cu.fetchone(),
                     "schema upgrade 14 failed for skipMediaCheck.")
 
-        cu.execute("""SELECT releaseId, value FROM ReleaseData
+        cu.execute("""SELECT buildId, value FROM BuildData
                           WHERE name='jsversion'""")
 
         jsVer = jsversion.getDefaultVersion()
-        self.failIf(cu.fetchall() != [(1, '1.5.4'), (2, jsVer)],
+        self.failIf(cu.fetchall() != [(1, '1.5.4'), (2, jsVer), (3L, jsVer)],
                     "schema upgrade 15 failed.")
 
         cu.execute("SELECT * FROM GroupTroves")
@@ -505,6 +520,22 @@ class UpgradePathTest(MintRepositoryHelper):
         # check to see if a name of the new max size falters.
         adminClient.createGroupTrove(1, 'group-' + ('a' * 194),
                                      '1.0.0', '', True)
+
+        cu.execute('SELECT * FROM Builds')
+        self.failIf(cu.fetchall() != \
+                    [(1L, 1L, 1L, None, '', '', '', '', '',
+                      0L, None, None, None, None),
+                     (2L, 2L, 2L, None, '', '', '', '', '',
+                      0L, None, None, None, None),
+                     (3L, 2L, 3L, None, 'pub', 'pub rel', '', '', '',
+                      0L, None, None, None, None)],
+                    "Schema upgrade 20 failed for release to build conversion")
+
+        cu.execute('SELECT * FROM PublishedReleases')
+        self.failIf(cu.fetchall() != \
+                    [(3L, 2L, '', '', 'pub rel', None, None, None, None,
+                      5000, None)],
+                    'Schema upgrade 20 failed for pub release creation')
 
     def testSchemaVerFifteen(self):
         # schema test designed to test upgrade codepath for exisiting project
