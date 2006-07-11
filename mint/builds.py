@@ -8,12 +8,12 @@ import sys
 import time
 import urlparse
 
+from mint import buildtemplates
 from mint import database
 from mint import jobs
 from mint import buildtypes
 from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM
 from mint.mint_error import MintError, ParameterError
-from mint.buildtemplates import dataHeadings, dataTemplates
 
 from conary import versions
 from conary.deps import deps
@@ -125,20 +125,6 @@ class BuildsTable(database.KeyedTable):
                 cu.execute("DROP TABLE ReleaseData")
             return dbversion >= 20
         return True
-
-    def new(self, **kwargs):
-        projectId = kwargs['projectId']
-        cu = self.db.cursor()
-        cu.execute("""SELECT buildId FROM Builds
-                          WHERE projectId=?
-                          AND troveLastChanged IS NULL""", projectId)
-        for buildId in [x[0] for x in cu.fetchall()]:
-            cu.execute("DELETE FROM BuildData WHERE buildId=?", buildId)
-        cu.execute("""DELETE FROM Builds
-                        WHERE projectId=?
-                        AND troveLastChanged IS NULL""", projectId)
-        self.db.commit()
-        return database.KeyedTable.new(self, **kwargs)
 
     def iterBuildsForProject(self, projectId):
         """ Returns an iterator over the all of the buildIds in a given
@@ -326,20 +312,7 @@ class Build(database.TableObject):
         return bool(self.pubReleaseId)
 
     def getDataTemplate(self):
-        if self.buildType:
-            return dataTemplates[self.buildType]
-        else:
-            return {}
-
-    def getDisplayTemplates(self):
-        return [(x, dataHeadings[x], dataTemplates[x]) \
-                for x in dataTemplates.keys()]
-        # FIXME: use the following code once we revert to new build model
-        if self.buildType:
-            return [(dataHeadings[self.buildType], \
-                     dataTemplates[self.buildType])]
-        else:
-            return 'No Image Selected', {}
+        return buildtemplates.getDataTemplate(self.buildType)
 
     def setDataValue(self, name, value, dataType = None, validate = True):
         template = self.getDataTemplate()

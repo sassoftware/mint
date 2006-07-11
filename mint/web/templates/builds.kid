@@ -19,8 +19,9 @@ from mint.web.templatesupport import downloadTracker
         from mint import userlevels
 
         isOwner = userLevel == userlevels.OWNER or auth.admin
+        isWriter = (userLevel in userlevels.WRITERS) or auth.admin
     ?>
-    <div py:strip="True" py:def="buildTableRow(productName, build, isOwner, isFirst, numBuildsInVersion, defaultHidden, hiddenName)">
+    <div py:strip="True" py:def="buildTableRow(buildName, build, isOwner, isWriter, isFirst, numBuildsInVersion, defaultHidden, hiddenName)">
         <?python
             from mint import buildtypes
             from mint.helperfuncs import truncateForDisplay
@@ -30,7 +31,7 @@ from mint.web.templatesupport import downloadTracker
         <tr py:attrs="rowAttrs">
             <td py:if="isFirst" rowspan="${numBuildsInVersion}">
                 ${truncateForDisplay(build.getName(), maxWordLen=25)}<br />
-                <span style="color: #999">${truncateForDisplay(productName, maxWordLen=30)}</span>
+                <span style="color: #999">${truncateForDisplay(buildName, maxWordLen=30)}</span>
             </td>
             <td>
                     <a href="build?id=${build.getId()}">${build.getArch()} ${buildtypes.typeNamesShort[build.buildType]}</a>
@@ -44,16 +45,12 @@ from mint.web.templatesupport import downloadTracker
                 </div>
                 <span py:if="not files">N/A</span>
             </td>
-            <div py:strip="True" py:if="isOwner and not build.getPublished()">
-            <td><a onclick="javascript:deleteBuild(${build.getId()});" href="#" class="option">Delete</a> 
+            <td py:if="isWriter and not build.getPublished()"><a onclick="javascript:deleteBuild(${build.getId()});" href="#" class="option">Delete</a> 
             </td>
-            <td><a py:if="build.getFiles()" onclick="javascript:setBuildPublished(${build.getId()});" class="option" href="#">Publish</a>
-            </td>
-            </div>
         </tr>
     </div>
 
-     <div py:strip="True" py:def="buildsTable(builds, buildVersions, isOwner, wantPublished, numShowByDefault)">
+     <div py:strip="True" py:def="buildsTable(builds, buildVersions, isOwner, isWriter, wantPublished, numShowByDefault)">
         <?python
             ithBuild = 0
             filteredBuilds = [x for x in builds if x.getPublished() == wantPublished]
@@ -68,7 +65,7 @@ from mint.web.templatesupport import downloadTracker
                     <th>Downloads</th>
                 </div>
             </tr>
-        <div py:strip="True" py:for="productName, buildsForVersion in buildVersions">
+        <div py:strip="True" py:for="buildName, buildsForVersion in buildVersions">
             <?python
                 filteredBuildsForVersion = [ x for x in buildsForVersion if x.getPublished() == wantPublished ]
                 isFirst = True
@@ -77,8 +74,8 @@ from mint.web.templatesupport import downloadTracker
             ?>
             <div py:strip="True" py:if="filteredBuildsForVersion" rowspan="${len(filteredBuildsForVersion)}">
                 <div py:strip="True" py:for="build in filteredBuildsForVersion">
-                    ${buildTableRow(productName, build, isOwner, (lastBuildName != productName), len(filteredBuildsForVersion), hideByDefault, hiddenName)}
-                    <?python lastBuildName = productName ?>
+                    ${buildTableRow(buildName, build, isOwner, isWriter, (lastBuildName != buildName), len(filteredBuildsForVersion), hideByDefault, hiddenName)}
+                    <?python lastBuildName = buildName ?>
                 </div>
             </div>
             <?python
@@ -96,7 +93,8 @@ from mint.web.templatesupport import downloadTracker
         <div id="layout">
             <div id="left" class="side">
                 ${projectResourcesMenu()}
-                ${buildsMenu(publishedBuilds, isOwner)}
+                <!-- FIXME - releases, not builds
+                ${buildsMenu(publishedBuilds, isOwner)} -->
                 ${commitsMenu(project.getCommits())}
             </div>
             <div id="right" class="side">
@@ -107,12 +105,12 @@ from mint.web.templatesupport import downloadTracker
                 <?python hasVMwareImage = True in [ x.hasVMwareImage() for x in publishedBuilds ] ?>
                 <h1>${project.getNameForDisplay(maxWordLen = 30)}</h1>
                 <h2><a py:if="hasVMwareImage" title="Download VMware Player" href="http://www.vmware.com/download/player/"><img class="vmwarebutton" src="${cfg.staticPath}apps/mint/images/get_vmware_player.gif" alt="Download VMware Player" /></a>Builds</h2>
-                <h3 py:if="isOwner">Published Builds</h3>
-                ${buildsTable(builds, buildVersions, isOwner, True, 5)}
+                <h3 py:if="isWriter">Published Builds</h3>
+                ${buildsTable(builds, buildVersions, isOwner, isWriter, True, 5)}
 
-                <div py:if="isOwner">
+                <div py:if="isWriter">
                     <h3>Unpublished Builds</h3>
-                    ${buildsTable(builds, buildVersions, isOwner, False, 5)}
+                    ${buildsTable(builds, buildVersions, isOwner, isWriter, False, 5)}
                 </div>
             </div>
         </div>

@@ -311,7 +311,8 @@ class BuildTest(fixtures.FixturedUnitTest):
         client = self.getClient("owner")
         build = client.getBuild(data['buildId'])
 
-        self.failIf([(x[0], x[2]) for x in build.getDisplayTemplates()] != \
+        self.failIf([(x[0], x[2]) \
+                for x in buildtemplates.getDisplayTemplates()] != \
                     [x for x in buildtemplates.dataTemplates.iteritems()],
                     "dataTemplates lost in display translation")
 

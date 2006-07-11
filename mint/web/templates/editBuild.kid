@@ -12,18 +12,18 @@ from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM
     <div py:def="breadcrumb()" py:strip="True">
         <a href="$basePath">${project.getNameForDisplay()}</a>
         <a href="${basePath}builds">Builds</a>
-        <a href="#">${(isNewBuild and "Create New" or "Edit") + " Build"}</a>
+        <a href="#">${(buildId and "Create New" or "Edit") + " Build"}</a>
     </div>
     <?python
-        for var in ['buildId', 'trove', 'productName']:
+        for var in ['buildId', 'trove', 'buildName']:
             kwargs[var] = kwargs.get(var, '')
     ?>
 
     <head>
-        <title>${formatTitle((isNewBuild and "Create New" or "Edit") + " Build")}</title>
+        <title>${formatTitle((buildId and "Edit" or "Create New") + " Build")}</title>
     </head>
     <?python
-        if isNewBuild:
+        if not buildId:
             jsonload = "javascript:getTroveList(" + str(project.getId()) + ");"
         else:
             jsonload = "javascript:handleBuildTypes(\""+ arch +"\");"
@@ -40,30 +40,30 @@ from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM
 
             <div id="middle">
                 <h1>${project.getNameForDisplay(maxWordLen = 50)}</h1>
-                <h2>${isNewBuild and "Create" or "Edit"} Build</h2>
+                <h2>${buildId and "Edit" or "Create"} Build</h2>
 
                 <form method="post" action="saveBuild" id="mainForm">
 
                     <div class="formgroupTitle">Distribution Information</div>
                     <div class="formgroup">
                         <label for="relname">Name</label>
-                        <input id="relname" name="name" type="text" value="${build.getName()}" /><div class="clearleft">&nbsp;</div>
+                        <input id="relname" name="name" type="text" value="${name}" /><div class="clearleft">&nbsp;</div>
 
                         <label for="reldesc">Description (optional)</label>
-                        <textarea id="reldesc" name="desc" type="text" py:content="build.getDesc()" /><div class="clearleft">&nbsp;</div>
+                        <textarea id="reldesc" name="desc" type="text" py:content="desc" /><div class="clearleft">&nbsp;</div>
 
                     </div>
 
                     <div class="formgroupTitle">Build Contents<span id="baton"></span></div>
                     <div class="formgroup">
                         <label for="trove">Distribution Group</label>
-                        <div py:strip="True" py:if="isNewBuild">
-                            <select py:if="isNewBuild" onchange="javascript:onTroveChange(${project.getId()});" id="trove" name="trove">
+                        <div py:strip="True" py:if="not buildId">
+                            <select py:if="not buildId" onchange="javascript:onTroveChange(${project.getId()});" id="trove" name="trove">
                                 <option value=""></option>
                             </select>
                             <img src="${cfg.staticPath}apps/mint/images/circle-ball-dark-antialiased.gif" id="nameSpinner" style="float: right;"/>
                         </div>
-                        <div py:strip="True" py:if="not isNewBuild">
+                        <div py:strip="True" py:if="buildId">
                             <input type="text" name="troveDisplay" id="trove" value="${troveName}" disabled="disabled" />
                             <input type="hidden" name="trove" value="${troveName}=${label.asString()}" />
                             <img src="${cfg.staticPath}apps/mint/images/circle-ball-dark-antialiased.gif" id="nameSpinner" style="float: right;"/>
@@ -71,26 +71,26 @@ from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM
                         <div class="clearleft">&nbsp;</div>
 
                         <label for="arch">Target Architecture</label>
-                        <div py:strip="True" py:if="isNewBuild">
+                        <div py:strip="True" py:if="not buildId">
                             <select onchange="javascript:onArchChange();" id="arch" name="arch" disabled="disabled">
                                 <option value=""/>
                             </select>
                             <img src="${cfg.staticPath}apps/mint/images/circle-ball-dark-antialiased.gif" id="archSpinner" style="float: right;"/>
                         </div>
-                        <div py:strip="True" py:if="not isNewBuild">
-                            <input type="text" id="arch" name="archDisplay" value="${not isNewBuild and arch or None}" disabled="disabled" />
-                            <input type="hidden" name="arch" value="${not isNewBuild and arch or None}" />
+                        <div py:strip="True" py:if="buildId">
+                            <input type="text" id="arch" name="archDisplay" value="${buildId and arch or None}" disabled="disabled" />
+                            <input type="hidden" name="arch" value="${buildId and arch or None}" />
                             <img src="${cfg.staticPath}apps/mint/images/circle-ball-dark-antialiased.gif" id="archSpinner" style="float: right;"/>
                         </div>
                         <div class="clearleft">&nbsp;</div>
 
                         <label for="version">Group Version</label>
-                        <div py:strip="True" py:if="isNewBuild">
+                        <div py:strip="True" py:if="not buildId">
                             <select onchange="javascript:onVersionChange();" id="version" name="version" disabled="disabled">
                                 <option value="" />
                             </select>
                         </div>
-                        <div py:strip="True" py:if="not isNewBuild">
+                        <div py:strip="True" py:if="buildId">
                             <input type="text" id="version" name="versionDisp" value="${versionStr}" disabled="disabled" />
                             <input type="hidden" name="version" value="${version + ' ' + flavor}" />
                         </div>
@@ -105,11 +105,6 @@ from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM
                         </div>
                     </div>
 
-                    <?python
-                        templates = build.getDisplayTemplates()
-                        dataDict = build.getDataDict()
-                        defaultTemplate = build.buildType and build.buildType or 1
-                    ?>
                     <div class="formgroupTitle" style="cursor: pointer;" onclick="javascript:toggle_display('advanced_settings');"><img id="advanced_settings_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" />Advanced Options</div>
                     <div id="advanced_settings" class="formgroup" style="display: none;">
                         <div py:strip="True" py:for="key, heading, template in templates">
@@ -146,9 +141,14 @@ from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM
                     </div>
 
                     <p>
-                        <button id="submitButton" type="submit" py:attrs="{'disabled': isNewBuild and 'disabled' or None}">${isNewBuild and "Create" or "Recreate"} Build</button>
+                        <button id="submitButton" type="submit" py:attrs="{'disabled': not buildId and 'disabled' or None}">${buildId and "Recreate" or "Create"} Build</button>
                     </p>
-                    <input type="hidden" name="buildId" value="${build.getId()}" />
+                    <?python
+                        # hacktastic way of not passing a None through a request
+                        if not buildId:
+                            buildId = 0
+                    ?>
+                    <input type="hidden" name="buildId" value="${buildId}" />
                 </form>
             </div>
         </div>

@@ -1,4 +1,6 @@
 Changes in tip:
+* Fix for RBL-408: Opening two "create release" tabs at once gives "requested
+  item not found"
 * Added XMLRPC call logging similar to Conary's, controlled by the 
   xmlrpcLogFile config entry. (RBL-12)
 * Fixed a bug where a directory with a symlink pointing to it could

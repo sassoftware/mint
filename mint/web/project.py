@@ -20,11 +20,12 @@ from mint import buildtypes
 from mint import userlevels
 from mint import users
 
+from mint import buildtemplates
 from mint.builds import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM
 from mint.users import sendMailWithChecks
 from mint.web.webhandler import WebHandler, normPath, HttpNotFound
-from mint.web.decorators import ownerOnly, requiresAuth, requiresAdmin, \
-        mailList, redirectHttp
+from mint.web.decorators import ownerOnly, writersOnly, requiresAuth, \
+        requiresAdmin, mailList, redirectHttp
 
 from conary import conaryclient
 from conary import conarycfg
@@ -326,37 +327,47 @@ class ProjectHandler(WebHandler):
         return self._write("cookGroup", jobId = jobId,
             curGroupTrove = curGroupTrove)
 
-    @ownerOnly
+    @writersOnly
     def newBuild(self, auth):
-        build = self.client.newBuild(self.project.getId(), self.project.getName())
-        # By default, Installable ISO images should be selected.
-        buildType = buildtypes.INSTALLABLE_ISO
-        build.setBuildType(buildType)
 
-        return self._write("editBuild", isNewBuild = True,
-            build = build,
-            buildType = buildType,
+        return self._write("editBuild",
+            buildId = None,
+            name = self.project.getName(),
+            desc = "",
+            buildType = buildtypes.INSTALLABLE_ISO,
+            defaultTemplate = buildtypes.INSTALLABLE_ISO,
+            templates = buildtemplates.getDisplayTemplates(),
+            dataDict = {},
+            trove = None,
+            troveName = None,
+            label = None,
+            versionStr = None,
+            version = None,
+            flavor = None,
+            arch = None,
             kwargs = {})
 
-    @ownerOnly
+    @writersOnly
     @intFields(buildId = -1)
     @strFields(trove = "")
     def editBuild(self, auth, buildId, trove):
 
         build = self.client.getBuild(buildId)
-        productName = build.getName()
-        buildType = build.getBuildType()
 
         troveName, version, flavor = build.getTrove()
-
         versionStr = versions.ThawVersion(version)
         label = versionStr.branch().label()
-
         thawedFlavor = deps.ThawFlavor(flavor)
         arch = thawedFlavor.members[deps.DEP_CLASS_IS].members.keys()[0]
 
-        return self._write("editBuild", isNewBuild = False,
-            build = build,
+        return self._write("editBuild",
+            buildId = buildId,
+            name = build.getName(),
+            desc = build.getDesc(),
+            buildType = build.getBuildType(),
+            defaultTemplate = buildtypes.INSTALLABLE_ISO,
+            templates = buildtemplates.getDisplayTemplates(),
+            dataDict = build.getDataDict(),
             trove = trove,
             troveName = troveName,
             label = label,
@@ -364,15 +375,18 @@ class ProjectHandler(WebHandler):
             version = version,
             flavor = flavor,
             arch = arch,
-            buildType = buildType,
             kwargs = {})
 
     @requiresAuth
     @intFields(buildId = None)
-    @strFields(trove = None, version = None, desc = "")
+    @strFields(trove = None, version = None, name = "", desc = "")
     def saveBuild(self, auth, buildId, trove, version, desc, name,
                     **kwargs):
-        build = self.client.getBuild(buildId)
+        if not buildId:
+            build = self.client.newBuild(self.project.id, name)
+            buildId = build.id
+        else:
+            build = self.client.getBuild(buildId)
 
         job = build.getJob()
         if job and job.status in (jobstatus.WAITING, jobstatus.RUNNING):
@@ -423,7 +437,7 @@ class ProjectHandler(WebHandler):
         self._predirect("build?id=%d" % buildId)
 
     @intFields(buildId = None)
-    @ownerOnly
+    @writersOnly
     def deleteBuild(self, auth, buildId):
         build = self.client.getBuild(buildId)
         build.deleteBuild()

@@ -1,8 +1,6 @@
 # Copyright (c) 2004-2006 rPath, Inc.
 #
 # All Rights Reserved
-#
-
 import sys
 from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM
 from mint import buildtypes
@@ -159,3 +157,15 @@ for templateName in [x for x in sys.modules[__name__].__dict__.keys() \
     dataHeadings[template.id] = buildtypes.typeNames[template.id] + \
                                 ' Settings'
     dataTemplates[template.id] = template
+
+
+def getDataTemplate(buildType):
+    if buildType:
+        return dataTemplates[buildType]
+    else:
+        return {}
+
+def getDisplayTemplates():
+    return [(x, dataHeadings[x], dataTemplates[x]) \
+            for x in dataTemplates.keys()]
+

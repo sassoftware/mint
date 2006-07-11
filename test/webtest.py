@@ -1113,6 +1113,29 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.failIf(res[0][0] != 'group-test',
                     "Trove name was malformed during build creation.")
 
+    def testForPhantomBuildRows(self):
+        client, userId = self.quickMintUser('foouser', 'foopass')
+        projectId = self.newProject(client)
+
+        page = self.webLogin('foouser', 'foopass')
+
+        # we are working with the project server right now
+        self.setServer(self.getProjectServerHostname(), self.port)
+
+        cu = self.db.cursor()
+        cu.execute("SELECT COUNT(buildId) FROM Builds")
+        res = cu.fetchone()
+        beforeCount = res[0]
+
+        page = self.fetch('/project/testproject/newBuild')
+
+        cu.execute("SELECT COUNT(buildId) FROM Builds")
+        res = cu.fetchone()
+        afterCount = res[0]
+
+        self.failUnlessEqual(beforeCount, afterCount,
+            "Hitting the build page creates a phantom row in builds table.")
+
     def testCantPublishBuildsWithoutFiles(self):
         client, userId = self.quickMintUser('foouser', 'foopass')
         projectId = self.newProject(client)
