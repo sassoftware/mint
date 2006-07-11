@@ -51,6 +51,8 @@ class BootableImageTest(MintRepositoryHelper):
             validate = False)
         build.setDataValue("swapSize", 0, dataType = data.RDT_INT,
             validate = False)
+        build.setDataValue('baseFileName', '', dataType = data.RDT_STRING,
+                           validate = False)
 
         job = client.startImageJob(build.id)
         isocfg = self.writeIsoGenCfg()
