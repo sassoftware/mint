@@ -26,10 +26,21 @@
 
                 <form method="post" action="cookGroup">
                     <p>
-                        <select name="arch">
+                        <select name="flavor">
                             <option value="1#x86">x86 (32-bit)</option>
                             <option value="1#x86_64">x86_64 (64-bit)</option>
                         </select>
+
+                    </p>
+                    <p>
+                        <div>
+                            <input name="flavor" type="checkbox" value="5#use:~dom0" id="dom0" />
+                            <label for="dom0">Xen dom0 (privileged host) support</label>
+                        </div>
+                        <div>
+                            <input name="flavor" type="checkbox" value="5#use:~domU" id="domU" />
+                            <label for="domU">Xen domU (unprivileged guest) support</label>
+                        </div>
                     </p>
                     <p><button class="img" type="submit"><img src="${cfg.staticPath}/apps/mint/images/cook_button.png" alt="Cook Group" /></button></p>
                     <input type="hidden" name="id" value="${groupTroveId}" />

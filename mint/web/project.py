@@ -300,10 +300,11 @@ class ProjectHandler(WebHandler):
         return self._write("pickArch", groupTroveId = id)
 
     @intFields(id = None)
-    @strFields(arch = "1#x86")
-    def cookGroup(self, auth, id, arch):
+    @listFields(str, flavor = ['1#x86'])
+    def cookGroup(self, auth, flavor, id):
         curGroupTrove = self.client.getGroupTrove(id)
 
+        arch = deps.mergeFlavorList([deps.ThawFlavor(x) for x in flavor]).freeze()
         job = curGroupTrove.getJob()
         if not job or (job and job.status not in (jobstatus.WAITING, jobstatus.RUNNING)):
             jobId = curGroupTrove.startCookJob(arch)

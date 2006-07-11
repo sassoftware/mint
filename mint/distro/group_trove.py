@@ -8,6 +8,7 @@ import sys
 import tempfile
 import time
 
+from mint import client
 from mint import projects
 from mint.distro.flavors import stockFlavors
 import mint.distro.gencslist
@@ -97,7 +98,8 @@ class GroupTroveCook(Generator):
             path = tempfile.mkdtemp()
             recipe = groupTrove.getRecipe()
             sourceName = groupTrove.recipeName + ":source"
-            arch = deps.ThawFlavor(self.job.getDataValue("arch"))
+            flavor = deps.ThawFlavor(self.job.getDataValue("arch"))
+            arch = deps.ThawFlavor("1#" + client.extractIs(flavor))
 
             project = self.client.getProject(projectId)
 
