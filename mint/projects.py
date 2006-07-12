@@ -93,11 +93,6 @@ class Project(database.TableObject):
     def getMembers(self):
         return self.server.getMembersByProjectId(self.id)
 
-    # XXX is this needed anymore?  a: possibly...
-    def getBuilds(self):
-        return [builds.Build(self.server, x) for x \
-                in self.server.getBuildsForProject(self.id)]
-
     def getCommits(self):
         return self.server.getCommitsForProject(self.id)
 
@@ -195,6 +190,9 @@ class Project(database.TableObject):
             return "http://%s%sproject/%s/" % (self.server._cfg.externalSiteHost, self.server._cfg.basePath, self.hostname)
         else:
             return "http://%s%sproject/%s/" % (self.server._cfg.projectSiteHost, self.server._cfg.basePath, self.hostname)
+
+    def getBuilds(self):
+        return self.server.getBuildsForProject(self.id)
 
     def getUnpublishedBuilds(self):
         return self.server.getUnpublishedBuildsForProject(self.id)

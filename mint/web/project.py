@@ -110,20 +110,8 @@ class ProjectHandler(WebHandler):
         releases = [self.client.getPublishedRelease(x) for x in self.project.getPublishedReleases()]
         return self._write("pubreleases", releases = releases)
 
-    def createRelease(self, auth):
-        release = self.client.newPublishedRelease(self.project.id)
-        release.name = self.project.name
-        builds = self.project.getBuilds()
-        if builds:
-            unpublishedBuilds = [x for x in builds if not x.getPublished()]
-        else:
-            unpublishedBuilds = []
-        return self._write("editPubrelease", release = release,
-                           isNewRelease = True,
-                           builds=unpublishedBuilds)
-
     def builds(self, auth):
-        builds = self.project.getBuilds()
+        builds = [self.client.getBuild(x) for x in self.project.getBuilds()]
         publishedBuilds = [x for x in builds if x.getPublished()]
 
         # Group versions by name or default name (based on group trove).
@@ -478,6 +466,8 @@ class ProjectHandler(WebHandler):
                 files = files,
                 buildInProgress = buildInProgress)
 
+    # FIXME - this probably needs to go away or be replaced with something
+    # else
     @ownerOnly
     @intFields(buildId = None)
     def publish(self, auth, buildId):
@@ -487,6 +477,52 @@ class ProjectHandler(WebHandler):
         self.predirect("build?id=%d" % buildId)
 
     @ownerOnly
+    def createRelease(self, auth):
+        currentBuilds = []
+        availableBuilds = [self.client.getBuild(x) for x in \
+                self.project.getUnpublishedBuilds()]
+
+        return self._write("editPubrelease",
+                           releaseId = None,
+                           name = self.project.name,
+                           desc = None,
+                           version = None,
+                           availableBuilds = availableBuilds,
+                           currentBuilds = currentBuilds)
+
+    @ownerOnly
+    @intFields(releaseId = None)
+    @listFields(int, buildIds = [])
+    def editRelease(self, auth, releaseId, buildIds):
+        pubrelease = self.client.getPublishedRelease(releaseId)
+        currentBuilds = [self.client.getBuild(x) for x in \
+                pubrelease.getBuilds()]
+        availableBuilds = [self.client.getBuild(x) for x in \
+                self.project.getUnpublishedBuilds()]
+
+        return self._write("editPubrelease",
+                           releaseId = None,
+                           name = pubrelease.name,
+                           desc = pubrelease.desc,
+                           version = pubrelease.version,
+                           availableBuilds = availableBuilds,
+                           currentBuilds = currentBuilds)
+
+    @ownerOnly
+    def saveRelease(self, auth):
+        pass
+
+    @ownerOnly
+    @intFields(releaseId = None)
+    def deleteRelease(self, auth, releaseId):
+        pass
+
+    @ownerOnly
+    @intFields(releaseId = None)
+    def finalizeRelease(self, auth, releaseId):
+        pass
+
+    @writersOnly
     @intFields(buildId = None)
     def restartJob(self, auth, buildId):
         self.client.startImageJob(buildId)
