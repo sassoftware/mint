@@ -39,7 +39,6 @@ function TrovePicker(projectId, serverName, troveName, pickerId, mintStaticPath)
     this.elId = pickerId;
     staticPath = mintStaticPath;
 
-    logDebug(this.elId);
     this.buildTrovePicker();
 }
 
@@ -90,7 +89,12 @@ TrovePicker.prototype.buildTrovePicker = function() {
         this.buildTroveSpec('', '', '')
     );
     swapDOM(oldEl, picker);
-    this.getAllTroveLabels();
+
+    if(this.troveName) {
+        this.getAllTroveLabels();
+    } else {
+        this.getGroupTroves();
+    }
 }
 
 // Show all flavors available for a given trove and version
@@ -149,6 +153,7 @@ TrovePicker.prototype.getTroveVersions = function(e) {
 
         // return to getAllTroveLabels
         returnLink = A(null, returnImg(), " Back");
+        returnLink.troveName = par.troveName;
         connect(returnLink, "onclick", par, "getAllTroveLabels");
         replaceChildNodes($('return'), returnLink);
     };
@@ -172,8 +177,10 @@ TrovePicker.prototype.getTroveVersions = function(e) {
 }
 
 // Fetch all labels a trove exists on a given server
-TrovePicker.prototype.getAllTroveLabels = function() {
-    logDebug("top of getAllTroveLabels");
+TrovePicker.prototype.getAllTroveLabels = function(e) {
+    if(e) {
+        this.troveName = e.src().troveName;
+    }
     var key = this.serverName + "=" + this.troveName;
     var par = this; // save the parent for the subfunction's use
 
@@ -213,4 +220,42 @@ TrovePicker.prototype.getAllTroveLabels = function() {
     } else {
         setupList(labelsCache[key]);
     }
+}
+
+TrovePicker.prototype.getGroupTroves = function() {
+    var par = this;
+
+    var setupList = function(troveList) {
+        oldList = $(par.elId + 'selectionList');
+        ul = UL({'id': par.elId + 'selectionList'});
+
+        for(var i in troveList) {
+            link = forwardLink(null, troveList[i]);
+            link.troveName = troveList[i];
+            connect(link, "onclick", par, "getAllTroveLabels");
+            appendChildNodes(ul, link);
+        }
+        swapDOM(oldList, ul);
+        par.working(false);
+    };
+
+    var callback = function(aReq) {
+        logDebug(aReq.responseText);
+        troveList = evalJSONRequest(aReq);
+        par.troveList = troveList;
+        setupList(troveList);
+    };
+
+    this.working(true);
+    var req = new JsonRpcRequest("jsonrpc/", "getGroupTroves");
+    req.setAuth(getCookieValue("pysid"));
+    req.setCallback(callback);
+    req.send(true, [this.projectId]);
+}
+
+TrovePicker.prototype.handleError = function() {
+    this.working(false);
+    oldList = $(this.elId + 'spinnerList');
+    ul = UL({'id': this.elId + 'spinnerList'}, LI({'style': 'color: red;'}, "Error connecting to server"));
+    swapDOM(oldList, ul);
 }
