@@ -32,6 +32,8 @@
                         </select>
 
                     </p>
+                <p>You can optionally add Xen privileged management domain
+                    (dom0) or guest domain (domU) support to this group.</p>
                     <p>
                         <div>
                             <input name="flavor" type="checkbox" value="5#use:~dom0" id="dom0" />
