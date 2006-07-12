@@ -18,6 +18,7 @@ from mint.users import LastOwner, UserInduction, MailError, GroupAlreadyExists, 
 from conary import versions
 from conary.conaryclient import ConaryClient
 from conary.repository.netclient import UserNotFound
+from conary import dbstore
 
 class AccountTest(MintRepositoryHelper):
 
@@ -502,5 +503,49 @@ class AccountTest(MintRepositoryHelper):
 			                        "foo@localhost", "fooATlocalhost",
 			                        "blah, blah", True)
         adminClient._cfg.adminNewUsers = False
+
+    def testExternalModify(self):
+        client, userId = self.quickMintAdmin('foouser', 'foopass')
+        client2, userId2 = self.quickMintUser('foouser1', 'foopass1')
+
+        projectId = self.newProject(client)
+        project = client2.getProject(projectId)
+        project.addMemberById(userId2, userlevels.USER)
+
+        # record current acl's
+        dbConn = client.server._server.projects.reposDB.getRepositoryDB( \
+            project.getFQDN())
+        db = dbstore.connect(dbConn[1], dbConn[0])
+        rCu = db.cursor()
+        rCu.execute('SELECT * FROM Permissions')
+        acls = rCu.fetchall()
+
+        # now make the project external
+        cu = self.db.cursor()
+        cu.execute('UPDATE Projects set external = 1')
+        self.db.commit()
+
+        # now switch to admin context and add the watcher
+        project = client.getProject(projectId)
+        project.addMemberById(userId2, userlevels.DEVELOPER)
+
+        # now test that "external" project was not modified by this action
+
+        rCu.execute('SELECT * FROM Permissions')
+        self.failIf(acls != rCu.fetchall(),
+                    "addMember attempted to change external project acl's")
+
+        # now make the project external
+        cu = self.db.cursor()
+        cu.execute('UPDATE Projects set external = 0')
+        self.db.commit()
+
+        project.addMemberById(userId2, userlevels.DEVELOPER)
+
+        rCu.execute('SELECT * FROM Permissions')
+        self.failIf(acls == rCu.fetchall(),
+                    "addMember didn't change internal project acl's")
+
+
 if __name__ == "__main__":
     testsuite.main()
