@@ -745,13 +745,17 @@ class MintServer(object):
             self.projectUsers.new(projectId, userId, level)
         except database.DuplicateItem:
             project.updateUserLevel(userId, level)
-            repos = self._getProjectRepo(project)
-            # edit vice/drop+add is intentional to honor acl tweaks by admins
-            repos.editAcl(project.getLabel(), username, None, None, None, None,
-                         level in userlevels.WRITERS, False,
-                         self.cfg.projectAdmin and level == userlevels.OWNER)
-            repos.setUserGroupCanMirror(project.getLabel(), username,
-                                        int(level == userlevels.OWNER))
+            # only attempt to modify acl's of local projects.
+            if not project.external:
+                repos = self._getProjectRepo(project)
+                # edit vice/drop+add is intentional to honor acl tweaks by
+                # admins.
+                repos.editAcl(project.getLabel(), username, None, None, None,
+                              None, level in userlevels.WRITERS, False,
+                              self.cfg.projectAdmin and \
+                              level == userlevels.OWNER)
+                repos.setUserGroupCanMirror(project.getLabel(), username,
+                                            int(level == userlevels.OWNER))
             return True
 
         if not project.external:
