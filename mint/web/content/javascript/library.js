@@ -745,9 +745,9 @@ function buttonStatus() {
         button.disabled = true;
         return;
     }
-    var boxes = getElementsByTagAndClassName('input', 'check');
+    var boxes = getElementsByTagAndClassName('input', 'relCheck');
     var builds = false;
-    for (var x = 0; boxes.length > x; x++) {
+    for (var x = 0; x < boxes.length ; x++) {
         if (boxes[x].checked) {
             builds = true;
             break;
