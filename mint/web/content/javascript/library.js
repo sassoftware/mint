@@ -730,3 +730,35 @@ function normalTitle() {
     updateNodeAttributes('inactiveOrangeTitle', 
                          {'style':{'textDecoration':'none'}});
 }
+
+//Edit Release
+function buttonStatus() {
+    var name = getElement('relname');
+    if (name.value == '') {
+        var button = getElement('submitButton');
+        button.disabled = true;
+        return;
+    }
+    var version = getElement('relver');
+    if (version.value == '') {
+        var button = getElement('submitButton');
+        button.disabled = true;
+        return;
+    }
+    var boxes = getElementsByTagAndClassName('input', 'check');
+    var builds = false;
+    for (var x = 0; boxes.length > x; x++) {
+        if (boxes[x].checked) {
+            builds = true;
+            break;
+        }
+    }
+    if (builds) {
+        var button = getElement('submitButton');
+        button.disabled = false;
+    }
+    else {
+        var button = getElement('submitButton');
+        button.disabled = true;
+    }
+}
