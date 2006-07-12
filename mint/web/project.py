@@ -113,8 +113,14 @@ class ProjectHandler(WebHandler):
     def createRelease(self, auth):
         release = self.client.newPublishedRelease(self.project.id)
         release.name = self.project.name
+        builds = self.project.getBuilds()
+        if builds:
+            unpublishedBuilds = [x for x in builds if not x.getPublished()]
+        else:
+            unpublishedBuilds = []
         return self._write("editPubrelease", release = release,
-                           isNewRelease = True)
+                           isNewRelease = True,
+                           builds=unpublishedBuilds)
 
     def builds(self, auth):
         builds = self.project.getBuilds()
