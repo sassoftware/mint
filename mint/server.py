@@ -2505,17 +2505,15 @@ class MintServer(object):
         self._filterProjectAccess(projectId)
         project = projects.Project(self, projectId)
 
-        labelIdMap = project.getLabelIdMap()
         nc = self._getProjectRepo(project)
+        label = versions.Label(project.getLabel())
+        troves = nc.troveNamesOnServer(label.getHost())
 
-        troveDict = {}
-        for label in labelIdMap.keys():
-            troves = nc.troveNamesOnServer(versions.Label(label).getHost())
-            troves = [x for x in troves if (x.startswith("group-") or\
-                                            x.startswith("fileset-")) and\
-                                            ":" not in x]
-            troveDict[label] = troves
-        return troveDict
+        troves = sorted(trove for trove in troves if 
+            (trove.startswith('group-') or 
+             trove.startswith('fileset-')) and
+            not trove.endswith(':source'))
+        return troves
 
     # XXX refactor to getJobStatus instead of two functions
     @typeCheck(int)
