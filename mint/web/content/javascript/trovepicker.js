@@ -78,11 +78,6 @@ TrovePicker.prototype.buildTrovePicker = function() {
         LI(null, "Loading...", IMG({'src': staticPath + spinnerImg}))
     );
     appendChildNodes(picker, SPAN({'id': this.elId + 'prompt', 'class': 'prompt'}),
-        P({'style': 'float: right;'},
-            SPAN({'id': this.elId + 'next'}, null), 
-            " ",
-            IMG({'src': staticPath + nextImg})
-        ),
         P({'id': 'return'}),
         spinner,
         UL({'id': this.elId + 'selectionList'}),
@@ -147,7 +142,6 @@ TrovePicker.prototype.getTroveVersions = function(e) {
         swapDOM(oldList, ul);
         par.working(false);
         replaceChildNodes($(par.elId + 'prompt'), "Please choose a version:");
-        replaceChildNodes($(par.elId + 'next'), "Next: Choose a Version");
         replaceChildNodes($(par.elId + 'troveSpec'),
             par.buildTroveSpec(par.troveName, par.label, ''));
 
@@ -197,7 +191,6 @@ TrovePicker.prototype.getAllTroveLabels = function(e) {
         swapDOM(oldList, ul);
         par.working(false);
         replaceChildNodes($(par.elId + 'prompt'), "Please choose a label:");
-        replaceChildNodes($(par.elId + 'next'), "Next: Choose a Version");
         replaceChildNodes($(par.elId + 'troveSpec'),
             par.buildTroveSpec(par.troveName, par.serverName, ''));
         replaceChildNodes($('return'), disabledReturn());
