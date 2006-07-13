@@ -53,10 +53,10 @@ class CmdLineTest(unittest.TestCase):
             'mint.cmdline.builds.BuildWaitCommand.runCommand',
             [None, None, None, {}, ['build-wait', '111']])
 
-    def testReleaseUrl(self):
-        self.checkRBuilder('release-url 111',
-            'mint.cmdline.releases.ReleaseUrlCommand.runCommand',
-            [None, None, None, {}, ['release-url', '111']])
+    def testBuildUrl(self):
+        self.checkRBuilder('build-url 111',
+            'mint.cmdline.builds.BuildUrlCommand.runCommand',
+            [None, None, None, {}, ['build-url', '111']])
 
     def testUserCreate(self):
         self.checkRBuilder('user-create testuser test@example.com --password password',
@@ -80,7 +80,7 @@ class CmdLineFuncTest(MintRepositoryHelper):
         cmd.runCommand(client, None, {}, ['build-create', 'testproject', troveSpec, 'installable_iso'])
 
         project = client.getProject(projectId)
-        build = project.getBuilds()[0]
+        build = client.getBuild(project.getBuilds()[0])
         assert(build.getTrove()[0] == 'group-test')
         assert(build.getJob())
 
@@ -107,19 +107,19 @@ class CmdLineFuncTest(MintRepositoryHelper):
         project = client.getProject(newProjectId)
         assert(project.getMembers() == [[1, 'adminuser', 0], [2, 'testuser', 0]])
 
-    def testReleaseUrl(self):
+    def testBuildUrl(self):
         client, userId = self.quickMintAdmin("adminuser", "adminpass")
         cfg = RBuilderShellConfig(False)
         cfg.serverUrl = 'http://testuser:testpass@mint.rpath.local/xmlrpc-private/'
 
         projectId = client.newProject("Foo", "testproject", MINT_PROJECT_DOMAIN)
-        release = client.newRelease(projectId, 'release 1')
-        release.setImageTypes([releasetypes.INSTALLABLE_ISO])
-        release.setFiles([["file1", "File Title 1"],
+        b = client.newBuild(projectId, 'build 1')
+        b.setBuildType(buildtypes.INSTALLABLE_ISO)
+        b.setFiles([["file1", "File Title 1"],
                           ["file2", "File Title 2"]])
 
-        cmd = releases.ReleaseUrlCommand()
-        rc, res = self.captureOutput(cmd.runCommand, client, cfg, {}, ['release-url', release.id])
+        cmd = builds.BuildUrlCommand()
+        rc, res = self.captureOutput(cmd.runCommand, client, cfg, {}, ['build-url', b.id])
 
         assert(res == "http://mint.rpath.local//downloadImage/1/file1\n"
                       "http://mint.rpath.local//downloadImage/2/file2\n")

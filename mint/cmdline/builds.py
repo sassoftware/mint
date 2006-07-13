@@ -3,7 +3,9 @@
 #
 # All rights reserved
 #
+import os
 import time
+import urlparse
 
 from mint import buildtypes
 from mint import jobstatus
@@ -74,3 +76,25 @@ class BuildWaitCommand(commands.RBuilderCommand):
         buildId = int(args[0])
         waitForBuild(client, buildId)
 commands.register(BuildWaitCommand)
+
+
+class BuildUrlCommand(commands.RBuilderCommand):
+    commands = ['build-url']
+    paramHelp = "<build id>"
+
+    def runCommand(self, client, cfg, argSet, args):
+        args = args[1:]
+        if len(args) < 1:
+            return self.usage()
+
+        buildId = int(args[0])
+        build = client.getBuild(buildId)
+
+        # extract the downloadImage url from the serverUrl configuration
+        parts = urlparse.urlparse(cfg.serverUrl)
+        urlBase = "http://%s/%s/downloadImage/%%d/%%s" % \
+            (parts[1].split('@')[1], os.path.normpath(parts[2] + "../")[1:])
+
+        for file in build.getFiles():
+            print urlBase % (file['fileId'], file['filename'])
+commands.register(BuildUrlCommand)
