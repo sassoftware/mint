@@ -776,7 +776,6 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         cu.execute("INSERT INTO BuildFiles VALUES (1, ?, 0, 'test.iso', 'Test Image')",
                    build.id)
         self.db.commit()
-        build.setPublished(True)
 
         # check for the meta refresh tag
         page = self.assertCode('/downloadImage/1/test.iso', code = 301)

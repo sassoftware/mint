@@ -583,11 +583,7 @@ class SiteHandler(WebHandler):
         if reqFilename and os.path.basename(filename) != reqFilename:
             raise HttpNotFound
 
-        # XXX this is gone now; we need a better way to do this
-        # only count downloads of the first ISO
-        #build = self.client.getBuild(buildId)
-        #if idx == 0:
-        #    build.incDownloads()
+        build = self.client.getBuild(buildId)
         try:
             project = self.client.getProject(build.projectId)
 
