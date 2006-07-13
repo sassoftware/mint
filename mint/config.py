@@ -109,8 +109,10 @@ class MintConfig(ConfigFile):
     bannersPerPage          = (cfgtypes.CfgInt, 5)
 
     # mimic exactly the conary server cfg items
-    externalPasswordURL     = cfgtypes.CfgString
-    authCacheTimeout        = cfgtypes.CfgInt
+    externalPasswordURL     = (cfgtypes.CfgString, None,
+                               "URL for external password verification")
+    authCacheTimeout        = (cfgtypes.CfgInt, None,
+                               "Number of seconds to cache authentication results")
 
     def read(self, path, exception = False):
         ConfigFile.read(self, path, exception)
