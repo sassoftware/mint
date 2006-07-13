@@ -164,7 +164,7 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest):
         pubRelease.finalize()
         pubRelease.refresh()
 
-        self.assertAlmostEqual(pubRelease.timePublished, time.time(), 1,
+        self.assertNotEqual(pubRelease.timePublished, 0,
                 "Release should be published now")
         self.failUnlessEqual(pubRelease.publishedBy, data['owner'],
                 "Release wasn't marked with the appropriate publisher")
