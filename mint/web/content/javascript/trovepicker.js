@@ -60,13 +60,6 @@ TrovePicker.prototype.working = function(isWorking) {
     }
 }
 
-TrovePicker.prototype.buildTroveSpec = function(name, version, flavor) {
-    return DIV({'id': this.elId + 'troveSpec'},
-        DIV((name ? green : gray), "Name: ", name),
-        DIV((version ? green : gray), "Version: ", version),
-        DIV((flavor ? green : gray), "Flavor: ", flavor)
-    );
-}
 
 // Build the initial DOM for the trove picker and
 // begin retrieving all leaves for a given
@@ -81,7 +74,9 @@ TrovePicker.prototype.buildTrovePicker = function() {
         P({'id': 'return'}),
         spinner,
         UL({'id': this.elId + 'selectionList'}),
-        this.buildTroveSpec('', '', '')
+        INPUT({'id': this.elId + 'Name', 'name': this.elId + 'Name', 'type': 'hidden'}),
+        INPUT({'id': this.elId + 'Version', 'name': this.elId + 'Version', 'type': 'hidden'}),
+        INPUT({'id': this.elId + 'Flavor', 'name': this.elId + 'Flavor', 'type': 'hidden'})
     );
     swapDOM(oldEl, picker);
 
@@ -92,19 +87,43 @@ TrovePicker.prototype.buildTrovePicker = function() {
     }
 }
 
+// A flavor has been chosen--continue on
+TrovePicker.prototype.pickFlavor = function(e) {
+    flavor = e.src().flavor;
+    setNodeAttribute($(this.elId + 'Flavor'), 'value', e.src().flavor);
+    
+    swapDOM($(this.elId + 'selectionList'),
+        SPAN(null, e.src().name + "=" + e.src().version + "[" + e.src().flavor + "]"));
+
+    // return to getTroveVersions
+    returnLink = A(null, returnImg(), " Back");
+    returnLink.version = e.src().version;
+    returnLink.label = e.src().label;
+    connect(returnLink, "onclick", this, "showTroveFlavors");
+    replaceChildNodes($('return'), returnLink);
+
+    var sb = $('submitButton');
+    sb.disabled = false;
+}
+
 // Show all flavors available for a given trove and version
 TrovePicker.prototype.showTroveFlavors = function(e) {
     this.version = e.src().version;
     this.label = e.src().label;
+    setNodeAttribute($(this.elId + 'Version'), 'value', this.version);
 
-    replaceChildNodes($(this.elId + 'troveSpec'),
-        this.buildTroveSpec(this.troveName, this.version, ''));
     oldList = $(this.elId + 'selectionList');
     ul = UL({ 'id': this.elId + 'selectionList' });
 
     for(var i in this.flavorCache[this.version]) {
         flavor = this.flavorCache[this.version][i];
-        appendChildNodes(ul, forwardLink(null, this.flavorDict[flavor]));
+        link = forwardLink(null, this.flavorDict[flavor]);
+        link.name = this.troveName;
+        link.version = this.version;
+        link.flavor = flavor;
+        link.label = this.label;
+        connect(link, "onclick", this, "pickFlavor");
+        appendChildNodes(ul, link);
     }
     // return to getTroveVersions
     returnLink = A(null, returnImg(), " Back");
@@ -142,8 +161,6 @@ TrovePicker.prototype.getTroveVersions = function(e) {
         swapDOM(oldList, ul);
         par.working(false);
         replaceChildNodes($(par.elId + 'prompt'), "Please choose a version:");
-        replaceChildNodes($(par.elId + 'troveSpec'),
-            par.buildTroveSpec(par.troveName, par.label, ''));
 
         // return to getAllTroveLabels
         returnLink = A(null, returnImg(), " Back");
@@ -175,6 +192,7 @@ TrovePicker.prototype.getAllTroveLabels = function(e) {
     if(e) {
         this.troveName = e.src().troveName;
     }
+    setNodeAttribute($(this.elId + 'Name'), 'value', this.troveName);
     var key = this.serverName + "=" + this.troveName;
     var par = this; // save the parent for the subfunction's use
 
@@ -191,8 +209,6 @@ TrovePicker.prototype.getAllTroveLabels = function(e) {
         swapDOM(oldList, ul);
         par.working(false);
         replaceChildNodes($(par.elId + 'prompt'), "Please choose a label:");
-        replaceChildNodes($(par.elId + 'troveSpec'),
-            par.buildTroveSpec(par.troveName, par.serverName, ''));
         replaceChildNodes($('return'), disabledReturn());
     };
 
@@ -230,7 +246,9 @@ TrovePicker.prototype.getGroupTroves = function() {
         }
         swapDOM(oldList, ul);
         par.working(false);
+        replaceChildNodes($(this.elId + 'prompt'), "Please choose a group:");
     };
+
 
     var callback = function(aReq) {
         logDebug(aReq.responseText);

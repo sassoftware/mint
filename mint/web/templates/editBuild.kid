@@ -19,8 +19,15 @@ from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM
             kwargs[var] = kwargs.get(var, '')
     ?>
 
+    <div py:def="trovePicker(projectId, serverName, troveName, pickerId)" py:omit="True">
+        <script type="text/javascript">
+            picker = new TrovePicker(${projectId}, '${serverName}', '${troveName}', '${pickerId}', '${cfg.staticPath}');
+        </script>
+    </div>
+
     <head>
         <title>${formatTitle((buildId and "Edit" or "Create New") + " Build")}</title>
+        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/trovepicker.js"/>
     </head>
     <?python
         if not buildId:
@@ -56,45 +63,7 @@ from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM
 
                     <div class="formgroupTitle">Build Contents<span id="baton"></span></div>
                     <div class="formgroup">
-                        <label for="trove">Distribution Group</label>
-                        <div py:strip="True" py:if="not buildId">
-                            <select py:if="not buildId" onchange="javascript:onTroveChange(${project.getId()});" id="trove" name="trove">
-                                <option value=""></option>
-                            </select>
-                            <img src="${cfg.staticPath}apps/mint/images/circle-ball-dark-antialiased.gif" id="nameSpinner" style="float: right;"/>
-                        </div>
-                        <div py:strip="True" py:if="buildId">
-                            <input type="text" name="troveDisplay" id="trove" value="${troveName}" disabled="disabled" />
-                            <input type="hidden" name="trove" value="${troveName}=${label.asString()}" />
-                            <img src="${cfg.staticPath}apps/mint/images/circle-ball-dark-antialiased.gif" id="nameSpinner" style="float: right;"/>
-                        </div>
-                        <div class="clearleft">&nbsp;</div>
-
-                        <label for="arch">Target Architecture</label>
-                        <div py:strip="True" py:if="not buildId">
-                            <select onchange="javascript:onArchChange();" id="arch" name="arch" disabled="disabled">
-                                <option value=""/>
-                            </select>
-                            <img src="${cfg.staticPath}apps/mint/images/circle-ball-dark-antialiased.gif" id="archSpinner" style="float: right;"/>
-                        </div>
-                        <div py:strip="True" py:if="buildId">
-                            <input type="text" id="arch" name="archDisplay" value="${buildId and arch or None}" disabled="disabled" />
-                            <input type="hidden" name="arch" value="${buildId and arch or None}" />
-                            <img src="${cfg.staticPath}apps/mint/images/circle-ball-dark-antialiased.gif" id="archSpinner" style="float: right;"/>
-                        </div>
-                        <div class="clearleft">&nbsp;</div>
-
-                        <label for="version">Group Version</label>
-                        <div py:strip="True" py:if="not buildId">
-                            <select onchange="javascript:onVersionChange();" id="version" name="version" disabled="disabled">
-                                <option value="" />
-                            </select>
-                        </div>
-                        <div py:strip="True" py:if="buildId">
-                            <input type="text" id="version" name="versionDisp" value="${versionStr}" disabled="disabled" />
-                            <input type="hidden" name="version" value="${version + ' ' + flavor}" />
-                        </div>
-                        <div class="clearleft">&nbsp;</div>
+                        <div id="distTrove">${trovePicker(project.id, project.getLabel().split('@')[0], '', 'distTrove')}</div>
                     </div>
 
                     <div class="formgroupTitle">Build Types</div>

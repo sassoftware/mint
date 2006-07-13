@@ -374,9 +374,10 @@ class ProjectHandler(WebHandler):
 
     @requiresAuth
     @intFields(buildId = None)
-    @strFields(trove = None, version = None, name = "", desc = "")
-    def saveBuild(self, auth, buildId, trove, version, desc, name,
-                    **kwargs):
+    @strFields(distTroveName = None, distTroveVersion = None,
+               distTroveFlavor = None, name = "", desc = "")
+    def saveBuild(self, auth, buildId, distTroveName, distTroveVersion, 
+                  distTroveFlavor, desc, name, **kwargs):
         if not buildId:
             build = self.client.newBuild(self.project.id, name)
             buildId = build.id
@@ -390,13 +391,11 @@ class ProjectHandler(WebHandler):
             self._predirect("build?id=%d" % buildId)
             return
 
-        trove, label = trove.split("=")
-        version, flavor = version.split(" ")
-        build.setTrove(trove, version, flavor)
+        build.setTrove(distTroveName, distTroveVersion, distTroveFlavor)
         build.setName(name)
         build.setDesc(desc)
 
-        flavor = deps.ThawFlavor(flavor)
+        flavor = deps.ThawFlavor(distTroveFlavor)
         jobArch = flavor.members[deps.DEP_CLASS_IS].members.keys()[0]
         assert(jobArch in ('x86', 'x86_64'))
 
@@ -441,7 +440,7 @@ class ProjectHandler(WebHandler):
     @intFields(id = None)
     def build(self, auth, id):
         builds = self.project.getBuilds()
-        publishedBuilds = [x for x in builds if x.getPublished()]
+        publishedBuilds = [x for x in builds if self.client.getBuild(x).getPublished()]
         build = self.client.getBuild(id)
         buildInProgress = False
         if auth.authorized:

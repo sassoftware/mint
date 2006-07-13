@@ -2493,7 +2493,7 @@ class MintServer(object):
         nc = conaryclient.ConaryClient(cfg).getRepos()
 
         troves = nc.getTroveVersionsByLabel({str(troveName): {versions.Label(str(labelStr)): None}})[troveName]
-        versionDict = dict((str(x), [y.freeze() for y in troves[x]]) for x in troves)
+        versionDict = dict((x.freeze(), [y.freeze() for y in troves[x]]) for x in troves)
         versionList = sorted(versionDict.keys(), reverse = True)
 
         # prepare a hash of frozen -> thawed flavors
