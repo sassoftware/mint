@@ -1098,10 +1098,10 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         page = page.postForm(1, self.post, \
                              {'name' : 'Foo',
-                              'trove': 'group-test=rpl:devel',
-                              'version': '/testproject.' + \
-                                  MINT_PROJECT_DOMAIN + \
-                                  '@rpl:devel/1.0-1-1 1#x86',
+                              'distTroveName': 'group-test',
+                              'distTroveVersion': '/testproject.' + \
+                                  MINT_PROJECT_DOMAIN + '@rpl:devel/1.0-1-1',
+                              'distTroveFlavor': '1#x86',
                               'buildtype_1' : '1'})
 
         cu = self.db.cursor()
