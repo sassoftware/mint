@@ -27,7 +27,8 @@ from mint.web.templatesupport import downloadTracker
                 <tr py:for="release in releases">
                     <td>${release.name}</td>
                     <td>${release.version}</td>
-                    <td>(<a href="${basePath}release/${release.id}">view</a>)</td>
+                    <td>(<a href="${basePath}release?id=${release.id}">view</a>)&nbsp;<span py:if="isOwner"><span py:if="not release.isFinalized()">(<a href="${basePath}editRelease?id=${release.id}">edit</a>)&nbsp;(<a href="${basePath}publishRelease?id=${release.id}">publish</a>)&nbsp;</span>(<a href="${basePath}deleteRelease?id=${release.id}">delete</a>)</span></td>
+
                 </tr>
             </tbody>
         </table>

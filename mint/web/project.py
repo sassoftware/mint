@@ -465,16 +465,6 @@ class ProjectHandler(WebHandler):
                 files = files,
                 buildInProgress = buildInProgress)
 
-    # FIXME - this probably needs to go away or be replaced with something
-    # else
-    @ownerOnly
-    @intFields(buildId = None)
-    def publish(self, auth, buildId):
-        build = self.client.getBuild(buildId)
-        build.setPublished(True)
-
-        self.predirect("build?id=%d" % buildId)
-
     @ownerOnly
     def createRelease(self, auth):
         currentBuilds = []
@@ -490,36 +480,98 @@ class ProjectHandler(WebHandler):
                            currentBuilds = currentBuilds)
 
     @ownerOnly
-    @intFields(releaseId = None)
-    @listFields(int, buildIds = [])
-    def editRelease(self, auth, releaseId, buildIds):
-        pubrelease = self.client.getPublishedRelease(releaseId)
+    @intFields(id = None)
+    def editRelease(self, auth, id):
+        pubrelease = self.client.getPublishedRelease(id)
         currentBuilds = [self.client.getBuild(x) for x in \
                 pubrelease.getBuilds()]
         availableBuilds = [self.client.getBuild(x) for x in \
                 self.project.getUnpublishedBuilds()]
 
         return self._write("editPubrelease",
-                           releaseId = None,
+                           releaseId = id,
                            name = pubrelease.name,
-                           desc = pubrelease.desc,
+                           desc = pubrelease.description,
                            version = pubrelease.version,
                            availableBuilds = availableBuilds,
                            currentBuilds = currentBuilds)
 
     @ownerOnly
-    def saveRelease(self, auth):
-        pass
+    @intFields(id = None)
+    @strFields(name = '', desc = '', version = '')
+    @listFields(int, buildIds = [])
+    def saveRelease(self, auth, id, name, desc, version, buildIds):
+        currentBuildIds = []
+        if not id:
+            pubrelease = self.client.newPublishedRelease(self.project.id)
+        else:
+            pubrelease = self.client.getPublishedRelease(id)
+            currentBuildIds = pubrelease.getBuilds()
+
+        # ignore things that are in both before and after sets
+        changedIds = set(currentBuildIds) ^ set(buildIds)
+
+        # handle adds and removes
+        for b in changedIds:
+            # add things that are in the current desired buildIds
+            if b in buildIds:
+                pubrelease.addBuild(b)
+            # delete everything else
+            else:
+                pubrelease.removeBuild(b)
+
+        # update metadata
+        pubrelease.name = name
+        pubrelease.description = desc
+        pubrelease.version = version
+
+        # ...and save
+        pubrelease.save()
+
+        if not id:
+            self._setInfo("Created release %s" % name)
+        else:
+            self._setInfo("Updated release %s" % name)
+        self._predirect("releases")
 
     @ownerOnly
-    @intFields(releaseId = None)
-    def deleteRelease(self, auth, releaseId):
-        pass
+    @dictFields(yesArgs = {})
+    @boolFields(confirmed = False)
+    def deleteRelease(self, auth, confirmed, **yesArgs):
+        if confirmed:
+            self.client.deletePublishedRelease(int(yesArgs['id']))
+            self._setInfo("Deleted release")
+            self._predirect("releases")
+        else:
+            return self._write("confirm",
+                    message = "Are you sure you want to delete this release? All builds associated with this release will be put back in the pool of unpublished releases.",
+                    yesArgs = { 'func': 'deleteRelease',
+                                'id': yesArgs['id'],
+                                'confirmed': '1' },
+                    noLink = "releases")
 
     @ownerOnly
-    @intFields(releaseId = None)
-    def finalizeRelease(self, auth, releaseId):
-        pass
+    @dictFields(yesArgs = {})
+    @boolFields(confirmed = False)
+    def publishRelease(self, auth, confirmed, **yesArgs):
+        if confirmed:
+            pubrelease = self.client.getPublishedRelease(int(yesArgs['id']))
+            pubrelease.finalize()
+            self._setInfo("Published release %s version %s" % (pubrelease.name, pubrelease.version))
+            self._predirect("releases")
+        else:
+            return self._write("confirm",
+                    message = "Are you sure you want to publish this release? No more modifications can be made to the release after it has been published. If any modifications need to be made after publishing, you will have to delete the release and recreate it.",
+                    yesArgs = { 'func': 'publishRelease',
+                                'id': yesArgs['id'],
+                                'confirmed': '1'},
+                    noLink = "releases")
+
+    @intFields(id = None)
+    def release(self, auth, id):
+        release = self.client.getPublishedRelease(id)
+        builds = [self.client.getBuild(x) for x in release.getBuilds()]
+        return self._write("pubrelease", release = release, builds = builds)
 
     @writersOnly
     @intFields(buildId = None)

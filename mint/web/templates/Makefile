@@ -8,6 +8,8 @@ SUBDIRS = repos admin docs setup
 
 kid_files = \
 	applianceSpotlight.kid	\
+	build.kid		\
+	builds.kid		\
 	conaryDevelCfg.kid	\
 	conaryUserCfg.kid	\
 	confirmEmail.kid	\
@@ -42,8 +44,7 @@ kid_files = \
 	register.kid		\
 	register_reconf.kid	\
 	rejectJoinRequest.kid   \
-	build.kid		\
-	builds.kid		\
+	pubrelease.kid		\
 	pubreleases.kid		\
 	rMake.kid		\
 	rMakeStatus.kid		\

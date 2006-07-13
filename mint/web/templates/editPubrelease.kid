@@ -31,7 +31,7 @@ from mint import pubreleases
                 <h2>${releaseId and "Edit" or "Create"} Release</h2>
                 <p  py:if="availableBuilds" class="help" style="margin-bottom: 24px;">Use this page to ${releaseId and 'edit an existing' or 'create a'} release. Fields labeled with a <em class="required">red arrow</em> are required. In addition, one or more builds must be selected from the Release Contents section${releaseId and 's' or ''}.</p>
 
-                <form py:if="availableBuilds" method="post" action="saveRelease" id="mainForm">
+                <form py:if="availableBuilds or currentBuilds" method="post" action="saveRelease" id="mainForm">
 
                     <div class="formgroupTitle">Release Information</div>
                     <div class="formgroup">
@@ -52,7 +52,7 @@ from mint import pubreleases
                     </div>
 
 
-                    <span py:if="releaseId">
+                    <div strip="True" py:if="currentBuilds">
                     <div class="formgroupTitle">Current Release Contents<span id="baton"></span></div>
                     <div class="formgroup">
                     <p class="help" style="margin-left: 20px; margin-right: 20px; margin-top: -5px; margin-bottom: 5px;">The following builds are currently included in this release. Un-check a build to remove it.</p>
@@ -95,9 +95,9 @@ from mint import pubreleases
                         <?python rowStyle ^= 1 ?>
                         </div>
                     </div>
-                    </span>
+                    </div>
 
-
+                    <div py:if="availableBuilds" py:strip="True">
                     <div class="formgroupTitle">${releaseId and 'Unpublished Builds' or 'Release Contents'}<span id="baton"></span></div>
                     <div class="formgroup">
                     <p class="help" style="margin-right: 20px; margin-left: 20px; margin-top: -5px; margin-bottom: 5px;">${releaseId and 'The following builds are currently not included with this release. Check a release to add it.' or 'Select builds to be included with this release.'}</p>
@@ -140,11 +140,17 @@ from mint import pubreleases
                         <?python rowStyle ^= 1 ?>
                         </div>
                     </div>
+                    </div>
 
                     <p>
                         <button id="submitButton" type="submit" py:attrs="{'disabled': not releaseId and 'disable' or None}">${releaseId and "Update" or "Create"} Release</button>
                     </p>
-                    <input py:if="releaseId" type="hidden" name="releaseId" value="${releaseId}" />
+                    <?python
+                        # hacktastic way of not passing a None through a request
+                        if not releaseId:
+                            releaseId = 0
+                    ?>
+                    <input type="hidden" name="id" value="${releaseId}" />
                 </form>
                 <p py:if="not (availableBuilds or currentBuilds)" class="help">There are currently no unpublished builds associated with this project. One or more unpublished builds are required to create a release.  Click <a href="${basePath}builds">here</a> to create a new build.</p>
             </div>

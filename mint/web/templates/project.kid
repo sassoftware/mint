@@ -28,7 +28,7 @@
         <div class="boxHeader">Project Resources</div>
         <ul>
             <li py:attrs="{'class': (lastchunk == '') and 'selectedItem' or None}"><a href="$projectUrl">Project Home</a></li>
-            <li py:attrs="{'class': (lastchunk in ('build', 'builds', 'newBuild', 'editBuild')) and 'selectedItem' or None}"><a href="${projectUrl}builds">Builds</a></li>
+            <li py:if="isDeveloper" py:attrs="{'class': (lastchunk in ('build', 'builds', 'newBuild', 'editBuild')) and 'selectedItem' or None}"><a href="${projectUrl}builds">Builds</a></li>
             <li py:attrs="{'class': (lastchunk in ('release', 'releases', 'newRelease', 'editRelease', 'deleteRelease')) and 'selectedItem' or None}"><a href="${projectUrl}releases">Releases</a></li>
             <li py:attrs="{'class': (lastchunk in ('browse', 'troveInfo')) and 'selectedItem' or None}"><a href="${projectUrl}../../repos/${project.getHostname()}/browse">Repository</a></li>
             <li py:if="isDeveloper and not project.external" py:attrs="{'class': (lastchunk in ('groups', 'editGroup', 'editGroup2', 'newGroup', 'pickArch', 'cookGroup')) and 'selectedItem' or None}"><a href="${projectUrl}groups">Group Builder</a></li>
@@ -179,5 +179,44 @@
             <div id="administer" py:if="auth.admin"><a href="http://${SITE}admin/"><strong>Site administration</strong></a></div>
             <div id="rMake"><a href="http://${SITE}rMake/" style="font-weight: bold;">rMake Builder</a></div>
         </div>
+    </div>
+
+    <div py:strip="True" py:def="buildTable(builds)">
+        <table>
+            <tr>
+                <th>Build Name</th>
+                <th>Arch</th>
+                <th>Image Type</th>
+            </tr>
+            <div py:strip="True" py:for="build in builds">
+                ${buildTableRow(build)}
+            </div>
+        </table>
+    </div>
+
+    <div py:strip="True" py:def="buildTableRow(build)">
+        <?python
+            from mint import buildtypes
+            from mint.helperfuncs import truncateForDisplay
+            from mint.web.templatesupport import downloadTracker
+            shorterName = truncateForDisplay(build.name)
+            buildFiles = build.getFiles()
+        ?>
+        <tr class="buildHeader">
+            <td><a href="${basePath}/build?id=${build.id}">${shorterName}</a></td>
+            <td>${build.getArch()}</td>
+            <td>${buildtypes.typeNamesShort[build.buildType]}</td>
+        </tr>
+        <tr>
+            <td colspan="3">
+                <ul class="downloadList">
+                    <li py:for="i, file in enumerate(buildFiles)">
+                        <?py fileUrl = cfg.basePath + "downloadImage/" + str(file['fileId']) + "/" + file['filename'] ?>
+                        <a py:attrs="downloadTracker(cfg, fileUrl)" href="http://${cfg.siteHost}${fileUrl}">${file['title'] and file['title'] or "Disc " + str(i+1)}</a> (${file['size']/1048576}&nbsp;MB)
+                    </li>
+                    <li py:if="not buildFiles">Build contains no downloadable files.</li>
+                </ul>
+            </td>
+        </tr>
     </div>
 </html>
