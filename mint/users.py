@@ -15,6 +15,7 @@ import socket
 import string
 import sys
 import time
+import urllib
 from email import MIMEText
 
 from mint import database
@@ -120,6 +121,11 @@ class UsersTable(database.KeyedTable):
             self.authDb = sqlite3.connect(cfg.authDbPath)
         database.DatabaseTable.__init__(self, db)
         self.confirm_table = ConfirmationsTable(db)
+        # not passing a db object since a mint db isn't correct
+        # and we're only using the _checkPassword function anyway
+        self._userAuth = repository.netrepos.netauth.UserAuthorization(
+            db = None, pwCheckUrl = self.cfg.externalPasswordURL,
+            cacheTimeout = self.cfg.authCacheTimeout)
 
     def versionCheck(self):
         dbversion = self.getDBVersion()
@@ -156,12 +162,9 @@ class UsersTable(database.KeyedTable):
                    salt, passwd, username)
         self.db.commit()
 
-    def _checkPassword(self, salt, password, challenge):
-        m = md5.new()
-        m.update(salt)
-        m.update(challenge)
-
-        return m.hexdigest() == password
+    def _checkPassword(self, user, salt, password, challenge):
+        return self._userAuth._checkPassword( \
+                user, salt, password, challenge)
 
     def _mungePassword(self, password):
         m = md5.new()
@@ -176,7 +179,7 @@ class UsersTable(database.KeyedTable):
         cu = self.db.cursor()
         cu.execute("SELECT salt, passwd FROM Users WHERE username=?", user)
         r = cu.fetchone()
-        if r  and self._checkPassword(r[0], r[1], challenge):
+        if r  and self._checkPassword(user, r[0], r[1], challenge):
             cu.execute("""SELECT UserGroups.userGroup
                           FROM UserGroups, Users, UserGroupMembers
                           WHERE UserGroups.userGroupId =
