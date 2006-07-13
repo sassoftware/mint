@@ -108,6 +108,10 @@ class MintConfig(ConfigFile):
     spotlightImagesDir      = os.path.join(os.path.sep, 'spotlight_images')
     bannersPerPage          = (cfgtypes.CfgInt, 5)
 
+    # mimic exactly the conary server cfg items
+    externalPasswordURL     = CfgString
+    authCacheTimeout        = CfgInt
+
     def read(self, path, exception = False):
         ConfigFile.read(self, path, exception)
 
