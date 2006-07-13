@@ -168,8 +168,6 @@ class SpiderPageTest(mint_rephelp.WebRepositoryHelper):
 
             build.setDesc('')
             build.setBuildType(buildtypes.STUB_IMAGE)
-            if not i:
-                build.setPublished(True)
 
         # compile regex expressions
         self.reLinks = re.compile("<a href=[^<>]*>", re.IGNORECASE)
