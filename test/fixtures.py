@@ -207,7 +207,7 @@ class FixtureCache(object):
         # create a build for the "foo" project called "Test Build"
         build = client.newBuild(projectId, "Test Build")
         build.setTrove("group-dist", "/testproject." + \
-                MINT_PROJECT_DOMAIN + "@rpl:devel/1.0-1-1", "1#x86")
+                MINT_PROJECT_DOMAIN + "@rpl:devel/0.0:1.0-1-1", "1#x86")
         stockBuildFlavor(db, build.id)
 
         # create another build for the "foo" project and publish it
@@ -215,7 +215,7 @@ class FixtureCache(object):
         pubBuild.setBuildType(buildtypes.STUB_IMAGE)
         pubBuild.setFiles([["file", "file title 1"]])
         pubBuild.setTrove("group-dist", "/testproject." + \
-                MINT_PROJECT_DOMAIN + "@rpl:devel/1.0-2-1", "1#x86")
+                MINT_PROJECT_DOMAIN + "@rpl:devel/0.0:1.0-2-1", "1#x86")
         stockBuildFlavor(db, pubBuild.id)
         pubRelease = client.newPublishedRelease(projectId)
         pubRelease.addBuild(pubBuild.id)
