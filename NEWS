@@ -10,6 +10,7 @@ Changes in tip:
 * Xen support has been added to the group builder "cook group" dialog.
 * Fix for RBL-408: Opening two "create release" tabs at once gives "requested
   item not found"
+* External password checking URLs can now be used.
 
 --- affects job server on tip ---
 * vmware images now default to bridged mode.
