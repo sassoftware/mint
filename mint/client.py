@@ -313,7 +313,7 @@ class MintClient:
         @param limit: The number of builds to display
         @param offset: List @limit starting at item @offset
         """
-        return [(x[0], x[1], self.getBuild(x[2])) for x in \
+        return [(x[0], x[1], self.getPublishedRelease(x[2])) for x in \
                 self.server.getPublishedReleaseList(limit, offset)]
 
     def newPublishedRelease(self, projectId):

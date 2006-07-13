@@ -132,14 +132,17 @@ from mint.client import upstream
                             <p py:if="not publishedReleases">No releases have been published yet.</p>
                             <ol py:if="publishedReleases">
 
-                                <li py:for="release in publishedReleases">
+                                <li py:for="releaseInfo in publishedReleases">
                                     <?python
-                                        projectName = release[0]
-                                        shorterReleaseName = truncateForDisplay(release[2].name, maxWords=5)
-                                        if release[2].version:
-                                            shorterReleaseName += " (%s)" % release[2].version
+                                        projectName, hostname, release = releaseInfo
+                                        releaseName = release.name
+                                        shorterProjectName = truncateForDisplay(projectName, maxWords=5)
+                                        shorterReleaseName = truncateForDisplay(releaseName, maxWords=8)
+                                        if release.version:
+                                            shorterReleaseName += " (Version %s)" % release.version
+                                            releaseName += " (Version %s)" % release.version
                                     ?>
-                                    <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${release[1]}/release?id=${release[2].id}" title="${release[2].name}">${projectName} <span style="font-size: smaller">${shorterReleaseName}</span></a>
+                                    <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${hostname}/release?id=${release.id}" title="${releaseName}">${projectName}<br /><span style="font-size: smaller">${shorterReleaseName}</span></a>
                                  </li>
                              </ol>
                          </td>
