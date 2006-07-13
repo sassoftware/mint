@@ -977,6 +977,32 @@ div.clearleft {
     margin-left: 30px;
 }
 
+span.smallSpecs {
+    font-size: 0.4em;
+    font-weight: normal;
+    font-style: italic;
+    margin-left: 10px;
+}
+
+label.troveSpecs {
+    text-decoration: underline;
+    width: 25%;
+    display: block;
+}
+
+div.troveData {
+    width: 68%;
+    float: right;
+    margin-right: 10px;
+}
+
+input.relCheck {
+    width: auto;
+    float: right;
+    margin-top: 10px;
+    margin-right: 20px;
+}
+
 /* mailing-list specific styles */
 div.mailingListButtons div {
     float:left;
