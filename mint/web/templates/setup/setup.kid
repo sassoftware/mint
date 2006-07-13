@@ -54,6 +54,7 @@ from conary.lib.cfg import *
                         </tr>
                     </table>
                 </div>
+                <div py="strip" py:if="not cfg.configured">
                 <h2>Initial Administrator Account</h2>
                 <table class="setup">
                     <tr>
@@ -81,6 +82,7 @@ from conary.lib.cfg import *
                         </td>
                     </tr>
                 </table>
+                </div>
             <p><button type="submit" class="img"><img src="${cfg.staticPath}apps/mint/images/save_changes_button.png" alt="Save Changes" /></button></p>
           </form>
         </div>
