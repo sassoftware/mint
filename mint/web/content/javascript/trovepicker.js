@@ -91,7 +91,7 @@ TrovePicker.prototype.buildTrovePicker = function() {
 TrovePicker.prototype.pickFlavor = function(e) {
     flavor = e.src().flavor;
     setNodeAttribute($(this.elId + 'Flavor'), 'value', e.src().flavor);
-    
+
     swapDOM($(this.elId + 'selectionList'),
         SPAN(null, e.src().name + "=" + e.src().version + "[" + e.src().flavor + "]"));
 
@@ -246,7 +246,7 @@ TrovePicker.prototype.getGroupTroves = function() {
         }
         swapDOM(oldList, ul);
         par.working(false);
-        replaceChildNodes($(this.elId + 'prompt'), "Please choose a group:");
+        replaceChildNodes($(par.elId + 'prompt'), "Please choose a group:");
     };
 
 
