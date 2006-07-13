@@ -237,7 +237,6 @@ class BuildTest(fixtures.FixturedUnitTest):
         build.setTrove("group-trove",
                          "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
         build.setFiles([["file1", "File Title 1"]])
-        build.setPublished(True)
 
         # ugly hack. mysql does not distinguish sub-second time resolution
         time.sleep(1)
@@ -246,7 +245,6 @@ class BuildTest(fixtures.FixturedUnitTest):
         build.setTrove("group-trove",
                          "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
         build.setFiles([["file1", "File Title 1"]])
-        build.setPublished(True)
 
         self.failIf(client.server.getBuildsForProject(projectId) != [2, 1],
                     "getBuildsForProject is not ordered by "
