@@ -20,6 +20,7 @@ from mint.session import SqlSession
 from mint.web.webhandler import WebHandler, normPath, HttpNotFound, HttpForbidden
 
 from conary.web.fields import strFields, intFields, listFields, boolFields
+from conary.repository.netrepos import netauth
 
 configGroups = {
     'Server Setup':
@@ -28,6 +29,8 @@ configGroups = {
         ('companyName', 'corpSite'),
     'Repository Setup':
         ('defaultBranch',),
+    '(Optional) External Passwords':
+        ('externalPasswordURL', 'authCacheTimeout'),
 }
 
 
@@ -70,14 +73,32 @@ class SetupHandler(WebHandler):
                 hostname is only the first part of the fully-qualified domain name.""")
         if 'siteDomainName' not in kwargs or not kwargs['siteDomainName']:
             errors.append("""You must specify a domain name for this installation.""")
-        if 'new_username' not in kwargs:
+        if not self.cfg.configured and 'new_username' not in kwargs:
             errors.append("You must enter a username to be created")
-        if 'new_email' not in kwargs:
+        if not self.cfg.configured and 'new_email' not in kwargs:
             errors.append("You must enter an administrator email address")
-        if 'new_password' not in kwargs or 'new_password2' not in kwargs:
+        if not self.cfg.configured and \
+               ('new_password' not in kwargs or 'new_password2' not in kwargs):
             errors.append("You must enter initial passwords")
-        elif kwargs['new_password'] != kwargs['new_password2']:
+        elif not self.cfg.configured and kwargs['new_password'] != \
+                 kwargs['new_password2']:
             errors.append("Passwords must match")
+        if kwargs.get('externalPasswordURL'):
+            userAuth = netauth.UserAuthorization( \
+                None, pwCheckUrl = kwargs['externalPasswordURL'],
+                cacheTimeout = kwargs.get('authCacheTimeout'))
+            if self.auth.admin and not userAuth._checkPassword( \
+                self.auth.username, None, None, self.auth.token[1]):
+                errors.append('Username: %s was not accepted by: %s' % \
+                              (self.auth.username,
+                               kwargs['externalPasswordURL']))
+            if kwargs.get('new_username') and \
+                   not userAuth._checkPassword(kwargs.get('new_username'),
+                                               None, None,
+                                               kwargs.get('new_password')):
+                errors.append('Username: %s was not accepted by: %s' % \
+                              (kwargs.get('new_username'),
+                               kwargs.get('new_password')))
 
         # rewrite configuration file
         keys = self.fields.keys()
@@ -95,18 +116,18 @@ class SetupHandler(WebHandler):
         newCfg.SSL = True
         newCfg.secureHost = newCfg.siteHost
         newCfg.projectDomainName = newCfg.externalDomainName = newCfg.siteDomainName
-        newCfg.bugsEmail = newCfg.adminMail = kwargs['new_email']
-
-        # create new user
-        userId = mintClient.registerNewUser(
-            str(kwargs['new_username']),
-            str(kwargs['new_password']),
-            "Administrator",
-            str(kwargs['new_email']),
-            "", "", active = True)
-        self.req.log_error("created initial user account %s (id %d)" % (str(kwargs['new_username']), userId))
-        mintClient.promoteUserToAdmin(userId)
-        self.req.log_error("promoted %d to admin" % userId)
+        if not self.cfg.configured:
+            newCfg.bugsEmail = newCfg.adminMail = kwargs['new_email']
+            # create new user
+            userId = mintClient.registerNewUser(
+                str(kwargs['new_username']),
+                str(kwargs['new_password']),
+                "Administrator",
+                str(kwargs['new_email']),
+                "", "", active = True)
+            self.req.log_error("created initial user account %s (id %d)" % (str(kwargs['new_username']), userId))
+            mintClient.promoteUserToAdmin(userId)
+            self.req.log_error("promoted %d to admin" % userId)
 
         cfg = file(RBUILDER_CONFIG, 'w')
         newCfg.display(out = cfg)
