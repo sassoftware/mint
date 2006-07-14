@@ -203,7 +203,7 @@
             buildFiles = build.getFiles()
         ?>
         <tr class="buildHeader">
-            <td><a href="${basePath}/build?id=${build.id}">${shorterName}</a></td>
+            <td><a href="${basePath}build?id=${build.id}">${shorterName}</a></td>
             <td>${build.getArch()}</td>
             <td>${buildtypes.typeNamesShort[build.buildType]}</td>
         </tr>
