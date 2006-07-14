@@ -39,9 +39,9 @@ class SpiderPageTest(mint_rephelp.WebRepositoryHelper):
         actions = [(self.stripString(self.reAction.findall(x)[0]), \
                     self.stripString(self.reMethod.findall(x)[0]).upper())
                    for x in forms]
+        actions = [x for x in actions if x[1] == 'GET']
         res = self.checkLinks([x[0] for x in actions], page.url)
-        for link, index in [(x[0], i) for i, x in \
-                            zip(range(len(actions)), actions) if x[1]=='GET']: 
+        for link, index in [(x[0], i) for i, x in enumerate(actions)]:
             newPage = page.getForm(index, self.get, {})
             if link not in self.checked:
                 res = self.spiderLink(link, newPage) or res
