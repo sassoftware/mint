@@ -94,7 +94,24 @@ class SiteSummary(MintReport):
                               WHERE timeCreated > ?)
                           AS ProjectBuilds""",
                    reportTime - 604800)
-        data.append(('Projects with builds this week', cu.fetchone()[0]))
+        data.append(('Projects with new builds this week', cu.fetchone()[0]))
+
+        # count projects with finalized published releases
+        cu.execute("""SELECT COUNT(*) FROM
+                          (SELECT DISTINCT projectId
+                            FROM PublishedReleases
+                            WHERE timePublished IS NOT NULL)
+                          AS FinalizedPublishedReleases""")
+        data.append(('Projects with published releases', cu.fetchone()[0]))
+
+        # count projects with finalized published releases this week
+        cu.execute("""SELECT COUNT(*) FROM
+                          (SELECT DISTINCT projectId
+                            FROM PublishedReleases
+                            WHERE timePublished > ?)
+                          AS FinalizedPublishedReleases""",
+                   reportTime - 604800)
+        data.append(('Projects with new published releases this week', cu.fetchone()[0]))
 
         # count projects with commits
         cu.execute("""SELECT COUNT(*) FROM
@@ -152,7 +169,7 @@ class SiteSummary(MintReport):
         # count builds for each image type
         for buildType in countedBuilds:
             cu.execute("""SELECT COUNT(*) FROM Builds
-                              WHERE Build.buildType=?""",
+                              WHERE buildType=?""",
                        buildType)
             data.append((buildtypes.typeNames[buildType],
                          cu.fetchone()[0]))
