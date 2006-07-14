@@ -1858,7 +1858,6 @@ class MintServer(object):
         return True
 
     @typeCheck(int)
-    @requiresAuth
     @private
     def isPublishedReleaseFinalized(self, pubReleaseId):
         self._filterPublishedReleaseAccess(pubReleaseId)
