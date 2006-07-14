@@ -1217,3 +1217,8 @@ div.trovePicker ul, div.trovePicker ul {
     list-style-type: none;
     padding-left: 12px;
 }
+
+div.formsubgroup > div > a {
+    cursor: pointer;
+    text-decoration: underline;
+}

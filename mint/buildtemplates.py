@@ -2,7 +2,7 @@
 #
 # All Rights Reserved
 import sys
-from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM
+from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM, RDT_TROVE
 from mint import buildtypes
 
 class BuildOption(tuple):
@@ -18,16 +18,27 @@ class IntegerOption(BuildOption):
 class BooleanOption(BuildOption):
     type = RDT_BOOL
 
+class TroveOption(BuildOption):
+    type = RDT_TROVE
+
 class EnumOption(BuildOption):
     type = RDT_ENUM
 
     def __new__(self):
         return tuple.__new__(tuple, (self.type, self.default, self.prompt, self.options))
 
+optionNameMap = {
+    'anacondaCustomTrove': 'anaconda-custom',
+    'anacondaTemplatesTrove': 'anaconda-templates',
+    'mediaTemplateTrove': 'media-template',
+}
+
+
 class Template(dict):
     def __init__(self):
         for option in self.__slots__:
-            dict.__setitem__(self, option,
+            newOption = optionNameMap.get(option, option)
+            dict.__setitem__(self, newOption,
                              sys.modules[__name__].__dict__[option]())
 
 # *** Extremely Important ***
@@ -104,6 +115,18 @@ class enumArg(EnumOption):
     prompt = 'Garbage Enum'
     options = {'foo' : '0', 'bar': '1', 'baz': '2'}
 
+class mediaTemplateTrove(TroveOption):
+    default = ''
+    prompt  = 'Version of the media-template trove to use when creating this image'
+
+class anacondaCustomTrove(TroveOption):
+    default = ''
+    prompt  = 'Version of the anaconda-custom trove to use when creating this image'
+
+class anacondaTemplatesTrove(TroveOption):
+    default = ''
+    prompt  = 'Version of the anaconda-templates trove to use when creating this image'
+
 ###
 # Templates
 # classes must end with 'Template' to be properly processed.
@@ -130,7 +153,8 @@ class VmwareImageTemplate(Template):
 
 class InstallableIsoTemplate(Template):
     __slots__ = ['autoResolve', 'maxIsoSize', 'baseFileName', 'bugsUrl',
-                 'installLabelPath', 'showMediaCheck', 'betaNag']
+                 'installLabelPath', 'showMediaCheck', 'betaNag',
+                 'mediaTemplateTrove', 'anacondaCustomTrove', 'anacondaTemplatesTrove']
     id = buildtypes.INSTALLABLE_ISO
 
 class NetbootTemplate(Template):

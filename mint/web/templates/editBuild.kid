@@ -3,7 +3,7 @@
 <?python
 from mint import buildtypes
 from mint.buildtypes import typeNames
-from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM
+from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM, RDT_TROVE
 ?>
 
 <html xmlns="http://www.w3.org/1999/xhtml"
@@ -101,6 +101,12 @@ from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM
                                         <select name="${name}" id="${name}" py:attrs="{'disabled' : key != defaultTemplate and 'disabled' or None}">
                                             <option py:for="prompt, val in sorted(dataRow[3].iteritems())" py:content="prompt" value="${val}" py:attrs="{'selected' : val == dataRow[1] and 'selected' or None}"/>
                                         </select>
+                                    </div>
+                                    <div py:strip="True" py:if="(dataRow[0] == RDT_TROVE)">
+                                        <label for="${name}">${dataRow[2]}</label>
+                                        <div id="${name}">Defaults to latest on branch
+                                            (<a onclick="new TrovePicker(${project.id}, '${project.getLabel().split('@')[0]}', '${name}', '${name}', '${cfg.staticPath}');">change)</a></div>
+
                                     </div>
                                     <div class="clearleft">&nbsp;</div>
                                 </div>

@@ -1096,21 +1096,25 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         page = self.fetch('/project/testproject/newBuild')
 
+        troveSpec = 'group-test=/testproject.' + MINT_PROJECT_DOMAIN + '@rpl:devel/1.0-1-1' + '[is: x86]'
         page = page.postForm(1, self.post, \
                              {'name' : 'Foo',
-                              'distTroveName': 'group-test',
-                              'distTroveVersion': '/testproject.' + \
-                                  MINT_PROJECT_DOMAIN + '@rpl:devel/1.0-1-1',
-                              'distTroveFlavor': '1#x86',
+                              'distTroveSpec': troveSpec,
+                              'anaconda_templatesSpec': troveSpec,
                               'buildtype_1' : '1'})
 
         cu = self.db.cursor()
-        cu.execute("SELECT troveName FROM Builds")
+        cu.execute("SELECT buildId, troveName FROM Builds")
 
         res = cu.fetchall()
         self.failIf(not res, "No build was generated from a web click.")
-        self.failIf(res[0][0] != 'group-test',
+        buildId = res[0][0]
+        self.failIf(res[0][1] != 'group-test',
                     "Trove name was malformed during build creation.")
+
+        build = client.getBuild(buildId)
+        assert(build.getDataValue('anaconda-templates') == 
+            'group-test=/testproject.rpath.local2@rpl:devel/1.0-1-1[is: x86]')
 
     def testForPhantomBuildRows(self):
         client, userId = self.quickMintUser('foouser', 'foopass')

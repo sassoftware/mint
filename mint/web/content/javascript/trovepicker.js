@@ -31,6 +31,10 @@ function disabledReturn() {
     return DIV(gray, IMG({'src': staticPath + prevImgDisabled}), " Back");
 }
 
+function buildTroveSpec(n, v, f) {
+    return n + "=" + v + "[" + f + "]";
+}
+
 // ctor
 function TrovePicker(projectId, serverName, troveName, pickerId, mintStaticPath) {
     this.projectId = projectId;
@@ -47,7 +51,6 @@ TrovePicker.prototype.serverName = null;
 TrovePicker.prototype.label = null;
 TrovePicker.prototype.version = null;
 TrovePicker.prototype.flavorCache = null;
-TrovePicker.prototype.flavorDict = null;
 
 TrovePicker.prototype.working = function(isWorking) {
     if(isWorking) {
@@ -74,9 +77,7 @@ TrovePicker.prototype.buildTrovePicker = function() {
         P({'id': 'return'}),
         spinner,
         UL({'id': this.elId + 'selectionList'}),
-        INPUT({'id': this.elId + 'Name', 'name': this.elId + 'Name', 'type': 'hidden'}),
-        INPUT({'id': this.elId + 'Version', 'name': this.elId + 'Version', 'type': 'hidden'}),
-        INPUT({'id': this.elId + 'Flavor', 'name': this.elId + 'Flavor', 'type': 'hidden'})
+        INPUT({'id': this.elId.replace("-", "_") + 'Spec', 'name': this.elId + 'Spec', 'type': 'hidden'})
     );
     swapDOM(oldEl, picker);
 
@@ -89,8 +90,8 @@ TrovePicker.prototype.buildTrovePicker = function() {
 
 // A flavor has been chosen--continue on
 TrovePicker.prototype.pickFlavor = function(e) {
-    flavor = e.src().flavor;
-    setNodeAttribute($(this.elId + 'Flavor'), 'value', e.src().flavor);
+    var troveSpec = buildTroveSpec(e.src().name, e.src().version, e.src().flavor);
+    setNodeAttribute($(this.elId.replace("-", "_") + 'Spec'), 'value', troveSpec);
 
     swapDOM($(this.elId + 'selectionList'),
         SPAN(null, e.src().name + "=" + e.src().version + "[" + e.src().flavor + "]"));
@@ -102,22 +103,23 @@ TrovePicker.prototype.pickFlavor = function(e) {
     connect(returnLink, "onclick", this, "showTroveFlavors");
     replaceChildNodes($('return'), returnLink);
 
-    var sb = $('submitButton');
-    sb.disabled = false;
+    if(this.elId == "distTrove") {
+        var sb = $('submitButton');
+        sb.disabled = false;
+    }
 }
 
 // Show all flavors available for a given trove and version
 TrovePicker.prototype.showTroveFlavors = function(e) {
     this.version = e.src().version;
     this.label = e.src().label;
-    setNodeAttribute($(this.elId + 'Version'), 'value', this.version);
 
     oldList = $(this.elId + 'selectionList');
     ul = UL({ 'id': this.elId + 'selectionList' });
 
     for(var i in this.flavorCache[this.version]) {
         flavor = this.flavorCache[this.version][i];
-        link = forwardLink(null, this.flavorDict[flavor]);
+        link = forwardLink(null, flavor);
         link.name = this.troveName;
         link.version = this.version;
         link.flavor = flavor;
@@ -149,7 +151,6 @@ TrovePicker.prototype.getTroveVersions = function(e) {
         ul = UL({ 'id': par.elId + 'selectionList' });
 
         par.flavorCache = versionDict;
-        par.flavorDict = req[2];
 
         for(var i in versionList) {
             link = forwardLink(null, versionList[i]);
@@ -192,7 +193,6 @@ TrovePicker.prototype.getAllTroveLabels = function(e) {
     if(e) {
         this.troveName = e.src().troveName;
     }
-    setNodeAttribute($(this.elId + 'Name'), 'value', this.troveName);
     var key = this.serverName + "=" + this.troveName;
     var par = this; // save the parent for the subfunction's use
 

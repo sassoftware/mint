@@ -31,6 +31,7 @@ from conary import conaryclient
 from conary import conarycfg
 from conary.deps import deps
 from conary import versions
+from conary.conaryclient.cmdline import parseTroveSpec
 from conary.web.fields import strFields, intFields, listFields, boolFields, dictFields
 
 def getUserDict(members):
@@ -374,10 +375,8 @@ class ProjectHandler(WebHandler):
 
     @requiresAuth
     @intFields(buildId = None)
-    @strFields(distTroveName = None, distTroveVersion = None,
-               distTroveFlavor = None, name = "", desc = "")
-    def saveBuild(self, auth, buildId, distTroveName, distTroveVersion, 
-                  distTroveFlavor, desc, name, **kwargs):
+    @strFields(distTroveSpec = None, name = "", desc = "")
+    def saveBuild(self, auth, buildId, distTroveSpec, name, desc, **kwargs):
         if not buildId:
             build = self.client.newBuild(self.project.id, name)
             buildId = build.id
@@ -391,18 +390,25 @@ class ProjectHandler(WebHandler):
             self._predirect("build?id=%d" % buildId)
             return
 
-        build.setTrove(distTroveName, distTroveVersion, distTroveFlavor)
+        distTroveName, distTroveVersion, distTroveFlavor = parseTroveSpec(distTroveSpec)
+        build.setTrove(distTroveName, distTroveVersion, distTroveFlavor.freeze())
         build.setName(name)
         build.setDesc(desc)
 
-        flavor = deps.ThawFlavor(distTroveFlavor)
-        jobArch = flavor.members[deps.DEP_CLASS_IS].members.keys()[0]
+        jobArch = distTroveFlavor.members[deps.DEP_CLASS_IS].members.keys()[0]
         assert(jobArch in ('x86', 'x86_64'))
 
         # handle buildType check box state changes
         buildType = int(kwargs['buildtype'])
 
         build.setBuildType(buildType)
+
+        # convert any python variable-name-safe trove spec parameters to the
+        # real data value name (they end in Spec, and have - translated to _)
+        for key in [x for x in kwargs if x.endswith('Spec')]:
+            newKey = key[:-4].replace("_", "-")
+            kwargs.update({newKey: str(kwargs[key])})
+            del kwargs[key]
 
         # get the template from the build and handle any relevant args
         # remember that checkboxes don't pass args for unchecked boxxen
