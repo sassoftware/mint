@@ -86,7 +86,7 @@ from mint.web.templatesupport import downloadTracker
         </table>
         <p py:if="not filteredBuilds">This project has no ${wantPublished and "published" or "unpublished"} builds.</p>
         <p py:if="ithBuild > numShowByDefault"><a name="${hiddenName}" onclick="javascript:toggle_display_by_name('${hiddenName}');" href="#">(show all ${wantPublished and "published" or "unpublished"} builds)</a></p>
-        <p py:if="isOwner and wantPublished"><strong><a href="newBuild">Create a new build</a></strong></p>
+        <p py:if="isWriter and wantPublished"><strong><a href="newBuild">Create a new build</a></strong></p>
     </div>
 
     <body>

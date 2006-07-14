@@ -15,7 +15,8 @@ from mint.web.templatesupport import downloadTracker
       py:extends="'layout.kid'">
     <?python
     isOwner = (userLevel == userlevels.OWNER or auth.admin)
-    if isOwner:
+    isWriter = (userLevel in userlevels.WRITERS or auth.admin)
+    if isWriter:
         onload = "getBuildStatus(" + str(build.getId()) + ");"
     else:
         onload = None
@@ -27,7 +28,7 @@ from mint.web.templatesupport import downloadTracker
     </head>
     <body py:attrs="bodyAttrs">
         <?python
-            if isOwner:
+            if isWriter:
                 job = build.getJob()
             else:
                 job = None
@@ -63,10 +64,10 @@ from mint.web.templatesupport import downloadTracker
                 <p>${build.getDesc().strip() or "Build has no description."}</p>
 
 
-                <div py:strip="True" py:if="isOwner">
+                <div py:strip="True" py:if="isWriter">
                     <h3>Creation Status</h3>
 
-                    <div py:if="isOwner and not build.getPublished()" id="jobStatusDingus">
+                    <div py:if="isWriter and not build.getPublished()" id="jobStatusDingus">
                         <div>
                             <img src="${cfg.staticPath}apps/mint/images/circle-ball-dark-antialiased.gif" id="spinner" style="float: right;"/>
                             <div id="statusMessage" class="running" />
