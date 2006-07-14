@@ -113,28 +113,8 @@ class ProjectHandler(WebHandler):
 
     def builds(self, auth):
         builds = [self.client.getBuild(x) for x in self.project.getBuilds()]
-        publishedBuilds = [x for x in builds if x.getPublished()]
 
-        # Group versions by name or default name (based on group trove).
-        # FIXME: this is a hack until we get a better way to do build
-        # management.
-        buildsByGroupTrove = {}
-        for r in builds:
-            k = r.getDefaultName()
-            buildsByVersion = buildsByGroupTrove.has_key(k) and buildsByGroupTrove[k] or []
-            buildsByVersion.append(r)
-            buildsByVersion.sort(key = lambda x: x.getArch())
-            buildsByGroupTrove[k] = buildsByVersion
-
-        # return a list of items in buildsByGroupTrove for web display
-        buildVersions = sorted(buildsByGroupTrove.items(),
-            key = lambda x: x[1][0], # first item in the buildsByVersion
-            cmp = lambda x, y: cmp(x.getChangedTime(), y.getChangedTime()),
-            reverse = True)
-
-        return self._write("builds", builds = builds,
-                publishedBuilds = publishedBuilds,
-                buildVersions = buildVersions)
+        return self._write("builds", builds = builds)
 
     def groups(self, auth):
         builds = [self.client.getBuild(x) for x in self.project.getBuilds()]
