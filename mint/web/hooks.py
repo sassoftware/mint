@@ -249,6 +249,8 @@ def conaryHandler(req, cfg, pathInfo):
 
     if not repositories.has_key(repHash):
         nscfg = netserver.ServerConfig()
+        nscfg.externalPasswordURL = cfg.externalPasswordURL
+        nscfg.authCacheTimeout = cfg.authCacheTimeout
 
         repositoryDir = os.path.join(cfg.reposPath, repName)
 

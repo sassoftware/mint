@@ -385,6 +385,8 @@ class MintServer(object):
             cfg.tmpDir = tmpPath
             cfg.serverName = project.getFQDN()
             cfg.contentsDir = reposPath + '/contents/'
+            cfg.externalPasswordURL = self.cfg.externalPasswordURL
+            cfg.authCacheTimeout = self.cfg.authCacheTimeout
 
             server = shimclient.NetworkRepositoryServer(cfg, '')
 
