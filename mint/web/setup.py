@@ -57,11 +57,12 @@ class SetupHandler(WebHandler):
             return self._write("setup/error", error = "You must access the rBuilder server as a fully-qualified domain name:"
                                                 " eg., <strong>http://rbuilder.example.com/</strong>, not just <strong>http://rbuilder/</strong>")
 
-        self.cfg.hostName = self.req.hostname.split(".")[0]
-        self.cfg.siteDomainName = ".".join(self.req.hostname.split(".")[1:])
+        newCfg = deepcopy(self.cfg)
+        newCfg.hostName = self.req.hostname.split(".")[0]
+        newCfg.siteDomainName =  ".".join(self.req.hostname.split(".")[1:])
 
         return self._write("setup/setup", configGroups = configGroups,
-            newCfg = self.cfg, errors = [])
+            newCfg = newCfg, errors = [])
 
     def processSetup(self, auth, **kwargs):
         mintClient = shimclient.ShimMintClient(self.cfg, [self.cfg.authUser, self.cfg.authPass])
