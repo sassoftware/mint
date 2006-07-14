@@ -182,8 +182,8 @@ class BuildsTable(database.KeyedTable):
         cu = self.db.cursor()
         cu.execute("SELECT IFNULL((SELECT pubReleaseId FROM Builds WHERE buildId=?), 0)", buildId)
         pubReleaseId = cu.fetchone()[0]
-        if bool(pubReleaseId):
-            cu.execute("SELECT IFNULL(timePublished, 0) FROM PublishedReleases WHERE pubReleaseId = ?", pubReleaseId)
+        if pubReleaseId:
+            cu.execute("SELECT timePublished FROM PublishedReleases WHERE pubReleaseId = ?", pubReleaseId)
             return bool(cu.fetchone()[0])
         return False
 
@@ -309,7 +309,7 @@ class Build(database.TableObject):
                 pubReleaseId, published)
 
     def getPublished(self):
-        return bool(self.pubReleaseId)
+        return self.server.getBuildPublished(self.buildId)
 
     def getDataTemplate(self):
         return buildtemplates.getDataTemplate(self.buildType)
