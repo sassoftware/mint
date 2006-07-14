@@ -121,8 +121,11 @@ class BuildsTable(database.KeyedTable):
                                   FROM Releases WHERE published=1""")
                 cu.execute("SELECT releaseId, troveVersion FROM Releases")
                 for releaseId, troveVersion in cu.fetchall():
-                    ver = versions.VersionFromString(troveVersion)
-                    ver = ver.trailingRevision().getVersion()
+                    try:
+                        ver = versions.ThawVersion(troveVersion)
+                        ver = ver.trailingRevision().getVersion()
+                    except:
+                        ver = '0'
                     cu.execute("""UPDATE PublishedReleases
                                       SET version=?
                                       WHERE pubReleaseId=?""",
