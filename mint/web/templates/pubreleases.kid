@@ -53,7 +53,7 @@ from mint.web.templatesupport import downloadTracker
                     This project currently has no releases.
                 </div>
                 <div py:if="isOwner">
-                    <a href="createRelease">Create a new release</a>
+                    <a href="newRelease">Create a new release</a>
                 </div>
             </div>
         </div>

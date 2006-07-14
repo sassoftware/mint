@@ -448,7 +448,7 @@ class ProjectHandler(WebHandler):
                 buildInProgress = buildInProgress)
 
     @ownerOnly
-    def createRelease(self, auth):
+    def newRelease(self, auth):
         currentBuilds = []
         availableBuilds = [self.client.getBuild(x) for x in \
                 self.project.getUnpublishedBuilds()]
