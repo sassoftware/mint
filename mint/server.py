@@ -441,11 +441,11 @@ class MintServer(object):
 
     def _filterLabelAccess(self, labelId):
         try:
-            labelRow = self.publishedReleases.get(labelId, fields=['projectId'])
+            labelRow = self.labels.get(labelId, fields=['projectId'])
         except database.ItemNotFound:
             return
 
-        self._filterProjectAccess(pubReleaseRow['projectId'])
+        self._filterProjectAccess(labelRow['projectId'])
 
 
     def _filterJobAccess(self, jobId):
@@ -1870,7 +1870,6 @@ class MintServer(object):
         return self.builds.getUnpublishedBuilds(projectId)
 
     @typeCheck(int)
-    @requiresAuth
     @private
     def getBuildsForPublishedRelease(self, pubReleaseId):
         self._filterPublishedReleaseAccess(pubReleaseId)
@@ -1966,7 +1965,11 @@ class MintServer(object):
         return self.updateBuild(buildId, {'pubReleaseId': pubReleaseId })
 
     @typeCheck(int)
-    @requiresAuth
+    @private
+    def getBuildPublished(self, buildId):
+        return self.builds.getPublished(buildId)
+
+    @typeCheck(int)
     @private
     def getBuildType(self, buildId):
         self._filterBuildAccess(buildId)
