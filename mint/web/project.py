@@ -136,7 +136,7 @@ class ProjectHandler(WebHandler):
                 buildVersions = buildVersions)
 
     def groups(self, auth):
-        builds = self.project.getBuilds()
+        builds = [self.client.getBuild(x) for x in self.project.getBuilds()]
         publishedBuilds = [x for x in builds if x.getPublished()]
         groupTrovesInProject = self.client.listGroupTrovesByProject(self.project.id)
 
@@ -439,8 +439,6 @@ class ProjectHandler(WebHandler):
 
     @intFields(id = None)
     def build(self, auth, id):
-        builds = self.project.getBuilds()
-        publishedBuilds = [x for x in builds if self.client.getBuild(x).getPublished()]
         build = self.client.getBuild(id)
         buildInProgress = False
         if auth.authorized:
@@ -457,12 +455,10 @@ class ProjectHandler(WebHandler):
         else:
             return self._write("build", build = build,
                 name = build.getName(),
-                isPublished = build.getPublished(),
+                files = files,
                 trove = trove, version = versions.ThawVersion(version),
                 flavor = deps.ThawFlavor(flavor),
                 buildId = id, projectId = self.project.getId(),
-                publishedBuilds = publishedBuilds,
-                files = files,
                 buildInProgress = buildInProgress)
 
     @ownerOnly
@@ -882,26 +878,29 @@ class ProjectHandler(WebHandler):
             return self._write("confirm", message = "Are you sure you want to resign from this project?",
                 yesArgs = {'func':'resign', 'confirmed':'1'}, noLink = "/")
 
-    @strFields(feed= "builds")
+    @strFields(feed= "releases")
     def rss(self, auth, feed):
-        if feed == "builds":
-            title = "%s builds" % self.project.getName()
-            link = "http://%s%sproject/%s/builds" % \
+        if feed == "releases":
+            title = "%s releases" % self.project.getName()
+            link = "http://%s%sproject/%s/releases" % \
                 (self.cfg.siteHost, self.cfg.basePath, self.project.getHostname())
-            desc = "Current builds from %s" % self.project.getName()
+            desc = "Current releases from %s" % self.project.getName()
 
-            builds = self.project.getBuilds()
+            releases = [self.client.getPublishedRelease(x) for x in self.project.getPublishedReleases()]
+            publishedReleases = [x for x in releases if x.isFinalized()]
             items = []
-            for build in builds[:10]:
+            for release in publishedReleases[:10]:
                 item = {}
-                item['title'] = "%s=%s" % (build.getTroveName(),
-                    build.getTroveVersion().trailingRevision().asString())
-                item['link'] = "http://%s%sproject/%s/build?id=%d" % \
-                    (self.cfg.siteHost, self.cfg.basePath, self.project.getHostname(), build.getId())
-                item['content'] = "A new version of %s has been buildd: %s version %s." % \
-                    (build.getName(), build.getTroveName(),
-                     build.getTroveVersion().trailingRevision().asString())
-                item['date_822'] = email.Utils.formatdate(build.getChangedTime())
+                item['title'] = "%s (version %s)" % (release.name, release.version)
+                item['link'] = "http://%s%sproject/%s/release?id=%d" % \
+                    (self.cfg.siteHost, self.cfg.basePath, self.project.getHostname(), release.getId())
+                item['content']  = "This release contains the following builds:"
+                item['content'] += "&lt;ul&gt;"
+                builds = [self.client.getBuild(x) for x in release.getBuilds()]
+                for build in builds:
+                    item['content'] += "&lt;li&gt;%s (%s %s)" % (build.getName(), build.getArch(), buildtypes.typeNamesShort[build.buildType])
+                item['content'] += "&lt;/ul&gt;"
+                item['date_822'] = email.Utils.formatdate(release.timePublished)
                 item['creator'] = "http://%s%s" % (self.siteHost, self.cfg.basePath)
                 items.append(item)
         else:
