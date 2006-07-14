@@ -421,11 +421,14 @@ class UpgradePathTest(MintRepositoryHelper):
 
         # create releases
         cu.execute("INSERT INTO Releases VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",
-                   1, 1, '', '', 1, '', '', '', 0, 0, 3, 0)
+                   1, 1, '', '', 1, '', '/foo.rpath.local@rpl:devel/1.0.0-1-1',
+                   '', 0, 0, 3, 0)
         cu.execute("INSERT INTO Releases VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",
-                   2, 2, '', '', 1, '', '', '', 0, 0, 3, 0)
+                   2, 2, '', '', 1, '', '/foo.rpath.local@rpl:devel/1.0.1-1-1',
+                   '', 0, 0, 3, 0)
         cu.execute("INSERT INTO Releases VALUES(?,?,?,?,?,?,?,?,?,?,?,?)",
-                   3, 2, 'pub', 'pub rel', 1, '', '', '', 0, 1, 3, 5000)
+                   3, 2, 'pub', 'pub rel', 1, '',
+                   '/foo.rpath.local@rpl:devel/1.0.2-1-1', '', 0, 1, 3, 5000)
 
         # add some release data
         cu.execute("INSERT INTO ReleaseData VALUES(?, ?, ?, ?)",
@@ -523,17 +526,20 @@ class UpgradePathTest(MintRepositoryHelper):
 
         cu.execute('SELECT * FROM Builds')
         self.failIf(cu.fetchall() != \
-                    [(1L, 1L, 1L, None, '', '', '', '', '',
+                    [(1L, 1L, 1L, None, '', '', '',
+                      '/foo.rpath.local@rpl:devel/1.0.0-1-1', '',
                       0L, None, None, None, None),
-                     (2L, 2L, 2L, None, '', '', '', '', '',
+                     (2L, 2L, 2L, None, '', '', '',
+                      '/foo.rpath.local@rpl:devel/1.0.1-1-1', '',
                       0L, None, None, None, None),
-                     (3L, 2L, 3L, None, 'pub', 'pub rel', '', '', '',
+                     (3L, 2L, 3L, None, 'pub', 'pub rel', '',
+                      '/foo.rpath.local@rpl:devel/1.0.2-1-1', '',
                       0L, None, None, None, None)],
                     "Schema upgrade 20 failed for release to build conversion")
 
         cu.execute('SELECT * FROM PublishedReleases')
         self.failIf(cu.fetchall() != \
-                    [(3L, 2L, '', '', 'pub rel', None, None, None, None,
+                    [(3L, 2L, '', '1.0.2', 'pub rel', None, None, None, None,
                       5000, None)],
                     'Schema upgrade 20 failed for pub release creation')
 
