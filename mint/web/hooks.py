@@ -469,7 +469,7 @@ def handler(req):
                         req.headers_out['Location'] = cfg.basePath + 'maintenance'
                         return apache.HTTP_MOVED_TEMPORARILY
                 except:
-                    # we only want to handle errors in buildion mode
+                    # we only want to handle errors in production mode
                     if cfg.debugMode or req.bytes_sent > 0:
                         raise
                     # only handle actual mint errors

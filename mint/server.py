@@ -1269,7 +1269,7 @@ class MintServer(object):
     @private
     def getConfirmation(self, username):
         # this function exists solely for server testing scripts and should
-        # not be used for any other purpose. Never enable in buildion mode.
+        # not be used for any other purpose. Never enable in production mode.
         if not self.cfg.debugMode:
             raise PermissionDenied
         cu = self.db.cursor()

@@ -691,7 +691,7 @@ class MySqlRepositoryDatabase(RepositoryDatabase):
 
         cu = db.cursor()
         # this check should never be required outside of the test suite,
-        # and it could be kind of dangerous being called in buildion.
+        # and it could be kind of dangerous being called in production.
         # audited for SQL injection
         cu.execute("SHOW DATABASES")
         if dbName in [x[0] for x in cu.fetchall()]:
