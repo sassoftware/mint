@@ -35,6 +35,12 @@ function buildTroveSpec(n, v, f) {
     return n + "=" + v + "[" + f + "]";
 }
 
+function trailingRevision(v) {
+    var parts = v.split(":");
+    var revision = parts[parts.length-1];
+    return revision;
+}
+
 // ctor
 function TrovePicker(projectId, serverName, troveName, pickerId, mintStaticPath) {
     this.projectId = projectId;
@@ -42,6 +48,10 @@ function TrovePicker(projectId, serverName, troveName, pickerId, mintStaticPath)
     this.troveName = troveName;
     this.elId = pickerId;
     staticPath = mintStaticPath;
+
+    if(troveName) {
+        this.allowNameChoice = false;
+    }
 
     this.buildTrovePicker();
 }
@@ -51,6 +61,7 @@ TrovePicker.prototype.serverName = null;
 TrovePicker.prototype.label = null;
 TrovePicker.prototype.version = null;
 TrovePicker.prototype.flavorCache = null;
+TrovePicker.prototype.allowNameChoice = true;
 
 TrovePicker.prototype.working = function(isWorking) {
     if(isWorking) {
@@ -90,14 +101,25 @@ TrovePicker.prototype.buildTrovePicker = function() {
 
 // A flavor has been chosen--continue on
 TrovePicker.prototype.pickFlavor = function(e) {
-    var troveSpec = buildTroveSpec(e.src().name, e.src().version, e.src().flavor);
+    var n = e.src().name;
+    var v = e.src().version;
+    var shortv = trailingRevision(v);
+    var f = e.src().flavor;
+    var shortf = e.src().shortFlavor;
+
+    var troveSpec = buildTroveSpec(n, v, f);
     setNodeAttribute($(this.elId.replace("-", "_") + 'Spec'), 'value', troveSpec);
 
-    swapDOM($(this.elId + 'selectionList'),
-        SPAN(null, e.src().name + "=" + e.src().version + "[" + e.src().flavor + "]"));
+    oldEl = $(this.elId + 'selectionList');
+    newEl = DIV({'id': this.elId + 'selectionList'},
+        SPAN({'style': 'font-weight: bold;'}, 'Trove: '),
+        SPAN(null, n + "=" + shortv + " [" + shortf + "]")
+    );
+    swapDOM(oldEl, newEl);
 
     // return to getTroveVersions
     returnLink = A(null, returnImg(), " Back");
+    returnLink.troveName = n;
     returnLink.version = e.src().version;
     returnLink.label = e.src().label;
     connect(returnLink, "onclick", this, "showTroveFlavors");
@@ -119,10 +141,11 @@ TrovePicker.prototype.showTroveFlavors = function(e) {
 
     for(var i in this.flavorCache[this.version]) {
         flavor = this.flavorCache[this.version][i];
-        link = forwardLink(null, flavor);
+        link = forwardLink(null, flavor[0]);
         link.name = this.troveName;
         link.version = this.version;
-        link.flavor = flavor;
+        link.flavor = flavor[1];
+        link.shortFlavor = flavor[0];
         link.label = this.label;
         connect(link, "onclick", this, "pickFlavor");
         appendChildNodes(ul, link);
@@ -153,7 +176,7 @@ TrovePicker.prototype.getTroveVersions = function(e) {
         par.flavorCache = versionDict;
 
         for(var i in versionList) {
-            link = forwardLink(null, versionList[i]);
+            link = forwardLink(null, trailingRevision(versionList[i]));
             link.version = versionList[i];
             link.label = par.label;
             connect(link, "onclick", par, "showTroveFlavors");
@@ -209,7 +232,15 @@ TrovePicker.prototype.getAllTroveLabels = function(e) {
         swapDOM(oldList, ul);
         par.working(false);
         replaceChildNodes($(par.elId + 'prompt'), "Please choose a label:");
-        replaceChildNodes($('return'), disabledReturn());
+
+        if(par.allowNameChoice) {
+            // return to getGroupTroves
+            returnLink = A(null, returnImg(), " Back");
+            connect(returnLink, "onclick", par, "getGroupTroves");
+            replaceChildNodes($('return'), returnLink);
+        } else {
+            replaceChildNodes($('return'), disabledReturn());
+        }
     };
 
     var callback = function(aReq) {
@@ -247,6 +278,7 @@ TrovePicker.prototype.getGroupTroves = function() {
         swapDOM(oldList, ul);
         par.working(false);
         replaceChildNodes($(par.elId + 'prompt'), "Please choose a group:");
+        replaceChildNodes($('return'), disabledReturn());
     };
 
 
