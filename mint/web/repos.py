@@ -182,3 +182,4 @@ class ConaryHandler(WebHandler, http.HttpHandler):
     del http.HttpHandler.addEntitlementForm
     del http.HttpHandler.deleteEntitlement
     del http.HttpHandler.manageEntitlements
+    del http.HttpHandler.log
