@@ -60,33 +60,32 @@ from mint import pubreleases
                         <?python rowStyle = 0 ?>
                         <div  py:attrs="{'class': rowStyle and 'odd' or 'even'}"  py:for="build in currentBuilds">
                         <label style="margin-left: 0px; text-align: left; margin-top: 5px; margin-bottom: 0px; width: 80%;"><a style="text-decoration: none; font-weight: bold; margin-left: 20px;" href="javascript:toggle_display('div_${build.getId()}');">${build.getName()}&#32;<img class="noborder" id="div_${build.getId()}_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif"/>
-                        <div id="${build.getId()}_short"><span class="smallSpecs" style="margin-left: 40px;" >${build.getArch()}</span><span class="smallSpecs">${buildtypes.typeNamesShort[build.getBuildType()]}</span><span class="smallSpecs">${build.getDefaultName()}</span></div>
+                        <div class="smallSpecs" id="${build.getId()}_short">${build.getArch()}&nbsp;${buildtypes.typeNamesShort[build.getBuildType()]}&nbsp;&nbsp;&nbsp;${build.getDefaultName()}</div>
                         </a></label> 
                         <input type="checkbox" checked="True" class="relCheck" name="buildIds" value="${build.getId()}" onclick="buttonStatus();"/>
                             <div class="clearleft" style="line-height: 0">&nbsp;</div>
                         <div id="div_${build.getId()}" style="display: none;">
-                            <label class="troveSpecs">Trove:</label>
+                            <label class="troveSpecs">Group</label>
                             <div style="width: 70%; float: right;"> ${build.getTroveName()}</div>
                             <div class="clearleft" style="line-height: 0; clear: right;">&nbsp;</div>
                             <br/>
-                            
-                            <label class="troveSpecs">Trove Version:</label>
+                            <label class="troveSpecs">Version</label>
                                 <div class="troveData"> ${build.getTroveVersion()}</div>
                             <div class="clearleft" style="line-height: 0; clear: right;">&nbsp;</div>
                             <br/>
-                            <label class="troveSpecs">Trove Flavor:</label>
+                            <label class="troveSpecs">Flavor</label>
                             <div class="troveData">${str(build.getTroveFlavor()).replace(',', ', ')}</div>
                             <div class="clearleft" style="line-height: 0; clear: right;">&nbsp;</div>
                             <br/>
-                            <label class="troveSpecs">Architecture:</label>
+                            <label class="troveSpecs">Architecture</label>
                             <div class="troveData">${build.getArch()}</div>
                             <div class="clearleft" style="line-height: 0; clear: right;">&nbsp;</div>
                             <br/>
-                            <label class="troveSpecs">Release Type:</label>
+                            <label class="troveSpecs">Release Type</label>
                             <div class="troveData">${buildtypes.typeNames[build.getBuildType()]}</div>
                             <div class="clearleft" style="line-height: 0; clear: right;">&nbsp;</div>
                             <br/>
-                            <label class="troveSpecs">Description:</label>
+                            <label class="troveSpecs">Build Notes</label>
                             <div class="troveData">${build.getDesc() and build.getDesc() or 'None'}</div>
                             <div class="clearleft" style="line-height: 0; clear: right;">&nbsp;</div>
                             <br/>
@@ -105,33 +104,33 @@ from mint import pubreleases
                         <?python rowStyle = 0 ?>
                         <div  py:attrs="{'class': rowStyle and 'odd' or 'even'}"  py:for="build in availableBuilds">
                         <label style="margin-left: 0px; text-align: left; margin-top: 5px; margin-bottom: 0px; width: 80%;"><a style="text-decoration: none; font-weight: bold; margin-left: 20px;" href="javascript:toggle_display('div_${build.getId()}');">${build.getName()}&#32;<img class="noborder" id="div_${build.getId()}_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif"/>
-                        <div id="${build.getId()}_short"><span class="smallSpecs" style="margin-left: 40px;" >${build.getArch()}</span><span class="smallSpecs">${buildtypes.typeNamesShort[build.getBuildType()]}</span><span class="smallSpecs">${build.getDefaultName()}</span></div>
-                        </a></label> 
+                                <div id="${build.getId()}_short" class="smallSpecs">${build.getArch()}&nbsp;${buildtypes.typeNamesShort[build.getBuildType()]}&nbsp;&nbsp;&nbsp;${build.getDefaultName()}</div>
+                        </a></label>
                         <input type="checkbox" class="relCheck" name="buildIds" value="${build.getId()}" onclick="buttonStatus();"/>
                             <div class="clearleft" style="line-height: 0">&nbsp;</div>
                         <div id="div_${build.getId()}" style="display: none;">
-                            <label class="troveSpecs">Trove:</label>
+                            <label class="troveSpecs">Group</label>
                             <div style="width: 70%; float: right;"> ${build.getTroveName()}</div>
                             <div class="clearleft" style="line-height: 0; clear: right;">&nbsp;</div>
                             <br/>
-                            
-                            <label class="troveSpecs">Trove Version:</label>
+
+                            <label class="troveSpecs">Version</label>
                                 <div class="troveData"> ${build.getTroveVersion()}</div>
                             <div class="clearleft" style="line-height: 0; clear: right;">&nbsp;</div>
                             <br/>
-                            <label class="troveSpecs">Trove Flavor:</label>
+                            <label class="troveSpecs">Flavor</label>
                             <div class="troveData">${str(build.getTroveFlavor()).replace(',', ', ')}</div>
                             <div class="clearleft" style="line-height: 0; clear: right;">&nbsp;</div>
                             <br/>
-                            <label class="troveSpecs">Architecture:</label>
+                            <label class="troveSpecs">Architecture</label>
                             <div class="troveData">${build.getArch()}</div>
                             <div class="clearleft" style="line-height: 0; clear: right;">&nbsp;</div>
                             <br/>
-                            <label class="troveSpecs">Release Type:</label>
+                            <label class="troveSpecs">Release Type</label>
                             <div class="troveData">${buildtypes.typeNames[build.getBuildType()]}</div>
                             <div class="clearleft" style="line-height: 0; clear: right;">&nbsp;</div>
                             <br/>
-                            <label class="troveSpecs">Description:</label>
+                            <label class="troveSpecs">Description</label>
                             <div class="troveData">${build.getDesc() and build.getDesc() or 'None'}</div>
                             <div class="clearleft" style="line-height: 0; clear: right;">&nbsp;</div>
                             <br/>

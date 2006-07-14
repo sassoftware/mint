@@ -977,15 +977,16 @@ div.clearleft {
     margin-left: 30px;
 }
 
-span.smallSpecs {
-    font-size: 0.4em;
+.smallSpecs {
+    font-size: smaller;
     font-weight: normal;
-    font-style: italic;
-    margin-left: 10px;
+    font-style: normal;
+    margin-left: 20px;
 }
 
 label.troveSpecs {
-    text-decoration: underline;
+    text-decoration: none;
+    font-weight: bold;
     width: 25%;
     display: block;
 }
@@ -1163,7 +1164,7 @@ table.user-admin#permissions thead {
 }
 
 .odd { background-color: white; }
-.even { background-color: #eaecef; }
+.even { background-color: #f0f0f0; }
 
 /* add/edit permissions and groups */
 
