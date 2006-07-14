@@ -113,12 +113,23 @@ class BuildsTable(database.KeyedTable):
                 cu.execute("""INSERT INTO PublishedReleases
                                   SELECT Releases.releaseId AS pubReleaseId,
                                       projectId, troveName AS name,
-                                      troveVersion AS version,
+                                      NULL AS version,
                                       description, NULL AS timeCreated,
                                       NULL AS createdBy, NULL AS timeUpdated,
                                       NULL AS updatedBy, timePublished,
                                       NULL AS publishedBy
                                   FROM Releases WHERE published=1""")
+                cu.execute("SELECT releaseId, troveVersion FROM Releases")
+                for releaseId, troveVersion in cu.fetchall():
+                    try:
+                        ver = versions.VersionFromString(troveVersion)
+                        ver = str(ver.trailingRevision()).split('-')[0]
+                    except:
+                        ver = '0'
+                    cu.execute("""UPDATE PublishedReleases
+                                      SET version=?
+                                      WHERE pubReleaseId=?""",
+                               ver, releaseId)
                 cu.execute("INSERT INTO BuildData SELECT * FROM ReleaseData")
                 cu.execute("DROP TABLE ReleaseImageTypes")
                 cu.execute("DROP TABLE Releases")
