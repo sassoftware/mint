@@ -432,7 +432,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.setServer(self.getProjectServerHostname(), self.port)
 
         page = self.assertContent('/project/foo/builds/',
-                                  content = 'has no published',
+                                  content = 'contains no builds',
                                   code = [200])
 
     def testMailListsPage(self):
