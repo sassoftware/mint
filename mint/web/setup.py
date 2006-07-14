@@ -109,8 +109,8 @@ class SetupHandler(WebHandler):
                 newCfg[key] = self.fields[key]
 
         if errors:
-            return self._write("setup/setup", configGroups = configGroups, newCfg = newCfg,
-                errors = errors)
+            return self._write("setup/setup", configGroups = configGroups,
+                               newCfg = newCfg, errors = errors)
 
         newCfg.postCfg()
         newCfg.SSL = True
