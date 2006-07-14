@@ -161,10 +161,13 @@ class FixtureCache(object):
                 - developer (who is a developer in the "foo" project)
                 - user (a user or watcher of the "foo" project
                 - nobody (a user with no allegiance to any project)
-            - A published release object containing one build (see below)
-            - Two builds inside the "foo" project:
-                - one published
-                - one unpublished
+            - Two published release objects
+                - One finalized, or published, containing one build
+                - One not finalized, containing another build
+            - Three builds inside the "foo" project:
+                - one published (i.e. belongs to the finalized release)
+                - one unpublished (belongs to a release not yet finalized)
+                - one available (not belonging to any release)
         @param cfg: The current effective Mint configuration.
         @return: A 2-tuple consisting of the current Mint configuration and a
             a dictionary containing the following:
@@ -205,20 +208,42 @@ class FixtureCache(object):
         userProject.addMemberById(userId, userlevels.USER)
 
         # create a build for the "foo" project called "Test Build"
+        # and add it to an unpublished (not final) release
         build = client.newBuild(projectId, "Test Build")
         build.setTrove("group-dist", "/testproject." + \
-                MINT_PROJECT_DOMAIN + "@rpl:devel/0.0:1.0-1-1", "1#x86")
+                MINT_PROJECT_DOMAIN + "@rpl:devel/0.0:1.1-1-1", "1#x86")
+        build.setBuildType(buildtypes.STUB_IMAGE)
+        build.setFiles([["file", "file title 1"]])
         stockBuildFlavor(db, build.id)
+        pubRelease = client.newPublishedRelease(projectId)
+        pubRelease.name = "(Not final) Release"
+        pubRelease.version = "1.1"
+        pubRelease.addBuild(build.id)
+        pubRelease.save()
 
         # create another build for the "foo" project and publish it
+        # i.e. make it a part of a finalized, or published, release
         pubBuild = client.newBuild(projectId, "Test Published Build")
+        pubBuild.setTrove("group-dist", "/testproject." + \
+                MINT_PROJECT_DOMAIN + "@rpl:devel/0.0:1.0-1-1", "1#x86")
         pubBuild.setBuildType(buildtypes.STUB_IMAGE)
         pubBuild.setFiles([["file", "file title 1"]])
-        pubBuild.setTrove("group-dist", "/testproject." + \
-                MINT_PROJECT_DOMAIN + "@rpl:devel/0.0:1.0-2-1", "1#x86")
         stockBuildFlavor(db, pubBuild.id)
-        pubRelease = client.newPublishedRelease(projectId)
-        pubRelease.addBuild(pubBuild.id)
+        pubReleaseFinal = client.newPublishedRelease(projectId)
+        pubReleaseFinal.name = "Finalized/Published Release"
+        pubReleaseFinal.version = "1.0"
+        pubReleaseFinal.addBuild(pubBuild.id)
+        pubReleaseFinal.save()
+        pubReleaseFinal.finalize()
+
+        # Create another build that just lies around somewhere
+        # unattached to any published releases
+        anotherBuild = client.newBuild(projectId, "Test Extra Build")
+        anotherBuild.setTrove("group-dist", "/testproject." + \
+                MINT_PROJECT_DOMAIN + "@rpl:devel/0.0:1.0-1-2", "1#x86")
+        anotherBuild.setBuildType(buildtypes.STUB_IMAGE)
+        anotherBuild.setFiles([["file", "file title 1"]])
+        stockBuildFlavor(db, anotherBuild.id)
 
         # create a group trove for the "foo" project
         groupTrove = client.createGroupTrove(projectId, 'group-test', '1.0.0',
@@ -230,9 +255,11 @@ class FixtureCache(object):
                       'developer':      developerId,
                       'user':           userId,
                       'nobody':         nobodyId,
-                      'buildId':      build.id,
-                      'pubBuildId':   pubBuild.id,
+                      'buildId':        build.id,
+                      'pubBuildId':     pubBuild.id,
                       'pubReleaseId':   pubRelease.id,
+                      'pubReleaseFinalId':   pubReleaseFinal.id,
+                      'anotherBuildId': anotherBuild.id,
                       'groupTroveId':   groupTrove.id }
 
 

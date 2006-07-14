@@ -40,23 +40,23 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest):
         client = self.getClient("owner")
         pubRelease = client.getPublishedRelease(data['pubReleaseId'])
         project = client.getProject(data['projectId'])
-        build = client.getBuild(data['buildId'])
-        build.setBuildType(buildtypes.STUB_IMAGE)
-        build.setFiles([["file", "file title 1"]])
+        build = client.getBuild(data['anotherBuildId'])
 
         # sanity checks
-        self.failIf(data['buildId'] in pubRelease.getBuilds(),
+        self.failIf(data['anotherBuildId'] in pubRelease.getBuilds(),
                 "Build is not published yet")
-        self.failUnless(data['buildId'] in project.getUnpublishedBuilds(),
+        self.failUnless(data['anotherBuildId'] in \
+                project.getUnpublishedBuilds(),
                 "Build should be in the unpublished list")
 
         # publish it now
         pubRelease.addBuild(build.id)
 
         # check the state of the world after publishing
-        self.failUnless(data['buildId'] in pubRelease.getBuilds(),
+        self.failUnless(data['anotherBuildId'] in pubRelease.getBuilds(),
                 "Build was not properly added to published releases")
-        self.failIf(data['buildId'] in project.getUnpublishedBuilds(),
+        self.failIf(data['anotherBuildId'] in \
+                project.getUnpublishedBuilds(),
                 "Build should no longer be considered unpublished")
 
     @fixtures.fixture("Full")
@@ -66,13 +66,13 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest):
         project = client.getProject(data['projectId'])
 
         # sanity checks
-        self.failUnless(data['pubBuildId'] in pubRelease.getBuilds(),
+        self.failUnless(data['buildId'] in pubRelease.getBuilds(),
                 "Build should be published before beginning")
-        self.failIf(data['pubBuildId'] in project.getUnpublishedBuilds(),
+        self.failIf(data['buildId'] in project.getUnpublishedBuilds(),
                 "Build should not be in the unpublished list")
 
         # unpublish it now
-        pubRelease.removeBuild(data['pubBuildId'])
+        pubRelease.removeBuild(data['buildId'])
 
         # check the state of the world after publishing
         self.failIf(data['buildId'] in pubRelease.getBuilds(),
@@ -87,7 +87,7 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest):
         releaseDescription = "My pithy description"
 
         client = self.getClient("owner")
-        pubRelease = client.getPublishedRelease(data['pubReleaseId'])
+        pubRelease = client.newPublishedRelease(data['projectId'])
 
         # set some things
         pubRelease.name = releaseName
@@ -99,12 +99,13 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest):
 
         # now save to the database
         pubRelease.save()
+        pubReleaseId = pubRelease.id
 
         # forget about it
         del pubRelease
 
         # retrieve it from the database, again
-        pubRelease = client.getPublishedRelease(data['pubReleaseId'])
+        pubRelease = client.getPublishedRelease(pubReleaseId)
 
         # check to make sure things are still set
         self.failUnless(pubRelease.name == releaseName)
@@ -119,21 +120,23 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest):
         client = self.getClient("owner")
         build = client.getBuild(data['buildId'])
         pubBuild = client.getBuild(data['pubBuildId'])
+        anotherBuild = client.getBuild(data['anotherBuildId'])
 
-        self.failIf(build.getPublished(), "Release should be published")
-        self.failUnless(pubBuild.getPublished(), "Release should not be published")
+        self.failIf(build.getPublished(), "Build should not be published")
+        self.failIf(anotherBuild.getPublished(), "Build should not be published")
+        self.failUnless(pubBuild.getPublished(), "Build should be published")
 
     @fixtures.fixture("Full")
     def testGetPublishedReleasesByProject(self, db, data):
         client = self.getClient("owner")
         project = client.getProject(data['projectId'])
-        self.failUnlessEqual(project.getPublishedReleases(), [ data['pubReleaseId'] ])
+        self.failUnlessEqual(project.getPublishedReleases(), [ data['pubReleaseId'], data['pubReleaseFinalId'] ])
 
     @fixtures.fixture("Full")
     def testGetUnpublishedBuildsByProject(self, db, data):
         client = self.getClient("owner")
         project = client.getProject(data['projectId'])
-        self.failUnlessEqual(project.getUnpublishedBuilds(), [ data['buildId'] ])
+        self.failUnlessEqual(project.getUnpublishedBuilds(), [ data['anotherBuildId'] ])
 
     @fixtures.fixture("Full")
     def testDeletePublishedRelease(self, db, data):
@@ -141,13 +144,13 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest):
         project = client.getProject(data['projectId'])
         client.deletePublishedRelease(data['pubReleaseId'])
 
-        self.failUnlessEqual(project.getPublishedReleases(), [],
-                "There should be no published releases in the project")
+        self.failUnlessEqual(len(project.getPublishedReleases()), 1,
+                "There should be only one published release in the project")
 
-        self.failUnless(data['pubBuildId'] in project.getUnpublishedBuilds(),
+        self.failUnless(data['buildId'] in project.getUnpublishedBuilds(),
                 "Previously published builds should now be unpublished")
 
-        build = client.getBuild(data['pubBuildId'])
+        build = client.getBuild(data['buildId'])
 
         self.failIf(build.getPublished(), "Build still shows up as published")
 
@@ -171,24 +174,15 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest):
         self.failUnless(pubRelease.isFinalized())
 
     @fixtures.fixture("Full")
-    def testPublishEmptyBuild(self, db, data):
-        client = self.getClient("owner")
-        pubRelease = client.getPublishedRelease(data['pubReleaseId'])
-        self.assertRaises(BuildEmpty,
-                pubRelease.addBuild, data['buildId'])
-
-    @fixtures.fixture("Full")
     def testDeleteBuildFromPublishedRelease(self, db, data):
         client = self.getClient("owner")
-        pubBuild = client.getBuild(data['pubBuildId'])
+        pubBuild = client.getBuild(data['buildId'])
         pubBuild.deleteBuild()
 
     @fixtures.fixture("Full")
     def testDeleteBuildFromFinalizedPublishedRelease(self, db, data):
         client = self.getClient("owner")
         pubBuild = client.getBuild(data['pubBuildId'])
-        pubRelease = client.getPublishedRelease(data['pubReleaseId'])
-        pubRelease.finalize()
         self.assertRaises(BuildPublished, pubBuild.deleteBuild)
 
     @fixtures.fixture("Full")

@@ -46,9 +46,9 @@ class BuildTest(fixtures.FixturedUnitTest):
         build.setFiles([["file1", "File Title 1"],
                           ["file2", "File Title 2"]])
         assert(build.getFiles() ==\
-            [{'fileId': 2, 'filename': 'file1',
+            [{'fileId': 4, 'filename': 'file1',
               'title': 'File Title 1', 'size': 0,},
-             {'fileId': 3, 'filename': 'file2',
+             {'fileId': 5, 'filename': 'file2',
               'title': 'File Title 2', 'size': 0,}]
         )
 
@@ -166,6 +166,9 @@ class BuildTest(fixtures.FixturedUnitTest):
         client = self.getClient("owner")
         pubBuild = client.getBuild(data['pubBuildId'])
 
+        self.failUnless(pubBuild.getPublished(),
+                    "getPublished() should return True")
+
         self.assertRaises(BuildPublished, pubBuild.setDataValue,
                           'stringArg', 'bar')
 
@@ -183,8 +186,6 @@ class BuildTest(fixtures.FixturedUnitTest):
         self.assertRaises(BuildPublished, client.startImageJob,
                           pubBuild.getId())
 
-        self.failIf(pubBuild.getPublished() is not True,
-                    "Result of getPublished is not boolean")
 
     @fixtures.fixture("Full")
     def testMissingBuild(self, db, data):
