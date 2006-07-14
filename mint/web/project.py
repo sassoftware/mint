@@ -901,11 +901,11 @@ class ProjectHandler(WebHandler):
                 item['link'] = "http://%s%sproject/%s/release?id=%d" % \
                     (self.cfg.siteHost, self.cfg.basePath, self.project.getHostname(), release.getId())
                 item['content']  = "This release contains the following builds:"
-                item['content'] += "&lt;ul&gt;"
+                item['content'] += "<ul>"
                 builds = [self.client.getBuild(x) for x in release.getBuilds()]
                 for build in builds:
-                    item['content'] += "&lt;li&gt;%s (%s %s)" % (build.getName(), build.getArch(), buildtypes.typeNamesShort[build.buildType])
-                item['content'] += "&lt;/ul&gt;"
+                    item['content'] += "<li>%s (%s %s)</li>" % (build.getName(), build.getArch(), buildtypes.typeNamesShort[build.buildType])
+                item['content'] += "</ul>"
                 item['date_822'] = email.Utils.formatdate(release.timePublished)
                 item['creator'] = "http://%s%s" % (self.siteHost, self.cfg.basePath)
                 items.append(item)
