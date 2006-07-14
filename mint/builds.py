@@ -122,7 +122,7 @@ class BuildsTable(database.KeyedTable):
                 cu.execute("SELECT releaseId, troveVersion FROM Releases")
                 for releaseId, troveVersion in cu.fetchall():
                     ver = versions.VersionFromString(troveVersion)
-                    ver = str(ver.trailingRevision()).split('-')[0]
+                    ver = ver.trailingRevision().getVersion()
                     cu.execute("""UPDATE PublishedReleases
                                       SET version=?
                                       WHERE pubReleaseId=?""",
