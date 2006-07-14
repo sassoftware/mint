@@ -3,18 +3,18 @@ var refreshed = false;
 var oldStatus = -1;
 var cookStatusRefreshTime = 2000; /* 2 seconds */
 var cookStatusId;
-var releaseStatusRefreshTime = 5000; /* 5 seconds */
-var releaseStatusId;
+var buildStatusRefreshTime = 5000; /* 5 seconds */
+var buildStatusId;
 var jobsListRefreshTime = 10000; /* 10 seconds */
 var jobsListId;
 var jobsList = "global";
 var archDict = "global";
 var cookStatus = "global";
-var releaseStatus = "global";
+var buildStatus = "global";
 var oldStatus = STATUS_UNKNOWN;
 var userCache = {};
 var groupTroveCache = {};
-var releaseCache = {};
+var buildCache = {};
 
 // user interface helpers ---------------------------------------------------
 
@@ -139,9 +139,9 @@ function normPath(path) {
     return path;
 }
 
-// get release image type
-getReleaseImageTypeDesc = function(aTypeId) {
-    return releaseImageTypeNamesShort[aTypeId];
+// get build image type
+getBuildTypeDesc = function(aTypeId) {
+    return buildTypeNamesShort[aTypeId];
 };
 
 // function that generates a generic header table row
@@ -175,12 +175,12 @@ makeJobRowData = function(aRow) {
             jobDesc = "Group cook: " + groupTroveObj['recipeName'];
         }
     }
-    else if (aRow['releaseId']) {
-        var releaseObj = getReleaseById(aRow['releaseId']);
-        if (releaseObj) {
-            jobDesc = "Release build: " + releaseObj['name'];
-            if (releaseObj.imageTypes) {
-                jobDesc += " (" + map(getReleaseImageTypeDesc, releaseObj.imageTypes).join(", ") + ")";
+    else if (aRow['buildId']) {
+        var buildObj = getBuildById(aRow['buildId']);
+        if (buildObj) {
+            jobDesc = "Build build: " + buildObj['name'];
+            if (buildObj.buildType) {
+                jobDesc += " (" + map(getBuildTypeDesc, buildObj.buildType).join(", ") + ")";
             }
         }
     }
@@ -206,24 +206,24 @@ makeJobRowData = function(aRow) {
 };
 
 // RPC callbacks ------------------------------------------------------------
-function processGetReleaseStatus(aReq) {
-    var oldReleaseStatus = $("statusMessage");
+function processGetBuildStatus(aReq) {
+    var oldBuildStatus = $("statusMessage");
 
     logDebug("[JSON] response: ", aReq.responseText);
-    releaseStatus = evalJSONRequest(aReq);
+    buildStatus = evalJSONRequest(aReq);
 
-    releaseStatusEl = DIV({ 'id': 'statusMessage', 'class': 'running' }, null);
-    if (!releaseStatus) {
+    buildStatusEl = DIV({ 'id': 'statusMessage', 'class': 'running' }, null);
+    if (!buildStatus) {
         status = STATUS_NOJOB;
     } else {
-        status = releaseStatus.status;
+        status = buildStatus.status;
         // FIXME: replace this with a status -> class name map or something
         if(status == STATUS_RUNNING)
-            setElementClass(releaseStatusEl, "running");
+            setElementClass(buildStatusEl, "running");
         if(status == STATUS_FINISHED)
-            setElementClass(releaseStatusEl, "finished");
+            setElementClass(buildStatusEl, "finished");
         if(status == STATUS_ERROR)
-            setElementClass(releaseStatusEl, "error");
+            setElementClass(buildStatusEl, "error");
 
         // refresh page when job successfully completes
         // to get new download list
@@ -243,10 +243,10 @@ function processGetReleaseStatus(aReq) {
             showElement('editOptionsDisabled');
             hideElement('editOptions');
         }
-        replaceChildNodes(releaseStatusEl, SPAN({'style': 'font-weight: bold;'}, "Status: "), SPAN(null, releaseStatus.message));
+        replaceChildNodes(buildStatusEl, SPAN({'style': 'font-weight: bold;'}, "Status: "), SPAN(null, buildStatus.message));
         oldStatus = status;
     }
-    swapDOM(oldReleaseStatus, releaseStatusEl);
+    swapDOM(oldBuildStatus, buildStatusEl);
 }
 
 function processGetCookStatus(aReq) {
@@ -387,13 +387,13 @@ function processListActiveJobs(aReq) {
 
 // RPC calls ----------------------------------------------------------------
 
-function getReleaseStatus(releaseId) {
-    var req = new JsonRpcRequest("jsonrpc/", "getReleaseStatus");
+function getBuildStatus(buildId) {
+    var req = new JsonRpcRequest("jsonrpc/", "getBuildStatus");
     req.setAuth(getCookieValue("pysid"));
-    req.setCallback(processGetReleaseStatus);
-    req.send(false, [releaseId]);
-    if (releaseStatus != null && releaseStatus.status < STATUS_FINISHED) {
-        releaseStatusId = setTimeout("getReleaseStatus("+releaseId+")", releaseStatusRefreshTime);
+    req.setCallback(processGetBuildStatus);
+    req.send(false, [buildId]);
+    if (buildStatus != null && buildStatus.status < STATUS_FINISHED) {
+        buildStatusId = setTimeout("getBuildStatus("+buildId+")", buildStatusRefreshTime);
     }
 }
 
@@ -458,25 +458,25 @@ function delMember(projectId, userId) {
     req.send(true, [projectId, userId, true]);
 }
 
-function deleteRelease(releaseId) {
-    var req = new JsonRpcRequest("jsonrpc/", "deleteRelease");
+function deleteBuild(buildId) {
+    var req = new JsonRpcRequest("jsonrpc/", "deleteBuild");
     req.setAuth(getCookieValue("pysid"));
     req.setCallback(reloadCallback);
-    req.send(true, [releaseId]);
+    req.send(true, [buildId]);
 }
 
-function setReleasePublished(releaseId) {
-    var req = new JsonRpcRequest("jsonrpc/", "setReleasePublished");
+function setBuildPublished(buildId) {
+    var req = new JsonRpcRequest("jsonrpc/", "setBuildPublished");
     req.setAuth(getCookieValue("pysid"));
     req.setCallback(reloadCallback);
-    req.send(true, [releaseId, true]);
+    req.send(true, [buildId, true]);
 }
 
-function startImageJob(releaseId) {
+function startImageJob(buildId) {
     var req = new JsonRpcRequest("jsonrpc/", "startImageJob");
     req.setAuth(getCookieValue("pysid"));
     req.setCallback(reloadCallback);
-    req.send(true, [releaseId]);
+    req.send(true, [buildId]);
 }
 // baton --------------------------------------------------------------------
 
@@ -496,7 +496,7 @@ function textWithBaton(text) {
 
 // event handlers -----------------------------------------------------------
 
-// called when a user selects a trove in the new/edit releases page
+// called when a user selects a trove in the new/edit builds page
 function onTroveChange(projectId) {
     var sel = document.getElementById("trove");
     var vSel = document.getElementById("version");
@@ -558,7 +558,7 @@ function onArchChange() {
             appendToSelect(vSel, versionlist[i][1] + " " + versionlist[i][2], document.createTextNode(versionlist[i][0]), verTitle, "version");
         }
         vSel.disabled = false;
-        handleReleaseTypes(selectedArch);
+        handleBuildTypes(selectedArch);
     }
 
     // Re-enable trove & arch selectors
@@ -593,8 +593,8 @@ function setDisabledByElem(elem, disable) {
     elem.disabled = disable;
 }
 
-function onImageChange(img) {
-    // beware of these boundary conditions, when we add more release targets...
+function onBuildTypeChange(img) {
+    // beware of these boundary conditions, when we add more build targets...
     for (t = 1; t < 9; t++) {
         var targImg = "formgroup_" + t;
         // ensure we only tinker with elements that exist on the page
@@ -612,15 +612,15 @@ function onImageChange(img) {
     }
 }
 
-function handleReleaseTypes(aSelectedArch) {
+function handleBuildTypes(aSelectedArch) {
 
-    // see layout.kid for definitions of VisibleBootableImageTypes, etc.
-    var one = iter(VisibleBootableImageTypes);
+    // see layout.kid for definitions of VisibleBootableBuildTypes, etc.
+    var one = iter(VisibleBootableBuildTypes);
 
-    // VisibleBootableImageTypes are not currently compatible with x86_64
+    // VisibleBootableBuildTypes are not currently compatible with x86_64
     // so, if that arch was selected, disable it
     forEach(one, function (x) {
-        var el = $('imagetype_'+x);
+        var el = $('buildtype_'+x);
         if (aSelectedArch == "x86_64") {
             el.disabled = true;
         } else {
@@ -632,22 +632,22 @@ function handleReleaseTypes(aSelectedArch) {
 
 // cache-y goodness
 
-function getReleaseById(aId) {
-    var releaseObj;
+function getBuildById(aId) {
+    var buildObj;
 
-    lclReleaseCallback = function(aReq) {
+    lclBuildCallback = function(aReq) {
         logDebug("[JSON] response: ", aReq.responseText);
-        releaseCache[aId] = evalJSONRequest(aReq);
+        buildCache[aId] = evalJSONRequest(aReq);
     };
 
-    if (!releaseCache[aId]) {
-        var req = new JsonRpcRequest('jsonrpc/', 'getRelease');
+    if (!buildCache[aId]) {
+        var req = new JsonRpcRequest('jsonrpc/', 'getBuild');
         req.setAuth(getCookieValue("pysid"));
-        req.setCallback(lclReleaseCallback);
+        req.setCallback(lclBuildCallback);
         req.send(false, [aId]);
     }
 
-    return releaseCache[aId];
+    return buildCache[aId];
 
 }
 
@@ -729,4 +729,36 @@ function underlineTitle() {
 function normalTitle() {
     updateNodeAttributes('inactiveOrangeTitle', 
                          {'style':{'textDecoration':'none'}});
+}
+
+//Edit Release
+function buttonStatus() {
+    var name = getElement('relname');
+    if (name.value == '') {
+        var button = getElement('submitButton');
+        button.disabled = true;
+        return;
+    }
+    var version = getElement('relver');
+    if (version.value == '') {
+        var button = getElement('submitButton');
+        button.disabled = true;
+        return;
+    }
+    var boxes = getElementsByTagAndClassName('input', 'relCheck');
+    var builds = false;
+    for (var x = 0; x < boxes.length ; x++) {
+        if (boxes[x].checked) {
+            builds = true;
+            break;
+        }
+    }
+    if (builds) {
+        var button = getElement('submitButton');
+        button.disabled = false;
+    }
+    else {
+        var button = getElement('submitButton');
+        button.disabled = true;
+    }
 }

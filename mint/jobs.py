@@ -24,7 +24,7 @@ class JobsTable(database.KeyedTable):
     createSQL = """
                 CREATE TABLE Jobs (
                     jobId           %(PRIMARYKEY)s,
-                    releaseId       INT,
+                    buildId         INT,
                     groupTroveId    INT,
                     owner           BIGINT,
                     userId          INT,
@@ -32,15 +32,14 @@ class JobsTable(database.KeyedTable):
                     statusMessage   TEXT,
                     timeSubmitted   DOUBLE,
                     timeStarted     DOUBLE,
-                    timeFinished    DOUBLE
-                )"""
+                    timeFinished    DOUBLE)"""
 
-    fields = ['jobId', 'releaseId', 'groupTroveId', 'owner', 'userId',
+    fields = ['jobId', 'buildId', 'groupTroveId', 'owner', 'userId',
               'status', 'statusMessage', 'timeSubmitted',
               'timeStarted', 'timeFinished']
 
-    indexes = {"JobsReleaseIdx": """CREATE INDEX JobsReleaseIdx
-                                        ON Jobs(releaseId)""",
+    indexes = {"JobsBuildIdx": """CREATE INDEX JobsBuildIdx
+                                        ON Jobs(buildId)""",
                "JobsGroupTroveIdx": """CREATE INDEX JobsGroupTroveIdx
                                            ON Jobs(groupTroveId)""",
                "JobsUserIdx": "CREATE INDEX JobsUserIdx ON Jobs(userId)"}
@@ -53,11 +52,21 @@ class JobsTable(database.KeyedTable):
                 cu.execute("ALTER TABLE Jobs ADD COLUMN groupTroveId INT")
             if dbversion == 11 and not self.initialCreation:
                 cu = self.db.cursor()
-                cu.execute("ALTER TABLE Jobs ADD COLUMN owner INT")
+                cu.execute("ALTER TABLE Jobs ADD COLUMN owner BIGINT")
             if dbversion == 12 and not self.initialCreation:
                 cu = self.db.cursor()
                 cu.execute("ALTER TABLE Jobs ADD COLUMN timeSubmitted DOUBLE")
-            return dbversion >= 12
+            if dbversion == 19:
+                cu = self.db.cursor()
+                cu.execute("ALTER TABLE Jobs ADD COLUMN buildId INT")
+                cu.execute('UPDATE Jobs SET buildId = releaseId')
+                if self.db.driver == 'mysql':
+                    cu.execute("ALTER TABLE Jobs DROP COLUMN releaseId")
+                else:
+                    cu.execute("DROP TABLE Jobs")
+                    cu.execute(self.createSQL % self.db.keywords)
+                    cu.execute('DELETE FROM JobData')
+            return dbversion >= 19
         return True
 
     def get(self, id):
@@ -75,8 +84,8 @@ class Job(database.TableObject):
     def getId(self):
         return self.id
 
-    def getReleaseId(self):
-        return self.releaseId
+    def getBuildId(self):
+        return self.buildId
 
     def getGroupTroveId(self):
         return self.groupTroveId
@@ -111,27 +120,27 @@ class Job(database.TableObject):
             val = None
         return val
 
-class ImageFilesTable(database.KeyedTable):
-    name = 'ImageFiles'
+class BuildFilesTable(database.KeyedTable):
+    name = 'BuildFiles'
     key = 'fileId'
     createSQL = """
-                CREATE TABLE ImageFiles (
+                CREATE TABLE BuildFiles (
                     fileId      %(PRIMARYKEY)s,
-                    releaseId   INT,
+                    buildId   INT,
                     idx         INT,
                     filename    CHAR(255),
                     title       CHAR(255) DEFAULT ''
                 );"""
-    fields = ['fileId', 'releaseId', 'idx', 'filename', 'title']
+    fields = ['fileId', 'buildId', 'idx', 'filename', 'title']
 
-    indexes = {"ImageFilesReleaseIdx": """CREATE INDEX ImageFilesReleaseIdx
-                                              ON ImageFiles(releaseId)"""}
+    indexes = {"BuildFilesBuildIdx": """CREATE INDEX BuildFilesBuildIdx
+                                              ON BuildFiles(buildId)"""}
 
     def versionCheck(self):
         dbversion = self.getDBVersion()
         if dbversion != self.schemaVersion:
             if dbversion == 1 and not self.initialCreation:
-                sql = """ALTER TABLE ImageFiles ADD COLUMN title STR DEFAULT ''"""
+                sql = """ALTER TABLE BuildFiles ADD COLUMN title STR DEFAULT ''"""
                 cu = self.db.cursor()
                 cu.execute(sql)
             return dbversion >= 1

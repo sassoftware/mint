@@ -17,7 +17,7 @@ from mint.helperfuncs import truncateForDisplay
                     url = "files?t=%s;v=%s;f=%s" % (quote(name), quote(version.freeze()), quote(flavor.freeze()))
                 ?>
                 <td style="width: 25%;"><a href="${url}">${name}</a></td>
-                <td style="width: 25%;">${str(version)}</td>
+                <td style="width: 25%;">${"%s/%s" % (version.trailingLabel(), version.trailingRevision())}</td>
                 <td style="width: 50%;">${flavorWrap(flavor)}</td>
             </tr>
         </table>

@@ -830,8 +830,7 @@ class GroupTroveTestConary(MintRepositoryHelper):
                               'group-test:source', 'testcase:source'])
 
         groupTroves = client.server.getGroupTroves(projectId)
-        assert(groupTroves == {'testproject.' + MINT_PROJECT_DOMAIN + \
-                '@rpl:devel': ['group-test']})
+        assert(groupTroves == ['group-test'])
 
     def waitForCommit(self, project, troveList):
         iters = 0
@@ -908,8 +907,7 @@ class GroupTroveTestConary(MintRepositoryHelper):
                               'group-test:source', 'testcase:source'])
 
         groupTroves = client.server.getGroupTroves(projectId)
-        assert(groupTroves == {'testproject.' + MINT_PROJECT_DOMAIN + \
-                '@rpl:devel': ['group-test']})
+        assert(groupTroves == ['group-test'])
 
     def addPackage(self, pkgName, v,
             components = ['devel', 'runtime'],

@@ -11,7 +11,8 @@ from mint import userlevels
 -->
     <?python
         isOwner = (userLevel == userlevels.OWNER or auth.admin)
-        releases = project.getReleases(showUnpublished = False)
+        # FIXME: releases, not builds
+        #builds = project.getBuilds()
         commits = project.getCommits()
     ?>
     <head>
@@ -21,7 +22,8 @@ from mint import userlevels
         <div id="layout" class="helpPage">
             <div id="left" class="side">
                 ${projectResourcesMenu()}
-                ${releasesMenu(releases, isOwner)}
+                <!-- FIXME: releases, not builds
+                ${buildsMenu(builds, isOwner)}-->
                 ${commitsMenu(commits)}
             </div>
             <div id="right" class="side">
@@ -39,9 +41,9 @@ from mint import userlevels
 
                 <ul>
 
-                    <li>If this project produces releases (and you wish to
+                    <li>If this project produces builds (and you wish to
                     install a new operating system), you should start by
-                    installing the project's release onto your system.</li>
+                    installing the project's build onto your system.</li>
 
                     <li>If you're already running a Conary-based system,
                     you can perform an installation by specifying this
@@ -63,7 +65,7 @@ from mint import userlevels
 
                 <p>If you do not yet have a Conary-based system,
                 the first step you must take is to install a
-                release from this or another ${cfg.productName}
+                build from this or another ${cfg.productName}
                 project.</p>
 
                 <p>Once you have a Conary-based system installed,

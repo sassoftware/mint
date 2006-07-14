@@ -17,7 +17,7 @@ import zipfile
 
 # mint imports
 from mint import mint_error
-from mint import releasetypes
+from mint import buildtypes
 from mint.distro import gencslist
 from mint.distro.imagegen import ImageGenerator, MSG_INTERVAL
 from mint.client import upstream
@@ -667,8 +667,8 @@ quit
         util.rmtree(self.fakeroot)
         self.fakeroot = None
 
-    def __init__(self, client, cfg, job, release, project):
-        ImageGenerator.__init__(self, client, cfg, job, release, project)
+    def __init__(self, client, cfg, job, build, project):
+        ImageGenerator.__init__(self, client, cfg, job, build, project)
         # set default options for all bootable image types
         self.imgcfg = self.getConfig()
         self.addJournal = True
@@ -679,8 +679,8 @@ quit
         log.info('generating raw hd image with tmpdir %s', self.fakeroot)
 
         #Figure out what group trove to use
-        self.basetrove, versionStr, flavorStr = self.release.getTrove()
-        log.info('self.release.getTrove returned (%s, %s, %s)' % \
+        self.basetrove, versionStr, flavorStr = self.build.getTrove()
+        log.info('self.build.getTrove returned (%s, %s, %s)' % \
                  (self.basetrove, versionStr, flavorStr))
 
         #Thaw the version string
@@ -693,12 +693,15 @@ quit
         # set up configuration
         self.conarycfg = self.project.getConaryConfig()
 
-        self.arch = self.release.getArch()
-        basefilename = "%(name)s-%(version)s-%(arch)s" % {
-                'name': self.project.getHostname(),
-                'version': upstream(version),
-                'arch': self.arch,
-            }
+        self.arch = self.build.getArch()
+        basefilename = build.getDataValue('baseFileName')
+        basefilename = ''.join([(x.isalnum() or x in ('-', '.')) and x or '_' \
+                                for x in basefilename])
+        basefilename = basefilename or \
+                       "%(name)s-%(version)s-%(arch)s" % {
+                           'name': self.project.getHostname(),
+                           'version': upstream(version),
+                           'arch': self.arch}
 
         #initialize some stuff
         self.basefilename = basefilename

@@ -16,7 +16,7 @@ from mint import shimclient
 from mint import config
 from mint import jobstatus
 from mint import jobs
-from mint import releasetypes
+from mint import buildtypes
 from mint import cooktypes
 from mint import mint_error
 from mint.data import RDT_INT, RDT_STRING, RDT_BOOL
@@ -30,10 +30,10 @@ from conary.deps import deps
 from conary.lib import util
 
 class JobsTest(fixtures.FixturedUnitTest):
-    def stockReleaseFlavor(self, db, releaseId, arch = "x86_64"):
+    def stockBuildFlavor(self, db, buildId, arch = "x86_64"):
         cu = db.cursor()
         flavor = deps.parseFlavor(stockFlavors['1#' + arch]).freeze()
-        cu.execute("UPDATE Releases set troveFlavor=? WHERE releaseId=?", flavor, releaseId)
+        cu.execute("UPDATE Builds set troveFlavor=? WHERE buildId=?", flavor, buildId)
         db.commit()
 
     #####
@@ -63,7 +63,7 @@ class JobsTest(fixtures.FixturedUnitTest):
         # ask for no arch
         client = self.getClient('test')
         job = client.startNextJob([],
-                                  {'imageTypes' : [releasetypes.STUB_IMAGE]},
+                                  {'buildTypes' : [buildtypes.STUB_IMAGE]},
                                   jsversion.getDefaultVersion())
 
         self.failIf(job, "startNextJob returned the wrong image type")
@@ -73,7 +73,7 @@ class JobsTest(fixtures.FixturedUnitTest):
         # ask for a different image type
         client = self.getClient('test')
         job = client.startNextJob(["1#x86_64"],
-                                  {'imageTypes' : [releasetypes.RAW_HD_IMAGE]},
+                                  {'buildTypes' : [buildtypes.RAW_HD_IMAGE]},
                                   jsversion.getDefaultVersion())
 
         self.failIf(job, "startNextJob returned the wrong image type")
@@ -83,7 +83,7 @@ class JobsTest(fixtures.FixturedUnitTest):
         # ask for a different architecture
         client = self.getClient('test')
         job = client.startNextJob(["1#x86"],
-                                  {'imageTypes' : [releasetypes.STUB_IMAGE]},
+                                  {'buildTypes' : [buildtypes.STUB_IMAGE]},
                                   jsversion.getDefaultVersion())
 
         self.failIf(job, "startNextJob matched the wrong architecture")
@@ -114,7 +114,7 @@ class JobsTest(fixtures.FixturedUnitTest):
         # ask for the right parameters
         client = self.getClient('test')
         job = client.startNextJob(["1#x86_64"],
-                                  {'imageTypes' : [releasetypes.STUB_IMAGE]},
+                                  {'buildTypes' : [buildtypes.STUB_IMAGE]},
                                   jsversion.getDefaultVersion())
 
         self.failIf(not job, "startNext job didn't match for correct values")
@@ -148,7 +148,7 @@ class JobsTest(fixtures.FixturedUnitTest):
         # ask for a image job with wrong arch
         client = self.getClient('test')
         job = client.startNextJob(["1#x86_64"],
-                                  {'imageTypes' : [releasetypes.STUB_IMAGE]},
+                                  {'buildTypes' : [buildtypes.STUB_IMAGE]},
                                   jsversion.getDefaultVersion())
 
         self.failIf(job, "startNextJob matched cook job when asked for image")
@@ -158,7 +158,7 @@ class JobsTest(fixtures.FixturedUnitTest):
         # ask for a image job with right arch
         client = self.getClient('test')
         job = client.startNextJob(["1#x86"],
-                                  {'imageTypes' : [releasetypes.STUB_IMAGE]},
+                                  {'buildTypes' : [buildtypes.STUB_IMAGE]},
                                   jsversion.getDefaultVersion())
 
         self.failIf(job, "startNextJob matched cook job when asked for image")
@@ -195,7 +195,7 @@ class JobsTest(fixtures.FixturedUnitTest):
         # ask for an image job with no arch
         client = self.getClient('test')
         job = client.startNextJob([],
-                                  {'imageTypes' : [releasetypes.STUB_IMAGE]},
+                                  {'buildTypes' : [buildtypes.STUB_IMAGE]},
                                   jsversion.getDefaultVersion())
 
         self.failIf(job, "startNextJob matched cook job but asked for nothing")
@@ -209,7 +209,7 @@ class JobsTest(fixtures.FixturedUnitTest):
         # ask for an image job with right arch
         client = self.getClient('test')
         job = client.startNextJob(['1#x86_64'],
-                                  {'imageTypes' : [releasetypes.STUB_IMAGE]},
+                                  {'buildTypes' : [buildtypes.STUB_IMAGE]},
                                   jsversion.getDefaultVersion())
 
         self.failIf(not job, "startNextJob ignored an image job")
@@ -229,7 +229,7 @@ class JobsTest(fixtures.FixturedUnitTest):
         # ask for an image job with wrong arch
         client = self.getClient('test')
         job = client.startNextJob(['1#x86'],
-                                  {'imageTypes' : [releasetypes.STUB_IMAGE]},
+                                  {'buildTypes' : [buildtypes.STUB_IMAGE]},
                                   jsversion.getDefaultVersion())
 
         self.failIf(job, "startNextJob matched image job wrong arch")
@@ -250,7 +250,7 @@ class JobsTest(fixtures.FixturedUnitTest):
         # ask for an image job with no arch
         client = self.getClient('test')
         job = client.startNextJob([],
-                                  {'imageTypes' : [releasetypes.STUB_IMAGE]},
+                                  {'buildTypes' : [buildtypes.STUB_IMAGE]},
                                   jsversion.getDefaultVersion())
 
         self.failIf(job, "startNextJob matched image job no arch")
@@ -301,7 +301,7 @@ class JobsTest(fixtures.FixturedUnitTest):
         # ask for all jobs with x86 arch (will match cook)
         client = self.getClient('test')
         job = client.startNextJob(['1#x86'],
-                                  {'imageTypes' : [releasetypes.STUB_IMAGE],
+                                  {'buildTypes' : [buildtypes.STUB_IMAGE],
                                    'cookTypes' : [cooktypes.GROUP_BUILDER]},
                                   jsversion.getDefaultVersion())
 
@@ -313,11 +313,11 @@ class JobsTest(fixtures.FixturedUnitTest):
         client = self.getClient('test')
         # ask for all jobs with x86_64 arch (will match image)
         job = client.startNextJob(['1#x86_64'],
-                                  {'imageTypes' : [releasetypes.STUB_IMAGE],
+                                  {'buildTypes' : [buildtypes.STUB_IMAGE],
                                    'cookTypes' : [cooktypes.GROUP_BUILDER]},
                                   jsversion.getDefaultVersion())
 
-        self.failIf(not (job and job.releaseId),
+        self.failIf(not (job and job.buildId),
                     "startNextJob ignored an image job")
 
     @fixtures.fixture('BothJobs')
@@ -325,7 +325,7 @@ class JobsTest(fixtures.FixturedUnitTest):
         # ask for all jobs no arch
         client = self.getClient('test')
         job = client.startNextJob([],
-                                  {'imageTypes' : [releasetypes.STUB_IMAGE],
+                                  {'buildTypes' : [buildtypes.STUB_IMAGE],
                                    'cookTypes' : [cooktypes.GROUP_BUILDER]},
                                   jsversion.getDefaultVersion())
 
@@ -336,16 +336,16 @@ class JobsTest(fixtures.FixturedUnitTest):
         # ask for all jobs
         client = self.getClient('test')
         job = client.startNextJob(['1#x86_64', '1#x86'],
-                                  {'imageTypes' : [releasetypes.STUB_IMAGE],
+                                  {'buildTypes' : [buildtypes.STUB_IMAGE],
                                    'cookTypes' : [cooktypes.GROUP_BUILDER]},
                                   jsversion.getDefaultVersion())
 
-        self.failIf(not (job and job.releaseId),
+        self.failIf(not (job and job.buildId),
                     "startNextJob didn't match image job")
 
         # ask for all jobs
         job = client.startNextJob(['1#x86_64', '1#x86'],
-                                  {'imageTypes' : [releasetypes.STUB_IMAGE],
+                                  {'buildTypes' : [buildtypes.STUB_IMAGE],
                                    'cookTypes' : [cooktypes.GROUP_BUILDER]},
                                   jsversion.getDefaultVersion())
 
@@ -353,11 +353,11 @@ class JobsTest(fixtures.FixturedUnitTest):
                     "startNextJob didn't match group trove")
 
     @fixtures.fixture('BothJobs')
-    def testStartCompImageType(self, db, data):
+    def testStartCompBuildType(self, db, data):
         # ask for all jobs but wrong image type
         client = self.getClient('test')
         job = client.startNextJob(['1#x86_64', '1#x86'],
-                                  {'imageTypes' : [releasetypes.RAW_HD_IMAGE],
+                                  {'buildTypes' : [buildtypes.RAW_HD_IMAGE],
                                    'cookTypes' : [cooktypes.GROUP_BUILDER]},
                                   jsversion.getDefaultVersion())
 
@@ -373,7 +373,7 @@ class JobsTest(fixtures.FixturedUnitTest):
         client = self.getClient('test')
         self.assertRaises(ParameterError,
                           client.startNextJob, ['this is not a frozen flavor'],
-                          {'imageTypes' : [releasetypes.RAW_HD_IMAGE],
+                          {'buildTypes' : [buildtypes.RAW_HD_IMAGE],
                            'cookTypes' : [cooktypes.GROUP_BUILDER]},
                           jsversion.getDefaultVersion())
 
@@ -382,7 +382,7 @@ class JobsTest(fixtures.FixturedUnitTest):
         client = self.getClient('test')
         self.assertRaises(ParameterError,
                           client.startNextJob, ['1#x86'],
-                          {'imageTypes' : [9999],
+                          {'buildTypes' : [9999],
                            'cookTypes' : [cooktypes.GROUP_BUILDER]},
                           jsversion.getDefaultVersion())
 
@@ -391,7 +391,7 @@ class JobsTest(fixtures.FixturedUnitTest):
         client = self.getClient('test')
         self.assertRaises(ParameterError,
                           client.startNextJob, ['1#x86'],
-                          {'imageTypes' : [releasetypes.RAW_HD_IMAGE],
+                          {'buildTypes' : [buildtypes.RAW_HD_IMAGE],
                            'cookTypes' : [9999]},
                           jsversion.getDefaultVersion())
 
@@ -401,7 +401,7 @@ class JobsTest(fixtures.FixturedUnitTest):
         # by this server. historically this raised permission denied.
         client = self.getClient('test')
         job = client.startNextJob(['1#x86_64', '1#x86'],
-                                  {'imageTypes' : [releasetypes.NETBOOT_IMAGE],
+                                  {'buildTypes' : [buildtypes.NETBOOT_IMAGE],
                                    'cookTypes' : [cooktypes.GROUP_BUILDER]},
                                   jsversion.getDefaultVersion())
 
@@ -437,7 +437,7 @@ class JobsTest(fixtures.FixturedUnitTest):
 
         job = client.startNextJob(['1#x86'],
                                   {'cookTypes' : [cooktypes.GROUP_BUILDER],
-                                   'imageTypes': [releasetypes.RAW_HD_IMAGE]},
+                                   'buildTypes': [buildtypes.RAW_HD_IMAGE]},
                                   jsversion.getDefaultVersion())
 
         self.failIf(job, "startNextJob returned a finished cook")
@@ -452,7 +452,7 @@ class JobsTest(fixtures.FixturedUnitTest):
         db.commit()
 
         job = client.startNextJob(['1#x86'],
-                                  {'imageTypes': [releasetypes.RAW_HD_IMAGE]},
+                                  {'buildTypes': [buildtypes.RAW_HD_IMAGE]},
                                   jsversion.getDefaultVersion())
 
         self.failIf(job, "startNextJob returned a finished cook")
@@ -483,7 +483,7 @@ class JobsTest(fixtures.FixturedUnitTest):
 
         job = client.startNextJob(['1#x86_64'],
                                   {'cookTypes' : [cooktypes.GROUP_BUILDER],
-                                   'imageTypes': [releasetypes.RAW_HD_IMAGE]},
+                                   'buildTypes': [buildtypes.RAW_HD_IMAGE]},
                                   jsversion.getDefaultVersion())
 
         self.failIf(job, "startNextJob returned a finished image")
@@ -498,7 +498,7 @@ class JobsTest(fixtures.FixturedUnitTest):
         db.commit()
 
         job = client.startNextJob(['1#x86_64'],
-                                  {'imageTypes': [releasetypes.RAW_HD_IMAGE]},
+                                  {'buildTypes': [buildtypes.RAW_HD_IMAGE]},
                                   jsversion.getDefaultVersion())
 
         self.failIf(job, "startNextJob returned a finished image")
@@ -527,7 +527,7 @@ class JobsTest(fixtures.FixturedUnitTest):
 
         job = client.startNextJob(['1#x86'],
                                   {'cookTypes' : [cooktypes.GROUP_BUILDER],
-                                   'imageTypes': [releasetypes.RAW_HD_IMAGE]},
+                                   'buildTypes': [buildtypes.RAW_HD_IMAGE]},
                                   jsversion.getDefaultVersion())
 
         self.failIf(job, "startNextJob returned an owned cook")
@@ -541,7 +541,7 @@ class JobsTest(fixtures.FixturedUnitTest):
         db.commit()
 
         job = client.startNextJob(['1#x86'],
-                                  {'imageTypes': [releasetypes.RAW_HD_IMAGE]},
+                                  {'buildTypes': [buildtypes.RAW_HD_IMAGE]},
                                   jsversion.getDefaultVersion())
 
         self.failIf(job, "startNextJob returned an owned cook")
@@ -570,7 +570,7 @@ class JobsTest(fixtures.FixturedUnitTest):
 
         job = client.startNextJob(['1#x86_64'],
                                   {'cookTypes' : [cooktypes.GROUP_BUILDER],
-                                   'imageTypes': [releasetypes.RAW_HD_IMAGE]},
+                                   'buildTypes': [buildtypes.RAW_HD_IMAGE]},
                                   jsversion.getDefaultVersion())
 
         self.failIf(job, "startNextJob returned an owned image")
@@ -584,7 +584,7 @@ class JobsTest(fixtures.FixturedUnitTest):
         db.commit()
 
         job = client.startNextJob(['1#x86_64'],
-                                  {'imageTypes': [releasetypes.RAW_HD_IMAGE]},
+                                  {'buildTypes': [buildtypes.RAW_HD_IMAGE]},
                                   jsversion.getDefaultVersion())
 
         self.failIf(job, "startNextJob returned an owned image")
@@ -595,7 +595,7 @@ class JobsTest(fixtures.FixturedUnitTest):
         # definitely needs to be allowed. return value doesn't matter
         client = self.getClient('test')
         job = client.startNextJob(['1#x86_64'],
-                                  {'imageTypes': [releasetypes.RAW_HD_IMAGE]},
+                                  {'buildTypes': [buildtypes.RAW_HD_IMAGE]},
                                   jsversion.getDefaultVersion())
 
     #####
@@ -607,12 +607,12 @@ class JobsTest(fixtures.FixturedUnitTest):
         # ensure an image job cannot be started for a mismatched job server.
         client = self.getClient('admin')
         cu = db.cursor()
-        cu.execute("""UPDATE ReleaseData SET value='illegal'
+        cu.execute("""UPDATE BuildData SET value='illegal'
                           WHERE name='jsversion'""")
         db.commit()
 
         self.assertRaises(mint_error.JobserverVersionMismatch,
-                          client.startImageJob, data['releaseId'])
+                          client.startImageJob, data['buildId'])
 
     @fixtures.fixture('ImageJob')
     def testStartImageJobJSV(self, db, data):
@@ -621,7 +621,7 @@ class JobsTest(fixtures.FixturedUnitTest):
         client = self.getClient('test')
         self.assertRaises(ParameterError, client.startNextJob,
                           ['1#x86', '1#x86_64'],
-                          {'imageTypes': [releasetypes.RAW_HD_IMAGE]},
+                          {'buildTypes': [buildtypes.RAW_HD_IMAGE]},
                           'wackyversion')
 
     @fixtures.fixture('ImageJob')
@@ -630,12 +630,12 @@ class JobsTest(fixtures.FixturedUnitTest):
         # using only image types defined
         client = self.getClient('test')
         cu = db.cursor()
-        cu.execute("""UPDATE ReleaseData SET value='1.0.0'
+        cu.execute("""UPDATE BuildData SET value='1.0.0'
                           WHERE name='jsversion'""")
         db.commit()
 
         job = client.startNextJob(['1#x86', '1#x86_64'],
-                                  {'imageTypes': [releasetypes.STUB_IMAGE]},
+                                  {'buildTypes': [buildtypes.STUB_IMAGE]},
                                   jsversion.getDefaultVersion())
 
         self.failIf(job, "startNextJob returned a mismatched jobserver image")
@@ -646,12 +646,12 @@ class JobsTest(fixtures.FixturedUnitTest):
         # using composite job request
         client = self.getClient('test')
         cu = db.cursor()
-        cu.execute("""UPDATE ReleaseData SET value='1.0.0'
+        cu.execute("""UPDATE BuildData SET value='1.0.0'
                           WHERE name='jsversion'""")
         db.commit()
 
         job = client.startNextJob(['1#x86', '1#x86_64'],
-                                  {'imageTypes': [releasetypes.STUB_IMAGE],
+                                  {'buildTypes': [buildtypes.STUB_IMAGE],
                                    'cookTypes' : [cooktypes.GROUP_BUILDER]},
                                   jsversion.getDefaultVersion())
 
@@ -662,12 +662,12 @@ class JobsTest(fixtures.FixturedUnitTest):
         # ensure cook jobs don't interact badly with job server version
         client = self.getClient('test')
         cu = db.cursor()
-        cu.execute("""UPDATE ReleaseData SET value='1.0.0'
+        cu.execute("""UPDATE BuildData SET value='1.0.0'
                           WHERE name='jsversion'""")
         db.commit()
 
         job = client.startNextJob(['1#x86', '1#x86_64'],
-                                  {'imageTypes': [releasetypes.STUB_IMAGE],
+                                  {'buildTypes': [buildtypes.STUB_IMAGE],
                                    'cookTypes' : [cooktypes.GROUP_BUILDER]},
                                   jsversion.getDefaultVersion())
 
@@ -677,21 +677,21 @@ class JobsTest(fixtures.FixturedUnitTest):
     @fixtures.fixture('Full')
     def testJobs(self, db, data):
         client = self.getClient('admin')
-        release = client.getRelease(data['releaseId'])
+        build = client.getBuild(data['buildId'])
 
-        job = client.startImageJob(release.getId())
-        job = release.getJob()
-        assert(job.getReleaseId() == release.getId())
+        job = client.startImageJob(build.getId())
+        job = build.getJob()
+        assert(job.getBuildId() == build.getId())
 
         # test restarting jobs
         job.setStatus(jobstatus.ERROR, "Error Message")
-        client.startImageJob(release.getId())
+        client.startImageJob(build.getId())
 
         assert(job.getStatus() == jobstatus.WAITING)
 
         # test duplicate job handling
         try:
-            job2 = client.startImageJob(release.getId())
+            job2 = client.startImageJob(build.getId())
         except jobs.DuplicateJob:
             pass
         else:
@@ -706,30 +706,30 @@ class JobsTest(fixtures.FixturedUnitTest):
     @fixtures.fixture('Full')
     def testStubImage(self, db, data):
         client = self.getClient('admin')
-        release = client.getRelease(data['releaseId'])
+        build = client.getBuild(data['buildId'])
         project = client.getProject(data['projectId'])
-        release.setImageTypes([releasetypes.STUB_IMAGE])
-        release.setDataValue('stringArg', 'Hello World!')
+        build.setBuildType(buildtypes.STUB_IMAGE)
+        build.setDataValue('stringArg', 'Hello World!')
 
-        job = client.startImageJob(release.getId())
+        job = client.startImageJob(build.getId())
 
         from mint.distro import jobserver
         isocfg = jobserver.IsoGenConfig()
         isocfg.finishedPath = self.cfg.imagesPath
         imagegen = stub_image.StubImage(client, isocfg, job,
-                                        release, project)
+                                        build, project)
         imagegen.write()
-        release.setFiles([[self.cfg.imagesPath + "/stub.iso", "Stub"]])
+        build.setFiles([[self.cfg.imagesPath + "/stub.iso", "Stub"]])
 
         assert(os.path.exists(self.cfg.imagesPath + "/stub.iso"))
 
-        release.refresh()
-        files = release.getFiles()
-        assert(files == [{'fileId': 1, 'filename': 'stub.iso',
+        build.refresh()
+        files = build.getFiles()
+        assert(files == [{'fileId': 4, 'filename': 'stub.iso',
                           'title': 'Stub', 'size': 13}])
 
         fileInfo = client.getFileInfo(files[0]['fileId'])
-        assert(fileInfo == (release.getId(), 0, self.cfg.imagesPath + '/stub.iso',
+        assert(fileInfo == (build.getId(), 0, self.cfg.imagesPath + '/stub.iso',
                             'Stub'))
 
         try:
@@ -741,26 +741,26 @@ class JobsTest(fixtures.FixturedUnitTest):
     @fixtures.fixture('Full')
     def testStubImageFileOrder(self, db, data):
         client = self.getClient('admin')
-        release = client.getRelease(data['releaseId'])
+        build = client.getBuild(data['buildId'])
         # make sure that the incoming ordering of files is preserved
-        release.setFiles([['zaaa.iso', 'Zaaa'], ['aaaa.iso', 'Aaaa']])
-        assert(release.getFiles() == [{'size': 0, 'title': 'Zaaa',
-                                       'filename': 'zaaa.iso', 'fileId': 1},
+        build.setFiles([['zaaa.iso', 'Zaaa'], ['aaaa.iso', 'Aaaa']])
+        assert(build.getFiles() == [{'size': 0, 'title': 'Zaaa',
+                                       'filename': 'zaaa.iso', 'fileId': 4},
                                       {'size': 0, 'title': 'Aaaa',
-                                       'filename': 'aaaa.iso', 'fileId': 2}])
+                                       'filename': 'aaaa.iso', 'fileId': 5}])
 
     @fixtures.fixture('Full')
     def testJobQueue(self, db, data):
         client = self.getClient('admin')
         ownerClient = self.getClient('owner')
-        release = ownerClient.getRelease(data['releaseId'])
-        release.setImageTypes([releasetypes.STUB_IMAGE])
-        release.setDataValue('stringArg', 'Hello World!')
+        build = ownerClient.getBuild(data['buildId'])
+        build.setBuildType(buildtypes.STUB_IMAGE)
+        build.setDataValue('stringArg', 'Hello World!')
 
-        job = ownerClient.startImageJob(release.getId())
+        job = ownerClient.startImageJob(build.getId())
 
         assert(ownerClient.server.getJobStatus(job.getId())['queueLen'] == 0)
-        assert(ownerClient.server.getReleaseStatus(release.getId())['queueLen'] == 0)
+        assert(ownerClient.server.getBuildStatus(build.getId())['queueLen'] == 0)
         assert(ownerClient.server.getJobWaitMessage(job.getId()) == \
                'Next in line for processing')
 
@@ -788,18 +788,18 @@ class JobsTest(fixtures.FixturedUnitTest):
         assert(ownerClient.server.getJobWaitMessage(cookJobId) == \
                'Next in line for processing')
 
-        job = ownerClient.startImageJob(release.getId())
+        job = ownerClient.startImageJob(build.getId())
         assert(ownerClient.server.getJobStatus(cookJobId)['queueLen'] == 0)
         assert(ownerClient.server.getJobStatus(job.getId())['queueLen'] == 1)
 
     @fixtures.fixture('Full')
     def testWaitStatus(self, db, data):
         client = self.getClient('admin')
-        release = client.getRelease(data['releaseId'])
-        release.setImageTypes([releasetypes.STUB_IMAGE])
-        release.setDataValue('stringArg', 'Hello World!')
+        build = client.getBuild(data['buildId'])
+        build.setBuildType(buildtypes.STUB_IMAGE)
+        build.setDataValue('stringArg', 'Hello World!')
 
-        job = client.startImageJob(release.getId())
+        job = client.startImageJob(build.getId())
 
         self.failIf(client.server.getJobWaitMessage(job.id) != \
                     'Next in line for processing',
@@ -827,11 +827,11 @@ class JobsTest(fixtures.FixturedUnitTest):
     @fixtures.fixture('Full')
     def testRunningStatus(self, db, data):
         client = self.getClient('admin')
-        release = client.getRelease(data['releaseId'])
-        release.setImageTypes([releasetypes.STUB_IMAGE])
-        release.setDataValue('stringArg', 'Hello World!')
+        build = client.getBuild(data['buildId'])
+        build.setBuildType(buildtypes.STUB_IMAGE)
+        build.setDataValue('stringArg', 'Hello World!')
 
-        job = client.startImageJob(release.getId())
+        job = client.startImageJob(build.getId())
 
         newMsg = "We are the knights who say 'Ni!'"
         job.setStatus(jobstatus.RUNNING, newMsg)
@@ -845,11 +845,11 @@ class JobsTest(fixtures.FixturedUnitTest):
     @fixtures.fixture('Full')
     def testStartTimestamp(self, db, data):
         client = self.getClient('admin')
-        release = client.getRelease(data['releaseId'])
-        release.setImageTypes([releasetypes.STUB_IMAGE])
-        release.setDataValue('stringArg', 'Hello World!')
+        build = client.getBuild(data['buildId'])
+        build.setBuildType(buildtypes.STUB_IMAGE)
+        build.setDataValue('stringArg', 'Hello World!')
 
-        job = client.startImageJob(release.getId())
+        job = client.startImageJob(build.getId())
 
         cu = db.cursor()
         cu.execute("UPDATE Jobs set timeStarted = 100 where jobId=?", job.id)
@@ -862,8 +862,8 @@ class JobsTest(fixtures.FixturedUnitTest):
                     "pre-start: job doesn't reflect altered timestamp")
 
         newJob = client.startNextJob(['1#x86', '1#x86_64'],
-                                    {'imageTypes':
-                                     [releasetypes.STUB_IMAGE]},
+                                    {'buildTypes':
+                                     [buildtypes.STUB_IMAGE]},
                                      jsversion.getDefaultVersion())
 
         assert(newJob.id == job.id)
@@ -882,40 +882,40 @@ class JobsTest(fixtures.FixturedUnitTest):
 
         cu = db.cursor()
 
-        release = client.newRelease(projectId, "Test Release")
-        release.setImageTypes([releasetypes.STUB_IMAGE])
-        release.setDataValue('stringArg', 'Hello World!')
+        build = client.newBuild(projectId, "Test Build")
+        build.setBuildType(buildtypes.STUB_IMAGE)
+        build.setDataValue('stringArg', 'Hello World!')
 
-        self.stockReleaseFlavor(db, release.getId())
-        job = client.startImageJob(release.getId())
+        self.stockBuildFlavor(db, build.getId())
+        job = client.startImageJob(build.getId())
 
-        cu.execute("UPDATE Releases SET troveLastChanged=0")
+        cu.execute("UPDATE Builds SET troveLastChanged=0")
         db.commit()
 
-        release2 = client.newRelease(projectId, "Test Release")
-        release2.setImageTypes([releasetypes.STUB_IMAGE])
-        release2.setDataValue('stringArg', 'Hello World!')
+        build2 = client.newBuild(projectId, "Test Build")
+        build2.setBuildType(buildtypes.STUB_IMAGE)
+        build2.setDataValue('stringArg', 'Hello World!')
 
-        self.stockReleaseFlavor(db, release2.getId())
-        job2 = client.startImageJob(release2.getId())
+        self.stockBuildFlavor(db, build2.getId())
+        job2 = client.startImageJob(build2.getId())
 
-        cu.execute("UPDATE Releases SET troveLastChanged=0")
+        cu.execute("UPDATE Builds SET troveLastChanged=0")
         db.commit()
 
-        release3 = client.newRelease(projectId, "Test Release")
-        release3.setImageTypes([releasetypes.STUB_IMAGE])
-        release3.setDataValue('stringArg', 'Hello World!')
+        build3 = client.newBuild(projectId, "Test Build")
+        build3.setBuildType(buildtypes.STUB_IMAGE)
+        build3.setDataValue('stringArg', 'Hello World!')
 
-        self.stockReleaseFlavor(db, release3.getId())
-        job3 = client.startImageJob(release3.getId())
+        self.stockBuildFlavor(db, build3.getId())
+        job3 = client.startImageJob(build3.getId())
 
         assert(job.getStatusMessage() == 'Next in line for processing')
         assert(job2.getStatusMessage() == 'Number 2 in line for processing')
         assert(job3.getStatusMessage() == 'Number 3 in line for processing')
 
         newJob = client.startNextJob(['1#x86', '1#x86_64'],
-                                    {'imageTypes':
-                                     [releasetypes.STUB_IMAGE]},
+                                    {'buildTypes':
+                                     [buildtypes.STUB_IMAGE]},
                                      jsversion.getDefaultVersion())
 
         job = client.getJob(job.id)
@@ -952,30 +952,30 @@ class JobsTest(fixtures.FixturedUnitTest):
 
         testUserClient = self.getClient("test")
         projectId = client.newProject("Foo", "foo", "rpath.org")
-        release = testUserClient.newRelease(projectId, "Test Release")
-        release.setImageTypes([releasetypes.STUB_IMAGE])
-        release.setDataValue('stringArg', 'Hello World!')
+        build = testUserClient.newBuild(projectId, "Test Build")
+        build.setBuildType(buildtypes.STUB_IMAGE)
+        build.setDataValue('stringArg', 'Hello World!')
 
-        self.stockReleaseFlavor(db, release.getId())
-        job1 = testUserClient.startImageJob(release.getId())
+        self.stockBuildFlavor(db, build.getId())
+        job1 = testUserClient.startImageJob(build.getId())
 
-        # protect this release from being auto-deleted
-        cu.execute("UPDATE Releases SET troveLastChanged=1")
+        # protect this build from being auto-deleted
+        cu.execute("UPDATE Builds SET troveLastChanged=1")
         db.commit()
 
-        release2 = testUserClient.newRelease(projectId, "Test Release")
-        release2.setImageTypes([releasetypes.STUB_IMAGE])
-        release2.setDataValue('stringArg', 'Hello World!')
+        build2 = testUserClient.newBuild(projectId, "Test Build")
+        build2.setBuildType(buildtypes.STUB_IMAGE)
+        build2.setDataValue('stringArg', 'Hello World!')
 
-        self.stockReleaseFlavor(db, release2.getId())
-        job2 = testUserClient.startImageJob(release2.getId())
+        self.stockBuildFlavor(db, build2.getId())
+        job2 = testUserClient.startImageJob(build2.getId())
 
-        # protect this release from being auto-deleted
-        cu.execute("UPDATE Releases SET troveLastChanged=1")
+        # protect this build from being auto-deleted
+        cu.execute("UPDATE Builds SET troveLastChanged=1")
         db.commit()
 
         self.failIf(job2.statusMessage == 'Next in line for processing',
-                    "Consecutive releases both show up as next.")
+                    "Consecutive builds both show up as next.")
 
         groupTrove = testUserClient.createGroupTrove(projectId, \
                 'group-test', '1.0.0', 'No Description', False)
@@ -996,21 +996,21 @@ class JobsTest(fixtures.FixturedUnitTest):
         job3 = testUserClient.getJob(3)
 
         self.failIf(job3.statusMessage != 'Number 3 in line for processing',
-                    "Release before cook caused wrong queue count")
+                    "Build before cook caused wrong queue count")
 
-        release3 = testUserClient.newRelease(projectId, "Test Release")
-        release3.setImageTypes([releasetypes.STUB_IMAGE])
-        release3.setDataValue('stringArg', 'Hello World!')
+        build3 = testUserClient.newBuild(projectId, "Test Build")
+        build3.setBuildType(buildtypes.STUB_IMAGE)
+        build3.setDataValue('stringArg', 'Hello World!')
 
-        self.stockReleaseFlavor(db, release3.getId())
-        job4 = testUserClient.startImageJob(release3.getId())
+        self.stockBuildFlavor(db, build3.getId())
+        job4 = testUserClient.startImageJob(build3.getId())
 
-        # protect this release from being auto-deleted
-        cu.execute("UPDATE Releases SET troveLastChanged=1")
+        # protect this build from being auto-deleted
+        cu.execute("UPDATE Builds SET troveLastChanged=1")
         db.commit()
 
         self.failIf(job4.statusMessage != 'Number 4 in line for processing',
-                    "Cook before release caused wrong queue count")
+                    "Cook before build caused wrong queue count")
 
         allJobs = (job1, job2, job3, job4)
 
@@ -1020,10 +1020,10 @@ class JobsTest(fixtures.FixturedUnitTest):
         db.commit()
 
         # regenerate jobs
-        job1 = testUserClient.startImageJob(release.getId())
-        job2 = testUserClient.startImageJob(release2.getId())
+        job1 = testUserClient.startImageJob(build.getId())
+        job2 = testUserClient.startImageJob(build2.getId())
         job3 = testUserClient.getJob(groupTrove.startCookJob("1#x86"))
-        job4 = testUserClient.startImageJob(release3.getId())
+        job4 = testUserClient.startImageJob(build3.getId())
 
         self.failIf(job1.statusMessage != 'Next in line for processing',
                     "Didn't properly report status of next job")
@@ -1035,9 +1035,9 @@ class JobsTest(fixtures.FixturedUnitTest):
     @fixtures.fixture('Full')
     def testJobData(self, db, data):
         client = self.getClient('admin')
-        release = client.getRelease(data['releaseId'])
+        build = client.getBuild(data['buildId'])
 
-        job = client.startImageJob(release.getId())
+        job = client.startImageJob(build.getId())
         job.setDataValue("mystring", "testing", RDT_STRING)
         job.setDataValue("myint", 123, RDT_INT)
 
@@ -1081,24 +1081,24 @@ class JobsTest(fixtures.FixturedUnitTest):
                     "job-server is not multi-instance safe")
 
     @fixtures.fixture('Full')
-    def testStartReleaseJob(self, db, data):
+    def testStartBuildJob(self, db, data):
         client = self.getClient('admin')
-        release = client.getRelease(data['releaseId'])
-        release.setImageTypes([releasetypes.STUB_IMAGE])
-        relJob = client.startImageJob(release.getId())
+        build = client.getBuild(data['buildId'])
+        build.setBuildType(buildtypes.STUB_IMAGE)
+        relJob = client.startImageJob(build.getId())
 
         # normally called from job-server
         job = client.startNextJob(["1#x86"],
-                                  {'imageTypes' : [releasetypes.STUB_IMAGE]},
+                                  {'buildTypes' : [buildtypes.STUB_IMAGE]},
                                   jsversion.getDefaultVersion())
 
         self.failIf(job, "startNextJob returned the wrong architecture")
 
         job = client.startNextJob(["1#x86", "1#x86_64"],
-                                  {'imageTypes' : [releasetypes.STUB_IMAGE]},
+                                  {'buildTypes' : [buildtypes.STUB_IMAGE]},
                                   jsversion.getDefaultVersion())
 
-        self.failIf(not job, "startNextJob ignored a valid release job")
+        self.failIf(not job, "startNextJob ignored a valid build job")
 
         self.failIf(job.status != jobstatus.RUNNING,
                     "job-server is not multi-instance safe")
@@ -1186,7 +1186,7 @@ class JobsTest(fixtures.FixturedUnitTest):
         self.failIf(job.id != 5, "owned job was selected")
 
     @fixtures.fixture('Full')
-    def testStartJobLockRelease(self, db, data):
+    def testStartJobLockBuild(self, db, data):
         client = self.getClient('admin')
         groupTrove = client.createGroupTrove(data['projectId'], 'group-test',
                                              '1.0.0', '', False)
@@ -1208,27 +1208,27 @@ class JobsTest(fixtures.FixturedUnitTest):
         cu.execute("SELECT owner FROM Jobs")
 
         self.failIf(cu.fetchall()[0] != (None,),
-                    "Lock on job of incompatible type was not released")
+                    "Lock on job of incompatible type was not buildd")
 
     @fixtures.fixture('Full')
-    def testRegenerateRelease(self, db, data):
+    def testRegenerateBuild(self, db, data):
         client = self.getClient('admin')
-        release = client.getRelease(data['releaseId'])
-        release.setImageTypes([releasetypes.STUB_IMAGE])
+        build = client.getBuild(data['buildId'])
+        build.setBuildType(buildtypes.STUB_IMAGE)
 
-        relJob = client.startImageJob(release.getId())
+        relJob = client.startImageJob(build.getId())
 
         cu = db.cursor()
 
         cu.execute("SELECT name, value FROM JobData")
 
         self.failIf(cu.fetchone() != ('arch', '1#x86_64'),
-                    "architecture information missing for release")
+                    "architecture information missing for build")
 
         cu.execute("UPDATE Jobs SET status=?, owner=1", jobstatus.FINISHED)
         db.commit()
 
-        relJob = client.startImageJob(release.getId())
+        relJob = client.startImageJob(build.getId())
 
         cu.execute("SELECT status, owner FROM Jobs")
 

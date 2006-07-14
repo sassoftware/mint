@@ -15,21 +15,23 @@ from mint import database
 from mint import mailinglists
 from mint import jobs
 from mint import jobstatus
-from mint import releases
-from mint import releasetypes
+from mint import builds
+from mint import buildtypes
 from mint import userlevels
 from mint import users
 
-from mint.releases import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM
+from mint import buildtemplates
+from mint.builds import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM
 from mint.users import sendMailWithChecks
 from mint.web.webhandler import WebHandler, normPath, HttpNotFound
-from mint.web.decorators import ownerOnly, requiresAuth, requiresAdmin, \
-        mailList, redirectHttp
+from mint.web.decorators import ownerOnly, writersOnly, requiresAuth, \
+        requiresAdmin, mailList, redirectHttp
 
 from conary import conaryclient
 from conary import conarycfg
 from conary.deps import deps
 from conary import versions
+from conary.conaryclient.cmdline import parseTroveSpec
 from conary.web.fields import strFields, intFields, listFields, boolFields, dictFields
 
 def getUserDict(members):
@@ -106,36 +108,40 @@ class ProjectHandler(WebHandler):
         return self._write("conaryDevelCfg")
 
     def releases(self, auth):
-        releases = self.project.getReleases(showUnpublished = True)
-        publishedReleases = [x for x in releases if x.getPublished()]
+        releases = [self.client.getPublishedRelease(x) for x in self.project.getPublishedReleases()]
+        return self._write("pubreleases", releases = releases)
+
+    def builds(self, auth):
+        builds = [self.client.getBuild(x) for x in self.project.getBuilds()]
+        publishedBuilds = [x for x in builds if x.getPublished()]
 
         # Group versions by name or default name (based on group trove).
-        # FIXME: this is a hack until we get a better way to do release
+        # FIXME: this is a hack until we get a better way to do build
         # management.
-        releasesByGroupTrove = {}
-        for r in releases:
+        buildsByGroupTrove = {}
+        for r in builds:
             k = r.getDefaultName()
-            releasesByVersion = releasesByGroupTrove.has_key(k) and releasesByGroupTrove[k] or []
-            releasesByVersion.append(r)
-            releasesByVersion.sort(key = lambda x: x.getArch())
-            releasesByGroupTrove[k] = releasesByVersion
+            buildsByVersion = buildsByGroupTrove.has_key(k) and buildsByGroupTrove[k] or []
+            buildsByVersion.append(r)
+            buildsByVersion.sort(key = lambda x: x.getArch())
+            buildsByGroupTrove[k] = buildsByVersion
 
-        # return a list of items in releasesByGroupTrove for web display
-        releaseVersions = sorted(releasesByGroupTrove.items(),
-            key = lambda x: x[1][0], # first item in the releasesByVersion
+        # return a list of items in buildsByGroupTrove for web display
+        buildVersions = sorted(buildsByGroupTrove.items(),
+            key = lambda x: x[1][0], # first item in the buildsByVersion
             cmp = lambda x, y: cmp(x.getChangedTime(), y.getChangedTime()),
             reverse = True)
 
-        return self._write("releases", releases = releases,
-                publishedReleases = publishedReleases,
-                releaseVersions = releaseVersions)
+        return self._write("builds", builds = builds,
+                publishedBuilds = publishedBuilds,
+                buildVersions = buildVersions)
 
     def groups(self, auth):
-        releases = self.project.getReleases(showUnpublished = True)
-        publishedReleases = [x for x in releases if x.getPublished()]
+        builds = [self.client.getBuild(x) for x in self.project.getBuilds()]
+        publishedBuilds = [x for x in builds if x.getPublished()]
         groupTrovesInProject = self.client.listGroupTrovesByProject(self.project.id)
 
-        return self._write("groups", publishedReleases = publishedReleases,
+        return self._write("groups", publishedBuilds = publishedBuilds,
             groupTrovesInProject = groupTrovesInProject)
 
     def _getBasicTroves(self):
@@ -317,37 +323,47 @@ class ProjectHandler(WebHandler):
         return self._write("cookGroup", jobId = jobId,
             curGroupTrove = curGroupTrove)
 
-    @ownerOnly
-    def newRelease(self, auth):
-        release = self.client.newRelease(self.project.getId(), self.project.getName())
-        # By default, Installable ISO images should be selected.
-        imageTypes = [ releasetypes.INSTALLABLE_ISO ]
-        release.setImageTypes(imageTypes)
+    @writersOnly
+    def newBuild(self, auth):
 
-        return self._write("editRelease", isNewRelease = True,
-            release = release,
-            imageTypes = imageTypes,
+        return self._write("editBuild",
+            buildId = None,
+            name = self.project.getName(),
+            desc = "",
+            buildType = buildtypes.INSTALLABLE_ISO,
+            defaultTemplate = buildtypes.INSTALLABLE_ISO,
+            templates = buildtemplates.getDisplayTemplates(),
+            dataDict = {},
+            trove = None,
+            troveName = None,
+            label = None,
+            versionStr = None,
+            version = None,
+            flavor = None,
+            arch = None,
             kwargs = {})
 
-    @ownerOnly
-    @intFields(releaseId = -1)
+    @writersOnly
+    @intFields(buildId = -1)
     @strFields(trove = "")
-    def editRelease(self, auth, releaseId, trove):
+    def editBuild(self, auth, buildId, trove):
 
-        release = self.client.getRelease(releaseId)
-        releaseName = release.getName()
-        imageTypes = release.getImageTypes()
+        build = self.client.getBuild(buildId)
 
-        troveName, version, flavor = release.getTrove()
-
+        troveName, version, flavor = build.getTrove()
         versionStr = versions.ThawVersion(version)
         label = versionStr.branch().label()
-
         thawedFlavor = deps.ThawFlavor(flavor)
         arch = thawedFlavor.members[deps.DEP_CLASS_IS].members.keys()[0]
 
-        return self._write("editRelease", isNewRelease = False,
-            release = release,
+        return self._write("editBuild",
+            buildId = buildId,
+            name = build.getName(),
+            desc = build.getDesc(),
+            buildType = build.getBuildType(),
+            defaultTemplate = buildtypes.INSTALLABLE_ISO,
+            templates = buildtemplates.getDisplayTemplates(),
+            dataDict = build.getDataDict(),
             trove = trove,
             troveName = troveName,
             label = label,
@@ -355,43 +371,48 @@ class ProjectHandler(WebHandler):
             version = version,
             flavor = flavor,
             arch = arch,
-            imageTypes = imageTypes,
             kwargs = {})
 
     @requiresAuth
-    @intFields(releaseId = None)
-    @strFields(trove = None, version = None, desc = "")
-    def saveRelease(self, auth, releaseId, trove, version, desc, name,
-                    **kwargs):
-        release = self.client.getRelease(releaseId)
+    @intFields(buildId = None)
+    @strFields(distTroveSpec = None, name = "", desc = "")
+    def saveBuild(self, auth, buildId, distTroveSpec, name, desc, **kwargs):
+        if not buildId:
+            build = self.client.newBuild(self.project.id, name)
+            buildId = build.id
+        else:
+            build = self.client.getBuild(buildId)
 
-        job = release.getJob()
+        job = build.getJob()
         if job and job.status in (jobstatus.WAITING, jobstatus.RUNNING):
-            self._addErrors("You cannot alter this release because a "
+            self._addErrors("You cannot alter this build because a "
                             "conflicting image is currently being generated.")
-            self._predirect("release?id=%d" % releaseId)
+            self._predirect("build?id=%d" % buildId)
             return
 
-        trove, label = trove.split("=")
-        version, flavor = version.split(" ")
-        release.setTrove(trove, version, flavor)
-        release.setName(name)
-        release.setDesc(desc)
+        distTroveName, distTroveVersion, distTroveFlavor = parseTroveSpec(distTroveSpec)
+        build.setTrove(distTroveName, distTroveVersion, distTroveFlavor.freeze())
+        build.setName(name)
+        build.setDesc(desc)
 
-        flavor = deps.ThawFlavor(flavor)
-        jobArch = flavor.members[deps.DEP_CLASS_IS].members.keys()[0]
+        jobArch = distTroveFlavor.members[deps.DEP_CLASS_IS].members.keys()[0]
         assert(jobArch in ('x86', 'x86_64'))
 
-        # handle imagetype check box state changes
-        imageTypes = []
+        # handle buildType check box state changes
+        buildType = int(kwargs['buildtype'])
 
-        imageTypes.append(int(kwargs['imagetype']))
+        build.setBuildType(buildType)
 
-        release.setImageTypes(imageTypes)
+        # convert any python variable-name-safe trove spec parameters to the
+        # real data value name (they end in Spec, and have - translated to _)
+        for key in [x for x in kwargs if x.endswith('Spec')]:
+            newKey = key[:-4].replace("_", "-")
+            kwargs.update({newKey: str(kwargs[key])})
+            del kwargs[key]
 
-        # get the template from the release and handle any relevant args
+        # get the template from the build and handle any relevant args
         # remember that checkboxes don't pass args for unchecked boxxen
-        template = release.getDataTemplate()
+        template = build.getDataTemplate()
         for name in list(template):
             try:
                 val = kwargs[name]
@@ -406,64 +427,160 @@ class ProjectHandler(WebHandler):
                     val = False
                 else:
                     val = template[name][1]
-            release.setDataValue(name, val)
+            build.setDataValue(name, val)
 
         try:
-            job = self.client.startImageJob(releaseId)
+            job = self.client.startImageJob(buildId)
         except jobs.DuplicateJob:
             pass
 
-        self._predirect("release?id=%d" % releaseId)
+        self._predirect("build?id=%d" % buildId)
 
-    @intFields(releaseId = None)
+    @intFields(buildId = None)
+    @writersOnly
+    def deleteBuild(self, auth, buildId):
+        build = self.client.getBuild(buildId)
+        build.deleteBuild()
+        self._predirect("build")
+
+    @intFields(id = None)
+    def build(self, auth, id):
+        build = self.client.getBuild(id)
+        buildInProgress = False
+        if auth.authorized:
+            buildJob = build.getJob()
+            if buildJob:
+                buildInProgress = \
+                        (buildJob.getStatus() <= jobstatus.RUNNING)
+
+        try:
+            trove, version, flavor = build.getTrove()
+            files = build.getFiles()
+        except builds.TroveNotSet:
+            self._predirect("editBuild?buildId=%d" % build.id)
+        else:
+            return self._write("build", build = build,
+                name = build.getName(),
+                files = files,
+                trove = trove, version = versions.ThawVersion(version),
+                flavor = deps.ThawFlavor(flavor),
+                buildId = id, projectId = self.project.getId(),
+                buildInProgress = buildInProgress)
+
     @ownerOnly
-    def deleteRelease(self, auth, releaseId):
-        release = self.client.getRelease(releaseId)
-        release.deleteRelease()
-        self._predirect("release")
+    def createRelease(self, auth):
+        currentBuilds = []
+        availableBuilds = [self.client.getBuild(x) for x in \
+                self.project.getUnpublishedBuilds()]
+
+        return self._write("editPubrelease",
+                           releaseId = None,
+                           name = self.project.name,
+                           desc = None,
+                           version = None,
+                           availableBuilds = availableBuilds,
+                           currentBuilds = currentBuilds)
+
+    @ownerOnly
+    @intFields(id = None)
+    def editRelease(self, auth, id):
+        pubrelease = self.client.getPublishedRelease(id)
+        currentBuilds = [self.client.getBuild(x) for x in \
+                pubrelease.getBuilds()]
+        availableBuilds = [self.client.getBuild(x) for x in \
+                self.project.getUnpublishedBuilds()]
+
+        return self._write("editPubrelease",
+                           releaseId = id,
+                           name = pubrelease.name,
+                           desc = pubrelease.description,
+                           version = pubrelease.version,
+                           availableBuilds = availableBuilds,
+                           currentBuilds = currentBuilds)
+
+    @ownerOnly
+    @intFields(id = None)
+    @strFields(name = '', desc = '', version = '')
+    @listFields(int, buildIds = [])
+    def saveRelease(self, auth, id, name, desc, version, buildIds):
+        currentBuildIds = []
+        if not id:
+            pubrelease = self.client.newPublishedRelease(self.project.id)
+        else:
+            pubrelease = self.client.getPublishedRelease(id)
+            currentBuildIds = pubrelease.getBuilds()
+
+        # ignore things that are in both before and after sets
+        changedIds = set(currentBuildIds) ^ set(buildIds)
+
+        # handle adds and removes
+        for b in changedIds:
+            # add things that are in the current desired buildIds
+            if b in buildIds:
+                pubrelease.addBuild(b)
+            # delete everything else
+            else:
+                pubrelease.removeBuild(b)
+
+        # update metadata
+        pubrelease.name = name
+        pubrelease.description = desc
+        pubrelease.version = version
+
+        # ...and save
+        pubrelease.save()
+
+        if not id:
+            self._setInfo("Created release %s" % name)
+        else:
+            self._setInfo("Updated release %s" % name)
+        self._predirect("releases")
+
+    @ownerOnly
+    @dictFields(yesArgs = {})
+    @boolFields(confirmed = False)
+    def deleteRelease(self, auth, confirmed, **yesArgs):
+        if confirmed:
+            self.client.deletePublishedRelease(int(yesArgs['id']))
+            self._setInfo("Deleted release")
+            self._predirect("releases")
+        else:
+            return self._write("confirm",
+                    message = "Are you sure you want to delete this release? All builds associated with this release will be put back in the pool of unpublished releases.",
+                    yesArgs = { 'func': 'deleteRelease',
+                                'id': yesArgs['id'],
+                                'confirmed': '1' },
+                    noLink = "releases")
+
+    @ownerOnly
+    @dictFields(yesArgs = {})
+    @boolFields(confirmed = False)
+    def publishRelease(self, auth, confirmed, **yesArgs):
+        if confirmed:
+            pubrelease = self.client.getPublishedRelease(int(yesArgs['id']))
+            pubrelease.finalize()
+            self._setInfo("Published release %s version %s" % (pubrelease.name, pubrelease.version))
+            self._predirect("releases")
+        else:
+            return self._write("confirm",
+                    message = "Are you sure you want to publish this release? No more modifications can be made to the release after it has been published. If any modifications need to be made after publishing, you will have to delete the release and recreate it.",
+                    yesArgs = { 'func': 'publishRelease',
+                                'id': yesArgs['id'],
+                                'confirmed': '1'},
+                    noLink = "releases")
 
     @intFields(id = None)
     def release(self, auth, id):
-        releases = self.project.getReleases(showUnpublished = True)
-        publishedReleases = [x for x in releases if x.getPublished()]
-        release = self.client.getRelease(id)
-        releaseInProgress = False
-        if auth.authorized:
-            releaseJob = release.getJob()
-            if releaseJob:
-                releaseInProgress = \
-                        (releaseJob.getStatus() <= jobstatus.RUNNING)
+        release = self.client.getPublishedRelease(id)
+        builds = [self.client.getBuild(x) for x in release.getBuilds()]
+        return self._write("pubrelease", release = release, builds = builds)
 
-        try:
-            trove, version, flavor = release.getTrove()
-            files = release.getFiles()
-        except releases.TroveNotSet:
-            self._predirect("editRelease?releaseId=%d" % release.id)
-        else:
-            return self._write("release", release = release,
-                name = release.getName(),
-                isPublished = release.getPublished(),
-                trove = trove, version = versions.ThawVersion(version),
-                flavor = deps.ThawFlavor(flavor),
-                releaseId = id, projectId = self.project.getId(),
-                publishedReleases = publishedReleases,
-                files = files,
-                releaseInProgress = releaseInProgress)
+    @writersOnly
+    @intFields(buildId = None)
+    def restartJob(self, auth, buildId):
+        self.client.startImageJob(buildId)
 
-    @ownerOnly
-    @intFields(releaseId = None)
-    def publish(self, auth, releaseId):
-        release = self.client.getRelease(releaseId)
-        release.setPublished(True)
-
-        self.predirect("release?id=%d" % releaseId)
-
-    @ownerOnly
-    @intFields(releaseId = None)
-    def restartJob(self, auth, releaseId):
-        self.client.startImageJob(releaseId)
-
-        self._predirect("release?id=%d" % releaseId)
+        self._predirect("build?id=%d" % buildId)
 
     def _mailingLists(self, auth, mlists, messages=[]):
         if not self.cfg.EnableMailLists:
@@ -775,18 +892,21 @@ class ProjectHandler(WebHandler):
                 (self.cfg.siteHost, self.cfg.basePath, self.project.getHostname())
             desc = "Current releases from %s" % self.project.getName()
 
-            releases = self.project.getReleases()
+            releases = [self.client.getPublishedRelease(x) for x in self.project.getPublishedReleases()]
+            publishedReleases = [x for x in releases if x.isFinalized()]
             items = []
-            for release in releases[:10]:
+            for release in publishedReleases[:10]:
                 item = {}
-                item['title'] = "%s=%s" % (release.getTroveName(),
-                    release.getTroveVersion().trailingRevision().asString())
+                item['title'] = "%s (version %s)" % (release.name, release.version)
                 item['link'] = "http://%s%sproject/%s/release?id=%d" % \
                     (self.cfg.siteHost, self.cfg.basePath, self.project.getHostname(), release.getId())
-                item['content'] = "A new version of %s has been released: %s version %s." % \
-                    (release.getName(), release.getTroveName(),
-                     release.getTroveVersion().trailingRevision().asString())
-                item['date_822'] = email.Utils.formatdate(release.getChangedTime())
+                item['content']  = "This release contains the following builds:"
+                item['content'] += "&lt;ul&gt;"
+                builds = [self.client.getBuild(x) for x in release.getBuilds()]
+                for build in builds:
+                    item['content'] += "&lt;li&gt;%s (%s %s)" % (build.getName(), build.getArch(), buildtypes.typeNamesShort[build.buildType])
+                item['content'] += "&lt;/ul&gt;"
+                item['date_822'] = email.Utils.formatdate(release.timePublished)
                 item['creator'] = "http://%s%s" % (self.siteHost, self.cfg.basePath)
                 items.append(item)
         else:

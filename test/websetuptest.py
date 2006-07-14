@@ -33,7 +33,7 @@ class MintTest(mint_rephelp.WebRepositoryHelper):
         f.close()
 
         page = self.assertContent('/setup/', ok_codes = [200],
-            content = "rBuilder Product Setup")
+            content = "rBuilder Build Setup")
 
         # set site back to configured
         self.mintCfg.configured = True

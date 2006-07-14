@@ -64,7 +64,7 @@
 
                 <li>(For projects developing Conary-based
                 distributions) Storage space for ISO images (known as
-                releases) generated from the project's software</li>
+                builds) generated from the project's software</li>
             </ul>
 
             <p>${cfg.productName} also provides a way to browse and

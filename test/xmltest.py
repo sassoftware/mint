@@ -13,12 +13,12 @@ from mint.server import deriveBaseFunc, checkParam, typeCheck, ParameterError
 
 SKIP_TYPE_CHECK = ('callWrapper', 'loadSession', 'saveSession', 'deleteSession', 'cleanupSessions')
 
-SKIP_PRIVATE = ('callWrapper', 'getReleaseStatus', 'getGroupTroves',
+SKIP_PRIVATE = ('callWrapper', 'getBuildStatus', 'getGroupTroves',
                 'getJobStatus', 'addGroupTroveItem', 'delGroupTroveItem',
                 'addGroupTroveItemByProject', 'setGroupTroveItemVersionLock',
                 'getTroveVersionsByArch', 'setUserLevel', 'getGroupTrove',
-                'getRelease', 'getUserPublic', 'listActiveJobs', 'delMember',
-                'setReleasePublished', 'deleteRelease', 'startImageJob')
+                'getBuild', 'getUserPublic', 'listActiveJobs', 'delMember',
+                'setBuildPublished', 'deleteBuild', 'startImageJob')
 
 class XmlInterfaceTest(fixtures.FixturedUnitTest):
     def _getMethods(self, client, skipSet):

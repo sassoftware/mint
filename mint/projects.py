@@ -15,7 +15,7 @@ from mint import mailinglists
 from mint import projectlisting
 from mint import searcher
 from mint import userlevels
-from mint import releases
+from mint import builds
 from mint.mint_error import MintError
 
 from conary import dbstore
@@ -92,10 +92,6 @@ class Project(database.TableObject):
 
     def getMembers(self):
         return self.server.getMembersByProjectId(self.id)
-
-    def getReleases(self, showUnpublished = False):
-        return [releases.Release(self.server, x) for x \
-                in self.server.getReleasesForProject(self.id, showUnpublished)]
 
     def getCommits(self):
         return self.server.getCommitsForProject(self.id)
@@ -195,6 +191,14 @@ class Project(database.TableObject):
         else:
             return "http://%s%sproject/%s/" % (self.server._cfg.projectSiteHost, self.server._cfg.basePath, self.hostname)
 
+    def getBuilds(self):
+        return self.server.getBuildsForProject(self.id)
+
+    def getUnpublishedBuilds(self):
+        return self.server.getUnpublishedBuildsForProject(self.id)
+
+    def getPublishedReleases(self):
+        return self.server.getPublishedReleasesByProject(self.id)
 
 class ProjectsTable(database.KeyedTable):
     name = 'Projects'
@@ -632,7 +636,7 @@ class LabelsTable(database.KeyedTable):
         cu = self.db.cursor()
 
         cu.execute("""SELECT p.troveVersion, l.label
-                      FROM Releases p, Labels l
+                      FROM Builds p, Labels l
                       WHERE p.projectId=?
                         AND l.projectId=p.projectId
                         AND l.labelId=?""",

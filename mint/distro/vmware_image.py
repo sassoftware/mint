@@ -2,7 +2,7 @@ import os
 import tempfile
 import zipfile
 
-from mint import releasetypes
+from mint import buildtypes
 from mint.distro import bootable_image
 
 from conary.lib import util, log
@@ -78,7 +78,7 @@ class VMwareImage(bootable_image.BootableImage):
             del fd
             imagesList = [self.createVMwarePlayerImage( \
                 vmfn, self.project.getName(),
-                self.release.getDataValue('vmMemory'),
+                self.build.getDataValue('vmMemory'),
                 self.cfg.imagesPath)]
         finally:
             if self.fakeroot:
@@ -88,10 +88,10 @@ class VMwareImage(bootable_image.BootableImage):
         return self.moveToFinal(imagesList,
                                 os.path.join(self.cfg.finishedPath,
                                              self.project.getHostname(),
-                                             str(self.release.getId())))
+                                             str(self.build.getId())))
 
     def __init__(self, *args, **kwargs):
         res = bootable_image.BootableImage.__init__(self, *args, **kwargs)
-        self.freespace = self.release.getDataValue("freespace") * 1048576
-        self.swapSize = self.release.getDataValue("swapSize") * 1048576
+        self.freespace = self.build.getDataValue("freespace") * 1048576
+        self.swapSize = self.build.getDataValue("swapSize") * 1048576
         return res

@@ -84,7 +84,7 @@ class DatabaseTable(object):
     those indeces
     """
 
-    schemaVersion = 19
+    schemaVersion = 21
     name = "Table"
     fields = []
     createSQL = "CREATE TABLE Table ();"
@@ -168,17 +168,22 @@ class KeyedTable(DatabaseTable):
     """
     key = "itemId"
 
-    def get(self, id):
+    def get(self, id, fields=None):
         """
         Fetches a single row in the database by primary key.
         @param id: database item primary key
+        @param fields: fields to retrieve when fetching; using None uses
+            default fields from KeyedTable object
         @return: map of column names to values
         @rtype: dict
         @raise ItemNotFound: row with requested key does not exist in the database.
         """
 
+        if not fields:
+            fields = self.fields
+
         cu = self.db.cursor()
-        stmt = "SELECT %s FROM %s WHERE %s=?" % (", ".join(self.fields), self.name, self.key)
+        stmt = "SELECT %s FROM %s WHERE %s=?" % (", ".join(fields), self.name, self.key)
         cu.execute(stmt, id)
 
         r = cu.fetchone()
@@ -186,7 +191,7 @@ class KeyedTable(DatabaseTable):
             raise ItemNotFound
 
         data = {}
-        for i, key in enumerate(self.fields):
+        for i, key in enumerate(fields):
             if r[i] != None:
                 data[key] = r[i]
             else:
@@ -257,6 +262,24 @@ class KeyedTable(DatabaseTable):
         except sqlerrors.ColumnNotUnique:
             self.db.rollback()
             raise DuplicateItem(self.name)
+        except:
+            self.db.rollback()
+            raise
+
+        return True
+
+    def delete(self, id):
+        """
+        Deletes a row in the database.
+        @param id: primary key of row to delete.
+        @return: True on success
+        @rtype: bool
+        """
+        stmt = "DELETE FROM %s WHERE %s=?" % (self.name, self.key)
+        cu = self.db.cursor()
+        try:
+            cu.execute(stmt, id)
+            self.db.commit()
         except:
             self.db.rollback()
             raise

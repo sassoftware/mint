@@ -143,8 +143,7 @@ class RepositoryTest(MintRepositoryHelper):
                               'group-test:source', 'testcase:source'])
 
         groupTroves = client.server.getGroupTroves(projectId)
-        assert(groupTroves == {'testproject.' + MINT_PROJECT_DOMAIN + \
-                '@rpl:devel': ['group-test']})
+        assert(groupTroves == ['group-test'])
 
     def testMultipleContentsDirs(self):
         self.openRepository()

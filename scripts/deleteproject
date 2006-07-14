@@ -94,28 +94,26 @@ def deleteProject(projectName):
     # then delete all group troves for this project
     cu.execute("DELETE FROM GroupTroves WHERE projectId=?", projectId)
 
-    status("Deleting Releases")
-    # now grab all release Ids for this project
-    cu.execute("SELECT releaseId FROM Releases WHERE projectId=?",
+    status("Deleting Builds")
+    # now grab all build Ids for this project
+    cu.execute("SELECT buildId FROM Builds WHERE projectId=?",
                projectId)
-    for releaseId in [x[0] for x in cu.fetchall()]:
+    for buildId in [x[0] for x in cu.fetchall()]:
         status("Deleting Jobs")
         # grab appropriate jobs and kill them
-        cu.execute("SELECT jobId FROM Jobs WHERE releaseId=?",
-                   releaseId)
+        cu.execute("SELECT jobId FROM Jobs WHERE buildId=?",
+                   buildId)
         for jobId in [x[0] for x in cu.fetchall()]:
             cu.execute("DELETE FROM JobData WHERE jobId=?", jobId)
             cu.execute("DELETE FROM Jobs WHERE jobId=?", jobId)
 
-        status("Deleting Image Files")
-        cu.execute("DELETE FROM ImageFiles WHERE releaseId=?", releaseId)
-        status("Deleting Release Data")
-        cu.execute("DELETE FROM ReleaseData WHERE releaseId=?", releaseId)
-        status("Deleting Release Image Types")
-        cu.execute("DELETE FROM ReleaseImageTypes WHERE releaseId=?",
-                   releaseId)
-    # now delete all releases for this project
-    cu.execute("DELETE FROM Releases WHERE projectId=?", projectId)
+        status("Deleting Build Files")
+        cu.execute("DELETE FROM BuildFiles WHERE buildId=?", buildId)
+        status("Deleting Build Data")
+        cu.execute("DELETE FROM BuildData WHERE buildId=?", buildId)
+
+    # now delete all builds for this project
+    cu.execute("DELETE FROM Builds WHERE projectId=?", projectId)
 
     status("Deleting Labels")
     # delete from all other tables that refer to projectId directly

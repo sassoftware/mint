@@ -60,7 +60,8 @@
                         (resultset[2], resultset[0]),
                         (resultset[4], resultset[3])
                     ]
-                    resultsetdesc = resultset[1]
+                    ver = versions.VersionFromString(resultset[1])
+                    resultsetdesc = "%s/%s" % (ver.trailingLabel(), ver.trailingRevision())
                     if groupTrove and not groupTrove.troveInGroup(resultset[0]):
                         formattedresults.append((self.cfg.basePath + 'project/%s/addGroupTrove?id=%d;trove=%s;version=%s;referer=%s' % (groupTrove.projectName, groupTrove.getId(), quote(resultset[0]), resultset[1], quote(req.unparsed_uri)) , 'Add to %s' % groupTrove.recipeName))
                     if rMakeBuild and not rMakeBuild.status and resultset[4].split('/')[2] in projectHosts and not resultset[0].startswith('group-'):

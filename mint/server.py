@@ -28,7 +28,8 @@ from mint import news
 from mint import pkgindex
 from mint import profile
 from mint import projects
-from mint import releases
+from mint import builds
+from mint import pubreleases
 from mint import reports
 from mint import requests
 from mint import sessiondb
@@ -43,11 +44,12 @@ from mint import useit
 from mint import rmakebuild
 from mint.distro import jsversion
 from mint.distro.flavors import stockFlavors
-from mint.mint_error import PermissionDenied, ReleasePublished, \
-     ReleaseMissing, MintError, ReleaseEmpty, UserAlreadyAdmin, \
+from mint.mint_error import PermissionDenied, BuildPublished, \
+     BuildMissing, MintError, BuildEmpty, UserAlreadyAdmin, \
      AdminSelfDemotion, JobserverVersionMismatch, LastAdmin, \
      MaintenanceMode, ParameterError, GroupTroveEmpty, rMakeBuildCollision, \
-     rMakeBuildEmpty, rMakeBuildOrder
+     rMakeBuildEmpty, rMakeBuildOrder, PublishedReleaseMissing, \
+     PublishedReleaseEmpty, PublishedReleaseFinalized
 from mint.reports import MintReport
 from mint.searcher import SearchTermsError
 
@@ -193,25 +195,24 @@ def getTables(db, cfg):
     d['labels'] = projects.LabelsTable(db, cfg)
     d['projects'] = projects.ProjectsTable(db, cfg)
     d['jobs'] = jobs.JobsTable(db)
-    d['images'] = jobs.ImageFilesTable(db)
+    d['buildFiles'] = jobs.BuildFilesTable(db)
     d['users'] = users.UsersTable(db, cfg)
     d['userGroups'] = users.UserGroupsTable(db, cfg)
     d['userGroupMembers'] = users.UserGroupMembersTable(db, cfg)
     d['userData'] = data.UserDataTable(db)
     d['projectUsers'] = users.ProjectUsersTable(db)
-    d['releases'] = releases.ReleasesTable(db)
+    d['builds'] = builds.BuildsTable(db)
     d['pkgIndex'] = pkgindex.PackageIndexTable(db)
     d['newsCache'] = news.NewsCacheTable(db, cfg)
     d['sessions'] = sessiondb.SessionsTable(db)
     d['membershipRequests'] = requests.MembershipRequestTable(db)
     d['commits'] = stats.CommitsTable(db)
-    d['releaseData'] = data.ReleaseDataTable(db)
+    d['buildData'] = data.BuildDataTable(db)
     d['groupTroves'] = grouptrove.GroupTroveTable(db, cfg)
     d['groupTroveItems'] = grouptrove.GroupTroveItemsTable(db, cfg)
     d['conaryComponents'] = grouptrove.ConaryComponentsTable(db)
     d['groupTroveRemovedComponents'] = grouptrove.GroupTroveRemovedComponentsTable(db)
     d['jobData'] = data.JobDataTable(db)
-    d['releaseImageTypes'] = releases.ReleaseImageTypesTable(db)
     d['inboundLabels'] = mirror.InboundLabelsTable(db)
     d['outboundLabels'] = mirror.OutboundLabelsTable(db)
     d['outboundMatchTroves'] = mirror.OutboundMatchTrovesTable(db)
@@ -221,6 +222,7 @@ def getTables(db, cfg):
     d['selections'] = selections.FrontPageSelectionsTable(db, cfg)
     d['rMakeBuild'] = rmakebuild.rMakeBuildTable(db)
     d['rMakeBuildItems'] = rmakebuild.rMakeBuildItemsTable(db)
+    d['publishedReleases'] = pubreleases.PublishedReleasesTable(db)
     outDatedTables = [x for x in d.values() if not x.upToDate]
     while outDatedTables[:]:
         d['version'].bumpVersion()
@@ -383,6 +385,8 @@ class MintServer(object):
             cfg.tmpDir = tmpPath
             cfg.serverName = project.getFQDN()
             cfg.contentsDir = reposPath + '/contents/'
+            cfg.externalPasswordURL = self.cfg.externalPasswordURL
+            cfg.authCacheTimeout = self.cfg.authCacheTimeout
 
             server = shimclient.NetworkRepositoryServer(cfg, '')
 
@@ -406,31 +410,50 @@ class MintServer(object):
             return
         if not self.projects.isHidden(projectId):
             return
-        members = self.projectUsers.getMembersByProjectId(projectId)
-        for userId, username, level in members:
-            if (userId == self.auth.userId) and (level in userlevels.WRITERS):
+        if (self.projectUsers.getUserlevelForProjectMember(projectId,
+            self.auth.userId) in userlevels.WRITERS):
                 return
         raise database.ItemNotFound()
 
-    def _filterReleaseAccess(self, releaseId):
-        cu = self.db.cursor()
-        cu.execute("SELECT projectId FROM Releases WHERE releaseId = ?",
-                   releaseId)
-        res = cu.fetchall()
-        if len(res):
-            self._filterProjectAccess(res[0][0])
+    def _filterBuildAccess(self, buildId):
+        try:
+            buildRow = self.builds.get(buildId, fields=['projectId'])
+        except database.ItemNotFound:
+            return
+
+        self._filterProjectAccess(buildRow['projectId'])
+
+
+    def _filterPublishedReleaseAccess(self, pubReleaseId):
+        try:
+            pubReleaseRow = self.publishedReleases.get(pubReleaseId,
+                    fields=['projectId'])
+        except database.ItemNotFound:
+            return
+
+        isFinal = self.publishedReleases.isPublishedReleaseFinalized(pubReleaseId)
+        # if the release is not finalized, then only project members 
+        # with write access can see the published release
+        if not isFinal and not self._checkProjectAccess(pubReleaseRow['projectId'], userlevels.WRITERS):
+            raise database.ItemNotFound()
+        # if the published release is finalized, then anyone can see it
+        # unless the project is hidden and the user is not an admin
+        else:
+            self._filterProjectAccess(pubReleaseRow['projectId'])
 
     def _filterLabelAccess(self, labelId):
-        cu = self.db.cursor()
-        cu.execute("SELECT projectId FROM Labels WHERE labelId = ?", labelId)
-        r = cu.fetchall()
-        if len(r):
-            self._filterProjectAccess(r[0][0])
+        try:
+            labelRow = self.labels.get(labelId, fields=['projectId'])
+        except database.ItemNotFound:
+            return
+
+        self._filterProjectAccess(labelRow['projectId'])
+
 
     def _filterJobAccess(self, jobId):
         cu = self.db.cursor()
         cu.execute("""SELECT projectId FROM Jobs
-                        JOIN Releases USING(releaseId)
+                        JOIN Builds USING(buildId)
                       WHERE jobId = ?
                         UNION SELECT projectId FROM Jobs
                                JOIN GroupTroves USING(groupTroveId)
@@ -440,11 +463,11 @@ class MintServer(object):
         if len(r) and r[0][0]:
             self._filterProjectAccess(r[0][0])
 
-    def _filterImageFileAccess(self, fileId):
+    def _filterBuildFileAccess(self, fileId):
         cu = self.db.cursor()
-        cu.execute("""SELECT projectId FROM ImageFiles
-                          LEFT JOIN Releases
-                              ON Releases.releaseId = ImageFiles.releaseId
+        cu.execute("""SELECT projectId FROM BuildFiles 
+                          LEFT JOIN Builds
+                              ON Builds.buildId = BuildFiles.buildId
                           WHERE fileId=?""", fileId)
         r = cu.fetchall()
         if len(r):
@@ -469,16 +492,16 @@ class MintServer(object):
             raise database.ItemNotFound
         return self._filterrMakeBuildAccess(res[0])
 
-    def _requireProjectDeveloper(self, projectId):
+    def _checkProjectAccess(self, projectId, allowedUserlevels):
         if list(self.authToken) == [self.cfg.authUser, self.cfg.authPass] or self.auth.admin:
-            return
-        members = self.projectUsers.getMembersByProjectId(projectId)
-        for userId, username, level in members:
-            if (userId == self.auth.userId) and \
-                   (level not in userlevels.WRITERS):
-                raise PermissionDenied
-        if self.auth.userId not in [x[0] for x in members]:
-            raise PermissionDenied
+            return True
+        try:
+            if (self.projectUsers.getUserlevelForProjectMember(projectId,
+                    self.auth.userId) in allowedUserlevels):
+                return True
+        except database.ItemNotFound:
+            pass
+        return False
 
     def _isUserAdmin(self, userId):
         mintAdminId = self.userGroups.getMintAdminId()
@@ -487,7 +510,6 @@ class MintServer(object):
                 return True
         except database.ItemNotFound:
             pass
-
         return False
 
     # project methods
@@ -666,8 +688,8 @@ class MintServer(object):
                     name = "%s (%s)" % (self.auth.username, self.auth.fullName)
                 else:
                     name = self.auth.username
-                import templates.joinRequest
-                message = templates.write(templates.joinRequest,
+                from mint.templates import joinRequest
+                message = templates.write(joinRequest,
                                           projectName = projectName, 
                                           comments = comments, cfg = self.cfg,
                                           displayEmail = self.auth.displayEmail,
@@ -725,13 +747,17 @@ class MintServer(object):
             self.projectUsers.new(projectId, userId, level)
         except database.DuplicateItem:
             project.updateUserLevel(userId, level)
-            repos = self._getProjectRepo(project)
-            # edit vice/drop+add is intentional to honor acl tweaks by admins
-            repos.editAcl(project.getLabel(), username, None, None, None, None,
-                         level in userlevels.WRITERS, False,
-                         self.cfg.projectAdmin and level == userlevels.OWNER)
-            repos.setUserGroupCanMirror(project.getLabel(), username,
-                                        int(level == userlevels.OWNER))
+            # only attempt to modify acl's of local projects.
+            if not project.external:
+                repos = self._getProjectRepo(project)
+                # edit vice/drop+add is intentional to honor acl tweaks by
+                # admins.
+                repos.editAcl(project.getLabel(), username, None, None, None,
+                              None, level in userlevels.WRITERS, False,
+                              self.cfg.projectAdmin and \
+                              level == userlevels.OWNER)
+                repos.setUserGroupCanMirror(project.getLabel(), username,
+                                            int(level == userlevels.OWNER))
             return True
 
         if not project.external:
@@ -1662,24 +1688,18 @@ class MintServer(object):
         os.chmod(self.cfg.conaryRcFile, 0644)
 
     #
-    # RELEASE STUFF
+    # BUILD STUFF
     #
-    @typeCheck(int, bool)
+    @typeCheck(int)
     @private
-    def getReleasesForProject(self, projectId, showUnpublished = False):
+    def getBuildsForProject(self, projectId):
         self._filterProjectAccess(projectId)
-        return [x for x in self.releases.iterReleasesForProject( \
-            projectId, showUnpublished)]
+        return [x for x in self.builds.iterBuildsForProject(projectId)]
 
     @typeCheck(int, int)
     @private
-    def getReleaseList(self, limit, offset):
-        cu = self.db.cursor()
-        cu.execute("""SELECT Projects.name, Projects.hostname, releaseId
-                         FROM Releases LEFT JOIN Projects ON Projects.projectId = Releases.projectId
-                         WHERE Projects.hidden=0 and published=1
-                         ORDER BY timePublished DESC LIMIT ? OFFSET ?""", limit, offset)
-        return [(x[0], x[1], int(x[2])) for x in cu.fetchall()]
+    def getPublishedReleaseList(self, limit, offset):
+        return self.publishedReleases.getPublishedReleaseList(limit, offset)
 
     @typeCheck(str, str, str, str)
     @private
@@ -1700,69 +1720,172 @@ class MintServer(object):
         return self.commits.getCommitsByProject(projectId)
 
     @typeCheck(int)
-    def getRelease(self, releaseId):
-        self._filterReleaseAccess(releaseId)
-        return self.releases.get(releaseId)
+    def getBuild(self, buildId):
+        self._filterBuildAccess(buildId)
+        return self.builds.get(buildId)
 
     @typeCheck(int, str, bool)
     @requiresAuth
     @private
-    def newRelease(self, projectId, releaseName, published):
+    def newBuild(self, projectId, productName):
         self._filterProjectAccess(projectId)
-        releaseId = self.releases.new(projectId = projectId,
-                                      name = releaseName,
-                                      published = published)
+        buildId = self.builds.new(projectId = projectId,
+                                      name = productName)
 
-        self.releaseData.setDataValue(releaseId, 'jsversion',
+        self.buildData.setDataValue(buildId, 'jsversion',
                                       jsversion.getDefaultVersion(),
                                       data.RDT_STRING)
 
-        return releaseId
+        return buildId
 
     @typeCheck(int)
     @requiresAuth
-    def deleteRelease(self, releaseId):
-        self._filterReleaseAccess(releaseId)
-        if not self.releases.releaseExists(releaseId):
-            raise ReleaseMissing()
-        if self.releases.getPublished(releaseId):
-            raise ReleasePublished()
+    def deleteBuild(self, buildId):
+        self._filterBuildAccess(buildId)
+        if not self.builds.buildExists(buildId):
+            raise BuildMissing()
+        if self.builds.getPublished(buildId):
+            raise BuildPublished()
         cu = self.db.cursor()
-        cu.execute("SELECT filename FROM ImageFiles WHERE releaseId=?",
-                   releaseId)
+        cu.execute("SELECT filename FROM BuildFiles WHERE buildId=?",
+                   buildId)
         for fileName in [x[0] for x in cu.fetchall()]:
             try:
                 os.unlink(fileName)
             except:
-                print >> sys.stderr, "Couldn't delete release image: %s" % \
+                print >> sys.stderr, "Couldn't delete related file: %s" % \
                       fileName
                 sys.stderr.flush()
-        self.releases.deleteRelease(releaseId)
+        self.builds.deleteBuild(buildId)
         return True
 
-    # release data calls
+    @typeCheck(int, dict)
+    @requiresAuth
+    @private
+    def updateBuild(self, buildId, valDict):
+        self._filterBuildAccess(buildId)
+        if not self.builds.buildExists(buildId):
+            raise BuildMissing()
+        if self.builds.getPublished(buildId):
+            raise BuildPublished()
+        if len(valDict):
+            valDict.update({'timeUpdated': time.time(),
+                            'updatedBy':   self.auth.userId})
+            return self.builds.update(buildId, **valDict)
+
+    # build data calls
     @typeCheck(int, str, ((str, int, bool),), int)
     @requiresAuth
     @private
-    def setReleaseDataValue(self, releaseId, name, value, dataType):
-        self._filterReleaseAccess(releaseId)
-        if not self.releases.releaseExists(releaseId):
-            raise ReleaseMissing()
-        if self.releases.getPublished(releaseId):
-            raise ReleasePublished()
-        return self.releaseData.setDataValue(releaseId, name, value, dataType)
+    def setBuildDataValue(self, buildId, name, value, dataType):
+        self._filterBuildAccess(buildId)
+        if not self.builds.buildExists(buildId):
+            raise BuildMissing()
+        if self.builds.getPublished(buildId):
+            raise BuildPublished()
+        return self.buildData.setDataValue(buildId, name, value, dataType)
 
     @typeCheck(int, str)
     @private
-    def getReleaseDataValue(self, releaseId, name):
-        self._filterReleaseAccess(releaseId)
-        return self.releaseData.getDataValue(releaseId, name)
+    def getBuildDataValue(self, buildId, name):
+        self._filterBuildAccess(buildId)
+        return self.buildData.getDataValue(buildId, name)
 
     @typeCheck(int)
     @private
-    def getReleaseDataDict(self, releaseId):
-        self._filterReleaseAccess(releaseId)
-        return self.releaseData.getDataDict(releaseId)
+    def getBuildDataDict(self, buildId):
+        self._filterBuildAccess(buildId)
+        return self.buildData.getDataDict(buildId)
+
+    #
+    # published releases 
+    #
+    @typeCheck(int)
+    @requiresAuth
+    def newPublishedRelease(self, projectId):
+        self._filterProjectAccess(projectId)
+        if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
+            raise PermissionDenied
+        timeCreated = time.time()
+        createdBy = self.auth.userId
+        return self.publishedReleases.new(projectId = projectId,
+                timeCreated = timeCreated, createdBy = createdBy)
+
+    @typeCheck(int)
+    def getPublishedRelease(self, pubReleaseId):
+        self._filterPublishedReleaseAccess(pubReleaseId)
+        return self.publishedReleases.get(pubReleaseId)
+
+    @typeCheck(int, dict)
+    @requiresAuth
+    @private
+    def updatePublishedRelease(self, pubReleaseId, valDict):
+        self._filterPublishedReleaseAccess(pubReleaseId)
+        projectId = self.publishedReleases.getProject(pubReleaseId)
+        if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
+            raise PermissionDenied
+        if self.publishedReleases.isPublishedReleaseFinalized(pubReleaseId):
+            raise PublishedReleaseFinalized
+        if len(valDict):
+            valDict.update({'timeUpdated': time.time(),
+                            'updatedBy': self.auth.userId})
+            return self.publishedReleases.update(pubReleaseId, **valDict)
+
+    @typeCheck(int, dict)
+    @requiresAuth
+    @private
+    def finalizePublishedRelease(self, pubReleaseId):
+        self._filterPublishedReleaseAccess(pubReleaseId)
+        projectId = self.publishedReleases.getProject(pubReleaseId)
+        if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
+            raise PermissionDenied
+        if not len(self.publishedReleases.getBuilds(pubReleaseId)):
+            raise PublishedReleaseEmpty
+        if self.publishedReleases.isPublishedReleaseFinalized(pubReleaseId):
+            raise PublishedReleaseFinalized
+        valDict = {'timePublished': time.time(),
+                   'publishedBy': self.auth.userId}
+        return self.publishedReleases.update(pubReleaseId, **valDict)
+
+    @typeCheck(int)
+    @requiresAuth
+    def deletePublishedRelease(self, pubReleaseId):
+        self._filterPublishedReleaseAccess(pubReleaseId)
+        projectId = self.publishedReleases.getProject(pubReleaseId)
+        if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
+            raise PermissionDenied
+        self.publishedReleases.delete(pubReleaseId)
+        return True
+
+    @typeCheck(int)
+    @requiresAuth
+    @private
+    def isPublishedReleaseFinalized(self, pubReleaseId):
+        self._filterPublishedReleaseAccess(pubReleaseId)
+        return self.publishedReleases.isPublishedReleaseFinalized(pubReleaseId)
+
+    @typeCheck(int)
+    @requiresAuth
+    @private
+    def getUnpublishedBuildsForProject(self, projectId):
+        self._filterProjectAccess(projectId)
+        return self.builds.getUnpublishedBuilds(projectId)
+
+    @typeCheck(int)
+    @private
+    def getBuildsForPublishedRelease(self, pubReleaseId):
+        self._filterPublishedReleaseAccess(pubReleaseId)
+        return self.publishedReleases.getBuilds(pubReleaseId)
+
+    @typeCheck(int)
+    @private
+    def getPublishedReleasesByProject(self, projectId):
+        self._filterProjectAccess(projectId)
+        finalizedOnly = False
+        if not self._checkProjectAccess(projectId, userlevels.WRITERS):
+            finalizedOnly = True
+        return self.publishedReleases.getPublishedReleasesByProject(projectId,
+                finalizedOnly)
 
     # job data calls
     @typeCheck(int, str, ((str, int, bool),), int)
@@ -1780,117 +1903,117 @@ class MintServer(object):
 
     @typeCheck(int)
     @private
-    def getReleaseTrove(self, releaseId):
-        self._filterReleaseAccess(releaseId)
-        return self.releases.getTrove(releaseId)
+    def getBuildTrove(self, buildId):
+        self._filterBuildAccess(buildId)
+        return self.builds.getTrove(buildId)
 
     @typeCheck(int, str, str, str)
     @requiresAuth
     @private
-    def setReleaseTrove(self, releaseId, troveName, troveVersion, troveFlavor):
-        self._filterReleaseAccess(releaseId)
-        if not self.releases.releaseExists(releaseId):
-            raise ReleaseMissing()
-        if self.releases.getPublished(releaseId):
-            raise ReleasePublished()
-        return self.releases.setTrove(releaseId, troveName,
+    def setBuildTrove(self, buildId, troveName, troveVersion, troveFlavor):
+        self._filterBuildAccess(buildId)
+        if not self.builds.buildExists(buildId):
+            raise BuildMissing()
+        if self.builds.getPublished(buildId):
+            raise BuildPublished()
+        return self.builds.setTrove(buildId, troveName,
                                                  troveVersion,
                                                  troveFlavor)
 
     @typeCheck(int, str)
     @requiresAuth
     @private
-    def setReleaseDesc(self, releaseId, desc):
-        self._filterReleaseAccess(releaseId)
-        if not self.releases.releaseExists(releaseId):
-            raise ReleaseMissing()
-        if self.releases.getPublished(releaseId):
-            raise ReleasePublished()
-        self.releases.update(releaseId, description = desc)
+    def setBuildDesc(self, buildId, desc):
+        self._filterBuildAccess(buildId)
+        if not self.builds.buildExists(buildId):
+            raise BuildMissing()
+        if self.builds.getPublished(buildId):
+            raise BuildPublished()
+        self.builds.update(buildId, description = desc)
         return True
 
     @typeCheck(int, str)
     @requiresAuth
     @private
-    def setReleaseName(self, releaseId, name):
-        self._filterReleaseAccess(releaseId)
-        if not self.releases.releaseExists(releaseId):
-            raise ReleaseMissing()
-        if self.releases.getPublished(releaseId):
-            raise ReleasePublished()
-        self.releases.update(releaseId, name = name)
+    def setBuildName(self, buildId, name):
+        self._filterBuildAccess(buildId)
+        if not self.builds.buildExists(buildId):
+            raise BuildMissing()
+        if self.builds.getPublished(buildId):
+            raise BuildPublished()
+        self.builds.update(buildId, name = name)
         return True
+
+    @typeCheck(int, int, bool)
+    @requiresAuth
+    @private
+    def setBuildPublished(self, buildId, pubReleaseId, published):
+        self._filterBuildAccess(buildId)
+        buildData = self.builds.get(buildId, fields=['projectId'])
+        if not self._checkProjectAccess(buildData['projectId'],
+                [userlevels.OWNER]):
+            raise PermissionDenied()
+        if not self.publishedReleases.publishedReleaseExists(pubReleaseId):
+            raise PublishedReleaseMissing()
+        if self.isPublishedReleaseFinalized(pubReleaseId):
+            raise PublishedReleaseFinalized()
+        if not self.builds.buildExists(buildId):
+            raise BuildMissing()
+        if published and not self.getBuildFilenames(buildId):
+            raise BuildEmpty()
+        if published and self.builds.getPublished(buildId):
+            raise BuildPublished()
+        pubReleaseId = published and pubReleaseId or None
+        return self.updateBuild(buildId, {'pubReleaseId': pubReleaseId })
 
     @typeCheck(int)
     @private
-    def incReleaseDownloads(self, releaseId):
-        self._filterReleaseAccess(releaseId)
-        cu = self.db.cursor()
-        cu.execute("UPDATE Releases SET downloads = downloads + 1 WHERE releaseId=?",
-            releaseId)
-        self.db.commit()
-        return True
-
-    @typeCheck(int, bool)
-    @requiresAuth
-    def setReleasePublished(self, releaseId, published):
-        self._filterReleaseAccess(releaseId)
-        if not self.releases.releaseExists(releaseId):
-            raise ReleaseMissing()
-        if published and not self.getImageFilenames(releaseId):
-            raise ReleaseEmpty()
-        if self.releases.getPublished(releaseId):
-            raise ReleasePublished()
-        timeStamp = time.time()
-
-        self.releases.update(releaseId, published = int(published), timePublished = timeStamp)
-        return True
+    def getBuildPublished(self, buildId):
+        return self.builds.getPublished(buildId)
 
     @typeCheck(int)
-    @requiresAuth
     @private
-    def getImageTypes(self, releaseId):
-        self._filterReleaseAccess(releaseId)
-        if not self.releases.releaseExists(releaseId):
-            raise ReleaseMissing()
+    def getBuildType(self, buildId):
+        self._filterBuildAccess(buildId)
+        if not self.builds.buildExists(buildId):
+            raise BuildMissing()
         cu = self.db.cursor()
-        cu.execute('SELECT imageType from ReleaseImageTypes WHERE releaseId=?', releaseId)
-        return [x[0] for x in cu.fetchall()]
+        cu.execute("SELECT buildType FROM Builds WHERE buildId = ?",
+                buildId)
+        return cu.fetchone()[0]
 
-    @typeCheck(int, list)
+    @typeCheck(int, int)
     @requiresAuth
     @private
-    def setImageTypes(self, releaseId, imageTypes):
-        self._filterReleaseAccess(releaseId)
-        if not self.releases.releaseExists(releaseId):
-            raise ReleaseMissing()
-        if self.releases.getPublished(releaseId):
-            raise ReleasePublished()
+    def setBuildType(self, buildId, buildType):
+        self._filterBuildAccess(buildId)
+        if not self.builds.buildExists(buildId):
+            raise BuildMissing()
+        if self.builds.getPublished(buildId):
+            raise BuildPublished()
         cu = self.db.cursor()
-        cu.execute("DELETE FROM ReleaseImageTypes WHERE releaseId=?", releaseId)
-        for i in imageTypes:
-            cu.execute("INSERT INTO ReleaseImageTypes (releaseId, imageType)"
-                    "VALUES (?, ?)", releaseId, i)
+        cu.execute("UPDATE Builds SET buildType = ? WHERE buildId = ?",
+                buildType, buildId)
         self.db.commit()
         return True
 
     @typeCheck()
     @private
-    def getAvailableImageTypes(self):
-        if self.cfg.visibleImageTypes:
-            return self.cfg.visibleImageTypes
+    def getAvailableBuildTypes(self):
+        if self.cfg.visibleBuildTypes:
+            return self.cfg.visibleBuildTypes
         else:
             return []
 
     @typeCheck(int)
     @requiresAuth
-    def startImageJob(self, releaseId):
-        self._filterReleaseAccess(releaseId)
-        if not self.releases.releaseExists(releaseId):
-            raise ReleaseMissing()
-        if self.releases.getPublished(releaseId):
-            raise ReleasePublished()
-        found, jsVer = self.releaseData.getDataValue(releaseId, 'jsversion')
+    def startImageJob(self, buildId):
+        self._filterBuildAccess(buildId)
+        if not self.builds.buildExists(buildId):
+            raise BuildMissing()
+        if self.builds.getPublished(buildId):
+            raise BuildPublished()
+        found, jsVer = self.buildData.getDataValue(buildId, 'jsversion')
         if not found:
             raise JobserverVersionMismatch('No job server version available.')
         if jsVer not in jsversion.getVersions():
@@ -1899,19 +2022,19 @@ class MintServer(object):
         cu = self.db.cursor()
 
         cu.execute("""SELECT jobId, status FROM Jobs
-                          WHERE releaseId=? AND groupTroveId IS NULL""",
-                   releaseId)
+                          WHERE buildId=? AND groupTroveId IS NULL""",
+                   buildId)
         r = cu.fetchall()
         if len(r) == 0:
-            retval = self.jobs.new(releaseId = releaseId,
+            retval = self.jobs.new(buildId = buildId,
                                    userId = self.auth.userId,
                                    status = jobstatus.WAITING,
                                    statusMessage = self.getJobWaitMessage(0),
                                    timeSubmitted = time.time(),
                                    timeStarted = 0,
                                    timeFinished = 0)
-            cu.execute('SELECT troveFlavor FROM Releases WHERE releaseId=?',
-                       releaseId)
+            cu.execute('SELECT troveFlavor FROM Builds WHERE buildId=?',
+                       buildId)
             flavorString = cu.fetchone()[0]
             flavor = deps.ThawFlavor(flavorString)
             arch = "1#" + flavor.members[deps.DEP_CLASS_IS].members.keys()[0]
@@ -1922,9 +2045,9 @@ class MintServer(object):
             if status in (jobstatus.WAITING, jobstatus.RUNNING):
                 raise jobs.DuplicateJob
             else:
-                # delete any files in the ImageFiles table prior to regeneration
-                cu.execute("DELETE FROM ImageFiles WHERE releaseId = ?",
-                        releaseId)
+                # delete any files in the BuildFiles table prior to regeneration
+                cu.execute("DELETE FROM BuildFiles WHERE buildId = ?",
+                        buildId)
 
                 # getJobWaitMessage orders by timeSubmitted, so update must
                 # occur in two steps
@@ -1944,14 +2067,14 @@ class MintServer(object):
     def startCookJob(self, groupTroveId, arch):
         projectId = self.groupTroves.getProjectId(groupTroveId)
         self._filterProjectAccess(projectId)
-        self._requireProjectDeveloper(projectId)
-
+        if not self._checkProjectAccess(projectId, userlevels.WRITERS):
+            raise PermissionDenied
         if not self.listGroupTroveItemsByGroupTrove(groupTroveId):
             raise GroupTroveEmpty
 
         cu = self.db.cursor()
         cu.execute("""SELECT jobId, status FROM Jobs
-                          WHERE groupTroveId=? AND releaseId IS NULL""",
+                          WHERE groupTroveId=? AND buildId IS NULL""",
                    groupTroveId)
         r = cu.fetchall()
         if len(r) == 0:
@@ -1996,7 +2119,7 @@ class MintServer(object):
         self._filterJobAccess(jobId)
         cu = self.db.cursor()
 
-        cu.execute("SELECT userId, releaseId, groupTroveId, status,"
+        cu.execute("SELECT userId, buildId, groupTroveId, status,"
                    "  statusMessage, timeSubmitted, timeStarted, "
                    "  timeFinished FROM Jobs "
                    " WHERE jobId=?", jobId)
@@ -2005,13 +2128,13 @@ class MintServer(object):
         if not p:
             raise jobs.JobMissing
 
-        dataKeys = ['userId', 'releaseId', 'groupTroveId', 'status',
+        dataKeys = ['userId', 'buildId', 'groupTroveId', 'status',
                     'statusMessage', 'timeSubmitted', 'timeStarted',
                     'timeFinished']
         data = {}
         for i, key in enumerate(dataKeys):
             # these keys can be NULL from the db
-            if key in ('releaseId', 'groupTroveId'):
+            if key in ('buildId', 'groupTroveId'):
                 if p[i] is None:
                     data[key] = 0
                 else:
@@ -2074,8 +2197,8 @@ class MintServer(object):
         @param jobserverVersion: string. version of the job server.
         @return: jobId of job to execute, or 0 for no job.
         """
-        import cooktypes
-        import releasetypes
+        from mint import cooktypes
+        from mint import buildtypes
         # scrub archTypes and jobTypes.
         maintenance.enforceMaintenanceMode( \
             self.cfg, auth = None, msg = "Repositories are currently offline.")
@@ -2083,12 +2206,12 @@ class MintServer(object):
             if arch not in ("1#x86", "1#x86_64"):
                 raise ParameterError("Not a legal architecture")
 
-        imageTypes = jobTypes.get('imageTypes', [])
+        buildTypes = jobTypes.get('buildTypes', [])
         cookTypes = jobTypes.get('cookTypes', [])
 
-        if sum([(x not in releasetypes.TYPES) \
-                for x in imageTypes]):
-            raise ParameterError("Not a legal Release Type")
+        if sum([(x not in buildtypes.TYPES) \
+                for x in buildTypes]):
+            raise ParameterError("Not a legal Build Type")
 
         if sum([(x != cooktypes.GROUP_BUILDER) for x in cookTypes]):
             raise ParameterError("Not a legal Cook Type")
@@ -2096,7 +2219,7 @@ class MintServer(object):
         if jobserverVersion not in jsversion.getVersions():
             raise ParameterError("Not a legal job server version: %s" % jobserverVersion)
         # client asked for nothing, client gets nothing.
-        if not (imageTypes or cookTypes) or (not archTypes):
+        if not (buildTypes or cookTypes) or (not archTypes):
             return 0
 
         # the pid would suffice, except that fails to be good enough
@@ -2114,18 +2237,18 @@ class MintServer(object):
         archTypeQuery = archTypes and "(%s)" % \
                         ', '.join(['?' for x in archTypes]) or ''
 
-        imageTypeQuery = imageTypes and "(%s)" % \
-                        ', '.join(['?' for x in imageTypes]) or ''
+        buildTypeQuery = buildTypes and "(%s)" % \
+                        ', '.join(['?' for x in buildTypes]) or ''
 
-        # at least one of releaseTypes or cookTypes will be defined,
+        # at least one of buildTypes or cookTypes will be defined,
         # or this code would have already bailed out.
-        if not imageTypes:
+        if not buildTypes:
             #client wants only cooks
             query = """SELECT Jobs.jobId FROM Jobs
                        LEFT JOIN JobData
                            ON Jobs.jobId=JobData.jobId
                        WHERE status=? AND JobData.name='arch'
-                           AND Jobs.releaseId IS NULL
+                           AND Jobs.buildId IS NULL
                            AND owner=?
                            AND JobData.value IN %s
                        ORDER BY timeSubmitted
@@ -2137,41 +2260,41 @@ class MintServer(object):
                        LEFT JOIN JobData
                            ON Jobs.jobId=JobData.jobId
                                AND JobData.name='arch'
-                       LEFT JOIN ReleaseImageTypes
-                           ON ReleaseImageTypes.releaseId=Jobs.releaseId
-                       LEFT JOIN ReleaseData
-                           ON ReleaseData.releaseId=Jobs.releaseId
-                               AND ReleaseData.name='jsversion'
+                       LEFT JOIN Builds
+                           ON Builds.buildId=Jobs.buildId
+                       LEFT JOIN BuildData
+                           ON BuildData.buildId=Jobs.buildId
+                               AND BuildData.name='jsversion'
                        WHERE status=?
                            AND Jobs.groupTroveId IS NULL
                            AND owner=?
-                           AND ReleaseData.value=?
+                           AND BuildData.value=?
                            AND JobData.value IN %s
-                           AND ReleaseImageTypes.imageType IN %s
+                           AND Builds.buildType IN %s
                        ORDER BY timeSubmitted
-                       LIMIT 1""" % (archTypeQuery, imageTypeQuery)
+                       LIMIT 1""" % (archTypeQuery, buildTypeQuery)
             cu.execute(query, jobstatus.WAITING, ownerId, jobserverVersion,
-                       *(archTypes + imageTypes))
+                       *(archTypes + buildTypes))
         else:
             # client wants both cook and image jobs
             query = """SELECT Jobs.jobId FROM Jobs
                        LEFT JOIN JobData
                            ON Jobs.jobId=JobData.jobId AND JobData.name='arch'
-                       LEFT JOIN ReleaseImageTypes
-                           ON ReleaseImageTypes.releaseId=Jobs.releaseId
-                       LEFT JOIN ReleaseData
-                           ON ReleaseData.releaseId=Jobs.releaseId
-                               AND ReleaseData.name='jsversion'
+                       LEFT JOIN Builds
+                           ON Builds.buildId=Jobs.buildId
+                       LEFT JOIN BuildData
+                           ON BuildData.buildId=Jobs.buildId
+                               AND BuildData.name='jsversion'
                        WHERE status=? AND owner=?
-                           AND ((ReleaseData.value=? AND
-                               ReleaseImageTypes.imageType IN %s) OR
+                           AND ((BuildData.value=? AND
+                               Builds.buildType IN %s) OR
                                 (groupTroveId IS NOT NULL))
                            AND JobData.value IN %s
                        ORDER BY timeSubmitted
-                       LIMIT 1""" % (imageTypeQuery, archTypeQuery)
+                       LIMIT 1""" % (buildTypeQuery, archTypeQuery)
 
             cu.execute(query, jobstatus.WAITING, ownerId, jobserverVersion,
-                       *(imageTypes + archTypes))
+                       *(buildTypes + archTypes))
 
         res = cu.fetchone()
 
@@ -2205,11 +2328,11 @@ class MintServer(object):
     @typeCheck(int)
     @requiresAuth
     @private
-    def getJobIdForRelease(self, releaseId):
-        self._filterReleaseAccess(releaseId)
+    def getJobIdForBuild(self, buildId):
+        self._filterBuildAccess(buildId)
         cu = self.db.cursor()
 
-        cu.execute("SELECT jobId FROM Jobs WHERE releaseId=?", releaseId)
+        cu.execute("SELECT jobId FROM Jobs WHERE buildId=?", buildId)
         r = cu.fetchone()
         if r:
             return r[0]
@@ -2222,7 +2345,8 @@ class MintServer(object):
     def getJobIdForCook(self, groupTroveId):
         projectId = self.groupTroves.getProjectId(groupTroveId)
         self._filterProjectAccess(projectId)
-        self._requireProjectDeveloper(projectId)
+        if not self._checkProjectAccess(projectId, userlevels.WRITERS):
+            raise PermissionDenied
 
         cu = self.db.cursor()
 
@@ -2257,20 +2381,20 @@ class MintServer(object):
     @typeCheck(int, (list, (list, str)))
     @requiresAuth
     @private
-    def setImageFilenames(self, releaseId, filenames):
-        self._filterReleaseAccess(releaseId)
-        if not self.releases.releaseExists(releaseId):
-            raise ReleaseMissing()
-        if self.releases.getPublished(releaseId):
-            raise ReleasePublished()
+    def setBuildFilenames(self, buildId, filenames):
+        self._filterBuildAccess(buildId)
+        if not self.builds.buildExists(buildId):
+            raise BuildMissing()
+        if self.builds.getPublished(buildId):
+            raise BuildPublished()
 
         cu = self.db.transaction()
         try:
-            cu.execute("DELETE FROM ImageFiles WHERE releaseId=?", releaseId)
+            cu.execute("DELETE FROM BuildFiles WHERE buildId=?", buildId)
             for idx, file in enumerate(filenames):
                 fileName, title = file
-                cu.execute("INSERT INTO ImageFiles VALUES (NULL, ?, ?, ?, ?)",
-                           releaseId, idx, fileName, title)
+                cu.execute("INSERT INTO BuildFiles VALUES (NULL, ?, ?, ?, ?)",
+                           buildId, idx, fileName, title)
         except:
             self.db.rollback()
             raise
@@ -2280,10 +2404,10 @@ class MintServer(object):
 
     @typeCheck(int)
     @private
-    def getImageFilenames(self, releaseId):
-        self._filterReleaseAccess(releaseId)
+    def getBuildFilenames(self, buildId):
+        self._filterBuildAccess(buildId)
         cu = self.db.cursor()
-        cu.execute("SELECT fileId, filename, title FROM ImageFiles WHERE releaseId=? ORDER BY idx", releaseId)
+        cu.execute("SELECT fileId, filename, title FROM BuildFiles WHERE buildId=? ORDER BY idx", buildId)
 
         results = cu.fetchall()
         if len(results) < 1:
@@ -2306,9 +2430,9 @@ class MintServer(object):
     @typeCheck(int)
     @private
     def getFileInfo(self, fileId):
-        self._filterImageFileAccess(fileId)
+        self._filterBuildFileAccess(fileId)
         cu = self.db.cursor()
-        cu.execute("SELECT releaseId, idx, filename, title FROM ImageFiles WHERE fileId=?", fileId)
+        cu.execute("SELECT buildId, idx, filename, title FROM BuildFiles WHERE fileId=?", fileId)
 
         r = cu.fetchone()
         if r:
@@ -2374,15 +2498,10 @@ class MintServer(object):
         nc = conaryclient.ConaryClient(cfg).getRepos()
 
         troves = nc.getTroveVersionsByLabel({str(troveName): {versions.Label(str(labelStr)): None}})[troveName]
-        versionDict = dict((str(x), [y.freeze() for y in troves[x]]) for x in troves)
+        versionDict = dict((x.freeze(), [str(y) for y in troves[x]]) for x in troves)
         versionList = sorted(versionDict.keys(), reverse = True)
 
-        # prepare a hash of frozen -> thawed flavors
-        flavorDict = set()
-        [flavorDict.update(set(x)) for x in versionDict.values()]
-        flavorDict = dict((x, str(deps.ThawFlavor(x)).replace(",", ", ")) for x in flavorDict)
-
-        return [versionDict, versionList, flavorDict]
+        return [versionDict, versionList]
 
     @typeCheck(int)
     @requiresAuth
@@ -2390,26 +2509,24 @@ class MintServer(object):
         self._filterProjectAccess(projectId)
         project = projects.Project(self, projectId)
 
-        labelIdMap = project.getLabelIdMap()
         nc = self._getProjectRepo(project)
+        label = versions.Label(project.getLabel())
+        troves = nc.troveNamesOnServer(label.getHost())
 
-        troveDict = {}
-        for label in labelIdMap.keys():
-            troves = nc.troveNamesOnServer(versions.Label(label).getHost())
-            troves = [x for x in troves if (x.startswith("group-") or\
-                                            x.startswith("fileset-")) and\
-                                            ":" not in x]
-            troveDict[label] = troves
-        return troveDict
+        troves = sorted(trove for trove in troves if 
+            (trove.startswith('group-') or 
+             trove.startswith('fileset-')) and
+            not trove.endswith(':source'))
+        return troves
 
     # XXX refactor to getJobStatus instead of two functions
     @typeCheck(int)
     @requiresAuth
-    def getReleaseStatus(self, releaseId):
-        self._filterReleaseAccess(releaseId)
+    def getBuildStatus(self, buildId):
+        self._filterBuildAccess(buildId)
 
-        release = releases.Release(self, releaseId)
-        job = release.getJob()
+        build = builds.Build(self, buildId)
+        job = build.getJob()
 
         if not job:
             return {'status'  : jobstatus.NOJOB,
@@ -2592,7 +2709,8 @@ class MintServer(object):
     def getGroupTroveLabelPath(self, groupTroveId):
         projectId = self.groupTroves.getProjectId(groupTroveId)
         self._filterProjectAccess(projectId)
-        self._requireProjectDeveloper(projectId)
+        if not self._checkProjectAccess(projectId, userlevels.WRITERS):
+            raise PermissionDenied
 
         groupTrove = self.groupTroves.get(groupTroveId)
         groupTroveItems = self.groupTroveItems.listByGroupTroveId(groupTroveId)
@@ -2621,7 +2739,8 @@ class MintServer(object):
     def getRecipe(self, groupTroveId):
         projectId = self.groupTroves.getProjectId(groupTroveId)
         self._filterProjectAccess(projectId)
-        self._requireProjectDeveloper(projectId)
+        if not self._checkProjectAccess(projectId, userlevels.WRITERS):
+            raise PermissionDenied
         return self._getRecipe(groupTroveId)
 
     @private
@@ -2630,7 +2749,8 @@ class MintServer(object):
     def setGroupTroveAutoResolve(self, groupTroveId, resolve):
         projectId = self.groupTroves.getProjectId(groupTroveId)
         self._filterProjectAccess(projectId)
-        self._requireProjectDeveloper(projectId)
+        if not self._checkProjectAccess(projectId, userlevels.WRITERS):
+            raise PermissionDenied
         self.groupTroves.setAutoResolve(groupTroveId, resolve)
         return True
 
@@ -2639,7 +2759,8 @@ class MintServer(object):
     @typeCheck(int)
     def listGroupTrovesByProject(self, projectId):
         self._filterProjectAccess(projectId)
-        self._requireProjectDeveloper(projectId)
+        if not self._checkProjectAccess(projectId, userlevels.WRITERS):
+            raise PermissionDenied
         return self.groupTroves.listGroupTrovesByProject(projectId)
 
     @private
@@ -2648,7 +2769,8 @@ class MintServer(object):
     def createGroupTrove(self, projectId, recipeName, upstreamVersion,
                          description, autoResolve):
         self._filterProjectAccess(projectId)
-        self._requireProjectDeveloper(projectId)
+        if not self._checkProjectAccess(projectId, userlevels.WRITERS):
+            raise PermissionDenied
         creatorId = self.users.getIdByColumn("username", self.authToken[0])
         return self.groupTroves.createGroupTrove(projectId, creatorId,
                                                  recipeName, upstreamVersion,
@@ -2659,7 +2781,8 @@ class MintServer(object):
     def getGroupTrove(self, groupTroveId):
         projectId = self.groupTroves.getProjectId(groupTroveId)
         self._filterProjectAccess(projectId)
-        self._requireProjectDeveloper(projectId)
+        if not self._checkProjectAccess(projectId, userlevels.WRITERS):
+            raise PermissionDenied
         return self.groupTroves.get(groupTroveId)
 
     @private
@@ -2668,7 +2791,8 @@ class MintServer(object):
     def deleteGroupTrove(self, groupTroveId):
         projectId = self.groupTroves.getProjectId(groupTroveId)
         self._filterProjectAccess(projectId)
-        self._requireProjectDeveloper(projectId)
+        if not self._checkProjectAccess(projectId, userlevels.WRITERS):
+            raise PermissionDenied
         return self.groupTroves.delGroupTrove(groupTroveId)
 
     @private
@@ -2677,7 +2801,8 @@ class MintServer(object):
     def setGroupTroveDesc(self, groupTroveId, description):
         projectId = self.groupTroves.getProjectId(groupTroveId)
         self._filterProjectAccess(projectId)
-        self._requireProjectDeveloper(projectId)
+        if not self._checkProjectAccess(projectId, userlevels.WRITERS):
+            raise PermissionDenied
         self.groupTroves.update(groupTroveId, description = description,
                                 timeModified = time.time())
         return True
@@ -2688,7 +2813,8 @@ class MintServer(object):
     def setGroupTroveUpstreamVersion(self, groupTroveId, vers):
         projectId = self.groupTroves.getProjectId(groupTroveId)
         self._filterProjectAccess(projectId)
-        self._requireProjectDeveloper(projectId)
+        if not self._checkProjectAccess(projectId, userlevels.WRITERS):
+            raise PermissionDenied
         self.groupTroves.setUpstreamVersion(groupTroveId, vers)
         return True
 
@@ -2731,7 +2857,8 @@ class MintServer(object):
     def listGroupTroveItemsByGroupTrove(self, groupTroveId):
         projectId = self.groupTroves.getProjectId(groupTroveId)
         self._filterProjectAccess(projectId)
-        self._requireProjectDeveloper(projectId)
+        if not self._checkProjectAccess(projectId, userlevels.WRITERS):
+            raise PermissionDenied
         return self.groupTroveItems.listByGroupTroveId(groupTroveId)
 
     @private
@@ -2740,7 +2867,8 @@ class MintServer(object):
     def troveInGroupTroveItems(self, groupTroveId, name, version, flavor):
         projectId = self.groupTroves.getProjectId(groupTroveId)
         self._filterProjectAccess(projectId)
-        self._requireProjectDeveloper(projectId)
+        if not self._checkProjectAccess(projectId, userlevels.WRITERS):
+            raise PermissionDenied
         return self.groupTroveItems.troveInGroupTroveItems( \
             groupTroveId, name, version, flavor)
 
@@ -2749,7 +2877,8 @@ class MintServer(object):
     def setGroupTroveItemVersionLock(self, groupTroveItemId, lock):
         projectId = self.groupTroveItems.getProjectId(groupTroveItemId)
         self._filterProjectAccess(projectId)
-        self._requireProjectDeveloper(projectId)
+        if not self._checkProjectAccess(projectId, userlevels.WRITERS):
+            raise PermissionDenied
         self.groupTroveItems.setVersionLock(groupTroveItemId, lock)
         return self.groupTroveItems.get(groupTroveItemId)
 
@@ -2759,7 +2888,8 @@ class MintServer(object):
     def setGroupTroveItemUseLock(self, groupTroveItemId, lock):
         projectId = self.groupTroveItems.getProjectId(groupTroveItemId)
         self._filterProjectAccess(projectId)
-        self._requireProjectDeveloper(projectId)
+        if not self._checkProjectAccess(projectId, userlevels.WRITERS):
+            raise PermissionDenied
         self.groupTroveItems.setUseLock(groupTroveItemId, lock)
         return lock
 
@@ -2769,7 +2899,8 @@ class MintServer(object):
     def setGroupTroveItemInstSetLock(self, groupTroveItemId, lock):
         projectId = self.groupTroveItems.getProjectId(groupTroveItemId)
         self._filterProjectAccess(projectId)
-        self._requireProjectDeveloper(projectId)
+        if not self._checkProjectAccess(projectId, userlevels.WRITERS):
+            raise PermissionDenied
         self.groupTroveItems.setInstSetLock(groupTroveItemId, lock)
         return lock
 
@@ -2779,7 +2910,8 @@ class MintServer(object):
                      subGroup, versionLock, useLock, instSetLock):
         projectId = self.groupTroves.getProjectId(groupTroveId)
         self._filterProjectAccess(projectId)
-        self._requireProjectDeveloper(projectId)
+        if not self._checkProjectAccess(projectId, userlevels.WRITERS):
+            raise PermissionDenied
         creatorId = self.users.getIdByColumn("username", self.authToken[0])
         return self.groupTroveItems.addTroveItem(groupTroveId, creatorId,
                                                  trvName, trvVersion,
@@ -2830,7 +2962,8 @@ class MintServer(object):
     def delGroupTroveItem(self, groupTroveItemId):
         projectId = self.groupTroveItems.getProjectId(groupTroveItemId)
         self._filterProjectAccess(projectId)
-        self._requireProjectDeveloper(projectId)
+        if not self._checkProjectAccess(projectId, userlevels.WRITERS):
+            raise PermissionDenied
         return self.groupTroveItems.delGroupTroveItem(groupTroveItemId)
 
     @private
@@ -2839,7 +2972,8 @@ class MintServer(object):
     def getGroupTroveItem(self, groupTroveItemId):
         projectId = self.groupTroveItems.getProjectId(groupTroveItemId)
         self._filterProjectAccess(projectId)
-        self._requireProjectDeveloper(projectId)
+        if not self._checkProjectAccess(projectId, userlevels.WRITERS):
+            raise PermissionDenied
         return self.groupTroveItems.get(groupTroveItemId)
 
     @private
@@ -2848,7 +2982,8 @@ class MintServer(object):
     def setGroupTroveItemSubGroup(self, groupTroveItemId, subGroup):
         projectId = self.groupTroveItems.getProjectId(groupTroveItemId)
         self._filterProjectAccess(projectId)
-        self._requireProjectDeveloper(projectId)
+        if not self._checkProjectAccess(projectId, userlevels.WRITERS):
+            raise PermissionDenied
         self.groupTroveItems.update(groupTroveItemId, subGroup = subGroup)
         return True
 

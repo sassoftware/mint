@@ -33,9 +33,10 @@ python_files = \
                mint_rephelp.py \
                mirrortest.py \
 	       mirrorprimetest.py \
+               buildtest.py \
                projecttest.py \
+               pubreleasetest.py \
                recipes.py \
-               releasetest.py \
                repostest.py \
                reportstest.py \
                rmakebuildtest.py \

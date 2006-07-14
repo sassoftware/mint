@@ -16,7 +16,7 @@ import tempfile
 import mint_rephelp
 from mint_rephelp import MINT_PROJECT_DOMAIN, MINT_DOMAIN
 
-from mint import releasetypes
+from mint import buildtypes
 
 from conary.lib import util
 
@@ -39,9 +39,9 @@ class SpiderPageTest(mint_rephelp.WebRepositoryHelper):
         actions = [(self.stripString(self.reAction.findall(x)[0]), \
                     self.stripString(self.reMethod.findall(x)[0]).upper())
                    for x in forms]
+        actions = [x for x in actions if x[1] == 'GET']
         res = self.checkLinks([x[0] for x in actions], page.url)
-        for link, index in [(x[0], i) for i, x in \
-                            zip(range(len(actions)), actions) if x[1]=='GET']: 
+        for link, index in [(x[0], i) for i, x in enumerate(actions)]:
             newPage = page.getForm(index, self.get, {})
             if link not in self.checked:
                 res = self.spiderLink(link, newPage) or res
@@ -152,24 +152,22 @@ class SpiderPageTest(mint_rephelp.WebRepositoryHelper):
         finally:
             os.unlink(fn)
 
-        # make releases
+        # make builds
         for i in range(2):
-            release = client.newRelease(projectId, "Test Release")
+            build = client.newBuild(projectId, "Test Build")
             # add timestamp field.
-            release.setTrove(trv.name(), trv.version.freeze(), "1#x86")
-            release.setFiles([["testimage.iso", "Test Image"]])
+            build.setTrove(trv.name(), trv.version.freeze(), "1#x86")
+            build.setFiles([["testimage.iso", "Test Image"]])
             imagePath = os.path.join(self.reposDir, "jobserver",
                                          "finished-images", project.hostname,
-                                         str(release.id))
+                                         str(build.id))
             util.mkdirChain(imagePath)
             f = open(os.path.join(imagePath, 'testimage.iso'), 'w')
             f.write('bogus image')
             f.close()
 
-            release.setDesc('')
-            release.setImageTypes([releasetypes.STUB_IMAGE])
-            if not i:
-                release.setPublished(True)
+            build.setDesc('')
+            build.setBuildType(buildtypes.STUB_IMAGE)
 
         # compile regex expressions
         self.reLinks = re.compile("<a href=[^<>]*>", re.IGNORECASE)

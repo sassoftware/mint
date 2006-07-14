@@ -18,7 +18,7 @@ import rephelp
 
 from mint import mint_error
 from mint import database
-from mint import releasetypes
+from mint import buildtypes
 from mint import jobstatus
 from mint.distro import jsversion
 
@@ -47,7 +47,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.setServer(self.getProjectServerHostname(), self.port)
 
         # pick a page to log in from
-        pageURI = '/project/testproject/releases'
+        pageURI = '/project/testproject/builds'
         page = self.fetch(pageURI)
 
         page = page.postForm(1, self.fetchWithRedirect,
@@ -424,14 +424,14 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                                             'level' : 0})
 
 
-    def testReleasesPage(self):
+    def testBuildsPage(self):
         client, userId = self.quickMintUser('foouser','foopass')
         projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
 
         # we are working with the project server right now
         self.setServer(self.getProjectServerHostname(), self.port)
 
-        page = self.assertContent('/project/foo/releases/',
+        page = self.assertContent('/project/foo/builds/',
                                   content = 'has no published',
                                   code = [200])
 
@@ -769,14 +769,13 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
     def testDownloadISO(self):
         client, userId = self.quickMintUser("testuser", "testpass")
         projectId = client.newProject("Foo", "foo", MINT_PROJECT_DOMAIN)
-        release = client.newRelease(projectId, "Test Release")
-        release.setImageTypes([0])
+        build = client.newBuild(projectId, "Test Build")
+        build.setBuildType(0)
 
         cu = self.db.cursor()
-        cu.execute("INSERT INTO ImageFiles VALUES (1, ?, 0, 'test.iso', 'Test Image')",
-                   release.id)
+        cu.execute("INSERT INTO BuildFiles VALUES (1, ?, 0, 'test.iso', 'Test Image')",
+                   build.id)
         self.db.commit()
-        release.setPublished(True)
 
         # check for the meta refresh tag
         page = self.assertCode('/downloadImage/1/test.iso', code = 301)
@@ -813,7 +812,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
                           groupTrove.id)
 
         # go to a different page that so that the group box can show up
-        page = self.assertContent('/project/testproject/releases',
+        page = self.assertContent('/project/testproject/builds',
                                   content = 'closeCurrentGroup')
 
         # then simulate clicking the close box to prove it closes properly
@@ -854,7 +853,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         page = page.postForm(1, self.post, {'flavor': ['1#x86']})
 
-        page = self.assertNotContent('/project/testproject/releases',
+        page = self.assertNotContent('/project/testproject/builds',
                               content = 'closeCurrentGroup')
 
     def testGroupCookRespawn(self):
@@ -1080,7 +1079,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.failIf(page.body != refPage.body,
                     "Illegal page reference was not contained.")
 
-    def testRelease(self):
+    def testBuild(self):
         client, userId = self.quickMintUser('foouser', 'foopass')
         projectId = self.newProject(client)
 
@@ -1095,37 +1094,64 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         # we are working with the project server right now
         self.setServer(self.getProjectServerHostname(), self.port)
 
-        page = self.fetch('/project/testproject/newRelease')
+        page = self.fetch('/project/testproject/newBuild')
 
+        troveSpec = 'group-test=/testproject.' + MINT_PROJECT_DOMAIN + '@rpl:devel/1.0-1-1' + '[is: x86]'
         page = page.postForm(1, self.post, \
                              {'name' : 'Foo',
-                              'trove': 'group-test=rpl:devel',
-                              'version': '/testproject.' + \
-                                  MINT_PROJECT_DOMAIN + \
-                                  '@rpl:devel/1.0-1-1 1#x86',
-                              'imagetype_1' : '1'})
+                              'distTroveSpec': troveSpec,
+                              'anaconda_templatesSpec': troveSpec,
+                              'buildtype_1' : '1'})
 
         cu = self.db.cursor()
-        cu.execute("SELECT troveName FROM Releases")
+        cu.execute("SELECT buildId, troveName FROM Builds")
 
         res = cu.fetchall()
-        self.failIf(not res, "No release was generated from a web click.")
-        self.failIf(res[0][0] != 'group-test',
-                    "Trove name was malformed during release creation.")
+        self.failIf(not res, "No build was generated from a web click.")
+        buildId = res[0][0]
+        self.failIf(res[0][1] != 'group-test',
+                    "Trove name was malformed during build creation.")
 
-    def testCantPublishReleasesWithoutFiles(self):
+        build = client.getBuild(buildId)
+        assert(build.getDataValue('anaconda-templates') == 
+            'group-test=/testproject.rpath.local2@rpl:devel/1.0-1-1[is: x86]')
+
+    def testForPhantomBuildRows(self):
         client, userId = self.quickMintUser('foouser', 'foopass')
         projectId = self.newProject(client)
 
-        release = client.newRelease(projectId, 'Test Release')
-        release.setImageTypes([1])
-        release.setTrove("group-trove",
+        page = self.webLogin('foouser', 'foopass')
+
+        # we are working with the project server right now
+        self.setServer(self.getProjectServerHostname(), self.port)
+
+        cu = self.db.cursor()
+        cu.execute("SELECT COUNT(buildId) FROM Builds")
+        res = cu.fetchone()
+        beforeCount = res[0]
+
+        page = self.fetch('/project/testproject/newBuild')
+
+        cu.execute("SELECT COUNT(buildId) FROM Builds")
+        res = cu.fetchone()
+        afterCount = res[0]
+
+        self.failUnlessEqual(beforeCount, afterCount,
+            "Hitting the build page creates a phantom row in builds table.")
+
+    def testCantPublishBuildsWithoutFiles(self):
+        client, userId = self.quickMintUser('foouser', 'foopass')
+        projectId = self.newProject(client)
+
+        build = client.newBuild(projectId, 'Test Build')
+        build.setBuildType(1)
+        build.setTrove("group-trove",
             "/conary.rpath.com@rpl:devel/0.0:1.0-1-1", "1#x86")
 
         self.webLogin('foouser', 'foopass')
-        page = self.assertNotContent('/project/testproject/releases', 
+        page = self.assertNotContent('/project/testproject/builds', 
             code = [200],
-            content = 'href="publish?releaseId',
+            content = 'href="publish?buildId',
             server = self.getProjectServerHostname())
 
     def testCreateExternalProject(self):

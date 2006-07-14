@@ -20,12 +20,7 @@ copyThread = None
 
 sourcePath = "/mnt/"
 needsMount = True
-
-# derive tmp path via config file
-from mint import config
-mc = config.MintConfig()
-mc.read(config.RBUILDER_CONFIG)
-tmpPath = os.path.join(mc.dataPath, 'tmp', '')
+tmpPath = None
 
 class JsonRPCHandler(BaseHTTPServer.BaseHTTPRequestHandler, object):
     def do_GET(self):
@@ -197,6 +192,14 @@ class TarHandler(JsonRPCHandler):
     def handle_one_request(self):
         global sourcePath, tmpPath, needsMount
         self.sourcePath = sourcePath
+
+        if not tmpPath:
+            # derive tmp path via config file
+            from mint import config
+            mc = config.MintConfig()
+            mc.read(config.RBUILDER_CONFIG)
+            tmpPath = os.path.join(mc.dataPath, 'tmp', '')
+
         self.tmpPath = tmpPath
         self.needsMount = needsMount
         JsonRPCHandler.handle_one_request(self)

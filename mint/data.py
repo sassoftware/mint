@@ -9,7 +9,8 @@ from mint import database
 (RDT_STRING,
  RDT_BOOL,
  RDT_INT,
- RDT_ENUM)= range(4)
+ RDT_ENUM,
+ RDT_TROVE)= range(5)
 
 class GenericDataTable(database.DatabaseTable):
     '''
@@ -118,5 +119,10 @@ class JobDataTable(GenericDataTable):
 class UserDataTable(GenericDataTable):
     name = "UserData"
 
+# XXX This table is deprecated in favor of BuildDataTable
 class ReleaseDataTable(GenericDataTable):
     name = "ReleaseData"
+
+class BuildDataTable(GenericDataTable):
+    name = "BuildData"
+

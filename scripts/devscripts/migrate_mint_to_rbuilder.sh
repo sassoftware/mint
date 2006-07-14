@@ -3,8 +3,8 @@
 # Migration script used to migrate an rBuilder Appliance from version 1.5.1
 # to version 1.6.3.
 
-# Full install label to products repository
-INSTALL_LABEL_PATH="products.rpath.com@rpath:rba-1.6"
+# Full install label to builds repository
+INSTALL_LABEL_PATH="builds.rpath.com@rpath:rba-1.6"
 JOBSERVER_VERSION="1.6.3"
 
 OLD_ROOT="/srv/mint"
@@ -40,7 +40,7 @@ if [ ! -d ${OLD_ROOT} -a -d ${NEW_ROOT} ]; then
     exit 1
 fi
 
-# Don't run this on a system where Conary isn't managing the product.
+# Don't run this on a system where Conary isn't managing the build.
 if [ -d ${OLD_ROOT} ]; then
     conary q mint > /dev/null 2>&1
     if [ $? -ne 0 ]; then
@@ -54,9 +54,9 @@ fi
 
 # start the migration here ####################################################
 
-# whack products line from conaryrc
+# whack builds line from conaryrc
 echo "Updating conaryrc"
-sed -i.bak -e 's/products.rpath.com@.* //g' /etc/conaryrc
+sed -i.bak -e 's/builds.rpath.com@.* //g' /etc/conaryrc
 
 # update conary (the old school way)
 echo "Updating Conary"

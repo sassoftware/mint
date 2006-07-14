@@ -13,11 +13,12 @@ from mint import database
 from mint import grouptrove
 from mint import jobs
 from mint import projects
-from mint import releases
+from mint import builds
+from mint import pubreleases
 from mint import users
 from mint import rmakebuild
 from mint.mint_error import MintError, UnknownException, PermissionDenied, \
-    ReleasePublished, ReleaseMissing, ReleaseEmpty, UserAlreadyAdmin, \
+    BuildPublished, BuildMissing, BuildEmpty, UserAlreadyAdmin, \
     AdminSelfDemotion, JobserverVersionMismatch, MaintenanceMode, \
     ParameterError, GroupTroveEmpty
 from mint.searcher import SearchTermsError
@@ -284,44 +285,77 @@ class MintClient:
         """
         return self.server.unhideProject(projectId)
 
-    def getRelease(self, releaseId):
+    def getBuild(self, buildId):
         """
-        Retrieve a L{releases.Release} object by release id.
-        @param releaseId: the database id of the requested release.
-        @type releaseId: int
-        @returns: an object representing the requested release.
-        @rtype: L{releases.Release}
+        Retrieve a L{builds.Build} object by build id.
+        @param buildId: the database id of the requested build.
+        @type buildId: int
+        @returns: an object representing the requested build.
+        @rtype: L{builds.Build}
         """
-        return releases.Release(self.server, releaseId)
+        return builds.Build(self.server, buildId)
 
-    def newRelease(self, projectId, releaseName, published = False):
+    def newBuild(self, projectId, buildName):
         """
-        Create a new release.
-        @param projectId: the project to be associated with the new release.
-        @param releaseName: name of the new release
-        @returns: an object representing the new release
-        @rtype: L{mint.releases.Release}
+        Create a new build.
+        @param projectId: the project to be associated with the new build.
+        @param buildName: name of the new build
+        @returns: an object representing the new build
+        @rtype: L{mint.builds.Build}
         """
-        releaseId = self.server.newRelease(projectId, releaseName, published)
-        return self.getRelease(releaseId)
+        buildId = self.server.newBuild(projectId, buildName)
+        return self.getBuild(buildId)
 
-    def getReleaseList(self, limit=10, offset=0):
+    def getPublishedReleaseList(self, limit=10, offset=0):
         """
-        Get a list of the most recent releases as ordered by their published date.
-        @param limit: The number of releases to display
+        Get a list of the most recent published releases as ordered
+        by their published date.
+        @param limit: The number of builds to display
         @param offset: List @limit starting at item @offset
         """
-        return [(x[0], x[1], self.getRelease(x[2])) for x in \
-                self.server.getReleaseList(limit, offset)]
+        return [(x[0], x[1], self.getPublishedRelease(x[2])) for x in \
+                self.server.getPublishedReleaseList(limit, offset)]
 
-    def startImageJob(self, releaseId):
+    def newPublishedRelease(self, projectId):
+        """
+        Create a new published release, which is a collection of 
+        builds (images, group troves, etc.).
+        @param projectId: the project to be associated with the release
+        @returns: an object representing the new published release
+        @rtype: L{mint.pubreleases.PublishedRelease}
+        """
+        pubReleaseId = self.server.newPublishedRelease(projectId)
+        return self.getPublishedRelease(pubReleaseId)
+
+    def getPublishedRelease(self, pubReleaseId):
+        """
+        Get a published release by its id.
+        @param pubReleaseId: the id of the published release
+        @returns: an object representing the published release
+        @rtype: L{mint.pubreleases.PublishedRelease}
+        """
+        # XXX broken
+        #return self.server.getPublishedRelease(pubReleaseId)
+        return pubreleases.PublishedRelease(self.server, pubReleaseId)
+
+    def deletePublishedRelease(self, pubReleaseId):
+        """
+        Delete a published release. This has the side effect of unlinking
+        any builds associated with that release.
+        @param pubReleaseId: the id of the published release
+        @returns: True if successful, False otherwise
+        @rtype: bool
+        """
+        return self.server.deletePublishedRelease(pubReleaseId)
+
+    def startImageJob(self, buildId):
         """
         Start a new image generation job.
-        @param releaseId: the release id which describes the image to be created.
+        @param buildId: the build id which describes the image to be created.
         @return: an object representing the new job
         @rtype: L{mint.jobs.Job}
         """
-        jobId = self.server.startImageJob(releaseId)
+        jobId = self.server.startImageJob(buildId)
         return self.getJob(jobId)
 
     def getJob(self, jobId):
@@ -588,12 +622,12 @@ class _Method(xmlrpclib._Method):
             raise users.UserInduction(exceptionArgs[0])
         elif exceptionName == "UserNotFound":
             raise UserNotFound(exceptionArgs[0])
-        elif exceptionName == "ReleasePublished":
-            raise ReleasePublished(exceptionArgs[0])
-        elif exceptionName == "ReleaseMissing":
-            raise ReleaseMissing(exceptionArgs[0])
-        elif exceptionName == "ReleaseEmpty":
-            raise ReleaseEmpty(exceptionArgs[0])
+        elif exceptionName == "BuildPublished":
+            raise BuildPublished(exceptionArgs[0])
+        elif exceptionName == "BuildMissing":
+            raise BuildMissing(exceptionArgs[0])
+        elif exceptionName == "BuildEmpty":
+            raise BuildEmpty(exceptionArgs[0])
         elif exceptionName == "AuthRepoError":
             raise users.AuthRepoError(exceptionArgs[0])
         elif exceptionName == "LabelMissing":

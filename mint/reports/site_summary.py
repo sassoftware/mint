@@ -5,7 +5,7 @@
 
 import time
 
-from mint import releasetypes
+from mint import buildtypes
 from mint.reports.mint_reports import MintReport
 
 class SiteSummary(MintReport):
@@ -80,21 +80,38 @@ class SiteSummary(MintReport):
                    reportTime - 604800)
         data.append(('New Projects this week', cu.fetchone()[0]))
 
-        # count projects with releases
+        # count projects with builds
         cu.execute("""SELECT COUNT(*) FROM
                           (SELECT DISTINCT projectId
-                            FROM Releases
+                            FROM Builds
                             WHERE troveName IS NOT NULL)
-                          AS ProjectReleases""")
-        data.append(('Projects with releases', cu.fetchone()[0]))
+                          AS ProjectBuilds""")
+        data.append(('Projects with builds', cu.fetchone()[0]))
 
-        # count projects with releases this week
+        # count projects with builds this week
         cu.execute("""SELECT COUNT(*) FROM
-                          (SELECT DISTINCT projectId FROM Releases
-                              WHERE timePublished > ?)
-                          AS ProjectReleases""",
+                          (SELECT DISTINCT projectId FROM Builds
+                              WHERE timeCreated > ?)
+                          AS ProjectBuilds""",
                    reportTime - 604800)
-        data.append(('Projects with releases this week', cu.fetchone()[0]))
+        data.append(('Projects with new builds this week', cu.fetchone()[0]))
+
+        # count projects with finalized published releases
+        cu.execute("""SELECT COUNT(*) FROM
+                          (SELECT DISTINCT projectId
+                            FROM PublishedReleases
+                            WHERE timePublished IS NOT NULL)
+                          AS FinalizedPublishedReleases""")
+        data.append(('Projects with published releases', cu.fetchone()[0]))
+
+        # count projects with finalized published releases this week
+        cu.execute("""SELECT COUNT(*) FROM
+                          (SELECT DISTINCT projectId
+                            FROM PublishedReleases
+                            WHERE timePublished > ?)
+                          AS FinalizedPublishedReleases""",
+                   reportTime - 604800)
+        data.append(('Projects with new published releases this week', cu.fetchone()[0]))
 
         # count projects with commits
         cu.execute("""SELECT COUNT(*) FROM
@@ -139,28 +156,22 @@ class SiteSummary(MintReport):
         # spacer
         data.append(('',''))
 
-        countedReleases = (releasetypes.INSTALLABLE_ISO,
-                           releasetypes.RAW_HD_IMAGE,
-                            releasetypes.VMWARE_IMAGE)
-        queryStr = '(' + ', '.join([str(x) for x in countedReleases]) + ')'
-        # count the total releases
-        cu.execute("""SELECT COUNT(*) FROM Releases
-                              LEFT JOIN ReleaseImageTypes
-                                  ON ReleaseImageTypes.releaseId =
-                                      Releases.releaseId
-                          WHERE imageType IN %s""" % str(countedReleases))
+        countedBuilds = (buildtypes.INSTALLABLE_ISO,
+                           buildtypes.RAW_HD_IMAGE,
+                            buildtypes.VMWARE_IMAGE)
+        queryStr = '(' + ', '.join([str(x) for x in countedBuilds]) + ')'
+        # count the total builds
+        cu.execute("""SELECT COUNT(*) FROM Builds
+                          WHERE buildType IN %s""" % str(countedBuilds))
 
         data.append(('Total Images', cu.fetchone()[0]))
 
-        # count releases for each image type
-        for releaseType in countedReleases:
-            cu.execute("""SELECT COUNT(*) FROM Releases
-                              LEFT JOIN ReleaseImageTypes
-                                  ON ReleaseImageTypes.releaseId =
-                                      Releases.releaseId
-                              WHERE ReleaseImageTypes.imageType=?""",
-                       releaseType)
-            data.append((releasetypes.typeNames[releaseType],
+        # count builds for each image type
+        for buildType in countedBuilds:
+            cu.execute("""SELECT COUNT(*) FROM Builds
+                              WHERE buildType=?""",
+                       buildType)
+            data.append((buildtypes.typeNames[buildType],
                          cu.fetchone()[0]))
 
         # spacer

@@ -65,13 +65,25 @@ def requiresAuth(func):
 
 def ownerOnly(func):
     """
-    Decorate a method to be callable only by the owner of the
-    current package also requires that a package exist.
+    Require a method to be callable only by the owner of the current project.
     """
     def wrapper(self, **kwargs):
         if not self.project:
             raise database.ItemNotFound("project")
         if self.userLevel == userlevels.OWNER or self.auth.admin:
+            return func(self, **kwargs)
+        else:
+            raise mint_error.PermissionDenied
+    return wrapper
+
+def writersOnly(func):
+    """
+    Require a method to be callable only by a developer or owner of a project.
+    """
+    def wrapper(self, **kwargs):
+        if not self.project:
+            raise database.ItemNotFound("project")
+        if self.userLevel in userlevels.WRITERS or self.auth.admin:
             return func(self, **kwargs)
         else:
             raise mint_error.PermissionDenied

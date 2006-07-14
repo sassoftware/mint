@@ -17,7 +17,7 @@ from mint_rephelp import MINT_HOST, MINT_DOMAIN, MINT_PROJECT_DOMAIN
 
 from mint import shimclient
 from mint import config
-from mint import releasetypes
+from mint import buildtypes
 from mint.distro.flavors import stockFlavors
 from mint import server
 from mint import userlevels
@@ -26,10 +26,10 @@ from conary import dbstore
 from conary.deps import deps
 from conary.lib import util
 
-def stockReleaseFlavor(db, releaseId, arch = "x86_64"):
+def stockBuildFlavor(db, buildId, arch = "x86_64"):
     cu = db.cursor()
     flavor = deps.parseFlavor(stockFlavors['1#' + arch]).freeze()
-    cu.execute("UPDATE Releases set troveFlavor=? WHERE releaseId=?", flavor, releaseId)
+    cu.execute("UPDATE Builds set troveFlavor=? WHERE buildId=?", flavor, buildId)
     db.commit()
 
 
@@ -161,7 +161,13 @@ class FixtureCache(object):
                 - developer (who is a developer in the "foo" project)
                 - user (a user or watcher of the "foo" project
                 - nobody (a user with no allegiance to any project)
-            - A single release inside the "foo" project.
+            - Two published release objects
+                - One finalized, or published, containing one build
+                - One not finalized, containing another build
+            - Three builds inside the "foo" project:
+                - one published (i.e. belongs to the finalized release)
+                - one unpublished (belongs to a release not yet finalized)
+                - one available (not belonging to any release)
         @param cfg: The current effective Mint configuration.
         @return: A 2-tuple consisting of the current Mint configuration and a
             a dictionary containing the following:
@@ -172,7 +178,7 @@ class FixtureCache(object):
                 - C{developer} - the id of the user "developer"
                 - C{nobody} - the id of the user "nobody"
                 - C{projectId} - the id of the "Foo" project
-                - C{releaseId} - the id of the release in the "Foo" project
+                - C{buildId} - the id of the build in the "Foo" project
         """
 
         # connect to the database and open a MintServer instance
@@ -201,9 +207,43 @@ class FixtureCache(object):
         userProject = userClient.getProject(projectId)
         userProject.addMemberById(userId, userlevels.USER)
 
-        # create a release for the "foo" project called "Test Release"
-        release = client.newRelease(projectId, "Test Release")
-        stockReleaseFlavor(db, release.id)
+        # create a build for the "foo" project called "Test Build"
+        # and add it to an unpublished (not final) release
+        build = client.newBuild(projectId, "Test Build")
+        build.setTrove("group-dist", "/testproject." + \
+                MINT_PROJECT_DOMAIN + "@rpl:devel/0.0:1.1-1-1", "1#x86")
+        build.setBuildType(buildtypes.STUB_IMAGE)
+        build.setFiles([["file", "file title 1"]])
+        stockBuildFlavor(db, build.id)
+        pubRelease = client.newPublishedRelease(projectId)
+        pubRelease.name = "(Not final) Release"
+        pubRelease.version = "1.1"
+        pubRelease.addBuild(build.id)
+        pubRelease.save()
+
+        # create another build for the "foo" project and publish it
+        # i.e. make it a part of a finalized, or published, release
+        pubBuild = client.newBuild(projectId, "Test Published Build")
+        pubBuild.setTrove("group-dist", "/testproject." + \
+                MINT_PROJECT_DOMAIN + "@rpl:devel/0.0:1.0-1-1", "1#x86")
+        pubBuild.setBuildType(buildtypes.STUB_IMAGE)
+        pubBuild.setFiles([["file", "file title 1"]])
+        stockBuildFlavor(db, pubBuild.id)
+        pubReleaseFinal = client.newPublishedRelease(projectId)
+        pubReleaseFinal.name = "Finalized/Published Release"
+        pubReleaseFinal.version = "1.0"
+        pubReleaseFinal.addBuild(pubBuild.id)
+        pubReleaseFinal.save()
+        pubReleaseFinal.finalize()
+
+        # Create another build that just lies around somewhere
+        # unattached to any published releases
+        anotherBuild = client.newBuild(projectId, "Test Extra Build")
+        anotherBuild.setTrove("group-dist", "/testproject." + \
+                MINT_PROJECT_DOMAIN + "@rpl:devel/0.0:1.0-1-2", "1#x86")
+        anotherBuild.setBuildType(buildtypes.STUB_IMAGE)
+        anotherBuild.setFiles([["file", "file title 1"]])
+        stockBuildFlavor(db, anotherBuild.id)
 
         # create a group trove for the "foo" project
         groupTrove = client.createGroupTrove(projectId, 'group-test', '1.0.0',
@@ -215,7 +255,11 @@ class FixtureCache(object):
                       'developer':      developerId,
                       'user':           userId,
                       'nobody':         nobodyId,
-                      'releaseId':      release.id,
+                      'buildId':        build.id,
+                      'pubBuildId':     pubBuild.id,
+                      'pubReleaseId':   pubRelease.id,
+                      'pubReleaseFinalId':   pubReleaseFinal.id,
+                      'anotherBuildId': anotherBuild.id,
                       'groupTroveId':   groupTrove.id }
 
 
@@ -228,7 +272,7 @@ class FixtureCache(object):
                 - test (a basic user with no special privileges)
             - A project called "foo"
                 - "test" is a member of "foo"
-                - A release called "Test Release"
+                - A build called "Test Build"
                 - A group trove called "testtrove"
                 - A single group trove cook job, in the "started" state
 
@@ -271,7 +315,7 @@ class FixtureCache(object):
                 - test (a basic user with no special privileges)
             - A project called "foo"
                 - "test" is a member of "foo"
-                - A release called "Test Release"
+                - A build called "Test Build"
                 - A single image job, in the "started" state
 
         @param cfg: The current effective Mint configuration.
@@ -287,12 +331,12 @@ class FixtureCache(object):
 
         projectId = client.newProject("Foo", "foo", "rpath.org")
 
-        release = client.newRelease(projectId, "Test Release")
-        release.setImageTypes([releasetypes.STUB_IMAGE])
+        build = client.newBuild(projectId, "Test Build")
+        build.setBuildType(buildtypes.STUB_IMAGE)
 
-        stockReleaseFlavor(db, release.getId())
+        stockBuildFlavor(db, build.getId())
 
-        relJob = client.startImageJob(release.getId())
+        prodJob = client.startImageJob(build.getId())
         return cfg, { 'test': testId }
 
     def fixtureBothJobs(self, cfg):
@@ -305,7 +349,7 @@ class FixtureCache(object):
             - A project called "foo"
                 - "test" is a member of "foo"
                 - A group trove called "testtrove"
-                - A release called "Test Release"
+                - A build called "Test Build"
                 - A single image job, in the "started" state
                 - A single group trove cook job, in the "started" state
 
@@ -322,12 +366,12 @@ class FixtureCache(object):
         client = shimclient.ShimMintClient(cfg, ('test', 'testpass'))
         projectId = client.newProject("Foo", "foo", "rpath.org")
 
-        release = client.newRelease(projectId, "Test Release")
-        release.setImageTypes([releasetypes.STUB_IMAGE])
+        build = client.newBuild(projectId, "Test Build")
+        build.setBuildType(buildtypes.STUB_IMAGE)
 
-        stockReleaseFlavor(db, release.getId())
+        stockBuildFlavor(db, build.getId())
 
-        relJob = client.startImageJob(release.getId())
+        prodJob = client.startImageJob(build.getId())
 
         groupTrove = client.createGroupTrove(projectId, 'group-test', '1.0.0',
             'No Description', False)
@@ -525,7 +569,11 @@ class FixturedUnitTest(unittest.TestCase):
         return self.adminClient
 
     def getClient(self, username):
-        return shimclient.ShimMintClient(self.cfg, (username, '%spass' % username))
+        if username == 'anonymous':
+            password = 'anonymous'
+        else:
+            password = '%spass' % username
+        return shimclient.ShimMintClient(self.cfg, (username, password))
 
     def quickMintUser(self, username, password, email = "test@example.com"):
         client = self._getAdminClient()
