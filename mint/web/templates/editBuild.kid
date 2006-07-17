@@ -63,18 +63,24 @@ from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM, RDT_TROVE
 
                     <div class="formgroupTitle">Build Contents<span id="baton"></span></div>
                     <div class="formgroup">
-                        <div id="distTrove">${trovePicker(project.id, project.getLabel().split('@')[0], '', 'distTrove')}</div>
+                        <div id="distTrove" py:if="not buildId">${trovePicker(project.id, project.getLabel().split('@')[0], '', 'distTrove')}</div>
+                        <div py:if="buildId" style="margin: 4px;">${troveName}=${str(version)} [${str(flavor).replace(",", ", ")}] </div>
                     </div>
 
                     <div class="formgroupTitle">Build Types</div>
                     <div class="formgroup">
                         <div py:strip="True" py:for="key in self.cfg.visibleBuildTypes">
-                            <input class="reversed" id="buildtype_${key}" name="buildtype" value="${key}" onclick="javascript:onBuildTypeChange('formgroup_${key}');" type="radio" py:attrs="{'checked': (key == buildType) and 'checked' or None}" />
+                            <input class="reversed" id="buildtype_${key}"
+                                name="buildtype" value="${key}" 
+                                onclick="javascript:onBuildTypeChange('formgroup_${key}');"
+                                type="radio" py:attrs="{'checked': (key == buildType) and 'checked' or None}" />
                             <label class="reversed" for="buildtype_${key}">${typeNames[key]}</label><div class="clearleft">&nbsp;</div>
                         </div>
                     </div>
 
-                    <div class="formgroupTitle" style="cursor: pointer;" onclick="javascript:toggle_display('advanced_settings');"><img id="advanced_settings_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" />Advanced Options</div>
+                    <div class="formgroupTitle" style="cursor: pointer;" onclick="javascript:toggle_display('advanced_settings');">
+                        <img id="advanced_settings_expander" src="${cfg.staticPath}/apps/mint/images/BUTTON_expand.gif" class="noborder" />Advanced Options
+                    </div>
                     <div id="advanced_settings" class="formgroup" style="display: none;">
                         <div py:strip="True" py:for="key, heading, template in templates">
                             <div class="formsubgroupcontainer" id="formgroup_${key}" py:attrs="{'style' : key != defaultTemplate and 'display : none;' or None}">
@@ -88,25 +94,31 @@ from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM, RDT_TROVE
                                             dataValue = dataRow[1]
                                     ?>
                                     <div py:strip="True" py:if="(dataRow[0] == RDT_BOOL)">
-                                        <input class="reversed" py:attrs="{'checked': 'checked' and dataValue or None, 'disabled' : key != defaultTemplate and 'disabled' or None}" type="checkbox" name="${name}" value="1" id="${name}"/>
+                                        <input class="reversed" py:attrs="{'checked': 'checked' and dataValue or None,
+                                                                           'disabled' : key != defaultTemplate and 'disabled' or None}" 
+                                            type="checkbox" name="${name}" value="1" id="${name}"/>
                                         <label class="reversed" for="${name}">${dataRow[2]}</label>
                                     </div>
                                     <div py:strip="True" py:if="(dataRow[0] == RDT_INT) or (dataRow[0] == RDT_STRING)">
                                         <label for="${name}">${dataRow[2]}</label>
-
-                                        <input type="text" name="${name}" id="${name}" value="${dataValue}" py:attrs="{'disabled' : key != defaultTemplate and 'disabled' or None}"/>
+                                        <input type="text" name="${name}" id="${name}" value="${dataValue}"
+                                            py:attrs="{'disabled' : key != defaultTemplate and 'disabled' or None}"/>
                                     </div>
                                     <div py:strip="True" py:if="(dataRow[0] == RDT_ENUM)">
                                         <label for="${name}">${dataRow[2]}</label>
                                         <select name="${name}" id="${name}" py:attrs="{'disabled' : key != defaultTemplate and 'disabled' or None}">
-                                            <option py:for="prompt, val in sorted(dataRow[3].iteritems())" py:content="prompt" value="${val}" py:attrs="{'selected' : val == dataRow[1] and 'selected' or None}"/>
+                                            <option py:for="prompt, val in sorted(dataRow[3].iteritems())"
+                                                py:content="prompt" value="${val}"
+                                                py:attrs="{'selected' : val == dataRow[1] and 'selected' or None}"/>
                                         </select>
                                     </div>
                                     <div py:strip="True" py:if="(dataRow[0] == RDT_TROVE)">
                                         <label for="${name}">${dataRow[2]}</label>
                                         <div id="${name}">Defaults to latest on branch
-                                            (<a onclick="new TrovePicker(${project.id}, '${project.getLabel().split('@')[0]}', '${name}', '${name}', '${cfg.staticPath}');">change)</a></div>
-
+                                            (<a onclick="new TrovePicker(${project.id},
+                                                '${project.getLabel().split('@')[0]}',
+                                                '${name}', '${name}', '${cfg.staticPath}');">change)</a>
+                                        </div>
                                     </div>
                                     <div class="clearleft">&nbsp;</div>
                                 </div>
@@ -116,7 +128,10 @@ from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM, RDT_TROVE
                     </div>
 
                     <p>
-                        <button id="submitButton" type="submit" py:attrs="{'disabled': not buildId and 'disabled' or None}">${buildId and "Recreate" or "Create"} Build</button>
+                        <button id="submitButton" type="submit"
+                            py:attrs="{'disabled': not buildId and 'disabled' or None}">
+                            ${buildId and "Recreate" or "Create"} Build
+                        </button>
                     </p>
                     <?python
                         # hacktastic way of not passing a None through a request
