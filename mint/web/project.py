@@ -100,7 +100,8 @@ class ProjectHandler(WebHandler):
         else:
             canResolve = True
 
-        return self._write("projectPage", canResolve = canResolve)
+        return self._write("projectPage", canResolve = canResolve,
+                releases = self.project.getPublishedReleases())
 
     def conaryUserCfg(self, auth):
         return self._write("conaryUserCfg")
