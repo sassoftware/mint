@@ -59,7 +59,7 @@ class PublishedReleasesTable(database.KeyedTable):
         res = cu.fetchall()
         return [x[0] for x in res]
 
-    def getPublishedReleaseList(self, limit, offset):
+    def getPublishedReleaseList(self, limit = 10, offset = 0):
         cu = self.db.cursor()
         cu.execute("""SELECT Proj.name, Proj.hostname, PubRel.pubReleaseId
                       FROM Projects Proj LEFT JOIN PublishedReleases PubRel

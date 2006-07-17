@@ -880,24 +880,26 @@ class ProjectHandler(WebHandler):
     @strFields(feed= "releases")
     def rss(self, auth, feed):
         if feed == "releases":
-            title = "%s releases" % self.project.getName()
+            title = "%s - %s releases" % (self.cfg.productName, self.project.getName())
             link = "http://%s%sproject/%s/releases" % \
                 (self.cfg.siteHost, self.cfg.basePath, self.project.getHostname())
-            desc = "Current releases from %s" % self.project.getName()
+            desc = "Latest releases from %s" % self.project.getName()
 
             releases = [self.client.getPublishedRelease(x) for x in self.project.getPublishedReleases()]
             publishedReleases = [x for x in releases if x.isFinalized()]
             items = []
+            hostname = self.project.getHostname()
+            projectName = self.project.getName()
             for release in publishedReleases[:10]:
                 item = {}
                 item['title'] = "%s (version %s)" % (release.name, release.version)
                 item['link'] = "http://%s%sproject/%s/release?id=%d" % \
-                    (self.cfg.siteHost, self.cfg.basePath, self.project.getHostname(), release.getId())
+                    (self.cfg.siteHost, self.cfg.basePath, hostname, release.getId())
                 item['content']  = "This release contains the following builds:"
                 item['content'] += "<ul>"
                 builds = [self.client.getBuild(x) for x in release.getBuilds()]
                 for build in builds:
-                    item['content'] += "<li>%s (%s %s)</li>" % (build.getName(), build.getArch(), buildtypes.typeNamesShort[build.buildType])
+                    item['content'] += "<li><a href=\"http://%s%sproject/%s/build?id=%ld\">%s (%s %s)</a></li>" % (self.cfg.siteHost, self.cfg.basePath, hostname, build.id, build.getName(), build.getArch(), buildtypes.typeNamesShort[build.buildType])
                 item['content'] += "</ul>"
                 item['date_822'] = email.Utils.formatdate(release.timePublished)
                 item['creator'] = "http://%s%s" % (self.siteHost, self.cfg.basePath)

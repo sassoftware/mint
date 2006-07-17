@@ -21,7 +21,7 @@ from mint.client import upstream
         <link rel="alternate" type="application/rss+xml"
               title="New ${cfg.productName} Projects" href="http://${cfg.siteHost}${cfg.basePath}rss?feed=newProjects" />
         <link rel="alternate" type="application/rss+xml"
-              title="New ${cfg.productName} Builds" href="http://${cfg.siteHost}${cfg.basePath}rss?feed=newBuilds" />
+              title="New ${cfg.productName} Releases" href="http://${cfg.siteHost}${cfg.basePath}rss?feed=newBuilds" />
     </head>
     <body onload="hideElement('steps');">
         <div id="right" class="side">

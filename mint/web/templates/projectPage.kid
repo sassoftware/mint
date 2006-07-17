@@ -28,8 +28,8 @@ from mint.helperfuncs import truncateForDisplay
     ?>
     <head>
         <title>${formatTitle("Project Page: %s"%project.getNameForDisplay())}</title>
-        <link py:if="builds" rel="alternate" type="application/rss+xml"
-              title="${project.getName()} Builds" href="${basePath}rss" />
+        <link py:if="releases" rel="alternate" type="application/rss+xml"
+              title="${project.getName()} Releases" href="${basePath}rss" />
 
     </head>
     <body>
