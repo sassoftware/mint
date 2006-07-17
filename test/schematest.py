@@ -529,10 +529,10 @@ class UpgradePathTest(MintRepositoryHelper):
 
         cu.execute('SELECT * FROM Builds')
         self.failIf(cu.fetchall() != \
-                    [(1L, 1L, 1L, None, '', '', '',
+                    [(1L, 1L, None, None, '', '', '',
                       '/foo.rpath.local@rpl:devel/0.0:1.0.0-1-1', '',
                       0L, None, None, None, None),
-                     (2L, 2L, 2L, None, '', '', '',
+                     (2L, 2L, None, None, '', '', '',
                       '/foo.rpath.local@rpl:devel/0.0:1.0.1-1-1', '',
                       0L, None, None, None, None),
                      (3L, 2L, 3L, None, 'pub', 'pub rel', '',
