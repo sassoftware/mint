@@ -195,7 +195,9 @@ class BuildsTable(database.KeyedTable):
         pubReleaseId = cu.fetchone()[0]
         if pubReleaseId:
             cu.execute("SELECT timePublished FROM PublishedReleases WHERE pubReleaseId = ?", pubReleaseId)
-            return bool(cu.fetchone()[0])
+            res = cu.fetchone()
+            if res:
+                return bool(res[0])
         return False
 
     def getUnpublishedBuilds(self, projectId):
