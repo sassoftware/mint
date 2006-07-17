@@ -90,11 +90,11 @@ from mint.web.templatesupport import downloadTracker
                         <th>Build Notes</th>
                         <td>${build.getDesc().strip() or "This build has no notes."}</td>
                     </tr>
-                    <tr>
+                    <tr py:if="builtBy">
                         <th>Built By</th>
                         <td>${builtBy}</td>
                     </tr>
-                    <tr py:if="not buildInProgress">
+                    <tr py:if="not buildInProgress and builtAt">
                         <th>Built At</th>
                         <td>${builtAt}</td>
                     </tr>

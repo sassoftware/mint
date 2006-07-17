@@ -428,6 +428,8 @@ class ProjectHandler(WebHandler):
     def build(self, auth, id):
         build = self.client.getBuild(id)
         buildInProgress = False
+        builtBy = ''
+        builtAt = None
         if auth.authorized:
             buildJob = build.getJob()
             if buildJob:
