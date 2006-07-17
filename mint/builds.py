@@ -111,9 +111,8 @@ class BuildsTable(database.KeyedTable):
                                   ON ReleaseImageTypes.releaseId=
                                        Releases.releaseId""")
                 cu.execute("""INSERT INTO PublishedReleases
-                                  SELECT Releases.releaseId AS pubReleaseId,
-                                      projectId, troveName AS name,
-                                      NULL AS version,
+                                  SELECT releaseId AS pubReleaseId,
+                                      projectId, name, NULL AS version,
                                       description, NULL AS timeCreated,
                                       NULL AS createdBy, NULL AS timeUpdated,
                                       NULL AS updatedBy, timePublished,
