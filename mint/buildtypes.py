@@ -36,9 +36,9 @@ typeNames = {
     RAW_FS_IMAGE:       "Raw Filesystem Image",
     STUB_IMAGE:         "Stub Image",
     RAW_HD_IMAGE:       "Raw Hard Disk Image",
-    VMWARE_IMAGE:       "VMware Player Image",
+    VMWARE_IMAGE:       "VMware\xc2\xae Player Image",
     LIVE_ISO:           "Demo CD/DVD (Live CD/DVD)",
-    TARBALL:            "Tar Archive"
+    TARBALL:            "Compressed Tar File"
 }
 
 typeNamesShort = {
@@ -47,7 +47,7 @@ typeNamesShort = {
     RAW_FS_IMAGE:       "Raw FS",
     STUB_IMAGE:         "Stub",
     RAW_HD_IMAGE:       "HDD",
-    VMWARE_IMAGE:       "VMware",
+    VMWARE_IMAGE:       "VMware\xc2\xae",
     LIVE_ISO:           "Demo CD/DVD",
     TARBALL:            "Tar"
 }
