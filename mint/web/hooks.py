@@ -213,11 +213,18 @@ def putFile(port, isSecure, repos, req):
 def conaryHandler(req, cfg, pathInfo):
     maintenance.enforceMaintenanceMode(cfg)
 
+    global db
     paths = normPath(req.uri).split("/")
     if "repos" in paths:
         # test suite hook: lop off any port specified in cfg file
-        domainName = cfg.projectDomainName.split(":")[0]
-        hostName = paths[paths.index('repos')+1]
+        cu = db.cursor()
+        hostName = paths[paths.index('repos') + 1]
+        cu.execute('SELECT domainname FROM Projects WHERE hostname=?',
+                   hostName)
+        try:
+            domainName = cu.fetchone()[0]
+        except IndexError:
+            raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND
         repName = hostName + "." + domainName
     else:
         repName = req.hostname
@@ -226,7 +233,6 @@ def conaryHandler(req, cfg, pathInfo):
     port = req.connection.local_addr[1]
     secure = (req.subprocess_env.get('HTTPS', 'off') == 'on')
 
-    global db
     repNameMap = getRepNameMap(db)
     projectName = repName.split(".")[0]
     if repName in repNameMap:
