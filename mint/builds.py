@@ -96,6 +96,9 @@ class BuildsTable(database.KeyedTable):
                            jsversion.getDefaultVersion())
             if dbversion == 20:
                 cu = self.db.cursor()
+                cu.execute("""DELETE FROM Releases
+                                  WHERE troveName IS NULL
+                                  OR troveVersion IS NULL""")
                 cu.execute("""INSERT INTO Builds
                                   SELECT Releases.releaseId AS buildId,
                                       projectId,
