@@ -99,7 +99,7 @@ class BuildsTable(database.KeyedTable):
                 cu.execute("""INSERT INTO Builds
                                   SELECT Releases.releaseId AS buildId,
                                       projectId,
-                                      Releases.releaseId AS pubReleaseId,
+                                      NULL AS pubReleaseId,
                                       ReleaseImageTypes.imageType AS buildType,
                                       name, description,
                                       troveName, troveVersion, troveFlavor,
@@ -119,6 +119,11 @@ class BuildsTable(database.KeyedTable):
                                       NULL AS updatedBy, timePublished,
                                       NULL AS publishedBy
                                   FROM Releases WHERE published=1""")
+                cu.execute("""UPDATE Builds set pubReleaseId=buildId
+                                  WHERE buildId IN
+                                      (SELECT releaseId
+                                       FROM Releases
+                                       WHERE published=1)""")
                 cu.execute("SELECT releaseId, troveVersion FROM Releases")
                 for releaseId, troveVersion in cu.fetchall():
                     try:
