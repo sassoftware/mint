@@ -2501,7 +2501,7 @@ class MintServer(object):
         versionList = sorted(versionDict.keys(), reverse = True)
 
         # insert a tuple of (flavor differences, full flavor) into versionDict
-        strFlavor = lambda x: str(x) and str(x) or '(no flavor)'
+        strFlavor = lambda x: str(x) and str(x).replace(',', ', ') or '(no flavor)'
         for v, fList in versionDict.items():
             diffDict = deps.flavorDifferences(fList)
             versionDict[v] = [(not diffDict[x].isEmpty() and str(diffDict[x]) or strFlavor(x), str(x)) for x in fList]
