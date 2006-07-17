@@ -216,15 +216,8 @@ def conaryHandler(req, cfg, pathInfo):
     global db
     paths = normPath(req.uri).split("/")
     if "repos" in paths:
-        # test suite hook: lop off any port specified in cfg file
-        cu = db.cursor()
         hostName = paths[paths.index('repos') + 1]
-        cu.execute('SELECT domainname FROM Projects WHERE hostname=?',
-                   hostName)
-        try:
-            domainName = cu.fetchone()[0]
-        except IndexError:
-            raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND
+        domainName = getProjectDomainName(db, hostName)
         repName = hostName + "." + domainName
     else:
         repName = req.hostname
@@ -411,6 +404,26 @@ def getRepNameMap(db):
         apache.log_error("ignoring exception fetching RepNameMap: %s" % str(e))
 
     return d
+
+
+domainNameCache = {}
+def getProjectDomainName(db, hostName):
+    global domainNameCache
+
+    if hostName not in domainNameCache:
+        if cfg.dbDriver != "sqlite":
+            db.use(cfg.dbPath.split("/")[-1])
+
+        cu = db.cursor()
+        cu.execute('SELECT domainname FROM Projects WHERE hostname=?',
+                   hostName)
+        try:
+            domainNameCache[hostName] = cu.fetchone()[0]
+        except (IndexError, TypeError):
+            raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND
+
+    return domainNameCache[hostName]
+
 
 def handler(req):
     coveragehook.install()
