@@ -46,14 +46,15 @@ from mint.web.templatesupport import downloadTracker
             <div id="middle">
                 <h1>${project.getNameForDisplay(maxWordLen = 30)}</h1>
                 <h2>Releases</h2>
+                <p py:if="isOwner">
+                    <strong><a href="newRelease">Create a new release</a></strong>
+                </p>
+
                 <div py:if="releases">
                     ${pubReleasesTable(releases, isOwner)}
                 </div>
                 <div py:if="not releases">
                     This project currently has no releases.
-                </div>
-                <div py:if="isOwner">
-                    <a href="newRelease">Create a new release</a>
                 </div>
             </div>
         </div>
