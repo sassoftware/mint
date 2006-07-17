@@ -128,6 +128,7 @@ TrovePicker.prototype.pickFlavor = function(e) {
     if(this.elId == "distTrove") {
         var sb = $('submitButton');
         sb.disabled = false;
+        handleBuildTypes(f);
     }
 }
 
@@ -301,4 +302,21 @@ TrovePicker.prototype.handleError = function() {
     oldList = $(this.elId + 'spinnerList');
     ul = UL({'id': this.elId + 'spinnerList'}, LI({'style': 'color: red;'}, "Error connecting to server"));
     swapDOM(oldList, ul);
+}
+
+function handleBuildTypes(flavor) {
+
+    // see layout.kid for definitions of VisibleBootableBuildTypes, etc.
+    var one = iter(VisibleBootableBuildTypes);
+
+    // VisibleBootableBuildTypes are not currently compatible with x86_64
+    // so, if that arch was selected, disable it
+    forEach(one, function (x) {
+        var el = $('buildtype_'+x);
+        if (flavor.match("x86_64")) {
+            el.disabled = true;
+        } else {
+            el.disabled = false;
+        }
+    });
 }

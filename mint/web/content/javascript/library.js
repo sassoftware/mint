@@ -478,109 +478,8 @@ function startImageJob(buildId) {
     req.setCallback(reloadCallback);
     req.send(true, [buildId]);
 }
-// baton --------------------------------------------------------------------
-
-var ticks = 0;
-var baton = '-\\|/';
-
-function textWithBaton(text) {
-
-    var newText = text;
-    newText += "  " + baton.charAt(ticks);
-    ticks = ((ticks + 1) % baton.length);
-    return newText;
-
-}
-
-// NOTE: ticker removed for now until we come up with something better
 
 // event handlers -----------------------------------------------------------
-
-// called when a user selects a trove in the new/edit builds page
-function onTroveChange(projectId) {
-    var sel = document.getElementById("trove");
-    var vSel = document.getElementById("version");
-    var archSel = document.getElementById("arch");
-    var sb = document.getElementById("submitButton");
-    var i = sel.selectedIndex;
-
-    // bail out if selector is changed to a non-trove header selection
-    if (i < 1) {
-        clearSelection(vSel);
-        vSel.disabled = true;
-        clearSelection(archSel);
-        archSel.disabled = true;
-        sb.disabled = true;
-        return;
-    }
-
-    // Disable so a quick user can't change anything while we're in transition
-    // Reset arch and version to display nothing
-    sel.disabled = true;
-    clearSelection(vSel);
-    vSel.disabled = true;
-    clearSelection(archSel);
-    archSel.disabled = true;
-    sb.disabled = true;
-
-    var troveNameWithLabel = sel.options[sel.selectedIndex].value;
-    // XXX: cache values?
-    getTroveVersionsByArch(projectId, troveNameWithLabel);
-}
-
-function onArchChange() {
-
-    var sel = $("trove");
-    var archSel = $("arch");
-    var vSel = $("version");
-    var sb = $("submitButton");
-    var i = archSel.selectedIndex;
-
-    // Disable everything else while arch is in transition
-    sel.disabled = true;
-    archSel.disabled = true;
-    sb.disabled = true;
-
-    // handle versions
-    clearSelection(vSel);
-    vSel.disabled = true;
-
-    if (i > 0) {
-        selectedArch = archSel.value;
-        var versionlist = archDict[selectedArch];
-        logDebug(versionlist);
-        appendToSelect(vSel, "", document.createTextNode("---"), '', "version");
-        for (var i in versionlist) {
-            verTitle = versionlist[i][0];
-            if (verTitle.length > 50) {
-               verTitle = '...' + verTitle.slice(-50);
-            }
-            appendToSelect(vSel, versionlist[i][1] + " " + versionlist[i][2], document.createTextNode(versionlist[i][0]), verTitle, "version");
-        }
-        vSel.disabled = false;
-        handleBuildTypes(selectedArch);
-    }
-
-    // Re-enable trove & arch selectors
-    sel.disabled = false;
-    archSel.disabled = false;
-
-}
-
-function onVersionChange() {
-
-    var vSel = $("version");
-    var sb = $("submitButton");
-    var i = vSel.selectedIndex;
-
-    if (i > 0) {
-       sb.disabled = false;
-    }
-    else {
-       sb.disabled = true;
-    }
-
-}
 
 function setDisabledByElem(elem, disable) {
     for (var i=0; i< elem.childNodes.length; i++) {
@@ -610,24 +509,6 @@ function onBuildTypeChange(img) {
             }
         }
     }
-}
-
-function handleBuildTypes(aSelectedArch) {
-
-    // see layout.kid for definitions of VisibleBootableBuildTypes, etc.
-    var one = iter(VisibleBootableBuildTypes);
-
-    // VisibleBootableBuildTypes are not currently compatible with x86_64
-    // so, if that arch was selected, disable it
-    forEach(one, function (x) {
-        var el = $('buildtype_'+x);
-        if (aSelectedArch == "x86_64") {
-            el.disabled = true;
-        } else {
-            el.disabled = false;
-        }
-    });
-
 }
 
 // cache-y goodness
