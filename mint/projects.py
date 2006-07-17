@@ -391,7 +391,7 @@ class ProjectsTable(database.KeyedTable):
 
         cu.execute(cmd)
 
-        return cu.fetchone()[0]
+        return int(cu.fetchone()[0])
 
     def getProjects(self, sortOrder, limit, offset, includeInactive=False):
         """ Return a list of projects with no filtering whatsoever
