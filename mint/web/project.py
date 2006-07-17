@@ -464,8 +464,8 @@ class ProjectHandler(WebHandler):
     @ownerOnly
     def newRelease(self, auth):
         currentBuilds = []
-        availableBuilds = [self.client.getBuild(x) for x in \
-                self.project.getUnpublishedBuilds()]
+        availableBuilds = [y for y in (self.client.getBuild(x) for x in \
+                self.project.getUnpublishedBuilds()) if y.getFiles()]
 
         return self._write("editPubrelease",
                            releaseId = None,
@@ -481,8 +481,8 @@ class ProjectHandler(WebHandler):
         pubrelease = self.client.getPublishedRelease(id)
         currentBuilds = [self.client.getBuild(x) for x in \
                 pubrelease.getBuilds()]
-        availableBuilds = [self.client.getBuild(x) for x in \
-                self.project.getUnpublishedBuilds()]
+        availableBuilds = [y for y in (self.client.getBuild(x) for x in \
+                self.project.getUnpublishedBuilds()) if y.getFiles()]
 
         return self._write("editPubrelease",
                            releaseId = id,
