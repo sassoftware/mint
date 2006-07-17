@@ -55,7 +55,6 @@ from mint.client import upstream
         </table>
         </div>
         </div>
-        <br/>
         </div>
 
                 <div id="inactiveRight" onmouseover="underlineTitle();" onmouseout="normalTitle();" onclick="buildIt();">
