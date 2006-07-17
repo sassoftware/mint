@@ -98,7 +98,7 @@ from mint.web.templatesupport import downloadTracker
                         <th>Built At</th>
                         <td>${builtAt}</td>
                     </tr>
-                    <tr>
+                    <tr style="background-color: #efefef;">
                         <th>Downloads</th>
                         <td py:if="files">
                             <div py:strip="True" py:for="i, file in enumerate(files)">
