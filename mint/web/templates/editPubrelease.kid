@@ -151,7 +151,7 @@ from mint import pubreleases
                     ?>
                     <input type="hidden" name="id" value="${releaseId}" />
                 </form>
-                <p py:if="not (availableBuilds or currentBuilds)" class="help">There are currently no unpublished builds associated with this project. One or more unpublished builds are required to create a release.  Click <a href="${basePath}builds">here</a> to create a new build.</p>
+                <p py:if="not (availableBuilds or currentBuilds)" class="help">There are currently no unpublished builds associated with this project that contain downloadable files. One or more unpublished builds that contain downloadable files are required to create a release.  Click <a href="${basePath}builds">here</a> to create a new build.</p>
             </div>
         </div>
     </body>
