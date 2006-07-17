@@ -542,8 +542,8 @@ class UpgradePathTest(MintRepositoryHelper):
 
         cu.execute('SELECT * FROM PublishedReleases')
         self.failIf(cu.fetchall() != \
-                    [(3L, 2L, '', '1.0.2', 'pub rel', None, None, None, None,
-                      5000, None)],
+                    [(3L, 2L, 'pub', '1.0.2', 'pub rel', None, None, None,
+                      None, 5000, None)],
                     'Schema upgrade 20 failed for pub release creation')
 
     def testSchemaVerFifteen(self):
