@@ -22,18 +22,26 @@ from conary.lib.cfg import *
             the following fields have been pre-populated with default
             values; you may change them if necessary.</p>
 
-            <p><strong>Note:</strong> The hostname and domain name
-            displayed below are based on the URL you used to access your
-            rBuilder server.  You may change these values, but be aware
-            that the resulting fully-qualified domain name constructed from
-            the values you've entered must match the URL your users will
-            use to access rBuilder.</p>
+            <p py:if="'Server Setup' in configGroups">
+                <strong>Note:</strong> The hostname and domain name
+                displayed below are based on the URL you used to access your
+                rBuilder server.  You may change these values, but be aware
+                that the resulting fully-qualified domain name constructed from
+                the values you've entered must match the URL your users will
+                use to access rBuilder.
+            </p>
 
-            <p py:if="cfg.configured">
-                <span style='font-weight: bold; color: red;'>Caution:</span>
-                You can change the hostname and domain name associated with
-                your rBuilder server, but all existing troves on your rBuilder
-                server will become inaccessible.
+            <p py:if="'Server Setup' in configGroups">
+                <span style='font-weight: bold; color: red;'>Note:</span>
+                Once you have created a project on your rBuilder server, you
+                will no longer be able to change the hostName or siteDomainName
+                fields.
+            </p>
+
+            <p><span style="font-weight: bold;">Note:</span>
+                Options in the external passwords section are only for
+                situations where you'd like to use an external URL to manage
+                authentication of rBuilder accounts.
             </p>
 
             <p>When you've filled in the necessary information, click on
@@ -50,7 +58,7 @@ from conary.lib.cfg import *
                     <table class="setup">
                         <tr py:for="i, key in enumerate(groupItems)">
                             <td>
-                                ${XML(newCfg._options[key].__doc__ and newCfg._options[key].__doc__ or key)}
+                                ${XML(newCfg._options[key].__doc__ or key)}
                             </td>
                             <td py:if="isinstance(newCfg._options[key].valueType, CfgBool)">
                               <input class="check" type="checkbox" name="${key}" value="${newCfg.__dict__[key]}"/>
