@@ -332,9 +332,9 @@ class ProjectHandler(WebHandler):
 
         build = self.client.getBuild(buildId)
 
-        troveName, version, flavor = build.getTrove()
-        versionStr = versions.ThawVersion(version)
-        label = versionStr.branch().label()
+        troveName, versionStr, flavor = build.getTrove()
+        version = versions.ThawVersion(versionStr)
+        label = version.branch().label()
         thawedFlavor = deps.ThawFlavor(flavor)
         arch = thawedFlavor.members[deps.DEP_CLASS_IS].members.keys()[0]
 
@@ -349,9 +349,8 @@ class ProjectHandler(WebHandler):
             trove = trove,
             troveName = troveName,
             label = label,
-            versionStr = versionStr.asString(),
             version = version,
-            flavor = flavor,
+            flavor = thawedFlavor,
             arch = arch,
             kwargs = {})
 
