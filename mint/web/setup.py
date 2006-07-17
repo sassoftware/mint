@@ -22,6 +22,8 @@ from mint.web.webhandler import WebHandler, normPath, HttpNotFound, HttpForbidde
 from conary.web.fields import strFields, intFields, listFields, boolFields
 from conary.repository.netrepos import netauth
 
+# be careful with 'Server Setup', code below and the associated kid template
+# refer to this key directly. be sure to find all instances if you change it.
 configGroups = {
     'Server Setup':
         ('hostName', 'siteDomainName'),
@@ -45,6 +47,10 @@ class SetupHandler(WebHandler):
         if not self.auth.admin and self.cfg.configured:
             raise HttpForbidden
 
+        if self.client.getProjects(0, 0, 0)[1] \
+               and 'Server Setup' in configGroups:
+            del configGroups['Server Setup']
+
         if not cmd:
             return self.setup
         try:
@@ -52,22 +58,42 @@ class SetupHandler(WebHandler):
         except AttributeError:
             raise HttpNotFound
 
+    def _copyCfg(self):
+        newCfg = deepcopy(self.cfg)
+        # deepcopy loses doc strings, which actually matters for this case.
+        # of course some builtins (like int) can't have docstrings...
+        for key, val in self.cfg._options.iteritems():
+            try:
+                newCfg._options[key].__doc__ = val.__doc__
+            except:
+                pass
+        return newCfg
+
     def setup(self, auth):
         if '.' not in self.req.hostname:
             return self._write("setup/error", error = "You must access the rBuilder server as a fully-qualified domain name:"
                                                 " eg., <strong>http://rbuilder.example.com/</strong>, not just <strong>http://rbuilder/</strong>")
 
-        newCfg = deepcopy(self.cfg)
-        newCfg.hostName = self.req.hostname.split(".")[0]
-        newCfg.siteDomainName =  ".".join(self.req.hostname.split(".")[1:])
+        newCfg = self._copyCfg()
+
+        if not self.cfg.configured:
+            newCfg.hostName = self.req.hostname.split(".")[0]
+            newCfg.siteDomainName =  ".".join(self.req.hostname.split(".")[1:])
 
         return self._write("setup/setup", configGroups = configGroups,
             newCfg = newCfg, errors = [])
 
+    @intFields(authCacheTimeout = 0)
     def processSetup(self, auth, **kwargs):
         mintClient = shimclient.ShimMintClient(self.cfg, [self.cfg.authUser, self.cfg.authPass])
 
         errors = []
+
+        if self.cfg.configured:
+            if 'hostName' not in kwargs:
+                kwargs['hostName'] = self.cfg.hostName
+            if 'siteDomainName' not in kwargs:
+                kwargs['siteDomainName'] = self.cfg.siteDomainName
 
         if '.' in kwargs['hostName']:
             errors.append("""The hostname of the rBuilder server must not contain periods. The
@@ -103,7 +129,7 @@ class SetupHandler(WebHandler):
 
         # rewrite configuration file
         keys = self.fields.keys()
-        newCfg = deepcopy(self.cfg)
+        newCfg = self._copyCfg()
 
         for key in keys:
             if key in newCfg:
