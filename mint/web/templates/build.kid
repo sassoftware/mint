@@ -92,11 +92,11 @@ from mint.web.templatesupport import downloadTracker
                     </tr>
                     <tr>
                         <th>Built By</th>
-                        <td>TBD</td>
+                        <td>${builtBy}</td>
                     </tr>
-                    <tr>
-                        <th>Build Time</th>
-                        <td>TBD</td>
+                    <tr py:if="not buildInProgress">
+                        <th>Built At</th>
+                        <td>${builtAt}</td>
                     </tr>
                     <tr>
                         <th>Downloads</th>

@@ -9,6 +9,7 @@ import email
 import os
 import re
 import sys
+import time
 from mod_python import apache
 
 from mint import database
@@ -421,7 +422,7 @@ class ProjectHandler(WebHandler):
     def deleteBuild(self, auth, buildId):
         build = self.client.getBuild(buildId)
         build.deleteBuild()
-        self._predirect("build")
+        self._predirect("builds")
 
     @intFields(id = None)
     def build(self, auth, id):
@@ -432,6 +433,12 @@ class ProjectHandler(WebHandler):
             if buildJob:
                 buildInProgress = \
                         (buildJob.getStatus() <= jobstatus.RUNNING)
+                buildUser = self.client.getUser(buildJob.getUserId())
+                builtBy = buildUser.username
+                if buildInProgress:
+                    builtAt = "In process"
+                else:
+                    builtAt = time.asctime(time.localtime(buildJob.timeFinished))
 
         try:
             trove, version, flavor = build.getTrove()
@@ -442,10 +449,14 @@ class ProjectHandler(WebHandler):
             return self._write("build", build = build,
                 name = build.getName(),
                 files = files,
-                trove = trove, version = versions.ThawVersion(version),
+                trove = trove, 
+                version = versions.ThawVersion(version),
                 flavor = deps.ThawFlavor(flavor),
-                buildId = id, projectId = self.project.getId(),
-                buildInProgress = buildInProgress)
+                buildId = id,
+                projectId = self.project.getId(),
+                buildInProgress = buildInProgress,
+                builtBy = builtBy,
+                builtAt = builtAt)
 
     @ownerOnly
     def newRelease(self, auth):
