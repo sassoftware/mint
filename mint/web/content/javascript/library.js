@@ -277,46 +277,6 @@ function processGetCookStatus(aReq) {
     swapDOM(oldEl, el);
 }
 
-function processGetTroveList(aReq) {
-    var sel = $("trove");
-    logDebug("[JSON] response: ", aReq.responseText);
-    var trovelist = evalJSONRequest(aReq);
-
-    /* make an empty selection, forcing user to pick */
-    clearSelection(sel);
-    appendToSelect(sel, "", document.createTextNode("---"), '', "trove");
-
-    for (var label in trovelist) {
-        var troveNames = sorted(trovelist[label]);
-        for (var troveNameIdx in troveNames) {
-            var troveName = troveNames[troveNameIdx];
-            appendToSelect(sel, troveName + "=" + label, document.createTextNode(troveName), troveName, "trove");
-        }
-    }
-    hideElement("nameSpinner");
-    hideElement("archSpinner");
-}
-
-function processGetTroveVersionsByArch(aReq) {
-    logDebug("[JSON] response: ", aReq.responseText);
-    archDict = evalJSONRequest(aReq);
-
-    // handle archs
-    var archs = keys(archDict).sort();
-    var archSel = $("arch");
-    clearSelection(archSel);
-    appendToSelect(archSel, "", document.createTextNode("---"), '', "arch");
-    for (var i in archs) {
-        var archStr = archs[i];
-        appendToSelect(archSel, archStr, document.createTextNode(archStr), archStr, "arch");
-    }
-    archSel.disabled = false;
-    hideElement("nameSpinner");
-    hideElement("archSpinner");
-    var sel = $("trove");
-    sel.disabled = false;
-}
-
 function processListActiveJobs(aReq) {
     var jobTable;
     var oldJobTable = $("jobsTable");
@@ -406,24 +366,6 @@ function getCookStatus(jobId) {
     if (cookStatus != null && cookStatus.status < STATUS_FINISHED) {
         cookStatusId = setTimeout("getCookStatus("+jobId+")", cookStatusRefreshTime);
     }
-}
-
-function getTroveList(projectId) {
-    showElement("nameSpinner");
-    hideElement("archSpinner");
-    var req = new JsonRpcRequest("jsonrpc/", "getGroupTroves");
-    req.setAuth(getCookieValue("pysid"));
-    req.setCallback(processGetTroveList);
-    req.send(true, [projectId]);
-}
-
-function getTroveVersionsByArch(projectId, troveNameWithLabel) {
-    hideElement("nameSpinner");
-    showElement("archSpinner");
-    var req = new JsonRpcRequest("jsonrpc/", "getTroveVersionsByArch");
-    req.setAuth(getCookieValue("pysid"));
-    req.setCallback(processGetTroveVersionsByArch);
-    req.send(true, [projectId, troveNameWithLabel]);
 }
 
 function listActiveJobs(wantOnlyActive) {
