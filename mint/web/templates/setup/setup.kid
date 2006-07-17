@@ -19,8 +19,8 @@ from conary.lib.cfg import *
             <h1>rBuilder Configuration</h1>
 
             <p>Now it's time to configure your rBuilder server.  Some of
-            the following fields have been pre-populated with default
-            values; you may change them if necessary.</p>
+            the following fields have been populated with default
+            values, which you may change if necessary.</p>
 
             <p py:if="'Server Setup' in configGroups">
                 <strong>Note:</strong> The hostname and domain name
@@ -39,8 +39,8 @@ from conary.lib.cfg import *
             </p>
 
             <p><span style="font-weight: bold;">Note:</span>
-                Options in the external passwords section are only for
-                situations where you'd like to use an external URL to manage
+                The External Passwords options require completion only for
+                situations where you wish to use an external URL to handle
                 authentication of rBuilder accounts.
             </p>
 
