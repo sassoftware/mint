@@ -29,6 +29,13 @@ from conary.lib.cfg import *
             the values you've entered must match the URL your users will
             use to access rBuilder.</p>
 
+            <p py:if="cfg.configured">
+                <span style='font-weight: bold; color: red;'>Caution:</span>
+                You can change the hostname and domain name associated with
+                your rBuilder server, but all existing troves on your rBuilder
+                server will become inaccessible.
+            </p>
+
             <p>When you've filled in the necessary information, click on
             the "Save Changes" button to save your rBuilder server's
             configuration.</p>
