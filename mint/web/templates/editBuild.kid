@@ -30,6 +30,7 @@ from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM, RDT_TROVE
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/trovepicker.js"/>
     </head>
     <?python
+        jsonload = None
         if buildId:
             jsonload = "javascript:handleBuildTypes(\""+ arch +"\");"
     ?>
