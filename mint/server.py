@@ -2485,8 +2485,12 @@ class MintServer(object):
         cfg = project.getConaryConfig()
         nc = conaryclient.ConaryClient(cfg).getRepos()
 
-        troves = nc.getAllTroveLeaves(str(serverName), {str(troveName): None})[troveName]
-        return list(set(str(x.branch().label()) for x in troves))
+        troves = nc.getAllTroveLeaves(str(serverName), {str(troveName): None})
+        if troveName in troves:
+            ret = list(set(str(x.branch().label()) for x in troves[troveName]))
+        else:
+            ret = []
+        return ret
 
     @typeCheck(int, ((str, unicode),), ((str, unicode),))
     def getTroveVersions(self, projectId, labelStr, troveName):

@@ -112,7 +112,7 @@ TrovePicker.prototype.pickFlavor = function(e) {
 
     oldEl = $(this.elId + 'selectionList');
     newEl = DIV({'id': this.elId + 'selectionList'},
-        SPAN({'style': 'font-weight: bold;'}, 'Trove: '),
+        SPAN({'style': 'font-weight: bold;'}, 'Group: '),
         SPAN(null, n + "=" + shortv + " [" + shortf + "]")
     );
     swapDOM(oldEl, newEl);
@@ -224,6 +224,9 @@ TrovePicker.prototype.getAllTroveLabels = function(e) {
         oldList = $(par.elId + 'selectionList');
         ul = UL({ 'id': par.elId + 'selectionList' });
 
+        if(labelList.length < 1) {
+            appendChildNodes(ul, LI(null, "No " + par.troveName + " packages found"));
+        }
         for(var i in labelList) {
             link = forwardLink(null, labelList[i]);
             link.label = labelList[i];
@@ -270,6 +273,9 @@ TrovePicker.prototype.getGroupTroves = function() {
         oldList = $(par.elId + 'selectionList');
         ul = UL({'id': par.elId + 'selectionList'});
 
+        if(troveList.length < 1) {
+            appendChildNodes(ul, LI(null, "No groups found. Cook a group with the Group Builder and try again."));
+        }
         for(var i in troveList) {
             link = forwardLink(null, troveList[i]);
             link.troveName = troveList[i];
@@ -281,7 +287,6 @@ TrovePicker.prototype.getGroupTroves = function() {
         replaceChildNodes($(par.elId + 'prompt'), "Please choose a group:");
         replaceChildNodes($('return'), disabledReturn());
     };
-
 
     var callback = function(aReq) {
         logDebug(aReq.responseText);
