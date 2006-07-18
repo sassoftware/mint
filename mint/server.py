@@ -1869,6 +1869,8 @@ class MintServer(object):
         projectId = self.publishedReleases.getProject(pubReleaseId)
         if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
             raise PermissionDenied
+        if self.publishedReleases.isPublishedReleasePublished(pubReleaseId):
+            raise PublishedReleasePublished
         self.publishedReleases.delete(pubReleaseId)
         return True
 
