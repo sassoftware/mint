@@ -48,7 +48,7 @@ class PublishedReleasesTable(database.KeyedTable):
             return False
         return True
 
-    def isPublishedReleaseFinalized(self, pubReleaseId):
+    def isPublishedReleasePublished(self, pubReleaseId):
         pubRelease = self.get(pubReleaseId, fields=['timePublished'])
         return bool(pubRelease['timePublished'])
 
@@ -70,11 +70,11 @@ class PublishedReleasesTable(database.KeyedTable):
                       limit, offset)
         return [(x[0], x[1], int(x[2])) for x in cu.fetchall()]
 
-    def getPublishedReleasesByProject(self, projectId, finalizedOnly=False):
+    def getPublishedReleasesByProject(self, projectId, publishedOnly=False):
         sql = """SELECT pubReleaseId FROM PublishedReleases
                  WHERE projectId = ?"""
 
-        if finalizedOnly:
+        if publishedOnly:
             sql += " AND timePublished IS NOT NULL"
 
         cu = self.db.cursor()
@@ -102,8 +102,8 @@ class PublishedRelease(database.TableObject):
     def getBuilds(self):
         return self.server.getBuildsForPublishedRelease(self.id)
 
-    def isFinalized(self):
-        return self.server.isPublishedReleaseFinalized(self.id)
+    def isPublished(self):
+        return self.server.isPublishedReleasePublished(self.id)
 
     def save(self):
         valDict = {'name': self.name,
@@ -111,7 +111,10 @@ class PublishedRelease(database.TableObject):
                    'description': self.description}
         return self.server.updatePublishedRelease(self.pubReleaseId, valDict)
 
-    def finalize(self):
-        return self.server.finalizePublishedRelease(self.pubReleaseId)
+    def publish(self):
+        return self.server.publishPublishedRelease(self.pubReleaseId)
+
+    def unpublish(self):
+        return self.server.unpublishPublishedRelease(self.pubReleaseId)
 
 

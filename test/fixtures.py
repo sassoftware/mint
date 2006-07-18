@@ -162,11 +162,11 @@ class FixtureCache(object):
                 - user (a user or watcher of the "foo" project
                 - nobody (a user with no allegiance to any project)
             - Two published release objects
-                - One finalized, or published, containing one build
-                - One not finalized, containing another build
+                - One publishd, or published, containing one build
+                - One not publishd, containing another build
             - Three builds inside the "foo" project:
-                - one published (i.e. belongs to the finalized release)
-                - one unpublished (belongs to a release not yet finalized)
+                - one published (i.e. belongs to the published release)
+                - one unpublished (belongs to a release not yet published)
                 - one available (not belonging to any release)
         @param cfg: The current effective Mint configuration.
         @return: A 2-tuple consisting of the current Mint configuration and a
@@ -222,7 +222,7 @@ class FixtureCache(object):
         pubRelease.save()
 
         # create another build for the "foo" project and publish it
-        # i.e. make it a part of a finalized, or published, release
+        # i.e. make it a part of a published release
         pubBuild = client.newBuild(projectId, "Test Published Build")
         pubBuild.setTrove("group-dist", "/testproject." + \
                 MINT_PROJECT_DOMAIN + "@rpl:devel/0.0:1.0-1-1", "1#x86")
@@ -230,11 +230,11 @@ class FixtureCache(object):
         pubBuild.setFiles([["file", "file title 1"]])
         stockBuildFlavor(db, pubBuild.id)
         pubReleaseFinal = client.newPublishedRelease(projectId)
-        pubReleaseFinal.name = "Finalized/Published Release"
+        pubReleaseFinal.name = "Published Release"
         pubReleaseFinal.version = "1.0"
         pubReleaseFinal.addBuild(pubBuild.id)
         pubReleaseFinal.save()
-        pubReleaseFinal.finalize()
+        pubReleaseFinal.publish()
 
         # Create another build that just lies around somewhere
         # unattached to any published releases

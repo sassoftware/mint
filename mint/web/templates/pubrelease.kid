@@ -34,7 +34,10 @@
                 <h1>${project.getNameForDisplay(maxWordLen=30)}</h1>
                 <h2>Release: ${release.name}, version ${release.version}</h2>
 
-                <p py:if="isDeveloper">This release is currently <b>${release.isFinalized() and "published" or "unpublished"}</b>.</p>
+                <p py:if="isDeveloper">
+                    <span py:strip="True" py:if="release.isPublished()">This release has been published and can be viewed by the public. <span py:strip="True" py:if="isOwner">(<a href="unpublishRelease?id=${release.id}">Unpublish this release.</a>)</span></span>
+                    <span py:strip="True" py:if="not release.isPublished()">This release has not been published yet. <span py:strip="True" py:if="isOwner">(<a href="publishRelease?id=${release.id}">Publish this release.</a>)</span></span>
+                </p>
 
                 <h3>Description</h3>
                 <p>${release.description.strip() or "Release has no description."}</p>

@@ -155,7 +155,7 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest):
         self.failIf(build.getPublished(), "Build still shows up as published")
 
     @fixtures.fixture("Full")
-    def testFinalizePublishedRelease(self, db, data):
+    def testPublishPublishedRelease(self, db, data):
         client = self.getClient("owner")
         pubRelease = client.getPublishedRelease(data['pubReleaseId'])
 
@@ -164,14 +164,14 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest):
         self.failIf(pubRelease.publishedBy,
                 "Release should not be published yet")
 
-        pubRelease.finalize()
+        pubRelease.publish()
         pubRelease.refresh()
 
         self.assertNotEqual(pubRelease.timePublished, 0,
                 "Release should be published now")
         self.failUnlessEqual(pubRelease.publishedBy, data['owner'],
                 "Release wasn't marked with the appropriate publisher")
-        self.failUnless(pubRelease.isFinalized())
+        self.failUnless(pubRelease.isPublished())
 
     @fixtures.fixture("Full")
     def testDeleteBuildFromPublishedRelease(self, db, data):
@@ -180,7 +180,7 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest):
         pubBuild.deleteBuild()
 
     @fixtures.fixture("Full")
-    def testDeleteBuildFromFinalizedPublishedRelease(self, db, data):
+    def testDeleteBuildFromPublishedPublishedRelease(self, db, data):
         client = self.getClient("owner")
         pubBuild = client.getBuild(data['pubBuildId'])
         self.assertRaises(BuildPublished, pubBuild.deleteBuild)
@@ -256,7 +256,7 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest):
                   "user", "nobody", "anonymous"]
 
         for user in users:
-            # finalize the release before testing
+            # publish the release before testing
             adminClient = self.getClient("admin")
             newBuild = adminClient.newBuild(data['projectId'],
                     "Test Published Build")
@@ -266,7 +266,7 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest):
                     MINT_PROJECT_DOMAIN + "@rpl:devel/1.0-2-1", "1#x86")
             newPubRelease = adminClient.newPublishedRelease(data['projectId'])
             newPubRelease.addBuild(newBuild.id)
-            newPubRelease.finalize()
+            newPubRelease.publish()
 
             client = self.getClient(user)
             userPubRelease = client.getPublishedRelease(newPubRelease.id)
@@ -374,7 +374,7 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest):
                         client.deletePublishedRelease, newPubRelease.id)
 
     @fixtures.fixture("Full")
-    def testPublishedReleaseAccessDeleteFinalized(self, db, data):
+    def testPublishedReleaseAccessDeletePublished(self, db, data):
         acls = { 'admin': (True, None),
                  'owner': (True, None),
                  'developer': (False, PermissionDenied),
@@ -392,7 +392,7 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest):
             newBuild.setTrove("group-dist", "/testproject." + \
                     MINT_PROJECT_DOMAIN + "@rpl:devel/1.0-2-1", "1#x86")
             newPubRelease.addBuild(newBuild.id)
-            newPubRelease.finalize()
+            newPubRelease.publish()
 
             client = self.getClient(user)
             userPubRelease = client.getPublishedRelease(newPubRelease.id)

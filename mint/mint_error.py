@@ -37,11 +37,15 @@ class BuildEmpty(MintError):
 
 class PublishedReleaseEmpty(MintError):
     def __str__(self):
-        return "The referenced published releases has no builds and cannot be finalized."
+        return "The referenced published releases has no builds and cannot be published."
 
-class PublishedReleaseFinalized(MintError):
+class PublishedReleasePublished(MintError):
     def __str__(self):
-        return "Release has been finalized and cannot be modified."
+        return "Release has already been published."
+
+class PublishedReleaseNotPublished(MintError):
+    def __str__(self):
+        return "Release has already been unpublished."
 
 class PublishedReleaseMissing(MintError):
     def __str__(self):

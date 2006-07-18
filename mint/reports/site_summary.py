@@ -96,20 +96,20 @@ class SiteSummary(MintReport):
                    reportTime - 604800)
         data.append(('Projects with new builds this week', cu.fetchone()[0]))
 
-        # count projects with finalized published releases
+        # count projects with public (published) published releases
         cu.execute("""SELECT COUNT(*) FROM
                           (SELECT DISTINCT projectId
                             FROM PublishedReleases
                             WHERE timePublished IS NOT NULL)
-                          AS FinalizedPublishedReleases""")
+                          AS PublicPublishedReleases""")
         data.append(('Projects with published releases', cu.fetchone()[0]))
 
-        # count projects with finalized published releases this week
+        # count projects with public (published) published releases this week
         cu.execute("""SELECT COUNT(*) FROM
                           (SELECT DISTINCT projectId
                             FROM PublishedReleases
                             WHERE timePublished > ?)
-                          AS FinalizedPublishedReleases""",
+                          AS PublicPublishedReleases""",
                    reportTime - 604800)
         data.append(('Projects with new published releases this week', cu.fetchone()[0]))
 

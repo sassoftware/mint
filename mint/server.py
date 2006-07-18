@@ -49,7 +49,8 @@ from mint.mint_error import PermissionDenied, BuildPublished, \
      AdminSelfDemotion, JobserverVersionMismatch, LastAdmin, \
      MaintenanceMode, ParameterError, GroupTroveEmpty, rMakeBuildCollision, \
      rMakeBuildEmpty, rMakeBuildOrder, PublishedReleaseMissing, \
-     PublishedReleaseEmpty, PublishedReleaseFinalized
+     PublishedReleaseEmpty, PublishedReleasePublished, \
+     PublishedReleaseNotPublished
 from mint.reports import MintReport
 from mint.searcher import SearchTermsError
 
@@ -431,12 +432,12 @@ class MintServer(object):
         except database.ItemNotFound:
             return
 
-        isFinal = self.publishedReleases.isPublishedReleaseFinalized(pubReleaseId)
-        # if the release is not finalized, then only project members 
+        isFinal = self.publishedReleases.isPublishedReleasePublished(pubReleaseId)
+        # if the release is not published, then only project members 
         # with write access can see the published release
         if not isFinal and not self._checkProjectAccess(pubReleaseRow['projectId'], userlevels.WRITERS):
             raise database.ItemNotFound()
-        # if the published release is finalized, then anyone can see it
+        # if the published release is published, then anyone can see it
         # unless the project is hidden and the user is not an admin
         else:
             self._filterProjectAccess(pubReleaseRow['projectId'])
@@ -1824,27 +1825,41 @@ class MintServer(object):
         projectId = self.publishedReleases.getProject(pubReleaseId)
         if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
             raise PermissionDenied
-        if self.publishedReleases.isPublishedReleaseFinalized(pubReleaseId):
-            raise PublishedReleaseFinalized
+        if self.publishedReleases.isPublishedReleasePublished(pubReleaseId):
+            raise PublishedReleasePublished
         if len(valDict):
             valDict.update({'timeUpdated': time.time(),
                             'updatedBy': self.auth.userId})
             return self.publishedReleases.update(pubReleaseId, **valDict)
 
-    @typeCheck(int, dict)
+    @typeCheck(int)
     @requiresAuth
     @private
-    def finalizePublishedRelease(self, pubReleaseId):
+    def publishPublishedRelease(self, pubReleaseId):
         self._filterPublishedReleaseAccess(pubReleaseId)
         projectId = self.publishedReleases.getProject(pubReleaseId)
         if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
             raise PermissionDenied
         if not len(self.publishedReleases.getBuilds(pubReleaseId)):
             raise PublishedReleaseEmpty
-        if self.publishedReleases.isPublishedReleaseFinalized(pubReleaseId):
-            raise PublishedReleaseFinalized
+        if self.publishedReleases.isPublishedReleasePublished(pubReleaseId):
+            raise PublishedReleasePublished
         valDict = {'timePublished': time.time(),
                    'publishedBy': self.auth.userId}
+        return self.publishedReleases.update(pubReleaseId, **valDict)
+
+    @typeCheck(int)
+    @requiresAuth
+    @private
+    def unpublishPublishedRelease(self, pubReleaseId):
+        self._filterPublishedReleaseAccess(pubReleaseId)
+        projectId = self.publishedReleases.getProject(pubReleaseId)
+        if not self._checkProjectAccess(projectId, [userlevels.OWNER]):
+            raise PermissionDenied
+        if not self.publishedReleases.isPublishedReleasePublished(pubReleaseId):
+            raise PublishedReleaseNotPublished
+        valDict = {'timePublished': None,
+                   'publishedBy': None}
         return self.publishedReleases.update(pubReleaseId, **valDict)
 
     @typeCheck(int)
@@ -1859,9 +1874,9 @@ class MintServer(object):
 
     @typeCheck(int)
     @private
-    def isPublishedReleaseFinalized(self, pubReleaseId):
+    def isPublishedReleasePublished(self, pubReleaseId):
         self._filterPublishedReleaseAccess(pubReleaseId)
-        return self.publishedReleases.isPublishedReleaseFinalized(pubReleaseId)
+        return self.publishedReleases.isPublishedReleasePublished(pubReleaseId)
 
     @typeCheck(int)
     @requiresAuth
@@ -1880,11 +1895,11 @@ class MintServer(object):
     @private
     def getPublishedReleasesByProject(self, projectId):
         self._filterProjectAccess(projectId)
-        finalizedOnly = False
+        publishedOnly = False
         if not self._checkProjectAccess(projectId, userlevels.WRITERS):
-            finalizedOnly = True
+            publishedOnly = True
         return self.publishedReleases.getPublishedReleasesByProject(projectId,
-                finalizedOnly)
+                publishedOnly)
 
     # job data calls
     @typeCheck(int, str, ((str, int, bool),), int)
@@ -1954,8 +1969,8 @@ class MintServer(object):
             raise PermissionDenied()
         if not self.publishedReleases.publishedReleaseExists(pubReleaseId):
             raise PublishedReleaseMissing()
-        if self.isPublishedReleaseFinalized(pubReleaseId):
-            raise PublishedReleaseFinalized()
+        if self.isPublishedReleasePublished(pubReleaseId):
+            raise PublishedReleasePublished()
         if not self.builds.buildExists(buildId):
             raise BuildMissing()
         if published and not self.getBuildFilenames(buildId):

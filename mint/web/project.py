@@ -554,13 +554,30 @@ class ProjectHandler(WebHandler):
     def publishRelease(self, auth, confirmed, **yesArgs):
         if confirmed:
             pubrelease = self.client.getPublishedRelease(int(yesArgs['id']))
-            pubrelease.finalize()
-            self._setInfo("Published release %s version %s" % (pubrelease.name, pubrelease.version))
+            pubrelease.publish()
+            self._setInfo("Published release %s (version %s)" % (pubrelease.name, pubrelease.version))
             self._predirect("releases")
         else:
             return self._write("confirm",
-                    message = "Are you sure you want to publish this release? No more modifications can be made to the release after it has been published. If any modifications need to be made after publishing, you will have to delete the release and recreate it.",
+                    message = "Publishing your release will make it viewable to the public. Be advised that, should you need to make changes to the release in the future (i.e. add/remove builds, update metadata) you will need to unpublish it first. Are you sure you want to publish this release?",
                     yesArgs = { 'func': 'publishRelease',
+                                'id': yesArgs['id'],
+                                'confirmed': '1'},
+                    noLink = "releases")
+
+    @ownerOnly
+    @dictFields(yesArgs = {})
+    @boolFields(confirmed = False)
+    def unpublishRelease(self, auth, confirmed, **yesArgs):
+        if confirmed:
+            pubrelease = self.client.getPublishedRelease(int(yesArgs['id']))
+            pubrelease.unpublish()
+            self._setInfo("Unpublished release %s (version %s)" % (pubrelease.name, pubrelease.version))
+            self._predirect("releases")
+        else:
+            return self._write("confirm",
+                    message = "Unpublishing your release will hide the release from the public, as well as allow you edit the contents of the release. Are you sure you want to unpublish your release?",
+                    yesArgs = { 'func': 'unpublishRelease',
                                 'id': yesArgs['id'],
                                 'confirmed': '1'},
                     noLink = "releases")
@@ -889,7 +906,7 @@ class ProjectHandler(WebHandler):
             desc = "Latest releases from %s" % self.project.getName()
 
             releases = [self.client.getPublishedRelease(x) for x in self.project.getPublishedReleases()]
-            publishedReleases = [x for x in releases if x.isFinalized()]
+            publishedReleases = [x for x in releases if x.isPublished()]
             items = []
             hostname = self.project.getHostname()
             projectName = self.project.getName()
