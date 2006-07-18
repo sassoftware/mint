@@ -20,6 +20,7 @@ class JobServerHelper(MintRepositoryHelper):
         if jspid == 0:
             args = ["/usr/bin/python",
                     "../scripts/job-server", "-s", "1",
+                    "--debug",
                     "--config=%s" % self.tmpDir + "/iso_gen.conf",]
             os.execv(args[0], args)
             return
