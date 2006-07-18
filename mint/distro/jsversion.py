@@ -35,7 +35,7 @@ def getVersions(basePath = None):
     try:
         troveSpecs = [x.strip() for x in f.readlines()]
         vers = [versions.VersionFromString(parseTroveSpec(x)[1]) for x in troveSpecs if x]
-        ret = [str(x.trailingRevision()).split('-')[0] for x in vers]
+        ret = sorted([str(x.trailingRevision()).split('-')[0] for x in vers])
         return ret and ret or [constants.mintVersion]
     finally:
         f.close()
