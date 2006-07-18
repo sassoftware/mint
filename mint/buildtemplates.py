@@ -117,15 +117,15 @@ class enumArg(EnumOption):
 
 class mediaTemplateTrove(TroveOption):
     default = ''
-    prompt  = 'Version of the media-template trove to use when creating this image'
+    prompt  = 'Version of media-template to use when creating this image'
 
 class anacondaCustomTrove(TroveOption):
     default = ''
-    prompt  = 'Version of the anaconda-custom trove to use when creating this image'
+    prompt  = 'Version of anaconda-custom to use when creating this image'
 
 class anacondaTemplatesTrove(TroveOption):
     default = ''
-    prompt  = 'Version of the anaconda-templates trove to use when creating this image'
+    prompt  = 'Version of anaconda-templates to use when creating this image'
 
 ###
 # Templates
