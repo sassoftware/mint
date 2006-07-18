@@ -13,7 +13,7 @@ from mint_rephelp import MINT_HOST, MINT_DOMAIN, MINT_PROJECT_DOMAIN
 
 from mint import buildtypes
 from mint import pubreleases
-from mint.mint_error import PermissionDenied, BuildPublished, BuildMissing, BuildEmpty
+from mint.mint_error import PermissionDenied, BuildPublished, BuildMissing, BuildEmpty, PublishedReleasePublished
 from mint.database import ItemNotFound
 
 class PublishedReleaseTest(fixtures.FixturedUnitTest):
@@ -130,7 +130,7 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest):
     def testGetPublishedReleasesByProject(self, db, data):
         client = self.getClient("owner")
         project = client.getProject(data['projectId'])
-        self.failUnlessEqual(project.getPublishedReleases(), [ data['pubReleaseId'], data['pubReleaseFinalId'] ])
+        self.failUnlessEqual(project.getPublishedReleases(), [ data['pubReleaseFinalId'], data['pubReleaseId'] ])
 
     @fixtures.fixture("Full")
     def testGetUnpublishedBuildsByProject(self, db, data):
@@ -375,8 +375,8 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest):
 
     @fixtures.fixture("Full")
     def testPublishedReleaseAccessDeletePublished(self, db, data):
-        acls = { 'admin': (True, None),
-                 'owner': (True, None),
+        acls = { 'admin': (False, PublishedReleasePublished),
+                 'owner': (False, PublishedReleasePublished),
                  'developer': (False, PermissionDenied),
                  'user': (False, PermissionDenied),
                  'nobody': (False, PermissionDenied),

@@ -12,7 +12,6 @@ from mint import userlevels
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'../layout.kid'">
 <?python
-isOwner = (userLevel == userlevels.OWNER or auth.admin)
 def pluralTroves(c):
     return c == 1 and "trove" or "troves"
 from mint.helperfuncs import truncateForDisplay
@@ -41,9 +40,8 @@ from mint.helperfuncs import truncateForDisplay
         <div id="layout">
             <div id="left" class="side">
                 ${projectResourcesMenu()}
-                <!-- FIXME: releases, not builds
-                ${buildsMenu(project.getBuilds(), isOwner)}-->
-                ${commitsMenu(project.getCommits())}
+                ${releasesMenu(projectPublishedReleases, isOwner)}
+                ${commitsMenu(projectCommits)}
             </div>
             <div id="right" class="side">
                 ${resourcePane()}

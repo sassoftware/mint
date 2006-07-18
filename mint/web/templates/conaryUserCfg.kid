@@ -9,12 +9,6 @@ from mint import userlevels
     Copyright (c) 2005-2006 rPath, Inc.
     All Rights Reserved
 -->
-    <?python
-        isOwner = (userLevel == userlevels.OWNER or auth.admin)
-        # FIXME: releases, not builds
-        #builds = project.getBuilds()
-        commits = project.getCommits()
-    ?>
     <head>
         <title>${formatTitle('Installing Software: %s'%project.getNameForDisplay())}</title>
     </head>
@@ -22,9 +16,8 @@ from mint import userlevels
         <div id="layout" class="helpPage">
             <div id="left" class="side">
                 ${projectResourcesMenu()}
-                <!-- FIXME: releases, not builds
-                ${buildsMenu(builds, isOwner)}-->
-                ${commitsMenu(commits)}
+                ${releasesMenu(projectPublishedReleases, isOwner)}
+                ${commitsMenu(projectCommits)}
             </div>
             <div id="right" class="side">
                 ${resourcePane()}

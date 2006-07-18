@@ -12,13 +12,6 @@ from mint.helperfuncs import truncateForDisplay
     All Rights Reserved
 -->
     <?python
-        isOwner = (userLevel == userlevels.OWNER or auth.admin)
-        isDeveloper = userLevel == userlevels.DEVELOPER
-        memberList = project.getMembers()
-
-        builds = project.getBuilds()
-        commits = project.getCommits()
-
         if cfg.SSL:
             proto = "https"
         else:
@@ -46,8 +39,8 @@ from mint.helperfuncs import truncateForDisplay
 
             <div id="left" class="side">
                 ${projectResourcesMenu()}
-                ${releasesMenu(releases, isOwner)}
-                ${commitsMenu(commits)}
+                ${releasesMenu(projectPublishedReleases, isOwner)}
+                ${commitsMenu(projectCommits)}
             </div>
             <div id="right" class="side">
                 ${resourcePane()}
@@ -94,7 +87,7 @@ from mint.helperfuncs import truncateForDisplay
                         <li>Browse the packages included in ${isOwner and "your" or "this"} project</li>
                         <li py:if="isOwner">Add or remove developers working on your project</li>
                         <li py:if="not isOwner">List the developers working on this project
-                            <span py:strip="True" py:if="not (isOwner or isDeveloper)">and request to join them</span>
+                            <span py:strip="True" py:if="not isWriter">and request to join them</span>
                         </li>
                         <li py:if="isOwner">Create and manage your project's mailing lists</li>
                         <li py:if="not isOwner">Join the mailing lists for this project or browse their archives</li>

@@ -10,15 +10,6 @@ from mint.helperfuncs import truncateForDisplay
     Copyright (c) 2005-2006 rPath, Inc.
     All Rights Reserved
 -->
-    <?python
-        isOwner = (userLevel == userlevels.OWNER or auth.admin)
-        isDeveloper = userLevel == userlevels.DEVELOPER
-        memberList = project.getMembers()
-
-        # FIXME: releases, not builds
-        #builds = project.getBuilds()
-        commits = project.getCommits()
-    ?>
     <head>
         <title>${formatTitle("Project Page: %s"%project.getNameForDisplay())}</title>
     </head>
@@ -26,9 +17,8 @@ from mint.helperfuncs import truncateForDisplay
         <div id="layout">
             <div id="left" class="side">
                 ${projectResourcesMenu()}
-                <!-- FIXME: releases, not builds
-                ${buildsMenu(builds, isOwner)} -->
-                ${commitsMenu(commits)}
+                ${releasesMenu(projectPublishedReleases, isOwner)}
+                ${commitsMenu(projectCommits)}
             </div>
             <div id="right" class="side">
                 ${resourcePane()}
@@ -40,7 +30,7 @@ from mint.helperfuncs import truncateForDisplay
 
                 <h3>Help Topics</h3>
                 <ul>
-                    <li py:if="isOwner or isDeveloper">
+                    <li py:if="isWriter">
                         <a href="${basePath}conaryDevelCfg">Setting up ${isOwner and "your" or "the"} project build environment</a>
                     </li>
                     <li><a href="${basePath}conaryUserCfg">Installing packages from ${isOwner and "your" or "this"} project</a></li>

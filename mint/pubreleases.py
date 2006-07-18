@@ -72,10 +72,9 @@ class PublishedReleasesTable(database.KeyedTable):
 
     def getPublishedReleasesByProject(self, projectId, publishedOnly=False):
         sql = """SELECT pubReleaseId FROM PublishedReleases
-                 WHERE projectId = ?"""
-
-        if publishedOnly:
-            sql += " AND timePublished IS NOT NULL"
+                 WHERE projectId = ? %s
+                 ORDER BY timePublished DESC, timeUpdated DESC""" % \
+                        (publishedOnly and " AND timePublished IS NOT NULL" or "")
 
         cu = self.db.cursor()
         cu.execute(sql, projectId)

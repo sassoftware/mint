@@ -13,11 +13,7 @@
         <title>${formatTitle('Release: %s' % project.getNameForDisplay())}</title>
     </head>
     <?python # this comment has to be here if the first line is an import...weird!
-        from mint import userlevels
         from mint import buildtypes
-
-        isOwner = userLevel == userlevels.OWNER or auth.admin
-        isDeveloper = userLevel in userlevels.WRITERS or auth.admin
         hasVMwareBuild = bool(buildtypes.VMWARE_IMAGE in [x.getBuildType() for x in builds])
     ?>
 
@@ -34,7 +30,7 @@
                 <h1>${project.getNameForDisplay(maxWordLen=30)}</h1>
                 <h2>Release: ${release.name}, version ${release.version}</h2>
 
-                <p py:if="isDeveloper">
+                <p py:if="isWriter">
                     <span py:strip="True" py:if="release.isPublished()">This release has been published and can be viewed by the public. <span py:strip="True" py:if="isOwner">(<a href="unpublishRelease?id=${release.id}">Unpublish this release.</a>)</span></span>
                     <span py:strip="True" py:if="not release.isPublished()">This release has not been published yet. <span py:strip="True" py:if="isOwner">(<a href="publishRelease?id=${release.id}">Publish this release.</a>)</span></span>
                 </p>

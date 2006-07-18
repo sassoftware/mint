@@ -15,11 +15,6 @@ from mint.web.templatesupport import downloadTracker
         <link py:if="releases" rel="alternate" type="application/rss+xml"
               title="${project.getName()} Releases" href="${basePath}rss" />
     </head>
-    <?python # this comment has to be here if the first line is an import...weird!
-        from mint import userlevels
-
-        isOwner = userLevel == userlevels.OWNER or auth.admin
-    ?>
 
     <div py:def="pubReleasesTable(releases, isOwner)">
         <table>

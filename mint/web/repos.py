@@ -11,6 +11,7 @@ import traceback
 from mod_python import apache
 
 from mint import database
+from mint import userlevels
 from mint.session import SqlSession
 from mint.web.templates import repos
 from mint.web.webhandler import WebHandler, normPath, HttpForbidden, HttpNotFound
@@ -76,11 +77,19 @@ class ConaryHandler(WebHandler, http.HttpHandler):
         except database.ItemNotFound:
             raise HttpNotFound
 
+        self.userLevel = self.project.getUserLevel(self.auth.userId)
+        self.isOwner  = (self.userLevel == userlevels.OWNER) or self.auth.admin
+        self.isWriter = (self.userLevel in userlevels.WRITERS) or self.auth.admin
+
+        # go ahead and fetch the release / commits data, too
+        self.projectReleases = [self.client.getPublishedRelease(x) for x in self.project.getPublishedReleases()]
+        self.projectPublishedReleases = [x for x in self.projectReleases if x.isPublished()]
+        self.projectUnpublishedReleases = [x for x in self.projectReleases if not x.isPublished()]
+        self.projectCommits =  self.project.getCommits()
+        self.projectMemberList = self.project.getMembers()
+
         self.basePath += "repos/%s" % self.project.getHostname()
         self.basePath = normPath(self.basePath)
-
-        if self.auth:
-            self.userLevel = self.project.getUserLevel(self.auth.userId)
 
         return self._handle
 

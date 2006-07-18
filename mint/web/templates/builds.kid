@@ -15,11 +15,6 @@ from mint.web.templatesupport import downloadTracker
         <link py:if="builds" rel="alternate" type="application/rss+xml"
               title="${project.getName()} Builds" href="${basePath}rss" />
     </head>
-    <?python # this comment has to be here if the first line is an import...weird!
-        from mint import userlevels
-        isOwner = userLevel == userlevels.OWNER or auth.admin
-        isWriter = (userLevel in userlevels.WRITERS) or auth.admin
-    ?>
 
     <div py:strip="True" py:def="buildsTableRow(build, isHidden, hiddenName)">
         <?python
@@ -55,9 +50,8 @@ from mint.web.templatesupport import downloadTracker
         <div id="layout">
             <div id="left" class="side">
                 ${projectResourcesMenu()}
-                <!-- FIXME - releases, not builds
-                ${buildsMenu(publishedBuilds, isOwner)} -->
-                ${commitsMenu(project.getCommits())}
+                ${releasesMenu(projectPublishedReleases, isOwner)}
+                ${commitsMenu(projectCommits)}
             </div>
             <div id="right" class="side">
                 ${resourcePane()}

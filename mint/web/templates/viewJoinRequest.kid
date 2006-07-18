@@ -10,11 +10,6 @@ from mint import userlevels
     All Rights Reserved
 -->
 
-    <?python
-        isOwner = userLevel == userlevels.OWNER or auth.admin
-        memberList = project.getMembers()
-    ?>
-
     <head>
         <title>${formatTitle('Member Settings: %s'%project.getNameForDisplay())}</title>
     </head>

@@ -70,11 +70,20 @@ class ProjectHandler(WebHandler):
                     (self.req.hostname, self.req.unparsed_uri, self.req.headers_in.get('referer', 'N/A')))
                 self._redirect("http://" + self.cfg.projectSiteHost + self.req.unparsed_uri)
 
-        self.userLevel = self.project.getUserLevel(self.auth.userId)
-
         #Take care of hidden projects
         if self.project.hidden and self.userLevel == userlevels.NONMEMBER and not self.auth.admin:
             raise HttpNotFound
+
+        self.userLevel = self.project.getUserLevel(self.auth.userId)
+        self.isOwner  = (self.userLevel == userlevels.OWNER) or self.auth.admin
+        self.isWriter = (self.userLevel in userlevels.WRITERS) or self.auth.admin
+
+        # go ahead and fetch the release / commits data, too
+        self.projectReleases = [self.client.getPublishedRelease(x) for x in self.project.getPublishedReleases()]
+        self.projectPublishedReleases = [x for x in self.projectReleases if x.isPublished()]
+        self.projectUnpublishedReleases = [x for x in self.projectReleases if not x.isPublished()]
+        self.projectCommits =  self.project.getCommits()
+        self.projectMemberList = self.project.getMembers()
 
         # add the project name to the base path
         self.basePath += "project/%s" % (cmds[0])
@@ -101,8 +110,7 @@ class ProjectHandler(WebHandler):
         else:
             canResolve = True
 
-        return self._write("projectPage", canResolve = canResolve,
-                releases = self.project.getPublishedReleases())
+        return self._write("projectPage", canResolve = canResolve)
 
     def conaryUserCfg(self, auth):
         return self._write("conaryUserCfg")
@@ -444,7 +452,6 @@ class ProjectHandler(WebHandler):
                     builtAt = "In process"
                 else:
                     builtAt = time.asctime(time.localtime(buildJob.timeFinished))
-
         try:
             trove, version, flavor = build.getTrove()
             files = build.getFiles()
@@ -454,14 +461,15 @@ class ProjectHandler(WebHandler):
             return self._write("build", build = build,
                 name = build.getName(),
                 files = files,
-                trove = trove, 
+                trove = trove,
                 version = versions.ThawVersion(version),
                 flavor = deps.ThawFlavor(flavor),
                 buildId = id,
                 projectId = self.project.getId(),
                 buildInProgress = buildInProgress,
                 builtBy = builtBy,
-                builtAt = builtAt)
+                builtAt = builtAt,
+                releases = releases)
 
     @ownerOnly
     def newRelease(self, auth):
@@ -905,12 +913,10 @@ class ProjectHandler(WebHandler):
                 (self.cfg.siteHost, self.cfg.basePath, self.project.getHostname())
             desc = "Latest releases from %s" % self.project.getName()
 
-            releases = [self.client.getPublishedRelease(x) for x in self.project.getPublishedReleases()]
-            publishedReleases = [x for x in releases if x.isPublished()]
             items = []
             hostname = self.project.getHostname()
             projectName = self.project.getName()
-            for release in publishedReleases[:10]:
+            for release in self.projectPublishedReleases[:10]:
                 item = {}
                 item['title'] = "%s (version %s)" % (release.name, release.version)
                 item['link'] = "http://%s%sproject/%s/release?id=%d" % \

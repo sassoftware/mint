@@ -9,11 +9,6 @@ from mint import userlevels
     Copyright (c) 2005-2006 rPath, Inc.
     All Rights Reserved
 -->
-    <?python
-        isOwner = (userLevel == userlevels.OWNER or auth.admin)
-        isDeveloper = userLevel == userlevels.DEVELOPER
-        memberList = project.getMembers()
-    ?>
     <head>
         <title>${formatTitle("Membership Request Rejection: %s"%project.getNameForDisplay())}</title>
     </head>

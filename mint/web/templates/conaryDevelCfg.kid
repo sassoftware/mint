@@ -10,10 +10,6 @@ from mint import userlevels
     All Rights Reserved
 -->
     <?python
-        isOwner = (userLevel == userlevels.OWNER or auth.admin)
-        # FIXME - releases, not builds
-        #builds = project.getBuilds()
-        commits = project.getCommits()
         protocol = 'http'
         if cfg.SSL:
             protocol = 'https'
@@ -25,9 +21,8 @@ from mint import userlevels
         <div id="layout" class="helpPage">
             <div id="left" class="side">
                 ${projectResourcesMenu()}
-                <!-- FIXME: releases, not builds
-                ${buildsMenu(builds, isOwner)} -->
-                ${commitsMenu(commits)}
+                ${releasesMenu(projectPublishedReleases, isOwner)}
+                ${commitsMenu(projectCommits)}
             </div>
             <div id="right" class="side">
                 ${resourcePane()}

@@ -14,9 +14,8 @@
         <div id="layout">
             <div id="left" class="side">
                 ${projectResourcesMenu()}
-                <!-- FIXME: releases, not builds
-                ${buildsMenu(publishedBuilds, isOwner)} -->
-                ${commitsMenu(project.getCommits())}
+                ${releasesMenu(projectPublishedReleases, isOwner)}
+                ${commitsMenu(projectCommits)}
             </div>
             <div id="right" class="side">
                 ${resourcePane()}

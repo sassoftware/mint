@@ -238,6 +238,7 @@ class MintApp(WebHandler):
         # Handle messages stashed in the session
         self.inlineMime = self.session.setdefault('inlineMime', [])
         self.infoMsg = self.session.setdefault('infoMsg', "")
+        self.searchType = self.session.setdefault('searchType', 'Projects')
         self.errorMsgList = self._getErrors()
 
         # a set of information to be passed into the next handler
@@ -252,6 +253,7 @@ class MintApp(WebHandler):
             'req':              self.req,
             'session':          self.session,
             'siteHost':         self.cfg.siteHost,
+            'searchType':       self.searchType,
             'toUrl':            self.toUrl,
             'basePath':         self.basePath,
             'project':          None,

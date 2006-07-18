@@ -13,14 +13,6 @@ from mint.helperfuncs import truncateForDisplay
     All Rights Reserved
 -->
     <?python
-        isOwner = (userLevel == userlevels.OWNER or auth.admin)
-        isDeveloper = userLevel == userlevels.DEVELOPER
-        memberList = project.getMembers()
-
-        # FIXME -- this should be releases, not builds
-        builds = project.getBuilds()
-        commits = project.getCommits()
-
         if cfg.SSL:
             proto = "https"
         else:
@@ -28,7 +20,7 @@ from mint.helperfuncs import truncateForDisplay
     ?>
     <head>
         <title>${formatTitle("Project Page: %s"%project.getNameForDisplay())}</title>
-        <link py:if="releases" rel="alternate" type="application/rss+xml"
+        <link py:if="projectReleases" rel="alternate" type="application/rss+xml"
               title="${project.getName()} Releases" href="${basePath}rss" />
 
     </head>
@@ -37,9 +29,8 @@ from mint.helperfuncs import truncateForDisplay
 
             <div id="left" class="side">
                 ${projectResourcesMenu()}
-                <!-- FIXME - release, not builds
-                ${buildsMenu(builds, isOwner)} -->
-                ${commitsMenu(commits)}
+                ${releasesMenu(projectPublishedReleases, isOwner)}
+                ${commitsMenu(projectCommits)}
             </div>
             <div id="right" class="side">
                 ${resourcePane()}
@@ -54,7 +45,7 @@ from mint.helperfuncs import truncateForDisplay
                     <p>Project was created ${timeDelta(project.timeCreated, capitalized=False)}.</p>
                     <p py:if="project.hidden">This project is hidden.</p>
                     <p py:if="project.external">This project is externally managed.</p>
-                    <p py:if="not (commits or project.external)">This project is considered to be a fledgling (i.e. no software has been committed to its repository).</p>
+                    <p py:if="not (projectCommits or project.external)">This project is considered to be a fledgling (i.e. no software has been committed to its repository).</p>
 
                     <h2>Administrative Options</h2>
 
@@ -72,7 +63,7 @@ from mint.helperfuncs import truncateForDisplay
                     </form>
                 </div>
 
-                <p class="help" py:if="not (commits or project.external) and cfg.hideFledgling and not auth.admin">
+                <p class="help" py:if="not (projectCommits or project.external) and cfg.hideFledgling and not auth.admin">
                     This is a fledgling project. The developers of this project
                     have not yet committed software into the project's repository.
                     To give the project's developers time to get started before
@@ -112,7 +103,7 @@ from mint.helperfuncs import truncateForDisplay
                         <li>Browse the packages included in ${isOwner and "your" or "this"} project</li>
                         <li py:if="isOwner">Add or remove developers working on your project</li>
                         <li py:if="not isOwner">List the developers working on this project
-                            <span py:strip="True" py:if="not (isOwner or isDeveloper)">and request to join them</span>
+                            <span py:strip="True" py:if="not isWriter">and request to join them</span>
                         </li>
                         <li py:if="isOwner">Create and manage your project's mailing lists</li>
                         <li py:if="not isOwner">Join the mailing lists for this project or browse their archives</li>

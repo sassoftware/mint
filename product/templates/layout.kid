@@ -6,7 +6,6 @@
 #
 from mint import constants
 from mint import maintenance
-from mint import userlevels
 from urllib import quote
 onload = "javascript:;"
 ?>

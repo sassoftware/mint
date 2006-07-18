@@ -7,10 +7,6 @@
     All Rights Reserved
 -->
 <?python
-    from mint import userlevels
-
-    isOwner = userLevel == userlevels.OWNER or auth.admin
-
     isRPL = project.external and project.getName() == 'rPath Linux'
 ?>
     <head>
@@ -21,9 +17,8 @@
         <div id="layout">
             <div id="left" class="side">
                 ${projectResourcesMenu()}
-                <!-- FIXME: releases, not builds
-                ${buildsMenu(project.getBuilds(), isOwner)} -->
-                ${commitsMenu(project.getCommits())}
+                ${releasesMenu(projectPublishedReleases, isOwner)}
+                ${commitsMenu(projectCommits)}
             </div>
             <div id="right" class="side">
                 ${resourcePane()}

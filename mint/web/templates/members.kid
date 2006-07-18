@@ -1,7 +1,4 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<?python
-from mint import userlevels
-?>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'layout.kid'">
@@ -11,10 +8,9 @@ from mint import userlevels
 -->
 
     <?python
+        from mint import userlevels
         isTrueOwner = userLevel == userlevels.OWNER
-        isOwner = isTrueOwner or auth.admin
         isDeveloper = userLevel == userlevels.DEVELOPER
-        memberList = project.getMembers()
     ?>
 
     <head>
@@ -51,9 +47,8 @@ from mint import userlevels
                       </form>
                     </div>
                 </div>
-                <!-- FIXME: releases, not builds
-                ${buildsMenu(project.getBuilds(), isOwner)} -->
-                ${commitsMenu(project.getCommits())}
+                ${releasesMenu(projectPublishedReleases, isOwner)}
+                ${commitsMenu(projectCommits)}
             </div>
             <div id="right" class="side">
                 ${resourcePane()}
@@ -99,12 +94,12 @@ from mint import userlevels
                                 <a href="${basePath}unwatch">Stop watching this project</a>
                             </li>
                             <div py:strip="True" py:if="not project.external">
-                                <li py:if="isDeveloper"><a href="${basePath}resign">Resign from this project</a></li>
-                                <li py:if="auth.authorized and not isTrueOwner and not isDeveloper and True in [ x[2] not in userlevels.READERS for x in memberList]">
+                                <li py:if="isWriter"><a href="${basePath}resign">Resign from this project</a></li>
+                                <li py:if="auth.authorized and not isTrueOwner and not isDeveloper and True in [ x[2] not in userlevels.READERS for x in projectMemberList]">
                                     <a py:if="not userHasReq" href="${basePath}joinRequest">Request to join this project</a>
                                     <a py:if="userHasReq" href="${basePath}joinRequest">Modify your comments to a pending join request</a>
                                 </li>
-                                <li py:if="True not in [ x[2] not in userlevels.READERS for x in memberList]">
+                                <li py:if="True not in [ x[2] not in userlevels.READERS for x in projectMemberList]">
                                     <a py:if="auth.authorized" href="${basePath}adopt">Adopt this project</a>
                                     <span py:strip="True" py:if="not auth.authorized">Log in to adopt this project</span>
                                 </li>
@@ -172,7 +167,7 @@ from mint import userlevels
                     <p py:if="len(users[userlevels.USER]) == 1">There is one user watching this project.</p>
                     <p py:if="len(users[userlevels.USER]) > 1">There are ${len(users[userlevels.USER])} users watching this project.</p>
                 </div>
-                <div py:if="isOwner or isDeveloper">
+                <div py:if="isWriter">
                     <h3>OpenPGP Signing Keys</h3>
                     <p>You can view the OpenPGP package signing keys that your developers have uploaded:</p>
                     <strong><a href="../../repos/${project.hostname}/pgpAdminForm">${auth.admin and "Manage" or "View"} OpenPGP Signing Keys</a></strong>

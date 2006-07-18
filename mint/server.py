@@ -1893,7 +1893,7 @@ class MintServer(object):
         self._filterPublishedReleaseAccess(pubReleaseId)
         return self.publishedReleases.getBuilds(pubReleaseId)
 
-    @typeCheck(int)
+    @typeCheck(int, bool)
     @private
     def getPublishedReleasesByProject(self, projectId):
         self._filterProjectAccess(projectId)

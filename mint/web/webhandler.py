@@ -51,27 +51,16 @@ class WebHandler(object):
         else:
             template = kid.load_template(path)
 
-        t = template.Template(cfg = self.cfg,
-                              auth = self.auth,
-                              project = self.project,
-                              userLevel = self.userLevel,
-                              projectList = self.projectList,
-                              projectDict = self.projectDict,
-                              req = self.req,
-                              session = self.session,
-                              siteHost = self.siteHost,
-                              toUrl = self.toUrl,
-                              basePath = self.basePath,
-                              SITE = self.SITE,
-                              isOwner = self.isOwner,
-                              groupTrove = self.groupTrove,
-                              rMakeBuild = self.rMakeBuild,
-                              groupProject = self.groupProject,
-                              inlineMime = self.inlineMime,
-                              infoMsg = self.infoMsg,
-                              errorMsgList = self.errorMsgList,
-                              output = self.output,
-                              **values)
+        # pass along the context (overridden by values passed in as
+        # kwargs to _write)
+        context = dict(self.__dict__.iteritems())
+        context.update(values)
+
+        print >> sys.stderr, "Context: %s" % context
+        sys.stderr.flush()
+
+        # write out the template
+        t = template.Template(**context)
 
         t.assume_encoding = 'utf-8' # tell kid to assume that all input is utf-8
         returner = t.serialize(encoding = "utf-8", output = self.output)
