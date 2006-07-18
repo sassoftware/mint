@@ -86,6 +86,9 @@ if __name__ == "__main__":
     parser.add_option("-n", "--no-daemon", dest = "noDaemon",
                       action = "store_true", default = False,
                       help = "Do not run as a daemon")
+    parser.add_option("-s", "--sleep-time", dest = "sleepTime", type = "int",
+                      default = None,
+                      help = "Maximum Sleep time between taking jobs.")
     (options, args) = parser.parse_args()
 
     slog = scriptlibrary.getScriptLogger()
@@ -123,6 +126,10 @@ if __name__ == "__main__":
             cfg.saveChildOutput = True
         cfg.debug = True
         logfileLevel = logging.DEBUG
+
+    if options.sleepTime:
+        jobserver.JOB_IDLE_INTERVAL = (max(0, options.sleepTime - 5),
+                                       options.sleepTime)
 
     # create log instance
     scriptlibrary.setupScriptLogger(os.path.join(cfg.logPath, "job-server.log"),
