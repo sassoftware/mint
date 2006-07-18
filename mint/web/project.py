@@ -469,6 +469,11 @@ class ProjectHandler(WebHandler):
         availableBuilds = [y for y in (self.client.getBuild(x) for x in \
                 self.project.getUnpublishedBuilds()) if y.getFiles()]
 
+        availableBuilds.sort(lambda x,y: (cmp(x.getTroveVersion(),
+                             y.getTroveVersion()) == 0 and \
+                             [cmp(x.getBuildType(), y.getBuildType())] or \
+                             [cmp(x.getTroveVersion(), 
+                              y.getTroveVersion())])[0])
         return self._write("editPubrelease",
                            releaseId = None,
                            name = self.project.name,
@@ -486,6 +491,16 @@ class ProjectHandler(WebHandler):
         availableBuilds = [y for y in (self.client.getBuild(x) for x in \
                 self.project.getUnpublishedBuilds()) if y.getFiles()]
 
+        availableBuilds.sort(lambda x,y: (cmp(x.getTroveVersion(),
+                             y.getTroveVersion()) == 0 and \
+                             [cmp(x.getBuildType(), y.getBuildType())] or \
+                             [cmp(x.getTroveVersion(), 
+                              y.getTroveVersion())])[0])
+        currentBuilds.sort(lambda x,y: (cmp(x.getTroveVersion(),
+                             y.getTroveVersion()) == 0 and \
+                             [cmp(x.getBuildType(), y.getBuildType())] or \
+                             [cmp(x.getTroveVersion(), 
+                              y.getTroveVersion())])[0])
         return self._write("editPubrelease",
                            releaseId = id,
                            name = pubrelease.name,
