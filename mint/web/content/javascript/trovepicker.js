@@ -61,6 +61,7 @@ TrovePicker.prototype.serverName = null;
 TrovePicker.prototype.label = null;
 TrovePicker.prototype.version = null;
 TrovePicker.prototype.flavorCache = null;
+TrovePicker.prototype.domCache = {};
 TrovePicker.prototype.allowNameChoice = true;
 
 TrovePicker.prototype.working = function(isWorking) {
@@ -172,18 +173,22 @@ TrovePicker.prototype.getTroveVersions = function(e) {
         var versionDict = req[0];
         var versionList = req[1];
         oldList = $(par.elId + 'selectionList');
-        ul = UL({ 'id': par.elId + 'selectionList' });
 
         par.flavorCache = versionDict;
 
-        for(var i in versionList) {
-            link = forwardLink(null, trailingRevision(versionList[i]));
-            link.version = versionList[i];
-            link.label = par.label;
-            connect(link, "onclick", par, "showTroveFlavors");
-            appendChildNodes(ul, link);
+        if(!par.domCache[key]) {
+            ul = UL({ 'id': par.elId + 'selectionList' });
+            for(var i in versionList) {
+                link = forwardLink(null, trailingRevision(versionList[i]));
+                link.version = versionList[i];
+                link.label = par.label;
+                connect(link, "onclick", par, "showTroveFlavors");
+                appendChildNodes(ul, link);
+            }
+            par.domCache[key] = ul;
         }
-        swapDOM(oldList, ul);
+        swapDOM(oldList, par.domCache[key]);
+
         par.working(false);
         replaceChildNodes($(par.elId + 'prompt'), "Please choose a version:");
 
