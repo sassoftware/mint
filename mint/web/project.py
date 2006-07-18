@@ -24,7 +24,8 @@ from mint import users
 from mint import buildtemplates
 from mint.builds import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM
 from mint.users import sendMailWithChecks
-from mint.web.webhandler import WebHandler, normPath, HttpNotFound
+from mint.web.webhandler import WebHandler, normPath, HttpNotFound, \
+     HttpForbidden
 from mint.web.decorators import ownerOnly, writersOnly, requiresAuth, \
         requiresAdmin, mailList, redirectHttp
 
@@ -248,6 +249,8 @@ class ProjectHandler(WebHandler):
     @dictFields(yesArgs = {})
     @boolFields(confirmed=False)
     def deleteGroup(self, auth, confirmed, **yesArgs):
+        if 'id' not in yesArgs:
+            raise HttpForbidden
         if confirmed:
             # Delete the group
             self.client.deleteGroupTrove(int(yesArgs['id']))
@@ -255,7 +258,7 @@ class ProjectHandler(WebHandler):
                 del self.session['groupTroveId']
             self._predirect("groups")
         else:
-            return self._write('confirm', message = "Are you sure you want to delete this group trove?", 
+            return self._write('confirm', message = "Are you sure you want to delete this group trove?",
                 yesArgs = {'func':'deleteGroup', 'id':yesArgs['id'], 'confirmed':'1'} , noLink = "groups")
 
     @intFields(id=None)
