@@ -63,7 +63,7 @@ from conary.lib.cfg import *
                             <td py:if="isinstance(newCfg._options[key].valueType, CfgBool)">
                               <input class="check" type="checkbox" name="${key}" value="${newCfg.__dict__[key]}"/>
                             </td>
-                            <td py:if="isinstance(newCfg._options[key].valueType, CfgString)">
+                            <td py:if="not isinstance(newCfg._options[key].valueType, CfgBool)">
                               <input style="width: 100%;" type="text" name="${key}" value="${newCfg.__dict__[key]}"/>
                             </td>
                         </tr>
