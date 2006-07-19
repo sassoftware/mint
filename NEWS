@@ -1,4 +1,6 @@
 Changes in tip:
+* Added release unpublish capability; unpublishing a release will hide the
+  release from the public, and allows you to edit the release contents.
 * Added XMLRPC call logging similar to Conary's, controlled by the 
   xmlrpcLogFile config entry. (RBL-12)
 * Fixed a bug where a directory with a symlink pointing to it could
