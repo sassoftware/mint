@@ -14,6 +14,7 @@ import time
 
 from mint.client import upstream
 from mint.data import RDT_STRING
+from mint import buildtemplates
 from mint.distro import gencslist
 from mint.distro import splitdistro
 from mint.distro import anaconda_templates
@@ -118,9 +119,10 @@ class InstallableIso(ImageGenerator):
     def _getUpdateJob(self, cclient, troveName):
         self.callback.setChangeSet(troveName)
         try:
+            dictTroveName = buildtemplates.optionNameMap.get(troveName, troveName)
             dataDict = self.build.getDataDict()
-            if troveName in dataDict:
-                spec = parseTroveSpec(dataDict[troveName])
+            if dictTroveName in dataDict:
+                spec = parseTroveSpec(dataDict[dictTroveName])
             else:
                 spec = (troveName, None, None)
 
