@@ -126,8 +126,6 @@ class InstallableIso(ImageGenerator):
                 spec = (troveName, None, None)
 
             itemList = [(troveName, (None, None), (spec[1], spec[2]), True)]
-            print >> sys.stderr, itemList
-            sys.stderr.flush()
             uJob, suggMap = cclient.updateChangeSet(itemList,
                 resolveDeps = False,
                 callback = self.callback)
