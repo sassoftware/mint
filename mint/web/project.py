@@ -468,8 +468,7 @@ class ProjectHandler(WebHandler):
                 projectId = self.project.getId(),
                 buildInProgress = buildInProgress,
                 builtBy = builtBy,
-                builtAt = builtAt,
-                releases = releases)
+                builtAt = builtAt)
 
     @ownerOnly
     def newRelease(self, auth):
