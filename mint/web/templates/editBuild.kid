@@ -63,7 +63,10 @@ from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM, RDT_TROVE
                     <div class="formgroupTitle">Build Contents<span id="baton"></span></div>
                     <div class="formgroup">
                         <div id="distTrove" py:if="not buildId">${trovePicker(project.id, project.getLabel().split('@')[0], '', 'distTrove')}</div>
-                        <div py:if="buildId" style="margin: 4px;">${troveName}=${str(version)} [${str(flavor).replace(",", ", ")}] </div>
+                        <div py:if="buildId" style="margin: 4px;">
+                            ${troveName}=${str(version)} [${str(flavor).replace(",", ", ")}]
+                            <input type="hidden" name="distTroveSpec" value="${troveName}=${version.freeze()}[${str(flavor)}]" />
+                        </div>
                     </div>
 
                     <div class="formgroupTitle">Build Types</div>
