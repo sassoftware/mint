@@ -3,6 +3,7 @@
 <?python
 from mint import buildtypes
 from mint.buildtypes import typeNames
+from mint.web.templatesupport import shortTroveSpec
 from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM, RDT_TROVE
 ?>
 
@@ -116,10 +117,13 @@ from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM, RDT_TROVE
                                     </div>
                                     <div py:strip="True" py:if="(dataRow[0] == RDT_TROVE)">
                                         <label for="${name}">${dataRow[2]}</label>
-                                        <div id="${name}">Defaults to latest on branch
+                                        <div id="${name}">
+                                            <span py:if="not buildId or not dataDict[name]">Defaults to latest on branch</span>
+                                            <span py:if="buildId and dataDict[name]">${shortTroveSpec(dataDict[name])}</span>
                                             (<a onclick="new TrovePicker(${project.id},
                                                 '${project.getLabel().split('@')[0]}',
                                                 '${name}', '${name}', '${cfg.staticPath}');">change)</a>
+                                            <input py:if="buildId and dataDict[name]" type="hidden" name="${name.replace('-', '_') + 'Spec'}" value="${dataDict[name]}" />
                                         </div>
                                     </div>
                                     <div class="clearleft">&nbsp;</div>

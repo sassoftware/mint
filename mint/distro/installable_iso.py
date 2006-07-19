@@ -119,14 +119,15 @@ class InstallableIso(ImageGenerator):
     def _getUpdateJob(self, cclient, troveName):
         self.callback.setChangeSet(troveName)
         try:
-            dictTroveName = buildtemplates.optionNameMap.get(troveName, troveName)
             dataDict = self.build.getDataDict()
-            if dictTroveName in dataDict:
-                spec = parseTroveSpec(dataDict[dictTroveName])
+            if troveName in dataDict:
+                spec = parseTroveSpec(dataDict[troveName])
             else:
                 spec = (troveName, None, None)
 
             itemList = [(troveName, (None, None), (spec[1], spec[2]), True)]
+            print >> sys.stderr, itemList
+            sys.stderr.flush()
             uJob, suggMap = cclient.updateChangeSet(itemList,
                 resolveDeps = False,
                 callback = self.callback)

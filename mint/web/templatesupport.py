@@ -7,6 +7,10 @@
 
 import time
 from mint import userlevels
+from mint.client import extractIs
+
+from conary.conaryclient.cmdline import parseTroveSpec
+from conary import versions
 
 def downloadTracker(cfg, url):
     if cfg.googleAnalyticsTracker:
@@ -32,3 +36,7 @@ def isGroupBuilderLegal(groupTrove, trv):
 def dictToJS(d):
     """Returns dict as a str with keys converted to str as well"""
     return str(dict([(str(x[0]), x[1]) for x in d.iteritems()]))
+
+def shortTroveSpec(spec):
+    n, v, f = parseTroveSpec(spec)
+    return "%s=%s (%s)" % (n, str(versions.ThawVersion(v).trailingRevision()), extractIs(f))

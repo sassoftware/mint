@@ -27,6 +27,7 @@ class EnumOption(BuildOption):
     def __new__(self):
         return tuple.__new__(tuple, (self.type, self.default, self.prompt, self.options))
 
+
 optionNameMap = {
     'anacondaCustomTrove': 'anaconda-custom',
     'anacondaTemplatesTrove': 'anaconda-templates',
