@@ -22,7 +22,7 @@ from mint import userlevels
 from mint import users
 
 from mint import buildtemplates
-from mint.builds import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM
+from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM, RDT_TROVE
 from mint.users import sendMailWithChecks
 from mint.web.webhandler import WebHandler, normPath, HttpNotFound, \
      HttpForbidden
@@ -414,6 +414,12 @@ class ProjectHandler(WebHandler):
                     val = str(val)
                 if template[name][0] == RDT_INT:
                     val = int(val)
+                if template[name][0] == RDT_TROVE:
+                    # remove timestamp from version string
+                    n, v, f = parseTroveSpec(str(val))
+                    v = str(versions.ThawVersion(v))
+                    f = str(f)
+                    val = "%s=%s[%s]" % (n, v, f)
             except KeyError:
                 if template[name][0] == RDT_BOOL:
                     val = False
