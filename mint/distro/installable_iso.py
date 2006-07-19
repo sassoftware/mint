@@ -113,7 +113,7 @@ def call(*cmds):
 
 class InstallableIso(ImageGenerator):
     configObject = IsoConfig
-    buildDir = 'rPath'
+    productDir = 'rPath'
 
     def _getUpdateJob(self, cclient, troveName):
         self.callback.setChangeSet(troveName)
@@ -179,17 +179,17 @@ class InstallableIso(ImageGenerator):
         print >> bsFile, time.time()
         print >> bsFile, self.project.getName()
         print >> bsFile, upstream(self.build.getTroveVersion())
-        print >> bsFile, self.buildDir
+        print >> bsFile, self.productDir
         print >> bsFile, self.build.getDataValue("bugsUrl")
         print >> bsFile, "%s %s %s" % (self.build.getTroveName(),
                                        self.build.getTroveVersion().asString(),
                                        self.build.getTroveFlavor().freeze())
         bsFile.close()
 
-    def writeBuildImage(self, topdir, arch):
-        # write the build.img cramfs
-        baseDir = os.path.join(topdir, self.buildDir, 'base')
-        buildPath = os.path.join(baseDir, "build.img")
+    def writeProductImage(self, topdir, arch):
+        # write the product.img cramfs
+        baseDir = os.path.join(topdir, self.productDir, 'base')
+        productPath = os.path.join(baseDir, "product.img")
         tmpPath = tempfile.mkdtemp()
 
         self.writeBuildStamp(tmpPath)
@@ -263,7 +263,7 @@ class InstallableIso(ImageGenerator):
         util.rmtree(stage2Path)
 
         # create cramfs
-        call('mkcramfs', tmpPath, buildPath)
+        call('mkcramfs', tmpPath, productPath)
 
         # clean up
         util.rmtree(tmpPath)
@@ -458,7 +458,7 @@ class InstallableIso(ImageGenerator):
 
         self.status("Preparing ISO template")
         _linkRecurse(templateDir, topdir)
-        buildDir = os.path.join(topdir, self.buildDir)
+        productDir = os.path.join(topdir, self.productDir)
 
         # replace isolinux.bin with a real copy, since it's modified
         call('cp', '--remove-destination', '-a',
@@ -469,7 +469,7 @@ class InstallableIso(ImageGenerator):
                      os.path.join(templateDir, 'isolinux', msgFile),
                      os.path.join(topdir, 'isolinux', msgFile))
 
-        csdir = os.path.join(topdir, self.buildDir, 'changesets')
+        csdir = os.path.join(topdir, self.productDir, 'changesets')
         util.mkdirChain(csdir)
         return csdir
 
@@ -561,7 +561,7 @@ class InstallableIso(ImageGenerator):
             anacondaArch = arch
 
         # write the sqldb file
-        baseDir = os.path.join(topdir, self.buildDir, 'base')
+        baseDir = os.path.join(topdir, self.productDir, 'base')
         sqldbPath = os.path.join(baseDir, 'sqldb')
         gencslist.writeSqldb(groupcs, sqldbPath,
             cfgFile = os.path.join(self.cfg.configPath, 'config', 'conaryrc'))
@@ -582,12 +582,12 @@ class InstallableIso(ImageGenerator):
         print >> discInfoFile, anacondaArch
         print >> discInfoFile, "1"
         for x in ["base", "changesets", "pixmaps"]:
-            print >> discInfoFile, "%s/%s" % (self.buildDir, x)
+            print >> discInfoFile, "%s/%s" % (self.productDir, x)
         discInfoFile.close()
 
         self.extractMediaTemplate(topdir)
         self.setupKickstart(topdir)
-        self.writeBuildImage(topdir, '1#' + arch)
+        self.writeProductImage(topdir, '1#' + arch)
 
         self.status("Building ISOs")
         splitdistro.splitDistro(topdir, troveName, maxIsoSize)
