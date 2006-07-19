@@ -56,9 +56,6 @@ class WebHandler(object):
         context = dict(self.__dict__.iteritems())
         context.update(values)
 
-        print >> sys.stderr, "Context: %s" % context
-        sys.stderr.flush()
-
         # write out the template
         t = template.Template(**context)
 
