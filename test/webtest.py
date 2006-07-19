@@ -1096,8 +1096,8 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
 
         page = self.fetch('/project/testproject/newBuild')
 
-        troveSpec = 'group-test=/testproject.' + MINT_PROJECT_DOMAIN + '@rpl:devel/1.0-1-1' + '[is: x86]'
-        page = page.postForm(1, self.post, \
+        troveSpec = 'group-test=/testproject.' + MINT_PROJECT_DOMAIN + '@rpl:devel/0.0:1.0-1-1' + '[is: x86]'
+        page = page.postForm(1, self.post,
                              {'name' : 'Foo',
                               'distTroveSpec': troveSpec,
                               'anaconda_templatesSpec': troveSpec,
