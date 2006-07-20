@@ -1,5 +1,4 @@
 javascript_files =\
-	generic.js \
 	groupbuilder.js \
 	library.js \
 	mirror.js \
