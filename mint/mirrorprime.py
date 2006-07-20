@@ -21,6 +21,7 @@ copyThread = None
 sourcePath = "/mnt/"
 needsMount = True
 tmpPath = None
+targetPath = None
 
 class JsonRPCHandler(BaseHTTPServer.BaseHTTPRequestHandler, object):
     def do_GET(self):
@@ -73,9 +74,11 @@ class CopyThread(threading.Thread):
         self.tmpPath = kwargs['tmpPath']
         self.sourcePath = kwargs['sourcePath']
         self.needsMount = kwargs['needsMount']
+        self.targetPath = kwargs['targetPath']
         del kwargs['tmpPath']
         del kwargs['sourcePath']
         del kwargs['needsMount']
+        del kwargs['targetPath']
 
         threading.Thread.__init__(self, *args, **kwargs)
         self.status = {"bytesTotal": 0, "bytesRead": 0, "done": False, "checksumError": False,
@@ -130,8 +133,8 @@ class TarThread(CopyThread):
             if x.startswith("mirror-") and x.endswith(".tar")][0]
 
         serverName = file[7:-4]
-        util.mkdirChain("/srv/rbuilder/repos/%s" % serverName)
-        cmd = ["tar", "xvf", os.path.join(self.tmpPath, file), "-C", "/srv/rbuilder/repos/%s" % serverName]
+        util.mkdirChain(self.targetPath + "/repos/%s" % serverName)
+        cmd = ["tar", "xvf", os.path.join(self.tmpPath, file), "-C", self.targetPath + "/repos/%s" % serverName]
         tar = subprocess.Popen(cmd, stdout = subprocess.PIPE)
 
         lines = 100
@@ -145,7 +148,8 @@ class TarThread(CopyThread):
         #
         # o Chown the files to apache.apache
         #
-        os.system("chown -R apache.apache /srv/rbuilder/repos/%s/" % serverName)
+        os.system("chown -R apache.apache %s/repos/%s/" % (targetPath, serverName))
+        os.unlink(os.path.join(self.tmpPath, file))
         self.status['done'] = True
 
 
@@ -190,7 +194,7 @@ class CopyFromDiscThread(CopyThread):
 
 class TarHandler(JsonRPCHandler):
     def handle_one_request(self):
-        global sourcePath, tmpPath, needsMount
+        global sourcePath, tmpPath, needsMount, targetPath
         self.sourcePath = sourcePath
 
         if not tmpPath:
@@ -199,8 +203,10 @@ class TarHandler(JsonRPCHandler):
             mc = config.MintConfig()
             mc.read(config.RBUILDER_CONFIG)
             tmpPath = os.path.join(mc.dataPath, 'tmp', '')
+            targetPath = mc.dataPath
 
         self.tmpPath = tmpPath
+        self.targetPath = targetPath
         self.needsMount = needsMount
         JsonRPCHandler.handle_one_request(self)
 
@@ -213,7 +219,8 @@ class TarHandler(JsonRPCHandler):
             copyThread = CopyFromDiscThread(
                 tmpPath = self.tmpPath,
                 sourcePath = self.sourcePath,
-                needsMount = self.needsMount)
+                needsMount = self.needsMount,
+                targetPath = self.targetPath)
             copyThread.start()
 
     def concatfiles(self):
@@ -225,7 +232,8 @@ class TarHandler(JsonRPCHandler):
             copyThread = ConcatThread(
                 tmpPath = self.tmpPath,
                 sourcePath = self.sourcePath,
-                needsMount = self.needsMount)
+                needsMount = self.needsMount,
+                targetPath = self.targetPath)
             copyThread.start()
 
     def untar(self):
@@ -237,7 +245,8 @@ class TarHandler(JsonRPCHandler):
             copyThread = TarThread(
                 tmpPath = self.tmpPath,
                 sourcePath = self.sourcePath,
-                needsMount = self.needsMount)
+                needsMount = self.needsMount,
+                targetPath = self.targetPath)
             copyThread.start()
 
     def getDiscInfo(self):

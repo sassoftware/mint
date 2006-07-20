@@ -34,6 +34,13 @@ class MirrorPrimeTest(unittest.TestCase):
         util.mkdirChain(self.tmpPath)
         util.mkdirChain(self.sourcePath)
 
+        # find archiveDir
+        for dir in sys.path:
+            thisdir = os.path.normpath(os.sep.join((dir, 'archive')))
+            if os.path.isdir(thisdir):
+                self.archiveDir = thisdir
+                break
+
         self.primePid = os.fork()
         if not self.primePid:
             fd = os.open(os.devnull, os.W_OK)
@@ -44,6 +51,7 @@ class MirrorPrimeTest(unittest.TestCase):
             mirrorprime.needsMount = False
             mirrorprime.sourcePath = self.sourcePath
             mirrorprime.tmpPath = self.tmpPath
+            mirrorprime.targetPath = self.tmpPath
 
             httpd = BaseHTTPServer.HTTPServer(('', self.primePort), mirrorprime.TarHandler)
             httpd.serve_forever()
@@ -139,7 +147,7 @@ class MirrorPrimeTest(unittest.TestCase):
         self.failIf(not done, "copy never completed")
 
         assert(r[1]['checksumError'])
- 
+
     def testConcat(self):
         self.writeMirrorFiles(dest = self.tmpPath)
 
@@ -156,6 +164,20 @@ class MirrorPrimeTest(unittest.TestCase):
 
         assert(os.stat(os.path.join(self.tmpPath, "mirror-test.rpath.local.tar"))[stat.ST_SIZE] == 24)
 
+    def testUntar(self):
+        util.copyfile(self.archiveDir + "/mirror-test.tar", self.tmpPath)
+        r = self.fetch('untar')
+
+        done = False
+        tries = 0
+        while not done and tries < 10:
+            r = self.fetch('copyStatus')
+            done = r[1]['done']
+            time.sleep(0.5)
+            tries += 1
+ 
+        assert(os.path.exists(self.tmpPath + "/repos/test/Makefile"))
+        assert(not os.path.exists(self.tmpPath + "/mirror-test.tar"))
 
 if __name__ == "__main__":
     testsuite.main()
