@@ -4,27 +4,27 @@
 # All Rights Reserved
 #
 
-WAITING, RUNNING, FINISHED, DELETED, ERROR, NOJOB = range(0, 6)
+UNKNOWN, WAITING, RUNNING, FINISHED, DELETED, ERROR, NOJOB = range(-1, 6)
 
-STATUSES = range(0, 6)
+STATUSES = range(-1, 6)
 statusNames = {
+    UNKNOWN: "Unknown",
     WAITING: "Waiting",
     RUNNING: "Running",
     FINISHED: "Finished",
     DELETED: "Deleted",
     ERROR: "Error",
-    NOJOB: "No Job",
-
+    NOJOB: "No Job"
 }
 
 statusCodeNames = {
+    UNKNOWN:  "STATUS_UNKNOWN",
     WAITING: "STATUS_WAITING",
     RUNNING: "STATUS_RUNNING",
     FINISHED: "STATUS_FINISHED",
     DELETED: "STATUS_DELETED",
     ERROR: "STATUS_ERROR",
     NOJOB: "STATUS_NOJOB",
-    9999:  "STATUS_UNKNOWN",
 }
 
 # code generator run by make to generate javascript constants
