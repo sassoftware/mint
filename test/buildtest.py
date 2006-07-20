@@ -290,8 +290,8 @@ class OldBuildTest(MintRepositoryHelper):
     def makeInstallableIsoCfg(self):
         mintDir = os.environ['MINT_PATH']
         os.mkdir("%s/changesets" % self.tmpDir)
-        util.mkdirChain("%s/templates/x86/BUILDNAME" % self.tmpDir)
-        util.mkdirChain("%s/templates/x86_64/BUILDNAME" % self.tmpDir)
+        util.mkdirChain("%s/templates/x86/PRODUCTNAME" % self.tmpDir)
+        util.mkdirChain("%s/templates/x86_64/PRODUCTNAME" % self.tmpDir)
 
         cfg = installable_iso.IsoConfig()
         cfg.configPath = self.tmpDir
