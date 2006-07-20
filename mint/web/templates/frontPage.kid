@@ -135,13 +135,9 @@ from mint.client import upstream
                                     <?python
                                         projectName, hostname, release = releaseInfo
                                         releaseName = release.name
-                                        shorterProjectName = truncateForDisplay(projectName, maxWords=5)
                                         shorterReleaseName = truncateForDisplay(releaseName, maxWords=8)
-                                        if release.version:
-                                            shorterReleaseName += " (Version %s)" % release.version
-                                            releaseName += " (Version %s)" % release.version
                                     ?>
-                                    <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${hostname}/release?id=${release.id}" title="${releaseName}">${projectName}<br /><span style="font-size: smaller">${shorterReleaseName}</span></a>
+                                    <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${hostname}/release?id=${release.id}" title="${releaseName}">${shorterReleaseName}<span py:if="release.version" style="font-size: smaller;"> (Version ${release.version})</span></a>
                                  </li>
                              </ol>
                          </td>

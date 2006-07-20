@@ -308,4 +308,15 @@ from mint.web.templatesupport import injectVersion, dictToJS
             </div>
         </div>
     </div>
+
+    <div py:def="statusArea(jobType)">
+        <div id="statusAreaHeader">
+            <div class="padded">${jobType} Status</div>
+        </div>
+        <div id="statusArea" class="running">
+            <img src="${cfg.staticPath}apps/mint/images/circle-ball-dark-antialiased.gif" style="float: right;" id="statusSpinner" alt="Job Running" />
+            <div id="statusMessage" />
+       </div>
+    </div>
+
 </html>

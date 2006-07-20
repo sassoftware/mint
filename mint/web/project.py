@@ -338,37 +338,56 @@ class ProjectHandler(WebHandler):
 
     @writersOnly
     @intFields(buildId = -1)
-    @strFields(trove = "")
-    def editBuild(self, auth, buildId, trove):
+    @strFields(trove = "", action = "edit")
+    def editBuild(self, auth, buildId, trove, action):
 
-        build = self.client.getBuild(buildId)
+        if action == "edit":
+            build = self.client.getBuild(buildId)
 
-        troveName, versionStr, flavor = build.getTrove()
-        version = versions.ThawVersion(versionStr)
-        label = version.branch().label()
-        thawedFlavor = deps.ThawFlavor(flavor)
-        arch = thawedFlavor.members[deps.DEP_CLASS_IS].members.keys()[0]
+            troveName, versionStr, flavor = build.getTrove()
+            version = versions.ThawVersion(versionStr)
+            label = version.branch().label()
+            thawedFlavor = deps.ThawFlavor(flavor)
+            arch = thawedFlavor.members[deps.DEP_CLASS_IS].members.keys()[0]
 
-        return self._write("editBuild",
-            buildId = buildId,
-            name = build.getName(),
-            desc = build.getDesc(),
-            buildType = build.getBuildType(),
-            defaultTemplate = buildtypes.INSTALLABLE_ISO,
-            templates = buildtemplates.getDisplayTemplates(),
-            dataDict = build.getDataDict(),
-            trove = trove,
-            troveName = troveName,
-            label = label,
-            version = version,
-            flavor = thawedFlavor,
-            arch = arch,
-            kwargs = {})
+            return self._write("editBuild",
+                buildId = buildId,
+                name = build.getName(),
+                desc = build.getDesc(),
+                buildType = build.getBuildType(),
+                defaultTemplate = buildtypes.INSTALLABLE_ISO,
+                templates = buildtemplates.getDisplayTemplates(),
+                dataDict = build.getDataDict(),
+                trove = trove,
+                troveName = troveName,
+                label = label,
+                version = version,
+                flavor = thawedFlavor,
+                arch = arch,
+                kwargs = {})
+        elif action == "recreate":
+            job = self.client.startImageJob(buildId)
+            try:
+                job = self.client.startImageJob(buildId)
+            except jobs.DuplicateJob:
+                pass
+            self._predirect("build?id=%d" % buildId)
+        else:
+            self._addErrors("Invalid action %s" % action)
+            self._predirect("build?id=%d" % buildId)
+
 
     @requiresAuth
     @intFields(buildId = None)
-    @strFields(distTroveSpec = None, name = "", desc = "")
-    def saveBuild(self, auth, buildId, distTroveSpec, name, desc, **kwargs):
+    @strFields(distTroveSpec = "", name = "", desc = "", action = "save")
+    def saveBuild(self, auth, buildId, distTroveSpec, name, desc, action, **kwargs):
+
+        if action == "cancel":
+            if buildId:
+                self._predirect("build?id=%d" % buildId)
+            else:
+                self._predirect("builds")
+
         if not buildId:
             build = self.client.newBuild(self.project.id, name)
             buildId = build.id
@@ -435,26 +454,39 @@ class ProjectHandler(WebHandler):
 
         self._predirect("build?id=%d" % buildId)
 
-    @intFields(buildId = None)
     @writersOnly
-    def deleteBuild(self, auth, buildId):
-        build = self.client.getBuild(buildId)
-        build.deleteBuild()
-        self._predirect("builds")
+    @intFields(id = None)
+    @dictFields(yesArgs = {})
+    @boolFields(confirmed = False)
+    def deleteBuild(self, auth, confirmed, **yesArgs):
+        if confirmed:
+            build = self.client.getBuild(int(yesArgs['id']))
+            build.deleteBuild()
+            self._setInfo("Build %s deleted" % build.name)
+            self._predirect("builds")
+        else:
+            return self._write("confirm",
+                    message = "Are you sure you want to delete this build?",
+                    yesArgs = { 'func': 'deleteBuild',
+                                'id': yesArgs['id'],
+                                'confirmed': '1' },
+                    noLink = "builds")
 
     @intFields(id = None)
     def build(self, auth, id):
         build = self.client.getBuild(id)
         buildInProgress = False
-        builtBy = ''
+        builtBy = None
         builtAt = None
         if auth.authorized:
             buildJob = build.getJob()
             if buildJob:
                 buildInProgress = \
                         (buildJob.getStatus() <= jobstatus.RUNNING)
-                buildUser = self.client.getUser(buildJob.getUserId())
-                builtBy = buildUser.username
+                try:
+                    builtBy = self.client.getUser(buildJob.getUserId())
+                except database.ItemNotFound:
+                    pass
                 if buildInProgress:
                     builtAt = "In process"
                 else:

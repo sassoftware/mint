@@ -8,9 +8,15 @@
 -->
     <head>
         <title>${formatTitle('Group Builder: %s' % project.getNameForDisplay())}</title>
+        <script type="text/javascript">
+            <![CDATA[
+                addLoadEvent(function() {roundElement('statusAreaHeader', {'corners': 'tl tr'})});
+                addLoadEvent(function() {getCookStatus(${jobId})});
+            ]]>
+        </script>
     </head>
 
-    <body onload="getCookStatus(${jobId});">
+    <body>
         <div id="layout">
             <div id="left" class="side">
                 ${projectResourcesMenu()}
@@ -28,14 +34,9 @@
                 <p>Your request to cook ${curGroupTrove.recipeName} has been
                 submitted.</p>
 
-                <h3>Request Status</h3>
-                <div>
-                    <img src="${cfg.staticPath}apps/mint/images/circle-ball-dark-antialiased.gif" id="spinner" style="float: right;"/>
-                    <div id="statusMessage" class="running" />
-                </div>
+                ${statusArea("Cook")}
 
-
-                <p>When the request status "Finished" appears, your group
+                <p>When the job status "Finished" appears, your group
                 has finished cooking. Click on the "Builds" link in the
                 "Project Resources" sidebar, and select
                 ${curGroupTrove.recipeName} to create a build.</p>

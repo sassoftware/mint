@@ -33,8 +33,24 @@ a:hover {
 }
 
 a:hover {
+    color: white;
+    background-color: #333;
     text-decoration: underline;
 }
+
+.boxHeader a,
+.boxHeader a:visited,
+.boxHeader a:active,
+.boxHeader a:hover,
+label a,
+label a:visited,
+label a:active,
+label a:hover {
+    color: #333;
+    background-color: transparent;
+    text-decoration: none;
+}
+
 
 a img {
     border: none;
@@ -188,6 +204,13 @@ div#top #topRight div.about a:link {
 
 div#top #topRight div.about a:visited {
     color: #bbbbbb;
+}
+
+div#prodLogo a:hover,
+div#corpLogo a:hover {
+    color: #333;
+    background-color: transparent;
+    text-decoration: none;
 }
 
 form#searchForm {
@@ -509,11 +532,6 @@ th#spotTh {
     background-color: #EEE;
 }
 
-tr.odd {
-    background-color: #EFEFEF;
-}
-
-
 
 button#signInSubmit {
     padding: 10px 0px 10px 0px;
@@ -602,6 +620,7 @@ div#topten a:active {
 
 div#topten a:hover {
     text-decoration: underline;
+    background: transparent;
 }
 
 div#topten table td {
@@ -776,7 +795,7 @@ div#projectsPane div.boxHeader span {
 
 div#projectsPane a.signout {
     float: right;
-    font-size: small;
+    font-size: x-small;
     color: white;
 }
 
@@ -977,11 +996,58 @@ div.clearleft {
     margin-left: 30px;
 }
 
-.smallSpecs {
+.smallSpecs,
+table.buildstable td.buildInfo {
     font-size: smaller;
     font-weight: normal;
     font-style: normal;
-    margin-left: 20px;
+    padding-bottom: 0.5em;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.smallSpecs {
+    padding-left: 20px;
+}
+
+table.buildstable span.buildAssociated {
+    font-size: smaller;
+    font-weight: normal;
+    font-style: italic;
+    text-align: right;
+}
+
+table.buildstable td.buildName {
+    font-weight: bold;
+    padding-top: 0.5em;
+    padding-bottom: 0.25em;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+table.buildstable td {
+    margin-bottom: 0.25em;
+}
+
+table.releasestable td.releaseInfo {
+    font-size: smaller;
+    font-weight: normal;
+    font-style: normal;
+    padding-bottom: 0.5em;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+table.releasestable td.releaseName {
+    font-weight: bold;
+    padding-top: 0.5em;
+    padding-bottom: 0.25em;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+table.releasestable td {
+    margin-bottom: 0.25em;
 }
 
 label.troveSpecs {
@@ -1055,22 +1121,44 @@ div.palette div.boxBody {
 }
 
 /* job status colors */
-div#statusMessage.error {
+
+#statusAreaHeader {
+    background: #0F2879;
+    color: white;
+    font-size: x-small;
+    font-weight: bold;
+}
+
+#statusAreaHeader .padded {
+    padding-left: 5px;
+}
+
+#statusArea {
+    padding: 3px 5px;
+    border: 2px solid #0F2879;
+}
+
+.error {
     background: #edc2c2;
-    border: 2px solid #ed6464;
-    padding: 4px;
 }
 
-div#statusMessage.running {
+.running {
     background: #eeeeff;
-    border: 2px solid #8888ff;
-    padding: 4px;
 }
 
-div#statusMessage.finished {
+.finished {
     background: #cdedc2;
-    border: 2px solid #7bbb66;
-    padding: 4px;
+}
+
+#editBuildOptions {
+    text-align: center;
+    margin-top: 1em;
+}
+
+button.newStyle {
+    font-size: x-small;
+    padding: 0.3em;
+    cursor: pointer;
 }
 
 /* general status -- refactor the job status to use these

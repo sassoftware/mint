@@ -1,17 +1,15 @@
 // Globals - top level stuff
-var refreshed = false;
-var oldStatus = -1;
+var cookStatus;
 var cookStatusRefreshTime = 2000; /* 2 seconds */
 var cookStatusId;
+var buildStatus;
 var buildStatusRefreshTime = 5000; /* 5 seconds */
 var buildStatusId;
 var jobsListRefreshTime = 10000; /* 10 seconds */
 var jobsListId;
-var jobsList = "global";
-var archDict = "global";
-var cookStatus = "global";
-var buildStatus = "global";
-var oldStatus = STATUS_UNKNOWN;
+var jobsList = "";
+var archDict = "";
+var oldBuildStatus = STATUS_UNKNOWN;
 var userCache = {};
 var groupTroveCache = {};
 var buildCache = {};
@@ -206,75 +204,51 @@ makeJobRowData = function(aRow) {
 };
 
 // RPC callbacks ------------------------------------------------------------
-function processGetBuildStatus(aReq) {
-    var oldBuildStatus = $("statusMessage");
-
-    logDebug("[JSON] response: ", aReq.responseText);
-    buildStatus = evalJSONRequest(aReq);
-
-    buildStatusEl = DIV({ 'id': 'statusMessage', 'class': 'running' }, null);
-    if (!buildStatus) {
-        status = STATUS_NOJOB;
-    } else {
-        status = buildStatus.status;
-        // FIXME: replace this with a status -> class name map or something
-        if(status == STATUS_RUNNING)
-            setElementClass(buildStatusEl, "running");
-        if(status == STATUS_FINISHED)
-            setElementClass(buildStatusEl, "finished");
-        if(status == STATUS_ERROR)
-            setElementClass(buildStatusEl, "error");
-
-        // refresh page when job successfully completes
-        // to get new download list
-        if ((oldStatus <= STATUS_RUNNING) &&
-            (status == STATUS_FINISHED)) {
-            window.location.reload();
-        }
-
-        // handle edit options; also, spin baton if we're still
-        // running
-        if (status > STATUS_RUNNING) {
-            hideElement('spinner');
-            hideElement('editOptionsDisabled');
-            showElement('editOptions');
-        } else {
-            showElement('spinner');
-            showElement('editOptionsDisabled');
-            hideElement('editOptions');
-        }
-        replaceChildNodes(buildStatusEl, SPAN({'style': 'font-weight: bold;'}, "Status: "), SPAN(null, buildStatus.message));
-        oldStatus = status;
-    }
-    swapDOM(oldBuildStatus, buildStatusEl);
-}
 
 function processGetCookStatus(aReq) {
-    var oldEl = $("statusMessage");
-    var el = DIV({ 'id': 'statusMessage', 'class': 'running' }, null);
 
     logDebug("[JSON] response: ", aReq.responseText);
     cookStatus = evalJSONRequest(aReq);
+    updateStatusArea(cookStatus);
 
-    if(!cookStatus) {
+}
+
+function processGetBuildStatus(aReq) {
+
+    logDebug("[JSON] response: ", aReq.responseText);
+    buildStatus = evalJSONRequest(aReq);
+    updateStatusArea(buildStatus);
+
+}
+
+function updateStatusArea(jobStatus) {
+
+    var statusAreaEl = $("statusArea");
+    var statusMessageEl = $("statusMessage");
+    var newStatusMessageEl = DIV({ 'id': 'statusMessage' }, null);
+
+    logDebug(jobStatus);
+
+    if(!jobStatus) {
         status = STATUS_NOJOB;
     } else {
-        status = cookStatus.status;
+        status = jobStatus.status;
         if(status == STATUS_RUNNING)
-            setElementClass(el, "running");
+            setElementClass(statusAreaEl, "running");
         if(status == STATUS_FINISHED)
-            setElementClass(el, "finished");
+            setElementClass(statusAreaEl, "finished");
         if(status == STATUS_ERROR)
-            setElementClass(el, "error");
+            setElementClass(statusAreaEl, "error");
 
         if (status > STATUS_RUNNING) {
-            hideElement('spinner');
+            hideElement('statusSpinner');
         } else {
-            showElement('spinner');
+            showElement('statusSpinner');
         }
-        replaceChildNodes(el, SPAN({'style': 'font-weight: bold;'}, "Status: "), SPAN(null, cookStatus.message));
+        replaceChildNodes(newStatusMessageEl, jobStatus.message);
     }
-    swapDOM(oldEl, el);
+    swapDOM(statusMessageEl, newStatusMessageEl);
+
 }
 
 function processListActiveJobs(aReq) {
@@ -352,8 +326,19 @@ function getBuildStatus(buildId) {
     req.setAuth(getCookieValue("pysid"));
     req.setCallback(processGetBuildStatus);
     req.send(false, [buildId]);
-    if (buildStatus != null && buildStatus.status < STATUS_FINISHED) {
-        buildStatusId = setTimeout("getBuildStatus("+buildId+")", buildStatusRefreshTime);
+    if (buildStatus != null) {
+        if (oldBuildStatus == STATUS_UNKNOWN) {
+            oldBuildStatus = buildStatus.status;
+        }
+        if (buildStatus.status < STATUS_FINISHED) {
+            buildStatusId = setTimeout("getBuildStatus("+buildId+")", buildStatusRefreshTime);
+        } else {
+            logDebug("oldBuildStatus: " + oldBuildStatus);
+            if (oldBuildStatus < STATUS_FINISHED) {
+                reloadCallback();
+            }
+        }
+        oldBuildStatus = buildStatus.status;
     }
 }
 
@@ -362,7 +347,7 @@ function getCookStatus(jobId) {
     req.setAuth(getCookieValue("pysid"));
     req.setCallback(processGetCookStatus);
     req.send(false, [jobId]);
-    // continue calling self until we're finished
+    // continue calling self until we are finished
     if (cookStatus != null && cookStatus.status < STATUS_FINISHED) {
         cookStatusId = setTimeout("getCookStatus("+jobId+")", cookStatusRefreshTime);
     }

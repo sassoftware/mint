@@ -16,33 +16,45 @@ from mint.web.templatesupport import downloadTracker
               title="${project.getName()} Builds" href="${basePath}rss" />
     </head>
 
-    <div py:strip="True" py:def="buildsTableRow(build, isHidden, hiddenName)">
+    <div py:strip="True" py:def="buildsTableRow(build, rowNumber, numShowByDefault, hiddenName)">
         <?python
             from mint import buildtypes
             from mint.helperfuncs import truncateForDisplay
-            rowAttrs = isHidden and { 'name': hiddenName, 'style': 'display: none;' } or {}
+            rowAttrs = (rowNumber >= numShowByDefault) and { 'name': hiddenName, 'style': 'display: none;' } or {}
+            rowAttrs['class'] = (rowNumber % 2) and 'odd' or 'even'
+            isPublished = build.getPublished()
         ?>
         <tr py:attrs="rowAttrs">
-            <td><a href="${basePath}build?id=${build.id}">${truncateForDisplay(build.name)}</a><br />
-                <span class="smallSpecs" colspan="2">
-                    ${build.getArch()}&nbsp;${buildtypes.typeNamesShort[build.getBuildType()]}&nbsp;&nbsp;&nbsp;${build.getDefaultName()}
-                </span>
+            <td colspan="4" class="buildName">${truncateForDisplay(build.name)}
+                <span py:if="isPublished" class="buildAssociated">
+                    <?python
+                        release = self.client.getPublishedRelease(build.pubReleaseId)
+                    ?>
+                    (part of release <a href="${basePath}release?id=${release.id}">${release.name}</a>)</span>
+            </td>
+        </tr>
+        <tr py:attrs="rowAttrs">
+            <td class="buildInfo">${build.getDefaultName()}</td>
+            <td class="buildInfo">${build.getArch()}</td>
+            <td class="buildInfo">${buildtypes.typeNamesShort[build.getBuildType()]}</td>
+            <td class="buildInfo">(<a href="${basePath}build?id=${build.id}">view</a>)
+                <span py:if="not isPublished" class="buildInfo">&nbsp;(<a href="${basePath}deleteBuild?id=${build.id}">delete</a>)</span>
             </td>
         </tr>
     </div>
 
      <div py:strip="True" py:def="buildsTable(builds, numShowByDefault)">
         <?python
-            ithBuild = 0
+            rowNumber = 0
             hiddenName = 'older_build'
         ?>
         <table py:if="builds" border="0" cellspacing="0" cellpadding="0" class="buildstable">
             <div py:strip="True" py:for="build in builds">
-                ${buildsTableRow(build, ithBuild > numShowByDefault, hiddenName)}
-                <?python ithBuild += 1 ?>
+                ${buildsTableRow(build, rowNumber, numShowByDefault, hiddenName)}
+                <?python rowNumber += 1 ?>
             </div>
         </table>
-        <p py:if="ithBuild > numShowByDefault"><a name="${hiddenName}" onclick="javascript:toggle_display_by_name('${hiddenName}');" href="#">(show all builds)</a></p>
+        <p py:if="rowNumber > numShowByDefault"><a name="${hiddenName}" onclick="javascript:toggle_display_by_name('${hiddenName}');" href="#">(show all builds)</a></p>
         <p py:if="not builds">This project contains no builds.</p>
     </div>
 

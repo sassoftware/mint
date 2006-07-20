@@ -59,7 +59,7 @@ allowNone = ['anaconda-custom', 'media-template']
                         <label for="relname">Name</label>
                         <input id="relname" name="name" type="text" value="${name}" /><div class="clearleft">&nbsp;</div>
 
-                        <label for="reldesc">Description (optional)</label>
+                        <label for="reldesc">Build Notes (optional)</label>
                         <textarea id="reldesc" name="desc" type="text" py:content="desc" /><div class="clearleft">&nbsp;</div>
 
                     </div>
@@ -137,10 +137,8 @@ allowNone = ['anaconda-custom', 'media-template']
                     </div>
 
                     <p>
-                        <button id="submitButton" type="submit"
-                            py:attrs="{'disabled': not buildId and 'disabled' or None}">
-                            ${buildId and "Recreate" or "Create"} Build
-                        </button>
+                        <button id="submitButton" type="submit" name="action" value="save" py:attrs="{'disabled': not buildId and 'disabled' or None}"> ${buildId and "Recreate" or "Create"} Build</button>
+                        <button type="submit" name="action" value="cancel">Cancel</button>
                     </p>
                     <input type="hidden" name="buildId" value="${buildId and buildId or 0}" />
                 </form>

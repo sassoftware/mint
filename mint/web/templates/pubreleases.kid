@@ -17,15 +17,18 @@ from mint.web.templatesupport import downloadTracker
     </head>
 
     <div py:def="pubReleasesTable(releases, isOwner)">
-        <table>
-            <tbody>
-                <tr py:for="release in releases">
-                    <td>${release.name}</td>
-                    <td>${release.version}</td>
-                    <td>(<a href="${basePath}release?id=${release.id}">view</a>)&nbsp;<span py:if="isOwner"><span py:if="not release.isPublished()">(<a href="${basePath}editRelease?id=${release.id}">edit</a>)&nbsp;(<a href="${basePath}publishRelease?id=${release.id}">publish</a>)&nbsp;(<a href="${basePath}deleteRelease?id=${release.id}">delete</a>)</span><span py:if="release.isPublished()">(<a href="${basePath}unpublishRelease?id=${release.id}">unpublish</a>)</span></span></td>
-
+        <table class="releasestable" border="0" cellspacing="0" cellpadding="0" >
+            <?python rowNumber = 0?>
+            <div py:for="release in releases" py:strip="True">
+                <tr py:attrs="{'class': (rowNumber % 2) and 'odd' or 'even'}">
+                    <td class="releaseName" colspan="2">${release.name}</td>
                 </tr>
-            </tbody>
+                <tr py:attrs="{'class': (rowNumber % 2) and 'odd' or 'even'}">
+                    <td class="releaseInfo">Version ${release.version}</td>
+                    <td class="releaseInfo">(<a href="${basePath}release?id=${release.id}">view</a>)&nbsp;<span py:if="isOwner"><span py:if="not release.isPublished()">(<a href="${basePath}editRelease?id=${release.id}">edit</a>)&nbsp;(<a href="${basePath}publishRelease?id=${release.id}">publish</a>)&nbsp;(<a href="${basePath}deleteRelease?id=${release.id}">delete</a>)</span><span py:if="release.isPublished()">(<a href="${basePath}unpublishRelease?id=${release.id}">unpublish</a>)</span></span></td>
+                </tr>
+                <?python rowNumber += 1 ?>
+            </div>
         </table>
     </div>
 
