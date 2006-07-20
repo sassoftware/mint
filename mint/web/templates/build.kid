@@ -4,7 +4,6 @@
 # Copyright (c) 2005-2006 rPath, Inc.
 # All Rights Reserved
 #
-from mint import jobstatus
 from mint import buildtypes
 from mint import userlevels
 from mint.helperfuncs import truncateForDisplay
@@ -13,15 +12,6 @@ from mint.web.templatesupport import downloadTracker
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:py="http://purl.org/kid/ns#"
       py:extends="'layout.kid'">
-    <?python
-    isOwner = (userLevel == userlevels.OWNER or auth.admin)
-    isWriter = (userLevel in userlevels.WRITERS or auth.admin)
-    if isWriter:
-        job = build.getJob()
-    else:
-        job = None
-
-    ?>
     <head>
         <title>${formatTitle('Project Build')}</title>
         <script type="text/javascript">
