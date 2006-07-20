@@ -36,7 +36,7 @@ from mint.web.webhandler import WebHandler, normPath, HttpNotFound, \
 import conary.versions
 from conary.web.fields import boolFields, dictFields, intFields, listFields, strFields
 
-from rmake.build import buildjob
+from mint.rmakeconstants import buildjob
 
 class SiteHandler(WebHandler):
     def handle(self, context):
