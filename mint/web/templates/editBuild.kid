@@ -139,12 +139,7 @@ from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM, RDT_TROVE
                             ${buildId and "Recreate" or "Create"} Build
                         </button>
                     </p>
-                    <?python
-                        # hacktastic way of not passing a None through a request
-                        if not buildId:
-                            buildId = 0
-                    ?>
-                    <input type="hidden" name="buildId" value="${buildId}" />
+                    <input type="hidden" name="buildId" value="${buildId and buildId or 0}" />
                 </form>
             </div>
         </div>

@@ -160,6 +160,12 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
                 fileLink.getattr('href'), code = [200],
                 content = '<span title="/temp/directory">/temp/directory</span>')
 
+    def testDisallowedMethod(self):
+        client, userId = self.quickMintUser('foouser','foopass')
+        projectId = self.newProject(client)
+
+        self.assertCode('/repos/testproject/log', code = 404)
+
 
 if __name__ == "__main__":
     testsuite.main()
