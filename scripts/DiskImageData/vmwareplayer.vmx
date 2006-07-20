@@ -51,12 +51,7 @@ ide1:0.autodetect = "TRUE"
 #####
 
 ethernet0.present = "TRUE"
-
-#ethernet0.connectionType = "nat"
 ethernet0.connectionType = "bridged"
-#
-# Switch these two to enable "Bridged" vs. "NAT"
-
 ethernet0.addressType = "generated"
 ethernet0.generatedAddress = ""
 ethernet0.generatedAddressOffset = "0"
@@ -91,19 +86,11 @@ workingDir = "."
 disk.fragment.minPercentage = "25"
 
 #
-# (F) T
-mainMem.preallocVACache = "TRUE"
-
-#
 # (16)
 sched.mem.pShare.checkRate = "32"
 
 #
 # (32)
 sched.mem.pshare.scanRate = "64"
-
-#svga settings
-svga.maxWidth = "1024"
-svga.maxHeight = "768"
 
 tools.remindInstall = "TRUE"
