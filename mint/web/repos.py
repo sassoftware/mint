@@ -21,6 +21,13 @@ from conary.repository import errors
 from conary.repository.shimclient import ShimNetClient
 from conary import conaryclient
 
+# When Conary implements a new method in http.HttpHandler that needs
+# to be exposed in rBuilder, add the name of the method here.
+allowedMethods = ('getOpenPGPKey', 'pgpAdminForm', 'pgpChangeOwner',
+    'files', 'troveInfo', 'browse', 'getFile', 'userlist',
+    'deleteGroup', 'addPermForm', 'addPerm', 'addGroupForm',
+    'manageGroupForm', 'manageGroup', 'addGroup',
+    'deletePerm', 'editPermForm', 'editPerm')
 
 class ConaryHandler(WebHandler, http.HttpHandler):
     def _filterAuth(self, **kwargs):
@@ -141,6 +148,9 @@ class ConaryHandler(WebHandler, http.HttpHandler):
                                        cfg.user)
         self.serverNameList = cfg.repositoryMap.keys()
 
+        # make sure we explicitly allow this method
+        if self.cmd not in allowedMethods:
+            raise HttpNotFound
         try:
             method = self.__getattribute__(self.cmd)
         except AttributeError:
@@ -168,27 +178,3 @@ class ConaryHandler(WebHandler, http.HttpHandler):
 
     def _write(self, templateName, **values):
         return WebHandler._write(self, templateName, templatePath = self.reposTemplatePath, **values)
-
-    del http.HttpHandler.main
-    del http.HttpHandler.metadata
-    del http.HttpHandler.chooseBranch
-    del http.HttpHandler.getMetadata
-    del http.HttpHandler.updateMetadata
-    del http.HttpHandler.deleteUser
-    del http.HttpHandler.addUser
-    del http.HttpHandler.chPassForm
-    del http.HttpHandler.chPass
-    del http.HttpHandler.addUserForm
-    del http.HttpHandler.pgpNewKeyForm
-    del http.HttpHandler.submitPGPKey
-    del http.HttpHandler.login
-    del http.HttpHandler.addEntitlement
-    del http.HttpHandler.addEntClassForm
-    del http.HttpHandler.manageEntitlementForm
-    del http.HttpHandler.deleteEntClass
-    del http.HttpHandler.entSetOwner
-    del http.HttpHandler.addEntClass
-    del http.HttpHandler.addEntitlementForm
-    del http.HttpHandler.deleteEntitlement
-    del http.HttpHandler.manageEntitlements
-    del http.HttpHandler.log

@@ -97,7 +97,7 @@ from mint import pubreleases
                     </div>
 
                     <div py:if="availableBuilds" py:strip="True">
-                    <div class="formgroupTitle">${releaseId and 'Unpublished Builds' or 'Release Contents'}<span id="baton"></span></div>
+                    <div class="formgroupTitle">${releaseId and 'Available Builds' or 'Release Contents'}<span id="baton"></span></div>
                     <div class="formgroup">
                     <p class="help" style="margin-right: 20px; margin-left: 20px; margin-top: -5px; margin-bottom: 5px;">${releaseId and 'The following builds are currently not included with this release. Check a release to add it.' or 'Select builds to be included with this release.'}</p>
                         <?python from mint import buildtypes ?>
@@ -151,7 +151,7 @@ from mint import pubreleases
                     ?>
                     <input type="hidden" name="id" value="${releaseId}" />
                 </form>
-                <p py:if="not (availableBuilds or currentBuilds)" class="help">There are currently no unpublished builds associated with this project that contain downloadable files. One or more unpublished builds that contain downloadable files are required to create a release.  Click <a href="${basePath}builds">here</a> to create a new build.</p>
+                <p py:if="not (availableBuilds or currentBuilds)" class="help">There are currently no available builds associated with this project that contain downloadable files. One or more available builds that contain downloadable files are required to create a release.  Click <a href="${basePath}builds">here</a> to create a new build.</p>
             </div>
         </div>
     </body>

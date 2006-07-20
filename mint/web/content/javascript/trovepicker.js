@@ -42,12 +42,13 @@ function trailingRevision(v) {
 }
 
 // ctor
-function TrovePicker(projectId, serverName, troveName, pickerId, mintStaticPath) {
+function TrovePicker(projectId, serverName, troveName, pickerId, mintStaticPath, allowNone) {
     this.projectId = projectId;
     this.serverName = serverName;
     this.troveName = troveName;
     this.elId = pickerId;
     staticPath = mintStaticPath;
+    this.allowNone = allowNone;
 
     if(troveName) {
         this.allowNameChoice = false;
@@ -63,6 +64,7 @@ TrovePicker.prototype.version = null;
 TrovePicker.prototype.flavorCache = null;
 TrovePicker.prototype.domCache = {};
 TrovePicker.prototype.allowNameChoice = true;
+TrovePicker.prototype.aloowNone = false;
 
 TrovePicker.prototype.working = function(isWorking) {
     if(isWorking) {
@@ -86,7 +88,7 @@ TrovePicker.prototype.buildTrovePicker = function() {
         LI(null, "Loading...", IMG({'src': staticPath + spinnerImg}))
     );
     appendChildNodes(picker, SPAN({'id': this.elId + 'prompt', 'class': 'prompt'}),
-        P({'id': 'return'}),
+        P({'id': this.elId + 'return'}),
         spinner,
         UL({'id': this.elId + 'selectionList'}),
         INPUT({'id': this.elId.replace("-", "_") + 'Spec', 'name': this.elId + 'Spec', 'type': 'hidden'})
@@ -124,13 +126,31 @@ TrovePicker.prototype.pickFlavor = function(e) {
     returnLink.version = e.src().version;
     returnLink.label = e.src().label;
     connect(returnLink, "onclick", this, "showTroveFlavors");
-    replaceChildNodes($('return'), returnLink);
+    replaceChildNodes($(this.elId + 'return'), returnLink);
 
     if(this.elId == "distTrove") {
         var sb = $('submitButton');
         sb.disabled = false;
         handleBuildTypes(f);
     }
+}
+
+TrovePicker.prototype.pickNoTrove = function(e) {
+    setNodeAttribute($(this.elId.replace("-", "_") + 'Spec'), 'value', 'NONE');
+    var n = e.src().troveName;
+
+    oldEl = $(this.elId + 'selectionList');
+    newEl = DIV({'id': this.elId + 'selectionList'},
+        SPAN({'style': 'font-weight: bold;'}, 'Group: '),
+        SPAN(null, "No " + n + " will be used for this build.")
+    );
+    swapDOM(oldEl, newEl);
+
+    // return to getTroveVersions
+    returnLink = A(null, returnImg(), " Back");
+    returnLink.troveName = n;
+    connect(returnLink, "onclick", this, "getAllTroveLabels");
+    replaceChildNodes($(this.elId + 'return'), returnLink);
 }
 
 // Show all flavors available for a given trove and version
@@ -156,7 +176,7 @@ TrovePicker.prototype.showTroveFlavors = function(e) {
     returnLink = A(null, returnImg(), " Back");
     returnLink.label = this.label;
     connect(returnLink, "onclick", this, "getTroveVersions");
-    replaceChildNodes($('return'), returnLink);
+    replaceChildNodes($(this.elId + 'return'), returnLink);
 
     swapDOM(oldList, ul);
     this.working(false);
@@ -196,7 +216,7 @@ TrovePicker.prototype.getTroveVersions = function(e) {
         returnLink = A(null, returnImg(), " Back");
         returnLink.troveName = par.troveName;
         connect(returnLink, "onclick", par, "getAllTroveLabels");
-        replaceChildNodes($('return'), returnLink);
+        replaceChildNodes($(par.elId + 'return'), returnLink);
     };
 
     var callback = function(aReq) {
@@ -238,6 +258,12 @@ TrovePicker.prototype.getAllTroveLabels = function(e) {
             connect(link, "onclick", par, "getTroveVersions");
             appendChildNodes(ul, link);
         }
+        if(labelList.length > 0 && par.allowNone) {
+            link = forwardLink(null, "Do not use " + par.troveName + " for this build.");
+            link.troveName = par.troveName;
+            connect(link, "onclick", par, "pickNoTrove");
+            appendChildNodes(ul, link);
+        }
         swapDOM(oldList, ul);
         par.working(false);
         replaceChildNodes($(par.elId + 'prompt'), "Please choose a label:");
@@ -246,9 +272,9 @@ TrovePicker.prototype.getAllTroveLabels = function(e) {
             // return to getGroupTroves
             returnLink = A(null, returnImg(), " Back");
             connect(returnLink, "onclick", par, "getGroupTroves");
-            replaceChildNodes($('return'), returnLink);
+            replaceChildNodes($(par.elId + 'return'), returnLink);
         } else {
-            replaceChildNodes($('return'), disabledReturn());
+            replaceChildNodes($(par.elId + 'return'), disabledReturn());
         }
     };
 
@@ -290,7 +316,7 @@ TrovePicker.prototype.getGroupTroves = function() {
         swapDOM(oldList, ul);
         par.working(false);
         replaceChildNodes($(par.elId + 'prompt'), "Please choose a group:");
-        replaceChildNodes($('return'), disabledReturn());
+        replaceChildNodes($(par.elId + 'return'), disabledReturn());
     };
 
     var callback = function(aReq) {
