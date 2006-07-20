@@ -122,10 +122,17 @@ class ProjectHandler(WebHandler):
         releases = [self.client.getPublishedRelease(x) for x in self.project.getPublishedReleases()]
         return self._write("pubreleases", releases = releases)
 
+    @writersOnly
     def builds(self, auth):
         builds = [self.client.getBuild(x) for x in self.project.getBuilds()]
+        buildsInProgress = []
+        for build in builds:
+            buildJob = build.getJob()
+            if buildJob and (buildJob.getStatus() <= jobstatus.RUNNING):
+                buildsInProgress.append(build.id)
 
-        return self._write("builds", builds = builds)
+        return self._write("builds", builds = builds,
+                buildsInProgress = buildsInProgress)
 
     def groups(self, auth):
         builds = [self.client.getBuild(x) for x in self.project.getBuilds()]
