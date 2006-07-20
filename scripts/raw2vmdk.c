@@ -120,11 +120,11 @@ int writeDescriptorFile(FILE * of, const off_t outsize,
     returner += fprintf(of, "\n"
         "# The Disk Data Base \n"
         "#DDB\n\n"
-        "ddb.virtualHWVersion = \"3\"\n"
-        "ddb.geometry.cylinders = \"%d\"\n"
-        "ddb.geometry.heads = \"%d\"\n"
+        "ddb.adapterType = \"ide\"\n"
         "ddb.geometry.sectors = \"%d\"\n"
-        "ddb.adapterType = \"ide\"\n", cylinders, heads, sectors);
+        "ddb.geometry.heads = \"%d\"\n"
+        "ddb.geometry.cylinders = \"%d\"\n"
+        "ddb.virtualHWVersion = \"4\"\n", sectors, heads, cylinders);
 
     free(cpoutfile);
     return returner;
