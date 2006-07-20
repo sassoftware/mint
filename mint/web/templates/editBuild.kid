@@ -5,6 +5,9 @@ from mint import buildtypes
 from mint.buildtypes import typeNames
 from mint.web.templatesupport import shortTroveSpec
 from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM, RDT_TROVE
+
+# troves that we can allow the user to select "None for this build"
+allowNone = ['anaconda-custom', 'media-template']
 ?>
 
 <html xmlns="http://www.w3.org/1999/xhtml"
@@ -122,7 +125,7 @@ from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM, RDT_TROVE
                                             <span py:if="buildId and dataDict[name]">${shortTroveSpec(dataDict[name])}</span>
                                             (<a onclick="new TrovePicker(${project.id},
                                                 '${project.getLabel().split('@')[0]}',
-                                                '${name}', '${name}', '${cfg.staticPath}');">change)</a>
+                                                '${name}', '${name}', '${cfg.staticPath}', ${int(name in allowNone)});">change)</a>
                                             <input py:if="buildId and dataDict[name]" type="hidden" name="${name.replace('-', '_') + 'Spec'}" value="${dataDict[name]}" />
                                         </div>
                                     </div>

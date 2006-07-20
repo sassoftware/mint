@@ -415,11 +415,12 @@ class ProjectHandler(WebHandler):
                 if template[name][0] == RDT_INT:
                     val = int(val)
                 if template[name][0] == RDT_TROVE:
-                    # remove timestamp from version string
-                    n, v, f = parseTroveSpec(str(val))
-                    v = str(versions.ThawVersion(v))
-                    f = str(f)
-                    val = "%s=%s[%s]" % (n, v, f)
+                    if val != "NONE":
+                        # remove timestamp from version string
+                        n, v, f = parseTroveSpec(str(val))
+                        v = str(versions.ThawVersion(v))
+                        f = str(f)
+                        val = "%s=%s[%s]" % (n, v, f)
             except KeyError:
                 if template[name][0] == RDT_BOOL:
                     val = False

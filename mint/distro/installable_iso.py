@@ -121,7 +121,10 @@ class InstallableIso(ImageGenerator):
         try:
             dataDict = self.build.getDataDict()
             if troveName in dataDict:
-                spec = parseTroveSpec(dataDict[troveName])
+                spec = dataDict[troveName]
+                if spec == "NONE":
+                    raise errors.TroveNotFound
+                spec = parseTroveSpec(spec)
             else:
                 spec = (troveName, None, None)
 
