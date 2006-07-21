@@ -138,9 +138,11 @@ class BuildsTable(database.KeyedTable):
                                       WHERE pubReleaseId=?""",
                                ver, releaseId)
                 cu.execute("INSERT INTO BuildData SELECT * FROM ReleaseData")
+                cu.execute("INSERT INTO BuildFiles SELECT * FROM ImageFiles")
                 cu.execute("DROP TABLE ReleaseImageTypes")
                 cu.execute("DROP TABLE Releases")
                 cu.execute("DROP TABLE ReleaseData")
+                cu.execute("DROP TABLE ImageFiles")
             return dbversion >= 20
         return True
 
