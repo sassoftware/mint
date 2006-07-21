@@ -234,6 +234,9 @@ class AdminHandler(WebHandler):
         return self._write('admin/external', firstTime = firstTime,
                 kwargs = kwargs)
 
+    def removeExternal(self, *args, **kwargs):
+        return self._write('admin/removeExternal')
+
     def jobs(self, *args, **kwargs):
         try:
             enableToggle = True
@@ -310,7 +313,7 @@ class AdminHandler(WebHandler):
                                 newData.append(item)
                 else:
                     newData.append(icon)
-            return self.previewIcons(newData)
+            return self.preview(newData=newData)
         elif op == "set":
             self.client.addUseItIcon(1, name1, link1)
             self.client.addUseItIcon(2, name2, link2)
@@ -320,29 +323,6 @@ class AdminHandler(WebHandler):
             self.client.addUseItIcon(6, name6, link6)
         return self.useIt()
 
-    def previewIcons(self, newData):
-        popularProjects, _ = self.client.getProjects(projectlisting.NUMDEVELOPERS_DES, 10, 0)
-        spotlightData = self.client.getCurrentSpotlight()
-        selectionData = self.client.getFrontPageSelection()
-        releases = self.client.getReleaseList()
-        if newData:
-            if len(newData) < 4:
-                table1Data = newData
-                table2Data = False
-            elif len(newData) == 4:
-                table1Data = newData[:2]
-                table2Data = newData[2:]
-            else:
-                table1Data = newData[:3]
-                table2Data = newData[3:]
-        else:
-            table1Data = False
-            table2Data = False
-
-        activeProjects, _  = self.client.getProjects(projectlisting.ACTIVITY_DES, 10, 0)
-        
-        
-        return self._write("admin/preview", firstTime=self.session.get('firstTimer', False), popularProjects=popularProjects, selectionData = selectionData, activeProjects = activeProjects, spotlightData=spotlightData, releases=releases, table1Data=table1Data, table2Data=table2Data)
     @intFields(itemId=None)
     def deleteUseItIcon(self, itemId, *args, **kwargs):
         self.client.deleteUseItIcon(itemId)
@@ -352,7 +332,7 @@ class AdminHandler(WebHandler):
     @intFields(rank=0)
     def addSelection(self, name, link, rank, op, *args, **kwargs):
         if op == 'preview':
-            return self.previewSelection(name, link, rank)
+            return self.preview(name=name, link=link, rank=rank)
         self.client.addFrontPageSelection(name, link, rank)
         return self.selections()
 
@@ -360,35 +340,6 @@ class AdminHandler(WebHandler):
     def deleteSelection(self, itemId, *args, **kwargs):
         self.client.deleteFrontPageSelection(itemId)
         return self.selections()
-
-    def previewSelection(self, name, link, rank, *args, **kwargs):
-        popularProjects, _ = self.client.getProjects(projectlisting.NUMDEVELOPERS_DES, 10, 0)
-        spotlightData = self.client.getCurrentSpotlight()
-        selectionData = self.client.getFrontPageSelection()
-        if selectionData:
-            selectionData.append({'name': name, 'link': link, 'rank': rank})
-            selectionData.sort(lambda x,y: cmp(x['rank'], y['rank']))
-        else:
-            selectionData = [{'name': name, 'link': link, 'rank': rank}]
-        publishedReleases = self.client.getPublishedReleaseList()
-        activeProjects, _  = self.client.getProjects(projectlisting.ACTIVITY_DES, 10, 0)
-
-        newData = self.client.getUseItIcons()
-        if newData:
-            if len(newData) < 4:
-                table1Data = newData
-                table2Data = False
-            elif len(newData) == 4:
-                table1Data = newData[:2]
-                table2Data = newData[2:]
-            else:
-                table1Data = newData[:3]
-                table2Data = newData[3:]
-        else:
-            table1Data = False
-            table2Data = False
-
-        return self._write("admin/preview", firstTime=self.session.get('firstTimer', False), popularProjects=popularProjects, selectionData = selectionData, activeProjects = activeProjects, spotlightData=spotlightData, publishedReleases=publishedReleases, table1Data=table1Data, table2Data=table2Data)
 
     def spotlight(self, *args, **kwargs):
         return self._write('admin/spotlight',
@@ -403,10 +354,9 @@ class AdminHandler(WebHandler):
             return self.spotlight()
 
         if operation == 'preview':
-            return self.previewSpotlight(title=title, text=text, logo=logo,
-                                         showArchive=showArchive, link=link, 
-                                         startDate=startDate, endDate=endDate,
-                                         auth=kwargs['auth'])
+            return self.preview(title=title, text=text, logo=logo,
+                                 showArchive=showArchive, link=link, 
+                                 startDate=startDate, endDate=endDate)
         elif operation == 'apply':
             self.client.addSpotlightItem(title, text, link, logo,
                                          showArchive, startDate, endDate)
@@ -426,13 +376,31 @@ class AdminHandler(WebHandler):
         self.client.deleteSpotlightItem(itemId)
         return self.spotlight()
 
-    def previewSpotlight(self, auth, *args, **spotlightData):
-        popularProjects, _ = self.client.getProjects(projectlisting.NUMDEVELOPERS_DES, 10, 0)
+    def preview(self, *args, **kwargs):
+        if not kwargs.has_key('showArchive'):
+            spotlightData = self.client.getCurrentSpotlight()
+        else:
+            spotlightData = kwargs
+        if spotlightData:
+            if not spotlightData.has_key('logo'):
+                spotlightData['logo'] = ''
         selectionData = self.client.getFrontPageSelection()
+        if kwargs.has_key('name'):
+            newSelectionData = kwargs
+            if selectionData:
+                selectionData.append(newSelectionData)
+                selectionData.sort(lambda x,y: cmp(x['rank'], y['rank']))
+            else:
+                selectionData = [newSelectionData]
+        if not kwargs.has_key('newData'):
+            newData = self.client.getUseItIcons()
+        else:
+            newData = kwargs['newData']
+            
+        popularProjects, _ = self.client.getProjects(projectlisting.NUMDEVELOPERS_DES, 10, 0)
         activeProjects, _  = self.client.getProjects(projectlisting.ACTIVITY_DES, 10, 0)
-        builds = self.client.getBuildsList()
+        publishedReleases = self.client.getPublishedReleaseList()
 
-        newData = self.client.getUseItIcons()
         if newData:
             if len(newData) < 4:
                 table1Data = newData
@@ -447,10 +415,7 @@ class AdminHandler(WebHandler):
             table1Data = False
             table2Data = False
 
-
-        if not spotlightData.has_key('logo'):
-            spotlightData['logo'] = ''
-        return self._write("admin/preview", firstTime=self.session.get('firstTimer', False), popularProjects=popularProjects, selectionData = selectionData, activeProjects = activeProjects, spotlightData=spotlightData, builds=builds, table1Data=table1Data, table2Data=table2Data)
+        return self._write("admin/preview", firstTime=self.session.get('firstTimer', False), popularProjects=popularProjects, selectionData = selectionData, activeProjects = activeProjects, spotlightData=spotlightData, publishedReleases=publishedReleases, table1Data=table1Data, table2Data=table2Data)
 
     @intFields(projectId = None)
     @strFields(targetUrl = None, mirrorUser = None, mirrorPass = None)
