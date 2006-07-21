@@ -433,6 +433,9 @@ class UpgradePathTest(MintRepositoryHelper):
                    '/foo.rpath.local@rpl:devel/0.0:1.0.2-1-1', '',
                    0, 1, 3, 5000)
 
+        cu.execute("INSERT INTO ImageFiles VALUES(?, ?, ?, ?, ?)",
+                   1, 3, 1, 'foo', 'Test File')
+
         # add some release data
         cu.execute("INSERT INTO ReleaseData VALUES(?, ?, ?, ?)",
                    1, 'jsversion', '1.5.4', 0)
@@ -545,6 +548,11 @@ class UpgradePathTest(MintRepositoryHelper):
                     [(3L, 2L, 'pub', '1.0.2', 'pub rel', None, None, None,
                       None, 5000, None)],
                     'Schema upgrade 20 failed for pub release creation')
+
+        cu.execute("SELECT * FROM BuildFiles")
+        self.failIf(cu.fetchall() != \
+                    [(1, 3, 1, 'foo', 'Test File')],
+                    "Schema upgrade 20 didn't migrate build files")
 
     def testSchemaVerFifteen(self):
         # schema test designed to test upgrade codepath for exisiting project
