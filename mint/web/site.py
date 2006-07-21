@@ -741,7 +741,9 @@ class SiteHandler(WebHandler):
         self.session.save()
         self.groupTrove = None
         self.groupProject = None
-        return self._write('editrMake')
+        return self._write( \
+            'editrMake',
+            selfLink = quote(self.cfg.basePath + 'editrMake?id=%d' % id))
 
     @strFields(title = None)
     @requiresAuth
@@ -866,19 +868,21 @@ class SiteHandler(WebHandler):
     @requiresAuth
     @dictFields(yesArgs = {})
     @boolFields(confirmed = False)
-    def resetrMakeStatus(self, auth, confirmed, **yesArgs):
+    @strFields(referer = '')
+    def resetrMakeStatus(self, auth, confirmed, referer, **yesArgs):
         if not self.rMakeBuild:
             return self._write('error', 'error', "No rMake Build underway.")
         if confirmed or self.rMakeBuild.status in \
                (buildjob.JOB_STATE_INIT, buildjob.JOB_STATE_FAILED,
                 buildjob.JOB_STATE_COMMITTED):
             self.rMakeBuild.resetStatus()
-            self._redirect(self.cfg.basePath)
+            self._redirect(referer or self.cfg.basePath)
         else:
             return self._write("confirm", message = "rMake Server will continue to service this rMake build but you will not be able to track it from rBuilder. Are you sure?",
-                               yesArgs = {'func':'resetrMakeStatus',
-                                          'confirmed':'1'},
-                               noLink = self.cfg.basePath)
+                               yesArgs = {'func' : 'resetrMakeStatus',
+                                          'confirmed' : '1',
+                                          'referer' : referer},
+                               noLink = referer)
 
 def helpDocument(page):
     templatePath = os.path.join(os.path.split(__file__)[0], 'templates/docs')

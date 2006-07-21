@@ -95,7 +95,7 @@ from mint.web.templatesupport import injectVersion, dictToJS
                 <div style="padding: 10px 0; text-align: center;" py:if="rMakeBuild.status == buildjob.JOB_STATE_INIT"><a id="rMakeBuildNextAction" class="option" style="display: inline;" href="${cfg.basePath}commandrMake?command=build">Build</a></div>
                 <div style="padding: 10px 0; text-align: center;" py:if="rMakeBuild.status not in (buildjob.JOB_STATE_INIT, buildjob.JOB_STATE_BUILT, buildjob.JOB_STATE_FAILED, buildjob.JOB_STATE_COMMITTED)"><a id="rMakeBuildNextAction" class="option" style="display: inline;" href="${cfg.basePath}commandrMake?command=stop">Stop</a></div>
                 <div style="padding: 10px 0; text-align: center;" py:if="rMakeBuild.status == buildjob.JOB_STATE_BUILT"><a id="rMakeBuildNextAction" class="option" style="display: inline;" href="${cfg.basePath}commandrMake?command=commit">Commit</a></div>
-                <div style="padding: 10px 0; text-align: center;" py:if="rMakeBuild.status in (buildjob.JOB_STATE_FAILED, buildjob.JOB_STATE_COMMITTED)"><a id="rMakeBuildNextAction" class="option" style="display: inline;" href="${cfg.basePath}resetrMakeStatus">Reset</a></div>
+                <div style="padding: 10px 0; text-align: center;" py:if="rMakeBuild.status in (buildjob.JOB_STATE_FAILED, buildjob.JOB_STATE_COMMITTED)"><a id="rMakeBuildNextAction" class="option" style="display: inline;" href="${cfg.basePath}resetrMakeStatus?referer=${quote(req.unparsed_uri)}">Reset</a></div>
             </div>
             <div py:strip="True" py:if="not rMakeBuildTroveList">
                 <div style="padding: 10px 0; text-align: center;"><a id="rMakeBuildNextAction" class="option" style="display: inline;" href="editrMake?id=${rMakeBuild.id}">Edit</a></div>

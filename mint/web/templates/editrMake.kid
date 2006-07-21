@@ -54,7 +54,7 @@
                 <h3>This rMake Build cannot be edited because it is currently being processed.</h3>
                 <div><a href="${cfg.basePath}rMakeStatus">View Status</a></div>
                 <p><strong>Possible Operations:</strong></p>
-                <div><a href="${cfg.basePath}resetrMakeStatus">Reset rMake Status</a></div>
+                <div><a href="${cfg.basePath}resetrMakeStatus?referer=${selfLink}">Reset rMake Status</a></div>
                 <div py:if="rMakeBuild.status not in (buildjob.JOB_STATE_FAILED, buildjob.JOB_STATE_BUILT, buildjob.JOB_STATE_INIT)"><a href="${cfg.basePath}commandrMake?command=stop">Stop rMake Build</a></div>
                 <div py:if="rMakeBuild.status == buildjob.JOB_STATE_BUILT"><a href="${cfg.basePath}commandrMake?command=commit">Commit rMake Build</a></div>
             </div>

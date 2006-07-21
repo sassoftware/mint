@@ -75,11 +75,8 @@ function processgetrMakeBuild(aReq) {
         if (rMakeBuild['status'] == buildjob['JOB_STATE_BUILT']) {
             swapDOM(rMakeBuildAction, A({id: 'rMakeBuildNextAction', class : 'option', style : 'display: inline;', href : BaseUrl + 'commandrMake?command=commit'}, 'Commit'));
         }
-        if (rMakeBuild['status'] == buildjob['JOB_STATE_COMMITTED']) {
-            swapDOM(rMakeBuildAction, A({id: 'rMakeBuildNextAction', class : 'option', style : 'display: inline;', href : BaseUrl + 'resetrMakeStatus'}, 'Reset'));
-        }
-        if (rMakeBuild['status'] == buildjob['JOB_STATE_FAILED']) {
-            swapDOM(rMakeBuildAction, A({id: 'rMakeBuildNextAction', class : 'option', style : 'display: inline;', href : BaseUrl + 'resetrMakeStatus'}, 'Reset'));
+        if ((rMakeBuild['status'] == buildjob['JOB_STATE_COMMITTED']) || (rMakeBuild['status'] == buildjob['JOB_STATE_FAILED'])){
+            swapDOM(rMakeBuildAction, A({id: 'rMakeBuildNextAction', class : 'option', style : 'display: inline;', href : 'javascript:resetrMakeStatus()'}, 'Reset'));
         }
     }
     if (!stop) {
@@ -142,14 +139,21 @@ function addrMakeBuildTroveByLabel(name, label) {
     var req = new JsonRpcRequest("jsonrpc/", 'addrMakeBuildTrove');
     req.setAuth(getCookieValue("pysid"));
     req.setCallback(rMakeTroveAdded);
-    req.send(true, [rMakeBuildId, name, label])
+    req.send(true, [rMakeBuildId, name, label]);
 }
 
 function addrMakeBuildTroveByProject(name, project) {
     var req = new JsonRpcRequest("jsonrpc/", 'addrMakeBuildTroveByProject');
     req.setAuth(getCookieValue("pysid"));
     req.setCallback(rMakeTroveAdded);
-    req.send(true, [rMakeBuildId, name, project])
+    req.send(true, [rMakeBuildId, name, project]);
+}
+
+function resetrMakeStatus(troveId) {
+    var req = new JsonRpcRequest("jsonrpc/", 'resetrMakeBuildStatus');
+    req.setAuth(getCookieValue("pysid"));
+    req.setCallback(function() {setTimeout('window.location.reload()', 0);});
+    req.send(true, [rMakeBuildId]);
 }
 
 function rMakeTroveAdded (aReq) {
@@ -196,8 +200,7 @@ LinkManager.prototype.getUrlData = function(link) {
     return args;
 }
 
-function LinkManager()
-{
+function LinkManager() {
     bindMethods(this);
 }
 
