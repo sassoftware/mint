@@ -24,7 +24,7 @@ from mint.client import upstream
         <link rel="alternate" type="application/rss+xml"
               title="New ${cfg.productName} Builds" href="http://${cfg.siteHost}${cfg.basePath}rss?feed=newBuilds" />
     </head>
-    <body onload="roundElement('previewMessage'); hideElement('steps');">
+    <body onload="roundElement('previewMessage'); hideElement('${table1Data and 'steps' or 'applianceLogos'}');">
 	<div id="previewMessage" style="background-color: #EF6064; font-size: 14pt; color: white; text-align:center; margin-bottom: 20px;">Preview Mode.  To exit, click your browser's 'back' button.<div style="text-align: right; font-size: 9pt; margin-right: 5px; cursor: pointer;" onclick="var e = document.getElementById('previewMessage');e.parentNode.removeChild(e);">close</div></div>
         <div id="right" class="side">
             ${resourcePane()}
@@ -59,7 +59,16 @@ from mint.client import upstream
         </div>
         </div>
         </div>
+        <span py:if="not table1Data">
+                <span id="findit" onclick="javascript:window.location='${cfg.basePath}help?page=user-tutorial'">
+                    Check out the software appliances others have made.
+                </span>
+                <span id="buildit" onclick="javascript:window.location='${cfg.basePath}help?page=dev-tutorial'">
+                    Make your own software appliance in three easy steps.
+                </span>
+        </span>
 
+            <span py:if="table1Data">
            <div id="inactiveRight" onmouseover="underlineTitle();" onmouseout="normalTitle();" onclick="buildIt();">
                     <div id="inactiveOrangeTitle">Build it.</div>
                         Make your own software appliance in three easy steps.
@@ -68,7 +77,7 @@ from mint.client import upstream
                     <div id="orangeTitle">Use It.</div>
                     Check out the software appliances others have made.
                 </div>
-
+            </span>
            <div id="applianceLogos" style="width: 720px; height: 234px;">
             <table py:if="table1Data" id="${table2Data and 'doubleTable' or 'singleTable'}">
                 <tr>
