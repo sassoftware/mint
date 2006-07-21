@@ -83,7 +83,7 @@ TrovePicker.prototype.working = function(isWorking) {
 // trove name on a server.
 TrovePicker.prototype.buildTrovePicker = function() {
     oldEl = $(this.elId);
-    picker = DIV({'id': this.elId, 'class': 'trovePicker'})
+    picker = DIV({'id': this.elId, 'class': 'trovePicker'});
     spinner = UL({'id': this.elId + 'spinnerList'},
         LI(null, "Loading...", IMG({'src': staticPath + spinnerImg}))
     );

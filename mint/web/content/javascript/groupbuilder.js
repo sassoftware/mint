@@ -211,14 +211,13 @@ GroupTroveManager.prototype.troveAddedByProject = function(data, req) {
 GroupTroveManager.prototype.troveDeleted = function(req) {
     logDebug("Trove deleted.  Data returned: " + req.responseText);
     var xml = req.responseXML;
-    var nodes = xml.getElementsByTagName('int')
+    var nodes = xml.getElementsByTagName('int');
     var retVal = scrapeText(nodes[0]);
     //find the table row in question and remove it.
     swapDOM('groupbuilder-item-' + retVal, null);
 }
 
-function LinkManager()
-{
+function LinkManager() {
     bindMethods(this);
 }
 
