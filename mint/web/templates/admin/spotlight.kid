@@ -34,7 +34,7 @@
                     <td id="spotTd">${item['title']}</td>
                     <td id="spotTd">${time.strftime("%m/%d/%Y", time.localtime(item['startDate']))}</td>
                     <td id="spotTd">${time.strftime("%m/%d/%Y", time.localtime(item['endDate']))}</td>
-                    <td id="spotTd"><form action="previewSpotlight" method="post"><input py:for="k, v in item.iteritems()" type="hidden" name="${k}" value="${v}"/><button type="submit" >Preview</button><a href="${cfg.basePath}admin/deleteSpotlightItem?itemId=${item['itemId']}&#038;title=${item['title']}"><button>Delete</button></a></form></td>
+                    <td id="spotTd"><form action="preview" method="post"><input py:for="k, v in item.iteritems()" type="hidden" name="${k}" value="${v}"/><button type="submit" >Preview</button><a href="${cfg.basePath}admin/deleteSpotlightItem?itemId=${item['itemId']}&#038;title=${item['title']}"><button>Delete</button></a></form></td>
                     <?python rowStyle ^= 1 ?>
                 </tr>
                 </tbody>
