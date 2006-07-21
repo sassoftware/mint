@@ -23,7 +23,7 @@ from mint.client import upstream
         <link rel="alternate" type="application/rss+xml"
               title="New ${cfg.productName} Releases" href="http://${cfg.siteHost}${cfg.basePath}rss?feed=newBuilds" />
     </head>
-    <body onload="hideElement('steps');">
+    <body onload="hideElement('${table1Data and 'steps' or 'applianceLogos'}');">
         <div id="right" class="side">
             ${resourcePane()}
         </div>
@@ -56,7 +56,16 @@ from mint.client import upstream
         </div>
         </div>
         </div>
+            <span py:if="not table1Data">
+                <span id="findit" onclick="javascript:window.location='${cfg.basePath}help?page=user-tutorial'">
+                    Check out the software appliances others have made.
+                </span>
+                <span id="buildit" onclick="javascript:window.location='${cfg.basePath}help?page=dev-tutorial'">
+                    Make your own software appliance in three easy steps.
+                </span>
+            </span>
 
+            <span py:if="table1Data">
                 <div id="inactiveRight" onmouseover="underlineTitle();" onmouseout="normalTitle();" onclick="buildIt();">
                     <div id="inactiveOrangeTitle">Build it.</div>
                         Make your own software appliance in three easy steps.
@@ -65,6 +74,7 @@ from mint.client import upstream
                     <div id="orangeTitle">Use It.</div>
                     Check out the software appliances others have made.
                 </div>
+            </span>
 
            <div id="applianceLogos" style="width: 720px; height: 234px;">
             <table py:if="table1Data" id="${table2Data and 'doubleTable' or 'singleTable'}">
