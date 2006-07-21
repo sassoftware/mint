@@ -47,7 +47,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         self.setServer(self.getProjectServerHostname(), self.port)
 
         # pick a page to log in from
-        pageURI = '/project/testproject/builds'
+        pageURI = '/project/testproject/releases'
         page = self.fetch(pageURI)
 
         page = page.postForm(1, self.fetchWithRedirect,
@@ -427,6 +427,8 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
     def testBuildsPage(self):
         client, userId = self.quickMintUser('foouser','foopass')
         projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
+
+        self.webLogin('foouser', 'foopass')
 
         # we are working with the project server right now
         self.setServer(self.getProjectServerHostname(), self.port)
