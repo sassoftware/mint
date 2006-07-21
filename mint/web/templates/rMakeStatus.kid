@@ -41,12 +41,11 @@
                     buildjob = ${str(buildjob)};
                     buildtrove = ${str(buildtrove)};
                     addLoadEvent(function () {initrMakeManager(${rMakeBuild.id})});
+                    addLoadEvent(function() {roundElement('statusAreaHeader', {'corners': 'tl tr'})});
                 ]]>
                 </script>
                 <h3 id="rmakebuilder-jobid">rMake Job ID: ${rMakeBuild.jobId or 'Unknown'}</h3>
-                <div id="rmakebuilder-status" class="${jobStatusCodes.get(commitFailed and buildjob.JOB_STATE_FAILED or rMakeBuild.status, 'statusRunning')}">
-                    ${rMakeBuild.statusMessage}
-                </div>
+                ${statusArea("rMake Build")}
                 <table>
                     <tr py:for="trvDict in troveList">
                         <td>${trvDict['trvName']}: </td>

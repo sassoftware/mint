@@ -36,11 +36,16 @@ function getrMakeBuild() {
 function processgetrMakeBuild(aReq) {
     var rMakeBuild = evalJSONRequest(aReq);
     if (savedrMakeBuild == null) {
-        savedrMakeBuild = rMakeBuild;
+        savedrMakeBuild = {};
+        for (i in rMakeBuild) {
+            savedrMakeBuild[i] = rMakeBuild[i];
+        }
         savedrMakeBuild['jobId'] = 0;
+        savedrMakeBuild['status'] = null;
+        savedrMakeBuild['statusMessage'] = null;
     }
     var rMakeBuildAction = document.getElementById('rMakeBuildNextAction');
-    var rMakeBuilderStatus = document.getElementById('rmakebuilder-status');
+    var rMakeBuilderStatus = document.getElementById('statusArea');
     var rMakeBuilderJobId = document.getElementById('rmakebuilder-jobid');
     if (rMakeBuild['statusMessage'].match('Commit failed.*')) {
         commitFailed = 1;
@@ -63,7 +68,7 @@ function processgetrMakeBuild(aReq) {
             statusClass = jobStatusCodes[buildjob['JOB_STATE_FAILED']];
         }
         if (rMakeBuilderStatus != null) {
-            swapDOM(rMakeBuilderStatus, DIV({id : 'rmakebuilder-status', class : statusClass}, rMakeBuild['statusMessage']));
+            swapDOM(rMakeBuilderStatus, DIV({id : 'statusArea', class : statusClass}, rMakeBuild['statusMessage']));
         }
     }
     for (var stopIndex in stopStatusList) {
@@ -81,7 +86,6 @@ function processgetrMakeBuild(aReq) {
     }
     if (!stop) {
         callLater(statusTimeout, getrMakeBuild);
-        /* setTimeout("getrMakeBuild()", statusTimeout); */
     }
     savedrMakeBuild = rMakeBuild;
 }
@@ -96,7 +100,10 @@ function listrMakeBuildTroves() {
 function processListrMakeBuildTroves(aReq) {
     var troveList = evalJSONRequest(aReq);
     if (savedTroveList.length == 0) {
-        savedTroveList = troveList;
+        savedTroveList = {};
+        for (i in troveList) {
+            savedTroveList[i] = troveList[i];
+        }
     }
     numTroves = troveList.length;
     for (var trvIndex in troveList) {
