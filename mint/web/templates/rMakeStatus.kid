@@ -44,7 +44,20 @@
                     addLoadEvent(function() {roundElement('statusAreaHeader', {'corners': 'tl tr'})});
                 ]]>
                 </script>
-                <h3 id="rmakebuilder-jobid">rMake Job ID: ${rMakeBuild.jobId or 'Unknown'}</h3>
+                <table>
+                    <tr>
+                        <td>
+                            <span id="rmakebuilder-jobid">
+                                rMake Job ID: ${rMakeBuild.jobId or 'Unknown'}
+                            </span>
+                        </td>
+                        <td>
+                            <span>
+                                ${rMakeBuildNextAction(troveList)}
+                            </span>
+                        </td>
+                    </tr>
+                </table>
                 ${statusArea("rMake Build")}
                 <table>
                     <tr py:for="trvDict in troveList">
