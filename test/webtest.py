@@ -26,6 +26,7 @@ from repostest import testRecipe
 
 from conary import versions
 from conary.repository import errors
+from conary.conaryclient import ConaryClient
 
 class WebPageTest(mint_rephelp.WebRepositoryHelper):
     def sessionData(self):
@@ -517,6 +518,20 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         page = self.assertContent('/repos/foo/browse',
                                   code = [200],
                                   content = 'Repository Browser')
+
+    def testRepoBrowserPermission(self):
+        client, userId = self.quickMintAdmin("testuser", "testpass")
+        projectId = self.newProject(client)
+
+        project = client.getProject(projectId)
+        cfg = project.getConaryConfig()
+        nc = ConaryClient(cfg).getRepos()
+
+        # delete anon access
+        nc.deleteAccessGroup(self.cfg.buildLabel, 'anonymous')
+
+        # check that we get a 403
+        self.fetch('/repos/testproject/browse', ok_codes = [403])
 
     def testGroupBuilderInResources(self):
         client, userId = self.quickMintUser('foouser','foopass')
