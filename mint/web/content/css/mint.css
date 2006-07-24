@@ -291,6 +291,10 @@ table#singleTable {
     bottom: 0;
     margin: 0;
     padding: 0;
+    margin-left:0 !important;
+    margin-left:-3px;
+    margin-right:0 !important;
+    margin-right:-3px;
 }
 
 table#doubleTable {
@@ -301,6 +305,10 @@ table#doubleTable {
     bottom: 0;
     margin: 0;
     padding: 0;
+    margin-left:0 !important;
+    margin-left:-3px;
+    margin-right:0 !important;
+    margin-right:-3px;
 }
 
 td#useIt {
