@@ -12,6 +12,7 @@ from mint_rephelp import MINT_PROJECT_DOMAIN
 
 from repostest import testRecipe
 from conary import versions
+from conary.conaryclient import ConaryClient
 
 testDirRecipe = """
 class TestCase(PackageRecipe):
@@ -107,13 +108,13 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
         page = page.assertCode('/repos/external/troveInfo?t=testcase:source', code = 200)
 
     def testTroveInfoPage(self):
-
         client, userId = self.quickMintUser('foouser','foopass')
         projectId = self.newProject(client)
         project = client.getProject(projectId)
 
         # test that missing troves are a 404 not found error
-        page = self.fetch('/repos/foo/troveInfo?t=group-foo', ok_codes = [404])
+        page = self.fetchWithRedirect('/repos/foo/troveInfo?t=group-foo',
+                                      code = [404])
 
         self.openRepository(1)
         self.addQuickTestComponent('foo:source',
@@ -131,7 +132,7 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
         client, userId = self.quickMintUser('foouser','foopass')
         projectId = self.newProject(client)
 
-        page = self.fetch('/repos/testproject/browse')
+        page = self.fetchWithRedirect('/repos/testproject/browse')
 
         self.failIf('/repos/testproject/rss' in page.body,
                     "Malformed base path for rss feed on repos page")
@@ -165,6 +166,30 @@ class WebReposTest(mint_rephelp.WebRepositoryHelper):
         projectId = self.newProject(client)
 
         self.assertCode('/repos/testproject/log', code = 404)
+
+    def testRepoBrowserPermission(self):
+        raise testsuite.SkipTestException('Test is not unittest safe')
+        client, userId = self.quickMintAdmin("testuser", "testpass")
+        projectId = self.newProject(client)
+
+        project = client.getProject(projectId)
+
+        cfg = project.getConaryConfig()
+        nc = ConaryClient(cfg).getRepos()
+
+        # delete anon access
+        nc.deleteAccessGroup(self.cfg.buildLabel, 'anonymous')
+
+        try:
+            # check that we get a 403
+            self.fetch('/repos/testproject/browse', ok_codes = [403])
+        finally:
+            # re-add acl. this shouldn't need to be done but seems
+            # to be necessary for other unit tests.
+            nc.addAccessGroup(self.cfg.buildLabel, 'anonymous')
+            nc.addAcl(self.cfg.buildLabel, 'anonymous', '', '',
+                      False, False, False)
+            nc.changePassword(self.cfg.buildLabel, 'anonymous', 'anonymous')
 
 
 if __name__ == "__main__":
