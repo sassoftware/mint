@@ -468,8 +468,9 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
                 self.servers.getServer(serverIdx).securePort or \
                 self.servers.getServer(serverIdx).port
 
+        protocol = self.mintCfg.SSL and 'https' or 'http'
         project.editLabel(labelId, defaultLabel,
-            'http://localhost:%d/repos/%s/' % (port, project.hostname),
+            '%s://localhost:%d/repos/%s/' % (protocol, port, project.hostname),
             label[2], label[3])
 
     def writeIsoGenCfg(self):
