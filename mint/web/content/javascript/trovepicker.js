@@ -54,7 +54,7 @@ function TrovePicker(projectId, serverName, troveName, pickerId, mintStaticPath,
         this.allowNameChoice = false;
     }
 
-    setTimeout("this.buildTrovePicker()", 5);
+    this.buildTrovePicker();
 }
 
 TrovePicker.prototype.troveName = null;
