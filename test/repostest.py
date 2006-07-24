@@ -237,6 +237,36 @@ class RepositoryTest(MintRepositoryHelper):
         troveNames = nc.troveNames(self.cfg.buildLabel)
         assert(troveNames == ['testcase:source'])
 
+    def testAnonDenied(self):
+        client, userId = self.quickMintAdmin("testuser", "testpass")
+        projectId = self.newProject(client)
+
+        project = client.getProject(projectId)
+        cfg = project.getConaryConfig()
+        nc = ConaryClient(cfg).getRepos()
+
+        # test good anon access
+        assert(nc.troveNames(self.cfg.buildLabel) == [])
+
+        # delete anon access
+        nc.deleteAccessGroup(self.cfg.buildLabel, 'anonymous')
+
+        # now make an anon client
+        labels = [x[0] for x in cfg.user]
+
+        while cfg.user:
+            cfg.user.pop()
+
+        for l in labels:
+            cfg.user.addServerGlob(l, 'anonymous', 'anonymous')
+
+        nc = ConaryClient(cfg).getRepos()
+
+        # test bad anon access. We probably want a permission denied vice
+        # openerror
+        self.assertRaises(repository.errors.OpenError,
+                          nc.troveNames, self.cfg.buildLabel)
+
     def testReposNameMap(self):
         client, userId = self.quickMintAdmin("testuser", "testpass")
 
