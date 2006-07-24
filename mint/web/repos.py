@@ -165,15 +165,17 @@ class ConaryHandler(WebHandler, http.HttpHandler):
             # member)... so use the auth user.
             saveToken = self.authToken
             self.authToken = (self.cfg.authUser, self.cfg.authPass, None, None)
+        try:
+            d['auth'] = self.authToken
             try:
-                d['auth'] = self.authToken
                 output = method(**d)
-            finally:
-                # carefully restore old credentials so that this code can work
-                # outside of mod-python environments.
+            except http.InvalidPassword:
+                raise HttpForbidden
+        finally:
+            # carefully restore old credentials so that this code can work
+            # outside of mod-python environments.
+            if self.auth.admin:
                 self.authToken = saveToken
-        else:
-            output = method(**d)
         return output
 
     def _write(self, templateName, **values):
