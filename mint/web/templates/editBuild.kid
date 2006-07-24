@@ -25,7 +25,7 @@ allowNone = ['anaconda-custom', 'media-template']
 
     <div py:def="trovePicker(projectId, serverName, troveName, pickerId)" py:omit="True">
         <script type="text/javascript">
-            addLoadEvent("picker = new TrovePicker(${projectId}, '${serverName}', '${troveName}', '${pickerId}', '${cfg.staticPath}');");
+            addLoadEvent(function() { picker = new TrovePicker(${projectId}, '${serverName}', '${troveName}', '${pickerId}', '${cfg.staticPath}'); });
         </script>
     </div>
 
