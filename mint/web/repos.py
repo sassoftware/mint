@@ -20,6 +20,7 @@ from conary.server import http
 from conary.repository import errors
 from conary.repository.shimclient import ShimNetClient
 from conary import conaryclient
+from conary import errors as conaryerrors
 
 # When Conary implements a new method in http.HttpHandler that needs
 # to be exposed in rBuilder, add the name of the method here.
@@ -171,6 +172,9 @@ class ConaryHandler(WebHandler, http.HttpHandler):
                 output = method(**d)
             except http.InvalidPassword:
                 raise HttpForbidden
+            except conaryerrors.ParseError, e:
+                return self._write("error", shortError = "Parse Error",
+                                   error = str(e))
         finally:
             # carefully restore old credentials so that this code can work
             # outside of mod-python environments.
