@@ -172,8 +172,9 @@ class ConaryHandler(WebHandler, http.HttpHandler):
                 output = method(**d)
             except http.InvalidPassword:
                 raise HttpForbidden
-            except conaryerrors.ParseError, e:
-                return self._write("error", shortError = "Parse Error",
+            except conaryerrors.InvalidRegex, e:
+                return self._write("error",
+                                   shortError = "Invalid Regular Expression",
                                    error = str(e))
         finally:
             # carefully restore old credentials so that this code can work
