@@ -10,8 +10,8 @@ grep -h downloadImage access_log.2 access_log.1 access_log > full_access_log
 # if this script is run on Monday, we want to start our report on the last Sunday
 # morning and end on the Saturday night.
 
-startDate=$(perl -e 'use Date::Manip; print UnixDate(ParseDate("sunday 2 weeks ago"), "%Y-%m-%d")')
-endDate=$(perl -e 'use Date::Manip; print UnixDate(ParseDate("last saturday"), "%Y-%m-%d");')
+startDate=$(date -d 'sunday 2 weeks ago' +%Y-%m-%d)
+endDate=$(date -d 'last saturday' +%Y-%m-%d)
 output=/srv/www/html/download-stats/downloads-$(date +%Y-%m-%d).pdf
 
 echo Processing downloads from $startDate $endDate to $output
