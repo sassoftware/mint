@@ -32,9 +32,11 @@
                         </select>
 
                     </p>
-                <p>You can optionally add Xen privileged management domain
-                    (dom0) or guest domain (domU) support to this group.</p>
-                    <p>
+                    <p py:if="False">
+                        You can optionally add Xen privileged management domain
+                        (dom0) or guest domain (domU) support to this group.
+                    </p>
+                    <p py:if="False">
                         <div>
                             <input name="flavor" type="checkbox" value="5#use:~dom0" id="dom0" />
                             <label for="dom0">Xen dom0 (privileged host) support</label>
