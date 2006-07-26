@@ -326,6 +326,7 @@ td#useIt {
 }
 
 div#orangeTitle, div#inactiveOrangeTitle {
+    padding-top: 5px;
     font-size: 24pt;
     color: #ffa814;
     font-weight: bold;
