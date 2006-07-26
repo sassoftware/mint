@@ -339,7 +339,7 @@ class ProjectHandler(WebHandler):
     @strFields(trove = "", action = "edit")
     def editBuild(self, auth, buildId, trove, action):
 
-        if action == "edit":
+        if action == "Edit Build":
             build = self.client.getBuild(buildId)
 
             troveName, versionStr, flavor = build.getTrove()
@@ -363,7 +363,7 @@ class ProjectHandler(WebHandler):
                 flavor = thawedFlavor,
                 arch = arch,
                 kwargs = {})
-        elif action == "recreate":
+        elif action == "Recreate Build":
             job = self.client.startImageJob(buildId)
             try:
                 job = self.client.startImageJob(buildId)

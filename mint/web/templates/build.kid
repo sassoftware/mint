@@ -44,9 +44,9 @@ from mint.web.templatesupport import downloadTracker
                     ${statusArea("Build")}
                     <div id="editOptions" py:attrs="{ 'style': buildInProgress and 'display: none;' or None }">
                         <form id="editBuildOptions" action="editBuild" method="post">
-                            <button class="newStyle" type="submit" name="action" value="edit">Edit Build</button>&nbsp;
-                            <button class="newStyle" type="submit" name="action" value="recreate">Recreate Build</button>
                             <input type="hidden" name="buildId" value="${build.id}" />
+                            <input type="submit" name="action" value="Edit Build" /> &nbsp;
+                            <input type="submit" name="action" value="Recreate Build" />
                         </form>
                     </div>
                 </div>
