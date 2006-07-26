@@ -1020,6 +1020,9 @@ table.buildstable td.buildInfo {
     padding-left: 20px;
 }
 
+/* Safari doesn't handle disabled buttons properly...*/
+button.d { color: #666; border:2px outset #eee; }
+
 table.buildstable span.buildAssociated {
     font-size: smaller;
     font-weight: normal;
