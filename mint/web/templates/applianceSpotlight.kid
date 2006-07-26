@@ -26,7 +26,7 @@
                     <!-- /Try rBuilder -->
                     <!-- Builds -->
                     <div class="sidebox">
-                        <div class="boxhead"><span class="boxtitle">Builds</span></div>
+                        <div class="boxhead"><span class="boxtitle">Products</span></div>
                         <div class="boxbody">
                             <ul>
                                 <li><span class="prodtitle"><a href="${cfg.corpSite}builds-rbuilder.html">rBuilder&trade;</a></span>
