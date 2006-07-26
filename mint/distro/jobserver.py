@@ -294,7 +294,7 @@ class JobDaemon:
 
                     slog.warning("Error retrieving job list: " + str(e))
                 except Exception, e:
-                    slog.error("Fatal exception caught: " + str(e))
+                    slog.error("Fatal exception caught: " + traceback.format_exc())
                     break
             # sleep at the end of every run, no matter what the outcome was
             time.sleep(random.uniform(*JOB_IDLE_INTERVAL))
