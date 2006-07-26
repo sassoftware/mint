@@ -47,7 +47,7 @@
                 <table>
                     <tr>
                         <td>
-                            <span id="rmakebuilder-jobid">
+                            <span id="rmakebuilder-jobid" style='font-weight: bold;'>
                                 rMake Job ID: ${rMakeBuild.jobId or 'Unknown'}
                             </span>
                         </td>

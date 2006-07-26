@@ -465,7 +465,7 @@ class MintClient:
     def listGroupTrovesByProject(self, projectId):
         return self.server.listGroupTrovesByProject(projectId)
 
-    # rMake build functions
+    # rMake Build functions
     def getrMakeBuild(self, rMakeBuildId):
         return rmakebuild.rMakeBuild(self.server, rMakeBuildId)
 

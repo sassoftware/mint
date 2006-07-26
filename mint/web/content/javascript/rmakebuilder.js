@@ -13,8 +13,8 @@ On pages that allow for rmake manipulation do the following:
         Populate the box with the new data returned from the xmlrpc call
             This includes changing the next action command if appropriate
 
-    On rMake build:
-        While rMake build is in progress, sleep periodically
+    On rMake Build:
+        While rMake Build is in progress, sleep periodically
         Post an xmlrpc request to update status
         Populate the builder pane or the status boxes with the proper content
 */

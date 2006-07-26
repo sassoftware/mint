@@ -734,7 +734,7 @@ class SiteHandler(WebHandler):
     def editrMake(self, auth, id):
         self.session['rMakeBuildId'] = id
         self.rMakeBuild = self.client.getrMakeBuild(id)
-        # rMake Builder and Group Builder are mutually exclusive
+        # rMake and Group Builder are mutually exclusive
         if 'groupTroveId' in self.session:
             del self.session['groupTroveId']
         self.session.save()
@@ -877,7 +877,7 @@ class SiteHandler(WebHandler):
             self.rMakeBuild.resetStatus()
             self._redirect(referer or self.cfg.basePath)
         else:
-            return self._write("confirm", message = "rMake Server will continue to service this rMake build but you will not be able to track it from rBuilder. Are you sure?",
+            return self._write("confirm", message = "rMake Server will continue to service this rMake Build but you will not be able to track it from rBuilder. Are you sure?",
                                yesArgs = {'func' : 'resetrMakeStatus',
                                           'confirmed' : '1',
                                           'referer' : referer},

@@ -7,7 +7,7 @@
     All Rights Reserved
 -->
     <head>
-        <title>${formatTitle('rMake Builder')}</title>
+        <title>${formatTitle('rMake')}</title>
     </head>
 
     <body>
@@ -18,22 +18,22 @@
             </div>
 
             <div id="spanleft">
-                <h1>rMake Builder</h1>
+                <h1>rMake</h1>
 
-                <p>You can use rMake Builder to create a grouping of
+                <p>You can use rMake to create a grouping of
                 packages to be built by your local rMake Server.</p>
 
-                <p>You can only add packages from projects you are a member of</p>
+                <p>You can only add packages from projects you are a member of.</p>
 
                 <h2>Current rMake Build</h2>
 
                 <ul>
                     <li py:if="not rMakeBuild">
-                        You are not currently using rMake Builder.
+                        You are not currently using rMake.
                     </li>
 
                     <li py:if="rMakeBuild">
-                        The following rMake build is currently being processed:
+                        The following rMake Build is currently being processed:
                     </li>
 
                     <li py:if="rMakeBuild" style="font-weight: bold;">

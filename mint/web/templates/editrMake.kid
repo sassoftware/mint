@@ -19,7 +19,7 @@
             </div>
 
             <div id="spanleft" py:if="not rMakeBuild.status">
-                <h1>Edit rMake Builder</h1>
+                <h1>Edit rMake Build</h1>
                 <form method="post" action="editrMake2">
                     Title:
                     <input type="text" name="title" value="${rMakeBuild.title}" size="16" maxlength="128"/>
