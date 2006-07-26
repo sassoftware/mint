@@ -15,7 +15,7 @@
         <title>${formatTitle('Create a Project')}</title>
     </head>
     <body>
-        <div class="layout">
+        <div id="layout">
             <h2>Create a Project</h2>
             <p>Fields labeled with a <em class="required">red arrow</em> are required.</p>
             <form method="post" action="createProject" >
@@ -24,7 +24,7 @@
                     <tr>
                         <th><em class="required">Project Title:</em></th>
                         <td>
-                            <input type="text" name="title" value="${kwargs['title']}"/>
+                            <input type="text" autocomplete="off" name="title" value="${kwargs['title']}"/>
                             <p class="help">The title should be a descriptive name for your project. For example, <strong>My Custom Linux</strong></p>
                         </td>
                     </tr>

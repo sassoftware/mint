@@ -27,7 +27,6 @@ onload = "javascript:;"
                 var VisibleBootableBuildTypes = ${str([x for x in (3, 4, 5, 6, 7, 8) if x in cfg.visibleBuildTypes])};
             ]]>
         </script>
-        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/generic.js" />
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/buildtypes.js" />
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/jobstatus.js" />
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/library.js" />
@@ -74,12 +73,12 @@ onload = "javascript:;"
                             <label class="search" for="searchLabel">I'm looking for a...</label>
                             <input class="search" name="search" id="searchLabel" type="text" />
                             <button class="img" id="searchSubmit" type="submit"><img src="${cfg.staticPath}/apps/mint/images/search.png" alt="Search" /></button><br />
-                            <input id="typeProject" type="radio" name="type" value="Projects" py:attrs="{'checked': self.session.get('searchType', 'Projects') == 'Projects' and 'checked' or None}" />
+                            <input id="typeProject" type="radio" name="type" value="Projects" py:attrs="{'checked': (searchType == 'Projects') and 'checked' or None}" />
                             <label for="typeProject">Project</label>
-                            <input id="typePackage" type="radio" name="type" value="Packages" py:attrs="{'checked': self.session.get('searchType', 'Projects') == 'Packages' and 'checked' or None}" />
+                            <input id="typePackage" type="radio" name="type" value="Packages" py:attrs="{'checked': (searchType == 'Packages') and 'checked' or None}" />
                             <label for="typePackage">Package</label>
                             <div py:strip="True" py:if="auth.admin">
-                            <input id="typeUser" type="radio" name="type" value="Users" py:attrs="{'checked': self.session.get('searchType', 'Projects') == 'Users' and 'checked' or None}" />
+                            <input id="typeUser" type="radio" name="type" value="Users" py:attrs="{'checked': (searchType == 'Users') and 'checked' or None}" />
                             <label for="typeUser">User</label>
                             </div>
                             <span id="browseText">&nbsp;&nbsp;&nbsp;Browse&nbsp;<a href="http://${cfg.siteHost}${cfg.basePath}projects">projects</a><span py:strip="True" py:if="auth.admin">&nbsp;or&nbsp;<a href="http://${cfg.siteHost}${cfg.basePath}users">users</a></span></span>
@@ -91,6 +90,20 @@ onload = "javascript:;"
                 if 'errors' in locals():
                     errorMsgList = errors
             ?>
+            <div py:if="inlineMime">
+                <?python
+                    mime, mimeArgs = inlineMime
+                ?>
+                <form method="post" action="${mime}" name="inlineMime">
+                    <input py:for="key, val in mimeArgs" type="hidden" name="${key}" value="${val}" />
+                    <script type="text/javascript">
+                        <![CDATA[
+                            callLater(1, function() { document.forms["inlineMime"].submit();});
+                            callLater(5, function() { document.location.reload();});
+                        ]]>
+                    </script>
+                </form>
+            </div>
             <div py:if="infoMsg" id="info" class="status" py:content="infoMsg" />
             <div py:if="errorMsgList" id="errors" class="status">The following ${(len(errorMsgList) == 1) and "error" or "errors"} occurred:
                 <p py:for="e in errorMsgList" py:content="e" />
