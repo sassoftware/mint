@@ -1,4 +1,5 @@
 Changes in tip:
+* Rearchitected the releases system, and replaced it with releases and builds.
 * Added release unpublish capability; unpublishing a release will hide the
   release from the public, and allows you to edit the release contents.
 * Added XMLRPC call logging similar to Conary's, controlled by the 
@@ -15,9 +16,7 @@ Changes in tip:
 * External password checking URLs can now be used.
 * The tar archive from mirror priming is now deleted after a successful
   extraction. (RBL-830)
-
---- affects job server on tip ---
-* vmware images now default to bridged mode.
+* VMware images now default to bridged networking mode.
 
 Changes in 1.6.3:
 * Installation paths changed: /srv/mint is now /srv/rbuilder; configuration is
