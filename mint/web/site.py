@@ -7,7 +7,6 @@ import base64
 import email
 import os
 import stat
-import sys
 import re
 import time
 from urllib import quote, unquote, quote_plus, urlencode
@@ -822,7 +821,7 @@ class SiteHandler(WebHandler):
             referer = self.cfg.basePath
         self._redirect(referer)
 
-    strFields(command = None)
+    @strFields(command = None)
     def commandrMake(self, auth, command):
         if not self.rMakeBuild:
             self._addErrors("No rMake Build underway.")
@@ -841,7 +840,7 @@ class SiteHandler(WebHandler):
                 self._setInfo("Committing rMake Build")
             self._redirect(self.cfg.basePath + 'rMakeStatus')
 
-    strFields(command = None)
+    @strFields(command = None)
     def rMakeCommand(self, auth, command):
         command = str(command)
         if not self.rMakeBuild:
