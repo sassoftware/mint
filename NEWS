@@ -1,6 +1,13 @@
-Changes in tip:
+Changes in 2.0.0:
+* Releases can now consist of an arbitrary set of builds; a build
+  is a combination of group-trove (trove, version, flavor) + build type
+  (ISO, VMware, QEMU, etc.).
 * Added release unpublish capability; unpublishing a release will hide the
   release from the public, and allows you to edit the release contents.
+* Project developers are now able to create and delete builds (e.g.
+  for testing purposes). Creating, publishing and deleting builds is still
+  the exclusive domain of the project owner(s).
+* Releases may now be deleted after being published.
 * Added XMLRPC call logging similar to Conary's, controlled by the 
   xmlrpcLogFile config entry. (RBL-12)
 * Fixed a bug where a directory with a symlink pointing to it could
@@ -8,14 +15,13 @@ Changes in tip:
   (RBL-695)
 * Searching (all types) will prioritize exact matches above all other results.
 * rBuilder can command an rMake server local to the web browser's machine.
-* custom output filenames can now be specified for builds.
+* Custom output filenames can now be specified for builds.
 * Xen support has been added to the group builder "cook group" dialog.
-* Fix for RBL-408: Opening two "create release" tabs at once gives "requested
-  item not found"
+* Opening two "create release" pages at once no longer gives "requested
+  item not found" (RBL-408)
 * External password checking URLs can now be used.
 * The tar archive from mirror priming is now deleted after a successful
   extraction. (RBL-830)
-
 --- affects job server on tip ---
 * vmware images now default to bridged mode.
 
