@@ -2,7 +2,8 @@ javascript_files =\
 	groupbuilder.js \
 	library.js \
 	mirror.js \
-	rpc.js
+	rpc.js	\
+	trovepicker.js
 
 generated_files =\
 	buildtypes.js \
