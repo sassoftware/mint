@@ -6,7 +6,6 @@
 #
 from mint import constants
 from mint import maintenance
-from mint import userlevels
 from urllib import quote
 onload = "javascript:;"
 ?>
@@ -23,7 +22,7 @@ onload = "javascript:;"
             <![CDATA[
                 var BaseUrl = '${cfg.basePath}';
 
-                // Configured visible image types; required for library.js
+                // Configured visible build types; required for library.js
                 var VisibleBuildTypes = ${str(cfg.visibleBuildTypes)};
                 var VisibleBootableBuildTypes = ${str([x for x in (3, 4, 5, 6, 7, 8) if x in cfg.visibleBuildTypes])};
             ]]>

@@ -108,7 +108,7 @@ from mint.helperfuncs import truncateForDisplay
                         <li py:if="isOwner">Create and manage your project's mailing lists</li>
                         <li py:if="not isOwner">Join the mailing lists for this project or browse their archives</li>
                         <li>
-                            Subscribe to build news
+                            Subscribe to release news
                             <a href="${basePath}rss">
                                 <img style="border: none; vertical-align: middle;"
                                      src="${cfg.staticPath}apps/mint/images/rss-inline.gif" />
