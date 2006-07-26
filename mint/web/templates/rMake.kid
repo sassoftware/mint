@@ -25,7 +25,7 @@
 
                 <p>You can only add packages from projects you are a member of.</p>
 
-                <h2>Current rMake Build</h2>
+                <h2>Current rMake build</h2>
 
                 <ul>
                     <li py:if="not rMakeBuild">
@@ -33,7 +33,7 @@
                     </li>
 
                     <li py:if="rMakeBuild">
-                        The following rMake Build is currently being processed:
+                        The following rMake build is currently being processed:
                     </li>
 
                     <li py:if="rMakeBuild" style="font-weight: bold;">
@@ -43,21 +43,21 @@
                     <li py:if="rMakeBuild">
                         All packages you select by clicking on the
                         package's "Add this package" link will be added to
-                        this rMake Build.
+                        this rMake build.
                     </li>
                 </ul>
 
-                <h2>Other rMake Builds</h2>
+                <h2>Other rMake builds</h2>
 
-                <p>To stop working on the current rMake Build and start using
-                another, click on the desired rMake Build.</p>
+                <p>To stop working on the current rMake build and start using
+                another, click on the desired rMake build.</p>
 
                 <ul>
                     <li py:for="rmb in rMakeBuilds">
                         <a href="${basePath}editrMake?id=${rmb.id}">${rmb.title} <span py:if="rMakeBuild and rMakeBuild.id == rmb.id">(currently selected)</span></a>
                     </li>
                 </ul>
-                <a href="${basePath}newrMake"><b>Create a new rMake Build</b></a>
+                <a href="${basePath}newrMake"><b>Create a new rMake build</b></a>
             </div>
         </div>
         <div id="layout" py:if="not supported">

@@ -84,7 +84,7 @@ from mint.web.templatesupport import injectVersion, dictToJS
             rMake
         </div>
         <div id="rMakeBuilderItems">
-            <div><a href="${cfg.basePath}${rMakeBuild.status and 'rMakeStatus' or 'editrMake?id=%d' % rMakeBuild.id}" title="${rMakeBuild.title}">Current rMake Build: ${truncateForDisplay(rMakeBuild.title, maxWordLen = 30)}</a></div>
+            <div><a href="${cfg.basePath}${rMakeBuild.status and 'rMakeStatus' or 'editrMake?id=%d' % rMakeBuild.id}" title="${rMakeBuild.title}">Current rMake build: ${truncateForDisplay(rMakeBuild.title, maxWordLen = 30)}</a></div>
             <table>
                 <thead>
                     <tr>

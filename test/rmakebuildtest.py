@@ -55,7 +55,7 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
                           WHERE rMakeBuildId=?""", rMakeBuild.id)
         self.failIf([list(x) for x in cu.fetchall()] != \
                     [['foo', 'test.rpath.local@rpl:devel']],
-                    "rMake Build trove not stored correctly")
+                    "rMake build trove not stored correctly")
 
     @fixtures.fixture("Full")
     def testDoubleAdd(self, db, data):
@@ -117,7 +117,7 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
         cu.execute("""SELECT trvName, trvLabel
                           FROM rMakeBuildItems
                           WHERE rMakeBuildId=?""", rMakeBuild.id)
-        self.failIf(cu.fetchall(), "rMake Build item not properly deleted")
+        self.failIf(cu.fetchall(), "rMake build item not properly deleted")
 
     @fixtures.fixture("Full")
     def testDelItemAccess(self, db, data):
@@ -492,10 +492,10 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
 
         rMakeBuild.delete()
         cu.execute("SELECT * FROM rMakeBuildItems")
-        self.failIf(cu.fetchall(), "rMake Build's troves not deleted")
+        self.failIf(cu.fetchall(), "rMake build's troves not deleted")
 
         cu.execute("SELECT * FROM rMakeBuild")
-        self.failIf(cu.fetchall(), "rMake Build not deleted")
+        self.failIf(cu.fetchall(), "rMake build not deleted")
 
     @fixtures.fixture("Full")
     def testDelAccess(self, db, data):
@@ -626,7 +626,7 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
 
         cu.execute("SELECT status, statusMessage, jobId, UUID FROM rMakeBuild")
         res = [x for x in cu.fetchone()]
-        self.failIf(res != [0, '', None, None], "rMake Build status not reset")
+        self.failIf(res != [0, '', None, None], "rMake build status not reset")
 
     @fixtures.fixture("Full")
     def testSetJobId(self, db, data):
@@ -993,7 +993,7 @@ class rMakeBuildTest(MintRepositoryHelper):
                           WHERE rMakeBuildId=?""", rMakeBuild.id)
         self.failIf([list(x) for x in cu.fetchall()] != \
                     [['testcase', 'testproject.rpath.local2@rpl:devel']],
-                    "rMake Build trove not stored correctly")
+                    "rMake build trove not stored correctly")
 
     def testDoubleAddByProject(self):
         client, userId = self.quickMintUser('testuser', 'testpass')
@@ -1033,7 +1033,7 @@ class rMakeBuildTest(MintRepositoryHelper):
         self.failIf([list(x) for x in cu.fetchall()] != \
                     [['testcase:source',
                       'testproject.rpath.local2@rpl:devel']],
-                    "rMake Build source component not stored correctly")
+                    "rMake build source component not stored correctly")
 
     def testDoubleAddSourceByProject(self):
         client, userId = self.quickMintUser('testuser', 'testpass')

@@ -98,17 +98,17 @@ class GroupTroveEmpty(MintError):
 class rMakeBuildEmpty(MintError):
     def __str__(self):
         return self.reason
-    def __init__(self, reason = "rMake Build cannot be empty"):
+    def __init__(self, reason = "rMake build cannot be empty"):
         self.reason = reason
 
 class rMakeBuildCollision(MintError):
     def __str__(self):
         return self.reason
-    def __init__(self, reason = "rMake Build already underway"):
+    def __init__(self, reason = "rMake build already underway"):
         self.reason = reason
 
 class rMakeBuildOrder(MintError):
     def __str__(self):
         return self.reason
-    def __init__(self, reason = "rMake Build commands submitted out of order"):
+    def __init__(self, reason = "rMake build commands submitted out of order"):
         self.reason = reason

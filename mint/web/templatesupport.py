@@ -24,7 +24,7 @@ def injectVersion(version):
     return '/'.join(parts)
 
 def isrMakeLegal(rMakeBuild, userLevel, trvName):
-    """Returns True if 'trv' is legal to add to an rMake Build."""
+    """Returns True if 'trv' is legal to add to an rMake build."""
     # FIXME: the final condition currently removes group troves--but should
     # be re-enabled once rMake properly handles them.
     return rMakeBuild and not rMakeBuild.status and userLevel in userlevels.WRITERS and (':' not in trvName or trvName.endswith(':source')) and not trvName.startswith('group-')
