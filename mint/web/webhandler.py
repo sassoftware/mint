@@ -8,7 +8,6 @@ import kid
 import os
 import textwrap
 import time
-import sys
 
 from mod_python import apache
 from mod_python import Cookie

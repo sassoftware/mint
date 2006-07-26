@@ -94,15 +94,14 @@ onload = "javascript:;"
                 <?python
                     mime, mimeArgs = inlineMime
                 ?>
-                <form method="post" action="${mime}" name="inlineMime">
-                    <input py:for="key, val in mimeArgs" type="hidden" name="${key}" value="${val}" />
+                <frame src="${mime}?${':'.join([x[0] + '=' + x[1] for x in mimeArgs])}" name="inlineMime" id="inlineMime">
                     <script type="text/javascript">
                         <![CDATA[
-                            callLater(1, function() { document.forms["inlineMime"].submit();});
-                            callLater(5, function() { document.location.reload();});
+                            addLoadEvent(function() {
+                              window.location.replace(document.URL);});
                         ]]>
                     </script>
-                </form>
+                </frame>
             </div>
             <div py:if="infoMsg" id="info" class="status" py:content="infoMsg" />
             <div py:if="errorMsgList" id="errors" class="status">The following ${(len(errorMsgList) == 1) and "error" or "errors"} occurred:

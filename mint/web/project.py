@@ -3,8 +3,6 @@
 #
 # All rights reserved
 #
-import dns.resolver
-import dns.exception
 import email
 import os
 import re
@@ -103,14 +101,7 @@ class ProjectHandler(WebHandler):
 
     @redirectHttp
     def projectPage(self, auth):
-        try:
-            dns.resolver.query(self.project.getFQDN())
-        except dns.exception.DNSException:
-            canResolve = self.project.external
-        else:
-            canResolve = True
-
-        return self._write("projectPage", canResolve = canResolve)
+        return self._write("projectPage")
 
     def conaryUserCfg(self, auth):
         return self._write("conaryUserCfg")

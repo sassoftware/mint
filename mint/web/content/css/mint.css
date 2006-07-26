@@ -98,6 +98,13 @@ table {
     width: 100%;
 }
 
+.iemargins {
+    margin-left: 0 !important;
+    margin-left: -3px;
+    margin-right: 0 !important;
+    margin-right: -3px;
+}
+
 td, th {
     vertical-align:top;
     text-align:left;
@@ -883,7 +890,7 @@ table.groupTroveItems textarea {
     width: 100%;
 }
 
-/* rMake Builder */
+/* rMake */
 
 div#rMakeBuilder {
     clear: right;
@@ -1019,6 +1026,9 @@ table.buildstable td.buildInfo {
 .smallSpecs {
     padding-left: 20px;
 }
+
+/* Safari doesn't handle disabled buttons properly...*/
+button.d { color: #666; border:2px outset #eee; }
 
 table.buildstable span.buildAssociated {
     font-size: smaller;

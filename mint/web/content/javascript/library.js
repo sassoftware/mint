@@ -545,11 +545,15 @@ function buttonStatus() {
     if (name.value == '') {
         var button = getElement('submitButton');
         button.disabled = true;
+        //Safari mishandles disabled buttons
+	updateNodeAttributes(button, {'class':'d'});
         return;
     }
     var version = getElement('relver');
     if (version.value == '') {
         var button = getElement('submitButton');
+        //Safari mishandles disabled buttons
+	updateNodeAttributes(button, {'class':'d'});
         button.disabled = true;
         return;
     }
@@ -564,9 +568,13 @@ function buttonStatus() {
     if (builds) {
         var button = getElement('submitButton');
         button.disabled = false;
+        //Safari mishandles disabled buttons
+	updateNodeAttributes(button, {'class':''});
     }
     else {
         var button = getElement('submitButton');
         button.disabled = true;
+        //Safari mishandles disabled buttons
+	updateNodeAttributes(button, {'class':'d'});
     }
 }

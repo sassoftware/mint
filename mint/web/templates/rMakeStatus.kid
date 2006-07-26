@@ -8,7 +8,7 @@
 -->
 
     <head>
-        <title>${formatTitle('rMake Build Status')}</title>
+        <title>${formatTitle('rMake build Status')}</title>
         <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/rmakebuilder.js"/>
     </head>
     <body>
@@ -47,7 +47,7 @@
                 <table>
                     <tr>
                         <td>
-                            <span id="rmakebuilder-jobid">
+                            <span id="rmakebuilder-jobid" style='font-weight: bold;'>
                                 rMake Job ID: ${rMakeBuild.jobId or 'Unknown'}
                             </span>
                         </td>
@@ -58,7 +58,7 @@
                         </td>
                     </tr>
                 </table>
-                ${statusArea("rMake Build")}
+                ${statusArea("rMake build")}
                 <table>
                     <tr py:for="trvDict in troveList">
                         <td>${trvDict['trvName']}: </td>

@@ -1,4 +1,5 @@
 Changes in 2.0.0:
+* Rearchitected the releases system, and replaced it with releases and builds.
 * Releases can now consist of an arbitrary set of builds; a build
   is a combination of group-trove (trove, version, flavor) + build type
   (ISO, VMware, QEMU, etc.).
@@ -15,6 +16,8 @@ Changes in 2.0.0:
   (RBL-695)
 * Searching (all types) will prioritize exact matches above all other results.
 * rBuilder can command an rMake server local to the web browser's machine.
+* The New Build page has been enhanced with an improved group trove selection
+  mechanism making it easier to choose the particular flavor of a group.
 * Custom output filenames can now be specified for builds.
 * Xen support has been added to the group builder "cook group" dialog.
 * Opening two "create release" pages at once no longer gives "requested
@@ -22,8 +25,7 @@ Changes in 2.0.0:
 * External password checking URLs can now be used.
 * The tar archive from mirror priming is now deleted after a successful
   extraction. (RBL-830)
---- affects job server on tip ---
-* vmware images now default to bridged mode.
+* VMware images now default to bridged networking mode.
 
 Changes in 1.6.3:
 * Installation paths changed: /srv/mint is now /srv/rbuilder; configuration is

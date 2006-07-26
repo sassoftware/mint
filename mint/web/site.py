@@ -7,7 +7,6 @@ import base64
 import email
 import os
 import stat
-import sys
 import re
 import time
 from urllib import quote, unquote, quote_plus, urlencode
@@ -722,7 +721,7 @@ class SiteHandler(WebHandler):
     @requiresAuth
     def createrMake(self, auth, title):
         if not re.match("[a-zA-Z0-9\-_ ]+$", title):
-            self._addErrors("Invalid rMake Build name: %s" % title)
+            self._addErrors("Invalid rMake build name: %s" % title)
         rMakeBuild = self.client.createrMakeBuild(title)
         if self._getErrors():
             return self._write('newrMake')
@@ -735,7 +734,7 @@ class SiteHandler(WebHandler):
     def editrMake(self, auth, id):
         self.session['rMakeBuildId'] = id
         self.rMakeBuild = self.client.getrMakeBuild(id)
-        # rMake Builder and Group Builder are mutually exclusive
+        # rMake and Group Builder are mutually exclusive
         if 'groupTroveId' in self.session:
             del self.session['groupTroveId']
         self.session.save()
@@ -749,7 +748,7 @@ class SiteHandler(WebHandler):
     @requiresAuth
     def editrMake2(self, auth, title):
         if not re.match("[a-zA-Z0-9\-_ ]+$", title):
-            self._addErrors("Invalid rMake Build name: %s" % title)
+            self._addErrors("Invalid rMake build name: %s" % title)
         else:
             self.rMakeBuild.rename(title)
             self._setInfo('name successfully changed to: %s' % title)
@@ -775,10 +774,10 @@ class SiteHandler(WebHandler):
             try:
                 self.rMakeBuild.delete()
             except:
-                self._addErrors("Unable to delete rMake Build: %s" % \
+                self._addErrors("Unable to delete rMake build: %s" % \
                                 self.rMakeBuild.title)
             else:
-                self._setInfo("Successfully deleted rMake Build: %s" % \
+                self._setInfo("Successfully deleted rMake build: %s" % \
                               self.rMakeBuild.title)
                 self.rMakeBuild = None
                 if 'rMakeBuildId' in self.session:
@@ -788,7 +787,7 @@ class SiteHandler(WebHandler):
         else:
             return self._write('confirm',
                                message = "Are you sure you want to delete " \
-                               "this rMake Build: %s?" % self.rMakeBuild.title,
+                               "this rMake build: %s?" % self.rMakeBuild.title,
                                yesArgs = {'func':'deleterMakeBuild',
                                           'confirmed':'1'},
                                noLink = "rMake")
@@ -796,7 +795,7 @@ class SiteHandler(WebHandler):
     @strFields(trvName = None, label = '', projectName = '', referer = '')
     def addrMakeTrove(self, auth, trvName, projectName, referer, label):
         if not self.rMakeBuild:
-            self._addErrors("No rMake Build underway.")
+            self._addErrors("No rMake build underway.")
         elif not label and not projectName:
             self._addErrors("No reference to trove origins given.")
         else:
@@ -813,7 +812,7 @@ class SiteHandler(WebHandler):
     @strFields(referer = '')
     def deleterMakeTrove(self, auth, troveId, referer):
         if not self.rMakeBuild:
-            self._addErrors("No rMake Build underway.")
+            self._addErrors("No rMake build underway.")
         else:
             trvDict = self.client.getrMakeBuildTrove(troveId)
             self.client.delrMakeBuildTrove(troveId)
@@ -822,10 +821,10 @@ class SiteHandler(WebHandler):
             referer = self.cfg.basePath
         self._redirect(referer)
 
-    strFields(command = None)
+    @strFields(command = None)
     def commandrMake(self, auth, command):
         if not self.rMakeBuild:
-            self._addErrors("No rMake Build underway.")
+            self._addErrors("No rMake build underway.")
             self._redirect(self.cfg.basePath)
         elif command not in ('build', 'stop', 'commit'):
             self._addErrors("Illegal rMake Command.")
@@ -834,18 +833,18 @@ class SiteHandler(WebHandler):
             self._setInlineMime(self.cfg.basePath + \
                                 "rMakeCommand", command = command)
             if command == 'build':
-                self._setInfo("Starting rMake Build")
+                self._setInfo("Starting rMake build")
             elif command == 'stop':
-                self._setInfo("Stopping rMake Build")
+                self._setInfo("Stopping rMake build")
             elif command == 'commit':
-                self._setInfo("Committing rMake Build")
+                self._setInfo("Committing rMake build")
             self._redirect(self.cfg.basePath + 'rMakeStatus')
 
-    strFields(command = None)
+    @strFields(command = None)
     def rMakeCommand(self, auth, command):
         command = str(command)
         if not self.rMakeBuild:
-            self._addErrors("No rMake Build underway.")
+            self._addErrors("No rMake build underway.")
             self._redirect(self.cfg.basePath)
         else:
             try:
@@ -860,7 +859,7 @@ class SiteHandler(WebHandler):
     @requiresAuth
     def rMakeStatus(self, auth):
         if not self.rMakeBuild:
-            return self._write('error', 'error', "No rMake Build underway.")
+            return self._write('error', 'error', "No rMake build underway.")
         else:
             return self._write('rMakeStatus',
                                troveList = self.rMakeBuild.listTroves())
@@ -871,7 +870,7 @@ class SiteHandler(WebHandler):
     @strFields(referer = '')
     def resetrMakeStatus(self, auth, confirmed, referer, **yesArgs):
         if not self.rMakeBuild:
-            return self._write('error', 'error', "No rMake Build underway.")
+            return self._write('error', 'error', "No rMake build underway.")
         if confirmed or self.rMakeBuild.status in \
                (buildjob.JOB_STATE_INIT, buildjob.JOB_STATE_FAILED,
                 buildjob.JOB_STATE_COMMITTED):

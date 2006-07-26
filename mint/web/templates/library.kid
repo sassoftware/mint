@@ -81,10 +81,10 @@ from mint.web.templatesupport import injectVersion, dictToJS
         <img class="right" src="${cfg.staticPath}apps/mint/images/header_orange_right.png" alt="" />
         <div class="boxHeader">
             <a href="${cfg.basePath}closeCurrentrMake?referer=${quote(req.unparsed_uri)}" title="Close"><img id="rmake_items_close" src="${cfg.staticPath}/apps/mint/images/BUTTON_close.gif" alt="X" class="noborder" /></a>
-            rMake Builder
+            rMake
         </div>
         <div id="rMakeBuilderItems">
-            <div><a href="${cfg.basePath}${rMakeBuild.status and 'rMakeStatus' or 'editrMake?id=%d' % rMakeBuild.id}" title="${rMakeBuild.title}">Current rMake Build: ${truncateForDisplay(rMakeBuild.title, maxWordLen = 30)}</a></div>
+            <div><a href="${cfg.basePath}${rMakeBuild.status and 'rMakeStatus' or 'editrMake?id=%d' % rMakeBuild.id}" title="${rMakeBuild.title}">Current rMake build: ${truncateForDisplay(rMakeBuild.title, maxWordLen = 30)}</a></div>
             <table>
                 <thead>
                     <tr>

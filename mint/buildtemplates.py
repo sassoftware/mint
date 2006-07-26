@@ -93,7 +93,7 @@ class vmMemory(IntegerOption):
 
 class unionfs(BooleanOption):
     default = False
-    prompt = "Enable copy-on-write for entire filesystem. To use this, your group must contain the unionfs kernel module. (unionfs is available in contrib (unsupported). The unionfs module you use must match your kernel version.)"
+    prompt = "Enable UnionFS for the entire filesystem. (For this option, the UnionFS kernel module is required in the group. See rBuilder documentation for more information on this option.)"
 
 class zisofs(BooleanOption):
     default = True

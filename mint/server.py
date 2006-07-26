@@ -3126,10 +3126,10 @@ class MintServer(object):
         self.groupTroveItems.update(groupTroveItemId, subGroup = subGroup)
         return True
 
-    ### rMake Build functions ###
+    ### rMake build functions ###
     def _checkrMakeBuildTitle(self, title):
         if not re.match("[a-zA-Z0-9\-_ ]+$", title):
-            raise ParameterError('Bad rMake Build name: %s' % title)
+            raise ParameterError('Bad rMake build name: %s' % title)
 
     @private
     @typeCheck(int)
@@ -3249,7 +3249,7 @@ class MintServer(object):
         self.rMakeBuild.setJobId(UUID, jobId)
         return True
 
-    ### rMake Build trove functions ###
+    ### rMake build trove functions ###
     @private
     @typeCheck(int, ((unicode, str),), ((unicode, str),))
     @requiresAuth
@@ -3261,7 +3261,7 @@ class MintServer(object):
         if rMakeBuildDict['status']:
             raise rMakeBuildOrder('Cannot add troves at this time.')
         if ':' in trvName and not trvName.endswith(':source'):
-            raise ParameterError('Cannot add components to rMake Build')
+            raise ParameterError('Cannot add components to rMake build')
         rMakeBuildItemId = self.rMakeBuildItems.new( \
             rMakeBuildId = rMakeBuildId, trvName = trvName,
             trvLabel = trvLabel)
