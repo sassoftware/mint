@@ -9,8 +9,10 @@ Changes in tip:
   (RBL-695)
 * Searching (all types) will prioritize exact matches above all other results.
 * rBuilder can command an rMake server local to the web browser's machine.
-* custom output filenames can now be specified for builds.
-* Xen support has been added to the group builder "cook group" dialog.
+* Custom output filenames can now be specified for builds.
+* Xen support has been added to the group builder "cook group" dialog. (Not launched)
+* The New Build page has been enhanced with an improved group trove selection
+  mechanism making it easier to choose the particular flavor of a group.
 * Fix for RBL-408: Opening two "create release" tabs at once gives "requested
   item not found"
 * External password checking URLs can now be used.
