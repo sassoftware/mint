@@ -37,25 +37,25 @@ from mint import pubreleases
                     <div class="formgroup">
                         <label for="relname"><em class="required">Name</em></label>
                         <input id="relname" name="name" type="text" value="${name}" onkeyup="buttonStatus();"/>
-                        <label>&nbsp;</label><p class="help">Enter a name for this release.</p>
+                        <label for="namehelp">&nbsp;</label><span id="namehelp" style="width: 50%;" class="help">Enter a name for this release.</span>
                         <div class="clearleft">&nbsp;</div>
 
                         <label for="relver"><em class="required">Version</em></label>
                         <input id="relver" name="version" type="text" value="${version}" onkeyup="buttonStatus();"/>
-                        <label>&nbsp;</label><p class="help">Enter a version for this release. (Example: 1.1.1)</p><div class="clearleft">&nbsp;</div>
+                        <label for="verhelp">&nbsp;</label><span id="verhelp" class="help">Enter a version for this release. (Example: 1.1.1)</span><div class="clearleft">&nbsp;</div>
 
                         <label for="reldesc">Description (optional)</label>
                         <textarea id="reldesc" name="desc" type="text" py:content="desc" />
-                        <label>&nbsp;</label><p class="help">Enter a description of the release here.  This field is optional.</p>
+                        <label for="deschelp">&nbsp;</label><span id="deschelp" class="help">Enter a description of the release here.  This field is optional.</span>
                         <div class="clearleft">&nbsp;</div>
 
                     </div>
 
 
                     <div strip="True" py:if="currentBuilds">
-                    <div class="formgroupTitle">Current Release Contents<span id="baton"></span></div>
+                    <div class="formgroupTitle">Current Release Contents</div>
                     <div class="formgroup">
-                    <p class="help" style="margin-left: 20px; margin-right: 20px; margin-top: -5px; margin-bottom: 5px;">The following builds are currently included in this release. Un-check a build to remove it.</p>
+                    <p class="help" style="margin-left: 20px; margin-right: 10px; margin-top: -5px; margin-bottom: 5px;">The following builds are currently included in this release. Un-check a build to remove it.</p>
                         <?python from mint import buildtypes ?>
                         <?python rowStyle = 0 ?>
                         <div  py:attrs="{'class': rowStyle and 'odd' or 'even'}"  py:for="build in currentBuilds">
@@ -65,30 +65,44 @@ from mint import pubreleases
                         <input type="checkbox" checked="True" class="relCheck" name="buildIds" value="${build.getId()}" onclick="buttonStatus();"/>
                             <div class="clearleft" style="line-height: 0">&nbsp;</div>
                         <div id="div_${build.getId()}" style="display: none;">
+			    <div style="height: 1%">
                             <label class="troveSpecs">Group</label>
-                            <div style="width: 70%; float: right;"> ${build.getTroveName()}</div>
+                            <div class="troveData">${build.getTroveName()}</div>
                             <div class="clearleft" style="line-height: 0; clear: right;">&nbsp;</div>
                             <br/>
+			    </div>
+			    <div style="height: 1%">
                             <label class="troveSpecs">Version</label>
-                                <div class="troveData"> ${build.getTroveVersion()}</div>
+                                <div class="troveData">${build.getTroveVersion()}</div>
                             <div class="clearleft" style="line-height: 0; clear: right;">&nbsp;</div>
                             <br/>
+			    </div>
+			    <div style="height: 1%">
+			    <div>
                             <label class="troveSpecs">Flavor</label>
                             <div class="troveData">${str(build.getTroveFlavor()).replace(',', ', ')}</div>
                             <div class="clearleft" style="line-height: 0; clear: right;">&nbsp;</div>
                             <br/>
+			    </div>
+			    <div style="height: 1%">
+                            </div>
                             <label class="troveSpecs">Architecture</label>
                             <div class="troveData">${build.getArch()}</div>
                             <div class="clearleft" style="line-height: 0; clear: right;">&nbsp;</div>
                             <br/>
+			    </div>
+			    <div style="height: 1%">
                             <label class="troveSpecs">Release Type</label>
                             <div class="troveData">${buildtypes.typeNames[build.getBuildType()]}</div>
                             <div class="clearleft" style="line-height: 0; clear: right;">&nbsp;</div>
                             <br/>
+			    </div>
+			    <div style="height: 1%">
                             <label class="troveSpecs">Build Notes</label>
                             <div class="troveData">${build.getDesc() and build.getDesc() or 'None'}</div>
                             <div class="clearleft" style="line-height: 0; clear: right;">&nbsp;</div>
                             <br/>
+			    </div>
                             
                         </div>
                         <?python rowStyle ^= 1 ?>
@@ -99,7 +113,7 @@ from mint import pubreleases
                     <div py:if="availableBuilds" py:strip="True">
                     <div class="formgroupTitle">${releaseId and 'Available Builds' or 'Release Contents'}<span id="baton"></span></div>
                     <div class="formgroup">
-                    <p class="help" style="margin-right: 20px; margin-left: 20px; margin-top: -5px; margin-bottom: 5px;">${releaseId and 'The following builds are currently not included with this release. Check a release to add it.' or 'Select builds to be included with this release.'}</p>
+                    <p class="help" style="margin-right: 10px; margin-left: 20px; margin-top: -5px; margin-bottom: 5px;">${releaseId and 'The following builds are currently not included with this release. Check a release to add it.' or 'Select builds to be included with this release.'}</p>
                         <?python from mint import buildtypes ?>
                         <?python rowStyle = 0 ?>
                         <div  py:attrs="{'class': rowStyle and 'odd' or 'even'}"  py:for="build in availableBuilds">
@@ -109,33 +123,43 @@ from mint import pubreleases
                         <input type="checkbox" class="relCheck" name="buildIds" value="${build.getId()}" onclick="buttonStatus();"/>
                             <div class="clearleft" style="line-height: 0">&nbsp;</div>
                         <div id="div_${build.getId()}" style="display: none;">
+			    <div style="height: 1%">
                             <label class="troveSpecs">Group</label>
-                            <div style="width: 70%; float: right;"> ${build.getTroveName()}</div>
+                            <div class="troveData"> ${build.getTroveName()}</div>
                             <div class="clearleft" style="line-height: 0; clear: right;">&nbsp;</div>
                             <br/>
-
+			    </div>
+			    <div style="height: 1%">
                             <label class="troveSpecs">Version</label>
                                 <div class="troveData"> ${build.getTroveVersion()}</div>
                             <div class="clearleft" style="line-height: 0; clear: right;">&nbsp;</div>
                             <br/>
+			    </div>
+			    <div style="height: 1%">
                             <label class="troveSpecs">Flavor</label>
                             <div class="troveData">${str(build.getTroveFlavor()).replace(',', ', ')}</div>
                             <div class="clearleft" style="line-height: 0; clear: right;">&nbsp;</div>
                             <br/>
+			    </div>
+			    <div style="height: 1%">
                             <label class="troveSpecs">Architecture</label>
                             <div class="troveData">${build.getArch()}</div>
                             <div class="clearleft" style="line-height: 0; clear: right;">&nbsp;</div>
                             <br/>
+			    </div>
+			    <div style="height: 1%">
                             <label class="troveSpecs">Release Type</label>
                             <div class="troveData">${buildtypes.typeNames[build.getBuildType()]}</div>
                             <div class="clearleft" style="line-height: 0; clear: right;">&nbsp;</div>
                             <br/>
-                            <label class="troveSpecs">Description</label>
+			    </div>
+			    <div style="height: 1%">
+                            <label class="troveSpecs">Build Notes</label>
                             <div class="troveData">${build.getDesc() and build.getDesc() or 'None'}</div>
                             <div class="clearleft" style="line-height: 0; clear: right;">&nbsp;</div>
                             <br/>
-                            
-                        </div>
+			    </div>
+                           </div> 
                         <?python rowStyle ^= 1 ?>
                         </div>
                     </div>
