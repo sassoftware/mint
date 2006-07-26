@@ -78,8 +78,13 @@ class JobsTable(database.KeyedTable):
 class Job(database.TableObject):
     __slots__ = [JobsTable.key] + JobsTable.fields
 
+    # alias for releaseId
+    releaseId = property(lambda self: self.buildId)
+
     def getItem(self, id):
-        return self.server.getJob(id)
+        # newer clients must call getJob2 to maintain backwards
+        # compatibility with older jobservers
+        return self.server.getJob2(id)
 
     def getId(self):
         return self.id

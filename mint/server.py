@@ -1721,6 +1721,29 @@ class MintServer(object):
         return self.commits.getCommitsByProject(projectId)
 
     @typeCheck(int)
+    def getRelease(self, releaseId):
+        """ Backwards-compatible call for older jobservers <= 1.6.3 """
+        # releaseId -> buildId
+        buildId = releaseId
+        self._filterBuildAccess(buildId)
+        build = self.builds.get(buildId)
+        # add some things that the old jobserver will expect
+        build['releaseId'] = build['buildId']
+        build['imageTypes'] = []
+        build['downloads'] = 0
+        build['timePublished'] = 0
+        build['published'] = 0
+        # remove things that will confuse old jobservers
+        del build['buildId']
+        del build['buildType']
+        del build['timeCreated']
+        del build['createdBy']
+        del build['timeUpdated']
+        del build['updatedBy']
+        del build['pubReleaseId']
+        return build
+
+    @typeCheck(int)
     def getBuild(self, buildId):
         self._filterBuildAccess(buildId)
         return self.builds.get(buildId)
@@ -1797,6 +1820,31 @@ class MintServer(object):
     def getBuildDataDict(self, buildId):
         self._filterBuildAccess(buildId)
         return self.buildData.getDataDict(buildId)
+
+    @typeCheck(int, str, ((str, int, bool),), int)
+    @requiresAuth
+    @private
+    def setReleaseDataValue(self, releaseId, name, value, dataType):
+        """ Backwards-compatible call for older jobservers <= 1.6.3 """
+        # releaseId -> buildId
+        buildId = releaseId
+        return self.setBuildDataValue(buildId, name, value, dataType)
+
+    @typeCheck(int, str)
+    @private
+    def getReleaseDataValue(self, releaseId, name):
+        """ Backwards-compatible call for older jobservers <= 1.6.3 """
+        # releaseId -> buildId
+        buildId = releaseId
+        return self.getBuildDataValue(buildId, name)
+
+    @typeCheck(int)
+    @private
+    def getReleaseDataDict(self, releaseId):
+        """ Backwards-compatible call for older jobservers <= 1.6.3 """
+        # releaseId -> buildId
+        buildId = releaseId
+        return self.getBuildDataDict(buildId)
 
     #
     # published releases 
@@ -1919,6 +1967,15 @@ class MintServer(object):
 
     @typeCheck(int)
     @private
+    def getReleaseTrove(self, releaseId):
+        """ Backwards-compatible call for older jobservers <= 1.6.3 """
+        # releaseId -> buildId
+        buildId = releaseId
+        self._filterBuildAccess(buildId)
+        return self.builds.getTrove(buildId)
+
+    @typeCheck(int)
+    @private
     def getBuildTrove(self, buildId):
         self._filterBuildAccess(buildId)
         return self.builds.getTrove(buildId)
@@ -1986,6 +2043,16 @@ class MintServer(object):
     @private
     def getBuildPublished(self, buildId):
         return self.builds.getPublished(buildId)
+
+    @typeCheck(int)
+    @private
+    def getImageTypes(self, releaseId):
+        """ Backwards-compatible call for older jobservers <= 1.6.3 """
+        # releaseId -> buildId
+        buildId = releaseId
+        # old jobservers expect a list here
+        imageTypes = [ self.getBuildType(buildId) ]
+        return imageTypes
 
     @typeCheck(int)
     @private
@@ -2132,12 +2199,44 @@ class MintServer(object):
     @typeCheck(int)
     @private
     def getJob(self, jobId):
+        """ Backwards-compatible call for older jobservers <= 1.6.3 """
+        self._filterJobAccess(jobId)
+        cu = self.db.cursor()
+
+        cu.execute("SELECT userId, buildId AS releaseId, groupTroveId, status,"
+                   "  statusMessage, timeSubmitted, timeStarted, "
+                   "  timeFinished FROM Jobs"
+                   " WHERE jobId=?", jobId)
+
+        p = cu.fetchone()
+        if not p:
+            raise jobs.JobMissing
+
+        dataKeys = ['userId', 'releaseId', 'groupTroveId', 'status',
+                    'statusMessage', 'timeSubmitted', 'timeStarted',
+                    'timeFinished']
+        data = {}
+        for i, key in enumerate(dataKeys):
+            # these keys can be NULL from the db
+            if key in ('releaseId', 'groupTroveId') and p[i] is None:
+                data[key] = 0
+            else:
+                data[key] = p[i]
+
+        # ensure waiting job messages get updated
+        if data['status'] == jobstatus.WAITING:
+            data['statusMessage'] = self.getJobWaitMessage(jobId)
+        return data
+
+    @typeCheck(int)
+    @private
+    def getJob2(self, jobId):
         self._filterJobAccess(jobId)
         cu = self.db.cursor()
 
         cu.execute("SELECT userId, buildId, groupTroveId, status,"
                    "  statusMessage, timeSubmitted, timeStarted, "
-                   "  timeFinished FROM Jobs "
+                   "  timeFinished FROM Jobs"
                    " WHERE jobId=?", jobId)
 
         p = cu.fetchone()
@@ -2150,13 +2249,11 @@ class MintServer(object):
         data = {}
         for i, key in enumerate(dataKeys):
             # these keys can be NULL from the db
-            if key in ('buildId', 'groupTroveId'):
-                if p[i] is None:
-                    data[key] = 0
-                else:
-                    data[key] = p[i]
+            if key in ('buildId', 'groupTroveId') and p[i] is None:
+                data[key] = 0
             else:
                 data[key] = p[i]
+
         # ensure waiting job messages get updated
         if data['status'] == jobstatus.WAITING:
             data['statusMessage'] = self.getJobWaitMessage(jobId)
@@ -2222,7 +2319,14 @@ class MintServer(object):
             if arch not in ("1#x86", "1#x86_64"):
                 raise ParameterError("Not a legal architecture")
 
-        buildTypes = jobTypes.get('buildTypes', [])
+        buildTypes = []
+        try:
+            buildTypes = jobTypes['buildTypes']
+        except KeyError:
+            # This is to handle deprecated jobservers who insist on sending
+            # imageTypes
+            buildTypes = jobTypes.get('imageTypes', [])
+
         cookTypes = jobTypes.get('cookTypes', [])
 
         if sum([(x not in buildtypes.TYPES) \
@@ -2417,6 +2521,15 @@ class MintServer(object):
         else:
             self.db.commit()
         return True
+
+    @typeCheck(int, (list, (list, str)))
+    @requiresAuth
+    @private
+    def setImageFilenames(self, releaseId, filenames):
+        """ Backwards-compatible call for older jobservers <= 1.6.3 """
+        # releaseId -> buildId
+        buildId = releaseId
+        return self.setBuildFilenames(buildId, filenames)
 
     @typeCheck(int)
     @private
