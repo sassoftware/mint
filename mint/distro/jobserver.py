@@ -294,7 +294,14 @@ class JobDaemon:
 
                     slog.warning("Error retrieving job list: " + str(e))
                 except Exception, e:
-                    slog.error("Fatal exception caught: " + traceback.format_exc())
+                    errorMsg = "The job server has caught a fatal exception:\n%s" % traceback.format_exc()
+                    slog.error(errorMsg)
+                    if job:
+                        # attempt to notify the client
+                        try:
+                            job.setStatus(jobstatus.ERROR, errorMsg + "\nPlease notify the site administrator.")
+                        except Exception:
+                            pass
                     break
             # sleep at the end of every run, no matter what the outcome was
             time.sleep(random.uniform(*JOB_IDLE_INTERVAL))
