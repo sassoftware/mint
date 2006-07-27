@@ -213,6 +213,7 @@ div#top #topRight div.about a:visited {
     color: #bbbbbb;
 }
 
+#useIt a:hover,
 div#prodLogo a:hover,
 div#corpLogo a:hover {
     color: #333;
