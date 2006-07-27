@@ -9,6 +9,7 @@ import time
 from mint import userlevels
 from mint.client import extractIs
 
+import conary
 from conary.conaryclient.cmdline import parseTroveSpec
 from conary import versions
 
@@ -39,4 +40,8 @@ def dictToJS(d):
 
 def shortTroveSpec(spec):
     n, v, f = parseTroveSpec(spec)
-    return "%s=%s (%s)" % (n, str(versions.ThawVersion(v).trailingRevision()), extractIs(f))
+    try:
+        v = versions.VersionFromString(v)
+    except conary.errors.ParseError: # we got a frozen version string
+        v = versions.ThawVersion(v)
+    return "%s=%s (%s)" % (n, str(v.trailingRevision()), extractIs(f))
