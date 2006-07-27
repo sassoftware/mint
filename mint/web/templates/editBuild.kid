@@ -19,7 +19,7 @@ allowNone = ['anaconda-custom', 'media-template']
         <a href="#">${(buildId and "Create New" or "Edit") + " Build"}</a>
     </div>
     <?python
-        for var in ['buildId', 'trove', 'buildName']:
+        for var in ['buildId', 'buildName']:
             kwargs[var] = kwargs.get(var, '')
     ?>
 

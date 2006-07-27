@@ -325,7 +325,6 @@ class ProjectHandler(WebHandler):
             defaultTemplate = buildtypes.INSTALLABLE_ISO,
             templates = buildtemplates.getDisplayTemplates(),
             dataDict = {},
-            trove = None,
             troveName = None,
             label = None,
             versionStr = None,
@@ -336,8 +335,8 @@ class ProjectHandler(WebHandler):
 
     @writersOnly
     @intFields(buildId = -1)
-    @strFields(trove = "", action = "edit")
-    def editBuild(self, auth, buildId, trove, action):
+    @strFields(action = "Edit Build")
+    def editBuild(self, auth, buildId, action):
 
         if action == "Edit Build":
             build = self.client.getBuild(buildId)
@@ -356,7 +355,6 @@ class ProjectHandler(WebHandler):
                 defaultTemplate = buildtypes.INSTALLABLE_ISO,
                 templates = buildtemplates.getDisplayTemplates(),
                 dataDict = build.getDataDict(),
-                trove = trove,
                 troveName = troveName,
                 label = label,
                 version = version,
