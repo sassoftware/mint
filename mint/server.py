@@ -192,54 +192,48 @@ def typeCheck(*paramTypes):
 
 tables = {}
 def getTables(db, cfg):
-    # use file locks to ensure we have a multi-process mutex
-    lockFile = open(os.path.join(cfg.dataPath, 'tmp', 'schema.lock'), 'w+')
-    try:
-        fcntl.lockf(lockFile.fileno(), fcntl.LOCK_EX)
-        d = {}
-        d['version'] = dbversion.VersionTable(db)
-        d['labels'] = projects.LabelsTable(db, cfg)
-        d['projects'] = projects.ProjectsTable(db, cfg)
-        d['jobs'] = jobs.JobsTable(db)
-        d['buildFiles'] = jobs.BuildFilesTable(db)
-        d['users'] = users.UsersTable(db, cfg)
-        d['userGroups'] = users.UserGroupsTable(db, cfg)
-        d['userGroupMembers'] = users.UserGroupMembersTable(db, cfg)
-        d['userData'] = data.UserDataTable(db)
-        d['projectUsers'] = users.ProjectUsersTable(db)
-        d['builds'] = builds.BuildsTable(db)
-        d['pkgIndex'] = pkgindex.PackageIndexTable(db)
-        d['newsCache'] = news.NewsCacheTable(db, cfg)
-        d['sessions'] = sessiondb.SessionsTable(db)
-        d['membershipRequests'] = requests.MembershipRequestTable(db)
-        d['commits'] = stats.CommitsTable(db)
-        d['buildData'] = data.BuildDataTable(db)
-        d['groupTroves'] = grouptrove.GroupTroveTable(db, cfg)
-        d['groupTroveItems'] = grouptrove.GroupTroveItemsTable(db, cfg)
-        d['conaryComponents'] = grouptrove.ConaryComponentsTable(db)
-        d['groupTroveRemovedComponents'] = grouptrove.GroupTroveRemovedComponentsTable(db)
-        d['jobData'] = data.JobDataTable(db)
-        d['inboundLabels'] = mirror.InboundLabelsTable(db)
-        d['outboundLabels'] = mirror.OutboundLabelsTable(db)
-        d['outboundMatchTroves'] = mirror.OutboundMatchTrovesTable(db)
-        d['repNameMap'] = mirror.RepNameMapTable(db)
-        d['spotlight'] = spotlight.ApplianceSpotlightTable(db, cfg)
-        d['useit'] = useit.UseItTable(db, cfg)
-        d['selections'] = selections.FrontPageSelectionsTable(db, cfg)
-        d['rMakeBuild'] = rmakebuild.rMakeBuildTable(db)
-        d['rMakeBuildItems'] = rmakebuild.rMakeBuildItemsTable(db)
-        d['publishedReleases'] = pubreleases.PublishedReleasesTable(db)
-        outDatedTables = [x for x in d.values() if not x.upToDate]
-        while outDatedTables[:]:
-            d['version'].bumpVersion()
-            for table in outDatedTables:
-                upToDate = table.versionCheck()
-                if upToDate:
-                    outDatedTables.remove(table)
-        if d['version'].getDBVersion() != d['version'].schemaVersion:
-            d['version'].bumpVersion()
-    finally:
-        lockFile.close()
+    d = {}
+    d['version'] = dbversion.VersionTable(db)
+    d['labels'] = projects.LabelsTable(db, cfg)
+    d['projects'] = projects.ProjectsTable(db, cfg)
+    d['jobs'] = jobs.JobsTable(db)
+    d['buildFiles'] = jobs.BuildFilesTable(db)
+    d['users'] = users.UsersTable(db, cfg)
+    d['userGroups'] = users.UserGroupsTable(db, cfg)
+    d['userGroupMembers'] = users.UserGroupMembersTable(db, cfg)
+    d['userData'] = data.UserDataTable(db)
+    d['projectUsers'] = users.ProjectUsersTable(db)
+    d['builds'] = builds.BuildsTable(db)
+    d['pkgIndex'] = pkgindex.PackageIndexTable(db)
+    d['newsCache'] = news.NewsCacheTable(db, cfg)
+    d['sessions'] = sessiondb.SessionsTable(db)
+    d['membershipRequests'] = requests.MembershipRequestTable(db)
+    d['commits'] = stats.CommitsTable(db)
+    d['buildData'] = data.BuildDataTable(db)
+    d['groupTroves'] = grouptrove.GroupTroveTable(db, cfg)
+    d['groupTroveItems'] = grouptrove.GroupTroveItemsTable(db, cfg)
+    d['conaryComponents'] = grouptrove.ConaryComponentsTable(db)
+    d['groupTroveRemovedComponents'] = grouptrove.GroupTroveRemovedComponentsTable(db)
+    d['jobData'] = data.JobDataTable(db)
+    d['inboundLabels'] = mirror.InboundLabelsTable(db)
+    d['outboundLabels'] = mirror.OutboundLabelsTable(db)
+    d['outboundMatchTroves'] = mirror.OutboundMatchTrovesTable(db)
+    d['repNameMap'] = mirror.RepNameMapTable(db)
+    d['spotlight'] = spotlight.ApplianceSpotlightTable(db, cfg)
+    d['useit'] = useit.UseItTable(db, cfg)
+    d['selections'] = selections.FrontPageSelectionsTable(db, cfg)
+    d['rMakeBuild'] = rmakebuild.rMakeBuildTable(db)
+    d['rMakeBuildItems'] = rmakebuild.rMakeBuildItemsTable(db)
+    d['publishedReleases'] = pubreleases.PublishedReleasesTable(db)
+    outDatedTables = [x for x in d.values() if not x.upToDate]
+    while outDatedTables[:]:
+        d['version'].bumpVersion()
+        for table in outDatedTables:
+            upToDate = table.versionCheck()
+            if upToDate:
+                outDatedTables.remove(table)
+    if d['version'].getDBVersion() != d['version'].schemaVersion:
+        d['version'].bumpVersion()
     return d
 
 class MintServer(object):
@@ -3443,6 +3437,7 @@ class MintServer(object):
         self.cfg = cfg
         self.req = req
         self.callLog = None
+        schemaLock = None
 
         if self.cfg.xmlrpcLogFile:
             self.callLog = calllog.CallLogger(self.cfg.xmlrpcLogFile, [self.cfg.siteHost])
@@ -3480,6 +3475,11 @@ class MintServer(object):
 
             global tables
             if not tables or alwaysReload:
+                # use file locks to ensure we have a multi-process mutex
+                schemaLock = open( \
+                    os.path.join(cfg.dataPath, 'tmp', 'schema.lock'), 'w+')
+                fcntl.lockf(schemaLock.fileno(), fcntl.LOCK_EX)
+
                 self.db.loadSchema()
                 tables = getTables(self.db, self.cfg)
 
@@ -3498,6 +3498,11 @@ class MintServer(object):
         except:
             #An error occurred during db creation or upgrading
             self.db.rollback()
+            if schemaLock:
+                schemaLock.close()
             raise
+        else:
+            if schemaLock:
+                schemaLock.close()
 
         self.newsCache.refresh()
