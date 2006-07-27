@@ -121,12 +121,12 @@ allowNone = ['anaconda-custom', 'media-template']
                                     <div py:strip="True" py:if="(dataRow[0] == RDT_TROVE)">
                                         <label for="${name}">${dataRow[2]}</label>
                                         <div id="${name}">
-                                            <span py:if="not buildId or not dataDict[name]">Defaults to latest on branch</span>
-                                            <span py:if="buildId and dataDict[name]">${shortTroveSpec(dataDict[name])}</span>
+                                            <span py:if="not buildId or not dataValue">Defaults to latest on branch</span>
+                                            <span py:if="buildId and dataValue">${shortTroveSpec(dataValue)}</span>
                                             (<a onclick="new TrovePicker(${project.id},
                                                 '${project.getLabel().split('@')[0]}',
                                                 '${name}', '${name}', '${cfg.staticPath}', ${int(name in allowNone)});">change)</a>
-                                            <input py:if="buildId and dataDict[name]" type="hidden" name="${name.replace('-', '_') + 'Spec'}" value="${dataDict[name]}" />
+                                            <input py:if="buildId and dataValue" type="hidden" name="${name.replace('-', '_') + 'Spec'}" value="${dataValue}" />
                                         </div>
                                     </div>
                                     <div class="clearleft">&nbsp;</div>
