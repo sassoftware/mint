@@ -20,44 +20,49 @@
             <div id="spanleft">
                 <h1>rMake</h1>
 
-                <p>You can use rMake to create a grouping of
-                packages to be built by your local rMake Server.</p>
+                <p>Use this page to manage your rMake builds.</p>
 
-                <p>You can only add packages from projects you are a member of.</p>
+                <p>To start, create a new rMake build using the link below<span py:if="rMakeBuilds">, or select an existing build</span>.</p>
 
+                <a href="${basePath}newrMake"><b>Create a new rMake build</b></a>
                 <h2>Current rMake build</h2>
+                <p py:if="rMakeBuild">
+                    All packages you select by clicking on the
+                    package's "Add to ${rMakeBuild.title}" link will be added to
+                    this rMake build.
+                </p>
 
                 <ul>
                     <li py:if="not rMakeBuild">
-                        You are not currently using rMake.
-                    </li>
-
-                    <li py:if="rMakeBuild">
-                        The following rMake build is currently being processed:
+                        None
                     </li>
 
                     <li py:if="rMakeBuild" style="font-weight: bold;">
                         <a href="${basePath}editrMake?id=${rMakeBuild.id}">${rMakeBuild.title}</a> (${len(rMakeBuild.listTroves())} troves)
                     </li>
 
-                    <li py:if="rMakeBuild">
-                        All packages you select by clicking on the
-                        package's "Add this package" link will be added to
-                        this rMake build.
-                    </li>
                 </ul>
 
                 <h2>Other rMake builds</h2>
 
-                <p>To stop working on the current rMake build and start using
-                another, click on the desired rMake build.</p>
+                <?python
+                    otherrMakeBuilds = [x for x in rMakeBuilds if not rMakeBuild or rMakeBuild.id != x.id]
+                ?>
+
+                <p py:if="rMakeBuild and otherrMakeBuilds">
+                To stop working on the current rMake build and start using
+                another, click on the one you desire.</p>
+                <p py:if="not rMakeBuild and otherrMakeBuilds">
+                Click on the desired rMake build to make it current.</p>
+                <ul py:if="not otherrMakeBuilds">
+                    <li>None</li>
+                </ul>
 
                 <ul>
-                    <li py:for="rmb in rMakeBuilds">
-                        <a href="${basePath}editrMake?id=${rmb.id}">${rmb.title} <span py:if="rMakeBuild and rMakeBuild.id == rmb.id">(currently selected)</span></a>
+                    <li py:for="rmb in otherrMakeBuilds">
+                        <a href="${basePath}editrMake?id=${rmb.id}">${rmb.title}</a>
                     </li>
                 </ul>
-                <a href="${basePath}newrMake"><b>Create a new rMake build</b></a>
             </div>
         </div>
         <div id="layout" py:if="not supported">
