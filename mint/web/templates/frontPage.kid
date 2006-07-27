@@ -72,7 +72,7 @@ from mint.client import upstream
                 </div>
                 <div id="activeLeft" >
                     <div id="orangeTitle">Use It.</div>
-                    Check out the software appliances others have made.
+                    Check out the software appliances others have built.
                 </div>
             </span>
 
