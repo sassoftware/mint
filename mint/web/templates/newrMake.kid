@@ -20,7 +20,7 @@
                 <h1>New rMake build</h1>
                 <form method="post" action="createrMake">
                     <input type="text" name="title" value="" size="16" maxlength="128"/>
-                    <p class="help">Please choose a name for your rMake build. This name is simply for your convenience so you can track multiple rMake builds conveniently. This name is not used anywhere else.</p>
+                    <p class="help">Please choose a name for your rMake build. This name is simply for your convenience so you can easily track multiple rMake builds. This name is not used anywhere else.</p>
                     <p><button class="img" type="submit">
                         <img src="${cfg.staticPath}/apps/mint/images/create_button.png" alt="Create" />
                     </button></p>
