@@ -68,6 +68,8 @@ class FixtureCache(object):
         cfg.sendNotificationEmails = False
         cfg.conaryRcFile = os.path.join(cfg.dataPath, 'run', 'conaryrc')
         util.mkdirChain(os.path.join(cfg.dataPath, 'run'))
+        util.mkdirChain(os.path.join(cfg.dataPath, 'tmp'))
+
         cfg.reposLog = False
         f = open(cfg.conaryRcFile, 'w')
         f.close()
