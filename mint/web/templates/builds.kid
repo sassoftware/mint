@@ -27,11 +27,11 @@ from mint.web.templatesupport import downloadTracker
         ?>
         <tr py:attrs="rowAttrs">
             <td colspan="4" class="buildName">${truncateForDisplay(build.name)}
-                <span py:if="isPublished" class="buildAssociated">
+                <span py:if="build.pubReleaseId" class="buildAssociated">
                     <?python
                         release = self.client.getPublishedRelease(build.pubReleaseId)
                     ?>
-                    <br />Part of release <a href="${basePath}release?id=${release.id}">${release.name} (Version ${release.version}) </a></span>
+                    <br />Part of ${isPublished and 'published' or 'unpublished'} release <a href="${basePath}release?id=${release.id}">${release.name} (Version ${release.version}) </a></span>
                 <div py:if="build.id in buildsInProgress" py:strip="True">
                     <br /><span class="buildAssociated">This build is currently in progress.</span>
                 </div>
