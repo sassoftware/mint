@@ -36,18 +36,21 @@
                     </button>
                 </p>
                 <h3 style="color:#FF7001;">Step 1: Add Packages To Your rMake build</h3>
-                <p>You have an rMake build. Now add packages to it from any
-                ${cfg.productName} project that you are a member of. To add
-                a package, search or browse for the desired package, and click
-                on its "Add to ${rMakeBuild.title}" link.</p>
+                <p>You now have an rMake build. Add packages to the build from
+                any ${cfg.productName} project that lists you as a member. To
+                add a package, search or browse for the desired package and
+                click on its "Add to ${rMakeBuild.title}" link.</p>
 
                 <h3 style="color:#FF7001;">Step 2: Build Your rMake build</h3>
-                <p>INSERT WORDS ABOUT SENDING STUFF TO LOCAL RMAKE SERVER HERE</p>
+                <p>Once all the desired packages have been added to the build,
+                click on the "Build" button. rMake will then assign the build
+                a job ID, retrieve the packages, build them on your system, and
+                display a dynamically-updated status page.</p>
 
                 <h3 style="color:#ff7001;">Step 3: Commit</h3>
-                <p>Once your rMake Job has successfully built, you can click
-                "Commit" to clone the packages rMake built back to their
-                respective repositories.
+                <p>Once your rMake job has successfully built, click on the
+                "Commit" button to copy the newly-built software back to the
+                originating repositories.
                 </p>
             </div>
             <div id="spanleft" py:if="rMakeBuild.status">

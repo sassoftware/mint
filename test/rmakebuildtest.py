@@ -965,6 +965,16 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
         self.failIf(rMakeBuild.listTroves()[0]['trvLabel'] != trvLabel,
                     "Frozen version was not translated to a label")
 
+    @fixtures.fixture("Full")
+    def testDupNameDiffUser(self, db, data):
+        client = self.getClient('nobody')
+        client1 = self.getClient('user')
+
+        rMakeBuild = client.createrMakeBuild('foo')
+
+        # add an item with the exact same name, but new user
+        rMakeBuild = client1.createrMakeBuild('foo')
+
 
 class rMakeBuildTest(MintRepositoryHelper):
     def makeCookedTrove(self, branch = 'rpl:devel', hostname = 'testproject'):

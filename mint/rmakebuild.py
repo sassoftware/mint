@@ -32,7 +32,7 @@ class rMakeBuildTable(database.KeyedTable):
     indexes = {'rMakeBuildIdx' : \
                "CREATE INDEX rMakeBuildIdx ON rMakeBuild(userId)",
                'rMakeBuildTitleIdx' : \
-               "CREATE UNIQUE INDEX rMakeBuildTitleIdx ON rMakeBuild(title)"}
+               "CREATE UNIQUE INDEX rMakeBuildTitleIdx ON rMakeBuild(userId, title)"}
 
     def listTrovesById(self, rMakeBuildId):
         cu = self.db.cursor()
