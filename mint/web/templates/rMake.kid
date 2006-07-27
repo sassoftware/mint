@@ -66,7 +66,25 @@
                 ${builderPane()}
             </div>
             <div id="spanleft">
-            __YELIAB__ Insert words about how to install rMake and what it's for...
+                <h1>rMake</h1>
+
+                <p>rMake is a package building tool that provides a clean build environment, ensuring that the same package can be built consistently across different machines by enforcing strict build requirements. This option is typically used to merge packages which naturally depend upon each other.</p>
+
+                <p>rMake is a tool for use on your local system that can be used at a command line. rMake functionality has been integrated into rBuilder. If you have rMake installed on your local system, these features will be active in the rBuilder interface.</p>
+
+                <h3>Before using rMake in rBuilder, you must do the following.</h3>
+
+                <ul>
+                    <li>Access rBuilder from a Conary-based system (rPath Linux)</li>
+                    <li>Installation of the rMake package from rpath.com, which can be done by running the following update command as root: <span style='font-weight: bold;'>conary update rmake=conary.rpath.com@rpl:devel</span></li>
+                    <li>Start the rMake service, which can be done by running the following command: <span style='font-weight: bold;'>/sbin/service rmake start</span></li>
+                </ul>
+
+                <p>After you successfully add rMake to your local system, the rMake link in your project panel will lead to the rMake main page, and you can start using the integrated rMake features here in rBuilder.</p>
+
+                <p>Note that your local system will be used for all rMake processing until the new package is commited to the rBuilder repositories.</p>
+
+                <p>For additional instructions, see rPath's <a href="http://wiki.conary.com/wiki/rBuilder:rMake">rMake documentation for rBuilder</a>.</p>
             </div>
         </div>
     </body>
