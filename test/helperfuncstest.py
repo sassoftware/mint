@@ -398,6 +398,14 @@ Much like Powdermilk Biscuits[tm]."""
         finally:
             os.unlink(fn)
 
+    def testShortTroveSpec(self):
+        from mint.web.templatesupport import shortTroveSpec
+
+        # with a timestap
+        assert(shortTroveSpec("foo=/bar@l:t/0.0:1.0-1-1[is:x86]") == "foo=1.0-1-1 (x86)")
+        # without
+        assert(shortTroveSpec("foo=/bar@l:t/1.0-1-1[is:x86]") == "foo=1.0-1-1 (x86)")
+
 
 class FixturedHelpersTest(fixtures.FixturedUnitTest):
     @fixtures.fixture('Full')
