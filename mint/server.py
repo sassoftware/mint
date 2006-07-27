@@ -14,6 +14,7 @@ import string
 import sys
 import time
 import tempfile
+import fcntl
 from urlparse import urlparse
 
 from mint import data
@@ -191,6 +192,10 @@ def typeCheck(*paramTypes):
 
 tables = {}
 def getTables(db, cfg):
+    # use file locks to ensure we have a multi-process mutex
+    util.mkdirChain(os.path.join(cfg.dataPath, 'tmp'))
+    lockFile = open(os.path.join(cfg.dataPath, 'tmp', 'schema.lock'), 'w+')
+    fcntl.lockf(lockFile.fileno(), fcntl.LOCK_EX)
     d = {}
     d['version'] = dbversion.VersionTable(db)
     d['labels'] = projects.LabelsTable(db, cfg)
@@ -233,6 +238,7 @@ def getTables(db, cfg):
                 outDatedTables.remove(table)
     if d['version'].getDBVersion() != d['version'].schemaVersion:
         d['version'].bumpVersion()
+    lockFile.close()
     return d
 
 class MintServer(object):
