@@ -27,6 +27,7 @@ from mint.web.webhandler import WebHandler, normPath, HttpNotFound, \
 from mint.web.decorators import ownerOnly, writersOnly, requiresAuth, \
         requiresAdmin, mailList, redirectHttp
 
+import conary
 from conary import conaryclient
 from conary import conarycfg
 from conary.deps import deps
@@ -433,7 +434,11 @@ class ProjectHandler(WebHandler):
                     if val != "NONE":
                         # remove timestamp from version string
                         n, v, f = parseTroveSpec(str(val))
-                        v = str(versions.ThawVersion(v))
+                        try:
+                            v = str(versions.VersionFromString(v))
+                        except conary.errors.ParseError: # we got a frozen version string
+                            v = str(versions.ThawVersion(v))
+
                         f = str(f)
                         val = "%s=%s[%s]" % (n, v, f)
             except KeyError:
