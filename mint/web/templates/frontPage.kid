@@ -58,7 +58,7 @@ from mint.client import upstream
         </div>
             <span py:if="not table1Data">
                 <span id="findit" onclick="javascript:window.location='${cfg.basePath}help?page=user-tutorial'">
-                    Check out the software appliances others have made.
+                    Check out the software appliances others have built.
                 </span>
                 <span id="buildit" onclick="javascript:window.location='${cfg.basePath}help?page=dev-tutorial'">
                     Make your own software appliance in three easy steps.
