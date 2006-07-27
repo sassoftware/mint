@@ -29,7 +29,11 @@ class CoverageWrapper(object):
             util.rmtree(self._annotatePath)
 
     def execute(self, testProgram):
-        util.execute('python2.4 %s' % testProgram)
+        try:
+            util.execute('python2.4 %s' % testProgram)
+        except RuntimeError, e:
+            return 1
+        return 0
 
     def displayReport(self, files, displayMissingLines=False):
         assert(not displayMissingLines)

@@ -396,6 +396,8 @@ class MintRepositoryHelper(rephelp.RepositoryHelper):
         rephelp.RepositoryHelper.setUp(self)
         self.openRepository()
 
+        util.mkdirChain(os.path.join(self.reposDir, "tmp"))
+
         self.mintServer = server.MintServer(self.mintCfg, alwaysReload = True)
         self.db = self.mintServer.db
 
