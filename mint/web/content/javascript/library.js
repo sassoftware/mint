@@ -176,9 +176,9 @@ makeJobRowData = function(aRow) {
     else if (aRow['buildId']) {
         var buildObj = getBuildById(aRow['buildId']);
         if (buildObj) {
-            jobDesc = "Build build: " + buildObj['name'];
+            jobDesc = "Build: " + buildObj['name'];
             if (buildObj.buildType) {
-                jobDesc += " (" + map(getBuildTypeDesc, buildObj.buildType).join(", ") + ")";
+                jobDesc += " (" + getBuildTypeDesc(buildObj.buildType) + ")";
             }
         }
     }
