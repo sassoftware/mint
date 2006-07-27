@@ -502,7 +502,7 @@ function buildIt() {
                    'Make your own software appliance in three easy steps.');
     newLeft = DIV({'id':'inactiveLeft'}, 
                   DIV({'id':'inactiveOrangeTitle'}, 'Use It.'),
-                  'Check out the software appliances others have made.');
+                  'Check out the software appliances others have built.');
     swapDOM('activeLeft', newLeft);
     swapDOM('inactiveRight', newRight);
     connect('inactiveLeft', 'onclick', useIt);
@@ -519,7 +519,7 @@ function useIt() {
                    'Make your own software appliance in three easy steps.');
     newLeft = DIV({'id':'activeLeft'}, 
                   DIV({'id':'orangeTitle'}, 'Use It.'),
-                  'Check out the software appliances others have made.');
+                  'Check out the software appliances others have built.');
     swapDOM('inactiveLeft', newLeft);
     swapDOM('activeRight', newRight);
     connect('inactiveRight', 'onclick', buildIt);
