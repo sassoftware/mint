@@ -460,14 +460,19 @@ class ProjectHandler(WebHandler):
     @dictFields(yesArgs = {})
     @boolFields(confirmed = False)
     def deleteBuild(self, auth, confirmed, **yesArgs):
+        build = self.client.getBuild(int(yesArgs['id']))
         if confirmed:
-            build = self.client.getBuild(int(yesArgs['id']))
             build.deleteBuild()
             self._setInfo("Build %s deleted" % build.name)
             self._predirect("builds")
         else:
+            message = ""
+            if build.pubReleaseId:
+                pubRelease = self.client.getPublishedRelease(build.pubReleaseId)
+                message += "This build is part of the unpublished release %s (version %s). Deleting the build will automatically delete the build from the release. " % (pubRelease.name, pubRelease.version)
+            message += "Are you sure you want to delete this build?"
             return self._write("confirm",
-                    message = "Are you sure you want to delete this build?",
+                    message = message,
                     yesArgs = { 'func': 'deleteBuild',
                                 'id': yesArgs['id'],
                                 'confirmed': '1' },
