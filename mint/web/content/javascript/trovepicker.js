@@ -230,6 +230,7 @@ TrovePicker.prototype.getTroveVersions = function(e) {
     if(!versionCache[key]) {
         this.working(true);
         var req = new JsonRpcRequest("jsonrpc/", "getTroveVersions");
+        req.setAuth(getCookieValue("pysid"));
         req.setCallback(callback);
         req.send(true, [this.projectId, this.label, this.troveName]);
     } else {
