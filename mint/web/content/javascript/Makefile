@@ -3,7 +3,8 @@ javascript_files =\
 	library.js \
 	mirror.js \
 	rpc.js	\
-	trovepicker.js
+	trovepicker.js \
+	rmakebuilder.js
 
 generated_files =\
 	buildtypes.js \
