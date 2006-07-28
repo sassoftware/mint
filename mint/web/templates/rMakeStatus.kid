@@ -58,7 +58,7 @@
                         </td>
                     </tr>
                 </table>
-                ${statusArea("rMake build")}
+                ${statusArea("rMake build", elementId = 'rMakeStatusArea')}
                 <table>
                     <tr py:for="trvDict in troveList">
                         <td>${trvDict['trvName']}: </td>
