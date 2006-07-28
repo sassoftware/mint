@@ -9,9 +9,11 @@ import time
 import urlparse
 
 from mint import buildtemplates
-from mint import database
-from mint import jobs
 from mint import buildtypes
+from mint import database
+from mint import helperfuncs
+from mint import jobs
+
 from mint.data import RDT_STRING, RDT_BOOL, RDT_INT, RDT_ENUM
 from mint.mint_error import MintError, ParameterError
 
@@ -320,11 +322,7 @@ class Build(database.TableObject):
         return self.server.setBuildFilenames(self.buildId, filenames)
 
     def getArch(self):
-        flavor = deps.ThawFlavor(self.getTrove()[2])
-        if flavor.members:
-            return flavor.members[deps.DEP_CLASS_IS].members.keys()[0]
-        else:
-            return "none"
+        return helperfuncs.getArchFromFlavor(self.getTrove()[2])
 
     def setPublished(self, pubReleaseId, published):
         return self.server.setBuildPublished(self.buildId,

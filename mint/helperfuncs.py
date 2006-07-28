@@ -4,6 +4,9 @@
 # All rights reserved
 #
 
+from conary import versions
+from conary.deps import deps
+
 def truncateForDisplay(s, maxWords=10, maxWordLen=15):
     """Truncates a string s for display. May limit the number of words in the
     displayed string to maxWords (default 10) and the maximum number of
@@ -93,3 +96,9 @@ def rewriteUrlProtocolPort(url, newProtocol, newPort = None):
 
     return urlparse.urlunsplit((newProtocol, hostname) + spliturl[2:])
 
+def getArchFromFlavor(flavor):
+    f = deps.ThawFlavor(flavor)
+    if f.members:
+        return f.members[deps.DEP_CLASS_IS].members.keys()[0]
+    else:
+        return "none"
