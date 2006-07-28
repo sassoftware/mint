@@ -58,7 +58,7 @@
               <dl py:if="releases">
                 <?python projectName = project.getName() ?>
                 <div py:strip="True" py:for="release in releases[:5]">
-                    <dt><a href="${projectUrl}release?id=${release.id}" title="${release.name} version ${release.version}">${truncateForDisplay(release.name, maxWords=5, maxWordLen=8)}</a></dt>
+                    <dt><a href="${projectUrl}release?id=${release.id}" title="${release.name} version ${release.version}">${truncateForDisplay(release.name, maxWords=5, maxWordLen=15)}</a></dt>
                     <dd>Version ${release.version}</dd>
                 </div>
               </dl>
