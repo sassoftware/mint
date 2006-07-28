@@ -186,7 +186,6 @@ class BuildTest(fixtures.FixturedUnitTest):
         self.assertRaises(BuildPublished, client.startImageJob,
                           pubBuild.getId())
 
-
     @fixtures.fixture("Full")
     def testMissingBuild(self, db, data):
         client = self.getClient("owner")
@@ -195,7 +194,8 @@ class BuildTest(fixtures.FixturedUnitTest):
         # make a build and delete it, to emulate a race condition
         # from the web UI
         buildId = build.getId()
-        build.deleteBuild()
+
+        self.captureAllOutput(build.deleteBuild)
 
         # messing with that same build should now fail in a controlled
         # manner. no UnknownErrors allowed!
