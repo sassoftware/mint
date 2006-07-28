@@ -45,7 +45,7 @@ function processgetrMakeBuild(aReq) {
         savedrMakeBuild['statusMessage'] = null;
     }
     var rMakeBuildAction = document.getElementById('rMakeBuildNextAction');
-    var rMakeBuilderStatus = document.getElementById('statusArea');
+    var rMakeBuilderStatus = document.getElementById('rMakeStatusArea');
     var rMakeBuilderJobId = document.getElementById('rmakebuilder-jobid');
     if (rMakeBuild['statusMessage'].match('Commit failed.*')) {
         commitFailed = 1;
@@ -68,7 +68,7 @@ function processgetrMakeBuild(aReq) {
             statusClass = jobStatusCodes[buildjob['JOB_STATE_FAILED']];
         }
         if (rMakeBuilderStatus != null) {
-            swapDOM(rMakeBuilderStatus, DIV({id : 'statusArea', class : statusClass}, rMakeBuild['statusMessage']));
+            swapDOM(rMakeBuilderStatus, DIV({id : 'rMakeStatusArea', class : statusClass}, rMakeBuild['statusMessage']));
         }
     }
     for (var stopIndex in stopStatusList) {
