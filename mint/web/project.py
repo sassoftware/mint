@@ -69,13 +69,13 @@ class ProjectHandler(WebHandler):
                     (self.req.hostname, self.req.unparsed_uri, self.req.headers_in.get('referer', 'N/A')))
                 self._redirect("http://" + self.cfg.projectSiteHost + self.req.unparsed_uri)
 
-        #Take care of hidden projects
-        if self.project.hidden and self.userLevel == userlevels.NONMEMBER and not self.auth.admin:
-            raise HttpNotFound
-
         self.userLevel = self.project.getUserLevel(self.auth.userId)
         self.isOwner  = (self.userLevel == userlevels.OWNER) or self.auth.admin
         self.isWriter = (self.userLevel in userlevels.WRITERS) or self.auth.admin
+
+        #Take care of hidden projects
+        if self.project.hidden and self.userLevel == userlevels.NONMEMBER and not self.auth.admin:
+            raise HttpNotFound
 
         # go ahead and fetch the release / commits data, too
         self.projectReleases = [self.client.getPublishedRelease(x) for x in self.project.getPublishedReleases()]
