@@ -127,6 +127,7 @@ TrovePicker.prototype.pickFlavor = function(e) {
     returnLink.label = e.src().label;
     connect(returnLink, "onclick", this, "showTroveFlavors");
     replaceChildNodes($(this.elId + 'return'), returnLink);
+    replaceChildNodes($(this.elId + 'prompt'), "Selected group:");
 
     if(this.elId == "distTrove") {
         var sb = $('submitButton');
