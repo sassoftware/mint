@@ -269,8 +269,12 @@ def conaryHandler(req, cfg, pathInfo):
         else:
            rest = req.uri
 
-        urlBase = "%%(protocol)s://%s:%%(port)d/repos/%s/" % \
-            (req.hostname, projectName)
+        if req.hostname != "conary.digium.com":
+            urlBase = "%%(protocol)s://%s:%%(port)d/repos/%s/" % \
+                (req.hostname, projectName)
+        else:
+            urlBase = "%%(protocol)s://%s:%%(port)d/conary/"% \
+                req.hostname
 
         # set up the commitAction
         buildLabel = repName + "@" + cfg.defaultBranch
