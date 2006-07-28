@@ -52,6 +52,17 @@ typeNamesShort = {
     TARBALL:            "Tar"
 }
 
+typeNamesMarketing = {
+    NETBOOT_IMAGE:      "Netboot Image",
+    INSTALLABLE_ISO:    "Installable CD/DVD",
+    RAW_FS_IMAGE:       "Mountable Filesystem",
+    STUB_IMAGE:         "Stub Image",
+    RAW_HD_IMAGE:       "Parallels, QEMU (Raw Hard Disk)",
+    VMWARE_IMAGE:       "VMware\xc2\xae",
+    LIVE_ISO:           "Demo CD/DVD (Live CD/DVD)",
+    TARBALL:            "TAR File"
+}
+
 # sizes are listed in bytes...
 discSizes = {
     'CD: 650 MB'  : '681574400',
@@ -79,7 +90,15 @@ def codegen():
         i.append("    '%d':  '%s'" % (k, v,))
     s += ", ".join(i)
     s += "};"
+
+    s += "var buildTypeNamesMarketing = {"
+    i = []
+    for k, v in typeNamesMarketing.items():
+        i.append("    '%d':  '%s'" % (k, v,))
+    s += ", ".join(i)
+    s += "};"
     return s
+
 
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "--genjs":
