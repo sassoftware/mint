@@ -368,6 +368,33 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
                 self.cfg.siteHost + self.cfg.basePath, UUID, currentApi, UUID)
 
     @fixtures.fixture("Full")
+    def testBuildNoIncludeXML(self, db, data):
+        client = self.getClient('nobody')
+        rMakeBuild = client.createrMakeBuild('foo')
+
+        assert(rMakeBuild.listTroves() == [])
+
+        trvName = 'foo'
+        trvLabel = 'test.rpath.local@rpl:devel'
+
+        itemId = rMakeBuild.addTrove(trvName, trvLabel)['rMakeBuildItemId']
+
+        createConaryRcFile = self.cfg.createConaryRcFile
+        try:
+            self.cfg.createConaryRcFile = False
+            xml = rMakeBuild.getXML()
+            cu = db.cursor()
+            cu.execute("SELECT UUID FROM rMakeBuild WHERE rMakeBuildId=?",
+                       rMakeBuild.id)
+            UUID = cu.fetchone()[0]
+
+            assert xml == "<rmake><version>1</version><buildConfig><option><name>subscribe</name><value>rBuilder xmlrpc http://%srmakesubscribe/%s</value></option><option><name>subscribe</name><value>rBuilder apiVersion %d</value></option><option><name>uuid</name><value>%s</value></option></buildConfig><command><name>build</name><trove><troveName>foo</troveName><troveVersion>test.rpath.local@rpl:devel</troveVersion><troveFlavor></troveFlavor></trove></command></rmake>" % \
+                   (self.cfg.siteHost + self.cfg.basePath,
+                    UUID, currentApi, UUID)
+        finally:
+            self.cfg.createConaryRcFile = createConaryRcFile
+
+    @fixtures.fixture("Full")
     def testCommitXML(self, db, data):
         client = self.getClient('nobody')
         rMakeBuild = client.createrMakeBuild('foo')
