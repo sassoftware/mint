@@ -89,7 +89,7 @@ allowNone = ['anaconda-custom', 'media-template']
                     </div>
                     <div id="advanced_settings" class="formgroup" style="display: none;">
                         <div py:strip="True" py:for="key, heading, template in templates">
-                            <div class="formsubgroupcontainer" id="formgroup_${key}" py:attrs="{'style' : key != defaultTemplate and 'display : none;' or None}">
+                            <div class="formsubgroupcontainer" id="formgroup_${key}" py:attrs="{'style' : key != buildType and 'display : none;' or None}">
                             <div class="formsubgroupTitle">${heading}</div>
                             <div class="formsubgroup">
                                 <div py:strip="True" py:for="name, dataRow in sorted(template.items(), key = lambda x: x[1][0])">
@@ -101,18 +101,18 @@ allowNone = ['anaconda-custom', 'media-template']
                                     ?>
                                     <div py:strip="True" py:if="(dataRow[0] == RDT_BOOL)">
                                         <input class="reversed" py:attrs="{'checked': 'checked' and dataValue or None,
-                                                                           'disabled' : key != defaultTemplate and 'disabled' or None}" 
+                                                                           'disabled' : key != buildType and 'disabled' or None}" 
                                             type="checkbox" name="${name}" value="1" id="${name}"/>
                                         <label class="reversed" for="${name}">${dataRow[2]}</label>
                                     </div>
                                     <div py:strip="True" py:if="(dataRow[0] == RDT_INT) or (dataRow[0] == RDT_STRING)">
                                         <label for="${name}">${dataRow[2]}</label>
                                         <input type="text" name="${name}" id="${name}" value="${dataValue}"
-                                            py:attrs="{'disabled' : key != defaultTemplate and 'disabled' or None}"/>
+                                            py:attrs="{'disabled' : key != buildType and 'disabled' or None}"/>
                                     </div>
                                     <div py:strip="True" py:if="(dataRow[0] == RDT_ENUM)">
                                         <label for="${name}">${dataRow[2]}</label>
-                                        <select name="${name}" id="${name}" py:attrs="{'disabled' : key != defaultTemplate and 'disabled' or None}">
+                                        <select name="${name}" id="${name}" py:attrs="{'disabled' : key != buildType and 'disabled' or None}">
                                             <option py:for="prompt, val in sorted(dataRow[3].iteritems())"
                                                 py:content="prompt" value="${val}"
                                                 py:attrs="{'selected' : val == dataRow[1] and 'selected' or None}"/>
