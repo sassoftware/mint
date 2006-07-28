@@ -20,7 +20,7 @@ from mint import constants
 from mint import templates
 from mint import server
 from mint.helperfuncs import truncateForDisplay, extractBasePath, \
-        hostPortParse, rewriteUrlProtocolPort
+        hostPortParse, rewriteUrlProtocolPort, getArchFromFlavor
 from mint.client import timeDelta
 from mint.distro import jsversion
 from mint_rephelp import MINT_PROJECT_DOMAIN
@@ -405,6 +405,17 @@ Much like Powdermilk Biscuits[tm]."""
         assert(shortTroveSpec("foo=/bar@l:t/0.0:1.0-1-1[is:x86]") == "foo=1.0-1-1 (x86)")
         # without
         assert(shortTroveSpec("foo=/bar@l:t/1.0-1-1[is:x86]") == "foo=1.0-1-1 (x86)")
+
+    def testGetArchFromFlavor(self):
+        f_x86 = "1#x86:cmov:i486:i586:i686:~!mmx:~!sse2|5#use:~MySQL-python.threadsafe:X:~!alternatives:~!bootstrap:~!builddocs:~buildtests:desktop:dietlibc:emacs:gcj:~glibc.tls:gnome:~!grub.static:gtk:ipv6:kde:~!kernel.debug:~!kernel.debugdata:~!kernel.numa:krb:ldap:nptl:~!openssh.smartcard:~!openssh.static_libcrypto:pam:pcre:perl:~!pie:~!postfix.mysql:python:qt:readline:sasl:~!selinux:~sqlite.threadsafe:ssl:tcl:tcpwrappers:tk:~!xorg-x11.xprint"
+        f_x86_64 = "1#x86_64:cmov:i486:i586:i686:~!mmx:~!sse2|5#use:~MySQL-python.threadsafe:X:~!alternatives:~!bootstrap:~!builddocs:~buildtests:desktop:dietlibc:emacs:gcj:~glibc.tls:gnome:~!grub.static:gtk:ipv6:kde:~!kernel.debug:~!kernel.debugdata:~!kernel.numa:krb:ldap:nptl:~!openssh.smartcard:~!openssh.static_libcrypto:pam:pcre:perl:~!pie:~!postfix.mysql:python:qt:readline:sasl:~!selinux:~sqlite.threadsafe:ssl:tcl:tcpwrappers:tk:~!xorg-x11.xprint"
+        f_blank = ""
+        f_no_arch = "#5:!tk"
+
+        self.failUnlessEqual(getArchFromFlavor(f_x86), 'x86')
+        self.failUnlessEqual(getArchFromFlavor(f_x86_64), 'x86-64')
+        self.failUnlessEqual(getArchFromFlavor(f_blank), '')
+        self.failUnlessEqual(getArchFromFlavor(f_no_arch), '')
 
 
 class FixturedHelpersTest(fixtures.FixturedUnitTest):

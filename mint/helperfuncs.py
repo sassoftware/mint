@@ -97,8 +97,13 @@ def rewriteUrlProtocolPort(url, newProtocol, newPort = None):
     return urlparse.urlunsplit((newProtocol, hostname) + spliturl[2:])
 
 def getArchFromFlavor(flavor):
+    fs = ""
     f = deps.ThawFlavor(flavor)
     if f.members:
-        return f.members[deps.DEP_CLASS_IS].members.keys()[0]
-    else:
-        return "none"
+        try:
+            fs = f.members[deps.DEP_CLASS_IS].members.keys()[0]
+        except:
+            pass
+        fs = fs.replace('_','-')
+
+    return fs
