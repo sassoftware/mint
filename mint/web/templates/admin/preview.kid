@@ -22,7 +22,7 @@ from mint.client import upstream
         <link rel="alternate" type="application/rss+xml"
               title="New ${cfg.productName} Projects" href="http://${cfg.siteHost}${cfg.basePath}rss?feed=newProjects" />
         <link rel="alternate" type="application/rss+xml"
-              title="New ${cfg.productName} Builds" href="http://${cfg.siteHost}${cfg.basePath}rss?feed=newBuilds" />
+              title="New ${cfg.productName} Releases" href="http://${cfg.siteHost}${cfg.basePath}rss?feed=newBuilds" />
     </head>
     <body onload="roundElement('previewMessage'); hideElement('${table1Data and 'steps' or 'applianceLogos'}');">
 	<div id="previewMessage" style="background-color: #EF6064; font-size: 14pt; color: white; text-align:center; margin-bottom: 20px;">Preview Mode.  To exit, click your browser's 'back' button.<div style="text-align: right; font-size: 9pt; margin-right: 5px; cursor: pointer;" onclick="var e = document.getElementById('previewMessage');e.parentNode.removeChild(e);">close</div></div>
@@ -59,25 +59,26 @@ from mint.client import upstream
         </div>
         </div>
         </div>
-        <span py:if="not table1Data">
+            <span py:if="not table1Data">
                 <span id="findit" onclick="javascript:window.location='${cfg.basePath}help?page=user-tutorial'">
-                    Check out the software appliances others have made.
+                    Check out the software appliances others have built.
                 </span>
                 <span id="buildit" onclick="javascript:window.location='${cfg.basePath}help?page=dev-tutorial'">
                     Make your own software appliance in three easy steps.
                 </span>
-        </span>
+            </span>
 
             <span py:if="table1Data">
-           <div id="inactiveRight" onmouseover="underlineTitle();" onmouseout="normalTitle();" onclick="buildIt();">
+                <div id="inactiveRight" onmouseover="underlineTitle();" onmouseout="normalTitle();" onclick="buildIt();">
                     <div id="inactiveOrangeTitle">Build it.</div>
                         Make your own software appliance in three easy steps.
                 </div>
                 <div id="activeLeft" >
                     <div id="orangeTitle">Use It.</div>
-                    Check out the software appliances others have made.
+                    Check out the software appliances others have built.
                 </div>
             </span>
+
            <div id="applianceLogos" style="width: 720px; height: 234px;">
             <table py:if="table1Data" id="${table2Data and 'doubleTable' or 'singleTable'}">
                 <tr>
@@ -106,7 +107,7 @@ from mint.client import upstream
             </div>
         </div>
 
-       <div py:if="selectionData or activeProjects or popularProjects" id="topten">
+        <div py:if="selectionData or activeProjects or popularProjects" id="topten">
             <div class="cssbox">
             <div class="cssbox_head"><h2>&nbsp;</h2></div>
             <div class="cssbox_body">
@@ -140,20 +141,16 @@ from mint.client import upstream
                             </ol>
                         </td>
                         <td py:if="not selectionData">
-                            <p py:if="not builds">No builds have been published yet.</p>
-                            <ol py:if="builds">
+                            <p py:if="not publishedReleases">No releases have been published yet.</p>
+                            <ol py:if="publishedReleases">
 
-                                <li py:for="build in builds">
+                                <li py:for="releaseInfo in publishedReleases">
                                     <?python
-                                        projectName = build[0]
-                                        if projectName != build[2].getName():
-                                            productName = truncateForDisplay(build[2].getName(), maxWords=5)
-                                        else:
-                                            productName = upstream(build[2].getTroveVersion())
-                                        projectName = truncateForDisplay(projectName, maxWords=5)
-                                        trove = build[2].getTroveName() + "=" + build[2].getTroveVersion().trailingRevision().asString()
+                                        projectName, hostname, release = releaseInfo
+                                        releaseName = release.name
+                                        shorterReleaseName = truncateForDisplay(releaseName, maxWords=8)
                                     ?>
-                                    <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${build[1]}/build?id=${build[2].getId()}" title="${trove}">${projectName} <span style="font-size: smaller">${productName} (${build[2].getArch()} ${buildtypes.typeNamesShort[build[2].imageTypes[0]]})</span></a>
+                                    <a href="http://${cfg.projectSiteHost}${cfg.basePath}project/${hostname}/release?id=${release.id}" title="${releaseName}">${shorterReleaseName}<span py:if="release.version" style="font-size: smaller;"> (Version ${release.version})</span></a>
                                  </li>
                              </ol>
                          </td>
