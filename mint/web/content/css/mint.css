@@ -1060,6 +1060,16 @@ table.releasestable td.releaseInfo {
     padding-right: 10px;
 }
 
+table.releasestable td.releaseInfoRight {
+    text-align: right;
+    font-size: smaller;
+    font-weight: normal;
+    font-style: normal;
+    padding-bottom: 0.5em;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
 table.releasestable td.releaseName {
     font-weight: bold;
     padding-top: 0.5em;

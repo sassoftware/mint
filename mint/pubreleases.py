@@ -5,6 +5,7 @@
 #
 
 from mint import database
+from mint import helperfuncs
 
 class PublishedReleasesTable(database.KeyedTable):
 
@@ -85,6 +86,19 @@ class PublishedReleasesTable(database.KeyedTable):
         data = self.get(pubReleaseId, ['projectId'])
         return data['projectId']
 
+    def getUniqueBuildTypes(self, pubReleaseId):
+        cu = self.db.cursor()
+        cu.execute("""SELECT buildType, troveFlavor
+                      FROM builds WHERE pubReleaseId = ?
+                      ORDER BY buildType, troveFlavor""", pubReleaseId)
+        uniqueBuildTypes = []
+        for row in cu.fetchall():
+            buildType, arch = row[0], helperfuncs.getArchFromFlavor(row[1])
+            if (buildType, arch) not in uniqueBuildTypes:
+                uniqueBuildTypes.append((buildType, arch))
+
+        return uniqueBuildTypes
+
 class PublishedRelease(database.TableObject):
 
     __slots__ = PublishedReleasesTable.fields
@@ -101,6 +115,9 @@ class PublishedRelease(database.TableObject):
     def getBuilds(self):
         return self.server.getBuildsForPublishedRelease(self.id)
 
+    def getUniqueBuildTypes(self):
+        return self.server.getUniqueBuildTypesForPublishedRelease(self.id)
+
     def isPublished(self):
         return self.server.isPublishedReleasePublished(self.id)
 
@@ -115,5 +132,4 @@ class PublishedRelease(database.TableObject):
 
     def unpublish(self):
         return self.server.unpublishPublishedRelease(self.pubReleaseId)
-
 

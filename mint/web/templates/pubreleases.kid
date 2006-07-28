@@ -5,6 +5,7 @@
 # All Rights Reserved
 #
 from mint.web.templatesupport import downloadTracker
+from mint import buildtypes
 ?>
 
 <html xmlns="http://www.w3.org/1999/xhtml"
@@ -20,12 +21,31 @@ from mint.web.templatesupport import downloadTracker
         <table class="releasestable" border="0" cellspacing="0" cellpadding="0" >
             <?python rowNumber = 0?>
             <div py:for="release in releases" py:strip="True">
+                <?python
+                    uniqueBuildTypes = release.getUniqueBuildTypes()
+                    uniqueBuildTypeNames = [ "%s %s" % (x[1], buildtypes.typeNamesMarketing[x[0]]) for x in uniqueBuildTypes ]
+                ?>
                 <tr py:attrs="{'class': (rowNumber % 2) and 'odd' or 'even'}">
-                    <td class="releaseName" colspan="2">${release.name}</td>
+                    <td class="releaseName" colspan="2"><a href="${basePath}release?id=${release.id}">${release.name}</a></td>
                 </tr>
                 <tr py:attrs="{'class': (rowNumber % 2) and 'odd' or 'even'}">
                     <td class="releaseInfo">Version ${release.version}</td>
-                    <td class="releaseInfo">(<a href="${basePath}release?id=${release.id}">view</a>)&nbsp;<span py:if="isOwner"><span py:if="not release.isPublished()">(<a href="${basePath}editRelease?id=${release.id}">edit</a>)&nbsp;(<a href="${basePath}publishRelease?id=${release.id}">publish</a>)&nbsp;(<a href="${basePath}deleteRelease?id=${release.id}">delete</a>)</span><span py:if="release.isPublished()">(<a href="${basePath}unpublishRelease?id=${release.id}">unpublish</a>)</span></span></td>
+                    <td class="releaseInfoRight">
+                        <div py:if="uniqueBuildTypes">
+                            <span py:for="buildTypeName in uniqueBuildTypeNames">${buildTypeName}<br /></span>
+                        </div>
+                        <div py:if="not uniqueBuildTypes">
+                            This release is empty.
+                        </div>
+                    </td>
+                </tr>
+                <tr py:if="release.description" py:attrs="{'class': (rowNumber % 2) and 'odd' or 'even'}">
+                    <td colspan="2" class="releaseInfo" py:content="release.description" />
+                </tr>
+                <tr py:if="isOwner" py:attrs="{'class': (rowNumber % 2) and 'odd' or 'even'}">
+                    <td colspan="2" class="releaseInfo">
+                        <span py:if="not release.isPublished()">(<a href="${basePath}editRelease?id=${release.id}">edit</a>)&nbsp;<span py:if="uniqueBuildTypes">(<a href="${basePath}publishRelease?id=${release.id}">publish</a>)&nbsp;</span>(<a href="${basePath}deleteRelease?id=${release.id}">delete</a>)</span>
+                        <span py:if="release.isPublished()">(<a href="${basePath}unpublishRelease?id=${release.id}">unpublish</a>)</span></td>
                 </tr>
                 <?python rowNumber += 1 ?>
             </div>

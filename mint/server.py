@@ -1942,6 +1942,12 @@ class MintServer(object):
         self._filterPublishedReleaseAccess(pubReleaseId)
         return self.publishedReleases.getBuilds(pubReleaseId)
 
+    @typeCheck(int)
+    @private
+    def getUniqueBuildTypesForPublishedRelease(self, pubReleaseId):
+        self._filterPublishedReleaseAccess(pubReleaseId)
+        return self.publishedReleases.getUniqueBuildTypes(pubReleaseId)
+
     @typeCheck(int, bool)
     @private
     def getPublishedReleasesByProject(self, projectId):
