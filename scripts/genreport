@@ -61,6 +61,18 @@ def logSummary(db, mc):
                        metricId, value, timeStamp)
     db.commit()
 
+def logMarketing(mc):
+    for report in ('newsletter_users', 'insider_users'):
+        repData = mc.getReport(report)
+        touchDir(DEST_DIR + '/' + report)
+        destFile = open(DEST_DIR + '/' + report + '/' + \
+                        report + '_' + dateStr + '.txt', 'w')
+        names = '\n'.join([''.join(x[1].split(',')) + ', ' + x[2] \
+                           for x in repData['data']])
+        names = names.encode('ascii', 'replace')
+        destFile.write(names)
+        destFile.close()
+
 def touchDir(dirPath):
     # a rudimentary function to ensure a directory exists. it will not
     # walk up the dir chain because presumably the script won't have
@@ -73,7 +85,7 @@ def touchDir(dirPath):
         os.mkdir(dirPath)
 
 try:
-    mc = MintClient("http://mintauth:mintpass@%s:%s/xmlrpc-private" % \
+    mc = MintClient("http://mintauth:mintpass@%s:%s/xmlrpc-private/" % \
                     (RBO_SERVER, RBO_PORT))
 
     db = dbstore.connect(DB_PATH, DB_DRIVER)
@@ -81,6 +93,7 @@ try:
     dateStr = ''.join(["%02d" % x for x in time.localtime(time.time())[:3]])
 
     logSummary(db, mc)
+    logMarketing(mc)
 
     reports = {}
     for report, title in mc.listAvailableReports().items():
