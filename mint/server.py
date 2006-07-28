@@ -3209,9 +3209,10 @@ class MintServer(object):
             else:
                 UUID = self.rMakeBuild.randomizeUUID(rMakeBuildId)
         res = "<rmake><version>1</version><buildConfig>"
-        res += makeOption('includeConfigFile',
-                          'http://' + self.cfg.siteHost + self.cfg.basePath + \
-                          'conaryrc')
+        if self.cfg.createConaryRcFile:
+            res += makeOption( \
+                'includeConfigFile',
+                'http://' + self.cfg.siteHost + self.cfg.basePath + 'conaryrc')
         res += makeOption('subscribe', 'rBuilder xmlrpc ' \
                           'http://' + self.cfg.siteHost + self.cfg.basePath + \
                           'rmakesubscribe/' + UUID)
