@@ -653,7 +653,7 @@ class ProjectHandler(WebHandler):
             release = self.client.getPublishedRelease(id)
             builds = [self.client.getBuild(x) for x in release.getBuilds()]
         except database.ItemNotFound:
-            return self.releases(auth)
+            self._redirect('http://%s%sproject/%s/releases' % (self.cfg.siteHost, self.cfg.basePath, self.project.getHostname()))
         else:
             return self._write("pubrelease", release = release, builds = builds)
 
