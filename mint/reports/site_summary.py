@@ -187,4 +187,30 @@ class SiteSummary(MintReport):
                           WHERE troveName LIKE '%:source' AND userId<>0""")
         data.append(('Command line commits', cu.fetchone()[0]))
 
+        # spacer
+        data.append(('',''))
+        cu.execute("""SELECT COUNT(*)
+                          FROM UserData
+                          WHERE name='insider' AND value = '1'""")
+        data.append(('Number of opt-ins for insider tips and tricks',
+                     cu.fetchone()[0]))
+
+        cu.execute("""SELECT COUNT(*)
+                          FROM UserData
+                          WHERE name='insider' AND value = '0'""")
+        data.append(('Number of opt-outs for insider tips and tricks',
+                     cu.fetchone()[0]))
+
+        cu.execute("""SELECT COUNT(*)
+                          FROM UserData
+                          WHERE name='newsletter' AND value = '1'""")
+        data.append(('Number of opt-ins for monthly newsletter',
+                     cu.fetchone()[0]))
+
+        cu.execute("""SELECT COUNT(*)
+                          FROM UserData
+                          WHERE name='newsletter' AND value = '0'""")
+        data.append(('Number of opt-outs for monthly newsletter',
+                     cu.fetchone()[0]))
+
         return data
