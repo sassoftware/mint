@@ -61,7 +61,7 @@ def deleteProject(projectName):
         rmtree(cfg.reposPath + projectFQDN)
 
     # delete the images directory
-    imagesPath = cfg.imagesPath .split('/')[:-1]
+    imagesPath = cfg.imagesPath.split('/')[:-1]
     imagesPath.append('images')
     imagesPath.append(projectName)
     imagesPath.insert(0, '/')
@@ -90,7 +90,6 @@ def deleteProject(projectName):
         cu.execute("""DELETE FROM GroupTroveRemovedComponents
                           WHERE groupTroveId=?""",
                    groupTroveId)
-    status("Deleting Group Trove Items")
     # then delete all group troves for this project
     cu.execute("DELETE FROM GroupTroves WHERE projectId=?", projectId)
 
@@ -114,6 +113,10 @@ def deleteProject(projectName):
 
     # now delete all builds for this project
     cu.execute("DELETE FROM Builds WHERE projectId=?", projectId)
+
+    status("Deleting Releases")
+    # now delete all published releases
+    cu.execute("DELETE FROM PublishedReleases WHERE projectId=?", projectId)
 
     status("Deleting Labels")
     # delete from all other tables that refer to projectId directly
