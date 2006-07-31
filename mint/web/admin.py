@@ -189,7 +189,9 @@ class AdminHandler(WebHandler):
 
             # set up the mirror, if requested
             if useMirror:
-                localUrl = "http://%s%srepos/%s/" % (self.cfg.projectSiteHost, self.cfg.basePath, hostname)
+                localUrl = "http%s://%s%srepos/%s/" % (self.cfg.SSL and 's' or\
+                           '', self.cfg.projectSiteHost, self.cfg.basePath, 
+                           hostname)
 
                 # set the internal label to our authUser and authPass
                 project.editLabel(labelId, label, localUrl, self.cfg.authUser, self.cfg.authPass)
