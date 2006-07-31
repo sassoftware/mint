@@ -75,6 +75,7 @@
             interest:</p>
 
             <ul>
+                <li>I want to know more about <a href="http://wiki.rpath.com/wiki/rBuilder">rBuilder Online</a></li>
                 <li>I'm a <a
                 href="${cfg.basePath}help?page=dev-tutorial">Developer</a></li>
 
