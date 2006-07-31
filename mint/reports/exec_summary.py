@@ -98,4 +98,30 @@ class ExecSummary(MintReport):
 
         data.extend([(x[0], x[1]) for x in cu.fetchall()])
 
+        # spacer
+        data.append(('',''))
+        cu.execute("""SELECT COUNT(*)
+                          FROM UserData
+                          WHERE name='insider' AND value = '1'""")
+        data.append(('Number of opt-ins for insider tips and tricks',
+                     cu.fetchone()[0]))
+
+        cu.execute("""SELECT COUNT(*)
+                          FROM UserData
+                          WHERE name='insider' AND value = '0'""")
+        data.append(('Number of opt-outs for insider tips and tricks',
+                     cu.fetchone()[0]))
+
+        cu.execute("""SELECT COUNT(*)
+                          FROM UserData
+                          WHERE name='newsletter' AND value = '1'""")
+        data.append(('Number of opt-ins for monthly newsletter',
+                     cu.fetchone()[0]))
+
+        cu.execute("""SELECT COUNT(*)
+                          FROM UserData
+                          WHERE name='newsletter' AND value = '0'""")
+        data.append(('Number of opt-outs for monthly newsletter',
+                     cu.fetchone()[0]))
+
         return data
