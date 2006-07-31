@@ -57,7 +57,7 @@ isOwner = (userLevel == userlevels.OWNER or auth.admin)
         <?python
             from mint.client import flavorWrap
             trove = troves[0]
-            sourceVersion = trove.getVersion().getSourceVersion().freeze()
+            sourceVersion = str(trove.getVersion().getSourceVersion())
             sourceLink = "troveInfo?t=%s;v=%s" % (quote(trove.getSourceName()), quote(sourceVersion))
         ?>
         <tr><th>Trove name:</th><td title="${trove.getName()}">${adder(trove)} ${truncateForDisplay(trove.getName(), maxWordLen = 40)}</td></tr>
