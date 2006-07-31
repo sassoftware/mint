@@ -11,7 +11,7 @@ testsuite.setup()
 
 from mint_rephelp import MintRepositoryHelper
 from mint import userlevels, server
-from mint.distro import jsversion
+from mint import jsversion
 from conary import dbstore
 from conary import sqlite3
 from conary.lib import util

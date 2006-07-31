@@ -10,7 +10,7 @@ import time
 
 from mint import client
 from mint import projects
-from mint.distro.flavors import stockFlavors
+from mint.flavors import stockFlavors
 import mint.distro.gencslist
 from mint.distro.imagegen import Generator
 

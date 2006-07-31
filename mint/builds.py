@@ -85,7 +85,7 @@ class BuildsTable(database.KeyedTable):
                 cu.execute("ALTER TABLE Releases ADD COLUMN description STR")
                 cu.execute("UPDATE Releases SET description=desc")
             if dbversion == 14:
-                from mint.distro import jsversion
+                from mint import jsversion
                 cu = self.db.cursor()
                 cu.execute("""INSERT INTO ReleaseData
                                   SELECT DISTINCT releaseId, 'jsversion',

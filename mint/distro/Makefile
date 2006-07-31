@@ -7,14 +7,12 @@
 python_files = \
 	anaconda_images.py	\
 	anaconda_templates.py	\
-	flavors.py		\
 	gencslist.py		\
 	group_trove.py		\
 	imagegen.py		\
 	__init__.py		\
 	installable_iso.py	\
 	jobserver.py		\
-	jsversion.py            \
 	bootable_image.py	\
 	raw_fs_image.py	\
 	live_iso.py		\

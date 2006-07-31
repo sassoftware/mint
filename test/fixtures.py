@@ -19,7 +19,7 @@ from mint_rephelp import MINT_HOST, MINT_DOMAIN, MINT_PROJECT_DOMAIN
 from mint import shimclient
 from mint import config
 from mint import buildtypes
-from mint.distro.flavors import stockFlavors
+from mint.flavors import stockFlavors
 from mint import server
 from mint import userlevels
 

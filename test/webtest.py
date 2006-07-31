@@ -20,7 +20,7 @@ from mint import mint_error
 from mint import database
 from mint import buildtypes
 from mint import jobstatus
-from mint.distro import jsversion
+from mint import jsversion
 
 from repostest import testRecipe
 

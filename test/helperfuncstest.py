@@ -22,7 +22,7 @@ from mint import server
 from mint.helperfuncs import truncateForDisplay, extractBasePath, \
         hostPortParse, rewriteUrlProtocolPort, getArchFromFlavor
 from mint.client import timeDelta
-from mint.distro import jsversion
+from mint import jsversion
 from mint_rephelp import MINT_PROJECT_DOMAIN
 from mint.userlevels import myProjectCompare
 from mint.web import templatesupport

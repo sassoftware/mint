@@ -18,7 +18,7 @@ from mint import maintenance
 from mint import mint_error
 from mint import buildtypes
 from mint import users
-from mint.distro import jsversion
+from mint import jsversion
 
 from conary.repository import errors
 

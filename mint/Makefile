@@ -18,10 +18,12 @@ python_files =			\
 	data.py			\
 	database.py		\
 	dbversion.py		\
+	flavors.py		\
 	grouptrove.py		\
 	helperfuncs.py		\
 	jobs.py			\
 	jobstatus.py		\
+	jsversion.py		\
 	maintenance.py		\
 	mailinglists.py		\
 	mint_error.py		\

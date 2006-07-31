@@ -12,7 +12,7 @@ import jobserverharness
 
 from mint import buildtypes
 from mint import constants
-from mint.distro import jsversion
+from mint import jsversion
 
 from conary.lib import util
 

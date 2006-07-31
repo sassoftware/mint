@@ -5,7 +5,6 @@
 #
 
 script_dist =			\
-	buildtemplates		\
 	deleteproject		\
 	install-jsroot		\
 	job-server		\
@@ -17,7 +16,6 @@ script_dist =			\
 
 extra_dist = \
 	Makefile		\
-	buildtemplates		\
 	raw2vmdk.c		\
         rootstat_wrapper.c	\
 	job-server.init.in	\

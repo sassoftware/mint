@@ -19,9 +19,10 @@ from mint import jobs
 from mint import buildtypes
 from mint import cooktypes
 from mint import mint_error
+from mint import jsversion
 from mint.data import RDT_INT, RDT_STRING, RDT_BOOL
-from mint.distro import stub_image, jsversion
-from mint.distro.flavors import stockFlavors
+from mint.distro import stub_image
+from mint.flavors import stockFlavors
 from mint.server import ParameterError, MintServer
 
 from conary import versions

@@ -43,8 +43,8 @@ from mint import spotlight
 from mint import selections
 from mint import useit
 from mint import rmakebuild
-from mint.distro import jsversion
-from mint.distro.flavors import stockFlavors
+from mint import jsversion
+from mint.flavors import stockFlavors
 from mint.mint_error import PermissionDenied, BuildPublished, \
      BuildMissing, MintError, BuildEmpty, UserAlreadyAdmin, \
      AdminSelfDemotion, JobserverVersionMismatch, LastAdmin, \
