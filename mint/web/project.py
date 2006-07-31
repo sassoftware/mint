@@ -649,9 +649,13 @@ class ProjectHandler(WebHandler):
 
     @intFields(id = None)
     def release(self, auth, id):
-        release = self.client.getPublishedRelease(id)
-        builds = [self.client.getBuild(x) for x in release.getBuilds()]
-        return self._write("pubrelease", release = release, builds = builds)
+        try:
+            release = self.client.getPublishedRelease(id)
+            builds = [self.client.getBuild(x) for x in release.getBuilds()]
+        except database.ItemNotFound:
+            return self.releases(auth)
+        else:
+            return self._write("pubrelease", release = release, builds = builds)
 
     @writersOnly
     @intFields(buildId = None)
