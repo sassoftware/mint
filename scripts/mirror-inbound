@@ -13,11 +13,11 @@ from conary import versions
 from conary.repository import netclient
 from conary.lib import util, log
 
+from mint import config
 from mint.client import MintClient
 from mint.scriptlibrary import SingletonScript
 
 log.setVerbosity(log.DEBUG)
-sys.excepthook = util.genExcepthook(debug=True)
 
 class MirrorInbound(SingletonScript):
 
@@ -31,8 +31,13 @@ class MirrorInbound(SingletonScript):
         return 1
 
     def action(self):
+        sys.excepthook = util.genExcepthook(debug=True)
+        mintCfg = config.MintConfig()
+        mintCfg.read(config.RBUILDER_CONFIG)
+
         client = MintClient(sys.argv[1])
         cfg = mirror.MirrorConfiguration()
+        cfg.entitlementDirectory = mintCfg.dataPath + '/entitlements/'
 
         mirroredLabels = client.getInboundLabels()
 
@@ -43,8 +48,12 @@ class MirrorInbound(SingletonScript):
             labelStr, targetUrl, targetUser, targetPass  = client.getLabel(targetLabelId)
             reposHost = versions.Label(labelStr).getHost()
 
+            if mintCfg.SSL:
+                targetUrl = "https" + targetUrl[4:]
+
             cfg.source.repositoryMap = {reposHost: sourceUrl}
-            cfg.source.user.addServerGlob(reposHost, sourceUser, sourcePass)
+            if sourceUser:
+                cfg.source.user.addServerGlob(reposHost, sourceUser, sourcePass)
 
             cfg.target.repositoryMap = {reposHost: targetUrl}
             cfg.target.user.addServerGlob(reposHost, targetUser, targetPass)
