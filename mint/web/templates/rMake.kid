@@ -111,7 +111,7 @@
                   using the integrated rMake features here in rBuilder.</p>
 
                 <p>For additional instructions, see rPath's <a
-                  href="http://wiki.conary.com/wiki/rBuilder:rMake">rMake
+                  href="http://wiki.rpath.com/wiki/rBuilder:rMake">rMake
                   documentation for rBuilder</a>.</p>
             </div>
         </div>
