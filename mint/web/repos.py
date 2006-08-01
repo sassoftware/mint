@@ -88,6 +88,7 @@ class ConaryHandler(WebHandler, http.HttpHandler):
         self.userLevel = self.project.getUserLevel(self.auth.userId)
         self.isOwner  = (self.userLevel == userlevels.OWNER) or self.auth.admin
         self.isWriter = (self.userLevel in userlevels.WRITERS) or self.auth.admin
+        self.isRemoteRepository = self.project.external
 
         # go ahead and fetch the release / commits data, too
         self.projectReleases = [self.client.getPublishedRelease(x) for x in self.project.getPublishedReleases()]
