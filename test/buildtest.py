@@ -187,6 +187,19 @@ class BuildTest(fixtures.FixturedUnitTest):
                           pubBuild.getId())
 
     @fixtures.fixture("Full")
+    def testDelMissingFile(self, db, data):
+        client = self.getClient("owner")
+        build = client.getBuild(data['buildId'])
+
+        # ensure there are no files to do a delete over
+        cu = db.cursor()
+        cu.execute('DELETE FROM BuildFiles')
+        db.commit()
+
+        # historically this triggered a bad local variable reference
+        build.deleteBuild()
+
+    @fixtures.fixture("Full")
     def testMissingBuild(self, db, data):
         client = self.getClient("owner")
         build = client.getBuild(data['buildId'])
@@ -195,7 +208,7 @@ class BuildTest(fixtures.FixturedUnitTest):
         # from the web UI
         buildId = build.getId()
 
-        self.captureAllOutput(build.deleteBuild)
+        build.deleteBuild()
 
         # messing with that same build should now fail in a controlled
         # manner. no UnknownErrors allowed!
