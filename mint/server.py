@@ -3290,7 +3290,7 @@ class MintServer(object):
     def addrMakeBuildTroveByProject(self, rMakeBuildId, trvName, projectName):
         self._filterrMakeBuildAccess(rMakeBuildId)
         trvName = str(trvName)
-        projectname = str(projectName)
+        projectName = str(projectName)
         projectId = self.projects.getProjectIdByHostname(projectName)
         self._filterProjectAccess(projectId)
         project = projects.Project(self, projectId)
