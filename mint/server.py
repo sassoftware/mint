@@ -1777,19 +1777,19 @@ class MintServer(object):
         for fileName in [x[0] for x in cu.fetchall()]:
             try:
                 os.unlink(fileName)
-            except Exception, e:
-                print >> sys.stderr, "Couldn't delete related file: %s" % \
-                      fileName
-                print >> sys.stderr, e
-                sys.stderr.flush()
-        dirName = os.path.sep.join(fileName.split(os.path.sep)[:-1])
-        try:
-            os.rmdir(dirName)
-        except Exception, e:
-            print >> sys.stderr, "Couldn't delete related directory: %s" % \
-                  dirName
-            print >> sys.stderr, e
-            sys.stderr.flush()
+            except OSError, e:
+                    # ignore permission denied, no such file/dir
+                    if e.errno not in (2, 13):
+                        raise
+            for dirName in (\
+                os.path.sep.join(fileName.split(os.path.sep)[:-1]),
+                os.path.sep.join(fileName.split(os.path.sep)[:-2])):
+                try:
+                    os.rmdir(dirName)
+                except OSError, e:
+                    # ignore permission denied, dir not empty, no such file/dir
+                    if e.errno not in (2, 13, 39):
+                        raise
         self.builds.deleteBuild(buildId)
         return True
 
