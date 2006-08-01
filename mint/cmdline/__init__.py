@@ -32,7 +32,7 @@ class ConfigCommand(commands.RBuilderCommand):
 
     def addParameters(self, argDef):
          commands.RBuilderCommand.addParameters(self, argDef)
-         argDef["show-passwords"] = NO_PARAM
+         argDef["show-passwords"] = options.NO_PARAM
 
     def runCommand(self, client, cfg, argSet, args):
         if len(args) > 1:
