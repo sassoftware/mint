@@ -13,7 +13,7 @@ from mint import buildtypes
       py:extends="'layout.kid'">
     <head>
         <title>${formatTitle('Published Releases: %s' % project.getNameForDisplay())}</title>
-        <link py:if="releases" rel="alternate" type="application/rss+xml"
+        <link py:if="projectReleases" rel="alternate" type="application/rss+xml"
               title="${project.getName()} Releases" href="${basePath}rss" />
     </head>
 
@@ -67,13 +67,17 @@ from mint import buildtypes
                 <p py:if="isOwner">
                     <strong><a href="newRelease">Create a new release</a></strong>
                 </p>
-
-                <div py:if="releases">
-                    ${pubReleasesTable(releases, isOwner)}
-                </div>
-                <div py:if="not releases">
+                <div py:if="not projectReleases">
                     This project currently has no releases.
                 </div>
+                <div py:if="projectPublishedReleases">
+                    ${pubReleasesTable(projectPublishedReleases, isOwner)}
+                </div>
+                <div py:if="projectUnpublishedReleases and isOwner">
+                    <h3>Unpublished Releases</h3>
+                    ${pubReleasesTable(projectUnpublishedReleases, isOwner)}
+                </div>
+
             </div>
         </div>
     </body>

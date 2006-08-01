@@ -111,8 +111,7 @@ class ProjectHandler(WebHandler):
         return self._write("conaryDevelCfg")
 
     def releases(self, auth):
-        releases = [self.client.getPublishedRelease(x) for x in self.project.getPublishedReleases()]
-        return self._write("pubreleases", releases = releases)
+        return self._write("pubreleases")
 
     @writersOnly
     def builds(self, auth):
