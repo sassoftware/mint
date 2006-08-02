@@ -680,6 +680,8 @@ class SqliteRepositoryDatabase(RepositoryDatabase):
 
 
 class MySqlRepositoryDatabase(RepositoryDatabase):
+    tableOpts = "character set latin1 collate latin1_bin"
+
     def translate(self, x):
         return x.translate(mysqlTransTable)
 
@@ -702,7 +704,7 @@ class MySqlRepositoryDatabase(RepositoryDatabase):
                 # so that a traceback will be generated.
                 raise AssertionError( \
                     "Attempted to delete an existing project database.")
-        cu.execute("CREATE DATABASE %s" % dbName)
+        cu.execute("CREATE DATABASE %s %s" % (dbName, self.tableOpts))
         db.close()
         RepositoryDatabase.create(self, name)
 
