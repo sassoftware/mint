@@ -377,8 +377,16 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         assert(project.getLabel() == 'bar.rpath.com@foo:bar')
 
     def testBrowseProjects(self):
+        self.registerErrorContent("Error")
         client, userId = self.quickMintUser('foouser','foopass')
         projectId = client.newProject('Foo', 'foo', MINT_PROJECT_DOMAIN)
+        project = client.getProject(projectId)
+        project.editProject("", "Foo", "\xe2\x99\xaa utf-8 song and dance \xe2\x99\xaa")
+
+        cu = self.db.cursor()
+        r = cu.execute("INSERT INTO Commits VALUES(?, ?, 'whoCares', '1.0', ?)", projectId, 100, userId)
+        self.db.commit()
+
         for sortOrder in range(10):
             page = self.fetch('/projects?sortOrder=%d' % sortOrder,
                                ok_codes = [200])

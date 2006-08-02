@@ -335,7 +335,7 @@ class SiteHandler(WebHandler):
         for i, x in enumerate(results[:]):
             results[i][0] = self.client.getProject(x[0])
 
-        results = [[x[0], x[1], x[2].encode('utf-8'), x[3].encode('utf-8'), x[4]] for x in results]
+        results = [[x[0], x[1], x[2], x[3], x[4]] for x in results]
         return self._write("projects", sortOrder=sortOrder, limit=limit, offset=offset, results=results, count=count)
 
     @requiresAdmin
