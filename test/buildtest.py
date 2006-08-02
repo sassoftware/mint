@@ -9,6 +9,7 @@ testsuite.setup()
 import os
 import sys
 import time
+import tempfile
 
 from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import MINT_PROJECT_DOMAIN
@@ -298,6 +299,38 @@ class BuildTest(fixtures.FixturedUnitTest):
 
         self.failIf(not isinstance(build.getDataValue('freespace'), int),
                     "freespace is not an integer")
+
+    @fixtures.fixture("Full")
+    def testDeleteBuildFiles(self, db, data):
+        client = self.getClient("owner")
+        build = client.getBuild(data['buildId'])
+        cu = db.cursor()
+
+        # defaults are fine
+        tmpdir = tempfile.mkdtemp()
+        try:
+            subdir = os.path.join(tmpdir, 'subdir')
+            os.mkdir(subdir)
+            newfile = os.path.join(subdir, 'file')
+            f = open(newfile, 'w')
+            f.close()
+            cu.execute('UPDATE BuildFiles SET filename=? WHERE buildId=?',
+                       newfile, build.id)
+            db.commit()
+            build.deleteBuild()
+            for targ in (newfile, subdir, tmpdir):
+                try:
+                    os.stat(targ)
+                except OSError, e:
+                    # ensure the file/dirs really are gone
+                    if e.errno != 2:
+                        raise
+        finally:
+            try:
+                util.rmtree(tmpdir)
+            except:
+                pass
+
 
 class OldBuildTest(MintRepositoryHelper):
     def makeInstallableIsoCfg(self):
