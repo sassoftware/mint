@@ -1360,6 +1360,22 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         page = self.assertContent("/search?search=wobble&type=Packages&comment=imadirtyspammer",
             code = [200], content = "search() got an unexpected keyword argument 'comment'")
 
+    def testUtf8Rss(self):
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        self.webLogin('testuser', 'testpass')
+
+        projectId = client.newProject("Foo", "testproject", MINT_PROJECT_DOMAIN)
+        project = client.getProject(projectId)
+        project.editProject("", "Foo", "\xe2\x99\xaa utf-8 song and dance \xe2\x99\xaa")
+
+        cu = self.db.cursor()
+        r = cu.execute("INSERT INTO Commits VALUES(?, ?, 'whoCares', '1.0', ?)", projectId, 100, userId)
+        self.db.commit()
+
+        page = self.fetch("/rss?feed=newProjects")
+        import epdb
+        epdb.st()
+
 
 if __name__ == "__main__":
     testsuite.main()

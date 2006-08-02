@@ -134,6 +134,7 @@ class WebHandler(object):
 
         template = kidCache["rss20.kid"]
         t = template.Template(**values)
+        t.assume_encoding = 'utf-8' # tell kid to assume that all input is utf-8
         self.req.content_type = "text/xml"
         return t.serialize(encoding = "utf-8", output = "xml")
 
