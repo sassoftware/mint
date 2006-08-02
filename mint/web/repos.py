@@ -116,6 +116,10 @@ class ConaryHandler(WebHandler, http.HttpHandler):
         cfg = self.project.getConaryConfig(overrideAuth = overrideAuth,
                                            newUser = self.authToken[0],
                                            newPass = self.authToken[1])
+        conarycfgFile = os.path.join(self.cfg.dataPath, 'config', 'conaryrc')
+        if os.path.exists(conarycfgFile):
+            cfg.read(conarycfgFile)
+
         self.authToken = (self.authToken[0], self.authToken[1], None, None)
 
         # FIXME: hack

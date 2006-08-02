@@ -356,6 +356,9 @@ class MintServer(object):
         # use a shimclient for mint-handled repositories; netclient if not
         if project.external:
             cfg = project.getConaryConfig()
+            conarycfgFile = os.path.join(self.cfg.dataPath, 'config', 'conaryrc')
+            if os.path.exists(conarycfgFile):
+                cfg.read(conarycfgFile)
             repo = conaryclient.ConaryClient(cfg).getRepos()
         else:
             if self.cfg.SSL:

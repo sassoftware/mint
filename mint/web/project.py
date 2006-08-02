@@ -137,6 +137,11 @@ class ProjectHandler(WebHandler):
         # XXX all of this is kind of a hardcoded hack that should be pulled out
         # into a config file somewhere, or something.
         cfg = conarycfg.ConaryConfiguration()
+
+        conarycfgFile = os.path.join(self.cfg.dataPath, 'config', 'conaryrc')
+        if os.path.exists(conarycfgFile):
+            cfg.read(conarycfgFile)
+
         cfg.dbPath = cfg.root = ":memory:"
         label = versions.Label('conary.rpath.com@rpl:1')
 
