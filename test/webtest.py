@@ -1372,9 +1372,7 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         r = cu.execute("INSERT INTO Commits VALUES(?, ?, 'whoCares', '1.0', ?)", projectId, 100, userId)
         self.db.commit()
 
-        page = self.fetch("/rss?feed=newProjects")
-        import epdb
-        epdb.st()
+        self.assertCode("/rss?feed=newProjects", code = 200)
 
 
 if __name__ == "__main__":
