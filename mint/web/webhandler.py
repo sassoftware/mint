@@ -58,7 +58,7 @@ class WebHandler(object):
         # write out the template
         t = template.Template(**context)
 
-        t.assume_encoding = 'utf-8' # tell kid to assume that all input is utf-8
+        t.assume_encoding = 'latin1'
         returner = t.serialize(encoding = "utf-8", output = self.output)
         prof.stopKid(templateName, wasCacheHit)
 
@@ -134,7 +134,7 @@ class WebHandler(object):
 
         template = kidCache["rss20.kid"]
         t = template.Template(**values)
-        t.assume_encoding = 'utf-8' # tell kid to assume that all input is utf-8
+        t.assume_encoding = 'latin1'
         self.req.content_type = "text/xml"
         return t.serialize(encoding = "utf-8", output = "xml")
 

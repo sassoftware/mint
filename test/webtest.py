@@ -796,12 +796,12 @@ class WebPageTest(mint_rephelp.WebRepositoryHelper):
         project = client.getProject(projectId)
 
         project.editProject("http://example.com/",
-            "This project has \xe2\x99\xaa \xe2\x99\xac extended characters in its description!",
+            'My linux is free, cool\xe7',
             "Test Title")
         project.refresh()
 
         page = self.assertContent('/project/foo/', code = [200],
-            content = project.getDesc(),
+            content = project.getDesc().decode("latin1").encode("utf-8"),
             server = self.getProjectServerHostname())
 
 
