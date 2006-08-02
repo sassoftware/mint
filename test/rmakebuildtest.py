@@ -58,6 +58,21 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
                     "rMake build trove not stored correctly")
 
     @fixtures.fixture("Full")
+    def testAddItemUnicode(self, db, data):
+        client = self.getClient('nobody')
+        rMakeBuild = client.createrMakeBuild('foo')
+
+        rMakeBuild.addTrove(u'foo', 'test.rpath.local@rpl:devel')
+
+        cu = db.cursor()
+        cu.execute("""SELECT trvName, trvLabel
+                          FROM rMakeBuildItems
+                          WHERE rMakeBuildId=?""", rMakeBuild.id)
+        self.failIf([list(x) for x in cu.fetchall()] != \
+                    [['foo', 'test.rpath.local@rpl:devel']],
+                    "rMake build trove not stored correctly")
+
+    @fixtures.fixture("Full")
     def testDoubleAdd(self, db, data):
         client = self.getClient('nobody')
         rMakeBuild = client.createrMakeBuild('foo')
@@ -1023,6 +1038,28 @@ class rMakeBuildTest(MintRepositoryHelper):
         self.makeCookedTrove('rpl:devel')
 
         rMakeBuild.addTroveByProject('testcase', 'testproject')
+
+        cu = self.db.cursor()
+        cu.execute("""SELECT trvName, trvLabel
+                          FROM rMakeBuildItems
+                          WHERE rMakeBuildId=?""", rMakeBuild.id)
+        self.failIf([list(x) for x in cu.fetchall()] != \
+                    [['testcase', 'testproject.rpath.local2@rpl:devel']],
+                    "rMake build trove not stored correctly")
+
+    def testAddItemByProjectUnicode(self):
+        client, userId = self.quickMintUser('testuser', 'testpass')
+        projectId = self.newProject(client)
+
+        project = client.getProject(projectId)
+
+        self.moveToServer(project, 1)
+
+        rMakeBuild = client.createrMakeBuild('foo')
+
+        self.makeCookedTrove('rpl:devel')
+
+        rMakeBuild.addTroveByProject('testcase', u'testproject')
 
         cu = self.db.cursor()
         cu.execute("""SELECT trvName, trvLabel
