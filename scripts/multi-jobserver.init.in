@@ -7,6 +7,9 @@
 # processname: job-server
 # config: @DESTDIR@/usr/bin
 
+# Source function library
+. /etc/init.d/functions
+
 JOBSERVER_BASEPATH='/srv/rbuilder/jobserver'
 SCRIPT_PATH='/usr/share/rbuilder/scripts'
 JOBSERVER_SCRIPT="$SCRIPT_PATH/job-server"
