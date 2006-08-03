@@ -7,7 +7,7 @@
 #              ISO generation jobs from an rBuilder server and generates
 #              the requested images.
 # processname: job-server
-# config: @DESTDIR@/usr/bin
+# config: /usr/bin
 
 # Source function library
 . /etc/init.d/functions
@@ -15,8 +15,8 @@
 # Configuration options
 DEBUG_MODE=1    # set to non-zero to turn debug mode logging on
 
-CONFIG_FILE='@DESTDIR@/srv/rbuilder/iso_gen.conf'
-SCRIPT_PATH='@DESTDIR@/usr/share/rbuilder/scripts'
+CONFIG_FILE='/srv/rbuilder/iso_gen.conf'
+SCRIPT_PATH='/usr/share/rbuilder/scripts'
 JOBSERVER_USER='isogen'
 JOBSERVER_HOME='/srv/rbuilder/images'
 JOBSERVER_SCRIPT="$SCRIPT_PATH/job-server"
@@ -44,13 +44,13 @@ start() {
 
 stop() {
     echo -n "Stopping $LONGNAME:"
-    killproc `basename $JOBSERVER_SCRIPT` -TERM
+
     echo ""
     if [ "$1" = "--wait" ]; then
         echo -n "Waiting for rBuilder ISO Generation server to terminate..."
         while [ -f "$LOCKFILE" ]; do sleep 1; done
         echo "done."
-    fi 
+    fi
 }
 
 status() {
