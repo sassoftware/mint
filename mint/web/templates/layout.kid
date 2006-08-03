@@ -116,7 +116,7 @@ onload = "javascript:;"
                         <li py:if="cfg.announceLink"><a href="${cfg.announceLink}">Site Announcements</a></li>
                         <li><a href="${cfg.basePath}legal/">Legal</a></li>
                         <li><a href="${cfg.corpSite}company-contact-rpath.html">Contact Us</a></li>
-                        <li><a href="${cfg.basePath}help/">Help</a></li>
+                        <li><a href="http://wiki.rpath.com/wiki/rBuilder:rBO" target="_blank">Help</a></li>
                     </ul>
                 </div>
                 <div id="bottomText">
