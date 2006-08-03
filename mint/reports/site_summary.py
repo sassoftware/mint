@@ -153,18 +153,37 @@ class SiteSummary(MintReport):
                           WHERE numUsers >= 5""")
         data.append(('Projects with 5 or more users', cu.fetchone()[0]))
 
+        # count the total number of non-rpath projects
+        cu.execute("""SELECT COUNT(projectList)
+                          FROM (SELECT Projects.projectId AS projectList,
+                                       COUNT(userId) AS numUsers
+                                    FROM Projects
+                                    LEFT JOIN ProjectUsers
+                                        ON ProjectUsers.projectId =
+                                               Projects.projectId
+                                    WHERE level IN (0, 1)
+                                    AND userId NOT IN %s
+                                    GROUP BY Projects.projectId) AS A
+                          WHERE numUsers > 5""" % str(self.employeeIds))
+
+        data.append(('Projects with 5 or more non-rPath users',
+                     cu.fetchone()[0]))
+
         # spacer
         data.append(('',''))
 
         countedBuilds = (buildtypes.INSTALLABLE_ISO,
-                           buildtypes.RAW_HD_IMAGE,
-                            buildtypes.VMWARE_IMAGE)
-        queryStr = '(' + ', '.join([str(x) for x in countedBuilds]) + ')'
+                         buildtypes.RAW_HD_IMAGE,
+                         buildtypes.RAW_FS_IMAGE,
+                         buildtypes.TARBALL,
+                         buildtypes.LIVE_ISO,
+                         buildtypes.VMWARE_IMAGE)
+
         # count the total builds
         cu.execute("""SELECT COUNT(*) FROM Builds
                           WHERE buildType IN %s""" % str(countedBuilds))
 
-        data.append(('Total Images', cu.fetchone()[0]))
+        data.append(('Images Present', cu.fetchone()[0]))
 
         # count builds for each image type
         for buildType in countedBuilds:
@@ -172,6 +191,22 @@ class SiteSummary(MintReport):
                               WHERE buildType=?""",
                        buildType)
             data.append((buildtypes.typeNames[buildType],
+                         cu.fetchone()[0]))
+
+        # spacer
+        data.append(('',''))
+        # count the total builds this week
+        cu.execute("""SELECT COUNT(*) FROM Builds
+                          WHERE buildType IN %s AND timeCreated > ?""" % \
+                   str(countedBuilds), reportTime - 604800)
+        data.append(('Images Built This Week', cu.fetchone()[0]))
+
+        # count builds for each image type per this week
+        for buildType in countedBuilds:
+            cu.execute("""SELECT COUNT(*) FROM Builds
+                              WHERE buildType=? AND timeCreated > ?""",
+                       buildType, reportTime - 604800)
+            data.append((buildtypes.typeNames[buildType] + " This Week",
                          cu.fetchone()[0]))
 
         # spacer
