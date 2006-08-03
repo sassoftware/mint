@@ -613,10 +613,15 @@ quit
     @timeMe
     def moveToFinal(self, filelist, finaldir):
         returnlist = []
-        util.mkdirChain( finaldir )
+        util.mkdirChain(finaldir)
+        pardir = os.path.sep.join(finaldir.split(os.path.sep)[:-1])
         isogenUid = os.geteuid()
         apacheGid = pwd.getpwnam('apache')[3]
+        # add the group writeable bit and assign group ownership to apache
         os.chown(finaldir, isogenUid, apacheGid)
+        os.chmod(finaldir, os.stat(finaldir)[0] & 0777 | 0020)
+        os.chown(pardir, isogenUid, apacheGid)
+        os.chmod(pardir, os.stat(pardir)[0] & 0777 | 0020)
         for file, name in filelist:
             base, ext = os.path.basename(file).split(os.path.extsep, 1)
             newfile = os.path.join(finaldir, self.basefilename + "." + ext)
@@ -626,6 +631,7 @@ quit
             gencslist._linkOrCopyFile(file, newfile)
             os.unlink(file)
             os.chown(newfile, isogenUid, apacheGid)
+            os.chmod(newfile, os.stat(newfile)[0] & 0777 | 0020)
             returnlist.append((newfile, name,))
         return returnlist
 

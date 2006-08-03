@@ -30,13 +30,18 @@ deprecatedBuildTypes = {
 
 
 #BOOTABLE_IMAGE Should never get stored in the DB and therefore doesn't need a name
+
+# NOTA BENE. If you want to put in special characters (e.g. a copyright or
+# registered trademark) in typeNames{,Short,Marketing}, please use the 
+# equivalent ISO-LATIN-1 escape (e.g. \xae for registered trademark).
+
 typeNames = {
     NETBOOT_IMAGE:      "Netboot Image",
     INSTALLABLE_ISO:    "Installable CD/DVD",
     RAW_FS_IMAGE:       "Raw Filesystem Image",
     STUB_IMAGE:         "Stub Image",
     RAW_HD_IMAGE:       "Raw Hard Disk Image",
-    VMWARE_IMAGE:       "VMware\xc2\xae Player Image",
+    VMWARE_IMAGE:       "VMware\xae Player Image",
     LIVE_ISO:           "Demo CD/DVD (Live CD/DVD)",
     TARBALL:            "Compressed Tar File"
 }
@@ -47,7 +52,7 @@ typeNamesShort = {
     RAW_FS_IMAGE:       "Raw FS",
     STUB_IMAGE:         "Stub",
     RAW_HD_IMAGE:       "HDD",
-    VMWARE_IMAGE:       "VMware\xc2\xae",
+    VMWARE_IMAGE:       "VMware\xae",
     LIVE_ISO:           "Demo CD/DVD",
     TARBALL:            "Tar"
 }
@@ -58,7 +63,7 @@ typeNamesMarketing = {
     RAW_FS_IMAGE:       "Mountable Filesystem",
     STUB_IMAGE:         "Stub Image",
     RAW_HD_IMAGE:       "Parallels, QEMU (Raw Hard Disk)",
-    VMWARE_IMAGE:       "VMware\xc2\xae",
+    VMWARE_IMAGE:       "VMware\xae",
     LIVE_ISO:           "Demo CD/DVD (Live CD/DVD)",
     TARBALL:            "TAR File"
 }
