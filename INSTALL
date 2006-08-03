@@ -27,7 +27,9 @@ connectivity in place, namely:
       rbuilder.example.com)
 
       NOTE: rPath recommends that the server be set up to receive a
-      DHCP-provided hostname and IP address before installation.
+      DHCP-provided hostname and IP address before installation. The server
+      should be behind a network firewall and not directly exposed to
+      public networks.
 
     o A network-connected system capable of running a Web browser
 
