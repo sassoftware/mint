@@ -279,10 +279,14 @@ class InstallableIso(ImageGenerator):
         isogenUid = os.geteuid()
         apacheGid = pwd.getpwnam('apache')[3]
         outputDir = os.path.normpath(os.path.join(self.cfg.finishedPath, self.project.getHostname(), str(self.build.getId())))
+        parDir = os.path.normpath(os.path.join(outputDir, '..'))
         util.mkdirChain(outputDir)
         # add the group writeable bit and assign group ownership to apache
         os.chmod(outputDir, os.stat(outputDir)[0] & 0777 | 0020)
         os.chown(outputDir, isogenUid, apacheGid)
+        parDir = os.path.normpath(os.path.join(outputDir, '..'))
+        os.chmod(parDir, os.stat(parDir)[0] & 0777 | 0020)
+        os.chown(parDir, isogenUid, apacheGid)
 
         isoList = []
         baseFileName = self.build.getDataValue('baseFileName')
@@ -357,10 +361,6 @@ class InstallableIso(ImageGenerator):
                 except OSError, e:
                     if e.errno != 1:
                         raise
-                    # it's not a problem if we get here, since the file in question
-                    # was already owned by apache--we couldn't re-assign it.
-                    print >> sys.stderr, "couldn't assign permission for %s to " \
-                          "apache." % outF
                 isoList += ( (outF, f), )
         return isoList
 
