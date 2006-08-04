@@ -18,6 +18,7 @@ from mint_rephelp import MINT_PROJECT_DOMAIN
 
 from mint.distro import bootable_image
 from mint.distro import raw_fs_image, raw_hd_image
+from mint.distro import live_iso, vmware_image
 from mint import data
 
 from conary import conarycfg, conaryclient
@@ -203,6 +204,15 @@ class BootableImageTest(MintRepositoryHelper):
     def testRawFsImageClass(self):
         bi = self.setupBootableImage(subclass = raw_fs_image.RawFsImage)
         assert(not bi.makeBootable)
+
+    def testVMwareImageClass(self):
+        bi = self.setupBootableImage(subclass = vmware_image.VMwareImage)
+        assert(bi.makeBootable)
+
+    def testLiveIsoClass(self):
+        bi = self.setupBootableImage(subclass = live_iso.LiveIso)
+        assert(not bi.makeBootable)
+
 
 
 if __name__ == "__main__":
