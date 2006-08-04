@@ -530,8 +530,23 @@ class ProjectTest(fixtures.FixturedUnitTest):
         # result must always be true
         assert(client.versionIsExternal(versionStr))
 
-    
+    @fixtures.fixture('Full')
+    def testProjectUrl(self, db, data):
+        client = self.getClient('admin')
+        preUrl = 'foo2.rpath.local/conary'
+        postUrl = 'http://' + preUrl
 
+        projectId = client.newProject('Foo 2', 'foo2', 'rpath.local2',
+                                      preUrl, 'desc')
+
+        project = client.getProject(projectId)
+        assert(postUrl == project.getProjectUrl())
+
+    @fixtures.fixture('Full')
+    def testInvalidLabelExtProj(self, db, data):
+        client = self.getClient('admin')
+        self.assertRaises(ParameterError, client.newExternalProject, 'Foo 2',
+                          'foo2', 'rpath.local2', 'bad-label', '', False)
 
 class ProjectTestConaryRepository(MintRepositoryHelper):
 
