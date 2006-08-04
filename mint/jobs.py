@@ -76,7 +76,7 @@ class JobsTable(database.KeyedTable):
         return res
 
 class Job(database.TableObject):
-    __slots__ = [JobsTable.key] + JobsTable.fields
+    __slots__ = JobsTable.fields
 
     # alias for releaseId
     releaseId = property(lambda self: self.buildId)
