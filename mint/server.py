@@ -1001,22 +1001,6 @@ class MintServer(object):
         self._generateConaryRcFile()
         return True
 
-    @typeCheck(int)
-    @requiresAdmin
-    @private
-    def disableProject(self, projectId):
-        self.projects.disable(projectId, self.cfg.reposPath)
-        self._generateConaryRcFile()
-        return True
-
-    @typeCheck(int)
-    @requiresAdmin
-    @private
-    def enableProject(self, projectId):
-        self.projects.enable(projectId, self.cfg.reposPath)
-        self._generateConaryRcFile()
-        return True
-
     # user methods
     @typeCheck(int)
     @private
@@ -1464,11 +1448,11 @@ class MintServer(object):
         @param limit:  Number of items to return
         @param offset: Count at which to begin listing
         """
-        if self.auth and self.auth.admin:
-            includeInactive = True
-        else:
-            includeInactive = False
-        return self.users.getUsers(sortOrder, limit, offset, includeInactive), self.users.getNumUsers(includeInactive)
+        # includeInactive *must* be set to false for non-admins if user browse
+        # is ever opened up to non-admins
+        includeInactive = True
+        return self.users.getUsers(sortOrder, limit, offset, includeInactive),\
+               self.users.getNumUsers(includeInactive)
 
     @typeCheck(int)
     @requiresAdmin
