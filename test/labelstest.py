@@ -92,10 +92,10 @@ class LabelsTest(fixtures.FixturedUnitTest):
         cu.execute("UPDATE Projects SET external=1 WHERE projectId=?",
                    projectId2)
 
-        addLabel(projectId, '/foo.rpath.org@rpl:devel')
-        addLabel(projectId, '/bar.rpath.org@rpl:devel')
-        addLabel(projectId2, '/baz.rpath.org@rpl:devel')
-        addLabel(projectId, '/foo.rpath.org@diff:label')
+        addLabel(projectId, 'foo.rpath.org@rpl:devel')
+        addLabel(projectId, 'bar.rpath.org@rpl:devel')
+        addLabel(projectId2, 'baz.rpath.org@rpl:devel')
+        addLabel(projectId, 'foo.rpath.org@diff:label')
         db.commit()
 
         # a local project returns False
