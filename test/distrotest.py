@@ -415,6 +415,8 @@ class DistroTest(MintRepositoryHelper):
         job = client.startImageJob(build.id)
 
         ii = installable_iso.InstallableIso(None, isocfg, job, build, project)
+        ii.isocfg = isocfg
+        ii.callback = EmptyCallback()
         ii._setupTrove()
 
         return ii
@@ -499,6 +501,27 @@ class DistroTest(MintRepositoryHelper):
         # check the returned conary client cfg for sanity
         cc = ii.getConaryClient('/', '1#x86')
         assert(cc.cfg.installLabelPath == [versions.Label('testproject.rpath.local2@rpl:devel')])
+
+    def testGetTemplatePath(self):
+        ii = self.getInstallableIso()
+
+        d = tempfile.mkdtemp()
+        try:
+            ii.isocfg.templatePath = d
+            ii.isocfg.templatesLabel = "localhost@rpl:linux"
+
+            self.addComponent("anaconda-templates:runtime", "1.0")
+            self.addCollection("anaconda-templates", "1.0",
+                [("anaconda-templates:runtime", True)])
+
+            # this is the sha1 of the n/v/f combo for the anaconda-template trove
+            sha1 = "e4384dad64b952baeecb81d44894a1a7"
+            util.mkdirChain(os.path.join(d, sha1))
+
+            path = ii._getTemplatePath()
+            assert(path == os.path.join(d, sha1))
+        finally:
+            util.rmtree(d)
 
 
 if __name__ == "__main__":
