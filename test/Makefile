@@ -30,7 +30,6 @@ python_files = \
                labelstest.py \
                maintenancetest.py \
 		marketingtest.py	\
-		newstest.py \
                mint_rephelp.py \
                mirrortest.py \
 	       mirrorprimetest.py \
