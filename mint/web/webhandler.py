@@ -66,7 +66,7 @@ class WebHandler(object):
 
     def _redirectHttp(self, location):
         if ':' in self.cfg.externalDomainName:
-            httpPort = self.cfg.externalDomainName.split(':')[1]
+            httpPort = int(self.cfg.externalDomainName.split(':')[1])
         else:
             httpPort = 80
 
