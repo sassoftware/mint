@@ -209,13 +209,16 @@ Much like Powdermilk Biscuits[tm]."""
         # time of day when test is run.
         ct = 1143668527.7868781
 	assert(timeDelta(0) == "Never")
+        assert(timeDelta(0, capitalized = False) == "never")
 	assert(timeDelta(ct, ct) == "This very second")
+	assert(timeDelta(ct, ct, capitalized = False) == "this very second")
 	assert(timeDelta(ct - 30, ct) == "30 seconds ago")
 	assert(timeDelta(ct - 60, ct) == "1 minute ago")
 	assert(timeDelta(ct - 974, ct) == "16 minutes ago")
 	assert(timeDelta(ct - 3650, ct) == "1 hour ago")
 	assert(timeDelta(ct - 12459, ct) == "3 hours ago")
 	assert(timeDelta(ct - 100234, ct) == "Yesterday")
+	assert(timeDelta(ct - 100234, ct, capitalized = False) == "yesterday")
 	assert(timeDelta(ct - 373123, ct) == "4 days ago")
 	assert(timeDelta(ct - 2592000, ct) == 
                time.strftime('%d-%b-%Y', time.localtime(ct - 2592000)))
