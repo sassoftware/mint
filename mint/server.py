@@ -1624,10 +1624,12 @@ class MintServer(object):
         cu = self.db.cursor()
 
         try:
-            hostname = ('/' + versionStr.split('/')[1]).split('@')[0]
+            hostname = (versionStr.split('/')[1]).split('@')[0]
         except:
             # All exceptions at this point will be string parsing errors.
-            raise ItemNotFound
+            # however we raise an itemNotFound to prevent illicit attempts
+            # to deduce hidden project names
+            raise database.ItemNotFound
 
         cu.execute("SELECT projectId FROM Labels WHERE label LIKE ?",
                    "%s%%" % hostname)
@@ -1657,7 +1659,7 @@ class MintServer(object):
 
     def _generateConaryRcFile(self):
         if not self.cfg.createConaryRcFile:
-            return
+            return False
         cu = self.db.cursor()
         res = cu.execute("""SELECT ProjectId from Projects 
                             WHERE hidden=0 AND disabled=0""")
@@ -1717,7 +1719,7 @@ class MintServer(object):
         build = self.builds.get(buildId)
         # add some things that the old jobserver will expect
         build['releaseId'] = build['buildId']
-        build['imageTypes'] = []
+        build['imageTypes'] = [build['buildType']]
         build['downloads'] = 0
         build['timePublished'] = 0
         build['published'] = 0
