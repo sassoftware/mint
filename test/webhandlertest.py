@@ -9,8 +9,6 @@ import testsuite
 import unittest
 testsuite.setup()
 
-import epdb
-
 from mint.web import webhandler
 
 class FakeConfig(object):
