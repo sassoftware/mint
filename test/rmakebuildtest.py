@@ -1017,6 +1017,11 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
         # add an item with the exact same name, but new user
         rMakeBuild = client1.createrMakeBuild('foo')
 
+    @fixtures.fixture('Full')
+    def testAccessMissingBuildItem(self, db, data):
+        client = self.getClient('nobody')
+        self.assertRaises(database.ItemNotFound, client.getrMakeBuildTrove, 99)
+
 
 class rMakeBuildTest(MintRepositoryHelper):
     def makeCookedTrove(self, branch = 'rpl:devel', hostname = 'testproject'):
