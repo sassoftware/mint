@@ -8,6 +8,7 @@ testsuite.setup()
 
 import fixtures
 from mint import mint_error
+from mint.database import ItemNotFound
 
 class UsersTest(fixtures.FixturedUnitTest):
     @fixtures.fixture("Full")
@@ -197,6 +198,61 @@ class UsersTest(fixtures.FixturedUnitTest):
         del userPub['passwd']
         for key, val in userPub.iteritems():
             assert val == user.__getattribute__(key)
+
+    @fixtures.fixture('Full')
+    def testMissingMintAuth(self, db, data):
+        client = self.getClient('admin')
+        assert client.server._server._isUserAdmin(data['admin'])
+        cu = db.cursor()
+        cu.execute("DELETE FROM UserGroups WHERE userGroup='MintAdmin'")
+        db.commit()
+        assert not client.server._server._isUserAdmin(data['admin'])
+
+    @ fixtures.fixture('Full')
+    def donttestProductionConfirmation(self, db, data):
+        client = self.getClient('admin')
+        debugMode = self.cfg.debugMode
+        try:
+            self.cfg.debugMode = False
+            self.assertRaises(mint_error.PermissionDenied,
+                              client.server._server.getConfirmation, 'admin')
+        finally:
+            self.cfg.debugMode = debugMode
+
+    @fixtures.fixture('Full')
+    def testNoConfirmation(self, db, data):
+        client = self.getClient('admin')
+        debugMode = self.cfg.debugMode
+        try:
+            self.cfg.debugMode = True
+            self.assertRaises(ItemNotFound,
+                              client.server._server.getConfirmation,
+                              'Sir not appearing in this film')
+        finally:
+            self.cfg.debugMode = debugMode
+
+    @fixtures.fixture('Full')
+    def testDataPermission(self, db, data):
+        client = self.getClient('nobody')
+        user = client.getUser(data['owner'])
+        self.assertRaises(mint_error.PermissionDenied,
+                          user.setDataValue, 'foo', 'bar')
+        self.assertRaises(mint_error.PermissionDenied,
+                          user.getDataValue, 'foo')
+        self.assertRaises(mint_error.PermissionDenied,
+                          user.getDefaultedData)
+        self.assertRaises(mint_error.PermissionDenied,
+                          user.getDataDict)
+
+    @fixtures.fixture('Full')
+    def testAdminUserSearch(self, db, data):
+        client = self.getClient('admin')
+        sRes = client.getUserSearchResults('%%%')
+        client.registerNewUser('unconfirmed', '123456', 'shadow',
+                               'nothing@localhost', '', '', False)
+        assert(client.getUserSearchResults('%%%') != sRes)
+        client = self.getClient('owner')
+        assert(client.getUserSearchResults('%%%') == sRes)
 
 
 if __name__ == "__main__":
