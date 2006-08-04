@@ -45,7 +45,7 @@ class PublishedReleasesTable(database.KeyedTable):
     def publishedReleaseExists(self, pubReleaseId):
         try:
             pubRelease = self.get(pubReleaseId, fields=['pubReleaseId'])
-        except ItemNotFound:
+        except database.ItemNotFound:
             return False
         return True
 
