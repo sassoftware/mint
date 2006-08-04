@@ -652,6 +652,228 @@ class GroupTroveTest(fixtures.FixturedUnitTest):
         self.assertRaises(ParameterError,
                           groupTrove.removeComponents, ['notarealcomponent'])
 
+    @fixtures.fixture('Full')
+    def testCleanup(self, db, data):
+        client = self.getClient('owner')
+        groupTrove = client.getGroupTrove(data['groupTroveId'])
+        assert client.server._server.cleanupGroupTroves() is not None
+
+    @fixtures.fixture('Full')
+    def testLabelPath(self, db, data):
+        client = self.getClient('owner')
+        groupTrove = client.getGroupTrove(data['groupTroveId'])
+        assert groupTrove.getLabelPath() == ['foo.rpath.local2@rpl:devel']
+
+        client = self.getClient('user')
+        # bogus call to prime client
+        client.getUser(data['user'])
+        self.assertRaises(PermissionDenied,
+                          client.server._server.getGroupTroveLabelPath,
+                          groupTrove.id)
+
+    @fixtures.fixture('Full')
+    def testGetRecipeAccess(self, db, data):
+        client = self.getClient('user')
+        # bogus call to prime client
+        client.getUser(data['user'])
+        self.assertRaises(PermissionDenied, client.server._server.getRecipe,
+                          data['groupTroveId'])
+
+    @fixtures.fixture('Full')
+    def testSetAutoResolveAccess(self, db, data):
+        client = self.getClient('user')
+        # bogus call to prime client
+        client.getUser(data['user'])
+        self.assertRaises(PermissionDenied,
+                          client.server._server.setGroupTroveAutoResolve,
+                          data['groupTroveId'], True)
+
+    @fixtures.fixture('Full')
+    def testListGrpTrvAccess(self, db, data):
+        client = self.getClient('user')
+        # bogus call to prime client
+        client.getUser(data['user'])
+        self.assertRaises(PermissionDenied,
+                          client.server._server.listGroupTrovesByProject,
+                          data['projectId'])
+
+    @fixtures.fixture('Full')
+    def testCreateGrpTrvAccess(self, db, data):
+        client = self.getClient('user')
+        # bogus call to prime client
+        client.getUser(data['user'])
+
+        self.assertRaises(PermissionDenied, client.createGroupTrove,
+                          data['projectId'], 'foo', '1.0.0', '', False)
+
+    @fixtures.fixture('Full')
+    def testDeleteGrpTrvAccess(self, db, data):
+        client = self.getClient('user')
+
+        # bogus call to prime client
+        client.getUser(data['user'])
+        self.assertRaises(PermissionDenied, client.deleteGroupTrove,
+                          data['groupTroveId'])
+
+    @fixtures.fixture('Full')
+    def testGrpTrvDescAccess(self, db, data):
+        client = self.getClient('user')
+        # bogus call to prime client
+        client.getUser(data['user'])
+
+        self.assertRaises(PermissionDenied,
+                          client.server._server.setGroupTroveDesc,
+                          data['groupTroveId'], 'foo')
+
+    @fixtures.fixture('Full')
+    def testGrpTrvVerAccess(self, db, data):
+        client = self.getClient('user')
+        # bogus call to prime client
+        client.getUser(data['user'])
+
+        self.assertRaises(PermissionDenied,
+                          client.server._server.setGroupTroveUpstreamVersion,
+                          data['groupTroveId'], '1.0.0')
+
+    @fixtures.fixture('Full')
+    def testListGrpTrvItemsAccess(self, db, data):
+        client = self.getClient('user')
+        # bogus call to prime client
+        client.getUser(data['user'])
+
+        self.assertRaises( \
+            PermissionDenied,
+            client.server._server.listGroupTroveItemsByGroupTrove,
+            data['groupTroveId'])
+
+    @fixtures.fixture('Full')
+    def testTrvInGrpTrvItemsAccess(self, db, data):
+        client = self.getClient('user')
+        # bogus call to prime client
+        client.getUser(data['user'])
+
+        self.assertRaises( \
+            PermissionDenied,
+            client.server._server.troveInGroupTroveItems,
+            data['groupTroveId'], 'foo', '/test@rpl:devel/1-1-1', '')
+
+    @fixtures.fixture('Full')
+    def testGrpTrvItemVerLckAccess(self, db, data):
+        client = self.getClient('owner')
+        groupTrove = client.getGroupTrove(data['groupTroveId'])
+
+        groupTroveItemId = groupTrove.addTrove( \
+            'foo', '/test.rpath.local@rpl:devel/1.0.0-1-1', '', '',
+            False, False, False)
+
+        client = self.getClient('user')
+        # bogus call to prime client
+        client.getUser(data['user'])
+
+        self.assertRaises( \
+            PermissionDenied,
+            client.server._server.setGroupTroveItemVersionLock,
+            groupTroveItemId, True)
+
+    @fixtures.fixture('Full')
+    def testGrpTrvItemUseLckAccess(self, db, data):
+        client = self.getClient('owner')
+        groupTrove = client.getGroupTrove(data['groupTroveId'])
+
+        groupTroveItemId = groupTrove.addTrove( \
+            'foo', '/test.rpath.local@rpl:devel/1.0.0-1-1', '', '',
+            False, False, False)
+
+        client = self.getClient('user')
+        # bogus call to prime client
+        client.getUser(data['user'])
+
+        self.assertRaises( \
+            PermissionDenied,
+            client.server._server.setGroupTroveItemUseLock,
+            groupTroveItemId, True)
+
+    @fixtures.fixture('Full')
+    def testGrpTrvItemISLckAccess(self, db, data):
+        client = self.getClient('owner')
+        groupTrove = client.getGroupTrove(data['groupTroveId'])
+
+        groupTroveItemId = groupTrove.addTrove( \
+            'foo', '/test.rpath.local@rpl:devel/1.0.0-1-1', '', '',
+            False, False, False)
+
+        client = self.getClient('user')
+        # bogus call to prime client
+        client.getUser(data['user'])
+
+        self.assertRaises( \
+            PermissionDenied,
+            client.server._server.setGroupTroveItemInstSetLock,
+            groupTroveItemId, True)
+
+    @fixtures.fixture('Full')
+    def testDelGrpTrvItemAccess(self, db, data):
+        client = self.getClient('owner')
+        groupTrove = client.getGroupTrove(data['groupTroveId'])
+
+        groupTroveItemId = groupTrove.addTrove( \
+            'foo', '/test.rpath.local@rpl:devel/1.0.0-1-1', '', '',
+            False, False, False)
+
+        client = self.getClient('user')
+        # bogus call to prime client
+        client.getUser(data['user'])
+
+        self.assertRaises( \
+            PermissionDenied,
+            client.server._server.delGroupTroveItem, groupTroveItemId)
+
+    @fixtures.fixture('Full')
+    def testGetGrpTrvItemAccess(self, db, data):
+        client = self.getClient('owner')
+        groupTrove = client.getGroupTrove(data['groupTroveId'])
+
+        groupTroveItemId = groupTrove.addTrove( \
+            'foo', '/test.rpath.local@rpl:devel/1.0.0-1-1', '', '',
+            False, False, False)
+
+        client = self.getClient('user')
+        # bogus call to prime client
+        client.getUser(data['user'])
+
+        self.assertRaises( \
+            PermissionDenied,
+            client.server._server.getGroupTroveItem, groupTroveItemId)
+
+    @fixtures.fixture('Full')
+    def testSetGrpTrvItemSubGrpAccess(self, db, data):
+        client = self.getClient('owner')
+        groupTrove = client.getGroupTrove(data['groupTroveId'])
+
+        groupTroveItemId = groupTrove.addTrove( \
+            'foo', '/test.rpath.local@rpl:devel/1.0.0-1-1', '', '',
+            False, False, False)
+
+        client = self.getClient('user')
+        # bogus call to prime client
+        client.getUser(data['user'])
+
+        self.assertRaises( \
+            PermissionDenied,
+            client.server._server.setGroupTroveItemSubGroup, groupTroveItemId,
+            'group-test')
+
+    @fixtures.fixture('Full')
+    def testAddGrpTrvItemAccess(self, db, data):
+        client = self.getClient('user')
+        # bogus call to prime client
+        client.getUser(data['user'])
+
+        self.assertRaises( \
+            PermissionDenied,
+            client.server._server.addGroupTroveItem, data['groupTroveId'],
+            'foo', '/test.rpath.local@rpl:devel/1.0.0-1-1', '', '',
+            False, False, False)
 
 class GroupTroveTestConary(MintRepositoryHelper):
     def makeCookedTrove(self, branch = 'rpl:devel', hostname = 'testproject'):
