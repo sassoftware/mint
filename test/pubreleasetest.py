@@ -13,7 +13,9 @@ from mint_rephelp import MINT_HOST, MINT_DOMAIN, MINT_PROJECT_DOMAIN
 
 from mint import buildtypes
 from mint import pubreleases
-from mint.mint_error import PermissionDenied, BuildPublished, BuildMissing, BuildEmpty, PublishedReleasePublished
+from mint.mint_error import PermissionDenied, BuildPublished, BuildMissing, \
+     BuildEmpty, PublishedReleasePublished, PublishedReleaseEmpty, \
+     PublishedReleaseNotPublished
 from mint.database import ItemNotFound
 
 class PublishedReleaseTest(fixtures.FixturedUnitTest):
@@ -465,6 +467,68 @@ class PublishedReleaseTest(fixtures.FixturedUnitTest):
         rel = project.getBuilds()
         if len(rel) != 1:
             self.fail("getBuildsForProject did not return hidden builds for admin")
+
+    @fixtures.fixture('Full')
+    def testAccessMissingPubRel(self, db, data):
+        client = self.getClient('nobody')
+        self.assertRaises(ItemNotFound, client.getPublishedRelease, 99)
+
+    @fixtures.fixture('Full')
+    def testModPubRel(self, db, data):
+        client = self.getClient('owner')
+        pubRel = client.getPublishedRelease(data['pubReleaseId'])
+        pubRel.publish()
+
+        self.assertRaises(PublishedReleasePublished, pubRel.save)
+
+        client = self.getClient('developer')
+        pubRel = client.getPublishedRelease(data['pubReleaseId'])
+        self.assertRaises(PermissionDenied, pubRel.save)
+
+    @fixtures.fixture('Full')
+    def testPubPubRelPerm(self, db, data):
+        client = self.getClient('developer')
+        pubRel = client.getPublishedRelease(data['pubReleaseId'])
+        self.assertRaises(PermissionDenied, pubRel.publish)
+
+    @fixtures.fixture('Full')
+    def testPubEmptyPubRel(self, db, data):
+        client = self.getClient('owner')
+        pubRel = client.getPublishedRelease(data['pubReleaseId'])
+        for buildId in pubRel.getBuilds():
+            pubRel.removeBuild(buildId)
+        self.assertRaises(PublishedReleaseEmpty, pubRel.publish)
+
+    @fixtures.fixture('Full')
+    def testPubPublishedPubRel(self, db, data):
+        client = self.getClient('owner')
+        pubRel = client.getPublishedRelease(data['pubReleaseId'])
+        pubRel.publish()
+        self.assertRaises(PublishedReleasePublished, pubRel.publish)
+
+    @fixtures.fixture('Full')
+    def testUnpubPublishedPubRel(self, db, data):
+        client = self.getClient('owner')
+        pubRel = client.getPublishedRelease(data['pubReleaseId'])
+        pubRel.publish()
+        pubRel.unpublish()
+        self.assertRaises(PublishedReleaseNotPublished, pubRel.unpublish)
+
+    @fixtures.fixture('Full')
+    def testUnpubPubRelPerm(self, db, data):
+        client = self.getClient('owner')
+        pubRel = client.getPublishedRelease(data['pubReleaseId'])
+        pubRel.publish()
+
+        client = self.getClient('developer')
+        pubRel = client.getPublishedRelease(data['pubReleaseId'])
+        self.assertRaises(PermissionDenied, pubRel.unpublish)
+
+    @fixtures.fixture('Full')
+    def testGetUniqueBuilds(self, db, data):
+        client = self.getClient('owner')
+        pubRel = client.getPublishedRelease(data['pubReleaseId'])
+        assert(pubRel.getUniqueBuildTypes() == [(2, 'x86-64')])
 
 
 if __name__ == "__main__":
