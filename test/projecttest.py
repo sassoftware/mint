@@ -42,6 +42,17 @@ class ProjectTest(fixtures.FixturedUnitTest):
                 [data['user'], 'user', userlevels.USER] ])
         assert(project.hidden == 0)
         assert(project.external == 0)
+        assert(project.getCreatorId() == 2)
+
+    @fixtures.fixture("Full")
+    def testNewProjectError(self, db, data):
+        client = self.getClient("user")
+        self.failUnlessRaises(InvalidHostname, client.newProject, "Test", 
+                              '&bar', MINT_PROJECT_DOMAIN)
+        self.failUnlessRaises(DuplicateHostname, client.newProject, "Test", 
+                              'foo', MINT_PROJECT_DOMAIN)
+        self.failUnlessRaises(DuplicateName, client.newProject, "Foo", 'bar',
+                              MINT_PROJECT_DOMAIN)
 
     @fixtures.fixture("Full")
     def testEditProject(self, db, data):
