@@ -175,7 +175,7 @@ class InstallableIso(ImageGenerator):
         if os.path.exists(tmpPath + '/pixmaps/splash.lss'):
             print >> sys.stderr, "found splash.lss; moving to isolinux directory"
             splashTarget = os.path.join(topdir, 'isolinux')
-            call('cp', '--remove-destination', '-v', tmpPath + '/pixmaps/splash.lss', splashTarget)
+            call('cp', '--remove-destination', tmpPath + '/pixmaps/splash.lss', splashTarget)
             # FIXME: regenerate boot.iso here
 
     def writeBuildStamp(self, tmpPath):
@@ -529,6 +529,11 @@ class InstallableIso(ImageGenerator):
         sys.stderr.flush()
         return rc
 
+    def _setupTrove(self):
+        troveName, versionStr, flavorStr = self.build.getTrove()
+        self.troveName = troveName
+        self.troveVersion = versions.ThawVersion(versionStr)
+        self.troveFlavor = deps.deps.ThawFlavor(flavorStr)
 
     def write(self):
         self.isocfg = self.getConfig()
@@ -539,11 +544,7 @@ class InstallableIso(ImageGenerator):
             self.build.getArch(), str(self.build.getId()), "unified")
         util.mkdirChain(topdir)
 
-        troveName, versionStr, flavorStr = self.build.getTrove()
-        self.troveName = troveName
-        self.troveVersion = versions.ThawVersion(versionStr)
-        self.troveFlavor = deps.deps.ThawFlavor(flavorStr)
-
+        self._setupTrove()
         maxIsoSize = int(self.build.getDataValue('maxIsoSize'))
 
         print >> sys.stderr, "Building ISOs of size: %d Mb" % \
@@ -594,7 +595,7 @@ class InstallableIso(ImageGenerator):
         self.writeProductImage(topdir, '1#' + arch)
 
         self.status("Building ISOs")
-        splitdistro.splitDistro(topdir, troveName, maxIsoSize)
+        splitdistro.splitDistro(topdir, self.troveName, maxIsoSize)
         isoList = self.buildIsos(topdir)
 
         # clean up

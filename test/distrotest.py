@@ -16,6 +16,7 @@ from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import EmptyCallback
 from mint_rephelp import MINT_PROJECT_DOMAIN
 
+from mint import buildtypes
 from mint.distro import gencslist, anaconda_images, splitdistro
 from mint.distro import installable_iso
 from mint.distro.gencslist import _validateChangeSet
@@ -25,6 +26,7 @@ from conary import sqlite3
 from conary import versions
 from conary.deps import deps
 from conary.lib import util
+from conary.lib import sha1helper
 from conary.repository import changeset
 
 
@@ -187,7 +189,6 @@ class DistroTest(MintRepositoryHelper):
             "/usr/share/fonts/bitstream-vera/Vera.ttf")
         ai.processImages()
 
-        from conary.lib import sha1helper
         sha1s = {
             'first-lowres.png': '9806b35fb077a1971c67645cd1e316078ae5000d',
             'anaconda_header.png': '818d5c1f4e7838037ae91ad68ebd975a6c1fec46',
@@ -209,7 +210,6 @@ class DistroTest(MintRepositoryHelper):
             "/usr/share/fonts/bitstream-vera/Vera.ttf")
         ai.processImages()
 
-        from conary.lib import sha1helper
         sha1s = {
             'first-lowres.png':         '6bbd85d7379a569beceaa3f00e651841601a6564',
             'anaconda_header.png':      '3739d0588704367d285577bdec7114b7a2b4b482',
@@ -393,18 +393,26 @@ class DistroTest(MintRepositoryHelper):
             util.rmtree(csdir)
             util.rmtree(savedCsdir)
 
-    def testAnacondaTemplates(self):
-        from mint.distro import installable_iso
+    def getInstallableIso(self):
         client, userId = self.quickMintUser("testuser", "testpass")
 
+        isocfg = self.writeIsoGenCfg()
         projectId = self.newProject(client)
         project = client.getProject(projectId)
 
         build = client.newBuild(projectId, "Test Build")
+        build.setBuildType(buildtypes.INSTALLABLE_ISO)
         build.setTrove("group-dist", "/testproject." + \
-            MINT_PROJECT_DOMAIN + "@rpl:devel/1.0-1-1", "1#x86")
+            MINT_PROJECT_DOMAIN + "@rpl:devel/0.0:1.0-1-1", "1#x86")
+        build.setDataValue("bugsUrl", "test")
         job = client.startImageJob(build.id)
 
+        ii = installable_iso.InstallableIso(None, isocfg, job, build, project)
+        ii._setupTrove()
+
+        return ii
+
+    def testAnacondaTemplates(self):
         testDir = self.servers.getServer(0).getTestDir()
         templateDir = tempfile.mkdtemp()
         tmpDir = tempfile.mkdtemp()
@@ -412,7 +420,7 @@ class DistroTest(MintRepositoryHelper):
         self.hideOutput()
         try:
             util.copytree(os.path.join(testDir, 'archive', 'anaconda'), tmpDir)
-            ii = installable_iso.InstallableIso(None, None, job, None, None)
+            ii = self.getInstallableIso()
             ii.isocfg = installable_iso.IsoConfig()
             ii.isocfg.rootstatWrapper = os.path.abspath(testDir + "../scripts/rootstat_wrapper.so")
 
@@ -423,6 +431,68 @@ class DistroTest(MintRepositoryHelper):
             self.showOutput()
             util.rmtree(templateDir)
             util.rmtree(tmpDir)
+
+    def checkSha1(self, fileName, sum):
+        assert(sha1helper.sha1ToString(sha1helper.sha1FileBin(fileName)) == sum)
+
+    def testConvertSplash(self):
+        testDir = self.servers.getServer(0).getTestDir()
+
+        ii = self.getInstallableIso()
+
+        d1 = tempfile.mkdtemp()
+        d2 = tempfile.mkdtemp()
+
+        self.hideOutput()
+        try:
+            util.mkdirChain(os.path.join(d1, 'isolinux'))
+            util.mkdirChain(os.path.join(d2, 'pixmaps'))
+            util.copyfile(os.path.join(testDir, 'archive', 'syslinux-splash.png'),
+                          os.path.join(d2, 'pixmaps', 'syslinux-splash.png'))
+            ii.convertSplash(d1, d2)
+
+            result = os.path.join(d1, 'isolinux', 'splash.lss')
+            self.checkSha1(result, 'b36af127d5336db0a39a9955cd44b3a8466aa048')
+        finally:
+            util.rmtree(d1)
+            util.rmtree(d2)
+
+    def testBuildStamp(self):
+        ii = self.getInstallableIso()
+
+        d = tempfile.mkdtemp()
+        try:
+            ii.writeBuildStamp(d)
+            self.verifyContentsInFile(os.path.join(d, ".buildstamp"),
+                "group-dist /testproject.rpath.local2@rpl:devel/1.0-1-1 1#x86")
+        finally:
+            util.rmtree(d)
+
+    def testLinkRecurse(self):
+        d1 = tempfile.mkdtemp()
+        d2 = tempfile.mkdtemp()
+
+        try:
+            util.mkdirChain(d1 + "/bar")
+            file(d1 + "/foo", "w").write("hello world")
+            file(d1 + "/bar/baz", "w").write("goodbye world")
+
+            installable_iso._linkRecurse(d1, d2)
+
+            # make sure that linkRecurse recursively links files and dirs
+            assert(os.path.exists(d2 + "/foo"))
+            assert(os.path.exists(d2 + "/bar/baz"))
+        finally:
+            util.rmtree(d1)
+            util.rmtree(d2)
+
+    def testConaryClient(self):
+        ii = self.getInstallableIso()
+
+        # check the returned conary client cfg for sanity
+        cc = ii.getConaryClient('/', '1#x86')
+        assert(cc.cfg.installLabelPath == [versions.Label('testproject.rpath.local2@rpl:devel')])
+
 
 if __name__ == "__main__":
     testsuite.main()
