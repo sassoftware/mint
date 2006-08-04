@@ -112,3 +112,9 @@ class rMakeBuildOrder(MintError):
         return self.reason
     def __init__(self, reason = "rMake build commands submitted out of order"):
         self.reason = reason
+
+class InvalidReport(MintError):
+    def __str__(self):
+        return self.reason
+    def __init__(self, reason = "Not a valid report name"):
+        self.reason = reason
