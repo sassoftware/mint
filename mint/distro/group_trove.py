@@ -144,7 +144,4 @@ class GroupTroveCook(Generator):
         self.status("Cooking group")
         groupTrove = self.client.getGroupTrove(self.job.getGroupTroveId())
         projectId = groupTrove.projectId
-        if not projectId:
-            return self._localCook(groupTrove)
-        else:
-            return self._projectCook(groupTrove)
+        return self._projectCook(groupTrove)
