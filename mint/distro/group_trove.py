@@ -26,68 +26,6 @@ from conary.lib import util
 
 
 class GroupTroveCook(Generator):
-    def _localCook(self, groupTrove):
-        curDir = os.getcwd()
-
-        ret = None
-        try:
-            path = tempfile.mkdtemp()
-            recipe = groupTrove.getRecipe()
-            sourceName = groupTrove.recipeName + ".recipe"
-            arch = deps.ThawFlavor(self.job.getDataValue("arch"))
-
-            cfg = conarycfg.ConaryConfiguration()
-
-            cfg.dbPath = cfg.root = ":memory:"
-            cfg.name = "rBuilder Online"
-            cfg.contact = "http://www.rpath.org"
-            cfg.quiet = False
-            cfg.buildLabel = versions.Label('conary.rpath.com@non:exist')
-            cfg.dbPath=":memory:"
-            cfg.buildFlavor = deps.parseFlavor(stockFlavors[arch.freeze()])
-            cfg.initializeFlavors()
-
-            for label in [x.split('@')[0] for x in groupTrove.getLabelPath()]:
-                project = self.client.getProjectByFQDN(label)
-                cfg.repositoryMap.update(\
-                    project.getConaryConfig().repositoryMap)
-
-            client = conaryclient.ConaryClient(cfg)
-            repos = client.getRepos()
-
-            os.chdir(path)
-
-            recipeFile = open(groupTrove.recipeName + '.recipe', 'w')
-            recipeFile.write(recipe)
-            recipeFile.flush()
-            recipeFile.close()
-
-            # cook recipe as local changeset
-            ret = cook.cookItem(repos, cfg, sourceName)
-            sys.stderr.flush()
-            sys.stdout.flush()
-            grpName, grpVer, grpFlavor = ret[0][0]
-
-            fn = path + "/%s-%s.ccs" % (groupTrove.recipeName,
-                                groupTrove.upstreamVersion)
-
-            # prepare a changeset to feed to anaconda
-            cs = changeset.ChangeSetFromFile(\
-                [x for x in os.listdir(path) if x.endswith('.ccs')][0])
-            rc = gencslist.extractChangeSets( \
-                client, cfg, path, grpName, versions.VersionFromString(grpVer),
-                grpFlavor, group = cs, fn = fn)
-
-            # FIXME: feed changeset List to anaconda.
-
-        finally:
-            os.chdir(curDir)
-
-        if ret:
-            return grpName, grpVer, grpFlavor.freeze()
-        else:
-            return None
-
     def _projectCook(self, groupTrove):
         projectId = groupTrove.projectId
         curDir = os.getcwd()
