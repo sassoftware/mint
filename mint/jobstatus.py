@@ -45,7 +45,7 @@ def codegen():
     return s
 
 
-if __name__ == "__main__":
+if __name__ == "__main__": #pragma: no cover
     import sys
     if len(sys.argv) > 1 and sys.argv[1] == "--genjs":
         print codegen()

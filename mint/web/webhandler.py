@@ -265,24 +265,24 @@ def getHttpAuth(req):
     return authToken
 
 
-class HttpError(Exception):
+class HttpError(Exception): #pragma: no cover
     def __str__(self):
         return "HTTP error %d" % self.code
 
-class HttpNotFound(HttpError):
+class HttpNotFound(HttpError): #pragma: no cover
     code = 404
 
-class HttpForbidden(HttpError):
+class HttpForbidden(HttpError): #pragma: no cover
     code = 403
 
-class HttpMoved(HttpError):
+class HttpMoved(HttpError): #pragma: no cover
     code = 301
 
-class HttpMovedTemporarily(HttpError):
+class HttpMovedTemporarily(HttpError): #pragma: no cover
     code = 302
 
-class HttpOK(HttpError):
+class HttpOK(HttpError): #pragma: no cover
     code = 200
 
-class HttpPartialContent(HttpError):
+class HttpPartialContent(HttpError): #pragma: no cover
     code = 206
