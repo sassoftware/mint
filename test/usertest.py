@@ -184,6 +184,20 @@ class UsersTest(fixtures.FixturedUnitTest):
         assert(baseDict != newDict)
         assert(newDict['newsletter'] == True)
 
+    @ fixtures.fixture('Full')
+    def testGetUserPublic(self, db, data):
+        client = self.getClient('user')
+        user = client.getUser(data['user'])
+
+        userPub = client.server._server.getUserPublic(user.id)
+
+        assert(userPub['salt'] == '')
+        assert(userPub['passwd'] == '')
+        del userPub['salt']
+        del userPub['passwd']
+        for key, val in userPub.iteritems():
+            assert val == user.__getattribute__(key)
+
 
 if __name__ == "__main__":
     testsuite.main()
