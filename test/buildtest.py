@@ -18,7 +18,9 @@ from mint import buildtypes, buildtemplates, jsversion
 from mint.data import RDT_STRING, RDT_BOOL, RDT_INT
 from mint.database import ItemNotFound
 from mint.distro import installable_iso
-from mint.mint_error import BuildPublished, BuildMissing, BuildEmpty
+from mint.mint_error import BuildPublished, BuildMissing, BuildEmpty, \
+     PublishedReleaseMissing, PublishedReleasePublished, \
+     JobserverVersionMismatch
 from mint.builds import BuildDataNameError
 from mint.server import deriveBaseFunc, ParameterError
 
@@ -411,6 +413,145 @@ class BuildTest(fixtures.FixturedUnitTest):
                (True, '1')
         d = client.server._server.getReleaseDataDict(build.id)
         assert 'foo' in d
+
+    @fixtures.fixture('Full')
+    def testGetRelTroveCompat(self, db, data):
+        client = self.getClient('owner')
+
+        # make a legitimate call to set auth values
+        client.getBuild(data['buildId'])
+        # assert backwards compat function
+        self.failIf(client.server._server.getReleaseTrove(data['buildId']) != \
+                    client.server._server.getBuildTrove(data['buildId']),
+                    "release trove not found. not backwards compatible")
+
+    @fixtures.fixture('Full')
+    def testMissingBuildTrove(self, db, data):
+        client = self.getClient('owner')
+        build = client.getBuild(data['buildId'])
+        build.setTrove('foo', 'bar', 'baz')
+        self.assertRaises(BuildMissing, client.server._server.setBuildTrove,
+                          99, 'foo', 'ver', 'flav')
+    @fixtures.fixture('Full')
+    def testMissingBuildName(self, db, data):
+        client = self.getClient('owner')
+        build = client.getBuild(data['buildId'])
+        build.setName('foo')
+        self.assertRaises(BuildMissing, client.server._server.setBuildName,
+                          99, 'foo')
+
+    @fixtures.fixture('Full')
+    def testPublishedBuildName(self, db, data):
+        client = self.getClient('owner')
+        pubRel = client.getPublishedRelease(data['pubReleaseId'])
+        build = client.getBuild(data['buildId'])
+        build.setName('foo')
+        pubRel.publish()
+        self.assertRaises(BuildPublished, build.setName, 'foo')
+
+    @fixtures.fixture('Full')
+    def testMissingSetBuildPublished(self, db, data):
+        client = self.getClient('owner')
+        pubRel = client.getPublishedRelease(data['pubReleaseId'])
+        build = client.getBuild(data['buildId'])
+
+        build.setPublished(pubRel.id, True)
+        self.assertRaises(PublishedReleaseMissing, build.setPublished,
+                          99, True)
+
+    @fixtures.fixture('Full')
+    def testPubSetBuildPublished(self, db, data):
+        client = self.getClient('owner')
+        pubRel = client.getPublishedRelease(data['pubReleaseId'])
+        build = client.getBuild(data['buildId'])
+        pubRel.publish()
+        self.assertRaises(PublishedReleasePublished, build.setPublished,
+                          pubRel.id, True)
+
+    @fixtures.fixture('Full')
+    def testEmptySetBuildPublished(self, db, data):
+        client = self.getClient('owner')
+        pubRel = client.getPublishedRelease(data['pubReleaseId'])
+        build = client.getBuild(data['buildId'])
+        build.setFiles([])
+        self.assertRaises(BuildEmpty, build.setPublished, pubRel.id, True)
+
+    @fixtures.fixture('Full')
+    def testGetImageTypesCompat(self, db, data):
+        client = self.getClient('owner')
+        build = client.getBuild(data['buildId'])
+        imageTypes = client.server._server.getImageTypes(build.id)
+        self.failIf(imageTypes != [build.getBuildType()],
+                    "Compatibility hook failed buildtypes")
+
+    @fixtures.fixture('Full')
+    def testMissingGetBuildType(self, db, data):
+        client = self.getClient('owner')
+        build = client.getBuild(data['buildId'])
+
+        self.assertRaises(BuildMissing, client.server._server.getBuildType, 99)
+
+    @fixtures.fixture('Full')
+    def testGetAvailBuildTypes(self, db, data):
+        client = self.getClient('owner')
+        build = client.getBuild(data['buildId'])
+        visibleBuildTypes = self.cfg.visibleBuildTypes
+        try:
+            for buildTypes in ([], [1, 2, 3]):
+                self.cfg.visibleBuildTypes = buildTypes
+                assert client.server._server.getAvailableBuildTypes() == \
+                       buildTypes
+        finally:
+            self.cfg.visibleBuildTypes = visibleBuildTypes
+
+    @fixtures.fixture('Full')
+    def testGetMissingJSVersion(self, db, data):
+        client = self.getClient('owner')
+        build = client.getBuild(data['buildId'])
+
+        cu = db.cursor()
+        cu.execute("DELETE FROM BuildData WHERE name='jsversion'")
+        db.commit()
+
+        self.assertRaises(JobserverVersionMismatch, client.startImageJob,
+                          build.id)
+
+    @fixtures.fixture('Full')
+    def testSetMissingFilenames(self, db, data):
+        client = self.getClient('owner')
+        build = client.getBuild(data['buildId'])
+
+        self.assertRaises(BuildMissing,
+                          client.server._server.setBuildFilenames, 99, [])
+
+    @fixtures.fixture('Full')
+    def testSetBrokenFilenames(self, db, data):
+        client = self.getClient('owner')
+        build = client.getBuild(data['buildId'])
+
+        self.assertRaises(ValueError,
+                          client.server._server.setBuildFilenames, build.id,
+                          [['not right at all']])
+
+    @fixtures.fixture('Full')
+    def testSetImageFilenamesCompat(self, db, data):
+        client = self.getClient('owner')
+        build = client.getBuild(data['buildId'])
+
+        self.assertRaises(ValueError,
+                          client.server._server.setImageFilenames, build.id,
+                          [['not right at all']])
+
+    @fixtures.fixture('Full')
+    def testGetEmptyFilenames(self, db, data):
+        client = self.getClient('owner')
+        build = client.getBuild(data['buildId'])
+
+        cu = db.cursor()
+
+        cu.execute('DELETE FROM BuildFiles')
+        db.commit()
+        assert build.getFiles() == []
 
 
 class OldBuildTest(MintRepositoryHelper):
