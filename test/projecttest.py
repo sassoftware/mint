@@ -475,6 +475,53 @@ class ProjectTest(fixtures.FixturedUnitTest):
         adminClient.unhideProject(hideProjId)
         assert(self._checkRepoMap('repositoryMap baz.rpath.local http://test.rpath.local2/repos/baz/\nrepositoryMap proj.rpath.local http://test.rpath.local2/repos/proj/\nrepositoryMap bar.rpath.local http://bar.rpath.local/conary/\n'))
 
+
+    @fixtures.fixture('Full')
+    def testGenConaryRc(self, db, data):
+        client = self.getClient('admin')
+        createConaryRcFile = self.cfg.createConaryRcFile
+        try:
+            self.cfg.createConaryRcFile = False
+            # ensure conaryrc file is not generated
+            assert(client.server._server._generateConaryRcFile() is False)
+            self.cfg.createConaryRcFile = True
+            # ensure conaryrc file is generated
+            assert(client.server._server._generateConaryRcFile() is None)
+        finally:
+            self.cfg.createConaryRcFile = createConaryRcFile
+
+    @fixtures.fixture("Empty")
+    def testBrokenVersion(self, db, data):
+        client = self.getClient('test')
+        self.assertRaises(ItemNotFound, client.versionIsExternal, 'foo')
+
+    @fixtures.fixture('Full')
+    def testProjectVersion(self, db, data):
+        client = self.getClient('admin')
+        project = client.getProject(data['projectId'])
+        label = project.getLabel()
+        versionStr = '/' + label + '/1.0.2-2-1'
+        assert(client.versionIsExternal(versionStr) == project.external)
+        cu = db.cursor()
+        cu.execute('UPDATE Projects SET external=1 WHERE projectId=?', project.id)
+        db.commit()
+        assert(client.versionIsExternal(versionStr) == project.external)
+
+    @fixtures.fixture('Full')
+    def testProjectVersion(self, db, data):
+        client = self.getClient('admin')
+        project = client.getProject(data['projectId'])
+        label = project.getLabel()
+        versionStr = '/' + label + '/1.0.2-2-1'
+        cu = db.cursor()
+        cu.execute('DELETE FROM Projects WHERE projectId=?', project.id)
+        db.commit()
+        # result must always be true
+        assert(client.versionIsExternal(versionStr))
+
+    
+
+
 class ProjectTestConaryRepository(MintRepositoryHelper):
 
     def testTranslatedProjectName(self):

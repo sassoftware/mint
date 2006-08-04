@@ -408,6 +408,19 @@ class MarketingTest(fixtures.FixturedUnitTest):
                                'name': 'new 2'}, {'itemId': 5, 'link': 'link 5',
                                                   'name': 'test 5'}],
                     "deleteUseItIcons functioning improperly")
-        
+
+    @fixtures.fixture('Full')
+    def testEmptyAddit(self, db, data):
+        client = self.getClient('admin')
+        self.failIf(client.addUseItIcon(1, '', ''),
+                    "Allowed to submit an empty name and link")
+        self.failIf(client.addUseItIcon(1, 'foo', ''),
+                    "Allowed to submit an empty link")
+        self.failIf(client.addUseItIcon(1, '', 'foo'),
+                    "Allowed to submit an empty name")
+        self.failIf(not client.addUseItIcon(1, 'foo', 'foo'),
+                    "Valid submission not accepted")
+
+
 if __name__ == "__main__":
     testsuite.main()

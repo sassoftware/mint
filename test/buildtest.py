@@ -331,6 +331,87 @@ class BuildTest(fixtures.FixturedUnitTest):
             except:
                 pass
 
+    @fixtures.fixture("Full")
+    def testDeleteBuildFiles(self, db, data):
+        client = self.getClient("owner")
+        build = client.getBuild(data['buildId'])
+        cu = db.cursor()
+
+        # really create a unqiue directory structure to ensure we don't suffer
+        # from unlucky code collission
+        tmpdir = tempfile.mkdtemp()
+        try:
+            subdir = os.path.join(tmpdir, 'subdir')
+            os.mkdir(subdir)
+            newfile = os.path.join(subdir, 'file')
+            f = open(newfile, 'w')
+            f.close()
+            cu.execute('UPDATE BuildFiles SET filename=? WHERE buildId=?',
+                       newfile, build.id)
+            db.commit()
+            util.rmtree(tmpdir)
+            for targ in (newfile, subdir, tmpdir):
+                try:
+                    os.stat(targ)
+                except OSError, e:
+                    # ensure the file/dirs really are gone
+                    if e.errno != 2:
+                        raise
+            # ensure there's no ill effects of deleted a build in this manner
+            build.deleteBuild()
+        finally:
+            try:
+                util.rmtree(tmpdir)
+            except:
+                pass
+
+    @fixtures.fixture('Full')
+    def testUpdateMissingBuild(self, db, data):
+        client = self.getClient("owner")
+        build = client.getBuild(data['buildId'])
+        buildId = build.id
+        build.deleteBuild()
+        self.assertRaises(BuildMissing, client.server._server.updateBuild,
+                          buildId, {})
+
+    @fixtures.fixture('Full')
+    def testUpdatePublishedBuild(self, db, data):
+        client = self.getClient("owner")
+        build = client.getBuild(data['buildId'])
+        buildId = build.id
+        pubRelease = client.getPublishedRelease(data['pubReleaseId'])
+        pubRelease.publish()
+        self.assertRaises(BuildPublished, client.server._server.updateBuild,
+                          buildId, {})
+
+    @fixtures.fixture('Full')
+    def testGetReleaseCompat(self, db, data):
+        client = self.getClient("owner")
+        build = client.getBuild(data['buildId'])
+        releaseDict = client.server._server.getRelease(build.id)
+        buildDict = client.server._server.getBuild(build.id)
+        added = {'releaseId' : build.id, 'imageTypes' : [build.buildType],
+                 'downloads': 0, 'timePublished': 0, 'published' : 0}
+        removed = ('buildId', 'buildType', 'timeCreated', 'createdBy',
+                   'timeUpdated', 'updatedBy', 'pubReleaseId')
+        for key, val in releaseDict.iteritems():
+            if key in added:
+                assert (val == added[key]), "release['%s'] != %s" % \
+                       (key, str(added[key]))
+            elif key not in removed:
+                assert (val == buildDict[key])
+
+    @fixtures.fixture('Full')
+    def testReleasDataCompat(self, db, data):
+        client = self.getClient("owner")
+        build = client.getBuild(data['buildId'])
+        client.server._server.setReleaseDataValue(build.id, 'foo', 1,
+                                                  RDT_STRING)
+        assert client.server._server.getReleaseDataValue(build.id, 'foo') == \
+               (True, '1')
+        assert client.server._server.getReleaseDataDict(build.id) == \
+               {'jsversion': '2.0.0', 'foo': '1'}
+
 
 class OldBuildTest(MintRepositoryHelper):
     def makeInstallableIsoCfg(self):
@@ -393,7 +474,7 @@ class OldBuildTest(MintRepositoryHelper):
         cwd = os.getcwd()
         os.chdir(self.tmpDir + "/images")
 
-        # unforutanatel imageJob.write call can be noisy on stderr
+        # unforutanately imageJob.write call can be noisy on stderr
         oldFd = os.dup(sys.stderr.fileno())
         fd = os.open(os.devnull, os.W_OK)
         os.dup2(fd, sys.stderr.fileno())
