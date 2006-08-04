@@ -20,6 +20,7 @@ from mint import buildtypes
 from mint import cooktypes
 from mint import mint_error
 from mint import jsversion
+from mint import database
 from mint.data import RDT_INT, RDT_STRING, RDT_BOOL
 from mint.distro import stub_image
 from mint.flavors import stockFlavors
@@ -1342,6 +1343,73 @@ class JobsTest(fixtures.FixturedUnitTest):
 
         self.failIf(ownerClient.listActiveJobs(False)[0]['hostname'] != '127.0.0.1')
 
+    @fixtures.fixture('Full')
+    def testCookStartDenied(self, db, data):
+        client = self.getClient('user')
+        self.assertRaises(mint_error.PermissionDenied,
+                          client.getGroupTrove, data['groupTroveId'])
+        self.assertRaises(mint_error.PermissionDenied,
+                          client.server._server.startCookJob,
+                          data['groupTroveId'], 'x86')
+
+    @fixtures.fixture('Full')
+    def testGetJobCompat(self, db, data):
+        client = self.getClient('admin')
+        job = client.startImageJob(data['buildId'])
+        job2 = client.server._server.getJob(job.id)
+        del job2['timeSubmitted']
+        assert job2 == {'status': 0, 'timeFinished': 0.0, 'timeStarted': 0.0,
+                        'userId': 1, 'releaseId': 1, 'groupTroveId': 0,
+                        'statusMessage': 'Next in line for processing'}
+
+    @fixtures.fixture('Full')
+    def testMissingGetJobCompat(self, db, data):
+        client = self.getClient('admin')
+        job = client.startImageJob(data['buildId'])
+        self.assertRaises(jobs.JobMissing, client.server._server.getJob, 99)
+
+    @fixtures.fixture('Full')
+    def testMissingGetJob(self, db, data):
+        client = self.getClient('admin')
+        job = client.startImageJob(data['buildId'])
+
+        self.assertRaises(jobs.JobMissing, client.server._server.getJob2, 99)
+
+
+    @fixtures.fixture('Full')
+    def testHostnameListActiveJobs(self, db, data):
+        client = self.getClient('admin')
+        job = client.startImageJob(data['buildId'])
+
+        jobData = client.listActiveJobs(False)
+        del jobData[0]['timeSubmitted']
+        assert jobData == [{'status': 0, 'timeFinished': 0.0,
+                            'timeStarted': 0.0, 'buildId': 1,
+                            'hostname': 'None', 'userId': 1, 'jobId': 1,
+                            'groupTroveId': '',
+                            'statusMessage': 'Next in line for processing'}]
+
+    @fixtures.fixture('Full')
+    def testJobIdCookPerms(self, db, data):
+        client = self.getClient('admin')
+        job = client.startImageJob(data['buildId'])
+
+        client.server._server.getJobIdForCook(job.id)
+
+        client = self.getClient('nobody')
+
+        job = client.getJob(data['buildId'])
+
+        self.assertRaises(mint_error.PermissionDenied,
+                          client.server._server.getJobIdForCook, job.id)
+
+    @fixtures.fixture('Full')
+    def testGetMissingJobQueue(self, db, data):
+        client = self.getClient('admin')
+        job = client.startImageJob(data['buildId'])
+
+        self.assertRaises(database.ItemNotFound,
+                          client.server._server._getJobQueueLength, 99)
 
 if __name__ == "__main__":
     testsuite.main()
