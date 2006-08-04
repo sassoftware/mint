@@ -29,7 +29,8 @@ python_files = \
                joinrequesttest.py \
                labelstest.py \
                maintenancetest.py \
-			   marketingtest.py	\
+		marketingtest.py	\
+		newstest.py \
                mint_rephelp.py \
                mirrortest.py \
 	       mirrorprimetest.py \
@@ -49,6 +50,7 @@ python_files = \
                usertest.py \
                xmltest.py \
                webtest.py \
+	       webhandlertest.py \
                webmemberstest.py \
 	       websetuptest.py \
 	       webrepostest.py \
