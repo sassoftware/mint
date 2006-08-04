@@ -402,15 +402,15 @@ class BuildTest(fixtures.FixturedUnitTest):
                 assert (val == buildDict[key])
 
     @fixtures.fixture('Full')
-    def testReleasDataCompat(self, db, data):
+    def testReleaseDataCompat(self, db, data):
         client = self.getClient("owner")
         build = client.getBuild(data['buildId'])
         client.server._server.setReleaseDataValue(build.id, 'foo', 1,
                                                   RDT_STRING)
         assert client.server._server.getReleaseDataValue(build.id, 'foo') == \
                (True, '1')
-        assert client.server._server.getReleaseDataDict(build.id) == \
-               {'jsversion': '2.0.0', 'foo': '1'}
+        d = client.server._server.getReleaseDataDict(build.id)
+        assert 'foo' in d
 
 
 class OldBuildTest(MintRepositoryHelper):
