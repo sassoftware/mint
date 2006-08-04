@@ -13,6 +13,7 @@ import time
 
 import fixtures
 from mint.server import PermissionDenied
+from mint.mint_error import InvalidReport
 
 class ReportTest(fixtures.FixturedUnitTest):
     @fixtures.fixture("Full")
@@ -21,7 +22,7 @@ class ReportTest(fixtures.FixturedUnitTest):
         reports = client.server.listAvailableReports()
         for rep in reports.keys():
             client.server.getReport(rep)
-        self.assertRaises(PermissionDenied, client.server.getReport, '')
+        self.assertRaises(InvalidReport, client.server.getReport, '')
 
     @fixtures.fixture("Full")
     def testReportPdf(self, db, data):
@@ -119,6 +120,29 @@ class ReportTest(fixtures.FixturedUnitTest):
                     [['admin', 'A User Named admin', 'admin@example.com', 2],
                      ['owner', 'A User Named owner', 'owner@example.com', 1]],
                     "user activity report wasn't properly computed")
+
+    @fixtures.fixture('Full')
+    def testGetRepObj(self, db, data):
+        client = self.getClient('admin')
+
+        self.assertRaises(InvalidReport,
+                          client.server._server._getReportObject,
+                          'not_a_valid_report')
+
+    @fixtures.fixture('Full')
+    def testListReportPerms(self, db, data):
+        client = self.getClient('nobody')
+        self.assertRaises(PermissionDenied, client.listAvailableReports)
+
+    @fixtures.fixture('Full')
+    def testReportDataPerms(self, db, data):
+        client = self.getClient('nobody')
+        self.assertRaises(PermissionDenied, client.getReport, 'new_users')
+
+    @fixtures.fixture('Full')
+    def testReportPdfPerms(self, db, data):
+        client = self.getClient('nobody')
+        self.assertRaises(PermissionDenied, client.getReportPdf, 'new_users')
 
     @fixtures.fixture("Full")
     def testPrecompiledReports(self, db, data):
