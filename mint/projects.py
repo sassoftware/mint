@@ -528,6 +528,12 @@ class ProjectsTable(database.KeyedTable):
         cu.execute("SELECT IFNULL(hidden, 0) from Projects WHERE projectId=?", projectId)
         return cu.fetchone()[0]
 
+    def get(self, *args, **kwargs):
+        ret = database.KeyedTable.get(self, *args, **kwargs)
+        ret['external'] = bool(ret['external'])
+        return ret
+
+
 class LabelsTable(database.KeyedTable):
     name = 'Labels'
     key = 'labelId'
