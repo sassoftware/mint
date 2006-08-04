@@ -11,12 +11,12 @@ class NewsTest(fixtures.FixturedUnitTest):
     @fixtures.fixture('Full')
     def testBasicNews(self, db, data):
         client = self.getClient('user')
-        assert(not client.getNews())
+        assert(client.getNews())
 
     @fixtures.fixture('Full')
     def testBasicNewsLink(self, db, data):
         client = self.getClient('user')
-        assert(not client.getNewsLink())
+        assert(client.getNewsLink())
 
 
 if __name__ == "__main__":

@@ -70,6 +70,7 @@ class FixtureCache(object):
         cfg.conaryRcFile = os.path.join(cfg.dataPath, 'run', 'conaryrc')
         util.mkdirChain(os.path.join(cfg.dataPath, 'run'))
         util.mkdirChain(os.path.join(cfg.dataPath, 'tmp'))
+        cfg.newsRssFeed = 'file://' + os.path.join(os.path.dirname(__file__), 'archive', 'news.xml')
 
         cfg.reposLog = False
         f = open(cfg.conaryRcFile, 'w')
