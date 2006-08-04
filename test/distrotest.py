@@ -281,6 +281,7 @@ class DistroTest(MintRepositoryHelper):
         build = client.newBuild(projectId, "Test Build")
         build.setTrove("group-dist", "/testproject." + \
                 MINT_PROJECT_DOMAIN + "@rpl:devel/1.0-1-1", "1#x86")
+        build.setBuildType(buildtypes.INSTALLABLE_ISO)
         job = client.startImageJob(build.id)
         isocfg = self.writeIsoGenCfg()
 
@@ -305,6 +306,12 @@ class DistroTest(MintRepositoryHelper):
         job = uJob.getPrimaryJobs().pop()
         assert(job == ('test', (None, None), (VFS('/testproject.' + \
                 MINT_PROJECT_DOMAIN + '@rpl:devel/1.0-1-1'), Flavor('')), True))
+
+        assert(not iso._getUpdateJob(cclient, "notfound"))
+
+        # enforce blocked auxillary troves
+        build.setDataValue("media-template", "NONE")
+        assert(not iso._getUpdateJob(cclient, "media-template"))
 
     def testSameFilename(self):
         csdir = tempfile.mkdtemp(dir=self.workDir)
