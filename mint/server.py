@@ -51,7 +51,7 @@ from mint.mint_error import PermissionDenied, BuildPublished, \
      MaintenanceMode, ParameterError, GroupTroveEmpty, rMakeBuildCollision, \
      rMakeBuildEmpty, rMakeBuildOrder, PublishedReleaseMissing, \
      PublishedReleaseEmpty, PublishedReleasePublished, \
-     PublishedReleaseNotPublished
+     PublishedReleaseNotPublished, InvalidReport
 from mint.reports import MintReport
 from mint.searcher import SearchTermsError
 
@@ -2039,8 +2039,10 @@ class MintServer(object):
             raise BuildMissing()
         if published and not self.getBuildFilenames(buildId):
             raise BuildEmpty()
-        if published and self.builds.getPublished(buildId):
-            raise BuildPublished()
+        # this exception condition is completely masked. re-enable it if the
+        # structure of this code changes
+        #if published and self.builds.getPublished(buildId):
+        #    raise BuildPublished()
         pubReleaseId = published and pubReleaseId or None
         return self.updateBuild(buildId, {'pubReleaseId': pubReleaseId })
 
@@ -2691,6 +2693,8 @@ class MintServer(object):
 
         job = jobs.Job(self, jobId)
 
+        # FIXME: this code appears worthless. doesn't filterJobAccess ensure
+        # you *have* a job?
         if not job:
             return {'status'  : jobstatus.NOJOB,
                     'message' : jobstatus.statusNames[jobstatus.NOJOB],
@@ -2710,7 +2714,7 @@ class MintServer(object):
             cu.execute("SELECT status FROM Jobs WHERE jobId=?", jobId)
             res = cu.fetchall()
             if not res:
-                raise Database.ItemNotFound("No job with that Id")
+                raise database.ItemNotFound("No job with that Id")
             # job is not in the queue
             if res[0][0] != jobstatus.WAITING:
                 return 0
@@ -2750,6 +2754,7 @@ class MintServer(object):
     @typeCheck()
     def cleanupGroupTroves(self):
         self.groupTroves.cleanup()
+        return True
 
     def _resolveRedirects(self, groupTroveId, trvName, trvVersion, trvFlavor):
         # get the repo object
@@ -2865,8 +2870,6 @@ class MintServer(object):
         # this approach is definitely sub-optimal, but has the advantage of
         # consistent results.
         recipeLabels = list(set([x['trvLabel'] for x in groupTroveItems]))
-        if not projectId:
-            return recipeLabels
         projectLabels = self.labels.getLabelsForProject( \
             groupTrove['projectId'])[0].keys()
         for label in projectLabels:
@@ -3340,6 +3343,8 @@ class MintServer(object):
         return res
 
     def _getReportObject(self, name):
+        if name not in reports.__dict__:
+            raise InvalidReport
         repModule = reports.__dict__[name]
         for objName in repModule.__dict__.keys():
             try:
@@ -3348,14 +3353,13 @@ class MintServer(object):
                     return repModule.__dict__[objName](self.db)
             except AttributeError:
                 pass
-        return None
 
     @private
     @typeCheck(str)
     @requiresAdmin
     def getReport(self, name):
         if name not in reports.getAvailableReports():
-            raise PermissionDenied
+            raise InvalidReport
         return self._getReportObject(name).getReport()
 
     @private
