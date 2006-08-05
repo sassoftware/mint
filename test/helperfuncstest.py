@@ -420,6 +420,41 @@ Much like Powdermilk Biscuits[tm]."""
         self.failUnlessEqual(getArchFromFlavor(f_blank), '')
         self.failUnlessEqual(getArchFromFlavor(f_no_arch), '')
 
+    def testMaskedTests(self):
+        curdir = os.path.normpath(__file__+ os.path.sep + '..')
+        modules = [x for x in os.listdir(curdir) if x.endswith('test.py') \
+                   and not x.startswith('.')]
+        masked = False
+        for fn in modules:
+            f = open(curdir + os.path.sep + fn)
+            lines = [x.strip() for x in f.readlines()]
+            f.close()
+            defLines = [x for x in lines if x.startswith('def')]
+            defs = [x.split()[1].split('(')[0] for x in defLines]
+            tests = [x for x in defs if x.startswith('test')]
+            for test in set(tests):
+                tests.remove(test)
+            if tests:
+                if not masked:
+                    print >> sys.stderr, \
+                          "\nWarning: test names have been resused."
+                print >> sys.stderr, "%s: " % \
+                      fn + ' '.join(tests)
+            masked |= bool(tests)
+        assert not masked
+
+    def testExecTests(self):
+        curdir = os.path.normpath(__file__+ os.path.sep + '..')
+        modules = [x for x in os.listdir(curdir) if x.endswith('test.py') \
+                   and not x.startswith('.')]
+        nonExec = False
+        for modl in modules:
+            if not (os.stat(modl)[0] & 0100):
+                if not nonExec:
+                    print >> sys.stderr, ""
+                print >> sys.stderr, "%s is not executable" % modl
+                nonExec = True
+        assert not nonExec
 
 class FixturedHelpersTest(fixtures.FixturedUnitTest):
     @fixtures.fixture('Full')
