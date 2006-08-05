@@ -334,7 +334,7 @@ class BuildTest(fixtures.FixturedUnitTest):
                 pass
 
     @fixtures.fixture("Full")
-    def testDeleteBuildFiles(self, db, data):
+    def testDeleteBuildFiles2(self, db, data):
         client = self.getClient("owner")
         build = client.getBuild(data['buildId'])
         cu = db.cursor()
