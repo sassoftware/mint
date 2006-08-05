@@ -215,6 +215,18 @@ class MaintenanceTest(mint_rephelp.WebRepositoryHelper):
         self.failIf(page.url != self.mintCfg.basePath + 'maintenance',
                     "rMake subscribe links don't end up on maintenance page")
 
+    def testMaintenanceLockPerms(self):
+        self.setMaintenanceMode(maintenance.LOCKED_MODE)
+        lockDir = os.path.sep.join( \
+            self.mintCfg.maintenanceLockPath.split(os.path.sep)[:-1])
+        fMode = os.stat(lockDir)[0]
+        try:
+            os.chmod(lockDir, 0)
+            self.assertRaises(OSError, self.setMaintenanceMode,
+                              maintenance.NORMAL_MODE)
+        finally:
+            os.chmod(lockDir, fMode)
+
 
 if __name__ == "__main__":
     testsuite.main()
