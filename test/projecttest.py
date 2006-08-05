@@ -516,10 +516,11 @@ class ProjectTest(fixtures.FixturedUnitTest):
         cu = db.cursor()
         cu.execute('UPDATE Projects SET external=1 WHERE projectId=?', project.id)
         db.commit()
+        project.refresh()
         assert(client.versionIsExternal(versionStr) == project.external)
 
     @fixtures.fixture('Full')
-    def testProjectVersion(self, db, data):
+    def testMissingProjectVersion(self, db, data):
         client = self.getClient('admin')
         project = client.getProject(data['projectId'])
         label = project.getLabel()
