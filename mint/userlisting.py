@@ -4,16 +4,8 @@
 # All Rights Reserved
 #
 
-(
-    USERNAME_ASC,
-    USERNAME_DES,
-    FULLNAME_ASC,
-    FULLNAME_DES,
-    CREATED_ASC,
-    CREATED_DES,
-    ACCESSED_ASC,
-    ACCESSED_DES
-) = range(0, 8)
+(USERNAME_ASC, USERNAME_DES, FULLNAME_ASC, FULLNAME_DES, CREATED_ASC, \
+ CREATED_DES, ACCESSED_ASC, ACCESSED_DES) = range(0, 8)
 
 blurbindex = 4
 blurbtrunclength = 300
