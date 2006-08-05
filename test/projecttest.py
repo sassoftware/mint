@@ -13,13 +13,23 @@ from mint_rephelp import MINT_PROJECT_DOMAIN
 
 from mint import userlevels
 from mint.database import DuplicateItem, ItemNotFound
-from mint.projects import InvalidHostname, DuplicateHostname, DuplicateName
+from mint.projects import InvalidHostname, DuplicateHostname, DuplicateName, \
+     DuplicateLabel
 from mint.server import ParameterError, PermissionDenied
+from mint import mint_error
 
 from conary import dbstore
 from conary.conaryclient import ConaryClient
 
 import fixtures
+
+class dummyProj(object):
+    def __init__(self, name):
+        self.name = name
+
+    def getName(self):
+        return self.name
+
 
 class ProjectTest(fixtures.FixturedUnitTest):
 
@@ -548,6 +558,65 @@ class ProjectTest(fixtures.FixturedUnitTest):
         client = self.getClient('admin')
         self.assertRaises(ParameterError, client.newExternalProject, 'Foo 2',
                           'foo2', 'rpath.local2', 'bad-label', '', False)
+
+    @fixtures.fixture('Empty')
+    def testMyProjCompUL(self, db, data):
+        projectsList = (('foo', userlevels.OWNER),
+                        ('bar', userlevels.DEVELOPER))
+        assert userlevels.myProjectCompare(*projectsList) == -1
+        assert userlevels.myProjectCompare(*reversed(projectsList)) == 1
+
+    @fixtures.fixture('Empty')
+    def testMyProjCompName(self, db, data):
+        projectsList = ((dummyProj('foo'), userlevels.OWNER),
+                        (dummyProj('bar'), userlevels.OWNER))
+        assert userlevels.myProjectCompare(*projectsList) == 1
+        assert userlevels.myProjectCompare(*reversed(projectsList)) == -1
+
+    @fixtures.fixture('Empty')
+    def testMyProjCompEq(self, db, data):
+        projectsList = ((dummyProj('foo'), userlevels.OWNER),
+                        (dummyProj('foo'), userlevels.OWNER))
+        assert userlevels.myProjectCompare(*projectsList) == 0
+        assert userlevels.myProjectCompare(*reversed(projectsList)) == 0
+
+    @fixtures.fixture('Full')
+    def testInitTimeModified(self, db, data):
+        client = self.getClient('admin')
+        project = client.getProject(data['projectId'])
+        assert project.timeModified == project.getTimeModified()
+        assert project.timeModified == project.timeCreated
+
+    @fixtures.fixture('Full')
+    def testBadFQDN(self, db, data):
+        client = self.getClient('admin')
+        project = client.getProject(data['projectId'])
+        self.assertRaises(ItemNotFound,
+                          client.server._server.projects.getProjectIdByFQDN,
+                          'bad.name')
+        self.assertRaises(ItemNotFound,
+                          client.server._server.getProjectIdByFQDN,
+                          'not.in.the.db')
+
+    @fixtures.fixture('Full')
+    def testDefaultedLabel(self, db, data):
+        client = self.getClient('admin')
+        project = client.getProject(data['projectId'])
+        cu = db.cursor()
+        cu.execute("UPDATE LABELS SET url=''")
+        db.commit()
+        project.refresh()
+        labelData = client.server._server.getLabelsForProject(project.id,
+                                                              False, '', '')
+        assert labelData[1].values()[0] == 'http://foo.rpath.local2/conary/'
+
+    @fixtures.fixture('Full')
+    def testDuplicateLabel(self, db, data):
+        client = self.getClient('admin')
+        project = client.getProject(data['projectId'])
+        self.assertRaises(DuplicateLabel, project.addLabel,
+                          project.getLabel(), '')
+
 
 class ProjectTestConaryRepository(MintRepositoryHelper):
 
