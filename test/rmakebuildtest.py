@@ -110,7 +110,7 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
                           'foo', 'foo')
 
     @fixtures.fixture("Full")
-    def testDelAccess(self, db, data):
+    def testDelItemAccess(self, db, data):
         client = self.getClient('nobody')
         rMakeBuild = client.createrMakeBuild('foo')
         itemId = rMakeBuild.addTrove( \
@@ -133,17 +133,6 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
                           FROM rMakeBuildItems
                           WHERE rMakeBuildId=?""", rMakeBuild.id)
         self.failIf(cu.fetchall(), "rMake build item not properly deleted")
-
-    @fixtures.fixture("Full")
-    def testDelItemAccess(self, db, data):
-        client = self.getClient('nobody')
-        rMakeBuild = client.createrMakeBuild('foo')
-
-        itemId = rMakeBuild.addTrove( \
-            'foo', 'test.rpath.local@rpl:devel')['rMakeBuildItemId']
-        client = self.getClient('user')
-        self.assertRaises(database.ItemNotFound, client.delrMakeBuildTrove,
-                          itemId)
 
     @fixtures.fixture("Full")
     def testUUID(self, db, data):
