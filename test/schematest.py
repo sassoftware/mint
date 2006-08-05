@@ -619,6 +619,16 @@ class UpgradePathTest(MintRepositoryHelper):
         self.failIf(self.getMirrorAcl(project3, 'testuser') == 1,
                     "schema upgrade tried to update external project.")
 
+    def testDbBumpVersion(self):
+        client, userId = self.quickMintAdmin('admin', 'passwd')
+        cu = self.db.cursor()
+        cu.execute('SELECT MAX(version) FROM DatabaseVersion')
+        assert cu.fetchone()[0] == client.server._server.version.schemaVersion
+        client.server._server.version.bumpVersion()
+        # ensure bumping version does not exceed max schema version
+        cu.execute('SELECT MAX(version) FROM DatabaseVersion')
+        assert cu.fetchone()[0] == client.server._server.version.schemaVersion
+
 
 if __name__ == "__main__":
     testsuite.main()
