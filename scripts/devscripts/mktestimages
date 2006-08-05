@@ -2,12 +2,17 @@
 
 import os, sys
 import time
+import tempfile
 
 from mint.scriptlibrary import SingletonScript
 
 from mint import client
-from mint.distro import jsversion
+from mint import jsversion
 from mint.jobs import DuplicateJob
+from mint import buildtypes
+from mint.data import RDT_STRING
+from mint.cmdline.builds import waitForBuild
+import urllib2
 
 class MakeTestImages(SingletonScript):
     def usage(self):
@@ -24,38 +29,51 @@ class MakeTestImages(SingletonScript):
     def action(self):
         mc = client.MintClient(self.url)
         project = mc.getProjectByHostname(self.projectName)
-        releaseList = project.getReleases(True)
 
-        # the list of targets we need to produce against
-        publishedList = [x for x in releaseList if x.published]
+        trvSpecs = ('group-imagetest',
+                    '/imagetest.rpath.local@rpl:devel/1154201616.198:1.0.0-1-1',
+                    '1#x86:cmov:i486:i586:i686:~!mmx:~!sse2|5#use:~MySQL-python.threadsafe:X:~!alternatives:~!bootstrap:~!builddocs:~buildtests:desktop:dietlibc:emacs:gcj:~glibc.tls:gnome:~!grub.static:gtk:ipv6:kde:~!kernel.debug:~!kernel.debugdata:~!kernel.numa:krb:ldap:nptl:~!openssh.smartcard:~!openssh.static_libcrypto:pam:pcre:perl:~!pie:~!postfix.mysql:python:qt:readline:sasl:~!selinux:~sqlite.threadsafe:ssl:tcl:tcpwrappers:tk:~!xorg-x11.xprint')
 
-        currentList = [x for x in releaseList if x.getDataValue('jsversion') \
-                          == jsversion.getDefaultVersion() \
-                          and x in publishedList \
-                          and not x.published]
+        currentList = []
 
-        # these are not the actual release objects. we need to make new ones
-        # and clone the settings from this list.
-        newTargetsNeeded = [x for x in publishedList if x not in currentList]
+        for jsVer in ('2.0.0',):
+            for buildType in (buildtypes.RAW_HD_IMAGE,):
+                buildName = 'Test Image: ' + \
+                            buildtypes.typeNamesShort[buildType]
+                build = mc.newBuild(project.id, buildName)
+                build.setBuildType(buildType)
+                build.setDesc('Test Image')
+                build.setTrove(*trvSpecs)
+                currentList.append(build)
 
-        for targ in newTargetsNeeded:
-            release = mc.newRelease(project.id, targ.name)
-            release.setImageTypes(targ.getImageTypes())
-            release.setName(targ.getName())
-            release.setDesc(targ.getDesc())
-            release.setTrove(*targ.getTrove())
-            currentList.append(release)
-            for key, val in targ.getDataDict().iteritems():
-                if key != 'jsversion':
-                    release.setDataValue(key, val)
+                build.setDataValue('jsversion', jsVer, dataType = RDT_STRING,
+                                   validate = False)
 
-        for release in currentList:
+        for build in currentList:
             try:
-                mc.startImageJob(release.id)
+                mc.startImageJob(build.id)
             except DuplicateJob:
                 pass
-            # sleep for 30 minutes to lessen server load
-            time.sleep(1800)
+            waitForBuild(mc, build.id)
+            build.refresh()
+            fileDict = [x for x in build.getFiles() if trvSpecs[0].split('-')[1] in x['filename']][0]
+            fileUrl = self.url.split('/')[0] + '//' + \
+                      ('/'.join(self.url.split('/')[:-2]) + \
+                       '/downloadImage/%d/%s' % ( \
+                fileDict['fileId'], fileDict['filename'])).split('@')[1]
+            urld = urllib2.urlopen(fileUrl)
+
+            fd, fn = tempfile.mkstemp()
+            os.close(fd)
+            f = open(fn, 'w')
+            # just put something in data to start the loop.
+            data = True
+            while data:
+                data = urld.read(512)
+                if data:
+                    f.write(data)
+            import epdb
+            epdb.st()
         return 0
 
 if __name__ == "__main__":
