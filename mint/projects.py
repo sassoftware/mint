@@ -42,6 +42,12 @@ class LabelMissing(MintError):
     def __str__(self):
         return "Project label does not exist"
 
+class DuplicateLabel(MintError):
+    def __str__(self):
+        return self.reason
+    def __init__(self, reason = "Label already exists"):
+        self.reason = reason
+
 mysqlTransTable = string.maketrans("-.:", "___")
 
 class Project(database.TableObject):
@@ -121,9 +127,6 @@ class Project(database.TableObject):
 
     def editProject(self, projecturl, desc, name):
         return self.server.editProject(self.id, projecturl, desc, name)
-
-    def updateUser(self, userId, **kwargs):
-        return self.users.update(userId, **kwargs)
 
     def getLabelIdMap(self):
         """Returns a dictionary mapping of label names to database IDs"""
@@ -640,19 +643,6 @@ class LabelsTable(database.KeyedTable):
 
     def removeLabel(self, projectId, labelId):
         cu = self.db.cursor()
-
-        cu.execute("""SELECT p.troveVersion, l.label
-                      FROM Builds p, Labels l
-                      WHERE p.projectId=?
-                        AND l.projectId=p.projectId
-                        AND l.labelId=?""",
-                   projectId, labelId)
-
-        for versionStr, label in cu.fetchall():
-            if versionStr:
-                v = versions.ThawVersion(versionStr)
-                if v.branch().label().asString() == label:
-                    raise LabelInUse
 
         cu.execute("""DELETE FROM Labels WHERE projectId=? AND labelId=?""", projectId, labelId)
         return False
