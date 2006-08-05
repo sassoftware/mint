@@ -70,7 +70,7 @@ class CmdLineTest(unittest.TestCase):
 
 
 class CmdLineFuncTest(MintRepositoryHelper):
-    def testBuildCreate(self):
+    def testBuildCreateCMD(self):
         client, userId = self.quickMintUser("test", "testpass")
 
         projectId = client.newProject("Foo", "testproject", MINT_PROJECT_DOMAIN)
@@ -84,7 +84,7 @@ class CmdLineFuncTest(MintRepositoryHelper):
         assert(build.getTrove()[0] == 'group-test')
         assert(build.getJob())
 
-    def testUserCreate(self):
+    def testUserCreateCMD(self):
         client, userId = self.quickMintAdmin("adminuser", "adminpass")
 
         cmd = users.UserCreateCommand()
@@ -93,7 +93,7 @@ class CmdLineFuncTest(MintRepositoryHelper):
         user = client.getUser(userId)
         assert(user.email == 'test@example.com')
 
-    def testUserMembership(self):
+    def testUserMembershipCMD(self):
         adminClient, userId = self.quickMintAdmin("adminuser", "adminpass")
         newProjectId = adminClient.newProject("testproject", "testproject",
             MINT_PROJECT_DOMAIN)
@@ -107,7 +107,7 @@ class CmdLineFuncTest(MintRepositoryHelper):
         project = client.getProject(newProjectId)
         assert(project.getMembers() == [[1, 'adminuser', 0], [2, 'testuser', 0]])
 
-    def testBuildUrl(self):
+    def testBuildUrlCMD(self):
         client, userId = self.quickMintAdmin("adminuser", "adminpass")
         cfg = RBuilderShellConfig(False)
         cfg.serverUrl = 'http://testuser:testpass@mint.rpath.local/xmlrpc-private/'
