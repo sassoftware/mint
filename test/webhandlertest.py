@@ -74,26 +74,26 @@ class WebHandlerTestWithoutPort(unittest.TestCase):
         self.wh.cfg = FakeConfig('/', 'foo', 'test.local')
         self.wh.req = FakeRequest('foo.test.local', 'GET', '/nowhere')
 
-    def testRedirectHttp(self):
+    def testRedirectHttpWOP(self):
         self.assertRaises(webhandler.HttpMoved, self.wh._redirectHttp,
                 '/nowhere')
         self.assertEqual(self.wh.req.headers_out['Location'],
                 'http://foo.test.local/nowhere')
 
-    def testPermanentRedirect(self):
+    def testPermanentRedirectWOP(self):
         self.assertRaises(webhandler.HttpMoved, self.wh._redirect,
                 'http://foo.test.local/nowhere')
         self.assertEqual(self.wh.req.headers_out['Location'],
                 'http://foo.test.local/nowhere')
 
-    def testTemporaryRedirect(self):
+    def testTemporaryRedirectWOP(self):
         self.assertRaises(webhandler.HttpMovedTemporarily,
                 self.wh._redirect, "http://foo.test.local/nowhere",
                 {'temporary': False})
         self.assertEqual(self.wh.req.headers_out['Location'],
                 'http://foo.test.local/nowhere')
 
-    def testBadRedirect(self):
+    def testBadRedirectWOP(self):
         self.assertRaises(webhandler.HttpMoved,
                 self.wh._redirect, "nowhere")
         self.failUnless(self.wh.req.error_logged)
