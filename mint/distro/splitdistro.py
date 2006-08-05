@@ -1,7 +1,7 @@
 #!/usr/bin/env python2.4
 # -*- python -*-
 #
-# Copyright (c) 2004-2005 rPath, Inc.
+# Copyright (c) 2004-2006 rPath, Inc.
 # All rights reserved
 #
 
@@ -42,13 +42,11 @@ def lndir(src, dest, excludes=[]):
                 # if target dir already exists, that's not an error
                 if e.errno != 17:
                     raise
-        for f in filenames:
+        for f in [x for x in filenames if x not in excludes]:
             if curdir:
                 curfile = join(curdir, f)
             else:
                 curfile = f
-            if curfile in excludes:
-                continue
             if not os.path.exists(join(dest, curfile)):
                 _linkOrCopyFile(join(dirpath, f), join(dest, curfile))
 
