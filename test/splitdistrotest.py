@@ -83,11 +83,20 @@ class SplitDistroTest(fixtures.FixturedUnitTest):
                     f.close()
             os.mkdir(os.path.join(tmpdir2, 'c'))
 
-            splitdistro.lndir(tmpdir, tmpdir2, excludes = ['b', '9'])
+            splitdistro.lndir( \
+                tmpdir, tmpdir2, excludes = ['b', os.path.join('c', '9')])
 
-            assert sorted(os.listdir(tmpdir2)) == \
-                   ['0', '1', '2', '3', '4', '5', '6', '7', '8', 'a', 'c']
-            assert sorted(os.listdir(os.path.join(tmpdir2, 'c'))) == \
+            dirList = sorted(os.listdir(tmpdir2))
+            self.failIf('9' not in dirList,
+                        'File of same basename and different path as an '
+                        'exclusion was not copied')
+            self.failIf('b' in dirList, "named excslusion subdir was copied")
+            assert dirList == \
+                   ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'c']
+
+            dirList = sorted(os.listdir(os.path.join(tmpdir2, 'c')))
+            self.failIf('9' in dirList, "explicitly excluded file was copied")
+            assert dirList == \
                    ['0', '1', '2', '3', '4', '5', '6', '7', '8']
         finally:
             util.rmtree(tmpdir)
