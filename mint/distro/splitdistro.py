@@ -27,11 +27,7 @@ def lndir(src, dest, excludes=[]):
         # skipping the directory by itself is not enough, we need to ensure
         # that sub directories get excluded as well (since we can't know them
         # ahead of time)
-        skipDir = False
-        for excluded in excludes:
-            if excluded in curdir:
-                skipDir = True
-        if skipDir:
+        if [x for x in excludes if x in curdir]:
             continue
         for d in dirnames:
             if d in excludes:
@@ -42,11 +38,13 @@ def lndir(src, dest, excludes=[]):
                 # if target dir already exists, that's not an error
                 if e.errno != 17:
                     raise
-        for f in [x for x in filenames if x not in excludes]:
+        for f in filenames:
             if curdir:
                 curfile = join(curdir, f)
             else:
                 curfile = f
+            if curfile in excludes:
+                continue
             if not os.path.exists(join(dest, curfile)):
                 _linkOrCopyFile(join(dirpath, f), join(dest, curfile))
 
