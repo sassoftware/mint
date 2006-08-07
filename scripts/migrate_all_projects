@@ -9,6 +9,7 @@ import os, sys
 
 from mint import config
 from mint import maintenance
+from mint.projects import mysqlTransTable
 from conary import dbstore
 from conary.server import schema
 
@@ -28,7 +29,7 @@ cu.execute("SELECT hostname, domainname FROM Projects")
 if cfg.reposDBDriver == 'sqlite':
     dbNames = [x[0] + "." + x[1] for x in cu.fetchall()]
 else:
-    dbNames = [x[0] + "_" + x[1].replace('.', '_') for x in cu.fetchall()]
+    dbNames = [x[0] + "_" + x[1].translate(mysqlTransTable) for x in cu.fetchall()]
 
 for dbName, count in zip(dbNames, range(len(dbNames))):
     print "completed %d of %d" % (count, len(dbNames)), chr(13),
