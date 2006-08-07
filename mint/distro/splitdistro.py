@@ -27,27 +27,22 @@ def lndir(src, dest, excludes=[]):
         # skipping the directory by itself is not enough, we need to ensure
         # that sub directories get excluded as well (since we can't know them
         # ahead of time)
-        if [x for x in excludes if x in curdir]:
+        if [x for x in excludes if curdir.startswith(x)]:
             continue
-        for d in dirnames:
-            if d in excludes:
-                continue
-            try:
-                os.mkdir(join(dest, curdir, d))
-            except OSError, e:
-                # if target dir already exists, that's not an error
-                if e.errno != 17:
-                    raise
-        for f in filenames:
+        for p in (filenames + dirnames):
             if curdir:
-                curfile = join(curdir, f)
+                curpath = join(curdir, p)
             else:
-                curfile = f
-            if curfile in excludes:
+                curpath = p
+            if curpath in excludes:
                 continue
-            if not os.path.exists(join(dest, curfile)):
-                _linkOrCopyFile(join(dirpath, f), join(dest, curfile))
-
+            if not os.path.exists(join(dest, curpath)):
+                # this is perfectly fine since the exact same path can't appear
+                # in both the directory list and the file list.
+                if p in filenames:
+                    _linkOrCopyFile(join(dirpath, p), join(dest, curpath))
+                else:
+                    os.mkdir(join(dest, curpath))
 
 def spaceused(path, isoblocksize):
     if not os.path.isdir(path):
