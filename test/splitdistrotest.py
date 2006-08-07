@@ -135,6 +135,105 @@ class SplitDistroTest(fixtures.FixturedUnitTest):
                 except:
                     pass
 
+    @fixtures.fixture('Empty')
+    def testLnDirDirs(self, db, data):
+        tmpdir = tempfile.mkdtemp()
+        tmpdir2 = tempfile.mkdtemp()
+        try:
+            os.mkdir(os.path.join(tmpdir, 'a'))
+            for dirName in ('b', 'c'):
+                util.mkdirChain(os.path.join(tmpdir, 'a', dirName))
+                util.mkdirChain(os.path.join(tmpdir, dirName))
+            splitdistro.lndir(tmpdir, tmpdir2, excludes = \
+                              ['b', os.path.join('a', 'c')])
+            dirList = os.listdir(os.path.join(tmpdir2, 'a'))
+            self.failIf('b' not in dirList,
+                        "Directory a/b should not have been excluded")
+            self.failIf('c' in dirList,
+                        "Directory a/c should have been excluded")
+            dirList = os.listdir(tmpdir2)
+            self.failIf('c' not in dirList,
+                        "Directory c should not have been excluded")
+            self.failIf('b' in dirList,
+                        "Directory b should have been excluded")
+        finally:
+            for dir in (tmpdir, tmpdir2):
+                try:
+                    self.captureAllOutput(util.rmtree, dir)
+                except:
+                    pass
+
+    @fixtures.fixture('Empty')
+    def testLnDirFiles(self, db, data):
+        tmpdir = tempfile.mkdtemp()
+        tmpdir2 = tempfile.mkdtemp()
+        try:
+            os.mkdir(os.path.join(tmpdir, 'a'))
+            for fn in ('b', 'c'):
+                f = open(os.path.join(tmpdir, 'a', fn), 'w')
+                f.close()
+                f = open(os.path.join(tmpdir, fn), 'w')
+                f.close()
+            splitdistro.lndir(tmpdir, tmpdir2, excludes = \
+                              ['b', os.path.join('a', 'c')])
+            dirList = os.listdir(os.path.join(tmpdir2, 'a'))
+            self.failIf('b' not in dirList,
+                        "File a/b should not have been excluded")
+            self.failIf('c' in dirList,
+                        "File a/c should have been excluded")
+            dirList = os.listdir(tmpdir2)
+            self.failIf('c' not in dirList,
+                        "File c should not have been excluded")
+            self.failIf('b' in dirList,
+                        "File b should have been excluded")
+        finally:
+            for dir in (tmpdir, tmpdir2):
+                try:
+                    self.captureAllOutput(util.rmtree, dir)
+                except:
+                    pass
+
+    @fixtures.fixture('Empty')
+    def testLnDirSubdirs(self, db, data):
+        tmpdir = tempfile.mkdtemp()
+        tmpdir2 = tempfile.mkdtemp()
+        try:
+            util.mkdirChain(os.path.join(tmpdir, 'a', 'b', 'c', 'd'))
+            splitdistro.lndir(tmpdir, tmpdir2, excludes =
+                              [os.path.join('a', 'b')])
+            self.failIf(os.path.exists( \
+                os.path.join(tmpdir2, 'a', 'b', 'c', 'd')),
+                        "Dir a/b/c/d should not have been copied")
+            self.failIf(os.path.exists(os.path.join(tmpdir2, 'a', 'b', 'c')),
+                        "Dir a/b/c should not have been copied")
+            self.failIf(os.path.exists(os.path.join(tmpdir2, 'a', 'b')),
+                        "Dir a/b should not have been copied")
+            self.failIf(not os.path.exists(os.path.join(tmpdir2, 'a')),
+                        "Dir a should have been copied")
+        finally:
+            for dir in (tmpdir, tmpdir2):
+                try:
+                    self.captureAllOutput(util.rmtree, dir)
+                except:
+                    pass
+
+    @fixtures.fixture('Empty')
+    def testLnDirExistDirs(self, db, data):
+        tmpdir = tempfile.mkdtemp()
+        tmpdir2 = tempfile.mkdtemp()
+        try:
+            util.mkdirChain(os.path.join(tmpdir, 'a', 'b'))
+            util.mkdirChain(os.path.join(tmpdir2, 'a', 'b'))
+            splitdistro.lndir(tmpdir, tmpdir2)
+            self.failIf(not os.path.exists(os.path.join(tmpdir2, 'a', 'b')),
+                        "Dir a/b should exist")
+        finally:
+            for dir in (tmpdir, tmpdir2):
+                try:
+                    self.captureAllOutput(util.rmtree, dir)
+                except:
+                    pass
+
 
 if __name__ == "__main__":
     testsuite.main()
