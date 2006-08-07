@@ -16,9 +16,16 @@ from conary.server import schema
 cfg = config.MintConfig()
 cfg.read(config.RBUILDER_CONFIG)
 
-if maintenance.getMaintenanceMode(cfg)==maintenance.NORMAL_MODE:
-    print >> sys.stderr, "rBuilder repositories are not locked. rBuilder"
-    print >> sys.stderr, "administrators can place the site in this mode."
+# check a few important things
+ec = os.system('/sbin/service httpd status > /dev/null')
+isRunningHttpd = bool((ec >> 8) == 0)
+isRunningInMaintenanceMode = (maintenance.getMaintenanceMode(cfg)==maintenance.LOCKED_MODE)
+
+if isRunningHttpd and not isRunningInMaintenanceMode:
+    print >> sys.stderr, """
+rBuilder repositories are not locked. You must place the site in
+maintenance mode or shut down the Apache Web Server (httpd) before
+continuing."""
     sys.exit(1)
 
 db = dbstore.connect(cfg.dbPath, driver = cfg.dbDriver)
