@@ -93,19 +93,24 @@
     </div>
 
     <div py:def="projectsPane()" id="projectsPane" >
+        <?python
+            from mint import rmakeconstants
+        ?>
+        <script type="text/javascript" src="${cfg.staticPath}apps/mint/javascript/rmakebuilder.js" />
         <script type="text/javascript">
+        <![CDATA[
         addLoadEvent(function() {
-            var rMakeMimeType = navigator.mimeTypes["application/x-rmake"];
-            if (rMakeMimeType) {
+            supportedrMakeVersions = ${str(list(rmakeconstants.supportedApiVersions))};
+            var rMakeVersion = rMakeProtocolVersion();
+            if (rMakeVersion != 0) {
                 var rMake = document.getElementById("rMake");
                 if (rMake) {
                     swapDOM(rMake, DIV({id : "rMake"},
-                                       A({href : BaseUrl + 'rMake?supported=1',
-                                          style: 'font-weight: bold;'},
-                                         'rMake')));
+                                       A({href : BaseUrl + 'rMake?supported=' + rMakeVersion, style: 'font-weight: bold;'}, 'rMake')));
                 }
             }
             });
+        ]]>
         </script>
         <img class="left" src="${cfg.staticPath}apps/mint/images/header_orange_left.png" alt="" />
         <img class="right" src="${cfg.staticPath}apps/mint/images/header_orange_right.png" alt="" />
