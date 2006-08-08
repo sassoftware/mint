@@ -10,7 +10,7 @@ import random
 
 from mint import database
 from conary import versions
-from mint.rmakeconstants import buildjob, buildtrove
+from mint.rmakeconstants import buildjob, buildtrove, currentApi
 
 class rMakeBuildTable(database.KeyedTable):
     name = "rMakeBuild"
@@ -221,8 +221,8 @@ class rMakeBuild(database.TableObject):
     def getItem(self, id):
         return self.server.getrMakeBuild(id)
 
-    def getXML(self, command = 'build'):
-        return self.server.getrMakeBuildXML(self.id, command)
+    def getXML(self, command = 'build', protocolVersion = currentApi):
+        return self.server.getrMakeBuildXML(self.id, command, protocolVersion)
 
     def addTrove(self, trvName, trvLabel):
         return self.server.addrMakeBuildTrove(self.id, trvName, trvLabel)
