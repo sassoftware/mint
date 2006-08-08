@@ -36,6 +36,8 @@ import conary.versions
 from conary.web.fields import boolFields, dictFields, intFields, listFields, strFields
 
 from mint.rmakeconstants import buildjob
+from mint.rmakeconstants import supportedApiVersions \
+     as supportedrMakeApiVersions
 
 class SiteHandler(WebHandler):
     def handle(self, context):
@@ -706,9 +708,14 @@ class SiteHandler(WebHandler):
             return self._redirect("http://%s%suserInfo?id=%d" %
                     (self.cfg.siteHost, self.cfg.basePath, userId))
 
-    @boolFields(supported = False)
+    @intFields(supported = 0)
     @requiresAuth
     def rMake(self, auth, supported):
+        if supported and supported not in supportedrMakeApiVersions:
+            return self._write('error',
+                               error = 'Your version of rMake is not '
+                               'supported by this server.')
+        self.session['rMakeProtocolVersion'] = supported
         return self._write('rMake',
                            rMakeBuilds = self.client.listrMakeBuilds(),
                            supported = supported)
@@ -848,7 +855,8 @@ class SiteHandler(WebHandler):
             self._redirect(self.cfg.basePath)
         else:
             try:
-                xml = self.rMakeBuild.getXML(command)
+                xml = self.rMakeBuild.getXML( \
+                    command, self.session['rMakeProtocolVersion'])
             except Exception, e:
                 self._addErrors(str(e))
                 self._redirect(self.cfg.basePath)
