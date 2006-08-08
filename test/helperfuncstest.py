@@ -233,7 +233,6 @@ Much like Powdermilk Biscuits[tm]."""
         tmpDir = tempfile.mkdtemp()
         try:
             self.failIf(jsversion.getVersions(tmpDir) != [constants.mintVersion])
-            self.failIf(jsversion.getVersionsOnDisk(tmpDir) != [constants.mintVersion])
 
             for dir in ('15.20.1', '1.5', '10.20', '10.2', '1.5.4beta', '1A',
                         'README'):
@@ -245,21 +244,6 @@ Much like Powdermilk Biscuits[tm]."""
                         ['1.5', '1.5.4beta', '10.2', '10.20', '15.20.1'],
                         "Version list contained improper job server versions.")
             self.failIf(jsversion.getDefaultVersion(tmpDir) != '15.20.1',
-                        "Wrong default job server version.")
-
-            specStrings = ('trove=/testproject.' + MINT_PROJECT_DOMAIN + \
-                                   '@rpl:devel/1.0.0-1-1',
-                           'trove=/testproject.' + MINT_PROJECT_DOMAIN + \
-                                   '@rpl:devel/1.5.4-1-1',
-                           'trove=/testproject.' + MINT_PROJECT_DOMAIN + \
-                                   '@rpl:devel/2.0.3-1-1',)
-            f = open(os.path.join(tmpDir, 'versions'), 'w')
-            f.write('\n'.join(specStrings))
-            f.close()
-            self.failIf(jsversion.getVersions(tmpDir) !=
-                        ['1.0.0', '1.5.4', '2.0.3'],
-                        "Versions file did not override directories")
-            self.failIf(jsversion.getDefaultVersion(tmpDir) != '2.0.3',
                         "Wrong default job server version.")
         finally:
             util.rmtree(tmpDir)
