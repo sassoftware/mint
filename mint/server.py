@@ -68,7 +68,9 @@ from conary.repository.netrepos import netserver, calllog
 from conary import errors as conary_errors
 
 from mint.rmakeconstants import buildjob
-from mint.rmakeconstants import currentApi as currentrMakeApi
+from mint.rmakeconstants import supportedApiVersions \
+     as supportedrMakeApiVersions
+
 
 validHost = re.compile('^[a-zA-Z][a-zA-Z0-9\-]*$')
 reservedHosts = ['admin', 'mail', 'mint', 'www', 'web', 'rpath', 'wiki', 'conary', 'lists']
@@ -3185,9 +3187,11 @@ class MintServer(object):
                 self.rMakeBuild.listTrovesById(rMakeBuildId)]
 
     @private
-    @typeCheck(int, str)
+    @typeCheck(int, str, int)
     @requiresAuth
-    def getrMakeBuildXML(self, rMakeBuildId, command):
+    def getrMakeBuildXML(self, rMakeBuildId, command, protocolVersion):
+        if protocolVersion not in supportedrMakeApiVersions:
+            raise ParameterError('Unsupported rMake API Version')
         def makeOption(name, val):
             return "<option><name>%s</name><value>%s</value></option>" % \
                    (name, val)
@@ -3224,7 +3228,7 @@ class MintServer(object):
                           'http://' + self.cfg.siteHost + self.cfg.basePath + \
                           'rmakesubscribe/' + UUID)
         res += makeOption('subscribe', 'rBuilder apiVersion %d' % \
-                          currentrMakeApi)
+                          protocolVersion)
         res += makeOption('uuid', UUID)
         res += "</buildConfig><command><name>%s</name>" % command
         if command == "build":
