@@ -232,6 +232,55 @@ LinkManager.prototype.reworkLinks = function () {
     }
 }
 
+/* Returns the highest protocol version supported by both rMake and rBuilder.
+   If no versions are in common, or rMake is not installed,
+   this function will return 0.
+*/
+function rMakeProtocolVersion() {
+    detected = false;
+    versions = new Array(0);
+
+    // only works with Mozilla-ish browsers
+    if (navigator.appName == "Netscape") {
+        for(i=0; i<navigator.plugins.length; i++)  {
+            if (navigator.plugins[i].name.indexOf('rMake') == 0) {
+                detected = true;
+                // get a list of the supported versions of rMake
+                for (j=0; j < navigator.plugins[i].length; j++) {
+                    mimeType = navigator.plugins[i][j].type;
+                    ver = mimeType.indexOf('subscriberApiVer=');
+                    if (ver != -1) {
+                        aVersion = mimeType.substring(ver + 17, mimeType.length);
+                        versions[versions.length] = aVersion;
+                    }
+                }
+            }
+        }
+    }
+    if (!detected) {
+        // fall back to protocol version 1 if rMake mime handler is present.
+        if (navigator.mimeTypes["application/x-rmake"]) {
+            return 1;
+        }
+        else {
+            return 0;
+        }
+    }
+    maxSupported = 0;
+    if (detected) {
+        for(i in versions) {
+            for (j in supportedrMakeVersions) {
+                if (versions[i] == supportedrMakeVersions[j]) {
+                    maxSupported = versions[i];
+                    break;
+                }
+            }
+        }
+    }
+    return maxSupported;
+}
+
+
 linkManager = null;
 
 function initrMakeManager(newrMakeBuildId) {
