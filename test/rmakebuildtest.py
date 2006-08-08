@@ -17,7 +17,8 @@ from mint_rephelp import MintRepositoryHelper
 from mint_rephelp import MINT_PROJECT_DOMAIN
 
 import conary.repository.errors as repo_errors
-from mint.rmakeconstants import buildjob, buildtrove, currentApi
+from mint.rmakeconstants import buildjob, buildtrove, currentApi, \
+     supportedApiVersions
 
 class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
     @fixtures.fixture("Full")
@@ -468,7 +469,25 @@ class FixturedrMakeBuildTest(fixtures.FixturedUnitTest):
 
         self.assertRaises(database.ItemNotFound,
                           client.server.getrMakeBuildXML, rMakeBuild.id,
-                          'commit')
+                          'commit', currentApi)
+
+    @fixtures.fixture("Full")
+    def testBadApiVersion(self, db, data):
+        client = self.getClient('nobody')
+        rMakeBuild = client.createrMakeBuild('foo')
+        self.assertRaises(mint_error.ParameterError,
+                          client.server.getrMakeBuildXML, rMakeBuild.id,
+                          'commit', 0)
+        self.assertRaises(mint_error.ParameterError,
+                          client.server.getrMakeBuildXML, rMakeBuild.id,
+                          'commit', currentApi + 1)
+
+    @fixtures.fixture("Full")
+    def testApiVersion(self, db, data):
+        client = self.getClient('nobody')
+        rMakeBuild = client.createrMakeBuild('foo')
+        assert currentApi in supportedApiVersions, \
+               "Current version isn't supported. Check rmakeconstants.py"
 
     @fixtures.fixture("Full")
     def testInvalidStatus(self, db, data):
