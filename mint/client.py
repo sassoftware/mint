@@ -310,7 +310,7 @@ class MintClient:
         """
         Get a list of the most recent published releases as ordered
         by their published date.
-        @param limit: The number of builds to display
+        @param limit: The number of published releases to display
         @param offset: List @limit starting at item @offset
         """
         return [(x[0], x[1], self.getPublishedRelease(x[2])) for x in \
