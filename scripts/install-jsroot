@@ -45,6 +45,10 @@ print str(versions.VersionFromString(cmdline.parseTroveSpec(\"$fullTroveSpec\")[
     ")
 
     ROOT=/srv/rbuilder/jobserver/$upstreamVer/
+    if [ -d $ROOT ]; then
+        echo "Chroot already exists, exiting." >&2
+        exit 0
+    fi
     echo "Installing chroot from repository: $upstreamVer" 
     conary update --root $ROOT "$troveSpec"
     if [ $? != 0 ]; then
