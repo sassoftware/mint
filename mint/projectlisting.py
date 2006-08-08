@@ -28,31 +28,32 @@ desctrunclength = 300
 
 sqlbase = """
     SELECT projectId, hostname, name, description, timeModified
-        FROM (SELECT Projects.projectId AS projectId,
-                     Projects.hostname AS hostname,
-                     Projects.name AS name,
-                     Projects.description AS description,
-                     Projects.projectId NOT IN
-                         (select DISTINCT projectId FROM Commits) AS fledgling,
-                     IFNULL(MAX(Commits.timestamp),
-                            Projects.timeCreated) AS timeModified,
-                     (SELECT count(*) FROM Commits
-                          WHERE Commits.projectId=Projects.projectId
-                          AND Commits.timestamp > (
-                              SELECT IFNULL(MAX(timestamp)-604800, 0)
-                          FROM Commits)) AS recentCommits,
-                     timeCreated,
-                     (SELECT COUNT(userId) AS numDevs FROM ProjectUsers
-                          WHERE ProjectUsers.projectId=Projects.projectId)
-                     AS numDevs,
-                     Projects.external AS external,
-                     Projects.hidden AS hidden
-                     FROM
-                         Projects
-                     LEFT JOIN Commits ON
-                         Projects.projectId=Commits.projectId
-                     %s
-                     GROUP BY Projects.projectId) as P
+        FROM (SELECT
+                  Projects.projectId AS projectId,
+                  Projects.hostname AS hostname,
+                  Projects.name AS name,
+                  LOWER(Projects.name) AS lowerName,
+                  Projects.description AS description,
+                  IFNULL(TM.timeModified, Projects.timeCreated)
+                      AS timeModified,
+                  CASE WHEN TM.timeModified IS NULL THEN 1 ELSE 0 END
+                      AS fledgling,
+                  (SELECT COUNT(*)
+                   FROM Commits AS RC
+                   WHERE RC.projectId = Projects.projectId
+                   AND RC.timestamp >
+                       IFNULL((SELECT MAX(C.timestamp) - 604800
+                               FROM Commits AS C), 0)) AS recentCommits,
+                  timeCreated,
+                  (SELECT COUNT(userId) FROM ProjectUsers AS PU
+                   WHERE PU.projectId = Projects.projectId) AS numDevs,
+                  Projects.external AS external,
+                  Projects.hidden AS hidden
+              FROM Projects
+              LEFT OUTER JOIN (SELECT projectId, MAX(timestamp) AS timeModified
+              FROM Commits GROUP BY projectId) AS TM ON
+              Projects.projectId = TM.projectId
+              %s) AS P
     %s
     ORDER BY %s
     LIMIT ?
@@ -60,8 +61,8 @@ sqlbase = """
 """
 
 ordersql = {
-    PROJECTNAME_ASC:   "LOWER(name) ASC",
-    PROJECTNAME_DES:   "LOWER(name) DESC",
+    PROJECTNAME_ASC:   "lowerName ASC",
+    PROJECTNAME_DES:   "lowerName DESC",
     LASTMODIFIED_ASC:  "timeModified ASC",
     LASTMODIFIED_DES:  "timeModified DESC",
     CREATED_ASC:       "timeCreated ASC",
