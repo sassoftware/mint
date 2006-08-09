@@ -422,7 +422,16 @@ def getProjectDomainName(db, hostName):
         try:
             domainNameCache[hostName] = cu.fetchone()[0]
         except (IndexError, TypeError):
-            raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND
+            import traceback
+            tb = traceback.format_exc()
+
+            apache.log_error("error in getProjectDomainName:")
+            for line in tb.split("\n"):
+                apache.log_error(line)
+
+            # assume cfg.projectDomainName on error
+            return cfg.projectDomainName
+            # raise apache.SERVER_RETURN, apache.HTTP_NOT_FOUND
 
     return domainNameCache[hostName]
 
