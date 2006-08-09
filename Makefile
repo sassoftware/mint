@@ -15,6 +15,7 @@ export sysconfdir = /etc
 export servicedir= /srv
 export confdir = $(servicedir)/rbuilder/
 export datadir = $(prefix)/share
+export mandir = $(datadir)/man
 export contentdir = $(datadir)/conary/web-common/apps/mint/
 export libdir = $(prefix)/lib
 export bindir = $(prefix)/bin
@@ -25,7 +26,7 @@ export raapluginsdir = $(libdir)/raa/rPath/
 
 .PHONY: doc
 
-SUBDIRS = mint test scripts mailman raa-plugins commands etc
+SUBDIRS = mint test scripts mailman raa-plugins commands etc doc
 
 extra_files = Makefile Make.rules rbuilder.conf httpd.conf
 

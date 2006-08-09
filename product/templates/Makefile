@@ -8,8 +8,7 @@ SUBDIRS = docs admin
 
 kid_files = \
 	layout.kid	\
-	newProject.kid  \
-	projectPage.kid
+	newProject.kid
 
 python_files = __init__.py
 
