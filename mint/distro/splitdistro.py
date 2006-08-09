@@ -205,6 +205,7 @@ def splitDistro(unified, baseTrove, maxisosize = 650 * 1024 * 1024,
             used = spaceused(current, isoblocksize) + \
                    spaceused(src, isoblocksize)
         dest = join(current, csdir, csfile)
+        util.mkdirChain(os.path.dirname(dest))
         os.link(src, dest)
         # cut off disc number, record the disc location
         newline = " ".join(line.split()[:-1])
