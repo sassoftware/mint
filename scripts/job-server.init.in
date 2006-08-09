@@ -2,7 +2,7 @@
 #
 # rbuilder-isogen:  Starts the rBuilder ISO generation server.
 #
-# chkconfig: - 24 15
+# chkconfig: 2345 24 15
 # description: This is the daemon which periodically requests a list of
 #              ISO generation jobs from an rBuilder server and generates
 #              the requested images.

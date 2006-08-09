@@ -2,7 +2,7 @@
 #
 # rbuilder-isogen:  Starts multiple rBuilder ISO generation servers.
 #
-# chkconfig: - 24 15
+# chkconfig: 2345 24 15
 # description: This executes multiple job server daemons in separate chroots.
 # processname: job-server
 # config: @DESTDIR@/usr/bin
