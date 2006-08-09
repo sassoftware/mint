@@ -45,7 +45,8 @@ class CmdLineTest(unittest.TestCase):
             main.main(['rbuilder', '--skip-default-config', 'config'])
         except cfgtypes.CfgError, e:
             assert(str(e) == 'Please set the serverUrl configuration option in ~/.rbuilderrc')
-        
+        else:
+            raise RuntimeError, 'expected exception not raised'
 
     def testBuildCreate(self):
         troveSpec = 'group-test=/testproject.%s@rpl:devel/1.0-1-1[is:x86]' % MINT_PROJECT_DOMAIN

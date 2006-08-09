@@ -24,9 +24,6 @@ class RBuilderShellConfig(ConfigFile):
         ConfigFile.__init__(self)
 	if readConfigFiles:
 	    self.readFiles()
-        if not self.serverUrl:
-            raise cfgtypes.CfgError(
-                'Please set the serverUrl configuration option in ~/.rbuilderrc')
 
     def readFiles(self):
         if os.environ.has_key("HOME"):
@@ -84,6 +81,9 @@ class RBuilderMain(options.MainHandler):
         print '  config                                                  - dump configuration'
 
     def runCommand(self, thisCommand, cfg, argSet, args):
+        if not cfg.serverUrl:
+            raise cfgtypes.CfgError(
+                'Please set the serverUrl configuration option in ~/.rbuilderrc')
         client = RBuilderClient(cfg)
         try:
             options.MainHandler.runCommand(self,
