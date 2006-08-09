@@ -10,6 +10,7 @@ import unittest
 testsuite.setup()
 
 import rephelp
+from conary.lib import cfgtypes
 
 from mint.cmdline import RBuilderMain, RBuilderShellConfig
 from mint.cmdline import builds, users
@@ -37,6 +38,14 @@ class CmdLineTest(unittest.TestCase):
                                      ignoreKeywords, **expectedKw)
         finally:
             os.unlink(cfgFn)
+
+    def testBadConfig(self):
+        main = RBuilderMain()
+        try:
+            main.main(['rbuilder', '--skip-default-config', 'config'])
+        except cfgtypes.CfgError, e:
+            assert(str(e) == 'Please set the serverUrl configuration option in ~/.rbuilderrc')
+        
 
     def testBuildCreate(self):
         troveSpec = 'group-test=/testproject.%s@rpl:devel/1.0-1-1[is:x86]' % MINT_PROJECT_DOMAIN

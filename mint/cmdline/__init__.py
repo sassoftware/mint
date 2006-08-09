@@ -7,8 +7,8 @@
 import os
 import sys
 
-from conary.lib import options, util, log
-from conary.conarycfg import ConfigFile
+from conary.lib import options, util, log, cfgtypes
+from conary.lib.cfg import ConfigFile
 
 from mint import constants
 from mint.client import MintClient
@@ -22,9 +22,16 @@ class RBuilderShellConfig(ConfigFile):
 
     def __init__(self, readConfigFiles = True):
         ConfigFile.__init__(self)
-        if os.environ.has_key("HOME") and readConfigFiles:
-            self.read(os.environ["HOME"] + "/" + ".rbuilderrc", exception=False)
+	if readConfigFiles:
+	    self.readFiles()
+        if not self.serverUrl:
+            raise cfgtypes.CfgError(
+                'Please set the serverUrl configuration option in ~/.rbuilderrc')
 
+    def readFiles(self):
+        if os.environ.has_key("HOME"):
+            fn = '/'.join((os.environ["HOME"], ".rbuilderrc"))
+            self.read(fn, exception=False)
 
 class ConfigCommand(commands.RBuilderCommand):
     commands = ['config']
@@ -88,4 +95,8 @@ class RBuilderMain(options.MainHandler):
 def main():
     log.setVerbosity(log.INFO)
     rb = RBuilderMain()
-    rb.main()
+    try:
+        return rb.main()
+    except cfgtypes.CfgError, e:
+        print str(e)
+        return 1
